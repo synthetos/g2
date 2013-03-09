@@ -7,5 +7,6 @@
 *.eep
 *.map
 *.srec
+*.atsuo
 .DS_Store
 TcfTransactionLog.csv
