@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG3", "TinyG3.cppproj", "{488DBD8B-89DD-4714-AB7E-4B71ED48DC60}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Release|ARM = Release|ARM
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{488DBD8B-89DD-4714-AB7E-4B71ED48DC60}.Debug|ARM.ActiveCfg = Debug|ARM
+		{488DBD8B-89DD-4714-AB7E-4B71ED48DC60}.Debug|ARM.Build.0 = Debug|ARM
+		{488DBD8B-89DD-4714-AB7E-4B71ED48DC60}.Release|ARM.ActiveCfg = Release|ARM
+		{488DBD8B-89DD-4714-AB7E-4B71ED48DC60}.Release|ARM.Build.0 = Release|ARM
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
