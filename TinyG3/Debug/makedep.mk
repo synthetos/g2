@@ -104,3 +104,5 @@ system\source\usart.c
 
 system\source\wdt.c
 
+variants\variant.cpp
+

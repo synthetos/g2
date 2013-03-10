@@ -36,6 +36,7 @@ SUBDIRS :=  \
 ../cmsis/linkerScripts/ \
 ../cmsis/src/ \
 ../arduino \
+../variants \
 ../system \
 ../system/include \
 ../system/source
@@ -93,7 +94,8 @@ C_SRCS +=  \
 ../system/source/uotghs_device.c \
 ../system/source/uotghs_host.c \
 ../system/source/usart.c \
-../system/source/wdt.c
+../system/source/wdt.c \
+../variants/variant.cpp
 
 
 PREPROCESSING_SRCS += 
@@ -153,7 +155,8 @@ system/source/uotghs.o \
 system/source/uotghs_device.o \
 system/source/uotghs_host.o \
 system/source/usart.o \
-system/source/wdt.o
+system/source/wdt.o \
+variants/variant.o
 
 
 OBJS_AS_ARGS +=  \
@@ -207,7 +210,8 @@ system/source/uotghs.o \
 system/source/uotghs_device.o \
 system/source/uotghs_host.o \
 system/source/usart.o \
-system/source/wdt.o
+system/source/wdt.o \
+variants/variant.o
 
 
 C_DEPS +=  \
@@ -261,7 +265,8 @@ system/source/uotghs.d \
 system/source/uotghs_device.d \
 system/source/uotghs_host.d \
 system/source/usart.d \
-system/source/wdt.d
+system/source/wdt.d \
+variants/variant.d
 
 
 C_DEPS_AS_ARGS +=  \
@@ -315,7 +320,8 @@ system/source/uotghs.d \
 system/source/uotghs_device.d \
 system/source/uotghs_host.d \
 system/source/usart.d \
-system/source/wdt.d
+system/source/wdt.d \
+variants/variant.d
 
 
 OUTPUT_FILE_PATH +=TinyG3.elf
@@ -327,6 +333,8 @@ ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:= ./makedep.mk
 
 # AVR32/GNU C Compiler
+
+
 
 
 
@@ -452,6 +460,12 @@ system/source/%.o: ../system/source/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
 	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mcpu=cortex-m3   -o"$@" "$<" 
+	@echo Finished building: $<
+
+variants/%.o: ../variants/%.cpp
+	@echo Building file: $<
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants"  -O1 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 

@@ -30,13 +30,29 @@ extern void SysTick_Handler( void )
 }
 */
 
+/******************** Application Code ************************/
+int led = 13;
+
+void setup( void )
+{
+	pinMode(13, OUTPUT);
+}
+
+void loop( void )
+{
+	digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+	delay(500);               // wait for a second
+	digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+	delay(500);               // wait for a second
+}
+/***************************************************************/
+
 /*
  * \brief Main entry point of Arduino application
  */
 int main( void )
 {
-//	init();
-
+	init();
 	delay(1);
 
 #if defined(USBCON)
