@@ -464,7 +464,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="arduino\system" />
     <Folder Include="cmsis\" />
     <Folder Include="cmsis\linkerScripts\" />
     <Folder Include="cmsis\src\" />

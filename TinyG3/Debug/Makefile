@@ -31,7 +31,6 @@ OUTPUT_FILE_DEP:=
 
 # Every subdirectory with source files must be described here
 SUBDIRS :=  \
-../arduino/system \
 ../cmsis/ \
 ../cmsis/linkerScripts/ \
 ../cmsis/src/ \
