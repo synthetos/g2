@@ -35,17 +35,16 @@ int led = 13;
 
 void setup( void )
 {
-	pinMode(13, OUTPUT);
+	pinMode(led, OUTPUT);
 }
 
 void loop( void )
 {
-	digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 	delay(500);               // wait for a second
-	digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
 	delay(500);               // wait for a second
 }
-/***************************************************************/
 
 /*
  * \brief Main entry point of Arduino application
@@ -59,11 +58,11 @@ int main( void )
 	USBDevice.attach();
 #endif
 
-//	setup();
+	setup();
 
 	for (;;)
 	{
-//		loop();
+		loop();
 		if (serialEventRun) serialEventRun();
 	}
 
