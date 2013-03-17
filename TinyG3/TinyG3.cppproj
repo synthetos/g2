@@ -33,13 +33,13 @@
       </OverrideVtorValue>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1045</port>
+        <port>1237</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>250000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -140,6 +140,7 @@
   <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</armgcccpp.compiler.optimization.DebugLevel>
   <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
+  <armgcccpp.compiler.miscellaneous.OtherFlags>-fpermissive</armgcccpp.compiler.miscellaneous.OtherFlags>
   <armgcccpp.linker.libraries.Libraries>
     <ListValues>
       <Value>m</Value>
@@ -314,6 +315,12 @@
     <Compile Include="cmsis\src\system_sam3xa.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="stepper.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="stepper.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="system\chip.h">
       <SubType>compile</SubType>
     </Compile>
@@ -480,6 +487,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="system\source\wdt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tinyg2.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tinyg2.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="variants\pins_arduino.h">

@@ -50,6 +50,8 @@ cmsis\src\startup_sam3xa.c
 
 cmsis\src\system_sam3xa.c
 
+stepper.cpp
+
 system\source\adc.c
 
 system\source\adc12_sam3u.c
@@ -103,6 +105,8 @@ system\source\uotghs_host.c
 system\source\usart.c
 
 system\source\wdt.c
+
+tinyg2.cpp
 
 variants\variant.cpp
 
