@@ -180,7 +180,7 @@ static void TC_SetCMR_ChannelB(Tc *tc, uint32_t chan, uint32_t v)
 	tc->TC_CHANNEL[chan].TC_CMR = (tc->TC_CHANNEL[chan].TC_CMR & 0xF0FFFFFF) | v;
 }
 
-static int _readResolution = 10;
+//static int _readResolution = 10;
 static int _writeResolution = 8;
 static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to) {
 	if (from == to)
@@ -270,7 +270,7 @@ void st_init()
 	sps.magic_start = MAGICNUM;
 
 	// setup DDA timer 
-	TC_Configure( TC_BASE, TC_DDA, TC_CMR_DDA );
+//	TC_Configure( TC_BASE, TC_DDA, TC_CMR_DDA );
 
 
 //	analogWrite(3,200);
