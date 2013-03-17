@@ -52,6 +52,8 @@ cmsis\src\system_sam3xa.c
 
 stepper.cpp
 
+system.cpp
+
 system\source\adc.c
 
 system\source\adc12_sam3u.c

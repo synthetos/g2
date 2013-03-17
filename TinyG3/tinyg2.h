@@ -2,7 +2,7 @@
  * tinyg2.h - tinyg2 main header - Application GLOBALS 
  * Part of TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -28,7 +28,7 @@
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG2_BUILD_NUMBER   	002.02		// Q&D motor driver
+#define TINYG2_BUILD_NUMBER   	003.01		// Q&D motor driver
 #define TINYG2_VERSION_NUMBER	0.01		// major version
 #define TINYG2_HARDWARE_VERSION	0.00		// board revision number (Native Arduino Due)
 

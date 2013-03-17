@@ -2,7 +2,7 @@
  * stepper.c - stepper motor controls
  * Part of TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -137,8 +137,12 @@
  *	degrees of phase angle results in a step being generated. 
  */
 
+//#include <component_tc.h>
+
 #include "tinyg2.h"
 #include "stepper.h"
+#include "system.h"
+
 
 /*
 #include <string.h>				// needed for memset in st_init()
@@ -148,7 +152,6 @@
 #include <avr/io.h>
 
 #include "util.h"
-#include "system.h"
 #include "config.h"
 #include "planner.h"
 */
@@ -162,9 +165,6 @@ static void _request_load_move(void);
 static void _set_f_dda(double *f_dda, double *dda_substeps,
 					   const double major_axis_steps, const double microseconds);
 */
-
-static int _readResolution = 10;
-static int _writeResolution = 8;
 
 static uint8_t PWMEnabled = 0;
 static uint8_t pinEnabled[PINS_COUNT];
@@ -180,6 +180,8 @@ static void TC_SetCMR_ChannelB(Tc *tc, uint32_t chan, uint32_t v)
 	tc->TC_CHANNEL[chan].TC_CMR = (tc->TC_CHANNEL[chan].TC_CMR & 0xF0FFFFFF) | v;
 }
 
+static int _readResolution = 10;
+static int _writeResolution = 8;
 static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to) {
 	if (from == to)
 	return value;
@@ -267,6 +269,10 @@ void st_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
+	// setup DDA timer 
+	TC_Configure( TC_BASE, TC_DDA, TC_CMR_DDA );
+
+
 //	analogWrite(3,200);
 	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
 	_st_init_timer(3,100);
@@ -330,9 +336,7 @@ void st_disable()
 static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 	uint32_t attr = g_APinDescription[ulPin].ulPinAttribute;
 
-	if ((attr & PIN_ATTR_ANALOG) == PIN_ATTR_ANALOG) {
-		return;
-	}
+	if ((attr & PIN_ATTR_ANALOG) == PIN_ATTR_ANALOG) { return;}
 
 	if ((attr & PIN_ATTR_PWM) == PIN_ATTR_PWM) {
 		ulValue = mapResolution(ulValue, _writeResolution, PWM_RESOLUTION);
@@ -377,7 +381,7 @@ static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 		ETCChannel channel = g_APinDescription[ulPin].ulTCChannel;
 		static const uint32_t channelToChNo[] = { 0, 0, 1, 1, 2, 2, 0, 0, 1, 1, 2, 2, 0, 0, 1, 1, 2, 2 };
 		static const uint32_t channelToAB[]   = { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
-		static const Tc *channelToTC[] = {
+		static Tc *channelToTC[] = {
 			TC0, TC0, TC0, TC0, TC0, TC0,
 			TC1, TC1, TC1, TC1, TC1, TC1,
 			TC2, TC2, TC2, TC2, TC2, TC2 };

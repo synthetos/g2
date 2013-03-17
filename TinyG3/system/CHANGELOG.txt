@@ -7,12 +7,10 @@ This is a log of changes made to the underlying Arduino library sources to suppo
 The source directories are used from the Arduino lib-1.5-cores branch of the Arduino github. For more detail look at the project itself or the g2 in Studio6 wiki page here:
 https://github.com/synthetos/g2/wiki/g2-in-Studio6
 
-
-CHANGES
+REQUIRED CHANGES
 
 *******************************************************************************************
-chip.h [REQUIRED] - redefined the SAM3XA_SERIES to include the ATSAM3X8E chip. 
-
+chip.h [REQUIRED] - redefined the SAM3XA_SERIES to include the ATSAM3X8E chip.
 /* The following modifies the SAM3XA_SERIES #define from the sam.h file to fix compilation problems in adc.h
    Ref: http://asf.atmel.no/docs/latest/common.services.calendar.example2.stk600-rcuc3d/html/group__sam__part__macros__group.html
 */
@@ -25,10 +23,10 @@ main.cpp [REQUIRED] - Modified to call tinyg2 setup and then jump to tinyg2 cont
 
 *******************************************************************************************
 
-
-
-
-
-
-  
-
+OPTIONAL CHANGES
+*******************************************************************************************
+Some changes to keep compiler warnings to a minimum
+variant.cpp - cast PINS_COUNT to int in init()
+Reset.cpp - added some parenthese in banzai()
+emac.c - added NULL initialization for p_tx_cb in emac_handler()
+wiring_analog.c - remove const qualifier from channelToTC declaration

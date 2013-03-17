@@ -1,7 +1,7 @@
 /* stepper.h - stepper motor interface
  * Part of TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -83,6 +83,15 @@ void st_dump_stepper_state(void);
  * Stepper configs and constants
  */
 
+ /* Timer settings for stepper module. See system.h for timer assignments
+ */
+#define TC_CHANNEL_DDA 
+#define F_DDA 		(double)10000	// DDA frequency in hz.
+//#define F_DDA 		(double)50000	// DDA frequency in hz.
+#define F_DWELL		(double)10000	// Dwell count frequency in hz.
+#define SWI_PERIOD		100			// cycles you have to shut off SW interrupt
+#define TIMER_PERIOD_MIN (20)		// used to trap bad timer loads
+
 /* DDA substepping
  * 	DDA_SUBSTEPS sets the amount of fractional precision for substepping.
  *	Substepping is kind of like microsteps done in software to make
@@ -130,14 +139,6 @@ void st_dump_stepper_state(void);
  */
 //#define F_DDA_MIN (double)489	// hz
 #define F_DDA_MIN (double)500	// hz - is 489 Hz with some margin
-
-/* Timer settings for stepper module. See system.h for timer assignments
- */
-#define F_DDA 		(double)10000	// DDA frequency in hz.
-//#define F_DDA 		(double)50000	// DDA frequency in hz.
-#define F_DWELL		(double)10000	// Dwell count frequency in hz.
-#define SWI_PERIOD		100			// cycles you have to shut off SW interrupt
-#define TIMER_PERIOD_MIN (20)		// used to trap bad timer loads
 
 // Timer setups
 /*

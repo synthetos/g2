@@ -362,7 +362,7 @@ void init( void )
   __libc_init_array();
 
   // Disable pull-up on every pin
-  for (int i = 0; i < PINS_COUNT; i++)
+  for (int i = 0; i < (int)PINS_COUNT; i++)		// ASH: Cast PINS_COUNT to int to keep compiler happy
 	  digitalWrite(i, LOW);
 
   // Enable parallel access on PIO output data registers
