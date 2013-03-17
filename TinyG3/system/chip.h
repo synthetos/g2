@@ -24,7 +24,7 @@
  */
 #include "sam.h"
 
-/* The following modifies the SAM3XA_SERIES #defines from the sam.h file to fix compilation problems
+/* The following modifies the SAM3XA_SERIES #define from the sam.h file to fix compilation problems in adc.h
    Ref: http://asf.atmel.no/docs/latest/common.services.calendar.example2.stk600-rcuc3d/html/group__sam__part__macros__group.html
 */
 //#define SAM3XA_SERIES (SAM3A4 || SAM3A8)	// original define in sam.h file
