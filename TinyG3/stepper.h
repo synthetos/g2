@@ -133,7 +133,8 @@ void st_dump_stepper_state(void);
 
 /* Timer settings for stepper module. See system.h for timer assignments
  */
-#define F_DDA 		(double)50000	// DDA frequency in hz.
+#define F_DDA 		(double)10000	// DDA frequency in hz.
+//#define F_DDA 		(double)50000	// DDA frequency in hz.
 #define F_DWELL		(double)10000	// Dwell count frequency in hz.
 #define SWI_PERIOD		100			// cycles you have to shut off SW interrupt
 #define TIMER_PERIOD_MIN (20)		// used to trap bad timer loads

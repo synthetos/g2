@@ -262,16 +262,18 @@ static struct stPrepSingleton sps;
 
 void st_init()
 {
+	memset(&st, 0, sizeof(st));	// clear all values, pointers and status
+
+	st.magic_start = MAGICNUM;
+	sps.magic_start = MAGICNUM;
+
 //	analogWrite(3,200);
 	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
 	_st_init_timer(3,100);
 }
 
 //	You can assume all values are zeroed. If not, use this:
-//	memset(&st, 0, sizeof(st));	// clear all values, pointers and status
 /*
-	st.magic_start = MAGICNUM;
-	sps.magic_start = MAGICNUM;
 
 	// Configure virtual ports
 	PORTCFG.VPCTRLA = PORTCFG_VP0MAP_PORT_MOTOR_1_gc | PORTCFG_VP1MAP_PORT_MOTOR_2_gc;
@@ -329,50 +331,7 @@ static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 	uint32_t attr = g_APinDescription[ulPin].ulPinAttribute;
 
 	if ((attr & PIN_ATTR_ANALOG) == PIN_ATTR_ANALOG) {
-		EAnalogChannel channel = g_APinDescription[ulPin].ulADCChannelNumber;
-		if (channel == DA0 || channel == DA1) {
-			uint32_t chDACC = ((channel == DA0) ? 0 : 1);
-			if (dacc_get_channel_status(DACC_INTERFACE) == 0) {
-				/* Enable clock for DACC_INTERFACE */
-				pmc_enable_periph_clk(DACC_INTERFACE_ID);
-
-				/* Reset DACC registers */
-				dacc_reset(DACC_INTERFACE);
-
-				/* Half word transfer mode */
-				dacc_set_transfer_mode(DACC_INTERFACE, 0);
-
-				/* Power save:
-				 * sleep mode  - 0 (disabled)
-				 * fast wakeup - 0 (disabled)
-				 */
-				dacc_set_power_save(DACC_INTERFACE, 0, 0);
-				/* Timing:
-				 * refresh        - 0x08 (1024*8 dacc clocks)
-				 * max speed mode -    0 (disabled)
-				 * startup time   - 0x10 (1024 dacc clocks)
-				 */
-				dacc_set_timing(DACC_INTERFACE, 0x08, 0, 0x10);
-
-				/* Set up analog current */
-				dacc_set_analog_control(DACC_INTERFACE, DACC_ACR_IBCTLCH0(0x02) |
-											DACC_ACR_IBCTLCH1(0x02) |
-											DACC_ACR_IBCTLDACCORE(0x01));
-			}
-
-			/* Disable TAG and select output channel chDACC */
-			dacc_set_channel_selection(DACC_INTERFACE, chDACC);
-
-			if ((dacc_get_channel_status(DACC_INTERFACE) & (1 << chDACC)) == 0) {
-				dacc_enable_channel(DACC_INTERFACE, chDACC);
-			}
-
-			// Write user value
-			ulValue = mapResolution(ulValue, _writeResolution, DACC_RESOLUTION);
-			dacc_write_conversion_data(DACC_INTERFACE, ulValue);
-			while ((dacc_get_interrupt_status(DACC_INTERFACE) & DACC_ISR_EOC) == 0);
-			return;
-		}
+		return;
 	}
 
 	if ((attr & PIN_ATTR_PWM) == PIN_ATTR_PWM) {
@@ -381,7 +340,8 @@ static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 		if (!PWMEnabled) {
 			// PWM Startup code
 		    pmc_enable_periph_clk(PWM_INTERFACE_ID);
-		    PWMC_ConfigureClocks(PWM_FREQUENCY * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);
+//		    PWMC_ConfigureClocks(PWM_FREQUENCY * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);
+		    PWMC_ConfigureClocks(F_DDA * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);
 			PWMEnabled = 1;
 		}
 
@@ -405,7 +365,8 @@ static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 
 	if ((attr & PIN_ATTR_TIMER) == PIN_ATTR_TIMER) {
 		// We use MCLK/2 as clock.
-		const uint32_t TC = VARIANT_MCK / 2 / TC_FREQUENCY;
+//		const uint32_t TC = VARIANT_MCK / 2 / TC_FREQUENCY;
+		const uint32_t TC = VARIANT_MCK / 2 / F_DDA;
 
 		// Map value to Timer ranges 0..255 => 0..TC
 		ulValue = mapResolution(ulValue, _writeResolution, TC_RESOLUTION);

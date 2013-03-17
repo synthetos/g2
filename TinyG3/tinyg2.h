@@ -28,7 +28,7 @@
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG2_BUILD_NUMBER   	002.01		// early development
+#define TINYG2_BUILD_NUMBER   	002.02		// Q&D motor driver
 #define TINYG2_VERSION_NUMBER	0.01		// major version
 #define TINYG2_HARDWARE_VERSION	0.00		// board revision number (Native Arduino Due)
 
