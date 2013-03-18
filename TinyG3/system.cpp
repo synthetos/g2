@@ -33,9 +33,6 @@
 
 void sys_init()
 {
-	// setup  power management controller (PMC)
-	// Much of this was done earlier in _____.cpp
-
 //	xmega_init();		// set system clock
 //	sys_port_bindings(TINYG_HARDWARE_VERSION);
 }

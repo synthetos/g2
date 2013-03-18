@@ -38,26 +38,42 @@ void sys_init(void);					// master hardware init
 #undef F_CPU							// set for delays
 #define F_CPU 84000000UL				// should always precede <avr/delay.h>
 
-#define TC_BASE ((Tc *)0x40080000)
-#define TC_0 0							// define timer counter channels
-#define TC_1 1
-#define TC_2 2
-//#define pTC(a) ( 0x40080000 + (a * 0x40) )	// address of timer counter channel
+/* Timer Counter usage
 
+ The SAM3x8e has 3 timer counters, each with 3 channels. Usage is:
+ 
+ - Arduino ADC uses TC0, channels 0, 1, and 2 for ADC triggers (adc.h)
+ 
+ - Stepper system uses TC1
+	- channel 0 = DDA interrupt timer	// aka 30 Timer Counter 3 (sam3x8e.h)
+	- channel 1 = dwell timer			// aka 31 Timer Counter 4
+	- channel 3 = unused				// aka 32 Timer Counter 5
 
-/* Timer assignment and setup - see component_tc.h for details) */
+ */
 
-#define TC_DDA			TC_0		// DDA timer 	(see stepper.h)
+//#define TC_BASE ((Tc *)0x40080000)	// base address of timer counter peripheral
+//#define TC0_CH0							// define timer counter channels
+//#define TC_1 1
+//#define TC_2 2
+
+#define TC_DDA				TC1			// DDA timer base address	(see stepper.h)
+#define TC_CHANNEL_DDA		0
+#define TC_ID_DDA			ID_TC3		//
+#define TC_FREQUENCY_DDA	50000UL
 #define TC_CMR_DDA	  ( TC_CMR_TCCLKS_TIMER_CLOCK1 )	// Mode register - MCK/2
 #define TC_IER_DDA		TC_IER_CPAS						// Int enable reg - RA compare
-#define TC_IMR_DDA		TC_IER_DDA						// Int mask reg - same as above	
+#define TC_IMR_DDA		TC_IER_DDA						// Int mask reg - same as above
 
-#define TIMER_DWELL	 		TCD0		// Dwell timer	(see stepper.h)
-#define TIMER_LOAD			TCE0		// Loader timer	(see stepper.h)
-#define TIMER_EXEC			TCF0		// Exec timer	(see stepper.h)
-#define TIMER_5				TCC1		// unallocated timer
-#define TIMER_PWM1			TCD1		// PWM timer #1 (see pwm.c)
-#define TIMER_PWM2			TCE1		// PWM timer #2	(see pwm.c)
+#define TC_DWELL_ID			ID_TC4
+#define TC_DWELL_FREQUENCY	1000UL
+
+
+//#define TIMER_DWELL	 		TCD0		// Dwell timer	(see stepper.h)
+//#define TIMER_LOAD			TCE0		// Loader timer	(see stepper.h)
+//#define TIMER_EXEC			TCF0		// Exec timer	(see stepper.h)
+//#define TIMER_5				TCC1		// unallocated timer
+//#define TIMER_PWM1			TCD1		// PWM timer #1 (see pwm.c)
+//#define TIMER_PWM2			TCE1		// PWM timer #2	(see pwm.c)
 
 
 /*** Motor, output bit & switch port assignments ***

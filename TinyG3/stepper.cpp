@@ -334,6 +334,13 @@ void st_disable()
 }
 
 static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
+
+	// enable DDA timer
+	pmc_enable_periph_clk(TC_ID_DDA);
+	TC_Configure(TC_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+	TC_SetRA(TC_DDA, TC_CHANNEL_DDA, (VARIANT_MCK / 2 / F_DDA) );
+
+	// ORIGINAL PWM CODE FROM wiring_analog.cpp
 	uint32_t attr = g_APinDescription[ulPin].ulPinAttribute;
 
 	if ((attr & PIN_ATTR_ANALOG) == PIN_ATTR_ANALOG) { return;}

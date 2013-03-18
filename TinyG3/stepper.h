@@ -85,7 +85,7 @@ void st_dump_stepper_state(void);
 
  /* Timer settings for stepper module. See system.h for timer assignments
  */
-#define TC_CHANNEL_DDA 
+//#define TC_CHANNEL_DDA 
 #define F_DDA 		(double)10000	// DDA frequency in hz.
 //#define F_DDA 		(double)50000	// DDA frequency in hz.
 #define F_DWELL		(double)10000	// Dwell count frequency in hz.
