@@ -83,8 +83,22 @@ void st_dump_stepper_state(void);
  * Stepper configs and constants
  */
 
- /* Timer settings for stepper module. See system.h for timer assignments
- */
+/* Timer settings for stepper module. See system.h for overall timer assignments */
+
+#define TC_CMR_DDA		(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
+#define TC_IER_DDA		TC_IER_CPCS		// Interrupt enable reg - RC compare
+#define TC_IMR_DDA		TC_IMR_CPCS		// Interrupt mask reg - same as above
+
+#define FREQUENCY_DDA	50000UL
+#define TC_CVAL_DDA		(VARIANT_MCK / 2 / FREQUENCY_DDA)
+
+#define TC_CMR_DWELL	(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
+#define TC_IER_DWELL	TC_IER_CPCS		// Interrupt enable reg - RC compare
+#define TC_IMR_DWELL	TC_IMR_CPCS		// Interrupt mask reg - same as above
+
+#define FREQUENCY_DWELL	1000UL
+#define FREQUENCY_DWELL	1000UL
+
 //#define TC_CHANNEL_DDA 
 #define F_DDA 		(double)10000	// DDA frequency in hz.
 //#define F_DDA 		(double)50000	// DDA frequency in hz.
