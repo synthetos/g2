@@ -63,12 +63,13 @@ void sys_init(void);					// master hardware init
 // DDA timer aliases
 #define TC_BLOCK_DDA		TC1				// TC1 block base address (sam3x8e.h)
 #define TC_CHANNEL_DDA		0				// DDA channel in DDA block
-#define TC_ID_DDA			ID_TC3			// Device ID for DDA channel (sam3x8e.h)
-#define TC_IRQn_DDA			TC3_IRQn
-#define ISR_Handler_DDA		TC3_Handler
-#define REG_CCR_DDA			REG_TC1_CCR0	// status register
+#define TC_ID_DDA			ID_TC3			// Device ID enumeration (sam3x8e.h)
+#define TC_IRQn_DDA			TC3_IRQn		// Interrupt vector enumeration (same as device ID)
+#define ISR_Handler_DDA		TC3_Handler		// alias for ISR handler function name
+#define REG_CMR_DDA			REG_TC1_CMR0	// channel mode register
+#define REG_CCR_DDA			REG_TC1_CCR0	// channel control register
 #define REG_SR_DDA			REG_TC1_SR0		// status register
-#define REG_RC_DDA			REG_TC1_RC0		// RC register
+#define REG_RC_DDA			REG_TC1_RC0		// RC register (comparison register)
 #define REG_IER_DDA			REG_TC1_IER0	// interrupt enable register
 #define REG_IDR_DDA			REG_TC1_IDR0	// interrupt disable register
 #define REG_IMR_DDA			REG_TC1_IMR0	// interrupt mask register

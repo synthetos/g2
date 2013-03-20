@@ -251,6 +251,14 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
+static inline void pinOutput(int pin, int val)
+{
+	if (val)
+		g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
+	else
+		g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
+}
+
 /* 
  * st_init() - initialize stepper motor subsystem 
  *
@@ -260,7 +268,11 @@ static struct stPrepSingleton sps;
  * 	  - microsteps are setup during cfg_init()
  *	  - motor polarity is setup during cfg_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete
+
+http://arduino.cc/forum/index.php?topic=130423.0
+
  */
+int temp = 0;
 
 void st_init()
 {
@@ -270,32 +282,43 @@ void st_init()
 	sps.magic_start = MAGICNUM;
 
 	// setup DDA timer
-	REG_IER_DDA = 0;
-	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
-	uint32_t dummy = (uint32_t)REG_TC1_SR0;		// read the status register
+//	REG_TC1_WPMR = 0x54494D00;	// enable write to registers
+//	REG_IER_DDA = 0;
+
+//	REG_TC0_CMR0=0b 0000 0000 0000 1001 1100 0100 0000 0000
+
+//	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+
+    REG_CCR_DDA = TC_CCR_CLKDIS;		// disable clock
+	REG_IDR_DDA = 0xFFFFFFFF;			// disable interrupts
+	long dummy = REG_SR_DDA;			// clear status register
+//	REG_CMR_DDA = 0x0009C400;			// setup mode
+	REG_CMR_DDA = TC_CMR_DDA;
+
 	REG_RC_DDA = TC_RC_DDA;
-	REG_IMR_DDA = TC_IMR_DDA;
+//	REG_IMR_DDA = TC_IMR_DDA;
 //	REG_IDR_DDA = TC_IDR_DDA;
 	REG_IER_DDA = TC_IER_DDA;
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
-	->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG ;
-
-	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+	
+//	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+	REG_CCR_DDA = TC_CCR_CLKEN | TC_CCR_SWTRG ;	// start the timer
 
 //	analogWrite(3,200);
 //	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
 //	_st_init_timer(3,100);
 }
 
-int temp = 0;
-
 void ISR_Handler_DDA(void) 
 {
-//	REG_IDR_DDA = TC_IDR_DDA;
 //	uint32_t dummy = (uint32_t *)REG_SR_DDA;	// read status register to clear it
 //	uint8_t dummy = (uint8_t *)REG_TC1_SR0;	// read status register to clear it
 //	uint32_t dummy = (uint32_t *)REG_TC1_SR0;	// read status register to clear it
+//	uint32_t dummy = (uint32_t)REG_TC1_SR0;
+
+	long dummy = REG_SR_DDA;
+
 	if (temp == 0) {
 		digitalWrite(3,HIGH);
 		temp = 1;
@@ -303,9 +326,8 @@ void ISR_Handler_DDA(void)
 		digitalWrite(3,LOW);
 		temp = 0;
 	}
-	uint32_t dummy = (uint32_t)REG_TC1_SR0;
-//	REG_RC_DDA = TC_RC_DDA;
 }
+
 
 //	You can assume all values are zeroed. If not, use this:
 /*
