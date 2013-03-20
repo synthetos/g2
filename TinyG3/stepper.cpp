@@ -143,7 +143,6 @@
 #include "stepper.h"
 #include "system.h"
 
-
 /*
 #include <string.h>				// needed for memset in st_init()
 #include <math.h>				// isinfinite()
@@ -190,7 +189,6 @@ static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to)
 	else
 	return value << (to-from);
 }
-
 
 /*
  * Stepper structures
@@ -272,7 +270,8 @@ static inline void pinOutput(int pin, int val)
 http://arduino.cc/forum/index.php?topic=130423.0
 
  */
-int temp = 0;
+volatile int temp = 0;
+volatile long dummy;			// convenient register to read into
 
 void st_init()
 {
@@ -291,7 +290,7 @@ void st_init()
 
     REG_CCR_DDA = TC_CCR_CLKDIS;		// disable clock
 	REG_IDR_DDA = 0xFFFFFFFF;			// disable interrupts
-	long dummy = REG_SR_DDA;			// clear status register
+	dummy = REG_SR_DDA;					// clear status register
 //	REG_CMR_DDA = 0x0009C400;			// setup mode
 	REG_CMR_DDA = TC_CMR_DDA;
 
@@ -317,15 +316,16 @@ void ISR_Handler_DDA(void)
 //	uint32_t dummy = (uint32_t *)REG_TC1_SR0;	// read status register to clear it
 //	uint32_t dummy = (uint32_t)REG_TC1_SR0;
 
-	long dummy = REG_SR_DDA;
+	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
 
-	if (temp == 0) {
-		digitalWrite(3,HIGH);
-		temp = 1;
+	if (temp == LOW) {
+		temp = HIGH;
+//		digitalWrite(3,HIGH);
 	} else {
-		digitalWrite(3,LOW);
-		temp = 0;
+		temp = LOW;
+//		digitalWrite(3,LOW);
 	}
+	digitalWrite(3,temp);
 }
 
 
