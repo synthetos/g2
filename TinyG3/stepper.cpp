@@ -325,6 +325,7 @@ void ISR_Handler_DDA(void)
 		temp = LOW;
 //		digitalWrite(3,LOW);
 	}
+//	digitalWrite(13,temp);
 	digitalWrite(3,temp);
 }
 
