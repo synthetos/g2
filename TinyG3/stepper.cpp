@@ -269,13 +269,42 @@ void st_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
-	// setup DDA timer 
-//	TC_Configure( TC_BASE, TC_DDA, TC_CMR_DDA );
+	// setup DDA timer
+	REG_IER_DDA = 0;
+	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+	uint32_t dummy = (uint32_t)REG_TC1_SR0;		// read the status register
+	REG_RC_DDA = TC_RC_DDA;
+	REG_IMR_DDA = TC_IMR_DDA;
+//	REG_IDR_DDA = TC_IDR_DDA;
+	REG_IER_DDA = TC_IER_DDA;
+	NVIC_EnableIRQ(TC_IRQn_DDA);
+	pmc_enable_periph_clk(TC_ID_DDA);
+	->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG ;
 
+	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 
 //	analogWrite(3,200);
-	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
-	_st_init_timer(3,100);
+//	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
+//	_st_init_timer(3,100);
+}
+
+int temp = 0;
+
+void ISR_Handler_DDA(void) 
+{
+//	REG_IDR_DDA = TC_IDR_DDA;
+//	uint32_t dummy = (uint32_t *)REG_SR_DDA;	// read status register to clear it
+//	uint8_t dummy = (uint8_t *)REG_TC1_SR0;	// read status register to clear it
+//	uint32_t dummy = (uint32_t *)REG_TC1_SR0;	// read status register to clear it
+	if (temp == 0) {
+		digitalWrite(3,HIGH);
+		temp = 1;
+	} else {
+		digitalWrite(3,LOW);
+		temp = 0;
+	}
+	uint32_t dummy = (uint32_t)REG_TC1_SR0;
+//	REG_RC_DDA = TC_RC_DDA;
 }
 
 //	You can assume all values are zeroed. If not, use this:
@@ -337,8 +366,8 @@ static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
 
 	// enable DDA timer
 	pmc_enable_periph_clk(TC_ID_DDA);
-	TC_Configure(TC_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
-	TC_SetRA(TC_DDA, TC_CHANNEL_DDA, (VARIANT_MCK / 2 / F_DDA) );
+	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+	TC_SetRA(TC_BLOCK_DDA, TC_CHANNEL_DDA, (VARIANT_MCK / 2 / F_DDA) );
 
 	// ORIGINAL PWM CODE FROM wiring_analog.cpp
 	uint32_t attr = g_APinDescription[ulPin].ulPinAttribute;
