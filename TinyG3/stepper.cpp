@@ -155,8 +155,6 @@
 #include "planner.h"
 */
 
-static void _st_init_timer (uint32_t ulPin, uint32_t ulValue);
-
 /*
 static void _exec_move(void);
 static void _load_move(void);
@@ -164,31 +162,6 @@ static void _request_load_move(void);
 static void _set_f_dda(double *f_dda, double *dda_substeps,
 					   const double major_axis_steps, const double microseconds);
 */
-
-static uint8_t PWMEnabled = 0;
-static uint8_t pinEnabled[PINS_COUNT];
-static uint8_t TCChanEnabled[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-static void TC_SetCMR_ChannelA(Tc *tc, uint32_t chan, uint32_t v)
-{
-	tc->TC_CHANNEL[chan].TC_CMR = (tc->TC_CHANNEL[chan].TC_CMR & 0xFFF0FFFF) | v;
-}
-
-static void TC_SetCMR_ChannelB(Tc *tc, uint32_t chan, uint32_t v)
-{
-	tc->TC_CHANNEL[chan].TC_CMR = (tc->TC_CHANNEL[chan].TC_CMR & 0xF0FFFFFF) | v;
-}
-
-//static int _readResolution = 10;
-static int _writeResolution = 8;
-static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to) {
-	if (from == to)
-	return value;
-	if (from > to)
-	return value >> (from-to);
-	else
-	return value << (to-from);
-}
 
 /*
  * Stepper structures
@@ -249,14 +222,6 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
-static inline void pinOutput(int pin, int val)
-{
-	if (val)
-		g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
-	else
-		g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
-}
-
 /* 
  * st_init() - initialize stepper motor subsystem 
  *
@@ -271,64 +236,44 @@ http://arduino.cc/forum/index.php?topic=130423.0
 
  */
 volatile int temp = 0;
-volatile long dummy;			// convenient register to read into
+volatile long dummy;					// convenient register to read into
 
 void st_init()
 {
-	memset(&st, 0, sizeof(st));	// clear all values, pointers and status
-
+	memset(&st, 0, sizeof(st));			// clear all values, pointers and status
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
 	// setup DDA timer
-//	REG_TC1_WPMR = 0x54494D00;	// enable write to registers
-//	REG_IER_DDA = 0;
-
-//	REG_TC0_CMR0=0b 0000 0000 0000 1001 1100 0100 0000 0000
-
-//	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
-
-    REG_CCR_DDA = TC_CCR_CLKDIS;		// disable clock
-	REG_IDR_DDA = 0xFFFFFFFF;			// disable interrupts
-	dummy = REG_SR_DDA;					// clear status register
-//	REG_CMR_DDA = 0x0009C400;			// setup mode
-	REG_CMR_DDA = TC_CMR_DDA;
-
-	REG_RC_DDA = TC_RC_DDA;
-//	REG_IMR_DDA = TC_IMR_DDA;
-//	REG_IDR_DDA = TC_IDR_DDA;
-	REG_IER_DDA = TC_IER_DDA;
+	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
+	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+	REG_RC_DDA = TC_RC_DDA;				// set frequency
+	REG_IER_DDA = TC_IER_DDA;			// enable interrupts
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
-	
-//	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
-	REG_CCR_DDA = TC_CCR_CLKEN | TC_CCR_SWTRG ;	// start the timer
+	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+}
 
-//	analogWrite(3,200);
-//	digitalWrite(8, LOW);   // turn the LED on (HIGH is the voltage level)
-//	_st_init_timer(3,100);
+static inline void pinOutput(int pin, int val)
+{
+	if (val)
+	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
+	else
+	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
 }
 
 void ISR_Handler_DDA(void) 
 {
-//	uint32_t dummy = (uint32_t *)REG_SR_DDA;	// read status register to clear it
-//	uint8_t dummy = (uint8_t *)REG_TC1_SR0;	// read status register to clear it
-//	uint32_t dummy = (uint32_t *)REG_TC1_SR0;	// read status register to clear it
-//	uint32_t dummy = (uint32_t)REG_TC1_SR0;
-
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
 
 	if (temp == LOW) {
 		temp = HIGH;
-//		digitalWrite(3,HIGH);
 	} else {
 		temp = LOW;
-//		digitalWrite(3,LOW);
 	}
-//	digitalWrite(13,temp);
+//	pinOutput(3,temp);
 	digitalWrite(3,temp);
 }
-
 
 //	You can assume all values are zeroed. If not, use this:
 /*
@@ -376,131 +321,11 @@ uint16_t st_get_sps_magic() { return (sps.magic_start);}
 
 void st_disable()
 {
-/*
-	for (uint8_t i=0; i<MOTORS; i++) {
-		device.st_port[i]->DIR = MOTOR_PORT_DIR_gm;  // sets outputs for motors & GPIO1, and GPIO2 inputs
-		device.st_port[i]->OUT = MOTOR_ENABLE_BIT_bm;// zero port bits AND disable motor
-	}
-	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-*/
-}
-
-static void _st_init_timer (uint32_t ulPin, uint32_t ulValue) {
-
-	// enable DDA timer
-	pmc_enable_periph_clk(TC_ID_DDA);
-	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
-	TC_SetRA(TC_BLOCK_DDA, TC_CHANNEL_DDA, (VARIANT_MCK / 2 / F_DDA) );
-
-	// ORIGINAL PWM CODE FROM wiring_analog.cpp
-	uint32_t attr = g_APinDescription[ulPin].ulPinAttribute;
-
-	if ((attr & PIN_ATTR_ANALOG) == PIN_ATTR_ANALOG) { return;}
-
-	if ((attr & PIN_ATTR_PWM) == PIN_ATTR_PWM) {
-		ulValue = mapResolution(ulValue, _writeResolution, PWM_RESOLUTION);
-
-		if (!PWMEnabled) {
-			// PWM Startup code
-		    pmc_enable_periph_clk(PWM_INTERFACE_ID);
-//		    PWMC_ConfigureClocks(PWM_FREQUENCY * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);
-		    PWMC_ConfigureClocks(F_DDA * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);
-			PWMEnabled = 1;
-		}
-
-		uint32_t chan = g_APinDescription[ulPin].ulPWMChannel;
-		if (!pinEnabled[ulPin]) {
-			// Setup PWM for this pin
-			PIO_Configure(g_APinDescription[ulPin].pPort,
-					g_APinDescription[ulPin].ulPinType,
-					g_APinDescription[ulPin].ulPin,
-					g_APinDescription[ulPin].ulPinConfiguration);
-			PWMC_ConfigureChannel(PWM_INTERFACE, chan, PWM_CMR_CPRE_CLKA, 0, 0);
-			PWMC_SetPeriod(PWM_INTERFACE, chan, PWM_MAX_DUTY_CYCLE);
-			PWMC_SetDutyCycle(PWM_INTERFACE, chan, ulValue);
-			PWMC_EnableChannel(PWM_INTERFACE, chan);
-			pinEnabled[ulPin] = 1;
-		}
-
-		PWMC_SetDutyCycle(PWM_INTERFACE, chan, ulValue);
-		return;
-	}
-
-	if ((attr & PIN_ATTR_TIMER) == PIN_ATTR_TIMER) {
-		// We use MCLK/2 as clock.
-//		const uint32_t TC = VARIANT_MCK / 2 / TC_FREQUENCY;
-		const uint32_t TC = VARIANT_MCK / 2 / F_DDA;
-
-		// Map value to Timer ranges 0..255 => 0..TC
-		ulValue = mapResolution(ulValue, _writeResolution, TC_RESOLUTION);
-		ulValue = ulValue * TC;
-		ulValue = ulValue / TC_MAX_DUTY_CYCLE;
-
-		// Setup Timer for this pin
-		ETCChannel channel = g_APinDescription[ulPin].ulTCChannel;
-		static const uint32_t channelToChNo[] = { 0, 0, 1, 1, 2, 2, 0, 0, 1, 1, 2, 2, 0, 0, 1, 1, 2, 2 };
-		static const uint32_t channelToAB[]   = { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
-		static Tc *channelToTC[] = {
-			TC0, TC0, TC0, TC0, TC0, TC0,
-			TC1, TC1, TC1, TC1, TC1, TC1,
-			TC2, TC2, TC2, TC2, TC2, TC2 };
-		static const uint32_t channelToId[] = { 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8 };
-		uint32_t chNo = channelToChNo[channel];
-		uint32_t chA  = channelToAB[channel];
-		Tc *chTC = channelToTC[channel];
-		uint32_t interfaceID = channelToId[channel];
-
-		if (!TCChanEnabled[interfaceID]) {
-			pmc_enable_periph_clk(TC_INTERFACE_ID + interfaceID);
-			TC_Configure(chTC, chNo,
-				TC_CMR_TCCLKS_TIMER_CLOCK1 |
-				TC_CMR_WAVE |         // Waveform mode
-				TC_CMR_WAVSEL_UP_RC | // Counter running up and reset when equals to RC
-				TC_CMR_EEVT_XC0 |     // Set external events from XC0 (this setup TIOB as output)
-				TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR |
-				TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR);
-			TC_SetRC(chTC, chNo, TC);
-		}
-		if (ulValue == 0) {
-			if (chA)
-				TC_SetCMR_ChannelA(chTC, chNo, TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_CLEAR);
-			else
-				TC_SetCMR_ChannelB(chTC, chNo, TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_CLEAR);
-		} else {
-			if (chA) {
-				TC_SetRA(chTC, chNo, ulValue);
-				TC_SetCMR_ChannelA(chTC, chNo, TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET);
-			} else {
-				TC_SetRB(chTC, chNo, ulValue);
-				TC_SetCMR_ChannelB(chTC, chNo, TC_CMR_BCPB_CLEAR | TC_CMR_BCPC_SET);
-			}
-		}
-		if (!pinEnabled[ulPin]) {
-			PIO_Configure(g_APinDescription[ulPin].pPort,
-					g_APinDescription[ulPin].ulPinType,
-					g_APinDescription[ulPin].ulPin,
-					g_APinDescription[ulPin].ulPinConfiguration);
-			pinEnabled[ulPin] = 1;
-		}
-		if (!TCChanEnabled[interfaceID]) {
-			TC_Start(chTC, chNo);
-			TCChanEnabled[interfaceID] = 1;
-		}
-		return;
-	}
-
-	// Defaults to digital write
-	pinMode(ulPin, OUTPUT);
-	ulValue = mapResolution(ulValue, _writeResolution, 8);
-	if (ulValue < 128)
-		digitalWrite(ulPin, LOW);
-	else
-		digitalWrite(ulPin, HIGH);
+	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 }
 
 
 /*
- * ISRs
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
  *	The step bit pulse width is ~1 uSec, which is OK for the TI DRV8811's.
@@ -805,8 +630,6 @@ void st_prep_dwell(double microseconds)
 }
 */
 
-
-
 /*
  * st_isbusy() - return TRUE if motors are running or a dwell is running
  */
@@ -853,8 +676,3 @@ void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 	}
 }
 */
-
-/**** DEBUG routines ****/
-/*
- * st_dump_stepper_state()
- */
