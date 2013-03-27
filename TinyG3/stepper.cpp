@@ -142,6 +142,10 @@
 #include "tinyg2.h"
 #include "stepper.h"
 #include "system.h"
+#include "motatePins.h"
+
+using namespace Motate;
+
 
 /*
 #include <string.h>				// needed for memset in st_init()
@@ -237,6 +241,10 @@ http://arduino.cc/forum/index.php?topic=130423.0
  */
 volatile int temp = 0;
 volatile long dummy;					// convenient register to read into
+
+//Motate::Pin2 xStepPin(kOutput);
+Pin2 xStepPin(kOutput);
+//pin2.setMode(kOutput);
 
 void st_init()
 {

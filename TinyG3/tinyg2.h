@@ -66,15 +66,15 @@ void tg_setup(void);
  * Alternate enum is: enum tgAxes { X=0, Y, Z, A, B, C };
  */
 
-#define X	0
-#define Y	1
-#define Z	2
-#define A	3
-#define B	4
-#define C	5
-#define U 	6				// reserved
-#define V 	7				// reserved
-#define W 	8				// reserved
+#define AXIS_X	0
+#define AXIS_Y	1
+#define AXIS_Z	2
+#define AXIS_A	3
+#define AXIS_B	4
+#define AXIS_C	5
+#define AXIS_U 	6			// reserved
+#define AXIS_V 	7			// reserved
+#define AXIS_W 	8			// reserved
 
 #define MOTOR_1	0 			// define motor numbers and array indexes
 #define MOTOR_2	1			// must be defines. enums don't work

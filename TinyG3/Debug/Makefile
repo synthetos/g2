@@ -28,7 +28,6 @@ AVR_APP_PATH :=$$$AVR_APP_PATH$$$
 QUOTE := "
 ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:=
-LIB_DEP:=
 
 # Every subdirectory with source files must be described here
 SUBDIRS :=  \
@@ -36,6 +35,8 @@ SUBDIRS :=  \
 ../cmsis/linkerScripts/ \
 ../cmsis/src/ \
 ../arduino \
+../motate \
+../motate/utility \
 ../variants \
 ../system \
 ../system/include \
@@ -347,8 +348,6 @@ ADDITIONAL_DEPENDENCIES:=
 
 OUTPUT_FILE_DEP:= ./makedep.mk
 
-LIB_DEP+= 
-
 # AVR32/GNU C Compiler
 
 
@@ -463,38 +462,38 @@ LIB_DEP+=
 
 arduino/%.o: ../arduino/%.c
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 arduino/%.o: ../arduino/%.cpp
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 cmsis/src/%.o: ../cmsis/src/%.c
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 ./%.o: .././%.cpp
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 system/source/%.o: ../system/source/%.c
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O1 -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 variants/%.o: ../variants/%.cpp
 	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\system" -I"..\system\include" -I"..\system\source" -I"..\variants" -I"..\motate" -I"..\motate\utility"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -c -fpermissive -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 
@@ -519,17 +518,17 @@ endif
 # All Target
 all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 
-$(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP)
+$(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
 	@echo Building target: $@
-	@echo Invoking: ARM/GNU Linker : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG3.map" -Wl,--start-group -lm  -Wl,--end-group -L"../cmsis/linkerScripts"  -Wl,--gc-sections -mcpu=cortex-m3 -Tsam3x8e_flash.ld 
+	@echo Invoking: ARM/GNU Linker : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
+	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG3.map" -Wl,--start-group -lm  -Wl,--end-group -L"../cmsis/linkerScripts"  -Wl,--gc-sections -Tsam3x8e_flash.ld  -mcpu=cortex-m3 
 	@echo Finished building target: $@
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O binary "TinyG3.elf" "TinyG3.bin"
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "TinyG3.elf" "TinyG3.hex"
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -j .eeprom --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0 --no-change-warnings -O binary "TinyG3.elf" "TinyG3.eep" || exit 0
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objdump.exe" -h -S "TinyG3.elf" > "TinyG3.lss"
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature  "TinyG3.elf" "TinyG3.srec"
-	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-size.exe" "TinyG3.elf"
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-objcopy.exe" -O binary "TinyG3.elf" "TinyG3.bin"
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "TinyG3.elf" "TinyG3.hex"
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-objcopy.exe" -j .eeprom --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0 --no-change-warnings -O binary "TinyG3.elf" "TinyG3.eep" || exit 0
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-objdump.exe" -h -S "TinyG3.elf" > "TinyG3.lss"
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature  "TinyG3.elf" "TinyG3.srec"
+	"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-size.exe" "TinyG3.elf"
 	
 
 
