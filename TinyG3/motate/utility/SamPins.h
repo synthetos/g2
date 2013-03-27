@@ -269,6 +269,7 @@ namespace Motate {
 			};\
 		};\
 		Pio* Pin<pinNum>::portPtr = (PIO ## registerLetter);\
+		Port32<registerChar> Pin<pinNum>::port;\
 		typedef Pin<pinNum> Pin ## pinNum;\
 		static Pin ## pinNum pin ## pinNum;
 

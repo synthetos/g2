@@ -142,9 +142,9 @@
 #include "tinyg2.h"
 #include "stepper.h"
 #include "system.h"
-#include "motatePins.h"
 
-using namespace Motate;
+//#include <motatePins.h>
+//using namespace Motate;
 
 
 /*
@@ -243,7 +243,7 @@ volatile int temp = 0;
 volatile long dummy;					// convenient register to read into
 
 //Motate::Pin2 xStepPin(kOutput);
-Pin2 xStepPin(kOutput);
+// Pin2 xStepPin(kOutput);
 //pin2.setMode(kOutput);
 
 void st_init()
