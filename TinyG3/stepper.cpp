@@ -145,14 +145,17 @@
 #include "motatePins.h"
 using namespace Motate;
 
-// Definitions
-Pin2 x_step(kOutput);
-Pin3 y_step(kOutput);
-Pin4 z_step(kOutput);
-Pin5 x_dir(kOutput);
-Pin6 y_dir(kOutput);
-Pin7 z_dir(kOutput);
-Pin8 enable(kOutput);
+// Setup a stepper template to hold our pins
+template<pin_number step_num, pin_number dir_num>
+struct Stepper {
+	OutputPin<step_num> step;
+	OutputPin<dir_num> dir;
+	// enable ??
+};
+Stepper<x_step_pin_num, x_dir_pin_num> x_motor;
+Stepper<y_step_pin_num, y_dir_pin_num> y_motor;
+Stepper<z_step_pin_num, z_dir_pin_num> z_motor;
+OutputPin<8> enable;
 
 /*
 static void _exec_move(void);
@@ -268,19 +271,19 @@ void ISR_Handler_DDA(void)
 
 	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		x_step.set();		// turn step bit on
+		x_motor.step.set();		// turn step bit on
 	}
 	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
 		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		y_step.set();
+		y_motor.step.set();
 	}
 	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
 		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		z_step.set();
+		z_motor.step.set();
 	}
-	x_step.clear();
-	y_step.clear();
-	z_step.clear();
+	x_motor.step.clear();
+	y_motor.step.clear();
+	z_motor.step.clear();
 
 //	if (temp == LOW) {
 //		temp = HIGH;

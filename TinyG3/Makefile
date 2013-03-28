@@ -61,7 +61,7 @@ ULIBS =
 
 # Define optimisation level here
 #OPTIMIZATION = -O0
-OPTIMIZATION = -Os
+OPTIMIZATION = -O0
 
 CFLAGS :=
 CPPFLAGS :=
