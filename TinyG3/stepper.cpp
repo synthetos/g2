@@ -146,20 +146,23 @@
 using namespace Motate;
 
 // Definitions
-Pin2 x_step(kOutput);
-Pin3 y_step(kOutput);
-Pin4 z_step(kOutput);
-Pin5 x_dir(kOutput);
-Pin6 y_dir(kOutput);
-Pin7 z_dir(kOutput);
-Pin8 enable(kOutput);
+Pin2 step_1(kOutput);			// stepper channel 1
+Pin3 step_2(kOutput);			// stepper channel 2
+Pin4 step_3(kOutput);			// stepper channel 3
+
+Pin5 dir_1(kOutput);			// direction channel 1
+Pin6 dir_2(kOutput);			// direction channel 2
+Pin7 dir_3(kOutput);			// direction channel 3
+
+Pin8 enable(kOutput);			// common enable
+
+volatile int temp = 0;
+volatile long dummy;			// convenient register to read into
 
 /*
 static void _exec_move(void);
 static void _load_move(void);
 static void _request_load_move(void);
-static void _set_f_dda(double *f_dda, double *dda_substeps,
-					   const double major_axis_steps, const double microseconds);
 */
 
 /*
@@ -221,6 +224,19 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
+uint16_t st_get_st_magic() { return (st.magic_start);}
+uint16_t st_get_sps_magic() { return (sps.magic_start);}
+
+/*
+static inline void pinOutput(int pin, int val)
+{
+	if (val)
+	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
+	else
+	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
+}
+*/
+
 /* 
  * st_init() - initialize stepper motor subsystem 
  *
@@ -230,13 +246,7 @@ static struct stPrepSingleton sps;
  * 	  - microsteps are setup during cfg_init()
  *	  - motor polarity is setup during cfg_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete
-
-http://arduino.cc/forum/index.php?topic=130423.0
-
  */
-volatile int temp = 0;
-volatile long dummy;					// convenient register to read into
-
 
 void st_init()
 {
@@ -254,44 +264,62 @@ void st_init()
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 }
 
-static inline void pinOutput(int pin, int val)
-{
-	if (val)
-	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
-	else
-	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
-}
-
+/*
+ * ISR - DDA timer interrupt routine - service ticks from DDA timer
+ *
+ *	Uses direct struct addresses and literal values for hardware devices -
+ *	it's faster than using indexed timer and port accesses. I checked.
+ *	Even when -0s or -03 is used.
+ */
 void ISR_Handler_DDA(void) 
 {
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
-
+//	uint8_t m1_flag = false;
+//	uint8_t m2_flag = false;
+//	uint8_t m3_flag = false;
+	
 	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		x_step.set();		// turn step bit on
+		step_1.set();		// turn step bit on
+//		m1_flag++;
 	}
 	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
 		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		y_step.set();
+		step_2.set();
+//		m2_flag++;
 	}
 	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
 		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		z_step.set();
+		step_3.set();
+//		m3_flag++;
 	}
-	x_step.clear();
-	y_step.clear();
-	z_step.clear();
-
-//	if (temp == LOW) {
-//		temp = HIGH;
-//	} else {
-//		temp = LOW;
-//	}
-//	digitalWrite(3,temp);
+//	if (m1_flag != false) {	step_1.clear();}
+//	if (m2_flag != false) {	step_2.clear();}
+//	if (m3_flag != false) {	step_3.clear();}
+	step_1.clear();
+	step_2.clear();
+	step_3.clear();
+	
+/*
+	if (--st.timer_ticks_downcount == 0) {			// end move
+//		enable.set();								// disable DDA timer
+		// power-down motors if this feature is enabled
+		if (cfg.m[MOTOR_1].power_mode == true) {
+			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_2].power_mode == true) {
+			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_3].power_mode == true) {
+			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_4].power_mode == true) {
+			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		_load_move();							// load the next move
+	}
+*/
 }
-
-uint16_t st_get_st_magic() { return (st.magic_start);}
-uint16_t st_get_sps_magic() { return (sps.magic_start);}
 
 /* 
  * st_disable() - stop the steppers. Requires re-init to recover
@@ -304,61 +332,6 @@ void st_disable()
 
 
 /*
- * ISR - DDA timer interrupt routine - service ticks from DDA timer
- *
- *	The step bit pulse width is ~1 uSec, which is OK for the TI DRV8811's.
- *	If you need to stretch the pulse I recommend moving the port OUTCLRs
- *	to the end of the routine. If you need more time than that use a 
- *	pulse OFF timer like grbl does so as not to spend any more time in 
- *	the ISR, which would limit the upper range of the DDA frequency.
- *
- *	Uses direct struct addresses and literal values for hardware devices -
- *	it's faster than using indexed timer and port accesses. I checked.
- *	Even when -0s or -03 is used.
- */
-
-/*
-ISR(TIMER_DDA_ISR_vect)
-{
-	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
-		PORT_MOTOR_1_VPORT.OUT |= STEP_BIT_bm;	// turn step bit on
- 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_1_VPORT.OUT &= ~STEP_BIT_bm;	// turn step bit off in ~1 uSec
-	}
-	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
-		PORT_MOTOR_2_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_2_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
-		PORT_MOTOR_3_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_3_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if ((st.m[MOTOR_4].counter += st.m[MOTOR_4].steps) > 0) {
-		PORT_MOTOR_4_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_4].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_4_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if (--st.timer_ticks_downcount == 0) {			// end move
- 		TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;		// disable DDA timer
-		// power-down motors if this feature is enabled
-		if (cfg.m[MOTOR_1].power_mode == true) {
-			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_2].power_mode == true) {
-			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_3].power_mode == true) {
-			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_4].power_mode == true) {
-			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		_load_move();							// load the next move
-	}
-}
-
 ISR(TIMER_DWELL_ISR_vect) {						// DWELL timer interupt
 	if (--st.timer_ticks_downcount == 0) {
  		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;	// disable DWELL timer
