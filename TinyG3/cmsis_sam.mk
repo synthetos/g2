@@ -190,8 +190,10 @@ VPATH += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
 # SOURCES += system_$(SERIES).o
 
 CXX_OBJECTS = $(addsuffix .o,$(basename $(SOURCES_CXX)))
-OBJECTS = $(addsuffix .o,$(basename $(SOURCES) ))
+OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
+FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 
+LINK_OBJECTS = $(FIRST_LINK_OBJECTS)
 
 # Append OBJ and BIN directories to output filename
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
@@ -212,6 +214,7 @@ CXX_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
 ASM_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
 LINKER_SCRIPT_$(1) ?= "$(DEVICE_PATH)/$(GCC_TOOLCHAIN)/$(CHIP)_$$@.ld"
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
+LINK_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(LINK_OBJECTS))
 
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$$(@F).d -MT $$(subst $$(OUTDIR),$$(OBJ)/\*_,$$@)
@@ -225,9 +228,9 @@ $(1): $(OBJ)/$(1)_/core.a
 	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Using linker script: $$(ABS_LINKER_SCRIPT_$(1))"
 	@if [[ $(VERBOSE) == 1 ]]; then {\
-		echo $(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(LIBS) $$^ -Wl,--end-group;\
+		echo $(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(LINK_OBJECTS_$(1)) $$< -Wl,--end-group;\
 	}; fi
-	@$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(LIBS) $$^ -Wl,--end-group
+	@$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(LINK_OBJECTS_$(1)) $$< -Wl,--end-group
 	@echo "Exporting symbols $(OUTPUT_BIN)_$$@.elf.txt"
 	@if [[ $(VERBOSE) == 1 ]]; then {\
 		echo $(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt";\

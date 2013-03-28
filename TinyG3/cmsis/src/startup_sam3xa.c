@@ -240,6 +240,9 @@ const DeviceVectors exception_table = {
 	(void*) CAN1_Handler    /* 44 CAN Controller 1 */
 };
 
+void _init() __attribute__ ((weak));
+void _init() {;}
+
 /**
  * \brief This is the code that gets called on processor reset.
  * To initialize the device, and call the main() routine.

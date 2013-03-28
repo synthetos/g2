@@ -36,6 +36,8 @@ SOURCE_DIRS = system/source \
 SOURCES     := $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
 SOURCES_CXX := $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
 
+FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
+
 # List ASM source files here
 ASRC =
 
