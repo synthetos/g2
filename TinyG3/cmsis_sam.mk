@@ -81,6 +81,7 @@ OPTIMIZATION = $(OPT)
 # Output directories
 BIN = $(CHIP)_bin
 OBJ = $(CHIP)_obj
+DEPDIR = $(OBJ)/dep
 
 # Output file basename
 OUTPUT_BIN = $(BIN)/$(PROJECT)_$(BOARD)_$(CHIP)
@@ -105,6 +106,8 @@ LIBS = -lgcc -lc
 LIB_PATH+=-L=/lib/thumb2
 LIB_PATH+=-L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
+VARIANT=arduino_due_x
+
 # Compilation tools
 CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
@@ -122,38 +125,53 @@ INCLUDES += -I"$(CMSIS_PATH)"
 INCLUDES += -I"$(SAM_PATH)"
 INCLUDES += -I"$(SAM_PATH)/$(SERIES)/include"
 
-# COMMON_CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
-# COMMON_CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
-# COMMON_CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-# COMMON_CFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
-# COMMON_CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
-# COMMON_CFLAGS += -Wsign-compare -Waggregate-return -Wstrict-prototypes
-# COMMON_CFLAGS += -Wmissing-prototypes -Wmissing-declarations
-# COMMON_CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-# COMMON_CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
-# COMMON_CFLAGS += -Wunreachable-code
-# COMMON_CFLAGS += -Wcast-align
-# COMMON_CFLAGS += -Wmissing-noreturn
-# COMMON_CFLAGS += -Wconversion
+CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
+CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
+CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
+CFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
+CFLAGS += -Wsign-compare -Waggregate-return -Wstrict-prototypes
+CFLAGS += -Wmissing-prototypes -Wmissing-declarations
+CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
+CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wunreachable-code
+CFLAGS += -Wcast-align
+#CFLAGS += -Wmissing-noreturn
+#CFLAGS += -Wconversion
+
+CFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99
+CFLAGS += $(OPTIMIZATION) $(INCLUDES) -D__$(CHIP)__ -D$(VARIANT)
 
 # To reduce application size use only integer printf function.
-# COMMON_CFLAGS += -Dprintf=iprintf
+CFLAGS += -Dprintf=iprintf
 
-# COMMON_CFLAGS += -mlong-calls -Wall
-# COMMON_CFLAGS += -ansi
-COMMON_CFLAGS += -mcpu=cortex-m3 -mthumb -ffunction-sections
-COMMON_CFLAGS += -g3 $(OPTIMIZATION) $(INCLUDES) -D__$(CHIP)__ -DBOARD=$(BOARD)
+# ---------------------------------------------------------------------------------------
+# CPP Flags
 
-# Here, we start to define CFLAGS and CXXFLAGS differently
-CXXFLAGS += $(COMMON_CFLAGS)
-CXXFLAGS += -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -Wall -c -fpermissive
+CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
+CPPFLAGS += -Wmain -Wparentheses -Wcast-align -Wunreachable-code
+CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
+CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
+CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
+CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
+CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn
+#CPPFLAGS += -Wconversion
 
-CFLAGS += $(COMMON_CFLAGS)
-CFLAGS += -std=gnu99 
-# CFLAGS += --param max-inline-insns-single=500
+CPPFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions
+CPPFLAGS += $(OPTIMIZATION) $(INCLUDES) -D__$(CHIP)__
+
+# To reduce application size use only integer printf function.
+CPPFLAGS += -Dprintf=iprintf
+
+# ---------------------------------------------------------------------------------------
+# ASM Flags
 
 ASFLAGS = -mcpu=cortex-m3 -mthumb -Wall -g $(OPTIMIZATION) $(INCLUDES) -D__$(CHIP)__ -D__ASSEMBLY__
-LDFLAGS= $(LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols -mcpu=cortex-m3 -nostartfiles
+
+LDFLAGS = $(LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
+LDFLAGS += -nostartfiles
 #LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
 
 #-------------------------------------------------------------------------------
@@ -168,8 +186,8 @@ VPATH += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
 
 # Objects built from C source files
 # SOURCES += main.o
-SOURCES += startup_$(SERIES).o
-SOURCES += system_$(SERIES).o
+# SOURCES += startup_$(SERIES).o
+# SOURCES += system_$(SERIES).o
 
 CXX_OBJECTS = $(addsuffix .o,$(basename $(SOURCES_CXX)))
 OBJECTS = $(addsuffix .o,$(basename $(SOURCES) ))
@@ -184,7 +202,7 @@ OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
 all: $(BIN) $(OBJ) $(MEMORIES)
 
-$(BIN) $(OBJ):
+$(BIN) $(OBJ) $(DEPDIR):
 	-@mkdir $@
 
 define RULES
@@ -204,37 +222,41 @@ DEPFLAGS = -MMD -MF $(OBJ)/dep/$$(@F).d -MT $$(subst $$(OUTDIR),$$(OBJ)/\*_,$$@)
 
 $(1): $(OBJ)/$(1)_/core.a
 	@echo "Linking ($(1)) $$@"
+	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Using linker script: $$(ABS_LINKER_SCRIPT_$(1))"
 	@if [[ $(VERBOSE) == 1 ]]; then {\
-		echo $(CXX) $(LIB_PATH) $(LDFLAGS) $(LD_OPTIONAL) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" -Wl,--start-group $(LIBS) $$^ -Wl,--end-group;\
+		echo $(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(LIBS) $$^ -Wl,--end-group;\
 	}; fi
-	@$(CXX) $(LIB_PATH) $(LDFLAGS) $(LD_OPTIONAL) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" -Wl,--start-group $(LIBS) $$^ -Wl,--end-group
+	@$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(LIBS) $$^ -Wl,--end-group
+	@echo "Exporting symbols $(OUTPUT_BIN)_$$@.elf.txt"
 	@if [[ $(VERBOSE) == 1 ]]; then {\
 		echo $(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt";\
 	}; fi
 	@$(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt"
+	@echo "Making binary $(OUTPUT_BIN)_$$@.bin"
 	@if [[ $(VERBOSE) == 1 ]]; then {\
 		echo $(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin";\
 	}; fi
 	@$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin"
-	@$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+	# @echo "--- SIZE INFO ---"
+	# @$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
 
 
-$$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(OBJECTS_$(1)) )
+$$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(OBJECTS_$(1)) ) | $(BIN) $(OBJ)
 
-$$(CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp
+$$(CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(BIN) $(OBJ) $(DEPDIR)
 	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling cpp ($(1)) $$< -> $$@"
-	@if [[ $(VERBOSE) == 1 ]]; then echo $(CXX) $(CXXFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
-	@$(CXX) $(CXXFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<
+	@if [[ $(VERBOSE) == 1 ]]; then echo $(CXX) $(CPPFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
+	@$(CXX) $(CPPFLAGS) $$(DEPFLAGS) -D$(1) -xc++ -c -o $$@ $$<
 
-$$(OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c
+$$(OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(BIN) $(OBJ) $(DEPDIR)
 	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling c ($(1)) $$< -> $$@"
 	@if [[ $(VERBOSE) == 1 ]]; then echo $(CC) $(CFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
 	@$(CC) $(CFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<
 
-$$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S
+$$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(BIN) $(OBJ) $(DEPDIR)
 	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling ($(1)) $$< -> $$@"
 	@if [[ $(VERBOSE) == 1 ]]; then echo $(CC) $(ASFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi

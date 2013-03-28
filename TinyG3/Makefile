@@ -29,7 +29,8 @@ CHIP = SAM3X8E
 
 SOURCE_DIRS = system/source \
               arduino \
-              variants\
+              variants \
+              cmsis/src \
               .
 
 SOURCES     := $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
@@ -42,6 +43,7 @@ ARDUINO_SYSTEM_ROOT := ../../Arduino/hardware/arduino/sam/system
 LIBSAM_ROOT = $(ARDUINO_SYSTEM_ROOT)/libsam
 CMSIS_ROOT = $(ARDUINO_SYSTEM_ROOT)/CMSIS
 LINKER_SCRIPT_flash = $(ARDUINO_SYSTEM_ROOT)/../variants/arduino_due_x/linker_scripts/gcc/flash.ld
+LINKER_SCRIPT_sram = $(ARDUINO_SYSTEM_ROOT)/../variants/arduino_due_x/linker_scripts/gcc/sram.ld
 
 # List all user directories here
 UINCDIR = motate\
@@ -56,9 +58,11 @@ ULIBDIR =
 ULIBS = 
 
 # Define optimisation level here
-#OPT = -O0
-OPT = -O1
+#OPTIMIZATION = -O0
+OPTIMIZATION = -Os
 
+CFLAGS :=
+CPPFLAGS :=
 
 INCLUDES  = $(patsubst %,-I%,$(DINCDIR) $(UINCDIR))
 LIBDIR  = $(patsubst %,-L%,$(DLIBDIR) $(ULIBDIR))
