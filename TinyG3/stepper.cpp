@@ -142,22 +142,17 @@
 #include "tinyg2.h"
 #include "stepper.h"
 #include "system.h"
+#include "motatePins.h"
+using namespace Motate;
 
-//#include <motatePins.h>
-//using namespace Motate;
-
-
-/*
-#include <string.h>				// needed for memset in st_init()
-#include <math.h>				// isinfinite()
-#include <avr/pgmspace.h>		// precursor for xio.h
-#include <avr/interrupt.h>
-#include <avr/io.h>
-
-#include "util.h"
-#include "config.h"
-#include "planner.h"
-*/
+// Definitions
+Pin2 x_step(kOutput);
+Pin3 y_step(kOutput);
+Pin4 z_step(kOutput);
+Pin5 x_dir(kOutput);
+Pin6 y_dir(kOutput);
+Pin7 z_dir(kOutput);
+Pin8 enable(kOutput);
 
 /*
 static void _exec_move(void);
@@ -242,9 +237,6 @@ http://arduino.cc/forum/index.php?topic=130423.0
 volatile int temp = 0;
 volatile long dummy;					// convenient register to read into
 
-//Motate::Pin2 xStepPin(kOutput);
-// Pin2 xStepPin(kOutput);
-//pin2.setMode(kOutput);
 
 void st_init()
 {
@@ -274,51 +266,29 @@ void ISR_Handler_DDA(void)
 {
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
 
-	if (temp == LOW) {
-		temp = HIGH;
-	} else {
-		temp = LOW;
+	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
+		x_step.set();		// turn step bit on
 	}
-//	pinOutput(3,temp);
-	digitalWrite(3,temp);
+	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
+		y_step.set();
+	}
+	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
+		z_step.set();
+	}
+	x_step.clear();
+	y_step.clear();
+	z_step.clear();
+
+//	if (temp == LOW) {
+//		temp = HIGH;
+//	} else {
+//		temp = LOW;
+//	}
+//	digitalWrite(3,temp);
 }
-
-//	You can assume all values are zeroed. If not, use this:
-/*
-
-	// Configure virtual ports
-	PORTCFG.VPCTRLA = PORTCFG_VP0MAP_PORT_MOTOR_1_gc | PORTCFG_VP1MAP_PORT_MOTOR_2_gc;
-	PORTCFG.VPCTRLB = PORTCFG_VP2MAP_PORT_MOTOR_3_gc | PORTCFG_VP3MAP_PORT_MOTOR_4_gc;
-
-	// setup ports
-	for (uint8_t i=0; i<MOTORS; i++) {
-		device.st_port[i]->DIR = MOTOR_PORT_DIR_gm;  // sets outputs for motors & GPIO1, and GPIO2 inputs
-		device.st_port[i]->OUT = MOTOR_ENABLE_BIT_bm;// zero port bits AND disable motor
-	}
-	// setup DDA timer
-	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_DDA.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_DDA.INTCTRLA = TIMER_DDA_INTLVL;		// interrupt mode
-
-	// setup DWELL timer
-	TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_DWELL.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_DWELL.INTCTRLA = TIMER_DWELL_INTLVL;	// interrupt mode
-
-	// setup software interrupt load timer
-	TIMER_LOAD.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_LOAD.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_LOAD.INTCTRLA = TIMER_LOAD_INTLVL;	// interrupt mode
-	TIMER_LOAD.PER = SWI_PERIOD;				// set period
-
-	// setup software interrupt exec timer
-	TIMER_EXEC.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_EXEC.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_EXEC.INTCTRLA = TIMER_EXEC_INTLVL;	// interrupt mode
-	TIMER_EXEC.PER = SWI_PERIOD;				// set period
-
-	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
-*/	
 
 uint16_t st_get_st_magic() { return (st.magic_start);}
 uint16_t st_get_sps_magic() { return (sps.magic_start);}

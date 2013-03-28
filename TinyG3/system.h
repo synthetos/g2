@@ -27,6 +27,9 @@
 #ifndef system_h
 #define system_h
 
+//#include "motatePins.h"
+//using namespace Motate;
+
 void sys_init(void);					// master hardware init
 //void sys_port_bindings(double hw_version);
 //void sys_get_id(char *id);
@@ -39,6 +42,17 @@ void sys_init(void);					// master hardware init
 #undef F_CPU							// set for delays
 #define F_CPU 84000000UL				// should always precede <avr/delay.h>
 
+
+/**** Resource Assignment via Motate ****/
+/*
+Pin2 x_step(kOutput);
+Pin3 y_step(kOutput);
+Pin4 z_step(kOutput);
+Pin5 x_dir(kOutput);
+Pin6 y_dir(kOutput);
+Pin7 z_dir(kOutput);
+Pin8 enable(kOutput);
+*/
 /**** Resource Assignment ****
  * This section describes what modules use resources such as timers, pins, etc.
  * Base addresses and channels are setup here, see detailed setup may be found 
