@@ -35,6 +35,11 @@ $(error CHIP not defined)
 endif
 
 VERBOSE ?= 0
+ifeq ($(VERBOSE),0)
+	QUIET := @
+else
+	QUIET := 
+endif
 
 include sam_series.mk
 
@@ -204,66 +209,60 @@ OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
 all: $(BIN) $(OBJ) $(MEMORIES)
 
-$(BIN) $(OBJ) $(DEPDIR):
-	-@mkdir $@
+REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
+
+MK_DIRS =   $(shell                              \
+              for d in $(REQUIRED_DIRS);         \
+              do                                 \
+                [[ -d $$d ]] || mkdir -p $$d;    \
+              done)
 
 define RULES
 OUTDIR = $(OBJ)/$(1)_
-OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(OBJECTS))
-CXX_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
-ASM_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
+REQUIRED_DIRS += $(OUTDIR)
+OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(OBJECTS))
+CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
+ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
 LINKER_SCRIPT_$(1) ?= "$(DEVICE_PATH)/$(GCC_TOOLCHAIN)/$(CHIP)_$$@.ld"
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
-LINK_OBJECTS_$(1) = $(addprefix $$(OUTDIR)/, $(LINK_OBJECTS))
+LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(LINK_OBJECTS))
 
 # Generate dependency information
-DEPFLAGS = -MMD -MF $(OBJ)/dep/$$(@F).d -MT $$(subst $$(OUTDIR),$$(OBJ)/\*_,$$@)
+DEPFLAGS_$(1) = -MMD -MF $(OBJ)/dep/$$(@F)_$(1).d -MT $(subst $(OUTDIR),$(OBJ)/$(1)_,$$@)
 
 # 
 # Include the dependency files, should be the last of the makefile
 #
 
-$(1): $(OBJ)/$(1)_/core.a
-	@echo "Linking ($(1)) $$@"
-	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$(1): $(OBJ)/$(1)_/core.a | $(MK_DIRS)
+	@echo "Linking ($(1)) $$<"
 	@echo "Using linker script: $$(ABS_LINKER_SCRIPT_$(1))"
-	@if [[ $(VERBOSE) == 1 ]]; then {\
-		echo $(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(LINK_OBJECTS_$(1)) $$< -Wl,--end-group;\
-	}; fi
-	@$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(LINK_OBJECTS_$(1)) $$< -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(LINK_OBJECTS_$(1)) $$< -Wl,--end-group
 	@echo "Exporting symbols $(OUTPUT_BIN)_$$@.elf.txt"
-	@if [[ $(VERBOSE) == 1 ]]; then {\
-		echo $(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt";\
-	}; fi
-	@$(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt"
+	$(QUIET)$(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt"
 	@echo "Making binary $(OUTPUT_BIN)_$$@.bin"
-	@if [[ $(VERBOSE) == 1 ]]; then {\
-		echo $(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin";\
-	}; fi
-	@$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin"
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin"
+
 	# @echo "--- SIZE INFO ---"
-	# @$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+	# $(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
 
 
 $$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(OBJECTS_$(1)) ) | $(BIN) $(OBJ)
 
-$$(CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(BIN) $(OBJ) $(DEPDIR)
-	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
+	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling cpp ($(1)) $$< -> $$@"
-	@if [[ $(VERBOSE) == 1 ]]; then echo $(CXX) $(CPPFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
-	@$(CXX) $(CPPFLAGS) $$(DEPFLAGS) -D$(1) -xc++ -c -o $$@ $$<
+	$(QUIET)$(CXX) $(CPPFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -xc++ -c -o $$@ $$<
 
-$$(OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(BIN) $(OBJ) $(DEPDIR)
-	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(MK_DIRS)
+	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling c ($(1)) $$< -> $$@"
-	@if [[ $(VERBOSE) == 1 ]]; then echo $(CC) $(CFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
-	@$(CC) $(CFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<
+	$(QUIET)$(CC) $(CFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
-$$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(BIN) $(OBJ) $(DEPDIR)
-	@if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(MK_DIRS)
+	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
 	@echo "Compiling ($(1)) $$< -> $$@"
-	@if [[ $(VERBOSE) == 1 ]]; then echo $(CC) $(ASFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<; fi
-	@$(CC) $(ASFLAGS) $$(DEPFLAGS) -D$(1) -c -o $$@ $$<
+	$(QUIET)$(CC) $(ASFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
 debug_$(1): $(1)
 	$(GDB) -x "$(CHIP)_$(1).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
