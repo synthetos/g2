@@ -245,7 +245,7 @@ namespace Motate {
 			void clear() {\
 				portPtr->PIO_CODR = mask;\
 			};\
-			void write(bool value) {\
+			void write(const bool value) {\
 				if (!value)\
 					clear();\
 				else\
