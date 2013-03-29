@@ -1,3 +1,3 @@
-*_obj
-*_bin
+build/
+bin/
 TinyG3.xcodeproj/project.xcworkspace/xcuserdata/rob.xcuserdatad/UserInterfaceState.xcuserstate

@@ -492,7 +492,7 @@
 		D457111D1705334100EA19A8 /* pins_arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pins_arduino.h; sourceTree = "<group>"; };
 		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
 		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
-		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; };
+		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 		D49EB85617054CB800F2BF9B /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
 		D49EB85717054CB800F2BF9B /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
@@ -3372,6 +3372,7 @@
 				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D49EB85517054CB800F2BF9B /* arduino */,
 				D457111C1705334100EA19A8 /* variants */,
+				D49EC5D51705FC1100F2BF9B /* bin */,
 				D49EB85417054C4000F2BF9B /* index */,
 			);
 			sourceTree = "<group>";
@@ -7672,6 +7673,13 @@
 				D49EC43417054FDF00F2BF9B /* wdt.c */,
 			);
 			path = source;
+			sourceTree = "<group>";
+		};
+		D49EC5D51705FC1100F2BF9B /* bin */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = bin;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -29,20 +29,21 @@ SOURCE_DIRS = . arduino variants
 FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
 
 # List all user directories here
-USER_INCLUDE_DIRS = motate $(SOURCE_DIRS)
+USER_INCLUDE_DIRS := motate $(SOURCE_DIRS)
 
 # List the user directory to look for the libraries here
 USER_LIB_DIRS =
 
 # List all user libraries here
-ULIBS = 
+USER_LIBS =
 
 # Define optimisation level here
-#OPTIMIZATION = -O0
+#OPTIMIZATION = -Os
 OPTIMIZATION = -O0
 
-CFLAGS :=
+CFLAGS   :=
 CPPFLAGS :=
+
 # List ASM source files here
 ASRC =
 
@@ -86,6 +87,15 @@ CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
 # To reduce application size use only integer printf function.
 CPPFLAGS += -Dprintf=iprintf
 
+# Default is to compile more quielty.
+# To show actual commands: make [options] VERBOSE=1
+VERBOSE ?= 0
+ifeq ($(VERBOSE),0)
+QUIET := @
+else
+QUIET :=
+endif
+
 #
 # End of default section
 ##############################################################################################
@@ -94,26 +104,22 @@ CPPFLAGS += -Dprintf=iprintf
 # Start of platforms section
 #
 
-
-
-
-INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
-LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
-
 PLATFORM ?= due
 
 ifeq ("$(PLATFORM)","due")
     CHIP = SAM3X8E
 
-    CMSIS_ROOT=CMSIS
-    SOURCE_DIRS += platform/atmel_sam/libsam
-    DEVICE_INCLUDE_DIRS += platform/atmel_sam/libsam \
-                           platform/atmel_sam/libsam/include
+    PLATFORM_BASE = platform/atmel_sam
 
-    LINKER_SCRIPT_flash = platform/atmel_sam/linker_scripts/gcc/flash.ld
-    LINKER_SCRIPT_sram  = platform/atmel_sam/linker_scripts/gcc/sram.ld
+    CMSIS_ROOT = CMSIS
+    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
+    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
+                           $(PLATFORM_BASE)/libsam/include
 
-    include platform/atmel_sam.mk
+#    LINKER_SCRIPT_flash = $(PLATFORM_BASE)/linker_scripts/gcc/flash.ld
+#    LINKER_SCRIPT_sram  = $(PLATFORM_BASE)/linker_scripts/gcc/sram.ld
+
+    include $(PLATFORM_BASE).mk
 endif
 
 #
@@ -123,9 +129,6 @@ endif
 ##############################################################################################
 # Actual compilation
 #
-
-# Optimization level, put in comment for debugging
-OPTIMIZATION = $(OPT)
 
 # Output directories
 BIN = bin/$(CHIP)
@@ -140,34 +143,43 @@ OUTPUT_BIN = $(BIN)/$(PROJECT)_$(CHIP)
 #-------------------------------------------------------------------------------
 
 # Compilation tools
-CC = $(CROSS_COMPILE)gcc
-CXX = $(CROSS_COMPILE)g++
-LD = $(CROSS_COMPILE)ld
-AR = $(CROSS_COMPILE)ar
-SIZE = $(CROSS_COMPILE)size
-STRIP = $(CROSS_COMPILE)strip
+CC      = $(CROSS_COMPILE)gcc
+CXX     = $(CROSS_COMPILE)g++
+LD      = $(CROSS_COMPILE)ld
+AR      = $(CROSS_COMPILE)ar
+SIZE    = $(CROSS_COMPILE)size
+STRIP   = $(CROSS_COMPILE)strip
 OBJCOPY = $(CROSS_COMPILE)objcopy
-GDB = $(CROSS_COMPILE)gdb
-NM = $(CROSS_COMPILE)nm
-RM = rm
+GDB     = $(CROSS_COMPILE)gdb
+NM      = $(CROSS_COMPILE)nm
+RM      = rm
+
+
+# ---------------------------------------------------------------------------------------
+# C Flags (NOT CPP flags)
 
 CFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99
-CFLAGS += $(OPTIMIZATION) $(INCLUDES)
+
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
 CPPFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions
-CPPFLAGS += $(OPTIMIZATION) $(INCLUDES)
+
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
 
-ASFLAGS += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+ASFLAGS =
 
-LDFLAGS = $(LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
+
+# ---------------------------------------------------------------------------------------
+# Linker Flags
+
+LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
 LDFLAGS += -nostartfiles
 #LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
+
 
 #-------------------------------------------------------------------------------
 #		Files
@@ -175,15 +187,22 @@ LDFLAGS += -nostartfiles
 
 # Directories where source files can be found
 
-CXX_OBJECTS = $(addsuffix .o,$(basename $(SOURCES_CXX)))
-OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
+SOURCES     = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
+SOURCES_CXX = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+
+OBJECTS     := $(addsuffix .o,$(basename $(SOURCES)))
+CXX_OBJECTS := $(addsuffix .o,$(basename $(SOURCES_CXX)))
 FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 
 # Append OBJ and BIN directories to output filename
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
-SOURCES     = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-SOURCES_CXX = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
+
+CFLAGS   += $(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += $(OPTIMIZATION) $(INCLUDES)
+ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 #-------------------------------------------------------------------------------
 #		Rules
@@ -207,18 +226,12 @@ REQUIRED_DIRS += $(OUTDIR)
 OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(OBJECTS))
 CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
 ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
-# FIXME -- what's the default here?
-#LINKER_SCRIPT_$(1) ?= "$(DEVICE_PATH)/$(GCC_TOOLCHAIN)/$(CHIP)_$$@.ld"
+LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/linker_scripts/gcc/$(1).ld
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
 FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(FIRST_LINK_OBJECTS))
 
 # Generate dependency information
 DEPFLAGS_$(1) = -MMD -MF $(OBJ)/dep/$$(@F)_$(1).d -MT $(subst $(OUTDIR),$(OBJ)/$(1),$$@)
-
-# 
-# Include the dependency files, should be the last of the makefile
-#
-$(warning $(OUTDIR)/core.a)
 
 $(1): $$(OUTDIR)/core.a | $(MK_DIRS)
 	@echo "Linking ($(1)) $$<"
@@ -253,6 +266,9 @@ $$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(MK_DIRS)
 debug_$(1): $(1)
 	$(GDB) -x "$(CHIP)_$(1).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
 
+# 
+# Include the dependency files, should be the last of the makefile
+#
 -include $(shell mkdir $(OBJ)/dep 2>/dev/null) $(wildcard $(OBJ)/dep/*.d)
 
 endef

@@ -34,13 +34,6 @@ ifeq ('$(CHIP)','')
 $(error CHIP not defined)
 endif
 
-VERBOSE ?= 0
-ifeq ($(VERBOSE),0)
-	QUIET := @
-else
-	QUIET := 
-endif
-
 include platform/atmel_sam_series.mk
 
 # fill the needed variables
@@ -77,7 +70,7 @@ SERIES:=sam4s
 endif
 
 # GCC toolchain provider
-GCC_TOOLCHAIN=gcc_atmel
+GCC_TOOLCHAIN = gcc_atmel
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi-
@@ -85,23 +78,26 @@ CROSS_COMPILE = arm-none-eabi-
 # Defines which are the available memory targets for the device.
 MEMORIES = sram flash
 
-CMSIS_PATH=$(CMSIS_ROOT)/CMSIS/Include
-SAM_PATH=$(CMSIS_ROOT)/Device/ATMEL
-DEVICE_PATH=$(SAM_PATH)/$(SERIES)/source
+CMSIS_PATH  = $(CMSIS_ROOT)/CMSIS/Include
+SAM_PATH    = $(CMSIS_ROOT)/Device/ATMEL
+DEVICE_PATH = $(SAM_PATH)/$(SERIES)/source
+
+SOURCE_DIRS         += $(DEVICE_PATH)
+SOURCE_DIRS         += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
 
 # Flags
-INCLUDES += -I"$(CMSIS_PATH)"
-INCLUDES += -I"$(SAM_PATH)"
-INCLUDES += -I"$(SAM_PATH)/$(SERIES)/include"
+DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
+DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
+DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
 
-LIBS = -lgcc -lc
+LIBS     += -lgcc -lc
 
-LIB_PATH+=-L=/lib/thumb2
-LIB_PATH+=-L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
+LIB_PATH += -L=/lib/thumb2
+LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
 # FIXME: Assumes all sams are Dues
 VARIANT=arduino_due_x
-CFLAGS += -D__$(CHIP)__ -D$(VARIANT)
+CFLAGS   += -D__$(CHIP)__ -D$(VARIANT)
 CPPFLAGS += -D__$(CHIP)__ -D$(VARIANT)
 
-ASFLAGS += -mcpu=cortex-m3 -mthumb 
+ASFLAGS  += -mcpu=cortex-m3 -mthumb 
