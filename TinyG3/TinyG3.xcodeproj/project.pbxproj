@@ -1,0 +1,588 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D457112E17053C3A00EA19A8 /* keywords.txt in Sources */ = {isa = PBXBuildFile; fileRef = D45710C71705334000EA19A8 /* keywords.txt */; };
+		D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C81705334000EA19A8 /* MotatePins.h */; };
+		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
+		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
+		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
+		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; };
+		D457113417053C3A00EA19A8 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45710D91705334100EA19A8 /* stepper.cpp */; };
+		D457113517053C3A00EA19A8 /* stepper.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DA1705334100EA19A8 /* stepper.h */; };
+		D457113617053C3A00EA19A8 /* CHANGELOG.txt in Sources */ = {isa = PBXBuildFile; fileRef = D45710DC1705334100EA19A8 /* CHANGELOG.txt */; };
+		D457113717053C3A00EA19A8 /* chip.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DD1705334100EA19A8 /* chip.h */; };
+		D457113817053C3A00EA19A8 /* adc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DF1705334100EA19A8 /* adc.h */; };
+		D457113917053C3A00EA19A8 /* can.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E01705334100EA19A8 /* can.h */; };
+		D457113A17053C3A00EA19A8 /* dacc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E11705334100EA19A8 /* dacc.h */; };
+		D457113B17053C3A00EA19A8 /* efc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E21705334100EA19A8 /* efc.h */; };
+		D457113C17053C3A00EA19A8 /* emac.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E31705334100EA19A8 /* emac.h */; };
+		D457113D17053C3A00EA19A8 /* gpbr.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E41705334100EA19A8 /* gpbr.h */; };
+		D457113E17053C3A00EA19A8 /* interrupt_sam_nvic.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E51705334100EA19A8 /* interrupt_sam_nvic.h */; };
+		D457113F17053C3A00EA19A8 /* pio.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E61705334100EA19A8 /* pio.h */; };
+		D457114017053C3A00EA19A8 /* pio_it.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E71705334100EA19A8 /* pio_it.h */; };
+		D457114117053C3A00EA19A8 /* pmc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E81705334100EA19A8 /* pmc.h */; };
+		D457114217053C3A00EA19A8 /* pwmc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710E91705334100EA19A8 /* pwmc.h */; };
+		D457114317053C3A00EA19A8 /* rstc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710EA1705334100EA19A8 /* rstc.h */; };
+		D457114417053C3A00EA19A8 /* rtc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710EB1705334100EA19A8 /* rtc.h */; };
+		D457114517053C3A00EA19A8 /* rtt.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710EC1705334100EA19A8 /* rtt.h */; };
+		D457114617053C3A00EA19A8 /* spi.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710ED1705334100EA19A8 /* spi.h */; };
+		D457114717053C3A00EA19A8 /* ssc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710EE1705334100EA19A8 /* ssc.h */; };
+		D457114817053C3A00EA19A8 /* tc.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710EF1705334100EA19A8 /* tc.h */; };
+		D457114917053C3A00EA19A8 /* timetick.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F01705334100EA19A8 /* timetick.h */; };
+		D457114A17053C3A00EA19A8 /* trng.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F11705334100EA19A8 /* trng.h */; };
+		D457114B17053C3A00EA19A8 /* twi.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F21705334100EA19A8 /* twi.h */; };
+		D457114C17053C3A00EA19A8 /* udp.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F31705334100EA19A8 /* udp.h */; };
+		D457114D17053C3A00EA19A8 /* udphs.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F41705334100EA19A8 /* udphs.h */; };
+		D457114E17053C3A00EA19A8 /* uotghs_device.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F51705334100EA19A8 /* uotghs_device.h */; };
+		D457114F17053C3A00EA19A8 /* uotghs_host.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F61705334100EA19A8 /* uotghs_host.h */; };
+		D457115017053C3A00EA19A8 /* usart.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F71705334100EA19A8 /* usart.h */; };
+		D457115117053C3A00EA19A8 /* USB_device.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F81705334100EA19A8 /* USB_device.h */; };
+		D457115217053C3A00EA19A8 /* USB_host.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710F91705334100EA19A8 /* USB_host.h */; };
+		D457115317053C3A00EA19A8 /* wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710FA1705334100EA19A8 /* wdt.h */; };
+		D457115417053C3A00EA19A8 /* readme.txt in Sources */ = {isa = PBXBuildFile; fileRef = D45710FB1705334100EA19A8 /* readme.txt */; };
+		D457115517053C3A00EA19A8 /* adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45710FD1705334100EA19A8 /* adc.c */; };
+		D457115617053C3A00EA19A8 /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D45710FE1705334100EA19A8 /* adc12_sam3u.c */; };
+		D457115717053C3A00EA19A8 /* can.c in Sources */ = {isa = PBXBuildFile; fileRef = D45710FF1705334100EA19A8 /* can.c */; };
+		D457115817053C3A00EA19A8 /* dacc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711001705334100EA19A8 /* dacc.c */; };
+		D457115917053C3A00EA19A8 /* efc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711011705334100EA19A8 /* efc.c */; };
+		D457115A17053C3A00EA19A8 /* emac.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711021705334100EA19A8 /* emac.c */; };
+		D457115B17053C3A00EA19A8 /* gpbr.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711031705334100EA19A8 /* gpbr.c */; };
+		D457115C17053C3A00EA19A8 /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711041705334100EA19A8 /* interrupt_sam_nvic.c */; };
+		D457115D17053C3A00EA19A8 /* pio.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711051705334100EA19A8 /* pio.c */; };
+		D457115E17053C3A00EA19A8 /* pmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711061705334100EA19A8 /* pmc.c */; };
+		D457115F17053C3A00EA19A8 /* pwmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711071705334100EA19A8 /* pwmc.c */; };
+		D457116017053C3A00EA19A8 /* rstc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711081705334100EA19A8 /* rstc.c */; };
+		D457116117053C3A00EA19A8 /* rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711091705334100EA19A8 /* rtc.c */; };
+		D457116217053C3A00EA19A8 /* rtt.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110A1705334100EA19A8 /* rtt.c */; };
+		D457116317053C3A00EA19A8 /* spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110B1705334100EA19A8 /* spi.c */; };
+		D457116417053C3A00EA19A8 /* ssc.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110C1705334100EA19A8 /* ssc.c */; };
+		D457116517053C3A00EA19A8 /* tc.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110D1705334100EA19A8 /* tc.c */; };
+		D457116617053C3A00EA19A8 /* timetick.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110E1705334100EA19A8 /* timetick.c */; };
+		D457116717053C3A00EA19A8 /* trng.c in Sources */ = {isa = PBXBuildFile; fileRef = D457110F1705334100EA19A8 /* trng.c */; };
+		D457116817053C3A00EA19A8 /* twi.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711101705334100EA19A8 /* twi.c */; };
+		D457116917053C3A00EA19A8 /* udp.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711111705334100EA19A8 /* udp.c */; };
+		D457116A17053C3A00EA19A8 /* udphs.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711121705334100EA19A8 /* udphs.c */; };
+		D457116B17053C3A00EA19A8 /* uotghs.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711131705334100EA19A8 /* uotghs.c */; };
+		D457116C17053C3A00EA19A8 /* uotghs_device.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711141705334100EA19A8 /* uotghs_device.c */; };
+		D457116D17053C3A00EA19A8 /* uotghs_host.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711151705334100EA19A8 /* uotghs_host.c */; };
+		D457116E17053C3A00EA19A8 /* usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711161705334100EA19A8 /* usart.c */; };
+		D457116F17053C3A00EA19A8 /* wdt.c in Sources */ = {isa = PBXBuildFile; fileRef = D45711171705334100EA19A8 /* wdt.c */; };
+		D457117017053C3A00EA19A8 /* system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45711181705334100EA19A8 /* system.cpp */; };
+		D457117117053C3A00EA19A8 /* system.h in Sources */ = {isa = PBXBuildFile; fileRef = D45711191705334100EA19A8 /* system.h */; };
+		D457117217053C3A00EA19A8 /* tinyg2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D457111A1705334100EA19A8 /* tinyg2.cpp */; };
+		D457117317053C3A00EA19A8 /* tinyg2.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111B1705334100EA19A8 /* tinyg2.h */; };
+		D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111D1705334100EA19A8 /* pins_arduino.h */; };
+		D457117517053C3A00EA19A8 /* variant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D457111E1705334100EA19A8 /* variant.cpp */; };
+		D457117617053C3A00EA19A8 /* variant.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111F1705334100EA19A8 /* variant.h */; };
+		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D457117D1705402400EA19A8 /* cmsis_sam.mk in Sources */ = {isa = PBXBuildFile; fileRef = D457117A17053EFA00EA19A8 /* cmsis_sam.mk */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D457112217053BFB00EA19A8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D45710C71705334000EA19A8 /* keywords.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
+		D45710C81705334000EA19A8 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
+		D45710C91705334000EA19A8 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
+		D45710D61705334100EA19A8 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
+		D45710D71705334100EA19A8 /* AvrXPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrXPins.h; sourceTree = "<group>"; };
+		D45710D81705334100EA19A8 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
+		D45710D91705334100EA19A8 /* stepper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stepper.cpp; sourceTree = "<group>"; };
+		D45710DA1705334100EA19A8 /* stepper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stepper.h; sourceTree = "<group>"; };
+		D45710DC1705334100EA19A8 /* CHANGELOG.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG.txt; sourceTree = "<group>"; };
+		D45710DD1705334100EA19A8 /* chip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = chip.h; sourceTree = "<group>"; };
+		D45710DF1705334100EA19A8 /* adc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = adc.h; sourceTree = "<group>"; };
+		D45710E01705334100EA19A8 /* can.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = can.h; sourceTree = "<group>"; };
+		D45710E11705334100EA19A8 /* dacc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dacc.h; sourceTree = "<group>"; };
+		D45710E21705334100EA19A8 /* efc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = efc.h; sourceTree = "<group>"; };
+		D45710E31705334100EA19A8 /* emac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emac.h; sourceTree = "<group>"; };
+		D45710E41705334100EA19A8 /* gpbr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpbr.h; sourceTree = "<group>"; };
+		D45710E51705334100EA19A8 /* interrupt_sam_nvic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interrupt_sam_nvic.h; sourceTree = "<group>"; };
+		D45710E61705334100EA19A8 /* pio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio.h; sourceTree = "<group>"; };
+		D45710E71705334100EA19A8 /* pio_it.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_it.h; sourceTree = "<group>"; };
+		D45710E81705334100EA19A8 /* pmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pmc.h; sourceTree = "<group>"; };
+		D45710E91705334100EA19A8 /* pwmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwmc.h; sourceTree = "<group>"; };
+		D45710EA1705334100EA19A8 /* rstc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rstc.h; sourceTree = "<group>"; };
+		D45710EB1705334100EA19A8 /* rtc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtc.h; sourceTree = "<group>"; };
+		D45710EC1705334100EA19A8 /* rtt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtt.h; sourceTree = "<group>"; };
+		D45710ED1705334100EA19A8 /* spi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spi.h; sourceTree = "<group>"; };
+		D45710EE1705334100EA19A8 /* ssc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssc.h; sourceTree = "<group>"; };
+		D45710EF1705334100EA19A8 /* tc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tc.h; sourceTree = "<group>"; };
+		D45710F01705334100EA19A8 /* timetick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timetick.h; sourceTree = "<group>"; };
+		D45710F11705334100EA19A8 /* trng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = trng.h; sourceTree = "<group>"; };
+		D45710F21705334100EA19A8 /* twi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = twi.h; sourceTree = "<group>"; };
+		D45710F31705334100EA19A8 /* udp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = udp.h; sourceTree = "<group>"; };
+		D45710F41705334100EA19A8 /* udphs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = udphs.h; sourceTree = "<group>"; };
+		D45710F51705334100EA19A8 /* uotghs_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uotghs_device.h; sourceTree = "<group>"; };
+		D45710F61705334100EA19A8 /* uotghs_host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uotghs_host.h; sourceTree = "<group>"; };
+		D45710F71705334100EA19A8 /* usart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usart.h; sourceTree = "<group>"; };
+		D45710F81705334100EA19A8 /* USB_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USB_device.h; sourceTree = "<group>"; };
+		D45710F91705334100EA19A8 /* USB_host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USB_host.h; sourceTree = "<group>"; };
+		D45710FA1705334100EA19A8 /* wdt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wdt.h; sourceTree = "<group>"; };
+		D45710FB1705334100EA19A8 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		D45710FD1705334100EA19A8 /* adc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adc.c; sourceTree = "<group>"; };
+		D45710FE1705334100EA19A8 /* adc12_sam3u.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adc12_sam3u.c; sourceTree = "<group>"; };
+		D45710FF1705334100EA19A8 /* can.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = can.c; sourceTree = "<group>"; };
+		D45711001705334100EA19A8 /* dacc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dacc.c; sourceTree = "<group>"; };
+		D45711011705334100EA19A8 /* efc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = efc.c; sourceTree = "<group>"; };
+		D45711021705334100EA19A8 /* emac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emac.c; sourceTree = "<group>"; };
+		D45711031705334100EA19A8 /* gpbr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gpbr.c; sourceTree = "<group>"; };
+		D45711041705334100EA19A8 /* interrupt_sam_nvic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interrupt_sam_nvic.c; sourceTree = "<group>"; };
+		D45711051705334100EA19A8 /* pio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pio.c; sourceTree = "<group>"; };
+		D45711061705334100EA19A8 /* pmc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pmc.c; sourceTree = "<group>"; };
+		D45711071705334100EA19A8 /* pwmc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pwmc.c; sourceTree = "<group>"; };
+		D45711081705334100EA19A8 /* rstc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rstc.c; sourceTree = "<group>"; };
+		D45711091705334100EA19A8 /* rtc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rtc.c; sourceTree = "<group>"; };
+		D457110A1705334100EA19A8 /* rtt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rtt.c; sourceTree = "<group>"; };
+		D457110B1705334100EA19A8 /* spi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spi.c; sourceTree = "<group>"; };
+		D457110C1705334100EA19A8 /* ssc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssc.c; sourceTree = "<group>"; };
+		D457110D1705334100EA19A8 /* tc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tc.c; sourceTree = "<group>"; };
+		D457110E1705334100EA19A8 /* timetick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timetick.c; sourceTree = "<group>"; };
+		D457110F1705334100EA19A8 /* trng.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = trng.c; sourceTree = "<group>"; };
+		D45711101705334100EA19A8 /* twi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = twi.c; sourceTree = "<group>"; };
+		D45711111705334100EA19A8 /* udp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = udp.c; sourceTree = "<group>"; };
+		D45711121705334100EA19A8 /* udphs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = udphs.c; sourceTree = "<group>"; };
+		D45711131705334100EA19A8 /* uotghs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs.c; sourceTree = "<group>"; };
+		D45711141705334100EA19A8 /* uotghs_device.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs_device.c; sourceTree = "<group>"; };
+		D45711151705334100EA19A8 /* uotghs_host.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs_host.c; sourceTree = "<group>"; };
+		D45711161705334100EA19A8 /* usart.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = usart.c; sourceTree = "<group>"; };
+		D45711171705334100EA19A8 /* wdt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wdt.c; sourceTree = "<group>"; };
+		D45711181705334100EA19A8 /* system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system.cpp; sourceTree = "<group>"; };
+		D45711191705334100EA19A8 /* system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
+		D457111A1705334100EA19A8 /* tinyg2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyg2.cpp; sourceTree = "<group>"; };
+		D457111B1705334100EA19A8 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
+		D457111D1705334100EA19A8 /* pins_arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pins_arduino.h; sourceTree = "<group>"; };
+		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
+		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
+		D457112417053BFB00EA19A8 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = index; path = /Users/rob/Desktop/Projects/MakerbotMods/g2/TinyG3/build/Release/index; sourceTree = "<absolute>"; };
+		D457117A17053EFA00EA19A8 /* cmsis_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = cmsis_sam.mk; sourceTree = "<group>"; };
+		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D457112117053BFB00EA19A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D45710B7170532AC00EA19A8 = {
+			isa = PBXGroup;
+			children = (
+				D45710C61705334000EA19A8 /* motate */,
+				D45710D91705334100EA19A8 /* stepper.cpp */,
+				D45710DA1705334100EA19A8 /* stepper.h */,
+				D45710DB1705334100EA19A8 /* system */,
+				D45711181705334100EA19A8 /* system.cpp */,
+				D457117B17053EFA00EA19A8 /* Makefile */,
+				D457117A17053EFA00EA19A8 /* cmsis_sam.mk */,
+				D45711191705334100EA19A8 /* system.h */,
+				D457111A1705334100EA19A8 /* tinyg2.cpp */,
+				D457111B1705334100EA19A8 /* tinyg2.h */,
+				D457111C1705334100EA19A8 /* variants */,
+			);
+			sourceTree = "<group>";
+		};
+		D45710C61705334000EA19A8 /* motate */ = {
+			isa = PBXGroup;
+			children = (
+				D45710C71705334000EA19A8 /* keywords.txt */,
+				D45710C81705334000EA19A8 /* MotatePins.h */,
+				D45710C91705334000EA19A8 /* MotateTimers.h */,
+				D45710D51705334100EA19A8 /* utility */,
+			);
+			path = motate;
+			sourceTree = "<group>";
+		};
+		D45710D51705334100EA19A8 /* utility */ = {
+			isa = PBXGroup;
+			children = (
+				D45710D61705334100EA19A8 /* AvrPins.h */,
+				D45710D71705334100EA19A8 /* AvrXPins.h */,
+				D45710D81705334100EA19A8 /* SamPins.h */,
+			);
+			path = utility;
+			sourceTree = "<group>";
+		};
+		D45710DB1705334100EA19A8 /* system */ = {
+			isa = PBXGroup;
+			children = (
+				D45710DC1705334100EA19A8 /* CHANGELOG.txt */,
+				D45710DD1705334100EA19A8 /* chip.h */,
+				D45710DE1705334100EA19A8 /* include */,
+				D45710FB1705334100EA19A8 /* readme.txt */,
+				D45710FC1705334100EA19A8 /* source */,
+			);
+			path = system;
+			sourceTree = "<group>";
+		};
+		D45710DE1705334100EA19A8 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				D45710DF1705334100EA19A8 /* adc.h */,
+				D45710E01705334100EA19A8 /* can.h */,
+				D45710E11705334100EA19A8 /* dacc.h */,
+				D45710E21705334100EA19A8 /* efc.h */,
+				D45710E31705334100EA19A8 /* emac.h */,
+				D45710E41705334100EA19A8 /* gpbr.h */,
+				D45710E51705334100EA19A8 /* interrupt_sam_nvic.h */,
+				D45710E61705334100EA19A8 /* pio.h */,
+				D45710E71705334100EA19A8 /* pio_it.h */,
+				D45710E81705334100EA19A8 /* pmc.h */,
+				D45710E91705334100EA19A8 /* pwmc.h */,
+				D45710EA1705334100EA19A8 /* rstc.h */,
+				D45710EB1705334100EA19A8 /* rtc.h */,
+				D45710EC1705334100EA19A8 /* rtt.h */,
+				D45710ED1705334100EA19A8 /* spi.h */,
+				D45710EE1705334100EA19A8 /* ssc.h */,
+				D45710EF1705334100EA19A8 /* tc.h */,
+				D45710F01705334100EA19A8 /* timetick.h */,
+				D45710F11705334100EA19A8 /* trng.h */,
+				D45710F21705334100EA19A8 /* twi.h */,
+				D45710F31705334100EA19A8 /* udp.h */,
+				D45710F41705334100EA19A8 /* udphs.h */,
+				D45710F51705334100EA19A8 /* uotghs_device.h */,
+				D45710F61705334100EA19A8 /* uotghs_host.h */,
+				D45710F71705334100EA19A8 /* usart.h */,
+				D45710F81705334100EA19A8 /* USB_device.h */,
+				D45710F91705334100EA19A8 /* USB_host.h */,
+				D45710FA1705334100EA19A8 /* wdt.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		D45710FC1705334100EA19A8 /* source */ = {
+			isa = PBXGroup;
+			children = (
+				D45710FD1705334100EA19A8 /* adc.c */,
+				D45710FE1705334100EA19A8 /* adc12_sam3u.c */,
+				D45710FF1705334100EA19A8 /* can.c */,
+				D45711001705334100EA19A8 /* dacc.c */,
+				D45711011705334100EA19A8 /* efc.c */,
+				D45711021705334100EA19A8 /* emac.c */,
+				D45711031705334100EA19A8 /* gpbr.c */,
+				D45711041705334100EA19A8 /* interrupt_sam_nvic.c */,
+				D45711051705334100EA19A8 /* pio.c */,
+				D45711061705334100EA19A8 /* pmc.c */,
+				D45711071705334100EA19A8 /* pwmc.c */,
+				D45711081705334100EA19A8 /* rstc.c */,
+				D45711091705334100EA19A8 /* rtc.c */,
+				D457110A1705334100EA19A8 /* rtt.c */,
+				D457110B1705334100EA19A8 /* spi.c */,
+				D457110C1705334100EA19A8 /* ssc.c */,
+				D457110D1705334100EA19A8 /* tc.c */,
+				D457110E1705334100EA19A8 /* timetick.c */,
+				D457110F1705334100EA19A8 /* trng.c */,
+				D45711101705334100EA19A8 /* twi.c */,
+				D45711111705334100EA19A8 /* udp.c */,
+				D45711121705334100EA19A8 /* udphs.c */,
+				D45711131705334100EA19A8 /* uotghs.c */,
+				D45711141705334100EA19A8 /* uotghs_device.c */,
+				D45711151705334100EA19A8 /* uotghs_host.c */,
+				D45711161705334100EA19A8 /* usart.c */,
+				D45711171705334100EA19A8 /* wdt.c */,
+			);
+			path = source;
+			sourceTree = "<group>";
+		};
+		D457111C1705334100EA19A8 /* variants */ = {
+			isa = PBXGroup;
+			children = (
+				D457111D1705334100EA19A8 /* pins_arduino.h */,
+				D457111E1705334100EA19A8 /* variant.cpp */,
+				D457111F1705334100EA19A8 /* variant.h */,
+			);
+			path = variants;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		D45710C21705330C00EA19A8 /* g3_due */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) flash VERBOSE=1";
+			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = g3_due;
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXNativeTarget section */
+		D457112317053BFB00EA19A8 /* index */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */;
+			buildPhases = (
+				D457112017053BFB00EA19A8 /* Sources */,
+				D457112117053BFB00EA19A8 /* Frameworks */,
+				D457112217053BFB00EA19A8 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = index;
+			productName = index;
+			productReference = D457112417053BFB00EA19A8 /* index */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D45710B8170532AC00EA19A8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = "Rob Giseburt";
+			};
+			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG3" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D45710B7170532AC00EA19A8;
+			productRefGroup = D45710B7170532AC00EA19A8;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D45710C21705330C00EA19A8 /* g3_due */,
+				D457112317053BFB00EA19A8 /* index */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D457112017053BFB00EA19A8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D457112E17053C3A00EA19A8 /* keywords.txt in Sources */,
+				D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */,
+				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
+				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
+				D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */,
+				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
+				D457113417053C3A00EA19A8 /* stepper.cpp in Sources */,
+				D457113517053C3A00EA19A8 /* stepper.h in Sources */,
+				D457113617053C3A00EA19A8 /* CHANGELOG.txt in Sources */,
+				D457113717053C3A00EA19A8 /* chip.h in Sources */,
+				D457113817053C3A00EA19A8 /* adc.h in Sources */,
+				D457113917053C3A00EA19A8 /* can.h in Sources */,
+				D457113A17053C3A00EA19A8 /* dacc.h in Sources */,
+				D457113B17053C3A00EA19A8 /* efc.h in Sources */,
+				D457113C17053C3A00EA19A8 /* emac.h in Sources */,
+				D457113D17053C3A00EA19A8 /* gpbr.h in Sources */,
+				D457113E17053C3A00EA19A8 /* interrupt_sam_nvic.h in Sources */,
+				D457113F17053C3A00EA19A8 /* pio.h in Sources */,
+				D457114017053C3A00EA19A8 /* pio_it.h in Sources */,
+				D457114117053C3A00EA19A8 /* pmc.h in Sources */,
+				D457114217053C3A00EA19A8 /* pwmc.h in Sources */,
+				D457114317053C3A00EA19A8 /* rstc.h in Sources */,
+				D457114417053C3A00EA19A8 /* rtc.h in Sources */,
+				D457114517053C3A00EA19A8 /* rtt.h in Sources */,
+				D457114617053C3A00EA19A8 /* spi.h in Sources */,
+				D457114717053C3A00EA19A8 /* ssc.h in Sources */,
+				D457114817053C3A00EA19A8 /* tc.h in Sources */,
+				D457114917053C3A00EA19A8 /* timetick.h in Sources */,
+				D457114A17053C3A00EA19A8 /* trng.h in Sources */,
+				D457114B17053C3A00EA19A8 /* twi.h in Sources */,
+				D457114C17053C3A00EA19A8 /* udp.h in Sources */,
+				D457114D17053C3A00EA19A8 /* udphs.h in Sources */,
+				D457114E17053C3A00EA19A8 /* uotghs_device.h in Sources */,
+				D457114F17053C3A00EA19A8 /* uotghs_host.h in Sources */,
+				D457115017053C3A00EA19A8 /* usart.h in Sources */,
+				D457115117053C3A00EA19A8 /* USB_device.h in Sources */,
+				D457115217053C3A00EA19A8 /* USB_host.h in Sources */,
+				D457115317053C3A00EA19A8 /* wdt.h in Sources */,
+				D457115417053C3A00EA19A8 /* readme.txt in Sources */,
+				D457115517053C3A00EA19A8 /* adc.c in Sources */,
+				D457115617053C3A00EA19A8 /* adc12_sam3u.c in Sources */,
+				D457115717053C3A00EA19A8 /* can.c in Sources */,
+				D457115817053C3A00EA19A8 /* dacc.c in Sources */,
+				D457115917053C3A00EA19A8 /* efc.c in Sources */,
+				D457115A17053C3A00EA19A8 /* emac.c in Sources */,
+				D457115B17053C3A00EA19A8 /* gpbr.c in Sources */,
+				D457115C17053C3A00EA19A8 /* interrupt_sam_nvic.c in Sources */,
+				D457115D17053C3A00EA19A8 /* pio.c in Sources */,
+				D457115E17053C3A00EA19A8 /* pmc.c in Sources */,
+				D457115F17053C3A00EA19A8 /* pwmc.c in Sources */,
+				D457116017053C3A00EA19A8 /* rstc.c in Sources */,
+				D457116117053C3A00EA19A8 /* rtc.c in Sources */,
+				D457116217053C3A00EA19A8 /* rtt.c in Sources */,
+				D457116317053C3A00EA19A8 /* spi.c in Sources */,
+				D457116417053C3A00EA19A8 /* ssc.c in Sources */,
+				D457116517053C3A00EA19A8 /* tc.c in Sources */,
+				D457116617053C3A00EA19A8 /* timetick.c in Sources */,
+				D457116717053C3A00EA19A8 /* trng.c in Sources */,
+				D457116817053C3A00EA19A8 /* twi.c in Sources */,
+				D457116917053C3A00EA19A8 /* udp.c in Sources */,
+				D457116A17053C3A00EA19A8 /* udphs.c in Sources */,
+				D457116B17053C3A00EA19A8 /* uotghs.c in Sources */,
+				D457116C17053C3A00EA19A8 /* uotghs_device.c in Sources */,
+				D457116D17053C3A00EA19A8 /* uotghs_host.c in Sources */,
+				D457116E17053C3A00EA19A8 /* usart.c in Sources */,
+				D457116F17053C3A00EA19A8 /* wdt.c in Sources */,
+				D457117017053C3A00EA19A8 /* system.cpp in Sources */,
+				D457117117053C3A00EA19A8 /* system.h in Sources */,
+				D457117217053C3A00EA19A8 /* tinyg2.cpp in Sources */,
+				D457117317053C3A00EA19A8 /* tinyg2.h in Sources */,
+				D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */,
+				D457117517053C3A00EA19A8 /* variant.cpp in Sources */,
+				D457117617053C3A00EA19A8 /* variant.h in Sources */,
+				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
+				D457117D1705402400EA19A8 /* cmsis_sam.mk in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D45710BD170532AC00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D45710BE170532AC00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		D45710C41705330D00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PRODUCT_NAME = g3_due;
+			};
+			name = Debug;
+		};
+		D45710C51705330D00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PRODUCT_NAME = g3_due;
+			};
+			name = Release;
+		};
+		D457112B17053BFB00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D457112C17053BFB00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG3" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D45710BD170532AC00EA19A8 /* Debug */,
+				D45710BE170532AC00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D45710C41705330D00EA19A8 /* Debug */,
+				D45710C51705330D00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D457112B17053BFB00EA19A8 /* Debug */,
+				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D45710B8170532AC00EA19A8 /* Project object */;
+}
