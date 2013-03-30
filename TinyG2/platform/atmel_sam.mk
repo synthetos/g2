@@ -35,6 +35,7 @@ $(error CHIP not defined)
 endif
 
 include platform/atmel_sam/atmel_sam_series.mk
+include platform/make_utilities.mk
 
 # fill the needed variables
 ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3N)))
@@ -82,8 +83,10 @@ CMSIS_PATH  = $(CMSIS_ROOT)/CMSIS/Include
 SAM_PATH    = $(CMSIS_ROOT)/Device/ATMEL
 DEVICE_PATH = $(SAM_PATH)/$(SERIES)/source
 
-SOURCE_DIRS         += $(DEVICE_PATH)
-SOURCE_DIRS         += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
+SAM_SOURCE_DIRS += $(DEVICE_PATH)
+SAM_SOURCE_DIRS += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
+
+$(eval $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam))
 
 # Flags
 DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
@@ -93,7 +96,7 @@ DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
 LIBS     += -lgcc -lc
 
 LIB_PATH += -L=/lib/thumb2
-LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
+#LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
 # FIXME: Assumes all sams are Dues
 VARIANT=arduino_due_x

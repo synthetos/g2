@@ -17,7 +17,7 @@
                BlueprintIdentifier = "D457112317053BFB00EA19A8"
                BuildableName = "index"
                BlueprintName = "index"
-               ReferencedContainer = "container:TinyG3.xcodeproj">
+               ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,7 +35,7 @@
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
             BuildableName = "index"
             BlueprintName = "index"
-            ReferencedContainer = "container:TinyG3.xcodeproj">
+            ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -54,7 +54,7 @@
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
             BuildableName = "index"
             BlueprintName = "index"
-            ReferencedContainer = "container:TinyG3.xcodeproj">
+            ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -72,7 +72,7 @@
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
             BuildableName = "index"
             BlueprintName = "index"
-            ReferencedContainer = "container:TinyG3.xcodeproj">
+            ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

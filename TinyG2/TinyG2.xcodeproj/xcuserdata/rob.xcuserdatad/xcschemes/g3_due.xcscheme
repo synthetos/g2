@@ -17,7 +17,7 @@
                BlueprintIdentifier = "D45710C21705330C00EA19A8"
                BuildableName = "g3_due"
                BlueprintName = "g3_due"
-               ReferencedContainer = "container:TinyG3.xcodeproj">
+               ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

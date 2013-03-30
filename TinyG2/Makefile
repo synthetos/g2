@@ -23,7 +23,7 @@
 # Start of default section
 #
 
-PROJECT  = TinyG3
+PROJECT  = TinyG2
 
 SOURCE_DIRS = . arduino variants
 FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
@@ -90,14 +90,39 @@ CPPFLAGS += -Dprintf=iprintf
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
+COLOR ?= 1
 ifeq ($(VERBOSE),0)
 QUIET := @
 else
 QUIET :=
 endif
 
+ifeq ($(COLOR),1)
+START_BOLD="\033[1m"
+END_BOLD="\033[0m"
+NO_COLOR="\033[0m"
+OK_COLOR="\033[32;01m"
+ERROR_COLOR="\033[31;01m"
+WARN_COLOR="\033[33;01m"
+else
+QUIET :=
+endif
+
+
 #
 # End of default section
+##############################################################################################
+
+##############################################################################################
+# Output directories (must be before platforms section)
+#
+
+BIN = bin/$(CHIP)
+OBJ = build/$(CHIP)
+DEPDIR = $(OBJ)/dep
+
+#
+# End of Output directories
 ##############################################################################################
 
 ##############################################################################################
@@ -127,10 +152,6 @@ endif
 # Actual compilation
 #
 
-# Output directories
-BIN = bin/$(CHIP)
-OBJ = build/$(CHIP)
-DEPDIR = $(OBJ)/dep
 
 # Output file basename
 OUTPUT_BIN = $(BIN)/$(PROJECT)_$(CHIP)
@@ -184,11 +205,11 @@ LDFLAGS += -nostartfiles
 
 # Directories where source files can be found
 
-SOURCES     = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-SOURCES_CXX = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
+CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
 
-OBJECTS     := $(addsuffix .o,$(basename $(SOURCES)))
-CXX_OBJECTS := $(addsuffix .o,$(basename $(SOURCES_CXX)))
+C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
+CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
 FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 
 # Append OBJ and BIN directories to output filename
@@ -206,8 +227,8 @@ ifeq ($(VERBOSE),2)
 $(warning INCLUDES: $(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 $(warning LIBRARIES: $(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 $(warning SOURCE DIRECTORIES: $(SOURCE_DIRS))
-$(warning C SOURCES: $(SOURCES))
-$(warning C++ SOURCES: $(SOURCES_CXX))
+$(warning C SOURCES: $(C_SOURCES))
+$(warning C++ SOURCES: $(CXX_SOURCES))
 $(warning LINK FIRST SOURCES: $(FIRST_LINK_SOURCES))
 endif
 
@@ -228,47 +249,53 @@ MK_DIRS =   $(shell                              \
               done)
 
 define RULES
-
 OUTDIR = $(OBJ)/$(1)
 REQUIRED_DIRS += $(OUTDIR)
-OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(OBJECTS))
-CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
-ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
+C_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(C_OBJECTS))
+CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(CXX_OBJECTS))
+ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(ASM_OBJECTS))
 LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/gcc_$(1).ld
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
-FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(FIRST_LINK_OBJECTS))
+FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(FIRST_LINK_OBJECTS))
 
 # Generate dependency information
 DEPFLAGS_$(1) = -MMD -MF $(OBJ)/dep/$$(@F)_$(1).d -MT $(subst $(OUTDIR),$(OBJ)/$(1),$$@)
 
-$(1): $$(OUTDIR)/core.a | $(MK_DIRS)
-	@echo "Linking ($(1)) $$<"
-	@echo "Using linker script: $$(ABS_LINKER_SCRIPT_$(1))"
-	$(QUIET)$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$$@.map" -o "$(OUTPUT_BIN)_$$@.elf" $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(FIRST_LINK_OBJECTS_$(1)) $$< -Wl,--end-group
-	@echo "Exporting symbols $(OUTPUT_BIN)_$$@.elf.txt"
-	$(QUIET)$(NM) "$(OUTPUT_BIN)_$$@.elf" >"$(OUTPUT_BIN)_$$@.elf.txt"
-	@echo "Making binary $(OUTPUT_BIN)_$$@.bin"
-	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$$@.elf" "$(OUTPUT_BIN)_$$@.bin"
+$$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(C_OBJECTS_$(1)) ) | $(BIN) $(OBJ)
 
-	# @echo "--- SIZE INFO ---"
-	# $(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+ALL_C_OBJECTS_$(1)   += $$(C_OBJECTS_$(1))
+ALL_CXX_OBJECTS_$(1) += $$(CXX_OBJECTS_$(1))
+ALL_ASM_OBJECTS_$(1) += $$(ASM_OBJECTS_$(1))
 
+.PHONY: $(1)
 
-$$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(OBJECTS_$(1)) ) | $(BIN) $(OBJ)
+$(1): $(OUTPUT_BIN)_$(1).elf
 
-$$(CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
+$(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
+	@echo $(START_BOLD)"Linking $(OUTPUT_BIN)_$(1).elf" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $$(ABS_LINKER_SCRIPT_$(1))" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$(1).map" -o $$@ $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(FIRST_LINK_OBJECTS_$(1)) $$+ -Wl,--end-group
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN)_$(1).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
+
+# @echo "--- SIZE INFO ---"
+# $(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+
+$$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
-	@echo "Compiling cpp ($(1)) $$< -> $$@"
+	@echo $(START_BOLD)"Compiling cpp ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -xc++ -c -o $$@ $$<
 
-$$(OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(MK_DIRS)
+$$(ALL_C_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
-	@echo "Compiling c ($(1)) $$< -> $$@"
+	@echo $(START_BOLD)"Compiling c ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
-$$(ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(MK_DIRS)
+$$(ALL_ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
-	@echo "Compiling ($(1)) $$< -> $$@"
+	@echo $(START_BOLD)"Compiling ($(1)) $$<"; echo "    -> $$@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
 debug_$(1): $(1)
@@ -281,6 +308,7 @@ debug_$(1): $(1)
 
 endef
 
+#$(foreach MEMORY, $(MEMORIES), $(warning $(call RULES,$(MEMORY))))
 $(foreach MEMORY, $(MEMORIES), $(eval $(call RULES,$(MEMORY))))
 
 clean:

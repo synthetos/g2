@@ -3280,10 +3280,11 @@
 		D49EC43217054FDF00F2BF9B /* uotghs_host.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs_host.c; sourceTree = "<group>"; };
 		D49EC43317054FDF00F2BF9B /* usart.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = usart.c; sourceTree = "<group>"; };
 		D49EC43417054FDF00F2BF9B /* wdt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wdt.c; sourceTree = "<group>"; };
-		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_sam.mk; sourceTree = "<group>"; };
-		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_sam_series.mk; sourceTree = "<group>"; };
+		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
+		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
+		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7524,6 +7525,7 @@
 			children = (
 				D49EC3FC17054FDF00F2BF9B /* atmel_sam */,
 				D49EC43517054FDF00F2BF9B /* atmel_sam.mk */,
+				D4B5763417079D790070CCAE /* make_utilities.mk */,
 			);
 			path = platform;
 			sourceTree = "<group>";
@@ -7641,7 +7643,7 @@
 /* Begin PBXLegacyTarget section */
 		D45710C21705330C00EA19A8 /* g3_due */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) flash VERBOSE=1";
+			buildArgumentsString = "$(ACTION) flash VERBOSE=1 COLOR=0";
 			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */;
 			buildPhases = (
 			);
@@ -7682,7 +7684,7 @@
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = "Rob Giseburt";
 			};
-			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG3" */;
+			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG2" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -8204,7 +8206,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG3" */ = {
+		D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D45710BD170532AC00EA19A8 /* Debug */,

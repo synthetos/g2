@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:TinyG3.xcodeproj">
+      location = "self:TinyG2.xcodeproj">
    </FileRef>
 </Workspace>
