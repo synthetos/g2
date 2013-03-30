@@ -18,7 +18,6 @@
 
 #define ARDUINO_MAIN
 #include "Arduino.h"
-#include "../tinyg2.h"
 
 /*
  * Cortex-M3 Systick IT handler
@@ -30,23 +29,6 @@ extern void SysTick_Handler( void )
   TimeTick_Increment() ;
 }
 */
-
-/******************** Application Code ************************/
-int led = 13;
-
-void setup( void )
-{
-	pinMode(led, OUTPUT);
-	tg_setup();
-}
-
-void loop( void )
-{
-	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
-	delay(500);               // wait for a second
-	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
-	delay(500);               // wait for a second
-}
 
 /*
  * \brief Main entry point of Arduino application

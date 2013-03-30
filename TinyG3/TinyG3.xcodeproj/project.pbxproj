@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D457112E17053C3A00EA19A8 /* keywords.txt in Sources */ = {isa = PBXBuildFile; fileRef = D45710C71705334000EA19A8 /* keywords.txt */; };
 		D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C81705334000EA19A8 /* MotatePins.h */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
 		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
 		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
-		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; };
+		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D457113417053C3A00EA19A8 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45710D91705334100EA19A8 /* stepper.cpp */; };
 		D457113517053C3A00EA19A8 /* stepper.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DA1705334100EA19A8 /* stepper.h */; };
 		D457117017053C3A00EA19A8 /* system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45711181705334100EA19A8 /* system.cpp */; };
@@ -26,7 +25,7 @@
 		D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85917054CB800F2BF9B /* cortex_handlers.c */; };
 		D49EB89117054CB800F2BF9B /* cxxabi-compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */; };
 		D49EB89217054CB800F2BF9B /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85C17054CB800F2BF9B /* hooks.c */; };
-		D49EB89317054CB800F2BF9B /* iar_calls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85D17054CB800F2BF9B /* iar_calls_sam3.c */; };
+		D49EB89317054CB800F2BF9B /* iar_calls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85D17054CB800F2BF9B /* iar_calls_sam3.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EB89417054CB800F2BF9B /* IPAddress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85E17054CB800F2BF9B /* IPAddress.cpp */; };
 		D49EB89517054CB800F2BF9B /* itoa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86017054CB800F2BF9B /* itoa.c */; };
 		D49EB89617054CB800F2BF9B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86217054CB800F2BF9B /* main.cpp */; };
@@ -34,7 +33,7 @@
 		D49EB89817054CB800F2BF9B /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86617054CB800F2BF9B /* Reset.cpp */; };
 		D49EB89917054CB800F2BF9B /* RingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86817054CB800F2BF9B /* RingBuffer.cpp */; };
 		D49EB89A17054CB800F2BF9B /* Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86B17054CB800F2BF9B /* Stream.cpp */; };
-		D49EB89B17054CB800F2BF9B /* syscalls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86E17054CB800F2BF9B /* syscalls_sam3.c */; };
+		D49EB89B17054CB800F2BF9B /* syscalls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86E17054CB800F2BF9B /* syscalls_sam3.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EB89C17054CB800F2BF9B /* UARTClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87117054CB800F2BF9B /* UARTClass.cpp */; };
 		D49EB89D17054CB800F2BF9B /* USARTClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87417054CB800F2BF9B /* USARTClass.cpp */; };
 		D49EB89E17054CB800F2BF9B /* CDC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87717054CB800F2BF9B /* CDC.cpp */; };
@@ -48,96 +47,6 @@
 		D49EB8A617054CB800F2BF9B /* wiring_shift.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88A17054CB800F2BF9B /* wiring_shift.c */; };
 		D49EB8A717054CB800F2BF9B /* WMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88C17054CB800F2BF9B /* WMath.cpp */; };
 		D49EB8A817054CB800F2BF9B /* WString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88E17054CB800F2BF9B /* WString.cpp */; };
-		D49EC43717054FDF00F2BF9B /* search.js in Sources */ = {isa = PBXBuildFile; fileRef = D49EBBCA17054FDA00F2BF9B /* search.js */; };
-		D49EC43817054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC2B17054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC43917054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC2C17054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC43A17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC2D17054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC43B17054FDF00F2BF9B /* arm_class_marks_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC2E17054FDB00F2BF9B /* arm_class_marks_example_f32.c */; };
-		D49EC43C17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3817054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC43D17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3917054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC43E17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3A17054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC43F17054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3B17054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC44017054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3C17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC44117054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC3D17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC44217054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC4717054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC44317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC4817054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC44417054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC4917054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC44517054FDF00F2BF9B /* arm_convolution_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC4A17054FDB00F2BF9B /* arm_convolution_example_f32.c */; };
-		D49EC44617054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5417054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC44717054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5517054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC44817054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5617054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC44917054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5717054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC44A17054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5817054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC44B17054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC5917054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC44C17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6317054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC44D17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6417054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC44E17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6517054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC44F17054FDF00F2BF9B /* arm_dotproduct_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6617054FDB00F2BF9B /* arm_dotproduct_example_f32.c */; };
-		D49EC45017054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6717054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC45117054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6817054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC45217054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC6917054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC45317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7317054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC45417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7417054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC45517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7517054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC45617054FDF00F2BF9B /* arm_fft_bin_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7617054FDB00F2BF9B /* arm_fft_bin_data.c */; };
-		D49EC45717054FDF00F2BF9B /* arm_fft_bin_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7717054FDB00F2BF9B /* arm_fft_bin_example_f32.c */; };
-		D49EC45817054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7817054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC45917054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7917054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC45A17054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC7A17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC45B17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8417054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC45C17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8517054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC45D17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8617054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC45E17054FDF00F2BF9B /* arm_fir_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8717054FDB00F2BF9B /* arm_fir_data.c */; };
-		D49EC45F17054FDF00F2BF9B /* arm_fir_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8817054FDB00F2BF9B /* arm_fir_example_f32.c */; };
-		D49EC46017054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8917054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC46117054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8A17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC46217054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC8B17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC46317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9517054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC46417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9617054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC46517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9717054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC46617054FDF00F2BF9B /* arm_graphic_equalizer_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9817054FDB00F2BF9B /* arm_graphic_equalizer_data.c */; };
-		D49EC46717054FDF00F2BF9B /* arm_graphic_equalizer_example_q31.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9917054FDB00F2BF9B /* arm_graphic_equalizer_example_q31.c */; };
-		D49EC46817054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9A17054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC46917054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9B17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC46A17054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBC9C17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC46B17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCA617054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC46C17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCA717054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC46D17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCA817054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC46E17054FDF00F2BF9B /* arm_linear_interp_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCA917054FDB00F2BF9B /* arm_linear_interp_data.c */; };
-		D49EC46F17054FDF00F2BF9B /* arm_linear_interp_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCAA17054FDB00F2BF9B /* arm_linear_interp_example_f32.c */; };
-		D49EC47017054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCAB17054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC47117054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCAC17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC47217054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCAD17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC47317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCB717054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC47417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCB817054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC47517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCB917054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC47617054FDF00F2BF9B /* arm_matrix_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCBA17054FDB00F2BF9B /* arm_matrix_example_f32.c */; };
-		D49EC47717054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCBB17054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC47817054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCBC17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC47917054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCBD17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC47A17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCC717054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC47B17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCC817054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC47C17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCC917054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC47D17054FDF00F2BF9B /* arm_signal_converge_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCCA17054FDB00F2BF9B /* arm_signal_converge_data.c */; };
-		D49EC47E17054FDF00F2BF9B /* arm_signal_converge_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCCB17054FDB00F2BF9B /* arm_signal_converge_example_f32.c */; };
-		D49EC47F17054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCCC17054FDB00F2BF9B /* system_ARMCM0.c */; };
-		D49EC48017054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCCD17054FDB00F2BF9B /* system_ARMCM3.c */; };
-		D49EC48117054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCCE17054FDB00F2BF9B /* system_ARMCM4.c */; };
-		D49EC48217054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCD817054FDB00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC48317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCD917054FDB00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC48417054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCDA17054FDB00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC48517054FDF00F2BF9B /* arm_sin_cos_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCDB17054FDC00F2BF9B /* arm_sin_cos_example_f32.c */; };
-		D49EC48617054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCDC17054FDC00F2BF9B /* system_ARMCM0.c */; };
-		D49EC48717054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCDD17054FDC00F2BF9B /* system_ARMCM3.c */; };
-		D49EC48817054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCDE17054FDC00F2BF9B /* system_ARMCM4.c */; };
-		D49EC48917054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCE817054FDC00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC48A17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCE917054FDC00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC48B17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCEA17054FDC00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC48C17054FDF00F2BF9B /* arm_variance_example_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCEB17054FDC00F2BF9B /* arm_variance_example_f32.c */; };
-		D49EC48D17054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCEC17054FDC00F2BF9B /* system_ARMCM0.c */; };
-		D49EC48E17054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCED17054FDC00F2BF9B /* system_ARMCM3.c */; };
-		D49EC48F17054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCEE17054FDC00F2BF9B /* system_ARMCM4.c */; };
-		D49EC49017054FDF00F2BF9B /* math_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCF317054FDC00F2BF9B /* math_helper.c */; };
 		D49EC49117054FDF00F2BF9B /* arm_abs_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCFE17054FDC00F2BF9B /* arm_abs_f32.c */; };
 		D49EC49217054FDF00F2BF9B /* arm_abs_q15.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCFF17054FDC00F2BF9B /* arm_abs_q15.c */; };
 		D49EC49317054FDF00F2BF9B /* arm_abs_q31.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBD0017054FDC00F2BF9B /* arm_abs_q31.c */; };
@@ -390,62 +299,11 @@
 		D49EC58A17054FDF00F2BF9B /* libarm_cortexM3l_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1B17054FDC00F2BF9B /* libarm_cortexM3l_math.a */; };
 		D49EC58B17054FDF00F2BF9B /* libarm_cortexM4l_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1C17054FDC00F2BF9B /* libarm_cortexM4l_math.a */; };
 		D49EC58C17054FDF00F2BF9B /* libarm_cortexM4lf_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1D17054FDC00F2BF9B /* libarm_cortexM4lf_math.a */; };
-		D49EC58D17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE2817054FDC00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC58E17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE2A17054FDC00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC58F17054FDF00F2BF9B /* startup_ARMCM0.S in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE2D17054FDC00F2BF9B /* startup_ARMCM0.S */; };
-		D49EC59017054FDF00F2BF9B /* startup_ARMCM0.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE2F17054FDC00F2BF9B /* startup_ARMCM0.s */; };
-		D49EC59117054FDF00F2BF9B /* system_ARMCM0.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE3017054FDC00F2BF9B /* system_ARMCM0.c */; };
-		D49EC59217054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE3817054FDC00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC59317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE3A17054FDC00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC59417054FDF00F2BF9B /* startup_ARMCM3.S in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE3D17054FDC00F2BF9B /* startup_ARMCM3.S */; };
-		D49EC59517054FDF00F2BF9B /* startup_ARMCM3.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE3F17054FDC00F2BF9B /* startup_ARMCM3.s */; };
-		D49EC59617054FDF00F2BF9B /* system_ARMCM3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE4017054FDC00F2BF9B /* system_ARMCM3.c */; };
-		D49EC59717054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE4817054FDC00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC59817054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE4A17054FDC00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC59917054FDF00F2BF9B /* startup_ARMCM4.S in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE4D17054FDC00F2BF9B /* startup_ARMCM4.S */; };
-		D49EC59A17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE4F17054FDC00F2BF9B /* startup_ARMCM4.s */; };
-		D49EC59B17054FDF00F2BF9B /* system_ARMCM4.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5017054FDC00F2BF9B /* system_ARMCM4.c */; };
-		D49EC59C17054FDF00F2BF9B /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBEF117054FDC00F2BF9B /* startup_sam3n.c */; };
-		D49EC59D17054FDF00F2BF9B /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBF1B17054FDC00F2BF9B /* startup_sam3n.c */; };
-		D49EC59E17054FDF00F2BF9B /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBF4517054FDC00F2BF9B /* startup_sam3n.c */; };
-		D49EC59F17054FDF00F2BF9B /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBF6F17054FDC00F2BF9B /* startup_sam3n.c */; };
-		D49EC5A017054FDF00F2BF9B /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBF7717054FDD00F2BF9B /* startup_sam3n.c */; };
-		D49EC5A117054FDF00F2BF9B /* system_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBF7817054FDD00F2BF9B /* system_sam3n.c */; };
-		D49EC5A217054FDF00F2BF9B /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC01F17054FDD00F2BF9B /* startup_sam3s.c */; };
-		D49EC5A317054FDF00F2BF9B /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC03B17054FDD00F2BF9B /* startup_sam3s.c */; };
-		D49EC5A417054FDF00F2BF9B /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC05717054FDD00F2BF9B /* startup_sam3s.c */; };
-		D49EC5A517054FDF00F2BF9B /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC07317054FDD00F2BF9B /* startup_sam3s.c */; };
-		D49EC5A617054FDF00F2BF9B /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC07B17054FDD00F2BF9B /* startup_sam3s.c */; };
-		D49EC5A717054FDF00F2BF9B /* system_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC07C17054FDD00F2BF9B /* system_sam3s.c */; };
-		D49EC5A817054FDF00F2BF9B /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC10B17054FDD00F2BF9B /* startup_sam3sd8.c */; };
-		D49EC5A917054FDF00F2BF9B /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC11D17054FDD00F2BF9B /* startup_sam3sd8.c */; };
-		D49EC5AA17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC12F17054FDD00F2BF9B /* startup_sam3sd8.c */; };
-		D49EC5AB17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC14117054FDD00F2BF9B /* startup_sam3sd8.c */; };
-		D49EC5AC17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC14717054FDD00F2BF9B /* startup_sam3sd8.c */; };
-		D49EC5AD17054FDF00F2BF9B /* system_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC14817054FDD00F2BF9B /* system_sam3sd8.c */; };
-		D49EC5AE17054FDF00F2BF9B /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC1D717054FDE00F2BF9B /* startup_sam3u.c */; };
-		D49EC5AF17054FDF00F2BF9B /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC1ED17054FDE00F2BF9B /* startup_sam3u.c */; };
-		D49EC5B017054FDF00F2BF9B /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC20317054FDE00F2BF9B /* startup_sam3u.c */; };
-		D49EC5B117054FDF00F2BF9B /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC21917054FDE00F2BF9B /* startup_sam3u.c */; };
-		D49EC5B217054FDF00F2BF9B /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC22117054FDE00F2BF9B /* startup_sam3u.c */; };
-		D49EC5B317054FDF00F2BF9B /* system_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC22217054FDE00F2BF9B /* system_sam3u.c */; };
-		D49EC5B417054FDF00F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2D617054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EC5B517054FDF00F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2F217054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EC5B617054FDF00F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC30E17054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EC5B717054FDF00F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC32A17054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EC5B817054FDF00F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC33217054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EC5B917054FDF00F2BF9B /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC33317054FDE00F2BF9B /* system_sam3xa.c */; };
-		D49EC5BA17054FDF00F2BF9B /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3BD17054FDF00F2BF9B /* startup_sam4s.c */; };
-		D49EC5BB17054FDF00F2BF9B /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3CD17054FDF00F2BF9B /* startup_sam4s.c */; };
-		D49EC5BC17054FDF00F2BF9B /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3DD17054FDF00F2BF9B /* startup_sam4s.c */; };
-		D49EC5BD17054FDF00F2BF9B /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3ED17054FDF00F2BF9B /* startup_sam4s.c */; };
-		D49EC5BE17054FDF00F2BF9B /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3F317054FDF00F2BF9B /* startup_sam4s.c */; };
-		D49EC5BF17054FDF00F2BF9B /* system_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC3F417054FDF00F2BF9B /* system_sam4s.c */; };
 		D49EC5C017054FDF00F2BF9B /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D49EC40117054FDF00F2BF9B /* Makefile */; };
 		D49EC5C117054FDF00F2BF9B /* adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42117054FDF00F2BF9B /* adc.c */; };
-		D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */; };
+		D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EC5C317054FDF00F2BF9B /* dacc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42317054FDF00F2BF9B /* dacc.c */; };
-		D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */; };
+		D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EC5C517054FDF00F2BF9B /* pio.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42517054FDF00F2BF9B /* pio.c */; };
 		D49EC5C617054FDF00F2BF9B /* pmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42617054FDF00F2BF9B /* pmc.c */; };
 		D49EC5C717054FDF00F2BF9B /* pwmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42717054FDF00F2BF9B /* pwmc.c */; };
@@ -462,6 +320,98 @@
 		D49EC5D217054FDF00F2BF9B /* uotghs_host.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43217054FDF00F2BF9B /* uotghs_host.c */; };
 		D49EC5D317054FDF00F2BF9B /* usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43317054FDF00F2BF9B /* usart.c */; };
 		D49EC5D417054FDF00F2BF9B /* wdt.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43417054FDF00F2BF9B /* wdt.c */; };
+		D49EC5DF170676AF00F2BF9B /* sam.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5317054FDC00F2BF9B /* sam.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5E0170676B500F2BF9B /* sam3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5417054FDC00F2BF9B /* sam3.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5E1170676C400F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC32A17054FDE00F2BF9B /* startup_sam3xa.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5E2170676C600F2BF9B /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC33317054FDE00F2BF9B /* system_sam3xa.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0617054FDC00F2BF9B /* arm_common_tables.h */; };
+		D49EC5E41706770A00F2BF9B /* arm_math.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0717054FDC00F2BF9B /* arm_math.h */; };
+		D49EC5E51706770A00F2BF9B /* core_cm0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0817054FDC00F2BF9B /* core_cm0.h */; };
+		D49EC5E61706770A00F2BF9B /* core_cm3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0917054FDC00F2BF9B /* core_cm3.h */; };
+		D49EC5E71706770A00F2BF9B /* core_cm4.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0A17054FDC00F2BF9B /* core_cm4.h */; };
+		D49EC5E81706770A00F2BF9B /* core_cm4_simd.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0B17054FDC00F2BF9B /* core_cm4_simd.h */; };
+		D49EC5E91706770A00F2BF9B /* core_cmFunc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0C17054FDC00F2BF9B /* core_cmFunc.h */; };
+		D49EC5EA1706770A00F2BF9B /* core_cmInstr.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0D17054FDC00F2BF9B /* core_cmInstr.h */; };
+		D49EC5EB1706789800F2BF9B /* component_adc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26117054FDE00F2BF9B /* component_adc.h */; };
+		D49EC5EC1706789800F2BF9B /* component_can.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26217054FDE00F2BF9B /* component_can.h */; };
+		D49EC5ED1706789800F2BF9B /* component_chipid.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26317054FDE00F2BF9B /* component_chipid.h */; };
+		D49EC5EE1706789800F2BF9B /* component_dacc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26417054FDE00F2BF9B /* component_dacc.h */; };
+		D49EC5EF1706789800F2BF9B /* component_dmac.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26517054FDE00F2BF9B /* component_dmac.h */; };
+		D49EC5F01706789800F2BF9B /* component_efc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26617054FDE00F2BF9B /* component_efc.h */; };
+		D49EC5F11706789800F2BF9B /* component_emac.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26717054FDE00F2BF9B /* component_emac.h */; };
+		D49EC5F21706789800F2BF9B /* component_gpbr.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26817054FDE00F2BF9B /* component_gpbr.h */; };
+		D49EC5F31706789800F2BF9B /* component_hsmci.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26917054FDE00F2BF9B /* component_hsmci.h */; };
+		D49EC5F41706789800F2BF9B /* component_matrix.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26A17054FDE00F2BF9B /* component_matrix.h */; };
+		D49EC5F51706789800F2BF9B /* component_pdc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26B17054FDE00F2BF9B /* component_pdc.h */; };
+		D49EC5F61706789800F2BF9B /* component_pio.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26C17054FDE00F2BF9B /* component_pio.h */; };
+		D49EC5F71706789800F2BF9B /* component_pmc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26D17054FDE00F2BF9B /* component_pmc.h */; };
+		D49EC5F81706789800F2BF9B /* component_pwm.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26E17054FDE00F2BF9B /* component_pwm.h */; };
+		D49EC5F91706789800F2BF9B /* component_rstc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26F17054FDE00F2BF9B /* component_rstc.h */; };
+		D49EC5FA1706789800F2BF9B /* component_rtc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27017054FDE00F2BF9B /* component_rtc.h */; };
+		D49EC5FB1706789800F2BF9B /* component_rtt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27117054FDE00F2BF9B /* component_rtt.h */; };
+		D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27217054FDE00F2BF9B /* component_sdramc.h */; };
+		D49EC5FD1706789800F2BF9B /* component_smc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27317054FDE00F2BF9B /* component_smc.h */; };
+		D49EC5FE1706789800F2BF9B /* component_spi.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27417054FDE00F2BF9B /* component_spi.h */; };
+		D49EC5FF1706789800F2BF9B /* component_ssc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27517054FDE00F2BF9B /* component_ssc.h */; };
+		D49EC6001706789800F2BF9B /* component_supc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27617054FDE00F2BF9B /* component_supc.h */; };
+		D49EC6011706789800F2BF9B /* component_tc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27717054FDE00F2BF9B /* component_tc.h */; };
+		D49EC6021706789800F2BF9B /* component_trng.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27817054FDE00F2BF9B /* component_trng.h */; };
+		D49EC6031706789800F2BF9B /* component_twi.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27917054FDE00F2BF9B /* component_twi.h */; };
+		D49EC6041706789800F2BF9B /* component_uart.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27A17054FDE00F2BF9B /* component_uart.h */; };
+		D49EC6051706789800F2BF9B /* component_uotghs.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27B17054FDE00F2BF9B /* component_uotghs.h */; };
+		D49EC6061706789800F2BF9B /* component_usart.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27C17054FDE00F2BF9B /* component_usart.h */; };
+		D49EC6071706789800F2BF9B /* component_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27D17054FDE00F2BF9B /* component_wdt.h */; };
+		D49EC6081706789800F2BF9B /* instance_adc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC27F17054FDE00F2BF9B /* instance_adc.h */; };
+		D49EC6091706789800F2BF9B /* instance_can0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28017054FDE00F2BF9B /* instance_can0.h */; };
+		D49EC60A1706789800F2BF9B /* instance_can1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28117054FDE00F2BF9B /* instance_can1.h */; };
+		D49EC60B1706789800F2BF9B /* instance_chipid.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28217054FDE00F2BF9B /* instance_chipid.h */; };
+		D49EC60C1706789800F2BF9B /* instance_dacc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28317054FDE00F2BF9B /* instance_dacc.h */; };
+		D49EC60D1706789800F2BF9B /* instance_dmac.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28417054FDE00F2BF9B /* instance_dmac.h */; };
+		D49EC60E1706789800F2BF9B /* instance_efc0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28517054FDE00F2BF9B /* instance_efc0.h */; };
+		D49EC60F1706789800F2BF9B /* instance_efc1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28617054FDE00F2BF9B /* instance_efc1.h */; };
+		D49EC6101706789800F2BF9B /* instance_emac.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28717054FDE00F2BF9B /* instance_emac.h */; };
+		D49EC6111706789800F2BF9B /* instance_gpbr.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28817054FDE00F2BF9B /* instance_gpbr.h */; };
+		D49EC6121706789800F2BF9B /* instance_hsmci.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28917054FDE00F2BF9B /* instance_hsmci.h */; };
+		D49EC6131706789800F2BF9B /* instance_matrix.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28A17054FDE00F2BF9B /* instance_matrix.h */; };
+		D49EC6141706789800F2BF9B /* instance_pioa.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28B17054FDE00F2BF9B /* instance_pioa.h */; };
+		D49EC6151706789800F2BF9B /* instance_piob.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28C17054FDE00F2BF9B /* instance_piob.h */; };
+		D49EC6161706789800F2BF9B /* instance_pioc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28D17054FDE00F2BF9B /* instance_pioc.h */; };
+		D49EC6171706789800F2BF9B /* instance_piod.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28E17054FDE00F2BF9B /* instance_piod.h */; };
+		D49EC6181706789800F2BF9B /* instance_pioe.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC28F17054FDE00F2BF9B /* instance_pioe.h */; };
+		D49EC6191706789800F2BF9B /* instance_piof.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29017054FDE00F2BF9B /* instance_piof.h */; };
+		D49EC61A1706789800F2BF9B /* instance_pmc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29117054FDE00F2BF9B /* instance_pmc.h */; };
+		D49EC61B1706789800F2BF9B /* instance_pwm.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29217054FDE00F2BF9B /* instance_pwm.h */; };
+		D49EC61C1706789800F2BF9B /* instance_rstc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29317054FDE00F2BF9B /* instance_rstc.h */; };
+		D49EC61D1706789800F2BF9B /* instance_rtc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29417054FDE00F2BF9B /* instance_rtc.h */; };
+		D49EC61E1706789800F2BF9B /* instance_rtt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29517054FDE00F2BF9B /* instance_rtt.h */; };
+		D49EC61F1706789800F2BF9B /* instance_sdramc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29617054FDE00F2BF9B /* instance_sdramc.h */; };
+		D49EC6201706789800F2BF9B /* instance_smc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29717054FDE00F2BF9B /* instance_smc.h */; };
+		D49EC6211706789800F2BF9B /* instance_spi0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29817054FDE00F2BF9B /* instance_spi0.h */; };
+		D49EC6221706789800F2BF9B /* instance_spi1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29917054FDE00F2BF9B /* instance_spi1.h */; };
+		D49EC6231706789800F2BF9B /* instance_ssc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29A17054FDE00F2BF9B /* instance_ssc.h */; };
+		D49EC6241706789800F2BF9B /* instance_supc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29B17054FDE00F2BF9B /* instance_supc.h */; };
+		D49EC6251706789800F2BF9B /* instance_tc0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29C17054FDE00F2BF9B /* instance_tc0.h */; };
+		D49EC6261706789800F2BF9B /* instance_tc1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29D17054FDE00F2BF9B /* instance_tc1.h */; };
+		D49EC6271706789800F2BF9B /* instance_tc2.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29E17054FDE00F2BF9B /* instance_tc2.h */; };
+		D49EC6281706789800F2BF9B /* instance_trng.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC29F17054FDE00F2BF9B /* instance_trng.h */; };
+		D49EC6291706789800F2BF9B /* instance_twi0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A017054FDE00F2BF9B /* instance_twi0.h */; };
+		D49EC62A1706789800F2BF9B /* instance_twi1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A117054FDE00F2BF9B /* instance_twi1.h */; };
+		D49EC62B1706789800F2BF9B /* instance_uart.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A217054FDE00F2BF9B /* instance_uart.h */; };
+		D49EC62C1706789800F2BF9B /* instance_uotghs.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A317054FDE00F2BF9B /* instance_uotghs.h */; };
+		D49EC62D1706789800F2BF9B /* instance_usart0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A417054FDE00F2BF9B /* instance_usart0.h */; };
+		D49EC62E1706789800F2BF9B /* instance_usart1.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A517054FDE00F2BF9B /* instance_usart1.h */; };
+		D49EC62F1706789800F2BF9B /* instance_usart2.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A617054FDE00F2BF9B /* instance_usart2.h */; };
+		D49EC6301706789800F2BF9B /* instance_usart3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A717054FDE00F2BF9B /* instance_usart3.h */; };
+		D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A817054FDE00F2BF9B /* instance_wdt.h */; };
+		D49EC6321706789800F2BF9B /* pio_sam3a4c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AA17054FDE00F2BF9B /* pio_sam3a4c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6331706789800F2BF9B /* pio_sam3a8c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AB17054FDE00F2BF9B /* pio_sam3a8c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6341706789800F2BF9B /* pio_sam3x4c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AC17054FDE00F2BF9B /* pio_sam3x4c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6351706789800F2BF9B /* pio_sam3x4e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AD17054FDE00F2BF9B /* pio_sam3x4e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6361706789800F2BF9B /* pio_sam3x8c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AE17054FDE00F2BF9B /* pio_sam3x8c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6381706789800F2BF9B /* pio_sam3x8h.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B017054FDE00F2BF9B /* pio_sam3x8h.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC63A1706789800F2BF9B /* system_sam3xa.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B917054FDE00F2BF9B /* system_sam3xa.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -3331,7 +3281,9 @@
 		D49EC43317054FDF00F2BF9B /* usart.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = usart.c; sourceTree = "<group>"; };
 		D49EC43417054FDF00F2BF9B /* wdt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wdt.c; sourceTree = "<group>"; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_sam.mk; sourceTree = "<group>"; };
-		D49EC43617054FDF00F2BF9B /* atmel_sam_series.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_sam_series.mk; sourceTree = "<group>"; };
+		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_sam_series.mk; sourceTree = "<group>"; };
+		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
+		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7572,7 +7524,6 @@
 			children = (
 				D49EC3FC17054FDF00F2BF9B /* atmel_sam */,
 				D49EC43517054FDF00F2BF9B /* atmel_sam.mk */,
-				D49EC43617054FDF00F2BF9B /* atmel_sam_series.mk */,
 			);
 			path = platform;
 			sourceTree = "<group>";
@@ -7580,6 +7531,9 @@
 		D49EC3FC17054FDF00F2BF9B /* atmel_sam */ = {
 			isa = PBXGroup;
 			children = (
+				D4B57632170737870070CCAE /* gcc_flash.ld */,
+				D4B57633170737870070CCAE /* gcc_sram.ld */,
+				D4B57631170737730070CCAE /* atmel_sam_series.mk */,
 				D49EC3FD17054FDF00F2BF9B /* libsam */,
 			);
 			path = atmel_sam;
@@ -7751,7 +7705,88 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D457112E17053C3A00EA19A8 /* keywords.txt in Sources */,
+				D49EC5EB1706789800F2BF9B /* component_adc.h in Sources */,
+				D49EC5EC1706789800F2BF9B /* component_can.h in Sources */,
+				D49EC5ED1706789800F2BF9B /* component_chipid.h in Sources */,
+				D49EC5EE1706789800F2BF9B /* component_dacc.h in Sources */,
+				D49EC5EF1706789800F2BF9B /* component_dmac.h in Sources */,
+				D49EC5F01706789800F2BF9B /* component_efc.h in Sources */,
+				D49EC5F11706789800F2BF9B /* component_emac.h in Sources */,
+				D49EC5F21706789800F2BF9B /* component_gpbr.h in Sources */,
+				D49EC5F31706789800F2BF9B /* component_hsmci.h in Sources */,
+				D49EC5F41706789800F2BF9B /* component_matrix.h in Sources */,
+				D49EC5E2170676C600F2BF9B /* system_sam3xa.c in Sources */,
+				D49EC5E1170676C400F2BF9B /* startup_sam3xa.c in Sources */,
+				D49EC5F51706789800F2BF9B /* component_pdc.h in Sources */,
+				D49EC5F61706789800F2BF9B /* component_pio.h in Sources */,
+				D49EC5F71706789800F2BF9B /* component_pmc.h in Sources */,
+				D49EC5F81706789800F2BF9B /* component_pwm.h in Sources */,
+				D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */,
+				D49EC5F91706789800F2BF9B /* component_rstc.h in Sources */,
+				D49EC5FA1706789800F2BF9B /* component_rtc.h in Sources */,
+				D49EC5FB1706789800F2BF9B /* component_rtt.h in Sources */,
+				D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */,
+				D49EC5FD1706789800F2BF9B /* component_smc.h in Sources */,
+				D49EC5FE1706789800F2BF9B /* component_spi.h in Sources */,
+				D49EC5FF1706789800F2BF9B /* component_ssc.h in Sources */,
+				D49EC6001706789800F2BF9B /* component_supc.h in Sources */,
+				D49EC6011706789800F2BF9B /* component_tc.h in Sources */,
+				D49EC6021706789800F2BF9B /* component_trng.h in Sources */,
+				D49EC6031706789800F2BF9B /* component_twi.h in Sources */,
+				D49EC6041706789800F2BF9B /* component_uart.h in Sources */,
+				D49EC6051706789800F2BF9B /* component_uotghs.h in Sources */,
+				D49EC6061706789800F2BF9B /* component_usart.h in Sources */,
+				D49EC6071706789800F2BF9B /* component_wdt.h in Sources */,
+				D49EC6081706789800F2BF9B /* instance_adc.h in Sources */,
+				D49EC6091706789800F2BF9B /* instance_can0.h in Sources */,
+				D49EC60A1706789800F2BF9B /* instance_can1.h in Sources */,
+				D49EC60B1706789800F2BF9B /* instance_chipid.h in Sources */,
+				D49EC60C1706789800F2BF9B /* instance_dacc.h in Sources */,
+				D49EC60D1706789800F2BF9B /* instance_dmac.h in Sources */,
+				D49EC60E1706789800F2BF9B /* instance_efc0.h in Sources */,
+				D49EC60F1706789800F2BF9B /* instance_efc1.h in Sources */,
+				D49EC6101706789800F2BF9B /* instance_emac.h in Sources */,
+				D49EC6111706789800F2BF9B /* instance_gpbr.h in Sources */,
+				D49EC6121706789800F2BF9B /* instance_hsmci.h in Sources */,
+				D49EC6131706789800F2BF9B /* instance_matrix.h in Sources */,
+				D49EC6141706789800F2BF9B /* instance_pioa.h in Sources */,
+				D49EC6151706789800F2BF9B /* instance_piob.h in Sources */,
+				D49EC6161706789800F2BF9B /* instance_pioc.h in Sources */,
+				D49EC6171706789800F2BF9B /* instance_piod.h in Sources */,
+				D49EC6181706789800F2BF9B /* instance_pioe.h in Sources */,
+				D49EC6191706789800F2BF9B /* instance_piof.h in Sources */,
+				D49EC61A1706789800F2BF9B /* instance_pmc.h in Sources */,
+				D49EC61B1706789800F2BF9B /* instance_pwm.h in Sources */,
+				D49EC61C1706789800F2BF9B /* instance_rstc.h in Sources */,
+				D49EC61D1706789800F2BF9B /* instance_rtc.h in Sources */,
+				D49EC61E1706789800F2BF9B /* instance_rtt.h in Sources */,
+				D49EC61F1706789800F2BF9B /* instance_sdramc.h in Sources */,
+				D49EC6201706789800F2BF9B /* instance_smc.h in Sources */,
+				D49EC6211706789800F2BF9B /* instance_spi0.h in Sources */,
+				D49EC6221706789800F2BF9B /* instance_spi1.h in Sources */,
+				D49EC6231706789800F2BF9B /* instance_ssc.h in Sources */,
+				D49EC6241706789800F2BF9B /* instance_supc.h in Sources */,
+				D49EC6251706789800F2BF9B /* instance_tc0.h in Sources */,
+				D49EC6261706789800F2BF9B /* instance_tc1.h in Sources */,
+				D49EC6271706789800F2BF9B /* instance_tc2.h in Sources */,
+				D49EC6281706789800F2BF9B /* instance_trng.h in Sources */,
+				D49EC6291706789800F2BF9B /* instance_twi0.h in Sources */,
+				D49EC62A1706789800F2BF9B /* instance_twi1.h in Sources */,
+				D49EC62B1706789800F2BF9B /* instance_uart.h in Sources */,
+				D49EC62C1706789800F2BF9B /* instance_uotghs.h in Sources */,
+				D49EC62D1706789800F2BF9B /* instance_usart0.h in Sources */,
+				D49EC62E1706789800F2BF9B /* instance_usart1.h in Sources */,
+				D49EC62F1706789800F2BF9B /* instance_usart2.h in Sources */,
+				D49EC6301706789800F2BF9B /* instance_usart3.h in Sources */,
+				D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */,
+				D49EC6321706789800F2BF9B /* pio_sam3a4c.h in Sources */,
+				D49EC6331706789800F2BF9B /* pio_sam3a8c.h in Sources */,
+				D49EC6341706789800F2BF9B /* pio_sam3x4c.h in Sources */,
+				D49EC6351706789800F2BF9B /* pio_sam3x4e.h in Sources */,
+				D49EC6361706789800F2BF9B /* pio_sam3x8c.h in Sources */,
+				D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */,
+				D49EC6381706789800F2BF9B /* pio_sam3x8h.h in Sources */,
+				D49EC63A1706789800F2BF9B /* system_sam3xa.h in Sources */,
 				D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */,
 				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
 				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
@@ -7765,6 +7800,8 @@
 				D457117317053C3A00EA19A8 /* tinyg2.h in Sources */,
 				D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */,
 				D457117517053C3A00EA19A8 /* variant.cpp in Sources */,
+				D49EC5DF170676AF00F2BF9B /* sam.h in Sources */,
+				D49EC5E0170676B500F2BF9B /* sam3.h in Sources */,
 				D457117617053C3A00EA19A8 /* variant.h in Sources */,
 				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
 				D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */,
@@ -7792,96 +7829,6 @@
 				D49EB8A617054CB800F2BF9B /* wiring_shift.c in Sources */,
 				D49EB8A717054CB800F2BF9B /* WMath.cpp in Sources */,
 				D49EB8A817054CB800F2BF9B /* WString.cpp in Sources */,
-				D49EC43717054FDF00F2BF9B /* search.js in Sources */,
-				D49EC43817054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC43917054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC43A17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC43B17054FDF00F2BF9B /* arm_class_marks_example_f32.c in Sources */,
-				D49EC43C17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC43D17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC43E17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC43F17054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC44017054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC44117054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC44217054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC44317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC44417054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC44517054FDF00F2BF9B /* arm_convolution_example_f32.c in Sources */,
-				D49EC44617054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC44717054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC44817054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC44917054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC44A17054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC44B17054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC44C17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC44D17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC44E17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC44F17054FDF00F2BF9B /* arm_dotproduct_example_f32.c in Sources */,
-				D49EC45017054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC45117054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC45217054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC45317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC45417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC45517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC45617054FDF00F2BF9B /* arm_fft_bin_data.c in Sources */,
-				D49EC45717054FDF00F2BF9B /* arm_fft_bin_example_f32.c in Sources */,
-				D49EC45817054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC45917054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC45A17054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC45B17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC45C17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC45D17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC45E17054FDF00F2BF9B /* arm_fir_data.c in Sources */,
-				D49EC45F17054FDF00F2BF9B /* arm_fir_example_f32.c in Sources */,
-				D49EC46017054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC46117054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC46217054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC46317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC46417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC46517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC46617054FDF00F2BF9B /* arm_graphic_equalizer_data.c in Sources */,
-				D49EC46717054FDF00F2BF9B /* arm_graphic_equalizer_example_q31.c in Sources */,
-				D49EC46817054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC46917054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC46A17054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC46B17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC46C17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC46D17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC46E17054FDF00F2BF9B /* arm_linear_interp_data.c in Sources */,
-				D49EC46F17054FDF00F2BF9B /* arm_linear_interp_example_f32.c in Sources */,
-				D49EC47017054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC47117054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC47217054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC47317054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC47417054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC47517054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC47617054FDF00F2BF9B /* arm_matrix_example_f32.c in Sources */,
-				D49EC47717054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC47817054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC47917054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC47A17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC47B17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC47C17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC47D17054FDF00F2BF9B /* arm_signal_converge_data.c in Sources */,
-				D49EC47E17054FDF00F2BF9B /* arm_signal_converge_example_f32.c in Sources */,
-				D49EC47F17054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC48017054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC48117054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC48217054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC48317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC48417054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC48517054FDF00F2BF9B /* arm_sin_cos_example_f32.c in Sources */,
-				D49EC48617054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC48717054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC48817054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC48917054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC48A17054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC48B17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC48C17054FDF00F2BF9B /* arm_variance_example_f32.c in Sources */,
-				D49EC48D17054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC48E17054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC48F17054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC49017054FDF00F2BF9B /* math_helper.c in Sources */,
 				D49EC49117054FDF00F2BF9B /* arm_abs_f32.c in Sources */,
 				D49EC49217054FDF00F2BF9B /* arm_abs_q15.c in Sources */,
 				D49EC49317054FDF00F2BF9B /* arm_abs_q31.c in Sources */,
@@ -8122,58 +8069,15 @@
 				D49EC57E17054FDF00F2BF9B /* arm_rfft_init_q31.c in Sources */,
 				D49EC57F17054FDF00F2BF9B /* arm_rfft_q15.c in Sources */,
 				D49EC58017054FDF00F2BF9B /* arm_rfft_q31.c in Sources */,
-				D49EC58D17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC58E17054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC58F17054FDF00F2BF9B /* startup_ARMCM0.S in Sources */,
-				D49EC59017054FDF00F2BF9B /* startup_ARMCM0.s in Sources */,
-				D49EC59117054FDF00F2BF9B /* system_ARMCM0.c in Sources */,
-				D49EC59217054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC59317054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC59417054FDF00F2BF9B /* startup_ARMCM3.S in Sources */,
-				D49EC59517054FDF00F2BF9B /* startup_ARMCM3.s in Sources */,
-				D49EC59617054FDF00F2BF9B /* system_ARMCM3.c in Sources */,
-				D49EC59717054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC59817054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC59917054FDF00F2BF9B /* startup_ARMCM4.S in Sources */,
-				D49EC59A17054FDF00F2BF9B /* startup_ARMCM4.s in Sources */,
-				D49EC59B17054FDF00F2BF9B /* system_ARMCM4.c in Sources */,
-				D49EC59C17054FDF00F2BF9B /* startup_sam3n.c in Sources */,
-				D49EC59D17054FDF00F2BF9B /* startup_sam3n.c in Sources */,
-				D49EC59E17054FDF00F2BF9B /* startup_sam3n.c in Sources */,
-				D49EC59F17054FDF00F2BF9B /* startup_sam3n.c in Sources */,
-				D49EC5A017054FDF00F2BF9B /* startup_sam3n.c in Sources */,
-				D49EC5A117054FDF00F2BF9B /* system_sam3n.c in Sources */,
-				D49EC5A217054FDF00F2BF9B /* startup_sam3s.c in Sources */,
-				D49EC5A317054FDF00F2BF9B /* startup_sam3s.c in Sources */,
-				D49EC5A417054FDF00F2BF9B /* startup_sam3s.c in Sources */,
-				D49EC5A517054FDF00F2BF9B /* startup_sam3s.c in Sources */,
-				D49EC5A617054FDF00F2BF9B /* startup_sam3s.c in Sources */,
-				D49EC5A717054FDF00F2BF9B /* system_sam3s.c in Sources */,
-				D49EC5A817054FDF00F2BF9B /* startup_sam3sd8.c in Sources */,
-				D49EC5A917054FDF00F2BF9B /* startup_sam3sd8.c in Sources */,
-				D49EC5AA17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */,
-				D49EC5AB17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */,
-				D49EC5AC17054FDF00F2BF9B /* startup_sam3sd8.c in Sources */,
-				D49EC5AD17054FDF00F2BF9B /* system_sam3sd8.c in Sources */,
-				D49EC5AE17054FDF00F2BF9B /* startup_sam3u.c in Sources */,
-				D49EC5AF17054FDF00F2BF9B /* startup_sam3u.c in Sources */,
-				D49EC5B017054FDF00F2BF9B /* startup_sam3u.c in Sources */,
-				D49EC5B117054FDF00F2BF9B /* startup_sam3u.c in Sources */,
-				D49EC5B217054FDF00F2BF9B /* startup_sam3u.c in Sources */,
-				D49EC5B317054FDF00F2BF9B /* system_sam3u.c in Sources */,
-				D49EC5B417054FDF00F2BF9B /* startup_sam3xa.c in Sources */,
-				D49EC5B517054FDF00F2BF9B /* startup_sam3xa.c in Sources */,
-				D49EC5B617054FDF00F2BF9B /* startup_sam3xa.c in Sources */,
-				D49EC5B717054FDF00F2BF9B /* startup_sam3xa.c in Sources */,
-				D49EC5B817054FDF00F2BF9B /* startup_sam3xa.c in Sources */,
-				D49EC5B917054FDF00F2BF9B /* system_sam3xa.c in Sources */,
-				D49EC5BA17054FDF00F2BF9B /* startup_sam4s.c in Sources */,
-				D49EC5BB17054FDF00F2BF9B /* startup_sam4s.c in Sources */,
-				D49EC5BC17054FDF00F2BF9B /* startup_sam4s.c in Sources */,
-				D49EC5BD17054FDF00F2BF9B /* startup_sam4s.c in Sources */,
-				D49EC5BE17054FDF00F2BF9B /* startup_sam4s.c in Sources */,
-				D49EC5BF17054FDF00F2BF9B /* system_sam4s.c in Sources */,
 				D49EC5C017054FDF00F2BF9B /* Makefile in Sources */,
+				D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */,
+				D49EC5E41706770A00F2BF9B /* arm_math.h in Sources */,
+				D49EC5E51706770A00F2BF9B /* core_cm0.h in Sources */,
+				D49EC5E61706770A00F2BF9B /* core_cm3.h in Sources */,
+				D49EC5E71706770A00F2BF9B /* core_cm4.h in Sources */,
+				D49EC5E81706770A00F2BF9B /* core_cm4_simd.h in Sources */,
+				D49EC5E91706770A00F2BF9B /* core_cmFunc.h in Sources */,
+				D49EC5EA1706770A00F2BF9B /* core_cmInstr.h in Sources */,
 				D49EC5C117054FDF00F2BF9B /* adc.c in Sources */,
 				D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */,
 				D49EC5C317054FDF00F2BF9B /* dacc.c in Sources */,

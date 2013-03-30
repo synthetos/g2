@@ -116,9 +116,6 @@ ifeq ("$(PLATFORM)","due")
     DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
                            $(PLATFORM_BASE)/libsam/include
 
-#    LINKER_SCRIPT_flash = $(PLATFORM_BASE)/linker_scripts/gcc/flash.ld
-#    LINKER_SCRIPT_sram  = $(PLATFORM_BASE)/linker_scripts/gcc/sram.ld
-
     include $(PLATFORM_BASE).mk
 endif
 
@@ -204,6 +201,17 @@ CFLAGS   += $(OPTIMIZATION) $(INCLUDES)
 CPPFLAGS += $(OPTIMIZATION) $(INCLUDES)
 ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
+
+ifeq ($(VERBOSE),2)
+$(warning INCLUDES: $(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+$(warning LIBRARIES: $(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
+$(warning SOURCE DIRECTORIES: $(SOURCE_DIRS))
+$(warning C SOURCES: $(SOURCES))
+$(warning C++ SOURCES: $(SOURCES_CXX))
+$(warning LINK FIRST SOURCES: $(FIRST_LINK_SOURCES))
+endif
+
+
 #-------------------------------------------------------------------------------
 #		Rules
 #-------------------------------------------------------------------------------
@@ -226,7 +234,7 @@ REQUIRED_DIRS += $(OUTDIR)
 OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(OBJECTS))
 CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(CXX_OBJECTS))
 ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(ASM_OBJECTS))
-LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/linker_scripts/gcc/$(1).ld
+LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/gcc_$(1).ld
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
 FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/, $(FIRST_LINK_OBJECTS))
 

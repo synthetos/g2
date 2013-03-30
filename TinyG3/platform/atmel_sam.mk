@@ -34,7 +34,7 @@ ifeq ('$(CHIP)','')
 $(error CHIP not defined)
 endif
 
-include platform/atmel_sam_series.mk
+include platform/atmel_sam/atmel_sam_series.mk
 
 # fill the needed variables
 ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3N)))

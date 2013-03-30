@@ -40,7 +40,25 @@
 static void _unit_tests(void);
 */
 
+#include "tinyg2.h"				// #1 There are some dependencies
 #include "stepper.h"
+
+/******************** Application Code ************************/
+int led = 13;
+
+void setup( void )
+{
+	pinMode(led, OUTPUT);
+	tg_setup();
+}
+
+void loop( void )
+{
+	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
+	delay(500);               // wait for a second
+	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
+	delay(500);               // wait for a second
+}
 
 /*
  * TinyG2 application setup (init) - called from Arduino main
