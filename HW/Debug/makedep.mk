@@ -14,8 +14,6 @@ arduino\IPAddress.cpp
 
 arduino\itoa.c
 
-arduino\main.cpp
-
 arduino\Print.cpp
 
 arduino\Reset.cpp

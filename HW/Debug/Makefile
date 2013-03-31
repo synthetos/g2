@@ -50,7 +50,6 @@ C_SRCS +=  \
 ../arduino/iar_calls_sam3.c \
 ../arduino/IPAddress.cpp \
 ../arduino/itoa.c \
-../arduino/main.cpp \
 ../arduino/Print.cpp \
 ../arduino/Reset.cpp \
 ../arduino/RingBuffer.cpp \
@@ -115,7 +114,6 @@ arduino/hooks.o \
 arduino/iar_calls_sam3.o \
 arduino/IPAddress.o \
 arduino/itoa.o \
-arduino/main.o \
 arduino/Print.o \
 arduino/Reset.o \
 arduino/RingBuffer.o \
@@ -174,7 +172,6 @@ arduino/hooks.o \
 arduino/iar_calls_sam3.o \
 arduino/IPAddress.o \
 arduino/itoa.o \
-arduino/main.o \
 arduino/Print.o \
 arduino/Reset.o \
 arduino/RingBuffer.o \
@@ -233,7 +230,6 @@ arduino/hooks.d \
 arduino/iar_calls_sam3.d \
 arduino/IPAddress.d \
 arduino/itoa.d \
-arduino/main.d \
 arduino/Print.d \
 arduino/Reset.d \
 arduino/RingBuffer.d \
@@ -292,7 +288,6 @@ arduino/hooks.d \
 arduino/iar_calls_sam3.d \
 arduino/IPAddress.d \
 arduino/itoa.d \
-arduino/main.d \
 arduino/Print.d \
 arduino/Reset.d \
 arduino/RingBuffer.d \
@@ -353,8 +348,6 @@ ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:= ./makedep.mk
 
 # AVR32/GNU C Compiler
-
-
 
 
 

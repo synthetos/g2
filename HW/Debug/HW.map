@@ -681,290 +681,6 @@ Discarded input sections
  .ARM.attributes
                 0x00000000       0x33 arduino/itoa.o
  .debug_frame   0x00000000       0x80 arduino/itoa.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .group         0x00000000        0x8 arduino/main.o
- .text          0x00000000        0x0 arduino/main.o
- .bss           0x00000000        0x0 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000      0x214 arduino/main.o
- .debug_macro   0x00000000       0x3a arduino/main.o
- .debug_macro   0x00000000       0x2e arduino/main.o
- .debug_macro   0x00000000       0x94 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
- .debug_macro   0x00000000       0x3a arduino/main.o
- .debug_macro   0x00000000       0x52 arduino/main.o
- .debug_macro   0x00000000       0x19 arduino/main.o
- .debug_macro   0x00000000      0x16d arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x29 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x12 arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000      0x1cc arduino/main.o
- .debug_macro   0x00000000      0xd80 arduino/main.o
- .debug_macro   0x00000000       0xf0 arduino/main.o
- .debug_macro   0x00000000       0x26 arduino/main.o
- .debug_macro   0x00000000       0x34 arduino/main.o
- .debug_macro   0x00000000       0x18 arduino/main.o
- .debug_macro   0x00000000      0x743 arduino/main.o
- .debug_macro   0x00000000      0xaa7 arduino/main.o
- .debug_macro   0x00000000      0x55a arduino/main.o
- .debug_macro   0x00000000      0x2a6 arduino/main.o
- .debug_macro   0x00000000      0x30b arduino/main.o
- .debug_macro   0x00000000      0x741 arduino/main.o
- .debug_macro   0x00000000       0x82 arduino/main.o
- .debug_macro   0x00000000      0x56c arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000      0x6a9 arduino/main.o
- .debug_macro   0x00000000      0x51e arduino/main.o
- .debug_macro   0x00000000       0xbe arduino/main.o
- .debug_macro   0x00000000     0x2333 arduino/main.o
- .debug_macro   0x00000000      0x84f arduino/main.o
- .debug_macro   0x00000000      0xdbb arduino/main.o
- .debug_macro   0x00000000       0x7c arduino/main.o
- .debug_macro   0x00000000      0x256 arduino/main.o
- .debug_macro   0x00000000       0x58 arduino/main.o
- .debug_macro   0x00000000      0x999 arduino/main.o
- .debug_macro   0x00000000      0x22d arduino/main.o
- .debug_macro   0x00000000      0x4d0 arduino/main.o
- .debug_macro   0x00000000      0x6a4 arduino/main.o
- .debug_macro   0x00000000      0x590 arduino/main.o
- .debug_macro   0x00000000       0x46 arduino/main.o
- .debug_macro   0x00000000      0x33f arduino/main.o
- .debug_macro   0x00000000      0x27e arduino/main.o
- .debug_macro   0x00000000     0x14d5 arduino/main.o
- .debug_macro   0x00000000      0x7ab arduino/main.o
- .debug_macro   0x00000000       0x76 arduino/main.o
- .debug_macro   0x00000000       0x82 arduino/main.o
- .debug_macro   0x00000000       0x76 arduino/main.o
- .debug_macro   0x00000000       0x4c arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
- .debug_macro   0x00000000       0x88 arduino/main.o
- .debug_macro   0x00000000       0x88 arduino/main.o
- .debug_macro   0x00000000      0x3b4 arduino/main.o
- .debug_macro   0x00000000       0xb8 arduino/main.o
- .debug_macro   0x00000000       0xb8 arduino/main.o
- .debug_macro   0x00000000       0xb8 arduino/main.o
- .debug_macro   0x00000000       0xb8 arduino/main.o
- .debug_macro   0x00000000      0x2b8 arduino/main.o
- .debug_macro   0x00000000      0x118 arduino/main.o
- .debug_macro   0x00000000      0x216 arduino/main.o
- .debug_macro   0x00000000      0x216 arduino/main.o
- .debug_macro   0x00000000       0x2e arduino/main.o
- .debug_macro   0x00000000       0xac arduino/main.o
- .debug_macro   0x00000000      0x13e arduino/main.o
- .debug_macro   0x00000000       0x7c arduino/main.o
- .debug_macro   0x00000000      0x1f6 arduino/main.o
- .debug_macro   0x00000000       0x64 arduino/main.o
- .debug_macro   0x00000000       0xa6 arduino/main.o
- .debug_macro   0x00000000       0x7c arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000      0x10c arduino/main.o
- .debug_macro   0x00000000      0x10c arduino/main.o
- .debug_macro   0x00000000      0x10c arduino/main.o
- .debug_macro   0x00000000      0x10c arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000       0x2e arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000       0x58 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000      0x27a arduino/main.o
- .debug_macro   0x00000000      0xd34 arduino/main.o
- .debug_macro   0x00000000      0x12a arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x44 arduino/main.o
- .debug_macro   0x00000000       0x76 arduino/main.o
- .debug_macro   0x00000000       0x52 arduino/main.o
- .debug_macro   0x00000000       0x58 arduino/main.o
- .debug_macro   0x00000000       0x34 arduino/main.o
- .debug_macro   0x00000000       0x3a arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000       0x52 arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000       0x4c arduino/main.o
- .debug_macro   0x00000000       0xef arduino/main.o
- .debug_macro   0x00000000       0x28 arduino/main.o
- .debug_macro   0x00000000       0x88 arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
- .debug_macro   0x00000000      0x79d arduino/main.o
- .debug_macro   0x00000000      0x501 arduino/main.o
- .debug_macro   0x00000000       0xd6 arduino/main.o
- .debug_macro   0x00000000       0x69 arduino/main.o
- .debug_macro   0x00000000       0x52 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x12 arduino/main.o
- .debug_macro   0x00000000      0x447 arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x85 arduino/main.o
- .debug_macro   0x00000000       0x22 arduino/main.o
- .debug_macro   0x00000000       0x91 arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000      0x16d arduino/main.o
- .debug_macro   0x00000000       0x1c arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x52 arduino/main.o
- .debug_macro   0x00000000       0x10 arduino/main.o
- .debug_macro   0x00000000       0x16 arduino/main.o
- .debug_macro   0x00000000       0x35 arduino/main.o
- .debug_macro   0x00000000       0x34 arduino/main.o
- .debug_macro   0x00000000      0x120 arduino/main.o
- .debug_macro   0x00000000      0x18a arduino/main.o
- .debug_macro   0x00000000       0x20 arduino/main.o
- .debug_macro   0x00000000       0x88 arduino/main.o
- .debug_macro   0x00000000      0x22a arduino/main.o
- .debug_macro   0x00000000      0x100 arduino/main.o
  .group         0x00000000        0x8 arduino/Print.o
  .group         0x00000000        0x8 arduino/Print.o
  .group         0x00000000        0x8 arduino/Print.o
@@ -5833,14 +5549,73 @@ Discarded input sections
  .group         0x00000000        0x8 HW.o
  .group         0x00000000        0x8 HW.o
  .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
+ .group         0x00000000        0x8 HW.o
  .text          0x00000000        0x0 HW.o
- .data          0x00000000        0x0 HW.o
  .bss           0x00000000        0x0 HW.o
- .debug_info    0x00000000       0x8d HW.o
- .debug_abbrev  0x00000000       0x4e HW.o
- .debug_aranges
-                0x00000000       0x18 HW.o
- .debug_macro   0x00000000      0xb30 HW.o
  .debug_macro   0x00000000       0x10 HW.o
  .debug_macro   0x00000000       0xf0 HW.o
  .debug_macro   0x00000000      0x214 HW.o
@@ -5917,11 +5692,70 @@ Discarded input sections
  .debug_macro   0x00000000      0x27a HW.o
  .debug_macro   0x00000000      0xd34 HW.o
  .debug_macro   0x00000000      0x12a HW.o
- .debug_line    0x00000000      0x92d HW.o
- .debug_str     0x00000000    0x4b30f HW.o
- .comment       0x00000000       0x34 HW.o
- .ARM.attributes
-                0x00000000       0x33 HW.o
+ .debug_macro   0x00000000       0x3a HW.o
+ .debug_macro   0x00000000       0x2e HW.o
+ .debug_macro   0x00000000       0x94 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000      0x100 HW.o
+ .debug_macro   0x00000000       0x3a HW.o
+ .debug_macro   0x00000000       0x52 HW.o
+ .debug_macro   0x00000000       0x19 HW.o
+ .debug_macro   0x00000000      0x16d HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000       0x29 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x12 HW.o
+ .debug_macro   0x00000000       0x1c HW.o
+ .debug_macro   0x00000000      0x1cc HW.o
+ .debug_macro   0x00000000      0xd80 HW.o
+ .debug_macro   0x00000000       0x1c HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000       0x44 HW.o
+ .debug_macro   0x00000000       0x76 HW.o
+ .debug_macro   0x00000000       0x52 HW.o
+ .debug_macro   0x00000000       0x58 HW.o
+ .debug_macro   0x00000000       0x34 HW.o
+ .debug_macro   0x00000000       0x3a HW.o
+ .debug_macro   0x00000000       0x22 HW.o
+ .debug_macro   0x00000000       0x52 HW.o
+ .debug_macro   0x00000000       0x1c HW.o
+ .debug_macro   0x00000000       0x4c HW.o
+ .debug_macro   0x00000000       0xef HW.o
+ .debug_macro   0x00000000       0x28 HW.o
+ .debug_macro   0x00000000       0x88 HW.o
+ .debug_macro   0x00000000      0x100 HW.o
+ .debug_macro   0x00000000      0x79d HW.o
+ .debug_macro   0x00000000      0x501 HW.o
+ .debug_macro   0x00000000       0xd6 HW.o
+ .debug_macro   0x00000000       0x69 HW.o
+ .debug_macro   0x00000000       0x52 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x12 HW.o
+ .debug_macro   0x00000000      0x447 HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x85 HW.o
+ .debug_macro   0x00000000       0x22 HW.o
+ .debug_macro   0x00000000       0x91 HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000      0x16d HW.o
+ .debug_macro   0x00000000       0x1c HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x52 HW.o
+ .debug_macro   0x00000000       0x10 HW.o
+ .debug_macro   0x00000000       0x16 HW.o
+ .debug_macro   0x00000000       0x35 HW.o
+ .debug_macro   0x00000000       0x34 HW.o
+ .debug_macro   0x00000000      0x120 HW.o
+ .debug_macro   0x00000000      0x18a HW.o
+ .debug_macro   0x00000000       0x20 HW.o
+ .debug_macro   0x00000000       0x88 HW.o
+ .debug_macro   0x00000000      0x22a HW.o
+ .debug_macro   0x00000000      0x100 HW.o
  .group         0x00000000        0x8 libsam/source/adc.o
  .group         0x00000000        0x8 libsam/source/adc.o
  .group         0x00000000        0x8 libsam/source/adc.o
@@ -13503,7 +13337,6 @@ LOAD arduino/hooks.o
 LOAD arduino/iar_calls_sam3.o
 LOAD arduino/IPAddress.o
 LOAD arduino/itoa.o
-LOAD arduino/main.o
 LOAD arduino/Print.o
 LOAD arduino/Reset.o
 LOAD arduino/RingBuffer.o
@@ -13637,235 +13470,235 @@ LOAD c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/a
                 0x0008025c                _ZN9IPAddressC1Ehhhh
  .text._GLOBAL__sub_I__ZN9IPAddressC2Ev
                 0x00080278       0x24 arduino/IPAddress.o
- .text.setup    0x0008029c       0x1c arduino/main.o
-                0x0008029c                setup
- .text.loop     0x000802b8       0x38 arduino/main.o
-                0x000802b8                loop
- .text.main     0x000802f0       0x54 arduino/main.o
-                0x000802f0                main
  .text._ZN5Print5writeEPKhj
-                0x00080344       0x2c arduino/Print.o
-                0x00080344                _ZN5Print5writeEPKhj
+                0x0008029c       0x2c arduino/Print.o
+                0x0008029c                _ZN5Print5writeEPKhj
  .text._ZN5Print5printEc
-                0x00080370        0xc arduino/Print.o
-                0x00080370                _ZN5Print5printEc
+                0x000802c8        0xc arduino/Print.o
+                0x000802c8                _ZN5Print5printEc
  .text._ZN5Print11printNumberEmh
-                0x0008037c       0x60 arduino/Print.o
-                0x0008037c                _ZN5Print11printNumberEmh
+                0x000802d4       0x60 arduino/Print.o
+                0x000802d4                _ZN5Print11printNumberEmh
  .text._ZN5Print5printEmi
-                0x000803dc       0x1c arduino/Print.o
-                0x000803dc                _ZN5Print5printEmi
+                0x00080334       0x1c arduino/Print.o
+                0x00080334                _ZN5Print5printEmi
  .text._ZN5Print5printEhi
-                0x000803f8       0x10 arduino/Print.o
-                0x000803f8                _ZN5Print5printEhi
+                0x00080350       0x10 arduino/Print.o
+                0x00080350                _ZN5Print5printEhi
  .text.initiateReset
-                0x00080408        0xc arduino/Reset.o
-                0x00080408                initiateReset
+                0x00080360        0xc arduino/Reset.o
+                0x00080360                initiateReset
  .text.cancelReset
-                0x00080414       0x10 arduino/Reset.o
-                0x00080414                cancelReset
+                0x0008036c       0x10 arduino/Reset.o
+                0x0008036c                cancelReset
  .text.tickReset
-                0x00080424       0x2c arduino/Reset.o
-                0x00080424                tickReset
+                0x0008037c       0x2c arduino/Reset.o
+                0x0008037c                tickReset
  .text._ZN10RingBufferC2Ev
-                0x00080450       0x24 arduino/RingBuffer.o
-                0x00080450                _ZN10RingBufferC2Ev
-                0x00080450                _ZN10RingBufferC1Ev
+                0x000803a8       0x24 arduino/RingBuffer.o
+                0x000803a8                _ZN10RingBufferC2Ev
+                0x000803a8                _ZN10RingBufferC1Ev
  .text._ZN10RingBuffer10store_charEh
-                0x00080474       0x1c arduino/RingBuffer.o
-                0x00080474                _ZN10RingBuffer10store_charEh
- .text._sbrk    0x00080490       0x30 arduino/syscalls_sam3.o
-                0x00080490                _sbrk
+                0x000803cc       0x1c arduino/RingBuffer.o
+                0x000803cc                _ZN10RingBuffer10store_charEh
+ .text._sbrk    0x000803e8       0x30 arduino/syscalls_sam3.o
+                0x000803e8                _sbrk
  .text._ZN9UARTClasscvbEv
-                0x000804c0        0x8 arduino/UARTClass.o
-                0x000804c0                _ZN9UARTClasscvbEv
+                0x00080418        0x8 arduino/UARTClass.o
+                0x00080418                _ZN9UARTClasscvbEv
  .text._ZN9UARTClass9availableEv
-                0x000804c8       0x10 arduino/UARTClass.o
-                0x000804c8                _ZN9UARTClass9availableEv
+                0x00080420       0x10 arduino/UARTClass.o
+                0x00080420                _ZN9UARTClass9availableEv
  .text._ZN9UARTClass4peekEv
-                0x000804d8       0x14 arduino/UARTClass.o
-                0x000804d8                _ZN9UARTClass4peekEv
+                0x00080430       0x14 arduino/UARTClass.o
+                0x00080430                _ZN9UARTClass4peekEv
  .text._ZN9UARTClass4readEv
-                0x000804ec       0x1c arduino/UARTClass.o
-                0x000804ec                _ZN9UARTClass4readEv
+                0x00080444       0x1c arduino/UARTClass.o
+                0x00080444                _ZN9UARTClass4readEv
  .text._ZN9UARTClass5flushEv
-                0x00080508        0xc arduino/UARTClass.o
-                0x00080508                _ZN9UARTClass5flushEv
+                0x00080460        0xc arduino/UARTClass.o
+                0x00080460                _ZN9UARTClass5flushEv
  .text._ZN9UARTClass5writeEh
-                0x00080514       0x14 arduino/UARTClass.o
-                0x00080514                _ZN9UARTClass5writeEh
+                0x0008046c       0x14 arduino/UARTClass.o
+                0x0008046c                _ZN9UARTClass5writeEh
  .text._ZN9UARTClassC2EP4Uart4IRQnmP10RingBuffer
-                0x00080528       0x28 arduino/UARTClass.o
-                0x00080528                _ZN9UARTClassC1EP4Uart4IRQnmP10RingBuffer
-                0x00080528                _ZN9UARTClassC2EP4Uart4IRQnmP10RingBuffer
+                0x00080480       0x28 arduino/UARTClass.o
+                0x00080480                _ZN9UARTClassC1EP4Uart4IRQnmP10RingBuffer
+                0x00080480                _ZN9UARTClassC2EP4Uart4IRQnmP10RingBuffer
  .text._ZN9UARTClass10IrqHandlerEv
-                0x00080550       0x30 arduino/UARTClass.o
-                0x00080550                _ZN9UARTClass10IrqHandlerEv
+                0x000804a8       0x30 arduino/UARTClass.o
+                0x000804a8                _ZN9UARTClass10IrqHandlerEv
  .text._ZN10USARTClasscvbEv
-                0x00080580        0x8 arduino/USARTClass.o
-                0x00080580                _ZN10USARTClasscvbEv
+                0x000804d8        0x8 arduino/USARTClass.o
+                0x000804d8                _ZN10USARTClasscvbEv
  .text._ZN10USARTClass9availableEv
-                0x00080588       0x10 arduino/USARTClass.o
-                0x00080588                _ZN10USARTClass9availableEv
+                0x000804e0       0x10 arduino/USARTClass.o
+                0x000804e0                _ZN10USARTClass9availableEv
  .text._ZN10USARTClass4peekEv
-                0x00080598       0x14 arduino/USARTClass.o
-                0x00080598                _ZN10USARTClass4peekEv
+                0x000804f0       0x14 arduino/USARTClass.o
+                0x000804f0                _ZN10USARTClass4peekEv
  .text._ZN10USARTClass4readEv
-                0x000805ac       0x1c arduino/USARTClass.o
-                0x000805ac                _ZN10USARTClass4readEv
+                0x00080504       0x1c arduino/USARTClass.o
+                0x00080504                _ZN10USARTClass4readEv
  .text._ZN10USARTClass5flushEv
-                0x000805c8        0xc arduino/USARTClass.o
-                0x000805c8                _ZN10USARTClass5flushEv
+                0x00080520        0xc arduino/USARTClass.o
+                0x00080520                _ZN10USARTClass5flushEv
  .text._ZN10USARTClass5writeEh
-                0x000805d4       0x14 arduino/USARTClass.o
-                0x000805d4                _ZN10USARTClass5writeEh
+                0x0008052c       0x14 arduino/USARTClass.o
+                0x0008052c                _ZN10USARTClass5writeEh
  .text._ZN10USARTClassC2EP5Usart4IRQnmP10RingBuffer
-                0x000805e8       0x28 arduino/USARTClass.o
-                0x000805e8                _ZN10USARTClassC2EP5Usart4IRQnmP10RingBuffer
-                0x000805e8                _ZN10USARTClassC1EP5Usart4IRQnmP10RingBuffer
+                0x00080540       0x28 arduino/USARTClass.o
+                0x00080540                _ZN10USARTClassC2EP5Usart4IRQnmP10RingBuffer
+                0x00080540                _ZN10USARTClassC1EP5Usart4IRQnmP10RingBuffer
  .text._ZN10USARTClass10IrqHandlerEv
-                0x00080610       0x30 arduino/USARTClass.o
-                0x00080610                _ZN10USARTClass10IrqHandlerEv
+                0x00080568       0x30 arduino/USARTClass.o
+                0x00080568                _ZN10USARTClass10IrqHandlerEv
  .text._ZN7Serial_9availableEv
-                0x00080640       0x1c arduino/USB/CDC.o
-                0x00080640                _ZN7Serial_9availableEv
+                0x00080598       0x1c arduino/USB/CDC.o
+                0x00080598                _ZN7Serial_9availableEv
  .text._ZN7Serial_4peekEv
-                0x0008065c       0x2c arduino/USB/CDC.o
-                0x0008065c                _ZN7Serial_4peekEv
+                0x000805b4       0x2c arduino/USB/CDC.o
+                0x000805b4                _ZN7Serial_4peekEv
  .text._ZN7Serial_5writeEh
-                0x00080688       0x1c arduino/USB/CDC.o
-                0x00080688                _ZN7Serial_5writeEh
+                0x000805e0       0x1c arduino/USB/CDC.o
+                0x000805e0                _ZN7Serial_5writeEh
  .text._ZN7Serial_5writeEPKhj
-                0x000806a4       0x3c arduino/USB/CDC.o
-                0x000806a4                _ZN7Serial_5writeEPKhj
+                0x000805fc       0x3c arduino/USB/CDC.o
+                0x000805fc                _ZN7Serial_5writeEPKhj
  .text._ZN7Serial_5flushEv
-                0x000806e0       0x14 arduino/USB/CDC.o
-                0x000806e0                _ZN7Serial_5flushEv
+                0x00080638       0x14 arduino/USB/CDC.o
+                0x00080638                _ZN7Serial_5flushEv
  .text._ZN7Serial_4readEv
-                0x000806f4       0x5c arduino/USB/CDC.o
-                0x000806f4                _ZN7Serial_4readEv
+                0x0008064c       0x5c arduino/USB/CDC.o
+                0x0008064c                _ZN7Serial_4readEv
  .text._ZN7Serial_6acceptEv
-                0x00080750       0xac arduino/USB/CDC.o
-                0x00080750                _ZN7Serial_6acceptEv
+                0x000806a8       0xac arduino/USB/CDC.o
+                0x000806a8                _ZN7Serial_6acceptEv
  .text._Z16CDC_GetInterfacePh
-                0x000807fc       0x28 arduino/USB/CDC.o
-                0x000807fc                _Z16CDC_GetInterfacePh
+                0x00080754       0x28 arduino/USB/CDC.o
+                0x00080754                _Z16CDC_GetInterfacePh
  .text._Z21CDC_GetOtherInterfacePh
-                0x00080824       0x24 arduino/USB/CDC.o
-                0x00080824                _Z21CDC_GetOtherInterfacePh
+                0x0008077c       0x24 arduino/USB/CDC.o
+                0x0008077c                _Z21CDC_GetOtherInterfacePh
  .text._Z9CDC_SetupR5Setup
-                0x00080848       0xb8 arduino/USB/CDC.o
-                0x00080848                _Z9CDC_SetupR5Setup
+                0x000807a0       0xb8 arduino/USB/CDC.o
+                0x000807a0                _Z9CDC_SetupR5Setup
  .text._GLOBAL__sub_I_cdc_rx_buffer
-                0x00080900       0x24 arduino/USB/CDC.o
+                0x00080858       0x24 arduino/USB/CDC.o
  .text._ZN9Keyboard_5writeEh
-                0x00080924       0x1c arduino/USB/HID.o
-                0x00080924                _ZN9Keyboard_5writeEh
+                0x0008087c       0x1c arduino/USB/HID.o
+                0x0008087c                _ZN9Keyboard_5writeEh
  .text._Z16HID_GetInterfacePh
-                0x00080940       0x28 arduino/USB/HID.o
-                0x00080940                _Z16HID_GetInterfacePh
+                0x00080898       0x28 arduino/USB/HID.o
+                0x00080898                _Z16HID_GetInterfacePh
  .text._Z17HID_GetDescriptori
-                0x00080968       0x1c arduino/USB/HID.o
-                0x00080968                _Z17HID_GetDescriptori
+                0x000808c0       0x1c arduino/USB/HID.o
+                0x000808c0                _Z17HID_GetDescriptori
  .text._Z14HID_SendReporthPKvm
-                0x00080984       0x3c arduino/USB/HID.o
-                0x00080984                _Z14HID_SendReporthPKvm
+                0x000808dc       0x3c arduino/USB/HID.o
+                0x000808dc                _Z14HID_SendReporthPKvm
  .text._Z9HID_SetupR5Setup
-                0x000809c0       0x58 arduino/USB/HID.o
-                0x000809c0                _Z9HID_SetupR5Setup
+                0x00080918       0x58 arduino/USB/HID.o
+                0x00080918                _Z9HID_SetupR5Setup
  .text._ZN6Mouse_C2Ev
-                0x00080a18        0x8 arduino/USB/HID.o
-                0x00080a18                _ZN6Mouse_C2Ev
-                0x00080a18                _ZN6Mouse_C1Ev
+                0x00080970        0x8 arduino/USB/HID.o
+                0x00080970                _ZN6Mouse_C2Ev
+                0x00080970                _ZN6Mouse_C1Ev
  .text._ZN9Keyboard_C2Ev
-                0x00080a20       0x10 arduino/USB/HID.o
-                0x00080a20                _ZN9Keyboard_C1Ev
-                0x00080a20                _ZN9Keyboard_C2Ev
+                0x00080978       0x10 arduino/USB/HID.o
+                0x00080978                _ZN9Keyboard_C1Ev
+                0x00080978                _ZN9Keyboard_C2Ev
  .text._ZN9Keyboard_10sendReportEP9KeyReport
-                0x00080a30       0x18 arduino/USB/HID.o
-                0x00080a30                _ZN9Keyboard_10sendReportEP9KeyReport
+                0x00080988       0x18 arduino/USB/HID.o
+                0x00080988                _ZN9Keyboard_10sendReportEP9KeyReport
  .text._ZN9Keyboard_10releaseAllEv
-                0x00080a48       0x24 arduino/USB/HID.o
-                0x00080a48                _ZN9Keyboard_10releaseAllEv
+                0x000809a0       0x24 arduino/USB/HID.o
+                0x000809a0                _ZN9Keyboard_10releaseAllEv
  .text._ZN9Keyboard_7releaseEh
-                0x00080a6c       0x90 arduino/USB/HID.o
-                0x00080a6c                _ZN9Keyboard_7releaseEh
+                0x000809c4       0x90 arduino/USB/HID.o
+                0x000809c4                _ZN9Keyboard_7releaseEh
  .text._ZN9Keyboard_5pressEh
-                0x00080afc       0xd0 arduino/USB/HID.o
-                0x00080afc                _ZN9Keyboard_5pressEh
+                0x00080a54       0xd0 arduino/USB/HID.o
+                0x00080a54                _ZN9Keyboard_5pressEh
  .text._GLOBAL__sub_I_Mouse
-                0x00080bcc       0x28 arduino/USB/HID.o
+                0x00080b24       0x28 arduino/USB/HID.o
  .text._ZL11USB_SendZlpv
-                0x00080bf4       0x30 arduino/USB/USBCore.o
+                0x00080b4c       0x30 arduino/USB/USBCore.o
  .text._Z14USBD_Availablem
-                0x00080c24       0x40 arduino/USB/USBCore.o
-                0x00080c24                _Z14USBD_Availablem
+                0x00080b7c       0x40 arduino/USB/USBCore.o
+                0x00080b7c                _Z14USBD_Availablem
  .text._Z9USBD_RecvmPvm
-                0x00080c64       0xa4 arduino/USB/USBCore.o
-                0x00080c64                _Z9USBD_RecvmPvm
+                0x00080bbc       0xa4 arduino/USB/USBCore.o
+                0x00080bbc                _Z9USBD_RecvmPvm
  .text._Z9USBD_Recvm
-                0x00080d08       0x2c arduino/USB/USBCore.o
-                0x00080d08                _Z9USBD_Recvm
+                0x00080c60       0x2c arduino/USB/USBCore.o
+                0x00080c60                _Z9USBD_Recvm
  .text._Z9USBD_SendmPKvm
-                0x00080d34       0x54 arduino/USB/USBCore.o
-                0x00080d34                _Z9USBD_SendmPKvm
+                0x00080c8c       0x54 arduino/USB/USBCore.o
+                0x00080c8c                _Z9USBD_SendmPKvm
  .text._Z16USBD_InitControli
-                0x00080d88       0x14 arduino/USB/USBCore.o
-                0x00080d88                _Z16USBD_InitControli
+                0x00080ce0       0x14 arduino/USB/USBCore.o
+                0x00080ce0                _Z16USBD_InitControli
  .text._Z16USBD_SendControlhPKvm
-                0x00080d9c       0x50 arduino/USB/USBCore.o
-                0x00080d9c                _Z16USBD_SendControlhPKvm
+                0x00080cf4       0x50 arduino/USB/USBCore.o
+                0x00080cf4                _Z16USBD_SendControlhPKvm
  .text._Z16USBD_RecvControlPvm
-                0x00080dec       0x30 arduino/USB/USBCore.o
-                0x00080dec                _Z16USBD_RecvControlPvm
+                0x00080d44       0x30 arduino/USB/USBCore.o
+                0x00080d44                _Z16USBD_RecvControlPvm
  .text._Z26USBD_ClassInterfaceRequestR5Setup
-                0x00080e1c       0x28 arduino/USB/USBCore.o
-                0x00080e1c                _Z26USBD_ClassInterfaceRequestR5Setup
+                0x00080d74       0x28 arduino/USB/USBCore.o
+                0x00080d74                _Z26USBD_ClassInterfaceRequestR5Setup
  .text._Z19USBD_SendInterfacesv
-                0x00080e44       0x30 arduino/USB/USBCore.o
-                0x00080e44                _Z19USBD_SendInterfacesv
+                0x00080d9c       0x30 arduino/USB/USBCore.o
+                0x00080d9c                _Z19USBD_SendInterfacesv
  .text._Z24USBD_SendOtherInterfacesv
-                0x00080e74       0x30 arduino/USB/USBCore.o
-                0x00080e74                _Z24USBD_SendOtherInterfacesv
+                0x00080dcc       0x30 arduino/USB/USBCore.o
+                0x00080dcc                _Z24USBD_SendOtherInterfacesv
  .text._ZL7USB_ISRv
-                0x00080ea4      0x64c arduino/USB/USBCore.o
+                0x00080dfc      0x64c arduino/USB/USBCore.o
  .text._Z10USBD_Flushm
-                0x000814f0       0x20 arduino/USB/USBCore.o
-                0x000814f0                _Z10USBD_Flushm
+                0x00081448       0x20 arduino/USB/USBCore.o
+                0x00081448                _Z10USBD_Flushm
  .text._ZN10USBDevice_C2Ev
-                0x00081510       0x34 arduino/USB/USBCore.o
-                0x00081510                _ZN10USBDevice_C1Ev
-                0x00081510                _ZN10USBDevice_C2Ev
+                0x00081468       0x34 arduino/USB/USBCore.o
+                0x00081468                _ZN10USBDevice_C1Ev
+                0x00081468                _ZN10USBDevice_C2Ev
  .text._GLOBAL__sub_I_TxLEDPulse
-                0x00081544       0x14 arduino/USB/USBCore.o
+                0x0008149c       0x14 arduino/USB/USBCore.o
  .text.PIOA_Handler
-                0x00081558       0x38 arduino/WInterrupts.o
-                0x00081558                PIOA_Handler
+                0x000814b0       0x38 arduino/WInterrupts.o
+                0x000814b0                PIOA_Handler
  .text.PIOB_Handler
-                0x00081590       0x38 arduino/WInterrupts.o
-                0x00081590                PIOB_Handler
+                0x000814e8       0x38 arduino/WInterrupts.o
+                0x000814e8                PIOB_Handler
  .text.PIOC_Handler
-                0x000815c8       0x38 arduino/WInterrupts.o
-                0x000815c8                PIOC_Handler
+                0x00081520       0x38 arduino/WInterrupts.o
+                0x00081520                PIOC_Handler
  .text.PIOD_Handler
-                0x00081600       0x38 arduino/WInterrupts.o
-                0x00081600                PIOD_Handler
- .text.delay    0x00081638       0x2c arduino/wiring.o
-                0x00081638                delay
+                0x00081558       0x38 arduino/WInterrupts.o
+                0x00081558                PIOD_Handler
+ .text.delay    0x00081590       0x2c arduino/wiring.o
+                0x00081590                delay
  .text.analogOutputInit
-                0x00081664       0x20 arduino/wiring_analog.o
-                0x00081664                analogOutputInit
- .text.pinMode  0x00081684       0xe0 arduino/wiring_digital.o
-                0x00081684                pinMode
+                0x000815bc       0x20 arduino/wiring_analog.o
+                0x000815bc                analogOutputInit
+ .text.pinMode  0x000815dc       0xe0 arduino/wiring_digital.o
+                0x000815dc                pinMode
  .text.digitalWrite
-                0x00081764       0x6c arduino/wiring_digital.o
-                0x00081764                digitalWrite
+                0x000816bc       0x6c arduino/wiring_digital.o
+                0x000816bc                digitalWrite
  .text.Reset_Handler
-                0x000817d0       0xe4 cmsis/src/startup_sam3xa.o
-                0x000817d0                Reset_Handler
+                0x00081728       0xe4 cmsis/src/startup_sam3xa.o
+                0x00081728                Reset_Handler
  .text.SystemInit
-                0x000818b4      0x104 cmsis/src/system_sam3xa.o
-                0x000818b4                SystemInit
+                0x0008180c      0x104 cmsis/src/system_sam3xa.o
+                0x0008180c                SystemInit
+ .text.setup    0x00081910       0x1c HW.o
+                0x00081910                setup
+ .text.loop     0x0008192c       0x38 HW.o
+                0x0008192c                loop
+ .text.main     0x00081964       0x54 HW.o
+                0x00081964                main
  .text.adc_init
                 0x000819b8       0x48 libsam/source/adc.o
                 0x000819b8                adc_init
@@ -14148,17 +13981,17 @@ LOAD c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/a
  .ramfunc       0x20070000       0x54 arduino/Reset.o
                 0x20070000                banzai
  *(.data .data.*)
- .data          0x20070054        0x4 arduino/main.o
-                0x20070054                led
- .data          0x20070058        0x4 arduino/Reset.o
- .data          0x2007005c        0xc arduino/USB/CDC.o
-                0x20070064                _serialPeek
- .data          0x20070068        0x2 arduino/USB/HID.o
-                0x20070068                _hid_protocol
-                0x20070069                _hid_idle
- *fill*         0x2007006a        0x2 00
- .data          0x2007006c        0x4 cmsis/src/system_sam3xa.o
-                0x2007006c                SystemCoreClock
+ .data          0x20070054        0x4 arduino/Reset.o
+ .data          0x20070058        0xc arduino/USB/CDC.o
+                0x20070060                _serialPeek
+ .data          0x20070064        0x2 arduino/USB/HID.o
+                0x20070064                _hid_protocol
+                0x20070065                _hid_idle
+ *fill*         0x20070066        0x2 00
+ .data          0x20070068        0x4 cmsis/src/system_sam3xa.o
+                0x20070068                SystemCoreClock
+ .data          0x2007006c        0x4 HW.o
+                0x2007006c                led
  .data          0x20070070        0x4 libsam/source/interrupt_sam_nvic.o
                 0x20070070                g_interrupt_enabled
  *fill*         0x20070074        0x4 00
@@ -14247,37 +14080,37 @@ OUTPUT(HW.elf elf32-littlearm)
  .ARM.attributes
                 0x000000b0       0x33 arduino/IPAddress.o
  .ARM.attributes
-                0x000000e3       0x33 arduino/main.o
+                0x000000e3       0x33 arduino/Print.o
  .ARM.attributes
-                0x00000116       0x33 arduino/Print.o
+                0x00000116       0x33 arduino/Reset.o
  .ARM.attributes
-                0x00000149       0x33 arduino/Reset.o
+                0x00000149       0x33 arduino/RingBuffer.o
  .ARM.attributes
-                0x0000017c       0x33 arduino/RingBuffer.o
+                0x0000017c       0x33 arduino/syscalls_sam3.o
  .ARM.attributes
-                0x000001af       0x33 arduino/syscalls_sam3.o
+                0x000001af       0x33 arduino/UARTClass.o
  .ARM.attributes
-                0x000001e2       0x33 arduino/UARTClass.o
+                0x000001e2       0x33 arduino/USARTClass.o
  .ARM.attributes
-                0x00000215       0x33 arduino/USARTClass.o
+                0x00000215       0x33 arduino/USB/CDC.o
  .ARM.attributes
-                0x00000248       0x33 arduino/USB/CDC.o
+                0x00000248       0x33 arduino/USB/HID.o
  .ARM.attributes
-                0x0000027b       0x33 arduino/USB/HID.o
+                0x0000027b       0x33 arduino/USB/USBCore.o
  .ARM.attributes
-                0x000002ae       0x33 arduino/USB/USBCore.o
+                0x000002ae       0x33 arduino/WInterrupts.o
  .ARM.attributes
-                0x000002e1       0x33 arduino/WInterrupts.o
+                0x000002e1       0x33 arduino/wiring.o
  .ARM.attributes
-                0x00000314       0x33 arduino/wiring.o
+                0x00000314       0x33 arduino/wiring_analog.o
  .ARM.attributes
-                0x00000347       0x33 arduino/wiring_analog.o
+                0x00000347       0x33 arduino/wiring_digital.o
  .ARM.attributes
-                0x0000037a       0x33 arduino/wiring_digital.o
+                0x0000037a       0x33 cmsis/src/startup_sam3xa.o
  .ARM.attributes
-                0x000003ad       0x33 cmsis/src/startup_sam3xa.o
+                0x000003ad       0x33 cmsis/src/system_sam3xa.o
  .ARM.attributes
-                0x000003e0       0x33 cmsis/src/system_sam3xa.o
+                0x000003e0       0x33 HW.o
  .ARM.attributes
                 0x00000413       0x33 libsam/source/adc.o
  .ARM.attributes
@@ -14335,7 +14168,6 @@ OUTPUT(HW.elf elf32-littlearm)
  .comment       0x00000000       0x34 arduino/cortex_handlers.o
  .comment       0x00000000       0x34 arduino/hooks.o
  .comment       0x00000000       0x34 arduino/IPAddress.o
- .comment       0x00000000       0x34 arduino/main.o
  .comment       0x00000000       0x34 arduino/Print.o
  .comment       0x00000000       0x34 arduino/Reset.o
  .comment       0x00000000       0x34 arduino/RingBuffer.o
@@ -14351,6 +14183,7 @@ OUTPUT(HW.elf elf32-littlearm)
  .comment       0x00000000       0x34 arduino/wiring_digital.o
  .comment       0x00000000       0x34 cmsis/src/startup_sam3xa.o
  .comment       0x00000000       0x34 cmsis/src/system_sam3xa.o
+ .comment       0x00000000       0x34 HW.o
  .comment       0x00000000       0x34 libsam/source/adc.o
  .comment       0x00000000       0x34 libsam/source/interrupt_sam_nvic.o
  .comment       0x00000000       0x34 libsam/source/pio.o
@@ -14380,22 +14213,22 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_info    0x00000000      0x270 arduino/cortex_handlers.o
  .debug_info    0x00000270       0x72 arduino/hooks.o
  .debug_info    0x000002e2      0x961 arduino/IPAddress.o
- .debug_info    0x00000c43      0x2db arduino/main.o
- .debug_info    0x00000f1e     0x21c3 arduino/Print.o
- .debug_info    0x000030e1      0x3a4 arduino/Reset.o
- .debug_info    0x00003485      0x1c2 arduino/RingBuffer.o
- .debug_info    0x00003647      0x671 arduino/syscalls_sam3.o
- .debug_info    0x00003cb8     0x1bc7 arduino/UARTClass.o
- .debug_info    0x0000587f     0x1caf arduino/USARTClass.o
- .debug_info    0x0000752e     0x25a0 arduino/USB/CDC.o
- .debug_info    0x00009ace     0x10ee arduino/USB/HID.o
- .debug_info    0x0000abbc     0x1aea arduino/USB/USBCore.o
- .debug_info    0x0000c6a6     0x118f arduino/WInterrupts.o
- .debug_info    0x0000d835      0x304 arduino/wiring.o
- .debug_info    0x0000db39     0x1af9 arduino/wiring_analog.o
- .debug_info    0x0000f632      0xa21 arduino/wiring_digital.o
- .debug_info    0x00010053      0x6c9 cmsis/src/startup_sam3xa.o
- .debug_info    0x0001071c      0x460 cmsis/src/system_sam3xa.o
+ .debug_info    0x00000c43     0x21c3 arduino/Print.o
+ .debug_info    0x00002e06      0x3a4 arduino/Reset.o
+ .debug_info    0x000031aa      0x1c2 arduino/RingBuffer.o
+ .debug_info    0x0000336c      0x671 arduino/syscalls_sam3.o
+ .debug_info    0x000039dd     0x1bc7 arduino/UARTClass.o
+ .debug_info    0x000055a4     0x1caf arduino/USARTClass.o
+ .debug_info    0x00007253     0x25a0 arduino/USB/CDC.o
+ .debug_info    0x000097f3     0x10ee arduino/USB/HID.o
+ .debug_info    0x0000a8e1     0x1aea arduino/USB/USBCore.o
+ .debug_info    0x0000c3cb     0x118f arduino/WInterrupts.o
+ .debug_info    0x0000d55a      0x304 arduino/wiring.o
+ .debug_info    0x0000d85e     0x1af9 arduino/wiring_analog.o
+ .debug_info    0x0000f357      0xa21 arduino/wiring_digital.o
+ .debug_info    0x0000fd78      0x6c9 cmsis/src/startup_sam3xa.o
+ .debug_info    0x00010441      0x460 cmsis/src/system_sam3xa.o
+ .debug_info    0x000108a1      0x2db HW.o
  .debug_info    0x00010b7c      0xf14 libsam/source/adc.o
  .debug_info    0x00011a90       0xad libsam/source/interrupt_sam_nvic.o
  .debug_info    0x00011b3d      0x930 libsam/source/pio.o
@@ -14424,22 +14257,22 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_abbrev  0x00000000       0xc1 arduino/cortex_handlers.o
  .debug_abbrev  0x000000c1       0x4e arduino/hooks.o
  .debug_abbrev  0x0000010f      0x356 arduino/IPAddress.o
- .debug_abbrev  0x00000465      0x11c arduino/main.o
- .debug_abbrev  0x00000581      0x3b0 arduino/Print.o
- .debug_abbrev  0x00000931      0x158 arduino/Reset.o
- .debug_abbrev  0x00000a89      0x150 arduino/RingBuffer.o
- .debug_abbrev  0x00000bd9      0x1a7 arduino/syscalls_sam3.o
- .debug_abbrev  0x00000d80      0x436 arduino/UARTClass.o
- .debug_abbrev  0x000011b6      0x436 arduino/USARTClass.o
- .debug_abbrev  0x000015ec      0x54f arduino/USB/CDC.o
- .debug_abbrev  0x00001b3b      0x542 arduino/USB/HID.o
- .debug_abbrev  0x0000207d      0x556 arduino/USB/USBCore.o
- .debug_abbrev  0x000025d3      0x28a arduino/WInterrupts.o
- .debug_abbrev  0x0000285d      0x14a arduino/wiring.o
- .debug_abbrev  0x000029a7      0x2c2 arduino/wiring_analog.o
- .debug_abbrev  0x00002c69      0x182 arduino/wiring_digital.o
- .debug_abbrev  0x00002deb      0x13d cmsis/src/startup_sam3xa.o
- .debug_abbrev  0x00002f28       0xf5 cmsis/src/system_sam3xa.o
+ .debug_abbrev  0x00000465      0x3b0 arduino/Print.o
+ .debug_abbrev  0x00000815      0x158 arduino/Reset.o
+ .debug_abbrev  0x0000096d      0x150 arduino/RingBuffer.o
+ .debug_abbrev  0x00000abd      0x1a7 arduino/syscalls_sam3.o
+ .debug_abbrev  0x00000c64      0x436 arduino/UARTClass.o
+ .debug_abbrev  0x0000109a      0x436 arduino/USARTClass.o
+ .debug_abbrev  0x000014d0      0x54f arduino/USB/CDC.o
+ .debug_abbrev  0x00001a1f      0x542 arduino/USB/HID.o
+ .debug_abbrev  0x00001f61      0x556 arduino/USB/USBCore.o
+ .debug_abbrev  0x000024b7      0x28a arduino/WInterrupts.o
+ .debug_abbrev  0x00002741      0x14a arduino/wiring.o
+ .debug_abbrev  0x0000288b      0x2c2 arduino/wiring_analog.o
+ .debug_abbrev  0x00002b4d      0x182 arduino/wiring_digital.o
+ .debug_abbrev  0x00002ccf      0x13d cmsis/src/startup_sam3xa.o
+ .debug_abbrev  0x00002e0c       0xf5 cmsis/src/system_sam3xa.o
+ .debug_abbrev  0x00002f01      0x11c HW.o
  .debug_abbrev  0x0000301d      0x1cf libsam/source/adc.o
  .debug_abbrev  0x000031ec       0x5f libsam/source/interrupt_sam_nvic.o
  .debug_abbrev  0x0000324b      0x1f6 libsam/source/pio.o
@@ -14467,21 +14300,21 @@ OUTPUT(HW.elf elf32-littlearm)
 .debug_loc      0x00000000     0x6c6e
  .debug_loc     0x00000000       0x60 arduino/cortex_handlers.o
  .debug_loc     0x00000060      0x1c7 arduino/IPAddress.o
- .debug_loc     0x00000227       0x60 arduino/main.o
- .debug_loc     0x00000287     0x1300 arduino/Print.o
- .debug_loc     0x00001587       0x20 arduino/Reset.o
- .debug_loc     0x000015a7       0x5e arduino/RingBuffer.o
- .debug_loc     0x00001605      0x1d8 arduino/syscalls_sam3.o
- .debug_loc     0x000017dd      0x1d2 arduino/UARTClass.o
- .debug_loc     0x000019af      0x1d2 arduino/USARTClass.o
- .debug_loc     0x00001b81      0x6b9 arduino/USB/CDC.o
- .debug_loc     0x0000223a      0x922 arduino/USB/HID.o
- .debug_loc     0x00002b5c      0xc10 arduino/USB/USBCore.o
- .debug_loc     0x0000376c      0x35d arduino/WInterrupts.o
- .debug_loc     0x00003ac9       0x8c arduino/wiring.o
- .debug_loc     0x00003b55      0x6cc arduino/wiring_analog.o
- .debug_loc     0x00004221      0x196 arduino/wiring_digital.o
- .debug_loc     0x000043b7       0x20 cmsis/src/startup_sam3xa.o
+ .debug_loc     0x00000227     0x1300 arduino/Print.o
+ .debug_loc     0x00001527       0x20 arduino/Reset.o
+ .debug_loc     0x00001547       0x5e arduino/RingBuffer.o
+ .debug_loc     0x000015a5      0x1d8 arduino/syscalls_sam3.o
+ .debug_loc     0x0000177d      0x1d2 arduino/UARTClass.o
+ .debug_loc     0x0000194f      0x1d2 arduino/USARTClass.o
+ .debug_loc     0x00001b21      0x6b9 arduino/USB/CDC.o
+ .debug_loc     0x000021da      0x922 arduino/USB/HID.o
+ .debug_loc     0x00002afc      0xc10 arduino/USB/USBCore.o
+ .debug_loc     0x0000370c      0x35d arduino/WInterrupts.o
+ .debug_loc     0x00003a69       0x8c arduino/wiring.o
+ .debug_loc     0x00003af5      0x6cc arduino/wiring_analog.o
+ .debug_loc     0x000041c1      0x196 arduino/wiring_digital.o
+ .debug_loc     0x00004357       0x20 cmsis/src/startup_sam3xa.o
+ .debug_loc     0x00004377       0x60 HW.o
  .debug_loc     0x000043d7      0x6da libsam/source/adc.o
  .debug_loc     0x00004ab1      0x37d libsam/source/pio.o
  .debug_loc     0x00004e2e      0x759 libsam/source/pmc.o
@@ -14511,37 +14344,37 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_aranges
                 0x00000068       0x60 arduino/IPAddress.o
  .debug_aranges
-                0x000000c8       0x30 arduino/main.o
+                0x000000c8       0xe8 arduino/Print.o
  .debug_aranges
-                0x000000f8       0xe8 arduino/Print.o
+                0x000001b0       0x38 arduino/Reset.o
  .debug_aranges
-                0x000001e0       0x38 arduino/Reset.o
+                0x000001e8       0x28 arduino/RingBuffer.o
  .debug_aranges
-                0x00000218       0x28 arduino/RingBuffer.o
+                0x00000210       0x70 arduino/syscalls_sam3.o
  .debug_aranges
-                0x00000240       0x70 arduino/syscalls_sam3.o
+                0x00000280       0x68 arduino/UARTClass.o
  .debug_aranges
-                0x000002b0       0x68 arduino/UARTClass.o
+                0x000002e8       0x68 arduino/USARTClass.o
  .debug_aranges
-                0x00000318       0x68 arduino/USARTClass.o
+                0x00000350       0x88 arduino/USB/CDC.o
  .debug_aranges
-                0x00000380       0x88 arduino/USB/CDC.o
+                0x000003d8       0xc8 arduino/USB/HID.o
  .debug_aranges
-                0x00000408       0xc8 arduino/USB/HID.o
+                0x000004a0       0xb8 arduino/USB/USBCore.o
  .debug_aranges
-                0x000004d0       0xb8 arduino/USB/USBCore.o
+                0x00000558       0x48 arduino/WInterrupts.o
  .debug_aranges
-                0x00000588       0x48 arduino/WInterrupts.o
+                0x000005a0       0x30 arduino/wiring.o
  .debug_aranges
-                0x000005d0       0x30 arduino/wiring.o
+                0x000005d0       0x58 arduino/wiring_analog.o
  .debug_aranges
-                0x00000600       0x58 arduino/wiring_analog.o
+                0x00000628       0x30 arduino/wiring_digital.o
  .debug_aranges
-                0x00000658       0x30 arduino/wiring_digital.o
+                0x00000658       0x28 cmsis/src/startup_sam3xa.o
  .debug_aranges
-                0x00000688       0x28 cmsis/src/startup_sam3xa.o
+                0x00000680       0x30 cmsis/src/system_sam3xa.o
  .debug_aranges
-                0x000006b0       0x30 cmsis/src/system_sam3xa.o
+                0x000006b0       0x30 HW.o
  .debug_aranges
                 0x000006e0      0x170 libsam/source/adc.o
  .debug_aranges
@@ -14593,22 +14426,22 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_ranges  0x00000000       0x28 arduino/cortex_handlers.o
  .debug_ranges  0x00000028       0x20 arduino/hooks.o
  .debug_ranges  0x00000048       0x50 arduino/IPAddress.o
- .debug_ranges  0x00000098       0x20 arduino/main.o
- .debug_ranges  0x000000b8       0xd8 arduino/Print.o
- .debug_ranges  0x00000190       0x28 arduino/Reset.o
- .debug_ranges  0x000001b8       0x18 arduino/RingBuffer.o
- .debug_ranges  0x000001d0       0x60 arduino/syscalls_sam3.o
- .debug_ranges  0x00000230       0x58 arduino/UARTClass.o
- .debug_ranges  0x00000288       0x58 arduino/USARTClass.o
- .debug_ranges  0x000002e0       0xd8 arduino/USB/CDC.o
- .debug_ranges  0x000003b8       0xb8 arduino/USB/HID.o
- .debug_ranges  0x00000470      0x128 arduino/USB/USBCore.o
- .debug_ranges  0x00000598       0x38 arduino/WInterrupts.o
- .debug_ranges  0x000005d0       0x20 arduino/wiring.o
- .debug_ranges  0x000005f0       0x48 arduino/wiring_analog.o
- .debug_ranges  0x00000638       0x20 arduino/wiring_digital.o
- .debug_ranges  0x00000658       0x18 cmsis/src/startup_sam3xa.o
- .debug_ranges  0x00000670       0x20 cmsis/src/system_sam3xa.o
+ .debug_ranges  0x00000098       0xd8 arduino/Print.o
+ .debug_ranges  0x00000170       0x28 arduino/Reset.o
+ .debug_ranges  0x00000198       0x18 arduino/RingBuffer.o
+ .debug_ranges  0x000001b0       0x60 arduino/syscalls_sam3.o
+ .debug_ranges  0x00000210       0x58 arduino/UARTClass.o
+ .debug_ranges  0x00000268       0x58 arduino/USARTClass.o
+ .debug_ranges  0x000002c0       0xd8 arduino/USB/CDC.o
+ .debug_ranges  0x00000398       0xb8 arduino/USB/HID.o
+ .debug_ranges  0x00000450      0x128 arduino/USB/USBCore.o
+ .debug_ranges  0x00000578       0x38 arduino/WInterrupts.o
+ .debug_ranges  0x000005b0       0x20 arduino/wiring.o
+ .debug_ranges  0x000005d0       0x48 arduino/wiring_analog.o
+ .debug_ranges  0x00000618       0x20 arduino/wiring_digital.o
+ .debug_ranges  0x00000638       0x18 cmsis/src/startup_sam3xa.o
+ .debug_ranges  0x00000650       0x20 cmsis/src/system_sam3xa.o
+ .debug_ranges  0x00000670       0x20 HW.o
  .debug_ranges  0x00000690      0x160 libsam/source/adc.o
  .debug_ranges  0x000007f0       0x60 libsam/source/pio.o
  .debug_ranges  0x00000850      0x1a0 libsam/source/pmc.o
@@ -14619,7 +14452,7 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_ranges  0x00000b28       0x38 variants/variant.o
  .debug_ranges  0x00000b60       0x60 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
 
-.debug_macro    0x00000000    0x29a3f
+.debug_macro    0x00000000    0x29a5b
  .debug_macro   0x00000000      0xe45 arduino/cortex_handlers.o
  .debug_macro   0x00000e45       0x10 arduino/cortex_handlers.o
  .debug_macro   0x00000e55      0x214 arduino/cortex_handlers.o
@@ -14769,186 +14602,187 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_macro   0x00014c12       0x10 arduino/IPAddress.o
  .debug_macro   0x00014c22       0x35 arduino/IPAddress.o
  .debug_macro   0x00014c57      0x100 arduino/IPAddress.o
- .debug_macro   0x00014d57      0xf09 arduino/main.o
- .debug_macro   0x00015c60      0xf03 arduino/Print.o
- .debug_macro   0x00016b63      0xf08 arduino/Reset.o
- .debug_macro   0x00017a6b      0x8e3 arduino/RingBuffer.o
- .debug_macro   0x0001834e      0xc44 arduino/syscalls_sam3.o
- .debug_macro   0x00018f92       0x10 arduino/syscalls_sam3.o
- .debug_macro   0x00018fa2       0xf5 arduino/syscalls_sam3.o
- .debug_macro   0x00019097       0x20 arduino/syscalls_sam3.o
- .debug_macro   0x000190b7      0xdcc arduino/UARTClass.o
- .debug_macro   0x00019e83      0xdcc arduino/USARTClass.o
- .debug_macro   0x0001ac4f      0xf25 arduino/USB/CDC.o
- .debug_macro   0x0001bb74      0xf2f arduino/USB/HID.o
- .debug_macro   0x0001caa3      0xf25 arduino/USB/USBCore.o
- .debug_macro   0x0001d9c8      0xe3a arduino/WInterrupts.o
- .debug_macro   0x0001e802      0xe3a arduino/wiring.o
- .debug_macro   0x0001f63c      0xe3a arduino/wiring_analog.o
- .debug_macro   0x00020476      0xe3a arduino/wiring_digital.o
- .debug_macro   0x000212b0      0xb10 cmsis/src/startup_sam3xa.o
- .debug_macro   0x00021dc0      0xb2e cmsis/src/system_sam3xa.o
- .debug_macro   0x000228ee      0xc25 libsam/source/adc.o
- .debug_macro   0x00023513      0xc2f libsam/source/interrupt_sam_nvic.o
- .debug_macro   0x00024142       0x3e libsam/source/interrupt_sam_nvic.o
- .debug_macro   0x00024180      0xc25 libsam/source/pio.o
- .debug_macro   0x00024da5      0xc2b libsam/source/pmc.o
- .debug_macro   0x000259d0      0xc25 libsam/source/timetick.o
- .debug_macro   0x000265f5      0xc25 libsam/source/uotghs.o
- .debug_macro   0x0002721a      0xd03 libsam/source/uotghs_device.o
- .debug_macro   0x00027f1d      0xc25 libsam/source/wdt.o
- .debug_macro   0x00028b42      0xefd variants/variant.o
+ .debug_macro   0x00014d57      0xf03 arduino/Print.o
+ .debug_macro   0x00015c5a      0xf08 arduino/Reset.o
+ .debug_macro   0x00016b62      0x8e3 arduino/RingBuffer.o
+ .debug_macro   0x00017445      0xc44 arduino/syscalls_sam3.o
+ .debug_macro   0x00018089       0x10 arduino/syscalls_sam3.o
+ .debug_macro   0x00018099       0xf5 arduino/syscalls_sam3.o
+ .debug_macro   0x0001818e       0x20 arduino/syscalls_sam3.o
+ .debug_macro   0x000181ae      0xdcc arduino/UARTClass.o
+ .debug_macro   0x00018f7a      0xdcc arduino/USARTClass.o
+ .debug_macro   0x00019d46      0xf25 arduino/USB/CDC.o
+ .debug_macro   0x0001ac6b      0xf2f arduino/USB/HID.o
+ .debug_macro   0x0001bb9a      0xf25 arduino/USB/USBCore.o
+ .debug_macro   0x0001cabf      0xe3a arduino/WInterrupts.o
+ .debug_macro   0x0001d8f9      0xe3a arduino/wiring.o
+ .debug_macro   0x0001e733      0xe3a arduino/wiring_analog.o
+ .debug_macro   0x0001f56d      0xe3a arduino/wiring_digital.o
+ .debug_macro   0x000203a7      0xb10 cmsis/src/startup_sam3xa.o
+ .debug_macro   0x00020eb7      0xb2e cmsis/src/system_sam3xa.o
+ .debug_macro   0x000219e5      0xefd HW.o
+ .debug_macro   0x000228e2       0x28 HW.o
+ .debug_macro   0x0002290a      0xc25 libsam/source/adc.o
+ .debug_macro   0x0002352f      0xc2f libsam/source/interrupt_sam_nvic.o
+ .debug_macro   0x0002415e       0x3e libsam/source/interrupt_sam_nvic.o
+ .debug_macro   0x0002419c      0xc25 libsam/source/pio.o
+ .debug_macro   0x00024dc1      0xc2b libsam/source/pmc.o
+ .debug_macro   0x000259ec      0xc25 libsam/source/timetick.o
+ .debug_macro   0x00026611      0xc25 libsam/source/uotghs.o
+ .debug_macro   0x00027236      0xd03 libsam/source/uotghs_device.o
+ .debug_macro   0x00027f39      0xc25 libsam/source/wdt.o
+ .debug_macro   0x00028b5e      0xefd variants/variant.o
 
-.debug_line     0x00000000    0x18aef
+.debug_line     0x00000000    0x18ad1
  .debug_line    0x00000000      0xe48 arduino/cortex_handlers.o
  .debug_line    0x00000e48       0x61 arduino/hooks.o
  .debug_line    0x00000ea9      0xf89 arduino/IPAddress.o
- .debug_line    0x00001e32      0xf1b arduino/main.o
- .debug_line    0x00002d4d     0x113f arduino/Print.o
- .debug_line    0x00003e8c      0xf24 arduino/Reset.o
- .debug_line    0x00004db0      0x399 arduino/RingBuffer.o
- .debug_line    0x00005149      0xc46 arduino/syscalls_sam3.o
- .debug_line    0x00005d8f      0xe79 arduino/UARTClass.o
- .debug_line    0x00006c08      0xe7b arduino/USARTClass.o
- .debug_line    0x00007a83     0x1048 arduino/USB/CDC.o
- .debug_line    0x00008acb     0x10ef arduino/USB/HID.o
- .debug_line    0x00009bba     0x11bc arduino/USB/USBCore.o
- .debug_line    0x0000ad76      0xefb arduino/WInterrupts.o
- .debug_line    0x0000bc71      0xe41 arduino/wiring.o
- .debug_line    0x0000cab2      0xf25 arduino/wiring_analog.o
- .debug_line    0x0000d9d7      0xe42 arduino/wiring_digital.o
- .debug_line    0x0000e819      0x918 cmsis/src/startup_sam3xa.o
- .debug_line    0x0000f131      0x96a cmsis/src/system_sam3xa.o
- .debug_line    0x0000fa9b      0xe1f libsam/source/adc.o
- .debug_line    0x000108ba      0xaf1 libsam/source/interrupt_sam_nvic.o
- .debug_line    0x000113ab      0xb98 libsam/source/pio.o
- .debug_line    0x00011f43      0xf52 libsam/source/pmc.o
- .debug_line    0x00012e95      0xb26 libsam/source/timetick.o
- .debug_line    0x000139bb      0xaab libsam/source/uotghs.o
- .debug_line    0x00014466      0xf2a libsam/source/uotghs_device.o
- .debug_line    0x00015390      0xaf0 libsam/source/wdt.o
- .debug_line    0x00015e80      0xf69 variants/variant.o
- .debug_line    0x00016de9      0x121 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
- .debug_line    0x00016f0a      0x13c c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
- .debug_line    0x00017046      0x1a4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
- .debug_line    0x000171ea      0x152 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
- .debug_line    0x0001733c      0x233 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
- .debug_line    0x0001756f      0x3c0 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
- .debug_line    0x0001792f      0x1af c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
- .debug_line    0x00017ade      0x1b6 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
- .debug_line    0x00017c94      0x232 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
- .debug_line    0x00017ec6      0x1a5 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
- .debug_line    0x0001806b      0x261 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
- .debug_line    0x000182cc      0x2bf c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
- .debug_line    0x0001858b      0x2eb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
- .debug_line    0x00018876      0x279 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
+ .debug_line    0x00001e32     0x113f arduino/Print.o
+ .debug_line    0x00002f71      0xf24 arduino/Reset.o
+ .debug_line    0x00003e95      0x399 arduino/RingBuffer.o
+ .debug_line    0x0000422e      0xc46 arduino/syscalls_sam3.o
+ .debug_line    0x00004e74      0xe79 arduino/UARTClass.o
+ .debug_line    0x00005ced      0xe7b arduino/USARTClass.o
+ .debug_line    0x00006b68     0x1048 arduino/USB/CDC.o
+ .debug_line    0x00007bb0     0x10ef arduino/USB/HID.o
+ .debug_line    0x00008c9f     0x11bc arduino/USB/USBCore.o
+ .debug_line    0x00009e5b      0xefb arduino/WInterrupts.o
+ .debug_line    0x0000ad56      0xe41 arduino/wiring.o
+ .debug_line    0x0000bb97      0xf25 arduino/wiring_analog.o
+ .debug_line    0x0000cabc      0xe42 arduino/wiring_digital.o
+ .debug_line    0x0000d8fe      0x918 cmsis/src/startup_sam3xa.o
+ .debug_line    0x0000e216      0x96a cmsis/src/system_sam3xa.o
+ .debug_line    0x0000eb80      0xefd HW.o
+ .debug_line    0x0000fa7d      0xe1f libsam/source/adc.o
+ .debug_line    0x0001089c      0xaf1 libsam/source/interrupt_sam_nvic.o
+ .debug_line    0x0001138d      0xb98 libsam/source/pio.o
+ .debug_line    0x00011f25      0xf52 libsam/source/pmc.o
+ .debug_line    0x00012e77      0xb26 libsam/source/timetick.o
+ .debug_line    0x0001399d      0xaab libsam/source/uotghs.o
+ .debug_line    0x00014448      0xf2a libsam/source/uotghs_device.o
+ .debug_line    0x00015372      0xaf0 libsam/source/wdt.o
+ .debug_line    0x00015e62      0xf69 variants/variant.o
+ .debug_line    0x00016dcb      0x121 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
+ .debug_line    0x00016eec      0x13c c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
+ .debug_line    0x00017028      0x1a4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
+ .debug_line    0x000171cc      0x152 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
+ .debug_line    0x0001731e      0x233 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
+ .debug_line    0x00017551      0x3c0 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
+ .debug_line    0x00017911      0x1af c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
+ .debug_line    0x00017ac0      0x1b6 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
+ .debug_line    0x00017c76      0x232 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
+ .debug_line    0x00017ea8      0x1a5 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
+ .debug_line    0x0001804d      0x261 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
+ .debug_line    0x000182ae      0x2bf c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
+ .debug_line    0x0001856d      0x2eb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
+ .debug_line    0x00018858      0x279 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
 
-.debug_str      0x00000000    0x6505b
+.debug_str      0x00000000    0x65045
  .debug_str     0x00000000    0x5dda7 arduino/cortex_handlers.o
                               0x5e014 (size before relaxing)
  .debug_str     0x0005dda7       0x23 arduino/hooks.o
                                0x2238 (size before relaxing)
  .debug_str     0x0005ddca     0x172d arduino/IPAddress.o
                               0x5f570 (size before relaxing)
- .debug_str     0x0005f4f7       0x32 arduino/main.o
-                              0x5f2ba (size before relaxing)
- .debug_str     0x0005f529      0xa68 arduino/Print.o
+ .debug_str     0x0005f4f7      0xa68 arduino/Print.o
                               0x5fda8 (size before relaxing)
- .debug_str     0x0005ff91       0xcf arduino/Reset.o
+ .debug_str     0x0005ff5f       0xcf arduino/Reset.o
                               0x5f374 (size before relaxing)
- .debug_str     0x00060060       0x70 arduino/RingBuffer.o
+ .debug_str     0x0006002e       0x70 arduino/RingBuffer.o
                                0x4644 (size before relaxing)
- .debug_str     0x000600d0      0x209 arduino/syscalls_sam3.o
+ .debug_str     0x0006009e      0x209 arduino/syscalls_sam3.o
                               0x4e26c (size before relaxing)
- .debug_str     0x000602d9      0x79c arduino/UARTClass.o
+ .debug_str     0x000602a7      0x79c arduino/UARTClass.o
                               0x5bb5e (size before relaxing)
- .debug_str     0x00060a75      0x232 arduino/USARTClass.o
+ .debug_str     0x00060a43      0x232 arduino/USARTClass.o
                               0x5bbc1 (size before relaxing)
- .debug_str     0x00060ca7      0x8c1 arduino/USB/CDC.o
+ .debug_str     0x00060c75      0x8c7 arduino/USB/CDC.o
                               0x60798 (size before relaxing)
- .debug_str     0x00061568      0x3e0 arduino/USB/HID.o
+ .debug_str     0x0006153c      0x3e0 arduino/USB/HID.o
                               0x5f88d (size before relaxing)
- .debug_str     0x00061948      0x600 arduino/USB/USBCore.o
+ .debug_str     0x0006191c      0x600 arduino/USB/USBCore.o
                               0x5fe28 (size before relaxing)
- .debug_str     0x00061f48      0x4f4 arduino/WInterrupts.o
+ .debug_str     0x00061f1c      0x4f4 arduino/WInterrupts.o
                               0x5e899 (size before relaxing)
- .debug_str     0x0006243c       0x33 arduino/wiring.o
+ .debug_str     0x00062410       0x33 arduino/wiring.o
                               0x5e026 (size before relaxing)
- .debug_str     0x0006246f      0x5ae arduino/wiring_analog.o
+ .debug_str     0x00062443      0x5ae arduino/wiring_analog.o
                               0x5ea5f (size before relaxing)
- .debug_str     0x00062a1d       0x43 arduino/wiring_digital.o
+ .debug_str     0x000629f1       0x43 arduino/wiring_digital.o
                               0x5e4d1 (size before relaxing)
- .debug_str     0x00062a60      0x47c cmsis/src/startup_sam3xa.o
+ .debug_str     0x00062a34      0x47c cmsis/src/startup_sam3xa.o
                               0x4ada0 (size before relaxing)
- .debug_str     0x00062edc      0x29c cmsis/src/system_sam3xa.o
+ .debug_str     0x00062eb0      0x29c cmsis/src/system_sam3xa.o
                               0x4abca (size before relaxing)
- .debug_str     0x00063178      0x782 libsam/source/adc.o
+ .debug_str     0x0006314c       0x16 HW.o
+                              0x5f2a4 (size before relaxing)
+ .debug_str     0x00063162      0x782 libsam/source/adc.o
                               0x57bd9 (size before relaxing)
- .debug_str     0x000638fa       0x26 libsam/source/interrupt_sam_nvic.o
+ .debug_str     0x000638e4       0x26 libsam/source/interrupt_sam_nvic.o
                               0x57306 (size before relaxing)
- .debug_str     0x00063920      0x11f libsam/source/pio.o
+ .debug_str     0x0006390a      0x11f libsam/source/pio.o
                               0x57670 (size before relaxing)
- .debug_str     0x00063a3f      0x52e libsam/source/pmc.o
+ .debug_str     0x00063a29      0x52e libsam/source/pmc.o
                               0x57a10 (size before relaxing)
- .debug_str     0x00063f6d       0x97 libsam/source/timetick.o
+ .debug_str     0x00063f57       0x97 libsam/source/timetick.o
                               0x576b6 (size before relaxing)
- .debug_str     0x00064004       0x22 libsam/source/uotghs.o
+ .debug_str     0x00063fee       0x22 libsam/source/uotghs.o
                               0x57311 (size before relaxing)
- .debug_str     0x00064026      0x1da libsam/source/uotghs_device.o
+ .debug_str     0x00064010      0x1da libsam/source/uotghs_device.o
                               0x5a396 (size before relaxing)
- .debug_str     0x00064200       0x77 libsam/source/wdt.o
+ .debug_str     0x000641ea       0x77 libsam/source/wdt.o
                               0x57377 (size before relaxing)
- .debug_str     0x00064277       0xa5 variants/variant.o
+ .debug_str     0x00064261       0xa5 variants/variant.o
                               0x5ffb5 (size before relaxing)
- .debug_str     0x0006431c       0xb3 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
+ .debug_str     0x00064306       0xb3 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
                                 0x158 (size before relaxing)
- .debug_str     0x000643cf       0xa1 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
+ .debug_str     0x000643b9       0xa1 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
                                 0x152 (size before relaxing)
- .debug_str     0x00064470      0x3bc c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
+ .debug_str     0x0006445a      0x3bc c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
                                 0x4e6 (size before relaxing)
- .debug_str     0x0006482c       0xcb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
+ .debug_str     0x00064816       0xcb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
                                 0x17c (size before relaxing)
- .debug_str     0x000648f7       0x92 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
+ .debug_str     0x000648e1       0x92 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
                                 0x4f9 (size before relaxing)
- .debug_str     0x00064989      0x2db c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
+ .debug_str     0x00064973      0x2db c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
                                 0x781 (size before relaxing)
- .debug_str     0x00064c64       0x76 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
+ .debug_str     0x00064c4e       0x76 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
                                 0x11b (size before relaxing)
- .debug_str     0x00064cda       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
+ .debug_str     0x00064cc4       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
                                 0x4ee (size before relaxing)
- .debug_str     0x00064d5d       0x6d c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
+ .debug_str     0x00064d47       0x6d c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
                                 0x4dd (size before relaxing)
- .debug_str     0x00064dca       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
+ .debug_str     0x00064db4       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
                                 0x128 (size before relaxing)
- .debug_str     0x00064e4d       0x7f c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
+ .debug_str     0x00064e37       0x7f c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
                                 0x53b (size before relaxing)
- .debug_str     0x00064ecc       0xb4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
+ .debug_str     0x00064eb6       0xb4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
                                 0x537 (size before relaxing)
- .debug_str     0x00064f80       0x34 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
+ .debug_str     0x00064f6a       0x34 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
                                 0x6cb (size before relaxing)
- .debug_str     0x00064fb4       0xa7 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
+ .debug_str     0x00064f9e       0xa7 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
                                 0x513 (size before relaxing)
 
 .debug_frame    0x00000000     0x1d08
  .debug_frame   0x00000000       0x68 arduino/cortex_handlers.o
  .debug_frame   0x00000068       0x40 arduino/hooks.o
  .debug_frame   0x000000a8       0xd4 arduino/IPAddress.o
- .debug_frame   0x0000017c       0x5c arduino/main.o
- .debug_frame   0x000001d8      0x2e4 arduino/Print.o
- .debug_frame   0x000004bc       0x58 arduino/Reset.o
- .debug_frame   0x00000514       0x40 arduino/RingBuffer.o
- .debug_frame   0x00000554       0xd0 arduino/syscalls_sam3.o
- .debug_frame   0x00000624       0xd8 arduino/UARTClass.o
- .debug_frame   0x000006fc       0xd8 arduino/USARTClass.o
- .debug_frame   0x000007d4      0x148 arduino/USB/CDC.o
- .debug_frame   0x0000091c      0x1f4 arduino/USB/HID.o
- .debug_frame   0x00000b10      0x210 arduino/USB/USBCore.o
- .debug_frame   0x00000d20       0xb4 arduino/WInterrupts.o
- .debug_frame   0x00000dd4       0x60 arduino/wiring.o
- .debug_frame   0x00000e34       0xb0 arduino/wiring_analog.o
- .debug_frame   0x00000ee4       0x64 arduino/wiring_digital.o
- .debug_frame   0x00000f48       0x38 cmsis/src/startup_sam3xa.o
- .debug_frame   0x00000f80       0x40 cmsis/src/system_sam3xa.o
+ .debug_frame   0x0000017c      0x2e4 arduino/Print.o
+ .debug_frame   0x00000460       0x58 arduino/Reset.o
+ .debug_frame   0x000004b8       0x40 arduino/RingBuffer.o
+ .debug_frame   0x000004f8       0xd0 arduino/syscalls_sam3.o
+ .debug_frame   0x000005c8       0xd8 arduino/UARTClass.o
+ .debug_frame   0x000006a0       0xd8 arduino/USARTClass.o
+ .debug_frame   0x00000778      0x148 arduino/USB/CDC.o
+ .debug_frame   0x000008c0      0x1f4 arduino/USB/HID.o
+ .debug_frame   0x00000ab4      0x210 arduino/USB/USBCore.o
+ .debug_frame   0x00000cc4       0xb4 arduino/WInterrupts.o
+ .debug_frame   0x00000d78       0x60 arduino/wiring.o
+ .debug_frame   0x00000dd8       0xb0 arduino/wiring_analog.o
+ .debug_frame   0x00000e88       0x64 arduino/wiring_digital.o
+ .debug_frame   0x00000eec       0x38 cmsis/src/startup_sam3xa.o
+ .debug_frame   0x00000f24       0x40 cmsis/src/system_sam3xa.o
+ .debug_frame   0x00000f64       0x5c HW.o
  .debug_frame   0x00000fc0      0x2ec libsam/source/adc.o
  .debug_frame   0x000012ac       0xf0 libsam/source/pio.o
  .debug_frame   0x0000139c      0x35c libsam/source/pmc.o

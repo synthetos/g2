@@ -5,22 +5,54 @@
  *  Author: Administrator
  */ 
 
+//#define ARDUINO_MAIN
 #include "sam.h"
+#include "Arduino.h"
 
-/**
- * \brief Application entry point.
- *
- * \return Unused (ANSI-C compatibility).
- */
 /*
-int main(void)
+extern void SysTick_Handler( void )
 {
-    // Initialize the SAM system
-    SystemInit();
-
-    while (1) 
-    {
-        //TODO:: Please write your application code 
-    }
+  // Increment tick count each ms
+  TimeTick_Increment() ;
 }
 */
+
+/******************** Application Code ************************/
+int led = 13;
+
+void setup( void )
+{
+	pinMode(led, OUTPUT);
+//	tg_setup();
+}
+
+void loop( void )
+{
+	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
+	delay(500);               // wait for a second
+	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
+	delay(500);               // wait for a second
+}
+
+/*
+ * \brief Main entry point of Arduino application
+ */
+int main( void )
+{
+	init();
+	delay(1);
+
+#if defined(USBCON)
+	USBDevice.attach();
+#endif
+
+	setup();
+
+	for (;;)
+	{
+		loop();
+		if (serialEventRun) serialEventRun();
+	}
+
+	return 0;
+}
