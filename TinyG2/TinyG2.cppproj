@@ -165,8 +165,7 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <OutputDirectory>Z:\Alden\Projects\proj64_ArduinoDue\g2\TinyG2</OutputDirectory>
+    <UsesExternalMakeFile>False</UsesExternalMakeFile>
     <ExternalMakeFilePath>Z:\Alden\Projects\proj64_ArduinoDue\g2\TinyG2\Makefile</ExternalMakeFilePath>
   </PropertyGroup>
   <ItemGroup>
