@@ -530,7 +530,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x12 arduino/IPAddress.o
  .debug_macro   0x00000000       0x1c arduino/IPAddress.o
  .debug_macro   0x00000000      0xd80 arduino/IPAddress.o
- .debug_macro   0x00000000       0xf0 arduino/IPAddress.o
+ .debug_macro   0x00000000       0xc0 arduino/IPAddress.o
  .debug_macro   0x00000000       0x26 arduino/IPAddress.o
  .debug_macro   0x00000000       0x34 arduino/IPAddress.o
  .debug_macro   0x00000000       0x18 arduino/IPAddress.o
@@ -896,7 +896,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x1cc arduino/Print.o
  .debug_macro   0x00000000      0x214 arduino/Print.o
  .debug_macro   0x00000000      0xd80 arduino/Print.o
- .debug_macro   0x00000000       0xf0 arduino/Print.o
+ .debug_macro   0x00000000       0xc0 arduino/Print.o
  .debug_macro   0x00000000       0x26 arduino/Print.o
  .debug_macro   0x00000000       0x34 arduino/Print.o
  .debug_macro   0x00000000       0x18 arduino/Print.o
@@ -1170,7 +1170,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/Reset.o
  .debug_macro   0x00000000      0x1cc arduino/Reset.o
  .debug_macro   0x00000000      0xd80 arduino/Reset.o
- .debug_macro   0x00000000       0xf0 arduino/Reset.o
+ .debug_macro   0x00000000       0xc0 arduino/Reset.o
  .debug_macro   0x00000000       0x26 arduino/Reset.o
  .debug_macro   0x00000000       0x34 arduino/Reset.o
  .debug_macro   0x00000000       0x18 arduino/Reset.o
@@ -1521,7 +1521,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/Stream.o
  .debug_macro   0x00000000      0x1cc arduino/Stream.o
  .debug_macro   0x00000000      0xd80 arduino/Stream.o
- .debug_macro   0x00000000       0xf0 arduino/Stream.o
+ .debug_macro   0x00000000       0xc0 arduino/Stream.o
  .debug_macro   0x00000000       0x26 arduino/Stream.o
  .debug_macro   0x00000000       0x34 arduino/Stream.o
  .debug_macro   0x00000000       0x18 arduino/Stream.o
@@ -1644,8 +1644,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x88 arduino/Stream.o
  .debug_macro   0x00000000      0x22a arduino/Stream.o
  .debug_macro   0x00000000      0x100 arduino/Stream.o
- .debug_line    0x00000000     0x1107 arduino/Stream.o
- .debug_str     0x00000000    0x5fd37 arduino/Stream.o
+ .debug_line    0x00000000      0xf99 arduino/Stream.o
+ .debug_str     0x00000000    0x5fa9f arduino/Stream.o
  .comment       0x00000000       0x34 arduino/Stream.o
  .ARM.attributes
                 0x00000000       0x33 arduino/Stream.o
@@ -1783,7 +1783,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x35 arduino/syscalls_sam3.o
  .debug_macro   0x00000000       0x34 arduino/syscalls_sam3.o
  .debug_macro   0x00000000      0x120 arduino/syscalls_sam3.o
- .debug_macro   0x00000000       0xf0 arduino/syscalls_sam3.o
+ .debug_macro   0x00000000       0xc0 arduino/syscalls_sam3.o
  .debug_macro   0x00000000      0x214 arduino/syscalls_sam3.o
  .debug_macro   0x00000000       0x34 arduino/syscalls_sam3.o
  .debug_macro   0x00000000       0x18 arduino/syscalls_sam3.o
@@ -2022,7 +2022,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x52 arduino/UARTClass.o
  .debug_macro   0x00000000       0x1c arduino/UARTClass.o
  .debug_macro   0x00000000       0x10 arduino/UARTClass.o
- .debug_macro   0x00000000       0xf0 arduino/UARTClass.o
+ .debug_macro   0x00000000       0xc0 arduino/UARTClass.o
  .debug_macro   0x00000000       0x26 arduino/UARTClass.o
  .debug_macro   0x00000000       0x34 arduino/UARTClass.o
  .debug_macro   0x00000000       0x18 arduino/UARTClass.o
@@ -2280,7 +2280,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x52 arduino/USARTClass.o
  .debug_macro   0x00000000       0x1c arduino/USARTClass.o
  .debug_macro   0x00000000       0x10 arduino/USARTClass.o
- .debug_macro   0x00000000       0xf0 arduino/USARTClass.o
+ .debug_macro   0x00000000       0xc0 arduino/USARTClass.o
  .debug_macro   0x00000000       0x26 arduino/USARTClass.o
  .debug_macro   0x00000000       0x34 arduino/USARTClass.o
  .debug_macro   0x00000000       0x18 arduino/USARTClass.o
@@ -2539,7 +2539,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/USB/CDC.o
  .debug_macro   0x00000000      0x1cc arduino/USB/CDC.o
  .debug_macro   0x00000000      0xd80 arduino/USB/CDC.o
- .debug_macro   0x00000000       0xf0 arduino/USB/CDC.o
+ .debug_macro   0x00000000       0xc0 arduino/USB/CDC.o
  .debug_macro   0x00000000       0x26 arduino/USB/CDC.o
  .debug_macro   0x00000000       0x34 arduino/USB/CDC.o
  .debug_macro   0x00000000       0x18 arduino/USB/CDC.o
@@ -2842,7 +2842,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/USB/HID.o
  .debug_macro   0x00000000      0x1cc arduino/USB/HID.o
  .debug_macro   0x00000000      0xd80 arduino/USB/HID.o
- .debug_macro   0x00000000       0xf0 arduino/USB/HID.o
+ .debug_macro   0x00000000       0xc0 arduino/USB/HID.o
  .debug_macro   0x00000000       0x26 arduino/USB/HID.o
  .debug_macro   0x00000000       0x34 arduino/USB/HID.o
  .debug_macro   0x00000000       0x18 arduino/USB/HID.o
@@ -3136,7 +3136,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/USB/USBCore.o
  .debug_macro   0x00000000      0x1cc arduino/USB/USBCore.o
  .debug_macro   0x00000000      0xd80 arduino/USB/USBCore.o
- .debug_macro   0x00000000       0xf0 arduino/USB/USBCore.o
+ .debug_macro   0x00000000       0xc0 arduino/USB/USBCore.o
  .debug_macro   0x00000000       0x26 arduino/USB/USBCore.o
  .debug_macro   0x00000000       0x34 arduino/USB/USBCore.o
  .debug_macro   0x00000000       0x18 arduino/USB/USBCore.o
@@ -3415,7 +3415,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/WInterrupts.o
  .debug_macro   0x00000000      0x1da arduino/WInterrupts.o
  .debug_macro   0x00000000      0xd80 arduino/WInterrupts.o
- .debug_macro   0x00000000       0xf0 arduino/WInterrupts.o
+ .debug_macro   0x00000000       0xc0 arduino/WInterrupts.o
  .debug_macro   0x00000000       0x26 arduino/WInterrupts.o
  .debug_macro   0x00000000       0x34 arduino/WInterrupts.o
  .debug_macro   0x00000000       0x18 arduino/WInterrupts.o
@@ -3684,7 +3684,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/wiring.o
  .debug_macro   0x00000000      0x1da arduino/wiring.o
  .debug_macro   0x00000000      0xd80 arduino/wiring.o
- .debug_macro   0x00000000       0xf0 arduino/wiring.o
+ .debug_macro   0x00000000       0xc0 arduino/wiring.o
  .debug_macro   0x00000000       0x26 arduino/wiring.o
  .debug_macro   0x00000000       0x34 arduino/wiring.o
  .debug_macro   0x00000000       0x18 arduino/wiring.o
@@ -3965,7 +3965,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/wiring_analog.o
  .debug_macro   0x00000000      0x1da arduino/wiring_analog.o
  .debug_macro   0x00000000      0xd80 arduino/wiring_analog.o
- .debug_macro   0x00000000       0xf0 arduino/wiring_analog.o
+ .debug_macro   0x00000000       0xc0 arduino/wiring_analog.o
  .debug_macro   0x00000000       0x26 arduino/wiring_analog.o
  .debug_macro   0x00000000       0x34 arduino/wiring_analog.o
  .debug_macro   0x00000000       0x18 arduino/wiring_analog.o
@@ -4234,7 +4234,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/wiring_digital.o
  .debug_macro   0x00000000      0x1da arduino/wiring_digital.o
  .debug_macro   0x00000000      0xd80 arduino/wiring_digital.o
- .debug_macro   0x00000000       0xf0 arduino/wiring_digital.o
+ .debug_macro   0x00000000       0xc0 arduino/wiring_digital.o
  .debug_macro   0x00000000       0x26 arduino/wiring_digital.o
  .debug_macro   0x00000000       0x34 arduino/wiring_digital.o
  .debug_macro   0x00000000       0x18 arduino/wiring_digital.o
@@ -4518,7 +4518,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/wiring_pulse.o
  .debug_macro   0x00000000      0x1cc arduino/wiring_pulse.o
  .debug_macro   0x00000000      0xd80 arduino/wiring_pulse.o
- .debug_macro   0x00000000       0xf0 arduino/wiring_pulse.o
+ .debug_macro   0x00000000       0xc0 arduino/wiring_pulse.o
  .debug_macro   0x00000000       0x26 arduino/wiring_pulse.o
  .debug_macro   0x00000000       0x34 arduino/wiring_pulse.o
  .debug_macro   0x00000000       0x18 arduino/wiring_pulse.o
@@ -4641,8 +4641,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x88 arduino/wiring_pulse.o
  .debug_macro   0x00000000      0x22a arduino/wiring_pulse.o
  .debug_macro   0x00000000      0x100 arduino/wiring_pulse.o
- .debug_line    0x00000000      0xf5a arduino/wiring_pulse.o
- .debug_str     0x00000000    0x5f7c3 arduino/wiring_pulse.o
+ .debug_line    0x00000000      0xdec arduino/wiring_pulse.o
+ .debug_str     0x00000000    0x5f52b arduino/wiring_pulse.o
  .comment       0x00000000       0x34 arduino/wiring_pulse.o
  .ARM.attributes
                 0x00000000       0x33 arduino/wiring_pulse.o
@@ -4810,7 +4810,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c arduino/wiring_shift.o
  .debug_macro   0x00000000      0x1da arduino/wiring_shift.o
  .debug_macro   0x00000000      0xd80 arduino/wiring_shift.o
- .debug_macro   0x00000000       0xf0 arduino/wiring_shift.o
+ .debug_macro   0x00000000       0xc0 arduino/wiring_shift.o
  .debug_macro   0x00000000       0x26 arduino/wiring_shift.o
  .debug_macro   0x00000000       0x34 arduino/wiring_shift.o
  .debug_macro   0x00000000       0x18 arduino/wiring_shift.o
@@ -4924,8 +4924,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x20 arduino/wiring_shift.o
  .debug_macro   0x00000000       0x88 arduino/wiring_shift.o
  .debug_macro   0x00000000      0x22a arduino/wiring_shift.o
- .debug_line    0x00000000      0xe7c arduino/wiring_shift.o
- .debug_str     0x00000000    0x5e037 arduino/wiring_shift.o
+ .debug_line    0x00000000      0xd0e arduino/wiring_shift.o
+ .debug_str     0x00000000    0x5dd9f arduino/wiring_shift.o
  .comment       0x00000000       0x34 arduino/wiring_shift.o
  .ARM.attributes
                 0x00000000       0x33 arduino/wiring_shift.o
@@ -5617,7 +5617,7 @@ Discarded input sections
  .text          0x00000000        0x0 main.o
  .bss           0x00000000        0x0 main.o
  .debug_macro   0x00000000       0x10 main.o
- .debug_macro   0x00000000       0xf0 main.o
+ .debug_macro   0x00000000       0xc0 main.o
  .debug_macro   0x00000000      0x214 main.o
  .debug_macro   0x00000000       0x20 main.o
  .debug_macro   0x00000000       0x34 main.o
@@ -5931,7 +5931,7 @@ Discarded input sections
  .text.adc_get_pdc_base
                 0x00000000        0xc platform/atmel_sam/libsam/source/adc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/adc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/adc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/adc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/adc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/adc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/adc.o
@@ -6129,7 +6129,7 @@ Discarded input sections
                 0x00000000       0x18 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000      0xc25 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/adc12_sam3u.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/adc12_sam3u.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/adc12_sam3u.o
@@ -6223,8 +6223,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/adc12_sam3u.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/adc12_sam3u.o
- .debug_line    0x00000000      0xb09 platform/atmel_sam/libsam/source/adc12_sam3u.o
- .debug_str     0x00000000    0x57312 platform/atmel_sam/libsam/source/adc12_sam3u.o
+ .debug_line    0x00000000      0x99b platform/atmel_sam/libsam/source/adc12_sam3u.o
+ .debug_str     0x00000000    0x5707a platform/atmel_sam/libsam/source/adc12_sam3u.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/adc12_sam3u.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/adc12_sam3u.o
@@ -6420,7 +6420,7 @@ Discarded input sections
  .debug_ranges  0x00000000      0x190 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000      0xcf4 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/can.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/can.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/can.o
@@ -6523,8 +6523,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000       0x89 platform/atmel_sam/libsam/source/can.o
  .debug_macro   0x00000000       0x22 platform/atmel_sam/libsam/source/can.o
- .debug_line    0x00000000     0x1048 platform/atmel_sam/libsam/source/can.o
- .debug_str     0x00000000    0x59427 platform/atmel_sam/libsam/source/can.o
+ .debug_line    0x00000000      0xeda platform/atmel_sam/libsam/source/can.o
+ .debug_str     0x00000000    0x5918f platform/atmel_sam/libsam/source/can.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/can.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/can.o
@@ -6677,7 +6677,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0xb0 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000      0xc31 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/dacc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/dacc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/dacc.o
@@ -6771,8 +6771,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/dacc.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/dacc.o
- .debug_line    0x00000000      0xc90 platform/atmel_sam/libsam/source/dacc.o
- .debug_str     0x00000000    0x5774a platform/atmel_sam/libsam/source/dacc.o
+ .debug_line    0x00000000      0xb22 platform/atmel_sam/libsam/source/dacc.o
+ .debug_str     0x00000000    0x574b2 platform/atmel_sam/libsam/source/dacc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/dacc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/dacc.o
@@ -6913,7 +6913,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x70 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000      0xce2 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/efc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/efc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/efc.o
@@ -7016,8 +7016,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000       0x89 platform/atmel_sam/libsam/source/efc.o
  .debug_macro   0x00000000       0x22 platform/atmel_sam/libsam/source/efc.o
- .debug_line    0x00000000      0xe12 platform/atmel_sam/libsam/source/efc.o
- .debug_str     0x00000000    0x5906a platform/atmel_sam/libsam/source/efc.o
+ .debug_line    0x00000000      0xca4 platform/atmel_sam/libsam/source/efc.o
+ .debug_str     0x00000000    0x58dd2 platform/atmel_sam/libsam/source/efc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/efc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/efc.o
@@ -7165,7 +7165,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x78 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000      0xcf7 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/emac.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/emac.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/emac.o
@@ -7268,8 +7268,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000       0x89 platform/atmel_sam/libsam/source/emac.o
  .debug_macro   0x00000000       0x22 platform/atmel_sam/libsam/source/emac.o
- .debug_line    0x00000000     0x103c platform/atmel_sam/libsam/source/emac.o
- .debug_str     0x00000000    0x59997 platform/atmel_sam/libsam/source/emac.o
+ .debug_line    0x00000000      0xece platform/atmel_sam/libsam/source/emac.o
+ .debug_str     0x00000000    0x596ff platform/atmel_sam/libsam/source/emac.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/emac.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/emac.o
@@ -7384,7 +7384,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x18 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000      0xc29 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/gpbr.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/gpbr.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/gpbr.o
@@ -7478,8 +7478,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/gpbr.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/gpbr.o
- .debug_line    0x00000000      0xb57 platform/atmel_sam/libsam/source/gpbr.o
- .debug_str     0x00000000    0x5739a platform/atmel_sam/libsam/source/gpbr.o
+ .debug_line    0x00000000      0x9e9 platform/atmel_sam/libsam/source/gpbr.o
+ .debug_str     0x00000000    0x57102 platform/atmel_sam/libsam/source/gpbr.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/gpbr.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/gpbr.o
@@ -7582,7 +7582,7 @@ Discarded input sections
  .text          0x00000000        0x0 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
  .bss           0x00000000        0x0 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
@@ -7780,7 +7780,7 @@ Discarded input sections
  .text.PIO_Clear
                 0x00000000        0x4 platform/atmel_sam/libsam/source/pio.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/pio.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/pio.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/pio.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/pio.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/pio.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/pio.o
@@ -8065,7 +8065,7 @@ Discarded input sections
  .text.pmc_get_writeprotect_status
                 0x00000000       0x14 platform/atmel_sam/libsam/source/pmc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/pmc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/pmc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/pmc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/pmc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/pmc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/pmc.o
@@ -8324,7 +8324,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0xd8 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000      0xc69 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/pwmc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/pwmc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/pwmc.o
@@ -8422,8 +8422,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x2e platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000       0x95 platform/atmel_sam/libsam/source/pwmc.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/pwmc.o
- .debug_line    0x00000000      0xf0b platform/atmel_sam/libsam/source/pwmc.o
- .debug_str     0x00000000    0x57cdd platform/atmel_sam/libsam/source/pwmc.o
+ .debug_line    0x00000000      0xd9d platform/atmel_sam/libsam/source/pwmc.o
+ .debug_str     0x00000000    0x57a45 platform/atmel_sam/libsam/source/pwmc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/pwmc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/pwmc.o
@@ -8552,7 +8552,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x50 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000      0xc35 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/rstc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/rstc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/rstc.o
@@ -8646,8 +8646,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/rstc.o
  .debug_macro   0x00000000       0x2e platform/atmel_sam/libsam/source/rstc.o
- .debug_line    0x00000000      0xbde platform/atmel_sam/libsam/source/rstc.o
- .debug_str     0x00000000    0x57448 platform/atmel_sam/libsam/source/rstc.o
+ .debug_line    0x00000000      0xa70 platform/atmel_sam/libsam/source/rstc.o
+ .debug_str     0x00000000    0x571b0 platform/atmel_sam/libsam/source/rstc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/rstc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/rstc.o
@@ -8789,7 +8789,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x68 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000      0xc69 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/rtc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/rtc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/rtc.o
@@ -8887,8 +8887,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x2e platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000       0x95 platform/atmel_sam/libsam/source/rtc.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/rtc.o
- .debug_line    0x00000000      0xdd6 platform/atmel_sam/libsam/source/rtc.o
- .debug_str     0x00000000    0x5794f platform/atmel_sam/libsam/source/rtc.o
+ .debug_line    0x00000000      0xc68 platform/atmel_sam/libsam/source/rtc.o
+ .debug_str     0x00000000    0x576b7 platform/atmel_sam/libsam/source/rtc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/rtc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/rtc.o
@@ -9016,7 +9016,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x30 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000      0xc69 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/rtt.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/rtt.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/rtt.o
@@ -9114,8 +9114,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x2e platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000       0x95 platform/atmel_sam/libsam/source/rtt.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/rtt.o
- .debug_line    0x00000000      0xcdd platform/atmel_sam/libsam/source/rtt.o
- .debug_str     0x00000000    0x5779a platform/atmel_sam/libsam/source/rtt.o
+ .debug_line    0x00000000      0xb6f platform/atmel_sam/libsam/source/rtt.o
+ .debug_str     0x00000000    0x57502 platform/atmel_sam/libsam/source/rtt.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/rtt.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/rtt.o
@@ -9246,7 +9246,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x58 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000      0xc25 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/spi.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/spi.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/spi.o
@@ -9340,8 +9340,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/spi.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/spi.o
- .debug_line    0x00000000      0xba3 platform/atmel_sam/libsam/source/spi.o
- .debug_str     0x00000000    0x57447 platform/atmel_sam/libsam/source/spi.o
+ .debug_line    0x00000000      0xa35 platform/atmel_sam/libsam/source/spi.o
+ .debug_str     0x00000000    0x571af platform/atmel_sam/libsam/source/spi.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/spi.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/spi.o
@@ -9540,7 +9540,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000       0x89 platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000       0x22 platform/atmel_sam/libsam/source/ssc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/ssc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/ssc.o
@@ -9634,8 +9634,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/ssc.o
  .debug_macro   0x00000000       0x4c platform/atmel_sam/libsam/source/ssc.o
- .debug_line    0x00000000     0x100d platform/atmel_sam/libsam/source/ssc.o
- .debug_str     0x00000000    0x59370 platform/atmel_sam/libsam/source/ssc.o
+ .debug_line    0x00000000      0xe9f platform/atmel_sam/libsam/source/ssc.o
+ .debug_str     0x00000000    0x590d8 platform/atmel_sam/libsam/source/ssc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/ssc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/ssc.o
@@ -9770,7 +9770,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x50 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000      0xc69 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/tc.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/tc.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/tc.o
@@ -9868,8 +9868,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x2e platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000       0x95 platform/atmel_sam/libsam/source/tc.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/tc.o
- .debug_line    0x00000000      0xd52 platform/atmel_sam/libsam/source/tc.o
- .debug_str     0x00000000    0x5789c platform/atmel_sam/libsam/source/tc.o
+ .debug_line    0x00000000      0xbe4 platform/atmel_sam/libsam/source/tc.o
+ .debug_str     0x00000000    0x57604 platform/atmel_sam/libsam/source/tc.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/tc.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/tc.o
@@ -9976,7 +9976,7 @@ Discarded input sections
  .text.Wait     0x00000000       0x20 platform/atmel_sam/libsam/source/timetick.o
  .text.Sleep    0x00000000       0x30 platform/atmel_sam/libsam/source/timetick.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/timetick.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/timetick.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/timetick.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/timetick.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/timetick.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/timetick.o
@@ -10190,7 +10190,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x40 platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000      0xc2b platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/trng.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/trng.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/trng.o
@@ -10284,8 +10284,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/trng.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/trng.o
- .debug_line    0x00000000      0xb7c platform/atmel_sam/libsam/source/trng.o
- .debug_str     0x00000000    0x57417 platform/atmel_sam/libsam/source/trng.o
+ .debug_line    0x00000000      0xa0e platform/atmel_sam/libsam/source/trng.o
+ .debug_str     0x00000000    0x5717f platform/atmel_sam/libsam/source/trng.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/trng.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/trng.o
@@ -10441,7 +10441,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x80 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000      0xce5 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/twi.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/twi.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/twi.o
@@ -10547,8 +10547,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000       0x29 platform/atmel_sam/libsam/source/twi.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/twi.o
- .debug_line    0x00000000      0xebd platform/atmel_sam/libsam/source/twi.o
- .debug_str     0x00000000    0x591c1 platform/atmel_sam/libsam/source/twi.o
+ .debug_line    0x00000000      0xd4f platform/atmel_sam/libsam/source/twi.o
+ .debug_str     0x00000000    0x58f29 platform/atmel_sam/libsam/source/twi.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/twi.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/twi.o
@@ -10657,7 +10657,7 @@ Discarded input sections
                 0x00000000       0x18 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000      0xc25 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/udp.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/udp.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/udp.o
@@ -10751,8 +10751,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/udp.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/udp.o
- .debug_line    0x00000000      0xae3 platform/atmel_sam/libsam/source/udp.o
- .debug_str     0x00000000    0x5730a platform/atmel_sam/libsam/source/udp.o
+ .debug_line    0x00000000      0x975 platform/atmel_sam/libsam/source/udp.o
+ .debug_str     0x00000000    0x57072 platform/atmel_sam/libsam/source/udp.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/udp.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/udp.o
@@ -10860,7 +10860,7 @@ Discarded input sections
                 0x00000000       0x18 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000      0xc25 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/udphs.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/udphs.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/udphs.o
@@ -10954,8 +10954,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x100 platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000      0x79d platform/atmel_sam/libsam/source/udphs.o
  .debug_macro   0x00000000      0x501 platform/atmel_sam/libsam/source/udphs.o
- .debug_line    0x00000000      0xae5 platform/atmel_sam/libsam/source/udphs.o
- .debug_str     0x00000000    0x5730c platform/atmel_sam/libsam/source/udphs.o
+ .debug_line    0x00000000      0x977 platform/atmel_sam/libsam/source/udphs.o
+ .debug_str     0x00000000    0x57074 platform/atmel_sam/libsam/source/udphs.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/udphs.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/udphs.o
@@ -11057,7 +11057,7 @@ Discarded input sections
  .text          0x00000000        0x0 platform/atmel_sam/libsam/source/uotghs.o
  .data          0x00000000        0x0 platform/atmel_sam/libsam/source/uotghs.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/uotghs.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/uotghs.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/uotghs.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/uotghs.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/uotghs.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/uotghs.o
@@ -11275,7 +11275,7 @@ Discarded input sections
  .text.UDD_GetFrameNumber
                 0x00000000       0x10 platform/atmel_sam/libsam/source/uotghs_device.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/uotghs_device.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/uotghs_device.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/uotghs_device.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/uotghs_device.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/uotghs_device.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/uotghs_device.o
@@ -11530,7 +11530,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x68 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000      0xd03 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/uotghs_host.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/uotghs_host.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/uotghs_host.o
@@ -11640,8 +11640,8 @@ Discarded input sections
  .debug_macro   0x00000000       0x91 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000       0x16 platform/atmel_sam/libsam/source/uotghs_host.o
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/uotghs_host.o
- .debug_line    0x00000000      0xedb platform/atmel_sam/libsam/source/uotghs_host.o
- .debug_str     0x00000000    0x5a3b0 platform/atmel_sam/libsam/source/uotghs_host.o
+ .debug_line    0x00000000      0xd6d platform/atmel_sam/libsam/source/uotghs_host.o
+ .debug_str     0x00000000    0x5a118 platform/atmel_sam/libsam/source/uotghs_host.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/uotghs_host.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/uotghs_host.o
@@ -11795,7 +11795,7 @@ Discarded input sections
  .debug_ranges  0x00000000       0x80 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000      0xcd3 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/usart.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/usart.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/usart.o
@@ -11899,8 +11899,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x16d platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000       0x89 platform/atmel_sam/libsam/source/usart.o
  .debug_macro   0x00000000       0x22 platform/atmel_sam/libsam/source/usart.o
- .debug_line    0x00000000      0xe57 platform/atmel_sam/libsam/source/usart.o
- .debug_str     0x00000000    0x590b7 platform/atmel_sam/libsam/source/usart.o
+ .debug_line    0x00000000      0xce9 platform/atmel_sam/libsam/source/usart.o
+ .debug_str     0x00000000    0x58e1f platform/atmel_sam/libsam/source/usart.o
  .comment       0x00000000       0x34 platform/atmel_sam/libsam/source/usart.o
  .ARM.attributes
                 0x00000000       0x33 platform/atmel_sam/libsam/source/usart.o
@@ -12012,7 +12012,7 @@ Discarded input sections
  .text.WDT_GetPeriod
                 0x00000000       0x24 platform/atmel_sam/libsam/source/wdt.o
  .debug_macro   0x00000000       0x10 platform/atmel_sam/libsam/source/wdt.o
- .debug_macro   0x00000000       0xf0 platform/atmel_sam/libsam/source/wdt.o
+ .debug_macro   0x00000000       0xc0 platform/atmel_sam/libsam/source/wdt.o
  .debug_macro   0x00000000      0x214 platform/atmel_sam/libsam/source/wdt.o
  .debug_macro   0x00000000       0x20 platform/atmel_sam/libsam/source/wdt.o
  .debug_macro   0x00000000       0x34 platform/atmel_sam/libsam/source/wdt.o
@@ -12268,7 +12268,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x1c variants/variant.o
  .debug_macro   0x00000000      0x1cc variants/variant.o
  .debug_macro   0x00000000      0xd80 variants/variant.o
- .debug_macro   0x00000000       0xf0 variants/variant.o
+ .debug_macro   0x00000000       0xc0 variants/variant.o
  .debug_macro   0x00000000       0x26 variants/variant.o
  .debug_macro   0x00000000       0x34 variants/variant.o
  .debug_macro   0x00000000       0x18 variants/variant.o
@@ -14452,7 +14452,7 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_ranges  0x00000b28       0x38 variants/variant.o
  .debug_ranges  0x00000b60       0x60 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
 
-.debug_macro    0x00000000    0x29a5b
+.debug_macro    0x00000000    0x29a2b
  .debug_macro   0x00000000      0xe45 arduino/cortex_handlers.o
  .debug_macro   0x00000e45       0x10 arduino/cortex_handlers.o
  .debug_macro   0x00000e55      0x214 arduino/cortex_handlers.o
@@ -14472,295 +14472,295 @@ OUTPUT(HW.elf elf32-littlearm)
  .debug_macro   0x000014e9       0x1c arduino/cortex_handlers.o
  .debug_macro   0x00001505      0x1da arduino/cortex_handlers.o
  .debug_macro   0x000016df      0xd80 arduino/cortex_handlers.o
- .debug_macro   0x0000245f       0xf0 arduino/cortex_handlers.o
- .debug_macro   0x0000254f       0x26 arduino/cortex_handlers.o
- .debug_macro   0x00002575       0x34 arduino/cortex_handlers.o
- .debug_macro   0x000025a9       0x18 arduino/cortex_handlers.o
- .debug_macro   0x000025c1      0x743 arduino/cortex_handlers.o
- .debug_macro   0x00002d04      0xaa7 arduino/cortex_handlers.o
- .debug_macro   0x000037ab      0x55a arduino/cortex_handlers.o
- .debug_macro   0x00003d05      0x2a6 arduino/cortex_handlers.o
- .debug_macro   0x00003fab      0x30b arduino/cortex_handlers.o
- .debug_macro   0x000042b6      0x741 arduino/cortex_handlers.o
- .debug_macro   0x000049f7       0x82 arduino/cortex_handlers.o
- .debug_macro   0x00004a79      0x56c arduino/cortex_handlers.o
- .debug_macro   0x00004fe5       0x1c arduino/cortex_handlers.o
- .debug_macro   0x00005001      0x6a9 arduino/cortex_handlers.o
- .debug_macro   0x000056aa      0x51e arduino/cortex_handlers.o
- .debug_macro   0x00005bc8       0xbe arduino/cortex_handlers.o
- .debug_macro   0x00005c86     0x2333 arduino/cortex_handlers.o
- .debug_macro   0x00007fb9      0x84f arduino/cortex_handlers.o
- .debug_macro   0x00008808      0xdbb arduino/cortex_handlers.o
- .debug_macro   0x000095c3       0x7c arduino/cortex_handlers.o
- .debug_macro   0x0000963f      0x256 arduino/cortex_handlers.o
- .debug_macro   0x00009895       0x58 arduino/cortex_handlers.o
- .debug_macro   0x000098ed      0x999 arduino/cortex_handlers.o
- .debug_macro   0x0000a286      0x22d arduino/cortex_handlers.o
- .debug_macro   0x0000a4b3      0x4d0 arduino/cortex_handlers.o
- .debug_macro   0x0000a983      0x6a4 arduino/cortex_handlers.o
- .debug_macro   0x0000b027      0x590 arduino/cortex_handlers.o
- .debug_macro   0x0000b5b7       0x46 arduino/cortex_handlers.o
- .debug_macro   0x0000b5fd      0x33f arduino/cortex_handlers.o
- .debug_macro   0x0000b93c      0x27e arduino/cortex_handlers.o
- .debug_macro   0x0000bbba     0x14d5 arduino/cortex_handlers.o
- .debug_macro   0x0000d08f      0x7ab arduino/cortex_handlers.o
- .debug_macro   0x0000d83a       0x76 arduino/cortex_handlers.o
- .debug_macro   0x0000d8b0       0x82 arduino/cortex_handlers.o
- .debug_macro   0x0000d932       0x76 arduino/cortex_handlers.o
- .debug_macro   0x0000d9a8       0x4c arduino/cortex_handlers.o
- .debug_macro   0x0000d9f4      0x100 arduino/cortex_handlers.o
- .debug_macro   0x0000daf4      0x100 arduino/cortex_handlers.o
- .debug_macro   0x0000dbf4      0x100 arduino/cortex_handlers.o
- .debug_macro   0x0000dcf4       0x88 arduino/cortex_handlers.o
- .debug_macro   0x0000dd7c       0x88 arduino/cortex_handlers.o
- .debug_macro   0x0000de04      0x3b4 arduino/cortex_handlers.o
- .debug_macro   0x0000e1b8       0xb8 arduino/cortex_handlers.o
- .debug_macro   0x0000e270       0xb8 arduino/cortex_handlers.o
- .debug_macro   0x0000e328       0xb8 arduino/cortex_handlers.o
- .debug_macro   0x0000e3e0       0xb8 arduino/cortex_handlers.o
- .debug_macro   0x0000e498      0x2b8 arduino/cortex_handlers.o
- .debug_macro   0x0000e750      0x118 arduino/cortex_handlers.o
- .debug_macro   0x0000e868      0x216 arduino/cortex_handlers.o
- .debug_macro   0x0000ea7e      0x216 arduino/cortex_handlers.o
- .debug_macro   0x0000ec94       0x2e arduino/cortex_handlers.o
- .debug_macro   0x0000ecc2       0xac arduino/cortex_handlers.o
- .debug_macro   0x0000ed6e      0x13e arduino/cortex_handlers.o
- .debug_macro   0x0000eeac       0x7c arduino/cortex_handlers.o
- .debug_macro   0x0000ef28      0x1f6 arduino/cortex_handlers.o
- .debug_macro   0x0000f11e       0x64 arduino/cortex_handlers.o
- .debug_macro   0x0000f182       0xa6 arduino/cortex_handlers.o
- .debug_macro   0x0000f228       0x7c arduino/cortex_handlers.o
- .debug_macro   0x0000f2a4       0x16 arduino/cortex_handlers.o
- .debug_macro   0x0000f2ba       0x22 arduino/cortex_handlers.o
- .debug_macro   0x0000f2dc       0x22 arduino/cortex_handlers.o
- .debug_macro   0x0000f2fe      0x10c arduino/cortex_handlers.o
- .debug_macro   0x0000f40a      0x10c arduino/cortex_handlers.o
- .debug_macro   0x0000f516      0x10c arduino/cortex_handlers.o
- .debug_macro   0x0000f622      0x10c arduino/cortex_handlers.o
- .debug_macro   0x0000f72e       0x1c arduino/cortex_handlers.o
- .debug_macro   0x0000f74a       0x2e arduino/cortex_handlers.o
- .debug_macro   0x0000f778       0x22 arduino/cortex_handlers.o
- .debug_macro   0x0000f79a       0x1c arduino/cortex_handlers.o
- .debug_macro   0x0000f7b6       0x58 arduino/cortex_handlers.o
- .debug_macro   0x0000f80e       0x10 arduino/cortex_handlers.o
- .debug_macro   0x0000f81e      0x27a arduino/cortex_handlers.o
- .debug_macro   0x0000fa98      0xd34 arduino/cortex_handlers.o
- .debug_macro   0x000107cc      0x12a arduino/cortex_handlers.o
- .debug_macro   0x000108f6       0x22 arduino/cortex_handlers.o
- .debug_macro   0x00010918       0x1c arduino/cortex_handlers.o
- .debug_macro   0x00010934       0x16 arduino/cortex_handlers.o
- .debug_macro   0x0001094a       0x44 arduino/cortex_handlers.o
- .debug_macro   0x0001098e       0x76 arduino/cortex_handlers.o
- .debug_macro   0x00010a04       0x52 arduino/cortex_handlers.o
- .debug_macro   0x00010a56       0x58 arduino/cortex_handlers.o
- .debug_macro   0x00010aae       0x34 arduino/cortex_handlers.o
- .debug_macro   0x00010ae2       0x3a arduino/cortex_handlers.o
- .debug_macro   0x00010b1c       0x22 arduino/cortex_handlers.o
- .debug_macro   0x00010b3e       0x52 arduino/cortex_handlers.o
- .debug_macro   0x00010b90       0x1c arduino/cortex_handlers.o
- .debug_macro   0x00010bac       0x4c arduino/cortex_handlers.o
- .debug_macro   0x00010bf8       0xef arduino/cortex_handlers.o
- .debug_macro   0x00010ce7       0x28 arduino/cortex_handlers.o
- .debug_macro   0x00010d0f       0x88 arduino/cortex_handlers.o
- .debug_macro   0x00010d97      0x100 arduino/cortex_handlers.o
- .debug_macro   0x00010e97      0x79d arduino/cortex_handlers.o
- .debug_macro   0x00011634      0x501 arduino/cortex_handlers.o
- .debug_macro   0x00011b35       0xd6 arduino/cortex_handlers.o
- .debug_macro   0x00011c0b       0x69 arduino/cortex_handlers.o
- .debug_macro   0x00011c74       0x16 arduino/cortex_handlers.o
- .debug_macro   0x00011c8a       0x16 arduino/cortex_handlers.o
- .debug_macro   0x00011ca0       0x10 arduino/cortex_handlers.o
- .debug_macro   0x00011cb0       0x10 arduino/cortex_handlers.o
- .debug_macro   0x00011cc0       0x85 arduino/cortex_handlers.o
- .debug_macro   0x00011d45       0x22 arduino/cortex_handlers.o
- .debug_macro   0x00011d67       0x91 arduino/cortex_handlers.o
- .debug_macro   0x00011df8       0x16 arduino/cortex_handlers.o
- .debug_macro   0x00011e0e      0x16d arduino/cortex_handlers.o
- .debug_macro   0x00011f7b       0x52 arduino/cortex_handlers.o
- .debug_macro   0x00011fcd       0x10 arduino/cortex_handlers.o
- .debug_macro   0x00011fdd       0x16 arduino/cortex_handlers.o
- .debug_macro   0x00011ff3       0x35 arduino/cortex_handlers.o
- .debug_macro   0x00012028       0x34 arduino/cortex_handlers.o
- .debug_macro   0x0001205c      0x120 arduino/cortex_handlers.o
- .debug_macro   0x0001217c      0x18a arduino/cortex_handlers.o
- .debug_macro   0x00012306       0x20 arduino/cortex_handlers.o
- .debug_macro   0x00012326       0x88 arduino/cortex_handlers.o
- .debug_macro   0x000123ae      0x22a arduino/cortex_handlers.o
- .debug_macro   0x000125d8      0x80f arduino/hooks.o
- .debug_macro   0x00012de7      0xf0c arduino/IPAddress.o
- .debug_macro   0x00013cf3       0x94 arduino/IPAddress.o
- .debug_macro   0x00013d87      0x1cc arduino/IPAddress.o
- .debug_macro   0x00013f53      0x743 arduino/IPAddress.o
- .debug_macro   0x00014696       0x52 arduino/IPAddress.o
- .debug_macro   0x000146e8       0x10 arduino/IPAddress.o
- .debug_macro   0x000146f8       0x10 arduino/IPAddress.o
- .debug_macro   0x00014708       0x10 arduino/IPAddress.o
- .debug_macro   0x00014718       0x12 arduino/IPAddress.o
- .debug_macro   0x0001472a      0x447 arduino/IPAddress.o
- .debug_macro   0x00014b71       0x85 arduino/IPAddress.o
- .debug_macro   0x00014bf6       0x1c arduino/IPAddress.o
- .debug_macro   0x00014c12       0x10 arduino/IPAddress.o
- .debug_macro   0x00014c22       0x35 arduino/IPAddress.o
- .debug_macro   0x00014c57      0x100 arduino/IPAddress.o
- .debug_macro   0x00014d57      0xf03 arduino/Print.o
- .debug_macro   0x00015c5a      0xf08 arduino/Reset.o
- .debug_macro   0x00016b62      0x8e3 arduino/RingBuffer.o
- .debug_macro   0x00017445      0xc44 arduino/syscalls_sam3.o
- .debug_macro   0x00018089       0x10 arduino/syscalls_sam3.o
- .debug_macro   0x00018099       0xf5 arduino/syscalls_sam3.o
- .debug_macro   0x0001818e       0x20 arduino/syscalls_sam3.o
- .debug_macro   0x000181ae      0xdcc arduino/UARTClass.o
- .debug_macro   0x00018f7a      0xdcc arduino/USARTClass.o
- .debug_macro   0x00019d46      0xf25 arduino/USB/CDC.o
- .debug_macro   0x0001ac6b      0xf2f arduino/USB/HID.o
- .debug_macro   0x0001bb9a      0xf25 arduino/USB/USBCore.o
- .debug_macro   0x0001cabf      0xe3a arduino/WInterrupts.o
- .debug_macro   0x0001d8f9      0xe3a arduino/wiring.o
- .debug_macro   0x0001e733      0xe3a arduino/wiring_analog.o
- .debug_macro   0x0001f56d      0xe3a arduino/wiring_digital.o
- .debug_macro   0x000203a7      0xb10 cmsis/src/startup_sam3xa.o
- .debug_macro   0x00020eb7      0xb2e cmsis/src/system_sam3xa.o
- .debug_macro   0x000219e5      0xefd main.o
- .debug_macro   0x000228e2       0x28 main.o
- .debug_macro   0x0002290a      0xc25 platform/atmel_sam/libsam/source/adc.o
- .debug_macro   0x0002352f      0xc2f platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
- .debug_macro   0x0002415e       0x3e platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
- .debug_macro   0x0002419c      0xc25 platform/atmel_sam/libsam/source/pio.o
- .debug_macro   0x00024dc1      0xc2b platform/atmel_sam/libsam/source/pmc.o
- .debug_macro   0x000259ec      0xc25 platform/atmel_sam/libsam/source/timetick.o
- .debug_macro   0x00026611      0xc25 platform/atmel_sam/libsam/source/uotghs.o
- .debug_macro   0x00027236      0xd03 platform/atmel_sam/libsam/source/uotghs_device.o
- .debug_macro   0x00027f39      0xc25 platform/atmel_sam/libsam/source/wdt.o
- .debug_macro   0x00028b5e      0xefd variants/variant.o
+ .debug_macro   0x0000245f       0xc0 arduino/cortex_handlers.o
+ .debug_macro   0x0000251f       0x26 arduino/cortex_handlers.o
+ .debug_macro   0x00002545       0x34 arduino/cortex_handlers.o
+ .debug_macro   0x00002579       0x18 arduino/cortex_handlers.o
+ .debug_macro   0x00002591      0x743 arduino/cortex_handlers.o
+ .debug_macro   0x00002cd4      0xaa7 arduino/cortex_handlers.o
+ .debug_macro   0x0000377b      0x55a arduino/cortex_handlers.o
+ .debug_macro   0x00003cd5      0x2a6 arduino/cortex_handlers.o
+ .debug_macro   0x00003f7b      0x30b arduino/cortex_handlers.o
+ .debug_macro   0x00004286      0x741 arduino/cortex_handlers.o
+ .debug_macro   0x000049c7       0x82 arduino/cortex_handlers.o
+ .debug_macro   0x00004a49      0x56c arduino/cortex_handlers.o
+ .debug_macro   0x00004fb5       0x1c arduino/cortex_handlers.o
+ .debug_macro   0x00004fd1      0x6a9 arduino/cortex_handlers.o
+ .debug_macro   0x0000567a      0x51e arduino/cortex_handlers.o
+ .debug_macro   0x00005b98       0xbe arduino/cortex_handlers.o
+ .debug_macro   0x00005c56     0x2333 arduino/cortex_handlers.o
+ .debug_macro   0x00007f89      0x84f arduino/cortex_handlers.o
+ .debug_macro   0x000087d8      0xdbb arduino/cortex_handlers.o
+ .debug_macro   0x00009593       0x7c arduino/cortex_handlers.o
+ .debug_macro   0x0000960f      0x256 arduino/cortex_handlers.o
+ .debug_macro   0x00009865       0x58 arduino/cortex_handlers.o
+ .debug_macro   0x000098bd      0x999 arduino/cortex_handlers.o
+ .debug_macro   0x0000a256      0x22d arduino/cortex_handlers.o
+ .debug_macro   0x0000a483      0x4d0 arduino/cortex_handlers.o
+ .debug_macro   0x0000a953      0x6a4 arduino/cortex_handlers.o
+ .debug_macro   0x0000aff7      0x590 arduino/cortex_handlers.o
+ .debug_macro   0x0000b587       0x46 arduino/cortex_handlers.o
+ .debug_macro   0x0000b5cd      0x33f arduino/cortex_handlers.o
+ .debug_macro   0x0000b90c      0x27e arduino/cortex_handlers.o
+ .debug_macro   0x0000bb8a     0x14d5 arduino/cortex_handlers.o
+ .debug_macro   0x0000d05f      0x7ab arduino/cortex_handlers.o
+ .debug_macro   0x0000d80a       0x76 arduino/cortex_handlers.o
+ .debug_macro   0x0000d880       0x82 arduino/cortex_handlers.o
+ .debug_macro   0x0000d902       0x76 arduino/cortex_handlers.o
+ .debug_macro   0x0000d978       0x4c arduino/cortex_handlers.o
+ .debug_macro   0x0000d9c4      0x100 arduino/cortex_handlers.o
+ .debug_macro   0x0000dac4      0x100 arduino/cortex_handlers.o
+ .debug_macro   0x0000dbc4      0x100 arduino/cortex_handlers.o
+ .debug_macro   0x0000dcc4       0x88 arduino/cortex_handlers.o
+ .debug_macro   0x0000dd4c       0x88 arduino/cortex_handlers.o
+ .debug_macro   0x0000ddd4      0x3b4 arduino/cortex_handlers.o
+ .debug_macro   0x0000e188       0xb8 arduino/cortex_handlers.o
+ .debug_macro   0x0000e240       0xb8 arduino/cortex_handlers.o
+ .debug_macro   0x0000e2f8       0xb8 arduino/cortex_handlers.o
+ .debug_macro   0x0000e3b0       0xb8 arduino/cortex_handlers.o
+ .debug_macro   0x0000e468      0x2b8 arduino/cortex_handlers.o
+ .debug_macro   0x0000e720      0x118 arduino/cortex_handlers.o
+ .debug_macro   0x0000e838      0x216 arduino/cortex_handlers.o
+ .debug_macro   0x0000ea4e      0x216 arduino/cortex_handlers.o
+ .debug_macro   0x0000ec64       0x2e arduino/cortex_handlers.o
+ .debug_macro   0x0000ec92       0xac arduino/cortex_handlers.o
+ .debug_macro   0x0000ed3e      0x13e arduino/cortex_handlers.o
+ .debug_macro   0x0000ee7c       0x7c arduino/cortex_handlers.o
+ .debug_macro   0x0000eef8      0x1f6 arduino/cortex_handlers.o
+ .debug_macro   0x0000f0ee       0x64 arduino/cortex_handlers.o
+ .debug_macro   0x0000f152       0xa6 arduino/cortex_handlers.o
+ .debug_macro   0x0000f1f8       0x7c arduino/cortex_handlers.o
+ .debug_macro   0x0000f274       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x0000f28a       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x0000f2ac       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x0000f2ce      0x10c arduino/cortex_handlers.o
+ .debug_macro   0x0000f3da      0x10c arduino/cortex_handlers.o
+ .debug_macro   0x0000f4e6      0x10c arduino/cortex_handlers.o
+ .debug_macro   0x0000f5f2      0x10c arduino/cortex_handlers.o
+ .debug_macro   0x0000f6fe       0x1c arduino/cortex_handlers.o
+ .debug_macro   0x0000f71a       0x2e arduino/cortex_handlers.o
+ .debug_macro   0x0000f748       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x0000f76a       0x1c arduino/cortex_handlers.o
+ .debug_macro   0x0000f786       0x58 arduino/cortex_handlers.o
+ .debug_macro   0x0000f7de       0x10 arduino/cortex_handlers.o
+ .debug_macro   0x0000f7ee      0x27a arduino/cortex_handlers.o
+ .debug_macro   0x0000fa68      0xd34 arduino/cortex_handlers.o
+ .debug_macro   0x0001079c      0x12a arduino/cortex_handlers.o
+ .debug_macro   0x000108c6       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x000108e8       0x1c arduino/cortex_handlers.o
+ .debug_macro   0x00010904       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x0001091a       0x44 arduino/cortex_handlers.o
+ .debug_macro   0x0001095e       0x76 arduino/cortex_handlers.o
+ .debug_macro   0x000109d4       0x52 arduino/cortex_handlers.o
+ .debug_macro   0x00010a26       0x58 arduino/cortex_handlers.o
+ .debug_macro   0x00010a7e       0x34 arduino/cortex_handlers.o
+ .debug_macro   0x00010ab2       0x3a arduino/cortex_handlers.o
+ .debug_macro   0x00010aec       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x00010b0e       0x52 arduino/cortex_handlers.o
+ .debug_macro   0x00010b60       0x1c arduino/cortex_handlers.o
+ .debug_macro   0x00010b7c       0x4c arduino/cortex_handlers.o
+ .debug_macro   0x00010bc8       0xef arduino/cortex_handlers.o
+ .debug_macro   0x00010cb7       0x28 arduino/cortex_handlers.o
+ .debug_macro   0x00010cdf       0x88 arduino/cortex_handlers.o
+ .debug_macro   0x00010d67      0x100 arduino/cortex_handlers.o
+ .debug_macro   0x00010e67      0x79d arduino/cortex_handlers.o
+ .debug_macro   0x00011604      0x501 arduino/cortex_handlers.o
+ .debug_macro   0x00011b05       0xd6 arduino/cortex_handlers.o
+ .debug_macro   0x00011bdb       0x69 arduino/cortex_handlers.o
+ .debug_macro   0x00011c44       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x00011c5a       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x00011c70       0x10 arduino/cortex_handlers.o
+ .debug_macro   0x00011c80       0x10 arduino/cortex_handlers.o
+ .debug_macro   0x00011c90       0x85 arduino/cortex_handlers.o
+ .debug_macro   0x00011d15       0x22 arduino/cortex_handlers.o
+ .debug_macro   0x00011d37       0x91 arduino/cortex_handlers.o
+ .debug_macro   0x00011dc8       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x00011dde      0x16d arduino/cortex_handlers.o
+ .debug_macro   0x00011f4b       0x52 arduino/cortex_handlers.o
+ .debug_macro   0x00011f9d       0x10 arduino/cortex_handlers.o
+ .debug_macro   0x00011fad       0x16 arduino/cortex_handlers.o
+ .debug_macro   0x00011fc3       0x35 arduino/cortex_handlers.o
+ .debug_macro   0x00011ff8       0x34 arduino/cortex_handlers.o
+ .debug_macro   0x0001202c      0x120 arduino/cortex_handlers.o
+ .debug_macro   0x0001214c      0x18a arduino/cortex_handlers.o
+ .debug_macro   0x000122d6       0x20 arduino/cortex_handlers.o
+ .debug_macro   0x000122f6       0x88 arduino/cortex_handlers.o
+ .debug_macro   0x0001237e      0x22a arduino/cortex_handlers.o
+ .debug_macro   0x000125a8      0x80f arduino/hooks.o
+ .debug_macro   0x00012db7      0xf0c arduino/IPAddress.o
+ .debug_macro   0x00013cc3       0x94 arduino/IPAddress.o
+ .debug_macro   0x00013d57      0x1cc arduino/IPAddress.o
+ .debug_macro   0x00013f23      0x743 arduino/IPAddress.o
+ .debug_macro   0x00014666       0x52 arduino/IPAddress.o
+ .debug_macro   0x000146b8       0x10 arduino/IPAddress.o
+ .debug_macro   0x000146c8       0x10 arduino/IPAddress.o
+ .debug_macro   0x000146d8       0x10 arduino/IPAddress.o
+ .debug_macro   0x000146e8       0x12 arduino/IPAddress.o
+ .debug_macro   0x000146fa      0x447 arduino/IPAddress.o
+ .debug_macro   0x00014b41       0x85 arduino/IPAddress.o
+ .debug_macro   0x00014bc6       0x1c arduino/IPAddress.o
+ .debug_macro   0x00014be2       0x10 arduino/IPAddress.o
+ .debug_macro   0x00014bf2       0x35 arduino/IPAddress.o
+ .debug_macro   0x00014c27      0x100 arduino/IPAddress.o
+ .debug_macro   0x00014d27      0xf03 arduino/Print.o
+ .debug_macro   0x00015c2a      0xf08 arduino/Reset.o
+ .debug_macro   0x00016b32      0x8e3 arduino/RingBuffer.o
+ .debug_macro   0x00017415      0xc44 arduino/syscalls_sam3.o
+ .debug_macro   0x00018059       0x10 arduino/syscalls_sam3.o
+ .debug_macro   0x00018069       0xf5 arduino/syscalls_sam3.o
+ .debug_macro   0x0001815e       0x20 arduino/syscalls_sam3.o
+ .debug_macro   0x0001817e      0xdcc arduino/UARTClass.o
+ .debug_macro   0x00018f4a      0xdcc arduino/USARTClass.o
+ .debug_macro   0x00019d16      0xf25 arduino/USB/CDC.o
+ .debug_macro   0x0001ac3b      0xf2f arduino/USB/HID.o
+ .debug_macro   0x0001bb6a      0xf25 arduino/USB/USBCore.o
+ .debug_macro   0x0001ca8f      0xe3a arduino/WInterrupts.o
+ .debug_macro   0x0001d8c9      0xe3a arduino/wiring.o
+ .debug_macro   0x0001e703      0xe3a arduino/wiring_analog.o
+ .debug_macro   0x0001f53d      0xe3a arduino/wiring_digital.o
+ .debug_macro   0x00020377      0xb10 cmsis/src/startup_sam3xa.o
+ .debug_macro   0x00020e87      0xb2e cmsis/src/system_sam3xa.o
+ .debug_macro   0x000219b5      0xefd main.o
+ .debug_macro   0x000228b2       0x28 main.o
+ .debug_macro   0x000228da      0xc25 platform/atmel_sam/libsam/source/adc.o
+ .debug_macro   0x000234ff      0xc2f platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
+ .debug_macro   0x0002412e       0x3e platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
+ .debug_macro   0x0002416c      0xc25 platform/atmel_sam/libsam/source/pio.o
+ .debug_macro   0x00024d91      0xc2b platform/atmel_sam/libsam/source/pmc.o
+ .debug_macro   0x000259bc      0xc25 platform/atmel_sam/libsam/source/timetick.o
+ .debug_macro   0x000265e1      0xc25 platform/atmel_sam/libsam/source/uotghs.o
+ .debug_macro   0x00027206      0xd03 platform/atmel_sam/libsam/source/uotghs_device.o
+ .debug_macro   0x00027f09      0xc25 platform/atmel_sam/libsam/source/wdt.o
+ .debug_macro   0x00028b2e      0xefd variants/variant.o
 
-.debug_line     0x00000000    0x1909d
- .debug_line    0x00000000      0xe81 arduino/cortex_handlers.o
- .debug_line    0x00000e81       0x61 arduino/hooks.o
- .debug_line    0x00000ee2      0xfc2 arduino/IPAddress.o
- .debug_line    0x00001ea4     0x1178 arduino/Print.o
- .debug_line    0x0000301c      0xf5d arduino/Reset.o
- .debug_line    0x00003f79      0x399 arduino/RingBuffer.o
- .debug_line    0x00004312      0xc46 arduino/syscalls_sam3.o
- .debug_line    0x00004f58      0xeb2 arduino/UARTClass.o
- .debug_line    0x00005e0a      0xeb4 arduino/USARTClass.o
- .debug_line    0x00006cbe     0x1081 arduino/USB/CDC.o
- .debug_line    0x00007d3f     0x1128 arduino/USB/HID.o
- .debug_line    0x00008e67     0x11f5 arduino/USB/USBCore.o
- .debug_line    0x0000a05c      0xf34 arduino/WInterrupts.o
- .debug_line    0x0000af90      0xe7a arduino/wiring.o
- .debug_line    0x0000be0a      0xf5e arduino/wiring_analog.o
- .debug_line    0x0000cd68      0xe7b arduino/wiring_digital.o
- .debug_line    0x0000dbe3      0x918 cmsis/src/startup_sam3xa.o
- .debug_line    0x0000e4fb      0x96a cmsis/src/system_sam3xa.o
- .debug_line    0x0000ee65      0xf38 main.o
- .debug_line    0x0000fd9d      0xe6b platform/atmel_sam/libsam/source/adc.o
- .debug_line    0x00010c08      0xb50 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
- .debug_line    0x00011758      0xbe4 platform/atmel_sam/libsam/source/pio.o
- .debug_line    0x0001233c      0xf9e platform/atmel_sam/libsam/source/pmc.o
- .debug_line    0x000132da      0xb72 platform/atmel_sam/libsam/source/timetick.o
- .debug_line    0x00013e4c      0xaf7 platform/atmel_sam/libsam/source/uotghs.o
- .debug_line    0x00014943      0xf76 platform/atmel_sam/libsam/source/uotghs_device.o
- .debug_line    0x000158b9      0xb3c platform/atmel_sam/libsam/source/wdt.o
- .debug_line    0x000163f5      0xfa2 variants/variant.o
- .debug_line    0x00017397      0x121 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
- .debug_line    0x000174b8      0x13c c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
- .debug_line    0x000175f4      0x1a4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
- .debug_line    0x00017798      0x152 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
- .debug_line    0x000178ea      0x233 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
- .debug_line    0x00017b1d      0x3c0 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
- .debug_line    0x00017edd      0x1af c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
- .debug_line    0x0001808c      0x1b6 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
- .debug_line    0x00018242      0x232 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
- .debug_line    0x00018474      0x1a5 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
- .debug_line    0x00018619      0x261 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
- .debug_line    0x0001887a      0x2bf c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
- .debug_line    0x00018b39      0x2eb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
- .debug_line    0x00018e24      0x279 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
+.debug_line     0x00000000    0x16beb
+ .debug_line    0x00000000      0xd13 arduino/cortex_handlers.o
+ .debug_line    0x00000d13       0x61 arduino/hooks.o
+ .debug_line    0x00000d74      0xe54 arduino/IPAddress.o
+ .debug_line    0x00001bc8     0x100a arduino/Print.o
+ .debug_line    0x00002bd2      0xdef arduino/Reset.o
+ .debug_line    0x000039c1      0x399 arduino/RingBuffer.o
+ .debug_line    0x00003d5a      0xad8 arduino/syscalls_sam3.o
+ .debug_line    0x00004832      0xd44 arduino/UARTClass.o
+ .debug_line    0x00005576      0xd46 arduino/USARTClass.o
+ .debug_line    0x000062bc      0xf13 arduino/USB/CDC.o
+ .debug_line    0x000071cf      0xfba arduino/USB/HID.o
+ .debug_line    0x00008189     0x1087 arduino/USB/USBCore.o
+ .debug_line    0x00009210      0xdc6 arduino/WInterrupts.o
+ .debug_line    0x00009fd6      0xd0c arduino/wiring.o
+ .debug_line    0x0000ace2      0xdf0 arduino/wiring_analog.o
+ .debug_line    0x0000bad2      0xd0d arduino/wiring_digital.o
+ .debug_line    0x0000c7df      0x7e7 cmsis/src/startup_sam3xa.o
+ .debug_line    0x0000cfc6      0x839 cmsis/src/system_sam3xa.o
+ .debug_line    0x0000d7ff      0xdca main.o
+ .debug_line    0x0000e5c9      0xcfd platform/atmel_sam/libsam/source/adc.o
+ .debug_line    0x0000f2c6      0x9e2 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
+ .debug_line    0x0000fca8      0xa76 platform/atmel_sam/libsam/source/pio.o
+ .debug_line    0x0001071e      0xe30 platform/atmel_sam/libsam/source/pmc.o
+ .debug_line    0x0001154e      0xa04 platform/atmel_sam/libsam/source/timetick.o
+ .debug_line    0x00011f52      0x989 platform/atmel_sam/libsam/source/uotghs.o
+ .debug_line    0x000128db      0xe08 platform/atmel_sam/libsam/source/uotghs_device.o
+ .debug_line    0x000136e3      0x9ce platform/atmel_sam/libsam/source/wdt.o
+ .debug_line    0x000140b1      0xe34 variants/variant.o
+ .debug_line    0x00014ee5      0x121 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
+ .debug_line    0x00015006      0x13c c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
+ .debug_line    0x00015142      0x1a4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
+ .debug_line    0x000152e6      0x152 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
+ .debug_line    0x00015438      0x233 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
+ .debug_line    0x0001566b      0x3c0 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
+ .debug_line    0x00015a2b      0x1af c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
+ .debug_line    0x00015bda      0x1b6 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
+ .debug_line    0x00015d90      0x232 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
+ .debug_line    0x00015fc2      0x1a5 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
+ .debug_line    0x00016167      0x261 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
+ .debug_line    0x000163c8      0x2bf c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
+ .debug_line    0x00016687      0x2eb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
+ .debug_line    0x00016972      0x279 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
 
-.debug_str      0x00000000    0x650df
- .debug_str     0x00000000    0x5dda7 arduino/cortex_handlers.o
-                              0x5e014 (size before relaxing)
- .debug_str     0x0005dda7       0x23 arduino/hooks.o
+.debug_str      0x00000000    0x64e47
+ .debug_str     0x00000000    0x5db0f arduino/cortex_handlers.o
+                              0x5dd7c (size before relaxing)
+ .debug_str     0x0005db0f       0x23 arduino/hooks.o
                                0x2238 (size before relaxing)
- .debug_str     0x0005ddca     0x172d arduino/IPAddress.o
-                              0x5f570 (size before relaxing)
- .debug_str     0x0005f4f7      0xa68 arduino/Print.o
-                              0x5fda8 (size before relaxing)
- .debug_str     0x0005ff5f       0xcf arduino/Reset.o
-                              0x5f374 (size before relaxing)
- .debug_str     0x0006002e       0x70 arduino/RingBuffer.o
+ .debug_str     0x0005db32     0x172d arduino/IPAddress.o
+                              0x5f2d8 (size before relaxing)
+ .debug_str     0x0005f25f      0xa68 arduino/Print.o
+                              0x5fb10 (size before relaxing)
+ .debug_str     0x0005fcc7       0xcf arduino/Reset.o
+                              0x5f0dc (size before relaxing)
+ .debug_str     0x0005fd96       0x70 arduino/RingBuffer.o
                                0x4644 (size before relaxing)
- .debug_str     0x0006009e      0x209 arduino/syscalls_sam3.o
-                              0x4e26c (size before relaxing)
- .debug_str     0x000602a7      0x79c arduino/UARTClass.o
-                              0x5bb5e (size before relaxing)
- .debug_str     0x00060a43      0x232 arduino/USARTClass.o
-                              0x5bbc1 (size before relaxing)
- .debug_str     0x00060c75      0x8c7 arduino/USB/CDC.o
-                              0x60798 (size before relaxing)
- .debug_str     0x0006153c      0x3e0 arduino/USB/HID.o
-                              0x5f88d (size before relaxing)
- .debug_str     0x0006191c      0x600 arduino/USB/USBCore.o
-                              0x5fe28 (size before relaxing)
- .debug_str     0x00061f1c      0x4f4 arduino/WInterrupts.o
-                              0x5e899 (size before relaxing)
- .debug_str     0x00062410       0x33 arduino/wiring.o
-                              0x5e026 (size before relaxing)
- .debug_str     0x00062443      0x5ae arduino/wiring_analog.o
-                              0x5ea5f (size before relaxing)
- .debug_str     0x000629f1       0x43 arduino/wiring_digital.o
-                              0x5e4d1 (size before relaxing)
- .debug_str     0x00062a34      0x47c cmsis/src/startup_sam3xa.o
+ .debug_str     0x0005fe06      0x209 arduino/syscalls_sam3.o
+                              0x4dfd4 (size before relaxing)
+ .debug_str     0x0006000f      0x79c arduino/UARTClass.o
+                              0x5b8c6 (size before relaxing)
+ .debug_str     0x000607ab      0x232 arduino/USARTClass.o
+                              0x5b929 (size before relaxing)
+ .debug_str     0x000609dd      0x8c7 arduino/USB/CDC.o
+                              0x60500 (size before relaxing)
+ .debug_str     0x000612a4      0x3e0 arduino/USB/HID.o
+                              0x5f5f5 (size before relaxing)
+ .debug_str     0x00061684      0x600 arduino/USB/USBCore.o
+                              0x5fb90 (size before relaxing)
+ .debug_str     0x00061c84      0x4f4 arduino/WInterrupts.o
+                              0x5e601 (size before relaxing)
+ .debug_str     0x00062178       0x33 arduino/wiring.o
+                              0x5dd8e (size before relaxing)
+ .debug_str     0x000621ab      0x5ae arduino/wiring_analog.o
+                              0x5e7c7 (size before relaxing)
+ .debug_str     0x00062759       0x43 arduino/wiring_digital.o
+                              0x5e239 (size before relaxing)
+ .debug_str     0x0006279c      0x47c cmsis/src/startup_sam3xa.o
                               0x4ada0 (size before relaxing)
- .debug_str     0x00062eb0      0x29c cmsis/src/system_sam3xa.o
+ .debug_str     0x00062c18      0x29c cmsis/src/system_sam3xa.o
                               0x4abca (size before relaxing)
- .debug_str     0x0006314c       0x18 main.o
-                              0x5f2a6 (size before relaxing)
- .debug_str     0x00063164      0x795 platform/atmel_sam/libsam/source/adc.o
-                              0x57bec (size before relaxing)
- .debug_str     0x000638f9       0x39 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
-                              0x57319 (size before relaxing)
- .debug_str     0x00063932      0x132 platform/atmel_sam/libsam/source/pio.o
-                              0x57683 (size before relaxing)
- .debug_str     0x00063a64      0x541 platform/atmel_sam/libsam/source/pmc.o
-                              0x57a23 (size before relaxing)
- .debug_str     0x00063fa5       0xaa platform/atmel_sam/libsam/source/timetick.o
-                              0x576c9 (size before relaxing)
- .debug_str     0x0006404f       0x35 platform/atmel_sam/libsam/source/uotghs.o
-                              0x57324 (size before relaxing)
- .debug_str     0x00064084      0x1ed platform/atmel_sam/libsam/source/uotghs_device.o
-                              0x5a3a9 (size before relaxing)
- .debug_str     0x00064271       0x8a platform/atmel_sam/libsam/source/wdt.o
-                              0x5738a (size before relaxing)
- .debug_str     0x000642fb       0xa5 variants/variant.o
-                              0x5ffb5 (size before relaxing)
- .debug_str     0x000643a0       0xb3 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
+ .debug_str     0x00062eb4       0x18 main.o
+                              0x5f00e (size before relaxing)
+ .debug_str     0x00062ecc      0x795 platform/atmel_sam/libsam/source/adc.o
+                              0x57954 (size before relaxing)
+ .debug_str     0x00063661       0x39 platform/atmel_sam/libsam/source/interrupt_sam_nvic.o
+                              0x57081 (size before relaxing)
+ .debug_str     0x0006369a      0x132 platform/atmel_sam/libsam/source/pio.o
+                              0x573eb (size before relaxing)
+ .debug_str     0x000637cc      0x541 platform/atmel_sam/libsam/source/pmc.o
+                              0x5778b (size before relaxing)
+ .debug_str     0x00063d0d       0xaa platform/atmel_sam/libsam/source/timetick.o
+                              0x57431 (size before relaxing)
+ .debug_str     0x00063db7       0x35 platform/atmel_sam/libsam/source/uotghs.o
+                              0x5708c (size before relaxing)
+ .debug_str     0x00063dec      0x1ed platform/atmel_sam/libsam/source/uotghs_device.o
+                              0x5a111 (size before relaxing)
+ .debug_str     0x00063fd9       0x8a platform/atmel_sam/libsam/source/wdt.o
+                              0x570f2 (size before relaxing)
+ .debug_str     0x00064063       0xa5 variants/variant.o
+                              0x5fd1d (size before relaxing)
+ .debug_str     0x00064108       0xb3 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-atexit.o)
                                 0x158 (size before relaxing)
- .debug_str     0x00064453       0xa1 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
+ .debug_str     0x000641bb       0xa1 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-fini.o)
                                 0x152 (size before relaxing)
- .debug_str     0x000644f4      0x3bc c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
+ .debug_str     0x0006425c      0x3bc c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-impure.o)
                                 0x4e6 (size before relaxing)
- .debug_str     0x000648b0       0xcb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
+ .debug_str     0x00064618       0xcb c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-init.o)
                                 0x17c (size before relaxing)
- .debug_str     0x0006497b       0x92 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
+ .debug_str     0x000646e3       0x92 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-malloc.o)
                                 0x4f9 (size before relaxing)
- .debug_str     0x00064a0d      0x2db c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
+ .debug_str     0x00064775      0x2db c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mallocr.o)
                                 0x781 (size before relaxing)
- .debug_str     0x00064ce8       0x76 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
+ .debug_str     0x00064a50       0x76 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-memset.o)
                                 0x11b (size before relaxing)
- .debug_str     0x00064d5e       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
+ .debug_str     0x00064ac6       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-mlock.o)
                                 0x4ee (size before relaxing)
- .debug_str     0x00064de1       0x6d c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
+ .debug_str     0x00064b49       0x6d c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-sbrkr.o)
                                 0x4dd (size before relaxing)
- .debug_str     0x00064e4e       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
+ .debug_str     0x00064bb6       0x83 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-strlen.o)
                                 0x128 (size before relaxing)
- .debug_str     0x00064ed1       0x7f c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
+ .debug_str     0x00064c39       0x7f c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__atexit.o)
                                 0x53b (size before relaxing)
- .debug_str     0x00064f50       0xb4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
+ .debug_str     0x00064cb8       0xb4 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-__call_atexit.o)
                                 0x537 (size before relaxing)
- .debug_str     0x00065004       0x34 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
+ .debug_str     0x00064d6c       0x34 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-freer.o)
                                 0x6cb (size before relaxing)
- .debug_str     0x00065038       0xa7 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
+ .debug_str     0x00064da0       0xa7 c:/program files/atmel/atmel studio 6.0/extensions/atmel/armgcc/3.3.1.128/armgcctoolchain/bin/../lib/gcc/arm-none-eabi/4.7.0/../../../../arm-none-eabi/lib/thumb\libc.a(lib_a-reent.o)
                                 0x513 (size before relaxing)
 
 .debug_frame    0x00000000     0x1d08

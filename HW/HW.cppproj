@@ -113,10 +113,10 @@
   <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
   <armgcc.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
+      <Value>..\cmsis</Value>
+      <Value>..\cmsis\CMSIS\Include</Value>
+      <Value>..\cmsis\Device\ATMEL</Value>
+      <Value>..\cmsis\Device\ATMEL\sam3xa\include</Value>
       <Value>..\arduino</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
@@ -130,10 +130,10 @@
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
   <armgcccpp.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
-      <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
+      <Value>..\cmsis</Value>
+      <Value>..\cmsis\CMSIS\Include</Value>
+      <Value>..\cmsis\Device\ATMEL</Value>
+      <Value>..\cmsis\Device\ATMEL\sam3xa\include</Value>
       <Value>..\arduino</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
