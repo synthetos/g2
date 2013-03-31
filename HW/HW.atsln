@@ -1,9 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG2", "TinyG2.cppproj", "{58D3A4E3-1690-4437-B359-367984FF9EB7}"
-EndProject
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "HW", "..\HW\HW.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "HW", "HW.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +9,6 @@ Global
 		Release|ARM = Release|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{58D3A4E3-1690-4437-B359-367984FF9EB7}.Debug|ARM.ActiveCfg = Debug|ARM
-		{58D3A4E3-1690-4437-B359-367984FF9EB7}.Debug|ARM.Build.0 = Debug|ARM
-		{58D3A4E3-1690-4437-B359-367984FF9EB7}.Release|ARM.ActiveCfg = Release|ARM
-		{58D3A4E3-1690-4437-B359-367984FF9EB7}.Release|ARM.Build.0 = Release|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug|ARM.ActiveCfg = Debug|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug|ARM.Build.0 = Debug|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release|ARM.ActiveCfg = Release|ARM
