@@ -24,18 +24,15 @@
  */
 #include "sam.h"
 
-/**** All fixes needed for this to compile are concentrated here ***/
+/*** ADDED TO MAKE IT COMPILE ***/
 
-/* The following modifies the SAM3XA_SERIES #define from the sam.h file to fix compilation problems in adc.h
-   Ref: http://asf.atmel.no/docs/latest/common.services.calendar.example2.stk600-rcuc3d/html/group__sam__part__macros__group.html
-*/
-//#define SAM3XA_SERIES (SAM3A4 || SAM3A8)	// original define in sam.h file
-#undef SAM3XA_SERIES
-#define SAM3XA_SERIES (SAM3X4 || SAM3X8 || SAM3A4 || SAM3A8)
+// ref: http://asf.atmel.com/docs/latest/sam.drivers.usart.usart_synchronous_example.sam3u_ek/html/group___s_a_m3_u___e_f_c.html
+#define EEFC_FCR_FCMD(value)   ((EEFC_FCR_FCMD_Msk & ((value) << EEFC_FCR_FCMD_Pos)))
+#define EEFC_FCR_FKEY(value)   ((EEFC_FCR_FKEY_Msk & ((value) << EEFC_FCR_FKEY_Pos)))
 
 #define USB_PID USB_PID_DUE
 
-/**** TO HERE ****/
+/*** TO HERE ***/
 
 /* Define attribute */
 #if defined (  __GNUC__  ) /* GCC CS3 */
@@ -55,21 +52,14 @@
  * Peripherals
  */
 #include "include/adc.h"
-#if (SAM3XA_SERIES) || (SAM3N_SERIES) || (SAM3S_SERIES)
 #include "include/dacc.h"
-#endif // (SAM3XA_SERIES) || (SAM3N_SERIES) || (SAM3S_SERIES)
-
 #include "include/interrupt_sam_nvic.h"
-#include "include/efc.h"
-#include "include/gpbr.h"
 #include "include/pio.h"
 #include "include/pmc.h"
 #include "include/pwmc.h"
-#include "include/rstc.h"
 #include "include/rtc.h"
 #include "include/rtt.h"
 #include "include/spi.h"
-#include "include/ssc.h"
 #include "include/tc.h"
 #include "include/twi.h"
 #include "include/usart.h"
@@ -79,12 +69,9 @@
 #include "include/USB_device.h"
 #include "include/USB_host.h"
 
-#if (SAM3XA_SERIES)
-#include "include/can.h"
-#include "include/emac.h"
-#include "include/trng.h"
+#if SAM3XA_SERIES
 #include "include/uotghs_device.h"
 #include "include/uotghs_host.h"
-#endif /* (SAM3XA_SERIES) */
+#endif /* SAM3XA_SERIES */
 
 #endif /* _LIB_SAM_ */
