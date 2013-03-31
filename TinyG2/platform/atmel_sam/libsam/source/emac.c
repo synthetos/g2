@@ -687,7 +687,7 @@ void emac_handler(emac_device_t* p_emac_dev)
 	Emac *p_hw = p_emac_dev->p_hw;
 
 	emac_tx_descriptor_t *p_tx_td;
-	emac_dev_tx_cb_t *p_tx_cb = NULL;		// ASH: Added initialization to keep compiler happy
+	emac_dev_tx_cb_t *p_tx_cb;
 	volatile uint32_t ul_isr;
 	volatile uint32_t ul_rsr;
 	volatile uint32_t ul_tsr;

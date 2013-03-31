@@ -33,8 +33,6 @@ OUTPUT_FILE_DEP:=
 SUBDIRS :=  \
 ../arduino/USB \
 ../cmsis/ \
-../cmsis/linkerScripts/ \
-../cmsis/src/ \
 ../arduino \
 ../motate \
 ../motate/utility \
@@ -42,8 +40,6 @@ SUBDIRS :=  \
 ../platform \
 ../platform/atmel_sam \
 ../platform/atmel_sam/libsam \
-../platform/atmel_sam/libsam/build_gcc \
-../platform/atmel_sam/libsam/build_iar \
 ../platform/atmel_sam/libsam/include \
 ../platform/atmel_sam/libsam/source \
 ../platform/atmel_sam/linker_scripts \
@@ -79,8 +75,6 @@ C_SRCS +=  \
 ../arduino/wiring_shift.c \
 ../arduino/WMath.cpp \
 ../arduino/WString.cpp \
-../cmsis/src/startup_sam3xa.c \
-../cmsis/src/system_sam3xa.c \
 ../platform/atmel_sam/libsam/source/adc.c \
 ../platform/atmel_sam/libsam/source/adc12_sam3u.c \
 ../platform/atmel_sam/libsam/source/dacc.c \
@@ -139,8 +133,6 @@ arduino/wiring_pulse.o \
 arduino/wiring_shift.o \
 arduino/WMath.o \
 arduino/WString.o \
-cmsis/src/startup_sam3xa.o \
-cmsis/src/system_sam3xa.o \
 platform/atmel_sam/libsam/source/adc.o \
 platform/atmel_sam/libsam/source/adc12_sam3u.o \
 platform/atmel_sam/libsam/source/dacc.o \
@@ -193,8 +185,6 @@ arduino/wiring_pulse.o \
 arduino/wiring_shift.o \
 arduino/WMath.o \
 arduino/WString.o \
-cmsis/src/startup_sam3xa.o \
-cmsis/src/system_sam3xa.o \
 platform/atmel_sam/libsam/source/adc.o \
 platform/atmel_sam/libsam/source/adc12_sam3u.o \
 platform/atmel_sam/libsam/source/dacc.o \
@@ -247,8 +237,6 @@ arduino/wiring_pulse.d \
 arduino/wiring_shift.d \
 arduino/WMath.d \
 arduino/WString.d \
-cmsis/src/startup_sam3xa.d \
-cmsis/src/system_sam3xa.d \
 platform/atmel_sam/libsam/source/adc.d \
 platform/atmel_sam/libsam/source/adc12_sam3u.d \
 platform/atmel_sam/libsam/source/dacc.d \
@@ -301,8 +289,6 @@ arduino/wiring_pulse.d \
 arduino/wiring_shift.d \
 arduino/WMath.d \
 arduino/WString.d \
-cmsis/src/startup_sam3xa.d \
-cmsis/src/system_sam3xa.d \
 platform/atmel_sam/libsam/source/adc.d \
 platform/atmel_sam/libsam/source/adc12_sam3u.d \
 platform/atmel_sam/libsam/source/dacc.d \
@@ -437,10 +423,6 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 
 
 
-
-
-
-
 arduino/%.o: ../arduino/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
@@ -457,12 +439,6 @@ arduino/USB/%.o: ../arduino/USB/%.cpp
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
 	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\arduino\USB" -I"..\motate" -I"..\motate\utility" -I"..\platform" -I"..\platform\atmel_sam" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"..\platform\atmel_sam\libsam\source" -I"..\variants"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"  -mcpu=cortex-m3   -o"$@" "$<" 
-	@echo Finished building: $<
-
-cmsis/src/%.o: ../cmsis/src/%.c
-	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : (crosstool-NG 1.15.3 - Atmel build: 59) 4.7.0
-	$(QUOTE)C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMGCCToolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -I"C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELS~1.0\EXTENS~1\Atmel\ARMGCC\331~1.128\ARMSUP~1\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\arduino\USB" -I"..\motate" -I"..\motate\utility" -I"..\platform" -I"..\platform\atmel_sam" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"..\platform\atmel_sam\libsam\source" -I"..\variants"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mcpu=cortex-m3   -o"$@" "$<" 
 	@echo Finished building: $<
 
 platform/atmel_sam/libsam/source/%.o: ../platform/atmel_sam/libsam/source/%.c

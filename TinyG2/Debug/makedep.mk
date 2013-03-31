@@ -52,10 +52,6 @@ arduino\WMath.cpp
 
 arduino\WString.cpp
 
-cmsis\src\startup_sam3xa.c
-
-cmsis\src\system_sam3xa.c
-
 platform\atmel_sam\libsam\source\adc.c
 
 platform\atmel_sam\libsam\source\adc12_sam3u.c
