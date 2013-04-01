@@ -14,8 +14,6 @@ arduino\IPAddress.cpp
 
 arduino\itoa.c
 
-arduino\main.cpp
-
 arduino\Print.cpp
 
 arduino\Reset.cpp
@@ -52,11 +50,25 @@ arduino\WMath.cpp
 
 arduino\WString.cpp
 
+cmsis\src\startup_sam3xa.c
+
+cmsis\src\system_sam3xa.c
+
+main.cpp
+
 platform\atmel_sam\libsam\source\adc.c
 
 platform\atmel_sam\libsam\source\adc12_sam3u.c
 
+platform\atmel_sam\libsam\source\can.c
+
 platform\atmel_sam\libsam\source\dacc.c
+
+platform\atmel_sam\libsam\source\efc.c
+
+platform\atmel_sam\libsam\source\emac.c
+
+platform\atmel_sam\libsam\source\gpbr.c
 
 platform\atmel_sam\libsam\source\interrupt_sam_nvic.c
 
@@ -66,15 +78,21 @@ platform\atmel_sam\libsam\source\pmc.c
 
 platform\atmel_sam\libsam\source\pwmc.c
 
+platform\atmel_sam\libsam\source\rstc.c
+
 platform\atmel_sam\libsam\source\rtc.c
 
 platform\atmel_sam\libsam\source\rtt.c
 
 platform\atmel_sam\libsam\source\spi.c
 
+platform\atmel_sam\libsam\source\ssc.c
+
 platform\atmel_sam\libsam\source\tc.c
 
 platform\atmel_sam\libsam\source\timetick.c
+
+platform\atmel_sam\libsam\source\trng.c
 
 platform\atmel_sam\libsam\source\twi.c
 

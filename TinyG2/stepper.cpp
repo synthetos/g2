@@ -159,11 +159,9 @@ Pin8 enable(kOutput);			// common enable
 volatile int temp = 0;
 volatile long dummy;			// convenient register to read into
 
-/*
-static void _exec_move(void);
+//static void _exec_move(void);
 static void _load_move(void);
-static void _request_load_move(void);
-*/
+//static void _request_load_move(void);
 
 /*
  * Stepper structures
@@ -262,6 +260,8 @@ void st_init()
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+
+	_load_move();
 }
 
 /*
@@ -404,8 +404,85 @@ static void _request_load_move()
  *	higher level as the DDA or dwell ISR. A software interrupt has been 
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
  */
-/*
+
 void _load_move()
+{
+//	sps.move_type = MOVE_TYPE_ALINE;
+	sps.move_type = true;
+	sps.timer_ticks = 100000;
+	sps.timer_ticks_X_substeps = 1000;
+	sps.timer_period = 64000;
+/*
+	// handle aline loads first (most common case)  NB: there are no more lines, only alines
+//	if (sps.move_type == MOVE_TYPE_ALINE) {
+	if (sps.move_type == true) {
+		st.timer_ticks_downcount = sps.timer_ticks;
+		st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
+		TIMER_DDA.PER = sps.timer_period;
+ 
+		// This section is somewhat optimized for execution speed 
+		// All axes must set steps and compensate for out-of-range pulse phasing.
+		// If axis has 0 steps the direction setting can be omitted
+		// If axis has 0 steps enabling motors is req'd to support power mode = 1
+
+		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
+		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
+			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_1].steps != 0) {
+			// For ideal optimizations, only set or clear a bit at a time.
+			if (sps.m[MOTOR_1].dir == 0) {
+				PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm;// CW motion (bit cleared)
+			} else {
+				PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;	// CCW motion
+			}
+			PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;	// enable motor
+		}
+
+		st.m[MOTOR_2].steps = sps.m[MOTOR_2].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_2].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_2].steps != 0) {
+			if (sps.m[MOTOR_2].dir == 0) {
+				PORT_MOTOR_2_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_2_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_2_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+
+		st.m[MOTOR_3].steps = sps.m[MOTOR_3].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_3].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_3].steps != 0) {
+			if (sps.m[MOTOR_3].dir == 0) {
+				PORT_MOTOR_3_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_3_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+
+		st.m[MOTOR_4].steps = sps.m[MOTOR_4].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_4].counter = (st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_4].steps != 0) {
+			if (sps.m[MOTOR_4].dir == 0) {
+				PORT_MOTOR_4_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_4_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+		TIMER_DDA.CTRLA = STEP_TIMER_ENABLE;					// enable the DDA timer
+	}
+*/
+}
+
+/*
 {
 	if (st.timer_ticks_downcount != 0) { return;}				  // exit if it's still busy
 	if (sps.exec_state != PREP_BUFFER_OWNED_BY_LOADER) { return;} // if there are no more moves
