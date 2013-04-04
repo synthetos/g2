@@ -43,6 +43,14 @@ static void _unit_tests(void);
 #include "tinyg2.h"				// #1 There are some dependencies
 #include "stepper.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+void _init(void) {};
+#ifdef __cplusplus
+}
+#endif
+
 /******************** Application Code ************************/
 int led = 13;
 

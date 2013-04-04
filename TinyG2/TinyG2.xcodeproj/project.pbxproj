@@ -3285,6 +3285,7 @@
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
+		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7634,8 +7635,17 @@
 		D49EC5D51705FC1100F2BF9B /* bin */ = {
 			isa = PBXGroup;
 			children = (
+				D4B57636170C6DFB0070CCAE /* SAM3X8E */,
 			);
 			path = bin;
+			sourceTree = "<group>";
+		};
+		D4B57636170C6DFB0070CCAE /* SAM3X8E */ = {
+			isa = PBXGroup;
+			children = (
+				D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */,
+			);
+			name = SAM3X8E;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -8122,7 +8132,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
-				PRODUCT_NAME = g3_due;
+				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Debug;
 		};
@@ -8130,7 +8140,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
-				PRODUCT_NAME = g3_due;
+				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Release;
 		};
