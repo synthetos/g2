@@ -25,10 +25,14 @@ void setup( void )
 {
 	pinMode(led, OUTPUT);
 	tg_setup();
+	Serial.begin(9600);           // set up Serial library at 9600 bps
+	Serial.print("Ready\n");
 }
 
 void loop( void )
 {
+	Serial.println("Hello world!");  // prints hello with ending line break
+
 	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 	delay(500);               // wait for a second
 	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
@@ -43,10 +47,7 @@ int main( void )
 	init();
 	delay(1);
 
-#if defined(USBCON)
 	USBDevice.attach();
-#endif
-
 	setup();
 
 	for (;;)

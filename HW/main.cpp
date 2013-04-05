@@ -43,9 +43,9 @@ int main( void )
 	init();
 	delay(1);
 
-#if defined(USBCON)
+//#if defined(USBCON)
 	USBDevice.attach();
-#endif
+//#endif
 
 	setup();
 

@@ -173,7 +173,7 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>False</UsesExternalMakeFile>
-    <ExternalMakeFilePath>Z:\Alden\Projects\proj64_ArduinoDue\g2\HW\Makefile</ExternalMakeFilePath>
+    <ExternalMakeFilePath>Z:\Alden\Projects\proj64_ArduinoDue\g2\TinyG2\Makefile</ExternalMakeFilePath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
