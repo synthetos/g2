@@ -3,8 +3,12 @@
 *.bin
 *.eep
 *.lss
+*.map
+*.srec
 *.aws
 *.atsuo
 *.cproj
+\bin
+\build
 .DS_Store
 TcfTransactionLog.csv
