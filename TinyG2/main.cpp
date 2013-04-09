@@ -26,6 +26,7 @@ void setup( void )
 	pinMode(led, OUTPUT);
 	tg_setup();
 	SerialUSB.begin(115200);
+	delay(1000);               // wait for a second
 }
 
 void loop( void )
