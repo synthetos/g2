@@ -24,14 +24,14 @@ int led = 13;
 void setup( void )
 {
 	pinMode(led, OUTPUT);
-	tg_setup();
+//	tg_setup();
 	SerialUSB.begin(115200);
-	delay(1000);               // wait for a second
+	delay(10000);               // wait for 10 seconds
 }
 
 void loop( void )
 {
-	SerialUSB.println("Hello Kitty");
+	SerialUSB.print("Hello Kitty");
 
 	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 	delay(500);               // wait for a second

@@ -54,6 +54,14 @@ cmsis\src\startup_sam3xa.c
 
 cmsis\src\system_sam3xa.c
 
+config.c
+
+config_app.c
+
+json_parser.c
+
+kinen.c
+
 main.cpp
 
 platform\atmel_sam\libsam\source\adc.c
@@ -116,5 +124,19 @@ system.cpp
 
 TinyG2.cpp
 
+util.c
+
 variants\variant.cpp
+
+xio\xio.c
+
+xio\xio_file.c
+
+xio\xio_pgm.c
+
+xio\xio_signals.c
+
+xio\xio_spi.c
+
+xio\xio_usart.c
 
