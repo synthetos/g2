@@ -6,9 +6,15 @@
  */ 
 
 //#define ARDUINO_MAIN
+
 #include "sam.h"
 #include "Arduino.h"
-#include "tinyg2.h"
+#include <stdio.h>
+
+//#include "tinyg2.h"
+
+// Disable some warnings for the Arduino files
+// ref: http://www.hilltop-cottage.info/blogs/adam/?p=211
 
 /*
 extern void SysTick_Handler( void )
@@ -25,16 +31,28 @@ void setup( void )
 {
 	pinMode(led, OUTPUT);
 //	tg_setup();
+
 	SerialUSB.begin(115200);
-	delay(10000);               // wait for 10 seconds
+	delay(2000);               // wait for N seconds
+	SerialUSB.print("\n\nSTARTUP\n");
+	
+//	Serial.begin(115200);
+//	delay(2000);               // wait for N seconds
+//	Serial.print("\n\nSTARTUP_2\n");
 }
 
 void loop( void )
 {
-	SerialUSB.print("Hello Kitty");
+	const uint8_t ptr[] = ("Hello Kitty...");
+	SerialUSB.write(ptr, sizeof(ptr));
+
+//	SerialUSB.print("Hello Kitty...");
+//	Serial.print("Hello Kitty2...");
+
+//	printf("printf test...\n");
 
 	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
-	delay(500);               // wait for a second
+	delay(100);               // wait for a second
 	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
 	delay(500);               // wait for a second
 }
@@ -56,8 +74,7 @@ int main( void )
 	for (;;)
 	{
 		loop();
-		if (serialEventRun) serialEventRun();
+//		if (serialEventRun) serialEventRun();
 	}
-
 	return 0;
 }

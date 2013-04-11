@@ -113,12 +113,12 @@ void xio_init()
 
 	// open individual devices (file device opens occur at time-of-use)
 	xio_open(XIO_DEV_USART, NULL, USART_XIO_FLAGS);
-	xio_open(XIO_DEV_SPI, NULL, SPI_XIO_FLAGS);
+//	xio_open(XIO_DEV_SPI, NULL, SPI_XIO_FLAGS);
 
 	// setup std devices for printf/fprintf to work
-	xio_set_stdin(XIO_DEV_USART);
-	xio_set_stdout(XIO_DEV_USART);
-	xio_set_stderr(XIO_DEV_SPI);
+//	xio_set_stdin(XIO_DEV_USART);
+//	xio_set_stdout(XIO_DEV_USART);
+//	xio_set_stderr(XIO_DEV_SPI);
 }
 
 void xio_reset_device(xioDev_t *d,  const flags_t flags)
@@ -138,8 +138,8 @@ void xio_reset_device(xioDev_t *d,  const flags_t flags)
 	xio_ctrl_device(d, flags);		// setup control flags
 
 	// setup stdio stream structure
-	fdev_setup_stream(&d->stream, d->x_putc, d->x_getc, _FDEV_SETUP_RW);
-	fdev_set_udata(&d->stream, d);	// reference yourself for udata 
+//	fdev_setup_stream(&d->stream, d->x_putc, d->x_getc, _FDEV_SETUP_RW);
+//	fdev_set_udata(&d->stream, d);	// reference yourself for udata 
 }
 
 void xio_null(xioDev_t *d) { return;}
@@ -176,12 +176,14 @@ int xio_ctrl_device(xioDev_t *d, const flags_t flags)
  */
 int xio_getc_device(FILE *stream)
 {
-	return (xio_read_buffer(((xioDev_t *)stream->udata)->rx));
+//	return (xio_read_buffer(((xioDev_t *)stream->udata)->rx));
+	return (NULL);
 }
 
 int xio_putc_device(const char c, FILE *stream)
 {
-	return (xio_write_buffer(((xioDev_t *)stream->udata)->tx, c));
+//	return (xio_write_buffer(((xioDev_t *)stream->udata)->tx, c));
+	return (NULL);
 }
 
 /* 
@@ -270,7 +272,7 @@ void xio_queue_RX_string(const uint8_t dev, const char *buf)
 /******************************************************************************
  * XIO UNIT TESTS
  ******************************************************************************/
-
+/*
 #ifdef __XIO_UNIT_TESTS
 static void _transmit_test(uint8_t dev);
 //static void _loopback_test(uint8_t dev);
@@ -315,6 +317,7 @@ static void _message_test(uint8_t dev)		// never returns
 		}
 	}
 }
+*/
 /*
 
 static void _loopback_test(uint8_t dev)		// never returns
@@ -357,5 +360,5 @@ void _pgm_read_test()
 	xio_getc_pgm(fdev);
 }
 */
-#endif // __UNIT_TESTS
+//#endif // __UNIT_TESTS
 

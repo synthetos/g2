@@ -130,13 +130,7 @@ variants\variant.cpp
 
 xio\xio.c
 
-xio\xio_file.c
-
-xio\xio_pgm.c
-
 xio\xio_signals.c
-
-xio\xio_spi.c
 
 xio\xio_usart.c
 

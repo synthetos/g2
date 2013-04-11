@@ -17,7 +17,7 @@
 
 #include <stdio.h>				// precursor for xio.h
 #include <stdbool.h>			// true and false
-#include <avr/pgmspace.h>		// precursor for xio.h
+//#include <avr/pgmspace.h>		// precursor for xio.h
 #include "xio.h"				// includes for all devices are in here
 
 /******************************************************************************
@@ -68,7 +68,8 @@ FILE *xio_open_pgm(const uint8_t dev, const char *addr, const flags_t flags)
 	xio_reset_device(d, flags);
 //	((xioFile_t *)(d->x))->filebase_P = (PROGMEM const char *)addr;	// might want to range check this
 //	((xioFile_t *)(d->x))->max_offset = PGM_ADDR_MAX;
-	PGMx->filebase_P = (PROGMEM const char *)addr;	// might want to range check this
+//	PGMx->filebase_P = (PROGMEM const char *)addr;	// might want to range check this
+	PGMx->filebase_P = (const char *)addr;	// might want to range check this
 	PGMx->max_offset = PGM_ADDR_MAX;
 	return (&d->stream);			// return stdio FILE reference
 }
@@ -92,10 +93,12 @@ FILE *xio_open_pgm(const uint8_t dev, const char *addr, const flags_t flags)
 int xio_getc_pgm(FILE *stream)
 {
 	char c;
+/*
 	xioDev_t *d = (xioDev_t *)stream->udata;
 
 	if (d->flag_eof) { return (_FDEV_EOF);}
-	if ((c = pgm_read_byte(&PGMx->filebase_P[PGMx->rd_offset])) == NUL) {
+//	if ((c = pgm_read_byte(&PGMx->filebase_P[PGMx->rd_offset])) == NUL) {
+	if ((c = PGMx->filebase_P[PGMx->rd_offset]) == NUL) {
 		d->flag_eof = true;
 	}
 	++(PGMx->rd_offset);
@@ -112,6 +115,7 @@ int xio_getc_pgm(FILE *stream)
 		c = '\n';
 	}
 	if (d->flag_echo) putchar(c);			// conditional echo
+*/
 	return (c);
 }
 

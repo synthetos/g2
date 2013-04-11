@@ -88,6 +88,7 @@
       <Value>..\cmsis\Device\ATMEL</Value>
       <Value>..\cmsis\Device\ATMEL\sam3xa\include</Value>
       <Value>..\arduino</Value>
+      <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
@@ -114,6 +115,7 @@
       <Value>..\cmsis\Device\ATMEL</Value>
       <Value>..\cmsis\Device\ATMEL\sam3xa\include</Value>
       <Value>..\arduino</Value>
+      <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
@@ -654,25 +656,10 @@
     <Compile Include="xio\xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="xio\xio_file.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="xio\xio_file.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="xio\xio_pgm.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="xio\xio_signals.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="xio\xio_signals.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="xio\xio_spi.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="xio\xio_spi.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="xio\xio_usart.c">

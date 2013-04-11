@@ -27,16 +27,20 @@
  *        Headers
  *----------------------------------------------------------------------------*/
 
-
 #include "syscalls.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 #include "sam.h"
-#if defined (  __GNUC__  ) /* GCC CS3 */
+#if defined (  __GNUC__  ) // GCC CS3
   #include <sys/types.h>
   #include <sys/stat.h>
 #endif
+
+// ASH: ++++ Added to support _write() to CDC
+//#include "Arduino.h"
+#include <USBAPI.h>
+//#include "Reset.h"
 
 /*----------------------------------------------------------------------------
  *        Exported variables
@@ -103,23 +107,22 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
+	SerialUSB.write(ptr, len);
+/*
     int iIndex ;
-
-
 //    for ( ; *ptr != 0 ; ptr++ )
     for ( iIndex=0 ; iIndex < len ; iIndex++, ptr++ )
     {
 //        UART_PutChar( *ptr ) ;
 
 		// Check if the transmitter is ready
-		  while ((UART->UART_SR & UART_SR_TXRDY) != UART_SR_TXRDY)
-			;
+		  while ((UART->UART_SR & UART_SR_TXRDY) != UART_SR_TXRDY);
 
 		  // Send character
 		  UART->UART_THR = *ptr;
     }
-
     return iIndex ;
+*/
 }
 
 extern void _exit( int status )

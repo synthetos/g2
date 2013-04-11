@@ -66,7 +66,7 @@
  */
 /* --- What's the the int characters? ---
  *	Single characters returned from buffer queues are treated as ints in order to 
- *	ease compatibility with stdio. This ia a bit of a pain but is necessary to 
+ *	ease compatibility with stdio. This is a bit of a pain but is necessary to 
  *	support _FDEV_ERR (which is -1) to be cascaded in returns to stdio functions.
  *	Not using ints in the right place is a bug generator if messing with this code.
  */
@@ -88,7 +88,10 @@
 
 //#include "../system.h"
 
-// see other xio_.h includes below the structures and typdefs
+#define _FDEV_ERR -1
+#define _FDEV_EOF -2
+
+// see other xio_.h includes below the structures and typedefs
 
 /*************************************************************************
  *	Device configurations

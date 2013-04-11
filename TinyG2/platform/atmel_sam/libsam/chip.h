@@ -24,14 +24,14 @@
  */
 #include "sam.h"
 
-/* The following modifies the SAM3XA_SERIES #define from the sam.h file to fix compilation problems in adc.h
-   Ref: http://asf.atmel.no/docs/latest/common.services.calendar.example2.stk600-rcuc3d/html/group__sam__part__macros__group.html
-*/
+// ASH: ++++ The following modifies the SAM3XA_SERIES #define from the sam.h file to fix compilation problems in adc.h
+// Ref: http://asf.atmel.no/docs/latest/common.services.calendar.example2.stk600-rcuc3d/html/group__sam__part__macros__group.html
 //#define SAM3XA_SERIES (SAM3A4 || SAM3A8)	// original define in sam.h file
 #undef SAM3XA_SERIES
 #define SAM3XA_SERIES (SAM3X4 || SAM3X8 || SAM3A4 || SAM3A8)
 
-#define USB_PID USB_PID_DUE
+// ASH: ++++ Added as this is note defined anywhere else
+#define USB_PID USB_PID_DUE		
 
 /**** TO HERE ****/
 

@@ -49,7 +49,7 @@
  *		slave. It's just IO.
  *
  *		If the slave has no data to send it should return ETX (0x03) on MISO. This is 
- *		useful to distinghuish between an "empty" slave and a non-responsive SPI slave or
+ *		useful to distinguish between an "empty" slave and a non-responsive SPI slave or
  *		unpopulated Kinen socket - which would return NULs or possibly 0xFFs.
  *
  *	- The master may poll for message data from the slave by sending STX chars to
@@ -59,7 +59,7 @@
  */
 #include <stdio.h>					// precursor for xio.h
 #include <stdbool.h>				// true and false
-#include <avr/interrupt.h>
+//#include <avr/interrupt.h>
 #include "xio.h"					// nested includes for all devices and types
 
 // allocate and initialize SPI structs
