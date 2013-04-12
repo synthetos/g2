@@ -23,7 +23,7 @@
 
 #include "RingBuffer.h"
 
-extern int USBwrite(const uint8_t *buffer, size_t size);
+// extern int USBwrite(const uint8_t *buffer, size_t size);
 
 //================================================================================
 //================================================================================

@@ -29,21 +29,21 @@
 
 #include "syscalls.h"
 
+// ASH: ++++ Added to support _write() to CDC
+#include "Stream.h"
+#include "USB/USBAPI.h"
+//#include "Reset.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 #include "sam.h"
 #if defined (  __GNUC__  ) // GCC CS3
   #include <sys/types.h>
   #include <sys/stat.h>
-#endif
-
-// ASH: ++++ Added to support _write() to CDC
-//#include "Arduino.h"
-#include <USBAPI.h>
-//#include "Reset.h"
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /*----------------------------------------------------------------------------
@@ -113,8 +113,7 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
-	// USBwrite(ptr, len);
-	SerialUSB.write(ptr, len);
+	return SerialUSB.write((const uint8_t *)ptr, len);
 /*
     int iIndex ;
 //    for ( ; *ptr != 0 ; ptr++ )
