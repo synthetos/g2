@@ -60,7 +60,7 @@ C_SRCS +=  \
 ../arduino/Reset.cpp \
 ../arduino/RingBuffer.cpp \
 ../arduino/Stream.cpp \
-../arduino/syscalls_sam3.c \
+../arduino/syscalls_sam3.cpp \
 ../arduino/UARTClass.cpp \
 ../arduino/USARTClass.cpp \
 ../arduino/USB/CDC.cpp \
@@ -623,7 +623,7 @@ all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP)
 	@echo Building target: $@
 	@echo Invoking: ARM/GNU Linker : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG2.map" -Wl,--start-group -lm -lc  -Wl,--end-group -L"../cmsis/linkerScripts"  -Wl,--gc-sections -mcpu=cortex-m3 -Tsam3x8e_flash.ld 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG2.map" -Wl,--start-group -lm  -Wl,--end-group -L"../cmsis/linkerScripts"  -Wl,--gc-sections -mcpu=cortex-m3 -Tsam3x8e_flash.ld 
 	@echo Finished building target: $@
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O binary "TinyG2.elf" "TinyG2.bin"
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "TinyG2.elf" "TinyG2.hex"

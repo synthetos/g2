@@ -22,7 +22,7 @@ arduino\RingBuffer.cpp
 
 arduino\Stream.cpp
 
-arduino\syscalls_sam3.c
+arduino\syscalls_sam3.cpp
 
 arduino\UARTClass.cpp
 
