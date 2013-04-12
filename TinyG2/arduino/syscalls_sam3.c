@@ -42,6 +42,7 @@
 #include <USBAPI.h>
 //#include "Reset.h"
 
+
 /*----------------------------------------------------------------------------
  *        Exported variables
  *----------------------------------------------------------------------------*/
@@ -107,7 +108,8 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
-	SerialUSB.write(ptr, len);
+	USBwrite(ptr, len);
+//	SerialUSB.write(ptr, len);
 /*
     int iIndex ;
 //    for ( ; *ptr != 0 ; ptr++ )
@@ -141,3 +143,4 @@ extern int _getpid ( void )
 {
     return -1 ;
 }
+

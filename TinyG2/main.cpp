@@ -43,13 +43,13 @@ void setup( void )
 
 void loop( void )
 {
-	const uint8_t ptr[] = ("Hello Kitty...");
-	SerialUSB.write(ptr, sizeof(ptr));
+//	const uint8_t ptr[] = ("Hello Kitty...");
+//	SerialUSB.write(ptr, sizeof(ptr));
 
 //	SerialUSB.print("Hello Kitty...");
 //	Serial.print("Hello Kitty2...");
 
-//	printf("printf test...\n");
+	printf("printf test...\n");
 
 	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 	delay(100);               // wait for a second
