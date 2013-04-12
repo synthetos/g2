@@ -42,6 +42,9 @@
 #include <USBAPI.h>
 //#include "Reset.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*----------------------------------------------------------------------------
  *        Exported variables
@@ -57,6 +60,8 @@ extern int  _end ;
 extern void _exit( int status ) ;
 extern void _kill( int pid, int sig ) ;
 extern int _getpid ( void ) ;
+
+
 
 extern caddr_t _sbrk ( int incr )
 {
@@ -108,8 +113,8 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
-	USBwrite(ptr, len);
-//	SerialUSB.write(ptr, len);
+	// USBwrite(ptr, len);
+	SerialUSB.write(ptr, len);
 /*
     int iIndex ;
 //    for ( ; *ptr != 0 ; ptr++ )
@@ -144,3 +149,6 @@ extern int _getpid ( void )
     return -1 ;
 }
 
+#ifdef __cplusplus
+}
+#endif
