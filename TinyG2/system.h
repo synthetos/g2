@@ -27,7 +27,7 @@
 #ifndef system_h
 #define system_h
 
-#include "motatePins.h"
+//#include "motatePins.h"
 //using namespace Motate;
 
 void sys_init(void);					// master hardware init
@@ -44,6 +44,7 @@ void sys_init(void);					// master hardware init
 
 
 /**** Resource Assignment via Motate ****/
+/*
 Motate::pin_number x_step_pin_num = 2;
 Motate::pin_number y_step_pin_num = 3;
 Motate::pin_number z_step_pin_num = 4;
@@ -51,6 +52,7 @@ Motate::pin_number x_dir_pin_num  = 5;
 Motate::pin_number y_dir_pin_num  = 6;
 Motate::pin_number z_dir_pin_num  = 7;
 Motate::pin_number enable_pin_num = 8;
+*/
 
 /**** Resource Assignment ****
  * This section describes what modules use resources such as timers, pins, etc.

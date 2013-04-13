@@ -91,11 +91,11 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
-      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
+  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
@@ -114,11 +114,11 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
-      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
     </ListValues>
   </armgcccpp.compiler.directories.IncludePaths>
+  <armgcccpp.compiler.optimization.level>Optimize for size (-Os)</armgcccpp.compiler.optimization.level>
   <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</armgcccpp.compiler.optimization.DebugLevel>
   <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
@@ -129,7 +129,6 @@
   </armgcccpp.linker.libraries.Libraries>
   <armgcccpp.linker.libraries.LibrarySearchPaths>
     <ListValues>
-      <Value>../platform/arm/lib</Value>
       <Value>../cmsis/linkerScripts</Value>
     </ListValues>
   </armgcccpp.linker.libraries.LibrarySearchPaths>
@@ -444,6 +443,9 @@
     <Compile Include="motate\utility\SamPins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\libsam\chip.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\libsam\include\adc.h">
       <SubType>compile</SubType>
     </Compile>
@@ -625,9 +627,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="tinyg2.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="util.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="util.h">
