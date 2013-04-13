@@ -3,7 +3,7 @@
 # 
 # Copyright (c) 2012 Robert Giseburt
 # 
-# This file is part of the TinyG2 project.
+# This file is part of the TinyG3 project.
 # 
 # This file is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -25,8 +25,8 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino arduino/USB variants
-FIRST_LINK_SOURCES := arduino/syscalls_sam3.cpp
+SOURCE_DIRS = . arduino variants
+FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
 
 # List all user directories here
 USER_INCLUDE_DIRS := motate $(SOURCE_DIRS)
@@ -218,8 +218,8 @@ OUTPUT := $(BIN)/$(OUTPUT_BIN)
 INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += $(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += $(OPTIMIZATION) $(INCLUDES)
+CFLAGS   += -g $(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += -g $(OPTIMIZATION) $(INCLUDES)
 ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
