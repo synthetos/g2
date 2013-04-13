@@ -124,6 +124,8 @@ system.cpp
 
 TinyG2.cpp
 
+util.c
+
 variants\variant.cpp
 
 xio\xio.c

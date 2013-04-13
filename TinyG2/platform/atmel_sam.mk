@@ -71,7 +71,7 @@ SERIES:=sam4s
 endif
 
 # GCC toolchain provider
-GCC_TOOLCHAIN = gcc
+GCC_TOOLCHAIN = gcc_atmel
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi-

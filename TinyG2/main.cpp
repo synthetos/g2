@@ -46,7 +46,7 @@ void loop( void )
 //	const uint8_t ptr[] = ("Hello Kitty...");
 //	SerialUSB.write(ptr, sizeof(ptr));
 
-	SerialUSB.print("Hello Kitty...");
+//	SerialUSB.print("Hello Kitty...");
 //	Serial.print("Hello Kitty2...");
 
 //	printf("printf test...\n");

@@ -45,15 +45,14 @@ void sys_init(void);					// master hardware init
 
 /**** Resource Assignment via Motate ****/
 /*
-Motate::pin_number x_step_pin_num = 2;
-Motate::pin_number y_step_pin_num = 3;
-Motate::pin_number z_step_pin_num = 4;
-Motate::pin_number x_dir_pin_num  = 5;
-Motate::pin_number y_dir_pin_num  = 6;
-Motate::pin_number z_dir_pin_num  = 7;
-Motate::pin_number enable_pin_num = 8;
+Pin2 x_step(kOutput);
+Pin3 y_step(kOutput);
+Pin4 z_step(kOutput);
+Pin5 x_dir(kOutput);
+Pin6 y_dir(kOutput);
+Pin7 z_dir(kOutput);
+Pin8 enable(kOutput);
 */
-
 /**** Resource Assignment ****
  * This section describes what modules use resources such as timers, pins, etc.
  * Base addresses and channels are setup here, see detailed setup may be found 
