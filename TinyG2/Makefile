@@ -67,7 +67,7 @@ CFLAGS += -Wunreachable-code
 #CFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
-CFLAGS += -Dprintf=iprintf
+# CFLAGS += -Dprintf=iprintf
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
@@ -85,7 +85,7 @@ CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
 #CPPFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
-CPPFLAGS += -Dprintf=iprintf
+# CPPFLAGS += -Dprintf=iprintf
 
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
