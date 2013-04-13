@@ -43,4 +43,4 @@ MEMORY
 /* The stack size used by the application. NOTE: you need to adjust  */
 STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : 0x2000 ;
 
-INCLUDE sam3x_flash.ld
+INCLUDE sam3x_sram.ld

@@ -157,13 +157,18 @@ Stepper<y_step_pin_num, y_dir_pin_num> y_motor;
 Stepper<z_step_pin_num, z_dir_pin_num> z_motor;
 OutputPin<8> enable;
 
-/*
-static void _exec_move(void);
+Pin5 dir_1(kOutput);			// direction channel 1
+Pin6 dir_2(kOutput);			// direction channel 2
+Pin7 dir_3(kOutput);			// direction channel 3
+
+Pin8 enable(kOutput);			// common enable
+
+volatile int temp = 0;
+volatile long dummy;			// convenient register to read into
+
+//static void _exec_move(void);
 static void _load_move(void);
-static void _request_load_move(void);
-static void _set_f_dda(double *f_dda, double *dda_substeps,
-					   const double major_axis_steps, const double microseconds);
-*/
+//static void _request_load_move(void);
 
 /*
  * Stepper structures
@@ -224,6 +229,19 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
+uint16_t st_get_st_magic() { return (st.magic_start);}
+uint16_t st_get_sps_magic() { return (sps.magic_start);}
+
+/*
+static inline void pinOutput(int pin, int val)
+{
+	if (val)
+	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
+	else
+	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
+}
+*/
+
 /* 
  * st_init() - initialize stepper motor subsystem 
  *
@@ -233,13 +251,7 @@ static struct stPrepSingleton sps;
  * 	  - microsteps are setup during cfg_init()
  *	  - motor polarity is setup during cfg_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete
-
-http://arduino.cc/forum/index.php?topic=130423.0
-
  */
-volatile int temp = 0;
-volatile long dummy;					// convenient register to read into
-
 
 void st_init()
 {
@@ -293,8 +305,65 @@ void ISR_Handler_DDA(void)
 //	digitalWrite(3,temp);
 }
 
-uint16_t st_get_st_magic() { return (st.magic_start);}
-uint16_t st_get_sps_magic() { return (sps.magic_start);}
+	_load_move();
+}
+
+/*
+ * ISR - DDA timer interrupt routine - service ticks from DDA timer
+ *
+ *	Uses direct struct addresses and literal values for hardware devices -
+ *	it's faster than using indexed timer and port accesses. I checked.
+ *	Even when -0s or -03 is used.
+ */
+void ISR_Handler_DDA(void) 
+{
+	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+//	uint8_t m1_flag = false;
+//	uint8_t m2_flag = false;
+//	uint8_t m3_flag = false;
+	
+	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
+		step_1.set();		// turn step bit on
+//		m1_flag++;
+	}
+	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
+		step_2.set();
+//		m2_flag++;
+	}
+	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
+		step_3.set();
+//		m3_flag++;
+	}
+//	if (m1_flag != false) {	step_1.clear();}
+//	if (m2_flag != false) {	step_2.clear();}
+//	if (m3_flag != false) {	step_3.clear();}
+	step_1.clear();
+	step_2.clear();
+	step_3.clear();
+	
+/*
+	if (--st.timer_ticks_downcount == 0) {			// end move
+//		enable.set();								// disable DDA timer
+		// power-down motors if this feature is enabled
+		if (cfg.m[MOTOR_1].power_mode == true) {
+			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_2].power_mode == true) {
+			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_3].power_mode == true) {
+			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		if (cfg.m[MOTOR_4].power_mode == true) {
+			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+		}
+		_load_move();							// load the next move
+	}
+*/
+}
 
 /* 
  * st_disable() - stop the steppers. Requires re-init to recover
@@ -307,61 +376,6 @@ void st_disable()
 
 
 /*
- * ISR - DDA timer interrupt routine - service ticks from DDA timer
- *
- *	The step bit pulse width is ~1 uSec, which is OK for the TI DRV8811's.
- *	If you need to stretch the pulse I recommend moving the port OUTCLRs
- *	to the end of the routine. If you need more time than that use a 
- *	pulse OFF timer like grbl does so as not to spend any more time in 
- *	the ISR, which would limit the upper range of the DDA frequency.
- *
- *	Uses direct struct addresses and literal values for hardware devices -
- *	it's faster than using indexed timer and port accesses. I checked.
- *	Even when -0s or -03 is used.
- */
-
-/*
-ISR(TIMER_DDA_ISR_vect)
-{
-	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
-		PORT_MOTOR_1_VPORT.OUT |= STEP_BIT_bm;	// turn step bit on
- 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_1_VPORT.OUT &= ~STEP_BIT_bm;	// turn step bit off in ~1 uSec
-	}
-	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
-		PORT_MOTOR_2_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_2_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
-		PORT_MOTOR_3_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_3_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if ((st.m[MOTOR_4].counter += st.m[MOTOR_4].steps) > 0) {
-		PORT_MOTOR_4_VPORT.OUT |= STEP_BIT_bm;
- 		st.m[MOTOR_4].counter -= st.timer_ticks_X_substeps;
-		PORT_MOTOR_4_VPORT.OUT &= ~STEP_BIT_bm;
-	}
-	if (--st.timer_ticks_downcount == 0) {			// end move
- 		TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;		// disable DDA timer
-		// power-down motors if this feature is enabled
-		if (cfg.m[MOTOR_1].power_mode == true) {
-			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_2].power_mode == true) {
-			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_3].power_mode == true) {
-			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		if (cfg.m[MOTOR_4].power_mode == true) {
-			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; 
-		}
-		_load_move();							// load the next move
-	}
-}
-
 ISR(TIMER_DWELL_ISR_vect) {						// DWELL timer interupt
 	if (--st.timer_ticks_downcount == 0) {
  		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;	// disable DWELL timer
@@ -434,8 +448,85 @@ static void _request_load_move()
  *	higher level as the DDA or dwell ISR. A software interrupt has been 
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
  */
-/*
+
 void _load_move()
+{
+//	sps.move_type = MOVE_TYPE_ALINE;
+	sps.move_type = true;
+	sps.timer_ticks = 100000;
+	sps.timer_ticks_X_substeps = 1000;
+	sps.timer_period = 64000;
+/*
+	// handle aline loads first (most common case)  NB: there are no more lines, only alines
+//	if (sps.move_type == MOVE_TYPE_ALINE) {
+	if (sps.move_type == true) {
+		st.timer_ticks_downcount = sps.timer_ticks;
+		st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
+		TIMER_DDA.PER = sps.timer_period;
+ 
+		// This section is somewhat optimized for execution speed 
+		// All axes must set steps and compensate for out-of-range pulse phasing.
+		// If axis has 0 steps the direction setting can be omitted
+		// If axis has 0 steps enabling motors is req'd to support power mode = 1
+
+		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
+		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
+			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_1].steps != 0) {
+			// For ideal optimizations, only set or clear a bit at a time.
+			if (sps.m[MOTOR_1].dir == 0) {
+				PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm;// CW motion (bit cleared)
+			} else {
+				PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;	// CCW motion
+			}
+			PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;	// enable motor
+		}
+
+		st.m[MOTOR_2].steps = sps.m[MOTOR_2].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_2].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_2].steps != 0) {
+			if (sps.m[MOTOR_2].dir == 0) {
+				PORT_MOTOR_2_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_2_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_2_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+
+		st.m[MOTOR_3].steps = sps.m[MOTOR_3].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_3].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_3].steps != 0) {
+			if (sps.m[MOTOR_3].dir == 0) {
+				PORT_MOTOR_3_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_3_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+
+		st.m[MOTOR_4].steps = sps.m[MOTOR_4].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_4].counter = (st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_4].steps != 0) {
+			if (sps.m[MOTOR_4].dir == 0) {
+				PORT_MOTOR_4_VPORT.OUT &= ~DIRECTION_BIT_bm;
+			} else {
+				PORT_MOTOR_4_VPORT.OUT |= DIRECTION_BIT_bm;
+			}
+			PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+		}
+		TIMER_DDA.CTRLA = STEP_TIMER_ENABLE;					// enable the DDA timer
+	}
+*/
+}
+
+/*
 {
 	if (st.timer_ticks_downcount != 0) { return;}				  // exit if it's still busy
 	if (sps.exec_state != PREP_BUFFER_OWNED_BY_LOADER) { return;} // if there are no more moves
@@ -447,7 +538,7 @@ void _load_move()
 		TIMER_DDA.PER = sps.timer_period;
  
 		// This section is somewhat optimized for execution speed 
-		// All axes must set steps and compensate for out-of-range pulse phasing. 
+		// All axes must set steps and compensate for out-of-range pulse phasing.
 		// If axis has 0 steps the direction setting can be omitted
 		// If axis has 0 steps enabling motors is req'd to support power mode = 1
 
