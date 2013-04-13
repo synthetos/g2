@@ -145,6 +145,8 @@
 #include "motatePins.h"
 using namespace Motate;
 
+/*
+
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num>
 struct Stepper {
@@ -162,6 +164,7 @@ Pin6 dir_2(kOutput);			// direction channel 2
 Pin7 dir_3(kOutput);			// direction channel 3
 
 Pin8 enable(kOutput);			// common enable
+*/
 
 volatile int temp = 0;
 volatile long dummy;			// convenient register to read into
@@ -280,7 +283,7 @@ static inline void pinOutput(int pin, int val)
 void ISR_Handler_DDA(void) 
 {
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
-
+/*
 	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
 		x_motor.step.set();		// turn step bit on
@@ -303,10 +306,11 @@ void ISR_Handler_DDA(void)
 //		temp = LOW;
 //	}
 //	digitalWrite(3,temp);
+*/
 }
 
-	_load_move();
-}
+//	_load_move();
+//}
 
 /*
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
@@ -315,6 +319,7 @@ void ISR_Handler_DDA(void)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
+/*
 void ISR_Handler_DDA(void) 
 {
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
@@ -343,7 +348,7 @@ void ISR_Handler_DDA(void)
 	step_1.clear();
 	step_2.clear();
 	step_3.clear();
-	
+*/	
 /*
 	if (--st.timer_ticks_downcount == 0) {			// end move
 //		enable.set();								// disable DDA timer
@@ -363,7 +368,7 @@ void ISR_Handler_DDA(void)
 		_load_move();							// load the next move
 	}
 */
-}
+//}
 
 /* 
  * st_disable() - stop the steppers. Requires re-init to recover

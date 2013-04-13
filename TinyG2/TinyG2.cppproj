@@ -91,11 +91,11 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
-      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
+  <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
   <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
@@ -114,7 +114,6 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
-      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
     </ListValues>
@@ -129,7 +128,6 @@
   </armgcccpp.linker.libraries.Libraries>
   <armgcccpp.linker.libraries.LibrarySearchPaths>
     <ListValues>
-      <Value>../platform/arm/lib</Value>
       <Value>../cmsis/linkerScripts</Value>
     </ListValues>
   </armgcccpp.linker.libraries.LibrarySearchPaths>

@@ -23,16 +23,16 @@ C_DEPS :=
 C_DEPS_AS_ARGS := 
 EXECUTABLES := 
 OUTPUT_FILE_PATH :=
+OUTPUT_FILE_PATH_AS_ARGS :=
 AVR_APP_PATH :=$$$AVR_APP_PATH$$$
-# AVR_APP_PATH :=$$$AVR_APP_PATH$$$
 QUOTE := "
 ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:=
 LIB_DEP:=
 
 # Every subdirectory with source files must be described here
-../arduino/USB \
 SUBDIRS :=  \
+../arduino/USB \
 ../cmsis/ \
 ../cmsis/linkerScripts/ \
 ../cmsis/src/ \
@@ -58,17 +58,17 @@ C_SRCS +=  \
 ../arduino/hooks.c \
 ../arduino/iar_calls_sam3.c \
 ../arduino/IPAddress.cpp \
-../arduino/main.cpp \
+../arduino/itoa.c \
 ../arduino/Print.cpp \
 ../arduino/Reset.cpp \
 ../arduino/RingBuffer.cpp \
 ../arduino/Stream.cpp \
 ../arduino/syscalls_sam3.cpp \
 ../arduino/UARTClass.cpp \
+../arduino/USARTClass.cpp \
 ../arduino/USB/CDC.cpp \
 ../arduino/USB/HID.cpp \
 ../arduino/USB/USBCore.cpp \
-../arduino/USARTClass.cpp \
 ../arduino/WInterrupts.c \
 ../arduino/wiring.c \
 ../arduino/wiring_analog.c \
@@ -78,6 +78,7 @@ C_SRCS +=  \
 ../arduino/WMath.cpp \
 ../arduino/WString.cpp \
 ../cmsis/src/startup_sam3xa.c \
+../cmsis/src/system_sam3xa.c \
 ../config.c \
 ../config_app.c \
 ../json_parser.c \
@@ -110,15 +111,14 @@ C_SRCS +=  \
 ../platform/atmel_sam/libsam/source/uotghs_host.c \
 ../platform/atmel_sam/libsam/source/usart.c \
 ../platform/atmel_sam/libsam/source/wdt.c \
-../cmsis/src/system_sam3xa.c \
 ../stepper.cpp \
+../system.cpp \
 ../TinyG2.cpp \
 ../util.c \
 ../variants/variant.cpp \
 ../xio/xio.c \
 ../xio/xio_signals.c \
 ../xio/xio_usart.c
-../variants/variant.cpp
 
 
 PREPROCESSING_SRCS += 
@@ -133,17 +133,17 @@ arduino/cxxabi-compat.o \
 arduino/hooks.o \
 arduino/iar_calls_sam3.o \
 arduino/IPAddress.o \
-arduino/main.o \
+arduino/itoa.o \
 arduino/Print.o \
 arduino/Reset.o \
 arduino/RingBuffer.o \
 arduino/Stream.o \
 arduino/syscalls_sam3.o \
 arduino/UARTClass.o \
+arduino/USARTClass.o \
 arduino/USB/CDC.o \
 arduino/USB/HID.o \
 arduino/USB/USBCore.o \
-arduino/USARTClass.o \
 arduino/WInterrupts.o \
 arduino/wiring.o \
 arduino/wiring_analog.o \
@@ -153,6 +153,7 @@ arduino/wiring_shift.o \
 arduino/WMath.o \
 arduino/WString.o \
 cmsis/src/startup_sam3xa.o \
+cmsis/src/system_sam3xa.o \
 config.o \
 config_app.o \
 json_parser.o \
@@ -185,15 +186,14 @@ platform/atmel_sam/libsam/source/uotghs_device.o \
 platform/atmel_sam/libsam/source/uotghs_host.o \
 platform/atmel_sam/libsam/source/usart.o \
 platform/atmel_sam/libsam/source/wdt.o \
-cmsis/src/system_sam3xa.o \
 stepper.o \
+system.o \
 TinyG2.o \
 util.o \
 variants/variant.o \
 xio/xio.o \
 xio/xio_signals.o \
 xio/xio_usart.o
-variants/variant.o
 
 
 OBJS_AS_ARGS +=  \
@@ -202,17 +202,17 @@ arduino/cxxabi-compat.o \
 arduino/hooks.o \
 arduino/iar_calls_sam3.o \
 arduino/IPAddress.o \
-arduino/main.o \
+arduino/itoa.o \
 arduino/Print.o \
 arduino/Reset.o \
 arduino/RingBuffer.o \
 arduino/Stream.o \
 arduino/syscalls_sam3.o \
 arduino/UARTClass.o \
+arduino/USARTClass.o \
 arduino/USB/CDC.o \
 arduino/USB/HID.o \
 arduino/USB/USBCore.o \
-arduino/USARTClass.o \
 arduino/WInterrupts.o \
 arduino/wiring.o \
 arduino/wiring_analog.o \
@@ -222,6 +222,7 @@ arduino/wiring_shift.o \
 arduino/WMath.o \
 arduino/WString.o \
 cmsis/src/startup_sam3xa.o \
+cmsis/src/system_sam3xa.o \
 config.o \
 config_app.o \
 json_parser.o \
@@ -254,15 +255,14 @@ platform/atmel_sam/libsam/source/uotghs_device.o \
 platform/atmel_sam/libsam/source/uotghs_host.o \
 platform/atmel_sam/libsam/source/usart.o \
 platform/atmel_sam/libsam/source/wdt.o \
-cmsis/src/system_sam3xa.o \
 stepper.o \
+system.o \
 TinyG2.o \
 util.o \
 variants/variant.o \
 xio/xio.o \
 xio/xio_signals.o \
 xio/xio_usart.o
-variants/variant.o
 
 
 C_DEPS +=  \
@@ -271,17 +271,17 @@ arduino/cxxabi-compat.d \
 arduino/hooks.d \
 arduino/iar_calls_sam3.d \
 arduino/IPAddress.d \
-arduino/main.d \
+arduino/itoa.d \
 arduino/Print.d \
 arduino/Reset.d \
 arduino/RingBuffer.d \
 arduino/Stream.d \
 arduino/syscalls_sam3.d \
 arduino/UARTClass.d \
+arduino/USARTClass.d \
 arduino/USB/CDC.d \
 arduino/USB/HID.d \
 arduino/USB/USBCore.d \
-arduino/USARTClass.d \
 arduino/WInterrupts.d \
 arduino/wiring.d \
 arduino/wiring_analog.d \
@@ -291,6 +291,7 @@ arduino/wiring_shift.d \
 arduino/WMath.d \
 arduino/WString.d \
 cmsis/src/startup_sam3xa.d \
+cmsis/src/system_sam3xa.d \
 config.d \
 config_app.d \
 json_parser.d \
@@ -323,15 +324,14 @@ platform/atmel_sam/libsam/source/uotghs_device.d \
 platform/atmel_sam/libsam/source/uotghs_host.d \
 platform/atmel_sam/libsam/source/usart.d \
 platform/atmel_sam/libsam/source/wdt.d \
-cmsis/src/system_sam3xa.d \
 stepper.d \
+system.d \
 TinyG2.d \
 util.d \
 variants/variant.d \
 xio/xio.d \
 xio/xio_signals.d \
 xio/xio_usart.d
-variants/variant.d
 
 
 C_DEPS_AS_ARGS +=  \
@@ -340,17 +340,17 @@ arduino/cxxabi-compat.d \
 arduino/hooks.d \
 arduino/iar_calls_sam3.d \
 arduino/IPAddress.d \
-arduino/main.d \
+arduino/itoa.d \
 arduino/Print.d \
 arduino/Reset.d \
 arduino/RingBuffer.d \
 arduino/Stream.d \
 arduino/syscalls_sam3.d \
 arduino/UARTClass.d \
+arduino/USARTClass.d \
 arduino/USB/CDC.d \
 arduino/USB/HID.d \
 arduino/USB/USBCore.d \
-arduino/USARTClass.d \
 arduino/WInterrupts.d \
 arduino/wiring.d \
 arduino/wiring_analog.d \
@@ -360,6 +360,7 @@ arduino/wiring_shift.d \
 arduino/WMath.d \
 arduino/WString.d \
 cmsis/src/startup_sam3xa.d \
+cmsis/src/system_sam3xa.d \
 config.d \
 config_app.d \
 json_parser.d \
@@ -392,20 +393,19 @@ platform/atmel_sam/libsam/source/uotghs_device.d \
 platform/atmel_sam/libsam/source/uotghs_host.d \
 platform/atmel_sam/libsam/source/usart.d \
 platform/atmel_sam/libsam/source/wdt.d \
-cmsis/src/system_sam3xa.d \
 stepper.d \
+system.d \
 TinyG2.d \
 util.d \
 variants/variant.d \
 xio/xio.d \
 xio/xio_signals.d \
 xio/xio_usart.d
-variants/variant.d
+
 
 OUTPUT_FILE_PATH +=TinyG2.elf
-OUTPUT_FILE_PATH +=TinyG3.elf
+
 OUTPUT_FILE_PATH_AS_ARGS +=TinyG2.elf
-OUTPUT_FILE_PATH_AS_ARGS +=TinyG3.elf
 
 ADDITIONAL_DEPENDENCIES:=
 
@@ -550,55 +550,55 @@ LIB_DEP+=
 arduino/%.o: ../arduino/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -Os -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 arduino/%.o: ../arduino/%.cpp
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 arduino/USB/%.o: ../arduino/USB/%.cpp
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 cmsis/src/%.o: ../cmsis/src/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -Os -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 ./%.o: .././%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -Os -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 ./%.o: .././%.cpp
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
+
 platform/atmel_sam/libsam/source/%.o: ../platform/atmel_sam/libsam/source/%.c
-system/source/%.o: ../system/source/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -Os -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 variants/%.o: ../variants/%.cpp
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -fno-rtti -fno-exceptions -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 xio/%.o: ../xio/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\arm\include" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -Os -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
 	@echo Finished building: $<
 
 
@@ -609,7 +609,7 @@ xio/%.o: ../xio/%.c
 
 # AVR32/GNU Assembler
 
-all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
+
 
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -619,21 +619,21 @@ endif
 endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
+
 # All Target
 all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
-
 
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP)
 	@echo Building target: $@
 	@echo Invoking: ARM/GNU Linker : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG2.map" -Wl,--start-group -lm  -Wl,--end-group -L"../platform/arm/lib" -L"../cmsis/linkerScripts"  -Wl,--gc-sections -mcpu=cortex-m3 -Tsam3x8e_flash.ld 
+	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="TinyG2.map" -Wl,--start-group -lm  -Wl,--end-group -L"../cmsis/linkerScripts"  -Wl,--gc-sections -mcpu=cortex-m3 -Tsam3x8e_flash.ld 
+	@echo Finished building target: $@
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O binary "TinyG2.elf" "TinyG2.bin"
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "TinyG2.elf" "TinyG2.hex"
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -j .eeprom --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0 --no-change-warnings -O binary "TinyG2.elf" "TinyG2.eep" || exit 0
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objdump.exe" -h -S "TinyG2.elf" > "TinyG2.lss"
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature  "TinyG2.elf" "TinyG2.srec"
 	"C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-size.exe" "TinyG2.elf"
-	"$(BASE_PATH)arm-none-eabi-size$(EXEC)" "TinyG3.elf"
 	
 
 
@@ -642,6 +642,6 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP)
 
 # Other Targets
 clean:
+	-$(RM) $(OBJS_AS_ARGS)$(C_DEPS_AS_ARGS) $(EXECUTABLES) 
 	rm -rf "TinyG2.elf" "TinyG2.a" "TinyG2.hex" "TinyG2.bin" "TinyG2.lss" "TinyG2.eep" "TinyG2.map" "TinyG2.srec"
-	rm -rf "TinyG3.elf" "TinyG3.a" "TinyG3.hex" "TinyG3.bin" "TinyG3.lss" "TinyG3.eep" "TinyG3.map" "TinyG3.srec"
 	
