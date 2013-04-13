@@ -49,7 +49,8 @@ void loop( void )
 //	SerialUSB.print("Hello Kitty...");
 //	Serial.print("Hello Kitty2...");
 
-	printf("printf test...\n");
+//	printf("printf test...\n");
+	printf("printf test2 %d %f...\n", 10, 10.003);
 
 	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
 	delay(100);               // wait for a second

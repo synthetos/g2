@@ -91,13 +91,9 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
+      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\arm-none-eabi\include</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
   <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
@@ -118,13 +114,9 @@
       <Value>..\Arduino\USB</Value>
       <Value>..\variants</Value>
       <Value>..\motate</Value>
+      <Value>..\platform\arm\include</Value>
       <Value>..\platform\atmel_sam\libsam</Value>
       <Value>..\platform\atmel_sam\libsam\include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-      <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\arm-none-eabi\include</Value>
     </ListValues>
   </armgcccpp.compiler.directories.IncludePaths>
   <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
@@ -133,11 +125,11 @@
   <armgcccpp.linker.libraries.Libraries>
     <ListValues>
       <Value>libm</Value>
-      <Value>libc</Value>
     </ListValues>
   </armgcccpp.linker.libraries.Libraries>
   <armgcccpp.linker.libraries.LibrarySearchPaths>
     <ListValues>
+      <Value>../platform/arm/lib</Value>
       <Value>../cmsis/linkerScripts</Value>
     </ListValues>
   </armgcccpp.linker.libraries.LibrarySearchPaths>
@@ -308,7 +300,7 @@
     <Compile Include="arduino\syscalls.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\syscalls_sam3.c">
+    <Compile Include="arduino\syscalls_sam3.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\Tone.h">
@@ -677,6 +669,9 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="platform\arm" />
+    <Folder Include="platform\arm\lib" />
+    <Folder Include="platform\arm\include" />
     <Folder Include="xio" />
     <Folder Include="platform" />
     <Folder Include="platform\atmel_sam" />
