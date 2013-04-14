@@ -58,6 +58,8 @@ config.c
 
 config_app.c
 
+controller.cpp
+
 json_parser.c
 
 kinen.c
@@ -122,15 +124,7 @@ stepper.cpp
 
 system.cpp
 
-TinyG2.cpp
-
-util.c
-
 variants\variant.cpp
 
-xio\xio.c
-
-xio\xio_signals.c
-
-xio\xio_usart.c
+xio.cpp
 

@@ -1,5 +1,5 @@
 /*
- * HW.cpp
+ * main.cpp
  *
  * Created: 3/31/2013 11:19:33 AM
  *  Author: Administrator
@@ -9,12 +9,31 @@
 
 #include "sam.h"
 #include "Arduino.h"
-#include <stdio.h>
 
-//#include "tinyg2.h"
+#include "tinyg2.h"
+#include "controller.h"
+#include "stepper.h"
+#include "xio.h"
 
-// Disable some warnings for the Arduino files
-// ref: http://www.hilltop-cottage.info/blogs/adam/?p=211
+/*
+#include "system.h"
+#include "util.h"				// #2
+#include "config.h"				// #3
+#include "canonical_machine.h"
+#include "json_parser.h"
+#include "gcode_parser.h"
+#include "report.h"
+#include "planner.h"
+#include "spindle.h"
+#include "network.h"
+#include "gpio.h"
+#include "test.h"
+#include "pwm.h"
+*/
+
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus
 
 /*
 extern void SysTick_Handler( void )
@@ -24,38 +43,26 @@ extern void SysTick_Handler( void )
 }
 */
 
+#define DEV_STDIN 0
+#define DEV_STDOUT 0
+#define DEV_STDERR 0
+
+extern controller_t controller_state;	// controller state structure
+static void _application_init(void);
+
 /******************** Application Code ************************/
-int led = 13;
+//int indicator_led = 13;
 
 void setup( void )
 {
-	pinMode(led, OUTPUT);
-//	tg_setup();
-
+	pinMode(INDICATOR_LED, OUTPUT);
 	SerialUSB.begin(115200);
-	delay(2000);               // wait for N seconds
-	SerialUSB.print("\n\nSTARTUP\n");
-	
-//	Serial.begin(115200);
-//	delay(2000);               // wait for N seconds
-//	Serial.print("\n\nSTARTUP_2\n");
+	_application_init();
 }
 
 void loop( void )
 {
-//	const uint8_t ptr[] = ("Hello Kitty...");
-//	SerialUSB.write(ptr, sizeof(ptr));
-
-//	SerialUSB.print("Hello Kitty...");
-//	Serial.print("Hello Kitty2...");
-
-//	printf("printf test...\n");
-	printf("printf test2 %d %f...\n", 10, 10.003);
-
-	digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
-	delay(100);               // wait for a second
-	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
-	delay(500);               // wait for a second
+	controller_run( &controller_state );		// single pass through the controller
 }
 
 /*
@@ -65,11 +72,7 @@ int main( void )
 {
 	init();
 	delay(1);
-
-//#if defined(USBCON)
 	USBDevice.attach();
-//#endif
-
 	setup();
 
 	for (;;)
@@ -79,3 +82,64 @@ int main( void )
 	}
 	return 0;
 }
+
+static void _application_init(void)
+{
+	// There are a lot of dependencies in the order of these inits.
+	// Don't change the ordering unless you understand this.
+
+	controller_init( &controller_state, DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+	st_init(); 			// stepper subsystem 				- must precede gpio_init()
+
+/*
+	cli();
+
+	// system and drivers
+	sys_init();			// system hardware setup 			- must be first
+	rtc_init();			// real time counter
+	xio_init();			// xmega io subsystem
+	sig_init();			// signal flags
+	st_init(); 			// stepper subsystem 				- must precede gpio_init()
+	gpio_init();		// switches and parallel IO
+	pwm_init();			// pulse width modulation drivers	- must follow gpio_init()
+
+	// application structures
+	tg_init(STD_INPUT);	// tinyg controller (controller.c)	- must be first app init; reqs xio_init()
+	cfg_init();			// config records from eeprom 		- must be next app init
+	mp_init();			// motion planning subsystem
+	cm_init();			// canonical machine				- must follow cfg_init()
+	sp_init();			// spindle PWM and variables
+
+	// now bring up the interupts and get started
+	PMIC_SetVectorLocationToApplication(); // as opposed to boot ROM
+	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
+	PMIC_EnableMediumLevel();
+	PMIC_EnableLowLevel();
+	sei();							// enable global interrupts
+	rpt_print_system_ready_message();// (LAST) announce system is ready
+
+	_unit_tests();					// run any unit tests that are enabled
+	tg_canned_startup();			// run any pre-loaded commands
+
+	while (true) {
+//		if (cs.network == NET_MASTER) { 
+//			tg_repeater();
+//		} else if (cs.network == NET_SLAVE) { 
+//			tg_receiver();
+//		} else {
+			tg_controller();		// NET_STANDALONE
+//		}
+	}
+*/
+	return;
+}
+
+void tg_reset(void)			// software hard reset using the watchdog timer
+{
+	//	wdt_enable(WDTO_15MS);
+	//	while (true);			// loops for about 15ms then resets
+}
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus

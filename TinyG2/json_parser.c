@@ -44,7 +44,7 @@
 #include "json_parser.h"
 //#include "report.h"
 #include "util.h"
-#include "xio/xio.h"				// for char definitions
+#include "xio.h"					// for char definitions
 
 // local scope stuff
 

@@ -166,9 +166,9 @@ const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
 //const cfgItem_t cfgArray[] PROGMEM = {
 const cfgItem_t cfgArray[] = {
 	// grp  token flags get_func, set_func  target for get/set,		   default value
-	{ "sys","fb", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_build,   TINYG2_BUILD_NUMBER }, // MUST BE FIRST!
-	{ "sys","fv", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_version, TINYG2_VERSION_NUMBER },
-	{ "sys","hv", _f07, _get_dbl, _set_dbl, (double *)&cfg.hw_version, TINYG2_HARDWARE_VERSION },
+	{ "sys","fb", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
+	{ "sys","fv", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_version, TINYG_FIRMWARE_VERSION },
+	{ "sys","hv", _f07, _get_dbl, _set_dbl, (double *)&cfg.hw_version, TINYG_HARDWARE_VERSION },
 /*
 	// Heater object
 	{ "h1", "h1st",  _f00, _get_ui8, _set_ui8,(double *)&heater.state, HEATER_OFF },

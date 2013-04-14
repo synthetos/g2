@@ -385,7 +385,9 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
+#ifndef min						// ASH: ++++ in case this is already defined
 #define min(a, b)   Min(a, b)
+#endif
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -396,8 +398,9 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
+#ifndef max						// ASH: ++++ in case this is already defined
 #define max(a, b)   Max(a, b)
-
+#endif
 //! @}
 
 #endif /* USB_DEVICE_H_INCLUDED */
