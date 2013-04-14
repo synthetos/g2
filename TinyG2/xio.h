@@ -1,6 +1,5 @@
 /*
  * xio.h - eXtended IO devices - common header file
- * Part of Kinen project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -12,8 +11,8 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _xio_h_
-#define _xio_h_
+#ifndef _XIO_H_
+#define _XIO_H_
 
 #include "tinyg2.h"
 
@@ -21,7 +20,7 @@
 #define _FDEV_EOF -2
 
 int read_char (void);
-err_t read_line (uint8_t *buffer, size_t *index, size_t size);
+status_t read_line (uint8_t *buffer, uint8_t *index, size_t size);
 size_t write(const uint8_t *buffer, size_t size);
 
 /* Some useful ASCII definitions */
@@ -45,4 +44,4 @@ size_t write(const uint8_t *buffer, size_t size);
 #define Q_EMPTY (char)0xFF	// signal no character
 
 
-#endif // xio_h
+#endif // _XIO_H_

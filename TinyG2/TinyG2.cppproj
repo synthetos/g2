@@ -120,6 +120,7 @@
   <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <armgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</armgcccpp.compiler.optimization.DebugLevel>
   <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
+  <armgcccpp.compiler.miscellaneous.OtherFlags>-fpermissive</armgcccpp.compiler.miscellaneous.OtherFlags>
   <armgcccpp.linker.libraries.Libraries>
     <ListValues>
       <Value>libm</Value>

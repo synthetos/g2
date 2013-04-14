@@ -44,20 +44,20 @@ extern "C"{
 
 typedef struct controllerState {	// main TG controller struct
 	uint16_t magic_start;			// magic number to test memory integrity	
-	double null;					// dumping ground for items with no target
-	double fw_build;				// tinyg firmware build number
-	double fw_version;				// tinyg firmware version number
-	double hw_version;				// tinyg hardware compatibility
+	float null;						// dumping ground for items with no target
+	float fw_build;					// tinyg firmware build number
+	float fw_version;				// tinyg firmware version number
+	float hw_version;				// tinyg hardware compatibility
 	uint8_t test;
 	uint8_t active_src;				// active source device
 	uint8_t default_src;			// default source device
 	uint8_t network_mode;			// 0=master, 1=repeater, 2=slave
-	uint8_t linelen;				// length of currently processing line
+	uint8_t linelen;					// length of currently processing line
 	uint8_t led_state;				// 0=off, 1=on
 	int32_t led_counter;			// a convenience for flashing an LED
-	char in_buf[INPUT_BUFFER_LEN];	// input text buffer
-	char out_buf[OUTPUT_BUFFER_LEN];// output text buffer
-	char saved_buf[SAVED_BUFFER_LEN];// save the input buffer
+	uint8_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
+	uint8_t out_buf[OUTPUT_BUFFER_LEN];// output text buffer
+	uint8_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
 	uint16_t magic_end;
 } controller_t;
 //controller_t controller_state;		// controller state structure

@@ -31,6 +31,7 @@
 
 #include "tinyg2.h"
 #include "controller.h"
+#include "xio.h"
 
 /*
 #include <ctype.h>				// for parsing
@@ -78,10 +79,11 @@ static uint8_t _sync_to_planner(void);
 
 void controller_init(controller_t *cs, uint8_t std_in, uint8_t std_out, uint8_t std_err) 
 {
-//	cs.magic_start = MAGICNUM;
-//	cs.magic_end = MAGICNUM;
-//	cs.fw_build = TINYG_FIRMWARE_BUILD;
-//	cs.fw_version = TINYG_FIRMWARE_VERSION;	// NB: HW version is set from EEPROM
+	cs->magic_start = MAGICNUM;
+	cs->magic_end = MAGICNUM;
+	cs->fw_build = TINYG_FIRMWARE_BUILD;
+	cs->fw_version = TINYG_FIRMWARE_VERSION;// NB: HW version is set from EEPROM
+	cs->linelen = 0;						// initialize index for read_line()
 
 //	xio_set_stdin(std_in);
 //	xio_set_stdout(std_out);
@@ -119,7 +121,7 @@ void controller_run(controller_t *cs)
 	}
 }
 
-#define	DISPATCH(func) if (func == ERR_EAGAIN) return; 
+#define	DISPATCH(func) if (func == STAT_EAGAIN) return; 
 static void _controller_HSM(controller_t *cs)
 {
 //----- ISRs. These should be considered the highest priority scheduler functions ----//
@@ -168,48 +170,28 @@ static void _controller_HSM(controller_t *cs)
  *	Also responsible for prompts and for flow control 
  */
 
-static uint8_t _command_dispatch(controller_t *cs)
+static status_t _command_dispatch(controller_t *cs)
 {
-	printf("printf test2 %d %f...\n", 10, 10.003);
+//	printf("printf test2 %d %f...\n", 10, 10.003);
+
+	status_t status;
+
+	// read input line or return if not a completed line
+	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
+		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
+	}
+	write (cs->in_buf, cs->linelen);
+	return (STAT_OK);
+}
 
 //	const uint8_t ptr[] = ("Hello Kitty...");
 //	SerialUSB.write(ptr, sizeof(ptr));
-
 //	SerialUSB.print("Hello Kitty...");
 //	Serial.print("Hello Kitty2...");
+//	c = SerialUSB.read();		// read is non-blocking
+//	SerialUSB.write(c);
 
-//	printf("printf test...\n");
-//	printf("printf test2 %d %f...\n", 10, 10.003);
-
-//	digitalWrite(INDICATOR_LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-//	delay(100);               // wait for a second
-//	digitalWrite(INDICATOR_LED, LOW);    // turn the LED off by making the voltage LOW
-//	delay(500);               // wait for a second
-
-//	uint8_t status;
-
-//	char str[24];
-//	uint8_t index;
-	//	c = SerialUSB.read();		// read is non-blocking
-	//	SerialUSB.write(c);
-//	str = read_line();		// read is non-blocking
-//	write(c,1);
-
-	// read input line or return if not a completed line
-	// xio_gets() is a non-blocking workalike of fgets()
-/*	
-	if ((status = xio_gets(cs.active_src, cs.in_buf, sizeof(cs.in_buf))) != TG_OK) {
-		if (status == TG_EOF) {					// EOF can come from file devices only
-			if (cfg.comm_mode == TEXT_MODE) {
-				fprintf_P(stderr, PSTR("End of command file\n"));
-			} else {
-				rpt_exception(TG_EOF, 0);		// not really an exception
-			}
-			tg_reset_source();					// reset to default source
-		}
-		// Note that TG_EAGAIN, TG_NOOP etc. will just flow through
-		return (status);
-	}
+/*
 	cmd_reset_list();
 	cs.linelen = strlen(cs.in_buf)+1;
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
@@ -249,22 +231,22 @@ static uint8_t _command_dispatch(controller_t *cs)
 			}
 		}
 	}
-*/
-	return (ERR_OK);
+	return (STAT_OK);
 }
+*/
 
 /* 
  * _normal_idler() - blink LED13 slowly to show everything is OK
  */
 
-static uint8_t _normal_idler( controller_t *cs )
+static status_t _normal_idler( controller_t *cs )
 {
 	if (--(cs->led_counter) < 0) {
 		cs->led_counter = LED_NORMAL_COUNTER;
 		cs->led_state ^= 1;
 		digitalWrite(INDICATOR_LED, cs->led_state);
 	}
-	return (ERR_OK);
+	return (STAT_OK);
 }
 
 /* 
@@ -319,7 +301,7 @@ uint8_t _system_assertions()
 	if (value == 0) { return (TG_OK);}
 	rpt_exception(TG_MEMORY_CORRUPTION, value);
 	cm_shutdown(ALARM_MEMORY_OFFSET + value);	
-	return (ERR_EAGAIN);
+	return (STAT_EAGAIN);
 }
 */
 
