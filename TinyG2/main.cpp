@@ -35,6 +35,9 @@
 extern "C"{
 #endif // __cplusplus
 
+void _init() __attribute__ ((weak));
+void _init() {;}
+
 /*
 extern void SysTick_Handler( void )
 {

@@ -25,7 +25,7 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino variants
+SOURCE_DIRS = . arduino arduino/USB variants
 FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
 
 # List all user directories here
@@ -60,9 +60,9 @@ CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align
+#CFLAGS += -Wcast-align -Wpacked 
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
@@ -80,8 +80,8 @@ CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn
+CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
@@ -247,6 +247,8 @@ MK_DIRS =   $(shell                              \
               do                                 \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
+
+$(eval $(DEVICE_RULES))
 
 define RULES
 OUTDIR = $(OBJ)/$(1)
