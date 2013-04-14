@@ -54,22 +54,6 @@ static volatile LineInfo _usbLineInfo = {
     0x00   // lineState
 };
 
-//ASH: ++++ added this function to escape the C++ context for use by syscalls_sam3.c _write()
-int USBwrite(const uint8_t *buffer, size_t size)
-{
-	if (_usbLineInfo.lineState > 0) {
-		int r = USBD_Send(CDC_TX, buffer, size);
-		if (r > 0) {
-			return r;
-		} else {
-//			setWriteError();
-			return 0;
-		}
-	}
-//	setWriteError();
-	return 0;
-}
-
 _Pragma("pack(1)")
 static const CDCDescriptor _cdcInterface =
 {
