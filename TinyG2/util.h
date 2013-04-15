@@ -31,8 +31,8 @@ double std_dev(double a[], uint8_t n, double *mean);
 
 // ritorno is a handy way to provide exception returns - it returns only 
 // if an error occurred. (ritorno is Italian for return) 
-uint8_t errcode;
-#define ritorno(a) if((errcode=a) != SC_OK) { return(errcode); }
+extern status_t errcode;
+#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
 
 /***** Math Support *****/
 

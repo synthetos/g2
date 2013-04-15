@@ -20,16 +20,20 @@
 #ifndef tinyg2_h
 #define tinyg2_h
 
+// common system includes
+#include <ctype.h>					
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
 #include "Arduino.h"
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.02		// added controller read_line
+#define TINYG_FIRMWARE_BUILD   	004.04		// added controller read_line
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
@@ -48,6 +52,21 @@
 /****** OPERATING SETTINGS *******/
 
 void tg_setup(void);
+
+/*************************************************************************
+ * Help during conversion from char to uint8_t for strings
+ */
+#define strncpy(d,s,l) (uint8_t *)strncpy((char *)d, (char *)s, l)
+#define strpbrk(d,s) (uint8_t* )strpbrk((char *)d, (char *)s)
+#define strcpy(d,s) (uint8_t *)strcpy((char *)d, (char *)s)
+#define strcat(d,s) (uint8_t *)strcat((char *)d, (char *)s)
+#define strstr(d,s) (uint8_t *)strstr((char *)d, (char *)s)
+#define strchr(d,s) (uint8_t *)strchr((char *)d, (char)s)
+#define strcmp(d,s) strcmp((char *)d, (char *)s)
+#define strtod(d,s) strtod((char *)d, (char **)s)
+#define strlen(s) strlen((char *)s)
+
+//#define sprintf(a,b) sprintf(char *)a, (char *)b)
 
 /*************************************************************************
  * TinyG application-specific prototypes, defines and globals

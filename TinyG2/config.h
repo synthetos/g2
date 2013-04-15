@@ -1,8 +1,7 @@
 /*
  * config.h - configuration sub-system
- * Part of Kinen project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.s
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -53,8 +52,12 @@
  *	CMD_BODY_LEN needs to allow for one parent JSON object and enough children
  *	to complete the largest possible operation - usually the status report.
  */
-#ifndef config_h
-#define config_h
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
+#ifdef __cplusplus
+extern "C"{
+#endif 
 
 /***********************************************************************************
  **** COMPILER SWITCHES ************************************************************
@@ -168,7 +171,7 @@ enum srVerbosity {					// status report enable and verbosity
 typedef struct cmdString {				// shared string object
 	uint8_t wp;							// current string array index for len < 256 bytes
 //	uint16_t wp;						// use this value is string len > 255 bytes
-	char string[CMD_SHARED_STRING_LEN];
+	uint8_t string[CMD_SHARED_STRING_LEN];
 } cmdStr_t;
 
 typedef struct cmdObject {				// depending on use, not all elements may be populated
@@ -178,20 +181,19 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
 	int8_t type;						// see cmdType
 	double value;						// numeric value
-	char token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
-	char group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
-	char (*stringp)[];					// pointer to array of characters from shared character array
+	uint8_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
+	uint8_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
+	uint8_t (*stringp)[];					// pointer to array of characters from shared character array
 } cmdObj_t; 							// OK, so it's not REALLY an object
-
 typedef uint8_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
 typedef void (*fptrPrint)(cmdObj_t *cmd);// required for PROGMEM access
 
 typedef struct cfgItem {
-	char group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
-	char token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
+	uint8_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
+	uint8_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
   #ifdef __ENABLE_TEXTMODE
-  	const char *format;					// pointer to formatted print string
+  	const uint8_t *format;					// pointer to formatted print string
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
   #endif
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
@@ -202,8 +204,9 @@ typedef struct cfgItem {
 
 /**** static allocation and definitions ****/
 
-cmdStr_t cmdStr;
-cmdObj_t cmd_list[CMD_LIST_LEN];		// JSON header element
+extern cmdStr_t cmdStr;
+extern cmdObj_t cmd_list[CMD_LIST_LEN];		// JSON header element
+
 #define cmd_header cmd_list
 #define cmd_body  (cmd_list+1)
 
@@ -216,12 +219,12 @@ uint8_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
 uint8_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
 
 // helpers
-index_t cmd_get_index(const char *group, const char *token);
+index_t cmd_get_index(const uint8_t *group, const uint8_t *token);
 uint8_t cmd_index_lt_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
 uint8_t cmd_index_is_group(index_t index);
 uint8_t cmd_index_lt_groups(index_t index);
-uint8_t cmd_group_is_prefixed(char *group);
+uint8_t cmd_group_is_prefixed(uint8_t *group);
 
 //uint8_t cmd_get_type(cmdObj_t *cmd);
 //uint8_t cmd_set_jv(cmdObj_t *cmd);
@@ -246,15 +249,15 @@ uint8_t _get_grp(cmdObj_t *cmd);		// get data for a group
 void cmd_get_cmdObj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_obj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_list(void);
-uint8_t cmd_copy_string(cmdObj_t *cmd, const char *src);
-uint8_t cmd_copy_string_P(cmdObj_t *cmd, const char *src_P);
-cmdObj_t *cmd_add_object(char *token);
-cmdObj_t *cmd_add_integer(char *token, const uint32_t value);
-cmdObj_t *cmd_add_float(char *token, const double value);
-cmdObj_t *cmd_add_string(char *token, const char *string);
-cmdObj_t *cmd_add_string_P(char *token, const char *string);
-cmdObj_t *cmd_add_message(const char *string);
-cmdObj_t *cmd_add_message_P(const char *string);
+uint8_t cmd_copy_string(cmdObj_t *cmd, const uint8_t *src);
+uint8_t cmd_copy_string_P(cmdObj_t *cmd, const uint8_t *src_P);
+cmdObj_t *cmd_add_object(const uint8_t *token);
+cmdObj_t *cmd_add_integer(const uint8_t *token, const uint32_t value);
+cmdObj_t *cmd_add_float(const uint8_t *token, const double value);
+cmdObj_t *cmd_add_string(const uint8_t *token, const uint8_t *string);
+cmdObj_t *cmd_add_string_P(const uint8_t *token, const uint8_t *string);
+cmdObj_t *cmd_add_message(const uint8_t *string);
+cmdObj_t *cmd_add_message_P(const uint8_t *string);
 void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags);
 
 // PERSISTENCE SUPPORT
@@ -267,8 +270,8 @@ uint8_t cmd_write_NVM_value(cmdObj_t *cmd);
 // TEXTMODE SUPPORT
 #ifdef __ENABLE_TEXTMODE
 void cmd_print(cmdObj_t *cmd);			// main entry point for formatted print
-uint8_t cmd_text_parser(char *str);
-char *_get_format(const index_t i, char *format);
+uint8_t cmd_text_parser(uint8_t *str);
+uint8_t *_get_format(const index_t i, uint8_t *format);
 void _print_nul(cmdObj_t *cmd);		// print nothing (no operation)
 void _print_ui8(cmdObj_t *cmd);		// print unit8_t value
 void _print_int(cmdObj_t *cmd);		// print uint32_t integer value
@@ -280,7 +283,7 @@ void cmd_print_text_multiline_formatted(void);
 #endif
 
 #ifdef __DEBUG
-void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, char *label);
+void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
 #endif
 
 /*** Unit tests ***/
@@ -294,4 +297,8 @@ void cfg_unit_tests(void);
 #define	CONFIG_UNITS
 #endif // __UNIT_TEST_CONFIG
 
-#endif
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _CONFIG_H_

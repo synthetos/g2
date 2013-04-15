@@ -93,17 +93,14 @@
  ***********************************************************************************
  * Depending on what's in your functions you may require more include files here
  */
-//#include <ctype.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <stdio.h>
-#include <stdbool.h>
-//#include <avr/pgmspace.h>
-
-#include "kinen.h"
 #include "tinyg2.h"
 #include "config.h"
 #include "config_app.h"
+#include "controller.h"
+
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 /***********************************************************************************
  **** PROGRAM MEMORY STRINGS AND STRING ARRAYS *************************************
@@ -125,6 +122,12 @@ const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
 //const char fmt_id[] PROGMEM = "[id]  TinyG ID%30s\n";
 
 #endif // __ENABLE_TEXTMODE
+
+/***********************************************************************************
+ **** CONFIG PARAMETERS ************************************************************
+ ***********************************************************************************/
+
+cfgParameters_t cfg; 				// application specific configuration parameters
 
 /***********************************************************************************
  **** CONFIG ARRAY  ****************************************************************
@@ -234,6 +237,10 @@ static uint8_t _get_htmp(cmdObj_t *cmd)
 {
 	cmd->value = heater.temperature;
 	cmd->type = TYPE_FLOAT;
-	return (SC_OK);
+	return (STAT_OK);
 }
 */
+
+#ifdef __cplusplus
+}
+#endif
