@@ -33,7 +33,7 @@
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.04		// added controller read_line
+#define TINYG_FIRMWARE_BUILD   	004.05		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 

@@ -52,11 +52,12 @@ typedef struct controllerState {		// main TG controller struct
 	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
-	uint8_t linelen;					// length of currently processing line
+	uint16_t linelen;					// length of currently processing line
+	uint16_t linemax;					// size of input buffer or some other size
 	uint8_t led_state;					// 0=off, 1=on
 	int32_t led_counter;				// a convenience for flashing an LED
-	uint16_t nvm_base_addr;				// NVM base address
-	uint16_t nvm_profile_base;			// NVM base address of current profile
+	uint32_t nvm_base_addr;				// NVM base address
+	uint32_t nvm_profile_base;			// NVM base address of current profile
 	uint8_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
 	uint8_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
 	uint8_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
