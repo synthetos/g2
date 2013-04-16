@@ -39,7 +39,7 @@ extern "C"{
 #define STATUS_MESSAGE_LEN 32			// status message string storage allocation
 #define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
 
-#define LED_NORMAL_COUNTER 1000			// blink rate for normal operation
+#define LED_NORMAL_COUNTER 100000			// blink rate for normal operation
 #define LED_ALARM_COUNTER 1000			// blink rate for alarm state
 
 typedef struct controllerState {		// main TG controller struct
