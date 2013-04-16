@@ -54,7 +54,7 @@
 #ifndef stepper_h
 #define stepper_h
 
-void st_init(void);			// initialize stepper subsystem
+void stepper_init(void);			// initialize stepper subsystem
 
 /*
 void st_disable(void);		// stop the steppers (step the stoppers)

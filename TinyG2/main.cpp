@@ -50,7 +50,6 @@ extern void SysTick_Handler( void )
 #define DEV_STDOUT 0
 #define DEV_STDERR 0
 
-extern controller_t controller_state;	// controller state structure
 static void _application_init(void);
 
 /******************** Application Code ************************/
@@ -92,7 +91,7 @@ static void _application_init(void)
 	// Don't change the ordering unless you understand this.
 
 	controller_init( &controller_state, DEV_STDIN, DEV_STDOUT, DEV_STDERR );
-	st_init(); 			// stepper subsystem 				- must precede gpio_init()
+	stepper_init(); 			// must precede gpio_init()
 
 /*
 	cli();

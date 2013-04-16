@@ -9,7 +9,6 @@
 #include "tinyg2.h"
 #include "xio.h"
 
-
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
@@ -50,7 +49,7 @@ status_t read_line (uint8_t *buffer, uint8_t *index, size_t size)
 				buffer[*index] = NUL;
 				return (STAT_OK);
 			}
-			buffer[*index] = (char)c;
+			buffer[*index] = (uint8_t)c;
 			continue;
 		}
 		return (STAT_EAGAIN);
@@ -58,7 +57,7 @@ status_t read_line (uint8_t *buffer, uint8_t *index, size_t size)
 	return (STAT_BUFFER_FULL);
 }
 
-size_t write(const uint8_t *buffer, size_t size)
+size_t write(uint8_t *buffer, size_t size)
 {
 //	SerialUSB.write(buffer, sizeof(buffer));
 	SerialUSB.write(buffer, size);

@@ -256,7 +256,7 @@ static inline void pinOutput(int pin, int val)
  *	  - high level interrupts must be enabled in main() once all inits are complete
  */
 
-void st_init()
+void stepper_init()
 {
 	memset(&st, 0, sizeof(st));			// clear all values, pointers and status
 	st.magic_start = MAGICNUM;

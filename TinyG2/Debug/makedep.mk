@@ -54,15 +54,13 @@ cmsis\src\startup_sam3xa.c
 
 cmsis\src\system_sam3xa.c
 
-config.c
+config.cpp
 
-config_app.c
+config_app.cpp
 
 controller.cpp
 
-json_parser.c
-
-kinen.c
+json_parser.cpp
 
 main.cpp
 

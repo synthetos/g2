@@ -26,8 +26,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef json_parser_h
-#define json_parser_h
+#ifndef _JSON_PARSER_H_
+#define _JSON_PARSER_H_
+
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 /* JSON array definitions / revisions */
 // for now there is only one JSON array in use - the footer
@@ -35,15 +39,15 @@
 
 #define FOOTER_REVISION 1
 
-#define JSON_OUTPUT_STRING_MAX (TEXT_BUFFER_LEN)
+#define JSON_OUTPUT_STRING_MAX (OUTPUT_BUFFER_LEN)
 #define JSON_MAX_DEPTH 4
 
 /*
  * Global Scope Functions
  */
 
-void js_json_parser(char *str);
-uint16_t js_serialize_json(cmdObj_t *cmd, char *out_buf);
+void js_json_parser(uint8_t *str);
+uint16_t js_serialize_json(cmdObj_t *cmd, uint8_t *out_buf);
 void js_print_json_object(cmdObj_t *cmd);
 void js_print_json_response(uint8_t status);
 
@@ -57,4 +61,8 @@ void js_unit_tests(void);
 #define	JSON_UNITS
 #endif // __UNIT_TEST_JSON
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // _JSON_PARSER_H_

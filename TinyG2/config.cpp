@@ -1,6 +1,5 @@
 /*
- * config.c - configuration handling and persistence; master function table
- * Part of Kinen project
+ * config.cpp - configuration handling and persistence; master function table
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -16,22 +15,33 @@
  */
 //#include <ctype.h>
 //#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
+//#include <string.h>
+//#include <stdio.h>
+//#include <stdbool.h>
 //#include <avr/pgmspace.h>
 
-#include "kinen.h"			// config reaches into almost everything
 #include "tinyg2.h"
 #include "config.h"
 #include "config_app.h"		// application-specific config stuff - follows config.h
 #include "json_parser.h"
+#include "controller.h"
 #include "util.h"
 #include "xio.h"
 //#include "report.h"
 //#include "system.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+/***********************************************************************************
+ **** STUCTURE ALLOCATIONS *********************************************************
+ ***********************************************************************************/
+
+cmdStr_t cmdStr;
+cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
 extern const cfgItem_t cfgArray[];	// found in contig_app.c
+
 
 /***********************************************************************************
  **** GENERIC STATICS **************************************************************
@@ -93,16 +103,16 @@ void cmd_persist(cmdObj_t *cmd)
 void cfg_init()
 {
 	cmdObj_t *cmd = cmd_reset_list();
-	kc.comm_mode = JSON_MODE;				// initial value until EEPROM is read
-//	kc.nvm_base_addr = NVM_BASE_ADDR;
-//	kc.nvm_profile_base = cfg.nvm_base_addr;
+	controller_state.comm_mode = JSON_MODE;				// initial value until EEPROM is read
+//	controller_state.nvm_base_addr = NVM_BASE_ADDR;
+//	controller_state.nvm_profile_base = cfg.nvm_base_addr;
 	cmd->value = true;
 	_set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
 }
 
 static uint8_t _set_defa(cmdObj_t *cmd) 
 {
-	if (cmd->value != true) { return (SC_OK);}	// failsafe. Must set true or no action occurs
+	if (cmd->value != true) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
 //	rpt_print_initializing_message();
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 //		if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_INITIALIZE) {
@@ -115,27 +125,27 @@ static uint8_t _set_defa(cmdObj_t *cmd)
 			cmd_persist(cmd);
 		}
 	}
-	return (SC_OK);
+	return (STAT_OK);
 }
 
 /***** Generic Internal Functions *******************************************
  * Generic gets()
- * _get_nul() - get nothing (returns SC_NOOP)
+ * _get_nul() - get nothing (returns STAT_NOOP)
  * _get_ui8() - get value as 8 bit uint8_t w/o unit conversion
  * _get_int() - get value as 32 bit integer w/o unit conversion
  * _get_dbl() - get value as double w/o unit conversion
  *
  * Generic sets()
- * _set_nul() - set nothing (returns SC_NOOP)
+ * _set_nul() - set nothing (returns STAT_NOOP)
  * _set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
  * _set_int() - set value as 32 bit integer w/o unit conversion
  * _set_dbl() - set value as double w/o unit conversion
  */
-uint8_t _set_nul(cmdObj_t *cmd) { return (SC_NOOP);}
+uint8_t _set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 uint8_t _get_nul(cmdObj_t *cmd) 
 { 
 	cmd->type = TYPE_NULL;
-	return (SC_NOOP);
+	return (STAT_NOOP);
 }
 
 uint8_t _get_ui8(cmdObj_t *cmd)
@@ -143,42 +153,42 @@ uint8_t _get_ui8(cmdObj_t *cmd)
 //	cmd->value = (double)*((uint8_t *)pgm_read_word(&cfgArray[cmd->index].target));
 	cmd->value = (double)*((uint8_t *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_INTEGER;
-	return (SC_OK);
+	return (STAT_OK);
 }
 uint8_t _set_ui8(cmdObj_t *cmd)
 {
 //	*((uint8_t *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
 	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_INTEGER;
-	return(SC_OK);
+	return(STAT_OK);
 }
 uint8_t _get_int(cmdObj_t *cmd)
 {
 //	cmd->value = (double)*((uint32_t *)pgm_read_word(&cfgArray[cmd->index].target));
 	cmd->value = (double)*((uint32_t *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_INTEGER;
-	return (SC_OK);
+	return (STAT_OK);
 }
 uint8_t _set_int(cmdObj_t *cmd)
 {
 //	*((uint32_t *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
 	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_INTEGER;
-	return(SC_OK);
+	return(STAT_OK);
 }
 uint8_t _get_dbl(cmdObj_t *cmd)
 {
 //	cmd->value = *((double *)pgm_read_word(&cfgArray[cmd->index].target));
 	cmd->value = *((double *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_FLOAT;
-	return (SC_OK);
+	return (STAT_OK);
 }
 uint8_t _set_dbl(cmdObj_t *cmd)
 {
 //	*((double *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
 	*((double *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_FLOAT;
-	return(SC_OK);
+	return(STAT_OK);
 }
 
 /********************************************************************************
@@ -202,8 +212,8 @@ uint8_t _set_dbl(cmdObj_t *cmd)
 
 uint8_t _get_grp(cmdObj_t *cmd)
 {
-	char *parent_group = cmd->token;		// token in the parent cmd object is the group
-	char group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
+	uint8_t *parent_group = cmd->token;		// token in the parent cmd object is the group
+	uint8_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
 	cmd->type = TYPE_PARENT;				// make first object the parent 
 //	for (index_t i=0; i<=CMD_INDEX_END_SINGLES; i++) {
 	for (index_t i=0; cmd_index_is_single(i); i++) {
@@ -213,7 +223,7 @@ uint8_t _get_grp(cmdObj_t *cmd)
 		(++cmd)->index = i;
 		cmd_get_cmdObj(cmd);
 	}
-	return (SC_OK);
+	return (STAT_OK);
 }
 
 /*
@@ -228,7 +238,7 @@ uint8_t _get_grp(cmdObj_t *cmd)
 
 uint8_t _set_grp(cmdObj_t *cmd)
 {
-	if (kc.comm_mode == TEXT_MODE) return (SC_UNRECOGNIZED_COMMAND);
+	if (controller_state.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
 	for (uint8_t i=0; i<CMD_MAX_OBJECTS; i++) {
 		if ((cmd = cmd->nx) == NULL) break;
 		if (cmd->type == TYPE_EMPTY) break;
@@ -239,7 +249,7 @@ uint8_t _set_grp(cmdObj_t *cmd)
 			cmd_persist(cmd);
 		}
 	}
-	return (SC_OK);
+	return (STAT_OK);
 }
 
 /*
@@ -248,9 +258,9 @@ uint8_t _set_grp(cmdObj_t *cmd)
  *	This little function deals with the fact that some groups don't use the parent 
  *	token as a prefix to the child elements; SR being a good example.
  */
-uint8_t cmd_group_is_prefixed(char *group)
+uint8_t cmd_group_is_prefixed(uint8_t *group)
 {
-	if (strstr("sr",group) != NULL) {	// you can extend like this: "sr,sys,xyzzy"
+	if (strstr("sr", group) != NULL) {	// you can extend like this: "sr,sys,xyzzy"
 		return (false);
 	}
 	return (true);
@@ -269,10 +279,10 @@ uint8_t cmd_group_is_prefixed(char *group)
  * cmd_get_index() is the most expensive routine in the whole config. It does a linear table scan 
  * of the PROGMEM strings, which of course could be further optimized with indexes or hashing.
  */
-index_t cmd_get_index(const char *group, const char *token)
+index_t cmd_get_index(const uint8_t *group, const uint8_t *token)
 {
-	char c;
-	char str[CMD_TOKEN_LEN+1];
+	uint8_t c;
+	uint8_t str[CMD_TOKEN_LEN+1];
 	strcpy(str, group);
 	strcat(str, token);
 
@@ -397,25 +407,26 @@ cmdObj_t *cmd_reset_list()					// clear the header and response body
 	return (cmd_body);						// this is a convenience for calling routines
 }
 
-uint8_t cmd_copy_string(cmdObj_t *cmd, const char *src)
+uint8_t cmd_copy_string(cmdObj_t *cmd, const uint8_t *src)
 {
-	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (SC_BUFFER_FULL);}
-	char *dst = &cmdStr.string[cmdStr.wp];
+//	if ((cmdStr.wp + strlen((const char *)src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
+	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
+	uint8_t *dst = &cmdStr.string[cmdStr.wp];
 	strcpy(dst, src);						// copy string to current head position
 	cmdStr.wp += strlen(src)+1;				// advance head for next string
-	cmd->stringp = (char (*)[])dst;
-	return (SC_OK);
+	cmd->stringp = (uint8_t (*)[])dst;
+	return (STAT_OK);
 }
 
-uint8_t cmd_copy_string_P(cmdObj_t *cmd, const char *src_P)
+uint8_t cmd_copy_string_P(cmdObj_t *cmd, const uint8_t *src_P)
 {
-	char buf[CMD_SHARED_STRING_LEN];
+	uint8_t buf[CMD_SHARED_STRING_LEN];
 //	strncpy_P(buf, src_P, CMD_SHARED_STRING_LEN);
 	strncpy(buf, src_P, CMD_SHARED_STRING_LEN);
 	return (cmd_copy_string(cmd, buf));
 }
 
-cmdObj_t *cmd_add_object(char *token)		// add an object to the body using a token
+cmdObj_t *cmd_add_object(const uint8_t *token)		// add an object to the body using a token
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
@@ -424,14 +435,14 @@ cmdObj_t *cmd_add_object(char *token)		// add an object to the body using a toke
 			continue;
 		}
 		// load the index from the token or die trying
-		if ((cmd->index = cmd_get_index("",token)) == NO_MATCH) { return (NULL);}
+		if ((cmd->index = cmd_get_index((const uint8_t*)"", token)) == NO_MATCH) { return (NULL);}
 		cmd_get_cmdObj(cmd);				// populate the object from the index
 		return (cmd);
 	}
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_integer(char *token, const uint32_t value)// add an integer object to the body
+cmdObj_t *cmd_add_integer(const uint8_t *token, const uint32_t value)// add an integer object to the body
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
@@ -447,7 +458,7 @@ cmdObj_t *cmd_add_integer(char *token, const uint32_t value)// add an integer ob
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_float(char *token, const double value)	// add a float object to the body
+cmdObj_t *cmd_add_float(const uint8_t *token, const double value)	// add a float object to the body
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
@@ -463,7 +474,7 @@ cmdObj_t *cmd_add_float(char *token, const double value)	// add a float object t
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_string(char *token, const char *string)	// add a string object to the body
+cmdObj_t *cmd_add_string(const uint8_t *token, const uint8_t *string)	// add a string object to the body
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
@@ -472,33 +483,33 @@ cmdObj_t *cmd_add_string(char *token, const char *string)	// add a string object
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
-		if (cmd_copy_string(cmd, string) != SC_OK) { return (NULL);}
-		cmd->index = cmd_get_index("", cmd->token);
+		if (cmd_copy_string(cmd, string) != STAT_OK) { return (NULL);}
+		cmd->index = cmd_get_index((const uint8_t *)"", cmd->token);
 		cmd->type = TYPE_STRING;
 		return (cmd);
 	}
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_string_P(char *token, const char *string)
+cmdObj_t *cmd_add_string_P(const uint8_t *token, const uint8_t *string)
 {
-	char message[CMD_MESSAGE_LEN]; 
+	uint8_t message[CMD_MESSAGE_LEN]; 
 //	sprintf_P(message, string);
-	sprintf(message, string);
-	return(cmd_add_string(token, message));
+	sprintf((char *)message, (const char *)string);
+	return(cmd_add_string(token, (uint8_t *)message));
 }
 
-cmdObj_t *cmd_add_message(const char *string)	// conditionally add a message object to the body
+cmdObj_t *cmd_add_message(const uint8_t *string)	// conditionally add a message object to the body
 {
-	return(cmd_add_string("msg", string));
+	return(cmd_add_string((const uint8_t *)"msg", string));
 }
 
-cmdObj_t *cmd_add_message_P(const char *string)	// conditionally add a message object to the body
+cmdObj_t *cmd_add_message_P(const uint8_t *string)	// conditionally add a message object to the body
 {
-	char message[CMD_MESSAGE_LEN]; 
+	uint8_t message[CMD_MESSAGE_LEN]; 
 //	sprintf_P(message, string);
-	sprintf(message, string);
-	return(cmd_add_string("msg", message));
+	sprintf((char *)message, (const char *)string);
+	return(cmd_add_string((const uint8_t *)"msg", message));
 }
 
 /**** cmd_print_list() - print cmd_array as JSON or text ****
@@ -532,7 +543,7 @@ void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags)
 
 void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags)
 {
-	if (kc.comm_mode == JSON_MODE) {
+	if (controller_state.comm_mode == JSON_MODE) {
 		switch (json_flags) {
 			case JSON_NO_PRINT: { break; } 
 			case JSON_OBJECT_FORMAT: { js_print_json_object(cmd_body); break; }
@@ -565,7 +576,7 @@ uint8_t cmd_read_NVM_value(cmdObj_t *cmd)
 //	uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
 //	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
 //	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
-	return (SC_OK);
+	return (STAT_OK);
 }
 
 uint8_t cmd_write_NVM_value(cmdObj_t *cmd)
@@ -579,97 +590,10 @@ uint8_t cmd_write_NVM_value(cmdObj_t *cmd)
 //		uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
 //		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
 //	}
-	return (SC_OK);
+	return (STAT_OK);
 }
 
-/****************************************************************************
- ***** Config Unit Tests ****************************************************
- ****************************************************************************/
-
-#ifdef __UNIT_TESTS
-#ifdef __UNIT_TEST_CONFIG
-
-#define NVMwr(i,v) { cmd.index=i; cmd.value=v; cmd_write_NVM_value(&cmd);}
-#define NVMrd(i)   { cmd.index=i; cmd_read_NVM_value(&cmd); printf("%f\n",cmd.value);}
-
-void cfg_unit_tests()
-{
-
-// NVM tests
-/*	cmdObj_t cmd;
-	NVMwr(0, 329.01)
-	NVMwr(1, 111.01)
-	NVMwr(2, 222.02)
-	NVMwr(3, 333.03)
-	NVMwr(4, 444.04)
-	NVMwr(10, 10.10)
-	NVMwr(100, 100.100)
-	NVMwr(479, 479.479)
-
-	NVMrd(0)
-	NVMrd(1)
-	NVMrd(2)
-	NVMrd(3)
-	NVMrd(4)
-	NVMrd(10)
-	NVMrd(100)
-	NVMrd(479)
-*/
-
-// config table tests
-
-	index_t i;
-//	double val;
-
-//	_print_configs("$", NUL);					// no filter (show all)
-//	_print_configs("$", 'g');					// filter for general parameters
-//	_print_configs("$", '1');					// filter for motor 1
-//	_print_configs("$", 'x');					// filter for x axis
-
-	i = cmd_get_index("fb");
-	i = cmd_get_index("xfr");
-	i = cmd_get_index("g54");
-
-//	i = _get_pos_axis(55);
-//	i = _get_pos_axis(73);
-//	i = _get_pos_axis(93);
-//	i = _get_pos_axis(113);
-
-/*
-	for (i=0; i<CMD_MAX_INDEX; i++) {
-
-		cmd_get(&cmd);
-
-		cmd.value = 42;
-		cmd_set(&cmd);
-
-		val = _get_dbl_value(i);
-		cmd_get_token(i, cmd.token);
-
-//		_get_friendly(i, string);
-		_get_format(i, cmd.vstring);
-		_get_axis(i);							// uncomment main function to test
-		_get_motor(i);
-		cmd_set(i, &cmd);
-		cmd_print(i);
-	}
-
-	_parse_config_string("$1po 1", &c);			// returns a number
-	_parse_config_string("XFR=1200", &c);		// returns a number
-	_parse_config_string("YFR 1300", &c);		// returns a number
-	_parse_config_string("zfr	1400", &c);		// returns a number
-	_parse_config_string("afr", &c);			// returns a null
-	_parse_config_string("Bfr   ", &c);			// returns a null
-	_parse_config_string("cfr=wordy", &c);		// returns a null
-
-//	i = cfg_get_config_index("gc");
-//	i = cfg_get_config_index("gcode");
-//	i = cfg_get_config_index("c_axis_mode");
-//	i = cfg_get_config_index("AINT_NOBODY_HOME");
-	i = cfg_get_config_index("firmware_version");
-*/
+#ifdef __cplusplus
 }
-
-#endif
-#endif
+#endif // __cplusplus
 

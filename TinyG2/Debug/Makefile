@@ -78,11 +78,10 @@ C_SRCS +=  \
 ../arduino/WString.cpp \
 ../cmsis/src/startup_sam3xa.c \
 ../cmsis/src/system_sam3xa.c \
-../config.c \
-../config_app.c \
+../config.cpp \
+../config_app.cpp \
 ../controller.cpp \
-../json_parser.c \
-../kinen.c \
+../json_parser.cpp \
 ../main.cpp \
 ../platform/atmel_sam/libsam/source/adc.c \
 ../platform/atmel_sam/libsam/source/adc12_sam3u.c \
@@ -154,7 +153,6 @@ config.o \
 config_app.o \
 controller.o \
 json_parser.o \
-kinen.o \
 main.o \
 platform/atmel_sam/libsam/source/adc.o \
 platform/atmel_sam/libsam/source/adc12_sam3u.o \
@@ -220,7 +218,6 @@ config.o \
 config_app.o \
 controller.o \
 json_parser.o \
-kinen.o \
 main.o \
 platform/atmel_sam/libsam/source/adc.o \
 platform/atmel_sam/libsam/source/adc12_sam3u.o \
@@ -286,7 +283,6 @@ config.d \
 config_app.d \
 controller.d \
 json_parser.d \
-kinen.d \
 main.d \
 platform/atmel_sam/libsam/source/adc.d \
 platform/atmel_sam/libsam/source/adc12_sam3u.d \
@@ -352,7 +348,6 @@ config.d \
 config_app.d \
 controller.d \
 json_parser.d \
-kinen.d \
 main.d \
 platform/atmel_sam/libsam/source/adc.d \
 platform/atmel_sam/libsam/source/adc12_sam3u.d \
@@ -523,8 +518,6 @@ LIB_DEP+=
 
 
 
-
-
 arduino/%.o: ../arduino/%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
@@ -544,12 +537,6 @@ arduino/USB/%.o: ../arduino/USB/%.cpp
 	@echo Finished building: $<
 
 cmsis/src/%.o: ../cmsis/src/%.c
-	@echo Building file: $<
-	@echo Invoking: ARM/GNU C Compiler : 
-	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 
-	@echo Finished building: $<
-
-./%.o: .././%.c
 	@echo Building file: $<
 	@echo Invoking: ARM/GNU C Compiler : 
 	$(QUOTE)C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\arm-none-eabi-gcc.exe$(QUOTE) -mthumb -D__SAM3X8E__ -DF_CPU=84000000UL  -I"..\cmsis" -I"..\cmsis\CMSIS\Include" -I"..\cmsis\Device\ATMEL" -I"..\cmsis\Device\ATMEL\sam3xa\include" -I"..\arduino" -I"..\Arduino\USB" -I"..\variants" -I"..\motate" -I"..\platform\atmel_sam\libsam" -I"..\platform\atmel_sam\libsam\include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\CMSIS\Include" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL" -I"C:\PROGRA~1\Atmel\ATMELT~1\ARMGCC~1\Native\472~1.87\CMSIS_~1\Device\ATMEL\sam3xa\include"  -O0 -ffunction-sections -mlong-calls -g3 -Wall -mcpu=cortex-m3 -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o"$@" "$<" 

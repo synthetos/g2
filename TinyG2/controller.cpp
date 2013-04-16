@@ -36,7 +36,6 @@
 /*
 #include <ctype.h>				// for parsing
 
-#include "tinyg.h"				// #1 unfortunately, there are some dependencies
 #include "config.h"				// #2
 #include "settings.h"
 #include "json_parser.h"
@@ -54,7 +53,7 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
 controller_t controller_state;	// controller state structure
 
@@ -174,13 +173,40 @@ static status_t _command_dispatch(controller_t *cs)
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 
-	status_t status;
-
-	// read input line or return if not a completed line
-	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
-		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
+	int c;
+	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
+		SerialUSB.write(c);
 	}
-	write (cs->in_buf, cs->linelen);
+		
+/*	status_t status;
+	cs->linemax = sizeof(cs->in_buf);
+
+	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
+		if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
+//		if ((c = read_char()) != _FDEV_ERR) {
+			cs->in_buf[cs->linelen] = (uint8_t)c;
+			if (c == LF) {
+				cs->linelen++;
+				cs->in_buf[cs->linelen] = NUL;
+	
+				for (int i=0; i<cs->linelen; i++) {
+					SerialUSB.write(c);
+				}
+//				write (cs->in_buf, cs->linelen);
+//				SerialUSB.write(cs->in_buf, cs->linelen);
+				return (STAT_OK);
+			}
+			continue;
+		}
+		return (STAT_EAGAIN);
+	}
+	return (STAT_BUFFER_FULL);
+*/
+	// read input line or return if not a completed line
+//	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
+//		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
+//	}
+//	write (cs->in_buf, cs->linelen);
 	return (STAT_OK);
 }
 

@@ -88,18 +88,25 @@
  *	index by calling cmd_get_index(). This also validates the token and group if no lookup exists.
  */
 
+#ifndef _CONFIG_APP_H_
+#define _CONFIG_APP_H_
+
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /***********************************************************************************
  **** APPLICATION_SPECIFIC CONFIG STRUCTURE(S) *************************************
  ***********************************************************************************
+
  * Define the cfg structures(s) used by the application
  */
-typedef struct cfgParameters {
-	double fw_build;				// tinyg firmware build number
-	double fw_version;				// tinyg firmware version number
-	double hw_version;				// tinyg hardware compatibility
-
-} cfgParameters_t;
-cfgParameters_t cfg; 				// declared in the header to make it global
+ typedef struct cfgParameters {
+	double fw_build;			// tinyg firmware build number
+	double fw_version;			// tinyg firmware version number
+	double hw_version;			// tinyg hardware compatibility
+ } cfgParameters_t;
+extern cfgParameters_t cfg; 	// declared in config_app.cpp
 
 /***********************************************************************************
  **** PROGRAM MEMORY STRINGS AND STRING ARRAYS *************************************
@@ -126,5 +133,9 @@ static uint8_t _get_htmp(cmdObj_t *cmd)
 	return (SC_OK);
 }
 */
+#ifdef __cplusplus
+}
+#endif
 
+#endif //_CONFIG_APP_H_
 

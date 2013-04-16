@@ -21,7 +21,7 @@
 
 int read_char (void);
 status_t read_line (uint8_t *buffer, uint8_t *index, size_t size);
-size_t write(const uint8_t *buffer, size_t size);
+size_t write(uint8_t *buffer, size_t size);
 
 /* Some useful ASCII definitions */
 
