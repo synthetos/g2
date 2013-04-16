@@ -16,6 +16,10 @@
 
 #include "tinyg2.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 #define _FDEV_ERR -1
 #define _FDEV_EOF -2
 
@@ -43,5 +47,8 @@ size_t write(uint8_t *buffer, size_t size);
 #define DEL (char)0x7F		//  DEL(ete)
 #define Q_EMPTY (char)0xFF	// signal no character
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _XIO_H_

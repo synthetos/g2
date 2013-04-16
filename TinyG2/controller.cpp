@@ -173,12 +173,37 @@ static status_t _command_dispatch(controller_t *cs)
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 
-	int c;
-	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
-		SerialUSB.write(c);
+//	int c;
+//	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
+//		SerialUSB.write(c);
+//	}
+
+	status_t status;
+	uint8_t in_buf[255];
+	uint8_t linelen = 0;
+	uint8_t linemax = sizeof(in_buf);
+
+	for (int c=0; linelen < linemax; (linelen)++ ) {
+		if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
+			in_buf[linelen] = (uint8_t)c;
+			if (c == LF) {
+				linelen++;
+				in_buf[linelen] = NUL;
+
+				for (int i=0; i<linelen; i++) {
+					SerialUSB.write(c);
+				}
+//				write (cs->in_buf, cs->linelen);
+//				SerialUSB.write(cs->in_buf, cs->linelen);
+				return (STAT_OK);
+			}
+			continue;
+		}
+		return (STAT_EAGAIN);
 	}
-		
-/*	status_t status;
+	return (STAT_BUFFER_FULL);
+
+/*
 	cs->linemax = sizeof(cs->in_buf);
 
 	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
@@ -202,6 +227,7 @@ static status_t _command_dispatch(controller_t *cs)
 	}
 	return (STAT_BUFFER_FULL);
 */
+
 	// read input line or return if not a completed line
 //	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
 //		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
@@ -333,4 +359,4 @@ uint8_t _system_assertions()
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif

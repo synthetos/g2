@@ -25,7 +25,7 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino arduino/USB variants
+SOURCE_DIRS = . arduino variants
 FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
 
 # List all user directories here
@@ -60,9 +60,9 @@ CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align -Wpacked 
+#CFLAGS += -Wcast-align
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
@@ -80,8 +80,8 @@ CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn -Wpacked 
+CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn
 #CPPFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
@@ -216,7 +216,6 @@ FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
 INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
-LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
 CFLAGS   += -g $(OPTIMIZATION) $(INCLUDES)
@@ -225,21 +224,12 @@ ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
 ifeq ($(VERBOSE),2)
-define NEWLINE_ONLY
-
-
-endef
-define NEWLINE_TAB
-
-	
-endef
-
-$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
-$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
-$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
-$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
-$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
-$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
+$(warning INCLUDES: $(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+$(warning LIBRARIES: $(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
+$(warning SOURCE DIRECTORIES: $(SOURCE_DIRS))
+$(warning C SOURCES: $(C_SOURCES))
+$(warning C++ SOURCES: $(CXX_SOURCES))
+$(warning LINK FIRST SOURCES: $(FIRST_LINK_SOURCES))
 endif
 
 
@@ -257,8 +247,6 @@ MK_DIRS =   $(shell                              \
               do                                 \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
-
-$(eval $(DEVICE_RULES))
 
 define RULES
 OUTDIR = $(OBJ)/$(1)

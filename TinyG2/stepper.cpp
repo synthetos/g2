@@ -145,6 +145,7 @@
 #include "motatePins.h"
 using namespace Motate;
 
+/*
 
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num>
@@ -153,12 +154,11 @@ struct Stepper {
 	OutputPin<dir_num> dir;
 	// enable ??
 };
-Stepper<motor_1_step_pin_num, motor_1_dir_pin_num> motor_1;
-Stepper<motor_2_step_pin_num, motor_2_dir_pin_num> motor_2;
-Stepper<motor_3_step_pin_num, motor_3_dir_pin_num> motor_3;
-OutputPin<enable_pin_num> enable;
+Stepper<x_step_pin_num, x_dir_pin_num> x_motor;
+Stepper<y_step_pin_num, y_dir_pin_num> y_motor;
+Stepper<z_step_pin_num, z_dir_pin_num> z_motor;
+OutputPin<8> enable;
 
-/* These conflict: 
 Pin5 dir_1(kOutput);			// direction channel 1
 Pin6 dir_2(kOutput);			// direction channel 2
 Pin7 dir_3(kOutput);			// direction channel 3
@@ -280,6 +280,38 @@ static inline void pinOutput(int pin, int val)
 	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
 }
 
+void ISR_Handler_DDA(void) 
+{
+	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+/*
+	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
+		x_motor.step.set();		// turn step bit on
+	}
+	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
+		y_motor.step.set();
+	}
+	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
+		z_motor.step.set();
+	}
+	x_motor.step.clear();
+	y_motor.step.clear();
+	z_motor.step.clear();
+
+//	if (temp == LOW) {
+//		temp = HIGH;
+//	} else {
+//		temp = LOW;
+//	}
+//	digitalWrite(3,temp);
+*/
+}
+
+//	_load_move();
+//}
+
 /*
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
@@ -287,6 +319,7 @@ static inline void pinOutput(int pin, int val)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
+/*
 void ISR_Handler_DDA(void) 
 {
 	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
@@ -296,29 +329,29 @@ void ISR_Handler_DDA(void)
 	
 	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
 		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		motor_1.step.set();		// turn step bit on
+		step_1.set();		// turn step bit on
 //		m1_flag++;
 	}
 	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
 		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		motor_2.step.set();
+		step_2.set();
 //		m2_flag++;
 	}
 	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
 		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		motor_3.step.set();
+		step_3.set();
 //		m3_flag++;
 	}
 //	if (m1_flag != false) {	step_1.clear();}
 //	if (m2_flag != false) {	step_2.clear();}
 //	if (m3_flag != false) {	step_3.clear();}
-	motor_1.step.clear();
-	motor_2.step.clear();
-	motor_3.step.clear();
-
-	if (--st.timer_ticks_downcount == 0) {			// end move
-		enable.set();								// disable DDA timer
+	step_1.clear();
+	step_2.clear();
+	step_3.clear();
+*/	
 /*
+	if (--st.timer_ticks_downcount == 0) {			// end move
+//		enable.set();								// disable DDA timer
 		// power-down motors if this feature is enabled
 		if (cfg.m[MOTOR_1].power_mode == true) {
 			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
@@ -333,9 +366,9 @@ void ISR_Handler_DDA(void)
 			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
 		}
 		_load_move();							// load the next move
-*/
 	}
-}
+*/
+//}
 
 /* 
  * st_disable() - stop the steppers. Requires re-init to recover

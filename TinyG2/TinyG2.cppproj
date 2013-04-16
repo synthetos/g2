@@ -26,10 +26,10 @@
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolNumber>000028014099</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1854</port>
+        <port>1885</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
@@ -65,8 +65,8 @@
     <BootSegment>0</BootSegment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <ExternalMakeFilePath>Z:\Alden\Projects\proj64_ArduinoDue\g2\TinyG2\Makefile</ExternalMakeFilePath>
+    <UsesExternalMakeFile>False</UsesExternalMakeFile>
+    <ExternalMakeFilePath>Z:\Alden\Projects\proj64_ArduinoDue\g2\HW\Makefile</ExternalMakeFilePath>
     <ToolchainSettings>
       <ArmGccCpp>
         <armgcc.common.general.symbols>__SAM3X8E__</armgcc.common.general.symbols>
@@ -152,9 +152,6 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <OutputDirectory>Z:\Alden\Projects\proj64_ArduinoDue\g2\TinyG2</OutputDirectory>
-    <BuildTarget>all</BuildTarget>
-    <CleanTarget>clean</CleanTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
