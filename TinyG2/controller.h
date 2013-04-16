@@ -30,7 +30,7 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
 #define TG_FLAG_PROMPTS_bm (1<<0)		// prompt enabled if set
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)

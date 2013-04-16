@@ -9,6 +9,10 @@
 #include "tinyg2.h"
 #include "xio.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
@@ -63,3 +67,16 @@ size_t write(uint8_t *buffer, size_t size)
 	SerialUSB.write(buffer, size);
 	return (size);
 }
+
+/*
+ * read_char() - returns single char or -1 (_FDEV_ERR) is none available
+ */
+int read_char (void)
+{
+	return SerialUSB.read();
+}
+
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
