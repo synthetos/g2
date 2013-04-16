@@ -93,9 +93,9 @@ DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
 
-LIBS     += -lgcc -lc
+DEVICE_LIBS          = gcc c
 
-LIB_PATH += -L=/lib/thumb2
+# DEVICE_LIB_DIRS = /lib/thumb2
 #LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
 # FIXME: Assumes all sams are Dues
