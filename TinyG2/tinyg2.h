@@ -29,6 +29,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <MotatePins.h>
+
 #include "Arduino.h"
 
 // NOTE: This header requires <stdio.h> be included previously
@@ -72,7 +74,8 @@ void tg_setup(void);
  * TinyG application-specific prototypes, defines and globals
  */
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
-#define INDICATOR_LED 13
+Motate::pin_number indicator_led_pin_num = 13;
+static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 4				// number of motors on the board

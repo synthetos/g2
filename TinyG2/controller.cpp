@@ -171,7 +171,7 @@ static void _controller_HSM(controller_t *cs)
 
 static status_t _command_dispatch(controller_t *cs)
 {
-//	printf("printf test2 %d %f...\n", 10, 10.003);
+	printf("printf test2 %d %f...\n", 10, 10.003);
 
 	int c;
 	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
@@ -270,10 +270,9 @@ static status_t _command_dispatch(controller_t *cs)
 
 static status_t _normal_idler( controller_t *cs )
 {
-	if (--(cs->led_counter) < 0) {
-		cs->led_counter = LED_NORMAL_COUNTER;
-		cs->led_state ^= 1;
-		digitalWrite(INDICATOR_LED, cs->led_state);
+	if (GetTickCount() > cs->led_counter) {
+		cs->led_counter += LED_NORMAL_COUNTER;
+		IndicatorLed.toggle();
 	}
 	return (STAT_OK);
 }
@@ -292,8 +291,7 @@ static uint8_t _alarm_idler( controller *cs )
 
 	if (--(cs->led_counter) < 0) {
 		cs->led_counter = LED_ALARM_COUNTER;
-		cs->led_state ^= 1;
-		digitalWrite(INDICATOR_LED, cs->led_state);
+        IndicatorLed.toggle();
 	}
 	return (TG_EAGAIN);	 // EAGAIN prevents any other actions from running
 }
