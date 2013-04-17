@@ -26,17 +26,18 @@
     <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
-      <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolName>J-Link</ToolName>
+      <ToolNumber>
+      </ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>2366</port>
+        <port>1151</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>SWD</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>4000000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -45,6 +46,7 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
+          <SwdClock>0</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -153,7 +155,7 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <BuildTarget>all TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -234,7 +236,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>all TinyG2.elf COLOR=0</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
   </PropertyGroup>
@@ -695,6 +697,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="motate\keywords.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="TinyG2.elf">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>
