@@ -47,6 +47,8 @@ CPPFLAGS :=
 # List ASM source files here
 ASRC =
 
+DEFAULT_MEMORY = flash
+
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
 
@@ -171,6 +173,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB     = $(CROSS_COMPILE)gdb
 NM      = $(CROSS_COMPILE)nm
 RM      = rm
+CP      = cp
 
 
 # ---------------------------------------------------------------------------------------
@@ -195,7 +198,7 @@ ASFLAGS =
 # Linker Flags
 
 LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
-LDFLAGS += -nostartfiles
+LDFLAGS += -nostartfiles -mcpu=cortex-m3
 #LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
 
 
@@ -219,9 +222,9 @@ INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += -g $(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += -g $(OPTIMIZATION) $(INCLUDES)
-ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+CFLAGS   += -g3 $(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += -g3 $(OPTIMIZATION) $(INCLUDES)
+ASFLAGS  += -g3 $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
 ifeq ($(VERBOSE),2)
@@ -248,7 +251,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(BIN) $(OBJ) $(MEMORIES)
+all: $(BIN) $(OBJ) $(DEFAULT_MEMORY) $(PROJECT).elf
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -259,6 +262,11 @@ MK_DIRS =   $(shell                              \
               done)
 
 $(eval $(DEVICE_RULES))
+
+
+#-------------------------------------------------------------------------------
+#		Per-Memory Rules Block
+#-------------------------------------------------------------------------------
 
 define RULES
 OUTDIR = $(OBJ)/$(1)
@@ -323,7 +331,18 @@ endef
 #$(foreach MEMORY, $(MEMORIES), $(warning $(call RULES,$(MEMORY))))
 $(foreach MEMORY, $(MEMORIES), $(eval $(call RULES,$(MEMORY))))
 
+
+#-------------------------------------------------------------------------------
+#		Default $(PROJECT).elf, and clean
+#-------------------------------------------------------------------------------
+
+$(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
+	$(CP) $< $@
+
+$(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
+	$(CP) $< $@
+
 clean:
-	-$(RM) -fR $(OBJ) $(BIN)
+	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf
 
 # *** EOF ***

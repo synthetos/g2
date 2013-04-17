@@ -15,3 +15,4 @@ bin/
 *.xcodeproj/project.xcworkspace/xcuserdata/rob.xcuserdatad/UserInterfaceState.xcuserstate
 .DS_Store
 TcfTransactionLog.csv
+TinyG2/TinyG2.elf
