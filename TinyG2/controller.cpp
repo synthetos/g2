@@ -171,7 +171,7 @@ static void _controller_HSM(controller_t *cs)
 
 static status_t _command_dispatch(controller_t *cs)
 {
-//	printf("printf test2 %d %f...\n", 10, 10.003);
+	printf("printf test2 %d %f...\n", 10, 10.003);
 
 	int c;
 	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking

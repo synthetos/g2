@@ -2,18 +2,30 @@
  * tinyg2.h - tinyg2 main header - Application GLOBALS 
  * Part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr. 
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify 
+ * it under the terms of the GNU General Public License, version 2 as published by the 
+ * Free Software Foundation. You should have received a copy of the GNU General Public 
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * As a special exception, you may use the software as part of a software library 
+ * without restriction. Specifically, if other files instantiate templates or use macros
+ * or inline functions from the software, or you compile the software and link it with 
+ * other files to produce an executable, the software does not by itself cause the 
+ * resulting executable to be covered by the GNU General Public License. This exception 
+ * does not however invalidate any other reasons why the executable file might be covered 
+ * by the GNU General Public License. 
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY 
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
- * Is this code over documented? Possibly. 
+/* Is this code over documented? Possibly. 
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
@@ -33,7 +45,7 @@
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.05		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_BUILD   	004.06		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
