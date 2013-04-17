@@ -25,7 +25,7 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino variants
+SOURCE_DIRS = . arduino arduino/USB variants
 FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
 
 # List all user directories here
@@ -47,6 +47,8 @@ CPPFLAGS :=
 # List ASM source files here
 ASRC =
 
+DEFAULT_MEMORY = flash
+
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
 
@@ -60,9 +62,9 @@ CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align
+#CFLAGS += -Wcast-align -Wpacked 
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
@@ -80,8 +82,8 @@ CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn
+CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
@@ -171,6 +173,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB     = $(CROSS_COMPILE)gdb
 NM      = $(CROSS_COMPILE)nm
 RM      = rm
+CP      = cp
 
 
 # ---------------------------------------------------------------------------------------
@@ -195,7 +198,7 @@ ASFLAGS =
 # Linker Flags
 
 LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
-LDFLAGS += -nostartfiles
+LDFLAGS += -nostartfiles -mcpu=cortex-m3
 #LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
 
 
@@ -216,20 +219,30 @@ FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
 INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += -g $(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += -g $(OPTIMIZATION) $(INCLUDES)
-ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+CFLAGS   += -g3 $(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += -g3 $(OPTIMIZATION) $(INCLUDES)
+ASFLAGS  += -g3 $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
 ifeq ($(VERBOSE),2)
-$(warning INCLUDES: $(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
-$(warning LIBRARIES: $(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
-$(warning SOURCE DIRECTORIES: $(SOURCE_DIRS))
-$(warning C SOURCES: $(C_SOURCES))
-$(warning C++ SOURCES: $(CXX_SOURCES))
-$(warning LINK FIRST SOURCES: $(FIRST_LINK_SOURCES))
+define NEWLINE_ONLY
+
+
+endef
+define NEWLINE_TAB
+
+	
+endef
+
+$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
+$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
+$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
+$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
 endif
 
 
@@ -238,7 +251,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(BIN) $(OBJ) $(MEMORIES)
+all: $(BIN) $(OBJ) $(DEFAULT_MEMORY) $(PROJECT).elf
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -247,6 +260,13 @@ MK_DIRS =   $(shell                              \
               do                                 \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
+
+$(eval $(DEVICE_RULES))
+
+
+#-------------------------------------------------------------------------------
+#		Per-Memory Rules Block
+#-------------------------------------------------------------------------------
 
 define RULES
 OUTDIR = $(OBJ)/$(1)
@@ -311,7 +331,18 @@ endef
 #$(foreach MEMORY, $(MEMORIES), $(warning $(call RULES,$(MEMORY))))
 $(foreach MEMORY, $(MEMORIES), $(eval $(call RULES,$(MEMORY))))
 
+
+#-------------------------------------------------------------------------------
+#		Default $(PROJECT).elf, and clean
+#-------------------------------------------------------------------------------
+
+$(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
+	$(CP) $< $@
+
+$(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
+	$(CP) $< $@
+
 clean:
-	-$(RM) -fR $(OBJ) $(BIN)
+	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf
 
 # *** EOF ***

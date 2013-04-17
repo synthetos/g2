@@ -9,10 +9,6 @@
 #include "tinyg2.h"
 #include "xio.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
@@ -43,7 +39,7 @@ int read_char (void)
  *	  STAT_FILE_SIZE_EXCEEDED returned if the starting index exceeds the size.
  */
 
-status_t read_line (uint8_t *buffer, uint8_t *index, size_t size)
+status_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 
@@ -67,17 +63,3 @@ size_t write(uint8_t *buffer, size_t size)
 	SerialUSB.write(buffer, size);
 	return (size);
 }
-
-/*
- * read_char() - returns single char or -1 (_FDEV_ERR) is none available
- */
-/*
-int read_char (void)
-{
-	return SerialUSB.read();
-}
-*/
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
