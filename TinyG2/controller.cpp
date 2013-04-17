@@ -202,11 +202,14 @@ static status_t _command_dispatch(controller_t *cs)
 	}
 	return (STAT_BUFFER_FULL);
 */
+/*
+	status_t status;
 	// read input line or return if not a completed line
-//	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
-//		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
-//	}
-//	write (cs->in_buf, cs->linelen);
+	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
+		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
+	}
+	write (cs->in_buf, cs->linelen);
+*/
 	return (STAT_OK);
 }
 

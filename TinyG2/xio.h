@@ -20,7 +20,7 @@
 #define _FDEV_EOF -2
 
 int read_char (void);
-status_t read_line (uint8_t *buffer, uint8_t *index, size_t size);
+status_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
 
 /* Some useful ASCII definitions */
