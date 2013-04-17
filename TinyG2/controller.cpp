@@ -171,14 +171,14 @@ static void _controller_HSM(controller_t *cs)
 
 static status_t _command_dispatch(controller_t *cs)
 {
-	printf("printf test2 %d %f...\n", 10, 10.003);
-
+//	printf("printf test2 %d %f...\n", 10, 10.003);
+/*
 	int c;
 	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
 		SerialUSB.write(c);
 	}
-		
-/*	status_t status;
+*/	
+	status_t status;
 	cs->linemax = sizeof(cs->in_buf);
 
 	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
@@ -201,7 +201,7 @@ static status_t _command_dispatch(controller_t *cs)
 		return (STAT_EAGAIN);
 	}
 	return (STAT_BUFFER_FULL);
-*/
+
 /*
 	status_t status;
 	// read input line or return if not a completed line
