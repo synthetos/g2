@@ -171,14 +171,14 @@ static void _controller_HSM(controller_t *cs)
 
 static status_t _command_dispatch(controller_t *cs)
 {
-//	printf("printf test2 %d %f...\n", 10, 10.003);
-/*
-	int c;
-	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
-		SerialUSB.write(c);
-	}
-*/	
-	status_t status;
+	printf("printf test2 %d %f...\n", 10, 10.003);
+
+//	int c;
+//	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
+//		SerialUSB.write(c);
+//	}
+
+/*	status_t status;
 	cs->linemax = sizeof(cs->in_buf);
 
 	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
@@ -201,15 +201,16 @@ static status_t _command_dispatch(controller_t *cs)
 		return (STAT_EAGAIN);
 	}
 	return (STAT_BUFFER_FULL);
+*/
 
-/*
 	status_t status;
 	// read input line or return if not a completed line
 	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
 		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
 	}
+	cs->linelen = 0;
 	write (cs->in_buf, cs->linelen);
-*/
+
 	return (STAT_OK);
 }
 
@@ -270,10 +271,9 @@ static status_t _command_dispatch(controller_t *cs)
 
 static status_t _normal_idler( controller_t *cs )
 {
-	if (--(cs->led_counter) < 0) {
-		cs->led_counter = LED_NORMAL_COUNTER;
-		cs->led_state ^= 1;
-		digitalWrite(INDICATOR_LED, cs->led_state);
+	if (GetTickCount() > cs->led_counter) {
+		cs->led_counter += LED_NORMAL_COUNTER;
+		IndicatorLed.toggle();
 	}
 	return (STAT_OK);
 }
@@ -292,8 +292,7 @@ static uint8_t _alarm_idler( controller *cs )
 
 	if (--(cs->led_counter) < 0) {
 		cs->led_counter = LED_ALARM_COUNTER;
-		cs->led_state ^= 1;
-		digitalWrite(INDICATOR_LED, cs->led_state);
+        IndicatorLed.toggle();
 	}
 	return (TG_EAGAIN);	 // EAGAIN prevents any other actions from running
 }

@@ -30,13 +30,13 @@
       <ToolNumber>000028014099</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1541</port>
+        <port>1834</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>250000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -153,7 +153,7 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <BuildTarget>all TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -234,7 +234,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>all TinyG2.elf COLOR=0</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
   </PropertyGroup>
@@ -695,12 +695,6 @@
       <SubType>compile</SubType>
     </None>
     <None Include="motate\keywords.txt">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\make_utilities.mk">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

@@ -51,13 +51,11 @@ extern void SysTick_Handler( void )
 #define DEV_STDERR 0
 
 static void _application_init(void);
-
+    
 /******************** Application Code ************************/
-//int indicator_led = 13;
 
 void setup( void )
 {
-	pinMode(INDICATOR_LED, OUTPUT);
 	SerialUSB.begin(115200);
 	_application_init();
 }

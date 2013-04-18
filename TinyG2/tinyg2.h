@@ -10,13 +10,13 @@
  * Free Software Foundation. You should have received a copy of the GNU General Public 
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * As a special exception, you may use the software as part of a software library 
- * without restriction. Specifically, if other files instantiate templates or use macros
- * or inline functions from the software, or you compile the software and link it with 
- * other files to produce an executable, the software does not by itself cause the 
- * resulting executable to be covered by the GNU General Public License. This exception 
- * does not however invalidate any other reasons why the executable file might be covered 
- * by the GNU General Public License. 
+ * As a special exception, you may use this file as part of a software library without 
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other 
+ * files to produce an executable, this file does not by itself cause the resulting 
+ * executable to be covered by the GNU General Public License. This exception does not 
+ * however invalidate any other reasons why the executable file might be covered by the 
+ * GNU General Public License. 
  *
  * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY 
  * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
@@ -41,11 +41,13 @@
 #include <string.h>
 #include <math.h>
 
+#include <MotatePins.h>
+
 #include "Arduino.h"
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.07		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_BUILD   	004.08		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
@@ -84,7 +86,8 @@ void tg_setup(void);
  * TinyG application-specific prototypes, defines and globals
  */
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
-#define INDICATOR_LED 13
+Motate::pin_number indicator_led_pin_num = 13;
+static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 4				// number of motors on the board

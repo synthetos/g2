@@ -39,7 +39,7 @@ USER_LIBS =
 
 # Define optimisation level here
 #OPTIMIZATION = -Os
-OPTIMIZATION = -O0
+OPTIMIZATION ?= 0
 
 CFLAGS   :=
 CPPFLAGS :=
@@ -69,7 +69,7 @@ CFLAGS += -Wunreachable-code
 #CFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
-CFLAGS += -Dprintf=iprintf
+#CFLAGS += -Dprintf=iprintf
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
@@ -87,7 +87,7 @@ CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
 #CPPFLAGS += -Wconversion
 
 # To reduce application size use only integer printf function.
-CPPFLAGS += -Dprintf=iprintf
+#CPPFLAGS += -Dprintf=iprintf
 
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
@@ -222,9 +222,9 @@ INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += -g3 $(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += -g3 $(OPTIMIZATION) $(INCLUDES)
-ASFLAGS  += -g3 $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES)
+ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
 ifeq ($(VERBOSE),2)

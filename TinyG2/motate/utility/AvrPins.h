@@ -83,6 +83,25 @@ namespace Motate {
 		static const int8_t number = -1;
 		static const uint8_t portLetter = 0;
 		static const uint8_t mask = 0;
+
+		Pin() {};
+		Pin(const PinMode type, const PinOptions options = kNormal) {};
+		void operator=(const bool value) {};
+		operator bool() { return 0; };
+		
+		void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
+		void setMode(const PinMode type, const bool fromConstructor=false) {};
+		PinMode getMode() {};
+		void setOptions(const uint16_t options, const bool fromConstructor=false) {};
+		uint16_t getOptions() { return kNormal; };
+		void set() {};
+		void clear() {};
+		void write(const bool value) {};
+		void toggle() {};
+		uint8_t get() { return 0; };
+		uint8_t getInputValue() { return 0; };
+		uint8_t getOutputValue() { return 0; };
+
 		static uint8_t maskForPort(const uint8_t otherPortLetter) {
 			return 0x00;
 		};
@@ -477,7 +496,7 @@ namespace Motate {
 			
 		};
 		
-		void set(uint8_t in_value) {
+		void write(uint8_t in_value) {
 			uint8_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
 #define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
 			if (PinBit ## bitNumber.maskForPort(port ## portLetter.letter) &&\
