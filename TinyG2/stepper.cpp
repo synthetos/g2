@@ -270,6 +270,9 @@ void stepper_init()
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+
+    // DEBUG -- rg
+    _load_move();
 }
 
 static inline void pinOutput(int pin, int val)
@@ -316,9 +319,10 @@ void ISR_Handler_DDA(void)
 	motor_2.step.clear();
 	motor_3.step.clear();
 
-	if (--st.timer_ticks_downcount == 0) {			// end move
-		enable.set();								// disable DDA timer
 /*
+	if (--st.timer_ticks_downcount == 0) {			// end move
+		st_disable();								// disable DDA timer
+
 		// power-down motors if this feature is enabled
 		if (cfg.m[MOTOR_1].power_mode == true) {
 			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
@@ -333,8 +337,8 @@ void ISR_Handler_DDA(void)
 			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
 		}
 		_load_move();							// load the next move
-*/
 	}
+*/
 }
 
 /* 
@@ -426,8 +430,13 @@ void _load_move()
 //	sps.move_type = MOVE_TYPE_ALINE;
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
-	sps.timer_ticks_X_substeps = 1000;
+	sps.timer_ticks_X_substeps = 1000000;
 	sps.timer_period = 64000;
+	
+	st.m[MOTOR_1].steps = 90000;
+	st.m[MOTOR_1].counter = -sps.timer_ticks;
+	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
+
 /*
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 //	if (sps.move_type == MOVE_TYPE_ALINE) {
