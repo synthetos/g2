@@ -1,41 +1,39 @@
 /*
- * controller.c - tinyg controller and top level parser
- * Part of TinyG project
+ * controller.cpp - tinyg2 controller and top level parser
+ * Part of TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr. 
+ * Copyright (c) 2013 Robert Giseburt
  *
- * TinyG is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by 
- * the Free Software Foundation, either version 3 of the License, 
- * or (at your option) any later version.
+ * This file ("the software") is free software: you can redistribute it and/or modify 
+ * it under the terms of the GNU General Public License, version 2 as published by the 
+ * Free Software Foundation. You should have received a copy of the GNU General Public 
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * As a special exception, you may use this file as part of a software library without 
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other 
+ * files to produce an executable, this file does not by itself cause the resulting 
+ * executable to be covered by the GNU General Public License. This exception does not 
+ * however invalidate any other reasons why the executable file might be covered by the 
+ * GNU General Public License. 
  *
- * TinyG is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for details.
- *
- * You should have received a copy of the GNU General Public License 
- * along with TinyG  If not, see <http://www.gnu.org/licenses/>.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY 
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* See the wiki for module details and additional information:
- *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-Developer-Info
+ * https://github.com/synthetos/g2/wiki
  */
 
 #include "tinyg2.h"
 #include "controller.h"
 #include "xio.h"
-
 /*
 #include <ctype.h>				// for parsing
-
 #include "config.h"				// #2
 #include "settings.h"
 #include "json_parser.h"
@@ -55,12 +53,14 @@
 extern "C"{
 #endif
 
-controller_t controller_state;	// controller state structure
+/**** Static structs ****/
+controller_t cs;				// controller state structure
 
 // local helpers
-static void _controller_HSM(controller_t *cs);
-static uint8_t _command_dispatch(controller_t *cs);
-static uint8_t _normal_idler(controller_t *cs);
+static void _controller_HSM(void);
+static uint8_t _command_dispatch(void);
+static uint8_t _normal_idler(void);
+static uint8_t _alarm_idler(void);
 /*
 static uint8_t _reset_handler(void);
 static uint8_t _bootloader_handler(void);
@@ -76,13 +76,13 @@ static uint8_t _sync_to_planner(void);
  * tg_init() - controller init
  */
 
-void controller_init(controller_t *cs, uint8_t std_in, uint8_t std_out, uint8_t std_err) 
+void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
 {
-	cs->magic_start = MAGICNUM;
-	cs->magic_end = MAGICNUM;
-	cs->fw_build = TINYG_FIRMWARE_BUILD;
-	cs->fw_version = TINYG_FIRMWARE_VERSION;// NB: HW version is set from EEPROM
-	cs->linelen = 0;						// initialize index for read_line()
+	cs.magic_start = MAGICNUM;
+	cs.magic_end = MAGICNUM;
+	cs.fw_build = TINYG_FIRMWARE_BUILD;
+	cs.fw_version = TINYG_FIRMWARE_VERSION;// NB: HW version is set from EEPROM
+	cs.linelen = 0;						// initialize index for read_line()
 
 //	xio_set_stdin(std_in);
 //	xio_set_stdout(std_out);
@@ -113,15 +113,15 @@ void controller_init(controller_t *cs, uint8_t std_in, uint8_t std_out, uint8_t 
  * http://johnsantic.com/comp/state.html, "Writing Efficient State Machines in C"
  */
 
-void controller_run(controller_t *cs) 
+void controller_run() 
 { 
 	while (true) { 
-		_controller_HSM(cs);
+		_controller_HSM();
 	}
 }
 
 #define	DISPATCH(func) if (func == STAT_EAGAIN) return; 
-static void _controller_HSM(controller_t *cs)
+static void _controller_HSM()
 {
 //----- ISRs. These should be considered the highest priority scheduler functions ----//
 /*
@@ -136,28 +136,28 @@ static void _controller_HSM(controller_t *cs)
  */
 //----- kernel level ISR handlers ----(flags are set in ISRs)-----------//
 												// Order is important:
-//	DISPATCH(_reset_handler(cs));				// 1. software reset received
-//	DISPATCH(_bootloader_handler(cs));			// 2. received ESC char to start bootloader
-//	DISPATCH(_limit_switch_handler(cs));		// 3. limit switch has been thrown
-//	DISPATCH(_alarm_idler(cs));					// 4. idle in shutdown state (alarmed)
-//	DISPATCH(_system_assertions(cs));			// 5. system integrity assertions
-//	DISPATCH(_feedhold_handler(cs));			// 6. feedhold requested
-//	DISPATCH(_cycle_start_handler(cs));			// 7. cycle start requested
+//	DISPATCH(_reset_handler());					// 1. software reset received
+//	DISPATCH(_bootloader_handler());			// 2. received ESC char to start bootloader
+//	DISPATCH(_limit_switch_handler());			// 3. limit switch has been thrown
+//	DISPATCH(_alarm_idler());					// 4. idle in shutdown state (alarmed)
+//	DISPATCH(_system_assertions());				// 5. system integrity assertions
+//	DISPATCH(_feedhold_handler());				// 6. feedhold requested
+//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 
 //----- planner hierarchy for gcode and cycles -------------------------//
-//	DISPATCH(rpt_status_report_callback(cs));	// conditionally send status report
-//	DISPATCH(rpt_queue_report_callback(cs));	// conditionally send queue report
-//	DISPATCH(mp_plan_hold_callback(cs));		// plan a feedhold
-//	DISPATCH(mp_end_hold_callback(cs));			// end a feedhold
-//	DISPATCH(ar_arc_callback(cs));				// arc generation runs behind lines
-//	DISPATCH(cm_homing_callback(cs));			// G28.2 continuation
+//	DISPATCH(rpt_status_report_callback());		// conditionally send status report
+//	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
+//	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
+//	DISPATCH(mp_end_hold_callback());			// end a feedhold
+//	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
+//	DISPATCH(cm_homing_callback());				// G28.2 continuation
 
 //----- command readers and parsers ------------------------------------//
-//	DISPATCH(_sync_to_planner(cs));				// ensure there is at least one free buffer in planning queue
-//	DISPATCH(_sync_to_tx_buffer(cs));			// sync with TX buffer (pseudo-blocking)
-//	DISPATCH(cfg_baud_rate_callback(cs));		// perform baud rate update (must be after TX sync)
-	DISPATCH(_command_dispatch(cs));			// read and execute next command
-	DISPATCH(_normal_idler(cs));				// blink LEDs slowly to show everything is OK
+//	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
+//	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
+//	DISPATCH(cfg_baud_rate_callback());			// perform baud rate update (must be after TX sync)
+	DISPATCH(_command_dispatch());				// read and execute next command
+	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
 /***************************************************************************** 
@@ -169,56 +169,19 @@ static void _controller_HSM(controller_t *cs)
  *	Also responsible for prompts and for flow control 
  */
 
-static status_t _command_dispatch(controller_t *cs)
+static status_t _command_dispatch()
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 
-//	int c;
-//	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
-//		SerialUSB.write(c);
-//	}
-/*
-	status_t status;
-	cs->linemax = sizeof(cs->in_buf);
-
-	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
-		if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
-//		if ((c = read_char()) != _FDEV_ERR) {
-			cs->in_buf[cs->linelen] = (uint8_t)c;
-			if ((c == LF) || (c == CR)) {
-				cs->linelen++;
-				cs->in_buf[cs->linelen] = NUL;
-	
-				for (int i=0; i<cs->linelen; i++) {
-					SerialUSB.write(cs->in_buf[i]);
-				}
-//				write (cs->in_buf, cs->linelen);
-//				SerialUSB.write(cs->in_buf, cs->linelen);
-				return (STAT_OK);
-			}
-			continue;
-		}
-		return (STAT_EAGAIN);
-	}
-	return (STAT_BUFFER_FULL);
-*/
 	status_t status;
 	// read input line or return if not a completed line
-	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
+	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
 		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
 	}
-	write (cs->in_buf, cs->linelen);
-	cs->linelen = 0;
+	write (cs.in_buf, cs.linelen);
+	cs.linelen = 0;
 	return (STAT_OK);
 }
-
-//	const uint8_t ptr[] = ("Hello Kitty...");
-//	SerialUSB.write(ptr, sizeof(ptr));
-//	SerialUSB.print("Hello Kitty...");
-//	Serial.print("Hello Kitty2...");
-//	c = SerialUSB.read();		// read is non-blocking
-//	SerialUSB.write(c);
-
 /*
 	cmd_reset_list();
 	cs.linelen = strlen(cs.in_buf)+1;
@@ -267,10 +230,10 @@ static status_t _command_dispatch(controller_t *cs)
  * _normal_idler() - blink LED13 slowly to show everything is OK
  */
 
-static status_t _normal_idler( controller_t *cs )
+static status_t _normal_idler(  )
 {
-	if (GetTickCount() > cs->led_counter) {
-		cs->led_counter += LED_NORMAL_COUNTER;
+	if (GetTickCount() > cs.led_counter) {
+		cs.led_counter += LED_NORMAL_COUNTER;
 		IndicatorLed.toggle();
 	}
 	return (STAT_OK);
@@ -283,18 +246,18 @@ static status_t _normal_idler( controller_t *cs )
  *	this point. It's important that the reset handler is still called so a SW reset
  *	(ctrl-x) can be processed.
  */
-/*
-static uint8_t _alarm_idler( controller *cs )
-{
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (TG_OK);}
 
-	if (--(cs->led_counter) < 0) {
-		cs->led_counter = LED_ALARM_COUNTER;
-        IndicatorLed.toggle();
+static uint8_t _alarm_idler(  )
+{
+//	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
+
+	if (GetTickCount() > cs.led_counter) {
+		cs.led_counter += LED_ALARM_COUNTER;
+		IndicatorLed.toggle();
 	}
-	return (TG_EAGAIN);	 // EAGAIN prevents any other actions from running
+	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
-*/
+
 /* 
  * _system_assertions() - check memory integrity and other assertions
  */

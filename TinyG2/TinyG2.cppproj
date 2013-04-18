@@ -29,7 +29,7 @@
       <ToolNumber>000028014099</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1927</port>
+        <port>1937</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>

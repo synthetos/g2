@@ -40,7 +40,7 @@ extern "C"{
 #define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
 
 #define LED_NORMAL_COUNTER 1000			// blink rate for normal operation
-#define LED_ALARM_COUNTER 1000			// blink rate for alarm state
+#define LED_ALARM_COUNTER 100			// blink rate for alarm state
 
 typedef struct controllerState {		// main TG controller struct
 	uint16_t magic_start;				// magic number to test memory integrity	
@@ -54,7 +54,7 @@ typedef struct controllerState {		// main TG controller struct
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint16_t linelen;					// length of currently processing line
 	uint16_t linemax;					// size of input buffer or some other size
-	int32_t led_counter;				// a convenience for flashing an LED
+	uint32_t led_counter;				// a convenience for flashing an LED
 	uint32_t nvm_base_addr;				// NVM base address
 	uint32_t nvm_profile_base;			// NVM base address of current profile
 	uint8_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
@@ -64,9 +64,9 @@ typedef struct controllerState {		// main TG controller struct
 } controller_t;
 extern controller_t controller_state;	// controller state structure
 
-void controller_init(controller_t *cs, uint8_t std_in, uint8_t std_out, uint8_t std_err);
-void controller_reset(controller_t *cs);
-void controller_run(controller_t *cs);
+void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
+void controller_reset();
+void controller_run();
 
 
 #ifdef __cplusplus

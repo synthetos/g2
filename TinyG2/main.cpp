@@ -62,7 +62,7 @@ void setup( void )
 
 void loop( void )
 {
-	controller_run( &controller_state );		// single pass through the controller
+	controller_run( );			// single pass through the controller
 }
 
 /*
@@ -88,7 +88,7 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
-	controller_init( &controller_state, DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
 	stepper_init(); 			// must precede gpio_init()
 
 /*
