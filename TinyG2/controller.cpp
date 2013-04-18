@@ -171,26 +171,26 @@ static void _controller_HSM(controller_t *cs)
 
 static status_t _command_dispatch(controller_t *cs)
 {
-	printf("printf test2 %d %f...\n", 10, 10.003);
+//	printf("printf test2 %d %f...\n", 10, 10.003);
 
 //	int c;
 //	if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
 //		SerialUSB.write(c);
 //	}
-
-/*	status_t status;
+/*
+	status_t status;
 	cs->linemax = sizeof(cs->in_buf);
 
 	for (int c=0; cs->linelen < cs->linemax; (cs->linelen)++ ) {
 		if ((c = SerialUSB.read()) != -1) {		// read is non-blocking
 //		if ((c = read_char()) != _FDEV_ERR) {
 			cs->in_buf[cs->linelen] = (uint8_t)c;
-			if (c == LF) {
+			if ((c == LF) || (c == CR)) {
 				cs->linelen++;
 				cs->in_buf[cs->linelen] = NUL;
 	
 				for (int i=0; i<cs->linelen; i++) {
-					SerialUSB.write(c);
+					SerialUSB.write(cs->in_buf[i]);
 				}
 //				write (cs->in_buf, cs->linelen);
 //				SerialUSB.write(cs->in_buf, cs->linelen);
@@ -202,15 +202,13 @@ static status_t _command_dispatch(controller_t *cs)
 	}
 	return (STAT_BUFFER_FULL);
 */
-
 	status_t status;
 	// read input line or return if not a completed line
 	if ((status = read_line(cs->in_buf, &cs->linelen, sizeof(cs->in_buf))) != STAT_OK) {
 		return (status);	// Note that STAT_EAGAIN, STAT_BUFFER_FULL etc. will just flow through
 	}
-	cs->linelen = 0;
 	write (cs->in_buf, cs->linelen);
-
+	cs->linelen = 0;
 	return (STAT_OK);
 }
 

@@ -43,13 +43,14 @@ status_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 
-	for (int c; *index < size; (*index)++ ) {
+//	for (int c; *index < size; (*index)++ ) {
+	for (int c; *index < size; ) {
 		if ((c = read_char()) != _FDEV_ERR) {
-			if (c == LF) {
+			buffer[(*index)++] = (uint8_t)c;
+			if ((c == LF) || (c == CR)) {
 				buffer[*index] = NUL;
 				return (STAT_OK);
 			}
-			buffer[*index] = (uint8_t)c;
 			continue;
 		}
 		return (STAT_EAGAIN);
