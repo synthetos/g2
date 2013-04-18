@@ -67,6 +67,7 @@ extern controller_t controller_state;	// controller state structure
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
 void controller_reset();
 void controller_run();
+void tg_text_response(const uint8_t status, const uint8_t *buf);
 
 
 #ifdef __cplusplus

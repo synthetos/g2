@@ -21,7 +21,8 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
@@ -29,7 +30,7 @@
       <ToolNumber>000028014099</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1937</port>
+        <port>1942</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
@@ -626,6 +627,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="system.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="text_parser.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="text_parser.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="tinyg2.h">

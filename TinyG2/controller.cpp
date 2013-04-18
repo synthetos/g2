@@ -31,10 +31,11 @@
 
 #include "tinyg2.h"
 #include "controller.h"
+#include "config.h"
+#include "config_app.h"
 #include "xio.h"
 /*
 #include <ctype.h>				// for parsing
-#include "config.h"				// #2
 #include "settings.h"
 #include "json_parser.h"
 #include "gcode_parser.h"
@@ -53,10 +54,16 @@
 extern "C"{
 #endif
 
-/**** Static structs ****/
+/***********************************************************************************
+ **** STUCTURE ALLOCATIONS *********************************************************
+ ***********************************************************************************/
+
 controller_t cs;				// controller state structure
 
-// local helpers
+/***********************************************************************************
+ **** STATICS AND LOCALS ***********************************************************
+ ***********************************************************************************/
+
 static void _controller_HSM(void);
 static uint8_t _command_dispatch(void);
 static uint8_t _normal_idler(void);
@@ -72,6 +79,10 @@ static uint8_t _cycle_start_handler(void);
 static uint8_t _sync_to_tx_buffer(void);
 static uint8_t _sync_to_planner(void);
 */
+
+/***********************************************************************************
+ **** CODE *************************************************************************
+ ***********************************************************************************/
 /*
  * tg_init() - controller init
  */
@@ -181,50 +192,48 @@ static status_t _command_dispatch()
 	write (cs.in_buf, cs.linelen);
 	cs.linelen = 0;
 	return (STAT_OK);
-}
-/*
+
 	cmd_reset_list();
-	cs.linelen = strlen(cs.in_buf)+1;
+//	cs.linelen = strlen(cs.in_buf)+1;
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
 
 	// dispatch the new text line
 	switch (toupper(cs.in_buf[0])) {
 
 		case NUL: { 							// blank line (just a CR)
-			if (cfg.comm_mode != JSON_MODE) {
-				tg_text_response(TG_OK, cs.saved_buf);
+			if (cs.comm_mode != JSON_MODE) {
+				text_response(STAT_OK, cs.saved_buf);
 			}
 			break;
 		}
-		case 'H': { 							// intercept help screens
-			cfg.comm_mode = TEXT_MODE;
-			print_general_help();
-			tg_text_response(TG_OK, cs.in_buf);
-			break;
-		}
+//		case 'H': { 							// intercept help screens
+//			cs.comm_mode = TEXT_MODE;
+//			print_general_help();
+//			text_response(STAT_OK, cs.in_buf);
+//			break;
+//		}
 		case '$': case '?':{ 					// text-mode configs
-			cfg.comm_mode = TEXT_MODE;
-			tg_text_response(cfg_text_parser(cs.in_buf), cs.saved_buf);
+			cs.comm_mode = TEXT_MODE;
+			text_response(text_parser(cs.in_buf), cs.saved_buf);
 			break;
 		}
 		case '{': { 							// JSON input
-			cfg.comm_mode = JSON_MODE;
-			js_json_parser(cs.in_buf);
-			break;
+			cs.comm_mode = JSON_MODE;
+			json_parser(cs.in_buf);
+			break;7
 		}
 		default: {								// anything else must be Gcode
-			if (cfg.comm_mode == JSON_MODE) {
+			if (cs.comm_mode == JSON_MODE) {
 				strncpy(cs.out_buf, cs.in_buf, INPUT_BUFFER_LEN -8);	// use out_buf as temp
 				sprintf(cs.in_buf,"{\"gc\":\"%s\"}\n", cs.out_buf);		// '-8' is used for JSON chars
-				js_json_parser(cs.in_buf);
+				json_parser(cs.in_buf);
 			} else {
-				tg_text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
+				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
 			}
 		}
 	}
 	return (STAT_OK);
 }
-*/
 
 /* 
  * _normal_idler() - blink LED13 slowly to show everything is OK
@@ -257,6 +266,39 @@ static uint8_t _alarm_idler(  )
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
+
+/**** Utilities ****
+ * _sync_to_tx_buffer() - return eagain if TX queue is backed up
+ * _sync_to_planner() - return eagain if planner is not ready for a new command
+ * tg_reset_source() - reset source to default input device (see note)
+ * tg_set_active_source() - set current input source
+ *
+ * Note: Once multiple serial devices are supported reset_source() should
+ *	be expanded to also set the stdout/stderr console device so the prompt
+ *	and other messages are sent to the active device.
+ */
+/*
+static uint8_t _sync_to_tx_buffer()
+{
+	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
+		return (TG_EAGAIN);
+	}
+	return (TG_OK);
+}
+
+static uint8_t _sync_to_planner()
+{
+//	if (mp_get_planner_buffers_available() == 0) { 
+	if (mp_get_planner_buffers_available() < 3) { 
+		return (TG_EAGAIN);
+	}
+	return (TG_OK);
+}
+
+void tg_reset_source() { tg_set_primary_source(tg.default_src);}
+void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
+void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}	
+*/
 
 /* 
  * _system_assertions() - check memory integrity and other assertions

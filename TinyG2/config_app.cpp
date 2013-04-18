@@ -1,16 +1,28 @@
 /*
  * config_app.h - application-specific part of configuration data
- * Part of Kinen project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* This file contains application specific data for the config system:
  *	- application-specific functions and function prototypes 
@@ -108,20 +120,16 @@ extern "C"{
 /* PROGMEM strings for print formatting
  * NOTE: DO NOT USE TABS IN FORMAT STRINGS
  */
-#ifdef __ENABLE_TEXTMODE
-
-const char fmt_nul[] PROGMEM = "";
-const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
-const char fmt_dbl[] PROGMEM = "%f\n";	// generic format for doubles
-const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
+const uint8_t fmt_nul[] = "";
+const uint8_t fmt_ui8[] = "%d\n";	// generic format for ui8s
+const uint8_t fmt_dbl[] = "%f\n";	// generic format for doubles
+const uint8_t fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
 
 // System group and ungrouped formatting strings
-const char fmt_fv[] PROGMEM = "[fv]  firmware version%16.2f\n";
-const char fmt_fb[] PROGMEM = "[fb]  firmware build%18.2f\n";
-const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
-//const char fmt_id[] PROGMEM = "[id]  TinyG ID%30s\n";
-
-#endif // __ENABLE_TEXTMODE
+const uint8_t fmt_fv[] = "[fv]  firmware version%16.2f\n";
+const uint8_t fmt_fb[] = "[fb]  firmware build%18.2f\n";
+const uint8_t fmt_hv[] = "[hv]  hardware version%16.2f\n";
+//const uint8_t fmt_id[] = "[id]  TinyG ID%30s\n";
 
 /***********************************************************************************
  **** CONFIG PARAMETERS ************************************************************

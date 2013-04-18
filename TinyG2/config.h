@@ -205,7 +205,11 @@ typedef struct cfgItem {
 /**** static allocation and definitions ****/
 
 extern cmdStr_t cmdStr;
-extern cmdObj_t cmd_list[CMD_LIST_LEN];		// JSON header element
+//extern cmdObj_t cmd_list[CMD_LIST_LEN];		// JSON header element
+
+//extern cmdStr_t cmdStr;
+extern cmdObj_t cmd_list[];
+extern const cfgItem_t cfgArray[];
 
 #define cmd_header cmd_list
 #define cmd_body  (cmd_list+1)

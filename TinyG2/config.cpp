@@ -1,25 +1,31 @@
 /*
  * config.cpp - configuration handling and persistence; master function table
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*	See config_app.h for an overview of the config system and it's use.
  */
-//#include <ctype.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <stdio.h>
-//#include <stdbool.h>
-//#include <avr/pgmspace.h>
-
 #include "tinyg2.h"
 #include "config.h"
 #include "config_app.h"		// application-specific config stuff - follows config.h
@@ -40,8 +46,7 @@ extern "C"{
 
 cmdStr_t cmdStr;
 cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
-extern const cfgItem_t cfgArray[];	// found in contig_app.c
-
+//extern const cfgItem_t cfgArray[];	// used by config_app.c
 
 /***********************************************************************************
  **** GENERIC STATICS **************************************************************
@@ -53,9 +58,9 @@ static uint8_t _set_defa(cmdObj_t *cmd);	// reset config to default values
 //static void _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]); // helper to print multiple groups in a list
 
 /***********************************************************************************
- **** CMD FUNCTION ENTRY POINTS ****************************************************
- ***********************************************************************************
- * Primary access points to cmd functions
+ **** CODE *************************************************************************
+ ***********************************************************************************/
+/* Primary access points to cmd functions
  * These gatekeeper functions check index ranges so others don't have to
  *
  * cmd_set() 	- Write a value or invoke a function - operates on single valued elements or groups
@@ -265,6 +270,7 @@ uint8_t cmd_group_is_prefixed(uint8_t *group)
 	}
 	return (true);
 }
+
 
 /***********************************************************************************
  ***** cmdObj functions ************************************************************
@@ -546,8 +552,8 @@ void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags)
 	if (controller_state.comm_mode == JSON_MODE) {
 		switch (json_flags) {
 			case JSON_NO_PRINT: { break; } 
-			case JSON_OBJECT_FORMAT: { js_print_json_object(cmd_body); break; }
-			case JSON_RESPONSE_FORMAT: { js_print_json_response(status); break; }
+			case JSON_OBJECT_FORMAT: { json_print_object(cmd_body); break; }
+			case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
 		}
 #ifdef __ENABLE_TEXTMODE
 	} else {
