@@ -29,8 +29,8 @@
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
-#ifndef tinyg2_h
-#define tinyg2_h
+#ifndef _TINYG2_H_
+#define _TINYG2_H_
 
 // common system includes
 #include <ctype.h>					
@@ -45,9 +45,13 @@
 
 #include "Arduino.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus
+
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.11		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_BUILD   	004.12		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
@@ -211,4 +215,8 @@ extern status_t errcode;
 #define	STAT_MAX_SPINDLE_SPEED_EXCEEDED 68
 #define	STAT_ARC_SPECIFICATION_ERROR 69	// arc specification error
 
-#endif
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _TINYG2_H_

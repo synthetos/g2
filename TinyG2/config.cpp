@@ -72,29 +72,26 @@ static uint8_t _set_defa(cmdObj_t *cmd);	// reset config to default values
  */
 uint8_t cmd_set(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
-//	return (((fptrCmd)(pgm_read_word(&cfgArray[cmd->index].set)))(cmd));
-	return (((fptrCmd)((&cfgArray[cmd->index].set)))(cmd));
+//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	return (cfgArray[cmd->index].set(cmd));
 }
 
 uint8_t cmd_get(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
-//	return (((fptrCmd)(pgm_read_word(&cfgArray[cmd->index].get)))(cmd));
-	return (((fptrCmd)((&cfgArray[cmd->index].get)))(cmd));
+//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	return (cfgArray[cmd->index].get(cmd));
 }
 
 void cmd_print(cmdObj_t *cmd)
 {
 //	if (cmd->index >= CMD_INDEX_MAX) return;
-//	((fptrPrint)(pgm_read_word(&cfgArray[cmd->index].print)))(cmd);
-	((fptrPrint)((&cfgArray[cmd->index].print)))(cmd);
+	cfgArray[cmd->index].print(cmd);
 }
 
 void cmd_persist(cmdObj_t *cmd)
 {
 #ifdef __ENABLE_PERSISTENCE	
-	if (cmd_index_lt_groups(cmd->index) == false) return;
+//	if (cmd_index_lt_groups(cmd->index) == false) return;
 //	if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_PERSIST) {
 	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
 		cmd_write_NVM_value(cmd);
@@ -405,8 +402,11 @@ index_t cmd_get_index(const uint8_t *group, const uint8_t *token)
 	strcpy_U(str, group);
 	strcat(str, token);
 
+	index_t index_max = cmd_index_max();
+
 //	for (index_t i=0; i<CMD_INDEX_MAX; i++) {
-	for (index_t i=0; cmd_index_lt_max(i); i++) {
+	for (index_t i=0; index_max; i++) {
+//	for (index_t i=0; cmd_index_lt_max(i); i++) {
 //		if ((c = (char)pgm_read_byte(&cfgArray[i].token[0])) != str[0]) {	// 1st character mismatch 
 //		if ((c = (char)cfgArray[i].token[0]) != str[0]) {	// 1st character mismatch
 		if ((c = cfgArray[i].token[0]) != str[0]) {	// 1st character mismatch

@@ -46,11 +46,15 @@ extern void SysTick_Handler( void )
 }
 */
 
+
 #define DEV_STDIN 0
 #define DEV_STDOUT 0
 #define DEV_STDERR 0
 
 static void _application_init(void);
+
+//globals
+status_t errcode;
     
 /******************** Application Code ************************/
 

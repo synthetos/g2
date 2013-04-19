@@ -35,10 +35,17 @@ extern "C"{
 
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 {
-	for (uint16_t index=0; src[index] != 0; index++) {
-		dst[index] = src[index];
-	}	
+	uint16_t index = 0;
+	do {
+		dst[index] = src[index];	
+	} while (src[index++] != 0);
 	return dst;
+
+//	for (uint16_t index=0; src[index] != 0; index++) {
+//		dst[index] = src[index];
+//	}
+//	dst[index] = 0;		// terminate string
+//	return dst;
 }
 
 /**** Vector functions ****

@@ -20,6 +20,8 @@ int read_char (void)
 /* 
  *	read_line() - read a complete line from stdin
  *
+ *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
+ *
  *	Returns:
  *
  *	  STAT_OK		  Returns a complete null terminated string. 
@@ -43,10 +45,10 @@ status_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 
-//	for (int c; *index < size; (*index)++ ) {
-	for (int c; *index < size; ) {
+//	for (int c; *index < size; ) {
+	for (int c; *index < size; (*index)++ ) {
 		if ((c = read_char()) != _FDEV_ERR) {
-			buffer[(*index)++] = (uint8_t)c;
+			buffer[*index] = (uint8_t)c;
 			if ((c == LF) || (c == CR)) {
 				buffer[*index] = NUL;
 				return (STAT_OK);

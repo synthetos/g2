@@ -188,8 +188,8 @@ static status_t _command_dispatch()
 
 	status_t status;
 	
-	strcpy(cs.in_buf, "$fb\n");
-	
+	strcpy(cs.in_buf, "$fb");
+
 	// read input line or return if not a completed line
 //	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
 //		return (STAT_OK);	// so the idler always runs
