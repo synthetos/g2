@@ -33,12 +33,14 @@
 #include "controller.h"
 #include "config.h"
 #include "config_app.h"
+#include "json_parser.h"
+#include "text_parser.h"
+//#include "gcode_parser.h"
 #include "xio.h"
 /*
 #include <ctype.h>				// for parsing
 #include "settings.h"
 #include "json_parser.h"
-#include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
@@ -114,11 +116,11 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
  * and are called even if they are not currently active. 
  *
  * The DISPATCH macro calls the function and returns to the controller parent 
- * if not finished (TG_EAGAIN), preventing later routines from running 
+ * if not finished (STAT_EAGAIN), preventing later routines from running 
  * (they remain blocked). Any other condition - OK or ERR - drops through 
  * and runs the next routine in the list.
  *
- * A routine that had no action (i.e. is OFF or idle) should return TG_NOOP
+ * A routine that had no action (i.e. is OFF or idle) should return STAT_NOOP
  *
  * Useful reference on state machines:
  * http://johnsantic.com/comp/state.html, "Writing Efficient State Machines in C"
@@ -191,7 +193,7 @@ static status_t _command_dispatch()
 	}
 	write (cs.in_buf, cs.linelen);
 	cs.linelen = 0;
-	return (STAT_OK);
+//	return (STAT_OK);
 
 	cmd_reset_list();
 //	cs.linelen = strlen(cs.in_buf)+1;
@@ -220,15 +222,16 @@ static status_t _command_dispatch()
 		case '{': { 							// JSON input
 			cs.comm_mode = JSON_MODE;
 			json_parser(cs.in_buf);
-			break;7
+			break;
 		}
 		default: {								// anything else must be Gcode
 			if (cs.comm_mode == JSON_MODE) {
 				strncpy(cs.out_buf, cs.in_buf, INPUT_BUFFER_LEN -8);	// use out_buf as temp
-				sprintf(cs.in_buf,"{\"gc\":\"%s\"}\n", cs.out_buf);		// '-8' is used for JSON chars
+				sprintf((char *)cs.in_buf,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);		// '-8' is used for JSON chars
 				json_parser(cs.in_buf);
 			} else {
-				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
+//				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
+				write (cs.in_buf, cs.linelen);	//+++++ test statement
 			}
 		}
 	}
@@ -281,18 +284,18 @@ static uint8_t _alarm_idler(  )
 static uint8_t _sync_to_tx_buffer()
 {
 	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
-		return (TG_EAGAIN);
+		return (STAT_EAGAIN);
 	}
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 static uint8_t _sync_to_planner()
 {
 //	if (mp_get_planner_buffers_available() == 0) { 
 	if (mp_get_planner_buffers_available() < 3) { 
-		return (TG_EAGAIN);
+		return (STAT_EAGAIN);
 	}
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 void tg_reset_source() { tg_set_primary_source(tg.default_src);}
@@ -329,8 +332,8 @@ uint8_t _system_assertions()
 	if (rtc.magic_end 		!= MAGICNUM) { value = 19; }
 	xio_assertions(&value);									// run xio assertions
 
-	if (value == 0) { return (TG_OK);}
-	rpt_exception(TG_MEMORY_CORRUPTION, value);
+	if (value == 0) { return (STAT_OK);}
+	rpt_exception(STAT_MEMORY_CORRUPTION, value);
 	cm_shutdown(ALARM_MEMORY_OFFSET + value);	
 	return (STAT_EAGAIN);
 }

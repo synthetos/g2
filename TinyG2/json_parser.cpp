@@ -333,8 +333,8 @@ uint16_t json_serialize(cmdObj_t *cmd, uint8_t *out_buf)
  */
 void json_print_object(cmdObj_t *cmd)
 {
-	json_serialize(cmd, controller_state.out_buf);
-	fprintf(stderr, "%s", controller_state.out_buf);
+	json_serialize(cmd, cs.out_buf);
+	fprintf(stderr, "%s", cs.out_buf);
 }
 
 /*

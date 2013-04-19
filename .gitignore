@@ -1,6 +1,8 @@
 *.o
 *.d
 *.bin
+*.elf
+*.hex
 *.eep
 *.lss
 *.map

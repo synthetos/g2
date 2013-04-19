@@ -173,40 +173,13 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 
  */
 
-
 //const cfgItem_t cfgArray[] PROGMEM = {
 const cfgItem_t cfgArray[] = {
-	// grp  token flags get_func, set_func  target for get/set,		   default value
-	{ "sys","fb", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-	{ "sys","fv", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_version, TINYG_FIRMWARE_VERSION },
-	{ "sys","hv", _f07, _get_dbl, _set_dbl, (double *)&cfg.hw_version, TINYG_HARDWARE_VERSION },
+	// grp    token flags format print_func get_func, set_func target for get/set,     default value
+	{ "sys", "fb", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
+	{ "sys", "fv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
+	{ "sys", "hv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
 /*
-	// Heater object
-	{ "h1", "h1st",  _f00, _get_ui8, _set_ui8,(double *)&heater.state, HEATER_OFF },
-	{ "h1", "h1tmp", _f00, _get_dbl, _set_dbl,(double *)&heater.temperature, LESS_THAN_ZERO },
-	{ "h1", "h1set", _f00, _get_dbl, _set_dbl,(double *)&heater.setpoint, HEATER_HYSTERESIS },
-	{ "h1", "h1hys", _f00, _get_ui8, _set_ui8,(double *)&heater.hysteresis, HEATER_HYSTERESIS },
-	{ "h1", "h1amb", _f00, _get_dbl, _set_dbl,(double *)&heater.ambient_temperature, HEATER_AMBIENT_TEMPERATURE },
-	{ "h1", "h1ovr", _f00, _get_dbl, _set_dbl,(double *)&heater.overheat_temperature, HEATER_OVERHEAT_TEMPERATURE },
-	{ "h1", "h1ato", _f00, _get_dbl, _set_dbl,(double *)&heater.ambient_timeout, HEATER_AMBIENT_TIMEOUT },
-	{ "h1", "h1reg", _f00, _get_dbl, _set_dbl,(double *)&heater.regulation_range, HEATER_REGULATION_RANGE },
-	{ "h1", "h1rto", _f00, _get_dbl, _set_dbl,(double *)&heater.regulation_timeout, HEATER_REGULATION_TIMEOUT },
-	{ "h1", "h1bad", _f00, _get_ui8, _set_ui8,(double *)&heater.bad_reading_max, HEATER_BAD_READING_MAX },
-
-	// Sensor object
-	{ "s1", "s1st",  _f00, _get_ui8, _set_ui8,(double *)&sensor.state, SENSOR_OFF },
-	{ "s1", "s1tmp", _f00, _get_dbl, _set_dbl,(double *)&sensor.temperature, LESS_THAN_ZERO },
-	{ "s1", "s1svm", _f00, _get_dbl, _set_dbl,(double *)&sensor.sample_variance_max, SENSOR_SAMPLE_VARIANCE_MAX },
-	{ "s1", "s1rvm", _f00, _get_dbl, _set_dbl,(double *)&sensor.reading_variance_max, SENSOR_READING_VARIANCE_MAX },
-
-	// PID object
-//	{ "p1", "p1st",  _f00, _get_ui8, _set_ui8,(double *)&pid.state, 0 },
-	{ "p1", "p1kp",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Kp, PID_Kp },
-	{ "p1", "p1ki",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Ki, PID_Ki },
-	{ "p1", "p1kd",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Kd, PID_Kd },
-	{ "p1", "p1smx", _f00, _get_dbl, _set_dbl,(double *)&pid.output_max, PID_MAX_OUTPUT },
-	{ "p1", "p1smn", _f00, _get_dbl, _set_dbl,(double *)&pid.output_min, PID_MIN_OUTPUT },
-
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
 	// *** Must agree with CMD_COUNT_GROUPS below ****
 	{ "","sys",_f00, _get_grp, _set_grp,(double *)&kc.null,0 },	// system group

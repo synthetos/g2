@@ -62,7 +62,8 @@ typedef struct controllerState {		// main TG controller struct
 	uint8_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
 	uint16_t magic_end;
 } controller_t;
-extern controller_t controller_state;	// controller state structure
+
+extern controller_t cs;					// controller state structure
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
 void controller_reset();

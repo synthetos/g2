@@ -37,10 +37,11 @@ extern "C"{
  * Global Scope Functions
  */
 
-//void js_json_parser(uint8_t *str);
-//uint16_t js_serialize_json(cmdObj_t *cmd, uint8_t *out_buf);
-//void js_print_json_object(cmdObj_t *cmd);
-//void js_print_json_response(uint8_t status);
+uint8_t text_parser(uint8_t *str);
+void text_response(const uint8_t status, const uint8_t *buf);
+void text_print_inline_pairs(cmdObj_t *cmd);
+void text_print_inline_values(cmdObj_t *cmd);
+void text_print_multiline_formatted(cmdObj_t *cmd);
 
 /* unit test setup */
 

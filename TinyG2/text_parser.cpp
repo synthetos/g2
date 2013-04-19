@@ -41,11 +41,11 @@
 extern "C"{
 #endif
 
-static uint8_t _text_parser_kernal(char *str, cmdObj_t *cmd);
+static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
 
 /******************************************************************************
  * text_parser() - update a config setting from a text block (text mode)
- * _text_parser_helper() - helper for above
+ * _text_parser_kernal() - helper for above
  * 
  * Use cases handled:
  *	- $xfr=1200	set a parameter
@@ -53,23 +53,23 @@ static uint8_t _text_parser_kernal(char *str, cmdObj_t *cmd);
  *	- $x		display a group
  *	- ?			generate a status report (multiline format)
  */
-uint8_t text_parser(char *str)
+uint8_t text_parser(uint8_t *str)
 {
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
-	uint8_t status = TG_OK;
+	uint8_t status = STAT_OK;
 
 	if (str[0] == '?') {					// handle status report case
-		rpt_run_text_status_report();
-		return (TG_OK);
+//		rpt_run_text_status_report();		//++++++ put back in
+		return (STAT_OK);
 	}
 	if ((str[0] == '$') && (str[1] == NUL)) {  // treat a lone $ as a sys request
 		strcat(str,"sys");
 	}
 	// single-unit parser processing
-	ritorno(_text_parser(str, cmd));		// decode the request or return if error
+	ritorno(_text_parser_kernal(str, cmd));	// decode the request or return if error
 	if ((cmd->type == TYPE_PARENT) || (cmd->type == TYPE_NULL)) {
-		if (cmd_get(cmd) == TG_COMPLETE) {	// populate value, group values, or run uber-group displays
-			return (TG_OK);					// return for uber-group displays so they don't print twice
+		if (cmd_get(cmd) == STAT_COMPLETE) {// populate value, group values, or run uber-group displays
+			return (STAT_OK);				// return for uber-group displays so they don't print twice
 		}
 	} else { 								// process SET and RUN commands
 		status = cmd_set(cmd);				// set single value
@@ -79,10 +79,10 @@ uint8_t text_parser(char *str)
 	return (status);
 }
 
-static uint8_t _text_parser_helper(char *str, cmdObj_t *cmd)
+static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 {
-	char *ptr_rd, *ptr_wr;					// read and write pointers
-	char separators[] = {" =:|\t"};			// any separator someone might use
+	uint8_t *ptr_rd, *ptr_wr;					// read and write pointers
+	uint8_t separators[] = {" =:|\t"};			// any separator someone might use
 
 	// string pre-processing
 	cmd_reset_obj(cmd);						// initialize config object
@@ -109,10 +109,10 @@ static uint8_t _text_parser_helper(char *str, cmdObj_t *cmd)
 			cmd->type = TYPE_FLOAT;
 		}
 	}
-	if ((cmd->index = cmd_get_index("",cmd->token)) == NO_MATCH) { 
-		return (TG_UNRECOGNIZED_COMMAND);
+	if ((cmd->index = cmd_get_index((uint8_t *)"", cmd->token)) == NO_MATCH) { 
+		return (STAT_UNRECOGNIZED_COMMAND);
 	}
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 
@@ -129,16 +129,16 @@ void text_response(const uint8_t status, const uint8_t *buf)
 	/*
 	if (cs.text_verbosity == TV_SILENT) return;	// skip all this
 
-	const char *units;								// becomes pointer to progmem string
+	const uint8_t *units;								// becomes pointer to progmem string
 	if (cm_get_units_mode() != INCHES) { 
 		units = (PGM_P)&prompt_mm;
 	} else {
 		units = (PGM_P)&prompt_in;
 	}
-	if ((status == TG_OK) || (status == TG_EAGAIN) || (status == TG_NOOP) || (status == TG_ZERO_LENGTH_MOVE)) {
+	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
 		fprintf_P(stderr, (PGM_P)&prompt_ok, units);
 	} else {
-		char status_message[STATUS_MESSAGE_LEN];
+		uint8_t status_message[STATUS_MESSAGE_LEN];
 		fprintf_P(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
 	}
 	cmdObj_t *cmd = cmd_body+1;
@@ -146,10 +146,58 @@ void text_response(const uint8_t status, const uint8_t *buf)
 		fprintf(stderr, *cmd->stringp);
 	}
 	*/
-	fprintf(stderr, *cmd->stringp);
+	cmdObj_t *cmd = cmd_body;		//+++++ patched
+	fprintf(stderr, (char *)cmd->stringp);
 	fprintf(stderr, "\n");
 }
 
+/************************************************************************************
+ * text_print_inline_pairs()
+ * text_print_inline_values()
+ * text_print_multiline_formatted()
+ */
+
+void text_print_inline_pairs(cmdObj_t *cmd)
+{
+//	cmdObj_t *cmd = cmd_body;
+	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
+		switch (cmd->type) {
+			case TYPE_PARENT:	{ cmd = cmd->nx; continue; }
+			case TYPE_FLOAT:	{ fprintf(stderr,("%s:%1.3f"), cmd->token, cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf(stderr,("%s:%1.0f"), cmd->token, cmd->value); break;}
+			case TYPE_STRING:	{ fprintf(stderr,("%s:%s"), cmd->token, *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf(stderr,("\n")); return; }
+		}
+		cmd = cmd->nx;
+		if (cmd->type != TYPE_EMPTY) { fprintf(stderr,(","));}
+	}
+}
+
+void text_print_inline_values(cmdObj_t *cmd)
+{
+//	cmdObj_t *cmd = cmd_body;
+	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
+		switch (cmd->type) {
+			case TYPE_PARENT:	{ cmd = cmd->nx; continue; }
+			case TYPE_FLOAT:	{ fprintf(stderr,("%1.3f"), cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf(stderr,("%1.0f"), cmd->value); break;}
+			case TYPE_STRING:	{ fprintf(stderr,("%s"), *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf(stderr,("\n")); return; }
+		}
+		cmd = cmd->nx;
+		if (cmd->type != TYPE_EMPTY) { fprintf(stderr,(","));}
+	}
+}
+
+void text_print_multiline_formatted(cmdObj_t *cmd)
+{
+//	cmdObj_t *cmd = cmd_body;
+	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
+		if (cmd->type != TYPE_PARENT) { cmd_print(cmd);}
+		cmd = cmd->nx;
+		if (cmd->type == TYPE_EMPTY) { break;}
+	}
+}
 
 #ifdef __cplusplus
 }
