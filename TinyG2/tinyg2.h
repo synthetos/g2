@@ -47,7 +47,7 @@
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.10		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_BUILD   	004.11		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
@@ -86,6 +86,7 @@ void tg_setup(void);
  * TinyG application-specific prototypes, defines and globals
  */
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
+
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
@@ -124,10 +125,14 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
  *
  * Any changes to the ranges also require changing the message strings and 
  * string array in controller.c
+ *
+ * ritorno is a handy way to provide exception returns 
+ * It returns only if an error occurred. (ritorno is Italian for return) 
  */
- 
- typedef uint8_t status_t;
- 
+typedef uint8_t status_t;
+extern status_t errcode;
+#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
+
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
 #define	STAT_OK 0						// function completed OK
 #define	STAT_ERROR 1					// generic error return (EPERM)

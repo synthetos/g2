@@ -56,6 +56,8 @@ static void _application_init(void);
 
 void setup( void )
 {
+	USBDevice.attach();
+	delay(5000);	
 	SerialUSB.begin(115200);
 	_application_init();
 }
@@ -71,14 +73,11 @@ void loop( void )
 int main( void )
 {
 	init();
-	delay(1);
-	USBDevice.attach();
+//	delay(1);
 	setup();
 
-	for (;;)
-	{
+	for (;;) {
 		loop();
-//		if (serialEventRun) serialEventRun();
 	}
 	return 0;
 }

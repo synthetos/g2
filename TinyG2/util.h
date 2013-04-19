@@ -29,11 +29,6 @@
 //uint16_t compute_checksum(char const *string, const uint16_t length);
 double std_dev(double a[], uint8_t n, double *mean);
 
-// ritorno is a handy way to provide exception returns - it returns only 
-// if an error occurred. (ritorno is Italian for return) 
-extern status_t errcode;
-#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
-
 /***** Math Support *****/
 
 // side-effect safe forms of min and max
