@@ -426,8 +426,13 @@ void _load_move()
 //	sps.move_type = MOVE_TYPE_ALINE;
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
-	sps.timer_ticks_X_substeps = 1000;
+	sps.timer_ticks_X_substeps = 1000000;
 	sps.timer_period = 64000;
+	
+	st.m[MOTOR_1].steps = 90000;
+	st.m[MOTOR_1].counter = -sps.timer_ticks;
+	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
+
 /*
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 //	if (sps.move_type == MOVE_TYPE_ALINE) {

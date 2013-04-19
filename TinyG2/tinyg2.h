@@ -2,7 +2,7 @@
  * tinyg2.h - tinyg2 main header - Application GLOBALS 
  * Part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr. 
+ * Copyright (c) 2013 Alden S. Hart Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify 
@@ -24,7 +24,7 @@
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */		
+ */
 /* Is this code over documented? Possibly. 
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
@@ -133,10 +133,10 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
  * ritorno is a handy way to provide exception returns 
  * It returns only if an error occurred. (ritorno is Italian for return) 
  */
-typedef uint8_t status_t;
+ typedef uint8_t status_t;
 extern status_t errcode;
 #define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
-
+ 
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
 #define	STAT_OK 0						// function completed OK
 #define	STAT_ERROR 1					// generic error return (EPERM)

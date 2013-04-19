@@ -9,7 +9,7 @@
  * it under the terms of the GNU General Public License, version 2 as published by the 
  * Free Software Foundation. You should have received a copy of the GNU General Public 
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * As a special exception, you may use this file as part of a software library without 
  * restriction. Specifically, if other files instantiate templates or use macros or
  * inline functions from this file, or you compile this file and link it with  other 
@@ -187,7 +187,7 @@ static status_t _command_dispatch()
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 
 	status_t status;
-	
+		
 	strcpy(cs.in_buf, "$fb");
 
 	// read input line or return if not a completed line

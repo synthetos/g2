@@ -52,7 +52,7 @@ extern void SysTick_Handler( void )
 #define DEV_STDERR 0
 
 static void _application_init(void);
-
+    
 //globals
 status_t errcode;
     
@@ -60,8 +60,6 @@ status_t errcode;
 
 void setup( void )
 {
-	USBDevice.attach();
-//	delay(5000);	
 	SerialUSB.begin(115200);
 	_application_init();
 }
@@ -77,7 +75,8 @@ void loop( void )
 int main( void )
 {
 	init();
-//	delay(1);
+	delay(1);
+	USBDevice.attach();
 	setup();
 
 	for (;;) {
