@@ -402,7 +402,7 @@ index_t cmd_get_index(const uint8_t *group, const uint8_t *token)
 {
 	uint8_t c;
 	uint8_t str[CMD_TOKEN_LEN+1];
-	strcpy(str, group);
+	strcpy_U(str, group);
 	strcat(str, token);
 
 //	for (index_t i=0; i<CMD_INDEX_MAX; i++) {

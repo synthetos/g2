@@ -57,7 +57,7 @@ static void _application_init(void);
 void setup( void )
 {
 	USBDevice.attach();
-	delay(5000);	
+//	delay(5000);	
 	SerialUSB.begin(115200);
 	_application_init();
 }

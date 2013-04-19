@@ -81,11 +81,12 @@ uint8_t text_parser(uint8_t *str)
 
 static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 {
-	uint8_t *ptr_rd, *ptr_wr;					// read and write pointers
-	uint8_t separators[] = {" =:|\t"};			// any separator someone might use
+	uint8_t *ptr_rd, *ptr_wr;				// read and write pointers
+//	uint8_t separators[] = {" =:|\t"};		// any separator someone might use
+	uint8_t separators[] = {"="};			// only separator allowed is = sign
 
 	// string pre-processing
-	cmd_reset_obj(cmd);						// initialize config object
+//	cmd_reset_obj(cmd);						// initialize config object
 	cmd_copy_string(cmd, str);				// make a copy for eventual reporting
 	if (*str == '$') str++;					// ignore leading $
 	for (ptr_rd = ptr_wr = str; *ptr_rd!=NUL; ptr_rd++, ptr_wr++) {

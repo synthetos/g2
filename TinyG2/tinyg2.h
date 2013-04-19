@@ -24,7 +24,7 @@
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+ */		
 /* Is this code over documented? Possibly. 
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
