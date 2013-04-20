@@ -47,7 +47,7 @@ extern "C"{
  */
 
 void json_parser(uint8_t *str);
-uint16_t json_serialize(cmdObj_t *cmd, uint8_t *out_buf);
+uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size);
 void json_print_object(cmdObj_t *cmd);
 void json_print_response(uint8_t status);
 

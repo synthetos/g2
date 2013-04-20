@@ -75,8 +75,8 @@ extern "C"{
  ***********************************************************************************/
 
 // Sizing and footprints			// chose one based on # of elements in cmdArray
-typedef uint8_t index_t;			// use this if there are < 256 indexed objects
-//typedef uint16_t index_t;			// use this if there are > 255 indexed objects
+//typedef uint8_t index_t;			// use this if there are < 256 indexed objects
+typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 
 									// defines allocated from stack (not-pre-allocated)
 #define CMD_FORMAT_LEN 80			// print formatting string max length
@@ -108,6 +108,7 @@ enum objType {						// object / value typing for config and JSON
 	TYPE_BOOL,						// value is "true" (1) or "false"(0)
 	TYPE_INTEGER,					// value is a uint32_t
 	TYPE_FLOAT,						// value is a floating point number
+	TYPE_FLOAT_UNITS,				// value is a floating point number that may require units conversion for display
 	TYPE_STRING,					// value is in string field
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
 	TYPE_PARENT						// object is a parent to a sub-object
@@ -180,6 +181,7 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
 	int8_t type;						// see cmdType
+	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
 	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
 	char_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
@@ -193,7 +195,8 @@ typedef struct cfgItem {
 	char_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
 	char_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
-  	const char_t *format;				// pointer to formatted print string in FLASH
+ 	int8_t precision;					// decimal precision for display (JSON)
+ 	const char_t *format;				// pointer to formatted print string in FLASH
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
@@ -232,21 +235,27 @@ uint8_t cmd_index_lt_groups(index_t index);
 uint8_t cmd_group_is_prefixed(char_t *group);
 
 // generic internal functions and accessors
+stat_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
+stat_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
+stat_t set_01(cmdObj_t *cmd);		// set a 0 or 1 value with validation
+stat_t set_012(cmdObj_t *cmd);		// set a 0, 1 or 2 value with validation
+stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
+stat_t set_flt(cmdObj_t *cmd);		// set floating point value
+stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
+
 stat_t get_nul(cmdObj_t *cmd);		// get null value type
 stat_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
 stat_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
-stat_t get_flt(cmdObj_t *cmd);		// get double value
-
-stat_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
-stat_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
-stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
-stat_t set_flt(cmdObj_t *cmd);		// set double value
+stat_t get_flt(cmdObj_t *cmd);		// get floating point value
+stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
 
 void print_nul(cmdObj_t *cmd);		// print nothing (no operation)
+void print_str(cmdObj_t *cmd);		// print a string value
 void print_ui8(cmdObj_t *cmd);		// print unit8_t value
 void print_int(cmdObj_t *cmd);		// print uint32_t integer value
 void print_flt(cmdObj_t *cmd);		// print floating point value
-void print_str(cmdObj_t *cmd);		// print a string value
+void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
+void print_rot(cmdObj_t *cmd);		// print floating point rotary value
 
 // get_format() 
 // This macro carries format_char_array (unused) to maintain compatibility with xmega code base

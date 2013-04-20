@@ -34,8 +34,18 @@
 #include "controller.h"
 #include "util.h"
 #include "xio.h"
-//#include "report.h"
-//#include "system.h"
+/*
+#include "settings.h"
+#include "canonical_machine.h"
+#include "gcode_parser.h"
+#include "planner.h"
+#include "stepper.h"
+#include "gpio.h"
+#include "test.h"
+#include "help.h"
+#include "system.h"
+#include "network.h"
+*/
 
 #ifdef __cplusplus
 extern "C"{
@@ -224,19 +234,21 @@ void print_flt(cmdObj_t *cmd)
 	cmd_get(cmd);
 	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
 }
-/*
+
 void print_lin(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
+//	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
+	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
 }
 
 void print_rot(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
+//	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
+	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
 }
-*/
+
 
 /******************************************************************************
  * Accessors - get various data from an object given the index
