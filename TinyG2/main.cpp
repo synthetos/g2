@@ -60,6 +60,7 @@ status_t errcode;
 
 void setup( void )
 {
+	USBDevice.attach();
 	SerialUSB.begin(115200);
 	_application_init();
 }
@@ -75,8 +76,7 @@ void loop( void )
 int main( void )
 {
 	init();
-	delay(1);
-	USBDevice.attach();
+//	delay(1);
 	setup();
 
 	for (;;) {
