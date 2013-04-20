@@ -3299,6 +3299,8 @@
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
 		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
+		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
+		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3369,6 +3371,8 @@
 		D45710D51705334100EA19A8 /* utility */ = {
 			isa = PBXGroup;
 			children = (
+				D4E2B2F017223FCB004A5C70 /* AvrTimers.h */,
+				D4E2B2F117223FCB004A5C70 /* SamTimers.h */,
 				D45710D61705334100EA19A8 /* AvrPins.h */,
 				D45710D71705334100EA19A8 /* AvrXPins.h */,
 				D45710D81705334100EA19A8 /* SamPins.h */,
