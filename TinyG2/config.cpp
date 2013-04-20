@@ -35,18 +35,6 @@
 #include "controller.h"
 #include "util.h"
 #include "xio.h"
-/*
-#include "settings.h"
-#include "canonical_machine.h"
-#include "gcode_parser.h"
-#include "planner.h"
-#include "stepper.h"
-#include "gpio.h"
-#include "test.h"
-#include "help.h"
-#include "system.h"
-#include "network.h"
-*/
 
 #ifdef __cplusplus
 extern "C"{
@@ -148,13 +136,13 @@ static uint8_t _set_defa(cmdObj_t *cmd)
  * get_nul() - get nothing (returns STAT_NOOP)
  * get_ui8() - get value as 8 bit uint8_t w/o unit conversion
  * get_int() - get value as 32 bit integer w/o unit conversion
- * get_flt() - get value as double w/o unit conversion
+ * get_flt() - get value as float w/o unit conversion
  *
  * Generic sets()
  * set_nul() - set nothing (returns STAT_NOOP)
  * set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
  * set_int() - set value as 32 bit integer w/o unit conversion
- * set_flt() - set value as double w/o unit conversion
+ * set_flt() - set value as float w/o unit conversion
  */
 stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 stat_t get_nul(cmdObj_t *cmd) 
@@ -433,7 +421,7 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
  *	or a NULL pointer if there was an error
  *
  *	Note Adding a really large integer (like a checksum value) may lose precision 
- *	due to the cast to a double. Sometimes it's better to load an integer as a 
+ *	due to the cast to a float. Sometimes it's better to load an integer as a 
  *	string if all you want to do is display it.
  */
 
@@ -536,14 +524,14 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value)// add an in
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
-		cmd->value = (double) value;
+		cmd->value = (float) value;
 		cmd->type = TYPE_INTEGER;
 		return (cmd);
 	}
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_float(const char_t *token, const double value)	// add a float object to the body
+cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float object to the body
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
@@ -647,7 +635,7 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 /************************************************************************************
  ***** EEPROM PERSISTENCE FUNCTIONS *************************************************
  ************************************************************************************
- * cmd_read_NVM_value()	 - return value (as double) by index
+ * cmd_read_NVM_value()	 - return value (as float) by index
  * cmd_write_NVM_value() - write to NVM by index, but only if the value has changed
  *
  *	It's the responsibility of the caller to make sure the index does not exceed range
@@ -664,7 +652,7 @@ stat_t cmd_read_NVM_value(cmdObj_t *cmd)
 
 stat_t cmd_write_NVM_value(cmdObj_t *cmd)
 {
-//	double tmp = cmd->value;
+//	float tmp = cmd->value;
 //	ritorno(cmd_read_NVM_value(cmd));
 //	if (cmd->value != tmp) {		// catches the isnan() case as well
 //		cmd->value = tmp;

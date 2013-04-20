@@ -36,6 +36,21 @@
 #include "config.h"
 #include "config_app.h"
 #include "controller.h"
+#include "canonical_machine.h"
+
+/*
+#include "settings.h"
+#include "canonical_machine.h"
+#include "gcode_parser.h"
+#include "planner.h"
+#include "stepper.h"
+#include "gpio.h"
+#include "test.h"
+#include "help.h"
+#include "system.h"
+#include "network.h"
+*/
+
 
 #ifdef __cplusplus
 extern "C"{

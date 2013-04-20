@@ -109,10 +109,10 @@ typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 #define CMD_LIST_LEN (CMD_BODY_LEN+2)// +2 allows for a header and a footer
 #define CMD_MAX_OBJECTS (CMD_BODY_LEN-1)// maximum number of objects in a body string
 
-//#define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
+#define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 									// must also line up in cfgArray, se00 - seXX
 
-#define NVM_VALUE_LEN 4				// NVM value length (double, fixed length)
+#define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
 #define NVM_BASE_ADDR 0x0000		// base address of usable NVM
 
 enum objType {						// object / value typing for config and JSON
@@ -285,7 +285,7 @@ cmdObj_t *cmd_reset_list(void);
 stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src);
 cmdObj_t *cmd_add_object(const char_t *token);
 cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
-cmdObj_t *cmd_add_float(const char_t *token, const double value);
+cmdObj_t *cmd_add_float(const char_t *token, const float value);
 cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
 cmdObj_t *cmd_add_message(const char_t *string);
 /*
@@ -303,6 +303,13 @@ stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 #ifdef __DEBUG
 void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
 #endif
+
+/*********************************************************************************************
+ **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
+ *********************************************************************************************/
+#include "config_app.h"
+
+
 
 /*** Unit tests ***/
 

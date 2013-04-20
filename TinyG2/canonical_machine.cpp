@@ -158,7 +158,8 @@ uint8_t cm_get_distance_mode() { return gm.distance_mode;}
 uint8_t cm_get_inverse_feed_rate_mode() { return gm.inverse_feed_rate_mode;}
 uint8_t cm_get_spindle_mode() { return gm.spindle_mode;} 
 uint32_t cm_get_model_linenum() { return gm.linenum;}
-uint8_t cm_isbusy() { return (mp_isbusy());}
+//+++++ uint8_t cm_isbusy() { return (mp_isbusy());}
+uint8_t cm_isbusy() { return (true);}
 
 // set parameters in gm struct
 void cm_set_motion_mode(uint8_t motion_mode) {gm.motion_mode = motion_mode;} 
@@ -190,10 +191,10 @@ float cm_get_coord_offset(uint8_t axis)
 		return (0);						// no work offset if in abs override mode
 	}
 	if (gm.origin_offset_enable == 1) {
-		return (cfg.offset[gm.coord_system][axis] + gm.origin_offset[axis]); // includes G5x and G92 compoenents
-	} else {
-		return (cfg.offset[gm.coord_system][axis]);		// just the g5x coordinate system components
+		return (cfg.offset[gm.coord_system][axis] + gm.origin_offset[axis]); // includes G5x and G92 components
 	}
+	return (cfg.offset[gm.coord_system][axis]);		// just the g5x coordinate system components
+	return (0);	//++++++++++++++
 }
 
 float *cm_get_coord_offset_vector(float vector[])
@@ -234,23 +235,25 @@ float *cm_get_model_canonical_position_vector(float position[])
 
 float cm_get_runtime_machine_position(uint8_t axis) 
 {
-	return (mp_get_runtime_machine_position(axis));
-
+//	return (mp_get_runtime_machine_position(axis));
+	return (0);
+}
 // deprecated behavior
 //	if (gm.units_mode == INCHES) {
 //		return (mp_get_runtime_machine_position(axis) / MM_PER_INCH);
 //	} else {
 //		return (mp_get_runtime_machine_position(axis));
 //	}
-}
+
 
 float cm_get_runtime_work_position(uint8_t axis) 
 {
 	if (gm.units_mode == INCHES) {
-		return (mp_get_runtime_work_position(axis) / MM_PER_INCH);
+//+++++		return (mp_get_runtime_work_position(axis) / MM_PER_INCH);
 	} else {
-		return (mp_get_runtime_work_position(axis));
+//+++++		return (mp_get_runtime_work_position(axis));
 	}
+	return (0);	//+++++++++++++++++++
 }
 
 float cm_get_runtime_work_offset(uint8_t axis) 
@@ -492,7 +495,7 @@ static float _get_move_times(float *min_time)
 			xyz_time = sqrt(square(gm.target[AXIS_X] - gm.position[AXIS_X]) + // in mm
 							square(gm.target[AXIS_Y] - gm.position[AXIS_Y]) +
 							square(gm.target[AXIS_Z] - gm.position[AXIS_Z])) / gm.feed_rate; // in linear units
-			if (xyz_time ==0) {
+			if (fp_ZERO(xyz_time)) {
 				abc_time = sqrt(square(gm.target[AXIS_A] - gm.position[AXIS_A]) + // in deg
 							square(gm.target[AXIS_B] - gm.position[AXIS_B]) +
 							square(gm.target[AXIS_C] - gm.position[AXIS_C])) / gm.feed_rate; // in degree units
@@ -577,7 +580,7 @@ void cm_shutdown(uint8_t value)
 //	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
 //	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
 
-	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
+//+++++	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
 }
 
@@ -586,11 +589,11 @@ void cm_shutdown(uint8_t value)
  */
 uint8_t cm_flush_planner()
 {
-	mp_flush_planner();
+//+++++	mp_flush_planner();
 
 	for (uint8_t i=0; i<AXES; i++) {
-		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
-		gm.position[i] = mp_get_runtime_machine_position(i);
+//+++++		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
+//+++++		gm.position[i] = mp_get_runtime_machine_position(i);
 		gm.target[i] = gm.position[i];
 	}
 	return (STAT_OK);
@@ -614,18 +617,18 @@ uint8_t cm_flush_planner()
 /*
  * cm_set_machine_axis_position() - set the position of a single axis
  */
-uint8_t cm_set_machine_axis_position(uint8_t axis, const float position)
+stat_t cm_set_machine_axis_position(uint8_t axis, const float position)
 {
 	gm.position[axis] = position;
 	gm.target[axis] = position;
-	mp_set_axis_position(axis, position);
+//+++++	mp_set_axis_position(axis, position);
 	return (STAT_OK);
 }
 
 /*
  * cm_select_plane() - G17,G18,G19 select axis plane
  */
-uint8_t cm_select_plane(uint8_t plane) 
+stat_t cm_select_plane(uint8_t plane) 
 {
 	gm.select_plane = plane;
 	if (plane == CANON_PLANE_YZ) {
@@ -647,7 +650,7 @@ uint8_t cm_select_plane(uint8_t plane)
 /*
  * cm_set_units_mode() - G20, G21
  */
-uint8_t cm_set_units_mode(uint8_t mode)
+stat_t cm_set_units_mode(uint8_t mode)
 {
 	gm.units_mode = mode;	// 0 = inches, 1 = mm.
 	return(STAT_OK);
@@ -656,7 +659,7 @@ uint8_t cm_set_units_mode(uint8_t mode)
 /*
  * cm_set_distance_mode() - G90, G91
  */
-uint8_t cm_set_distance_mode(uint8_t mode)
+stat_t cm_set_distance_mode(uint8_t mode)
 {
 	gm.distance_mode = mode;	// 0 = absolute mode, 1 = incremental
 	return (STAT_OK);
@@ -665,10 +668,10 @@ uint8_t cm_set_distance_mode(uint8_t mode)
 /*
  * cm_set_coord_system() - G54-G59
  */
-uint8_t	cm_set_coord_system(uint8_t coord_system)
+stat_t cm_set_coord_system(uint8_t coord_system)
 {
 	gm.coord_system = coord_system;	
-	mp_queue_command(_exec_offset, coord_system,0);
+//+++++	mp_queue_command(_exec_offset, coord_system,0);
 	return (STAT_OK);
 }
 static void _exec_offset(uint8_t coord_system, float float_val)
@@ -677,7 +680,7 @@ static void _exec_offset(uint8_t coord_system, float float_val)
 	for (uint8_t i=0; i<AXES; i++) {
 		offsets[i] = cfg.offset[coord_system][i] + (gm.origin_offset[i] * gm.origin_offset_enable);
 	}
-	mp_set_runtime_work_offset(offsets);
+//+++++	mp_set_runtime_work_offset(offsets);
 }
 
 /*
@@ -687,7 +690,7 @@ static void _exec_offset(uint8_t coord_system, float float_val)
  *	the offsets (as Gcode expects). If you want to persist coordinate system 
  *	offsets use $g54x - $g59c config functions instead.
  */
-uint8_t	cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
+stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 {
 	if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) { // you can't set G53
 		return (STAT_INTERNAL_RANGE_ERROR);
@@ -709,7 +712,7 @@ uint8_t	cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
  *	Y axis. USE: With the axis(or axes) where you want it, issue g92.4 y0 
  *	(for example). The Y axis will now be set to 0 (or whatever value provided)
  */
-uint8_t cm_set_absolute_origin(float origin[], float flag[])
+stat_t cm_set_absolute_origin(float origin[], float flag[])
 {
 	for (uint8_t i=0; i<AXES; i++) {
 		if (flag[i] > EPSILON) {
@@ -729,7 +732,7 @@ uint8_t cm_set_absolute_origin(float origin[], float flag[])
  * G92's behave according to NIST 3.5.18 & LinuxCNC G92
  * http://linuxcnc.org/docs/html/gcode/gcode.html#sec:G92-G92.1-G92.2-G92.3
  */
-uint8_t cm_set_origin_offsets(float offset[], float flag[])
+stat_t cm_set_origin_offsets(float offset[], float flag[])
 {
 	gm.origin_offset_enable = 1;
 	for (uint8_t i=0; i<AXES; i++) {
@@ -737,30 +740,30 @@ uint8_t cm_set_origin_offsets(float offset[], float flag[])
 			gm.origin_offset[i] = gm.position[i] - cfg.offset[gm.coord_system][i] - _to_millimeters(offset[i]);
 		}
 	}
-	mp_queue_command(_exec_offset, gm.coord_system,0);
+//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
-uint8_t cm_reset_origin_offsets()
+stat_t cm_reset_origin_offsets()
 {
 	gm.origin_offset_enable = 0;
 	for (uint8_t i=0; i<AXES; i++) 
 		gm.origin_offset[i] = 0;
-	mp_queue_command(_exec_offset, gm.coord_system,0);
+//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
-uint8_t cm_suspend_origin_offsets()
+stat_t cm_suspend_origin_offsets()
 {
 	gm.origin_offset_enable = 0;
-	mp_queue_command(_exec_offset, gm.coord_system,0);
+//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
-uint8_t cm_resume_origin_offsets()
+stat_t cm_resume_origin_offsets()
 {
 	gm.origin_offset_enable = 1;
-	mp_queue_command(_exec_offset, gm.coord_system,0);
+//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
@@ -770,15 +773,16 @@ uint8_t cm_resume_origin_offsets()
  * cm_straight_traverse() - G0 linear rapid
  */
 
-uint8_t cm_straight_traverse(float target[], float flags[])
+stat_t cm_straight_traverse(float target[], float flags[])
 {
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_target(target,flags);
 	cm_cycle_start();							// required for homing & other cycles
-	uint8_t status = MP_LINE(gm.target, 
-							_get_move_times(&gm.min_time), 
-							cm_get_coord_offset_vector(gm.work_offset), 
-							gm.min_time);
+	stat_t status;
+//+++++	stat_t status = MP_LINE(gm.target, 
+//							_get_move_times(&gm.min_time), 
+//							cm_get_coord_offset_vector(gm.work_offset), 
+//							gm.min_time);
 	cm_set_gcode_model_endpoint_position(status);
 	return (status);
 }
@@ -790,32 +794,32 @@ uint8_t cm_straight_traverse(float target[], float flags[])
  * cm_goto_g30_position() - G30
  */
 
-uint8_t cm_set_g28_position(void)
+stat_t cm_set_g28_position(void)
 {
 	copy_axis_vector(gm.g28_position, gm.position);
 	return (STAT_OK);
 }
 
-uint8_t cm_goto_g28_position(float target[], float flags[])
+stat_t cm_goto_g28_position(float target[], float flags[])
 {
 	cm_set_absolute_override(true);
 	cm_straight_traverse(target, flags);
-	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
+//+++++	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(gm.g28_position, f));
 }
 
-uint8_t cm_set_g30_position(void)
+stat_t cm_set_g30_position(void)
 {
 	copy_axis_vector(gm.g30_position, gm.position);
 	return (STAT_OK);
 }
 
-uint8_t cm_goto_g30_position(float target[], float flags[])
+stat_t cm_goto_g30_position(float target[], float flags[])
 {
 	cm_set_absolute_override(true);
 	cm_straight_traverse(target, flags);
-	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
+//+++++	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(gm.g30_position, f));
 }
@@ -833,7 +837,7 @@ uint8_t cm_goto_g30_position(float target[], float flags[])
  * inverse feed rate as this would require knowing the move length in advance.
  */
 
-uint8_t cm_set_feed_rate(float feed_rate)
+stat_t cm_set_feed_rate(float feed_rate)
 {
 	if (gm.inverse_feed_rate_mode == true) {
 		gm.inverse_feed_rate = feed_rate; // minutes per motion for this block only
@@ -850,7 +854,7 @@ uint8_t cm_set_feed_rate(float feed_rate)
  *	FALSE = units per minute feed rate in effect
  */
 
-inline uint8_t cm_set_inverse_feed_rate_mode(uint8_t mode)
+inline stat_t cm_set_inverse_feed_rate_mode(uint8_t mode)
 {
 	gm.inverse_feed_rate_mode = mode;
 	return (STAT_OK);
@@ -860,7 +864,7 @@ inline uint8_t cm_set_inverse_feed_rate_mode(uint8_t mode)
  * cm_set_path_control() - G61, G61.1, G64
  */
 
-uint8_t cm_set_path_control(uint8_t mode)
+stat_t cm_set_path_control(uint8_t mode)
 {
 	gm.path_control = mode;
 	return (STAT_OK);
@@ -874,19 +878,20 @@ uint8_t cm_set_path_control(uint8_t mode)
  * cm_straight_feed() - G1
  */ 
 
-uint8_t cm_dwell(float seconds)
+stat_t cm_dwell(float seconds)
 {
 	gm.parameter = seconds;
-	(void)mp_dwell(seconds);
+//+++++	(void)mp_dwell(seconds);
 	return (STAT_OK);
 }
 
-uint8_t cm_straight_feed(float target[], float flags[])
+stat_t cm_straight_feed(float target[], float flags[])
 {
 	gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
 	// trap zero feed rate condition
-	if ((gm.inverse_feed_rate_mode == false) && (gm.feed_rate == 0)) {
+//	if ((gm.inverse_feed_rate_mode == false) && (gm.feed_rate == 0)) {
+	if ((gm.inverse_feed_rate_mode == false) && (fp_ZERO(gm.feed_rate))) {
 		return (STAT_GCODE_FEEDRATE_ERROR);
 	}
 
@@ -898,10 +903,11 @@ uint8_t cm_straight_feed(float target[], float flags[])
 
 	cm_set_target(target, flags);
 	cm_cycle_start();						// required for homing & other cycles
-	uint8_t status = MP_LINE(gm.target, 
-							 _get_move_times(&gm.min_time), 
-							 cm_get_coord_offset_vector(gm.work_offset), 
-							 gm.min_time);
+	stat_t status;
+//+++++	stat_t status = MP_LINE(gm.target, 
+//							 _get_move_times(&gm.min_time), 
+//							 cm_get_coord_offset_vector(gm.work_offset), 
+//							 gm.min_time);
 
 	cm_set_gcode_model_endpoint_position(status);
 	return (status);
@@ -921,9 +927,9 @@ uint8_t cm_straight_feed(float target[], float flags[])
  * These functions are stubbed out for now and don't actually do anything
  */
 
-uint8_t cm_change_tool(uint8_t tool)
+stat_t cm_change_tool(uint8_t tool)
 {
-	mp_queue_command(_exec_change_tool, tool, 0);
+//+++++	mp_queue_command(_exec_change_tool, tool, 0);
 	return (STAT_OK);
 }
 static void _exec_change_tool(uint8_t tool, float float_val)
@@ -931,9 +937,9 @@ static void _exec_change_tool(uint8_t tool, float float_val)
 	gm.tool = tool;
 }
 
-uint8_t cm_select_tool(uint8_t tool)
+stat_t cm_select_tool(uint8_t tool)
 {
-	mp_queue_command(_exec_select_tool, tool, 0);
+//+++++	mp_queue_command(_exec_select_tool, tool, 0);
 	return (STAT_OK);
 }
 static void _exec_select_tool(uint8_t tool, float float_val)
@@ -948,15 +954,15 @@ static void _exec_select_tool(uint8_t tool, float float_val)
  * cm_flood_coolant_control() - M8, M9
  */
 
-uint8_t cm_mist_coolant_control(uint8_t mist_coolant)
+stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 {
-	mp_queue_command(_exec_mist_coolant_control, mist_coolant,0);
+//+++++	mp_queue_command(_exec_mist_coolant_control, mist_coolant,0);
 	return (STAT_OK);
 }
 
-uint8_t cm_flood_coolant_control(uint8_t flood_coolant)
+stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 {
-	mp_queue_command(_exec_flood_coolant_control, flood_coolant,0);
+//+++++	mp_queue_command(_exec_flood_coolant_control, flood_coolant,0);
 	return (STAT_OK);
 }
 
@@ -964,9 +970,9 @@ static void _exec_mist_coolant_control(uint8_t mist_coolant, float float_val)
 {
 	gm.mist_coolant = mist_coolant;
 	if (mist_coolant == true) {
-		gpio_set_bit_on(MIST_COOLANT_BIT);
+//+++++		gpio_set_bit_on(MIST_COOLANT_BIT);
 	} else {
-		gpio_set_bit_off(MIST_COOLANT_BIT);
+//+++++		gpio_set_bit_off(MIST_COOLANT_BIT);
 	}
 }
 
@@ -974,9 +980,9 @@ static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val)
 {
 	gm.flood_coolant = flood_coolant;
 	if (flood_coolant == true) {
-		gpio_set_bit_on(FLOOD_COOLANT_BIT);
+//+++++		gpio_set_bit_on(FLOOD_COOLANT_BIT);
 	} else {
-		gpio_set_bit_off(FLOOD_COOLANT_BIT);
+//+++++		gpio_set_bit_off(FLOOD_COOLANT_BIT);
 		_exec_mist_coolant_control(false,0);	// M9 special function
 	}
 }
@@ -994,7 +1000,7 @@ static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val)
  *	See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
  */
 
-uint8_t cm_override_enables(uint8_t flag)			// M48, M49
+stat_t cm_override_enables(uint8_t flag)			// M48, M49
 {
 	gm.feed_rate_override_enable = flag;
 	gm.traverse_override_enable = flag;
@@ -1002,9 +1008,10 @@ uint8_t cm_override_enables(uint8_t flag)			// M48, M49
 	return (STAT_OK);
 }
 
-uint8_t cm_feed_rate_override_enable(uint8_t flag)	// M50
+stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if ((fp_TRUE(gf.parameter)) && (fp_ZERO(gn.parameter))) {
 		gm.feed_rate_override_enable = false;
 	} else {
 		gm.feed_rate_override_enable = true;
@@ -1012,7 +1019,7 @@ uint8_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 	return (STAT_OK);
 }
 
-uint8_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
+stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 {
 	gm.feed_rate_override_enable = flag;
 	gm.feed_rate_override_factor = gn.parameter;
@@ -1020,9 +1027,10 @@ uint8_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 	return (STAT_OK);
 }
 
-uint8_t cm_traverse_override_enable(uint8_t flag)	// M50.2
+stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if ((fp_TRUE(gf.parameter)) && (fp_ZERO(gn.parameter))) {
 		gm.traverse_override_enable = false;
 	} else {
 		gm.traverse_override_enable = true;
@@ -1030,7 +1038,7 @@ uint8_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 	return (STAT_OK);
 }
 
-uint8_t cm_traverse_override_factor(uint8_t flag)	// M51
+stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 {
 	gm.traverse_override_enable = flag;
 	gm.traverse_override_factor = gn.parameter;
@@ -1038,9 +1046,10 @@ uint8_t cm_traverse_override_factor(uint8_t flag)	// M51
 	return (STAT_OK);
 }
 
-uint8_t cm_spindle_override_enable(uint8_t flag)	// M51.1
+stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if ((fp_TRUE(gf.parameter)) && (fp_ZERO(gn.parameter))) {
 		gm.spindle_override_enable = false;
 	} else {
 		gm.spindle_override_enable = true;
@@ -1048,7 +1057,7 @@ uint8_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 	return (STAT_OK);
 }
 
-uint8_t cm_spindle_override_factor(uint8_t flag)	// M50.1
+stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
 {
 	gm.spindle_override_enable = flag;
 	gm.spindle_override_factor = gn.parameter;
@@ -1116,18 +1125,18 @@ void cm_feedhold()
 
 void cm_program_stop() 
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_optional_program_stop()	
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_program_end()				// M2, M30
 {
 //	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_END,0);
+//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_END,0);
 }
 
 static void _exec_program_finalize(uint8_t machine_state, float f)
@@ -1137,9 +1146,9 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	cm.motion_state = MOTION_STOP;
 	cm.hold_state = FEEDHOLD_OFF;			//...and any feedhold is ended
 	cm.cycle_start_flag = false;
-	mp_zero_segment_velocity();				// for reporting purposes
-	rpt_request_status_report();			// request final status report (not unfiltered)
-	cmd_persist_offsets(cm.g10_persist_flag); // persist offsets if any changes made
+//+++++	mp_zero_segment_velocity();				// for reporting purposes
+//+++++	rpt_request_status_report();			// request final status report (not unfiltered)
+//+++++	cmd_persist_offsets(cm.g10_persist_flag); // persist offsets if any changes made
 }
 
 #ifdef __cplusplus

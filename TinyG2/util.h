@@ -39,6 +39,12 @@ extern "C"{
 
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 
+inline void copy_vector(float dest[], const float src[], uint8_t length);
+inline void copy_axis_vector(float dest[], const float src[]);
+inline float get_axis_vector_length(const float a[], const float b[]);
+inline float *set_vector(float x, float y, float z, float a, float b, float c);
+inline float *set_vector_by_axis(float value, uint8_t axis);
+
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
 float max3(float x1, float x2, float x3);
@@ -50,7 +56,12 @@ float std_dev(float a[], uint8_t n, float *mean);
 
 /***** Math Support *****/
 
+#ifndef square
+#define square(x) ((x)*(x))		/* UNSAFE */
+#endif
+
 // side-effect safe forms of min and max
+
 #ifndef max
 #define max(a,b) \
    ({ __typeof__ (a) termA = (a); \
