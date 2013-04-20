@@ -2,7 +2,7 @@
 ## Just call "make" from this directory.
 
 # Program paths
-WGET=wget
+WGET=curl -O
 TAR=tar xzvf
 TOUCH=touch
 
