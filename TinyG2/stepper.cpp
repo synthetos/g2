@@ -186,21 +186,21 @@ Stepper<motor_2_step_pin_num,
 		motor_2_microstep_0_pin_num, 
 		motor_2_microstep_1_pin_num,
 		motor_2_vref_pin_num> motor_2;
-		
+
 Stepper<motor_3_step_pin_num, 
 		motor_3_dir_pin_num, 
 		motor_3_enable_pin_num, 
 		motor_3_microstep_0_pin_num, 
 		motor_3_microstep_1_pin_num,
 		motor_3_vref_pin_num> motor_3;
-		
+
 Stepper<motor_4_step_pin_num, 
 		motor_4_dir_pin_num, 
 		motor_4_enable_pin_num, 
 		motor_4_microstep_0_pin_num, 
 		motor_4_microstep_1_pin_num,
 		motor_4_vref_pin_num> motor_4;
-		
+
 Stepper<motor_5_step_pin_num, 
 		motor_5_dir_pin_num, 
 		motor_5_enable_pin_num, 
@@ -286,7 +286,7 @@ static struct stPrepSingleton sps;
 magic_t st_get_st_magic() { return (st.magic_start);}
 magic_t st_get_sps_magic() { return (sps.magic_start);}
 
-/* 
+/*
  * st_init() - initialize stepper motor subsystem 
  *
  *	Notes:
