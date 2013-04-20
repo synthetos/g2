@@ -185,21 +185,16 @@ static void _controller_HSM()
 static status_t _command_dispatch()
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
-
-	status_t status;
-	
-	strcpy(cs.in_buf, "$fb");
+//	printf("test %2.3f\n", 11.033);
+//	strcpy(cs.in_buf, "$fb");
 
 	// read input line or return if not a completed line
-//	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
-//		return (STAT_OK);	// so the idler always runs
-//	}
-	write (cs.in_buf, cs.linelen);
+	status_t status;
+	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
+		return (STAT_OK);	// so the idler always runs
+	}
+//	write (cs.in_buf, cs.linelen);
 	cs.linelen = 0;
-//	return (STAT_OK);
-
-//	cmd_reset_list();	++++ REMOVE THIS LINE
-//	cs.linelen = strlen(cs.in_buf)+1;
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
 
 	// dispatch the new text line
