@@ -46,11 +46,15 @@ extern void SysTick_Handler( void )
 }
 */
 
+
 #define DEV_STDIN 0
 #define DEV_STDOUT 0
 #define DEV_STDERR 0
 
 static void _application_init(void);
+    
+//globals
+status_t errcode;
     
 /******************** Application Code ************************/
 
@@ -62,7 +66,7 @@ void setup( void )
 
 void loop( void )
 {
-	controller_run( &controller_state );		// single pass through the controller
+	controller_run( );			// single pass through the controller
 }
 
 /*
@@ -75,10 +79,8 @@ int main( void )
 	USBDevice.attach();
 	setup();
 
-	for (;;)
-	{
+	for (;;) {
 		loop();
-//		if (serialEventRun) serialEventRun();
 	}
 	return 0;
 }
@@ -88,7 +90,7 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
-	controller_init( &controller_state, DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
 	stepper_init(); 			// must precede gpio_init()
 
 /*

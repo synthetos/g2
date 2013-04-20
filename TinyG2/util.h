@@ -18,7 +18,13 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /****** Global Scope Variables and Functions ******/
+
+uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 
 //double min3(double x1, double x2, double x3);
 //double min4(double x1, double x2, double x3, double x4);
@@ -28,11 +34,6 @@
 //uint8_t read_double(char *buf, uint8_t *i, double *double_ptr);
 //uint16_t compute_checksum(char const *string, const uint16_t length);
 double std_dev(double a[], uint8_t n, double *mean);
-
-// ritorno is a handy way to provide exception returns - it returns only 
-// if an error occurred. (ritorno is Italian for return) 
-extern status_t errcode;
-#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
 
 /***** Math Support *****/
 
@@ -89,5 +90,10 @@ extern status_t errcode;
 //		M_PI is pi as defined in math.h
 //		M_SQRT2 is radical2 as defined in math.h
 //#define M_SQRT3 (1.73205080756888)
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	// util_h

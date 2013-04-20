@@ -1,16 +1,28 @@
 /*
  * config_app.h - application-specific part of configuration data
- * Part of Kinen project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* This file contains application specific data for the config system:
  *	- application-specific functions and function prototypes 
@@ -108,20 +120,16 @@ extern "C"{
 /* PROGMEM strings for print formatting
  * NOTE: DO NOT USE TABS IN FORMAT STRINGS
  */
-#ifdef __ENABLE_TEXTMODE
-
-const char fmt_nul[] PROGMEM = "";
-const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
-const char fmt_dbl[] PROGMEM = "%f\n";	// generic format for doubles
-const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
+const uint8_t fmt_nul[] = "";
+const uint8_t fmt_ui8[] = "%d\n";	// generic format for ui8s
+const uint8_t fmt_dbl[] = "%f\n";	// generic format for doubles
+const uint8_t fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
 
 // System group and ungrouped formatting strings
-const char fmt_fv[] PROGMEM = "[fv]  firmware version%16.2f\n";
-const char fmt_fb[] PROGMEM = "[fb]  firmware build%18.2f\n";
-const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
-//const char fmt_id[] PROGMEM = "[id]  TinyG ID%30s\n";
-
-#endif // __ENABLE_TEXTMODE
+const uint8_t fmt_fv[] = "[fv]  firmware version%16.2f\n";
+const uint8_t fmt_fb[] = "[fb]  firmware build%18.2f\n";
+const uint8_t fmt_hv[] = "[hv]  hardware version%16.2f\n";
+//const uint8_t fmt_id[] = "[id]  TinyG ID%30s\n";
 
 /***********************************************************************************
  **** CONFIG PARAMETERS ************************************************************
@@ -165,40 +173,13 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 
  */
 
-
 //const cfgItem_t cfgArray[] PROGMEM = {
 const cfgItem_t cfgArray[] = {
-	// grp  token flags get_func, set_func  target for get/set,		   default value
-	{ "sys","fb", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-	{ "sys","fv", _f07, _get_dbl, _set_dbl, (double *)&cfg.fw_version, TINYG_FIRMWARE_VERSION },
-	{ "sys","hv", _f07, _get_dbl, _set_dbl, (double *)&cfg.hw_version, TINYG_HARDWARE_VERSION },
+	// grp    token flags format print_func get_func, set_func target for get/set,     default value
+	{ "sys", "fb", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
+	{ "sys", "fv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
+	{ "sys", "hv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
 /*
-	// Heater object
-	{ "h1", "h1st",  _f00, _get_ui8, _set_ui8,(double *)&heater.state, HEATER_OFF },
-	{ "h1", "h1tmp", _f00, _get_dbl, _set_dbl,(double *)&heater.temperature, LESS_THAN_ZERO },
-	{ "h1", "h1set", _f00, _get_dbl, _set_dbl,(double *)&heater.setpoint, HEATER_HYSTERESIS },
-	{ "h1", "h1hys", _f00, _get_ui8, _set_ui8,(double *)&heater.hysteresis, HEATER_HYSTERESIS },
-	{ "h1", "h1amb", _f00, _get_dbl, _set_dbl,(double *)&heater.ambient_temperature, HEATER_AMBIENT_TEMPERATURE },
-	{ "h1", "h1ovr", _f00, _get_dbl, _set_dbl,(double *)&heater.overheat_temperature, HEATER_OVERHEAT_TEMPERATURE },
-	{ "h1", "h1ato", _f00, _get_dbl, _set_dbl,(double *)&heater.ambient_timeout, HEATER_AMBIENT_TIMEOUT },
-	{ "h1", "h1reg", _f00, _get_dbl, _set_dbl,(double *)&heater.regulation_range, HEATER_REGULATION_RANGE },
-	{ "h1", "h1rto", _f00, _get_dbl, _set_dbl,(double *)&heater.regulation_timeout, HEATER_REGULATION_TIMEOUT },
-	{ "h1", "h1bad", _f00, _get_ui8, _set_ui8,(double *)&heater.bad_reading_max, HEATER_BAD_READING_MAX },
-
-	// Sensor object
-	{ "s1", "s1st",  _f00, _get_ui8, _set_ui8,(double *)&sensor.state, SENSOR_OFF },
-	{ "s1", "s1tmp", _f00, _get_dbl, _set_dbl,(double *)&sensor.temperature, LESS_THAN_ZERO },
-	{ "s1", "s1svm", _f00, _get_dbl, _set_dbl,(double *)&sensor.sample_variance_max, SENSOR_SAMPLE_VARIANCE_MAX },
-	{ "s1", "s1rvm", _f00, _get_dbl, _set_dbl,(double *)&sensor.reading_variance_max, SENSOR_READING_VARIANCE_MAX },
-
-	// PID object
-//	{ "p1", "p1st",  _f00, _get_ui8, _set_ui8,(double *)&pid.state, 0 },
-	{ "p1", "p1kp",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Kp, PID_Kp },
-	{ "p1", "p1ki",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Ki, PID_Ki },
-	{ "p1", "p1kd",	 _f00, _get_dbl, _set_dbl,(double *)&pid.Kd, PID_Kd },
-	{ "p1", "p1smx", _f00, _get_dbl, _set_dbl,(double *)&pid.output_max, PID_MAX_OUTPUT },
-	{ "p1", "p1smn", _f00, _get_dbl, _set_dbl,(double *)&pid.output_min, PID_MIN_OUTPUT },
-
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
 	// *** Must agree with CMD_COUNT_GROUPS below ****
 	{ "","sys",_f00, _get_grp, _set_grp,(double *)&kc.null,0 },	// system group
@@ -223,6 +204,7 @@ const cfgItem_t cfgArray[] = {
 #define CMD_INDEX_START_UBER_GROUPS (CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS)
 
 //index_t cmd_get_max_index() { return (CMD_INDEX_MAX);}
+index_t	cmd_index_max () { return ( CMD_INDEX_MAX );}
 uint8_t cmd_index_lt_max(index_t index) { return ((index < CMD_INDEX_MAX) ? true : false);}
 uint8_t cmd_index_is_single(index_t index) { return ((index <= CMD_INDEX_END_SINGLES) ? true : false);}
 uint8_t cmd_index_is_group(index_t index) { return (((index >= CMD_INDEX_START_GROUPS) && (index < CMD_INDEX_START_UBER_GROUPS)) ? true : false);}

@@ -1,29 +1,29 @@
 /*
- * json_parser.c - JSON parser for TinyG
+ * json_parser.cpp - JSON parser for TinyG
  * Part of TinyG project
  *
- * Copyright (c) 2012 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * TinyG is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by 
- * the Free Software Foundation, either version 3 of the License, 
- * or (at your option) any later version.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
  *
- * TinyG is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for details.
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
  *
- * You should have received a copy of the GNU General Public License 
- * along with TinyG  If not, see <http://www.gnu.org/licenses/>.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* See the wiki for module details and additional information:
  *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-Developer-Info
@@ -43,13 +43,13 @@ extern "C"{
 
 // local scope stuff
 
-uint8_t _json_parser_kernal(uint8_t *str);
+static uint8_t _json_parser_kernal(uint8_t *str);
 static uint8_t _get_nv_pair_strict(cmdObj_t *cmd, uint8_t **pstr, int8_t *depth);
 static uint8_t _normalize_json_string(uint8_t *str, uint16_t size);
 //static uint8_t _gcode_comment_overrun_hack(cmdObj_t *cmd);
 
 /****************************************************************************
- * js_json_parser() - exposed part of JSON parser
+ * json_parser() - exposed part of JSON parser
  * _json_parser_kernal()
  * _normalize_json_string()
  * _get_nv_pair_strict()
@@ -86,7 +86,7 @@ static uint8_t _normalize_json_string(uint8_t *str, uint16_t size);
  *		in an application agnostic way. It should work for other apps than TinyG 
  */
 
-void js_json_parser(uint8_t *str)
+void json_parser(uint8_t *str)
 {
 	cmd_reset_list();				// get a fresh cmdObj list
 	uint8_t status = _json_parser_kernal(str);
@@ -261,7 +261,7 @@ static uint8_t _get_nv_pair_strict(cmdObj_t *cmd, uint8_t **pstr, int8_t *depth)
 }
 
 /****************************************************************************
- * js_serialize_json() - make a JSON object string from JSON object array
+ * json_serialize() - make a JSON object string from JSON object array
  *
  *	*cmd is a pointer to the first element in the cmd list to serialize
  *	*out_buf is a pointer to the output string - usually what was the input string
@@ -284,7 +284,7 @@ static uint8_t _get_nv_pair_strict(cmdObj_t *cmd, uint8_t **pstr, int8_t *depth)
  *	    --- OR ---
  *	  - If a JSON object is empty omit the object altogether (no curlies)
  */
-uint16_t js_serialize_json(cmdObj_t *cmd, uint8_t *out_buf)
+uint16_t json_serialize(cmdObj_t *cmd, uint8_t *out_buf)
 {
 	uint8_t *str = out_buf;
 	int8_t initial_depth = cmd->depth;
@@ -325,20 +325,20 @@ uint16_t js_serialize_json(cmdObj_t *cmd, uint8_t *out_buf)
 }
 
 /*
- * js_print_json_object() - serialize and print the cmdObj array directly (w/o header & footer)
+ * json_print_object() - serialize and print the cmdObj array directly (w/o header & footer)
  *
  *	Ignores JSON verbosity settings and everything else - just serializes the list & prints
  *	Useful for reports and other simple output.
  *	Object list should be terminated by cmd->nx == NULL
  */
-void js_print_json_object(cmdObj_t *cmd)
+void json_print_object(cmdObj_t *cmd)
 {
-	js_serialize_json(cmd, controller_state.out_buf);
-	fprintf(stderr, "%s", controller_state.out_buf);
+	json_serialize(cmd, cs.out_buf);
+	fprintf(stderr, "%s", cs.out_buf);
 }
 
 /*
- * js_print_json_response() - JSON responses with headers, footers and observes JSON verbosity 
+ * json_print_response() - JSON responses with headers, footers and observes JSON verbosity 
  *
  *	A footer is returned for every setting except $jv=0
  *
@@ -357,9 +357,9 @@ void js_print_json_object(cmdObj_t *cmd)
  */
 #define MAX_TAIL_LEN 8
 
-void js_print_json_response(uint8_t status)
+void json_print_response(uint8_t status)
 {
-	js_print_json_object(cmd_list);
+	json_print_object(cmd_list);
 }
 
 //###########################################################################

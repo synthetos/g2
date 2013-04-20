@@ -64,7 +64,7 @@ extern "C"{
  ***********************************************************************************/
 // Comment out what you don't need to skinny down the FLASH / RAM footprint
 
-//#define __ENABLE_TEXTMODE
+#define __ENABLE_TEXTMODE
 #define __ENABLE_PERSISTENCE
 #define __ENABLE_USART_DEVICE
 #define __ENABLE_SPI_DEVICE
@@ -180,11 +180,12 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
 	int8_t type;						// see cmdType
-	double value;						// numeric value
+	float value;						// numeric value
 	uint8_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
 	uint8_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
-	uint8_t (*stringp)[];					// pointer to array of characters from shared character array
+	uint8_t (*stringp)[];				// pointer to array of characters from shared character array
 } cmdObj_t; 							// OK, so it's not REALLY an object
+
 typedef uint8_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
 typedef void (*fptrPrint)(cmdObj_t *cmd);// required for PROGMEM access
 
@@ -192,20 +193,19 @@ typedef struct cfgItem {
 	uint8_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
 	uint8_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
-  #ifdef __ENABLE_TEXTMODE
-  	const uint8_t *format;					// pointer to formatted print string
+  	const uint8_t *format;				// pointer to formatted print string
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
-  #endif
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
-	double *target;						// target for writing config value
-	double def_value;					// default value for config item
+	float *target;						// target for writing config value
+	float def_value;					// default value for config item
 } cfgItem_t;
 
 /**** static allocation and definitions ****/
 
 extern cmdStr_t cmdStr;
-extern cmdObj_t cmd_list[CMD_LIST_LEN];		// JSON header element
+extern cmdObj_t cmd_list[];
+extern const cfgItem_t cfgArray[];
 
 #define cmd_header cmd_list
 #define cmd_body  (cmd_list+1)
@@ -217,9 +217,11 @@ void cfg_init(void);
 // main entry points for core access functions
 uint8_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
 uint8_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
+void cmd_print(cmdObj_t *cmd);			// main entry point for set value
 
 // helpers
 index_t cmd_get_index(const uint8_t *group, const uint8_t *token);
+index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
 uint8_t cmd_index_is_group(index_t index);
@@ -231,19 +233,27 @@ uint8_t cmd_group_is_prefixed(uint8_t *group);
 //uint8_t cmd_set_tv(cmdObj_t *cmd);
 //uint8_t cmd_persist_offsets(uint8_t flag);
 
-// generic internal functions
-uint8_t _get_nul(cmdObj_t *cmd);		// get null value type
-uint8_t _get_ui8(cmdObj_t *cmd);		// get uint8_t value
-uint8_t _get_int(cmdObj_t *cmd);		// get uint32_t integer value
-uint8_t _get_dbl(cmdObj_t *cmd);		// get double value
+// generic internal functions and accessors
+uint8_t get_nul(cmdObj_t *cmd);		// get null value type
+uint8_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
+uint8_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
+uint8_t get_flt(cmdObj_t *cmd);		// get double value
 
-uint8_t _set_nul(cmdObj_t *cmd);		// set nothing (no operation)
-uint8_t _set_ui8(cmdObj_t *cmd);		// set uint8_t value
-uint8_t _set_int(cmdObj_t *cmd);		// set uint32_t integer value
-uint8_t _set_dbl(cmdObj_t *cmd);		// set double value
+uint8_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
+uint8_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
+uint8_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
+uint8_t set_flt(cmdObj_t *cmd);		// set double value
 
-uint8_t _set_grp(cmdObj_t *cmd);		// set data for a group
-uint8_t _get_grp(cmdObj_t *cmd);		// get data for a group
+void print_nul(cmdObj_t *cmd);		// print nothing (no operation)
+void print_ui8(cmdObj_t *cmd);		// print unit8_t value
+void print_int(cmdObj_t *cmd);		// print uint32_t integer value
+void print_flt(cmdObj_t *cmd);		// print floating point value
+void print_str(cmdObj_t *cmd);		// print a string value
+
+char *get_format(const index_t i, char *format);
+
+uint8_t set_grp(cmdObj_t *cmd);		// set data for a group
+uint8_t get_grp(cmdObj_t *cmd);		// get data for a group
 
 // object and list functions
 void cmd_get_cmdObj(cmdObj_t *cmd);
@@ -265,21 +275,6 @@ void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags);
 void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 uint8_t cmd_read_NVM_value(cmdObj_t *cmd);
 uint8_t cmd_write_NVM_value(cmdObj_t *cmd);
-#endif
-
-// TEXTMODE SUPPORT
-#ifdef __ENABLE_TEXTMODE
-void cmd_print(cmdObj_t *cmd);			// main entry point for formatted print
-uint8_t cmd_text_parser(uint8_t *str);
-uint8_t *_get_format(const index_t i, uint8_t *format);
-void _print_nul(cmdObj_t *cmd);		// print nothing (no operation)
-void _print_ui8(cmdObj_t *cmd);		// print unit8_t value
-void _print_int(cmdObj_t *cmd);		// print uint32_t integer value
-void _print_dbl(cmdObj_t *cmd);		// print double value
-void _print_str(cmdObj_t *cmd);		// print a string value
-void cmd_print_text_inline_pairs(void);
-void cmd_print_text_inline_values(void);
-void cmd_print_text_multiline_formatted(void);
 #endif
 
 #ifdef __DEBUG

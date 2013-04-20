@@ -1,5 +1,5 @@
 /*
- * json_parser.c - JSON parser and JSON support
+ * text_parser.h - text parser and text mode support for tinyg2
  * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
@@ -26,43 +26,35 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _JSON_PARSER_H_
-#define _JSON_PARSER_H_
+#ifndef _TEXT_PARSER_H_
+#define _TEXT_PARSER_H_
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-/* JSON array definitions / revisions */
-// for now there is only one JSON array in use - the footer
-// if you add these make sure there are no collisions w/present or past numbers
-
-#define FOOTER_REVISION 1
-
-#define JSON_OUTPUT_STRING_MAX (OUTPUT_BUFFER_LEN)
-#define JSON_MAX_DEPTH 4
-
 /*
  * Global Scope Functions
  */
 
-void json_parser(uint8_t *str);
-uint16_t json_serialize(cmdObj_t *cmd, uint8_t *out_buf);
-void json_print_object(cmdObj_t *cmd);
-void json_print_response(uint8_t status);
+uint8_t text_parser(uint8_t *str);
+void text_response(const uint8_t status, const uint8_t *buf);
+void text_print_inline_pairs(cmdObj_t *cmd);
+void text_print_inline_values(cmdObj_t *cmd);
+void text_print_multiline_formatted(cmdObj_t *cmd);
 
 /* unit test setup */
 
-//#define __UNIT_TEST_JSON				// uncomment to enable JSON unit tests
-#ifdef __UNIT_TEST_JSON
-void js_unit_tests(void);
-#define	JSON_UNITS js_unit_tests();
+//#define __UNIT_TEST_TEXT				// uncomment to enable TEXT unit tests
+#ifdef __UNIT_TEST_TEXT
+void text_unit_tests(void);
+#define	TEXT_UNITS text_unit_tests();
 #else
-#define	JSON_UNITS
-#endif // __UNIT_TEST_JSON
+#define	TEXT_UNITS
+#endif // __UNIT_TEST_TEXT
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // _JSON_PARSER_H_
+#endif // _TEXT_PARSER_H_

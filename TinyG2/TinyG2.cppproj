@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
@@ -15,7 +15,7 @@
     <AssemblyName>HW</AssemblyName>
     <Name>HW</Name>
     <RootNamespace>HW</RootNamespace>
-    <ToolchainFlavour>Native</ToolchainFlavour>
+    <ToolchainFlavour>Yagarto</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <OverrideVtorValue>exception_table</OverrideVtorValue>
@@ -26,10 +26,10 @@
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028014010</ToolNumber>
+      <ToolNumber>000028011884</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1180</port>
+        <port>2756</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
@@ -44,7 +44,7 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
-          <SwdClock>8500000</SwdClock>
+          <SwdClock>250000</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -629,7 +629,16 @@
     <Compile Include="system.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="text_parser.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="text_parser.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="tinyg2.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="util.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="util.h">

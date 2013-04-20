@@ -1,29 +1,36 @@
 /*
  * config.cpp - configuration handling and persistence; master function table
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*	See config_app.h for an overview of the config system and it's use.
  */
-//#include <ctype.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <stdio.h>
-//#include <stdbool.h>
-//#include <avr/pgmspace.h>
-
 #include "tinyg2.h"
 #include "config.h"
 #include "config_app.h"		// application-specific config stuff - follows config.h
 #include "json_parser.h"
+#include "text_parser.h"
 #include "controller.h"
 #include "util.h"
 #include "xio.h"
@@ -40,8 +47,7 @@ extern "C"{
 
 cmdStr_t cmdStr;
 cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
-extern const cfgItem_t cfgArray[];	// found in contig_app.c
-
+//extern const cfgItem_t cfgArray[];	// used by config_app.c
 
 /***********************************************************************************
  **** GENERIC STATICS **************************************************************
@@ -53,34 +59,39 @@ static uint8_t _set_defa(cmdObj_t *cmd);	// reset config to default values
 //static void _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]); // helper to print multiple groups in a list
 
 /***********************************************************************************
- **** CMD FUNCTION ENTRY POINTS ****************************************************
- ***********************************************************************************
- * Primary access points to cmd functions
+ **** CODE *************************************************************************
+ ***********************************************************************************/
+/* Primary access points to cmd functions
  * These gatekeeper functions check index ranges so others don't have to
  *
  * cmd_set() 	- Write a value or invoke a function - operates on single valued elements or groups
  * cmd_get() 	- Build a cmdObj with the values from the target & return the value
  *			   	  Populate cmd body with single valued elements or groups (iterates)
+ * cmd_print()	- Output a formatted string for the value.
  * cmd_persist()- persist value to NVM. Takes special cases into account
  */
 uint8_t cmd_set(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
-//	return (((fptrCmd)(pgm_read_word(&cfgArray[cmd->index].set)))(cmd));
-	return (((fptrCmd)((&cfgArray[cmd->index].set)))(cmd));
+//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	return (cfgArray[cmd->index].set(cmd));
 }
 
 uint8_t cmd_get(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
-//	return (((fptrCmd)(pgm_read_word(&cfgArray[cmd->index].get)))(cmd));
-	return (((fptrCmd)((&cfgArray[cmd->index].get)))(cmd));
+//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	return (cfgArray[cmd->index].get(cmd));
+}
+
+void cmd_print(cmdObj_t *cmd)
+{
+//	if (cmd->index >= CMD_INDEX_MAX) return;
+	cfgArray[cmd->index].print(cmd);
 }
 
 void cmd_persist(cmdObj_t *cmd)
 {
 #ifdef __ENABLE_PERSISTENCE	
-	if (cmd_index_lt_groups(cmd->index) == false) return;
+//	if (cmd_index_lt_groups(cmd->index) == false) return;
 //	if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_PERSIST) {
 	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
 		cmd_write_NVM_value(cmd);
@@ -103,9 +114,9 @@ void cmd_persist(cmdObj_t *cmd)
 void cfg_init()
 {
 	cmdObj_t *cmd = cmd_reset_list();
-	controller_state.comm_mode = JSON_MODE;				// initial value until EEPROM is read
-//	controller_state.nvm_base_addr = NVM_BASE_ADDR;
-//	controller_state.nvm_profile_base = cfg.nvm_base_addr;
+	cs.comm_mode = JSON_MODE;						// initial value until EEPROM is read
+//	cs.nvm_base_addr = NVM_BASE_ADDR;
+//	cs.nvm_profile_base = cfg.nvm_base_addr;
 	cmd->value = true;
 	_set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
 }
@@ -130,66 +141,170 @@ static uint8_t _set_defa(cmdObj_t *cmd)
 
 /***** Generic Internal Functions *******************************************
  * Generic gets()
- * _get_nul() - get nothing (returns STAT_NOOP)
- * _get_ui8() - get value as 8 bit uint8_t w/o unit conversion
- * _get_int() - get value as 32 bit integer w/o unit conversion
- * _get_dbl() - get value as double w/o unit conversion
+ * get_nul() - get nothing (returns STAT_NOOP)
+ * get_ui8() - get value as 8 bit uint8_t w/o unit conversion
+ * get_int() - get value as 32 bit integer w/o unit conversion
+ * get_flt() - get value as double w/o unit conversion
  *
  * Generic sets()
- * _set_nul() - set nothing (returns STAT_NOOP)
- * _set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
- * _set_int() - set value as 32 bit integer w/o unit conversion
- * _set_dbl() - set value as double w/o unit conversion
+ * set_nul() - set nothing (returns STAT_NOOP)
+ * set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
+ * set_int() - set value as 32 bit integer w/o unit conversion
+ * set_flt() - set value as double w/o unit conversion
  */
-uint8_t _set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
-uint8_t _get_nul(cmdObj_t *cmd) 
+uint8_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
+uint8_t get_nul(cmdObj_t *cmd) 
 { 
 	cmd->type = TYPE_NULL;
 	return (STAT_NOOP);
 }
 
-uint8_t _get_ui8(cmdObj_t *cmd)
+uint8_t get_ui8(cmdObj_t *cmd)
 {
-//	cmd->value = (double)*((uint8_t *)pgm_read_word(&cfgArray[cmd->index].target));
-	cmd->value = (double)*((uint8_t *)cfgArray[cmd->index].target);
+//	cmd->value = (float)*((uint8_t *)pgm_read_word(&cfgArray[cmd->index].target));
+	cmd->value = (float)*((uint8_t *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
-uint8_t _set_ui8(cmdObj_t *cmd)
+uint8_t set_ui8(cmdObj_t *cmd)
 {
 //	*((uint8_t *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
 	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_INTEGER;
 	return(STAT_OK);
 }
-uint8_t _get_int(cmdObj_t *cmd)
+uint8_t get_int(cmdObj_t *cmd)
 {
-//	cmd->value = (double)*((uint32_t *)pgm_read_word(&cfgArray[cmd->index].target));
-	cmd->value = (double)*((uint32_t *)cfgArray[cmd->index].target);
+//	cmd->value = (float)*((uint32_t *)pgm_read_word(&cfgArray[cmd->index].target));
+	cmd->value = (float)*((uint32_t *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
-uint8_t _set_int(cmdObj_t *cmd)
+uint8_t set_int(cmdObj_t *cmd)
 {
 //	*((uint32_t *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
 	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_INTEGER;
 	return(STAT_OK);
 }
-uint8_t _get_dbl(cmdObj_t *cmd)
+uint8_t get_flt(cmdObj_t *cmd)
 {
-//	cmd->value = *((double *)pgm_read_word(&cfgArray[cmd->index].target));
-	cmd->value = *((double *)cfgArray[cmd->index].target);
+//	cmd->value = *((float *)pgm_read_word(&cfgArray[cmd->index].target));
+	cmd->value = *((float *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_FLOAT;
 	return (STAT_OK);
 }
-uint8_t _set_dbl(cmdObj_t *cmd)
+uint8_t set_flt(cmdObj_t *cmd)
 {
-//	*((double *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
-	*((double *)cfgArray[cmd->index].target) = cmd->value;
+//	*((float *)pgm_read_word(&cfgArray[cmd->index].target)) = cmd->value;
+	*((float *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_FLOAT;
 	return(STAT_OK);
 }
+
+/* Generic prints()
+ * print_nul() - print nothing
+ * print_str() - print string value
+ * print_ui8() - print uint8_t value w/no units or unit conversion
+ * print_int() - print integer value w/no units or unit conversion
+ * print_dbl() - print double value w/no units or unit conversion
+ * print_lin() - print linear value with units and in/mm unit conversion
+ * print_rot() - print rotary value with units
+ */
+void print_nul(cmdObj_t *cmd) {}
+
+void print_str(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), *cmd->stringp);
+}
+
+void print_ui8(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), (uint8_t)cmd->value);
+}
+
+void print_int(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), (uint32_t)cmd->value);
+}
+
+void print_flt(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), cmd->value);
+}
+/*
+void print_lin(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
+}
+
+void print_rot(cmdObj_t *cmd)
+{
+	cmd_get(cmd);
+	char format[CMD_FORMAT_LEN+1];
+	fprintf(stderr, get_format(cmd->index, format), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
+}
+*/
+
+/******************************************************************************
+ * Accessors - get various data from an object given the index
+ * get_format() 	- return format string for an index
+ * get_motor()		- return the motor number as an index or -1 if na
+ * get_axis()		- return the axis as an index or -1 if na 
+ * get_pos_axis()	- return axis number for pos values or -1 if none - e.g. posx
+ */
+char *get_format(const index_t i, char *format)
+{
+//	strncpy_P(format, (PGM_P)pgm_read_word(&cfgArray[i].format), CMD_FORMAT_LEN);
+	strncpy(format, cfgArray[i].format, CMD_FORMAT_LEN);
+	return (format);
+}
+/*
+int8_t get_motor(const index_t i)
+{
+	char *ptr;
+	char motors[] = {"1234"};
+	char tmp[CMD_TOKEN_LEN+1];
+
+	strcpy(tmp, cfgArray[i].group);
+	if ((ptr = strchr(motors, tmp[0])) == NULL) {
+		return (-1);
+	}
+	return (ptr - motors);
+}
+
+int8_t get_axis(const index_t i)
+{
+	char *ptr;
+	char tmp[CMD_TOKEN_LEN+1];
+	char axes[] = {"xyzabc"};
+
+	strcpy(tmp, cfgArray[i].token);
+	if ((ptr = strchr(axes, tmp[0])) == NULL) { return (-1);}
+	return (ptr - axes);
+}
+
+int8_t get_pos_axis(const index_t i)
+{
+	char *ptr;
+	char tmp[CMD_TOKEN_LEN+1];
+	char axes[] = {"xyzabc"};
+
+	strcpy(tmp, cfgArray[i].token);
+	if ((ptr = strchr(axes, tmp[3])) == NULL) { return (-1);}
+	return (ptr - axes);
+}
+*/
 
 /********************************************************************************
  * Group operations
@@ -238,7 +353,7 @@ uint8_t _get_grp(cmdObj_t *cmd)
 
 uint8_t _set_grp(cmdObj_t *cmd)
 {
-	if (controller_state.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
+	if (cs.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
 	for (uint8_t i=0; i<CMD_MAX_OBJECTS; i++) {
 		if ((cmd = cmd->nx) == NULL) break;
 		if (cmd->type == TYPE_EMPTY) break;
@@ -266,6 +381,7 @@ uint8_t cmd_group_is_prefixed(uint8_t *group)
 	return (true);
 }
 
+
 /***********************************************************************************
  ***** cmdObj functions ************************************************************
  ***********************************************************************************/
@@ -283,11 +399,14 @@ index_t cmd_get_index(const uint8_t *group, const uint8_t *token)
 {
 	uint8_t c;
 	uint8_t str[CMD_TOKEN_LEN+1];
-	strcpy(str, group);
+	strcpy_U(str, group);
 	strcat(str, token);
 
+	index_t index_max = cmd_index_max();
+
 //	for (index_t i=0; i<CMD_INDEX_MAX; i++) {
-	for (index_t i=0; cmd_index_lt_max(i); i++) {
+	for (index_t i=0; index_max; i++) {
+//	for (index_t i=0; cmd_index_lt_max(i); i++) {
 //		if ((c = (char)pgm_read_byte(&cfgArray[i].token[0])) != str[0]) {	// 1st character mismatch 
 //		if ((c = (char)cfgArray[i].token[0]) != str[0]) {	// 1st character mismatch
 		if ((c = cfgArray[i].token[0]) != str[0]) {	// 1st character mismatch
@@ -528,36 +647,22 @@ cmdObj_t *cmd_add_message_P(const uint8_t *string)	// conditionally add a messag
  *	  text_flags = TEXT_INLINE_VALUES - print text as comma separated values on a single line
  *	  text_flags = TEXT_MULTILINE_FORMATTED - print text one value per line with formatting string
  */
-/*
-void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags)
-{
-	if (kc.comm_mode == JSON_MODE) {
-		switch (json_flags) {
-			case JSON_NO_PRINT: { break; } 
-			case JSON_OBJECT_FORMAT: { js_print_json_object(cmd_body); break; }
-			case JSON_RESPONSE_FORMAT: { js_print_json_response(status); break; }
-		}
-	}
-}
-*/
 
 void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags)
 {
-	if (controller_state.comm_mode == JSON_MODE) {
+	if (cs.comm_mode == JSON_MODE) {
 		switch (json_flags) {
 			case JSON_NO_PRINT: { break; } 
-			case JSON_OBJECT_FORMAT: { js_print_json_object(cmd_body); break; }
-			case JSON_RESPONSE_FORMAT: { js_print_json_response(status); break; }
+			case JSON_OBJECT_FORMAT: { json_print_object(cmd_body); break; }
+			case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
 		}
-#ifdef __ENABLE_TEXTMODE
 	} else {
 		switch (text_flags) {
 			case TEXT_NO_PRINT: { break; } 
-			case TEXT_INLINE_PAIRS: { cmd_print_text_inline_pairs(); break; }
-			case TEXT_INLINE_VALUES: { cmd_print_text_inline_values(); break; }
-			case TEXT_MULTILINE_FORMATTED: { cmd_print_text_multiline_formatted();}
+			case TEXT_INLINE_PAIRS: { text_print_inline_pairs(cmd_body); break; }
+			case TEXT_INLINE_VALUES: { text_print_inline_values(cmd_body); break; }
+			case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(cmd_body);}
 		}
-#endif
 	}
 }
 

@@ -2,23 +2,35 @@
  * tinyg2.h - tinyg2 main header - Application GLOBALS 
  * Part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart Jr. 
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-/*
- * Is this code over documented? Possibly. 
+ * This file ("the software") is free software: you can redistribute it and/or modify 
+ * it under the terms of the GNU General Public License, version 2 as published by the 
+ * Free Software Foundation. You should have received a copy of the GNU General Public 
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * As a special exception, you may use this file as part of a software library without 
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other 
+ * files to produce an executable, this file does not by itself cause the resulting 
+ * executable to be covered by the GNU General Public License. This exception does not 
+ * however invalidate any other reasons why the executable file might be covered by the 
+ * GNU General Public License. 
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY 
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */		
+/* Is this code over documented? Possibly. 
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
-#ifndef tinyg2_h
-#define tinyg2_h
+#ifndef _TINYG2_H_
+#define _TINYG2_H_
 
 // common system includes
 #include <ctype.h>					
@@ -33,9 +45,13 @@
 
 #include "Arduino.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus
+
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.05		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_BUILD   	004.13		// _command_dispatch tests after uint8_t conversion
 #define TINYG_FIRMWARE_VERSION	0.01		// major version
 #define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
 
@@ -74,6 +90,7 @@ void tg_setup(void);
  * TinyG application-specific prototypes, defines and globals
  */
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
+
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
@@ -112,10 +129,14 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
  *
  * Any changes to the ranges also require changing the message strings and 
  * string array in controller.c
+ *
+ * ritorno is a handy way to provide exception returns 
+ * It returns only if an error occurred. (ritorno is Italian for return) 
  */
- 
- typedef uint8_t status_t;
- 
+typedef uint8_t status_t;
+extern status_t errcode;
+#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
+
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
 #define	STAT_OK 0						// function completed OK
 #define	STAT_ERROR 1					// generic error return (EPERM)
@@ -194,4 +215,8 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 #define	STAT_MAX_SPINDLE_SPEED_EXCEEDED 68
 #define	STAT_ARC_SPECIFICATION_ERROR 69	// arc specification error
 
-#endif
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _TINYG2_H_
