@@ -299,9 +299,8 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
-
-# @echo "--- SIZE INFO ---"
-# $(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+	@echo "--- SIZE INFO ---"
+	$(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
 
 $$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
