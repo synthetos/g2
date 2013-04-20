@@ -102,9 +102,9 @@ extern "C"{
  * Define the cfg structures(s) used by the application
  */
  typedef struct cfgParameters {
-	double fw_build;			// tinyg firmware build number
-	double fw_version;			// tinyg firmware version number
-	double hw_version;			// tinyg hardware compatibility
+//	double fw_build;			// tinyg firmware build number
+//	double fw_version;			// tinyg firmware version number
+//	double hw_version;			// tinyg hardware compatibility
  } cfgParameters_t;
 extern cfgParameters_t cfg; 	// declared in config_app.cpp
 

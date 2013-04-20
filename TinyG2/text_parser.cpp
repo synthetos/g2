@@ -41,7 +41,7 @@
 extern "C"{
 #endif
 
-static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
+static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
 
 /******************************************************************************
  * text_parser() - update a config setting from a text block (text mode)
@@ -53,7 +53,7 @@ static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
  *	- $x		display a group
  *	- ?			generate a status report (multiline format)
  */
-uint8_t text_parser(uint8_t *str)
+stat_t text_parser(uint8_t *str)
 {
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
 	uint8_t status = STAT_OK;
@@ -79,7 +79,7 @@ uint8_t text_parser(uint8_t *str)
 	return (status);
 }
 
-static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
+static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 {
 	uint8_t *ptr_rd, *ptr_wr;				// read and write pointers
 //	uint8_t separators[] = {" =:|\t"};		// any separator someone might use

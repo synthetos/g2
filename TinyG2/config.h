@@ -171,7 +171,7 @@ enum srVerbosity {					// status report enable and verbosity
 typedef struct cmdString {				// shared string object
 	uint8_t wp;							// current string array index for len < 256 bytes
 //	uint16_t wp;						// use this value is string len > 255 bytes
-	uint8_t string[CMD_SHARED_STRING_LEN];
+	char_t string[CMD_SHARED_STRING_LEN];
 } cmdStr_t;
 
 typedef struct cmdObject {				// depending on use, not all elements may be populated
@@ -181,19 +181,19 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
 	int8_t type;						// see cmdType
 	float value;						// numeric value
-	uint8_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
-	uint8_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
-	uint8_t (*stringp)[];				// pointer to array of characters from shared character array
+	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
+	char_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
+	char_t (*stringp)[];				// pointer to array of characters from shared character array
 } cmdObj_t; 							// OK, so it's not REALLY an object
 
-typedef uint8_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
+typedef stat_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
 typedef void (*fptrPrint)(cmdObj_t *cmd);// required for PROGMEM access
 
 typedef struct cfgItem {
-	uint8_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
-	uint8_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
+	char_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
+	char_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
-  	const uint8_t *format;				// pointer to formatted print string
+  	const char_t *format;				// pointer to formatted print string in FLASH
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
@@ -215,34 +215,32 @@ extern const cfgItem_t cfgArray[];
 void cfg_init(void);
 
 // main entry points for core access functions
-uint8_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
-uint8_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
+stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
+stat_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
 void cmd_print(cmdObj_t *cmd);			// main entry point for set value
+#ifdef __ENABLE_PERSISTENCE
+void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
+#endif
 
 // helpers
-index_t cmd_get_index(const uint8_t *group, const uint8_t *token);
+index_t cmd_get_index(const char_t *group, const char_t *token);
 index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
 uint8_t cmd_index_is_group(index_t index);
 uint8_t cmd_index_lt_groups(index_t index);
-uint8_t cmd_group_is_prefixed(uint8_t *group);
-
-//uint8_t cmd_get_type(cmdObj_t *cmd);
-//uint8_t cmd_set_jv(cmdObj_t *cmd);
-//uint8_t cmd_set_tv(cmdObj_t *cmd);
-//uint8_t cmd_persist_offsets(uint8_t flag);
+uint8_t cmd_group_is_prefixed(char_t *group);
 
 // generic internal functions and accessors
-uint8_t get_nul(cmdObj_t *cmd);		// get null value type
-uint8_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
-uint8_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
-uint8_t get_flt(cmdObj_t *cmd);		// get double value
+stat_t get_nul(cmdObj_t *cmd);		// get null value type
+stat_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
+stat_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
+stat_t get_flt(cmdObj_t *cmd);		// get double value
 
-uint8_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
-uint8_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
-uint8_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
-uint8_t set_flt(cmdObj_t *cmd);		// set double value
+stat_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
+stat_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
+stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
+stat_t set_flt(cmdObj_t *cmd);		// set double value
 
 void print_nul(cmdObj_t *cmd);		// print nothing (no operation)
 void print_ui8(cmdObj_t *cmd);		// print unit8_t value
@@ -250,31 +248,34 @@ void print_int(cmdObj_t *cmd);		// print uint32_t integer value
 void print_flt(cmdObj_t *cmd);		// print floating point value
 void print_str(cmdObj_t *cmd);		// print a string value
 
-char *get_format(const index_t i, char *format);
+// get_format() 
+// This macro carries format_char_array (unused) to maintain compatibility with xmega code base
+// char *get_format(const index_t index, char_t *format);
+#define get_format(index, format_char_array) (const char *)cfgArray[index].format
 
-uint8_t set_grp(cmdObj_t *cmd);		// set data for a group
-uint8_t get_grp(cmdObj_t *cmd);		// get data for a group
+stat_t set_grp(cmdObj_t *cmd);		// set data for a group
+stat_t get_grp(cmdObj_t *cmd);		// get data for a group
 
 // object and list functions
 void cmd_get_cmdObj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_obj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_list(void);
-uint8_t cmd_copy_string(cmdObj_t *cmd, const uint8_t *src);
-uint8_t cmd_copy_string_P(cmdObj_t *cmd, const uint8_t *src_P);
-cmdObj_t *cmd_add_object(const uint8_t *token);
-cmdObj_t *cmd_add_integer(const uint8_t *token, const uint32_t value);
-cmdObj_t *cmd_add_float(const uint8_t *token, const double value);
-cmdObj_t *cmd_add_string(const uint8_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_string_P(const uint8_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_message(const uint8_t *string);
-cmdObj_t *cmd_add_message_P(const uint8_t *string);
-void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags);
+stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src);
+cmdObj_t *cmd_add_object(const char_t *token);
+cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
+cmdObj_t *cmd_add_float(const char_t *token, const double value);
+cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
+cmdObj_t *cmd_add_message(const char_t *string);
+/*
+cmdObj_t *cmd_add_string_P(const char_t *token, const uint8_t *string);
+cmdObj_t *cmd_add_message_P(const char_t *string);
+stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P);
+*/
+void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
-// PERSISTENCE SUPPORT
 #ifdef __ENABLE_PERSISTENCE
-void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
-uint8_t cmd_read_NVM_value(cmdObj_t *cmd);
-uint8_t cmd_write_NVM_value(cmdObj_t *cmd);
+stat_t cmd_read_NVM_value(cmdObj_t *cmd);
+stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 #endif
 
 #ifdef __DEBUG

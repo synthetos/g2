@@ -68,6 +68,9 @@ CFLAGS += -Wunreachable-code
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
+# Stop warnings about late-bound printf() format strings. We use these.
+CFLAGS += -Wno-format-nonliteral -Wno-format-security
+
 # To reduce application size use only integer printf function.
 #CFLAGS += -Dprintf=iprintf
 
@@ -85,6 +88,9 @@ CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
 #CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
+
+# Stop warnings about late-bound printf() format strings. We use these.
+CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 
 # To reduce application size use only integer printf function.
 #CPPFLAGS += -Dprintf=iprintf
@@ -299,8 +305,9 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
-	@echo "--- SIZE INFO ---"
-	$(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+#	@echo "--- SIZE INFO ---"
+#	$(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@"
+#	$(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
 
 $$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi

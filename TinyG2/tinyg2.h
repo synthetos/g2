@@ -51,9 +51,10 @@ extern "C"{
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.13		// _command_dispatch tests after uint8_t conversion
-#define TINYG_FIRMWARE_VERSION	0.01		// major version
-#define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
+#define TINYG_FIRMWARE_BUILD   	005.01		// _command_dispatch tests after uint8_t conversion
+#define TINYG_FIRMWARE_VERSION	0.01		// firmware major version
+#define TINYG_HARDWARE_PLATFORM	2.00		// hardware platform indicator (Native Arduino Due)
+#define TINYG_HARDWARE_VERSION	0.01		// hardware platform revision number
 
 #define TINYG2_HARDWARE_VERSION_MAX TINYG2_HARDWARE_VERSION
 
@@ -72,14 +73,15 @@ extern "C"{
 void tg_setup(void);
 
 /*************************************************************************
- * Help during conversion from char to uint8_t for strings
+ * String handling help - strings are handled as uint8_t's typedef'd to char_t
  */
-#define strncpy(d,s,l) (uint8_t *)strncpy((char *)d, (char *)s, l)
-#define strpbrk(d,s) (uint8_t* )strpbrk((char *)d, (char *)s)
-#define strcpy(d,s) (uint8_t *)strcpy((char *)d, (char *)s)
-#define strcat(d,s) (uint8_t *)strcat((char *)d, (char *)s)
-#define strstr(d,s) (uint8_t *)strstr((char *)d, (char *)s)
-#define strchr(d,s) (uint8_t *)strchr((char *)d, (char)s)
+typedef uint8_t char_t;
+#define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
+#define strpbrk(d,s) (char_t* )strpbrk((char *)d, (char *)s)
+#define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
+#define strcat(d,s) (char_t *)strcat((char *)d, (char *)s)
+#define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
+#define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
 #define strcmp(d,s) strcmp((char *)d, (char *)s)
 #define strtod(d,s) strtod((char *)d, (char **)s)
 #define strlen(s) strlen((char *)s)
@@ -125,7 +127,8 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 #define PWM_1	0
 #define PWM_2	1
 
-/* Error and status codes
+/* 
+ * STATUS CODES
  *
  * Any changes to the ranges also require changing the message strings and 
  * string array in controller.c
@@ -133,9 +136,9 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
  * ritorno is a handy way to provide exception returns 
  * It returns only if an error occurred. (ritorno is Italian for return) 
  */
-typedef uint8_t status_t;
-extern status_t errcode;
-#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
+typedef uint8_t stat_t;
+extern stat_t status_code;				// declared in main.cpp
+#define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
 #define	STAT_OK 0						// function completed OK

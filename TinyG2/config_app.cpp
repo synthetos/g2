@@ -120,9 +120,11 @@ extern "C"{
 /* PROGMEM strings for print formatting
  * NOTE: DO NOT USE TABS IN FORMAT STRINGS
  */
+
+// generic format strings
 const uint8_t fmt_nul[] = "";
 const uint8_t fmt_ui8[] = "%d\n";	// generic format for ui8s
-const uint8_t fmt_dbl[] = "%f\n";	// generic format for doubles
+const uint8_t fmt_flt[] = "%f\n";	// generic format for floating point
 const uint8_t fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
 
 // System group and ungrouped formatting strings
@@ -176,9 +178,9 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 //const cfgItem_t cfgArray[] PROGMEM = {
 const cfgItem_t cfgArray[] = {
 	// grp    token flags format print_func get_func, set_func target for get/set,     default value
-	{ "sys", "fb", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-	{ "sys", "fv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
-	{ "sys", "hv", _f07, fmt_fv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
+	{ "sys", "fb", _f07, fmt_fb, print_flt, get_flt, set_nul, (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
+	{ "sys", "fv", _f07, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
+	{ "sys", "hv", _f07, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
 /*
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
 	// *** Must agree with CMD_COUNT_GROUPS below ****

@@ -39,15 +39,16 @@ extern "C"{
 #define STATUS_MESSAGE_LEN 32			// status message string storage allocation
 #define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
 
-#define LED_NORMAL_COUNTER 1000			// blink rate for normal operation
-#define LED_ALARM_COUNTER 100			// blink rate for alarm state
+#define LED_NORMAL_COUNTER 1000			// blink rate for normal operation (in ms)
+#define LED_ALARM_COUNTER 100			// blink rate for alarm state (in ms)
 
 typedef struct controllerState {		// main TG controller struct
 	uint16_t magic_start;				// magic number to test memory integrity	
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
-	float hw_version;					// tinyg hardware compatibility
+	float hw_platform;					// tinyg hardware compatibility - platform type
+	float hw_version;					// tinyg hardware compatibility - platform revision
 	uint8_t active_src;					// active source device
 	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON

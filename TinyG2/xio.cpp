@@ -41,7 +41,7 @@ int read_char (void)
  *	  STAT_FILE_SIZE_EXCEEDED returned if the starting index exceeds the size.
  */
 
-status_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
+stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 

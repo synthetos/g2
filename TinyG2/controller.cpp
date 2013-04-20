@@ -67,19 +67,19 @@ controller_t cs;				// controller state structure
  ***********************************************************************************/
 
 static void _controller_HSM(void);
-static uint8_t _command_dispatch(void);
-static uint8_t _normal_idler(void);
-static uint8_t _alarm_idler(void);
+static stat_t _command_dispatch(void);
+static stat_t _normal_idler(void);
+static stat_t _alarm_idler(void);
 /*
-static uint8_t _reset_handler(void);
-static uint8_t _bootloader_handler(void);
-static uint8_t _limit_switch_handler(void);
-static uint8_t _shutdown_idler(void);
-static uint8_t _system_assertions(void);
-static uint8_t _feedhold_handler(void);
-static uint8_t _cycle_start_handler(void);
-static uint8_t _sync_to_tx_buffer(void);
-static uint8_t _sync_to_planner(void);
+static stat_t _reset_handler(void);
+static stat_t _bootloader_handler(void);
+static stat_t _limit_switch_handler(void);
+static stat_t _shutdown_idler(void);
+static stat_t _system_assertions(void);
+static stat_t _feedhold_handler(void);
+static stat_t _cycle_start_handler(void);
+static stat_t _sync_to_tx_buffer(void);
+static stat_t _sync_to_planner(void);
 */
 
 /***********************************************************************************
@@ -182,14 +182,14 @@ static void _controller_HSM()
  *	Also responsible for prompts and for flow control 
  */
 
-static status_t _command_dispatch()
+static stat_t _command_dispatch()
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 //	printf("test %2.3f\n", 11.033);
 //	strcpy(cs.in_buf, "$fb");
 
 	// read input line or return if not a completed line
-	status_t status;
+	stat_t status;
 	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
 		return (STAT_OK);	// so the idler always runs
 	}
@@ -240,7 +240,7 @@ static status_t _command_dispatch()
  * _normal_idler() - blink LED13 slowly to show everything is OK
  */
 
-static status_t _normal_idler(  )
+static stat_t _normal_idler(  )
 {
 	if (GetTickCount() > cs.led_counter) {
 		cs.led_counter += LED_NORMAL_COUNTER;
@@ -257,7 +257,7 @@ static status_t _normal_idler(  )
  *	(ctrl-x) can be processed.
  */
 
-static uint8_t _alarm_idler(  )
+static stat_t _alarm_idler(  )
 {
 //	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
 
@@ -279,7 +279,7 @@ static uint8_t _alarm_idler(  )
  *	and other messages are sent to the active device.
  */
 /*
-static uint8_t _sync_to_tx_buffer()
+static stat_t _sync_to_tx_buffer()
 {
 	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
 		return (STAT_EAGAIN);
@@ -287,7 +287,7 @@ static uint8_t _sync_to_tx_buffer()
 	return (STAT_OK);
 }
 
-static uint8_t _sync_to_planner()
+static stat_t _sync_to_planner()
 {
 //	if (mp_get_planner_buffers_available() == 0) { 
 	if (mp_get_planner_buffers_available() < 3) { 
@@ -305,7 +305,7 @@ void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}
  * _system_assertions() - check memory integrity and other assertions
  */
 /*
-uint8_t _system_assertions()
+static stat_t _system_assertions()
 {
 	uint8_t value = 0;
 	
