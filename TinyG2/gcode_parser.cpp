@@ -25,10 +25,10 @@
 #include <avr/pgmspace.h>			// precursor for xio.h
 */
 #include "tinyg2.h"
-#include "util.h"
 #include "config.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
+#include "util.h"
 #include "xio.h"					// for char definitions
 
 #ifdef __cplusplus
@@ -61,8 +61,8 @@ stat_t gc_gcode_parser(char_t *block)
 {
 	uint8_t msg_flag = _normalize_gcode_block(block);	// get block ready for parsing
 	if (block[0] == NUL) {
-		if (msg_flag == true) return (TG_OK);	// queues messages for display
-		return (TG_NOOP); 
+		if (msg_flag == true) return (STAT_OK);	// queues messages for display
+		return (STAT_NOOP); 
 	}
 	return(_parse_gcode_block(block));			// parse block & return if error
 }
@@ -280,23 +280,23 @@ static stat_t parse_gcode_block(char_t *buf)
 
 			case 'T': SET_NON_MODAL (tool, (uint8_t)trunc(value));
 			case 'F': SET_NON_MODAL (feed_rate, value);
-			case 'P': SET_NON_MODAL (parameter, value); 	// used for dwell time, G10 coord select
+			case 'P': SET_NON_MODAL (parameter, value);				// used for dwell time, G10 coord select
 			case 'S': SET_NON_MODAL (spindle_speed, value); 
-			case 'X': SET_NON_MODAL (target[X], value);
-			case 'Y': SET_NON_MODAL (target[Y], value);
-			case 'Z': SET_NON_MODAL (target[Z], value);
-			case 'A': SET_NON_MODAL (target[A], value);
-			case 'B': SET_NON_MODAL (target[B], value);
-			case 'C': SET_NON_MODAL (target[C], value);
-		//	case 'U': SET_NON_MODAL (target[U], value);		// reserved
-		//	case 'V': SET_NON_MODAL (target[V], value);		// reserved
-		//	case 'W': SET_NON_MODAL (target[W], value);		// reserved
+			case 'X': SET_NON_MODAL (target[AXIS_X], value);
+			case 'Y': SET_NON_MODAL (target[AXIS_Y], value);
+			case 'Z': SET_NON_MODAL (target[AXIS_Z], value);
+			case 'A': SET_NON_MODAL (target[AXIS_A], value);
+			case 'B': SET_NON_MODAL (target[AXIS_B], value);
+			case 'C': SET_NON_MODAL (target[AXIS_C], value);
+		//	case 'U': SET_NON_MODAL (target[AXIS_U], value);		// reserved
+		//	case 'V': SET_NON_MODAL (target[AXIS_V], value);		// reserved
+		//	case 'W': SET_NON_MODAL (target[AXIS_W], value);		// reserved
 			case 'I': SET_NON_MODAL (arc_offset[0], value);
 			case 'J': SET_NON_MODAL (arc_offset[1], value);
 			case 'K': SET_NON_MODAL (arc_offset[2], value);
 			case 'R': SET_NON_MODAL (arc_radius, value);
-			case 'N': SET_NON_MODAL (linenum,(uint32_t)value);// line number
-			case 'L': break;								// not used for anything
+			case 'N': SET_NON_MODAL (linenum,(uint32_t)value);		// line number
+			case 'L': break;										// not used for anything
 			default: status = STAT_UNRECOGNIZED_COMMAND;
 		}
 		if(status != STAT_OK) break;
@@ -442,16 +442,16 @@ static stat_t check_gcode_block()
  * helpers
  */
 
-static stat_t get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *i) {
-	if (buf[*i] == NUL) { 		// no more statements
+static stat_t get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *index) {
+	if (buf[*index] == NUL) { 		// no more statements
 		return (STAT_COMPLETE);
 	}
-	*letter = buf[*i];
+	*letter = buf[*index];
 	if(isupper(*letter) == false) { 
 		return (STAT_EXPECTED_COMMAND_LETTER);
 	}
-	(*i)++;
-	if (read_float(buf, i, value) == false) {
+	(*index)++;
+	if (read_float(buf, index, value) == false) {
 		return (STAT_BAD_NUMBER_FORMAT);
 	}
 	return (STAT_OK);		// leave the index on the next character after the statement

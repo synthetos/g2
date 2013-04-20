@@ -178,12 +178,12 @@ uint8_t isnumber(char_t c)
  *	no non-alphnumeric characters, and no newline or CR.
  */
 
-uint8_t read_float(char_t *buf, uint8_t *i, float *float_ptr) 
+uint8_t read_float(char_t *buf, uint8_t *index, float *float_ptr) 
 {
-	char_t *start = buf + *i;
+	char_t *start = buf + *index;
 	char_t *end;
   
-	*float_ptr = strtod(start, &end);
+	*float_ptr = (float)strtod(start, &end);
 	if(end == start) { 
 		return(false); 
 	}

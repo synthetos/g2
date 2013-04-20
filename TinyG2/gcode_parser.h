@@ -29,7 +29,7 @@ extern "C"{
  * Global Scope Functions
  */
 
-stat_t gc_gcode_parser(char *block);
+stat_t gc_gcode_parser(char_t *block);
 
 #ifdef __cplusplus
 }

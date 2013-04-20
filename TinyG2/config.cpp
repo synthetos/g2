@@ -187,11 +187,9 @@ stat_t set_flt(cmdObj_t *cmd)
 }
 
 /*
-char *get_format(const index_t index, char_t *format)
+char *get_format(const index_t index)
 {
 	return ((char *)cfgArray[index].format);
-//	strncpy(format, cfgArray[index].format, CMD_FORMAT_LEN);
-//	return (format);
 }
 */
 
@@ -210,39 +208,39 @@ void print_nul(cmdObj_t *cmd) {}
 void print_str(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), *(cmd->stringp));
+	fprintf(stderr, get_format(cmd->index), *(cmd->stringp));
 }
 
 void print_ui8(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), (uint8_t)cmd->value);
+	fprintf(stderr, get_format(cmd->index), (uint8_t)cmd->value);
 }
 
 void print_int(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), (uint32_t)cmd->value);
+	fprintf(stderr, get_format(cmd->index), (uint32_t)cmd->value);
 }
 
 void print_flt(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
+	fprintf(stderr, get_format(cmd->index), cmd->value);
 }
 
 void print_lin(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-//	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
-	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
+//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
+	fprintf(stderr, get_format(cmd->index), cmd->value);
 }
 
 void print_rot(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-//	fprintf(stderr, get_format(cmd->index, NULL), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
-	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
+//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
+	fprintf(stderr, get_format(cmd->index), cmd->value);
 }
 
 
@@ -445,12 +443,11 @@ cmdObj_t *cmd_reset_list()					// clear the header and response body
 
 stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 {
-//	if ((cmdStr.wp + strlen((const char *)src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
 	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
-	uint8_t *dst = &cmdStr.string[cmdStr.wp];
+	char_t *dst = &cmdStr.string[cmdStr.wp];
 	strcpy(dst, src);						// copy string to current head position
 	cmdStr.wp += strlen(src)+1;				// advance head for next string
-	cmd->stringp = (uint8_t (*)[])dst;
+	cmd->stringp = (char_t (*)[])dst;
 	return (STAT_OK);
 }
 

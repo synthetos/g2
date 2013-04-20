@@ -270,10 +270,7 @@ void print_flt(cmdObj_t *cmd);		// print floating point value
 void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
 void print_rot(cmdObj_t *cmd);		// print floating point rotary value
 
-// get_format() 
-// This macro carries format_char_array (unused) to maintain compatibility with xmega code base
-// char *get_format(const index_t index, char_t *format);
-#define get_format(index, format_char_array) (const char *)cfgArray[index].format
+#define get_format(index) (const char *)cfgArray[index].format
 
 stat_t set_grp(cmdObj_t *cmd);		// set data for a group
 stat_t get_grp(cmdObj_t *cmd);		// get data for a group
