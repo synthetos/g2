@@ -165,7 +165,7 @@ static stat_t _normalize_gcode_block(char_t *block)
  *	  - inverse feed rate mode is cancelled - set back to units_per_minute mode
  */
 
-static uint8_t _parse_gcode_block(char_t *buf) 
+static stat_t parse_gcode_block(char_t *buf) 
 {
 	uint8_t i=0; 	 			// persistent index into Gcode block buffer (buf)
   	char_t letter;				// parsed letter, eg.g. G or X or Y
@@ -345,7 +345,7 @@ static uint8_t _parse_gcode_block(char_t *buf)
  *	to calling the canonical functions (which do the unit conversions)
  */
 
-static uint8_t _execute_gcode_block()
+static stat_t execute_gcode_block()
 {
 	uint8_t status = STAT_OK;
 
@@ -417,7 +417,7 @@ static uint8_t _execute_gcode_block()
  * _check_gcode_block() - return a STAT_ error if an error is detected
  */
 
-static uint8_t _check_gcode_block()
+static stat_t check_gcode_block()
 {
 	// Check for modal group violations. From NIST, section 3.4 "It is an error 
 	// to put a G-code from group 1 and a G-code from group 0 on the same line 
@@ -442,7 +442,7 @@ static uint8_t _check_gcode_block()
  * helpers
  */
 
-static uint8_t _get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *i) {
+static stat_t get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *i) {
 	if (buf[*i] == NUL) { 		// no more statements
 		return (STAT_COMPLETE);
 	}

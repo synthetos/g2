@@ -778,7 +778,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_target(target,flags);
 	cm_cycle_start();							// required for homing & other cycles
-	stat_t status;
+	stat_t status=0;
 //+++++	stat_t status = MP_LINE(gm.target, 
 //							_get_move_times(&gm.min_time), 
 //							cm_get_coord_offset_vector(gm.work_offset), 
@@ -903,7 +903,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 	cm_set_target(target, flags);
 	cm_cycle_start();						// required for homing & other cycles
-	stat_t status;
+	stat_t status=0;
 //+++++	stat_t status = MP_LINE(gm.target, 
 //							 _get_move_times(&gm.min_time), 
 //							 cm_get_coord_offset_vector(gm.work_offset), 

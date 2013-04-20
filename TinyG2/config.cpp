@@ -25,11 +25,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*	See config_app.h for an overview of the config system and it's use.
- */
 #include "tinyg2.h"
 #include "config.h"
-#include "config_app.h"		// application-specific config stuff - follows config.h
+//#include "config_app.h"		// application-specific config stuff - follows config.h
 #include "json_parser.h"
 #include "text_parser.h"
 #include "controller.h"
@@ -51,7 +49,7 @@ cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
  ***********************************************************************************/
 
-static uint8_t _set_defa(cmdObj_t *cmd);	// reset config to default values
+static stat_t set_defa(cmdObj_t *cmd);	// reset config to default values
 //static void _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]); // helper to print multiple groups in a list
 
 /***********************************************************************************
@@ -113,10 +111,10 @@ void cfg_init()
 //	cs.nvm_base_addr = NVM_BASE_ADDR;
 //	cs.nvm_profile_base = cfg.nvm_base_addr;
 	cmd->value = true;
-	_set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
+	set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
 }
 
-static uint8_t _set_defa(cmdObj_t *cmd) 
+static stat_t set_defa(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
 //	rpt_print_initializing_message();
@@ -188,6 +186,15 @@ stat_t set_flt(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
+/*
+char *get_format(const index_t index, char_t *format)
+{
+	return ((char *)cfgArray[index].format);
+//	strncpy(format, cfgArray[index].format, CMD_FORMAT_LEN);
+//	return (format);
+}
+*/
+
 /* Generic prints()
  * print_nul() - print nothing
  * print_str() - print string value
@@ -238,58 +245,6 @@ void print_rot(cmdObj_t *cmd)
 	fprintf(stderr, get_format(cmd->index, NULL), cmd->value);
 }
 
-
-/******************************************************************************
- * Accessors - get various data from an object given the index
- * get_format() 	- return format string for an index
- * get_motor()		- return the motor number as an index or -1 if na
- * get_axis()		- return the axis as an index or -1 if na 
- * get_pos_axis()	- return axis number for pos values or -1 if none - e.g. posx
- */
-/*
-char *get_format(const index_t index, char_t *format)
-{
-	return ((char *)cfgArray[index].format);
-//	strncpy(format, cfgArray[index].format, CMD_FORMAT_LEN);
-//	return (format);
-}
-*/
-/*
-int8_t get_motor(const index_t i)
-{
-	char *ptr;
-	char motors[] = {"1234"};
-	char tmp[CMD_TOKEN_LEN+1];
-
-	strcpy(tmp, cfgArray[i].group);
-	if ((ptr = strchr(motors, tmp[0])) == NULL) {
-		return (-1);
-	}
-	return (ptr - motors);
-}
-
-int8_t get_axis(const index_t i)
-{
-	char *ptr;
-	char tmp[CMD_TOKEN_LEN+1];
-	char axes[] = {"xyzabc"};
-
-	strcpy(tmp, cfgArray[i].token);
-	if ((ptr = strchr(axes, tmp[0])) == NULL) { return (-1);}
-	return (ptr - axes);
-}
-
-int8_t get_pos_axis(const index_t i)
-{
-	char *ptr;
-	char tmp[CMD_TOKEN_LEN+1];
-	char axes[] = {"xyzabc"};
-
-	strcpy(tmp, cfgArray[i].token);
-	if ((ptr = strchr(axes, tmp[3])) == NULL) { return (-1);}
-	return (ptr - axes);
-}
-*/
 
 /********************************************************************************
  * Group operations

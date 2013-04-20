@@ -112,8 +112,6 @@ extern "C"{
  **** APPLICATION_SPECIFIC CONFIG STRUCTURE(S) *************************************
  ***********************************************************************************/
 
-// configuration parameter structures
-
 typedef struct cfgAxisParameters {
 	uint8_t axis_mode;				// see tgAxisMode in gcode.h
 	float feedrate_max;				// max velocity in mm/min or deg/min
@@ -213,107 +211,7 @@ typedef struct cfgParameters {
 } cfgParameters_t;
 extern cfgParameters_t cfg; 		// declared in config_app.cpp
 
-/***********************************************************************************
- **** PROGRAM MEMORY STRINGS AND STRING ARRAYS *************************************
- ***********************************************************************************/
-/* PROGMEM strings for print formatting
- * NOTE: DO NOT USE TABS IN FORMAT STRINGS
- */
 
-//static const char_t msg_units0[] PROGMEM = " in";	// used by generic print functions
-//static const char_t msg_units1[] PROGMEM = " mm";
-//static const char_t msg_units2[] PROGMEM = " deg";
-//static const char_t *msg_units[] PROGMEM = { msg_units0, msg_units1, msg_units2 };
-//#define F_DEG 2
-
-/***********************************************************************************
- **** FUNCTIONS AND PROTOTYPES *****************************************************
- ***********************************************************************************/
-/* Imported from tinyg / config.c
-//static void _pr_ma_str(cmdObj_t *cmd); // generic print functions for motors and axes
-static void _pr_ma_ui8(cmdObj_t *cmd);
-//static void _pr_ma_int(cmdObj_t *cmd); // placeholder
-//static void _pr_ma_dbl(cmdObj_t *cmd); // placeholder
-static void _pr_ma_lin(cmdObj_t *cmd);
-static void _pr_ma_rot(cmdObj_t *cmd);
-static void _print_coor(cmdObj_t *cmd);	// print coordinate offsets with linear units
-static void _print_corr(cmdObj_t *cmd);	// print coordinate offsets with rotary units
-
-// helpers for generic functions
-static char *_get_format(const index_t i, char *format);
-static int8_t _get_motor(const index_t i);
-//static int8_t _get_axis(const index_t i);
-static int8_t _get_pos_axis(const index_t i);
-static uint8_t _text_parser(char *str, cmdObj_t *c);
-static uint8_t _get_msg_helper(cmdObj_t *cmd, prog_char_ptr msg, uint8_t value);
-*/
-/*
-// parameter-specific internal functions
-static uint8_t _set_hv(cmdObj_t *cmd);		// set hardware version
-static uint8_t _get_sr(cmdObj_t *cmd);		// run status report (as data)
-static void _print_sr(cmdObj_t *cmd);		// run status report (as printout)
-static uint8_t _set_sr(cmdObj_t *cmd);		// set status report specification
-static uint8_t _set_si(cmdObj_t *cmd);		// set status report interval
-static uint8_t _run_boot(cmdObj_t *cmd);	// jump to the bootloader
-static uint8_t _get_id(cmdObj_t *cmd);		// get device ID
-static uint8_t _get_qr(cmdObj_t *cmd);		// get a queue report (as data)
-static uint8_t _run_qf(cmdObj_t *cmd);		// execute a queue flush block
-static uint8_t _get_er(cmdObj_t *cmd);		// invoke a bogus exception report for testing purposes
-static uint8_t _get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
-
-static uint8_t _get_gc(cmdObj_t *cmd);		// get current gcode block
-static uint8_t _run_gc(cmdObj_t *cmd);		// run a gcode block
-static uint8_t _run_home(cmdObj_t *cmd);	// invoke a homing cycle
-
-static uint8_t _get_line(cmdObj_t *cmd);	// get runtime line number
-static uint8_t _get_stat(cmdObj_t *cmd);	// get combined machine state as value and string
-static uint8_t _get_macs(cmdObj_t *cmd);	// get raw machine state as value and string
-static uint8_t _get_cycs(cmdObj_t *cmd);	// get raw cycle state (etc etc)...
-static uint8_t _get_mots(cmdObj_t *cmd);	// get raw motion state...
-static uint8_t _get_hold(cmdObj_t *cmd);	// get raw hold state...
-static uint8_t _get_home(cmdObj_t *cmd);	// get raw homing state...
-static uint8_t _get_unit(cmdObj_t *cmd);	// get unit mode...
-static uint8_t _get_coor(cmdObj_t *cmd);	// get coordinate system in effect...
-static uint8_t _get_momo(cmdObj_t *cmd);	// get motion mode...
-static uint8_t _get_plan(cmdObj_t *cmd);	// get active plane...
-static uint8_t _get_path(cmdObj_t *cmd);	// get patch control mode...
-static uint8_t _get_dist(cmdObj_t *cmd);	// get distance mode...
-static uint8_t _get_frmo(cmdObj_t *cmd);	// get feedrate mode...
-static uint8_t _get_vel(cmdObj_t *cmd);		// get runtime velocity...
-static uint8_t _get_pos(cmdObj_t *cmd);		// get runtime work position...
-static uint8_t _get_mpos(cmdObj_t *cmd);	// get runtime machine position...
-static uint8_t _get_ofs(cmdObj_t *cmd);		// get runtime work offset...
-static void _print_pos(cmdObj_t *cmd);		// print runtime work position in prevailing units
-static void _print_mpos(cmdObj_t *cmd);		// print runtime work position always in MM uints
-
-static uint8_t _set_defa(cmdObj_t *cmd);	// reset config to default values
-
-static uint8_t _set_sa(cmdObj_t *cmd);		// set motor step angle
-static uint8_t _set_tr(cmdObj_t *cmd);		// set motor travel per revolution
-static uint8_t _set_mi(cmdObj_t *cmd);		// set microsteps
-static uint8_t _set_po(cmdObj_t *cmd);		// set motor polarity
-
-static uint8_t _set_sw(cmdObj_t *cmd);		// must run any time you change a switch setting
-static uint8_t _get_am(cmdObj_t *cmd);		// get axis mode
-static uint8_t _set_am(cmdObj_t *cmd);		// set axis mode
-static void _print_am(cmdObj_t *cmd);		// print axis mode
-
-static uint8_t _set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
-static uint8_t _set_ec(cmdObj_t *cmd);		// expand CRLF on TX outout
-static uint8_t _set_ee(cmdObj_t *cmd);		// enable character echo
-static uint8_t _set_ex(cmdObj_t *cmd);		// enable XON/XOFF
-static uint8_t _set_baud(cmdObj_t *cmd);	// set USB baud rate
-*/
-
-
-/*
-static uint8_t _get_htmp(cmdObj_t *cmd)
-{
-	cmd->value = heater.temperature;
-	cmd->type = TYPE_FLOAT;
-	return (SC_OK);
-}
-*/
 #ifdef __cplusplus
 }
 #endif
