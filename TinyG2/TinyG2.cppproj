@@ -405,6 +405,12 @@
     <Compile Include="arduino\WString.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="canonical_machine.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="canonical_machine.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="cmsis\src\startup_sam3xa.c">
       <SubType>compile</SubType>
     </Compile>
@@ -427,6 +433,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="controller.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gcode_parser.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gcode_parser.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="json_parser.cpp">

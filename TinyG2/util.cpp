@@ -56,20 +56,20 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
  * set_vector()				- load values into vector form
  * set_vector_by_axis()		- load a single value into a zero vector
  */
-/*
-inline void copy_vector(double dest[], const double src[], uint8_t length) 
+
+inline void copy_vector(float dest[], const float src[], uint8_t length) 
 {
 	for (uint8_t i=0; i<length; i++) {
 		dest[i] = src[i];
 	}
 }
 
-inline void copy_axis_vector(double dest[], const double src[]) 
+inline void copy_axis_vector(float dest[], const float src[]) 
 {
-	memcpy(dest, src, sizeof(double)*AXES);
+	memcpy(dest, src, sizeof(float)*AXES);
 }
 
-double get_axis_vector_length(const double a[], const double b[]) 
+float get_axis_vector_length(const float a[], const float b[]) 
 {
 	return (sqrt(square(a[X] - b[X]) +
 				 square(a[Y] - b[Y]) +
@@ -79,7 +79,7 @@ double get_axis_vector_length(const double a[], const double b[])
 				 square(a[C] - b[C])));
 }
 
-double *set_vector(double x, double y, double z, double a, double b, double c)
+float *set_vector(float x, float y, float z, float a, float b, float c)
 {
 	vector[X] = x;
 	vector[Y] = y;
@@ -90,7 +90,7 @@ double *set_vector(double x, double y, double z, double a, double b, double c)
 	return (vector);
 }
 
-double *set_vector_by_axis(double value, uint8_t axis)
+float *set_vector_by_axis(float value, uint8_t axis)
 {
 	clear_vector(vector);
 	switch (axis) {
@@ -103,7 +103,7 @@ double *set_vector_by_axis(double value, uint8_t axis)
 	}
 	return (vector);
 }
-*/
+
 /**** Math and other general purpose functions ****/
 
 /* Slightly faster (*) multi-value min and max functions
@@ -120,77 +120,77 @@ double *set_vector_by_axis(double value, uint8_t axis)
  *	#define max3(a,b,c) (max(max(a,b),c))
  *	#define max4(a,b,c,d) (max(max(a,b),max(c,d)))
  */
-/*
-inline double min3(double x1, double x2, double x3)
+
+inline float min3(float x1, float x2, float x3)
 {
-	double min = x1;
+	float min = x1;
 	if (x2 < min) { min = x2;} 
 	if (x3 < min) { return (x3);} 
 	return (min);
 }
 
-inline double min4(double x1, double x2, double x3, double x4)
+inline float min4(float x1, float x2, float x3, float x4)
 {
-	double min = x1;
+	float min = x1;
 	if (x2 < min) { min = x2;} 
 	if (x3 < min) { min = x3;} 
 	if (x4 < min) { return (x4);}
 	return (min);
 }
 
-inline double max3(double x1, double x2, double x3)
+inline float max3(float x1, float x2, float x3)
 {
-	double max = x1;
+	float max = x1;
 	if (x2 > max) { max = x2;} 
 	if (x3 > max) { return (x3);} 
 	return (max);
 }
 
-inline double max4(double x1, double x2, double x3, double x4)
+inline float max4(float x1, float x2, float x3, float x4)
 {
-	double max = x1;
+	float max = x1;
 	if (x2 > max) { max = x2;} 
 	if (x3 > max) { max = x3;} 
 	if (x4 > max) { return (x4);}
 	return (max);
 }
-*/
+
 /*
  * isnumber() - isdigit that also accepts plus, minus, and decimal point
  */
-/*
-uint8_t isnumber(char c)
+
+uint8_t isnumber(char_t c)
 {
 	if (c == '.') { return (true); }
 	if (c == '-') { return (true); }
 	if (c == '+') { return (true); }
 	return (isdigit(c));
 }
-*/
+
 /* 
- * read_double() - read a double from a normalized char array
+ * read_float() - read a float from a normalized char array
  *
  *	buf			normalized char array (line)
  *	i			char array index must point to start of number
- *	double_ptr	pointer to double to write value into
+ *	float_ptr	pointer to float to write value into
  *
  *	The line is normalized when it is all caps, has no white space,
  *	no non-alphnumeric characters, and no newline or CR.
  */
-/*
-uint8_t read_double(char *buf, uint8_t *i, double *double_ptr) 
+
+uint8_t read_float(char_t *buf, uint8_t *i, float *float_ptr) 
 {
-	char *start = buf + *i;
-	char *end;
+	char_t *start = buf + *i;
+	char_t *end;
   
-	*double_ptr = strtod(start, &end);
+	*float_ptr = strtod(start, &end);
 	if(end == start) { 
 		return(false); 
 	}
 	*i = (uint8_t)(end - buf);
 	return(true);
 }
-*/
+
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 
@@ -200,8 +200,8 @@ uint8_t read_double(char *buf, uint8_t *i, double *double_ptr)
  *	See http://en.wikipedia.org/wiki/Java_hashCode()
  */
 #define HASHMASK 9999
-/*
-uint16_t compute_checksum(char const *string, const uint16_t length) 
+
+uint16_t compute_checksum(char_t const *string, const uint16_t length) 
 {
 	uint32_t h = 0;
 	uint16_t len = strlen(string);
@@ -214,9 +214,6 @@ uint16_t compute_checksum(char const *string, const uint16_t length)
     }
     return (h % HASHMASK);
 }
-
-*/
-
 
 #ifdef __cplusplus
 }

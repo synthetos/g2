@@ -1,5 +1,5 @@
 /*
- * json_parser.c - JSON parser and JSON support
+ * json_parser.h - JSON parser and JSON support
  * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.

@@ -1,5 +1,6 @@
 /*
  * config.cpp - configuration handling and persistence; master function table
+ * Part of TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  * Copyright (c) 2013 Robert Giseburt

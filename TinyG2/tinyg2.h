@@ -157,7 +157,7 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_BUFFER_FULL 13
 #define	STAT_BUFFER_FULL_FATAL 14
 #define	STAT_INITIALIZING 15			// initializing - not ready for use
-#define	STAT_ERROR_16 16
+#define	STAT_STUBBED_16 16				// function is stubbed
 #define	STAT_ERROR_17 17
 #define	STAT_ERROR_18 18
 #define	STAT_ERROR_19 19				// NOTE: XIO codes align to here
