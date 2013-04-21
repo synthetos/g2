@@ -570,34 +570,6 @@ cmdObj_t *cmd_add_message(const char_t *string)	// conditionally add a message o
 	return(cmd_add_string((const char_t *)"msg", string));
 }
 
-
-/* deprecated PROGMEM functions 
-
-stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P)
-{
-	char_t buf[CMD_SHARED_STRING_LEN];
-	//	strncpy_P(buf, src_P, CMD_SHARED_STRING_LEN);
-	strncpy(buf, src_P, CMD_SHARED_STRING_LEN);
-	return (cmd_copy_string(cmd, buf));
-}
-
-
-cmdObj_t *cmd_add_string_P(const char_t *token, const char_t *string)
-{
-	char_t message[CMD_MESSAGE_LEN];
-	//	sprintf_P(message, string);
-	sprintf((char *)message, (const char *)string);
-	return(cmd_add_string(token, (char_t *)message));
-}
-
-cmdObj_t *cmd_add_message_P(const char_t *string)	// conditionally add a message object to the body
-{
-	char_t message[CMD_MESSAGE_LEN]; 
-//	sprintf_P(message, string);
-	sprintf((char *)message, (const char *)string);
-	return(cmd_add_string((const char_t *)"msg", message));
-}
-*/
 /**** cmd_print_list() - print cmd_array as JSON or text ****
  *
  * 	Use this function for all text and JSON output that wants to be in a response header

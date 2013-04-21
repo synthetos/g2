@@ -42,7 +42,6 @@ void copy_vector(float dest[], const float src[], uint8_t length);
 void copy_axis_vector(float dest[], const float src[]);
 float get_axis_vector_length(const float a[], const float b[]);
 float *set_vector(float x, float y, float z, float a, float b, float c);
-float *set_vector_by_axis(float value, uint8_t axis);
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);

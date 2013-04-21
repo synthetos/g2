@@ -71,13 +71,7 @@
  *		affected by upstream changes to the gm model. Many other vars also fall into
  *		this category.
  */
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>				// needed for memcpy, memset
-#include <avr/pgmspace.h>		// needed for exception strings
-*/
+
 #include "tinyg2.h"
 #include "util.h"
 #include "config.h"

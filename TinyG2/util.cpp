@@ -69,68 +69,6 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 		dst[index] = src[index];	
 	} while (src[index++] != 0);
 	return dst;
-
-//	for (uint16_t index=0; src[index] != 0; index++) {
-//		dst[index] = src[index];
-//	}
-//	dst[index] = 0;		// terminate string
-//	return dst;
-}
-
-/**** Vector functions ****
- * copy_vector()			- copy vector of arbitrary length
- * copy_axis_vector()		- copy an axis vector
- * set_unit_vector()		- populate a unit vector by pos. & target
- * get_axis_vector_length()	- return the length of an axis vector
- * set_vector()				- load values into vector form
- * set_vector_by_axis()		- load a single value into a zero vector
- */
-
-void copy_vector(float dest[], const float src[], uint8_t length) 
-{
-	for (uint8_t i=0; i<length; i++) {
-		dest[i] = src[i];
-	}
-}
-
-void copy_axis_vector(float dest[], const float src[]) 
-{
-	memcpy(dest, src, sizeof(float)*AXES);
-}
-
-float get_axis_vector_length(const float a[], const float b[]) 
-{
-	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
-				 square(a[AXIS_Y] - b[AXIS_Y]) +
-				 square(a[AXIS_Z] - b[AXIS_Z]) +
-				 square(a[AXIS_A] - b[AXIS_A]) +
-				 square(a[AXIS_B] - b[AXIS_B]) +
-				 square(a[AXIS_C] - b[AXIS_C])));
-}
-
-float *set_vector(float x, float y, float z, float a, float b, float c)
-{
-	vector[AXIS_X] = x;
-	vector[AXIS_Y] = y;
-	vector[AXIS_Z] = z;
-	vector[AXIS_A] = a;
-	vector[AXIS_B] = b;
-	vector[AXIS_C] = c;
-	return (vector);
-}
-
-float *set_vector_by_axis(float value, uint8_t axis)
-{
-//+++++	clear_vector(vector);
-	switch (axis) {
-		case (AXIS_X): { vector[AXIS_X] = value; break; }
-		case (AXIS_Y): { vector[AXIS_Y] = value; break; }
-		case (AXIS_Z): { vector[AXIS_Z] = value; break; }
-		case (AXIS_A): { vector[AXIS_A] = value; break; }
-		case (AXIS_B): { vector[AXIS_B] = value; break; }
-		case (AXIS_C): { vector[AXIS_C] = value; }
-	}
-	return (vector);
 }
 
 /**** Math and other general purpose functions ****/
@@ -244,6 +182,52 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
     return (h % HASHMASK);
 }
 */
+
+/**** Vector functions ****
+ * copy_vector()			- copy vector of arbitrary length
+ * copy_axis_vector()		- copy an axis vector
+ * set_unit_vector()		- populate a unit vector by pos. & target
+ * get_axis_vector_length()	- return the length of an axis vector
+ * set_vector()				- load values into vector form
+ */
+/*
+void copy_vector(float dest[], const float src[], uint8_t length) 
+{
+	for (uint8_t i=0; i<length; i++) {
+		dest[i] = src[i];
+	}
+}
+*/
+/*
+void copy_axis_vector(float dest[], const float src[]) 
+{
+	memcpy(dest, src, sizeof(float)*AXES);
+}
+*/
+/*
+float get_axis_vector_length(const float a[], const float b[]) 
+{
+	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
+				 square(a[AXIS_Y] - b[AXIS_Y]) +
+				 square(a[AXIS_Z] - b[AXIS_Z]) +
+				 square(a[AXIS_A] - b[AXIS_A]) +
+				 square(a[AXIS_B] - b[AXIS_B]) +
+				 square(a[AXIS_C] - b[AXIS_C])));
+}
+*/
+/*
+float *set_vector(float x, float y, float z, float a, float b, float c)
+{
+	vector[AXIS_X] = x;
+	vector[AXIS_Y] = y;
+	vector[AXIS_Z] = z;
+	vector[AXIS_A] = a;
+	vector[AXIS_B] = b;
+	vector[AXIS_C] = c;
+	return (vector);
+}
+*/
+
 #ifdef __cplusplus
 }
 #endif
