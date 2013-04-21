@@ -142,7 +142,7 @@ typedef struct cfgPWMParameters {
 } cfgPWM_t;
 
 typedef struct cfgParameters {
-	uint16_t magic_start;			// magic number to test memory integity
+	magic_t magic_start;			// magic number to test memory integity
 	uint16_t nvm_base_addr;			// NVM base address
 	uint16_t nvm_profile_base;		// NVM base address of current profile
 
@@ -198,7 +198,7 @@ typedef struct cfgParameters {
 	cfgAxis_t a[AXES];				// settings for axes X,Y,Z,A B,C
 	cfgPWM_t p;						// settings for PWM p
 
-	uint16_t magic_end;
+	magic_t magic_end;
 } cfgParameters_t;
 extern cfgParameters_t cfg; 		// declared in config_app.cpp
 

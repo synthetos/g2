@@ -211,7 +211,7 @@ typedef struct stRunMotor { 		// one per controlled motor
 } stRunMotor_t;
 
 typedef struct stRunSingleton {		// Stepper static values and axis parameters
-	uint16_t magic_start;			// magic number to test memory integity	
+	magic_t magic_start;			// magic number to test memory integity	
 	int32_t timer_ticks_downcount;	// tick down-counter (unscaled)
 	int32_t timer_ticks_X_substeps;	// ticks multiplied by scaling factor
 	stRunMotor_t m[MOTORS];			// runtime motor structures
@@ -232,7 +232,7 @@ typedef struct stPrepMotor {
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-	uint16_t magic_start;			// magic number to test memory integity	
+	magic_t magic_start;			// magic number to test memory integity	
 	uint8_t move_type;				// move type
 	volatile uint8_t exec_state;	// move execution state 
 	volatile uint8_t counter_reset_flag; // set TRUE if counter should be reset
@@ -245,8 +245,8 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
-uint16_t st_get_st_magic() { return (st.magic_start);}
-uint16_t st_get_sps_magic() { return (sps.magic_start);}
+magic_t st_get_st_magic() { return (st.magic_start);}
+magic_t st_get_sps_magic() { return (sps.magic_start);}
 
 /*
 static inline void pinOutput(int pin, int val)
