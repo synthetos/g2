@@ -43,12 +43,13 @@ extern "C"{
 #define LED_ALARM_COUNTER 100			// blink rate for alarm state (in ms)
 
 typedef struct controllerState {		// main TG controller struct
-	magic_t magic_start;				// magic number to test memory integrity	
+	magic_t magic_start;				// magic number to test memory integrity
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
+	uint8_t state;						// controller state
 	uint8_t active_src;					// active source device
 	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON
@@ -65,6 +66,14 @@ typedef struct controllerState {		// main TG controller struct
 } controller_t;
 
 extern controller_t cs;					// controller state structure
+
+enum cmControllerState {				// manages startup lines
+	CONTROLLER_INITIALIZING = 0,		// controller is initializing - not ready for use
+	CONTROLLER_STARTUP,					// controller is running startup lines
+	CONTROLLER_READY					// controller is active and ready for use
+};
+
+/**** function prototypes ****/
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
 void controller_reset();

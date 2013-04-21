@@ -39,6 +39,7 @@ USER_LIBS =
 
 # Define optimisation level here
 #OPTIMIZATION = -Os
+#OPTIMIZATION ?= 3
 OPTIMIZATION ?= 0
 
 CFLAGS   :=

@@ -130,19 +130,14 @@ static const char_t *stat_msg[] = {
 	stat_50, stat_51, stat_52, stat_53, stat_54, stat_55, stat_56, stat_57, stat_58, stat_59,
 	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69
 };
+
 /*
-char *rpt_get_status_message(uint8_t status, char *msg) 
-{
-	strncpy_P(msg,(PGM_P)pgm_read_word(&msgStatusMessage[status]), STATUS_MESSAGE_LEN);
-	return (msg);
-}
-*/
+ * rpt_exception() - generate an exception message
+ */
 void rpt_exception(uint8_t status, int16_t value)
 {
-	char msg[STATUS_MESSAGE_LEN];
 	printf("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}\n", 
 		TINYG_FIRMWARE_BUILD, status, stat_msg[status], value);
-//		TINYG_FIRMWARE_BUILD, status, rpt_get_status_message(status, msg), value);
 }
 
 /**** Application Messages *********************************************************
@@ -153,15 +148,8 @@ void rpt_exception(uint8_t status, int16_t value)
  *
  *	These messages are always in JSON format to allow UIs to sync
  */
-/*
-void rpt_print_message(char *msg)
-{
-	cmd_add_string("msg", msg);
-	cmd_print_list(STAT_OK, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
-}
-*/
 
-void _startup_helper(uint8_t status, char *msg)
+void _startup_helper(uint8_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
 	cmd_reset_list();
@@ -261,7 +249,7 @@ void rpt_init_status_report()
  * rpt_set_status_report() - interpret an sr setup string and return current report
  */
 /*
-uint8_t rpt_set_status_report(cmdObj_t *cmd)
+stat_t rpt_set_status_report(cmdObj_t *cmd)
 {
 	uint8_t elements = 0;
 	index_t status_report_list[CMD_STATUS_REPORT_LEN];
@@ -317,7 +305,7 @@ void rpt_status_report_rtc_callback() 		// called by 10ms real-time clock
 	if (cm.status_report_counter != 0) { cm.status_report_counter--;} // stick at zero
 }
 
-uint8_t rpt_status_report_callback() 		// called by controller dispatcher
+stat_t rpt_status_report_callback() 		// called by controller dispatcher
 {
 	if ((cfg.status_report_verbosity == SR_OFF) || 
 		(cm.status_report_counter != 0) ||
@@ -439,7 +427,7 @@ void rpt_request_queue_report()
 	qr.request = true;
 }
 
-uint8_t rpt_queue_report_callback()
+stat_t rpt_queue_report_callback()
 {
 	if (qr.request == false) { return (STAT_NOOP);}
 	qr.request = false;

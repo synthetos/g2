@@ -85,21 +85,22 @@ typedef uint8_t char_t;
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
+#define DEV_STDIN 0				// STDIO defaults
+#define DEV_STDOUT 0
+#define DEV_STDERR 0
+
 typedef uint16_t magic_t;		// magic number size
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
 
+/* 
+ * Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
+ */
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 4				// number of motors on the board
 #define COORDS 6				// number of supported coordinate systems (1-6)
 #define PWMS 2					// number of supported PWM channels
 
 // If you change COORDS you must adjust the entries in cfgArray table in config.c
-
-/* Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
- * 	 NB: Using defines can have side effects if anythign else in the code uses A, B, X... etc.
- *   The "side effect safe" min and max routines had this side effect.
- * Alternate enum is: enum tgAxes { X=0, Y, Z, A, B, C };
- */
 
 #define AXIS_X	0
 #define AXIS_Y	1
@@ -132,7 +133,8 @@ typedef uint8_t stat_t;
 extern stat_t status_code;				// declared in main.cpp
 #define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
-// OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
+/* OS, communications and low-level status (must align with strings in report.cpp) */
+
 #define	STAT_OK 0						// function completed OK
 #define	STAT_ERROR 1					// generic error return (EPERM)
 #define	STAT_EAGAIN 2					// function would block here (call again)

@@ -86,7 +86,7 @@ static stat_t _sync_to_planner(void);
  **** CODE *************************************************************************
  ***********************************************************************************/
 /*
- * tg_init() - controller init
+ * controller_init() - controller init
  */
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
@@ -94,8 +94,9 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.magic_start = MAGICNUM;
 	cs.magic_end = MAGICNUM;
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
-	cs.fw_version = TINYG_FIRMWARE_VERSION;// NB: HW version is set from EEPROM
-	cs.linelen = 0;						// initialize index for read_line()
+	cs.fw_version = TINYG_FIRMWARE_VERSION;	// NB: HW version is set from EEPROM
+	cs.state = CONTROLLER_STARTUP;			// ready to run startup lines	
+	cs.linelen = 0;							// initialize index for read_line()
 
 //	xio_set_stdin(std_in);
 //	xio_set_stdout(std_out);
@@ -105,7 +106,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 }
 
 /* 
- * tg_controller() - MAIN LOOP - top-level controller
+ * controller_run() - MAIN LOOP - top-level controller
  *
  * The order of the dispatched tasks is very important. 
  * Tasks are ordered by increasing dependency (blocking hierarchy).
@@ -186,16 +187,23 @@ static stat_t _command_dispatch()
 {
 //	printf("printf test2 %d %f...\n", 10, 10.003);
 //	printf("test %2.3f\n", 11.033);
-//	strcpy(cs.in_buf, "$fb");
 
 	// read input line or return if not a completed line
 	stat_t status;
-	if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
-		return (STAT_OK);	// so the idler always runs
+	if (cs.state == CONTROLLER_READY) {
+		if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
+			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
+		}
+	} else if (cs.state == CONTROLLER_STARTUP) {
+		strcpy(cs.in_buf, "$fb");
+		cs.state = CONTROLLER_READY;
+	} else {
+		return (STAT_OK);
 	}
-//	write (cs.in_buf, cs.linelen);
-	cs.linelen = 0;
+	
+	// execute the text line
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+	cs.linelen = 0;
 
 	// dispatch the new text line
 	switch (toupper(cs.in_buf[0])) {
