@@ -179,7 +179,6 @@ namespace Motate {
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint32_t mask = (1u << registerPin);\
-			static Port32<registerChar> port;\
 			\
 			Pin() {};\
 			Pin(const PinMode type, const PinOptions options = kNormal) {\
@@ -201,12 +200,12 @@ namespace Motate {
 						if (!fromConstructor) {\
 							if ( (*PIO ## registerLetter).PIO_OSR == 0xffffffff )\
 							{\
-								port.disablePeripheralClock();\
+								 Port32<registerChar>::disablePeripheralClock();\
 							}\
 						}\
 						break;\
 					case kInput:\
-						port.enablePeripheralClock();\
+						 Port32<registerChar>::enablePeripheralClock();\
 						(*PIO ## registerLetter).PIO_ODR = mask ;\
 						(*PIO ## registerLetter).PIO_PER = mask ;\
 						break;\
@@ -295,7 +294,7 @@ namespace Motate {
         template <>\
         struct Port32<registerChar> {\
             static const uint8_t letter = (uint8_t) registerChar;\
-            void enablePeripheralClock() {\
+            static void enablePeripheralClock() {\
                 if (pmcId() < 32) {\
                     uint32_t id_mask = 1u << ( pmcId() );\
                     if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
@@ -308,7 +307,7 @@ namespace Motate {
                     }\
                 }\
             };\
-            void disablePeripheralClock() {\
+            static void disablePeripheralClock() {\
                 if (pmcId() < 32) {\
                     uint32_t id_mask = 1u << ( pmcId() );\
                     if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
@@ -393,7 +392,7 @@ namespace Motate {
             Pio* portPtr() {\
                 return (PIO ## registerLetter);\
             };\
-            const uint32_t pmcId() {\
+            static const uint32_t pmcId() {\
                 return ID_PIO ## registerLetter;\
             };\
         };\
