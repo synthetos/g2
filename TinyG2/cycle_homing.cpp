@@ -458,7 +458,7 @@ int8_t _get_next_axes(int8_t axis)
 		}
 	}
 	if (next_axis == AXES) {
-//		fprintf_P(stderr, PSTR("***** Homing failed: none or disabled/inhibited axes specified\n"));
+//		fprintf(stderr, PSTR("***** Homing failed: none or disabled/inhibited axes specified\n"));
 		return (-2);	// didn't find any axes to process
 	}
 

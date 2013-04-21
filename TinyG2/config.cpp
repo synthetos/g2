@@ -378,7 +378,7 @@ uint8_t cmd_group_is_prefixed(uint8_t *group)
  * cmd_persist_offsets() - write any changed G54 (et al) offsets back to NVM
  * 
  * cmd_get_index() is the most expensive routine in the whole config. It does a linear table scan 
- * of the PROGMEM strings, which of course could be further optimized with indexes or hashing.
+ * of the Flash strings, which of course could be further optimized with indexes or hashing.
  */
 index_t cmd_get_index(const char_t *group, const char_t *token)
 {

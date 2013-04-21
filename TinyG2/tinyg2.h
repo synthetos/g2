@@ -34,7 +34,6 @@
 #include <math.h>
 
 #include <MotatePins.h>
-
 #include "Arduino.h"
 
 #ifdef __cplusplus
@@ -43,7 +42,7 @@ extern "C"{
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	005.04		// 
+#define TINYG_FIRMWARE_BUILD   	005.05		// 
 #define TINYG_FIRMWARE_VERSION	0.01		// firmware major version
 #define TINYG_HARDWARE_PLATFORM	2.00		// hardware platform indicator (Native Arduino Due)
 #define TINYG_HARDWARE_VERSION	1.00		// hardware platform revision number
@@ -86,6 +85,7 @@ typedef uint8_t char_t;
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
+typedef uint16_t magic_t;		// magic number size
 #define MAGICNUM 0x12EF			// used for memory integrity assertions
 
 #define AXES 6					// number of axes supported in this version
@@ -149,8 +149,8 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_BUFFER_FULL 13
 #define	STAT_BUFFER_FULL_FATAL 14
 #define	STAT_INITIALIZING 15			// initializing - not ready for use
-#define	STAT_STUBBED_16 16				// function is stubbed
-#define	STAT_ERROR_17 17
+#define	STAT_ENTERING_BOOT_LEADER 16
+#define	STAT_FUNCTION_IS_STUBBED 17
 #define	STAT_ERROR_18 18
 #define	STAT_ERROR_19 19				// NOTE: XIO codes align to here
 

@@ -43,7 +43,7 @@ extern "C"{
 #define LED_ALARM_COUNTER 100			// blink rate for alarm state (in ms)
 
 typedef struct controllerState {		// main TG controller struct
-	uint16_t magic_start;				// magic number to test memory integrity	
+	magic_t magic_start;				// magic number to test memory integrity	
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
@@ -58,10 +58,10 @@ typedef struct controllerState {		// main TG controller struct
 	uint32_t led_counter;				// a convenience for flashing an LED
 	uint32_t nvm_base_addr;				// NVM base address
 	uint32_t nvm_profile_base;			// NVM base address of current profile
-	uint8_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
-	uint8_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
-	uint8_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
-	uint16_t magic_end;
+	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
+	char_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
+	char_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
+	magic_t magic_end;
 } controller_t;
 
 extern controller_t cs;					// controller state structure

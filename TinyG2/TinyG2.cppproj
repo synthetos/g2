@@ -447,6 +447,12 @@
     <Compile Include="gpio.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="help.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="help.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="json_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -634,6 +640,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\libsam\source\wdt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="report.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="report.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings.h">

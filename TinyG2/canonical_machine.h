@@ -1,6 +1,6 @@
 /*
  * canonical_machine.h - rs274/ngc canonical machining functions
- * Part of TinyG project
+ * This file is part of the TinyG2 project
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3

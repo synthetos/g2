@@ -1,5 +1,6 @@
 /*
  * config_app.cpp - application-specific part of configuration data
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *
@@ -43,7 +44,6 @@
 #include "system.h"
 #include "network.h"
 */
-
 
 #ifdef __cplusplus
 extern "C"{
@@ -296,33 +296,33 @@ static const char_t fmt_dist[] = "Distance mode:       %s\n";
 static const char_t fmt_frmo[] = "Feed rate mode:      %s\n";
 
 static const char_t fmt_pos[]  = "%c position:%15.3f%S\n";
-static const char_t fmt_mpos[] = "%c machine posn:%11.3f%S\n";
-static const char_t fmt_ofs[]  = "%c work offset:%12.3f%S\n";
+static const char_t fmt_mpos[] = "%c machine posn:%11.3f%s\n";
+static const char_t fmt_ofs[]  = "%c work offset:%12.3f%s\n";
 static const char_t fmt_hom[]  = "%c axis homing state:%2.0f\n";
 
 // Motor print formatting strings
 static const char_t fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
-static const char_t fmt_0sa[] = "[%s%s] m%s step angle%20.3f%S\n";
-static const char_t fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%S\n";
+static const char_t fmt_0sa[] = "[%s%s] m%s step angle%20.3f%s\n";
+static const char_t fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%s\n";
 static const char_t fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char_t fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char_t fmt_0pm[] = "[%s%s] m%s power management%10d [0=off,1=on]\n";
 
 // Axis print formatting strings
-static const char_t fmt_Xam[] = "[%s%s] %s axis mode%18d %S\n";
-static const char_t fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%S/min\n";
-static const char_t fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%S/min\n";
-static const char_t fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%S\n";
-static const char_t fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%S/min^3\n";
-static const char_t fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%S (larger is faster)\n";
-static const char_t fmt_Xra[] = "[%s%s] %s radius value%20.4f%S\n";
+static const char_t fmt_Xam[] = "[%s%s] %s axis mode%18d %s\n";
+static const char_t fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%s/min\n";
+static const char_t fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%s/min\n";
+static const char_t fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%s\n";
+static const char_t fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%s/min^3\n";
+static const char_t fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+static const char_t fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
 static const char_t fmt_Xsn[] = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
 static const char_t fmt_Xsx[] = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-static const char_t fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%S/min\n";
-static const char_t fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%S/min\n";
-static const char_t fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%S\n";
-static const char_t fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%S\n";
-static const char_t fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%S/min^3\n";
+static const char_t fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%s/min\n";
+static const char_t fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%s/min\n";
+static const char_t fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%s\n";
+static const char_t fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%s\n";
+static const char_t fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%s/min^3\n";
 
 // PWM strings
 static const char_t fmt_p1frq[] = "[p1frq] pwm frequency   %15.3f Hz\n";
@@ -337,8 +337,8 @@ static const char_t fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
 static const char_t fmt_p1pof[] = "[p1pof] pwm phase off   %15.3f [0..1]\n";
 
 // Coordinate system offset print formatting strings
-static const char_t fmt_cofs[] = "[%s%s] %s %s offset%20.3f%S\n";
-static const char_t fmt_cloc[] = "[%s%s] %s %s location%18.3f%S\n";
+static const char_t fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
+static const char_t fmt_cloc[] = "[%s%s] %s %s location%18.3f%s\n";
 
 // Gcode model power-on reset default values
 static const char_t fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";

@@ -120,7 +120,7 @@ static const uint8_t prompt_in[] = "inch";
 static const uint8_t prompt_ok[] = "tinyg [%S] ok> ";
 static const uint8_t prompt_err[] = "tinyg [%S] err: %s: %s ";
 
-void text_response(const uint8_t status, const uint8_t *buf)
+void text_response(const uint8_t status, char_t *buf)
 {
 	/*
 	if (cs.text_verbosity == TV_SILENT) return;	// skip all this
@@ -132,10 +132,10 @@ void text_response(const uint8_t status, const uint8_t *buf)
 		units = (PGM_P)&prompt_in;
 	}
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
-		fprintf_P(stderr, (PGM_P)&prompt_ok, units);
+		fprintf(stderr, (PGM_P)&prompt_ok, units);
 	} else {
 		uint8_t status_message[STATUS_MESSAGE_LEN];
-		fprintf_P(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
+		fprintf(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
 	}
 	cmdObj_t *cmd = cmd_body+1;
 	if (cmd->token[0] == 'm') {

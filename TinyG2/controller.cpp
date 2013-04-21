@@ -35,7 +35,8 @@
 #include "config_app.h"
 #include "json_parser.h"
 #include "text_parser.h"
-//#include "gcode_parser.h"
+#include "gcode_parser.h"
+#include "help.h"
 #include "xio.h"
 /*
 #include <ctype.h>				// for parsing
@@ -49,7 +50,6 @@
 #include "gpio.h"
 #include "report.h"
 #include "util.h"
-#include "help.h"
 */
 
 #ifdef __cplusplus
@@ -206,12 +206,12 @@ static stat_t _command_dispatch()
 			}
 			break;
 		}
-//		case 'H': { 							// intercept help screens
-//			cs.comm_mode = TEXT_MODE;
-//			print_general_help();
-//			text_response(STAT_OK, cs.in_buf);
-//			break;
-//		}
+		case 'H': { 							// intercept help screens
+			cs.comm_mode = TEXT_MODE;
+			print_general_help();
+			text_response(STAT_OK, cs.in_buf);
+			break;
+		}
 		case '$': case '?':{ 					// text-mode configs
 			cs.comm_mode = TEXT_MODE;
 			text_response(text_parser(cs.in_buf), cs.saved_buf);
@@ -229,7 +229,8 @@ static stat_t _command_dispatch()
 				json_parser(cs.in_buf);
 			} else {
 //				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
-				write (cs.in_buf, cs.linelen);	//+++++ test statement
+				text_response(STAT_OK, cs.in_buf);
+//				write (cs.in_buf, cs.linelen);	//+++++ test statement
 			}
 		}
 	}
