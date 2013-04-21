@@ -1,5 +1,6 @@
 /*
- * xio.cpp
+ * xio.cpp - extended IO functions
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  * Copyright (c) 2013 Robert Giseburt

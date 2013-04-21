@@ -1,22 +1,22 @@
 # 
 # Makefile
 # 
-# Copyright (c) 2012 Robert Giseburt
+# Copyright (c) 2012 - 2013 Robert Giseburt
+# Copyright (c) 2013 Alden S. Hart Jr.
 # 
-# This file is part of the TinyG3 project.
+# This file is part of the TinyG2 project.
 # 
-# This file is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This file is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-# 
-# You should have received a copy of the GNU Lesser General Public License
-# along with the Motate Library.  If not, see <http://www.gnu.org/licenses/>.
+# This file ("the software") is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2 as published by the
+# Free Software Foundation. You should have received a copy of the GNU General Public
+# License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+#
+# THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+# WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+# SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+# OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
 
 ##############################################################################################

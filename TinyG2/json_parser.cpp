@@ -2,8 +2,7 @@
  * json_parser.cpp - JSON parser for TinyG
  * Part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2011 - 2013 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,10 +23,6 @@
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-/* See the wiki for module details and additional information:
- *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-Developer-Info
- *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-JSON
  */
 
 #include "tinyg2.h"

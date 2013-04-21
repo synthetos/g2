@@ -1,5 +1,5 @@
 /*
- * xio.h - eXtended IO devices - common header file
+ * xio.h - extended IO functions
  * Part of TInyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.

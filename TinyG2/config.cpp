@@ -1,9 +1,8 @@
 /*
  * config.cpp - configuration handling and persistence; master function table
- * Part of TinyG2 project
+ * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -296,24 +295,24 @@ void print_rot(cmdObj_t *cmd)
 
 /********************************************************************************
  * Group operations
+ */
+/* 
+ * get_grp() - read data from a group
  *
- * _get_grp() - read data from a group
- * _set_grp() - get or set one or more values in a group
- *
- *	_get_grp() is a group expansion function that expands the parent group and 
- *	returns the values of all the children in that group. It expects the first 
- *	cmdObj in the cmdBody to have a valid group name in the token field. This 
- *	first object will be set to a TYPE_PARENT. The group field is left nul -  
- *	as the group field refers to a parent group, which this group has none.
+ *	get_grp() is a group expansion function that expands the parent group and  returns 
+ *	the values of all the children in that group. It expects the first cmdObj in the 
+ *	cmdBody to have a valid group name in the token field. This first object will be set 
+ *	to a TYPE_PARENT. The group field is left nul - as the group field refers to a parent 
+ *	group, which this group has none.
  *
  *	All subsequent cmdObjs in the body will be populated with their values.
  *	The token field will be populated as will the parent name in the group field. 
  *
- *	The sys group is an exception where the childern carry a blank group field, 
- *	even though the sys parent is labeled as a TYPE_PARENT.
+ *	The sys group is an exception where the childern carry a blank group field, even though 
+ *	the sys parent is labeled as a TYPE_PARENT.
  */
 
-stat_t _get_grp(cmdObj_t *cmd)
+stat_t get_grp(cmdObj_t *cmd)
 {
 	uint8_t *parent_group = cmd->token;		// token in the parent cmd object is the group
 	uint8_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
@@ -329,16 +328,15 @@ stat_t _get_grp(cmdObj_t *cmd)
 }
 
 /*
- * _set_grp() - get or set one or more values in a group
+ * set_grp() - get or set one or more values in a group
  *
- *	This functions is called "_set_group()" but technically it's a getter and 
- *	a setter. It iterates the group children and either gets the value or sets
- *	the value for each depending on the cmd->type.
+ *	This functions is called "set_group()" but technically it's a getter and a setter. 
+ *	It iterates the group children and either gets the value or sets the value for each 
+ *	depending on the cmd->type.
  *
  *	This function serves JSON mode only as text mode shouldn't call it.
  */
-
-stat_t _set_grp(cmdObj_t *cmd)
+stat_t set_grp(cmdObj_t *cmd)
 {
 	if (cs.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
 	for (uint8_t i=0; i<CMD_MAX_OBJECTS; i++) {

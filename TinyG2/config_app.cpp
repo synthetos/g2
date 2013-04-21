@@ -2,20 +2,11 @@
  * config_app.cpp - application-specific part of configuration data
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
  * Free Software Foundation. You should have received a copy of the GNU General Public
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, you may use this file as part of a software library without
- * restriction. Specifically, if other files instantiate templates or use macros or
- * inline functions from this file, or you compile this file and link it with  other
- * files to produce an executable, this file does not by itself cause the resulting
- * executable to be covered by the GNU General Public License. This exception does not
- * however invalidate any other reasons why the executable file might be covered by the
- * GNU General Public License.
  *
  * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
  * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
@@ -125,6 +116,11 @@ static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX outout
 static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
 static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF
 static stat_t set_baud(cmdObj_t *cmd);		// set USB baud rate
+
+static stat_t do_motors(cmdObj_t *cmd);		// print parameters for all motor groups
+static stat_t do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
+static stat_t do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t do_all(cmdObj_t *cmd);		// print all parameters
 
 /***********************************************************************************
  **** FLASH STRINGS AND STRING ARRAYS **********************************************
@@ -551,7 +547,7 @@ const cfgItem_t cfgArray[] = {
     { "p1","p1wpl",_fip, 3, fmt_p1wpl, print_flt, get_flt, set_flt,(float *)&cfg.p.ccw_phase_lo,	P1_CCW_PHASE_LO },
     { "p1","p1wph",_fip, 3, fmt_p1wph, print_flt, get_flt, set_flt,(float *)&cfg.p.ccw_phase_hi,	P1_CCW_PHASE_HI },
     { "p1","p1pof",_fip, 3, fmt_p1pof, print_rot, get_flt, set_flt,(float *)&cfg.p.phase_off,		P1_PWM_PHASE_OFF },
-/*
+
 	// Coordinate system offsets (G54-G59 and G92)
 	{ "g54","g54x",_fip, 3, fmt_cofs, print_coor,get_flu, set_flu,(float *)&cfg.offset[G54][AXIS_X],	G54_X_OFFSET },
 	{ "g54","g54y",_fip, 3, fmt_cofs, print_coor,get_flu, set_flu,(float *)&cfg.offset[G54][AXIS_Y],	G54_Y_OFFSET },
@@ -623,17 +619,17 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.switch_type,			SWITCH_TYPE },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
-	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, cmdset_jv,(float *)&cfg.json_verbosity,		JSON_VERBOSITY },
+//	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, cmdset_jv,(float *)&cfg.json_verbosity,		JSON_VERBOSITY },
 	{ "sys","tv",  _f07, 0, fmt_tv, print_ui8, get_ui8, set_01,  (float *)&cfg.text_verbosity,		TEXT_VERBOSITY },
-	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
+//	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
 	{ "sys","sv",  _f07, 0, fmt_sv, print_ui8, get_ui8, set_012, (float *)&cfg.status_report_verbosity,SR_VERBOSITY },
 	{ "sys","si",  _f07, 0, fmt_si, print_flt, get_int, set_si,  (float *)&cfg.status_report_interval,STATUS_REPORT_INTERVAL_MS },
 
-	{ "sys","ic",  _f07, 0, fmt_ic, print_ui8, get_ui8, set_ic,  (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
+//	{ "sys","ic",  _f07, 0, fmt_ic, print_ui8, get_ui8, set_ic,  (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
 	{ "sys","ec",  _f07, 0, fmt_ec, print_ui8, get_ui8, set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
 	{ "sys","ee",  _f07, 0, fmt_ee, print_ui8, get_ui8, set_ee,  (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
 	{ "sys","ex",  _f07, 0, fmt_ex, print_ui8, get_ui8, set_ex,  (float *)&cfg.enable_xon,			COM_ENABLE_XON },
-	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
+//	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 
 	// NOTE: The ordering within the gcode defaults is important for token resolution
 	{ "sys","gpl", _f07, 0, fmt_gpl, print_ui8, get_ui8,set_012, (float *)&cfg.select_plane,		GCODE_DEFAULT_PLANE },
@@ -641,15 +637,15 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","gco", _f07, 0, fmt_gco, print_ui8, get_ui8,set_ui8, (float *)&cfg.coord_system,		GCODE_DEFAULT_COORD_SYSTEM },
 	{ "sys","gpa", _f07, 0, fmt_gpa, print_ui8, get_ui8,set_012, (float *)&cfg.path_control,		GCODE_DEFAULT_PATH_CONTROL },
 	{ "sys","gdi", _f07, 0, fmt_gdi, print_ui8, get_ui8,set_01,  (float *)&cfg.distance_mode,		GCODE_DEFAULT_DISTANCE_MODE },
-	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, _run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
+	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// removed from system group as "hidden" parameters
-	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
-	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
-	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
+//	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
+//	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
+//	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
 	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
 	{ "",   "qrl", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_lo_water, QR_LO_WATER },
-	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
+//	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
 
 	// Persistence for status report - must be in sequence
 	// *** Count must agree with CMD_STATUS_REPORT_LEN in config.h ***
@@ -708,11 +704,10 @@ const cfgItem_t cfgArray[] = {
 
 	// Uber-group (groups of groups, for text-mode displays only)
 	// *** Must agree with CMD_COUNT_UBER_GROUPS below ****
-	{ "", "m", _f00, 0, fmt_nul, print_nul, _do_motors, set_nul,(float *)&cs.null,0 },
-	{ "", "q", _f00, 0, fmt_nul, print_nul, _do_axes,   set_nul,(float *)&cs.null,0 },
-	{ "", "o", _f00, 0, fmt_nul, print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
-	{ "", "$", _f00, 0, fmt_nul, print_nul, _do_all,    set_nul,(float *)&cs.null,0 }
-*/
+	{ "", "m", _f00, 0, fmt_nul, print_nul, do_motors, set_nul,(float *)&cs.null,0 },
+	{ "", "q", _f00, 0, fmt_nul, print_nul, do_axes,   set_nul,(float *)&cs.null,0 },
+	{ "", "o", _f00, 0, fmt_nul, print_nul, do_offsets,set_nul,(float *)&cs.null,0 },
+	{ "", "$", _f00, 0, fmt_nul, print_nul, do_all,    set_nul,(float *)&cs.null,0 }
 };
 
 /***** Make sure these defines line up with any changes in the above table *****/

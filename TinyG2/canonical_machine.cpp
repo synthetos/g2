@@ -2,8 +2,7 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * Part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
