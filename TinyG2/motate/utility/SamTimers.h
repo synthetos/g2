@@ -66,7 +66,6 @@ namespace Motate {
 		kInterruptsOff       = 0,
 		kInterruptOnMatch    = 1<<1,
 		kInterruptOnOverflow = 1<<2,
-		kSetOnMatch          = 1<<3, // ???
 	};
     
     enum TimerErrorCodes {
@@ -75,18 +74,18 @@ namespace Motate {
 
 	template <uint8_t timerNum>
 	struct Timer {
-        // NOTE: Read carefully! The *pointers* are const, not the *values*.
+        // NOTE: Notice! The *pointers* are const, not the *values*.
 		static Tc * const tc;
 		static TcChannel * const tcChan;
         static const uint32_t peripheralId; // ID_TC0 .. ID_TC8
 		
 		/* ################################################################### *
-		/* #                          WARNING                                # *
-		/* # WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! # *
-		/* #                          WARNING           (u been warned)      # *
-		/* ################################################################### */
+		 * #                          WARNING                                # *
+		 * # WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! # *
+		 * #                          WARNING           (u been warned)      # *
+		 * ################################################################### */
 		
-		Timer() : init() {};
+		Timer() { init(); };
 				
 		void init() {
 			/* Unlock this thing */
@@ -133,7 +132,7 @@ namespace Motate {
         // Set the mode and frequency.
         // Returns: The actual frequency that was used, or kFrequencyUnattainable
 		int32_t setModeAndFrequency(const TimerMode mode, const uint32_t freq) {
-			/* Prepare to be able to make changes: *?
+			/* Prepare to be able to make changes: */
 			/*   Disable TC clock */
 			tcChan->TC_CCR = TC_CCR_CLKDIS ;
 			/*   Disable interrupts */
@@ -196,11 +195,16 @@ namespace Motate {
                 int32_t newTop = masterClock/(divisor*freq);
                 setTop(newTop);
                 
-                // determine and return the new frequency
+                // Determine and return the new frequency.
                 return masterClock/(divisor*newTop);
             }
 
-            // determine and return the new frequency
+            // Optimization -- we can't use RC for much when we're not using it,
+            //  so, instead of looking up if we're using it or not, just set it to
+            //  0xFFFF when we're not using it.
+            setTop(0xFFFF);
+            
+            // Determine and return the new frequency.
             return masterClock/(divisor*0xFFFF);
         };
         
@@ -212,9 +216,79 @@ namespace Motate {
 			return 0;
 		};
         
+        // Here we want to get what the TOP value is. Is the mode is one that resets on RC, then RC is the TOP.
+        // Otherwise, TOP is 0xFFFF. In order to see if TOP is RC, we need to look at the CPCTRG (RC Compare
+        // Trigger Enable) bit of the CMR (Channel Mode Register). Note that this bit position is the same for
+        // waveform or Capture mode, even though the Datasheet seems to obfuscate this fact.
+        uint32_t getTopValue() {
+            return tcChan->TC_CMR & TC_CMR_CPCTRG ? tcChan->TC_RC : 0xFFFF;
+        };
         
+        // Return the current value of the counter. This is a fleeting thing...
+        uint32_t getValue() {
+            return tcChan->TC_CV;
+        }
+        
+        void start() {
+            tcChan->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
+        };
+        
+        void stop() {
+            tcChan->TC_CCR = TC_CCR_CLKDIS;
+        };
+        
+        // Channel-specific functions. These are Motate channels.
+        // Motate channel 0 = Sam channel A.
+        // Motate channel 1 = Sam channel B.
+        
+        // Specify the duty cycle as a value from 0.0 .. 1.0;
+        void setDutyCycle(const uint8_t channel, const float ratio) {
+            if (channel == 0)
+                tcChan->TC_RA = getTopValue() * ratio;
+            else if (channel == 1)
+                tcChan->TC_RB = getTopValue() * ratio;
+        };
+        
+        // Specify channel A/B duty cycle as a integer value from 0 .. TOP.
+        // TOP in this case is either RC_RC or 0xFFFF.
+        void setDutyCycle(const uint8_t channel, const uint32_t absolute) {
+            if (channel == 0)
+                tcChan->TC_RA = absolute;
+            else if (channel == 1)
+                tcChan->TC_RB = absolute;
+        };
 	};
 
+    
+	template<> Tc * const        Timer<0>::tc           = TC0;
+	template<> TcChannel * const Timer<0>::tcChan       = TC0->TC_CHANNEL + 0;
+	template<> const uint32_t    Timer<0>::peripheralId = ID_TC0;
+	template<> Tc * const        Timer<1>::tc           = TC0;
+	template<> TcChannel * const Timer<1>::tcChan       = TC0->TC_CHANNEL + 1;
+	template<> const uint32_t    Timer<1>::peripheralId = ID_TC1;
+	template<> Tc * const        Timer<2>::tc           = TC0;
+	template<> TcChannel * const Timer<2>::tcChan       = TC0->TC_CHANNEL + 2;
+	template<> const uint32_t    Timer<2>::peripheralId = ID_TC2;
+
+	template<> Tc * const        Timer<3>::tc           = TC1;
+	template<> TcChannel * const Timer<3>::tcChan       = TC1->TC_CHANNEL + 0;
+	template<> const uint32_t    Timer<3>::peripheralId = ID_TC3;
+	template<> Tc * const        Timer<4>::tc           = TC1;
+	template<> TcChannel * const Timer<4>::tcChan       = TC1->TC_CHANNEL + 1;
+	template<> const uint32_t    Timer<4>::peripheralId = ID_TC4;
+	template<> Tc * const        Timer<5>::tc           = TC1;
+	template<> TcChannel * const Timer<5>::tcChan       = TC1->TC_CHANNEL + 2;
+	template<> const uint32_t    Timer<5>::peripheralId = ID_TC5;
+
+	template<> Tc * const        Timer<6>::tc           = TC2;
+	template<> TcChannel * const Timer<6>::tcChan       = TC2->TC_CHANNEL + 0;
+	template<> const uint32_t    Timer<6>::peripheralId = ID_TC6;
+	template<> Tc * const        Timer<7>::tc           = TC2;
+	template<> TcChannel * const Timer<7>::tcChan       = TC2->TC_CHANNEL + 1;
+	template<> const uint32_t    Timer<7>::peripheralId = ID_TC7;
+	template<> Tc * const        Timer<8>::tc           = TC2;
+	template<> TcChannel * const Timer<8>::tcChan       = TC2->TC_CHANNEL + 2;
+	template<> const uint32_t    Timer<8>::peripheralId = ID_TC8;
 
 }
 #endif /* end of include guard: AVRTIMERS_H_ONCE */
