@@ -3,9 +3,8 @@
  * Part of TinyG project
  *
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are 
+/* util contains a dog's breakfast of supporting functions that are 
  * not specific to tinyg: including:
- *
  *	  - math and min/max utilities and extensions 
  *	  - vector manipulation utilities
  *	  - support for debugging routines
@@ -178,7 +177,7 @@ uint8_t isnumber(char_t c)
  *	no non-alphnumeric characters, and no newline or CR.
  */
 
-uint8_t read_float(char_t *buf, uint8_t *index, float *float_ptr) 
+uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr) 
 {
 	char_t *start = buf + *index;
 	char_t *end;

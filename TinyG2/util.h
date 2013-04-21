@@ -26,8 +26,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef util_h
-#define util_h
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
 #include <stdint.h>
 
@@ -39,11 +39,11 @@ extern "C"{
 
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 
-inline void copy_vector(float dest[], const float src[], uint8_t length);
-inline void copy_axis_vector(float dest[], const float src[]);
-inline float get_axis_vector_length(const float a[], const float b[]);
-inline float *set_vector(float x, float y, float z, float a, float b, float c);
-inline float *set_vector_by_axis(float value, uint8_t axis);
+void copy_vector(float dest[], const float src[], uint8_t length);
+void copy_axis_vector(float dest[], const float src[]);
+float get_axis_vector_length(const float a[], const float b[]);
+float *set_vector(float x, float y, float z, float a, float b, float c);
+float *set_vector_by_axis(float value, uint8_t axis);
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
@@ -51,7 +51,7 @@ float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
 
 //uint8_t isnumber(char_t c);
-uint8_t read_float (char_t *buf, uint8_t *index, float *fp);
+uint8_t read_float (uint8_t *buf, uint8_t *index, float *float_ptr);
 //uint16_t compute_checksum(char_t const *string, const uint16_t length);
 //float std_dev(float a[], uint8_t n, float *mean);
 
@@ -121,4 +121,4 @@ uint8_t read_float (char_t *buf, uint8_t *index, float *fp);
 }
 #endif
 
-#endif	// util_h
+#endif	// _UTIL_H_

@@ -27,7 +27,6 @@
  */
 #include "tinyg2.h"
 #include "config.h"
-//#include "config_app.h"		// application-specific config stuff - follows config.h
 #include "json_parser.h"
 #include "text_parser.h"
 #include "controller.h"
