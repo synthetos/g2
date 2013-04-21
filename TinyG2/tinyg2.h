@@ -51,7 +51,7 @@ extern "C"{
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	005.02		// 
+#define TINYG_FIRMWARE_BUILD   	005.03		// 
 #define TINYG_FIRMWARE_VERSION	0.01		// firmware major version
 #define TINYG_HARDWARE_PLATFORM	2.00		// hardware platform indicator (Native Arduino Due)
 #define TINYG_HARDWARE_VERSION	1.00		// hardware platform revision number
@@ -91,10 +91,10 @@ typedef uint8_t char_t;
 /*************************************************************************
  * TinyG application-specific prototypes, defines and globals
  */
-#define MAGICNUM 0x12EF			// used for memory integrity assertions
-
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
+
+#define MAGICNUM 0x12EF			// used for memory integrity assertions
 
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 4				// number of motors on the board

@@ -73,9 +73,9 @@ extern void SysTick_Handler( void )
 
 static void _application_init(void);
     
-//globals
+// collect all weird little globals here
 stat_t status_code;		// declared for ritorno, see tinyg2.h
-    
+
 /******************** Application Code ************************/
 
 void setup( void )

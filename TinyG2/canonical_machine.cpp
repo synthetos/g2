@@ -96,8 +96,20 @@
 extern "C"{
 #endif
 
-// NOTE: The canonical machine singleton "cm" would normally be declared here 
+/***********************************************************************************
+ **** STRUCTURE ALLOCATIONS *********************************************************
+ ***********************************************************************************/
+// NOTE: The canonical machine singleton "cm" would normally be declared here
 // but it's also used by cycles so it's in canonical_machine.h instead.
+
+cmSingleton_t cm;		// canonical machine control structure
+GCodeModel_t gm;		// active gcode model
+GCodeInput_t gn;		// gcode input values
+GCodeInput_t gf;		// gcode input flags
+
+/***********************************************************************************
+ **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
+ ***********************************************************************************/
 
 static float _get_move_times(float *min_time);
 
@@ -111,6 +123,10 @@ static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val);
 static void _exec_program_finalize(uint8_t machine_state, float float_val);
 
 #define _to_millimeters(a) ((gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+
+/***********************************************************************************
+ **** CODE *************************************************************************
+ ***********************************************************************************/
 
 /*************************************************************************
  *

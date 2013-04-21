@@ -34,7 +34,6 @@
  */
 #include "tinyg2.h"
 #include "config.h"
-//#include "config_app.h"
 #include "controller.h"
 #include "canonical_machine.h"
 #include "settings.h"
@@ -108,7 +107,7 @@ static stat_t set_defa(cmdObj_t *cmd);		// reset config to default values
 
 static stat_t get_am(cmdObj_t *cmd);		// get axis mode
 static stat_t set_am(cmdObj_t *cmd);		// set axis mode
-static void print_am(cmdObj_t *cmd);		// print axis mode
+static void print_am(cmdObj_t *cmd);		// print axis mode with enumeration string
 static stat_t set_sw(cmdObj_t *cmd);		// must run any time you change a switch setting
 static stat_t set_sa(cmdObj_t *cmd);		// set motor step angle
 static stat_t set_tr(cmdObj_t *cmd);		// set motor travel per revolution
@@ -118,7 +117,6 @@ static stat_t set_po(cmdObj_t *cmd);		// set motor polarity
 static void pr_ma_ui8(cmdObj_t *cmd);		// print uint8_t value
 static void pr_ma_lin(cmdObj_t *cmd);		// print a linear value in prevailing units
 static void pr_ma_rot(cmdObj_t *cmd);		// print a rotary value in degrees units
-static void print_am(cmdObj_t *cmd);		// print axis mode with enumeration string
 static void print_coor(cmdObj_t *cmd);		// print coordinate offsets with linear units
 static void print_corr(cmdObj_t *cmd);		// print coordinate offsets with rotary units
 
@@ -541,7 +539,7 @@ const cfgItem_t cfgArray[] = {
 	{ "c","cjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].jerk_max,			C_JERK_MAX },
 	{ "c","cjd",_fip, 0, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].junction_dev,		C_JUNCTION_DEVIATION },
 	{ "c","cra",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].radius,			C_RADIUS },
-/*
+
 	// PWM settings
     { "p1","p1frq",_fip, 0, fmt_p1frq, print_flt, get_flt, set_flt,(float *)&cfg.p.frequency,		P1_PWM_FREQUENCY },
     { "p1","p1csl",_fip, 0, fmt_p1csl, print_flt, get_flt, set_flt,(float *)&cfg.p.cw_speed_lo,		P1_CW_SPEED_LO },
@@ -553,7 +551,7 @@ const cfgItem_t cfgArray[] = {
     { "p1","p1wpl",_fip, 3, fmt_p1wpl, print_flt, get_flt, set_flt,(float *)&cfg.p.ccw_phase_lo,	P1_CCW_PHASE_LO },
     { "p1","p1wph",_fip, 3, fmt_p1wph, print_flt, get_flt, set_flt,(float *)&cfg.p.ccw_phase_hi,	P1_CCW_PHASE_HI },
     { "p1","p1pof",_fip, 3, fmt_p1pof, print_rot, get_flt, set_flt,(float *)&cfg.p.phase_off,		P1_PWM_PHASE_OFF },
-
+/*
 	// Coordinate system offsets (G54-G59 and G92)
 	{ "g54","g54x",_fip, 3, fmt_cofs, print_coor,get_flu, set_flu,(float *)&cfg.offset[G54][AXIS_X],	G54_X_OFFSET },
 	{ "g54","g54y",_fip, 3, fmt_cofs, print_coor,get_flu, set_flu,(float *)&cfg.offset[G54][AXIS_Y],	G54_Y_OFFSET },
@@ -978,8 +976,9 @@ static stat_t get_vel(cmdObj_t *cmd)
 {
 //+++++	cmd->value = mp_get_runtime_velocity();
 	if (cm_get_units_mode() == INCHES) cmd->value *= INCH_PER_MM;
-	cmd->type = TYPE_FLOAT;
 	cmd->precision = cfgArray[cmd->index].precision;
+//	cmd->type = TYPE_FLOAT_UNITS;
+	cmd->type = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1013,24 +1012,27 @@ int8_t _get_pos_axis(const index_t index)	// index into configArray
 static stat_t get_pos(cmdObj_t *cmd) 
 {
 	cmd->value = cm_get_runtime_work_position(_get_pos_axis(cmd->index));
-	cmd->type = TYPE_FLOAT;
 	cmd->precision = cfgArray[cmd->index].precision;
+//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->type = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
 static stat_t get_mpos(cmdObj_t *cmd) 
 {
 	cmd->value = cm_get_runtime_machine_position(_get_pos_axis(cmd->index));
-	cmd->type = TYPE_FLOAT;
 	cmd->precision = cfgArray[cmd->index].precision;
+//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->type = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
 static stat_t get_ofs(cmdObj_t *cmd) 
 {
 	cmd->value = cm_get_runtime_work_offset(_get_pos_axis(cmd->index));
-	cmd->type = TYPE_FLOAT;
 	cmd->precision = cfgArray[cmd->index].precision;
+//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->type = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1073,7 +1075,7 @@ static stat_t run_gc(cmdObj_t *cmd)
 
 static stat_t run_home(cmdObj_t *cmd)
 {
-	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
+//+++++	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
 	return (STAT_OK);
 }
 

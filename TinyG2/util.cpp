@@ -9,6 +9,8 @@
  *	  - vector manipulation utilities
  *	  - support for debugging routines
  */  
+
+#include "tinyg2.h"
 #include "util.h"
 
 /*
@@ -28,10 +30,17 @@
 #include "stepper.h"
 #include "report.h"
 */
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
+/*** statically allocated global for vector operations ***/
+float vector[AXES];		// vector used by util.cpp and other functions
+
+/*
+ * strcpy_U() - strcpy workalike to get around initial NUL for blank string - possibly wrong
+ */
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 {
 	uint16_t index = 0;
@@ -56,14 +65,14 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
  * set_vector_by_axis()		- load a single value into a zero vector
  */
 
-inline void copy_vector(float dest[], const float src[], uint8_t length) 
+void copy_vector(float dest[], const float src[], uint8_t length) 
 {
 	for (uint8_t i=0; i<length; i++) {
 		dest[i] = src[i];
 	}
 }
 
-inline void copy_axis_vector(float dest[], const float src[]) 
+void copy_axis_vector(float dest[], const float src[]) 
 {
 	memcpy(dest, src, sizeof(float)*AXES);
 }
@@ -91,14 +100,14 @@ float *set_vector(float x, float y, float z, float a, float b, float c)
 
 float *set_vector_by_axis(float value, uint8_t axis)
 {
-	clear_vector(vector);
+//+++++	clear_vector(vector);
 	switch (axis) {
-		case (X): vector[AXIS_X] = value; break;
-		case (Y): vector[AXIS_Y] = value; break;
-		case (Z): vector[AXIS_Z] = value; break;
-		case (A): vector[AXIS_A] = value; break;
-		case (B): vector[AXIS_B] = value; break;
-		case (C): vector[AXIS_C] = value;
+		case (AXIS_X): { vector[AXIS_X] = value; break; }
+		case (AXIS_Y): { vector[AXIS_Y] = value; break; }
+		case (AXIS_Z): { vector[AXIS_Z] = value; break; }
+		case (AXIS_A): { vector[AXIS_A] = value; break; }
+		case (AXIS_B): { vector[AXIS_B] = value; break; }
+		case (AXIS_C): { vector[AXIS_C] = value; }
 	}
 	return (vector);
 }
@@ -157,7 +166,7 @@ inline float max4(float x1, float x2, float x3, float x4)
 /*
  * isnumber() - isdigit that also accepts plus, minus, and decimal point
  */
-
+/*
 uint8_t isnumber(char_t c)
 {
 	if (c == '.') { return (true); }
@@ -165,7 +174,7 @@ uint8_t isnumber(char_t c)
 	if (c == '+') { return (true); }
 	return (isdigit(c));
 }
-
+*/
 /* 
  * read_float() - read a float from a normalized char array
  *
@@ -186,7 +195,7 @@ uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr)
 	if(end == start) { 
 		return(false); 
 	}
-	*i = (uint8_t)(end - buf);
+	*index = (uint8_t)(end - buf);
 	return(true);
 }
 
@@ -199,7 +208,7 @@ uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr)
  *	See http://en.wikipedia.org/wiki/Java_hashCode()
  */
 #define HASHMASK 9999
-
+/*
 uint16_t compute_checksum(char_t const *string, const uint16_t length) 
 {
 	uint32_t h = 0;
@@ -213,7 +222,7 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
     }
     return (h % HASHMASK);
 }
-
+*/
 #ifdef __cplusplus
 }
 #endif

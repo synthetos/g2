@@ -56,7 +56,7 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t g10_persist_flag;		//.G10 changed offsets - persist them
 	uint16_t magic_end;
 } cmSingleton_t;
-cmSingleton_t cm;
+extern cmSingleton_t cm;
 
 /* GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
  *
@@ -187,10 +187,10 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	float arc_offset[3];  				// IJK - used by arc commands
 } GCodeInput_t;
 
-// Allocation
-GCodeModel_t gm;		// active gcode model
-GCodeInput_t gn;		// gcode input values
-GCodeInput_t gf;		// gcode input flags
+// Externs 
+extern GCodeModel_t gm;					// active gcode model
+extern GCodeInput_t gn;					// gcode input values
+extern GCodeInput_t gf;					// gcode input flags
 
 /*****************************************************************************
  * 

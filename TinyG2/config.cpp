@@ -30,6 +30,7 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "controller.h"
+#include "canonical_machine.h"
 #include "util.h"
 #include "xio.h"
 
@@ -38,7 +39,7 @@ extern "C"{
 #endif
 
 /***********************************************************************************
- **** STUCTURE ALLOCATIONS *********************************************************
+ **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
 cmdStr_t cmdStr;
@@ -128,20 +129,16 @@ static stat_t set_defa(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-/***** Generic Internal Functions *******************************************
- * Generic gets()
- * get_nul() - get nothing (returns STAT_NOOP)
- * get_ui8() - get value as 8 bit uint8_t w/o unit conversion
- * get_int() - get value as 32 bit integer w/o unit conversion
- * get_flt() - get value as float w/o unit conversion
- *
- * Generic sets()
- * set_nul() - set nothing (returns STAT_NOOP)
- * set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
- * set_int() - set value as 32 bit integer w/o unit conversion
- * set_flt() - set value as float w/o unit conversion
+/***** Generic Internal Functions *********************************************/
+
+/* Generic gets()
+ *  get_nul() - get nothing (returns STAT_NOOP)
+ *  get_ui8() - get value as 8 bit uint8_t w/o unit conversion
+ *  get_int() - get value as 32 bit integer w/o unit conversion
+ *  get_flt() - get value as float w/o unit conversion
+ *  get_flu() - get value as double w/unit conversion
+ *	get_format() - internal accessor for printf() format string
  */
-stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 stat_t get_nul(cmdObj_t *cmd) 
 { 
 	cmd->type = TYPE_NULL;
@@ -154,43 +151,98 @@ stat_t get_ui8(cmdObj_t *cmd)
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
-stat_t set_ui8(cmdObj_t *cmd)
-{
-	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
-	cmd->type = TYPE_INTEGER;
-	return(STAT_OK);
-}
+
 stat_t get_int(cmdObj_t *cmd)
 {
 	cmd->value = (float)*((uint32_t *)cfgArray[cmd->index].target);
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
+
+stat_t get_flt(cmdObj_t *cmd)
+{
+	cmd->value = *((float *)cfgArray[cmd->index].target);
+	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->type = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+stat_t get_flu(cmdObj_t *cmd)
+{
+	get_flt(cmd);
+	if (cm_get_units_mode() == INCHES) {
+		cmd->value *= INCH_PER_MM;
+	}
+	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->type = TYPE_FLOAT;
+	return (STAT_OK);
+}
+/* REPLACED BY A MACRO - See config.h
+char *get_format(const index_t index)
+{
+	return ((char *)cfgArray[index].format);
+}
+*/
+
+/* Generic sets()
+ *  set_nul() - set nothing (returns STAT_NOOP)
+ *  set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
+ *  set_01()  - set a 0 or 1 uint8_t value with validation
+ *  set_012() - set a 0, 1 or 2 uint8_t value with validation
+ *  set_int() - set value as 32 bit integer w/o unit conversion
+ *  set_flt() - set value as float w/o unit conversion
+ *  set_flu() - set value as float w/unit conversion
+ */
+stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
+
+stat_t set_ui8(cmdObj_t *cmd)
+{
+	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
+	cmd->type = TYPE_INTEGER;
+	return(STAT_OK);
+}
+
+stat_t set_01(cmdObj_t *cmd)
+{
+	if (cmd->value > 1) {
+		return (STAT_INPUT_VALUE_UNSUPPORTED);
+	} else {
+		return (set_ui8(cmd));
+	}
+}
+
+stat_t set_012(cmdObj_t *cmd)
+{
+	if (cmd->value > 2) {
+		return (STAT_INPUT_VALUE_UNSUPPORTED);
+	} else {
+		return (set_ui8(cmd));
+	}
+}
+
 stat_t set_int(cmdObj_t *cmd)
 {
 	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->type = TYPE_INTEGER;
 	return(STAT_OK);
 }
-stat_t get_flt(cmdObj_t *cmd)
-{
-	cmd->value = *((float *)cfgArray[cmd->index].target);
-	cmd->type = TYPE_FLOAT;
-	return (STAT_OK);
-}
+
 stat_t set_flt(cmdObj_t *cmd)
 {
 	*((float *)cfgArray[cmd->index].target) = cmd->value;
+	cmd->precision = cfgArray[cmd->index].precision;
 	cmd->type = TYPE_FLOAT;
 	return(STAT_OK);
 }
 
-/*
-char *get_format(const index_t index)
+stat_t set_flu(cmdObj_t *cmd)
 {
-	return ((char *)cfgArray[index].format);
+	if (cm_get_units_mode() == INCHES) { cmd->value *= MM_PER_INCH;}
+	*((float *)cfgArray[cmd->index].target) = cmd->value;
+	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->type = TYPE_FLOAT_UNITS;
+	return(STAT_OK);
 }
-*/
 
 /* Generic prints()
  * print_nul() - print nothing
@@ -201,7 +253,6 @@ char *get_format(const index_t index)
  * print_lin() - print linear value with units and in/mm unit conversion
  * print_rot() - print rotary value with units
  */
-
 void print_nul(cmdObj_t *cmd) {}
 
 void print_str(cmdObj_t *cmd)
@@ -403,6 +454,7 @@ cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)	// clear a single cmdObj structure
 	cmd->type = TYPE_EMPTY;				// selective clear is much faster than calling memset
 	cmd->index = 0;
 	cmd->value = 0;
+	cmd->precision = 0;
 	cmd->token[0] = NUL;
 	cmd->group[0] = NUL;
 	cmd->stringp = NULL;
