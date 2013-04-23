@@ -227,12 +227,12 @@ void rpt_print_system_ready_message(void)
  *	Call this function to completely re-initialze the status report
  *	Sets SR list to hard-coded defaults and re-initializes sr values in NVM
  */
-/*
+
 void rpt_init_status_report()
 {
 	cmdObj_t *cmd = cmd_reset_list();	// used for status report persistence locations
 	char sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
-	cm.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
+	cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
 
 	cmd->index = cmd_get_index("","se00");				// set first SR persistence index
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
@@ -244,11 +244,11 @@ void rpt_init_status_report()
 		cmd->index++;									// increment SR NVM index
 	}
 }
-*/
+
 /* 
  * rpt_set_status_report() - interpret an sr setup string and return current report
  */
-/*
+
 stat_t rpt_set_status_report(cmdObj_t *cmd)
 {
 	uint8_t elements = 0;
@@ -273,10 +273,11 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
 	rpt_populate_unfiltered_status_report();			// return current values
 	return (STAT_OK);
 }
-*/
+
 /* 
  * rpt_run_text_status_report()	- generate a text mode status report in multiline format
  * rpt_request_status_report()	- request a status report to run after minimum interval
+ * rpt_force_status_report()	- request a status report to run at the next main loop opporunity
  * rpt_status_report_rtc_callback()	- real-time clock downcount for minimum reporting interval
  * rpt_status_report_callback()	- main loop callback to send a report if one is ready
  *
@@ -288,28 +289,29 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
  *	Status reports are generally returned with minimal delay (from the controller callback), 
  *	but will not be provided more frequently than the status report interval
  */
-/*
 void rpt_run_text_status_report()
 {
 	rpt_populate_unfiltered_status_report();
 	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 }
 
-void rpt_request_status_report()
+void rpt_request_status_report(uint8_t request_type)
 {
-	cm.status_report_request = true;
+	cm.status_report_request = request_type;
 }
 
 void rpt_status_report_rtc_callback() 		// called by 10ms real-time clock
 {
-	if (cm.status_report_counter != 0) { cm.status_report_counter--;} // stick at zero
+	if (--cm.status_report_counter == 0) {
+		cm.status_report_request = SR_IMMEDIATE_REQUEST;	// promote to immediate request
+		cm.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// reset minimum interval
+	}
 }
 
-stat_t rpt_status_report_callback() 		// called by controller dispatcher
+uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 {
 	if ((cfg.status_report_verbosity == SR_OFF) || 
-		(cm.status_report_counter != 0) ||
-		(cm.status_report_request == false)) {
+		(cm.status_report_request != SR_IMMEDIATE_REQUEST)) {
 		return (STAT_NOOP);
 	}
 	if (cfg.status_report_verbosity == SR_FILTERED) {
@@ -320,11 +322,10 @@ stat_t rpt_status_report_callback() 		// called by controller dispatcher
 		rpt_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
-	cm.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// reset minimum interval
-	cm.status_report_request = false;
+	cm.status_report_request = SR_NO_REQUEST;
 	return (STAT_OK);
 }
-*/
+
 /*
  * rpt_populate_unfiltered_status_report() - populate cmdObj body with status values
  *
@@ -350,7 +351,7 @@ void rpt_populate_unfiltered_status_report()
 		cmd = cmd->nx;
 	}
 }
-*/
+
 /*
  * rpt_populate_filtered_status_report() - populate cmdObj body with status values
  *
@@ -361,7 +362,7 @@ void rpt_populate_unfiltered_status_report()
  *	the SR index, which is a relatively expensive operation. In current use this 
  *	doesn't matter, but if the caller assumes its set it may lead to a side-effect (bug)
  */
-/*
+
 uint8_t rpt_populate_filtered_status_report()
 {
 	uint8_t has_data = false;
@@ -393,7 +394,7 @@ uint8_t rpt_populate_filtered_status_report()
 	cmd->pv->nx = NULL;						// back up one and terminate the body
 	return (has_data);
 }
-*/
+
 /*****************************************************************************
  * Queue Reports
  * rpt_request_queue_report()	- request a queue report with current values

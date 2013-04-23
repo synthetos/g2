@@ -68,7 +68,8 @@
 #define _CONFIG_H_
 
 /***** PLEASE NOTE:
-# include "config_app.h"	is present at the end of this file */
+# include "config_app.h"	// is present at the end of this file 
+*/
 
 #ifdef __cplusplus
 extern "C"{
@@ -164,6 +165,12 @@ enum jsonVerbosity {
 	JV_VERBOSE						// echos all configs and gcode blocks, line numbers and messages
 };
 
+enum srStatusReportRequest {
+	SR_NO_REQUEST = 0,				// no status report is requested
+	SR_TIMED_REQUEST,				// request a status report at next timer interval
+	SR_IMMEDIATE_REQUEST			// request a status report ASAP
+};
+
 enum srVerbosity {					// status report enable and verbosity
 	SR_OFF = 0,						// no reports
 	SR_FILTERED,					// reports only values that have changed from the last report
@@ -236,9 +243,7 @@ void cfg_init(void);
 stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
 stat_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
 void cmd_print(cmdObj_t *cmd);			// main entry point for set value
-#ifdef __ENABLE_PERSISTENCE
 void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
-#endif
 
 // helpers
 index_t cmd_get_index(const char_t *group, const char_t *token);
