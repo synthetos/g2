@@ -478,6 +478,7 @@ cmdObj_t *cmd_reset_list()					// clear the header and response body
 		cmd->nx = (cmd+1);
 		cmd->index = 0;
 		cmd->depth = 1;						// header and footer are corrected later
+		cmd->precision = 0;
 		cmd->type = TYPE_EMPTY;
 		cmd->token[0] = NUL;
 	}

@@ -195,7 +195,7 @@ static stat_t _command_dispatch()
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
 		}
 	} else if (cs.state == CONTROLLER_STARTUP) {
-		strcpy(cs.in_buf, "$fb");
+		strcpy(cs.in_buf, "$x");
 		cs.state = CONTROLLER_READY;
 	} else {
 		return (STAT_OK);

@@ -27,7 +27,7 @@
 
 #include "tinyg2.h"
 #include "controller.h"
-#include "config.h"					// JSON sits on top of the config system
+#include "config.h"
 #include "text_parser.h"
 #include "util.h"
 #include "xio.h"					// for char definitions
@@ -189,9 +189,13 @@ void text_print_multiline_formatted(cmdObj_t *cmd)
 {
 //	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
-		if (cmd->type != TYPE_PARENT) { cmd_print(cmd);}
+		if (cmd->type != TYPE_PARENT) { 
+			cmd_print(cmd);
+		}
 		cmd = cmd->nx;
-		if (cmd->type == TYPE_EMPTY) { break;}
+		if (cmd->type == TYPE_EMPTY) { 
+			break;
+		}
 	}
 }
 
