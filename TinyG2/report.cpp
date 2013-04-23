@@ -137,7 +137,7 @@ static const char_t *stat_msg[] = {
 void rpt_exception(uint8_t status, int16_t value)
 {
 	printf("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}\n", 
-		TINYG_FIRMWARE_BUILD, status, stat_msg[status], value);
+		TINYG2_FIRMWARE_BUILD, status, stat_msg[status], value);
 }
 
 /**** Application Messages *********************************************************

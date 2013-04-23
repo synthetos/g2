@@ -253,6 +253,7 @@ static const char_t fmt_str[] = "%s\n";	// generic format for string message (wi
 // System group and ungrouped formatting strings
 static const char_t fmt_fv[] = "[fv]  firmware version%16.2f\n";
 static const char_t fmt_fb[] = "[fb]  firmware build%18.2f\n";
+static const char_t fmt_hp[] = "[hp]  hardware platform%15.2f\n";
 static const char_t fmt_hv[] = "[hv]  hardware version%16.2f\n";
 static const char_t fmt_id[] = "[id]  TinyG ID%30s\n";
 
@@ -369,9 +370,10 @@ static const char_t fmt_gdi[] = "[gdi] default gcode distance mode%2d [0=G90,1=G
 
 const cfgItem_t cfgArray[] = {
 	// group token flags p, format print_func get_func, set_func target for get/set,      default value
-	{ "sys", "fb", _f07, 2, fmt_fb, print_flt, get_flt, set_nul, (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-	{ "sys", "fv", _f07, 3, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
-	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
+	{ "sys", "fb", _f07, 2, fmt_fb, print_flt, get_flt, set_nul, (float *)&cs.fw_build,   TINYG2_FIRMWARE_BUILD }, // MUST BE FIRST!
+	{ "sys", "fv", _f07, 3, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version, TINYG2_FIRMWARE_VERSION },
+	{ "sys", "hp", _f07, 0, fmt_hp, print_flt, get_flt, set_flt, (float *)&cs.hw_platform, TINYG2_HARDWARE_PLATFORM },
+	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG2_HARDWARE_VERSION },
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, fmt_line,print_int, get_int, set_int,(float *)&gm.linenum,0 },	// Gcode line number - gets model line number
@@ -712,21 +714,23 @@ const cfgItem_t cfgArray[] = {
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define CMD_COUNT_GROUPS 		4		// count of simple groups
-#define CMD_COUNT_UBER_GROUPS 	0 		// count of uber-groups
+#define CMD_COUNT_GROUPS 		25		// count of simple groups
+#define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups
 
+/* <DO NOT MESS WITH THESE ITEMS> */
 #define CMD_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))
-//#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS - CMD_STATUS_REPORT_LEN)
-#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
+#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS - CMD_STATUS_REPORT_LEN)
+//#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
 #define CMD_INDEX_START_GROUPS		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
 #define CMD_INDEX_START_UBER_GROUPS (CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS)
 
 index_t	cmd_index_max () { return ( CMD_INDEX_MAX );}
 uint8_t cmd_index_lt_max(index_t index) { return ((index < CMD_INDEX_MAX) ? true : false);}
+uint8_t cmd_index_ge_max(index_t index) { return ((index >= CMD_INDEX_MAX) ? true : false);}
 uint8_t cmd_index_is_single(index_t index) { return ((index <= CMD_INDEX_END_SINGLES) ? true : false);}
 uint8_t cmd_index_is_group(index_t index) { return (((index >= CMD_INDEX_START_GROUPS) && (index < CMD_INDEX_START_UBER_GROUPS)) ? true : false);}
 uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_GROUPS) ? true : false);}
-
+/* </DO NOT MESS WITH THESE ITEMS> */
 
 /***********************************************************************************
  **** APPLICATION SPECIFIC FUNCTIONS ***********************************************

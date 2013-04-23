@@ -241,6 +241,7 @@ void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 index_t cmd_get_index(const char_t *group, const char_t *token);
 index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);
+uint8_t cmd_index_ge_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
 uint8_t cmd_index_is_group(index_t index);
 uint8_t cmd_index_lt_groups(index_t index);

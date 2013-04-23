@@ -428,7 +428,7 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
 
 void cmd_get_cmdObj(cmdObj_t *cmd)
 {
-	if (cmd_index_lt_max(cmd->index)) { return;}
+	if (cmd_index_is_group(cmd->index)) { return;}	// must be a single object, not a group
 	index_t tmp = cmd->index;
 	cmd_reset_obj(cmd);
 	cmd->index = tmp;

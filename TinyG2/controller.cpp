@@ -93,8 +93,9 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
 	cs.magic_start = MAGICNUM;
 	cs.magic_end = MAGICNUM;
-	cs.fw_build = TINYG_FIRMWARE_BUILD;
-	cs.fw_version = TINYG_FIRMWARE_VERSION;	// NB: HW version is set from EEPROM
+	cs.fw_build = TINYG2_FIRMWARE_BUILD;
+	cs.fw_version = TINYG2_FIRMWARE_VERSION;
+	cs.hw_platform = TINYG2_HARDWARE_PLATFORM;// NB: HW version is set from EEPROM
 	cs.state = CONTROLLER_STARTUP;			// ready to run startup lines	
 	cs.linelen = 0;							// initialize index for read_line()
 
