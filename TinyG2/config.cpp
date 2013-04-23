@@ -1,5 +1,5 @@
 /*
- * config.cpp - configuration handling and persistence; master function table
+ * config.cpp - application independent configuration handling 
  * This file is part of the TinyG2 project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
@@ -30,6 +30,7 @@
 #include "text_parser.h"
 #include "controller.h"
 #include "canonical_machine.h"
+#include "persistence.h"
 #include "util.h"
 #include "xio.h"
 
@@ -604,38 +605,6 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 			case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(cmd_body);}
 		}
 	}
-}
-
-/************************************************************************************
- ***** EEPROM PERSISTENCE FUNCTIONS *************************************************
- ************************************************************************************
- * cmd_read_NVM_value()	 - return value (as float) by index
- * cmd_write_NVM_value() - write to NVM by index, but only if the value has changed
- *
- *	It's the responsibility of the caller to make sure the index does not exceed range
- */
-
-stat_t cmd_read_NVM_value(cmdObj_t *cmd)
-{
-//	int8_t nvm_byte_array[NVM_VALUE_LEN];
-//	uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-//	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-//	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
-	return (STAT_OK);
-}
-
-stat_t cmd_write_NVM_value(cmdObj_t *cmd)
-{
-//	float tmp = cmd->value;
-//	ritorno(cmd_read_NVM_value(cmd));
-//	if (cmd->value != tmp) {		// catches the isnan() case as well
-//		cmd->value = tmp;
-//		int8_t nvm_byte_array[NVM_VALUE_LEN];
-//		memcpy(&nvm_byte_array, &tmp, NVM_VALUE_LEN);
-//		uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-//		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-//	}
-	return (STAT_OK);
 }
 
 #ifdef __cplusplus

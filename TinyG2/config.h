@@ -67,6 +67,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+/***** PLEASE NOTE:
+# include "config_app.h"	is present at the end of this file */
+
 #ifdef __cplusplus
 extern "C"{
 #endif 
@@ -285,17 +288,7 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
 cmdObj_t *cmd_add_float(const char_t *token, const float value);
 cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
 cmdObj_t *cmd_add_message(const char_t *string);
-/*
-cmdObj_t *cmd_add_string_P(const char_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_message_P(const char_t *string);
-stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P);
-*/
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
-
-#ifdef __ENABLE_PERSISTENCE
-stat_t cmd_read_NVM_value(cmdObj_t *cmd);
-stat_t cmd_write_NVM_value(cmdObj_t *cmd);
-#endif
 
 #ifdef __DEBUG
 void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);

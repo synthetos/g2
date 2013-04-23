@@ -475,6 +475,12 @@
     <Compile Include="motate\utility\SamPins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="persistence.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="persistence.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\libsam\include\adc.h">
       <SubType>compile</SubType>
     </Compile>
