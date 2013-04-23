@@ -42,7 +42,7 @@ extern "C"{
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG2_FIRMWARE_BUILD   	005.09	// status reports
+#define TINYG2_FIRMWARE_BUILD   	006.01	// gpio
 #define TINYG2_FIRMWARE_VERSION		0.01	// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number

@@ -443,6 +443,9 @@
     <Compile Include="gcode_parser.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="gpio.h">
       <SubType>compile</SubType>
     </Compile>
