@@ -32,9 +32,11 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "settings.h"
+#include "system.h"
+#include "util.h"
+#include "xio.h"		// for ASCII definitions
 
 /*
-#include "util.h"
 #include "planner.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
@@ -230,15 +232,18 @@ void rpt_print_system_ready_message(void)
 
 void rpt_init_status_report()
 {
+	const char_t nul[] = "";	
+	const char_t se00[] = "se00";
+	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
 	cmdObj_t *cmd = cmd_reset_list();	// used for status report persistence locations
-	char sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
 	cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
 
-	cmd->index = cmd_get_index("","se00");				// set first SR persistence index
+//	cmd->index = cmd_get_index((const char_t *)"",(const char_t *)"se00");	// set first SR persistence index
+	cmd->index = cmd_get_index(nul, se00);				// set first SR persistence index
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
 		cfg.status_report_value[i] = -1234567;			// pre-load values with an unlikely number
-		cmd->value = cmd_get_index("", sr_defaults[i]);	// load the index for the SR element
+		cmd->value = cmd_get_index(nul, sr_defaults[i]);// load the index for the SR element
 		cmd_set(cmd);
 		cmd_persist(cmd);								// conditionally persist - automatic by cmd_persis()
 		cmd->index++;									// increment SR NVM index
@@ -254,11 +259,11 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
 	uint8_t elements = 0;
 	index_t status_report_list[CMD_STATUS_REPORT_LEN];
 	memset(status_report_list, 0, sizeof(status_report_list));
-	index_t sr_start = cmd_get_index("","se00");		// set first SR persistence index
+	index_t sr_start = cmd_get_index((const char_t *)"",(const char_t *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<CMD_STATUS_REPORT_LEN; i++) {
 		if (((cmd = cmd->nx) == NULL) || (cmd->type == TYPE_EMPTY)) { break;}
-		if ((cmd->type == TYPE_BOOL) && (cmd->value == true)) {
+		if ((cmd->type == TYPE_BOOL) && (fp_TRUE(cmd->value))) {
 			status_report_list[i] = cmd->index;
 			cmd->value = cmd->index;					// persist the index as the value
 			cmd->index = sr_start + i;					// index of the SR persistence location
@@ -297,21 +302,20 @@ void rpt_run_text_status_report()
 
 void rpt_request_status_report(uint8_t request_type)
 {
-	cm.status_report_request = request_type;
+	cs.status_report_request = request_type;
 }
 
 void rpt_status_report_rtc_callback() 		// called by 10ms real-time clock
 {
-	if (--cm.status_report_counter == 0) {
-		cm.status_report_request = SR_IMMEDIATE_REQUEST;	// promote to immediate request
-		cm.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// reset minimum interval
+	if (--cs.status_report_counter == 0) {
+		cs.status_report_request = SR_IMMEDIATE_REQUEST;	// promote to immediate request
+		cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// reset minimum interval
 	}
 }
 
 uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 {
-	if ((cfg.status_report_verbosity == SR_OFF) || 
-		(cm.status_report_request != SR_IMMEDIATE_REQUEST)) {
+	if ((cfg.status_report_verbosity == SR_OFF) || (cs.status_report_request != SR_IMMEDIATE_REQUEST)) {
 		return (STAT_NOOP);
 	}
 	if (cfg.status_report_verbosity == SR_FILTERED) {
@@ -322,7 +326,7 @@ uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 		rpt_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
-	cm.status_report_request = SR_NO_REQUEST;
+	cs.status_report_request = SR_NO_REQUEST;
 	return (STAT_OK);
 }
 
@@ -331,15 +335,17 @@ uint8_t rpt_status_report_callback() 		// called by controller dispatcher
  *
  *	Designed to be run as a response; i.e. have a "r" header and a footer.
  */
-/*
+
 void rpt_populate_unfiltered_status_report()
 {
-	char tmp[CMD_TOKEN_LEN+1];
+	const char_t nul[] = "";
+	const char_t sr[] = "sr";
+	char_t tmp[CMD_TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets *cmd to the start of the body
 	cmd->type = TYPE_PARENT; 				// setup the parent object
-	strcpy(cmd->token, "sr");
+	strcpy(cmd->token, sr);
 //	sprintf_P(cmd->token, PSTR("sr"));		// alternate form of above: less RAM, more FLASH & cycles
-	cmd->index = cmd_get_index("","sr");	// set the index - may be needed by calling function
+	cmd->index = cmd_get_index(nul, sr);	// set the index - may be needed by calling function
 	cmd = cmd->nx;
 
 	for (uint8_t i=0; i<CMD_STATUS_REPORT_LEN; i++) {
@@ -365,21 +371,23 @@ void rpt_populate_unfiltered_status_report()
 
 uint8_t rpt_populate_filtered_status_report()
 {
+	const char_t sr[] = "sr";
+	char_t tmp[CMD_TOKEN_LEN+1];
 	uint8_t has_data = false;
-	char tmp[CMD_TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets cmd to the start of the body
 
 	cmd->type = TYPE_PARENT; 				// setup the parent object
-	strcpy(cmd->token, "sr");
+	strcpy(cmd->token, sr);
 //	sprintf_P(cmd->token, PSTR("sr"));		// alternate form of above: less RAM, more FLASH & cycles
-//	cmd->index = cmd_get_index("","sr");	// OMITTED - set the index - may be needed by calling function
+//	cmd->index = cmd_get_index(nul, sr);	// OMITTED - set the index - may be needed by calling function
 	cmd = cmd->nx;
 
 	for (uint8_t i=0; i<CMD_STATUS_REPORT_LEN; i++) {
 		if ((cmd->index = cfg.status_report_list[i]) == 0) { break;}
 
 		cmd_get_cmdObj(cmd);
-		if (cfg.status_report_value[i] == cmd->value) {	// float == comparison runs the risk of overreporting. So be it
+//		if (cfg.status_report_value[i] == cmd->value) {	// float == comparison runs the risk of overreporting. So be it
+		if (fp_EQ(cmd->value, cfg.status_report_value[i])) {
 			continue;
 		} else {
 			strcpy(tmp, cmd->group);		// flatten out groups
@@ -400,7 +408,7 @@ uint8_t rpt_populate_filtered_status_report()
  * rpt_request_queue_report()	- request a queue report with current values
  * rpt_queue_report_callback()	- run the queue report w/stored values
  */
-/*
+
 struct qrIndexes {				// static data for queue reports
 	uint8_t request;			// set to true to request a report
 	uint8_t buffers_available;	// stored value used by callback
@@ -412,7 +420,7 @@ void rpt_request_queue_report()
 { 
 	if (cfg.queue_report_verbosity == QR_OFF) return;
 
-	qr.buffers_available = mp_get_planner_buffers_available();
+//+++++	qr.buffers_available = mp_get_planner_buffers_available();
 
 	// perform filtration for QR_FILTERED reports
 	if (cfg.queue_report_verbosity == QR_FILTERED) {
@@ -440,13 +448,13 @@ stat_t rpt_queue_report_callback()
 	cmd->nx = NULL;							// terminate the list
 
 	// make a qr object and print it
-	sprintf_P(cmd->token, PSTR("qr"));
+	sprintf((char *)cmd->token, "qr");
 	cmd->value = qr.buffers_available;
 	cmd->type = TYPE_INTEGER;
 	cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	return (STAT_OK);
 }
-*/
+
 /****************************************************************************
  ***** Report Unit Tests ****************************************************
  ****************************************************************************/

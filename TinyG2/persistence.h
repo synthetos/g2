@@ -36,6 +36,10 @@ extern "C"{
 stat_t cmd_read_NVM_value(cmdObj_t *cmd);
 stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 
+#ifdef __DEBUG
+void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
+#endif
+
 /*** Unit tests ***/
 
 /* unit test setup */

@@ -87,7 +87,7 @@ extern "C"{
 #define __ENABLE_PGM_FILE_DEVICE
 
 /***********************************************************************************
- **** DEFINITIONS AND SIZING *******************************************************
+ **** DEFINITIONS AND SETTINGS *******************************************************
  ***********************************************************************************/
 
 // Sizing and footprints			// chose one based on # of elements in cmdArray
@@ -129,6 +129,7 @@ enum objType {						// object / value typing for config and JSON
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
 	TYPE_PARENT						// object is a parent to a sub-object
 };
+
 enum tgCommunicationsMode {
 	TEXT_MODE = 0,					// text command line mode
 	JSON_MODE,						// strict JSON construction
@@ -163,18 +164,6 @@ enum jsonVerbosity {
 	JV_MESSAGES,					// echo configs; gcode messages only (if present); no block echo or line numbers
 	JV_LINENUM,						// echo configs; gcode blocks return messages and line numbers as present
 	JV_VERBOSE						// echos all configs and gcode blocks, line numbers and messages
-};
-
-enum srStatusReportRequest {
-	SR_NO_REQUEST = 0,				// no status report is requested
-	SR_TIMED_REQUEST,				// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST			// request a status report ASAP
-};
-
-enum srVerbosity {					// status report enable and verbosity
-	SR_OFF = 0,						// no reports
-	SR_FILTERED,					// reports only values that have changed from the last report
-	SR_VERBOSE						// reports all values specified
 };
 
 /**** operations flags and shorthand ****/
@@ -295,16 +284,10 @@ cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
 cmdObj_t *cmd_add_message(const char_t *string);
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
-#ifdef __DEBUG
-void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
-#endif
-
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/
 #include "config_app.h"
-
-
 
 /*** Unit tests ***/
 

@@ -3,6 +3,7 @@
  * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -54,6 +55,7 @@ void sys_init(void);					// master hardware init
 #undef F_CPU							// set for delays
 #define F_CPU 84000000UL				// should always precede <avr/delay.h>
 
+#define RTC_PERIOD 10					// MS for system tick (systick * N)
 
 /**** Resource Assignment via Motate ****/
 

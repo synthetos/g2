@@ -39,9 +39,7 @@
 #include "help.h"
 #include "xio.h"
 /*
-#include <ctype.h>				// for parsing
 #include "settings.h"
-#include "json_parser.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"

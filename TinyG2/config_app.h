@@ -100,6 +100,35 @@ extern "C"{
 #endif
 
 /***********************************************************************************
+ **** APPLICATION_SPECIFIC DEFINITIONS AND SETTINGS ********************************
+ ***********************************************************************************/
+
+enum cmdType {						// classification of commands
+	CMD_TYPE_NULL = 0,
+	CMD_TYPE_CONFIG,				// configuration commands
+	CMD_TYPE_GCODE,					// gcode
+	CMD_TYPE_REPORT					// SR, QR and any other report
+};
+
+enum srStatusReportRequest {
+	SR_NO_REQUEST = 0,				// no status report is requested
+	SR_TIMED_REQUEST,				// request a status report at next timer interval
+	SR_IMMEDIATE_REQUEST			// request a status report ASAP
+};
+
+enum srVerbosity {					// status report enable and verbosity
+	SR_OFF = 0,						// no reports
+	SR_FILTERED,					// reports only values that have changed from the last report
+	SR_VERBOSE						// reports all values specified
+};
+
+enum qrVerbosity {					// planner queue enable and verbosity
+	QR_OFF = 0,						// no response is provided
+	QR_FILTERED,					// queue depth reported only above hi-water mark and below lo-water mark
+	QR_VERBOSE						// queue depth reported for all buffers
+};
+
+/***********************************************************************************
  **** APPLICATION_SPECIFIC CONFIG STRUCTURE(S) *************************************
  ***********************************************************************************/
 
