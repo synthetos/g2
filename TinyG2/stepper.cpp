@@ -1,29 +1,16 @@
 /*
- * stepper.cpp - stepper motor controls
- * This file is part of TinyG2 project
+ * stepper.c - stepper motor controls
+ * Part of TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
  *
- * This file ("the software") is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 2 as published by the
- * Free Software Foundation. You should have received a copy of the GNU General Public
- * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, you may use this file as part of a software library without
- * restriction. Specifically, if other files instantiate templates or use macros or
- * inline functions from this file, or you compile this file and link it with  other
- * files to produce an executable, this file does not by itself cause the resulting
- * executable to be covered by the GNU General Public License. This exception does not
- * however invalidate any other reasons why the executable file might be covered by the
- * GNU General Public License.
- *
- * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
- * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
- * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* 	This module provides the low-level stepper drivers and some related
  * 	functions. It dequeues lines queued by the motor_queue routines.
@@ -156,6 +143,8 @@
 #include "stepper.h"
 #include "system.h"
 #include "motatePins.h"
+#include "motateTimers.h"
+
 using namespace Motate;
 
 
@@ -211,7 +200,7 @@ typedef struct stRunMotor { 		// one per controlled motor
 } stRunMotor_t;
 
 typedef struct stRunSingleton {		// Stepper static values and axis parameters
-	magic_t magic_start;			// magic number to test memory integity	
+	uint16_t magic_start;			// magic number to test memory integity	
 	int32_t timer_ticks_downcount;	// tick down-counter (unscaled)
 	int32_t timer_ticks_X_substeps;	// ticks multiplied by scaling factor
 	stRunMotor_t m[MOTORS];			// runtime motor structures
@@ -232,7 +221,7 @@ typedef struct stPrepMotor {
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-	magic_t magic_start;			// magic number to test memory integity	
+	uint16_t magic_start;			// magic number to test memory integity	
 	uint8_t move_type;				// move type
 	volatile uint8_t exec_state;	// move execution state 
 	volatile uint8_t counter_reset_flag; // set TRUE if counter should be reset
@@ -245,8 +234,8 @@ typedef struct stPrepSingleton {
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
-magic_t st_get_st_magic() { return (st.magic_start);}
-magic_t st_get_sps_magic() { return (sps.magic_start);}
+uint16_t st_get_st_magic() { return (st.magic_start);}
+uint16_t st_get_sps_magic() { return (sps.magic_start);}
 
 /*
 static inline void pinOutput(int pin, int val)
@@ -275,6 +264,7 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
+#ifdef BARE_CODE
 	// setup DDA timer
 	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
 	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
@@ -283,6 +273,14 @@ void stepper_init()
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+#else
+    _load_move();
+
+    Motate::Timer<3> ddr_timer;
+    ddr_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
+    ddr_timer.setInterrupts(kInterruptOnOverflow);
+    ddr_timer.start();
+#endif
 }
 
 static inline void pinOutput(int pin, int val)
@@ -293,6 +291,8 @@ static inline void pinOutput(int pin, int val)
 	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
 }
 
+Motate::Pin<31> proof_of_timer(kOutput);
+
 /*
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
@@ -300,57 +300,59 @@ static inline void pinOutput(int pin, int val)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-void ISR_Handler_DDA(void) 
+MOTATE_TIMER_INTERRUPT(3)
 {
-	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+    dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+    proof_of_timer = 0;
 //	uint8_t m1_flag = false;
 //	uint8_t m2_flag = false;
 //	uint8_t m3_flag = false;
-	
-	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
-		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		motor_1.step.set();		// turn step bit on
+    
+    if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+        st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
+        motor_1.step.set();		// turn step bit on
 //		m1_flag++;
-	}
-	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
-		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		motor_2.step.set();
+    }
+    if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+        st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
+        motor_2.step.set();
 //		m2_flag++;
-	}
-	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
-		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		motor_3.step.set();
+    }
+    if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+        st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
+        motor_3.step.set();
 //		m3_flag++;
-	}
+    }
 //	if (m1_flag != false) {	step_1.clear();}
 //	if (m2_flag != false) {	step_2.clear();}
 //	if (m3_flag != false) {	step_3.clear();}
-	motor_1.step.clear();
-	motor_2.step.clear();
-	motor_3.step.clear();
+    motor_1.step.clear();
+    motor_2.step.clear();
+    motor_3.step.clear();
 
-	if (--st.timer_ticks_downcount == 0) {			// end move
-		enable.set();								// disable DDA timer
+    if (--st.timer_ticks_downcount == 0) {			// end move
+        enable.set();								// disable DDA timer
 /*
-		// power-down motors if this feature is enabled
-		if (cfg.m[MOTOR_1].power_mode == true) {
-			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_2].power_mode == true) {
-			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_3].power_mode == true) {
-			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_4].power_mode == true) {
-			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		_load_move();							// load the next move
+        // power-down motors if this feature is enabled
+        if (cfg.m[MOTOR_1].power_mode == true) {
+            PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_2].power_mode == true) {
+            PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_3].power_mode == true) {
+            PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_4].power_mode == true) {
+            PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        _load_move();							// load the next move
 */
-	}
+    }
+    proof_of_timer = 1;
 }
 
-/* 
+/*
  * st_disable() - stop the steppers. Requires re-init to recover
  */
 
