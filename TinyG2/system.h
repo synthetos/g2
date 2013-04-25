@@ -62,10 +62,80 @@ void sys_init(void);					// master hardware init
 Motate::pin_number motor_1_step_pin_num = 2;
 Motate::pin_number motor_2_step_pin_num = 3;
 Motate::pin_number motor_3_step_pin_num = 4;
-Motate::pin_number motor_1_dir_pin_num  = 5;
-Motate::pin_number motor_2_dir_pin_num  = 6;
-Motate::pin_number motor_3_dir_pin_num  = 7;
-Motate::pin_number enable_pin_num       = 8;
+Motate::pin_number motor_4_step_pin_num = 31;
+Motate::pin_number motor_5_step_pin_num = 37;
+Motate::pin_number motor_6_step_pin_num = 42;
+
+Motate::pin_number motor_1_dir_pin_num = 5;
+Motate::pin_number motor_2_dir_pin_num = 6;
+Motate::pin_number motor_3_dir_pin_num = 7;
+Motate::pin_number motor_4_dir_pin_num = 32;
+Motate::pin_number motor_5_dir_pin_num = 38;
+Motate::pin_number motor_6_dir_pin_num = 43;
+
+Motate::pin_number motor_enable_pin_num = 8;
+
+Motate::pin_number motor_1_enable_pin_num = 22;
+Motate::pin_number motor_2_enable_pin_num = 25;
+Motate::pin_number motor_3_enable_pin_num = 28;
+Motate::pin_number motor_4_enable_pin_num = 33;
+Motate::pin_number motor_5_enable_pin_num = 39;
+Motate::pin_number motor_6_enable_pin_num = 44;
+
+Motate::pin_number motor_1_microstep_0_pin_num = 23;
+Motate::pin_number motor_2_microstep_0_pin_num = 26;
+Motate::pin_number motor_3_microstep_0_pin_num = 29;
+Motate::pin_number motor_4_microstep_0_pin_num = 35;
+Motate::pin_number motor_5_microstep_0_pin_num = 40;
+Motate::pin_number motor_6_microstep_0_pin_num = 45;
+
+Motate::pin_number motor_1_microstep_1_pin_num = 24;
+Motate::pin_number motor_2_microstep_1_pin_num = 27;
+Motate::pin_number motor_3_microstep_1_pin_num = 30;
+Motate::pin_number motor_4_microstep_1_pin_num = 36;
+Motate::pin_number motor_5_microstep_1_pin_num = 41;
+Motate::pin_number motor_6_microstep_1_pin_num = 46;
+
+Motate::pin_number motor_1_vref_pin_num = 66;
+Motate::pin_number motor_2_vref_pin_num = 67;
+Motate::pin_number motor_3_vref_pin_num = 62;
+Motate::pin_number motor_4_vref_pin_num = 63;
+Motate::pin_number motor_5_vref_pin_num = 64;
+Motate::pin_number motor_6_vref_pin_num = 34;
+
+Motate::pin_number axis_X_min_pin_num = 14;
+Motate::pin_number axis_X_max_pin_num = 15;
+Motate::pin_number axis_Y_min_pin_num = 16;
+Motate::pin_number axis_Y_max_pin_num = 17;
+Motate::pin_number axis_Z_min_pin_num = 18;
+Motate::pin_number axis_Z_max_pin_num = 19;
+Motate::pin_number axis_A_min_pin_num = 58;
+Motate::pin_number axis_A_max_pin_num = 59;
+Motate::pin_number axis_B_min_pin_num = 60;
+Motate::pin_number axis_B_max_pin_num = 61;
+Motate::pin_number axis_C_min_pin_num = 65;
+Motate::pin_number axis_C_max_pin_num = 51;
+
+Motate::pin_number spindle_enable_pin_num = 12;
+Motate::pin_number spindle_dir_pin_num = 13;
+Motate::pin_number spindle_pwm_pin_num = 11;
+Motate::pin_number secondary_pwm_pin_num = 9;
+Motate::pin_number coolant_on_pin_num = 54;
+
+Motate::pin_number kinen_spi_ss1_pin_num = 10;
+Motate::pin_number kinen_spi_ss2_pin_num = 47;
+Motate::pin_number kinen_spi_ss3_pin_num = 52;
+Motate::pin_number kinen_spi_ss4_pin_num = 48;
+Motate::pin_number kinen_spi_ss5_pin_num = 49;
+Motate::pin_number kinen_spi_ss6_pin_num = 50;
+Motate::pin_number kinen_sync_pin_num = 53;
+
+Motate::pin_number grbl_reset_pin_num = 54;
+Motate::pin_number grbl_feedhold_pin_num = 55;
+Motate::pin_number grbl_cycle_start_pin_num = 56;
+
+Motate::pin_number i2c_sda_pin_num = 20;
+Motate::pin_number i2c_scl_pin_num = 21;
 
 /**** Resource Assignment ****
  * This section describes what modules use resources such as timers, pins, etc.

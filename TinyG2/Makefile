@@ -38,9 +38,9 @@ USER_LIB_DIRS =
 USER_LIBS =
 
 # Define optimisation level here
-#OPTIMIZATION = -Os
+#OPTIMIZATION ?= 0
 #OPTIMIZATION ?= 3
-OPTIMIZATION ?= 0
+OPTIMIZATION ?= s
 
 CFLAGS   :=
 CPPFLAGS :=

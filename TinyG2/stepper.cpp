@@ -146,8 +146,7 @@
 #include "motateTimers.h"
 
 using namespace Motate;
-
-
+/*
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num>
 struct Stepper {
@@ -158,7 +157,30 @@ struct Stepper {
 Stepper<motor_1_step_pin_num, motor_1_dir_pin_num> motor_1;
 Stepper<motor_2_step_pin_num, motor_2_dir_pin_num> motor_2;
 Stepper<motor_3_step_pin_num, motor_3_dir_pin_num> motor_3;
-OutputPin<enable_pin_num> enable;
+Stepper<motor_4_step_pin_num, motor_4_dir_pin_num> motor_4;
+Stepper<motor_5_step_pin_num, motor_5_dir_pin_num> motor_5;
+Stepper<motor_6_step_pin_num, motor_6_dir_pin_num> motor_6;
+OutputPin<motor_enable_pin_num> enable;
+*/
+
+// Setup a stepper template to hold our pins
+template<pin_number step_num, pin_number dir_num, pin_number enable_num, 
+		 pin_number ms0_num, pin_number ms1_num>
+struct Stepper {
+	OutputPin<step_num> step;
+	OutputPin<dir_num> dir;
+	OutputPin<enable_num> enable;
+	OutputPin<ms0_num> ms0;
+	OutputPin<ms1_num> ms1;
+};
+Stepper<motor_1_step_pin_num, motor_1_dir_pin_num, motor_1_enable_pin_num, motor_1_microstep_0_pin_num, motor_1_microstep_1_pin_num> motor_1;
+Stepper<motor_2_step_pin_num, motor_2_dir_pin_num, motor_2_enable_pin_num, motor_2_microstep_0_pin_num, motor_2_microstep_1_pin_num> motor_2;
+Stepper<motor_3_step_pin_num, motor_3_dir_pin_num, motor_3_enable_pin_num, motor_3_microstep_0_pin_num, motor_3_microstep_1_pin_num> motor_3;
+Stepper<motor_4_step_pin_num, motor_4_dir_pin_num, motor_4_enable_pin_num, motor_4_microstep_0_pin_num, motor_4_microstep_1_pin_num> motor_4;
+Stepper<motor_5_step_pin_num, motor_5_dir_pin_num, motor_5_enable_pin_num, motor_5_microstep_0_pin_num, motor_5_microstep_1_pin_num> motor_5;
+Stepper<motor_6_step_pin_num, motor_6_dir_pin_num, motor_6_enable_pin_num, motor_6_microstep_0_pin_num, motor_6_microstep_1_pin_num> motor_6;
+OutputPin<motor_enable_pin_num> enable;
+
 
 /* These conflict: 
 Pin5 dir_1(kOutput);			// direction channel 1
