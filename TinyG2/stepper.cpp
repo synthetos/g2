@@ -143,6 +143,8 @@
 #include "stepper.h"
 #include "system.h"
 #include "motatePins.h"
+#include "motateTimers.h"
+
 using namespace Motate;
 
 
@@ -262,6 +264,7 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
+#ifdef BARE_CODE
 	// setup DDA timer
 	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
 	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
@@ -270,6 +273,14 @@ void stepper_init()
 	NVIC_EnableIRQ(TC_IRQn_DDA);
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+#else
+    _load_move();
+
+    Motate::Timer<3> ddr_timer;
+    ddr_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
+    ddr_timer.setInterrupts(kInterruptOnOverflow);
+    ddr_timer.start();
+#endif
 }
 
 static inline void pinOutput(int pin, int val)
@@ -280,6 +291,8 @@ static inline void pinOutput(int pin, int val)
 	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
 }
 
+Motate::Pin<31> proof_of_timer(kOutput);
+
 /*
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
@@ -287,57 +300,59 @@ static inline void pinOutput(int pin, int val)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-void ISR_Handler_DDA(void) 
+MOTATE_TIMER_INTERRUPT(3)
 {
-	dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+    dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+    proof_of_timer = 0;
 //	uint8_t m1_flag = false;
 //	uint8_t m2_flag = false;
 //	uint8_t m3_flag = false;
-	
-	if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
-		st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
-		motor_1.step.set();		// turn step bit on
+    
+    if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+        st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
+        motor_1.step.set();		// turn step bit on
 //		m1_flag++;
-	}
-	if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
-		st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
-		motor_2.step.set();
+    }
+    if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+        st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
+        motor_2.step.set();
 //		m2_flag++;
-	}
-	if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
-		st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
-		motor_3.step.set();
+    }
+    if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+        st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
+        motor_3.step.set();
 //		m3_flag++;
-	}
+    }
 //	if (m1_flag != false) {	step_1.clear();}
 //	if (m2_flag != false) {	step_2.clear();}
 //	if (m3_flag != false) {	step_3.clear();}
-	motor_1.step.clear();
-	motor_2.step.clear();
-	motor_3.step.clear();
+    motor_1.step.clear();
+    motor_2.step.clear();
+    motor_3.step.clear();
 
-	if (--st.timer_ticks_downcount == 0) {			// end move
-		enable.set();								// disable DDA timer
+    if (--st.timer_ticks_downcount == 0) {			// end move
+        enable.set();								// disable DDA timer
 /*
-		// power-down motors if this feature is enabled
-		if (cfg.m[MOTOR_1].power_mode == true) {
-			PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_2].power_mode == true) {
-			PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_3].power_mode == true) {
-			PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		if (cfg.m[MOTOR_4].power_mode == true) {
-			PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
-		}
-		_load_move();							// load the next move
+        // power-down motors if this feature is enabled
+        if (cfg.m[MOTOR_1].power_mode == true) {
+            PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_2].power_mode == true) {
+            PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_3].power_mode == true) {
+            PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        if (cfg.m[MOTOR_4].power_mode == true) {
+            PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
+        }
+        _load_move();							// load the next move
 */
-	}
+    }
+    proof_of_timer = 1;
 }
 
-/* 
+/*
  * st_disable() - stop the steppers. Requires re-init to recover
  */
 
