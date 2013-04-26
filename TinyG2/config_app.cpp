@@ -34,14 +34,11 @@
 #include "xio.h"
 
 /*
-#include "settings.h"
-#include "canonical_machine.h"
 #include "gcode_parser.h"
 #include "planner.h"
 #include "stepper.h"
 #include "test.h"
 #include "help.h"
-#include "system.h"
 #include "network.h"
 */
 

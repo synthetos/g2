@@ -6,6 +6,28 @@
 
 	This file is part of the Motate Library.
 
+	This file ("the software") is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2 as published by the
+	Free Software Foundation. You should have received a copy of the GNU General Public
+	License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
+
+	As a special exception, you may use this file as part of a software library without
+	restriction. Specifically, if other files instantiate templates or use macros or
+	inline functions from this file, or you compile this file and link it with  other
+	files to produce an executable, this file does not by itself cause the resulting
+	executable to be covered by the GNU General Public License. This exception does not
+	however invalidate any other reasons why the executable file might be covered by the
+	GNU General Public License.
+
+	THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+	WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+	SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------------WAS--------------------
+
 	The Motate Library is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Lesser General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -291,111 +313,111 @@ namespace Motate {
 
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
-        template <>\
-        struct Port32<registerChar> {\
-            static const uint8_t letter = (uint8_t) registerChar;\
-            static void enablePeripheralClock() {\
-                if (pmcId() < 32) {\
-                    uint32_t id_mask = 1u << ( pmcId() );\
-                    if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
-                        PMC->PMC_PCER0 = id_mask;\
-                    }\
-                } else {\
-                    uint32_t id_mask = 1u << ( pmcId() - 32 );\
-                    if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {\
-                        PMC->PMC_PCER1 = id_mask;\
-                    }\
-                }\
-            };\
-            static void disablePeripheralClock() {\
-                if (pmcId() < 32) {\
-                    uint32_t id_mask = 1u << ( pmcId() );\
-                    if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
-                        PMC->PMC_PCDR0 = id_mask;\
-                    }\
-                } else {\
-                    uint32_t id_mask = 1u << ( pmcId()-32 );\
-                    if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {\
-                        PMC->PMC_PCDR1 = id_mask;\
-                    }\
-                }\
-            };\
-            void setModes(const uintPort_t value, const uintPort_t mask) {\
-                (*PIO ## registerLetter).PIO_ODR = ~value & mask ;\
-                (*PIO ## registerLetter).PIO_OER = value & mask ;\
-                (*PIO ## registerLetter).PIO_PER = mask ;\
-                /* if all pins are output, disable PIO Controller clocking, reduce power consumption */\
-                if ( (*PIO ## registerLetter).PIO_OSR == 0xffffffff )\
-                {\
-                    disablePeripheralClock();\
-                } else {\
-                    enablePeripheralClock();\
-                }\
-            };\
-            void setOptions(const uint16_t options, const uintPort_t mask) {\
-                if (kPullUp & options)\
-                {\
-                    (*PIO ## registerLetter).PIO_PUER = mask ;\
-                }\
-                else\
-                {\
-                    (*PIO ## registerLetter).PIO_PUDR = mask ;\
-                }\
-                if (kWiredAnd & options)\
-                {/*kDriveLowOnly - Enable Multidrive*/\
-                    (*PIO ## registerLetter).PIO_MDER = mask ;\
-                }\
-                else\
-                {\
-                    (*PIO ## registerLetter).PIO_MDDR = mask ;\
-                }\
-                if (kDeglitch & options)\
-                {\
-                    (*PIO ## registerLetter).PIO_IFER = mask ;\
-                    (*PIO ## registerLetter).PIO_SCIFSR = mask ;\
-                    }\
-                    else\
-                    {\
-                    if (kDebounce & options)\
-                    {\
-                        (*PIO ## registerLetter).PIO_IFER = mask ;\
-                        (*PIO ## registerLetter).PIO_DIFSR = mask ;\
-                    }\
-                        else\
-                    {\
-                        (*PIO ## registerLetter).PIO_IFDR = mask ;\
-                    }\
-                }\
-            };\
-            void set(const uintPort_t value) {\
-                (*PIO ## registerLetter).PIO_SODR = value;\
-            };\
-            void clear(const uintPort_t value) {\
-                (*PIO ## registerLetter).PIO_CODR = value;\
-            };\
-            void write(const uintPort_t value) {\
-                (*PIO ## registerLetter).PIO_OWER = 0xffffffff;/*Enable all registers for writing thru ODSR*/\
-                (*PIO ## registerLetter).PIO_ODSR = value;\
-                (*PIO ## registerLetter).PIO_OWDR = 0xffffffff;/*Disable all registers for writing thru ODSR*/\
-            };\
-            void write(const uintPort_t value, const uintPort_t mask) {\
-                (*PIO ## registerLetter).PIO_OWER = mask;/*Enable masked registers for writing thru ODSR*/\
-                (*PIO ## registerLetter).PIO_ODSR = value;\
-                (*PIO ## registerLetter).PIO_OWDR = mask;/*Disable masked registers for writing thru ODSR*/\
-            };\
-            uintPort_t getInputValues(const uintPort_t mask) {\
-                return (*PIO ## registerLetter).PIO_PDSR & mask;\
-            };\
-            uintPort_t getOutputValues(const uintPort_t mask) {\
-                return (*PIO ## registerLetter).PIO_OSR & mask;\
-            };\
-            Pio* portPtr() {\
-                return (PIO ## registerLetter);\
-            };\
-            static const uint32_t pmcId() {\
-                return ID_PIO ## registerLetter;\
-            };\
-        };\
+		template <>\
+		struct Port32<registerChar> {\
+			static const uint8_t letter = (uint8_t) registerChar;\
+			static void enablePeripheralClock() {\
+				if (pmcId() < 32) {\
+					uint32_t id_mask = 1u << ( pmcId() );\
+					if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
+						PMC->PMC_PCER0 = id_mask;\
+					}\
+				} else {\
+					uint32_t id_mask = 1u << ( pmcId() - 32 );\
+					if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {\
+						PMC->PMC_PCER1 = id_mask;\
+					}\
+				}\
+			};\
+			static void disablePeripheralClock() {\
+				if (pmcId() < 32) {\
+					uint32_t id_mask = 1u << ( pmcId() );\
+					if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
+						PMC->PMC_PCDR0 = id_mask;\
+					}\
+				} else {\
+					uint32_t id_mask = 1u << ( pmcId()-32 );\
+					if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {\
+						PMC->PMC_PCDR1 = id_mask;\
+					}\
+				}\
+			};\
+			void setModes(const uintPort_t value, const uintPort_t mask) {\
+				(*PIO ## registerLetter).PIO_ODR = ~value & mask ;\
+				(*PIO ## registerLetter).PIO_OER = value & mask ;\
+				(*PIO ## registerLetter).PIO_PER = mask ;\
+				/* if all pins are output, disable PIO Controller clocking, reduce power consumption */\
+				if ( (*PIO ## registerLetter).PIO_OSR == 0xffffffff )\
+				{\
+					disablePeripheralClock();\
+				} else {\
+					enablePeripheralClock();\
+				}\
+			};\
+			void setOptions(const uint16_t options, const uintPort_t mask) {\
+				if (kPullUp & options)\
+				{\
+					(*PIO ## registerLetter).PIO_PUER = mask ;\
+				}\
+				else\
+				{\
+					(*PIO ## registerLetter).PIO_PUDR = mask ;\
+				}\
+				if (kWiredAnd & options)\
+				{/*kDriveLowOnly - Enable Multidrive*/\
+					(*PIO ## registerLetter).PIO_MDER = mask ;\
+				}\
+				else\
+				{\
+					(*PIO ## registerLetter).PIO_MDDR = mask ;\
+				}\
+				if (kDeglitch & options)\
+				{\
+					(*PIO ## registerLetter).PIO_IFER = mask ;\
+					(*PIO ## registerLetter).PIO_SCIFSR = mask ;\
+					}\
+					else\
+					{\
+					if (kDebounce & options)\
+					{\
+						(*PIO ## registerLetter).PIO_IFER = mask ;\
+						(*PIO ## registerLetter).PIO_DIFSR = mask ;\
+					}\
+						else\
+					{\
+						(*PIO ## registerLetter).PIO_IFDR = mask ;\
+					}\
+				}\
+			};\
+			void set(const uintPort_t value) {\
+				(*PIO ## registerLetter).PIO_SODR = value;\
+			};\
+			void clear(const uintPort_t value) {\
+				(*PIO ## registerLetter).PIO_CODR = value;\
+			};\
+			void write(const uintPort_t value) {\
+				(*PIO ## registerLetter).PIO_OWER = 0xffffffff;/*Enable all registers for writing thru ODSR*/\
+				(*PIO ## registerLetter).PIO_ODSR = value;\
+				(*PIO ## registerLetter).PIO_OWDR = 0xffffffff;/*Disable all registers for writing thru ODSR*/\
+			};\
+			void write(const uintPort_t value, const uintPort_t mask) {\
+				(*PIO ## registerLetter).PIO_OWER = mask;/*Enable masked registers for writing thru ODSR*/\
+				(*PIO ## registerLetter).PIO_ODSR = value;\
+				(*PIO ## registerLetter).PIO_OWDR = mask;/*Disable masked registers for writing thru ODSR*/\
+			};\
+			uintPort_t getInputValues(const uintPort_t mask) {\
+				return (*PIO ## registerLetter).PIO_PDSR & mask;\
+			};\
+			uintPort_t getOutputValues(const uintPort_t mask) {\
+				return (*PIO ## registerLetter).PIO_OSR & mask;\
+			};\
+			Pio* portPtr() {\
+				return (PIO ## registerLetter);\
+			};\
+			static const uint32_t pmcId() {\
+				return ID_PIO ## registerLetter;\
+			};\
+		};\
 		typedef Port32<registerChar> Port ## registerLetter;\
 		static Port ## registerLetter port ## registerLetter;
 
@@ -564,7 +586,7 @@ namespace Motate {
 		static Pin<PinBit1num>  PinBit1;
 		static Pin<PinBit0num>  PinBit0;
 
-#define _MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(aPortLetter) \
+	#define _MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(aPortLetter) \
 		static const uint32_t port ## aPortLetter ## ClearMask =\
 			(Pin<PinBit31num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit31num>::mask : 0x00) |\
 			(Pin<PinBit30num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit30num>::mask : 0x00) |\

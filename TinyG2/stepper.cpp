@@ -1,16 +1,29 @@
 /*
- * stepper.c - stepper motor controls
- * Part of TinyG2 project
+ * stepper.cpp - stepper motor controls
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* 	This module provides the low-level stepper drivers and some related
  * 	functions. It dequeues lines queued by the motor_queue routines.
@@ -137,64 +150,78 @@
  *	degrees of phase angle results in a step being generated. 
  */
 
-//#include <component_tc.h>
-
 #include "tinyg2.h"
-#include "stepper.h"
 #include "system.h"
-#include "motatePins.h"
-#include "motateTimers.h"
+#include "stepper.h"
+//#include "motatePins.h"		// defined in system.h   Not needed here
+//#include "motateTimers.h"		// defined in system.h   Not needed here
+//#include <component_tc.h>		// deprecated - to be removed
 
 using namespace Motate;
-/*
-// Setup a stepper template to hold our pins
-template<pin_number step_num, pin_number dir_num>
-struct Stepper {
-	OutputPin<step_num> step;
-	OutputPin<dir_num> dir;
-	// enable ??
-};
-Stepper<motor_1_step_pin_num, motor_1_dir_pin_num> motor_1;
-Stepper<motor_2_step_pin_num, motor_2_dir_pin_num> motor_2;
-Stepper<motor_3_step_pin_num, motor_3_dir_pin_num> motor_3;
-Stepper<motor_4_step_pin_num, motor_4_dir_pin_num> motor_4;
-Stepper<motor_5_step_pin_num, motor_5_dir_pin_num> motor_5;
-Stepper<motor_6_step_pin_num, motor_6_dir_pin_num> motor_6;
-OutputPin<motor_enable_pin_num> enable;
-*/
+
+Motate::Pin<31> proof_of_timer(kOutput);
 
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num, pin_number enable_num, 
-		 pin_number ms0_num, pin_number ms1_num>
+		 pin_number ms0_num, pin_number ms1_num, pin_number vref_num>
+
 struct Stepper {
 	OutputPin<step_num> step;
 	OutputPin<dir_num> dir;
 	OutputPin<enable_num> enable;
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
+	OutputPin<vref_num> vref;
 };
-Stepper<motor_1_step_pin_num, motor_1_dir_pin_num, motor_1_enable_pin_num, motor_1_microstep_0_pin_num, motor_1_microstep_1_pin_num> motor_1;
-Stepper<motor_2_step_pin_num, motor_2_dir_pin_num, motor_2_enable_pin_num, motor_2_microstep_0_pin_num, motor_2_microstep_1_pin_num> motor_2;
-Stepper<motor_3_step_pin_num, motor_3_dir_pin_num, motor_3_enable_pin_num, motor_3_microstep_0_pin_num, motor_3_microstep_1_pin_num> motor_3;
-Stepper<motor_4_step_pin_num, motor_4_dir_pin_num, motor_4_enable_pin_num, motor_4_microstep_0_pin_num, motor_4_microstep_1_pin_num> motor_4;
-Stepper<motor_5_step_pin_num, motor_5_dir_pin_num, motor_5_enable_pin_num, motor_5_microstep_0_pin_num, motor_5_microstep_1_pin_num> motor_5;
-Stepper<motor_6_step_pin_num, motor_6_dir_pin_num, motor_6_enable_pin_num, motor_6_microstep_0_pin_num, motor_6_microstep_1_pin_num> motor_6;
+Stepper<motor_1_step_pin_num, 
+		motor_1_dir_pin_num, 
+		motor_1_enable_pin_num, 
+		motor_1_microstep_0_pin_num, 
+		motor_1_microstep_1_pin_num,
+		motor_1_vref_pin_num> motor_1;
+
+Stepper<motor_2_step_pin_num, 
+		motor_2_dir_pin_num, 
+		motor_2_enable_pin_num, 
+		motor_2_microstep_0_pin_num, 
+		motor_2_microstep_1_pin_num,
+		motor_2_vref_pin_num> motor_2;
+
+Stepper<motor_3_step_pin_num, 
+		motor_3_dir_pin_num, 
+		motor_3_enable_pin_num, 
+		motor_3_microstep_0_pin_num, 
+		motor_3_microstep_1_pin_num,
+		motor_3_vref_pin_num> motor_3;
+
+Stepper<motor_4_step_pin_num, 
+		motor_4_dir_pin_num, 
+		motor_4_enable_pin_num, 
+		motor_4_microstep_0_pin_num, 
+		motor_4_microstep_1_pin_num,
+		motor_4_vref_pin_num> motor_4;
+
+Stepper<motor_5_step_pin_num, 
+		motor_5_dir_pin_num, 
+		motor_5_enable_pin_num, 
+		motor_5_microstep_0_pin_num, 
+		motor_5_microstep_1_pin_num,
+		motor_5_vref_pin_num> motor_5;
+		
+Stepper<motor_6_step_pin_num, 
+		motor_6_dir_pin_num, 
+		motor_6_enable_pin_num, 
+		motor_6_microstep_0_pin_num, 
+		motor_6_microstep_1_pin_num,
+		motor_6_vref_pin_num> motor_6;
+
 OutputPin<motor_enable_pin_num> enable;
-
-
-/* These conflict: 
-Pin5 dir_1(kOutput);			// direction channel 1
-Pin6 dir_2(kOutput);			// direction channel 2
-Pin7 dir_3(kOutput);			// direction channel 3
-
-Pin8 enable(kOutput);			// common enable
-*/
 
 volatile int temp = 0;
 volatile long dummy;			// convenient register to read into
 
-//static void _exec_move(void);
 static void _load_move(void);
+//static void _exec_move(void);
 //static void _request_load_move(void);
 
 /*
@@ -251,25 +278,15 @@ typedef struct stPrepSingleton {
 	uint16_t timer_period;			// DDA or dwell clock period setting
 	uint32_t timer_ticks;			// DDA or dwell ticks for the move
 	uint32_t timer_ticks_X_substeps;// DDA ticks scaled by substep factor
-	double segment_velocity;		// +++++ record segment velocity for diagnostics
+	float segment_velocity;		// +++++ record segment velocity for diagnostics
 	stPrepMotor_t m[MOTORS];		// per-motor structs
 } stPrepSingleton_t;
 static struct stPrepSingleton sps;
 
-uint16_t st_get_st_magic() { return (st.magic_start);}
-uint16_t st_get_sps_magic() { return (sps.magic_start);}
+magic_t st_get_st_magic() { return (st.magic_start);}
+magic_t st_get_sps_magic() { return (sps.magic_start);}
 
 /*
-static inline void pinOutput(int pin, int val)
-{
-	if (val)
-	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
-	else
-	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
-}
-*/
-
-/* 
  * st_init() - initialize stepper motor subsystem 
  *
  *	Notes:
@@ -298,22 +315,12 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-    Motate::Timer<3> ddr_timer;
-    ddr_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
-    ddr_timer.setInterrupts(kInterruptOnOverflow);
-    ddr_timer.start();
+//    Motate::Timer<3> dda_timer;	// +++++ moved to system.h
+    dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
+    dda_timer.setInterrupts(kInterruptOnOverflow);
+    dda_timer.start();
 #endif
 }
-
-static inline void pinOutput(int pin, int val)
-{
-	if (val)
-	g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
-	else
-	g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
-}
-
-Motate::Pin<31> proof_of_timer(kOutput);
 
 /*
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
@@ -322,9 +329,10 @@ Motate::Pin<31> proof_of_timer(kOutput);
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-MOTATE_TIMER_INTERRUPT(3)
+//MOTATE_TIMER_INTERRUPT(3)
+DDA_TIMER_INTERRUPT
 {
-    dummy = REG_SR_DDA;		// read SR to clear interrupt condition
+    dummy = DDA_STATUS_REGISTER;	// read SR to clear interrupt condition
     proof_of_timer = 0;
     
     if (!motor_1.step.isNull() && (st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
@@ -351,6 +359,7 @@ MOTATE_TIMER_INTERRUPT(3)
         st.m[MOTOR_6].counter -= st.timer_ticks_X_substeps;
         motor_6.step.set();
     }
+
     motor_1.step.clear();
     motor_2.step.clear();
     motor_3.step.clear();
@@ -393,7 +402,7 @@ MOTATE_TIMER_INTERRUPT(3)
 
 void st_disable()
 {
-	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+//++++	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 }
 
 

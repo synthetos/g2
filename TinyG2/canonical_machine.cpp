@@ -76,6 +76,8 @@
 #include "util.h"
 #include "config.h"
 #include "canonical_machine.h"
+
+//#include "system.h"
 /*
 #include "plan_arc.h"
 #include "planner.h"
@@ -83,7 +85,6 @@
 #include "spindle.h"
 #include "report.h"
 #include "gpio.h"
-#include "system.h"
 */
 #ifdef __cplusplus
 extern "C"{

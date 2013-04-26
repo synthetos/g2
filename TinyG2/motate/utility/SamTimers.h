@@ -6,18 +6,25 @@ Copyright (c) 2012 Robert Giseburt
 
 This file is part of the Motate Library.
 
-The Motate Library is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This file ("the software") is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License, version 2 as published by the
+Free Software Foundation. You should have received a copy of the GNU General Public
+License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
 
-The Motate Library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
+As a special exception, you may use this file as part of a software library without
+restriction. Specifically, if other files instantiate templates or use macros or
+inline functions from this file, or you compile this file and link it with  other
+files to produce an executable, this file does not by itself cause the resulting
+executable to be covered by the GNU General Public License. This exception does not
+however invalidate any other reasons why the executable file might be covered by the
+GNU General Public License.
 
-You should have received a copy of the GNU Lesser General Public License
-along with the Motate Library.  If not, see <http://www.gnu.org/licenses/>.
+THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef SAMTIMERS_H_ONCE
@@ -83,16 +90,16 @@ namespace Motate {
 		static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
 		static const IRQn_Type tcIRQ();
 
-		/* ################################################################### *
-		* #                          WARNING                                # *
-		* # WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! # *
-		* #                          WARNING           (u been warned)      # *
-		* ################################################################### */
+		/********************************************************************
+		**                          WARNING                                **
+		** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
+		**                          WARNING           (u been warned)      **
+		*********************************************************************/
 
 		Timer() { init(); };
 
 		void init() {
-				/* Unlock this thing */
+			/* Unlock this thing */
 			unlock();
 		}
 
@@ -146,14 +153,14 @@ namespace Motate {
 
 			enablePeripheralClock();
 
-				/* Setup clock "prescaler" */
-				/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
-				/* For now, we don't support TC5. */
+			/* Setup clock "prescaler" */
+			/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
+			/* For now, we don't support TC5. */
 
-				// Grab the SystemCoreClock value, in case it's volatile.
+			// Grab the SystemCoreClock value, in case it's volatile.
 			uint32_t masterClock = SystemCoreClock;
 
-				// Store the divisor temporarily, to avoid looking it up again...
+			// Store the divisor temporarily, to avoid looking it up again...
 			uint32_t divisor = 2; // sane default of 2
 
 			// TC1 = MCK/2
@@ -168,7 +175,7 @@ namespace Motate {
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
 				divisor = 8;
 
-			// TC3 = MCK/32                
+			// TC3 = MCK/32
 			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
 						/*  Set mode */
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
@@ -189,9 +196,9 @@ namespace Motate {
 				return kFrequencyUnattainable;
 			}
 
-				//TODO: Add ability to select external clocks... -RG
+			//TODO: Add ability to select external clocks... -RG
 
-				// Extra mile, set the actual frequency, but only if we're going to RC.
+			// Extra mile, set the actual frequency, but only if we're going to RC.
 			if (mode == kTimerInputCaptureToMatch
 				|| mode == kTimerUpToMatch
 			|| mode == kTimerUpDownToMatch) {
@@ -199,34 +206,34 @@ namespace Motate {
 				int32_t newTop = masterClock/(divisor*freq);
 				setTop(newTop);
 
-					// Determine and return the new frequency.
+				// Determine and return the new frequency.
 				return masterClock/(divisor*newTop);
 			}
 
-				// Optimization -- we can't use RC for much when we're not using it,
-				//  so, instead of looking up if we're using it or not, just set it to
-				//  0xFFFF when we're not using it.
+			// Optimization -- we can't use RC for much when we're not using it,
+			//  so, instead of looking up if we're using it or not, just set it to
+			//  0xFFFF when we're not using it.
 			setTop(0xFFFF);
 
-				// Determine and return the new frequency.
+			// Determine and return the new frequency.
 			return masterClock/(divisor*0xFFFF);
 		};
 
-			// Set the TOP value for modes that use it.
-			// WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
+		// Set the TOP value for modes that use it.
+		// WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
 		void setTop(const uint32_t topValue) {
 			tcChan()->TC_RC = topValue;
 		};
 
-			// Here we want to get what the TOP value is. Is the mode is one that resets on RC, then RC is the TOP.
-			// Otherwise, TOP is 0xFFFF. In order to see if TOP is RC, we need to look at the CPCTRG (RC Compare
-			// Trigger Enable) bit of the CMR (Channel Mode Register). Note that this bit position is the same for
-			// waveform or Capture mode, even though the Datasheet seems to obfuscate this fact.
+		// Here we want to get what the TOP value is. Is the mode is one that resets on RC, then RC is the TOP.
+		// Otherwise, TOP is 0xFFFF. In order to see if TOP is RC, we need to look at the CPCTRG (RC Compare
+		// Trigger Enable) bit of the CMR (Channel Mode Register). Note that this bit position is the same for
+		// waveform or Capture mode, even though the Datasheet seems to obfuscate this fact.
 		uint32_t getTopValue() {
 			return tcChan()->TC_CMR & TC_CMR_CPCTRG ? tcChan()->TC_RC : 0xFFFF;
 		};
 
-			// Return the current value of the counter. This is a fleeting thing...
+		// Return the current value of the counter. This is a fleeting thing...
 		uint32_t getValue() {
 			return tcChan()->TC_CV;
 		}
@@ -257,7 +264,7 @@ namespace Motate {
 		void setDutyCycleA(const uint32_t absolute) {
 			tcChan()->TC_RA = absolute;
 		};
-		
+
 		void setDutyCycleB(const uint32_t absolute) {
 			tcChan()->TC_RB = absolute;
 		};
@@ -266,7 +273,7 @@ namespace Motate {
 			if (interrupts != kInterruptsOff) {
 				tcChan()->TC_IDR = 0xFFFFFFFF;
 				NVIC_EnableIRQ(tcIRQ());
-				
+
 				if (interrupts | kInterruptOnOverflow) {
 					// Check to see if we're overflowing on C. See getTopValue() description.
 					if (tcChan()->TC_CMR & TC_CMR_CPCTRG) {
@@ -281,17 +288,17 @@ namespace Motate {
 				if (interrupts | kInterruptOnMatchB) {
 					tcChan()->TC_IER = TC_IER_CPBS; // RB Compare
 				}
-				
+
 			} else {
 				tcChan()->TC_IDR = 0xFFFFFFFF;
 				NVIC_DisableIRQ(tcIRQ());
 			}
 		}
-		
+
 		// Placeholder for user code.
 		static void interrupt();
 	};
-	
+
 	template<> Tc * const        Timer<0>::tc()           { return TC0; };
 	template<> TcChannel * const Timer<0>::tcChan()       { return TC0->TC_CHANNEL + 0; };
 	template<> const uint32_t    Timer<0>::peripheralId() { return ID_TC0; };
@@ -336,7 +343,7 @@ namespace Motate {
 	template<> TcChannel * const Timer<8>::tcChan()       { return TC2->TC_CHANNEL + 2; };
 	template<> const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
 	template<> const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
-	
+
 } // namespace Motate
 
 #define MOTATE_TIMER_INTERRUPT(number) extern "C" void TC ## number ## _Handler(void)

@@ -38,11 +38,9 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
-// NOTE: This header requires <stdio.h> be included previously
-
-#define TINYG2_FIRMWARE_BUILD   	006.01	// gpio
+#define TINYG2_FIRMWARE_BUILD   	006.03	// gpio with Motate
 #define TINYG2_FIRMWARE_VERSION		0.01	// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -77,24 +75,12 @@ typedef uint8_t char_t;
 #define strtod(d,s) strtod((char *)d, (char **)s)
 #define strlen(s) strlen((char *)s)
 
+// You still need to do casts in the code for printf()s
 //#define sprintf(a,b) sprintf(char *)a, (char *)b)
 
-/*************************************************************************
- * TinyG application-specific prototypes, defines and globals
+/* Axes, motors & PWM channels used by the application
  */
-Motate::pin_number indicator_led_pin_num = 13;
-static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
-#define DEV_STDIN 0				// STDIO defaults
-#define DEV_STDOUT 0
-#define DEV_STDERR 0
-
-typedef uint16_t magic_t;		// magic number size
-#define MAGICNUM 0x12EF			// used for memory integrity assertions
-
-/* 
- * Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
- */
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 6				// number of motors on the board
 #define COORDS 6				// number of supported coordinate systems (1-6)
@@ -121,6 +107,19 @@ typedef uint16_t magic_t;		// magic number size
 
 #define PWM_1	0
 #define PWM_2	1
+
+/*************************************************************************
+ * TinyG application-specific prototypes, defines and globals
+ */
+Motate::pin_number indicator_led_pin_num = 13;
+static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
+
+#define DEV_STDIN 0				// STDIO defaults
+#define DEV_STDOUT 0
+#define DEV_STDERR 0
+
+typedef uint16_t magic_t;		// magic number size
+#define MAGICNUM 0x12EF			// used for memory integrity assertions
 
 /* 
  * STATUS CODES
@@ -216,6 +215,6 @@ extern stat_t status_code;				// declared in main.cpp
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
 #endif // _TINYG2_H_
