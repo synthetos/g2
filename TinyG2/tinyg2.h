@@ -96,7 +96,7 @@ typedef uint16_t magic_t;		// magic number size
  * Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
  */
 #define AXES 6					// number of axes supported in this version
-#define MOTORS 4				// number of motors on the board
+#define MOTORS 6				// number of motors on the board
 #define COORDS 6				// number of supported coordinate systems (1-6)
 #define PWMS 2					// number of supported PWM channels
 
@@ -116,6 +116,8 @@ typedef uint16_t magic_t;		// magic number size
 #define MOTOR_2	1			// must be defines. enums don't work
 #define MOTOR_3	2
 #define MOTOR_4	3
+#define MOTOR_5 4
+#define MOTOR_6 5
 
 #define PWM_1	0
 #define PWM_2	1

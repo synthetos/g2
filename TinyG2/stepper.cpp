@@ -326,31 +326,37 @@ MOTATE_TIMER_INTERRUPT(3)
 {
     dummy = REG_SR_DDA;		// read SR to clear interrupt condition
     proof_of_timer = 0;
-//	uint8_t m1_flag = false;
-//	uint8_t m2_flag = false;
-//	uint8_t m3_flag = false;
     
-    if ((st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
+    if (!motor_1.step.isNull() && (st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
         st.m[MOTOR_1].counter -= st.timer_ticks_X_substeps;
         motor_1.step.set();		// turn step bit on
-//		m1_flag++;
     }
-    if ((st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
+    if (!motor_2.step.isNull() && (st.m[MOTOR_2].counter += st.m[MOTOR_2].steps) > 0) {
         st.m[MOTOR_2].counter -= st.timer_ticks_X_substeps;
         motor_2.step.set();
-//		m2_flag++;
     }
-    if ((st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
+    if (!motor_3.step.isNull() && (st.m[MOTOR_3].counter += st.m[MOTOR_3].steps) > 0) {
         st.m[MOTOR_3].counter -= st.timer_ticks_X_substeps;
         motor_3.step.set();
-//		m3_flag++;
     }
-//	if (m1_flag != false) {	step_1.clear();}
-//	if (m2_flag != false) {	step_2.clear();}
-//	if (m3_flag != false) {	step_3.clear();}
+    if (!motor_4.step.isNull() && (st.m[MOTOR_4].counter += st.m[MOTOR_4].steps) > 0) {
+        st.m[MOTOR_4].counter -= st.timer_ticks_X_substeps;
+        motor_4.step.set();
+    }
+    if (!motor_5.step.isNull() && (st.m[MOTOR_5].counter += st.m[MOTOR_5].steps) > 0) {
+        st.m[MOTOR_5].counter -= st.timer_ticks_X_substeps;
+        motor_5.step.set();
+    }
+    if (!motor_6.step.isNull() && (st.m[MOTOR_6].counter += st.m[MOTOR_6].steps) > 0) {
+        st.m[MOTOR_6].counter -= st.timer_ticks_X_substeps;
+        motor_6.step.set();
+    }
     motor_1.step.clear();
     motor_2.step.clear();
     motor_3.step.clear();
+    motor_4.step.clear();
+    motor_5.step.clear();
+    motor_6.step.clear();
 
     if (--st.timer_ticks_downcount == 0) {			// end move
         enable.set();								// disable DDA timer
