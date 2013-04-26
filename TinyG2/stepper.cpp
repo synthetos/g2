@@ -359,6 +359,13 @@ MOTATE_TIMER_INTERRUPT(3)
     motor_6.step.clear();
 
     if (--st.timer_ticks_downcount == 0) {			// end move
+        motor_1.enable.set();
+        motor_2.enable.set();
+        motor_3.enable.set();
+        motor_4.enable.set();
+        motor_5.enable.set();
+        motor_6.enable.set();
+
         enable.set();								// disable DDA timer
 /*
         // power-down motors if this feature is enabled
