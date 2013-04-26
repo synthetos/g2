@@ -62,10 +62,13 @@ void sys_init(void);					// master hardware init
 
 /* Timer assignments */
 
-Motate::Timer<3> ddr_timer;				// stepper.cpp for stepper pulse generation
-Motate::Timer<4> dwell_timer;			// stepper.cpp for dwell timing
+Motate::Timer<3> dda_timer;				// stepper pulse generation in stepper.cpp
+#define DDA_TIMER_INTERRUPT MOTATE_TIMER_INTERRUPT(3)
+#define DDA_STATUS_REGISTER REG_TC1_SR0	// status register needed for clearing interrupts
 
-#define REG_SR_DDA	REG_TC1_SR0			// status register needed for clearing interrupts
+Motate::Timer<4> dwell_timer;			// dwell timing in stepper.cpp 
+#define DWELL_TIMER_INTERRUPT MOTATE_TIMER_INTERRUPT(4)
+#define DWELL_STATUS_REGISTER REG_TC1_SR1
 
 /* Pin assignments */
 

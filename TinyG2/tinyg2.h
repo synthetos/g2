@@ -38,9 +38,9 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
-#define TINYG2_FIRMWARE_BUILD   	006.02	// gpio with Motate
+#define TINYG2_FIRMWARE_BUILD   	006.03	// gpio with Motate
 #define TINYG2_FIRMWARE_VERSION		0.01	// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -215,6 +215,6 @@ extern stat_t status_code;				// declared in main.cpp
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
 #endif // _TINYG2_H_
