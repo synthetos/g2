@@ -1,15 +1,27 @@
 /*
  * config.h - configuration sub-system
  *
- * Copyright (c) 2013 Alden S. Hart Jr.s
+ * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*
  * See config_data.h for a general description of the config system and its use.
@@ -55,6 +67,10 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+/***** PLEASE NOTE:
+# include "config_app.h"	// is present at the end of this file 
+*/
+
 #ifdef __cplusplus
 extern "C"{
 #endif 
@@ -71,12 +87,12 @@ extern "C"{
 #define __ENABLE_PGM_FILE_DEVICE
 
 /***********************************************************************************
- **** DEFINITIONS AND SIZING *******************************************************
+ **** DEFINITIONS AND SETTINGS *******************************************************
  ***********************************************************************************/
 
 // Sizing and footprints			// chose one based on # of elements in cmdArray
-typedef uint8_t index_t;			// use this if there are < 256 indexed objects
-//typedef uint16_t index_t;			// use this if there are > 255 indexed objects
+//typedef uint8_t index_t;			// use this if there are < 256 indexed objects
+typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 
 									// defines allocated from stack (not-pre-allocated)
 #define CMD_FORMAT_LEN 80			// print formatting string max length
@@ -96,10 +112,10 @@ typedef uint8_t index_t;			// use this if there are < 256 indexed objects
 #define CMD_LIST_LEN (CMD_BODY_LEN+2)// +2 allows for a header and a footer
 #define CMD_MAX_OBJECTS (CMD_BODY_LEN-1)// maximum number of objects in a body string
 
-//#define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
+#define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 									// must also line up in cfgArray, se00 - seXX
 
-#define NVM_VALUE_LEN 4				// NVM value length (double, fixed length)
+#define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
 #define NVM_BASE_ADDR 0x0000		// base address of usable NVM
 
 enum objType {						// object / value typing for config and JSON
@@ -108,10 +124,12 @@ enum objType {						// object / value typing for config and JSON
 	TYPE_BOOL,						// value is "true" (1) or "false"(0)
 	TYPE_INTEGER,					// value is a uint32_t
 	TYPE_FLOAT,						// value is a floating point number
+	TYPE_FLOAT_UNITS,				// value is a floating point number that may require units conversion for display
 	TYPE_STRING,					// value is in string field
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
 	TYPE_PARENT						// object is a parent to a sub-object
 };
+
 enum tgCommunicationsMode {
 	TEXT_MODE = 0,					// text command line mode
 	JSON_MODE,						// strict JSON construction
@@ -148,12 +166,6 @@ enum jsonVerbosity {
 	JV_VERBOSE						// echos all configs and gcode blocks, line numbers and messages
 };
 
-enum srVerbosity {					// status report enable and verbosity
-	SR_OFF = 0,						// no reports
-	SR_FILTERED,					// reports only values that have changed from the last report
-	SR_VERBOSE						// reports all values specified
-};
-
 /**** operations flags and shorthand ****/
 
 #define F_INITIALIZE	0x01			// initialize this item (run set during initialization)
@@ -171,7 +183,7 @@ enum srVerbosity {					// status report enable and verbosity
 typedef struct cmdString {				// shared string object
 	uint8_t wp;							// current string array index for len < 256 bytes
 //	uint16_t wp;						// use this value is string len > 255 bytes
-	uint8_t string[CMD_SHARED_STRING_LEN];
+	char_t string[CMD_SHARED_STRING_LEN];
 } cmdStr_t;
 
 typedef struct cmdObject {				// depending on use, not all elements may be populated
@@ -180,20 +192,22 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
 	int8_t type;						// see cmdType
+	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
-	uint8_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
-	uint8_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
-	uint8_t (*stringp)[];				// pointer to array of characters from shared character array
+	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
+	char_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
+	char_t (*stringp)[];				// pointer to array of characters from shared character array
 } cmdObj_t; 							// OK, so it's not REALLY an object
 
-typedef uint8_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
+typedef stat_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
 typedef void (*fptrPrint)(cmdObj_t *cmd);// required for PROGMEM access
 
 typedef struct cfgItem {
-	uint8_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
-	uint8_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
+	char_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
+	char_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
-  	const uint8_t *format;				// pointer to formatted print string
+ 	int8_t precision;					// decimal precision for display (JSON)
+ 	const char_t *format;				// pointer to formatted print string in FLASH
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
@@ -215,71 +229,65 @@ extern const cfgItem_t cfgArray[];
 void cfg_init(void);
 
 // main entry points for core access functions
-uint8_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
-uint8_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
+stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
+stat_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
 void cmd_print(cmdObj_t *cmd);			// main entry point for set value
+void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 
 // helpers
-index_t cmd_get_index(const uint8_t *group, const uint8_t *token);
+index_t cmd_get_index(const char_t *group, const char_t *token);
 index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);
+uint8_t cmd_index_ge_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
 uint8_t cmd_index_is_group(index_t index);
 uint8_t cmd_index_lt_groups(index_t index);
-uint8_t cmd_group_is_prefixed(uint8_t *group);
-
-//uint8_t cmd_get_type(cmdObj_t *cmd);
-//uint8_t cmd_set_jv(cmdObj_t *cmd);
-//uint8_t cmd_set_tv(cmdObj_t *cmd);
-//uint8_t cmd_persist_offsets(uint8_t flag);
+uint8_t cmd_group_is_prefixed(char_t *group);
 
 // generic internal functions and accessors
-uint8_t get_nul(cmdObj_t *cmd);		// get null value type
-uint8_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
-uint8_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
-uint8_t get_flt(cmdObj_t *cmd);		// get double value
+stat_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
+stat_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
+stat_t set_01(cmdObj_t *cmd);		// set a 0 or 1 value with validation
+stat_t set_012(cmdObj_t *cmd);		// set a 0, 1 or 2 value with validation
+stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
+stat_t set_flt(cmdObj_t *cmd);		// set floating point value
+stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
 
-uint8_t set_nul(cmdObj_t *cmd);		// set nothing (no operation)
-uint8_t set_ui8(cmdObj_t *cmd);		// set uint8_t value
-uint8_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
-uint8_t set_flt(cmdObj_t *cmd);		// set double value
+stat_t get_nul(cmdObj_t *cmd);		// get null value type
+stat_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
+stat_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
+stat_t get_flt(cmdObj_t *cmd);		// get floating point value
+stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
 
 void print_nul(cmdObj_t *cmd);		// print nothing (no operation)
+void print_str(cmdObj_t *cmd);		// print a string value
 void print_ui8(cmdObj_t *cmd);		// print unit8_t value
 void print_int(cmdObj_t *cmd);		// print uint32_t integer value
 void print_flt(cmdObj_t *cmd);		// print floating point value
-void print_str(cmdObj_t *cmd);		// print a string value
+void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
+void print_rot(cmdObj_t *cmd);		// print floating point rotary value
 
-char *get_format(const index_t i, char *format);
+#define get_format(index) (const char *)cfgArray[index].format
 
-uint8_t set_grp(cmdObj_t *cmd);		// set data for a group
-uint8_t get_grp(cmdObj_t *cmd);		// get data for a group
+stat_t set_grp(cmdObj_t *cmd);		// set data for a group
+stat_t get_grp(cmdObj_t *cmd);		// get data for a group
 
 // object and list functions
 void cmd_get_cmdObj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_obj(cmdObj_t *cmd);
 cmdObj_t *cmd_reset_list(void);
-uint8_t cmd_copy_string(cmdObj_t *cmd, const uint8_t *src);
-uint8_t cmd_copy_string_P(cmdObj_t *cmd, const uint8_t *src_P);
-cmdObj_t *cmd_add_object(const uint8_t *token);
-cmdObj_t *cmd_add_integer(const uint8_t *token, const uint32_t value);
-cmdObj_t *cmd_add_float(const uint8_t *token, const double value);
-cmdObj_t *cmd_add_string(const uint8_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_string_P(const uint8_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_message(const uint8_t *string);
-cmdObj_t *cmd_add_message_P(const uint8_t *string);
-void cmd_print_list(uint8_t status, uint8_t text_flags, uint8_t json_flags);
+stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src);
+cmdObj_t *cmd_add_object(const char_t *token);
+cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
+cmdObj_t *cmd_add_float(const char_t *token, const float value);
+cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
+cmdObj_t *cmd_add_message(const char_t *string);
+void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
-// PERSISTENCE SUPPORT
-#ifdef __ENABLE_PERSISTENCE
-void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
-uint8_t cmd_read_NVM_value(cmdObj_t *cmd);
-uint8_t cmd_write_NVM_value(cmdObj_t *cmd);
-#endif
-
-#ifdef __DEBUG
-void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
-#endif
+/*********************************************************************************************
+ **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
+ *********************************************************************************************/
+#include "config_app.h"
 
 /*** Unit tests ***/
 
@@ -294,6 +302,6 @@ void cfg_unit_tests(void);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
 #endif // _CONFIG_H_

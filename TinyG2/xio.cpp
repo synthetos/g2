@@ -1,10 +1,30 @@
 /*
- * xio.cpp
+ * xio.cpp - extended IO functions
+ * This file is part of the TinyG2 project
  *
- * Created: 4/13/2013 1:05:24 PM
- *  Author: Administrator
- */ 
-
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Robert Giseburt
+ *
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "Arduino.h"
 #include "tinyg2.h"
 #include "xio.h"
@@ -41,7 +61,7 @@ int read_char (void)
  *	  STAT_FILE_SIZE_EXCEEDED returned if the starting index exceeds the size.
  */
 
-status_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
+stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 

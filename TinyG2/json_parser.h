@@ -1,9 +1,8 @@
 /*
- * json_parser.c - JSON parser and JSON support
- * Part of TinyG project
+ * json_parser.h - JSON parser and JSON support
+ * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2011 - 2013 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -47,7 +46,7 @@ extern "C"{
  */
 
 void json_parser(uint8_t *str);
-uint16_t json_serialize(cmdObj_t *cmd, uint8_t *out_buf);
+uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size);
 void json_print_object(cmdObj_t *cmd);
 void json_print_response(uint8_t status);
 

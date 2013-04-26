@@ -1,6 +1,6 @@
 /*
  * tinyg2.h - tinyg2 main header - Application GLOBALS 
- * Part of TinyG2 project
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr. 
  * Copyright (c) 2013 Robert Giseburt
@@ -10,14 +10,6 @@
  * Free Software Foundation. You should have received a copy of the GNU General Public 
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * As a special exception, you may use this file as part of a software library without 
- * restriction. Specifically, if other files instantiate templates or use macros or
- * inline functions from this file, or you compile this file and link it with  other 
- * files to produce an executable, this file does not by itself cause the resulting 
- * executable to be covered by the GNU General Public License. This exception does not 
- * however invalidate any other reasons why the executable file might be covered by the 
- * GNU General Public License. 
- *
  * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY 
  * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
@@ -42,7 +34,6 @@
 #include <math.h>
 
 #include <MotatePins.h>
-
 #include "Arduino.h"
 
 #ifdef __cplusplus
@@ -51,11 +42,12 @@ extern "C"{
 
 // NOTE: This header requires <stdio.h> be included previously
 
-#define TINYG_FIRMWARE_BUILD   	004.13		// _command_dispatch tests after uint8_t conversion
-#define TINYG_FIRMWARE_VERSION	0.01		// major version
-#define TINYG_HARDWARE_VERSION	0.01		// board revision number (Native Arduino Due)
+#define TINYG2_FIRMWARE_BUILD   	006.01	// gpio
+#define TINYG2_FIRMWARE_VERSION		0.01	// firmware major version
+#define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
+#define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
 
-#define TINYG2_HARDWARE_VERSION_MAX TINYG2_HARDWARE_VERSION
+#define TINYG2_HARDWARE_VERSION_MAX (TINYG2_HARDWARE_VERSION)
 
 /****** DEVELOPMENT SETTINGS ******/
 
@@ -72,14 +64,15 @@ extern "C"{
 void tg_setup(void);
 
 /*************************************************************************
- * Help during conversion from char to uint8_t for strings
+ * String handling help - strings are handled as uint8_t's typedef'd to char_t
  */
-#define strncpy(d,s,l) (uint8_t *)strncpy((char *)d, (char *)s, l)
-#define strpbrk(d,s) (uint8_t* )strpbrk((char *)d, (char *)s)
-#define strcpy(d,s) (uint8_t *)strcpy((char *)d, (char *)s)
-#define strcat(d,s) (uint8_t *)strcat((char *)d, (char *)s)
-#define strstr(d,s) (uint8_t *)strstr((char *)d, (char *)s)
-#define strchr(d,s) (uint8_t *)strchr((char *)d, (char)s)
+typedef uint8_t char_t;
+#define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
+#define strpbrk(d,s) (char_t* )strpbrk((char *)d, (char *)s)
+#define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
+#define strcat(d,s) (char_t *)strcat((char *)d, (char *)s)
+#define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
+#define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
 #define strcmp(d,s) strcmp((char *)d, (char *)s)
 #define strtod(d,s) strtod((char *)d, (char **)s)
 #define strlen(s) strlen((char *)s)
@@ -89,23 +82,25 @@ void tg_setup(void);
 /*************************************************************************
  * TinyG application-specific prototypes, defines and globals
  */
-#define MAGICNUM 0x12EF			// used for memory integrity assertions
-
 Motate::pin_number indicator_led_pin_num = 13;
 static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 
+#define DEV_STDIN 0				// STDIO defaults
+#define DEV_STDOUT 0
+#define DEV_STDERR 0
+
+typedef uint16_t magic_t;		// magic number size
+#define MAGICNUM 0x12EF			// used for memory integrity assertions
+
+/* 
+ * Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
+ */
 #define AXES 6					// number of axes supported in this version
 #define MOTORS 4				// number of motors on the board
 #define COORDS 6				// number of supported coordinate systems (1-6)
 #define PWMS 2					// number of supported PWM channels
 
 // If you change COORDS you must adjust the entries in cfgArray table in config.c
-
-/* Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
- * 	 NB: Using defines can have side effects if anythign else in the code uses A, B, X... etc.
- *   The "side effect safe" min and max routines had this side effect.
- * Alternate enum is: enum tgAxes { X=0, Y, Z, A, B, C };
- */
 
 #define AXIS_X	0
 #define AXIS_Y	1
@@ -125,7 +120,8 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
 #define PWM_1	0
 #define PWM_2	1
 
-/* Error and status codes
+/* 
+ * STATUS CODES
  *
  * Any changes to the ranges also require changing the message strings and 
  * string array in controller.c
@@ -133,11 +129,12 @@ static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
  * ritorno is a handy way to provide exception returns 
  * It returns only if an error occurred. (ritorno is Italian for return) 
  */
-typedef uint8_t status_t;
-extern status_t errcode;
-#define ritorno(a) if((errcode=a) != STAT_OK) { return(errcode); }
+typedef uint8_t stat_t;
+extern stat_t status_code;				// declared in main.cpp
+#define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
-// OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
+/* OS, communications and low-level status (must align with strings in report.cpp) */
+
 #define	STAT_OK 0						// function completed OK
 #define	STAT_ERROR 1					// generic error return (EPERM)
 #define	STAT_EAGAIN 2					// function would block here (call again)
@@ -154,8 +151,8 @@ extern status_t errcode;
 #define	STAT_BUFFER_FULL 13
 #define	STAT_BUFFER_FULL_FATAL 14
 #define	STAT_INITIALIZING 15			// initializing - not ready for use
-#define	STAT_ERROR_16 16
-#define	STAT_ERROR_17 17
+#define	STAT_ENTERING_BOOT_LEADER 16
+#define	STAT_FUNCTION_IS_STUBBED 17
 #define	STAT_ERROR_18 18
 #define	STAT_ERROR_19 19				// NOTE: XIO codes align to here
 

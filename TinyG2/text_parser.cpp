@@ -1,9 +1,8 @@
 /*
  * text_parser.cpp - text parser for TinyG
- * Part of TinyG project
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,14 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* See the wiki for module details and additional information:
- *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-Developer-Info
- *	 http://www.synthetos.com/wiki/index.php?title=Projects:TinyG-JSON
- */
 
 #include "tinyg2.h"
 #include "controller.h"
-#include "config.h"					// JSON sits on top of the config system
+#include "config.h"
 #include "text_parser.h"
 #include "util.h"
 #include "xio.h"					// for char definitions
@@ -41,7 +36,7 @@
 extern "C"{
 #endif
 
-static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
+static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
 
 /******************************************************************************
  * text_parser() - update a config setting from a text block (text mode)
@@ -53,7 +48,7 @@ static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
  *	- $x		display a group
  *	- ?			generate a status report (multiline format)
  */
-uint8_t text_parser(uint8_t *str)
+stat_t text_parser(uint8_t *str)
 {
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
 	uint8_t status = STAT_OK;
@@ -79,7 +74,7 @@ uint8_t text_parser(uint8_t *str)
 	return (status);
 }
 
-static uint8_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
+static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 {
 	uint8_t *ptr_rd, *ptr_wr;				// read and write pointers
 //	uint8_t separators[] = {" =:|\t"};		// any separator someone might use
@@ -125,7 +120,7 @@ static const uint8_t prompt_in[] = "inch";
 static const uint8_t prompt_ok[] = "tinyg [%S] ok> ";
 static const uint8_t prompt_err[] = "tinyg [%S] err: %s: %s ";
 
-void text_response(const uint8_t status, const uint8_t *buf)
+void text_response(const uint8_t status, char_t *buf)
 {
 	/*
 	if (cs.text_verbosity == TV_SILENT) return;	// skip all this
@@ -137,10 +132,10 @@ void text_response(const uint8_t status, const uint8_t *buf)
 		units = (PGM_P)&prompt_in;
 	}
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
-		fprintf_P(stderr, (PGM_P)&prompt_ok, units);
+		fprintf(stderr, (PGM_P)&prompt_ok, units);
 	} else {
 		uint8_t status_message[STATUS_MESSAGE_LEN];
-		fprintf_P(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
+		fprintf(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
 	}
 	cmdObj_t *cmd = cmd_body+1;
 	if (cmd->token[0] == 'm') {
@@ -194,9 +189,13 @@ void text_print_multiline_formatted(cmdObj_t *cmd)
 {
 //	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
-		if (cmd->type != TYPE_PARENT) { cmd_print(cmd);}
+		if (cmd->type != TYPE_PARENT) { 
+			cmd_print(cmd);
+		}
 		cmd = cmd->nx;
-		if (cmd->type == TYPE_EMPTY) { break;}
+		if (cmd->type == TYPE_EMPTY) { 
+			break;
+		}
 	}
 }
 

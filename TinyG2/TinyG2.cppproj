@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
@@ -18,7 +18,8 @@
     <ToolchainFlavour>Yagarto</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <OverrideVtorValue>
+    </OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>JTAG</avrtoolinterface>
@@ -26,16 +27,16 @@
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolNumber>000028014099</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>2756</port>
+        <port>1337</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>0</JtagDbgClock>
+          <JtagDbgClock>250000</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -44,7 +45,6 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
-          <SwdClock>250000</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -404,6 +404,12 @@
     <Compile Include="arduino\WString.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="canonical_machine.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="canonical_machine.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="cmsis\src\startup_sam3xa.c">
       <SubType>compile</SubType>
     </Compile>
@@ -428,6 +434,27 @@
     <Compile Include="controller.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="cycle_homing.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gcode_parser.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gcode_parser.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gpio.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="help.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="help.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="json_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -450,6 +477,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="persistence.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="persistence.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\libsam\include\adc.h">
@@ -617,6 +650,45 @@
     <Compile Include="platform\atmel_sam\libsam\source\wdt.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="report.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="report.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_default.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_lumenlabMicRoV3.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_othercutter.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_otherfab.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_pocketcnc_linear.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_pocketcnc_rotary.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_probotixV90.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko375.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_Ultimaker.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_zen7x12.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="stepper.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -668,6 +740,7 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="settings" />
     <Folder Include="platform\arm" />
     <Folder Include="platform\arm\lib" />
     <Folder Include="platform\arm\include" />

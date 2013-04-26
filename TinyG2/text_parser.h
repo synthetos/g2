@@ -1,9 +1,8 @@
 /*
  * text_parser.h - text parser and text mode support for tinyg2
- * Part of TinyG project
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -37,8 +36,8 @@ extern "C"{
  * Global Scope Functions
  */
 
-uint8_t text_parser(uint8_t *str);
-void text_response(const uint8_t status, const uint8_t *buf);
+stat_t text_parser(uint8_t *str);
+void text_response(const uint8_t status, char_t *buf);
 void text_print_inline_pairs(cmdObj_t *cmd);
 void text_print_inline_values(cmdObj_t *cmd);
 void text_print_multiline_formatted(cmdObj_t *cmd);

@@ -1,15 +1,37 @@
 /*
  * util.cpp - a random assortment of useful functions
- * Part of TinyG project
+ * This file is part of the TinyG2 project
  *
+ * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ *
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are 
+/* util contains a dog's breakfast of supporting functions that are 
  * not specific to tinyg: including:
- *
  *	  - math and min/max utilities and extensions 
  *	  - vector manipulation utilities
  *	  - support for debugging routines
- */  
+ */
+
+#include "tinyg2.h"
 #include "util.h"
 
 /*
@@ -29,10 +51,17 @@
 #include "stepper.h"
 #include "report.h"
 */
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
+/*** statically allocated global for vector operations ***/
+float vector[AXES];		// vector used by util.cpp and other functions
+
+/*
+ * strcpy_U() - strcpy workalike to get around initial NUL for blank string - possibly wrong
+ */
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 {
 	uint16_t index = 0;
@@ -40,70 +69,8 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 		dst[index] = src[index];	
 	} while (src[index++] != 0);
 	return dst;
-
-//	for (uint16_t index=0; src[index] != 0; index++) {
-//		dst[index] = src[index];
-//	}
-//	dst[index] = 0;		// terminate string
-//	return dst;
 }
 
-/**** Vector functions ****
- * copy_vector()			- copy vector of arbitrary length
- * copy_axis_vector()		- copy an axis vector
- * set_unit_vector()		- populate a unit vector by pos. & target
- * get_axis_vector_length()	- return the length of an axis vector
- * set_vector()				- load values into vector form
- * set_vector_by_axis()		- load a single value into a zero vector
- */
-/*
-inline void copy_vector(double dest[], const double src[], uint8_t length) 
-{
-	for (uint8_t i=0; i<length; i++) {
-		dest[i] = src[i];
-	}
-}
-
-inline void copy_axis_vector(double dest[], const double src[]) 
-{
-	memcpy(dest, src, sizeof(double)*AXES);
-}
-
-double get_axis_vector_length(const double a[], const double b[]) 
-{
-	return (sqrt(square(a[X] - b[X]) +
-				 square(a[Y] - b[Y]) +
-				 square(a[Z] - b[Z]) +
-				 square(a[A] - b[A]) +
-				 square(a[B] - b[B]) +
-				 square(a[C] - b[C])));
-}
-
-double *set_vector(double x, double y, double z, double a, double b, double c)
-{
-	vector[X] = x;
-	vector[Y] = y;
-	vector[Z] = z;
-	vector[A] = a;
-	vector[B] = b;
-	vector[C] = c;
-	return (vector);
-}
-
-double *set_vector_by_axis(double value, uint8_t axis)
-{
-	clear_vector(vector);
-	switch (axis) {
-		case (X): vector[X] = value; break;
-		case (Y): vector[Y] = value; break;
-		case (Z): vector[Z] = value; break;
-		case (A): vector[A] = value; break;
-		case (B): vector[B] = value; break;
-		case (C): vector[C] = value;
-	}
-	return (vector);
-}
-*/
 /**** Math and other general purpose functions ****/
 
 /* Slightly faster (*) multi-value min and max functions
@@ -120,46 +87,46 @@ double *set_vector_by_axis(double value, uint8_t axis)
  *	#define max3(a,b,c) (max(max(a,b),c))
  *	#define max4(a,b,c,d) (max(max(a,b),max(c,d)))
  */
-/*
-inline double min3(double x1, double x2, double x3)
+
+inline float min3(float x1, float x2, float x3)
 {
-	double min = x1;
+	float min = x1;
 	if (x2 < min) { min = x2;} 
 	if (x3 < min) { return (x3);} 
 	return (min);
 }
 
-inline double min4(double x1, double x2, double x3, double x4)
+inline float min4(float x1, float x2, float x3, float x4)
 {
-	double min = x1;
+	float min = x1;
 	if (x2 < min) { min = x2;} 
 	if (x3 < min) { min = x3;} 
 	if (x4 < min) { return (x4);}
 	return (min);
 }
 
-inline double max3(double x1, double x2, double x3)
+inline float max3(float x1, float x2, float x3)
 {
-	double max = x1;
+	float max = x1;
 	if (x2 > max) { max = x2;} 
 	if (x3 > max) { return (x3);} 
 	return (max);
 }
 
-inline double max4(double x1, double x2, double x3, double x4)
+inline float max4(float x1, float x2, float x3, float x4)
 {
-	double max = x1;
+	float max = x1;
 	if (x2 > max) { max = x2;} 
 	if (x3 > max) { max = x3;} 
 	if (x4 > max) { return (x4);}
 	return (max);
 }
-*/
+
 /*
  * isnumber() - isdigit that also accepts plus, minus, and decimal point
  */
 /*
-uint8_t isnumber(char c)
+uint8_t isnumber(char_t c)
 {
 	if (c == '.') { return (true); }
 	if (c == '-') { return (true); }
@@ -168,29 +135,29 @@ uint8_t isnumber(char c)
 }
 */
 /* 
- * read_double() - read a double from a normalized char array
+ * read_float() - read a float from a normalized char array
  *
  *	buf			normalized char array (line)
  *	i			char array index must point to start of number
- *	double_ptr	pointer to double to write value into
+ *	float_ptr	pointer to float to write value into
  *
  *	The line is normalized when it is all caps, has no white space,
  *	no non-alphnumeric characters, and no newline or CR.
  */
-/*
-uint8_t read_double(char *buf, uint8_t *i, double *double_ptr) 
+
+uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr) 
 {
-	char *start = buf + *i;
-	char *end;
+	char_t *start = buf + *index;
+	char_t *end;
   
-	*double_ptr = strtod(start, &end);
+	*float_ptr = (float)strtod(start, &end);
 	if(end == start) { 
 		return(false); 
 	}
-	*i = (uint8_t)(end - buf);
+	*index = (uint8_t)(end - buf);
 	return(true);
 }
-*/
+
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 
@@ -201,7 +168,7 @@ uint8_t read_double(char *buf, uint8_t *i, double *double_ptr)
  */
 #define HASHMASK 9999
 /*
-uint16_t compute_checksum(char const *string, const uint16_t length) 
+uint16_t compute_checksum(char_t const *string, const uint16_t length) 
 {
 	uint32_t h = 0;
 	uint16_t len = strlen(string);
@@ -214,9 +181,52 @@ uint16_t compute_checksum(char const *string, const uint16_t length)
     }
     return (h % HASHMASK);
 }
-
 */
 
+/**** Vector functions ****
+ * copy_vector()			- copy vector of arbitrary length
+ * copy_axis_vector()		- copy an axis vector
+ * set_unit_vector()		- populate a unit vector by pos. & target
+ * get_axis_vector_length()	- return the length of an axis vector
+ * set_vector()				- load values into vector form
+ */
+/*
+void copy_vector(float dest[], const float src[], uint8_t length) 
+{
+	for (uint8_t i=0; i<length; i++) {
+		dest[i] = src[i];
+	}
+}
+*/
+/*
+void copy_axis_vector(float dest[], const float src[]) 
+{
+	memcpy(dest, src, sizeof(float)*AXES);
+}
+*/
+/*
+float get_axis_vector_length(const float a[], const float b[]) 
+{
+	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
+				 square(a[AXIS_Y] - b[AXIS_Y]) +
+				 square(a[AXIS_Z] - b[AXIS_Z]) +
+				 square(a[AXIS_A] - b[AXIS_A]) +
+				 square(a[AXIS_B] - b[AXIS_B]) +
+				 square(a[AXIS_C] - b[AXIS_C])));
+}
+*/
+/*
+float *set_vector(float x, float y, float z, float a, float b, float c)
+{
+	vector[AXIS_X] = x;
+	vector[AXIS_Y] = y;
+	vector[AXIS_Z] = z;
+	vector[AXIS_A] = a;
+	vector[AXIS_B] = b;
+	vector[AXIS_C] = c;
+	return (vector);
+}
+*/
 
 #ifdef __cplusplus
 }
