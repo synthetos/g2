@@ -6,6 +6,27 @@ Copyright (c) 2012 Robert Giseburt
 
 This file is part of the Motate Library.
 
+This file ("the software") is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License, version 2 as published by the
+Free Software Foundation. You should have received a copy of the GNU General Public
+License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
+
+As a special exception, you may use this file as part of a software library without
+restriction. Specifically, if other files instantiate templates or use macros or
+inline functions from this file, or you compile this file and link it with  other
+files to produce an executable, this file does not by itself cause the resulting
+executable to be covered by the GNU General Public License. This exception does not
+however invalidate any other reasons why the executable file might be covered by the
+GNU General Public License.
+
+THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------------WAS--------------------
 The Motate Library is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -18,6 +39,7 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with the Motate Library.  If not, see <http://www.gnu.org/licenses/>.
+-------------------------------------------
 */
 
 #ifndef SAMTIMERS_H_ONCE
@@ -156,34 +178,34 @@ namespace Motate {
 				// Store the divisor temporarily, to avoid looking it up again...
 			uint32_t divisor = 2; // sane default of 2
 
-				// TC4 = MCK/128
-			if (freq > ((masterClock / 128) / 0x10000) && freq < (masterClock / 128)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
-				divisor = 128;
-
-				// TC3 = MCK/32                
-			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
-				divisor = 32;
-
-				// TC2 = MCK/8
-			} else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
-				divisor = 8;
-
-				// TC1 = MCK/2
-			} else if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
-					/*  Set mode */
+			// TC1 = MCK/2
+			if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
+				/*  Set mode */
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 				divisor = 2;
 
-				// Nothing fit! Hmm...
+			// TC2 = MCK/8
+			} else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
+				divisor = 8;
+
+			// TC3 = MCK/32                
+			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
+				divisor = 32;
+
+			// TC4 = MCK/128
+			} else if (freq > ((masterClock / 128) / 0x10000) && freq < (masterClock / 128)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
+				divisor = 128;
+
+			// Nothing fit! Hmm...
 			} else {
-					// PUNT! For now, just guess TC1.
-					/*  Set mode */
+				// PUNT! For now, just guess TC1.
+				/*  Set mode */
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 
 				return kFrequencyUnattainable;

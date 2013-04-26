@@ -22,7 +22,8 @@
     </OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
@@ -473,10 +474,16 @@
     <Compile Include="motate\utility\AvrPins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\utility\AvrTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\utility\AvrXPins.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\utility\SamTimers.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="persistence.cpp">

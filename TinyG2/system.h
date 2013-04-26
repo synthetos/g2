@@ -25,23 +25,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
- * INTERRUPT USAGE - TinyG uses a lot of them all over the place
- *
- *	HI	Stepper DDA pulse generation		(set in stepper.h)
- *	HI	Stepper load routine SW interrupt	(set in stepper.h)
- *	HI	Dwell timer counter 				(set in stepper.h)
- *  LO	Segment execution SW interrupt		(set in stepper.h) 
- *	MED	GPIO1 switch port					(set in gpio.h)
- *  MED	Serial RX for USB & RS-485			(set in xio_usart.h)
- *  LO	Serial TX for USB & RS-485			(set in xio_usart.h)
- *	LO	Real time clock interrupt			(set in xmega_rtc.h)
- */
-#ifndef system_h
-#define system_h
+#ifndef SYSTEM_H_ONCE
+#define SYSTEM_H_ONCE
 
 #include "motatePins.h"
-//using namespace Motate;
+#include "motateTimers.h"
 
 void sys_init(void);					// master hardware init
 //void sys_port_bindings(double hw_version);
@@ -57,58 +45,62 @@ void sys_init(void);					// master hardware init
 
 #define RTC_PERIOD 10					// MS for system tick (systick * N)
 
-/**** Resource Assignment via Motate ****/
+/* Refer to tinyg2.h for Axes, motors & PWM channels used by the application */
 
-Motate::pin_number motor_1_step_pin_num = 2;
-Motate::pin_number motor_2_step_pin_num = 3;
-Motate::pin_number motor_3_step_pin_num = 4;
-Motate::pin_number motor_4_step_pin_num = 31;
-Motate::pin_number motor_5_step_pin_num = 37;
-Motate::pin_number motor_6_step_pin_num = 42;
+/**** Resource Assignment via Motate ****
+ *
+ * This section defines resource usage for pins, timers, PWM channels, communications
+ * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and 
+ * other files for pinouts and other configuration details.
+ *
+ * Commenting out or #ifdef'ing out definitions below will cause the compiler to 
+ * drop references to these resources from the compiled code. This will reduce 
+ * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor, 
+ * XYZ axis config commenting out the higher motors and axes here will remove them
+ * from later code (using the motate .isNull() test).
+ */
 
-Motate::pin_number motor_1_dir_pin_num = 5;
-Motate::pin_number motor_2_dir_pin_num = 6;
-Motate::pin_number motor_3_dir_pin_num = 7;
-Motate::pin_number motor_4_dir_pin_num = 32;
-Motate::pin_number motor_5_dir_pin_num = 38;
-Motate::pin_number motor_6_dir_pin_num = 43;
+/* Timer assignments */
 
-Motate::pin_number motor_enable_pin_num = 8;
+Motate::Timer<3> ddr_timer;				// stepper.cpp for stepper pulse generation
+Motate::Timer<4> dwell_timer;			// stepper.cpp for dwell timing
 
-Motate::pin_number motor_1_enable_pin_num = 22;
-Motate::pin_number motor_2_enable_pin_num = 25;
-Motate::pin_number motor_3_enable_pin_num = 28;
-Motate::pin_number motor_4_enable_pin_num = 33;
-Motate::pin_number motor_5_enable_pin_num = 39;
-Motate::pin_number motor_6_enable_pin_num = 44;
+#define REG_SR_DDA	REG_TC1_SR0			// status register needed for clearing interrupts
 
-Motate::pin_number motor_1_microstep_0_pin_num = 23;
-Motate::pin_number motor_2_microstep_0_pin_num = 26;
-Motate::pin_number motor_3_microstep_0_pin_num = 29;
-Motate::pin_number motor_4_microstep_0_pin_num = 35;
-Motate::pin_number motor_5_microstep_0_pin_num = 40;
-Motate::pin_number motor_6_microstep_0_pin_num = 45;
+/* Pin assignments */
 
-Motate::pin_number motor_1_microstep_1_pin_num = 24;
-Motate::pin_number motor_2_microstep_1_pin_num = 27;
-Motate::pin_number motor_3_microstep_1_pin_num = 30;
-Motate::pin_number motor_4_microstep_1_pin_num = 36;
-Motate::pin_number motor_5_microstep_1_pin_num = 41;
-Motate::pin_number motor_6_microstep_1_pin_num = 46;
+// Communications support
+Motate::pin_number i2c_sda_pin_num = 20;
+Motate::pin_number i2c_scl_pin_num = 21;
+Motate::pin_number spi_ss1_pin_num = 10;
+Motate::pin_number spi_ss2_pin_num = 47;
+Motate::pin_number spi_ss3_pin_num = 52;
+Motate::pin_number spi_ss4_pin_num = 48;
+Motate::pin_number spi_ss5_pin_num = 49;
+Motate::pin_number spi_ss6_pin_num = 50;
+Motate::pin_number kinen_sync_pin_num = 53;
 
-Motate::pin_number motor_1_vref_pin_num = 66;
-Motate::pin_number motor_2_vref_pin_num = 67;
-Motate::pin_number motor_3_vref_pin_num = 62;
-Motate::pin_number motor_4_vref_pin_num = 63;
-Motate::pin_number motor_5_vref_pin_num = 64;
-Motate::pin_number motor_6_vref_pin_num = 34;
+// grbl compatibility
+Motate::pin_number grbl_reset_pin_num = 54;
+Motate::pin_number grbl_feedhold_pin_num = 55;
+Motate::pin_number grbl_cycle_start_pin_num = 56;
 
+// Gcode support
+Motate::pin_number motor_enable_pin_num			= 8;
+Motate::pin_number spindle_enable_pin_num		= 12;
+Motate::pin_number spindle_dir_pin_num			= 13;
+Motate::pin_number spindle_pwm_pin_num			= 11;
+Motate::pin_number secondary_pwm_pin_num		= 9;
+Motate::pin_number coolant_on_pin_num			= 54;
+
+// axes
 Motate::pin_number axis_X_min_pin_num = 14;
 Motate::pin_number axis_X_max_pin_num = 15;
 Motate::pin_number axis_Y_min_pin_num = 16;
 Motate::pin_number axis_Y_max_pin_num = 17;
 Motate::pin_number axis_Z_min_pin_num = 18;
 Motate::pin_number axis_Z_max_pin_num = 19;
+
 Motate::pin_number axis_A_min_pin_num = 58;
 Motate::pin_number axis_A_max_pin_num = 59;
 Motate::pin_number axis_B_min_pin_num = 60;
@@ -116,48 +108,103 @@ Motate::pin_number axis_B_max_pin_num = 61;
 Motate::pin_number axis_C_min_pin_num = 65;
 Motate::pin_number axis_C_max_pin_num = 51;
 
-Motate::pin_number spindle_enable_pin_num = 12;
-Motate::pin_number spindle_dir_pin_num = 13;
-Motate::pin_number spindle_pwm_pin_num = 11;
-Motate::pin_number secondary_pwm_pin_num = 9;
-Motate::pin_number coolant_on_pin_num = 54;
+// motors
+Motate::pin_number motor_1_step_pin_num			= 2;
+Motate::pin_number motor_1_dir_pin_num			= 5;
+Motate::pin_number motor_1_enable_pin_num		= 22;
+Motate::pin_number motor_1_microstep_0_pin_num	= 23;
+Motate::pin_number motor_1_microstep_1_pin_num	= 24;
+Motate::pin_number motor_1_vref_pin_num			= 66;
 
-Motate::pin_number kinen_spi_ss1_pin_num = 10;
-Motate::pin_number kinen_spi_ss2_pin_num = 47;
-Motate::pin_number kinen_spi_ss3_pin_num = 52;
-Motate::pin_number kinen_spi_ss4_pin_num = 48;
-Motate::pin_number kinen_spi_ss5_pin_num = 49;
-Motate::pin_number kinen_spi_ss6_pin_num = 50;
-Motate::pin_number kinen_sync_pin_num = 53;
+Motate::pin_number motor_2_step_pin_num			= 3;
+Motate::pin_number motor_2_dir_pin_num			= 6;
+Motate::pin_number motor_2_enable_pin_num		= 25;
+Motate::pin_number motor_2_microstep_0_pin_num	= 26;
+Motate::pin_number motor_2_microstep_1_pin_num	= 27;
+Motate::pin_number motor_2_vref_pin_num			= 67;
 
-Motate::pin_number grbl_reset_pin_num = 54;
-Motate::pin_number grbl_feedhold_pin_num = 55;
-Motate::pin_number grbl_cycle_start_pin_num = 56;
+#if (MOTORS >= 3)
+Motate::pin_number motor_3_step_pin_num			= 4;
+Motate::pin_number motor_3_dir_pin_num			= 7;
+Motate::pin_number motor_3_enable_pin_num		= 28;
+Motate::pin_number motor_3_microstep_0_pin_num	= 29;
+Motate::pin_number motor_3_microstep_1_pin_num	= 30;
+Motate::pin_number motor_3_vref_pin_num			= 62;
+#else
+Motate::pin_number motor_3_step_pin_num			= -1;
+Motate::pin_number motor_3_dir_pin_num			= -1;
+Motate::pin_number motor_3_enable_pin_num		= -1;
+Motate::pin_number motor_3_microstep_0_pin_num	= -1;
+Motate::pin_number motor_3_microstep_1_pin_num	= -1;
+Motate::pin_number motor_3_vref_pin_num			= -1;
+#endif
 
-Motate::pin_number i2c_sda_pin_num = 20;
-Motate::pin_number i2c_scl_pin_num = 21;
+#if (MOTORS >= 4)
+Motate::pin_number motor_4_step_pin_num			= 31;
+Motate::pin_number motor_4_dir_pin_num			= 32;
+Motate::pin_number motor_4_enable_pin_num		= 33;
+Motate::pin_number motor_4_microstep_0_pin_num	= 35;
+Motate::pin_number motor_4_microstep_1_pin_num	= 36;
+Motate::pin_number motor_4_vref_pin_num			= 63;
+#else
+Motate::pin_number motor_4_step_pin_num			= -1;
+Motate::pin_number motor_4_dir_pin_num			= -1;
+Motate::pin_number motor_4_enable_pin_num		= -1;
+Motate::pin_number motor_4_microstep_0_pin_num	= -1;
+Motate::pin_number motor_4_microstep_1_pin_num	= -1;
+Motate::pin_number motor_4_vref_pin_num			= -1;
+#endif
 
-/**** Resource Assignment ****
- * This section describes what modules use resources such as timers, pins, etc.
- * Base addresses and channels are setup here, see detailed setup may be found 
- * in the referenced modules, e.g. (stepper.h)
+#if (MOTORS >= 5)
+Motate::pin_number motor_5_step_pin_num			= 37;
+Motate::pin_number motor_5_dir_pin_num			= 38;
+Motate::pin_number motor_5_enable_pin_num		= 39;
+Motate::pin_number motor_5_microstep_0_pin_num	= 40;
+Motate::pin_number motor_5_microstep_1_pin_num	= 41;
+Motate::pin_number motor_5_vref_pin_num			= 64;
+#else
+Motate::pin_number motor_5_step_pin_num			= -1;
+Motate::pin_number motor_5_dir_pin_num			= -1;
+Motate::pin_number motor_5_enable_pin_num		= -1;
+Motate::pin_number motor_5_microstep_0_pin_num	= -1;
+Motate::pin_number motor_5_microstep_1_pin_num	= -1;
+Motate::pin_number motor_5_vref_pin_num			= -1;
+#endif
+
+#if (MOTORS >= 6)
+Motate::pin_number motor_6_step_pin_num			= 42;
+Motate::pin_number motor_6_dir_pin_num			= 43;
+Motate::pin_number motor_6_enable_pin_num		= 44;
+Motate::pin_number motor_6_microstep_0_pin_num	= 45;
+Motate::pin_number motor_6_microstep_1_pin_num	= 46;
+Motate::pin_number motor_6_vref_pin_num			= 34;
+#else
+Motate::pin_number motor_6_step_pin_num			= -1;
+Motate::pin_number motor_6_dir_pin_num			= -1;
+Motate::pin_number motor_6_enable_pin_num		= -1;
+Motate::pin_number motor_6_microstep_0_pin_num	= -1;
+Motate::pin_number motor_6_microstep_1_pin_num	= -1;
+Motate::pin_number motor_6_vref_pin_num			= -1;
+#endif
+
+
+/**** DEPRECATED CODE. BEST TO LEAVE IN UNTIL COMPLETELY REPLACED ****/
+
+
+/*
+ * INTERRUPT USAGE - TinyG uses a lot of them all over the place
+ *
+ *	HI	Stepper DDA pulse generation		(set in stepper.h)
+ *	HI	Stepper load routine SW interrupt	(set in stepper.h)
+ *	HI	Dwell timer counter 				(set in stepper.h)
+ *  LO	Segment execution SW interrupt		(set in stepper.h) 
+ *	MED	GPIO1 switch port					(set in gpio.h)
+ *  MED	Serial RX for USB & RS-485			(set in xio_usart.h)
+ *  LO	Serial TX for USB & RS-485			(set in xio_usart.h)
+ *	LO	Real time clock interrupt			(set in xmega_rtc.h)
  */
-/* Timer Counter usage
- The SAM3x8e has 3 timer counter *blocks*, each with 3 *channels*. Usage is:
- 
- - TC0 block, channels 0, 1, 2; Reserved for Arduino ADC triggers (adc.h)
- 
- - TC1 block; (stepper.h)
- 	- channel 0 = DDA interrupt timer	// aka 30 Timer Counter 3 (sam3x8e.h)
-	- channel 1 = dwell timer			// aka 31 Timer Counter 4
-	- channel 3 = reserved				// aka 32 Timer Counter 5
 
- - TC2 block; ()
- 	- channel 0 = PWM channel, pin D8   // aka 33 Timer Counter 6 (sam3x8e.h)
- 	- channel 1 = PWM channel, pin D9	// aka 34 Timer Counter 7
- 	- channel 3 = PWM channel, pin D10	// aka 35 Timer Counter 8
- */
-
+/*
 // DDA timer aliases
 #define TC_BLOCK_DDA		TC1				// TC1 block base address (sam3x8e.h)
 #define TC_CHANNEL_DDA		0				// DDA channel in DDA block
@@ -183,12 +230,13 @@ Motate::pin_number i2c_scl_pin_num = 21;
 //#define TIMER_5				TCC1		// unallocated timer
 //#define TIMER_PWM1			TCD1		// PWM timer #1 (see pwm.c)
 //#define TIMER_PWM2			TCE1		// PWM timer #2	(see pwm.c)
-
+*/
 
 /*** Motor, output bit & switch port assignments ***
  *** These are not all the same, and must line up in multiple places in gpio.h ***
  * Sorry if this is confusing - it's a board routing issue
  */
+/*
 #define PORT_MOTOR_1	PORTA			// motors mapped to ports
 #define PORT_MOTOR_2 	PORTF
 #define PORT_MOTOR_3	PORTE
@@ -221,7 +269,7 @@ Motate::pin_number i2c_scl_pin_num = 21;
 #define PORT_MOTOR_2_VPORT	VPORT1
 #define PORT_MOTOR_3_VPORT	VPORT2
 #define PORT_MOTOR_4_VPORT	VPORT3
-
+*/
 /*
  * Port setup - Stepper / Switch Ports:
  *	b0	(out) step			(SET is step,  CLR is rest)
@@ -233,6 +281,7 @@ Motate::pin_number i2c_scl_pin_num = 21;
  *	b6	(in) min limit switch on GPIO 2 (note: motor controls and GPIO2 port mappings are not the same)
  *	b7	(in) max limit switch on GPIO 2 (note: motor controls and GPIO2 port mappings are not the same)
  */
+/*
 #define MOTOR_PORT_DIR_gm 0x3F	// dir settings: lower 6 out, upper 2 in
 
 enum cfgPortBits {			// motor control port bit positions
@@ -254,9 +303,9 @@ enum cfgPortBits {			// motor control port bit positions
 #define GPIO1_OUT_BIT_bm	(1<<GPIO1_OUT_BIT_bp)	// spindle and coolant output bits
 #define SW_MIN_BIT_bm		(1<<SW_MIN_BIT_bp)		// minimum switch inputs
 #define SW_MAX_BIT_bm		(1<<SW_MAX_BIT_bp)		// maximum switch inputs
-
+*/
 /* Bit assignments for GPIO1_OUTs for spindle, PWM and coolant */
-
+/*
 #define SPINDLE_BIT			0x08		// spindle on/off
 #define SPINDLE_DIR			0x04		// spindle direction, 1=CW, 0=CCW
 #define SPINDLE_PWM			0x02		// spindle PWMs output bit
@@ -267,7 +316,7 @@ enum cfgPortBits {			// motor control port bit positions
 #define SPINDLE_DIR_LED		1
 #define SPINDLE_PWM_LED		2
 #define COOLANT_LED			3
-
+*/
 //#define INDICATOR_LED		SPINDLE_DIR_LED	// can use the spindle direction as an indicator LED
 
 /**** Device singleton - global structure to allow iteration through similar devices ****/
@@ -291,4 +340,4 @@ typedef struct deviceSingleton {
 } deviceSingleton_t;
 deviceSingleton_t device;
 */
-#endif
+#endif	// end of include guard: SYSTEM_H_ONCE
