@@ -146,44 +146,44 @@ namespace Motate {
 
 			enablePeripheralClock();
 
-				/* Setup clock "prescaler" */
-				/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
-				/* For now, we don't support TC5. */
+			/* Setup clock "prescaler" */
+			/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
+			/* For now, we don't support TC5. */
 
-				// Grab the SystemCoreClock value, in case it's volatile.
+			// Grab the SystemCoreClock value, in case it's volatile.
 			uint32_t masterClock = SystemCoreClock;
 
 				// Store the divisor temporarily, to avoid looking it up again...
 			uint32_t divisor = 2; // sane default of 2
 
-				// TC4 = MCK/128
-			if (freq > ((masterClock / 128) / 0x10000) && freq < (masterClock / 128)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
-				divisor = 128;
-
-				// TC3 = MCK/32                
-			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
-				divisor = 32;
-
-				// TC2 = MCK/8
-			} else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
-					/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
-				divisor = 8;
-
-				// TC1 = MCK/2
-			} else if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
-					/*  Set mode */
+			// TC4 = MCK/128
+			if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
+				/*  Set mode */
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 				divisor = 2;
 
-				// Nothing fit! Hmm...
+			// Nothing fit! Hmm...
+			} else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
+				divisor = 8;
+
+			// TC1 = MCK/2
+			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
+				divisor = 32;
+
+			// TC2 = MCK/8
+			} else if (freq > ((masterClock / 128) / 0x10000) && freq < (masterClock / 128)) {
+						/*  Set mode */
+				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
+				divisor = 128;
+
+			// TC3 = MCK/32                
 			} else {
-					// PUNT! For now, just guess TC1.
-					/*  Set mode */
+				// PUNT! For now, just guess TC1.
+				/*  Set mode */
 				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 
 				return kFrequencyUnattainable;

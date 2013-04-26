@@ -264,6 +264,8 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
+    _load_move();
+
 #ifdef BARE_CODE
 	// setup DDA timer
 	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
@@ -274,8 +276,6 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-    _load_move();
-
     Motate::Timer<3> ddr_timer;
     ddr_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
     ddr_timer.setInterrupts(kInterruptOnOverflow);
