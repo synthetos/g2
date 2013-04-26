@@ -357,7 +357,7 @@
     <Compile Include="arduino\WInterrupts.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\wiring.c">
+    <Compile Include="arduino\wiring.c.UNUSED">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\wiring.h">
@@ -702,10 +702,10 @@
     <Compile Include="stepper.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="system.cpp">
+    <Compile Include="hardware.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="system.h">
+    <Compile Include="hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="text_parser.cpp">

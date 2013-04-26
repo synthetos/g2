@@ -25,7 +25,7 @@
 #include "xio.h"
 
 /*
-#include "system.h"
+#include "hardware.h"
 #include "util.h"				// #2
 #include "config.h"				// #3
 #include "canonical_machine.h"

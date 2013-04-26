@@ -151,14 +151,18 @@
  */
 
 #include "tinyg2.h"
-#include "system.h"
+#include "hardware.h"
 #include "stepper.h"
-//#include "motatePins.h"		// defined in system.h   Not needed here
-//#include "motateTimers.h"		// defined in system.h   Not needed here
+//#include "motatePins.h"		// defined in hardware.h   Not needed here
+#include "motateTimers.h"		// defined in hardware.h   Not needed here
+
 //#include <component_tc.h>		// deprecated - to be removed
 
 using namespace Motate;
 
+// Setup local resources
+Motate::Timer<DDA_TIMER_NUM> dda_timer;
+Motate::Timer<DWELL_TIMER_NUM> dwell_timer;
 Motate::Pin<31> proof_of_timer(kOutput);
 
 // Setup a stepper template to hold our pins
@@ -315,7 +319,7 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-//    Motate::Timer<3> dda_timer;	// +++++ moved to system.h
+//    Motate::Timer<3> dda_timer;	// +++++ moved to hardware.h
     dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
     dda_timer.setInterrupts(kInterruptOnOverflow);
     dda_timer.start();

@@ -77,7 +77,7 @@
 #include "config.h"
 #include "canonical_machine.h"
 
-//#include "system.h"
+//#include "hardware.h"
 /*
 #include "plan_arc.h"
 #include "planner.h"

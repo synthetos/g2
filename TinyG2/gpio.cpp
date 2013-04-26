@@ -58,7 +58,7 @@
 #include "util.h"
 #include "config.h"
 #include "controller.h"
-#include "system.h"							// gpio port bits are mapped here
+#include "hardware.h"							// gpio port bits are mapped here
 #include "canonical_machine.h"
 */
 
@@ -75,7 +75,7 @@ static void _isr_helper(uint8_t sw_num);
  * gpio_init() - initialize homing/limit switches
  *
  *	This function assumes sys_init() and st_init() have been run previously to 
- *	bind the ports and set bit IO directions, repsectively. See system.h for details
+ *	bind the ports and set bit IO directions, repsectively. See hardware.h for details
  */
 /* Note: v7 boards have external strong pullups on GPIO2 pins (2.7K ohm). 
  *	v6 and earlier use internal pullups only. Internal pullups are set 

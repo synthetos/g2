@@ -96,7 +96,7 @@ void st_dump_stepper_state(void);
  * Stepper configs and constants
  */
 
-/* Timer settings for stepper module. See system.h for overall timer assignments */
+/* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
 #define FREQUENCY_DDA	50000UL
 #define TC_RC_DDA		(VARIANT_MCK / FREQUENCY_DDA / 2) // <--- divided by MCK divisor
@@ -171,10 +171,10 @@ void st_dump_stepper_state(void);
 #define STEP_TIMER_ENABLE	1		// turn timer clock on (F_CPU = 32 Mhz)
 #define STEP_TIMER_WGMODE	0		// normal mode (count to TOP and rollover)
 
-#define TIMER_DDA_ISR_vect	TCC0_OVF_vect	// must agree with assignment in system.h
-#define TIMER_DWELL_ISR_vect TCD0_OVF_vect	// must agree with assignment in system.h
-#define TIMER_LOAD_ISR_vect	TCE0_OVF_vect	// must agree with assignment in system.h
-#define TIMER_EXEC_ISR_vect	TCF0_OVF_vect	// must agree with assignment in system.h
+#define TIMER_DDA_ISR_vect	TCC0_OVF_vect	// must agree with assignment in hardware.h
+#define TIMER_DWELL_ISR_vect TCD0_OVF_vect	// must agree with assignment in hardware.h
+#define TIMER_LOAD_ISR_vect	TCE0_OVF_vect	// must agree with assignment in hardware.h
+#define TIMER_EXEC_ISR_vect	TCF0_OVF_vect	// must agree with assignment in hardware.h
 
 #define TIMER_OVFINTLVL_HI	3		// timer interrupt level (3=hi)
 #define	TIMER_OVFINTLVL_MED 2;		// timer interrupt level (2=med)

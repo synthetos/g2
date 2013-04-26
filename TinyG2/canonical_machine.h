@@ -389,7 +389,7 @@ enum cmProgramFlow {
 	PROGRAM_END
 };
 
-enum cmSpindleState {				// spindle state settings (See system.h for bit settings)
+enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
 	SPINDLE_OFF = 0,
 	SPINDLE_CW,
 	SPINDLE_CCW
