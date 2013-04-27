@@ -29,7 +29,11 @@
 #define HARDWARE_H_ONCE
 
 #include "motatePins.h"					// motateTimers.h are in files that use timers
-
+/*
+#ifdef __cplusplus
+extern "C"{
+#endif
+*/
 void sys_init(void);					// master hardware init
 //void sys_port_bindings(double hw_version);
 //void sys_get_id(char *id);
@@ -341,5 +345,10 @@ typedef struct deviceSingleton {
 //	PORT_t *out_port[MOTORS];	// bindings for output ports (GPIO1)
 } deviceSingleton_t;
 deviceSingleton_t device;
+*/
+/*
+#ifdef __cplusplus
+}
+#endif
 */
 #endif	// end of include guard: HARDWARE_H_ONCE
