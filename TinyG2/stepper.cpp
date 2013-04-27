@@ -329,8 +329,8 @@ void stepper_init()
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-//MOTATE_TIMER_INTERRUPT(3)
-DDA_TIMER_INTERRUPT
+namespace Motate {
+template<> void Timer<dda_timer_number>::interrupt()
 {
     dummy = DDA_STATUS_REGISTER;	// read SR to clear interrupt condition
     proof_of_timer = 0;
@@ -394,6 +394,7 @@ DDA_TIMER_INTERRUPT
 */
     }
     proof_of_timer = 1;
+}
 }
 
 /*

@@ -2,7 +2,7 @@
 utility/SamTimers.hpp - Library for the Arduino-compatible Motate system
 http://tinkerin.gs/
 
-Copyright (c) 2012 Robert Giseburt
+Copyright (c) 2013 Robert Giseburt
 
 This file is part of the Motate Library.
 
@@ -81,6 +81,8 @@ namespace Motate {
 		kFrequencyUnattainable = -1,
 	};
 
+    typedef const uint8_t timer_number;
+    
 	template <uint8_t timerNum>
 	struct Timer {
 
@@ -296,56 +298,58 @@ namespace Motate {
 		}
 
 		// Placeholder for user code.
-		static void interrupt();
+		static void interrupt() __attribute__ ((weak));
 	};
-
-	template<> Tc * const        Timer<0>::tc()           { return TC0; };
-	template<> TcChannel * const Timer<0>::tcChan()       { return TC0->TC_CHANNEL + 0; };
-	template<> const uint32_t    Timer<0>::peripheralId() { return ID_TC0; };
-	template<> const IRQn_Type   Timer<0>::tcIRQ()        { return TC0_IRQn; };
-
-	template<> Tc * const        Timer<1>::tc()           { return TC0; };
-	template<> TcChannel * const Timer<1>::tcChan()       { return TC0->TC_CHANNEL + 1; };
-	template<> const uint32_t    Timer<1>::peripheralId() { return ID_TC1; };
-	template<> const IRQn_Type   Timer<1>::tcIRQ()        { return TC1_IRQn; };
-
-	template<> Tc * const        Timer<2>::tc()           { return TC0; };
-	template<> TcChannel * const Timer<2>::tcChan()       { return TC0->TC_CHANNEL + 2; };
-	template<> const uint32_t    Timer<2>::peripheralId() { return ID_TC2; };
-	template<> const IRQn_Type   Timer<2>::tcIRQ()        { return TC2_IRQn; };
-
-	template<> Tc * const        Timer<3>::tc()           { return TC1; };
-	template<> TcChannel * const Timer<3>::tcChan()       { return TC1->TC_CHANNEL + 0; };
-	template<> const uint32_t    Timer<3>::peripheralId() { return ID_TC3; };
-	template<> const IRQn_Type   Timer<3>::tcIRQ()        { return TC3_IRQn; };
-
-	template<> Tc * const        Timer<4>::tc()           { return TC1; };
-	template<> TcChannel * const Timer<4>::tcChan()       { return TC1->TC_CHANNEL + 1; };
-	template<> const uint32_t    Timer<4>::peripheralId() { return ID_TC4; };
-	template<> const IRQn_Type   Timer<4>::tcIRQ()        { return TC4_IRQn; };
-
-	template<> Tc * const        Timer<5>::tc()           { return TC1; };
-	template<> TcChannel * const Timer<5>::tcChan()       { return TC1->TC_CHANNEL + 2; };
-	template<> const uint32_t    Timer<5>::peripheralId() { return ID_TC5; };
-	template<> const IRQn_Type   Timer<5>::tcIRQ()        { return TC5_IRQn; };
-
-	template<> Tc * const        Timer<6>::tc()           { return TC2; };
-	template<> TcChannel * const Timer<6>::tcChan()       { return TC2->TC_CHANNEL + 0; };
-	template<> const uint32_t    Timer<6>::peripheralId() { return ID_TC6; };
-	template<> const IRQn_Type   Timer<6>::tcIRQ()        { return TC6_IRQn; };
-
-	template<> Tc * const        Timer<7>::tc()           { return TC2; };
-	template<> TcChannel * const Timer<7>::tcChan()       { return TC2->TC_CHANNEL + 1; };
-	template<> const uint32_t    Timer<7>::peripheralId() { return ID_TC7; };
-	template<> const IRQn_Type   Timer<7>::tcIRQ()        { return TC7_IRQn; };
-
-	template<> Tc * const        Timer<8>::tc()           { return TC2; };
-	template<> TcChannel * const Timer<8>::tcChan()       { return TC2->TC_CHANNEL + 2; };
-	template<> const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
-	template<> const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
 
 } // namespace Motate
 
-#define MOTATE_TIMER_INTERRUPT(number) extern "C" void TC ## number ## _Handler(void)
+/** THIS IS OLD INFO, AND NO LONGER RELEVANT TO THIS PROJECT, BUT IT WAS HARD TO COME BY: **/
+
+/*****
+ Ok, here we get ugly: We need the *mangled* names for the specialized interrupt functions,
+ so that we can use weak references from C functions TCn_Handler to the C++ Timer<n>::interrupt(),
+ so that we get clean linkage to user-provided functions, and no errors if those functions don't exist.
+ 
+ So, to get the mangled names (which will only for for GCC, btw), I do this in a bash shell (ignore any errors after the g++ line):
+ 
+ cat <<END >> temp.cpp
+ #include <inttypes.h>
+ namespace Motate {
+ template <uint8_t timerNum>
+ struct Timer {
+ static void interrupt();
+ };
+ template<> void Timer<0>::interrupt() {};
+ template<> void Timer<1>::interrupt() {};
+ template<> void Timer<2>::interrupt() {};
+ template<> void Timer<3>::interrupt() {};
+ template<> void Timer<4>::interrupt() {};
+ template<> void Timer<5>::interrupt() {};
+ template<> void Timer<6>::interrupt() {};
+ template<> void Timer<7>::interrupt() {};
+ template<> void Timer<8>::interrupt() {};
+ }
+ END
+ arm-none-eabi-g++ temp.cpp -o temp.o -mthumb -nostartfiles -mcpu=cortex-m3
+ arm-none-eabi-nm temp.o | grep Motate
+ rm temp.o temp.cpp
+ 
+ 
+ You should get output like this:
+ 
+ 00008000 T _ZN6Motate5TimerILh0EE9interruptEv
+ 0000800c T _ZN6Motate5TimerILh1EE9interruptEv
+ 00008018 T _ZN6Motate5TimerILh2EE9interruptEv
+ 00008024 T _ZN6Motate5TimerILh3EE9interruptEv
+ 00008030 T _ZN6Motate5TimerILh4EE9interruptEv
+ 0000803c T _ZN6Motate5TimerILh5EE9interruptEv
+ 00008048 T _ZN6Motate5TimerILh6EE9interruptEv
+ 00008054 T _ZN6Motate5TimerILh7EE9interruptEv
+ 00008060 T _ZN6Motate5TimerILh8EE9interruptEv
+ 
+ Ignore the hex number and T at the beginning, and the rest is the mangled names you need for below.
+ I broke the string into three parts to clearly show the part that is changing.
+ */
+
 
 #endif /* end of include guard: SAMTIMERS_H_ONCE */

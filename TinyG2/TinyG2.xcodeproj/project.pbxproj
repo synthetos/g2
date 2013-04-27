@@ -416,6 +416,7 @@
 		D49EC6381706789800F2BF9B /* pio_sam3x8h.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B017054FDE00F2BF9B /* pio_sam3x8h.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D49EC63A1706789800F2BF9B /* system_sam3xa.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B917054FDE00F2BF9B /* system_sam3xa.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -3299,6 +3300,7 @@
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
 		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
+		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
 		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -3363,6 +3365,7 @@
 				D45710C71705334000EA19A8 /* keywords.txt */,
 				D45710C81705334000EA19A8 /* MotatePins.h */,
 				D45710C91705334000EA19A8 /* MotateTimers.h */,
+				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
 				D45710D51705334100EA19A8 /* utility */,
 			);
 			path = motate;
@@ -8140,6 +8143,7 @@
 				D432964A171D1B00001611B6 /* controller.cpp in Sources */,
 				D432964B171D1B00001611B6 /* json_parser.cpp in Sources */,
 				D432964C171D1B00001611B6 /* xio.cpp in Sources */,
+				D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
