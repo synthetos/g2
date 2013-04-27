@@ -21,13 +21,12 @@
 		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
 		D457113417053C3A00EA19A8 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45710D91705334100EA19A8 /* stepper.cpp */; };
 		D457113517053C3A00EA19A8 /* stepper.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DA1705334100EA19A8 /* stepper.h */; };
-		D457117017053C3A00EA19A8 /* system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45711181705334100EA19A8 /* system.cpp */; };
-		D457117117053C3A00EA19A8 /* system.h in Sources */ = {isa = PBXBuildFile; fileRef = D45711191705334100EA19A8 /* system.h */; };
 		D457117317053C3A00EA19A8 /* tinyg2.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111B1705334100EA19A8 /* tinyg2.h */; };
 		D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111D1705334100EA19A8 /* pins_arduino.h */; };
 		D457117517053C3A00EA19A8 /* variant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D457111E1705334100EA19A8 /* variant.cpp */; };
 		D457117617053C3A00EA19A8 /* variant.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111F1705334100EA19A8 /* variant.h */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D48F5A3F172C1E8D00D0E055 /* hardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A3D172C1E8D00D0E055 /* hardware.cpp */; };
 		D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85917054CB800F2BF9B /* cortex_handlers.c */; };
 		D49EB89117054CB800F2BF9B /* cxxabi-compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */; };
 		D49EB89217054CB800F2BF9B /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85C17054CB800F2BF9B /* hooks.c */; };
@@ -453,13 +452,13 @@
 		D45710D81705334100EA19A8 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
 		D45710D91705334100EA19A8 /* stepper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stepper.cpp; sourceTree = "<group>"; };
 		D45710DA1705334100EA19A8 /* stepper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stepper.h; sourceTree = "<group>"; };
-		D45711181705334100EA19A8 /* system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system.cpp; sourceTree = "<group>"; };
-		D45711191705334100EA19A8 /* system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
 		D457111B1705334100EA19A8 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
 		D457111D1705334100EA19A8 /* pins_arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pins_arduino.h; sourceTree = "<group>"; };
 		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
 		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D48F5A3D172C1E8D00D0E055 /* hardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hardware.cpp; sourceTree = "<group>"; };
+		D48F5A3E172C1E8D00D0E055 /* hardware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hardware.h; sourceTree = "<group>"; };
 		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 		D49EB85617054CB800F2BF9B /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
 		D49EB85717054CB800F2BF9B /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
@@ -3339,14 +3338,14 @@
 				D4329643171D1B00001611B6 /* json_parser.cpp */,
 				D432963B171A5577001611B6 /* main.cpp */,
 				D45710D91705334100EA19A8 /* stepper.cpp */,
-				D45711181705334100EA19A8 /* system.cpp */,
+				D48F5A3D172C1E8D00D0E055 /* hardware.cpp */,
+				D48F5A3E172C1E8D00D0E055 /* hardware.h */,
 				D4329646171D1B00001611B6 /* xio.cpp */,
 				D4329640171D1B00001611B6 /* config.h */,
 				D432963E171D1B00001611B6 /* config_app.h */,
 				D4329642171D1B00001611B6 /* controller.h */,
 				D4329644171D1B00001611B6 /* json_parser.h */,
 				D45710DA1705334100EA19A8 /* stepper.h */,
-				D45711191705334100EA19A8 /* system.h */,
 				D457111B1705334100EA19A8 /* tinyg2.h */,
 				D4329645171D1B00001611B6 /* util.h */,
 				D4329647171D1B00001611B6 /* xio.h */,
@@ -7835,8 +7834,6 @@
 				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
 				D457113417053C3A00EA19A8 /* stepper.cpp in Sources */,
 				D457113517053C3A00EA19A8 /* stepper.h in Sources */,
-				D457117017053C3A00EA19A8 /* system.cpp in Sources */,
-				D457117117053C3A00EA19A8 /* system.h in Sources */,
 				D457117317053C3A00EA19A8 /* tinyg2.h in Sources */,
 				D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */,
 				D457117517053C3A00EA19A8 /* variant.cpp in Sources */,
@@ -8144,6 +8141,7 @@
 				D432964B171D1B00001611B6 /* json_parser.cpp in Sources */,
 				D432964C171D1B00001611B6 /* xio.cpp in Sources */,
 				D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */,
+				D48F5A3F172C1E8D00D0E055 /* hardware.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
