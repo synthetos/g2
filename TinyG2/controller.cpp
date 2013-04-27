@@ -194,7 +194,8 @@ static stat_t _command_dispatch()
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
 		}
 	} else if (cs.state == CONTROLLER_STARTUP) {
-		strcpy(cs.in_buf, "$x");
+//		strcpy(cs.in_buf, "$x");
+		strcpy(cs.in_buf, "g0x100");
 		cs.state = CONTROLLER_READY;
 	} else {
 		return (STAT_OK);
@@ -235,8 +236,8 @@ static stat_t _command_dispatch()
 				sprintf((char *)cs.in_buf,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);		// '-8' is used for JSON chars
 				json_parser(cs.in_buf);
 			} else {
-//				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
-				text_response(STAT_OK, cs.in_buf);
+				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
+//				text_response(STAT_OK, cs.in_buf);
 //				write (cs.in_buf, cs.linelen);	//+++++ test statement
 			}
 		}

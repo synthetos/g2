@@ -21,8 +21,8 @@
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
-#ifndef _TINYG2_H_
-#define _TINYG2_H_
+#ifndef TINYG2_H_ONCE
+#define TINYG2_H_ONCE
 
 // common system includes
 #include <ctype.h>					
@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	007.02	// adding in planner and going for end-to-end operation
+#define TINYG2_FIRMWARE_BUILD   	007.04	// adding in planner and going for end-to-end operation
 #define TINYG2_FIRMWARE_VERSION		0.01	// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -217,4 +217,4 @@ extern stat_t status_code;				// declared in main.cpp
 }
 #endif
 
-#endif // _TINYG2_H_
+#endif // End of include guard: TINYG2_H_ONCE

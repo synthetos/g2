@@ -91,9 +91,7 @@ static stat_t get_pos(cmdObj_t *cmd);		// get runtime work position...
 static stat_t get_mpos(cmdObj_t *cmd);		// get runtime machine position...
 static stat_t get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 static void print_pos(cmdObj_t *cmd);		// print runtime work position in prevailing units
-static void print_mpos(cmdObj_t *cmd);		// print runtime work position always in MM uints
-
-static stat_t set_defa(cmdObj_t *cmd);		// reset config to default values
+static void print_mpos(cmdObj_t *cmd);		// print runtime work position always in MM units
 
 static stat_t get_am(cmdObj_t *cmd);		// get axis mode
 static stat_t set_am(cmdObj_t *cmd);		// set axis mode
@@ -109,13 +107,13 @@ static void pr_ma_lin(cmdObj_t *cmd);		// print a linear value in prevailing uni
 static void pr_ma_rot(cmdObj_t *cmd);		// print a rotary value in degrees units
 static void print_coor(cmdObj_t *cmd);		// print coordinate offsets with linear units
 static void print_corr(cmdObj_t *cmd);		// print coordinate offsets with rotary units
-
+/*
 static stat_t set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
-static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX outout
+static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX output
 static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
 static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF
 static stat_t set_baud(cmdObj_t *cmd);		// set USB baud rate
-
+*/
 static stat_t do_motors(cmdObj_t *cmd);		// print parameters for all motor groups
 static stat_t do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
 static stat_t do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
@@ -181,7 +179,7 @@ static const char_t *msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, 
 static const char_t msg_home0[] = "Not Homed";
 static const char_t msg_home1[] = "Homed";
 static const char_t *msg_home[] = { msg_home0, msg_home1 };
-
+/*
 static const char_t msg_baud0[] = "0";
 static const char_t msg_baud1[] = "9600";
 static const char_t msg_baud2[] = "19200";
@@ -190,7 +188,7 @@ static const char_t msg_baud4[] = "57600";
 static const char_t msg_baud5[] = "115200";
 static const char_t msg_baud6[] = "230400";
 static const char_t *msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
-
+*/
 static const char_t msg_sw0[] = "Disabled";
 static const char_t msg_sw1[] = "NO homing";
 static const char_t msg_sw2[] = "NO homing & limit";
@@ -428,8 +426,8 @@ const cfgItem_t cfgArray[] = {
 	{ "", "er",  _f00, 0, fmt_nul, print_nul, get_er,  set_nul, (float *)&cs.null, 0 },		// invoke bogus exception report for testing
 	{ "", "rx",  _f00, 0, fmt_rx,  print_int, get_rx,  set_nul, (float *)&cs.null, 0 },		// space in RX buffer
 	{ "", "msg", _f00, 0, fmt_str, print_str, get_nul, set_nul, (float *)&cs.null, 0 },		// string for generic messages
+	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defa,(float *)&cs.null,0},// prints defaults help screen
 //	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },// prints test help screen
-//	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defa,(float *)&cs.null,0},// prints defaults help screen
 //	{ "", "boot",_f00, 0, fmt_nul, print_nul, print_boot_loader_help,run_boot,(float *)&cs.null,0 },
 	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
 	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
@@ -441,28 +439,46 @@ const cfgItem_t cfgArray[] = {
 	{ "1","1mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_1].microsteps,	M1_MICROSTEPS },
 	{ "1","1po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_1].polarity,	M1_POLARITY },
 	{ "1","1pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_1].power_mode,	M1_POWER_MODE },
-
+#if (MOTORS >= 2)
 	{ "2","2ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_2].motor_map,	M2_MOTOR_MAP },
 	{ "2","2sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_2].step_angle,	M2_STEP_ANGLE },
 	{ "2","2tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_2].travel_rev,	M2_TRAVEL_PER_REV },
 	{ "2","2mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_2].microsteps,	M2_MICROSTEPS },
 	{ "2","2po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_2].polarity,	M2_POLARITY },
 	{ "2","2pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_2].power_mode,	M2_POWER_MODE },
-
+#endif
+#if (MOTORS >= 3)
 	{ "3","3ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_3].motor_map,	M3_MOTOR_MAP },
 	{ "3","3sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_3].step_angle,	M3_STEP_ANGLE },
 	{ "3","3tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_3].travel_rev,	M3_TRAVEL_PER_REV },
 	{ "3","3mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_3].microsteps,	M3_MICROSTEPS },
 	{ "3","3po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_3].polarity,	M3_POLARITY },
 	{ "3","3pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_3].power_mode,	M3_POWER_MODE },
-
+#endif
+#if (MOTORS >= 4)
 	{ "4","4ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_4].motor_map,	M4_MOTOR_MAP },
 	{ "4","4sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_4].step_angle,	M4_STEP_ANGLE },
 	{ "4","4tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_4].travel_rev,	M4_TRAVEL_PER_REV },
 	{ "4","4mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_4].microsteps,	M4_MICROSTEPS },
 	{ "4","4po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_4].polarity,	M4_POLARITY },
 	{ "4","4pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_4].power_mode,	M4_POWER_MODE },
-
+#endif
+#if (MOTORS >= 5)
+	{ "5","5ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_5].motor_map,	M5_MOTOR_MAP },
+	{ "5","5sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_5].step_angle,	M5_STEP_ANGLE },
+	{ "5","5tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_5].travel_rev,	M5_TRAVEL_PER_REV },
+	{ "5","5mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_5].microsteps,	M5_MICROSTEPS },
+	{ "5","5po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_5].polarity,	M5_POLARITY },
+	{ "5","5pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_5].power_mode,	M5_POWER_MODE },
+#endif
+#if (MOTORS >= 6)
+	{ "6","6ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_6].motor_map,	M6_MOTOR_MAP },
+	{ "6","6sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_6].step_angle,	M6_STEP_ANGLE },
+	{ "6","6tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_6].travel_rev,	M6_TRAVEL_PER_REV },
+	{ "6","6mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_6].microsteps,	M6_MICROSTEPS },
+	{ "6","6po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_6].polarity,	M6_POLARITY },
+	{ "6","6pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_6].power_mode,	M6_POWER_MODE },
+#endif
 	// Axis parameters
 	{ "x","xam",_fip, 0, fmt_Xam, print_am,  get_am,  set_am, (float *)&cfg.a[AXIS_X].axis_mode,		X_AXIS_MODE },
 	{ "x","xvm",_fip, 0, fmt_Xvm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].velocity_max,		X_VELOCITY_MAX },
@@ -625,13 +641,13 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
 	{ "sys","sv",  _f07, 0, fmt_sv, print_ui8, get_ui8, set_012, (float *)&cfg.status_report_verbosity,SR_VERBOSITY },
 	{ "sys","si",  _f07, 0, fmt_si, print_flt, get_int, set_si,  (float *)&cfg.status_report_interval,STATUS_REPORT_INTERVAL_MS },
-
-//	{ "sys","ic",  _f07, 0, fmt_ic, print_ui8, get_ui8, set_ic,  (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
+/*
+	{ "sys","ic",  _f07, 0, fmt_ic, print_ui8, get_ui8, set_ic,  (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
 	{ "sys","ec",  _f07, 0, fmt_ec, print_ui8, get_ui8, set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
 	{ "sys","ee",  _f07, 0, fmt_ee, print_ui8, get_ui8, set_ee,  (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
 	{ "sys","ex",  _f07, 0, fmt_ex, print_ui8, get_ui8, set_ex,  (float *)&cfg.enable_xon,			COM_ENABLE_XON },
-//	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
-
+	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
+*/
 	// NOTE: The ordering within the gcode defaults is important for token resolution
 	{ "sys","gpl", _f07, 0, fmt_gpl, print_ui8, get_ui8,set_012, (float *)&cfg.select_plane,		GCODE_DEFAULT_PLANE },
 	{ "sys","gun", _f07, 0, fmt_gun, print_ui8, get_ui8,set_01,  (float *)&cfg.units_mode,			GCODE_DEFAULT_UNITS },
@@ -683,6 +699,8 @@ const cfgItem_t cfgArray[] = {
 	{ "","2",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","3",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","4",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","5",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","6",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","x",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis groups
 	{ "","y",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","z",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -713,7 +731,7 @@ const cfgItem_t cfgArray[] = {
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define CMD_COUNT_GROUPS 		25		// count of simple groups
+#define CMD_COUNT_GROUPS 		27		// count of simple groups
 #define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups
 
 /* <DO NOT MESS WITH THESE ITEMS> */
@@ -1217,21 +1235,21 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
  * set_baud() - set USB baud rate
  *	The above assume USB is the std device
  */
+/*
 static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
 {
-/*
+
 	if (fp_NOT_ZERO(cmd->value)) { 
 		(void)xio_ctrl(XIO_DEV_USB, yes);
 	} else { 
 		(void)xio_ctrl(XIO_DEV_USB, no);
 	}
-*/
 	return (STAT_OK);
 }
-
+*/
+/*
 static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
 {
-/*
 	if (cmd->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	cfg.ignore_crlf = (uint8_t)cmd->value;
 	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORECR);	// clear them both
@@ -1242,40 +1260,36 @@ static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
 	} else if (cfg.ignore_crlf == IGNORE_LF) {		// $ic=2
 		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORELF);
 	}
-*/
 	return (STAT_OK);
 }
-
+*/
+/*
 static stat_t set_ec(cmdObj_t *cmd) 				// expand CR to CRLF on TX
 {
-/*
 	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	cfg.enable_cr = (uint8_t)cmd->value;
 	return(_set_comm_helper(cmd, XIO_CRLF, XIO_NOCRLF));
-*/
 	return (STAT_OK);
 }
-
+*/
+/*
 static stat_t set_ee(cmdObj_t *cmd) 				// enable character echo
 {
-/*
 	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	cfg.enable_echo = (uint8_t)cmd->value;
 	return(_set_comm_helper(cmd, XIO_ECHO, XIO_NOECHO));
-*/
 	return (STAT_OK);
 }
-
+*/
+/*
 static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF
 {
-/*
 	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	cfg.enable_xon = (uint8_t)cmd->value;
 	return(_set_comm_helper(cmd, XIO_XOFF, XIO_NOXOFF));
-*/
 	return (STAT_OK);
 }
-
+*/
 /*
  * set_baud() - set USB baud rate
  *
@@ -1285,10 +1299,9 @@ static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF
  *	Then it waits for the TX buffer to empty (so the message is sent)
  *	Then it performs the callback to apply the new baud rate
  */
-
+/*
 static stat_t set_baud(cmdObj_t *cmd)
 {
-/*
 	uint8_t baud = (uint8_t)cmd->value;
 	if ((baud < 1) || (baud > 6)) {
 		cmd_add_message("*** WARNING *** Illegal baud rate specified");
@@ -1299,19 +1312,17 @@ static stat_t set_baud(cmdObj_t *cmd)
 	char message[CMD_MESSAGE_LEN]; 
 	sprintf(message, "*** NOTICE *** Resetting baud rate to %s", msg_baud[baud]);
 	cmd_add_message((char_t *)message);
-*/
 	return (STAT_OK);
 }
 
 uint8_t cfg_baud_rate_callback(void) 
 {
-/*
 	if (cfg.usb_baud_flag == false) { return(STAT_NOOP);}
 	cfg.usb_baud_flag = false;
 	xio_set_baud(XIO_DEV_USB, cfg.usb_baud_rate);
-*/
 	return (STAT_OK);
 }
+*/
 
 /**** UberGroup Operations ****************************************************
  * Uber groups are groups of groups organized for convenience:
@@ -1321,10 +1332,10 @@ uint8_t cfg_baud_rate_callback(void)
  *	- all		- group of all groups
  *
  * do_group_list()	- get and print all groups in the list (iteration)
- * do_motors()		- get and print motor uber group 1-4
+ * do_motors()		- get and print motor uber group 1-6
  * do_axes()		- get and print axis uber group XYZABC
- * do_offsets()	- get and print offset uber group G54-G59, G28, G30, G92
- * do_all()		- get and print all groups uber group
+ * do_offsets()		- get and print offset uber group G54-G59, G28, G30, G92
+ * do_all()			- get and print all groups uber group
  */
 
 static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // helper to print multiple groups in a list
@@ -1344,7 +1355,7 @@ static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // help
 
 static stat_t do_motors(cmdObj_t *cmd)	// print parameters for all motor groups
 {
-	char list[][CMD_TOKEN_LEN+1] = {"1","2","3","4",""}; // must have a terminating element
+	char list[][CMD_TOKEN_LEN+1] = {"1","2","3","4","5","6",""}; // must have a terminating element
 	return (do_group_list(cmd, list));
 }
 

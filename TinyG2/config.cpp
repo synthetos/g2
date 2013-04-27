@@ -49,7 +49,6 @@ cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
  ***********************************************************************************/
 
-static stat_t set_defa(cmdObj_t *cmd);	// reset config to default values
 //static void _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]); // helper to print multiple groups in a list
 
 /***********************************************************************************
@@ -114,10 +113,11 @@ void config_init()
 	set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
 }
 
-static stat_t set_defa(cmdObj_t *cmd) 
+stat_t set_defa(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
-	cfg.units_mode = MILLIMETERS;
+	cm_set_units_mode(MILLIMETERS);					// must do inits in MM mode
+
 //	rpt_print_initializing_message();
 	
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {

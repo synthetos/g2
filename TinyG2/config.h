@@ -284,6 +284,8 @@ cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
 cmdObj_t *cmd_add_message(const char_t *string);
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
+stat_t set_defa(cmdObj_t *cmd);	// reset config to default values
+
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/

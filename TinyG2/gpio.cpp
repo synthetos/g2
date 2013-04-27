@@ -72,7 +72,7 @@ switches_t sw;
 #define SW_LOCKOUT_TICKS 25					// 25=250ms. RTC ticks are ~10ms each
 #define SW_DEGLITCH_TICKS 3					// 3=30ms
 
-static void _isr_helper(uint8_t sw_num);
+//static void _isr_helper(uint8_t sw_num);
 
 /*
  * gpio_init() - initialize homing/limit switches
