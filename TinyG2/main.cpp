@@ -52,28 +52,20 @@ stat_t status_code;		// declared for ritorno, see tinyg2.h
 
 /******************** Application Code ************************/
 
-void setup( void )
-{
-	USBDevice.attach();
-	SerialUSB.begin(115200);
-	_application_init();
-}
-
-void loop( void )
-{
-	controller_run( );			// single pass through the controller
-}
-
-/*
- * \brief Main entry point of Arduino application
- */
 int main( void )
 {
+	// system initialization
 	init();
-	setup();
+	USBDevice.attach();				// USB setup
+	SerialUSB.begin(115200);
+	delay(1000);
+	
+	// TinyG application setup
+	_application_init();
 
+	// main loop
 	for (;;) {
-		loop();
+		controller_run( );			// single pass through the controller
 	}
 	return 0;
 }
