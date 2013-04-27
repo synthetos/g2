@@ -88,7 +88,7 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
  *	#define max4(a,b,c,d) (max(max(a,b),max(c,d)))
  */
 
-inline float min3(float x1, float x2, float x3)
+float min3(float x1, float x2, float x3)
 {
 	float min = x1;
 	if (x2 < min) { min = x2;} 
@@ -96,7 +96,7 @@ inline float min3(float x1, float x2, float x3)
 	return (min);
 }
 
-inline float min4(float x1, float x2, float x3, float x4)
+float min4(float x1, float x2, float x3, float x4)
 {
 	float min = x1;
 	if (x2 < min) { min = x2;} 
@@ -105,7 +105,7 @@ inline float min4(float x1, float x2, float x3, float x4)
 	return (min);
 }
 
-inline float max3(float x1, float x2, float x3)
+float max3(float x1, float x2, float x3)
 {
 	float max = x1;
 	if (x2 > max) { max = x2;} 
@@ -113,7 +113,7 @@ inline float max3(float x1, float x2, float x3)
 	return (max);
 }
 
-inline float max4(float x1, float x2, float x3, float x4)
+float max4(float x1, float x2, float x3, float x4)
 {
 	float max = x1;
 	if (x2 > max) { max = x2;} 
@@ -183,28 +183,23 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
 }
 */
 
-/**** Vector functions ****
+/**** Vector utilities ****
  * copy_vector()			- copy vector of arbitrary length
  * copy_axis_vector()		- copy an axis vector
- * set_unit_vector()		- populate a unit vector by pos. & target
  * get_axis_vector_length()	- return the length of an axis vector
- * set_vector()				- load values into vector form
  */
 /*
-void copy_vector(float dest[], const float src[], uint8_t length) 
+void copy_vector(float dst[], const float src[], uint8_t length) 
 {
-	for (uint8_t i=0; i<length; i++) {
-		dest[i] = src[i];
-	}
+	for (uint8_t i=0; i<length; i++) { dst[i] = src[i]; }
 }
 */
-/*
-void copy_axis_vector(float dest[], const float src[]) 
+
+void copy_axis_vector(float dst[], const float src[]) 
 {
-	memcpy(dest, src, sizeof(float)*AXES);
+	memcpy(dst, src, sizeof(float)*AXES);
 }
-*/
-/*
+
 float get_axis_vector_length(const float a[], const float b[]) 
 {
 	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
@@ -214,19 +209,6 @@ float get_axis_vector_length(const float a[], const float b[])
 				 square(a[AXIS_B] - b[AXIS_B]) +
 				 square(a[AXIS_C] - b[AXIS_C])));
 }
-*/
-/*
-float *set_vector(float x, float y, float z, float a, float b, float c)
-{
-	vector[AXIS_X] = x;
-	vector[AXIS_Y] = y;
-	vector[AXIS_Z] = z;
-	vector[AXIS_A] = a;
-	vector[AXIS_B] = b;
-	vector[AXIS_C] = c;
-	return (vector);
-}
-*/
 
 #ifdef __cplusplus
 }

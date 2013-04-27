@@ -32,7 +32,7 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "settings.h"
-#include "system.h"
+#include "hardware.h"
 #include "util.h"
 #include "xio.h"		// for ASCII definitions
 

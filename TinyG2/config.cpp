@@ -94,8 +94,8 @@ void cmd_persist(cmdObj_t *cmd)
 }
 
 /****************************************************************************
- * cfg_init() - called once on hard reset
- * _set_defa() - reset NVM with default values for active profile
+ * config_init() - called once on hard reset
+ * set_defa() - reset NVM with default values for active profile
  *
  * Will perform one of 2 actions:
  *	(1) if NVM is set up or out-of-rev: load RAM and NVM with hardwired default settings
@@ -104,7 +104,7 @@ void cmd_persist(cmdObj_t *cmd)
  *	You can assume the cfg struct has been zeroed by a hard reset. 
  *	Do not clear it as the version and build numbers have already been set by tg_init()
  */
-void cfg_init()
+void config_init()
 {
 	cmdObj_t *cmd = cmd_reset_list();
 	cs.comm_mode = JSON_MODE;						// initial value until EEPROM is read
@@ -117,7 +117,9 @@ void cfg_init()
 static stat_t set_defa(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
+	cfg.units_mode = MILLIMETERS;
 //	rpt_print_initializing_message();
+	
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 		if ((cfgArray[cmd->index].flags & F_INITIALIZE) != 0) {
 			cmd->value = cfgArray[cmd->index].def_value;
@@ -136,7 +138,7 @@ static stat_t set_defa(cmdObj_t *cmd)
  *  get_ui8() - get value as 8 bit uint8_t w/o unit conversion
  *  get_int() - get value as 32 bit integer w/o unit conversion
  *  get_flt() - get value as float w/o unit conversion
- *  get_flu() - get value as double w/unit conversion
+ *  get_flu() - get value as float w/unit conversion
  *	get_format() - internal accessor for printf() format string
  */
 stat_t get_nul(cmdObj_t *cmd) 

@@ -151,14 +151,19 @@
  */
 
 #include "tinyg2.h"
-#include "system.h"
+#include "hardware.h"
+#include "planner.h"
 #include "stepper.h"
-//#include "motatePins.h"		// defined in system.h   Not needed here
-//#include "motateTimers.h"		// defined in system.h   Not needed here
+//#include "motatePins.h"		// defined in hardware.h   Not needed here
+#include "motateTimers.h"		// defined in hardware.h   Not needed here
+
 //#include <component_tc.h>		// deprecated - to be removed
 
 using namespace Motate;
 
+// Setup local resources
+Motate::Timer<DDA_TIMER_NUM> dda_timer;
+Motate::Timer<DWELL_TIMER_NUM> dwell_timer;
 Motate::Pin<31> proof_of_timer(kOutput);
 
 // Setup a stepper template to hold our pins
@@ -315,7 +320,7 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-//    Motate::Timer<3> dda_timer;	// +++++ moved to system.h
+//    Motate::Timer<3> dda_timer;	// +++++ moved to hardware.h
     dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
     dda_timer.setInterrupts(kInterruptOnOverflow);
     dda_timer.start();
@@ -400,10 +405,10 @@ template<> void Timer<dda_timer_number>::interrupt()
 /*
  * st_disable() - stop the steppers. Requires re-init to recover
  */
-
 void st_disable()
 {
 //++++	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+	return;
 }
 
 
@@ -658,19 +663,19 @@ void _load_move()
  *	the loader. It deals with all the DDA optimizations and timer setups so that
  *	loading can be performed as rapidly as possible. It works in joint space 
  *	(motors) and it works in steps, not length units. All args are provided as 
- *	doubles and converted to their appropriate integer types for the loader. 
+ *	floats and converted to their appropriate integer types for the loader. 
  *
  * Args:
  *	steps[] are signed relative motion in steps (can be non-integer values)
  *	Microseconds - how many microseconds the segment should run 
  */
 /*
-uint8_t st_prep_line(double steps[], double microseconds)
+uint8_t st_prep_line(float steps[], float microseconds)
 {
 	uint8_t i;
-	double f_dda = F_DDA;		// starting point for adjustment
-	double dda_substeps = DDA_SUBSTEPS;
-	double major_axis_steps = 0;
+	float f_dda = F_DDA;		// starting point for adjustment
+	float dda_substeps = DDA_SUBSTEPS;
+	float major_axis_steps = 0;
 
 	// *** defensive programming ***
 	// trap conditions that would prevent queueing the line
@@ -718,58 +723,50 @@ uint8_t st_prep_line(double steps[], double microseconds)
  *
  *	Used by M codes, tool and spindle changes
  */
-
-/*
 void st_prep_null()
 {
 	sps.move_type = MOVE_TYPE_NULL;
 }
-*/
 
 /* 
  * st_prep_dwell() 	 - Add a dwell to the move buffer
  */
 
-/*
-void st_prep_dwell(double microseconds)
+void st_prep_dwell(float microseconds)
 {
 	sps.move_type = MOVE_TYPE_DWELL;
 	sps.timer_period = _f_to_period(F_DWELL);
 	sps.timer_ticks = (uint32_t)((microseconds/1000000) * F_DWELL);
 }
-*/
 
 /*
  * st_isbusy() - return TRUE if motors are running or a dwell is running
  */
-/*
-inline uint8_t st_isbusy()
+uint8_t st_isbusy()
 {
 	if (st.timer_ticks_downcount == 0) {
 		return (false);
 	} 
 	return (true);
 }
-*/
 
 /* 
  * st_set_polarity() - setter needed by the config system
  */
-/*
 void st_set_polarity(const uint8_t motor, const uint8_t polarity)
 {
 	st.m[motor].polarity = polarity;
 }
-*/
+
 /* 
  * st_set_microsteps() - set microsteps in hardware
  *
  *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
  *	This may change if microstep morphing is implemented.
  */
-/*
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
+/*
 	if (microstep_mode == 8) {
 		device.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
 		device.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
@@ -783,5 +780,5 @@ void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
 		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
 	}
-}
 */
+}

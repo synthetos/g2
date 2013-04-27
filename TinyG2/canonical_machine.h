@@ -389,7 +389,7 @@ enum cmProgramFlow {
 	PROGRAM_END
 };
 
-enum cmSpindleState {				// spindle state settings (See system.h for bit settings)
+enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
 	SPINDLE_OFF = 0,
 	SPINDLE_CW,
 	SPINDLE_CCW
@@ -468,8 +468,8 @@ void cm_set_gcode_model_endpoint_position(uint8_t status);
 void cm_set_model_linenum(uint32_t linenum);
 
 /*--- canonical machining functions ---*/
-void cm_init(void);												// init canonical machine
-void cm_shutdown(uint8_t value);								// emergency shutdown
+void canonical_machine_init(void);
+void canonical_machine_shutdown(uint8_t value);					// emergency shutdown
 
 stat_t cm_set_machine_axis_position(uint8_t axis, const float position);	// set absolute position
 stat_t cm_flush_planner(void);									// flush planner queue with coordinate resets

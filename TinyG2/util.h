@@ -25,8 +25,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef UTIL_H_ONCE
+#define UTIL_H_ONCE
 
 #include <stdint.h>
 
@@ -38,10 +38,17 @@ extern "C"{
 
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 
-void copy_vector(float dest[], const float src[], uint8_t length);
-void copy_axis_vector(float dest[], const float src[]);
+//void copy_vector(float dest[], const float src[], uint8_t length);
 float get_axis_vector_length(const float a[], const float b[]);
-float *set_vector(float x, float y, float z, float a, float b, float c);
+void copy_axis_vector(float dst[], const float src[]);
+/*
+#define copy_axis_vector(dst,src) ( dst[AXIS_X] = src[AXIS_X];\
+									dst[AXIS_Y] = src[AXIS_Y];\
+									dst[AXIS_Z] = src[AXIS_Z];\
+									dst[AXIS_A] = src[AXIS_A];\
+									dst[AXIS_B] = src[AXIS_B];\
+									dst[AXIS_C] = src[AXIS_C]; )
+*/
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
@@ -119,4 +126,4 @@ uint8_t read_float (uint8_t *buf, uint8_t *index, float *float_ptr);
 }
 #endif
 
-#endif	// _UTIL_H_
+#endif	// End of include guard: UTIL_H_ONCE

@@ -6,7 +6,7 @@
  *		 After initial load the EEPROM values (or changed values) are used.
  *
  *		 System and hardware settings that you shouldn't need to change 
- *		 are in system.h  Application settings that also shouldn't need 
+ *		 are in hardware.h  Application settings that also shouldn't need 
  *		 to be changed are in tinyg.h
  */
 
@@ -27,7 +27,7 @@
 #define SWITCH_TYPE 		SW_TYPE_NORMALLY_CLOSED
 
 #undef	COM_COMM_MODE
-#define COM_COMM_MODE		TG_JSON_MODE
+#define COM_COMM_MODE		JSON_MODE
 
 #undef	COM_ENABLE_QR
 #define COM_ENABLE_QR		true
