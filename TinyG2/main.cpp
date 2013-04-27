@@ -24,6 +24,7 @@
 #include "canonical_machine.h"
 #include "planner.h"
 #include "stepper.h"
+#include "spindle.h"
 #include "report.h"
 #include "hardware.h"
 #include "xio.h"
@@ -32,7 +33,6 @@
 #include "util.h"				// #2
 #include "json_parser.h"
 #include "gcode_parser.h"
-#include "spindle.h"
 #include "network.h"
 #include "gpio.h"
 #include "test.h"
@@ -83,22 +83,23 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
-//	cli();
+	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	stepper_init(); 				// must precede gpio_init()
+	config_init();					// config records from eeprom 		- must be next app init
 //	gpio_init();					// switches and parallel IO
 //	pwm_init();						// pulse width modulation drivers	- must follow gpio_init()
 
+	// do these next
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
-	config_init();					// config records from eeprom 		- must be next app init
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow cfg_init()
-//	spindle_init();					// spindle PWM and variables
+	spindle_init();					// spindle PWM and variables
+
+	// do these last
+	stepper_init(); 				// must precede gpio_init()
 
 	// now bring up the interrupts and get started
-//	sei();							// enable global interrupts
-	rpt_print_system_ready_message();// (LAST) announce system is ready
-
+//	rpt_print_system_ready_message();// (LAST) announce system is ready
 //	_unit_tests();					// run any unit tests that are enabled
 //	tg_canned_startup();			// run any pre-loaded commands
 	return;

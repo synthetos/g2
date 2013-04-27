@@ -151,19 +151,23 @@
  */
 
 #include "tinyg2.h"
+#include "config.h"
 #include "hardware.h"
 #include "planner.h"
 #include "stepper.h"
 //#include "motatePins.h"		// defined in hardware.h   Not needed here
-#include "motateTimers.h"		// defined in hardware.h   Not needed here
+#include "motateTimers.h"
+#include "util.h"
 
 //#include <component_tc.h>		// deprecated - to be removed
 
 using namespace Motate;
 
 // Setup local resources
-Motate::Timer<DDA_TIMER_NUM> dda_timer;
-Motate::Timer<DWELL_TIMER_NUM> dwell_timer;
+Motate::Timer<DDA_TIMER_NUM> dda_timer;			// stepper pulse generation
+Motate::Timer<DWELL_TIMER_NUM> dwell_timer;		// dwell timer
+Motate::Timer<LOAD_TIMER_NUM> load_timer;		// triggers load of next stepper segment
+Motate::Timer<EXEC_TIMER_NUM> exec_timer;		// triggers calculation of next+1 stepper segment
 Motate::Pin<31> proof_of_timer(kOutput);
 
 // Setup a stepper template to hold our pins
@@ -222,12 +226,12 @@ Stepper<motor_6_step_pin_num,
 
 OutputPin<motor_enable_pin_num> enable;
 
-volatile int temp = 0;
+//volatile int temp = 0;
 volatile long dummy;			// convenient register to read into
 
 static void _load_move(void);
-//static void _exec_move(void);
-//static void _request_load_move(void);
+static void _exec_move(void);
+static void _request_load_move(void);
 
 /*
  * Stepper structures
@@ -292,7 +296,7 @@ magic_t st_get_st_magic() { return (st.magic_start);}
 magic_t st_get_sps_magic() { return (sps.magic_start);}
 
 /*
- * st_init() - initialize stepper motor subsystem 
+ * stepper_init() - initialize stepper motor subsystem 
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
@@ -308,10 +312,8 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
-    _load_move();
-
-#ifdef BARE_CODE
 	// setup DDA timer
+#ifdef BARE_CODE
 	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
 	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
 	REG_RC_DDA = TC_RC_DDA;				// set frequency
@@ -320,22 +322,55 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-//    Motate::Timer<3> dda_timer;	// +++++ moved to hardware.h
     dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
     dda_timer.setInterrupts(kInterruptOnOverflow);
-    dda_timer.start();
+ //   dda_timer.start();
 #endif
+
+	// setup DWELL timer
+	dwell_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DWELL);
+	dwell_timer.setInterrupts(kInterruptOnOverflow);
+//	dwell_timer.start();
+
+	// setup LOAD timer
+	load_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
+	load_timer.setInterrupts(kInterruptOnOverflow);
+
+	// setup EXEC timer
+	exec_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
+	exec_timer.setInterrupts(kInterruptOnOverflow);
+
+    _load_move();
 }
 
 /*
+ * st_disable() - stop the steppers. (Requires re-init to recover -- Is this still true?)
+ */
+void st_disable()
+{
+	dda_timer.stop();
+}
+
+/*
+ * Dwell timer interrupt
+ */
+MOTATE_TIMER_INTERRUPT(DWELL_TIMER_NUM) 
+{
+	dummy = DWELL_STATUS_REGISTER;				// read SR to clear interrupt condition
+	if (--st.timer_ticks_downcount == 0) {
+		dwell_timer.stop();
+		_load_move();
+	}
+}
+
+/****************************************************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
  *	Uses direct struct addresses and literal values for hardware devices -
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-//MOTATE_TIMER_INTERRUPT(3)
-DDA_TIMER_INTERRUPT
+MOTATE_TIMER_INTERRUPT(DDA_TIMER_NUM)
 {
     dummy = DDA_STATUS_REGISTER;	// read SR to clear interrupt condition
     proof_of_timer = 0;
@@ -395,52 +430,24 @@ DDA_TIMER_INTERRUPT
         if (cfg.m[MOTOR_4].power_mode == true) {
             PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm;
         }
-        _load_move();							// load the next move
 */
+        _load_move();						// load the next move
     }
     proof_of_timer = 1;
 }
 
-/*
- * st_disable() - stop the steppers. Requires re-init to recover
- */
-void st_disable()
-{
-//++++	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
-	return;
-}
-
-
-/*
-ISR(TIMER_DWELL_ISR_vect) {						// DWELL timer interupt
-	if (--st.timer_ticks_downcount == 0) {
- 		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;	// disable DWELL timer
-		_load_move();
-	}
-}
-
-ISR(TIMER_LOAD_ISR_vect) {						// load steppers SW interrupt
- 	TIMER_LOAD.CTRLA = STEP_TIMER_DISABLE;		// disable SW interrupt timer
-	_load_move();
-}
-
-ISR(TIMER_EXEC_ISR_vect) {						// exec move SW interrupt
- 	TIMER_EXEC.CTRLA = STEP_TIMER_DISABLE;		// disable SW interrupt timer
-	_exec_move();
-}
-*/
-
-/* Software interrupts to fire the above
- * st_test_exec_state()	   - return TRUE if exec/prep can run
- * _request_load_move()    - SW interrupt to request to load a move
- *	st_request_exec_move() - SW interrupt to request to execute a move
- * _exec_move() 		   - Run a move from the planner and prepare it for loading
+/****************************************************************************************
+ * Exec sequencing code
  *
- *	_exec_move() can only be called be called from an ISR at a level lower
- *	than DDA, Only use st_request_exec_move() to call it.
+ * st_test_exec_state()		- return TRUE if exec/prep can run
+ * st_request_exec_move()	- SW interrupt to request to execute a move
+ * EXEC INTERRUPT			- interrupt handler for above
+ * _exec_move() 			- Run a move from the planner and prepare it for loading
+ *
+ *	_exec_move() can only be called be called from an ISR at a level lower than DDA, 
+ *	Only use st_request_exec_move() to call it.
  */
 
-/*
 uint8_t st_test_exec_state()
 {
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
@@ -452,10 +459,23 @@ uint8_t st_test_exec_state()
 void st_request_exec_move()
 {
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
-		TIMER_EXEC.PER = SWI_PERIOD;
-		TIMER_EXEC.CTRLA = STEP_TIMER_ENABLE;			// trigger a LO interrupt
+		exec_timer.start();
+		//TIMER_EXEC.PER = SWI_PERIOD;
+		//TIMER_EXEC.CTRLA = STEP_TIMER_ENABLE;			// trigger a LO interrupt
 	}
 }
+
+MOTATE_TIMER_INTERRUPT(EXEC_TIMER_NUM)			// exec move SW interrupt
+{
+	dummy = EXEC_STATUS_REGISTER;
+	exec_timer.stop();							// disable SW interrupt timer
+	_exec_move();
+}
+/* OLD CODE
+ISR(TIMER_EXEC_ISR_vect) {						// exec move SW interrupt
+	TIMER_EXEC.CTRLA = STEP_TIMER_DISABLE;		// disable SW interrupt timer
+	_exec_move();
+} */
 
 static void _exec_move()
 {
@@ -467,15 +487,36 @@ static void _exec_move()
 	}
 }
 
+/****************************************************************************************
+ * Load sequencing code
+ *
+ * _request_load()		- fires a software interrupt (timer) to request to load a move
+ *  LOADER INTERRUPT	- interrupt handler for above
+ * _load_move() 		- load a move into steppers, load a dwell, or process a Null move
+ */
+
 static void _request_load_move()
 {
-	if (st.timer_ticks_downcount == 0) {				// bother interrupting
-		TIMER_LOAD.PER = SWI_PERIOD;
-		TIMER_LOAD.CTRLA = STEP_TIMER_ENABLE;			// trigger a HI interrupt
-	} 	// else don't bother to interrupt. You'll just trigger an 
-		// interrupt and find out the load routine is not ready for you
+	if (st.timer_ticks_downcount == 0) {	// bother interrupting
+		load_timer.start();
+		//		TIMER_LOAD.PER = SWI_PERIOD;
+		//		TIMER_LOAD.CTRLA = STEP_TIMER_ENABLE;
+	} 	// else don't bother to interrupt. You'll just trigger an
+	// interrupt and find out the load routine is not ready for you
 }
-*/
+
+MOTATE_TIMER_INTERRUPT(LOAD_TIMER_NUM)		// load steppers SW interrupt
+{
+	dummy = LOAD_STATUS_REGISTER;
+	load_timer.stop();						// disable SW interrupt timer
+	_load_move();
+}
+/* OLD CODE
+ISR(TIMER_LOAD_ISR_vect) {					// load steppers SW interrupt
+{
+	TIMER_LOAD.CTRLA = STEP_TIMER_DISABLE;	// disable SW interrupt timer
+	_load_move();
+} */
 
 /*
  * _load_move() - Dequeue move and load into stepper struct
@@ -483,11 +524,16 @@ static void _request_load_move()
  *	This routine can only be called be called from an ISR at the same or 
  *	higher level as the DDA or dwell ISR. A software interrupt has been 
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
+ *
+ *	In aline code:
+ *	 - All axes must set steps and compensate for out-of-range pulse phasing.
+ *	 - If axis has 0 steps the direction setting can be omitted
+ *	 - If axis has 0 steps the motor must not be enabled to support power mode = 1
  */
 
 void _load_move()
 {
-//	sps.move_type = MOVE_TYPE_ALINE;
+/*++++ TEST CODE
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
 	sps.timer_ticks_X_substeps = 1000000;
@@ -496,94 +542,14 @@ void _load_move()
 	st.m[MOTOR_1].steps = 90000;
 	st.m[MOTOR_1].counter = -sps.timer_ticks;
 	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-
-/*
-	// handle aline loads first (most common case)  NB: there are no more lines, only alines
-//	if (sps.move_type == MOVE_TYPE_ALINE) {
-	if (sps.move_type == true) {
-		st.timer_ticks_downcount = sps.timer_ticks;
-		st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-		TIMER_DDA.PER = sps.timer_period;
- 
-		// This section is somewhat optimized for execution speed 
-		// All axes must set steps and compensate for out-of-range pulse phasing.
-		// If axis has 0 steps the direction setting can be omitted
-		// If axis has 0 steps enabling motors is req'd to support power mode = 1
-
-		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
-		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
-			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
-		}
-		if (st.m[MOTOR_1].steps != 0) {
-			// For ideal optimizations, only set or clear a bit at a time.
-			if (sps.m[MOTOR_1].dir == 0) {
-				PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm;// CW motion (bit cleared)
-			} else {
-				PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;	// CCW motion
-			}
-			PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;	// enable motor
-		}
-
-		st.m[MOTOR_2].steps = sps.m[MOTOR_2].steps;
-		if (sps.counter_reset_flag == true) {
-			st.m[MOTOR_2].counter = -(st.timer_ticks_downcount);
-		}
-		if (st.m[MOTOR_2].steps != 0) {
-			if (sps.m[MOTOR_2].dir == 0) {
-				PORT_MOTOR_2_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_2_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_2_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
-		}
-
-		st.m[MOTOR_3].steps = sps.m[MOTOR_3].steps;
-		if (sps.counter_reset_flag == true) {
-			st.m[MOTOR_3].counter = -(st.timer_ticks_downcount);
-		}
-		if (st.m[MOTOR_3].steps != 0) {
-			if (sps.m[MOTOR_3].dir == 0) {
-				PORT_MOTOR_3_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_3_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
-		}
-
-		st.m[MOTOR_4].steps = sps.m[MOTOR_4].steps;
-		if (sps.counter_reset_flag == true) {
-			st.m[MOTOR_4].counter = (st.timer_ticks_downcount);
-		}
-		if (st.m[MOTOR_4].steps != 0) {
-			if (sps.m[MOTOR_4].dir == 0) {
-				PORT_MOTOR_4_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_4_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
-		}
-		TIMER_DDA.CTRLA = STEP_TIMER_ENABLE;					// enable the DDA timer
-	}
 */
-}
-
-/*
-{
-	if (st.timer_ticks_downcount != 0) { return;}				  // exit if it's still busy
-	if (sps.exec_state != PREP_BUFFER_OWNED_BY_LOADER) { return;} // if there are no more moves
-
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.timer_ticks_downcount = sps.timer_ticks;
 		st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-		TIMER_DDA.PER = sps.timer_period;
+//		TIMER_DDA.PER = sps.timer_period;
  
-		// This section is somewhat optimized for execution speed 
-		// All axes must set steps and compensate for out-of-range pulse phasing.
-		// If axis has 0 steps the direction setting can be omitted
-		// If axis has 0 steps enabling motors is req'd to support power mode = 1
-
-#ifdef MOTOR_1
+/* Old motor1 code - left in for comparison
 		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
 		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
 			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
@@ -597,65 +563,85 @@ void _load_move()
 			}
 			PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;	// enable motor
 		}
-#endif
-#ifdef MOTOR_2
+*/
+		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
+		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
+			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_1].steps != 0) {
+			if (sps.m[MOTOR_1].dir == 0) {
+				motor_1.dir.clear();	// clear bit for clockwise motion 
+			} else {
+				motor_1.dir.set();		// CCW motion
+			}
+			motor_1.enable.clear();		// enable motor
+		}
+
 		st.m[MOTOR_2].steps = sps.m[MOTOR_2].steps;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_2].counter = -(st.timer_ticks_downcount);
 		}
 		if (st.m[MOTOR_2].steps != 0) {
-			if (sps.m[MOTOR_2].dir == 0) {
-				PORT_MOTOR_2_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_2_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_2_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+			if (sps.m[MOTOR_2].dir == 0) motor_2.dir.clear(); 
+			else motor_2.dir.set();
+			motor_2.enable.clear();
 		}
-#endif
-#ifdef MOTOR_3
+
 		st.m[MOTOR_3].steps = sps.m[MOTOR_3].steps;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_3].counter = -(st.timer_ticks_downcount);
 		}
 		if (st.m[MOTOR_3].steps != 0) {
-			if (sps.m[MOTOR_3].dir == 0) {
-				PORT_MOTOR_3_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_3_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+			if (sps.m[MOTOR_3].dir == 0) motor_3.dir.clear();
+			else motor_3.dir.set();
+			motor_3.enable.clear();
 		}
-#endif
-#ifdef MOTOR_4
+
 		st.m[MOTOR_4].steps = sps.m[MOTOR_4].steps;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_4].counter = (st.timer_ticks_downcount);
 		}
 		if (st.m[MOTOR_4].steps != 0) {
-			if (sps.m[MOTOR_4].dir == 0) {
-				PORT_MOTOR_4_VPORT.OUT &= ~DIRECTION_BIT_bm;
-			} else {
-				PORT_MOTOR_4_VPORT.OUT |= DIRECTION_BIT_bm;
-			}
-			PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;
+			if (sps.m[MOTOR_4].dir == 0) motor_4.dir.clear();
+			else motor_4.dir.set();
+			motor_4.enable.clear();
 		}
-#endif
-		TIMER_DDA.CTRLA = STEP_TIMER_ENABLE;					// enable the DDA timer
+
+		st.m[MOTOR_5].steps = sps.m[MOTOR_5].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_5].counter = (st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_5].steps != 0) {
+			if (sps.m[MOTOR_5].dir == 0) motor_5.dir.clear();
+			else motor_5.dir.set();
+			motor_5.enable.clear();
+		}
+
+		st.m[MOTOR_6].steps = sps.m[MOTOR_6].steps;
+		if (sps.counter_reset_flag == true) {
+			st.m[MOTOR_6].counter = (st.timer_ticks_downcount);
+		}
+		if (st.m[MOTOR_6].steps != 0) {
+			if (sps.m[MOTOR_6].dir == 0) motor_6.dir.clear();
+			else motor_6.dir.set();
+			motor_6.enable.clear();
+		}
+		dda_timer.start();
 
 	// handle dwells
 	} else if (sps.move_type == MOVE_TYPE_DWELL) {
 		st.timer_ticks_downcount = sps.timer_ticks;
-		TIMER_DWELL.PER = sps.timer_period;						// load dwell timer period
- 		TIMER_DWELL.CTRLA = STEP_TIMER_ENABLE;					// enable the dwell timer
+		dwell_timer.start();
+//		TIMER_DWELL.PER = sps.timer_period;						// load dwell timer period
+//		TIMER_DWELL.CTRLA = STEP_TIMER_ENABLE;					// enable the dwell timer
 	}
 
-	// all other cases drop to here (e.g. Null moves after Mcodes skip to here) 
+	// all other cases drop to here - such as Null moves queued by Mcodes 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;					// flip it back
 	st_request_exec_move();										// exec and prep next move
 }
-*/
 
-/*
+/****************************************************************************************
  * st_prep_line() - Prepare the next move for the loader
  *
  *	This function does the math on the next pulse segment and gets it ready for 
@@ -668,32 +654,21 @@ void _load_move()
  *	steps[] are signed relative motion in steps (can be non-integer values)
  *	Microseconds - how many microseconds the segment should run 
  */
-/*
+
 uint8_t st_prep_line(float steps[], float microseconds)
 {
 	uint8_t i;
-	float f_dda = F_DDA;		// starting point for adjustment
+	float f_dda = FREQUENCY_DDA;		// starting point for adjustment
 	float dda_substeps = DDA_SUBSTEPS;
-	float major_axis_steps = 0;
+//	float major_axis_steps = 0;
 
 	// *** defensive programming ***
-	// trap conditions that would prevent queueing the line
+	// trap conditions that would prevent queuing the line
 	if (sps.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
 	} else if (isfinite(microseconds) == false) { return (STAT_ZERO_LENGTH_MOVE);
 	} else if (microseconds < EPSILON) { return (STAT_ZERO_LENGTH_MOVE);
 	}
 	sps.counter_reset_flag = false;		// initialize counter reset flag for this move.
-
-// *** DEPRECATED CODE BLOCK ***
-	// This code is left here in case integer overclocking is re-enabled
-	// This code does not get compiled (under -0s) if DDA_OVERCLOCK = 0
-	for (i=0; i<MOTORS; i++) {
-		if (major_axis_steps < fabs(steps[i])) { 
-			major_axis_steps = fabs(steps[i]); 
-		}
-	}
-	_set_f_dda(&f_dda, &dda_substeps, major_axis_steps, microseconds);
-// *** ...TO HERE ***
 
 	// setup motor parameters
 	for (i=0; i<MOTORS; i++) {
@@ -714,8 +689,7 @@ uint8_t st_prep_line(float steps[], float microseconds)
 }
 // FOOTNOTE: This expression was previously computed as below but floating 
 // point rounding errors caused subtle and nasty accumulated position errors:
-//	sp.timer_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
-*/
+// sp.timer_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
 
 /* 
  * st_prep_null() - Keeps the loader happy. Otherwise performs no action
@@ -734,12 +708,18 @@ void st_prep_null()
 void st_prep_dwell(float microseconds)
 {
 	sps.move_type = MOVE_TYPE_DWELL;
-	sps.timer_period = _f_to_period(F_DWELL);
-	sps.timer_ticks = (uint32_t)((microseconds/1000000) * F_DWELL);
+	sps.timer_period = _f_to_period(FREQUENCY_DWELL);
+	sps.timer_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
 }
 
-/*
- * st_isbusy() - return TRUE if motors are running or a dwell is running
+/****************************************************************************************
+ * UTILITIES
+ * st_isbusy()			- return TRUE if motors are running or a dwell is running
+ * st_set_polarity()	- setter needed by the config system
+ * st_set_microsteps()	- set microsteps in hardware
+ *
+ *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
+ *	This may change if microstep morphing is implemented.
  */
 uint8_t st_isbusy()
 {
@@ -749,20 +729,11 @@ uint8_t st_isbusy()
 	return (true);
 }
 
-/* 
- * st_set_polarity() - setter needed by the config system
- */
 void st_set_polarity(const uint8_t motor, const uint8_t polarity)
 {
 	st.m[motor].polarity = polarity;
 }
 
-/* 
- * st_set_microsteps() - set microsteps in hardware
- *
- *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
- *	This may change if microstep morphing is implemented.
- */
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
 /*

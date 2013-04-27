@@ -74,11 +74,11 @@ uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
 void st_set_polarity(const uint8_t motor, const uint8_t polarity);
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
 
-//uint8_t st_test_prep_state(void);
-//void st_request_exec_move(void);
 void st_prep_null(void);
 void st_prep_dwell(float microseconds);
-//uint8_t st_prep_line(float steps[], float microseconds);
+uint8_t st_test_prep_state(void);
+void st_request_exec_move(void);
+uint8_t st_prep_line(float steps[], float microseconds);
 
 magic_t st_get_st_magic(void);
 magic_t st_get_sps_magic(void);
@@ -93,22 +93,24 @@ magic_t st_get_sps_magic(void);
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
 #define FREQUENCY_DDA	50000UL
-#define TC_RC_DDA		(VARIANT_MCK / FREQUENCY_DDA / 2) // <--- divided by MCK divisor
-#define TC_CMR_DDA		(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
-#define TC_IER_DDA		TC_IER_CPCS		// Interrupt enable value - RC compare
+//#define TC_RC_DDA		(VARIANT_MCK / FREQUENCY_DDA / 2) // <--- divided by MCK divisor
+//#define TC_CMR_DDA		(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
+//#define TC_IER_DDA		TC_IER_CPCS		// Interrupt enable value - RC compare
 
-#define TC_CMR_DWELL	(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
-#define TC_IER_DWELL	TC_IER_CPCS		// Interrupt enable value - RC compare
+//#define TC_CMR_DWELL	(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
+//#define TC_IER_DWELL	TC_IER_CPCS		// Interrupt enable value - RC compare
 
 #define FREQUENCY_DWELL	1000UL
-#define FREQUENCY_DWELL	1000UL
+//#define FREQUENCY_DWELL	1000UL
+
+#define FREQUENCY_SGI 200000UL // 200,000 Hz means software interrupts will fire 5 uSec after being called
 
 //#define TC_CHANNEL_DDA 
-#define F_DDA 		(float)10000	// DDA frequency in hz.
+//#define F_DDA 			(float)10000	// DDA frequency in hz.
 //#define F_DDA 		(float)50000	// DDA frequency in hz.
-#define F_DWELL		(float)10000	// Dwell count frequency in hz.
-#define SWI_PERIOD		100			// cycles you have to shut off SW interrupt
-#define TIMER_PERIOD_MIN (20)		// used to trap bad timer loads
+//#define F_DWELL		(float)10000	// Dwell count frequency in hz.
+//#define SWI_PERIOD		100			// cycles you have to shut off SW interrupt
+//#define TIMER_PERIOD_MIN (20)		// used to trap bad timer loads
 
 /* DDA substepping
  * 	DDA_SUBSTEPS sets the amount of fractional precision for substepping.
@@ -117,30 +119,7 @@ magic_t st_get_sps_magic(void);
  *
  *	Set to 1 to disable, but don't do this or you will lose a lot of accuracy.
  */
-//#define DDA_SUBSTEPS 1000000		// 100,000 accumulates substeps to 6 decimal places
 #define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
-
-/* DDA overclocking
- * 	Overclocking multiplies the step rate of the fastest axis (major axis) 
- *	by an integer value up to the DDA_OVERCLOCK value. This makes the 
- *	interpolation of the non-major axes more accurate than simply setting
- *	the DDA to the speed of the major axis; and allows the DDA to run at 
- *	less than the max frequency when possible.
- *
- *	Set to 0 to disable.
- *
- *	NOTE: TinyG doesn't use tunable overclocking any more. It just overclocks
- *	at the fastest sustainable step rate which is about 50 Khz for the xmega.
- *	This minimizes the aliasing on minor axes at minimal impact to the major 
- *	axis. The DDA overclock setting and associated code are left in for historical
- *	purposes and in case we ever want to go back to pure overclocking.
- *
- *	Setting this value to 0 has the effect of telling the optimizer to take out
- *	entire code regions that are not called if this value is zero. So they are 
- *	left in for historical purposes and not commented out. These regions are noted.
- */
-//#define DDA_OVERCLOCK 16		// doesn't have to be a binary multiple
-#define DDA_OVERCLOCK 0			// Permanently disabled. See above NOTE
 
 /* Counter resets
  * 	You want to reset the DDA counters if the new ticks value is way less 
@@ -156,7 +135,7 @@ magic_t st_get_sps_magic(void);
  *	clock. Anything lower will overflow the 16 bit PERIOD register.
  */
 //#define F_DDA_MIN (float)489	// hz
-#define F_DDA_MIN (float)500	// hz - is 489 Hz with some margin
+//#define F_DDA_MIN (float)500	// hz - is 489 Hz with some margin
 
 // Timer setups
 /*

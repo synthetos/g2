@@ -43,9 +43,9 @@ static void _exec_spindle_control(uint8_t spindle_mode, float f);
 static void _exec_spindle_speed(uint8_t i, float speed);
 
 /* 
- * sp_init()
+ * spindle_init()
  */
-void sp_init()
+void spindle_init()
 {
     if( cfg.p.frequency < 0 )
         cfg.p.frequency = 0;

@@ -62,15 +62,31 @@ void hardware_get_id(char_t *id);
  * from later code (using the motate .isNull() test).
  */
 
-/* Timer assignments */
+/* Interrupt usage and priority
+ *
+ * The following interrupts are defined w/indicated priorities
+ *
+ *	 0	DDA_TIMER (3) for step pulse generation
+ *	 1	DWELL_TIMER (4) for dwell timing
+ *	 2	LOADER software generated interrupt (STIR / SGI)
+ *	 3	Serial read character interrupt
+ *	 4	EXEC software generated interrupt (STIR / SGI)
+ *	 5	Serial write character interrupt  
+ */
+
+/* Timer assignments. See stepper.h and other headers for setup */
 
 #define DDA_TIMER_NUM 3					// stepper pulse generation in stepper.cpp
-#define DDA_TIMER_INTERRUPT MOTATE_TIMER_INTERRUPT(3)
 #define DDA_STATUS_REGISTER REG_TC1_SR0	// status register needed for clearing interrupts
 
 #define DWELL_TIMER_NUM 4				// dwell timing in stepper.cpp
-#define DWELL_TIMER_INTERRUPT MOTATE_TIMER_INTERRUPT(4)
 #define DWELL_STATUS_REGISTER REG_TC1_SR1
+
+#define LOAD_TIMER_NUM 5				// request load timer in stepper.cpp
+#define LOAD_STATUS_REGISTER REG_TC1_SR2
+
+#define EXEC_TIMER_NUM 6				// request exec timer in stepper.cpp
+#define EXEC_STATUS_REGISTER REG_TC2_SR0
 
 /* Pin assignments */
 
