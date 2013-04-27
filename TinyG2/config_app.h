@@ -193,7 +193,7 @@ typedef struct cfgParameters {
 	uint8_t distance_mode;			// G90,G91 reset default
 
 	// communications settings
-	uint8_t comm_mode;				// TG_TEXT_MODE or TG_JSON_MODE
+	uint8_t comm_mode;				// STAT_TEXT_MODE or STAT_JSON_MODE
 	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
 	uint8_t enable_cr;				// enable CR in CRFL expansion on TX
 	uint8_t enable_echo;			// enable text-mode echo

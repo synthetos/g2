@@ -35,7 +35,7 @@ extern "C"{
 #endif
 */
 void sys_init(void);					// master hardware init
-//void sys_port_bindings(double hw_version);
+//void sys_port_bindings(float hw_version);
 //void sys_get_id(char *id);
 
 #define SYS_ID_LEN 12					// length of system ID string from sys_get_id()

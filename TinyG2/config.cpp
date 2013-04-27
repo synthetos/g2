@@ -136,7 +136,7 @@ static stat_t set_defa(cmdObj_t *cmd)
  *  get_ui8() - get value as 8 bit uint8_t w/o unit conversion
  *  get_int() - get value as 32 bit integer w/o unit conversion
  *  get_flt() - get value as float w/o unit conversion
- *  get_flu() - get value as double w/unit conversion
+ *  get_flu() - get value as float w/unit conversion
  *	get_format() - internal accessor for printf() format string
  */
 stat_t get_nul(cmdObj_t *cmd) 

@@ -43,7 +43,7 @@ extern "C"{
  * Global Scope Functions
  */
 
-uint8_t ik_kinematics(double travel[], double steps[], double microseconds);
+uint8_t ik_kinematics(float travel[], float steps[], float microseconds);
 
 //#ifdef __UNIT_TESTS
 //void ik_unit_tests(void);

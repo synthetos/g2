@@ -357,7 +357,7 @@
     <Compile Include="arduino\WInterrupts.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\wiring.c.UNUSED">
+    <Compile Include="arduino\wiring.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\wiring.h">

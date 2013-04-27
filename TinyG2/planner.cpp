@@ -51,20 +51,20 @@
  *	Lower-level models should never use data from upper-level models as the data 
  *	may have changed and lead to unpredictable results.
  */
-
+/*
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>				// for memset
 #include <stdio.h>				// precursor for xio.h
 #include <avr/pgmspace.h>		// precursor for xio.h
-
-#include "tinyg.h"
+*/
+#include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "plan_line.h"
 #include "planner.h"
-#include "spindle.h"
+//#include "spindle.h"
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
@@ -80,7 +80,7 @@ extern "C"{
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed time		// local alias for spindle_speed to the time variable
 #define int_val move_code		// local alias for uint8_t to the move_code
-#define dbl_val time			// local alias for double to the time variable
+#define dbl_val time			// local alias for float to the time variable
 
 // execution routines (NB: These are all called from the LO interrupt)
 static uint8_t _exec_dwell(mpBuf_t *bf);
@@ -142,24 +142,24 @@ void mp_flush_planner()
  *	the motors will still be processing the action and the real tool 
  *	position is still close to the starting point.
  */
-double *mp_get_plan_position(double position[])
+float *mp_get_plan_position(float position[])
 {
 	copy_axis_vector(position, mm.position);	
 	return (position);
 }
 
-void mp_set_plan_position(const double position[])
+void mp_set_plan_position(const float position[])
 {
 	copy_axis_vector(mm.position, position);
 }
 
-void mp_set_axes_position(const double position[])
+void mp_set_axes_position(const float position[])
 {
 	copy_axis_vector(mm.position, position);
 	copy_axis_vector(mr.position, position);
 }
 
-void mp_set_axis_position(uint8_t axis, const double position)
+void mp_set_axis_position(uint8_t axis, const float position)
 {
 	mm.position[axis] = position;
 	mr.position[axis] = position;
@@ -176,7 +176,7 @@ uint8_t mp_exec_move()
 {
 	mpBuf_t *bf;
 
-	if ((bf = mp_get_run_buffer()) == NULL) return (TG_NOOP);	// NULL means nothing's running
+	if ((bf = mp_get_run_buffer()) == NULL) return (STAT_NOOP);	// NULL means nothing's running
 
 	// Manage cycle and motion state transitions
 	// cycle auto-start for lines only. Add other move types as appropriate.
@@ -191,7 +191,7 @@ uint8_t mp_exec_move()
 	if (bf->bf_func != NULL) {
 		return (bf->bf_func(bf));
 	}
-	return (TG_INTERNAL_ERROR);		// never supposed to get here
+	return (STAT_INTERNAL_ERROR);		// never supposed to get here
 }
 
 /************************************************************************************
@@ -211,7 +211,7 @@ uint8_t mp_exec_move()
  *	and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(uint8_t, double), uint8_t int_val, double float_val)
+void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float float_val)
 {
 	mpBuf_t *bf;
 
@@ -230,9 +230,9 @@ void mp_queue_command(void(*cm_exec)(uint8_t, double), uint8_t int_val, double f
 static uint8_t _exec_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->int_val, bf->dbl_val);
-	st_prep_null();			// Must call a null prep to keep the loader happy. 
+//+++++	st_prep_null();			// Must call a null prep to keep the loader happy. 
 	mp_free_run_buffer();
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 /*************************************************************************
@@ -244,24 +244,24 @@ static uint8_t _exec_command(mpBuf_t *bf)
  * timer than the stepper pulse timer.
  */
 
-uint8_t mp_dwell(double seconds) 
+uint8_t mp_dwell(float seconds) 
 {
 	mpBuf_t *bf; 
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
-		return (TG_BUFFER_FULL_FATAL);		  	// (not supposed to fail)
+		return (STAT_BUFFER_FULL_FATAL);		  	// (not supposed to fail)
 	}
 	bf->bf_func = _exec_dwell;					// register the callback to the exec function
 	bf->time = seconds;						  	// in seconds, not minutes
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 static uint8_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
+//+++++	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
 	mp_free_run_buffer();
-	return (TG_OK);
+	return (STAT_OK);
 }
 
 /**** PLANNER BUFFERS *****************************************************
@@ -366,7 +366,7 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->move_state = MOVE_STATE_NEW;
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
-	st_request_exec_move();						// request a move exec if not busy
+//+++++	st_request_exec_move();						// request a move exec if not busy
 }
 
 mpBuf_t * mp_get_run_buffer() 

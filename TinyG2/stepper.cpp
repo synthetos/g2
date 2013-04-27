@@ -661,19 +661,19 @@ void _load_move()
  *	the loader. It deals with all the DDA optimizations and timer setups so that
  *	loading can be performed as rapidly as possible. It works in joint space 
  *	(motors) and it works in steps, not length units. All args are provided as 
- *	doubles and converted to their appropriate integer types for the loader. 
+ *	floats and converted to their appropriate integer types for the loader. 
  *
  * Args:
  *	steps[] are signed relative motion in steps (can be non-integer values)
  *	Microseconds - how many microseconds the segment should run 
  */
 /*
-uint8_t st_prep_line(double steps[], double microseconds)
+uint8_t st_prep_line(float steps[], float microseconds)
 {
 	uint8_t i;
-	double f_dda = F_DDA;		// starting point for adjustment
-	double dda_substeps = DDA_SUBSTEPS;
-	double major_axis_steps = 0;
+	float f_dda = F_DDA;		// starting point for adjustment
+	float dda_substeps = DDA_SUBSTEPS;
+	float major_axis_steps = 0;
 
 	// *** defensive programming ***
 	// trap conditions that would prevent queueing the line
@@ -734,7 +734,7 @@ void st_prep_null()
  */
 
 /*
-void st_prep_dwell(double microseconds)
+void st_prep_dwell(float microseconds)
 {
 	sps.move_type = MOVE_TYPE_DWELL;
 	sps.timer_period = _f_to_period(F_DWELL);
@@ -745,7 +745,6 @@ void st_prep_dwell(double microseconds)
 /*
  * st_isbusy() - return TRUE if motors are running or a dwell is running
  */
-/*
 inline uint8_t st_isbusy()
 {
 	if (st.timer_ticks_downcount == 0) {
@@ -753,7 +752,6 @@ inline uint8_t st_isbusy()
 	} 
 	return (true);
 }
-*/
 
 /* 
  * st_set_polarity() - setter needed by the config system
