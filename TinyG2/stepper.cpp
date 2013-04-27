@@ -152,6 +152,7 @@
 
 #include "tinyg2.h"
 #include "hardware.h"
+#include "planner.h"
 #include "stepper.h"
 //#include "motatePins.h"		// defined in hardware.h   Not needed here
 #include "motateTimers.h"		// defined in hardware.h   Not needed here
@@ -403,10 +404,10 @@ DDA_TIMER_INTERRUPT
 /*
  * st_disable() - stop the steppers. Requires re-init to recover
  */
-
 void st_disable()
 {
 //++++	TC_Stop(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+	return;
 }
 
 
@@ -721,31 +722,26 @@ uint8_t st_prep_line(float steps[], float microseconds)
  *
  *	Used by M codes, tool and spindle changes
  */
-
-/*
 void st_prep_null()
 {
 	sps.move_type = MOVE_TYPE_NULL;
 }
-*/
 
 /* 
  * st_prep_dwell() 	 - Add a dwell to the move buffer
  */
 
-/*
 void st_prep_dwell(float microseconds)
 {
 	sps.move_type = MOVE_TYPE_DWELL;
 	sps.timer_period = _f_to_period(F_DWELL);
 	sps.timer_ticks = (uint32_t)((microseconds/1000000) * F_DWELL);
 }
-*/
 
 /*
  * st_isbusy() - return TRUE if motors are running or a dwell is running
  */
-inline uint8_t st_isbusy()
+uint8_t st_isbusy()
 {
 	if (st.timer_ticks_downcount == 0) {
 		return (false);
@@ -756,21 +752,20 @@ inline uint8_t st_isbusy()
 /* 
  * st_set_polarity() - setter needed by the config system
  */
-/*
 void st_set_polarity(const uint8_t motor, const uint8_t polarity)
 {
 	st.m[motor].polarity = polarity;
 }
-*/
+
 /* 
  * st_set_microsteps() - set microsteps in hardware
  *
  *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
  *	This may change if microstep morphing is implemented.
  */
-/*
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
+/*
 	if (microstep_mode == 8) {
 		device.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
 		device.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
@@ -784,5 +779,5 @@ void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
 		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
 	}
-}
 */
+}

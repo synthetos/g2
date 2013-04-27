@@ -231,16 +231,16 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 } mpMoveRuntimeSingleton_t;
 
 
-// Allocate global scope structs
-mpBufferPool_t mb;				// move buffer queue
-mpMoveMasterSingleton_t mm;		// context for line planning
-mpMoveRuntimeSingleton_t mr;	// context for line runtime
+// Reference global scope structs
+extern mpBufferPool_t mb;				// move buffer queue
+extern mpMoveMasterSingleton_t mm;		// context for line planning
+extern mpMoveRuntimeSingleton_t mr;	// context for line runtime
 
 /*
  * Global Scope Functions
  */
 
-void mp_init(void);
+void planner_init(void);
 void mp_init_buffers(void);
 
 void mp_flush_planner(void);

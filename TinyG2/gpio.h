@@ -98,15 +98,15 @@ enum swState {						// state machine for managing debouncing and lockout
 	SW_LOCKOUT
 };
 
-struct swStruct {							// switch state
+typedef struct swStruct {							// switch state
 	uint8_t switch_type;					// 0=NO, 1=NC - applies to all switches
 	uint8_t limit_flag;						// 1=limit switch thrown - do a lockout
 	uint8_t sw_num_thrown;					// number of switch that was just thrown
 	volatile uint8_t mode[NUM_SWITCHES];	// 0=disabled, 1=homing, 2=homing+limit, 3=limit
 	volatile uint8_t state[NUM_SWITCHES];	// see switch processing functions for explanation
 	volatile int8_t count[NUM_SWITCHES];	// deglitching and lockout counter
-};
-struct swStruct sw;
+} switches_t;
+extern switches_t sw;
 
 // Note 1: The term "thrown" is used because switches could be normally-open 
 //		   or normally-closed. "Thrown" means activated or hit.

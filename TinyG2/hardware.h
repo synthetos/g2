@@ -29,14 +29,13 @@
 #define HARDWARE_H_ONCE
 
 #include "motatePins.h"					// motateTimers.h are in files that use timers
-/*
+
 #ifdef __cplusplus
 extern "C"{
 #endif
-*/
-void sys_init(void);					// master hardware init
-//void sys_port_bindings(float hw_version);
-//void sys_get_id(char *id);
+
+void hardware_init(void);				// master hardware init
+void hardware_get_id(char_t *id);
 
 #define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
 
@@ -346,9 +345,9 @@ typedef struct deviceSingleton {
 } deviceSingleton_t;
 deviceSingleton_t device;
 */
-/*
+
 #ifdef __cplusplus
 }
 #endif
-*/
+
 #endif	// end of include guard: HARDWARE_H_ONCE

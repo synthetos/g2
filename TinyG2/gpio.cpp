@@ -62,6 +62,9 @@
 #include "canonical_machine.h"
 */
 
+// Allocate switch structure
+switches_t sw;
+
 /*
  * variables and settings 
  */

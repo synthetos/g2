@@ -76,14 +76,14 @@
 #include "util.h"
 #include "config.h"
 #include "canonical_machine.h"
-
-//#include "hardware.h"
-/*
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
-#include "spindle.h"
 #include "report.h"
+
+//#include "hardware.h"
+/*
+#include "spindle.h"
 #include "gpio.h"
 */
 #ifdef __cplusplus
@@ -168,8 +168,7 @@ uint8_t cm_get_distance_mode() { return gm.distance_mode;}
 uint8_t cm_get_inverse_feed_rate_mode() { return gm.inverse_feed_rate_mode;}
 uint8_t cm_get_spindle_mode() { return gm.spindle_mode;} 
 uint32_t cm_get_model_linenum() { return gm.linenum;}
-//+++++ uint8_t cm_isbusy() { return (mp_isbusy());}
-uint8_t cm_isbusy() { return (true);}
+uint8_t cm_isbusy() { return (mp_isbusy());}
 
 // set parameters in gm struct
 void cm_set_motion_mode(uint8_t motion_mode) {gm.motion_mode = motion_mode;} 
@@ -204,7 +203,6 @@ float cm_get_coord_offset(uint8_t axis)
 		return (cfg.offset[gm.coord_system][axis] + gm.origin_offset[axis]); // includes G5x and G92 components
 	}
 	return (cfg.offset[gm.coord_system][axis]);		// just the g5x coordinate system components
-	return (0);	//++++++++++++++
 }
 
 float *cm_get_coord_offset_vector(float vector[])
@@ -259,18 +257,15 @@ float cm_get_runtime_machine_position(uint8_t axis)
 float cm_get_runtime_work_position(uint8_t axis) 
 {
 	if (gm.units_mode == INCHES) {
-//+++++		return (mp_get_runtime_work_position(axis) / MM_PER_INCH);
+		return (mp_get_runtime_work_position(axis) / MM_PER_INCH);
 	} else {
-//+++++		return (mp_get_runtime_work_position(axis));
+		return (mp_get_runtime_work_position(axis));
 	}
-	return (0);	//+++++++++++++++++++
 }
 
 float cm_get_runtime_work_offset(uint8_t axis) 
 {
-//	return (mp_get_runtime_work_offset(axis));
-//	return (STAT_STUBBED);
-	return (0);		// ++++
+	return (mp_get_runtime_work_offset(axis));
 }
 
 /*
@@ -536,15 +531,15 @@ static float _get_move_times(float *min_time)
 /* 
  * Initialization and Termination (4.3.2)
  *
- * cm_init() 
- * cm_shutdown() 
+ * canonical_machine_init() 
+ * canonical_machine_ahutdown() 
  * cm_flush_planner()
  *
  *	Config init cfg_init() must have been run beforehand. Many parameters 
  *	used by the canonical machine are actually set during cfg_init().
  */
 
-void cm_init()
+void canonical_machine_init()
 {
 // You can assume all memory has been zeroed by a hard reset. If not, use this code:
 //	memset(&cm, 0, sizeof(cm));		// reset canonicalMachineSingleton
@@ -574,13 +569,13 @@ void cm_init()
 }
 
 /*
- * cm_shutdown() - shut down machine
+ * canonical_machine_shutdown() - shut down machine
  */
 
-void cm_shutdown(uint8_t value)
+void canonical_machine_shutdown(uint8_t value)
 {
 	// stop the steppers and the spindle
-//++++++	st_disable();
+	st_disable();
 	cm_spindle_control(SPINDLE_OFF);
 
 	// disable all MCode functions
@@ -590,7 +585,7 @@ void cm_shutdown(uint8_t value)
 //	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
 //	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
 
-//+++++	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
+	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
 }
 
@@ -599,11 +594,11 @@ void cm_shutdown(uint8_t value)
  */
 uint8_t cm_flush_planner()
 {
-//+++++	mp_flush_planner();
+	mp_flush_planner();
 
 	for (uint8_t i=0; i<AXES; i++) {
-//+++++		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
-//+++++		gm.position[i] = mp_get_runtime_machine_position(i);
+		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
+		gm.position[i] = mp_get_runtime_machine_position(i);
 		gm.target[i] = gm.position[i];
 	}
 	return (STAT_OK);
@@ -631,7 +626,7 @@ stat_t cm_set_machine_axis_position(uint8_t axis, const float position)
 {
 	gm.position[axis] = position;
 	gm.target[axis] = position;
-//+++++	mp_set_axis_position(axis, position);
+	mp_set_axis_position(axis, position);
 	return (STAT_OK);
 }
 
@@ -681,7 +676,7 @@ stat_t cm_set_distance_mode(uint8_t mode)
 stat_t cm_set_coord_system(uint8_t coord_system)
 {
 	gm.coord_system = coord_system;	
-//+++++	mp_queue_command(_exec_offset, coord_system,0);
+	mp_queue_command(_exec_offset, coord_system,0);
 	return (STAT_OK);
 }
 static void _exec_offset(uint8_t coord_system, float float_val)
@@ -690,7 +685,7 @@ static void _exec_offset(uint8_t coord_system, float float_val)
 	for (uint8_t i=0; i<AXES; i++) {
 		offsets[i] = cfg.offset[coord_system][i] + (gm.origin_offset[i] * gm.origin_offset_enable);
 	}
-//+++++	mp_set_runtime_work_offset(offsets);
+	mp_set_runtime_work_offset(offsets);
 }
 
 /*
@@ -750,7 +745,7 @@ stat_t cm_set_origin_offsets(float offset[], float flag[])
 			gm.origin_offset[i] = gm.position[i] - cfg.offset[gm.coord_system][i] - _to_millimeters(offset[i]);
 		}
 	}
-//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
+	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
@@ -759,21 +754,21 @@ stat_t cm_reset_origin_offsets()
 	gm.origin_offset_enable = 0;
 	for (uint8_t i=0; i<AXES; i++) 
 		gm.origin_offset[i] = 0;
-//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
+	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
 stat_t cm_suspend_origin_offsets()
 {
 	gm.origin_offset_enable = 0;
-//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
+	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
 stat_t cm_resume_origin_offsets()
 {
 	gm.origin_offset_enable = 1;
-//+++++	mp_queue_command(_exec_offset, gm.coord_system,0);
+	mp_queue_command(_exec_offset, gm.coord_system,0);
 	return (STAT_OK);
 }
 
@@ -788,11 +783,10 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_target(target,flags);
 	cm_cycle_start();							// required for homing & other cycles
-	stat_t status=0;
-//+++++	stat_t status = MP_LINE(gm.target, 
-//							_get_move_times(&gm.min_time), 
-//							cm_get_coord_offset_vector(gm.work_offset), 
-//							gm.min_time);
+	stat_t status = MP_LINE(gm.target, 
+							_get_move_times(&gm.min_time), 
+							cm_get_coord_offset_vector(gm.work_offset), 
+							gm.min_time);
 	cm_set_gcode_model_endpoint_position(status);
 	return (status);
 }
@@ -814,7 +808,7 @@ stat_t cm_goto_g28_position(float target[], float flags[])
 {
 	cm_set_absolute_override(true);
 	cm_straight_traverse(target, flags);
-//+++++	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
+	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(gm.g28_position, f));
 }
@@ -829,7 +823,7 @@ stat_t cm_goto_g30_position(float target[], float flags[])
 {
 	cm_set_absolute_override(true);
 	cm_straight_traverse(target, flags);
-//+++++	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
+	while (mp_get_planner_buffers_available() == 0); 	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(gm.g30_position, f));
 }
@@ -864,7 +858,7 @@ stat_t cm_set_feed_rate(float feed_rate)
  *	FALSE = units per minute feed rate in effect
  */
 
-inline stat_t cm_set_inverse_feed_rate_mode(uint8_t mode)
+stat_t cm_set_inverse_feed_rate_mode(uint8_t mode)
 {
 	gm.inverse_feed_rate_mode = mode;
 	return (STAT_OK);
@@ -913,11 +907,10 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 	cm_set_target(target, flags);
 	cm_cycle_start();						// required for homing & other cycles
-	stat_t status=0;
-//+++++	stat_t status = MP_LINE(gm.target, 
-//							 _get_move_times(&gm.min_time), 
-//							 cm_get_coord_offset_vector(gm.work_offset), 
-//							 gm.min_time);
+	stat_t status = MP_LINE(gm.target, 
+							 _get_move_times(&gm.min_time), 
+							 cm_get_coord_offset_vector(gm.work_offset), 
+							 gm.min_time);
 
 	cm_set_gcode_model_endpoint_position(status);
 	return (status);
@@ -939,7 +932,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 stat_t cm_change_tool(uint8_t tool)
 {
-//+++++	mp_queue_command(_exec_change_tool, tool, 0);
+	mp_queue_command(_exec_change_tool, tool, 0);
 	return (STAT_OK);
 }
 static void _exec_change_tool(uint8_t tool, float float_val)
@@ -949,7 +942,7 @@ static void _exec_change_tool(uint8_t tool, float float_val)
 
 stat_t cm_select_tool(uint8_t tool)
 {
-//+++++	mp_queue_command(_exec_select_tool, tool, 0);
+	mp_queue_command(_exec_select_tool, tool, 0);
 	return (STAT_OK);
 }
 static void _exec_select_tool(uint8_t tool, float float_val)
@@ -966,13 +959,13 @@ static void _exec_select_tool(uint8_t tool, float float_val)
 
 stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 {
-//+++++	mp_queue_command(_exec_mist_coolant_control, mist_coolant,0);
+	mp_queue_command(_exec_mist_coolant_control, mist_coolant,0);
 	return (STAT_OK);
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 {
-//+++++	mp_queue_command(_exec_flood_coolant_control, flood_coolant,0);
+	mp_queue_command(_exec_flood_coolant_control, flood_coolant,0);
 	return (STAT_OK);
 }
 
@@ -1135,18 +1128,18 @@ void cm_feedhold()
 
 void cm_program_stop() 
 { 
-//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_optional_program_stop()	
 { 
-//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_program_end()				// M2, M30
 {
 //	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
-//+++++	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_END,0);
+	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_END,0);
 }
 
 static void _exec_program_finalize(uint8_t machine_state, float f)
@@ -1154,11 +1147,11 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	cm.machine_state = machine_state;
 	cm.cycle_state = CYCLE_OFF;
 	cm.motion_state = MOTION_STOP;
-	cm.hold_state = FEEDHOLD_OFF;			//...and any feedhold is ended
+	cm.hold_state = FEEDHOLD_OFF;					//...and any feedhold is ended
 	cm.cycle_start_flag = false;
-//+++++	mp_zero_segment_velocity();				// for reporting purposes
-//+++++	rpt_request_status_report();			// request final status report (not unfiltered)
-//+++++	cmd_persist_offsets(cm.g10_persist_flag); // persist offsets if any changes made
+	mp_zero_segment_velocity();						// for reporting purposes
+	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request final status report (not unfiltered)
+//+++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made
 }
 
 #ifdef __cplusplus

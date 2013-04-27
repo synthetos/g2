@@ -65,7 +65,7 @@ typedef struct arArcSingleton {			// persistent planner and runtime variables
 	float center_2;			// center of circle at axis 2 (typ Y)
 	float magic_end;
 } arc_t;
-arc_t ar;
+//extern arc_t ar;
 
 // function prototypes
 stat_t ar_arc(	const float target[],

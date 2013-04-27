@@ -74,6 +74,11 @@
 extern "C"{
 #endif
 
+// Allocate planner structures
+mpBufferPool_t mb;				// move buffer queue
+mpMoveMasterSingleton_t mm;		// context for line planning
+mpMoveRuntimeSingleton_t mr;	// context for line runtime
+
 /*
  * Local Scope Data and Functions
  */
@@ -92,10 +97,10 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 #endif
 
 /* 
- * mp_init()
+ * planner_init()
  */
 
-void mp_init()
+void planner_init()
 {
 // You can assume all memory has been zeroed by a hard reset. If not, use this code:
 //	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
@@ -103,8 +108,8 @@ void mp_init()
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-	ar.magic_start = MAGICNUM;
-	ar.magic_end = MAGICNUM;
+//+++++	ar.magic_start = MAGICNUM;
+//+++++	ar.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 
@@ -121,7 +126,7 @@ void mp_flush_planner()
 	ar_abort_arc();
 	mp_init_buffers();
 	cm.motion_state = MOTION_STOP;
-//	copy_axis_vector(mm.position, mr.position);
+//	copy_axis_vector(mm.position, mr.position);		//++++ Is this right?
 }
 
 /*

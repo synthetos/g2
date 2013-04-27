@@ -18,26 +18,24 @@
     <ToolchainFlavour>Yagarto</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue>
-    </OverrideVtorValue>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>
-    </avrtoolinterface>
+    <avrtoolinterface>JTAG</avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028014099</ToolNumber>
+      <ToolNumber>000028011884</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1337</port>
+        <port>3694</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>250000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -718,6 +716,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_zen7x12.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="spindle.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="spindle.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="stepper.cpp">

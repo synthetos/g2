@@ -69,22 +69,22 @@
 
 void stepper_init(void);			// initialize stepper subsystem
 
-//void st_disable(void);		// stop the steppers (step the stoppers)
-uint8_t st_isbusy(void);	// return TRUE is any axis is running (F=idle)
-//void st_set_polarity(const uint8_t motor, const uint8_t polarity);
-//void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
+void st_disable(void);				// stop the steppers (step the stoppers)
+uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
+void st_set_polarity(const uint8_t motor, const uint8_t polarity);
+void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
 
 //uint8_t st_test_prep_state(void);
 //void st_request_exec_move(void);
-//void st_prep_null(void);
-//void st_prep_dwell(float microseconds);
+void st_prep_null(void);
+void st_prep_dwell(float microseconds);
 //uint8_t st_prep_line(float steps[], float microseconds);
 
 magic_t st_get_st_magic(void);
 magic_t st_get_sps_magic(void);
 
 // handy macro
-//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
+#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
 
 /*
  * Stepper configs and constants

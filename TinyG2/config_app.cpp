@@ -28,17 +28,19 @@
 #include "config.h"
 #include "controller.h"
 #include "canonical_machine.h"
+#include "gcode_parser.h"
 #include "settings.h"
+#include "planner.h"
+#include "stepper.h"
+#include "report.h"
 #include "gpio.h"
 #include "util.h"
+#include "help.h"
 #include "xio.h"
 
 /*
 #include "gcode_parser.h"
-#include "planner.h"
-#include "stepper.h"
 #include "test.h"
-#include "help.h"
 #include "network.h"
 */
 
@@ -429,8 +431,8 @@ const cfgItem_t cfgArray[] = {
 //	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },// prints test help screen
 //	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defa,(float *)&cs.null,0},// prints defaults help screen
 //	{ "", "boot",_f00, 0, fmt_nul, print_nul, print_boot_loader_help,run_boot,(float *)&cs.null,0 },
-//	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
-//	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
+	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
+	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
 
 	// Motor parameters
 	{ "1","1ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_1].motor_map,	M1_MOTOR_MAP },
@@ -620,7 +622,7 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
 //	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, cmdset_jv,(float *)&cfg.json_verbosity,		JSON_VERBOSITY },
 	{ "sys","tv",  _f07, 0, fmt_tv, print_ui8, get_ui8, set_01,  (float *)&cfg.text_verbosity,		TEXT_VERBOSITY },
-//	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
+	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
 	{ "sys","sv",  _f07, 0, fmt_sv, print_ui8, get_ui8, set_012, (float *)&cfg.status_report_verbosity,SR_VERBOSITY },
 	{ "sys","si",  _f07, 0, fmt_si, print_flt, get_int, set_si,  (float *)&cfg.status_report_interval,STATUS_REPORT_INTERVAL_MS },
 
@@ -639,9 +641,9 @@ const cfgItem_t cfgArray[] = {
 	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// removed from system group as "hidden" parameters
-//	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
-//	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
-//	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
+	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
+	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
+	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
 	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
 	{ "",   "qrl", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_lo_water, QR_LO_WATER },
 //	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
@@ -759,8 +761,8 @@ static stat_t set_hv(cmdObj_t *cmd)
 {
 	if (cmd->value > TINYG2_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_flt(cmd);					// record the hardware version
-//+++++	sys_port_bindings(cmd->value);	// reset port bindings
-//+++++	gpio_init();					// re-initialize the GPIO ports
+//++++	sys_port_bindings(cmd->value);	// reset port bindings
+//++++	gpio_init();					// re-initialize the GPIO ports
 	return (STAT_OK);
 }
 
@@ -768,7 +770,7 @@ static stat_t get_id(cmdObj_t *cmd)
 {
 /*
 	char_t tmp[SYS_ID_LEN];
-//+++++	sys_get_id(tmp);
+//++++	sys_get_id(tmp);
 	cmd->type = TYPE_STRING;
 	ritorno(cmd_copy_string(cmd, tmp));
 */
@@ -789,7 +791,7 @@ static stat_t get_id(cmdObj_t *cmd)
  */
 static stat_t get_qr(cmdObj_t *cmd) 
 {
-//+++++	cmd->value = (float)mp_get_planner_buffers_available();
+	cmd->value = (float)mp_get_planner_buffers_available();
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
@@ -802,44 +804,44 @@ static stat_t run_qf(cmdObj_t *cmd)
 
 static stat_t get_er(cmdObj_t *cmd) 
 {
-//+++++	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
+	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
 	return (STAT_OK);
 }
 
 static stat_t get_rx(cmdObj_t *cmd)
 {
-//+++++	cmd->value = (float)xio_get_usb_rx_free();
+//++++	cmd->value = (float)xio_get_usb_rx_free();
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
 static stat_t get_sr(cmdObj_t *cmd)
 {
-//+++++	rpt_populate_unfiltered_status_report();
+	rpt_populate_unfiltered_status_report();
 	return (STAT_OK);
 }
 
 static stat_t set_sr(cmdObj_t *cmd)
 {
-//+++++	return (rpt_set_status_report(cmd));
+	return (rpt_set_status_report(cmd));
 	return (STAT_OK);
 }
 
 static void print_sr(cmdObj_t *cmd)
 {
-//+++++	rpt_populate_unfiltered_status_report();
+	rpt_populate_unfiltered_status_report();
 }
 
 static stat_t set_si(cmdObj_t *cmd) 
 {
-//+++++	if (cmd->value < STATUS_REPORT_MIN_MS) { cmd->value = STATUS_REPORT_MIN_MS;}
+	if (cmd->value < STATUS_REPORT_MIN_MS) { cmd->value = STATUS_REPORT_MIN_MS;}
 	cfg.status_report_interval = (uint32_t)cmd->value;
 	return(STAT_OK);
 }
 
 static stat_t run_boot(cmdObj_t *cmd)
 {
-//+++++	sig_request_bootloader();
+//++++	sig_request_bootloader();
 	return(STAT_OK);
 }
 
@@ -963,14 +965,14 @@ static stat_t get_frmo(cmdObj_t *cmd)
 
 static stat_t get_line(cmdObj_t *cmd)
 {
-//+++++	cmd->value = (float)mp_get_runtime_linenum();
+	cmd->value = (float)mp_get_runtime_linenum();
 	cmd->type = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
 static stat_t get_vel(cmdObj_t *cmd) 
 {
-//+++++	cmd->value = mp_get_runtime_velocity();
+	cmd->value = mp_get_runtime_velocity();
 	if (cm_get_units_mode() == INCHES) cmd->value *= INCH_PER_MM;
 	cmd->precision = cfgArray[cmd->index].precision;
 //	cmd->type = TYPE_FLOAT_UNITS;
@@ -1065,13 +1067,13 @@ static stat_t get_gc(cmdObj_t *cmd)
 
 static stat_t run_gc(cmdObj_t *cmd)
 {
-//+++++	return(gc_gcode_parser(*cmd->stringp));
+	return(gc_gcode_parser(*cmd->stringp));
 	return (STAT_OK);
 }
 
 static stat_t run_home(cmdObj_t *cmd)
 {
-//+++++	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
+	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
 	return (STAT_OK);
 }
 
@@ -1131,7 +1133,7 @@ static stat_t set_am(cmdObj_t *cmd)		// axis mode
 
 static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 {
-//+++++	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_ui8(cmd);
 //+++++	gpio_init();
 	return (STAT_OK);
@@ -1158,14 +1160,14 @@ static stat_t set_mi(cmdObj_t *cmd)		// motor microsteps
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(cmd);
-//+++++	st_set_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
+	st_set_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 
 static stat_t set_po(cmdObj_t *cmd)		// motor polarity
 { 
 	ritorno (set_01(cmd));
-//+++++	st_set_polarity(_get_motor(cmd->index), (uint8_t)cmd->value);
+	st_set_polarity(_get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 

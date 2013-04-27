@@ -30,23 +30,24 @@
  *	- add watchdog timer functions
  *
  */
- /*
-#include <stdio.h>
-#include <stddef.h> 
-#include <avr/pgmspace.h> 
-*/
+
 #include "tinyg2.h"
 #include "hardware.h"
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /*
- * sys_init() - lowest level hardware init
+ * hardware_init() - lowest level hardware init
  */
 
-void sys_init()
+void hardware_init()
 {
 //	xmega_init();		// set system clock
 //	sys_port_bindings(TINYG_HARDWARE_VERSION);
 }
+
 /*
 void sys_port_bindings(float hw_version)
 {
@@ -83,7 +84,7 @@ uint8_t sys_read_calibration_byte(uint8_t index)
 */
 
 /*
- * sys_get_id() - get a human readable signature
+ * hardware_get_id() - get a human readable signature
  *
  *	Produces a unique deviceID based on the factory calibration data. Format is:
  *		123456-ABC
@@ -107,7 +108,7 @@ enum {
 	COORDY1,    // Wafer Coordinate Y Byte 1 
 }; 
 
-void sys_get_id(char *id)
+void hardware_get_id(char_t *id)
 {
 	char printable[33] = {"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"};
 	uint8_t i;
@@ -128,3 +129,7 @@ void sys_get_id(char *id)
 	NVM_CMD = NVM_CMD_NO_OPERATION_gc; 	 	// Clean up NVM Command register 
 }
 */
+ 
+ #ifdef __cplusplus
+ }
+ #endif

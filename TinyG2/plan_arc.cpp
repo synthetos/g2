@@ -45,6 +45,9 @@
 extern "C"{
 #endif
 
+// Allocate arc planner structure
+arc_t ar;
+
 /*
  * Local functions
  */

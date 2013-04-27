@@ -226,7 +226,7 @@ extern const cfgItem_t cfgArray[];
 
 /**** Global scope function prototypes ****/
 
-void cfg_init(void);
+void config_init(void);
 
 // main entry points for core access functions
 stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value

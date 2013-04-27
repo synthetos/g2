@@ -19,19 +19,19 @@
  */
 
 #include "tinyg2.h"
+#include "config.h"
 #include "controller.h"
+#include "canonical_machine.h"
+#include "planner.h"
 #include "stepper.h"
 #include "report.h"
+#include "hardware.h"
 #include "xio.h"
 
 /*
-#include "hardware.h"
 #include "util.h"				// #2
-#include "config.h"				// #3
-#include "canonical_machine.h"
 #include "json_parser.h"
 #include "gcode_parser.h"
-#include "planner.h"
 #include "spindle.h"
 #include "network.h"
 #include "gpio.h"
@@ -49,14 +49,6 @@ static void _application_init(void);
 
 // collect all weird little globals here
 stat_t status_code;		// declared for ritorno, see tinyg2.h
-
-/*
-extern void SysTick_Handler( void )
-{
-  // Increment tick count each ms
-  TimeTick_Increment() ;
-}
-*/
 
 /******************** Application Code ************************/
 
@@ -91,35 +83,21 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
-//	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
-//	stepper_init(); 					// must precede gpio_init()
-//	rpt_print_system_ready_message();	// (LAST) announce system is ready
-
 //	cli();
+	hardware_init();				// system hardware setup 			- must be first
+	stepper_init(); 				// must precede gpio_init()
+//	gpio_init();					// switches and parallel IO
+//	pwm_init();						// pulse width modulation drivers	- must follow gpio_init()
 
-	// system and drivers
-//	sys_init();			// system hardware setup 			- must be first
-//	rtc_init();			// real time counter
-//	xio_init();			// xmega io subsystem
-//	sig_init();			// signal flags
-	stepper_init(); 					// must precede gpio_init()
-//	gpio_init();		// switches and parallel IO
-//	pwm_init();			// pulse width modulation drivers	- must follow gpio_init()
-
-	// application structures
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
-//	cfg_init();			// config records from eeprom 		- must be next app init
-//	mp_init();			// motion planning subsystem
-//	cm_init();			// canonical machine				- must follow cfg_init()
-//	sp_init();			// spindle PWM and variables
+	config_init();					// config records from eeprom 		- must be next app init
+	planner_init();					// motion planning subsystem
+	canonical_machine_init();		// canonical machine				- must follow cfg_init()
+//	spindle_init();					// spindle PWM and variables
 
-	// now bring up the interupts and get started
-//	PMIC_SetVectorLocationToApplication(); // as opposed to boot ROM
-//	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
-//	PMIC_EnableMediumLevel();
-//	PMIC_EnableLowLevel();
+	// now bring up the interrupts and get started
 //	sei();							// enable global interrupts
-//	rpt_print_system_ready_message();// (LAST) announce system is ready
+	rpt_print_system_ready_message();// (LAST) announce system is ready
 
 //	_unit_tests();					// run any unit tests that are enabled
 //	tg_canned_startup();			// run any pre-loaded commands

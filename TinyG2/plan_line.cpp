@@ -26,11 +26,6 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-//#include <stdlib.h>
-#include <math.h>
-//#include <stdio.h>			// uncomment for debugging
-//#include <avr/pgmspace.h>		// precursor for xio.h
-
 #include "tinyg2.h"
 #include "config.h"
 #include "controller.h"
@@ -41,7 +36,6 @@
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
-//#include "xio/xio.h"			// uncomment for debugging
 
 #ifdef __cplusplus
 extern "C"{
@@ -308,7 +302,8 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 		_calculate_trapezoid(bp);
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
-		if ((bp->exit_velocity == bp->exit_vmax) || (bp->exit_velocity == bp->nx->entry_vmax) || 
+		if ((bp->exit_velocity == bp->exit_vmax) || 
+			(bp->exit_velocity == bp->nx->entry_vmax) || 
 		   ((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
 			bp->replannable = false;
 		}
@@ -792,22 +787,22 @@ uint8_t mp_plan_hold_callback()
 	mpBuf_t *bp; 					// working buffer pointer
 	if ((bp = mp_get_run_buffer()) == NULL) { return (STAT_NOOP);}	// Oops! nothing's running
 
-	uint8_t mr_flag = true;		// used to tell replan to account for mr buffer Vx
-	float mr_available_length; // available length left in mr buffer for deceleration
-	float braking_velocity;	// velocity left to shed to brake to zero
-	float braking_length;		// distance required to brake to zero from braking_velocity
+	uint8_t mr_flag = true;			// used to tell replan to account for mr buffer Vx
+	float mr_available_length;		// available length left in mr buffer for deceleration
+	float braking_velocity;			// velocity left to shed to brake to zero
+	float braking_length;			// distance required to brake to zero from braking_velocity
 
 	// examine and process mr buffer
-	mr_available_length = get_axis_vector_length(mr.endpoint, mr.position);
+//	mr_available_length = get_axis_vector_length(mr.endpoint, mr.position);
 
-/*	mr_available_length = 
+	mr_available_length = 
 		(sqrt(square(mr.endpoint[AXIS_X] - mr.position[AXIS_X]) +
 			  square(mr.endpoint[AXIS_Y] - mr.position[AXIS_Y]) +
 			  square(mr.endpoint[AXIS_Z] - mr.position[AXIS_Z]) +
 			  square(mr.endpoint[AXIS_A] - mr.position[AXIS_A]) +
 			  square(mr.endpoint[AXIS_B] - mr.position[AXIS_B]) +
 			  square(mr.endpoint[AXIS_C] - mr.position[AXIS_C])));
-*/
+
 //	braking_velocity = mr.segment_velocity;
 	braking_velocity = _compute_next_segment_velocity();
 	braking_length = _get_target_length(braking_velocity, 0, bp); // bp is OK to use here
@@ -1271,15 +1266,11 @@ static uint8_t _exec_aline_segment(uint8_t correction_flag)
 */
 	// prep the segment for the steppers and adjust the variables for the next iteration
 	(void)ik_kinematics(travel, steps, mr.microseconds);
-//+++++	if (st_prep_line(steps, mr.microseconds) == STAT_OK) {
-//+++++		copy_axis_vector(mr.position, mr.target); 	// update runtime position	
-		mr.position[AXIS_X] = mr.target[AXIS_X];
-		mr.position[AXIS_Y] = mr.target[AXIS_Y];
-		mr.position[AXIS_Z] = mr.target[AXIS_Z];
-		mr.position[AXIS_A] = mr.target[AXIS_A];
-		mr.position[AXIS_B] = mr.target[AXIS_B];
-		mr.position[AXIS_C] = mr.target[AXIS_C];	
-//+++++	}
+/*++++
+	if (st_prep_line(steps, mr.microseconds) == STAT_OK) {
+		copy_axis_vector(mr.position, mr.target); 	// update runtime position	
+	}
+++++*/
 	if (--mr.segment_count == 0) {
 		return (STAT_COMPLETE);	// this section has run all its segments
 	}
