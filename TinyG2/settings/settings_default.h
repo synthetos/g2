@@ -77,6 +77,20 @@
 #define M4_POLARITY				0
 #define M4_POWER_MODE			1
 
+#define M5_MOTOR_MAP			AXIS_B
+#define M5_STEP_ANGLE			1.8
+#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M5_MICROSTEPS			8
+#define M5_POLARITY				0
+#define M5_POWER_MODE			1
+
+#define M6_MOTOR_MAP			AXIS_C
+#define M6_STEP_ANGLE			1.8
+#define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M6_MICROSTEPS			8
+#define M6_POLARITY				0
+#define M6_POWER_MODE			1
+
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values

@@ -116,7 +116,8 @@ void config_init()
 stat_t set_defa(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
-	cfg.units_mode = MILLIMETERS;
+	cm_set_units_mode(MILLIMETERS);					// must do inits in MM mode
+
 //	rpt_print_initializing_message();
 	
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {

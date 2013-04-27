@@ -426,8 +426,8 @@ const cfgItem_t cfgArray[] = {
 	{ "", "er",  _f00, 0, fmt_nul, print_nul, get_er,  set_nul, (float *)&cs.null, 0 },		// invoke bogus exception report for testing
 	{ "", "rx",  _f00, 0, fmt_rx,  print_int, get_rx,  set_nul, (float *)&cs.null, 0 },		// space in RX buffer
 	{ "", "msg", _f00, 0, fmt_str, print_str, get_nul, set_nul, (float *)&cs.null, 0 },		// string for generic messages
-//	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },// prints test help screen
 	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defa,(float *)&cs.null,0},// prints defaults help screen
+//	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },// prints test help screen
 //	{ "", "boot",_f00, 0, fmt_nul, print_nul, print_boot_loader_help,run_boot,(float *)&cs.null,0 },
 	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
 	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
@@ -439,28 +439,46 @@ const cfgItem_t cfgArray[] = {
 	{ "1","1mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_1].microsteps,	M1_MICROSTEPS },
 	{ "1","1po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_1].polarity,	M1_POLARITY },
 	{ "1","1pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_1].power_mode,	M1_POWER_MODE },
-
+#if (MOTORS >= 2)
 	{ "2","2ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_2].motor_map,	M2_MOTOR_MAP },
 	{ "2","2sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_2].step_angle,	M2_STEP_ANGLE },
 	{ "2","2tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_2].travel_rev,	M2_TRAVEL_PER_REV },
 	{ "2","2mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_2].microsteps,	M2_MICROSTEPS },
 	{ "2","2po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_2].polarity,	M2_POLARITY },
 	{ "2","2pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_2].power_mode,	M2_POWER_MODE },
-
+#endif
+#if (MOTORS >= 3)
 	{ "3","3ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_3].motor_map,	M3_MOTOR_MAP },
 	{ "3","3sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_3].step_angle,	M3_STEP_ANGLE },
 	{ "3","3tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_3].travel_rev,	M3_TRAVEL_PER_REV },
 	{ "3","3mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_3].microsteps,	M3_MICROSTEPS },
 	{ "3","3po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_3].polarity,	M3_POLARITY },
 	{ "3","3pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_3].power_mode,	M3_POWER_MODE },
-
+#endif
+#if (MOTORS >= 4)
 	{ "4","4ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_4].motor_map,	M4_MOTOR_MAP },
 	{ "4","4sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_4].step_angle,	M4_STEP_ANGLE },
 	{ "4","4tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_4].travel_rev,	M4_TRAVEL_PER_REV },
 	{ "4","4mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_4].microsteps,	M4_MICROSTEPS },
 	{ "4","4po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_4].polarity,	M4_POLARITY },
 	{ "4","4pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_4].power_mode,	M4_POWER_MODE },
-
+#endif
+#if (MOTORS >= 5)
+	{ "5","5ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_5].motor_map,	M5_MOTOR_MAP },
+	{ "5","5sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_5].step_angle,	M5_STEP_ANGLE },
+	{ "5","5tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_5].travel_rev,	M5_TRAVEL_PER_REV },
+	{ "5","5mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_5].microsteps,	M5_MICROSTEPS },
+	{ "5","5po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_5].polarity,	M5_POLARITY },
+	{ "5","5pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_5].power_mode,	M5_POWER_MODE },
+#endif
+#if (MOTORS >= 6)
+	{ "6","6ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_6].motor_map,	M6_MOTOR_MAP },
+	{ "6","6sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_6].step_angle,	M6_STEP_ANGLE },
+	{ "6","6tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_6].travel_rev,	M6_TRAVEL_PER_REV },
+	{ "6","6mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_6].microsteps,	M6_MICROSTEPS },
+	{ "6","6po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_6].polarity,	M6_POLARITY },
+	{ "6","6pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_6].power_mode,	M6_POWER_MODE },
+#endif
 	// Axis parameters
 	{ "x","xam",_fip, 0, fmt_Xam, print_am,  get_am,  set_am, (float *)&cfg.a[AXIS_X].axis_mode,		X_AXIS_MODE },
 	{ "x","xvm",_fip, 0, fmt_Xvm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].velocity_max,		X_VELOCITY_MAX },
@@ -681,6 +699,8 @@ const cfgItem_t cfgArray[] = {
 	{ "","2",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","3",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","4",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","5",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","6",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","x",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis groups
 	{ "","y",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","z",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -711,7 +731,7 @@ const cfgItem_t cfgArray[] = {
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define CMD_COUNT_GROUPS 		25		// count of simple groups
+#define CMD_COUNT_GROUPS 		27		// count of simple groups
 #define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups
 
 /* <DO NOT MESS WITH THESE ITEMS> */
@@ -1312,10 +1332,10 @@ uint8_t cfg_baud_rate_callback(void)
  *	- all		- group of all groups
  *
  * do_group_list()	- get and print all groups in the list (iteration)
- * do_motors()		- get and print motor uber group 1-4
+ * do_motors()		- get and print motor uber group 1-6
  * do_axes()		- get and print axis uber group XYZABC
- * do_offsets()	- get and print offset uber group G54-G59, G28, G30, G92
- * do_all()		- get and print all groups uber group
+ * do_offsets()		- get and print offset uber group G54-G59, G28, G30, G92
+ * do_all()			- get and print all groups uber group
  */
 
 static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // helper to print multiple groups in a list
@@ -1335,7 +1355,7 @@ static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // help
 
 static stat_t do_motors(cmdObj_t *cmd)	// print parameters for all motor groups
 {
-	char list[][CMD_TOKEN_LEN+1] = {"1","2","3","4",""}; // must have a terminating element
+	char list[][CMD_TOKEN_LEN+1] = {"1","2","3","4","5","6",""}; // must have a terminating element
 	return (do_group_list(cmd, list));
 }
 
