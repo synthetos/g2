@@ -278,6 +278,9 @@ void st_disable()
 	dda_timer.stop();
 }
 
+// Define the timers inside the Motate namespace
+namespace Motate {
+
 /*
  * Dwell timer interrupt
  */
@@ -297,7 +300,6 @@ MOTATE_TIMER_INTERRUPT(DWELL_TIMER_NUM)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-namespace Motate {
 MOTATE_TIMER_INTERRUPT(DDA_TIMER_NUM)
 {
     dummy = DDA_STATUS_REGISTER;	// read SR to clear interrupt condition
@@ -363,7 +365,8 @@ MOTATE_TIMER_INTERRUPT(DDA_TIMER_NUM)
     }
     proof_of_timer = 1;
 }
-}
+    
+} // namespace Motate
 
 /****************************************************************************************
  * Exec sequencing code
@@ -394,12 +397,18 @@ void st_request_exec_move()
 	}
 }
 
+// Define the timers inside the Motate namespace
+namespace Motate {
+
 MOTATE_TIMER_INTERRUPT(EXEC_TIMER_NUM)			// exec move SW interrupt
 {
 	dummy = EXEC_STATUS_REGISTER;
 	exec_timer.stop();							// disable SW interrupt timer
 	_exec_move();
 }
+    
+} // namespace Motate
+
 /* OLD CODE
 ISR(TIMER_EXEC_ISR_vect) {						// exec move SW interrupt
 	TIMER_EXEC.CTRLA = STEP_TIMER_DISABLE;		// disable SW interrupt timer
@@ -434,11 +443,16 @@ static void _request_load_move()
 	// interrupt and find out the load routine is not ready for you
 }
 
+// Define the timers inside the Motate namespace
+namespace Motate {
+
 MOTATE_TIMER_INTERRUPT(LOAD_TIMER_NUM)		// load steppers SW interrupt
 {
 	dummy = LOAD_STATUS_REGISTER;
 	load_timer.stop();						// disable SW interrupt timer
 	_load_move();
+}
+
 }
 /* OLD CODE
 ISR(TIMER_LOAD_ISR_vect) {					// load steppers SW interrupt
