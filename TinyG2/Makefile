@@ -26,7 +26,7 @@
 PROJECT  = TinyG2
 
 SOURCE_DIRS = . arduino arduino/USB variants motate
-FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
+FIRST_LINK_SOURCES := motate/SamTimers.cpp arduino/syscalls_sam3.c
 
 # List all user directories here
 USER_INCLUDE_DIRS := $(SOURCE_DIRS)

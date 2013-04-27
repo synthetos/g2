@@ -298,12 +298,12 @@ namespace Motate {
 		}
 
 		// Placeholder for user code.
-		static void interrupt() {};
+		static void interrupt() __attribute__ ((weak));
 	};
 
 } // namespace Motate
 
-#define MOTATE_TIMER_INTERRUPT(number) extern "C" void TC ## number ## _Handler(void)
+#define MOTATE_TIMER_INTERRUPT(number) template<> void Timer<number>::interrupt()
 
 /** THIS IS OLD INFO, AND NO LONGER RELEVANT TO THIS PROJECT, BUT IT WAS HARD TO COME BY: **/
 

@@ -235,6 +235,7 @@ void stepper_init()
 	motor_6.ms0.setMode(kOutput);
 	motor_6.ms1.setMode(kOutput);
 	motor_6.vref.setMode(kOutput);
+    
 
 	// ***** Setup timers *****
 	// setup DDA timer
@@ -249,7 +250,7 @@ void stepper_init()
 #else
     dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
     dda_timer.setInterrupts(kInterruptOnOverflow);
- //   dda_timer.start();
+//    dda_timer.start();
 #endif
 
 	// setup DWELL timer
@@ -267,7 +268,18 @@ void stepper_init()
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
 
-//    _load_move();
+#if 0
+    sps.move_type = true;
+	sps.timer_ticks = 100000;
+	sps.timer_ticks_X_substeps = 1000000;
+	sps.timer_period = 64000;
+	
+	st.m[MOTOR_1].steps = 90000;
+	st.m[MOTOR_1].counter = -sps.timer_ticks;
+	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
+    
+    dda_timer.start();
+#endif
 }
 
 /*
