@@ -55,8 +55,7 @@ float min4(float x1, float x2, float x3, float x4);
 float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
 
-//uint8_t isnumber(char_t c);
-//uint8_t read_float (uint8_t *buf, uint8_t *index, float *float_ptr);
+uint8_t isnumber(char_t c);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
 float std_dev(float a[], uint8_t n, float *mean);
 

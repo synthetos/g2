@@ -385,7 +385,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#ifndef min						// ASH: ++++ in case this is already defined
+#ifndef min						// ASH: ++++ added guard in case this is already defined
 #define min(a, b)   Min(a, b)
 #endif
 
@@ -398,7 +398,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#ifndef max						// ASH: ++++ in case this is already defined
+#ifndef max						// ASH: ++++ added guard in case this is already defined
 #define max(a, b)   Max(a, b)
 #endif
 //! @}

@@ -26,9 +26,11 @@
  */
 
 #include "tinyg2.h"
-#include "controller.h"
 #include "config.h"
+#include "controller.h"
+#include "canonical_machine.h"
 #include "text_parser.h"
+#include "report.h"
 #include "util.h"
 #include "xio.h"					// for char definitions
 
@@ -54,7 +56,7 @@ stat_t text_parser(uint8_t *str)
 	uint8_t status = STAT_OK;
 
 	if (str[0] == '?') {					// handle status report case
-//		rpt_run_text_status_report();		//++++++ put back in
+		rpt_run_text_status_report();
 		return (STAT_OK);
 	}
 	if ((str[0] == '$') && (str[1] == NUL)) {  // treat a lone $ as a sys request
@@ -115,37 +117,39 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 /************************************************************************************
  * text_response() - text mode responses
  */
-static const uint8_t prompt_mm[] = "mm";
-static const uint8_t prompt_in[] = "inch";
-static const uint8_t prompt_ok[] = "tinyg [%S] ok> ";
-static const uint8_t prompt_err[] = "tinyg [%S] err: %s: %s ";
+static const char_t prompt_mm[] = "mm";
+static const char_t prompt_in[] = "inch";
+static const char_t prompt_ok[] = "tinyg [%S] ok> ";
+static const char_t prompt_err[] = "tinyg [%S] err: %s: %s ";
 
 void text_response(const uint8_t status, char_t *buf)
 {
-	/*
-	if (cs.text_verbosity == TV_SILENT) return;	// skip all this
+	cmdObj_t *cmd = cmd_body;
 
-	const uint8_t *units;								// becomes pointer to progmem string
+	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
+
+	char *units;
 	if (cm_get_units_mode() != INCHES) { 
-		units = (PGM_P)&prompt_mm;
+		units = (char *)prompt_mm;
 	} else {
-		units = (PGM_P)&prompt_in;
+		units = (char *)prompt_in;
 	}
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
-		fprintf(stderr, (PGM_P)&prompt_ok, units);
+		fprintf(stderr, (char *)prompt_ok, units);
 	} else {
-		uint8_t status_message[STATUS_MESSAGE_LEN];
-		fprintf(stderr, (PGM_P)prompt_err, units, rpt_get_status_message(status, status_message), buf);
+		fprintf(stderr, (char *)prompt_err, units, (char *)get_status_message(status), buf);
 	}
-	cmdObj_t *cmd = cmd_body+1;
+	cmd = cmd_body+1;
 	if (cmd->token[0] == 'm') {
-		fprintf(stderr, *cmd->stringp);
+		fprintf(stderr, (char *)*cmd->stringp);
 	}
-	*/
-	cmdObj_t *cmd = cmd_body;		//+++++ patched
-	fprintf(stderr, (char *)cmd->stringp);
-	fprintf(stderr, "\n");
 }
+//#else
+//	cmdObj_t *cmd = cmd_body;
+//	fprintf(stderr, (char *)cmd->stringp);
+//	fprintf(stderr, "\n");
+//#endif
+//}
 
 /************************************************************************************
  * text_print_inline_pairs()

@@ -25,8 +25,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _REPORT_H_
-#define _REPORT_H_
+#ifndef REPORT_H_ONCE
+#define REPORT_H_ONCE
 
 #include "config.h"
 
@@ -34,8 +34,8 @@
 extern "C"{
 #endif
 
-char *rpt_get_status_message(uint8_t status, char *msg);
-void rpt_print_message(char *msg);
+const char_t *get_status_message(uint8_t status);
+void rpt_print_message(char_t *msg);
 void rpt_exception(uint8_t status, int16_t value);
 void rpt_print_loading_configs_message(void);
 void rpt_print_initializing_message(void);
@@ -69,5 +69,5 @@ void sr_unit_tests(void);
 }
 #endif
 
-#endif // _REPORT_H_
+#endif // End of include guard: REPORT_H_ONCE
 

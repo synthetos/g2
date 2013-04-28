@@ -70,16 +70,14 @@ stat_t gc_gcode_parser(char_t *block)
 /*
  * _normalize_gcode_block() - normalize a block (line) of gcode in place
  *
- *	Comments always terminate the block (embedded comments are not supported)
- *	Messages in comments are sent to console (stderr)
- *	Processing: split string into command and comment portions. Valid choices:
- *	  supported:	command
- *	  supported:	comment
- *	  supported:	command comment
- *	  unsupported:	command command
- *	  unsupported:	comment command
- *	  unsupported:	command comment command
- *
+ *	Normalization rules
+ *	 - convert all letters to upper case
+ *	 - remove all white space
+ *	 - remove extraneous leading zeros that might be taken to mean Octal during strtof()
+ *	 - remove all control and other invalid characters:
+ *		chars < 0x20 (control characters)
+ *		! $ % ,	; ; ? @ ^ _ ~ " ' <DEL>
+ * 
  *	Valid characters in a Gcode block are (see RS274NGC_3 Appendix E)
  *		digits						all digits are passed to interpreter
  *		lower case alpha			all alpha is passed
@@ -89,20 +87,27 @@ stat_t gc_gcode_parser(char_t *block)
  *		<sp> <tab> 					chars are legal but are not passed
  *		/  							if first, block delete char - omits the block
  *
- *	Invalid characters in a Gcode block are:
- *		control characters			chars < 0x20
- *		! $ % ,	; ; ? @ 
- *		^ _ ~ " ' <DEL>
+ *	Comment handling:
  *
- *	MSG specifier in comment can have mixed case but cannot cannot have 
- *	embedded white spaces
+ *	 - Comments are not normalized - they are left alone
+ *	 - Comments always terminate the block (i.e. embedded comments are not supported)
+ *	 - Messages in comments are sent to console 
+ *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
+ *	 - Normalization returns true if there was a message to display, false otherwise
+ *	 - Processing splits string into command and comment portions - cases:
+ *		  supported:	COMMAND
+ *		  supported:	comment
+ *		  supported:	COMMAND comment
  *
- *	Returns true if there was a message to display, false otherwise
+ *		unsupported:	COMMAND COMMAND
+ *		unsupported:	comment COMMAND
+ *		unsupported:	COMMAND comment COMMAND
  *
  *	++++ todo: Support leading and trailing spaces around the MSG specifier
+ *	++++ todo: Refactor to reject Octal numbers (leading 0's)
  */
 
-static stat_t _normalize_gcode_block(char_t *block) 
+static uint8_t _normalize_gcode_block(char_t *block) 
 {
 	char_t c;
 	char_t *comment=0;	// comment pointer - first char past opening paren
@@ -167,7 +172,6 @@ static stat_t _normalize_gcode_block(char_t *block)
 
 static stat_t _parse_gcode_block(char_t *buf) 
 {
-//	uint8_t index = 0;				// persistent index into Gcode block buffer (buf)
 	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
   	char letter;					// parsed letter, eg.g. G or X or Y
 	float value;					// value parsed from letter (e.g. 2 for G2)
@@ -181,9 +185,6 @@ static stat_t _parse_gcode_block(char_t *buf)
 
   	// extract commands and parameters
 	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
-//	while((status = _get_gcode_word(&letter, &value, (char *)buf, &index)) == STAT_OK) {
-//	while((status = _get_next_statement(&letter, &value, buf, &i)) == STAT_OK) {
-
 		switch(letter) {
 			case 'G':
 				switch((uint8_t)value) {
@@ -448,7 +449,8 @@ static stat_t _check_gcode_block()
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value
  *
- *	This function requires the Gcode string to be normalized
+ *	This function requires the Gcode string to be normalized.
+ *	Normalization must remove any leading zeros or they will be converted to Octal
  */
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value) 
 {
@@ -474,43 +476,10 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	return (STAT_OK);			// pointer points to next character after the word
 }
 
-/*
-stat_t _read_float(char_t *buf, uint8_t *index, float *float_ptr)
-{
-	char *start = (char *)buf + *index;
-	char *end;
-	
-//	*float_ptr = (float)strtod(start, &end);
-	*float_ptr = strtof(start, &end);
-	if(end == start) {
-		return(false);
-	}
-	*index = (uint8_t)(end - (char *)buf);
-	return(true);
-}
-
-static stat_t _get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *index) 
-{
-	if (buf[*index] == NUL) { 		// no more statements
-		return (STAT_COMPLETE);
-	}
-	*letter = buf[*index];
-	if(isupper(*letter) == false) { 
-		return (STAT_EXPECTED_COMMAND_LETTER);
-	}
-	(*index)++;
-	if (_read_float(buf, index, value) == false) {
-		return (STAT_BAD_NUMBER_FORMAT);
-	}
-	return (STAT_OK);		// leave the index on the next character after the statement
-}
-*/
-
 static uint8_t _point(float value) 
 {
 	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
 }
-
 
 #ifdef __cplusplus
 }

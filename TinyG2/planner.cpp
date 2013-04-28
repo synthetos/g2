@@ -108,8 +108,8 @@ void planner_init()
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-//+++++	ar.magic_start = MAGICNUM;
-//+++++	ar.magic_end = MAGICNUM;
+//++++	ar.magic_start = MAGICNUM;
+//++++	ar.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 
@@ -235,7 +235,7 @@ void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float flo
 static uint8_t _exec_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->int_val, bf->dbl_val);
-//+++++	st_prep_null();			// Must call a null prep to keep the loader happy. 
+	st_prep_null();			// Must call a null prep to keep the loader happy. 
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
@@ -264,7 +264,7 @@ uint8_t mp_dwell(float seconds)
 
 static uint8_t _exec_dwell(mpBuf_t *bf)
 {
-//+++++	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
@@ -371,7 +371,7 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->move_state = MOVE_STATE_NEW;
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
-//+++++	st_request_exec_move();						// request a move exec if not busy
+	st_request_exec_move();						// request a move exec if not busy
 }
 
 mpBuf_t * mp_get_run_buffer() 

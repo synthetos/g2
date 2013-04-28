@@ -1153,7 +1153,7 @@ static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 {
 	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_ui8(cmd);
-//+++++	gpio_init();
+//++++	gpio_init();
 	return (STAT_OK);
 }
 

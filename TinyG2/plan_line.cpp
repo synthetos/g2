@@ -909,7 +909,7 @@ uint8_t mp_end_hold_callback()
 			return (STAT_NOOP);
 		}
 		cm.motion_state = MOTION_RUN;
-//+++++		st_request_exec_move();					// restart the steppers
+		st_request_exec_move();					// restart the steppers
 	}
 	return (STAT_OK);
 }
@@ -1004,7 +1004,7 @@ static uint8_t _exec_aline(mpBuf_t *bf)
 			mr.move_state = MOVE_STATE_OFF;			// reset mr buffer
 			mr.section_state = MOVE_STATE_OFF;
 			bf->nx->replannable = false;			// prevent overplanning (Note 2)
-//+++++			st_prep_null();							// call this to leep the loader happy
+			st_prep_null();							// call this to keep the loader happy
 			mp_free_run_buffer();
 			return (STAT_NOOP);
 		}
@@ -1266,11 +1266,9 @@ static uint8_t _exec_aline_segment(uint8_t correction_flag)
 */
 	// prep the segment for the steppers and adjust the variables for the next iteration
 	(void)ik_kinematics(travel, steps, mr.microseconds);
-/*++++
 	if (st_prep_line(steps, mr.microseconds) == STAT_OK) {
 		copy_axis_vector(mr.position, mr.target); 	// update runtime position	
 	}
-++++*/
 	if (--mr.segment_count == 0) {
 		return (STAT_COMPLETE);	// this section has run all its segments
 	}

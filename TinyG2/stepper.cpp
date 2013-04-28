@@ -41,6 +41,8 @@
 
 //#include <component_tc.h>		// deprecated - to be removed
 
+//#define TEST_CODE
+
 using namespace Motate;
 
 // Setup local resources
@@ -165,7 +167,7 @@ typedef struct stPrepSingleton {
 	uint16_t timer_period;			// DDA or dwell clock period setting
 	uint32_t timer_ticks;			// DDA or dwell ticks for the move
 	uint32_t timer_ticks_X_substeps;// DDA ticks scaled by substep factor
-	float segment_velocity;		// +++++ record segment velocity for diagnostics
+//	float segment_velocity;			// ++++ record segment velocity for diagnostics
 	stPrepMotor_t m[MOTORS];		// per-motor structs
 } stPrepSingleton_t;
 
@@ -221,7 +223,7 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
-/*
+
 #if 0
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
@@ -234,10 +236,10 @@ void stepper_init()
 
 	dda_timer.start();
 #endif
-*/
-//#if 1
+
+#if 1
 	st_request_exec_move();
-//#endif
+#endif
 }
 
 /*
@@ -444,7 +446,7 @@ ISR(TIMER_LOAD_ISR_vect) {					// load steppers SW interrupt
 
 void _load_move()
 {
-#if 1
+#ifdef TEST_CODE
     sps.move_type = true;
 	sps.timer_ticks = 100000;
 	sps.timer_ticks_X_substeps = 1000000;

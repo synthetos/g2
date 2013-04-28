@@ -125,7 +125,6 @@ float max4(float x1, float x2, float x3, float x4)
 /*
  * isnumber() - isdigit that also accepts plus, minus, and decimal point
  */
-/*
 uint8_t isnumber(char_t c)
 {
 	if (c == '.') { return (true); }
@@ -133,31 +132,7 @@ uint8_t isnumber(char_t c)
 	if (c == '+') { return (true); }
 	return (isdigit(c));
 }
-*/
-/* 
- * read_float() - read a float from a normalized char array
- *
- *	buf			normalized char array (line)
- *	i			char array index must point to start of number
- *	float_ptr	pointer to float to write value into
- *
- *	The line is normalized when it is all caps, has no white space,
- *	no non-alphanumeric characters, and no newline or CR.
- */
-/*
-stat_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr) 
-{
-	char_t *start = buf + *index;
-	char_t *end;
-  
-	*float_ptr = (float)strtod(start, &end);
-	if(end == start) { 
-		return(false); 
-	}
-	*index = (uint8_t)(end - buf);
-	return(true);
-}
-*/
+
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 

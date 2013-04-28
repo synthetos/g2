@@ -30,8 +30,7 @@
 #include "config.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
-//#include "planner.h"
-//#include "report.h"
+#include "planner.h"
 #include "gpio.h"
 
 #ifdef __cplusplus
@@ -171,7 +170,7 @@ stat_t cm_homing_callback(void)
 
 static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 {
-//+++++	mp_flush_planner(); 						// should be stopped, but in case of switch closure
+	mp_flush_planner(); 						// should be stopped, but in case of switch closure
 	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -200,7 +199,7 @@ static stat_t _homing_error_exit(int8_t axis)
 	cmd_add_message((const char_t *)message);
 	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_PAIRS, JSON_RESPONSE_FORMAT);
 
-//+++++	mp_flush_planner(); 						// should be stopped, but in case of switch closure
+	mp_flush_planner(); 						// should be stopped, but in case of switch closure
 	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -347,7 +346,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 
 	vector[axis] = target;
 	cm_set_feed_rate(velocity);
-//+++++	mp_flush_planner();
+	mp_flush_planner();
 	ritorno(cm_straight_feed(vector, flags));
 	return (STAT_EAGAIN);
 }

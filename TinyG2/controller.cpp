@@ -238,7 +238,7 @@ static stat_t _command_dispatch()
 			} else {
 				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
 //				text_response(STAT_OK, cs.in_buf);
-//				write (cs.in_buf, cs.linelen);	//+++++ test statement
+//				write (cs.in_buf, cs.linelen);	//++++ test statement
 			}
 		}
 	}

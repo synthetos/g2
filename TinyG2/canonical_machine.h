@@ -304,7 +304,7 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 };
 
 enum cmMotionMode {						// G Modal Group 1
-	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - seek
+	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - traverse
 	MOTION_MODE_STRAIGHT_FEED,			// G1 - feed
 	MOTION_MODE_CW_ARC,					// G2 - arc feed
 	MOTION_MODE_CCW_ARC,				// G3 - arc feed

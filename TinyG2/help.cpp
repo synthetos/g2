@@ -18,11 +18,11 @@
  */
 
 #include "tinyg2.h"
-#include "util.h"
 #include "config.h"
-//#include "report.h"
-#include "controller.h"
+#include "report.h"
+//#include "controller.h"
 #include "help.h"				// must follow config.h
+//#include "util.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -53,7 +53,7 @@ These commands are active from the command line:\n\
 ");
 _status_report_advisory();
 _postscript();
-//+++++ rpt_print_system_ready_message();
+rpt_print_system_ready_message();
 return(STAT_OK);
 }
 

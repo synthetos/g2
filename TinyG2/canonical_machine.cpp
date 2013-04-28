@@ -885,7 +885,7 @@ stat_t cm_set_path_control(uint8_t mode)
 stat_t cm_dwell(float seconds)
 {
 	gm.parameter = seconds;
-//+++++	(void)mp_dwell(seconds);
+	(void)mp_dwell(seconds);
 	return (STAT_OK);
 }
 
@@ -973,9 +973,9 @@ static void _exec_mist_coolant_control(uint8_t mist_coolant, float float_val)
 {
 	gm.mist_coolant = mist_coolant;
 	if (mist_coolant == true) {
-//+++++		gpio_set_bit_on(MIST_COOLANT_BIT);
+//++++		gpio_set_bit_on(MIST_COOLANT_BIT);
 	} else {
-//+++++		gpio_set_bit_off(MIST_COOLANT_BIT);
+//++++		gpio_set_bit_off(MIST_COOLANT_BIT);
 	}
 }
 
@@ -983,9 +983,9 @@ static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val)
 {
 	gm.flood_coolant = flood_coolant;
 	if (flood_coolant == true) {
-//+++++		gpio_set_bit_on(FLOOD_COOLANT_BIT);
+//++++		gpio_set_bit_on(FLOOD_COOLANT_BIT);
 	} else {
-//+++++		gpio_set_bit_off(FLOOD_COOLANT_BIT);
+//++++		gpio_set_bit_off(FLOOD_COOLANT_BIT);
 		_exec_mist_coolant_control(false,0);	// M9 special function
 	}
 }
@@ -1151,7 +1151,7 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	cm.cycle_start_flag = false;
 	mp_zero_segment_velocity();						// for reporting purposes
 	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request final status report (not unfiltered)
-//+++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made
+//++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made
 }
 
 #ifdef __cplusplus

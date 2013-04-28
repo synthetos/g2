@@ -31,6 +31,7 @@
 #include "report.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "planner.h"
 #include "settings.h"
 #include "hardware.h"
 #include "util.h"
@@ -41,6 +42,10 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 */
+
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 /**** Status and Exception Messages **************************************************
  * rpt_get_status_message() - return the status message
@@ -132,6 +137,11 @@ static const char_t *stat_msg[] = {
 	stat_50, stat_51, stat_52, stat_53, stat_54, stat_55, stat_56, stat_57, stat_58, stat_59,
 	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69
 };
+
+const char_t *get_status_message(stat_t status)
+{
+	return (stat_msg[status]);
+}
 
 /*
  * rpt_exception() - generate an exception message
@@ -420,7 +430,7 @@ void rpt_request_queue_report()
 { 
 	if (cfg.queue_report_verbosity == QR_OFF) return;
 
-//+++++	qr.buffers_available = mp_get_planner_buffers_available();
+	qr.buffers_available = mp_get_planner_buffers_available();
 
 	// perform filtration for QR_FILTERED reports
 	if (cfg.queue_report_verbosity == QR_FILTERED) {
@@ -469,4 +479,8 @@ void sr_unit_tests(void)
 	sr_run_status_report();
 }
 #endif
+#endif
+
+#ifdef __cplusplus
+}
 #endif
