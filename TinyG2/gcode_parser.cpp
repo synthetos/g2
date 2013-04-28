@@ -174,7 +174,7 @@ static stat_t _parse_gcode_block(char_t *buf)
 {
 	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
   	char letter;					// parsed letter, eg.g. G or X or Y
-	float value;					// value parsed from letter (e.g. 2 for G2)
+	float value = 0;				// value parsed from letter (e.g. 2 for G2)
 	stat_t status = STAT_OK;
 
 	// set initial state for new move 

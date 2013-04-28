@@ -106,7 +106,7 @@ Stepper<motor_6_step_pin_num,
 
 OutputPin<motor_enable_pin_num> enable;
 
-volatile long dummy;					// convenient register to read into
+//volatile long dummy;					// convenient register to read into
 
 static void _load_move(void);
 static void _exec_move(void);
@@ -118,8 +118,8 @@ enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
 };
 
-//#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
-#define INCREMENT_DIAGNOSTIC_COUNTER(motor) st.m[motor].step_count_diagnostic++;
+#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
+//#define INCREMENT_DIAGNOSTIC_COUNTER(motor) st.m[motor].step_count_diagnostic++;
 
 /*
  * Stepper structures
@@ -195,14 +195,6 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
-	enable.clear();
-// 	while (1) {
-// 		motor_1.step.set();		// turn step bit on
-// //		delay (2);
-// 		motor_1.step.clear();
-// //		delay (2);
-// 	}
-
 	// setup DDA timer
 #ifdef BARE_CODE
 	//requires: #include <component_tc.h>
@@ -232,7 +224,7 @@ void stepper_init()
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 	_clear_diagnostic_counters();
-		
+/*
 #ifdef TEST_CODE
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
@@ -244,10 +236,37 @@ void stepper_init()
 
 	dda_timer.start();
 #endif
+*/
 }
 
+/*
+ * st_enable() - start the steppers
+ * st_disable() - step the stoppers
+ */
+void st_enable()
+{
+	enable.clear();		// grblShield common enable
+	dda_timer.start();
+}
+
+void st_disable()
+{
+	dda_timer.stop();
+	enable.set();		// grblShield common enable
+	motor_1.enable.set();
+	motor_2.enable.set();
+	motor_4.enable.set();
+	motor_5.enable.set();
+	motor_6.enable.set();
+	st.m[MOTOR_1].phase_increment = 0;
+	st.m[MOTOR_2].phase_increment = 0;
+	st.m[MOTOR_3].phase_increment = 0;
+	st.m[MOTOR_4].phase_increment = 0;
+	st.m[MOTOR_5].phase_increment = 0;
+	st.m[MOTOR_6].phase_increment = 0;
+}
 // clear diagnostic counters
-static void _clear_diagnostic_counters() 
+static void _clear_diagnostic_counters()
 {
 	st.m[MOTOR_1].step_count_diagnostic = 0;
 	st.m[MOTOR_2].step_count_diagnostic = 0;
@@ -255,13 +274,6 @@ static void _clear_diagnostic_counters()
 	st.m[MOTOR_4].step_count_diagnostic = 0;
 	st.m[MOTOR_5].step_count_diagnostic = 0;
 	st.m[MOTOR_6].step_count_diagnostic = 0;
-}
-/*
- * st_disable() - stop the steppers. (Requires re-init to recover -- Is this still true?)
- */
-void st_disable()
-{
-	dda_timer.stop();
 }
 
 // Define the timer interrupts inside the Motate namespace
@@ -294,27 +306,32 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
     if (!motor_1.step.isNull() && (st.m[MOTOR_1].phase_accumulator += st.m[MOTOR_1].phase_increment) > 0) {
         st.m[MOTOR_1].phase_accumulator -= st.timer_ticks_X_substeps;
 		motor_1.step.set();		// turn step bit on
-//		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
     }
     if (!motor_2.step.isNull() && (st.m[MOTOR_2].phase_accumulator += st.m[MOTOR_2].phase_increment) > 0) {
         st.m[MOTOR_2].phase_accumulator -= st.timer_ticks_X_substeps;
         motor_2.step.set();
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_2);
     }
     if (!motor_3.step.isNull() && (st.m[MOTOR_3].phase_accumulator += st.m[MOTOR_3].phase_increment) > 0) {
         st.m[MOTOR_3].phase_accumulator -= st.timer_ticks_X_substeps;
         motor_3.step.set();
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_3);
     }
     if (!motor_4.step.isNull() && (st.m[MOTOR_4].phase_accumulator += st.m[MOTOR_4].phase_increment) > 0) {
         st.m[MOTOR_4].phase_accumulator -= st.timer_ticks_X_substeps;
         motor_4.step.set();
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_4);
     }
     if (!motor_5.step.isNull() && (st.m[MOTOR_5].phase_accumulator += st.m[MOTOR_5].phase_increment) > 0) {
         st.m[MOTOR_5].phase_accumulator -= st.timer_ticks_X_substeps;
         motor_5.step.set();
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_5);
     }
     if (!motor_6.step.isNull() && (st.m[MOTOR_6].phase_accumulator += st.m[MOTOR_6].phase_increment) > 0) {
         st.m[MOTOR_6].phase_accumulator -= st.timer_ticks_X_substeps;
         motor_6.step.set();
+		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
     }
     motor_1.step.clear();
     motor_2.step.clear();
@@ -331,7 +348,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
         if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
         if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
         if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
-        enable.set();								// disable DDA timer
+		st_disable();
         _load_move();								// load the next move
     }
     proof_of_timer = 1;
@@ -342,14 +359,19 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 /****************************************************************************************
  * Exec sequencing code
  *
- * EXEC TIMER INTERRUPT		- interrupt handler for calling exec function
- * st_test_exec_state()		- return TRUE if exec/prep can run
  * st_request_exec_move()	- SW interrupt to request to execute a move
+ * exec_timer interrupt		- interrupt handler for calling exec function
  * _exec_move() 			- Run a move from the planner and prepare it for loading
  *
- *	_exec_move() can only be called be called from an ISR at a level lower than DDA, 
+ *	_exec_move() should only be called be called from an ISR at a level lower than DDA.
  *	Only use st_request_exec_move() to call it.
  */
+void st_request_exec_move()
+{
+	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
+		exec_timer.setInterruptPending();
+	}
+}
 
 // Define the timers inside the Motate namespace
 namespace Motate {
@@ -361,21 +383,6 @@ MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 }
 
 } // namespace Motate
-
-uint8_t st_test_exec_state()
-{
-	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
-		return (true);
-	}
-	return (false);
-}
-
-void st_request_exec_move()
-{
-	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
-		exec_timer.setInterruptPending();
-	}
-}
 
 static void _exec_move()
 {
@@ -390,10 +397,18 @@ static void _exec_move()
 /****************************************************************************************
  * Load sequencing code
  *
- *  LOADER INTERRUPT	- interrupt handler for running the loader
  * _request_load()		- fires a software interrupt (timer) to request to load a move
+ *  load_mode interrupt	- interrupt handler for running the loader
  * _load_move() 		- load a move into steppers, load a dwell, or process a Null move
  */
+
+static void _request_load_move()
+{
+	if (st.timer_ticks_downcount == 0) {	// bother interrupting
+		load_timer.setInterruptPending();
+	} 	// ...else don't bother to interrupt. 
+		// You'll just trigger an interrupt and find out the loader is not ready
+}
 
 // Define the timers inside the Motate namespace
 namespace Motate {
@@ -404,14 +419,6 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 	_load_move();
 }
 } // namespace Motate
-
-static void _request_load_move()
-{
-	if (st.timer_ticks_downcount == 0) {	// bother interrupting
-		load_timer.setInterruptPending();
-	} 	// else don't bother to interrupt. You'll just trigger an
-		// interrupt and find out the load routine is not ready for you
-}
 
 /*
  * _load_move() - Dequeue move and load into stepper struct
@@ -428,6 +435,7 @@ static void _request_load_move()
 
 void _load_move()
 {
+/*
 #ifdef TEST_CODE
     sps.move_type = true;
 
@@ -436,50 +444,29 @@ void _load_move()
 	st.m[MOTOR_1].phase_increment = 90000;
 	st.m[MOTOR_1].phase_accumulator = -sps.timer_ticks;
 	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-
-// 	sps.timer_ticks = 248;
-//	sps.timer_ticks_X_substeps = 24800000;
-//	st.m[MOTOR_1].phase_increment = 727;
-//	st.m[MOTOR_1].phase_accumulator = 0;
-//	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-  
-    dda_timer.start();
+	st_enable(); 
+//    dda_timer.start();
     return;
 #endif
-
+*/
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.timer_ticks_downcount = sps.timer_ticks;
 		st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
  
-/* Old motor1 code - left in for comparison
-		st.m[MOTOR_1].steps = sps.m[MOTOR_1].steps;			// set steps
-		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
-			st.m[MOTOR_1].counter = -(st.timer_ticks_downcount);
-		}
-		if (st.m[MOTOR_1].steps != 0) {
-			// For ideal optimizations, only set or clear a bit at a time.
-			if (sps.m[MOTOR_1].dir == 0) {
-				PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm;// CW motion (bit cleared)
-			} else {
-				PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;	// CCW motion
-			}
-			PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm;	// enable motor
-		}
-*/
 		st.m[MOTOR_1].phase_increment = sps.m[MOTOR_1].phase_increment;
-		if (sps.counter_reset_flag == true) {				// compensate for pulse phasing
+		if (sps.counter_reset_flag == true) {	// compensate for pulse phasing
 			st.m[MOTOR_1].phase_accumulator = -(st.timer_ticks_downcount);
 		}
 		if (st.m[MOTOR_1].phase_increment != 0) {
 			if (sps.m[MOTOR_1].dir == 0) {
-				motor_1.dir.clear();	// clear bit for clockwise motion 
+				motor_1.dir.clear();			// clear bit for clockwise motion 
 			} else {
-				motor_1.dir.set();		// CCW motion
+				motor_1.dir.set();				// CCW motion
 			}
-			motor_1.enable.clear();		// enable motor
+			motor_1.enable.clear();				// enable motor
 		}
-		
+
 		st.m[MOTOR_2].phase_increment = sps.m[MOTOR_2].phase_increment;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_2].phase_accumulator = -(st.timer_ticks_downcount);
@@ -489,7 +476,7 @@ void _load_move()
 			else motor_2.dir.set();
 			motor_2.enable.clear();
 		}
-		
+
 		st.m[MOTOR_3].phase_increment = sps.m[MOTOR_3].phase_increment;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_3].phase_accumulator = -(st.timer_ticks_downcount);
@@ -519,7 +506,7 @@ void _load_move()
 			else motor_5.dir.set();
 			motor_5.enable.clear();
 		}
-		
+
 		st.m[MOTOR_6].phase_increment = sps.m[MOTOR_6].phase_increment;
 		if (sps.counter_reset_flag == true) {
 			st.m[MOTOR_6].phase_accumulator = (st.timer_ticks_downcount);
@@ -529,8 +516,9 @@ void _load_move()
 			else motor_6.dir.set();
 			motor_6.enable.clear();
 		}
-		enable.clear();											// global enable
-		dda_timer.start();
+		st_enable();
+//		enable.clear();
+//		dda_timer.start();
 
 	// handle dwells
 	} else if (sps.move_type == MOVE_TYPE_DWELL) {
@@ -539,8 +527,8 @@ void _load_move()
 	}
 
 	// all other cases drop to here - such as Null moves queued by Mcodes 
-	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;					// flip it back
-	st_request_exec_move();										// exec and prep next move
+	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
+	st_request_exec_move();								// exec and prep next move
 }
 
 /****************************************************************************************

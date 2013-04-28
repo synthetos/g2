@@ -195,7 +195,7 @@ static stat_t _command_dispatch()
 		}
 	} else if (cs.state == CONTROLLER_STARTUP) {
 //		strcpy(cs.in_buf, "$x");
-		strcpy(cs.in_buf, "g1f400x100");
+//		strcpy(cs.in_buf, "g1f400x100");
 		cs.state = CONTROLLER_READY;
 	} else {
 		return (STAT_OK);
