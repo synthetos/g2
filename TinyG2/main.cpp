@@ -58,8 +58,8 @@ int main( void )
 	init();
 	USBDevice.attach();				// USB setup
 	SerialUSB.begin(115200);
-	delay(1000);
-	
+//	delay(1000);
+
 	// TinyG application setup
 	_application_init();
 

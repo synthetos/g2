@@ -44,7 +44,7 @@ void hardware_get_id(char_t *id);
 /* CPU clock */	
 
 #undef F_CPU							// set for delays
-#define F_CPU 84000000UL				// should always precede <avr/delay.h>
+#define F_CPU 84000000UL
 
 #define RTC_PERIOD 10					// MS for system tick (systick * N)
 
@@ -78,9 +78,9 @@ void hardware_get_id(char_t *id);
 /* Timer assignments. See stepper.h and other headers for setup */
 
 Motate::timer_number dda_timer_num   = 3;	// stepper pulse generation in stepper.cpp
-Motate::timer_number dwell_timer_num = 4; // dwell timing in stepper.cpp
-Motate::timer_number load_timer_num  = 5; // request load timer in stepper.cpp
-Motate::timer_number exec_timer_num  = 6; // request exec timer in stepper.cpp
+Motate::timer_number dwell_timer_num = 4;	// dwell timing in stepper.cpp
+Motate::timer_number load_timer_num  = 5;	// request load timer in stepper.cpp
+Motate::timer_number exec_timer_num  = 6;	// request exec timer in stepper.cpp
 
 /* Pin assignments */
 

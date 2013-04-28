@@ -1086,7 +1086,6 @@ static stat_t get_gc(cmdObj_t *cmd)
 static stat_t run_gc(cmdObj_t *cmd)
 {
 	return(gc_gcode_parser(*cmd->stringp));
-	return (STAT_OK);
 }
 
 static stat_t run_home(cmdObj_t *cmd)
@@ -1182,11 +1181,9 @@ static stat_t set_mi(cmdObj_t *cmd)		// motor microsteps
 	return (STAT_OK);
 }
 
-static stat_t set_po(cmdObj_t *cmd)		// motor polarity
-{ 
-	ritorno (set_01(cmd));
-	st_set_polarity(_get_motor(cmd->index), (uint8_t)cmd->value);
-	return (STAT_OK);
+static stat_t set_po(cmdObj_t *cmd)			// motor polarity
+{
+	return(set_01(cmd));
 }
 
 static void pr_ma_ui8(cmdObj_t *cmd)		// print uint8_t value

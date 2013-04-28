@@ -37,7 +37,6 @@ void stepper_init(void);			// initialize stepper subsystem
 
 void st_disable(void);				// stop the steppers (step the stoppers)
 uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
-void st_set_polarity(const uint8_t motor, const uint8_t polarity);
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
 
 void st_prep_null(void);
@@ -49,9 +48,6 @@ uint8_t st_prep_line(float steps[], float microseconds);
 magic_t st_get_st_magic(void);
 magic_t st_get_sps_magic(void);
 
-// handy macro
-#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
-
 /*
  * Stepper configs and constants
  */
@@ -59,18 +55,17 @@ magic_t st_get_sps_magic(void);
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
 #define FREQUENCY_DDA	50000UL
+#define FREQUENCY_DWELL	1000UL
+#define FREQUENCY_SGI	200000UL	// 200,000 Hz means software interrupts will fire 5 uSec after being called
+//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)		// handy macro
+
+// DEPRECATED
 //#define TC_RC_DDA		(VARIANT_MCK / FREQUENCY_DDA / 2) // <--- divided by MCK divisor
 //#define TC_CMR_DDA		(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
 //#define TC_IER_DDA		TC_IER_CPCS		// Interrupt enable value - RC compare
-
 //#define TC_CMR_DWELL	(TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC)	// MCK/2, RC trigger (component_tc.h)
 //#define TC_IER_DWELL	TC_IER_CPCS		// Interrupt enable value - RC compare
-
-#define FREQUENCY_DWELL	1000UL
 //#define FREQUENCY_DWELL	1000UL
-
-#define FREQUENCY_SGI 200000UL // 200,000 Hz means software interrupts will fire 5 uSec after being called
-
 //#define TC_CHANNEL_DDA 
 //#define F_DDA 			(float)10000	// DDA frequency in hz.
 //#define F_DDA 		(float)50000	// DDA frequency in hz.
