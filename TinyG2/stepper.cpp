@@ -39,7 +39,7 @@
 #include "motateTimers.h"
 #include "util.h"
 
-#define TEST_CODE
+//#define TEST_CODE
 
 using namespace Motate;
 
@@ -196,12 +196,12 @@ void stepper_init()
 	sps.magic_start = MAGICNUM;
 
 	enable.clear();
-	while (1) {
-		motor_1.step.set();		// turn step bit on
-//		delay (2);
-		motor_1.step.clear();
-//		delay (2);
-	}
+// 	while (1) {
+// 		motor_1.step.set();		// turn step bit on
+// //		delay (2);
+// 		motor_1.step.clear();
+// //		delay (2);
+// 	}
 
 	// setup DDA timer
 #ifdef BARE_CODE
@@ -233,7 +233,7 @@ void stepper_init()
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 	_clear_diagnostic_counters();
 		
-#if 1
+#ifdef TEST_CODE
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
 	sps.timer_ticks_X_substeps = 1000000;
@@ -428,7 +428,6 @@ static void _request_load_move()
 
 void _load_move()
 {
-/*
 #ifdef TEST_CODE
     sps.move_type = true;
 
@@ -447,7 +446,7 @@ void _load_move()
     dda_timer.start();
     return;
 #endif
-*/
+
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.timer_ticks_downcount = sps.timer_ticks;
