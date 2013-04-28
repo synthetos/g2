@@ -7735,7 +7735,7 @@
 /* Begin PBXLegacyTarget section */
 		D45710C21705330C00EA19A8 /* g3_due */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) flash VERBOSE=1 COLOR=0";
+			buildArgumentsString = "$(ACTION) flash VERBOSE=1 COLOR=0 OPTIMIZATION=s";
 			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */;
 			buildPhases = (
 			);

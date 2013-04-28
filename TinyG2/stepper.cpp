@@ -204,8 +204,8 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-    dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
-    dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
+	dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
+	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 #endif
 
 	// setup DWELL timer
@@ -214,16 +214,16 @@ void stepper_init()
 
 	// setup LOAD timer
 	load_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
-	load_timer.setInterrupts(kInterruptOnOverflow);
+	load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 
 	// setup EXEC timer
 	exec_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
-	exec_timer.setInterrupts(kInterruptOnOverflow);
+	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
 
 #if 0
-    sps.move_type = true;
+	sps.move_type = true;
 	sps.timer_ticks = 100000;
 	sps.timer_ticks_X_substeps = 1000000;
 	sps.timer_period = 64000;
@@ -231,11 +231,11 @@ void stepper_init()
 	st.m[MOTOR_1].steps = 90000;
 	st.m[MOTOR_1].counter = -sps.timer_ticks;
 	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-    
-    dda_timer.start();
+
+	dda_timer.start();
 #endif
 #if 1
-    st_request_exec_move();
+	st_request_exec_move();
 #endif
 }
 
