@@ -221,7 +221,7 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
-
+/*
 #if 0
 	sps.move_type = true;
 	sps.timer_ticks = 100000;
@@ -234,9 +234,10 @@ void stepper_init()
 
 	dda_timer.start();
 #endif
-#if 1
+*/
+//#if 1
 	st_request_exec_move();
-#endif
+//#endif
 }
 
 /*
@@ -247,7 +248,7 @@ void st_disable()
 	dda_timer.stop();
 }
 
-// Define the timers inside the Motate namespace
+// Define the timer interrupts inside the Motate namespace
 namespace Motate {
 
 /*
@@ -420,7 +421,7 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 	_load_move();
 }
 
-}
+} // namespace Motate
 /* OLD CODE
 ISR(TIMER_LOAD_ISR_vect) {					// load steppers SW interrupt
 {
@@ -666,8 +667,3 @@ void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 	}
 */
 }
-/*
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-*/

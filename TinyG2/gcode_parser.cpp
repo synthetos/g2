@@ -44,7 +44,7 @@ static stat_t _normalize_gcode_block(char_t *block);
 static stat_t _parse_gcode_block(char_t *line);	// Parse the block into structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
 static stat_t _check_gcode_block(void);			// check the block for correctness
-static stat_t _get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *i);
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
 
 #define SET_MODAL(m,parm,val) ({gn.parm=val; gf.parm=1; gp.modals[m]+=1; break;})
@@ -162,24 +162,27 @@ static stat_t _normalize_gcode_block(char_t *block)
  *  floats (no whitespace).
  *
  *	A number of implicit things happen when the gn struct is zeroed:
- *	  - inverse feed rate mode is cancelled - set back to units_per_minute mode
+ *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
 
 static stat_t _parse_gcode_block(char_t *buf) 
 {
-	uint8_t i=0; 	 			// persistent index into Gcode block buffer (buf)
-  	char_t letter;				// parsed letter, eg.g. G or X or Y
-	float value;				// value parsed from letter (e.g. 2 for G2)
-	uint8_t status = STAT_OK;
+//	uint8_t index = 0;				// persistent index into Gcode block buffer (buf)
+	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
+  	char letter;					// parsed letter, eg.g. G or X or Y
+	float value;					// value parsed from letter (e.g. 2 for G2)
+	stat_t status = STAT_OK;
 
 	// set initial state for new move 
-	memset(&gp, 0, sizeof(gp));	// clear all parser values
-	memset(&gf, 0, sizeof(gf));	// clear all next-state flags
-	memset(&gn, 0, sizeof(gn));	// clear all next-state values
+	memset(&gp, 0, sizeof(gp));		// clear all parser values
+	memset(&gf, 0, sizeof(gf));		// clear all next-state flags
+	memset(&gn, 0, sizeof(gn));		// clear all next-state values
 	gn.motion_mode = cm_get_motion_mode();	// get motion mode from previous block
 
   	// extract commands and parameters
-	while((status = _get_next_statement(&letter, &value, buf, &i)) == STAT_OK) {
+	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
+//	while((status = _get_gcode_word(&letter, &value, (char *)buf, &index)) == STAT_OK) {
+//	while((status = _get_next_statement(&letter, &value, buf, &i)) == STAT_OK) {
 
 		switch(letter) {
 			case 'G':
@@ -442,7 +445,52 @@ static stat_t _check_gcode_block()
  * helpers
  */
 
-static stat_t _get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *index) {
+/*
+ * _get_next_gcode_word() - get gcode word consisting of a letter and a value
+ *
+ *	This function requires the Gcode string to be normalized
+ */
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value) 
+{
+	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
+
+	// get letter part
+	if(isupper(**pstr) == false) { return (STAT_EXPECTED_COMMAND_LETTER); }
+	*letter = **pstr;
+	(*pstr)++;
+	
+	// X-axis-becomes-a-hexadecimal-number get-value case, e.g. G0X100 --> G255
+	if ((**pstr == '0') && (*(*pstr+1) == 'X')) {
+		*value = 0;
+		(*pstr)++;
+		return (STAT_OK);		// pointer points to X
+	}
+
+	// get-value general case
+	char *end; 
+	*value = strtof(*pstr, &end);
+	if(end == *pstr) { return(STAT_BAD_NUMBER_FORMAT); }	// more robust test then checking for value=0;
+	*pstr = end;
+	return (STAT_OK);			// pointer points to next character after the word
+}
+
+/*
+stat_t _read_float(char_t *buf, uint8_t *index, float *float_ptr)
+{
+	char *start = (char *)buf + *index;
+	char *end;
+	
+//	*float_ptr = (float)strtod(start, &end);
+	*float_ptr = strtof(start, &end);
+	if(end == start) {
+		return(false);
+	}
+	*index = (uint8_t)(end - (char *)buf);
+	return(true);
+}
+
+static stat_t _get_next_statement(char_t *letter, float *value, char_t *buf, uint8_t *index) 
+{
 	if (buf[*index] == NUL) { 		// no more statements
 		return (STAT_COMPLETE);
 	}
@@ -451,16 +499,18 @@ static stat_t _get_next_statement(char_t *letter, float *value, char_t *buf, uin
 		return (STAT_EXPECTED_COMMAND_LETTER);
 	}
 	(*index)++;
-	if (read_float(buf, index, value) == false) {
+	if (_read_float(buf, index, value) == false) {
 		return (STAT_BAD_NUMBER_FORMAT);
 	}
 	return (STAT_OK);		// leave the index on the next character after the statement
 }
+*/
 
 static uint8_t _point(float value) 
 {
 	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
 }
+
 
 #ifdef __cplusplus
 }

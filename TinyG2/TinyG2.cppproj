@@ -153,7 +153,7 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=0</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <PostBuildEvent>
     </PostBuildEvent>

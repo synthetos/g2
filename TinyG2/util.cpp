@@ -142,10 +142,10 @@ uint8_t isnumber(char_t c)
  *	float_ptr	pointer to float to write value into
  *
  *	The line is normalized when it is all caps, has no white space,
- *	no non-alphnumeric characters, and no newline or CR.
+ *	no non-alphanumeric characters, and no newline or CR.
  */
-
-uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr) 
+/*
+stat_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr) 
 {
 	char_t *start = buf + *index;
 	char_t *end;
@@ -157,7 +157,7 @@ uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr)
 	*index = (uint8_t)(end - buf);
 	return(true);
 }
-
+*/
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 
@@ -167,7 +167,7 @@ uint8_t read_float(uint8_t *buf, uint8_t *index, float *float_ptr)
  *	See http://en.wikipedia.org/wiki/Java_hashCode()
  */
 #define HASHMASK 9999
-/*
+
 uint16_t compute_checksum(char_t const *string, const uint16_t length) 
 {
 	uint32_t h = 0;
@@ -181,7 +181,7 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
     }
     return (h % HASHMASK);
 }
-*/
+
 
 /**** Vector utilities ****
  * copy_vector()			- copy vector of arbitrary length
