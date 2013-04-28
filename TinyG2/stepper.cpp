@@ -44,10 +44,10 @@
 using namespace Motate;
 
 // Setup local resources
-Motate::Timer<DDA_TIMER_NUM> dda_timer;			// stepper pulse generation
-Motate::Timer<DWELL_TIMER_NUM> dwell_timer;		// dwell timer
-Motate::Timer<LOAD_TIMER_NUM> load_timer;		// triggers load of next stepper segment
-Motate::Timer<EXEC_TIMER_NUM> exec_timer;		// triggers calculation of next+1 stepper segment
+Motate::Timer<dda_timer_num> dda_timer;			// stepper pulse generation
+Motate::Timer<dwell_timer_num> dwell_timer;		// dwell timer
+Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
+Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
 Motate::Pin<31> proof_of_timer(kOutput);
 
 // Setup a stepper template to hold our pins
@@ -193,50 +193,6 @@ void stepper_init()
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
 
-	// ***** Setup pins *****
-	motor_1.step.setMode(kOutput);
-	motor_1.dir.setMode(kOutput);
-	motor_1.enable.setMode(kOutput);
-	motor_1.ms0.setMode(kOutput);
-	motor_1.ms1.setMode(kOutput);
-	motor_1.vref.setMode(kOutput);
-
-	motor_2.step.setMode(kOutput);
-	motor_2.dir.setMode(kOutput);
-	motor_2.enable.setMode(kOutput);
-	motor_2.ms0.setMode(kOutput);
-	motor_2.ms1.setMode(kOutput);
-	motor_2.vref.setMode(kOutput);
-
-	motor_3.step.setMode(kOutput);
-	motor_3.dir.setMode(kOutput);
-	motor_3.enable.setMode(kOutput);
-	motor_3.ms0.setMode(kOutput);
-	motor_3.ms1.setMode(kOutput);
-	motor_3.vref.setMode(kOutput);
-
-	motor_4.step.setMode(kOutput);
-	motor_4.dir.setMode(kOutput);
-	motor_4.enable.setMode(kOutput);
-	motor_4.ms0.setMode(kOutput);
-	motor_4.ms1.setMode(kOutput);
-	motor_4.vref.setMode(kOutput);
-
-	motor_5.step.setMode(kOutput);
-	motor_5.dir.setMode(kOutput);
-	motor_5.enable.setMode(kOutput);
-	motor_5.ms0.setMode(kOutput);
-	motor_5.ms1.setMode(kOutput);
-	motor_5.vref.setMode(kOutput);
-
-	motor_6.step.setMode(kOutput);
-	motor_6.dir.setMode(kOutput);
-	motor_6.enable.setMode(kOutput);
-	motor_6.ms0.setMode(kOutput);
-	motor_6.ms1.setMode(kOutput);
-	motor_6.vref.setMode(kOutput);
-    
-
 	// ***** Setup timers *****
 	// setup DDA timer
 #ifdef BARE_CODE
@@ -249,14 +205,12 @@ void stepper_init()
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
     dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
-    dda_timer.setInterrupts(kInterruptOnOverflow);
-//    dda_timer.start();
+    dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 #endif
 
 	// setup DWELL timer
 	dwell_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DWELL);
-	dwell_timer.setInterrupts(kInterruptOnOverflow);
-//	dwell_timer.start();
+	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
 	// setup LOAD timer
 	load_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
@@ -280,6 +234,9 @@ void stepper_init()
     
     dda_timer.start();
 #endif
+#if 1
+    st_request_exec_move();
+#endif
 }
 
 /*
@@ -296,9 +253,9 @@ namespace Motate {
 /*
  * Dwell timer interrupt
  */
-MOTATE_TIMER_INTERRUPT(DWELL_TIMER_NUM) 
+MOTATE_TIMER_INTERRUPT(dwell_timer_num) 
 {
-	dummy = DWELL_STATUS_REGISTER;				// read SR to clear interrupt condition
+	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
 	if (--st.timer_ticks_downcount == 0) {
 		dwell_timer.stop();
 		_load_move();
@@ -312,9 +269,9 @@ MOTATE_TIMER_INTERRUPT(DWELL_TIMER_NUM)
  *	it's faster than using indexed timer and port accesses. I checked.
  *	Even when -0s or -03 is used.
  */
-MOTATE_TIMER_INTERRUPT(DDA_TIMER_NUM)
+MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
-    dummy = DDA_STATUS_REGISTER;	// read SR to clear interrupt condition
+	dda_timer.getInterruptCause(); // read SR to clear interrupt condition
     proof_of_timer = 0;
     
     if (!motor_1.step.isNull() && (st.m[MOTOR_1].counter += st.m[MOTOR_1].steps) > 0) {
@@ -403,7 +360,7 @@ uint8_t st_test_exec_state()
 void st_request_exec_move()
 {
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
-		exec_timer.start();
+		exec_timer.setInterruptPending();
 		//TIMER_EXEC.PER = SWI_PERIOD;
 		//TIMER_EXEC.CTRLA = STEP_TIMER_ENABLE;			// trigger a LO interrupt
 	}
@@ -412,10 +369,9 @@ void st_request_exec_move()
 // Define the timers inside the Motate namespace
 namespace Motate {
 
-MOTATE_TIMER_INTERRUPT(EXEC_TIMER_NUM)			// exec move SW interrupt
+MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 {
-	dummy = EXEC_STATUS_REGISTER;
-	exec_timer.stop();							// disable SW interrupt timer
+	exec_timer.getInterruptCause(); // read SR to clear interrupt condition
 	_exec_move();
 }
     
@@ -448,7 +404,7 @@ static void _exec_move()
 static void _request_load_move()
 {
 	if (st.timer_ticks_downcount == 0) {	// bother interrupting
-		load_timer.start();
+		load_timer.setInterruptPending();
 		//		TIMER_LOAD.PER = SWI_PERIOD;
 		//		TIMER_LOAD.CTRLA = STEP_TIMER_ENABLE;
 	} 	// else don't bother to interrupt. You'll just trigger an
@@ -458,10 +414,9 @@ static void _request_load_move()
 // Define the timers inside the Motate namespace
 namespace Motate {
 
-MOTATE_TIMER_INTERRUPT(LOAD_TIMER_NUM)		// load steppers SW interrupt
+MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 {
-	dummy = LOAD_STATUS_REGISTER;
-	load_timer.stop();						// disable SW interrupt timer
+	load_timer.getInterruptCause(); // read SR to clear interrupt condition
 	_load_move();
 }
 
@@ -488,8 +443,8 @@ ISR(TIMER_LOAD_ISR_vect) {					// load steppers SW interrupt
 
 void _load_move()
 {
-/*++++ TEST CODE
-	sps.move_type = true;
+#if 1
+    sps.move_type = true;
 	sps.timer_ticks = 100000;
 	sps.timer_ticks_X_substeps = 1000000;
 	sps.timer_period = 64000;
@@ -497,7 +452,11 @@ void _load_move()
 	st.m[MOTOR_1].steps = 90000;
 	st.m[MOTOR_1].counter = -sps.timer_ticks;
 	st.timer_ticks_X_substeps = sps.timer_ticks_X_substeps;
-*/
+    
+    dda_timer.start();
+    return;
+#endif
+
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.timer_ticks_downcount = sps.timer_ticks;

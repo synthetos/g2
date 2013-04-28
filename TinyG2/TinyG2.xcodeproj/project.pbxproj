@@ -8,29 +8,41 @@
 
 /* Begin PBXBuildFile section */
 		D432963A171A5564001611B6 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329639171A5564001611B6 /* syscalls_sam3.cpp */; };
-		D432963C171A5577001611B6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D432963B171A5577001611B6 /* main.cpp */; };
-		D4329648171D1B00001611B6 /* config_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D432963D171D1B00001611B6 /* config_app.cpp */; };
-		D4329649171D1B00001611B6 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D432963F171D1B00001611B6 /* config.cpp */; };
-		D432964A171D1B00001611B6 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329641171D1B00001611B6 /* controller.cpp */; };
-		D432964B171D1B00001611B6 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329643171D1B00001611B6 /* json_parser.cpp */; };
-		D432964C171D1B00001611B6 /* xio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329646171D1B00001611B6 /* xio.cpp */; };
-		D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C81705334000EA19A8 /* MotatePins.h */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
 		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
 		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
-		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D457113417053C3A00EA19A8 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D45710D91705334100EA19A8 /* stepper.cpp */; };
-		D457113517053C3A00EA19A8 /* stepper.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710DA1705334100EA19A8 /* stepper.h */; };
-		D457117317053C3A00EA19A8 /* tinyg2.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111B1705334100EA19A8 /* tinyg2.h */; };
+		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; };
 		D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111D1705334100EA19A8 /* pins_arduino.h */; };
 		D457117517053C3A00EA19A8 /* variant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D457111E1705334100EA19A8 /* variant.cpp */; };
 		D457117617053C3A00EA19A8 /* variant.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111F1705334100EA19A8 /* variant.h */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
-		D48F5A3F172C1E8D00D0E055 /* hardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A3D172C1E8D00D0E055 /* hardware.cpp */; };
+		D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */; };
+		D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A41172CB1F900D0E055 /* config_app.cpp */; };
+		D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A42172CB1F900D0E055 /* config.cpp */; };
+		D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A43172CB1F900D0E055 /* controller.cpp */; };
+		D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */; };
+		D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */; };
+		D48F5A5C172CB1FA00D0E055 /* gpio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A46172CB1F900D0E055 /* gpio.cpp */; };
+		D48F5A5D172CB1FA00D0E055 /* hardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A47172CB1F900D0E055 /* hardware.cpp */; };
+		D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A48172CB1FA00D0E055 /* help.cpp */; };
+		D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A49172CB1FA00D0E055 /* json_parser.cpp */; };
+		D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */; };
+		D48F5A61172CB1FA00D0E055 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4B172CB1FA00D0E055 /* main.cpp */; };
+		D48F5A62172CB1FA00D0E055 /* persistence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4C172CB1FA00D0E055 /* persistence.cpp */; };
+		D48F5A63172CB1FA00D0E055 /* plan_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */; };
+		D48F5A64172CB1FA00D0E055 /* plan_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */; };
+		D48F5A65172CB1FA00D0E055 /* planner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4F172CB1FA00D0E055 /* planner.cpp */; };
+		D48F5A66172CB1FA00D0E055 /* report.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A50172CB1FA00D0E055 /* report.cpp */; };
+		D48F5A67172CB1FA00D0E055 /* spindle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A51172CB1FA00D0E055 /* spindle.cpp */; };
+		D48F5A68172CB1FA00D0E055 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A52172CB1FA00D0E055 /* stepper.cpp */; };
+		D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A53172CB1FA00D0E055 /* text_parser.cpp */; };
+		D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A54172CB1FA00D0E055 /* util.cpp */; };
+		D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A55172CB1FA00D0E055 /* xio.cpp */; };
+		D48F5A82172CE34A00D0E055 /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2F217054FDE00F2BF9B /* startup_sam3xa.c */; };
 		D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85917054CB800F2BF9B /* cortex_handlers.c */; };
 		D49EB89117054CB800F2BF9B /* cxxabi-compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */; };
 		D49EB89217054CB800F2BF9B /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85C17054CB800F2BF9B /* hooks.c */; };
-		D49EB89317054CB800F2BF9B /* iar_calls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85D17054CB800F2BF9B /* iar_calls_sam3.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EB89317054CB800F2BF9B /* iar_calls_sam3.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85D17054CB800F2BF9B /* iar_calls_sam3.c */; };
 		D49EB89417054CB800F2BF9B /* IPAddress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85E17054CB800F2BF9B /* IPAddress.cpp */; };
 		D49EB89517054CB800F2BF9B /* itoa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86017054CB800F2BF9B /* itoa.c */; };
 		D49EB89717054CB800F2BF9B /* Print.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86317054CB800F2BF9B /* Print.cpp */; };
@@ -304,9 +316,9 @@
 		D49EC58C17054FDF00F2BF9B /* libarm_cortexM4lf_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1D17054FDC00F2BF9B /* libarm_cortexM4lf_math.a */; };
 		D49EC5C017054FDF00F2BF9B /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D49EC40117054FDF00F2BF9B /* Makefile */; };
 		D49EC5C117054FDF00F2BF9B /* adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42117054FDF00F2BF9B /* adc.c */; };
-		D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */; };
 		D49EC5C317054FDF00F2BF9B /* dacc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42317054FDF00F2BF9B /* dacc.c */; };
-		D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */; };
 		D49EC5C517054FDF00F2BF9B /* pio.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42517054FDF00F2BF9B /* pio.c */; };
 		D49EC5C617054FDF00F2BF9B /* pmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42617054FDF00F2BF9B /* pmc.c */; };
 		D49EC5C717054FDF00F2BF9B /* pwmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42717054FDF00F2BF9B /* pwmc.c */; };
@@ -323,16 +335,11 @@
 		D49EC5D217054FDF00F2BF9B /* uotghs_host.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43217054FDF00F2BF9B /* uotghs_host.c */; };
 		D49EC5D317054FDF00F2BF9B /* usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43317054FDF00F2BF9B /* usart.c */; };
 		D49EC5D417054FDF00F2BF9B /* wdt.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43417054FDF00F2BF9B /* wdt.c */; };
-		D49EC5DF170676AF00F2BF9B /* sam.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5317054FDC00F2BF9B /* sam.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC5E0170676B500F2BF9B /* sam3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5417054FDC00F2BF9B /* sam3.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC5E1170676C400F2BF9B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC32A17054FDE00F2BF9B /* startup_sam3xa.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC5E2170676C600F2BF9B /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC33317054FDE00F2BF9B /* system_sam3xa.c */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC5DF170676AF00F2BF9B /* sam.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5317054FDC00F2BF9B /* sam.h */; };
+		D49EC5E0170676B500F2BF9B /* sam3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5417054FDC00F2BF9B /* sam3.h */; };
 		D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0617054FDC00F2BF9B /* arm_common_tables.h */; };
 		D49EC5E41706770A00F2BF9B /* arm_math.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0717054FDC00F2BF9B /* arm_math.h */; };
-		D49EC5E51706770A00F2BF9B /* core_cm0.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0817054FDC00F2BF9B /* core_cm0.h */; };
 		D49EC5E61706770A00F2BF9B /* core_cm3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0917054FDC00F2BF9B /* core_cm3.h */; };
-		D49EC5E71706770A00F2BF9B /* core_cm4.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0A17054FDC00F2BF9B /* core_cm4.h */; };
-		D49EC5E81706770A00F2BF9B /* core_cm4_simd.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0B17054FDC00F2BF9B /* core_cm4_simd.h */; };
 		D49EC5E91706770A00F2BF9B /* core_cmFunc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0C17054FDC00F2BF9B /* core_cmFunc.h */; };
 		D49EC5EA1706770A00F2BF9B /* core_cmInstr.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0D17054FDC00F2BF9B /* core_cmInstr.h */; };
 		D49EC5EB1706789800F2BF9B /* component_adc.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC26117054FDE00F2BF9B /* component_adc.h */; };
@@ -406,15 +413,8 @@
 		D49EC62F1706789800F2BF9B /* instance_usart2.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A617054FDE00F2BF9B /* instance_usart2.h */; };
 		D49EC6301706789800F2BF9B /* instance_usart3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A717054FDE00F2BF9B /* instance_usart3.h */; };
 		D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A817054FDE00F2BF9B /* instance_wdt.h */; };
-		D49EC6321706789800F2BF9B /* pio_sam3a4c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AA17054FDE00F2BF9B /* pio_sam3a4c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6331706789800F2BF9B /* pio_sam3a8c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AB17054FDE00F2BF9B /* pio_sam3a8c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6341706789800F2BF9B /* pio_sam3x4c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AC17054FDE00F2BF9B /* pio_sam3x4c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6351706789800F2BF9B /* pio_sam3x4e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AD17054FDE00F2BF9B /* pio_sam3x4e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6361706789800F2BF9B /* pio_sam3x8c.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AE17054FDE00F2BF9B /* pio_sam3x8c.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6381706789800F2BF9B /* pio_sam3x8h.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B017054FDE00F2BF9B /* pio_sam3x8h.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
-		D49EC63A1706789800F2BF9B /* system_sam3xa.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B917054FDE00F2BF9B /* system_sam3xa.h */; settings = {COMPILER_FLAGS = "-D__SAM3X8H__"; }; };
+		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; };
+		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 /* End PBXBuildFile section */
 
@@ -432,33 +432,60 @@
 
 /* Begin PBXFileReference section */
 		D4329639171A5564001611B6 /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
-		D432963B171A5577001611B6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		D432963D171D1B00001611B6 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config_app.cpp; sourceTree = "<group>"; };
-		D432963E171D1B00001611B6 /* config_app.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config_app.h; sourceTree = "<group>"; };
-		D432963F171D1B00001611B6 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
-		D4329640171D1B00001611B6 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
-		D4329641171D1B00001611B6 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
-		D4329642171D1B00001611B6 /* controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = controller.h; sourceTree = "<group>"; };
-		D4329643171D1B00001611B6 /* json_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = json_parser.cpp; sourceTree = "<group>"; };
-		D4329644171D1B00001611B6 /* json_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json_parser.h; sourceTree = "<group>"; };
-		D4329645171D1B00001611B6 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
-		D4329646171D1B00001611B6 /* xio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xio.cpp; sourceTree = "<group>"; };
-		D4329647171D1B00001611B6 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
 		D45710C71705334000EA19A8 /* keywords.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
 		D45710C81705334000EA19A8 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
 		D45710C91705334000EA19A8 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
 		D45710D61705334100EA19A8 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
 		D45710D71705334100EA19A8 /* AvrXPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrXPins.h; sourceTree = "<group>"; };
 		D45710D81705334100EA19A8 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
-		D45710D91705334100EA19A8 /* stepper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stepper.cpp; sourceTree = "<group>"; };
-		D45710DA1705334100EA19A8 /* stepper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stepper.h; sourceTree = "<group>"; };
-		D457111B1705334100EA19A8 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
 		D457111D1705334100EA19A8 /* pins_arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pins_arduino.h; sourceTree = "<group>"; };
 		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
 		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
-		D48F5A3D172C1E8D00D0E055 /* hardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hardware.cpp; sourceTree = "<group>"; };
-		D48F5A3E172C1E8D00D0E055 /* hardware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hardware.h; sourceTree = "<group>"; };
+		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canonical_machine.cpp; sourceTree = "<group>"; };
+		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config_app.cpp; sourceTree = "<group>"; };
+		D48F5A42172CB1F900D0E055 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
+		D48F5A43172CB1F900D0E055 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
+		D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_homing.cpp; sourceTree = "<group>"; };
+		D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gcode_parser.cpp; sourceTree = "<group>"; };
+		D48F5A46172CB1F900D0E055 /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gpio.cpp; sourceTree = "<group>"; };
+		D48F5A47172CB1F900D0E055 /* hardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hardware.cpp; sourceTree = "<group>"; };
+		D48F5A48172CB1FA00D0E055 /* help.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = help.cpp; sourceTree = "<group>"; };
+		D48F5A49172CB1FA00D0E055 /* json_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = json_parser.cpp; sourceTree = "<group>"; };
+		D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kinematics.cpp; sourceTree = "<group>"; };
+		D48F5A4B172CB1FA00D0E055 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D48F5A4C172CB1FA00D0E055 /* persistence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = persistence.cpp; sourceTree = "<group>"; };
+		D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_arc.cpp; sourceTree = "<group>"; };
+		D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_line.cpp; sourceTree = "<group>"; };
+		D48F5A4F172CB1FA00D0E055 /* planner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = planner.cpp; sourceTree = "<group>"; };
+		D48F5A50172CB1FA00D0E055 /* report.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = report.cpp; sourceTree = "<group>"; };
+		D48F5A51172CB1FA00D0E055 /* spindle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spindle.cpp; sourceTree = "<group>"; };
+		D48F5A52172CB1FA00D0E055 /* stepper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stepper.cpp; sourceTree = "<group>"; };
+		D48F5A53172CB1FA00D0E055 /* text_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = text_parser.cpp; sourceTree = "<group>"; };
+		D48F5A54172CB1FA00D0E055 /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = util.cpp; sourceTree = "<group>"; };
+		D48F5A55172CB1FA00D0E055 /* xio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xio.cpp; sourceTree = "<group>"; };
+		D48F5A6C172CB21000D0E055 /* canonical_machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = canonical_machine.h; sourceTree = "<group>"; };
+		D48F5A6D172CB21100D0E055 /* config_app.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config_app.h; sourceTree = "<group>"; };
+		D48F5A6E172CB21100D0E055 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		D48F5A6F172CB21100D0E055 /* controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = controller.h; sourceTree = "<group>"; };
+		D48F5A70172CB21100D0E055 /* gcode_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gcode_parser.h; sourceTree = "<group>"; };
+		D48F5A71172CB21100D0E055 /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
+		D48F5A72172CB21100D0E055 /* hardware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hardware.h; sourceTree = "<group>"; };
+		D48F5A73172CB21100D0E055 /* help.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = help.h; sourceTree = "<group>"; };
+		D48F5A74172CB21100D0E055 /* json_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json_parser.h; sourceTree = "<group>"; };
+		D48F5A75172CB21100D0E055 /* kinematics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kinematics.h; sourceTree = "<group>"; };
+		D48F5A76172CB21100D0E055 /* persistence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = persistence.h; sourceTree = "<group>"; };
+		D48F5A77172CB21100D0E055 /* plan_arc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = plan_arc.h; sourceTree = "<group>"; };
+		D48F5A78172CB21100D0E055 /* plan_line.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = plan_line.h; sourceTree = "<group>"; };
+		D48F5A79172CB21100D0E055 /* planner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = planner.h; sourceTree = "<group>"; };
+		D48F5A7A172CB21100D0E055 /* report.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = report.h; sourceTree = "<group>"; };
+		D48F5A7B172CB21100D0E055 /* settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings.h; sourceTree = "<group>"; };
+		D48F5A7C172CB21100D0E055 /* spindle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spindle.h; sourceTree = "<group>"; };
+		D48F5A7D172CB21100D0E055 /* stepper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stepper.h; sourceTree = "<group>"; };
+		D48F5A7E172CB21100D0E055 /* text_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = text_parser.h; sourceTree = "<group>"; };
+		D48F5A7F172CB21100D0E055 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
+		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
+		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
 		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 		D49EB85617054CB800F2BF9B /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
 		D49EB85717054CB800F2BF9B /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
@@ -3330,29 +3357,55 @@
 		D45710B7170532AC00EA19A8 = {
 			isa = PBXGroup;
 			children = (
-				D49EB85417054C4000F2BF9B /* index */,
 				D457117B17053EFA00EA19A8 /* Makefile */,
-				D432963F171D1B00001611B6 /* config.cpp */,
-				D432963D171D1B00001611B6 /* config_app.cpp */,
-				D4329641171D1B00001611B6 /* controller.cpp */,
-				D4329643171D1B00001611B6 /* json_parser.cpp */,
-				D432963B171A5577001611B6 /* main.cpp */,
-				D45710D91705334100EA19A8 /* stepper.cpp */,
-				D48F5A3D172C1E8D00D0E055 /* hardware.cpp */,
-				D48F5A3E172C1E8D00D0E055 /* hardware.h */,
-				D4329646171D1B00001611B6 /* xio.cpp */,
-				D4329640171D1B00001611B6 /* config.h */,
-				D432963E171D1B00001611B6 /* config_app.h */,
-				D4329642171D1B00001611B6 /* controller.h */,
-				D4329644171D1B00001611B6 /* json_parser.h */,
-				D45710DA1705334100EA19A8 /* stepper.h */,
-				D457111B1705334100EA19A8 /* tinyg2.h */,
-				D4329645171D1B00001611B6 /* util.h */,
-				D4329647171D1B00001611B6 /* xio.h */,
+				D48F5A4B172CB1FA00D0E055 /* main.cpp */,
+				D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */,
+				D48F5A6C172CB21000D0E055 /* canonical_machine.h */,
+				D48F5A42172CB1F900D0E055 /* config.cpp */,
+				D48F5A6E172CB21100D0E055 /* config.h */,
+				D48F5A41172CB1F900D0E055 /* config_app.cpp */,
+				D48F5A6D172CB21100D0E055 /* config_app.h */,
+				D48F5A43172CB1F900D0E055 /* controller.cpp */,
+				D48F5A6F172CB21100D0E055 /* controller.h */,
+				D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */,
+				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
+				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
+				D48F5A46172CB1F900D0E055 /* gpio.cpp */,
+				D48F5A71172CB21100D0E055 /* gpio.h */,
+				D48F5A47172CB1F900D0E055 /* hardware.cpp */,
+				D48F5A72172CB21100D0E055 /* hardware.h */,
+				D48F5A48172CB1FA00D0E055 /* help.cpp */,
+				D48F5A73172CB21100D0E055 /* help.h */,
+				D48F5A49172CB1FA00D0E055 /* json_parser.cpp */,
+				D48F5A74172CB21100D0E055 /* json_parser.h */,
+				D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */,
+				D48F5A75172CB21100D0E055 /* kinematics.h */,
+				D48F5A4C172CB1FA00D0E055 /* persistence.cpp */,
+				D48F5A76172CB21100D0E055 /* persistence.h */,
+				D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */,
+				D48F5A77172CB21100D0E055 /* plan_arc.h */,
+				D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */,
+				D48F5A78172CB21100D0E055 /* plan_line.h */,
+				D48F5A4F172CB1FA00D0E055 /* planner.cpp */,
+				D48F5A79172CB21100D0E055 /* planner.h */,
+				D48F5A50172CB1FA00D0E055 /* report.cpp */,
+				D48F5A7A172CB21100D0E055 /* report.h */,
+				D48F5A7B172CB21100D0E055 /* settings.h */,
+				D48F5A51172CB1FA00D0E055 /* spindle.cpp */,
+				D48F5A7C172CB21100D0E055 /* spindle.h */,
+				D48F5A52172CB1FA00D0E055 /* stepper.cpp */,
+				D48F5A7D172CB21100D0E055 /* stepper.h */,
+				D48F5A53172CB1FA00D0E055 /* text_parser.cpp */,
+				D48F5A7E172CB21100D0E055 /* text_parser.h */,
+				D48F5A7F172CB21100D0E055 /* tinyg2.h */,
+				D48F5A54172CB1FA00D0E055 /* util.cpp */,
+				D48F5A80172CB21100D0E055 /* util.h */,
+				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
+				D48F5A81172CB21100D0E055 /* xio.h */,
+				D45710C61705334000EA19A8 /* motate */,
 				D49EB85517054CB800F2BF9B /* arduino */,
 				D49EC5D51705FC1100F2BF9B /* bin */,
 				D49EB8A917054FD500F2BF9B /* CMSIS */,
-				D45710C61705334000EA19A8 /* motate */,
 				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D457111C1705334100EA19A8 /* variants */,
 			);
@@ -7552,6 +7605,7 @@
 		D49EC3FB17054FDF00F2BF9B /* platform */ = {
 			isa = PBXGroup;
 			children = (
+				D49EB85417054C4000F2BF9B /* index */,
 				D49EC3FC17054FDF00F2BF9B /* atmel_sam */,
 				D49EC43517054FDF00F2BF9B /* atmel_sam.mk */,
 				D4B5763417079D790070CCAE /* make_utilities.mk */,
@@ -7755,8 +7809,6 @@
 				D49EC5F21706789800F2BF9B /* component_gpbr.h in Sources */,
 				D49EC5F31706789800F2BF9B /* component_hsmci.h in Sources */,
 				D49EC5F41706789800F2BF9B /* component_matrix.h in Sources */,
-				D49EC5E2170676C600F2BF9B /* system_sam3xa.c in Sources */,
-				D49EC5E1170676C400F2BF9B /* startup_sam3xa.c in Sources */,
 				D49EC5F51706789800F2BF9B /* component_pdc.h in Sources */,
 				D49EC5F61706789800F2BF9B /* component_pio.h in Sources */,
 				D49EC5F71706789800F2BF9B /* component_pmc.h in Sources */,
@@ -7819,22 +7871,11 @@
 				D49EC62F1706789800F2BF9B /* instance_usart2.h in Sources */,
 				D49EC6301706789800F2BF9B /* instance_usart3.h in Sources */,
 				D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */,
-				D49EC6321706789800F2BF9B /* pio_sam3a4c.h in Sources */,
-				D49EC6331706789800F2BF9B /* pio_sam3a8c.h in Sources */,
-				D49EC6341706789800F2BF9B /* pio_sam3x4c.h in Sources */,
-				D49EC6351706789800F2BF9B /* pio_sam3x4e.h in Sources */,
-				D49EC6361706789800F2BF9B /* pio_sam3x8c.h in Sources */,
 				D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */,
-				D49EC6381706789800F2BF9B /* pio_sam3x8h.h in Sources */,
-				D49EC63A1706789800F2BF9B /* system_sam3xa.h in Sources */,
-				D457112F17053C3A00EA19A8 /* MotatePins.h in Sources */,
 				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
 				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
 				D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */,
 				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
-				D457113417053C3A00EA19A8 /* stepper.cpp in Sources */,
-				D457113517053C3A00EA19A8 /* stepper.h in Sources */,
-				D457117317053C3A00EA19A8 /* tinyg2.h in Sources */,
 				D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */,
 				D457117517053C3A00EA19A8 /* variant.cpp in Sources */,
 				D49EC5DF170676AF00F2BF9B /* sam.h in Sources */,
@@ -8107,10 +8148,7 @@
 				D49EC5C017054FDF00F2BF9B /* Makefile in Sources */,
 				D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */,
 				D49EC5E41706770A00F2BF9B /* arm_math.h in Sources */,
-				D49EC5E51706770A00F2BF9B /* core_cm0.h in Sources */,
 				D49EC5E61706770A00F2BF9B /* core_cm3.h in Sources */,
-				D49EC5E71706770A00F2BF9B /* core_cm4.h in Sources */,
-				D49EC5E81706770A00F2BF9B /* core_cm4_simd.h in Sources */,
 				D49EC5E91706770A00F2BF9B /* core_cmFunc.h in Sources */,
 				D49EC5EA1706770A00F2BF9B /* core_cmInstr.h in Sources */,
 				D49EC5C117054FDF00F2BF9B /* adc.c in Sources */,
@@ -8134,14 +8172,30 @@
 				D49EC5D317054FDF00F2BF9B /* usart.c in Sources */,
 				D49EC5D417054FDF00F2BF9B /* wdt.c in Sources */,
 				D432963A171A5564001611B6 /* syscalls_sam3.cpp in Sources */,
-				D432963C171A5577001611B6 /* main.cpp in Sources */,
-				D4329648171D1B00001611B6 /* config_app.cpp in Sources */,
-				D4329649171D1B00001611B6 /* config.cpp in Sources */,
-				D432964A171D1B00001611B6 /* controller.cpp in Sources */,
-				D432964B171D1B00001611B6 /* json_parser.cpp in Sources */,
-				D432964C171D1B00001611B6 /* xio.cpp in Sources */,
 				D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */,
-				D48F5A3F172C1E8D00D0E055 /* hardware.cpp in Sources */,
+				D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */,
+				D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */,
+				D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */,
+				D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */,
+				D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */,
+				D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */,
+				D48F5A5C172CB1FA00D0E055 /* gpio.cpp in Sources */,
+				D48F5A5D172CB1FA00D0E055 /* hardware.cpp in Sources */,
+				D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */,
+				D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */,
+				D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */,
+				D48F5A61172CB1FA00D0E055 /* main.cpp in Sources */,
+				D48F5A62172CB1FA00D0E055 /* persistence.cpp in Sources */,
+				D48F5A63172CB1FA00D0E055 /* plan_arc.cpp in Sources */,
+				D48F5A64172CB1FA00D0E055 /* plan_line.cpp in Sources */,
+				D48F5A65172CB1FA00D0E055 /* planner.cpp in Sources */,
+				D48F5A66172CB1FA00D0E055 /* report.cpp in Sources */,
+				D48F5A82172CE34A00D0E055 /* startup_sam3xa.c in Sources */,
+				D48F5A67172CB1FA00D0E055 /* spindle.cpp in Sources */,
+				D48F5A68172CB1FA00D0E055 /* stepper.cpp in Sources */,
+				D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */,
+				D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */,
+				D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -8209,6 +8263,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-D__SAM3X8E__";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -8240,6 +8295,7 @@
 					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/GCC\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CFLAGS = "-D__SAM3X8E__";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};

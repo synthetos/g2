@@ -28,7 +28,8 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
-#include "motatePins.h"					// motateTimers.h are in files that use timers
+#include "motatePins.h"
+#include "motateTimers.h" // for Motate::timer_number
 
 #ifdef __cplusplus
 extern "C"{
@@ -76,17 +77,10 @@ void hardware_get_id(char_t *id);
 
 /* Timer assignments. See stepper.h and other headers for setup */
 
-#define DDA_TIMER_NUM 3					// stepper pulse generation in stepper.cpp
-#define DDA_STATUS_REGISTER REG_TC1_SR0	// status register needed for clearing interrupts
-
-#define DWELL_TIMER_NUM 4				// dwell timing in stepper.cpp
-#define DWELL_STATUS_REGISTER REG_TC1_SR1
-
-#define LOAD_TIMER_NUM 5				// request load timer in stepper.cpp
-#define LOAD_STATUS_REGISTER REG_TC1_SR2
-
-#define EXEC_TIMER_NUM 6				// request exec timer in stepper.cpp
-#define EXEC_STATUS_REGISTER REG_TC2_SR0
+Motate::timer_number dda_timer_num   = 3;	// stepper pulse generation in stepper.cpp
+Motate::timer_number dwell_timer_num = 4; // dwell timing in stepper.cpp
+Motate::timer_number load_timer_num  = 5; // request load timer in stepper.cpp
+Motate::timer_number exec_timer_num  = 6; // request exec timer in stepper.cpp
 
 /* Pin assignments */
 

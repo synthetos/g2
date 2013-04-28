@@ -70,18 +70,32 @@ namespace Motate {
 	};
 
 	enum TimerChannelInterruptOptions {
-		kInterruptsOff       = 0,
-		kInterruptOnMatchA   = 1<<1,
-		kInterruptOnMatchB   = 1<<2,
-		/* Interrupt on overflow could be a match C as well. */
-		kInterruptOnOverflow = 1<<3,
+		kInterruptsOff              = 0,
+        /* Alias for "off" to make more sense
+            when returned from setInterruptPending(). */
+		kInterruptUnknown           = 0,
+		
+        kInterruptOnMatchA          = 1<<1,
+		kInterruptOnMatchB          = 1<<2,
+		/* Note: Interrupt on overflow could be a match C as well. */
+		kInterruptOnOverflow        = 1<<3,
+
+		/* This turns the IRQ on, but doesn't set the timer to ever trigger it. */
+		kInterruptOnSoftwareTrigger = 1<<4,
+
+		/* Set priority levels here as well: */
+		kInterruptPriorityHighest   = 1<<5,
+		kInterruptPriorityHigh      = 1<<6,
+		kInterruptPriorityMedium    = 1<<7,
+		kInterruptPriorityLow       = 1<<8,
+		kInterruptPriorityLowest    = 1<<9,
 	};
 
 	enum TimerErrorCodes {
 		kFrequencyUnattainable = -1,
 	};
 
-    typedef const uint8_t timer_number;
+	typedef const uint8_t timer_number;
     
 	template <uint8_t timerNum>
 	struct Timer {
@@ -291,10 +305,63 @@ namespace Motate {
 					tcChan()->TC_IER = TC_IER_CPBS; // RB Compare
 				}
 
+				/* Set interrupt priority */
+				if (interrupts | kInterruptPriorityHighest) {
+					NVIC_SetPriority(tcIRQ(), 0);
+				}
+				else if (interrupts | kInterruptPriorityHigh) {
+					NVIC_SetPriority(tcIRQ(), 3);
+				}
+				else if (interrupts | kInterruptPriorityMedium) {
+					NVIC_SetPriority(tcIRQ(), 7);
+				}
+				else if (interrupts | kInterruptPriorityLow) {
+					NVIC_SetPriority(tcIRQ(), 11);
+				}
+				else if (interrupts | kInterruptPriorityLowest) {
+					NVIC_SetPriority(tcIRQ(), 15);
+				}
+
 			} else {
 				tcChan()->TC_IDR = 0xFFFFFFFF;
 				NVIC_DisableIRQ(tcIRQ());
 			}
+		}
+        
+		void setInterruptPending() {
+			NVIC_SetPendingIRQ(tcIRQ());
+		}
+
+/* Here for reference (most we don't use):
+ TC_SR_COVFS   (TC_SR) Counter Overflow Status
+ TC_SR_LOVRS   (TC_SR) Load Overrun Status
+ TC_SR_CPAS    (TC_SR) RA Compare Status
+ TC_SR_CPBS    (TC_SR) RB Compare Status
+ TC_SR_CPCS    (TC_SR) RC Compare Status
+ TC_SR_LDRAS   (TC_SR) RA Loading Status
+ TC_SR_LDRBS   (TC_SR) RB Loading Status
+ TC_SR_ETRGS   (TC_SR) External Trigger Status
+ TC_SR_CLKSTA  (TC_SR) Clock Enabling Status
+ TC_SR_MTIOA   (TC_SR) TIOA Mirror
+ TC_SR_MTIOB   (TC_SR) TIOB Mirror
+*/
+
+		TimerChannelInterruptOptions getInterruptCause() {
+			uint32_t sr = tcChan()->TC_SR;
+					// if it is either an overflow or a RC compare
+			if (sr & (TC_SR_COVFS | TC_SR_CPCS)) {
+				return kInterruptOnOverflow;
+			}
+			else if (sr & (TC_SR_CPAS)) {
+				return kInterruptOnMatchA;
+			}
+			else if (sr & (TC_SR_CPBS)) {
+				return kInterruptOnMatchB;
+			}
+			else if (sr & (TC_SR_ETRGS)) {
+				return kInterruptOnMatchA;
+			}
+			return kInterruptUnknown;
 		}
 
 		// Placeholder for user code.
