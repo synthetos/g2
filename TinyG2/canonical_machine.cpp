@@ -168,6 +168,7 @@ uint8_t cm_get_distance_mode() { return gm.distance_mode;}
 uint8_t cm_get_inverse_feed_rate_mode() { return gm.inverse_feed_rate_mode;}
 uint8_t cm_get_spindle_mode() { return gm.spindle_mode;} 
 uint32_t cm_get_model_linenum() { return gm.linenum;}
+uint8_t	cm_get_block_delete_switch() { return gm.block_delete_switch;}
 uint8_t cm_isbusy() { return (mp_isbusy());}
 
 // set parameters in gm struct
@@ -560,6 +561,8 @@ void canonical_machine_init()
 	cm_set_path_control(cfg.path_control);
 	cm_set_distance_mode(cfg.distance_mode);
 
+	gm.block_delete_switch = true;
+	
 	// never start a machine in a motion mode	
 	gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
 

@@ -78,82 +78,72 @@ stat_t gc_gcode_parser(char_t *block)
  *		chars < 0x20 (control characters)
  *		! $ % ,	; ; ? @ ^ _ ~ " ' <DEL>
  * 
- *	Valid characters in a Gcode block are (see RS274NGC_3 Appendix E)
- *		digits						all digits are passed to interpreter
- *		lower case alpha			all alpha is passed
- *		upper case alpha			all alpha is passed
- *		+ - . / *	< = > 			chars passed to interpreter
- *		| % # ( ) [ ] { } 			chars passed to interpreter
- *		<sp> <tab> 					chars are legal but are not passed
- *		/  							if first, block delete char - omits the block
+ *	Valid characters in a Gcode block are a sub-set of those in RS274NGC_3 Appendix E:
+ *	 - alphanumeric plus '-' and '.'
+ *
+ *	Block delete: Blocks starting with '/' are ignored if block delete switch is on,
+ *	  otherwise they are processed as usual.
+ *
+ *	Octal stripping: Leading zeros in number fields are stripped unless followed by a period
  *
  *	Comment handling:
- *
  *	 - Comments are not normalized - they are left alone
  *	 - Comments always terminate the block (i.e. embedded comments are not supported)
  *	 - Messages in comments are sent to console 
  *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
  *	 - Normalization returns true if there was a message to display, false otherwise
- *	 - Processing splits string into command and comment portions - cases:
- *		  supported:	COMMAND
- *		  supported:	comment
- *		  supported:	COMMAND comment
- *
- *		unsupported:	COMMAND COMMAND
- *		unsupported:	comment COMMAND
- *		unsupported:	COMMAND comment COMMAND
- *
- *	++++ todo: Support leading and trailing spaces around the MSG specifier
- *	++++ todo: Refactor to reject Octal numbers (leading 0's)
+ *	 - Processing splits string into command and comment portions - supported cases are:
+ *		 COMMAND
+ *		 (comment)
+ *		 COMMAND (comment)
  */
-
-static uint8_t _normalize_gcode_block(char_t *block) 
+static uint8_t _normalize_gcode_block(char_t *str) 
 {
-	char_t c;
-	char_t *comment=0;	// comment pointer - first char past opening paren
-	uint8_t i=0; 		// index for incoming characters
-	uint8_t j=0;		// index for normalized characters
+	char_t *rd = str;						// read pointer
+	char_t *wr = str;						// pointer to write normalized characters
+	char_t *cp = NUL;							// comment pointer - first char past opening paren
 
-	if (block[0] == '/') {					// discard deleted blocks
-		block[0] = NUL;
-		return (false);
-	}
-	if (block[0] == '?') {					// trap and return ? command
-		return (false);
+	if (*rd == '?') { return (false); }		// trap and return ? command
+	if (*rd == '/') {						// handle block deletes
+		rd++;
+		if (cm_get_block_delete_switch() == true) {
+			*wr = NUL;
+			return (false);
+		}
 	}
 	// normalize the command block & mark the comment(if any)
-	while ((c = toupper(block[i++])) != NUL) {
-		if ((isupper(c)) || (isdigit(c))) {	// capture common chars
-		 	block[j++] = c; 
+	do {
+		if (*rd == NUL) { *wr = NUL; }
+		else if (*rd == '(') { *wr = NUL; cp = rd+1; } 
+		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
+			*(wr++) = (char_t)toupper((char)*(rd));
+		}
+		rd++;
+	} while (*wr != NUL);
+
+	// Perform Octal stripping - remove invalid leading zeros in number strings
+	rd = str;
+	while (*rd != NUL) {
+		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
+			wr = rd+1;
+			while (*wr != NUL) { *wr = *(wr+1); wr++;}
+//			while (*wr != NUL) { *(wr++) = *(wr+1); }
 			continue;
 		}
-		if (c == '(') {						// detect & handle comments
-			block[j] = NUL;
-			comment = &block[i]; 
-			break;
-		}
-		if (c <= ' ') continue;				// toss controls & whitespace
-		if (c == DEL) continue;				// toss DELETE (0x7F)
-		if (strchr("!$%,;:?@^_~`\'\"", c))	// toss invalid punctuation
-			continue;
-		block[j++] = c;
+		rd++;
 	}
-	block[j] = NUL;							// terminate the command
-	if (comment != 0) {
-		if ((toupper(comment[0]) == 'M') && 
-			(toupper(comment[1]) == 'S') &&
-			(toupper(comment[2]) == 'G')) {
-			i=0;
-			comment +=3;					// skip past the leading chars
-			while ((c = comment[i++]) != NUL) {// remove trailing parenthesis
-				if (c == ')') {
-					comment[--i] = NUL;
-					break;
-				}
-			}
-			(void)cm_message(comment);
+
+	// process a comment with a message, otherwise ignore it
+	rd = cp;
+	if (cp != NUL) {
+		if ((tolower(*(rd++)) == 'm') && (toupper(*(rd++)) == 's') && (toupper(*(rd++)) == 'g')) {
+			do {
+				if (*rd == ')') *rd = NUL;   // remove trailing parenthesis, if any
+				rd++;
+			} while (*rd != NUL);
+			(void)cm_message(cp);
 			return (true);
-		}
+		}				
 	}
 	return (false);
 }

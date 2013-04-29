@@ -49,7 +49,7 @@
 
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			AXIS_X			// 1ma
+#define M1_MOTOR_MAP 			AXIS_X		// 1ma
 #define M1_STEP_ANGLE 			1.8			// 1sa
 #define M1_TRAVEL_PER_REV		1.25		// 1tr
 #define M1_MICROSTEPS			8			// 1mi		1,2,4,8
@@ -94,7 +94,7 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			1200 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			800 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MAX 			150					// xtm		travel between switches or crashes
 #define X_JERK_MAX 				JERK_MAX			// xjm
@@ -108,7 +108,7 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			1200
+#define Y_VELOCITY_MAX 			800
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MAX 			150
 #define Y_JERK_MAX 				JERK_MAX
@@ -122,7 +122,7 @@
 #define Y_JERK_HOMING			Y_JERK_MAX
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
-#define Z_VELOCITY_MAX 			1200
+#define Z_VELOCITY_MAX 			800
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX 			75
 #define Z_JERK_MAX 				JERK_MAX

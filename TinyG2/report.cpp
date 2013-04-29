@@ -236,7 +236,7 @@ void rpt_print_system_ready_message(void)
 /* 
  * rpt_init_status_report()
  *
- *	Call this function to completely re-initialze the status report
+ *	Call this function to completely re-initialize the status report
  *	Sets SR list to hard-coded defaults and re-initializes sr values in NVM
  */
 
@@ -248,7 +248,6 @@ void rpt_init_status_report()
 	cmdObj_t *cmd = cmd_reset_list();	// used for status report persistence locations
 	cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
 
-//	cmd->index = cmd_get_index((const char_t *)"",(const char_t *)"se00");	// set first SR persistence index
 	cmd->index = cmd_get_index(nul, se00);				// set first SR persistence index
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry

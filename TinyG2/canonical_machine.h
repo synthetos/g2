@@ -94,11 +94,11 @@ typedef struct GCodeModel {				// Gcode dynamic model
 	float g28_position[AXES];			// XYZABC stored machine position for G28
 	float g30_position[AXES];			// XYZABC stored machine position for G30
 
-	float min_time;					// minimum time possible for the move given axis constraints
+	float min_time;						// minimum time possible for the move given axis constraints
 	float feed_rate; 					// F - normalized to millimeters/minute
 	float inverse_feed_rate; 			// ignored if inverse_feed_rate not active
 	float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
-	float traverse_override_factor;	// 1.0000 x traverse rate. Go down from there
+	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
 	uint8_t inverse_feed_rate_mode;		// G93 TRUE = inverse, FALSE = normal (G94)
 	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
 	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
@@ -124,8 +124,10 @@ typedef struct GCodeModel {				// Gcode dynamic model
 
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float  spindle_speed;				// in RPM
-	float  spindle_override_factor;	// 1.0000 x S spindle speed. Go up or down from there
+	float  spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
+
+	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
 
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
@@ -443,6 +445,8 @@ uint8_t cm_get_distance_mode(void);
 uint8_t cm_get_inverse_feed_rate_mode(void);
 uint8_t cm_get_spindle_mode(void);
 uint32_t cm_get_model_linenum(void);
+uint8_t	cm_get_block_delete_switch(void);
+
 uint8_t cm_isbusy(void);
 
 void cm_set_motion_mode(uint8_t motion_mode);
