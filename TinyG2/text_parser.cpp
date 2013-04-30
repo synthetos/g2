@@ -107,7 +107,7 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 			cmd->type = TYPE_FLOAT;
 		}
 	}
-	if ((cmd->index = cmd_get_index((uint8_t *)"", cmd->token)) == NO_MATCH) { 
+	if ((cmd->index = cmd_get_index((char_t *)"", cmd->token)) == NO_MATCH) { 
 		return (STAT_UNRECOGNIZED_COMMAND);
 	}
 	return (STAT_OK);
@@ -119,8 +119,8 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
  */
 static const char prompt_mm_ok[] = "tinyg [mm] ok> ";
 static const char prompt_in_ok[] = "tinyg [in] ok> ";
-static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s ";
-static const char prompt_in_err[] = "tinyg [in] err: %s: %s ";
+static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s\n";
+static const char prompt_in_err[] = "tinyg [in] err: %s: %s\n";
 
 void text_response(const uint8_t status, char_t *buf)
 {

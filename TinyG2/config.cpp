@@ -347,12 +347,13 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
 	char_t str[CMD_TOKEN_LEN+1];
-	strcpy_U(str, group);
+//	strcpy_U(str, group);
+	strcpy(str, group);
 	strcat(str, token);
 
 	index_t index_max = cmd_index_max();
 
-	for (index_t i=0; index_max; i++) {
+	for (index_t i=0; i < index_max; i++) {
 		if ((c = cfgArray[i].token[0]) != str[0]) {	continue; }					// 1st character mismatch
 		if ((c = cfgArray[i].token[1]) == NUL) { if (str[1] == NUL) return(i);}	// one character match
 		if (c != str[1]) continue;												// 2nd character mismatch
