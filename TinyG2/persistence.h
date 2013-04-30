@@ -24,8 +24,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _PERSISTENCE_H_
-#define _PERSISTENCE_H_
+#ifndef PERSISTENCE_H_ONCE
+#define PERSISTENCE_H_ONCE
 
 #include "config.h"
 
@@ -33,8 +33,9 @@
 extern "C"{
 #endif 
 
-stat_t cmd_read_NVM_value(cmdObj_t *cmd);
-stat_t cmd_write_NVM_value(cmdObj_t *cmd);
+void persistence_init(void);
+stat_t read_persistent_value(cmdObj_t *cmd);
+stat_t write_persistent_value(cmdObj_t *cmd);
 
 #ifdef __DEBUG
 void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
@@ -55,4 +56,4 @@ void cfg_unit_tests(void);
 }
 #endif
 
-#endif // _PERSISTENCE_H_
+#endif // End of include guard: PERSISTENCE_H_ONCE

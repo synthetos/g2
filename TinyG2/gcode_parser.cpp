@@ -102,8 +102,8 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 
 	// Preset comments and messages to NUL string
 	// Not required if com and msg already point to NUL on entry
-//	for (rd = cmd; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; } }
-	
+//	for (rd = cmd; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = cmd;} }
+
 	// mark block deletes
 	if (*rd == '/') { *block_delete_flag = true; } 
 	else { *block_delete_flag = false; }
@@ -132,34 +132,19 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	if (**com != NUL) {
 		rd = *com;
 		while (isspace(*rd)) { rd++; }		// skip any leading spaces before "msg"
-		if ((*rd == 'm') || (*rd == 'M')) { rd++;
-		if ((*rd == 's') || (*rd == 'S')) { rd++;
-		if ((*rd == 'g') || (*rd == 'G')) { rd++;
-			*msg = rd;
+		if ((tolower(*rd) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
+			*msg = rd+3;
 		}
-		}
-		}
-
-//		if ((tolower(*(rd)) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
-//			*msg = rd+3;
-//		}
 		for (; *rd != NUL; rd++) {	
 			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
 		}
 	}
 }
-
-/*
-	*com = cmd;
-	do {
-		if (*rd == NUL) { *wr = NUL; }
-		else if (*rd == '(') { *wr = NUL; *com = rd+1; }
-		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
-			*(wr++) = (char_t)toupper((char)*(rd));
-		}
-		rd++;
-	} while (*wr != NUL);
-*/
+//		if ((*rd == 'm') || (*rd == 'M')) { rd++;
+//		if ((*rd == 's') || (*rd == 'S')) { rd++;
+//		if ((*rd == 'g') || (*rd == 'G')) { rd++;
+//			*msg = rd;
+//		} } }
 
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value

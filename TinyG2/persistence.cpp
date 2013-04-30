@@ -53,16 +53,21 @@ extern "C"{
  **** CODE *************************************************************************
  ***********************************************************************************/
 
-/************************************************************************************
- ***** EEPROM PERSISTENCE FUNCTIONS *************************************************
- ************************************************************************************
- * cmd_read_NVM_value()	 - return value (as float) by index
- * cmd_write_NVM_value() - write to NVM by index, but only if the value has changed
+void persistence_init()
+{
+//	cs.nvm_base_addr = NVM_BASE_ADDR;
+//	cs.nvm_profile_base = cfg.nvm_base_addr;
+	return;	
+}
+
+/* 
+ * read_persistent_value()	- return value (as float) by index
+ * write_persistent_value() - write to NVM by index, but only if the value has changed
  *
  *	It's the responsibility of the caller to make sure the index does not exceed range
  */
 
-stat_t cmd_read_NVM_value(cmdObj_t *cmd)
+stat_t read_persistent_value(cmdObj_t *cmd)
 {
 //	int8_t nvm_byte_array[NVM_VALUE_LEN];
 //	uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
@@ -71,7 +76,7 @@ stat_t cmd_read_NVM_value(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-stat_t cmd_write_NVM_value(cmdObj_t *cmd)
+stat_t write_persistent_value(cmdObj_t *cmd)
 {
 //	float tmp = cmd->value;
 //	ritorno(cmd_read_NVM_value(cmd));

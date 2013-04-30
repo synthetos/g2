@@ -67,8 +67,8 @@ controller_t cs;				// controller state structure
 static void _controller_HSM(void);
 static stat_t _command_dispatch(void);
 static stat_t _normal_idler(void);
-static stat_t _alarm_idler(void);
 /*
+static stat_t _alarm_idler(void);
 static stat_t _reset_handler(void);
 static stat_t _bootloader_handler(void);
 static stat_t _limit_switch_handler(void);
@@ -266,7 +266,7 @@ static stat_t _normal_idler(  )
  *	this point. It's important that the reset handler is still called so a SW reset
  *	(ctrl-x) can be processed.
  */
-
+/*
 static stat_t _alarm_idler(  )
 {
 //	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
@@ -277,7 +277,7 @@ static stat_t _alarm_idler(  )
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
-
+*/
 /**** Utilities ****
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command

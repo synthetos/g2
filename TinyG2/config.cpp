@@ -83,12 +83,10 @@ void cmd_print(cmdObj_t *cmd)
 
 void cmd_persist(cmdObj_t *cmd)
 {
-#ifdef __ENABLE_PERSISTENCE	
 //	if (cmd_index_lt_groups(cmd->index) == false) return;
 	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
-		cmd_write_NVM_value(cmd);
+		write_persistent_value(cmd);
 	}
-#endif
 	return;
 }
 
@@ -106,13 +104,13 @@ void cmd_persist(cmdObj_t *cmd)
 void config_init()
 {
 	cmdObj_t *cmd = cmd_reset_list();
-	cs.comm_mode = JSON_MODE;						// initial value until EEPROM is read
-//	cs.nvm_base_addr = NVM_BASE_ADDR;
-//	cs.nvm_profile_base = cfg.nvm_base_addr;
+	cs.comm_mode = JSON_MODE;		// initial value until EEPROM is read
+	persistence_init();
 	cmd->value = true;
-	set_defa(cmd);		// this subroutine called from here and from the $defa=1 command
-}
+	set_defa(cmd);		
+	}
 
+// this subroutine called during init and from the $defa=1 command
 stat_t set_defa(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
@@ -135,10 +133,9 @@ stat_t set_defa(cmdObj_t *cmd)
 
 /* Generic gets()
  *  get_nul() - get nothing (returns STAT_NOOP)
- *  get_ui8() - get value as 8 bit uint8_t w/o unit conversion
- *  get_int() - get value as 32 bit integer w/o unit conversion
- *  get_flt() - get value as float w/o unit conversion
- *  get_flu() - get value as float w/unit conversion
+ *  get_ui8() - get value as 8 bit uint8_t
+ *  get_int() - get value as 32 bit integer
+ *  get_flt() - get value as float
  *	get_format() - internal accessor for printf() format string
  */
 stat_t get_nul(cmdObj_t *cmd) 
@@ -169,16 +166,6 @@ stat_t get_flt(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-stat_t get_flu(cmdObj_t *cmd)
-{
-	get_flt(cmd);
-	if (cm_get_units_mode() == INCHES) {
-		cmd->value *= INCH_PER_MM;
-	}
-	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT;
-	return (STAT_OK);
-}
 /* REPLACED BY A MACRO - See config.h
 char *get_format(const index_t index)
 {
@@ -188,12 +175,11 @@ char *get_format(const index_t index)
 
 /* Generic sets()
  *  set_nul() - set nothing (returns STAT_NOOP)
- *  set_ui8() - set value as 8 bit uint8_t value w/o unit conversion
+ *  set_ui8() - set value as 8 bit uint8_t value
  *  set_01()  - set a 0 or 1 uint8_t value with validation
  *  set_012() - set a 0, 1 or 2 uint8_t value with validation
- *  set_int() - set value as 32 bit integer w/o unit conversion
- *  set_flt() - set value as float w/o unit conversion
- *  set_flu() - set value as float w/unit conversion
+ *  set_int() - set value as 32 bit integer
+ *  set_flt() - set value as float
  */
 stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 
@@ -237,23 +223,12 @@ stat_t set_flt(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
-stat_t set_flu(cmdObj_t *cmd)
-{
-	if (cm_get_units_mode() == INCHES) { cmd->value *= MM_PER_INCH;}
-	*((float *)cfgArray[cmd->index].target) = cmd->value;
-	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT_UNITS;
-	return(STAT_OK);
-}
-
 /* Generic prints()
  * print_nul() - print nothing
  * print_str() - print string value
  * print_ui8() - print uint8_t value w/no units or unit conversion
  * print_int() - print integer value w/no units or unit conversion
  * print_flt() - print float value w/no units or unit conversion
- * print_lin() - print linear value with units and in/mm unit conversion
- * print_rot() - print rotary value with units
  */
 void print_nul(cmdObj_t *cmd) {}
 
@@ -280,21 +255,6 @@ void print_flt(cmdObj_t *cmd)
 	cmd_get(cmd);
 	fprintf(stderr, get_format(cmd->index), cmd->value);
 }
-
-void print_lin(cmdObj_t *cmd)
-{
-	cmd_get(cmd);
-//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode()]));
-	fprintf(stderr, get_format(cmd->index), cmd->value);
-}
-
-void print_rot(cmdObj_t *cmd)
-{
-	cmd_get(cmd);
-//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
-	fprintf(stderr, get_format(cmd->index), cmd->value);
-}
-
 
 /********************************************************************************
  * Group operations

@@ -117,11 +117,16 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 /************************************************************************************
  * text_response() - text mode responses
  */
-
+/*
 static const char_t prompt_mm[] = "mm";
 static const char_t prompt_in[] = "inch";
 static const char_t prompt_ok[] = "tinyg [%s] ok> ";
 static const char_t prompt_err[] = "tinyg [%s] err: %s: %s ";
+*/
+static const char prompt_mm_ok[] = "tinyg [mm] ok> ";
+static const char prompt_in_ok[] = "tinyg [in] ok> ";
+static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s ";
+static const char prompt_in_err[] = "tinyg [in] err: %s: %s ";
 
 void text_response(const uint8_t status, char_t *buf)
 {
@@ -129,16 +134,18 @@ void text_response(const uint8_t status, char_t *buf)
 
 	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
 
-	char_t *units;
-	if (cm_get_units_mode() != INCHES) { 
-		units = (char_t *)prompt_mm;
-	} else {
-		units = (char_t *)prompt_in;
-	}
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
-		fprintf(stderr, (char *)prompt_ok, units);
+		if (cm_get_units_mode() == INCHES) {
+			fprintf(stderr, prompt_in_ok);
+		} else {
+			fprintf(stderr, prompt_mm_ok);
+		}
 	} else {
-		fprintf(stderr, (char *)prompt_err, units, (char *)get_status_message(status), buf);
+		if (cm_get_units_mode() == INCHES) {
+			fprintf(stderr, prompt_in_err, (char *)get_status_message(status), buf);
+		} else {
+			fprintf(stderr, prompt_mm_err, (char *)get_status_message(status), buf);			
+		}
 	}
 	cmd = cmd_body+1;
 	if (cmd->token[0] == 'm') {

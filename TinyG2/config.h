@@ -64,10 +64,10 @@
  *	CMD_BODY_LEN needs to allow for one parent JSON object and enough children
  *	to complete the largest possible operation - usually the status report.
  */
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef CONFIG_H_ONCE
+#define CONFIG_H_ONCE
 
-/***** PLEASE NOTE:
+/***** PLEASE NOTE *****
 # include "config_app.h"	// is present at the end of this file 
 */
 
@@ -251,21 +251,17 @@ stat_t set_01(cmdObj_t *cmd);		// set a 0 or 1 value with validation
 stat_t set_012(cmdObj_t *cmd);		// set a 0, 1 or 2 value with validation
 stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
 stat_t set_flt(cmdObj_t *cmd);		// set floating point value
-stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
 
 stat_t get_nul(cmdObj_t *cmd);		// get null value type
 stat_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
 stat_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
 stat_t get_flt(cmdObj_t *cmd);		// get floating point value
-stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
 
 void print_nul(cmdObj_t *cmd);		// print nothing (no operation)
 void print_str(cmdObj_t *cmd);		// print a string value
 void print_ui8(cmdObj_t *cmd);		// print unit8_t value
 void print_int(cmdObj_t *cmd);		// print uint32_t integer value
 void print_flt(cmdObj_t *cmd);		// print floating point value
-void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
-void print_rot(cmdObj_t *cmd);		// print floating point rotary value
 
 #define get_format(index) (const char *)cfgArray[index].format
 
