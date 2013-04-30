@@ -25,8 +25,8 @@
  *	to be changed are in tinyg.h
  */
 
-#ifndef _SETTINGS_H_
-#define _SETTINGS_H_
+#ifndef SETTINGS_H_ONCE
+#define SETTINGS_H_ONCE
 
 /**** GENERAL SETTINGS ******************************************************/
 
@@ -97,4 +97,4 @@
 #define P1_PWM_PHASE_OFF                0.1
 #endif//P1_PWM_FREQUENCY
 
-#endif // _SETTINGS_H_
+#endif // End of include guard: SETTINGS_H_ONCE

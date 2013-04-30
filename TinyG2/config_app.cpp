@@ -657,7 +657,7 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.switch_type,			SWITCH_TYPE },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
-	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, set_jv,(float *)&cfg.json_verbosity,		JSON_VERBOSITY },
+	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, set_jv,	 (float *)&cfg.json_verbosity,		JSON_VERBOSITY },
 	{ "sys","tv",  _f07, 0, fmt_tv, print_ui8, get_ui8, set_01,  (float *)&cfg.text_verbosity,		TEXT_VERBOSITY },
 	{ "sys","qv",  _f07, 0, fmt_qv, print_ui8, get_ui8, set_012, (float *)&cfg.queue_report_verbosity,QR_VERBOSITY },
 	{ "sys","sv",  _f07, 0, fmt_sv, print_ui8, get_ui8, set_012, (float *)&cfg.status_report_verbosity,SR_VERBOSITY },
