@@ -218,6 +218,7 @@ uint8_t gpio_read_switch(uint8_t sw_num)
 		return ((read != 0) ? SW_CLOSED : SW_OPEN);
 	}
 */
+	return (0);
 }
 
 /*
@@ -300,8 +301,8 @@ uint8_t gpio_read_bit(uint8_t b)
 	if (b & 0x04) { return (device.out_port[1]->IN & GPIO1_OUT_BIT_bm); }
 	if (b & 0x02) { return (device.out_port[2]->IN & GPIO1_OUT_BIT_bm); }
 	if (b & 0x01) { return (device.out_port[3]->IN & GPIO1_OUT_BIT_bm); }
-	return (0);
 */
+	return (0);
 }
 
 void gpio_set_bit_on(uint8_t b)

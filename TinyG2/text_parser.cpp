@@ -117,10 +117,11 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 /************************************************************************************
  * text_response() - text mode responses
  */
+
 static const char_t prompt_mm[] = "mm";
 static const char_t prompt_in[] = "inch";
-static const char_t prompt_ok[] = "tinyg [%S] ok> ";
-static const char_t prompt_err[] = "tinyg [%S] err: %s: %s ";
+static const char_t prompt_ok[] = "tinyg [%s] ok> ";
+static const char_t prompt_err[] = "tinyg [%s] err: %s: %s ";
 
 void text_response(const uint8_t status, char_t *buf)
 {
@@ -128,11 +129,11 @@ void text_response(const uint8_t status, char_t *buf)
 
 	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
 
-	char *units;
+	char_t *units;
 	if (cm_get_units_mode() != INCHES) { 
-		units = (char *)prompt_mm;
+		units = (char_t *)prompt_mm;
 	} else {
-		units = (char *)prompt_in;
+		units = (char_t *)prompt_in;
 	}
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
 		fprintf(stderr, (char *)prompt_ok, units);
@@ -144,12 +145,6 @@ void text_response(const uint8_t status, char_t *buf)
 		fprintf(stderr, (char *)*cmd->stringp);
 	}
 }
-//#else
-//	cmdObj_t *cmd = cmd_body;
-//	fprintf(stderr, (char *)cmd->stringp);
-//	fprintf(stderr, "\n");
-//#endif
-//}
 
 /************************************************************************************
  * text_print_inline_pairs()
