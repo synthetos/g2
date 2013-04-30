@@ -298,9 +298,9 @@ static const char_t fmt_qr[] = "qr:%d\n";
 static const char_t fmt_rx[] = "rx:%d\n";
 
 // Gcode model values for reporting purposes
-static const char_t fmt_vel[]  = "Velocity:%17.3f%S/min\n";
+static const char_t fmt_vel[]  = "Velocity:%17.3f%s/min\n";
 static const char_t fmt_line[] = "Line number:%10.0f\n";
-static const char_t fmt_feed[] = "Feed rate:%16.3f%S/min\n";
+static const char_t fmt_feed[] = "Feed rate:%16.3f%s/min\n";
 static const char_t fmt_stat[] = "Machine state:       %s\n"; // combined machine state
 static const char_t fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
 static const char_t fmt_cycs[] = "Cycle state:         %s\n";
@@ -315,7 +315,7 @@ static const char_t fmt_path[] = "Path Mode:           %s\n";
 static const char_t fmt_dist[] = "Distance mode:       %s\n";
 static const char_t fmt_frmo[] = "Feed rate mode:      %s\n";
 
-static const char_t fmt_pos[]  = "%c position:%15.3f%S\n";
+static const char_t fmt_pos[]  = "%c position:%15.3f%s\n";
 static const char_t fmt_mpos[] = "%c machine posn:%11.3f%s\n";
 static const char_t fmt_ofs[]  = "%c work offset:%12.3f%s\n";
 static const char_t fmt_hom[]  = "%c axis homing state:%2.0f\n";

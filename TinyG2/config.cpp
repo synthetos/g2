@@ -31,6 +31,7 @@
 #include "controller.h"
 #include "canonical_machine.h"
 #include "persistence.h"
+#include "report.h"
 #include "util.h"
 #include "xio.h"
 
@@ -108,7 +109,7 @@ void config_init()
 	persistence_init();
 	cmd->value = true;
 	set_defa(cmd);		
-	}
+}
 
 // this subroutine called during init and from the $defa=1 command
 stat_t set_defa(cmdObj_t *cmd) 
@@ -126,6 +127,7 @@ stat_t set_defa(cmdObj_t *cmd)
 			cmd_persist(cmd);
 		}
 	}
+	rpt_init_status_report();	// set default status report
 	return (STAT_OK);
 }
 

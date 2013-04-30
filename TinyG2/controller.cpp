@@ -36,17 +36,17 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "gcode_parser.h"
+#include "canonical_machine.h"
+#include "plan_arc.h"
+#include "planner.h"
+#include "report.h"
 #include "help.h"
 #include "xio.h"
 /*
 #include "settings.h"
-#include "canonical_machine.h"
-#include "plan_arc.h"
-#include "planner.h"
 #include "stepper.h"
 #include "hardware.h"
 #include "gpio.h"
-#include "report.h"
 #include "util.h"
 */
 
@@ -67,6 +67,8 @@ controller_t cs;				// controller state structure
 static void _controller_HSM(void);
 static stat_t _command_dispatch(void);
 static stat_t _normal_idler(void);
+static stat_t _sync_to_planner(void);
+
 /*
 static stat_t _alarm_idler(void);
 static stat_t _reset_handler(void);
@@ -77,7 +79,6 @@ static stat_t _system_assertions(void);
 static stat_t _feedhold_handler(void);
 static stat_t _cycle_start_handler(void);
 static stat_t _sync_to_tx_buffer(void);
-static stat_t _sync_to_planner(void);
 */
 
 /***********************************************************************************
@@ -158,15 +159,15 @@ static void _controller_HSM()
 //	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 
 //----- planner hierarchy for gcode and cycles -------------------------//
-//	DISPATCH(rpt_status_report_callback());		// conditionally send status report
-//	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
-//	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
-//	DISPATCH(mp_end_hold_callback());			// end a feedhold
-//	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
-//	DISPATCH(cm_homing_callback());				// G28.2 continuation
+	DISPATCH(rpt_status_report_callback());		// conditionally send status report
+	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
+	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
+	DISPATCH(mp_end_hold_callback());			// end a feedhold
+	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
+	DISPATCH(cm_homing_callback());				// G28.2 continuation
 
 //----- command readers and parsers ------------------------------------//
-//	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
+	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 //	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 //	DISPATCH(cfg_baud_rate_callback());			// perform baud rate update (must be after TX sync)
 	DISPATCH(_command_dispatch());				// read and execute next command
@@ -184,9 +185,6 @@ static void _controller_HSM()
 
 static stat_t _command_dispatch()
 {
-//	printf("printf test2 %d %f...\n", 10, 10.003);
-//	printf("test %2.3f\n", 11.033);
-
 	// read input line or return if not a completed line
 	stat_t status;
 	if (cs.state == CONTROLLER_READY) {
@@ -289,6 +287,10 @@ static stat_t _alarm_idler(  )
  *	and other messages are sent to the active device.
  */
 /*
+void tg_reset_source() { tg_set_primary_source(tg.default_src);}
+void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
+void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}
+
 static stat_t _sync_to_tx_buffer()
 {
 	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
@@ -296,7 +298,7 @@ static stat_t _sync_to_tx_buffer()
 	}
 	return (STAT_OK);
 }
-
+*/
 static stat_t _sync_to_planner()
 {
 //	if (mp_get_planner_buffers_available() == 0) { 
@@ -306,10 +308,6 @@ static stat_t _sync_to_planner()
 	return (STAT_OK);
 }
 
-void tg_reset_source() { tg_set_primary_source(tg.default_src);}
-void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
-void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}	
-*/
 
 /* 
  * _system_assertions() - check memory integrity and other assertions
