@@ -73,7 +73,12 @@ typedef uint8_t char_t;
 #define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
 #define strcmp(d,s) strcmp((char *)d, (char *)s)
 #define strtod(d,s) strtod((char *)d, (char **)s)
+#define strtof(d,s) strtof((char *)d, (char **)s)
 #define strlen(s) strlen((char *)s)
+#define isdigit(c) isdigit((char) c)
+#define isalnum(c) isalnum((char) c)
+#define tolower(c) (char_t)tolower((char) c)
+#define toupper(c) (char_t)toupper((char) c)
 
 // You still need to do casts in the code for printf()s
 //#define sprintf(a,b) sprintf(char *)a, (char *)b)

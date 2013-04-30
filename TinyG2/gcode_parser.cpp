@@ -16,14 +16,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>					// needed for memcpy, memset
-#include <avr/pgmspace.h>			// precursor for xio.h
-*/
 #include "tinyg2.h"
 #include "config.h"
 #include "gcode_parser.h"
@@ -40,7 +32,6 @@ struct gcodeParserSingleton {	 	  // struct to manage globals
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
-//static stat_t _normalize_gcode_block(char_t *block);
 static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
@@ -61,8 +52,9 @@ static stat_t _check_gcode_block(void);			// check the block for correctness
 stat_t gc_gcode_parser(char_t *block)
 {
 	char_t *cmd = block;					// gcode command or NUL string
-	char_t *com;							// gcode comment or NUL string
-	char_t *msg;							// gcode message or NUL string
+	char_t none = NUL;
+	char_t *com = &none;					// gcode comment or NUL string
+	char_t *msg = &none;					// gcode message or NUL string
 	uint8_t block_delete_flag;
 
 	_normalize_gcode_block(cmd, &com, &msg, &block_delete_flag);
@@ -105,21 +97,19 @@ stat_t gc_gcode_parser(char_t *block)
  */
 static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint8_t *block_delete_flag)
 {
-	char_t *rd;				// read pointer
-	char_t *wr;				// write pointer
+	char_t *rd = cmd;				// read pointer
+	char_t *wr = cmd;				// write pointer
 
 	// Preset comments and messages to NUL string
-	for (rd = cmd; *rd != NUL; rd++) {
-		if (*rd == NUL) { *com = rd; *msg = rd; } 
-	}
+	// Not required if com and msg already point to NUL on entry
+//	for (rd = cmd; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; } }
 	
 	// mark block deletes
-	rd = cmd;
-	if (*rd == '/') { *block_delete_flag = true; rd++; } 
+	if (*rd == '/') { *block_delete_flag = true; } 
 	else { *block_delete_flag = false; }
 	
 	// normalize the command block & find the comment(if any)
-	for (wr = cmd; *wr != NUL; rd++) {
+	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
 		else if (*rd == '(') { *wr = NUL; *com = rd+1; } 
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
@@ -140,10 +130,19 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	
 	// process comments and messages
 	if (**com != NUL) {
+		rd = *com;
 		while (isspace(*rd)) { rd++; }		// skip any leading spaces before "msg"
-		if ((tolower(*(rd++)) == 'm') && (toupper(*(rd++)) == 's') && (toupper(*(rd++)) == 'g')) {
-			*msg = rd+1;
+		if ((*rd == 'm') || (*rd == 'M')) { rd++;
+		if ((*rd == 's') || (*rd == 'S')) { rd++;
+		if ((*rd == 'g') || (*rd == 'G')) { rd++;
+			*msg = rd;
 		}
+		}
+		}
+
+//		if ((tolower(*(rd)) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
+//			*msg = rd+3;
+//		}
 		for (; *rd != NUL; rd++) {	
 			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
 		}

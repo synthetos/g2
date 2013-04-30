@@ -78,32 +78,32 @@ stat_t text_parser(uint8_t *str)
 
 static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 {
-	uint8_t *ptr_rd, *ptr_wr;				// read and write pointers
-//	uint8_t separators[] = {" =:|\t"};		// any separator someone might use
+	uint8_t *rd, *wr;						// read and write pointers
 	uint8_t separators[] = {"="};			// only separator allowed is = sign
+//	uint8_t separators[] = {" =:|\t"};		// more permissive: any separator someone might use
 
 	// string pre-processing
 //	cmd_reset_obj(cmd);						// initialize config object
 	cmd_copy_string(cmd, str);				// make a copy for eventual reporting
 	if (*str == '$') str++;					// ignore leading $
-	for (ptr_rd = ptr_wr = str; *ptr_rd!=NUL; ptr_rd++, ptr_wr++) {
-		*ptr_wr = tolower(*ptr_rd);			// convert string to lower case
-		if (*ptr_rd==',') {
-			*ptr_wr = *(++ptr_rd);			// skip over comma
+	for (rd = wr = str; *rd!=NUL; rd++, wr++) {
+		*wr = tolower(*rd);			// convert string to lower case
+		if (*rd==',') {
+			*wr = *(++rd);			// skip over comma
 		}
 	}
-	*ptr_wr = NUL;
+	*wr = NUL;
 
 	// field processing
 	cmd->type = TYPE_NULL;
-	if ((ptr_rd = strpbrk(str, separators)) == NULL) { // no value part
+	if ((rd = strpbrk(str, separators)) == NULL) { // no value part
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 	} else {
-		*ptr_rd = NUL;						// terminate at end of name
+		*rd = NUL;						// terminate at end of name
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
-		str = ++ptr_rd;
-		cmd->value = strtod(str, &ptr_rd);	// ptr_rd used as end pointer
-		if (ptr_rd != str) {
+		str = ++rd;
+		cmd->value = strtof(str, &rd);	// rd used as end pointer
+		if (rd != str) {
 			cmd->type = TYPE_FLOAT;
 		}
 	}
