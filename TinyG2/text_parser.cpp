@@ -117,12 +117,6 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 /************************************************************************************
  * text_response() - text mode responses
  */
-/*
-static const char_t prompt_mm[] = "mm";
-static const char_t prompt_in[] = "inch";
-static const char_t prompt_ok[] = "tinyg [%s] ok> ";
-static const char_t prompt_err[] = "tinyg [%s] err: %s: %s ";
-*/
 static const char prompt_mm_ok[] = "tinyg [mm] ok> ";
 static const char prompt_in_ok[] = "tinyg [in] ok> ";
 static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s ";

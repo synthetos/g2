@@ -151,9 +151,6 @@ enum textFormats {					// text output print modes
 
 enum textVerbosity {
 	TV_SILENT = 0,					// no response is provided
-	TV_PROMPT,						// returns prompt only and exception messages
-	TV_MESSAGES,					// returns prompt only and exception messages
-	TV_CONFIGS,						// returns prompt, messages and echo config commands. Gcode blocks are not echoed 
 	TV_VERBOSE						// returns all prompts, messages, configs and gcode blocks
 };
 

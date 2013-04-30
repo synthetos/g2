@@ -758,11 +758,10 @@ const cfgItem_t cfgArray[] = {
 /* <DO NOT MESS WITH THESE ITEMS> */
 #define CMD_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))
 #define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS - CMD_STATUS_REPORT_LEN)
-//#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
 #define CMD_INDEX_START_GROUPS		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
 #define CMD_INDEX_START_UBER_GROUPS (CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS)
 
-index_t	cmd_index_max () { return ( CMD_INDEX_MAX );}
+index_t	cmd_index_max() { return ( CMD_INDEX_MAX );}
 uint8_t cmd_index_lt_max(index_t index) { return ((index < CMD_INDEX_MAX) ? true : false);}
 uint8_t cmd_index_ge_max(index_t index) { return ((index >= CMD_INDEX_MAX) ? true : false);}
 uint8_t cmd_index_is_single(index_t index) { return ((index <= CMD_INDEX_END_SINGLES) ? true : false);}

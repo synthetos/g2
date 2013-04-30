@@ -140,11 +140,6 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 		}
 	}
 }
-//		if ((*rd == 'm') || (*rd == 'M')) { rd++;
-//		if ((*rd == 's') || (*rd == 'S')) { rd++;
-//		if ((*rd == 'g') || (*rd == 'G')) { rd++;
-//			*msg = rd;
-//		} } }
 
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value
