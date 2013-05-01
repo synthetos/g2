@@ -210,14 +210,13 @@ static const char_t msg_baud5[] = "115200";
 static const char_t msg_baud6[] = "230400";
 static const char_t *msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
 */
-/*
 static const char_t msg_sw0[] = "Disabled";
 static const char_t msg_sw1[] = "NO homing";
 static const char_t msg_sw2[] = "NO homing & limit";
 static const char_t msg_sw3[] = "NC homing";
 static const char_t msg_sw4[] = "NC homing & limit";
 static const char_t *msg_sw[] = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
-*/
+
 static const char_t msg_g53[] = "G53 - machine coordinate system";
 static const char_t msg_g54[] = "G54 - coordinate system 1";
 static const char_t msg_g55[] = "G55 - coordinate system 2";

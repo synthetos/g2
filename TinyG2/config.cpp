@@ -413,9 +413,9 @@ void cmd_get_cmdObj(cmdObj_t *cmd)
 	((fptrCmd)(cfgArray[cmd->index].get))(cmd);	// populate the value
 }
  
-cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)	// clear a single cmdObj structure
+cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)		// clear a single cmdObj structure
 {
-	cmd->type = TYPE_EMPTY;				// selective clear is much faster than calling memset
+	cmd->type = TYPE_EMPTY;					// selective clear is much faster than calling memset
 	cmd->index = 0;
 	cmd->value = 0;
 	cmd->precision = 0;
@@ -423,7 +423,7 @@ cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)	// clear a single cmdObj structure
 	cmd->group[0] = NUL;
 	cmd->stringp = NULL;
 
-	if (cmd->pv == NULL) { 				// set depth correctly
+	if (cmd->pv == NULL) { 					// set depth correctly
 		cmd->depth = 0;
 	} else {
 		if (cmd->pv->type == TYPE_PARENT) { 
@@ -467,7 +467,7 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 	return (STAT_OK);
 }
 
-cmdObj_t *cmd_add_object(const char_t *token)		// add an object to the body using a token
+cmdObj_t *cmd_add_object(const char_t *token) // add an object to the body using a token
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
