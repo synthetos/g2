@@ -245,7 +245,7 @@ void rpt_init_status_report()
 	const char_t nul[] = "";	
 	const char_t se00[] = "se00";
 	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
-	cmdObj_t *cmd = cmd_reset_list();	// used for status report persistence locations
+	cmdObj_t *cmd = cmd_reset_list();					// used for status report persistence locations
 	cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
 
 	cmd->index = cmd_get_index(nul, se00);				// set first SR persistence index

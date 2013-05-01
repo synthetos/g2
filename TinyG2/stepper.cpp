@@ -383,13 +383,25 @@ MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 }
 
 } // namespace Motate
-
+/*
 static void _exec_move()
 {
    	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
 			_request_load_move();
+		}
+	}
+}
+*/
+static void _exec_move()
+{
+	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+		if (mp_exec_move() != STAT_NOOP) {
+			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
+			_request_load_move();
+		} else {
+			st_prep_null();
 		}
 	}
 }
@@ -517,8 +529,6 @@ void _load_move()
 			motor_6.enable.clear();
 		}
 		st_enable();
-//		enable.clear();
-//		dda_timer.start();
 
 	// handle dwells
 	} else if (sps.move_type == MOVE_TYPE_DWELL) {

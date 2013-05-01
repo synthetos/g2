@@ -212,11 +212,12 @@ uint8_t mp_exec_move()
  *	  - To finish up _exec_command() needs to run a null pre and free the planner buffer
  *
  *	Doing it this way instead of synchronizing on queue empty simplifies the
- *	handling of feedholds, feed overrides, buffer flushes, and thread blocking,
+ *	handling of feed holds, feed overrides, buffer flushes, and thread blocking,
  *	and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float float_val)
+//void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float float_val)
+void mp_queue_command(cm_exec cm_func, uint8_t int_value, float float_value)
 {
 	mpBuf_t *bf;
 
@@ -225,9 +226,10 @@ void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float flo
 
 	bf->move_type = MOVE_TYPE_COMMAND;
 	bf->bf_func = _exec_command;		// callback to planner queue exec function
-	bf->cm_func = cm_exec;				// callback to canonical machine exec function
-	bf->int_val = int_val;
-	bf->dbl_val = float_val;
+	bf->cm_func = cm_func;				// callback to canonical machine exec function
+//	bf->cm_func = cm_exec;				// callback to canonical machine exec function
+	bf->int_val = int_value;
+	bf->dbl_val = float_value;
 	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
 	return;
 }

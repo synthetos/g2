@@ -95,13 +95,13 @@ static stat_t _json_parser_kernal(char_t *str)
 	int8_t depth;
 	cmdObj_t *cmd = cmd_body;
 	char_t group[CMD_GROUP_LEN+1] = {""};		// group identifier - starts as NUL
-	int8_t i = CMD_BODY_LEN;
+	int8_t pairs = CMD_BODY_LEN;
 
 	ritorno(_normalize_json_string(str, JSON_OUTPUT_STRING_MAX));	// return if error
 
 	// parse the JSON command into the cmd body
 	do {
-		if (--i == 0) { return (STAT_JSON_TOO_MANY_PAIRS); }		// length error
+		if (--pairs == 0) { return (STAT_JSON_TOO_MANY_PAIRS); }		// length error
 		if ((status = _get_nv_pair_strict(cmd, &str, &depth)) > STAT_EAGAIN) {	// erred out
 			return (status);
 		}
@@ -204,7 +204,7 @@ static stat_t _get_nv_pair_strict(cmdObj_t *cmd, char_t **pstr, int8_t *depth)
 	
 	// numbers
 	} else if (isdigit(**pstr) || (**pstr == '-')) {// value is a number
-		cmd->value = strtod(*pstr, &tmp);			// tmp is the end pointer
+		cmd->value = strtof(*pstr, &tmp);			// tmp is the end pointer
 		if(tmp == *pstr) { return (STAT_BAD_NUMBER_FORMAT);}
 		cmd->type = TYPE_FLOAT;
 

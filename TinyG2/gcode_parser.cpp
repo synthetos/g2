@@ -16,14 +16,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>					// needed for memcpy, memset
-#include <avr/pgmspace.h>			// precursor for xio.h
-*/
 #include "tinyg2.h"
 #include "config.h"
 #include "gcode_parser.h"
@@ -40,12 +32,12 @@ struct gcodeParserSingleton {	 	  // struct to manage globals
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
-static stat_t _normalize_gcode_block(char_t *block);
+static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint8_t *block_delete_flag);
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
+static stat_t _point(float value);
 static stat_t _parse_gcode_block(char_t *line);	// Parse the block into structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
 static stat_t _check_gcode_block(void);			// check the block for correctness
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
-static stat_t _point(float value);
 
 #define SET_MODAL(m,parm,val) ({gn.parm=val; gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({gn.parm=val; gf.parm=1; break;})
@@ -59,95 +51,131 @@ static stat_t _point(float value);
 
 stat_t gc_gcode_parser(char_t *block)
 {
-	uint8_t msg_flag = _normalize_gcode_block(block);	// get block ready for parsing
-	if (block[0] == NUL) {
-		if (msg_flag == true) return (STAT_OK);	// queues messages for display
-		return (STAT_NOOP); 
+	char_t *cmd = block;					// gcode command or NUL string
+	char_t none = NUL;
+	char_t *com = &none;					// gcode comment or NUL string
+	char_t *msg = &none;					// gcode message or NUL string
+	uint8_t block_delete_flag;
+
+	_normalize_gcode_block(cmd, &com, &msg, &block_delete_flag);
+	
+	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {
+		return (STAT_NOOP);
 	}
-	return(_parse_gcode_block(block));			// parse block & return if error
+	if (*msg != NUL) {
+		(void)cm_message(msg);				// queue the message	
+	}	
+	return(_parse_gcode_block(block));
 }
 
 /*
  * _normalize_gcode_block() - normalize a block (line) of gcode in place
  *
- *	Normalization rules
- *	 - convert all letters to upper case
- *	 - remove all white space
- *	 - remove extraneous leading zeros that might be taken to mean Octal during strtof()
- *	 - remove all control and other invalid characters:
- *		chars < 0x20 (control characters)
- *		! $ % ,	; ; ? @ ^ _ ~ " ' <DEL>
- * 
- *	Valid characters in a Gcode block are a sub-set of those in RS274NGC_3 Appendix E:
- *	 - alphanumeric plus '-' and '.'
+ *	Normalization functions:
+ *   - convert all letters to upper case
+ *	 - remove white space, control and other invalid characters 
+ *	 - remove (erroneous) leading zeros that might be taken to mean Octal
+ *	 - identify and return start of comments and messages
+ *	 - signal if a block-delete character (/) was encountered in the first space
  *
- *	Block delete: Blocks starting with '/' are ignored if block delete switch is on,
- *	  otherwise they are processed as usual.
+ *	So this: "  g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
- *	Octal stripping: Leading zeros in number fields are stripped unless followed by a period
- *
- *	Comment handling:
- *	 - Comments are not normalized - they are left alone
+ *	Comment and message handling:
+ *	 - Comments and messages are not normalized - they are left alone
  *	 - Comments always terminate the block (i.e. embedded comments are not supported)
- *	 - Messages in comments are sent to console 
  *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
  *	 - Normalization returns true if there was a message to display, false otherwise
  *	 - Processing splits string into command and comment portions - supported cases are:
  *		 COMMAND
  *		 (comment)
  *		 COMMAND (comment)
+ *
+ *	Returns:
+ *	 - com points to comment string or to NUL if no comment
+ *	 - msg points to message string or to NUL if no comment
+ *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
-static uint8_t _normalize_gcode_block(char_t *str) 
+static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint8_t *block_delete_flag)
 {
-	char_t *rd = str;						// read pointer
-	char_t *wr = str;						// pointer to write normalized characters
-	char_t *cp = NUL;							// comment pointer - first char past opening paren
+	char_t *rd = cmd;				// read pointer
+	char_t *wr = cmd;				// write pointer
 
-	if (*rd == '?') { return (false); }		// trap and return ? command
-	if (*rd == '/') {						// handle block deletes
-		rd++;
-		if (cm_get_block_delete_switch() == true) {
-			*wr = NUL;
-			return (false);
-		}
-	}
-	// normalize the command block & mark the comment(if any)
-	do {
+	// Preset comments and messages to NUL string
+	// Not required if com and msg already point to NUL on entry
+//	for (rd = cmd; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = cmd;} }
+
+	// mark block deletes
+	if (*rd == '/') { *block_delete_flag = true; } 
+	else { *block_delete_flag = false; }
+	
+	// normalize the command block & find the comment(if any)
+	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
-		else if (*rd == '(') { *wr = NUL; cp = rd+1; } 
+		else if (*rd == '(') { *wr = NUL; *com = rd+1; } 
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
 			*(wr++) = (char_t)toupper((char)*(rd));
 		}
-		rd++;
-	} while (*wr != NUL);
-
+	}
+	
 	// Perform Octal stripping - remove invalid leading zeros in number strings
-	rd = str;
+	rd = cmd;
 	while (*rd != NUL) {
 		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
 			wr = rd+1;
-			while (*wr != NUL) { *wr = *(wr+1); wr++;}
-//			while (*wr != NUL) { *(wr++) = *(wr+1); }
+			while (*wr != NUL) { *wr = *(wr+1); wr++;}	// copy forward w/overwrite
 			continue;
 		}
 		rd++;
 	}
-
-	// process a comment with a message, otherwise ignore it
-	rd = cp;
-	if (cp != NUL) {
-		if ((tolower(*(rd++)) == 'm') && (toupper(*(rd++)) == 's') && (toupper(*(rd++)) == 'g')) {
-			do {
-				if (*rd == ')') *rd = NUL;   // remove trailing parenthesis, if any
-				rd++;
-			} while (*rd != NUL);
-			(void)cm_message(cp);
-			return (true);
-		}				
+	
+	// process comments and messages
+	if (**com != NUL) {
+		rd = *com;
+		while (isspace(*rd)) { rd++; }		// skip any leading spaces before "msg"
+		if ((tolower(*rd) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
+			*msg = rd+3;
+		}
+		for (; *rd != NUL; rd++) {	
+			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
+		}
 	}
-	return (false);
 }
 
+/*
+ * _get_next_gcode_word() - get gcode word consisting of a letter and a value
+ *
+ *	This function requires the Gcode string to be normalized.
+ *	Normalization must remove any leading zeros or they will be converted to Octal
+ *	G0X... is not interpreted as hexadecimal. This is trapped.
+ */
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value) 
+{
+	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
+
+	// get letter part
+	if(isupper(**pstr) == false) { return (STAT_EXPECTED_COMMAND_LETTER); }
+	*letter = **pstr;
+	(*pstr)++;
+	
+	// X-axis-becomes-a-hexadecimal-number get-value case, e.g. G0X100 --> G255
+	if ((**pstr == '0') && (*(*pstr+1) == 'X')) {
+		*value = 0;
+		(*pstr)++;
+		return (STAT_OK);		// pointer points to X
+	}
+
+	// get-value general case
+	char *end; 
+	*value = strtof(*pstr, &end);
+	if(end == *pstr) { return(STAT_BAD_NUMBER_FORMAT); }	// more robust test then checking for value=0;
+	*pstr = end;
+	return (STAT_OK);			// pointer points to next character after the word
+}
+
+static uint8_t _point(float value) 
+{
+	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
+}
 /*
  * _parse_gcode_block() - parses one line of NULL terminated G-Code. 
  *
@@ -430,45 +458,6 @@ static stat_t _check_gcode_block()
 //		return (STAT_GCODE_AXIS_WORD_MISSING);
 //	}
 	return (STAT_OK);
-}
-
-/*
- * helpers
- */
-
-/*
- * _get_next_gcode_word() - get gcode word consisting of a letter and a value
- *
- *	This function requires the Gcode string to be normalized.
- *	Normalization must remove any leading zeros or they will be converted to Octal
- */
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value) 
-{
-	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
-
-	// get letter part
-	if(isupper(**pstr) == false) { return (STAT_EXPECTED_COMMAND_LETTER); }
-	*letter = **pstr;
-	(*pstr)++;
-	
-	// X-axis-becomes-a-hexadecimal-number get-value case, e.g. G0X100 --> G255
-	if ((**pstr == '0') && (*(*pstr+1) == 'X')) {
-		*value = 0;
-		(*pstr)++;
-		return (STAT_OK);		// pointer points to X
-	}
-
-	// get-value general case
-	char *end; 
-	*value = strtof(*pstr, &end);
-	if(end == *pstr) { return(STAT_BAD_NUMBER_FORMAT); }	// more robust test then checking for value=0;
-	*pstr = end;
-	return (STAT_OK);			// pointer points to next character after the word
-}
-
-static uint8_t _point(float value) 
-{
-	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
 }
 
 #ifdef __cplusplus

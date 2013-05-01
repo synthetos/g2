@@ -302,11 +302,17 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 		_calculate_trapezoid(bp);
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
-		if ((bp->exit_velocity == bp->exit_vmax) || 
-			(bp->exit_velocity == bp->nx->entry_vmax) || 
-		   ((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
+		if ((fp_EQ(bp->exit_velocity, bp->exit_vmax)) || (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) || 
+		   ((bp->pv->replannable == false) && (fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))))) {
 			bp->replannable = false;
 		}
+/*
+		if ((bp->exit_velocity == bp->exit_vmax) ||
+		(bp->exit_velocity == bp->nx->entry_vmax) ||
+		((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
+			bp->replannable = false;
+		}
+*/
 	}
 	// finish up the last block move
 	bp->entry_velocity = bp->pv->exit_velocity;
