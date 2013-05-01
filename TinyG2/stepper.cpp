@@ -383,25 +383,15 @@ MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 }
 
 } // namespace Motate
-/*
-static void _exec_move()
-{
-   	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
-		if (mp_exec_move() != STAT_NOOP) {
-			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-			_request_load_move();
-		}
-	}
-}
-*/
+
 static void _exec_move()
 {
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
 			_request_load_move();
-		} else {
-			st_prep_null();
+		} else {					// ++++ this line added
+			st_prep_null();			// ++++ this line added
 		}
 	}
 }
