@@ -48,7 +48,7 @@ Motate::Timer<dda_timer_num> dda_timer;			// stepper pulse generation
 Motate::Timer<dwell_timer_num> dwell_timer;		// dwell timer
 Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
-Motate::Pin<31> proof_of_timer(kOutput);
+Motate::OutputPin<31> proof_of_timer;
 
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num, pin_number enable_num, 

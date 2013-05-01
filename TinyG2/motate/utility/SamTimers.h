@@ -62,11 +62,30 @@ namespace Motate {
 		kTimerUpDownToMatch = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
 	};
 
+	/* We're trading acronyms for verbose CamelCase. Dubious. */
 	enum TimerChannelOutputOptions {
 		kOutputDisconnected = 0,
-		kToggleOnMatch      = 1,
-		kClearOnMatch       = 2,
-		kSetOnMatch         = 3,
+
+		/* ACPA (TC_CMR) RA Compare Effect on TIOA */
+		kToggleAOnCompareA  = TC_CMR_ACPA_TOGGLE,
+		kClearAOnCompareA   = TC_CMR_ACPA_CLEAR,
+		kSetAOnCompareA     = TC_CMR_ACPA_SET,
+
+		/* BCPB (TC_CMR) RB Compare Effect on TIOB */
+		kToggleBOnCompareB  = TC_CMR_BCPB_TOGGLE,
+		kClearBOnCompareB   = TC_CMR_BCPB_CLEAR,
+		kSetBOnCompareB     = TC_CMR_BCPB_SET,
+
+		/* We use "match" the same as the mode -- RC Compare */
+		/* ACPC (TC_CMR) RC Compare Effect on TIOA */
+		kToggleAOnMatch     = TC_CMR_ACPC_TOGGLE,
+		kClearAOnMatch      = TC_CMR_ACPC_CLEAR,
+		kSetAOnMatch        = TC_CMR_ACPC_SET,
+
+		/* BCPC (TC_CMR) RC Compare Effect on TIOB */
+		kToggleBOnMatch     = TC_CMR_BCPC_TOGGLE,
+		kClearBOnMatch      = TC_CMR_BCPC_CLEAR,
+		kSetBOnMatch        = TC_CMR_BCPC_SET,
 	};
 
 	enum TimerChannelInterruptOptions {
@@ -113,6 +132,10 @@ namespace Motate {
 		*********************************************************************/
 
 		Timer() { init(); };
+		Timer(const TimerMode mode, const uint32_t freq) {
+			init();
+			setModeAndFrequency(mode, freq);
+		};
 
 		void init() {
 			/* Unlock this thing */
@@ -277,12 +300,25 @@ namespace Motate {
 
 		// Specify channel A/B duty cycle as a integer value from 0 .. TOP.
 		// TOP in this case is either RC_RC or 0xFFFF.
-		void setDutyCycleA(const uint32_t absolute) {
+		void setExactDutyCycleA(const uint32_t absolute) {
 			tcChan()->TC_RA = absolute;
 		};
 
-		void setDutyCycleB(const uint32_t absolute) {
+		void setExactDutyCycleB(const uint32_t absolute) {
 			tcChan()->TC_RB = absolute;
+		};
+
+		void setOutputOptions(const uint32_t options) {
+
+			// Note that we carefully crafted the TimerChannelOutputOptions
+			// to match the bits in CMR, so we just mask and set!
+			tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
+													 TC_CMR_ACPA_Msk |
+													 TC_CMR_BCPB_Msk |
+													 TC_CMR_ACPC_Msk |
+													 TC_CMR_BCPC_Msk
+													)
+								) | options;
 		};
 
 		void setInterrupts(const uint32_t interrupts) {

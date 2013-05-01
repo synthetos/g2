@@ -231,6 +231,14 @@ namespace Motate {
 						(*PIO ## registerLetter).PIO_ODR = mask ;\
 						(*PIO ## registerLetter).PIO_PER = mask ;\
 						break;\
+					case kPeripheralA:\
+						(*PIO ## registerLetter).PIO_ABSR &= ~mask ;\
+						(*PIO ## registerLetter).PIO_PDR = mask ;\
+						break;\
+					case kPeripheralB:\
+						(*PIO ## registerLetter).PIO_ABSR |= mask ;\
+						(*PIO ## registerLetter).PIO_PDR = mask ;\
+						break;\
 					default:\
 						break;\
 				}\
