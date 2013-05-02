@@ -66,29 +66,28 @@ cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
  */
 stat_t cmd_set(cmdObj_t *cmd)
 {
-//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
 	return (cfgArray[cmd->index].set(cmd));
 }
 
 stat_t cmd_get(cmdObj_t *cmd)
 {
-//	ritorno(cmd_index_lt_max(cmd->index));	// validate index or return
+	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
 	return (cfgArray[cmd->index].get(cmd));
 }
 
 void cmd_print(cmdObj_t *cmd)
 {
-//	if (cmd->index >= CMD_INDEX_MAX) return;
+	if (cmd_index_ge_max(cmd->index)) return;	// validate index or return
 	cfgArray[cmd->index].print(cmd);
 }
 
 void cmd_persist(cmdObj_t *cmd)
 {
-//	if (cmd_index_lt_groups(cmd->index) == false) return;
+	if (!cmd_index_is_single(cmd->index)) return;	// validate index to < groups or return
 	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
 		write_persistent_value(cmd);
 	}
-	return;
 }
 
 /****************************************************************************
@@ -282,7 +281,6 @@ stat_t get_grp(cmdObj_t *cmd)
 	uint8_t *parent_group = cmd->token;		// token in the parent cmd object is the group
 	uint8_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
 	cmd->type = TYPE_PARENT;				// make first object the parent 
-//	for (index_t i=0; i<=CMD_INDEX_END_SINGLES; i++) {
 	for (index_t i=0; cmd_index_is_single(i); i++) {
 		strcpy(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
 		if (strcmp(parent_group, group) != 0) continue;

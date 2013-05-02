@@ -25,8 +25,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _CONTROLLER_H_
-#define _CONTROLLER_H_
+#ifndef CONTROLLER_H_ONCE
+#define CONTROLLER_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -87,4 +87,4 @@ void tg_text_response(const uint8_t status, const uint8_t *buf);
 }
 #endif
 
-#endif // _CONTROLLER_H_
+#endif // End of include guard: CONTROLLER_H_ONCE

@@ -20,8 +20,8 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "report.h"
-//#include "controller.h"
 #include "help.h"				// must follow config.h
+//#include "controller.h"
 //#include "util.h"
 
 #ifdef __cplusplus

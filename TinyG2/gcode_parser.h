@@ -17,22 +17,20 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _GCODE_PARSER_H_
-#define _GCODE_PARSER_H_
-#include "tinyg2.h"
+#ifndef GCODE_PARSER_H_ONCE
+#define GCODE_PARSER_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
 /*
  * Global Scope Functions
  */
-
 stat_t gc_gcode_parser(char_t *block);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // _GCODE_PARSER_H_
+#endif // End of include guard: GCODE_PARSER_H_ONCE

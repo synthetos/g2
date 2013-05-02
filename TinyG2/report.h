@@ -28,11 +28,21 @@
 #ifndef REPORT_H_ONCE
 #define REPORT_H_ONCE
 
-#include "config.h"
-
 #ifdef __cplusplus
 extern "C"{
 #endif
+
+enum srVerbosity {					// status report enable and verbosity
+	SR_OFF = 0,						// no reports
+	SR_FILTERED,					// reports only values that have changed from the last report
+	SR_VERBOSE						// reports all values specified
+};
+
+enum srStatusReportRequest {
+	SR_NO_REQUEST = 0,				// no status report is requested
+	SR_TIMED_REQUEST,				// request a status report at next timer interval
+	SR_IMMEDIATE_REQUEST			// request a status report ASAP
+};
 
 const char_t *get_status_message(uint8_t status);
 void rpt_print_message(char_t *msg);

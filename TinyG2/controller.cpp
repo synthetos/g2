@@ -68,7 +68,6 @@ static void _controller_HSM(void);
 static stat_t _command_dispatch(void);
 static stat_t _normal_idler(void);
 static stat_t _sync_to_planner(void);
-
 /*
 static stat_t _alarm_idler(void);
 static stat_t _reset_handler(void);

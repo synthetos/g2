@@ -42,7 +42,6 @@ extern "C"{
 struct hmHomingSingleton {		// persistent homing runtime variables
 	// controls for homing cycle
 	int8_t axis;				// axis currently being homed
-//	int8_t axis2;				// second axis if dual axis
 	uint8_t min_mode;			// mode for min switch fo this axis
 	uint8_t max_mode;			// mode for max switch fo this axis
 	int8_t homing_switch;		// homing switch for current axis (index into switch flag table)

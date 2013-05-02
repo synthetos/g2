@@ -313,15 +313,7 @@ void rpt_request_status_report(uint8_t request_type)
 {
 	cs.status_report_request = request_type;
 }
-/*
-void rpt_status_report_rtc_callback() 		// called by 10ms real-time clock
-{
-	if (--cs.status_report_counter == 0) {
-		cs.status_report_request = SR_IMMEDIATE_REQUEST;	// promote to immediate request
-		cs.status_report_counter = (cfg.status_report_interval / MILLISECONDS_PER_TICK);	// reset minimum interval
-	}
-}
-*/
+
 uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 {
 	if ((cfg.status_report_verbosity == SR_OFF) || (cs.status_report_request == SR_NO_REQUEST)) {

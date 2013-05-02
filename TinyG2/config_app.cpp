@@ -37,11 +37,9 @@
 #include "util.h"
 #include "help.h"
 #include "xio.h"
-
 /*
-#include "gcode_parser.h"
-#include "test.h"
 #include "network.h"
+#include "test.h"
 */
 
 #ifdef __cplusplus
@@ -62,7 +60,7 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 
 //static stat_t set_hv(cmdObj_t *cmd);		// set hardware version
 //static stat_t get_id(cmdObj_t *cmd);		// get device ID
-//static stat_t run_boot(cmdObj_t *cmd);		// jump to the bootloader
+//static stat_t run_boot(cmdObj_t *cmd);	// jump to conclusions
 
 static stat_t get_sr(cmdObj_t *cmd);		// run status report (as data)
 static stat_t set_sr(cmdObj_t *cmd);		// set status report specification
@@ -668,14 +666,6 @@ const cfgItem_t cfgArray[] = {
 //	{ "sys","ex",  _f07, 0, fmt_ex, print_ui8, get_ui8, set_ex,  (float *)&cfg.enable_xon,			COM_ENABLE_XON },
 //	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 
-	// NOTE: The ordering within the gcode defaults is important for token resolution
-	{ "sys","gpl", _f07, 0, fmt_gpl, print_ui8, get_ui8,set_012, (float *)&cfg.select_plane,		GCODE_DEFAULT_PLANE },
-	{ "sys","gun", _f07, 0, fmt_gun, print_ui8, get_ui8,set_01,  (float *)&cfg.units_mode,			GCODE_DEFAULT_UNITS },
-	{ "sys","gco", _f07, 0, fmt_gco, print_ui8, get_ui8,set_ui8, (float *)&cfg.coord_system,		GCODE_DEFAULT_COORD_SYSTEM },
-	{ "sys","gpa", _f07, 0, fmt_gpa, print_ui8, get_ui8,set_012, (float *)&cfg.path_control,		GCODE_DEFAULT_PATH_CONTROL },
-	{ "sys","gdi", _f07, 0, fmt_gdi, print_ui8, get_ui8,set_01,  (float *)&cfg.distance_mode,		GCODE_DEFAULT_DISTANCE_MODE },
-	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
-
 	// removed from system group as "hidden" parameters
 	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
 	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
@@ -683,6 +673,14 @@ const cfgItem_t cfgArray[] = {
 	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
 	{ "",   "qrl", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_lo_water, QR_LO_WATER },
 //	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
+
+	// NOTE: The ordering within the gcode defaults is important for token resolution
+	{ "sys","gpl", _f07, 0, fmt_gpl, print_ui8, get_ui8,set_012, (float *)&cfg.select_plane,		GCODE_DEFAULT_PLANE },
+	{ "sys","gun", _f07, 0, fmt_gun, print_ui8, get_ui8,set_01,  (float *)&cfg.units_mode,			GCODE_DEFAULT_UNITS },
+	{ "sys","gco", _f07, 0, fmt_gco, print_ui8, get_ui8,set_ui8, (float *)&cfg.coord_system,		GCODE_DEFAULT_COORD_SYSTEM },
+	{ "sys","gpa", _f07, 0, fmt_gpa, print_ui8, get_ui8,set_012, (float *)&cfg.path_control,		GCODE_DEFAULT_PATH_CONTROL },
+	{ "sys","gdi", _f07, 0, fmt_gdi, print_ui8, get_ui8,set_01,  (float *)&cfg.distance_mode,		GCODE_DEFAULT_DISTANCE_MODE },
+	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// Persistence for status report - must be in sequence
 	// *** Count must agree with CMD_STATUS_REPORT_LEN in config.h ***
@@ -1072,14 +1070,6 @@ int8_t _get_pos_axis(const index_t index)	// index into configArray
 	char *ptr = (char *)strchr(axes, axis);
 	if (ptr == NULL) { return (-1);}
 	return (ptr - axes);
-/*	
-	char_t *ptr;
-	char_t tmp[CMD_TOKEN_LEN+1];
-	char_t axes[] = {"xyzabc"};
-	strcpy(tmp, cfgArray[i].token);
-	if ((ptr = strchr(axes, tmp[3])) == NULL) { return (-1);}
-	return (ptr - axes);
-*/
 }
 
 static stat_t get_pos(cmdObj_t *cmd) 
@@ -1302,17 +1292,11 @@ int8_t get_axis(const index_t i)
 }
 */
 
-// *** GETTERS ***
-
-
 static stat_t get_am(cmdObj_t *cmd)
 {
 	get_ui8(cmd);
 	return(_get_msg_helper(cmd, msg_am, cmd->value));
 }
-
-// *** SETTERS ***
-
 
 static stat_t set_am(cmdObj_t *cmd)		// axis mode
 {

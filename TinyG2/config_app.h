@@ -92,8 +92,8 @@
  *	index by calling cmd_get_index(). This also validates the token and group if no lookup exists.
  */
 
-#ifndef _CONFIG_APP_H_
-#define _CONFIG_APP_H_
+#ifndef CONFIG_APP_H_ONCE
+#define CONFIG_APP_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -108,18 +108,6 @@ enum cmdType {						// classification of commands
 	CMD_TYPE_CONFIG,				// configuration commands
 	CMD_TYPE_GCODE,					// gcode
 	CMD_TYPE_REPORT					// SR, QR and any other report
-};
-
-enum srStatusReportRequest {
-	SR_NO_REQUEST = 0,				// no status report is requested
-	SR_TIMED_REQUEST,				// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST			// request a status report ASAP
-};
-
-enum srVerbosity {					// status report enable and verbosity
-	SR_OFF = 0,						// no reports
-	SR_FILTERED,					// reports only values that have changed from the last report
-	SR_VERBOSE						// reports all values specified
 };
 
 enum qrVerbosity {					// planner queue enable and verbosity
@@ -236,5 +224,5 @@ extern cfgParameters_t cfg; 		// declared in config_app.cpp
 }
 #endif
 
-#endif //_CONFIG_APP_H_
+#endif //End of include guard: CONFIG_APP_H_ONCE
 

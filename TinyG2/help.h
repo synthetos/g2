@@ -17,8 +17,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _HELP_H_
-#define _HELP_H_
+#ifndef HELP_H_ONCE
+#define HELP_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -34,4 +34,4 @@ stat_t print_boot_loader_help(cmdObj_t *cmd);
 }
 #endif
 
-#endif // _HELP_H_
+#endif // End of include guard: HELP_H_ONCE

@@ -244,8 +244,8 @@ float *cm_get_model_canonical_position_vector(float position[])
 
 float cm_get_runtime_machine_position(uint8_t axis) 
 {
-//	return (mp_get_runtime_machine_position(axis));
-	return (0);
+	return (mp_get_runtime_machine_position(axis));
+//	return (0);
 }
 // deprecated behavior
 //	if (gm.units_mode == INCHES) {
@@ -350,8 +350,9 @@ void cm_set_target(float target[], float flag[])
 		// skip axis if not flagged for update or its disabled
 		if ((flag[i] < EPSILON) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 			continue;
-		} else tmp = _calc_ABC(i, target, flag);		
-		
+		} else {
+			tmp = _calc_ABC(i, target, flag);		
+		}			
 		if (gm.distance_mode == ABSOLUTE_MODE) {
 			gm.target[i] = tmp + cm_get_coord_offset(i); // sacidu93's fix to Issue #22
 		} else {
@@ -372,33 +373,6 @@ static float _calc_ABC(uint8_t i, float target[], float flag[])
 
 	} else if ((cfg.a[i].axis_mode == AXIS_RADIUS) && (flag[i] > EPSILON)) {
 		tmp = _to_millimeters(target[i]) * 360 / (2 * M_PI * cfg.a[i].radius);
-
-/* COMMENTED OUT THE SLAVE MODES
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_X) && (flag[X] > EPSILON)) {
-		tmp = (target[X] - gm.position[X]) * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_Y) && (flag[Y] > EPSILON)) {
-		tmp = (target[Y] - gm.position[Y]) * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_Z) && (flag[Z] > EPSILON)) {
-		tmp = (target[Z] - gm.position[Z]) * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_XY) && ((flag[X] > EPSILON) || (flag[Y] > EPSILON))) {
-		float length = sqrt(square(target[X] - gm.position[X]) + square(target[Y] - gm.position[Y]));
-		tmp = length * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_XZ) && ((flag[X] > EPSILON) || (flag[Z] > EPSILON))) {
-		float length = sqrt(square(target[X] - gm.position[X]) + square(target[Z] - gm.position[Z]));
-		tmp = length * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_YZ) && ((flag[Y] > EPSILON) || (flag[Z] > EPSILON))) {
-		float length = sqrt(square(target[Y] - gm.position[Y]) + square(target[Z] - gm.position[Z]));
-		tmp = length * 360 / (2 * M_PI * cfg.a[i].radius);
-
-	} else if ((cfg.a[i].axis_mode == AXIS_SLAVE_XYZ) && ((flag[X] > EPSILON) || (flag[Y] > EPSILON) || (flag[Z] > EPSILON))) {
-		float length = sqrt(square(target[X] - gm.position[X]) + square(target[Y] - gm.position[Y]) + square(target[Z] - gm.position[Z]));
-		tmp = length * 360 / (2 * M_PI * cfg.a[i].radius);
-*/
 	}
 	return tmp;
 }
@@ -542,11 +516,11 @@ static float _get_move_times(float *min_time)
 
 void canonical_machine_init()
 {
-// You can assume all memory has been zeroed by a hard reset. If not, use this code:
-//	memset(&cm, 0, sizeof(cm));		// reset canonicalMachineSingleton
-//	memset(&gn, 0, sizeof(gn));		// clear all values, pointers and status
-//	memset(&gf, 0, sizeof(gf));
-//	memset(&gm, 0, sizeof(gm));
+// If you can assume all memory has been zeroed by a hard reset you don't need this code:
+	memset(&cm, 0, sizeof(cm));		// reset canonicalMachineSingleton
+	memset(&gn, 0, sizeof(gn));		// clear all values, pointers and status
+	memset(&gf, 0, sizeof(gf));
+	memset(&gm, 0, sizeof(gm));
 
 	// setup magic numbers
 	cm.magic_start = MAGICNUM;
@@ -1016,7 +990,6 @@ stat_t cm_override_enables(uint8_t flag)			// M48, M49
 
 stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
-//	if ((gf.parameter == true) && (gn.parameter == 0)) {
 	if ((fp_TRUE(gf.parameter)) && (fp_ZERO(gn.parameter))) {
 		gm.feed_rate_override_enable = false;
 	} else {
@@ -1054,7 +1027,6 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 
 stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 {
-//	if ((gf.parameter == true) && (gn.parameter == 0)) {
 	if ((fp_TRUE(gf.parameter)) && (fp_ZERO(gn.parameter))) {
 		gm.spindle_override_enable = false;
 	} else {
