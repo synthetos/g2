@@ -72,8 +72,8 @@ static const char_t stat_14[] = "Buffer full - fatal";
 static const char_t stat_15[] = "Initializing";
 static const char_t stat_16[] = "Entering boot loader";
 static const char_t stat_17[] = "Function is stubbed";
-static const char_t stat_18[] = "18";
-static const char_t stat_19[] = "19";
+static const char_t stat_18[] = "stat_18";
+static const char_t stat_19[] = "stat_19";
 
 static const char_t stat_20[] = "Internal error";
 static const char_t stat_21[] = "Internal range error";
@@ -84,17 +84,17 @@ static const char_t stat_25[] = "Read-only address";
 static const char_t stat_26[] = "Initialization failure";
 static const char_t stat_27[] = "System shutdown";
 static const char_t stat_28[] = "Memory corruption";
-static const char_t stat_29[] = "29";
-static const char_t stat_30[] = "30";
-static const char_t stat_31[] = "31";
-static const char_t stat_32[] = "32";
-static const char_t stat_33[] = "33";
-static const char_t stat_34[] = "34";
-static const char_t stat_35[] = "35";
-static const char_t stat_36[] = "36";
-static const char_t stat_37[] = "37";
-static const char_t stat_38[] = "38";
-static const char_t stat_39[] = "39";
+static const char_t stat_29[] = "stat_29";
+static const char_t stat_30[] = "stat_30";
+static const char_t stat_31[] = "stat_31";
+static const char_t stat_32[] = "stat_32";
+static const char_t stat_33[] = "stat_33";
+static const char_t stat_34[] = "stat_34";
+static const char_t stat_35[] = "stat_35";
+static const char_t stat_36[] = "stat_36";
+static const char_t stat_37[] = "stat_37";
+static const char_t stat_38[] = "stat_38";
+static const char_t stat_39[] = "stat_39";
 
 static const char_t stat_40[] = "Unrecognized command";
 static const char_t stat_41[] = "Expected command letter";
@@ -108,14 +108,14 @@ static const char_t stat_48[] = "JSON syntax error";
 static const char_t stat_49[] = "JSON input has too many pairs";
 static const char_t stat_50[] = "JSON output too long";
 static const char_t stat_51[] = "Out of buffer space";
-static const char_t stat_52[] = "52";
-static const char_t stat_53[] = "53";
-static const char_t stat_54[] = "54";
-static const char_t stat_55[] = "55";
-static const char_t stat_56[] = "56";
-static const char_t stat_57[] = "57";
-static const char_t stat_58[] = "58";
-static const char_t stat_59[] = "59";
+static const char_t stat_52[] = "stat_52";
+static const char_t stat_53[] = "stat_53";
+static const char_t stat_54[] = "stat_54";
+static const char_t stat_55[] = "stat_55";
+static const char_t stat_56[] = "stat_56";
+static const char_t stat_57[] = "stat_57";
+static const char_t stat_58[] = "stat_58";
+static const char_t stat_59[] = "stat_59";
 
 static const char_t stat_60[] = "Zero length move";
 static const char_t stat_61[] = "Gcode block skipped";
@@ -246,7 +246,7 @@ void rpt_init_status_report()
 	const char_t se00[] = "se00";
 	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
 	cmdObj_t *cmd = cmd_reset_list();					// used for status report persistence locations
-	cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// RTC fires every 10 ms
+//	cs.status_report_counter = (cfg.status_report_interval / MILLISECONDS_PER_TICK);	// RTC fires every 10 ms
 
 	cmd->index = cmd_get_index(nul, se00);				// set first SR persistence index
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
@@ -301,7 +301,7 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
  *	  - filtered request after each Gcode block
  *
  *	Status reports are generally returned with minimal delay (from the controller callback), 
- *	but will not be provided more frequently than the status report interval
+ *	but will not be provided more frequently than the status report interval.
  */
 void rpt_run_text_status_report()
 {
@@ -313,19 +313,24 @@ void rpt_request_status_report(uint8_t request_type)
 {
 	cs.status_report_request = request_type;
 }
-
+/*
 void rpt_status_report_rtc_callback() 		// called by 10ms real-time clock
 {
 	if (--cs.status_report_counter == 0) {
 		cs.status_report_request = SR_IMMEDIATE_REQUEST;	// promote to immediate request
-		cs.status_report_counter = (cfg.status_report_interval / RTC_PERIOD);	// reset minimum interval
+		cs.status_report_counter = (cfg.status_report_interval / MILLISECONDS_PER_TICK);	// reset minimum interval
 	}
 }
-
+*/
 uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 {
-	if ((cfg.status_report_verbosity == SR_OFF) || (cs.status_report_request != SR_IMMEDIATE_REQUEST)) {
+	if ((cfg.status_report_verbosity == SR_OFF) || (cs.status_report_request == SR_NO_REQUEST)) {
 		return (STAT_NOOP);
+	}
+	if (cs.status_report_request == SR_TIMED_REQUEST) {
+		if (GetTickCount() < cs.status_report_time_due) {
+			return (STAT_NOOP);
+		}		
 	}
 	if (cfg.status_report_verbosity == SR_FILTERED) {
 		if (rpt_populate_filtered_status_report() == true) {
@@ -335,6 +340,7 @@ uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 		rpt_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
+	cs.status_report_time_due = GetTickCount() + cfg.status_report_interval;
 	cs.status_report_request = SR_NO_REQUEST;
 	return (STAT_OK);
 }

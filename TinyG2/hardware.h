@@ -46,7 +46,7 @@ void hardware_get_id(char_t *id);
 #undef F_CPU							// set for delays
 #define F_CPU 84000000UL
 
-#define RTC_PERIOD 10					// MS for system tick (systick * N)
+#define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
 
 /* Refer to tinyg2.h for Axes, motors & PWM channels used by the application */
 

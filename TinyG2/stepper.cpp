@@ -39,7 +39,12 @@
 #include "motateTimers.h"
 #include "util.h"
 
-//#define TEST_CODE
+//#define ENABLE_DIAGNOSTICS
+#ifdef ENABLE_DIAGNOSTICS
+#define INCREMENT_DIAGNOSTIC_COUNTER(motor) st.m[motor].step_count_diagnostic++;
+#else
+#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
+#endif
 
 using namespace Motate;
 
@@ -109,7 +114,7 @@ OutputPin<motor_enable_pin_num> enable;
 //volatile long dummy;					// convenient register to read into
 
 static void _load_move(void);
-static void _exec_move(void);
+//static void _exec_move(void);
 static void _request_load_move(void);
 static void _clear_diagnostic_counters(void);
 
@@ -117,9 +122,6 @@ enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
 	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
 };
-
-#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
-//#define INCREMENT_DIAGNOSTIC_COUNTER(motor) st.m[motor].step_count_diagnostic++;
 
 /*
  * Stepper structures
@@ -378,24 +380,31 @@ namespace Motate {
 
 MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 {
-	exec_timer.getInterruptCause();				// read SR to clear interrupt condition
-	_exec_move();
+	exec_timer.getInterruptCause();				// clears the interrupt condition
+//	_exec_move();
+	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+		if (mp_exec_move() != STAT_NOOP) {
+			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
+			_request_load_move();
+		}
+	}
 }
 
 } // namespace Motate
 
+/*
 static void _exec_move()
 {
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
 			_request_load_move();
-		} else {					// ++++ this line added
-			st_prep_null();			// ++++ this line added
+//		} else {					// ++++ this line added
+//			st_prep_null();			// ++++ this line added
 		}
 	}
 }
-
+*/
 /****************************************************************************************
  * Load sequencing code
  *
@@ -527,8 +536,9 @@ void _load_move()
 	}
 
 	// all other cases drop to here - such as Null moves queued by Mcodes 
-	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
-	st_request_exec_move();								// exec and prep next move
+	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;	// flip it back
+	st_prep_null();								// disable prep buffer, if only temporarily
+	st_request_exec_move();						// exec and prep next move
 }
 
 /****************************************************************************************
