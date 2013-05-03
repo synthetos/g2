@@ -115,7 +115,6 @@ OutputPin<motor_enable_pin_num> enable;
 //volatile long dummy;					// convenient register to read into
 
 static void _load_move(void);
-//static void _exec_move(void);
 static void _request_load_move(void);
 static void _clear_diagnostic_counters(void);
 
@@ -127,18 +126,17 @@ enum prepBufferState {
 /*
  * Stepper structures
  *
- *	There are 4 sets of structures involved in this operation;
+ *	There are 4 sets of structures involved in loading and running step pulses:
  *
- *	data structure:						static to:		runs at:
- *	  mpBuffer planning buffers (bf)	  planner.c		  main loop
- *	  mrRuntimeSingleton (mr)			  planner.c		  MED ISR
- *	  stPrepSingleton (sp)				  stepper.c		  MED ISR
- *	  stRunSingleton (st)				  stepper.c		  HI ISR
- *  
- *	Care has been taken to isolate actions on these structures to the 
- *	execution level in which they run and to use the minimum number of 
- *	volatiles in these structures. This allows the compiler to optimize
- *	the stepper inner-loops better.
+ *	data structure:					 static to:		runs at:
+ *	  mpBuffer planning buffers (bf)  planner.cpp	  main loop
+ *	  mrRuntimeSingleton (mr)		  planner.cpp	  medium interrupt priority
+ *	  stPrepSingleton (sps)			  stepper.cpp	  medium interrupt priority
+ *	  stRunSingleton (st)			  stepper.cpp	  highest interrupt priority 
+ * 
+ *	Care has been taken to isolate actions on these structures to the execution 
+ *	level in which they run and to use the minimum number of volatiles in these 
+ *	structures. This allows the compiler to optimize the stepper inner-loops better.
  */
 
 // Runtime structure. Used exclusively by step generation ISR (HI)
@@ -199,7 +197,7 @@ void stepper_init()
 	sps.magic_start = MAGICNUM;
 
 	// setup DDA timer
-#ifdef BARE_CODE
+#ifdef BARE_CODE						// left in for comparison to Motate setup
 	//requires: #include <component_tc.h>
 	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
 	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
@@ -245,25 +243,25 @@ void stepper_init()
  */
 void st_enable()
 {
-	enable.clear();		// grblShield common enable
+	enable.clear();			// enable grblShield common enable
 	dda_timer.start();
 }
 
 void st_disable()
 {
 	dda_timer.stop();
-	enable.set();		// grblShield common enable
-	motor_1.enable.set();
+	enable.set();			// disable grblShield common enable
+	motor_1.enable.set();	// disable individual motor enables
 	motor_2.enable.set();
 	motor_4.enable.set();
 	motor_5.enable.set();
 	motor_6.enable.set();
-	st.m[MOTOR_1].phase_increment = 0;
-	st.m[MOTOR_2].phase_increment = 0;
-	st.m[MOTOR_3].phase_increment = 0;
-	st.m[MOTOR_4].phase_increment = 0;
-	st.m[MOTOR_5].phase_increment = 0;
-	st.m[MOTOR_6].phase_increment = 0;
+//	st.m[MOTOR_1].phase_increment = 0;
+//	st.m[MOTOR_2].phase_increment = 0;
+//	st.m[MOTOR_3].phase_increment = 0;
+//	st.m[MOTOR_4].phase_increment = 0;
+//	st.m[MOTOR_5].phase_increment = 0;
+//	st.m[MOTOR_6].phase_increment = 0;
 }
 // clear diagnostic counters
 static void _clear_diagnostic_counters()
@@ -294,14 +292,17 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 /****************************************************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
- *	Uses direct struct addresses and literal values for hardware devices -
- *	it's faster than using indexed timer and port accesses. I checked.
- *	Even when -0s or -03 is used.
+ *	This interrupt is really 2 interrupts. It fires on timer overflow and also on match
+ *	Overflow interrupts are used to set step pins, match interrupts clear step pins.
+ *	This way the duty cycle of the stepper pulse can be controlled by setting the match value
+ *
+ *	Also note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests.
+ *	If motor_N is not defined that entire if {} clause drops out of the complied code.
  */
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
-	uint32_t interrupt_cause = dda_timer.getInterruptCause();
-	// read SR to clear interrupt condition
+	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
+
 	if (interrupt_cause == kInterruptOnOverflow) {
 		dda_debug_pin1 = 1;
 
@@ -370,14 +371,10 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 } // namespace Motate
 
 /****************************************************************************************
- * Exec sequencing code
+ * Exec sequencing code - 
  *
  * st_request_exec_move()	- SW interrupt to request to execute a move
  * exec_timer interrupt		- interrupt handler for calling exec function
- * _exec_move() 			- Run a move from the planner and prepare it for loading
- *
- *	_exec_move() should only be called be called from an ISR at a level lower than DDA.
- *	Only use st_request_exec_move() to call it.
  */
 void st_request_exec_move()
 {
@@ -392,7 +389,6 @@ namespace Motate {
 MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 {
 	exec_timer.getInterruptCause();				// clears the interrupt condition
-//	_exec_move();
    	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
@@ -402,16 +398,6 @@ MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 }
 
 } // namespace Motate
-
-/*
-static void _exec_move()
-{
-	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
-		if (mp_exec_move() != STAT_NOOP) {
-			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-		}
-}
-*/
 
 /****************************************************************************************
  * Load sequencing code
@@ -479,11 +465,11 @@ void _load_move()
 		}
 		if (st.m[MOTOR_1].phase_increment != 0) {
 			if (sps.m[MOTOR_1].dir == 0) {
-				motor_1.dir.clear();			// clear bit for clockwise motion 
+				motor_1.dir.clear();			// clear the bit for clockwise motion 
 			} else {
-				motor_1.dir.set();				// CCW motion
+				motor_1.dir.set();				// set the bit for CCW motion
 			}
-			motor_1.enable.clear();				// enable motor
+			motor_1.enable.clear();				// enable the motor (clear the ~Enable line)
 		}
 
 		st.m[MOTOR_2].phase_increment = sps.m[MOTOR_2].phase_increment;
@@ -543,20 +529,40 @@ void _load_move()
 		dwell_timer.start();
 	}
 
-	st_prep_null();								// disable prep buffer, if only temporarily
-	// all other cases drop to here - such as Null moves queued by Mcodes 
-	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
-	st_request_exec_move();								// exec and prep next move
+	// all cases drop to here - such as Null moves queued by Mcodes
+	st_prep_null();									// disable prep buffer, if only temporarily
+	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
+	st_request_exec_move();							// exec and prep next move
 }
 
-/****************************************************************************************
+/* 
+ * st_prep_null() - Keeps the loader happy. Otherwise performs no action
+ *
+ *	Used by M codes, tool and spindle changes
+ */
+void st_prep_null()
+{
+	sps.move_type = MOVE_TYPE_NULL;
+}
+
+/* 
+ * st_prep_dwell() 	 - Add a dwell to the move buffer
+ */
+
+void st_prep_dwell(float microseconds)
+{
+	sps.move_type = MOVE_TYPE_DWELL;
+	sps.timer_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
+}
+
+/***********************************************************************************
  * st_prep_line() - Prepare the next move for the loader
  *
- *	This function does the math on the next pulse segment and gets it ready for 
- *	the loader. It deals with all the DDA optimizations and timer setups so that
- *	loading can be performed as rapidly as possible. It works in joint space 
- *	(motors) and it works in steps, not length units. All args are provided as 
- *	floats and converted to their appropriate integer types for the loader. 
+ *	This function does the math on the next pulse segment and gets it ready for the 
+ *	loader. It deals with all the DDA optimizations and timer setups so that loading 
+ *	can be performed as rapidly as possible. It works in joint space (motors) and it 
+ *	works in steps, not length units. All args are provided as floats and converted 
+ *	to their appropriate integer types for the loader. 
  *
  * Args:
  *	steps[] are signed relative motion in steps (can be non-integer values)
@@ -592,27 +598,6 @@ uint8_t st_prep_line(float steps[], float microseconds)
 // FOOTNOTE: This expression was previously computed as below but floating 
 // point rounding errors caused subtle and nasty accumulated position errors:
 // sp.timer_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
-
-/* 
- * st_prep_null() - Keeps the loader happy. Otherwise performs no action
- *
- *	Used by M codes, tool and spindle changes
- */
-void st_prep_null()
-{
-	sps.move_type = MOVE_TYPE_NULL;
-}
-
-/* 
- * st_prep_dwell() 	 - Add a dwell to the move buffer
- */
-
-void st_prep_dwell(float microseconds)
-{
-	sps.move_type = MOVE_TYPE_DWELL;
-//	sps.timer_period = _f_to_period(FREQUENCY_DWELL);
-	sps.timer_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
-}
 
 /****************************************************************************************
  * UTILITIES

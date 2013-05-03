@@ -345,7 +345,6 @@ void rpt_populate_unfiltered_status_report()
 	cmdObj_t *cmd = cmd_reset_list();		// sets *cmd to the start of the body
 	cmd->type = TYPE_PARENT; 				// setup the parent object
 	strcpy(cmd->token, sr);
-//	sprintf_P(cmd->token, PSTR("sr"));		// alternate form of above: less RAM, more FLASH & cycles
 	cmd->index = cmd_get_index(nul, sr);	// set the index - may be needed by calling function
 	cmd = cmd->nx;
 

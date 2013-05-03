@@ -1119,14 +1119,14 @@ static uint8_t _exec_aline_head()
 		mr.segment_move_time = mr.move_time / (2 * mr.segments);
 		mr.segment_count = (uint32_t)mr.segments;
 		if ((mr.microseconds = uSec(mr.segment_move_time)) < MIN_SEGMENT_USEC) {
-			return(STAT_GCODE_BLOCK_SKIPPED);		// exit without advancing position
+			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
 		}
 		_init_forward_diffs(mr.entry_velocity, mr.midpoint_velocity);
 		mr.section_state = MOVE_STATE_RUN1;
 	}
-	if (mr.section_state == MOVE_STATE_RUN1) {	// concave part of accel curve (period 1)
+	if (mr.section_state == MOVE_STATE_RUN1) {				// concave part of accel curve (period 1)
 		mr.segment_velocity += mr.forward_diff_1;
-		if (_exec_aline_segment(false) == STAT_COMPLETE) { // set up for second half
+		if (_exec_aline_segment(false) == STAT_COMPLETE) {	// set up for second half
 			mr.segment_count = (uint32_t)mr.segments;
 			mr.section_state = MOVE_STATE_RUN2;
 
@@ -1138,7 +1138,7 @@ static uint8_t _exec_aline_head()
 		}
 		return(STAT_EAGAIN);
 	}
-	if (mr.section_state == MOVE_STATE_RUN2) {	// convex part of accel curve (period 2)
+	if (mr.section_state == MOVE_STATE_RUN2) {				// convex part of accel curve (period 2)
 		mr.segment_velocity += mr.forward_diff_1;
 		mr.forward_diff_1 += mr.forward_diff_2;
 		if (_exec_aline_segment(false) == STAT_COMPLETE) {
@@ -1161,7 +1161,7 @@ static uint8_t _exec_aline_body()
 	if (mr.section_state == MOVE_STATE_NEW) {
 		if (mr.body_length < EPSILON) {
 			mr.move_state = MOVE_STATE_TAIL;
-			return(_exec_aline_tail());			// skip ahead to tail periods
+			return(_exec_aline_tail());							// skip ahead to tail periods
 		}
 		mr.move_time = mr.body_length / mr.cruise_velocity;
 		mr.segments = ceil(uSec(mr.move_time) / cfg.estd_segment_usec);
@@ -1169,12 +1169,12 @@ static uint8_t _exec_aline_body()
 		mr.segment_velocity = mr.cruise_velocity;
 		mr.segment_count = (uint32_t)mr.segments;
 		if ((mr.microseconds = uSec(mr.segment_move_time)) < MIN_SEGMENT_USEC) {
-			return(STAT_GCODE_BLOCK_SKIPPED);		// exit without advancing position
+			return(STAT_GCODE_BLOCK_SKIPPED);					// exit without advancing position
 		}
 		
 		mr.section_state = MOVE_STATE_RUN;
 	}
-	if (mr.section_state == MOVE_STATE_RUN) {				// stright part (period 3)
+	if (mr.section_state == MOVE_STATE_RUN) {					// straight part (period 3)
 		if (_exec_aline_segment(false) == STAT_COMPLETE) {
 			if (mr.tail_length < EPSILON) { return(STAT_OK);}	// end the move
 			mr.move_state = MOVE_STATE_TAIL;
@@ -1202,7 +1202,7 @@ static uint8_t _exec_aline_tail()
 		_init_forward_diffs(mr.cruise_velocity, mr.midpoint_velocity);
 		mr.section_state = MOVE_STATE_RUN1;
 	}
-	if (mr.section_state == MOVE_STATE_RUN1) {				// convex part (period 4)
+	if (mr.section_state == MOVE_STATE_RUN1) {					// convex part (period 4)
 		mr.segment_velocity += mr.forward_diff_1;
 		if (_exec_aline_segment(false) == STAT_COMPLETE) { 	  	// set up for second half
 			mr.segment_count = (uint32_t)mr.segments;
@@ -1216,7 +1216,7 @@ static uint8_t _exec_aline_tail()
 		}
 		return(STAT_EAGAIN);
 	}
-	if (mr.section_state == MOVE_STATE_RUN2) {				// concave part (period 5)
+	if (mr.section_state == MOVE_STATE_RUN2) {					// concave part (period 5)
 		mr.segment_velocity += mr.forward_diff_1;
 		mr.forward_diff_1 += mr.forward_diff_2;
 		if (_exec_aline_segment(true) == STAT_COMPLETE) { return (STAT_OK);}	// end the move
@@ -1280,8 +1280,6 @@ static uint8_t _exec_aline_segment(uint8_t correction_flag)
 	}
 	return (STAT_EAGAIN);			// this section still has more segments to run
 }
-
-
 
 /****** UNIT TESTS ******/
 
