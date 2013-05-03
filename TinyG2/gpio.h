@@ -25,8 +25,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _GPIO_H
-#define _GPIO_H
+#ifndef GPIO_H_ONCE
+#define GPIO_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -38,7 +38,7 @@ extern "C"{
  */
 // Interrupt level: pick one:
 //#define GPIO1_INTLVL (PORT_INT0LVL_HI_gc|PORT_INT1LVL_HI_gc)	// can't be hi
-#define GPIO1_INTLVL (PORT_INT0LVL_MED_gc|PORT_INT1LVL_MED_gc)
+//#define GPIO1_INTLVL (PORT_INT0LVL_MED_gc|PORT_INT1LVL_MED_gc)
 //#define GPIO1_INTLVL (PORT_INT0LVL_LO_gc|PORT_INT1LVL_LO_gc)	// shouldn;t be low
 
 // port assignments for vectors
@@ -141,4 +141,4 @@ void gpio_unit_tests(void);
 }
 #endif
 
-#endif // _GPIO_H
+#endif // End of include guard: GPIO_H_ONCE

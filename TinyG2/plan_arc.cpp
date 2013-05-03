@@ -9,14 +9,6 @@
  * Free Software Foundation. You should have received a copy of the GNU General Public
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
  *
- * As a special exception, you may use this file as part of a software library without
- * restriction. Specifically, if other files instantiate templates or use macros or
- * inline functions from this file, or you compile this file and link it with  other
- * files to produce an executable, this file does not by itself cause the resulting
- * executable to be covered by the GNU General Public License. This exception does not
- * however invalidate any other reasons why the executable file might be covered by the
- * GNU General Public License.
- *
  * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
  * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
@@ -24,22 +16,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
-#include <stdlib.h>
-#include <math.h>
-#include <stdio.h>				// precursor for xio.h
-#include <avr/pgmspace.h>		// precursor for xio.h
-*/
 #include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
-//#include "kinematics.h"
 #include "util.h"
-
-//#include "xio/xio.h"			// support trap and debug statements
-//#include "controller.h"			// only needed for line number
 
 #ifdef __cplusplus
 extern "C"{
@@ -282,16 +264,6 @@ static stat_t _compute_center_arc()
 	float move_time = _get_arc_time(linear_travel, angular_travel, radius_tmp);
 
 	// Trace the arc
-//	set_vector(gm.target[gm.plane_axis_0], gm.target[gm.plane_axis_1], gm.target[gm.plane_axis_2],
-//			   gm.target[AXIS_A], gm.target[AXIS_B], gm.target[AXIS_C]);
-
-//	vector[AXIS_X] = gm.target[gm.plane_axis_0];
-//	vector[AXIS_Y] = gm.target[gm.plane_axis_1];
-//	vector[AXIS_Z] = gm.target[gm.plane_axis_2];
-//	vector[AXIS_A] = gm.target[AXIS_A];
-//	vector[AXIS_B] = gm.target[AXIS_B];
-//	vector[AXIS_C] = gm.target[AXIS_C];
-
 	float vector[6] = { gm.target[gm.plane_axis_0], 
 						gm.target[gm.plane_axis_1], 
 						gm.target[gm.plane_axis_2],

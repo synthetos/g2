@@ -24,12 +24,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* Notes:
- *	- add full interrupt tables and dummy interrupt routine (maybe)
- *	- add crystal oscillator failover
- *	- add watchdog timer functions
- *
- */
 
 #include "tinyg2.h"
 #include "hardware.h"
@@ -44,36 +38,10 @@ extern "C"{
 
 void hardware_init()
 {
-//	xmega_init();		// set system clock
-//	sys_port_bindings(TINYG_HARDWARE_VERSION);
+	return;
 }
 
 /*
-void sys_port_bindings(float hw_version)
-{
-	device.st_port[0] = &PORT_MOTOR_1;
-	device.st_port[1] = &PORT_MOTOR_2;
-	device.st_port[2] = &PORT_MOTOR_3;
-	device.st_port[3] = &PORT_MOTOR_6;
-
-	device.sw_port[0] = &PORT_SWITCH_X;
-	device.sw_port[1] = &PORT_SWITCH_Y;
-	device.sw_port[2] = &PORT_SWITCH_Z;
-	device.sw_port[3] = &PORT_SWITCH_A;
-
-	if (hw_version > 6.9) {
-		device.out_port[0] = &PORT_OUT_V7_X;
-		device.out_port[1] = &PORT_OUT_V7_Y;
-		device.out_port[2] = &PORT_OUT_V7_Z;
-		device.out_port[3] = &PORT_OUT_V7_A;
-	} else {
-		device.out_port[0] = &PORT_OUT_V6_X;
-		device.out_port[1] = &PORT_OUT_V6_Y;
-		device.out_port[2] = &PORT_OUT_V6_Z;
-		device.out_port[3] = &PORT_OUT_V6_A;
-	}
-}
-
 uint8_t sys_read_calibration_byte(uint8_t index)
 { 
 	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc; 	// Load NVM Command register to read the calibration row

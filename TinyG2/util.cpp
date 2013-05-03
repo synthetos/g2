@@ -28,29 +28,10 @@
  * not specific to tinyg: including:
  *	  - math and min/max utilities and extensions 
  *	  - vector manipulation utilities
- *	  - support for debugging routines
  */
 
 #include "tinyg2.h"
 #include "util.h"
-
-/*
-#include <ctype.h>
-#include <stdio.h>				// precursor for xio.h
-#include <stdlib.h>
-#include <stdbool.h>
-#include <math.h>
-#include <string.h>
-#include <avr/pgmspace.h>		// precursor for xio.h
-
-#include "tinyg.h"
-#include "config.h"
-#include "controller.h"
-#include "canonical_machine.h"
-#include "planner.h"
-#include "stepper.h"
-#include "report.h"
-*/
 
 #ifdef __cplusplus
 extern "C"{

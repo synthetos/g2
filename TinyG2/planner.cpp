@@ -51,13 +51,6 @@
  *	Lower-level models should never use data from upper-level models as the data 
  *	may have changed and lead to unpredictable results.
  */
-/*
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>				// for memset
-#include <stdio.h>				// precursor for xio.h
-#include <avr/pgmspace.h>		// precursor for xio.h
-*/
 #include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
@@ -68,7 +61,6 @@
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
-//#include "xio/xio.h"			// uncomment for debugging
 
 #ifdef __cplusplus
 extern "C"{

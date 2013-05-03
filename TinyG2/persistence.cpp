@@ -26,15 +26,7 @@
  */
 #include "tinyg2.h"
 #include "persistence.h"
-/*
-#include "config.h"
-#include "json_parser.h"
-#include "text_parser.h"
-#include "controller.h"
-#include "canonical_machine.h"
-#include "util.h"
-#include "xio.h"
-*/
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -92,5 +84,5 @@ stat_t write_persistent_value(cmdObj_t *cmd)
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 

@@ -25,8 +25,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _JSON_PARSER_H_
-#define _JSON_PARSER_H_
+#ifndef _JSON_PARSER_H_ONCE
+#define _JSON_PARSER_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -37,7 +37,6 @@ extern "C"{
 // if you add these make sure there are no collisions w/present or past numbers
 
 #define FOOTER_REVISION 1
-
 #define JSON_OUTPUT_STRING_MAX (OUTPUT_BUFFER_LEN)
 #define JSON_MAX_DEPTH 4
 
@@ -64,4 +63,4 @@ void js_unit_tests(void);
 }
 #endif
 
-#endif // _JSON_PARSER_H_
+#endif // End of include guard: JSON_PARSER_H_ONCE

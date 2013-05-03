@@ -37,12 +37,6 @@
 #include "util.h"
 #include "xio.h"		// for ASCII definitions
 
-/*
-#include "planner.h"
-#include "gcode_parser.h"
-#include "canonical_machine.h"
-*/
-
 #ifdef __cplusplus
 extern "C"{
 #endif

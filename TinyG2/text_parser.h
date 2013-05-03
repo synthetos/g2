@@ -25,8 +25,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _TEXT_PARSER_H_
-#define _TEXT_PARSER_H_
+#ifndef TEXT_PARSER_H_ONCE
+#define TEXT_PARSER_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -56,4 +56,4 @@ void text_unit_tests(void);
 }
 #endif
 
-#endif // _TEXT_PARSER_H_
+#endif // End of include guard: TEXT_PARSER_H_ONCE
