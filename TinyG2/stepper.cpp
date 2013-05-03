@@ -49,8 +49,8 @@
 using namespace Motate;
 
 // Setup local resources
-Motate::Timer<dda_timer_num> dda_timer;			// stepper pulse generation
-Motate::Timer<dwell_timer_num> dwell_timer;		// dwell timer
+Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
+Motate::Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
 Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
 Motate::OutputPin<31> proof_of_timer;
@@ -208,20 +208,16 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-	dda_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DDA);
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 #endif
 
 	// setup DWELL timer
-	dwell_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_DWELL);
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
 	// setup LOAD timer
-	load_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
 	load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 
 	// setup EXEC timer
-	exec_timer.setModeAndFrequency(kTimerUpToMatch, FREQUENCY_SGI);
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
@@ -382,7 +378,7 @@ MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 {
 	exec_timer.getInterruptCause();				// clears the interrupt condition
 //	_exec_move();
-	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+   	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
 			_request_load_move();
@@ -398,13 +394,10 @@ static void _exec_move()
 	if (sps.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			sps.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-			_request_load_move();
-//		} else {					// ++++ this line added
-//			st_prep_null();			// ++++ this line added
 		}
-	}
 }
 */
+
 /****************************************************************************************
  * Load sequencing code
  *
@@ -535,10 +528,10 @@ void _load_move()
 		dwell_timer.start();
 	}
 
-	// all other cases drop to here - such as Null moves queued by Mcodes 
-	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;	// flip it back
 	st_prep_null();								// disable prep buffer, if only temporarily
-	st_request_exec_move();						// exec and prep next move
+	// all other cases drop to here - such as Null moves queued by Mcodes 
+	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
+	st_request_exec_move();								// exec and prep next move
 }
 
 /****************************************************************************************
