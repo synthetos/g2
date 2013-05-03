@@ -53,7 +53,8 @@ Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// ste
 Motate::Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
 Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
-Motate::OutputPin<31> proof_of_timer;
+Motate::OutputPin<31> dda_debug_pin1;
+Motate::OutputPin<33> dda_debug_pin2;
 
 // Setup a stepper template to hold our pins
 template<pin_number step_num, pin_number dir_num, pin_number enable_num, 
@@ -208,7 +209,8 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 #else
-	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
+	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
+	dda_timer.setDutyCycleA(0.25);
 #endif
 
 	// setup DWELL timer
@@ -298,58 +300,71 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
  */
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
-	dda_timer.getInterruptCause(); // read SR to clear interrupt condition
-    proof_of_timer = 0;
-    
-    if (!motor_1.step.isNull() && (st.m[MOTOR_1].phase_accumulator += st.m[MOTOR_1].phase_increment) > 0) {
-        st.m[MOTOR_1].phase_accumulator -= st.timer_ticks_X_substeps;
-		motor_1.step.set();		// turn step bit on
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
-    }
-    if (!motor_2.step.isNull() && (st.m[MOTOR_2].phase_accumulator += st.m[MOTOR_2].phase_increment) > 0) {
-        st.m[MOTOR_2].phase_accumulator -= st.timer_ticks_X_substeps;
-        motor_2.step.set();
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_2);
-    }
-    if (!motor_3.step.isNull() && (st.m[MOTOR_3].phase_accumulator += st.m[MOTOR_3].phase_increment) > 0) {
-        st.m[MOTOR_3].phase_accumulator -= st.timer_ticks_X_substeps;
-        motor_3.step.set();
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_3);
-    }
-    if (!motor_4.step.isNull() && (st.m[MOTOR_4].phase_accumulator += st.m[MOTOR_4].phase_increment) > 0) {
-        st.m[MOTOR_4].phase_accumulator -= st.timer_ticks_X_substeps;
-        motor_4.step.set();
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_4);
-    }
-    if (!motor_5.step.isNull() && (st.m[MOTOR_5].phase_accumulator += st.m[MOTOR_5].phase_increment) > 0) {
-        st.m[MOTOR_5].phase_accumulator -= st.timer_ticks_X_substeps;
-        motor_5.step.set();
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_5);
-    }
-    if (!motor_6.step.isNull() && (st.m[MOTOR_6].phase_accumulator += st.m[MOTOR_6].phase_increment) > 0) {
-        st.m[MOTOR_6].phase_accumulator -= st.timer_ticks_X_substeps;
-        motor_6.step.set();
-		INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
-    }
-    motor_1.step.clear();
-    motor_2.step.clear();
-    motor_3.step.clear();
-    motor_4.step.clear();
-    motor_5.step.clear();
-    motor_6.step.clear();
+	uint32_t interrupt_cause = dda_timer.getInterruptCause();
+	// read SR to clear interrupt condition
+	if (interrupt_cause == kInterruptOnOverflow) {
+		dda_debug_pin1 = 1;
 
-    if (--st.timer_ticks_downcount == 0) {			// process end of move
-        // power-down motors if this feature is enabled
-        if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
-        if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
-        if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
-        if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
-        if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
-        if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
-		st_disable();
-        _load_move();								// load the next move
-    }
-    proof_of_timer = 1;
+		if (!motor_1.step.isNull() && (st.m[MOTOR_1].phase_accumulator += st.m[MOTOR_1].phase_increment) > 0) {
+			st.m[MOTOR_1].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_1.step.set();		// turn step bit on
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
+		}
+		if (!motor_2.step.isNull() && (st.m[MOTOR_2].phase_accumulator += st.m[MOTOR_2].phase_increment) > 0) {
+			st.m[MOTOR_2].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_2.step.set();
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_2);
+		}
+		if (!motor_3.step.isNull() && (st.m[MOTOR_3].phase_accumulator += st.m[MOTOR_3].phase_increment) > 0) {
+			st.m[MOTOR_3].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_3.step.set();
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_3);
+		}
+		if (!motor_4.step.isNull() && (st.m[MOTOR_4].phase_accumulator += st.m[MOTOR_4].phase_increment) > 0) {
+			st.m[MOTOR_4].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_4.step.set();
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_4);
+		}
+		if (!motor_5.step.isNull() && (st.m[MOTOR_5].phase_accumulator += st.m[MOTOR_5].phase_increment) > 0) {
+			st.m[MOTOR_5].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_5.step.set();
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_5);
+		}
+		if (!motor_6.step.isNull() && (st.m[MOTOR_6].phase_accumulator += st.m[MOTOR_6].phase_increment) > 0) {
+			st.m[MOTOR_6].phase_accumulator -= st.timer_ticks_X_substeps;
+			motor_6.step.set();
+			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
+		}
+		
+		dda_debug_pin1 = 0;
+	} // dda_timer.getInterruptCause() == kInterruptOnOverflow
+
+	else
+	if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
+		dda_debug_pin2 = 1;
+
+		motor_1.step.clear();
+		motor_2.step.clear();
+		motor_3.step.clear();
+		motor_4.step.clear();
+		motor_5.step.clear();
+		motor_6.step.clear();
+
+		// Should we leave this part in the overflow handling portion? -RG
+		
+		if (--st.timer_ticks_downcount == 0) {			// process end of move
+														// power-down motors if this feature is enabled
+			if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
+			if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
+			if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
+			if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
+			if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
+			if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
+			st_disable();
+			_load_move();								// load the next move
+		}
+		dda_debug_pin2 = 0;
+	}
 }
 
 } // namespace Motate
