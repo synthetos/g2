@@ -32,8 +32,8 @@
 #include "settings.h"
 #include "planner.h"
 #include "stepper.h"
+#include "switch.h"
 #include "report.h"
-#include "gpio.h"
 #include "util.h"
 #include "help.h"
 #include "xio.h"
@@ -505,8 +505,8 @@ const cfgItem_t cfgArray[] = {
 	{ "x","xjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].jerk_max,			X_JERK_MAX },
 	{ "x","xjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
 	{ "x","xjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].junction_dev,		X_JUNCTION_DEVIATION },
-	{ "x","xsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[0],						X_SWITCH_MODE_MIN },
-	{ "x","xsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[1],						X_SWITCH_MODE_MAX },
+	{ "x","xsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,		X_SWITCH_MODE_MIN },
+	{ "x","xsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,		X_SWITCH_MODE_MAX },
 	{ "x","xsv",_fip, 0, fmt_Xsv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].search_velocity,	X_SEARCH_VELOCITY },
 	{ "x","xlv",_fip, 0, fmt_Xlv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
 	{ "x","xlb",_fip, 3, fmt_Xlb, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].latch_backoff,	X_LATCH_BACKOFF },
@@ -519,8 +519,8 @@ const cfgItem_t cfgArray[] = {
 	{ "y","yjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].jerk_max,			Y_JERK_MAX },
 	{ "y","yjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].jerk_homing,		Y_JERK_HOMING },
 	{ "y","yjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].junction_dev,		Y_JUNCTION_DEVIATION },
-	{ "y","ysn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[2],						Y_SWITCH_MODE_MIN },
-	{ "y","ysx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[3],						Y_SWITCH_MODE_MAX },
+	{ "y","ysn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Y][SW_MIN].mode,		Y_SWITCH_MODE_MIN },
+	{ "y","ysx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Y][SW_MAX].mode,		Y_SWITCH_MODE_MAX },
 	{ "y","ysv",_fip, 0, fmt_Xsv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].search_velocity,	Y_SEARCH_VELOCITY },
 	{ "y","ylv",_fip, 0, fmt_Xlv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
 	{ "y","ylb",_fip, 3, fmt_Xlb, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].latch_backoff,	Y_LATCH_BACKOFF },
@@ -533,8 +533,8 @@ const cfgItem_t cfgArray[] = {
 	{ "z","zjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].jerk_max,			Z_JERK_MAX },
 	{ "z","zjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].jerk_homing,		Z_JERK_HOMING },
 	{ "z","zjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].junction_dev,	 	Z_JUNCTION_DEVIATION },
-	{ "z","zsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[4],						Z_SWITCH_MODE_MIN },
-	{ "z","zsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[5],						Z_SWITCH_MODE_MAX },
+	{ "z","zsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Z][SW_MIN].mode,		Z_SWITCH_MODE_MIN },
+	{ "z","zsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Z][SW_MAX].mode,		Z_SWITCH_MODE_MAX },
 	{ "z","zsv",_fip, 0, fmt_Xsv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].search_velocity,	Z_SEARCH_VELOCITY },
 	{ "z","zlv",_fip, 0, fmt_Xlv, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
 	{ "z","zlb",_fip, 3, fmt_Xlb, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].latch_backoff,	Z_LATCH_BACKOFF },
@@ -548,8 +548,8 @@ const cfgItem_t cfgArray[] = {
 	{ "a","ajh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_A].jerk_homing,		A_JERK_HOMING },
 	{ "a","ajd",_fip, 4, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].junction_dev,	 	A_JUNCTION_DEVIATION },
 	{ "a","ara",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].radius,			A_RADIUS},
-	{ "a","asn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[6],						A_SWITCH_MODE_MIN },
-	{ "a","asx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.mode[7],						A_SWITCH_MODE_MAX },
+	{ "a","asn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_A][SW_MIN].mode,		A_SWITCH_MODE_MIN },
+	{ "a","asx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_A][SW_MAX].mode,		A_SWITCH_MODE_MAX },
 	{ "a","asv",_fip, 0, fmt_Xsv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].search_velocity,	A_SEARCH_VELOCITY },
 	{ "a","alv",_fip, 0, fmt_Xlv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].latch_velocity,	A_LATCH_VELOCITY },
 	{ "a","alb",_fip, 3, fmt_Xlb, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].latch_backoff,	A_LATCH_BACKOFF },
@@ -562,6 +562,12 @@ const cfgItem_t cfgArray[] = {
 	{ "b","bjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].jerk_max,			B_JERK_MAX },
 	{ "b","bjd",_fip, 0, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].junction_dev,	 	B_JUNCTION_DEVIATION },
 	{ "b","bra",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].radius,			B_RADIUS },
+	{ "b","bsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_B][SW_MIN].mode,		B_SWITCH_MODE_MIN },
+	{ "b","bsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_B][SW_MAX].mode,		B_SWITCH_MODE_MAX },
+	{ "b","bsv",_fip, 0, fmt_Xsv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].search_velocity,	B_SEARCH_VELOCITY },
+	{ "b","blv",_fip, 0, fmt_Xlv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
+	{ "b","blb",_fip, 3, fmt_Xlb, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].latch_backoff,	B_LATCH_BACKOFF },
+	{ "b","bzb",_fip, 3, fmt_Xzb, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].zero_backoff,		B_ZERO_BACKOFF },
 
 	{ "c","cam",_fip, 0, fmt_Xam, print_am,  get_am,  set_am, (float *)&cfg.a[AXIS_C].axis_mode,		C_AXIS_MODE },
 	{ "c","cvm",_fip, 0, fmt_Xvm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].velocity_max,	 	C_VELOCITY_MAX },
@@ -570,6 +576,12 @@ const cfgItem_t cfgArray[] = {
 	{ "c","cjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].jerk_max,			C_JERK_MAX },
 	{ "c","cjd",_fip, 0, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].junction_dev,		C_JUNCTION_DEVIATION },
 	{ "c","cra",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].radius,			C_RADIUS },
+	{ "c","csn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_C][SW_MIN].mode,		C_SWITCH_MODE_MIN },
+	{ "c","csx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_C][SW_MAX].mode,		C_SWITCH_MODE_MAX },
+	{ "c","csv",_fip, 0, fmt_Xsv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].search_velocity,	C_SEARCH_VELOCITY },
+	{ "c","clv",_fip, 0, fmt_Xlv, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
+	{ "c","clb",_fip, 3, fmt_Xlb, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
+	{ "c","czb",_fip, 3, fmt_Xzb, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].zero_backoff,		C_ZERO_BACKOFF },
 
 	// PWM settings
     { "p1","p1frq",_fip, 0, fmt_p1frq, print_flt, get_flt, set_flt,(float *)&cfg.p.frequency,		P1_PWM_FREQUENCY },
@@ -651,7 +663,7 @@ const cfgItem_t cfgArray[] = {
 	// NOTE: Some values have been removed from the system group but are still accessible as individual elements
 	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration,JUNCTION_ACCELERATION },
 	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	CHORDAL_TOLERANCE },
-	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.switch_type,			SWITCH_TYPE },
+	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					SWITCH_TYPE },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
 	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, set_jv,	 (float *)&cfg.json_verbosity,		JSON_VERBOSITY },
@@ -781,7 +793,7 @@ static stat_t set_hv(cmdObj_t *cmd)
 	if (cmd->value > TINYG2_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_flt(cmd);					// record the hardware version
 //++++	sys_port_bindings(cmd->value);	// reset port bindings
-//++++	gpio_init();					// re-initialize the GPIO ports
+//++++	switch_init();					// re-initialize the GPIO ports
 	return (STAT_OK);
 }
 */
@@ -1314,7 +1326,7 @@ static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 {
 	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_ui8(cmd);
-//++++	gpio_init();
+//++++	switch_init();
 	return (STAT_OK);
 }
 

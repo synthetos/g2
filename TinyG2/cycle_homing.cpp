@@ -31,7 +31,7 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "planner.h"
-#include "gpio.h"
+#include "switch.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -242,10 +242,10 @@ static stat_t _homing_axis_start(int8_t axis)
 	}
 
 	// determine the switch setup and that config is OK
-	hm.min_mode = gpio_get_switch_mode(MIN_SWITCH(axis));
-	hm.max_mode = gpio_get_switch_mode(MAX_SWITCH(axis));
+	hm.min_mode = get_switch_mode(MIN_SWITCH(axis));
+	hm.max_mode = get_switch_mode(MAX_SWITCH(axis));
 
-	if ( ((hm.min_mode & SW_HOMING) ^ (hm.max_mode & SW_HOMING)) == 0) {// one or the other must be homing
+	if ( ((hm.min_mode & SW_HOMING_BIT) ^ (hm.max_mode & SW_HOMING_BIT)) == 0) {// one or the other must be homing
 		return (_homing_error_exit(axis));					// axis cannot be homed
 	}
 	hm.axis = axis;											// persist the axis
@@ -253,7 +253,7 @@ static stat_t _homing_axis_start(int8_t axis)
 	hm.latch_velocity = fabs(cfg.a[axis].latch_velocity); 	// latch velocity is always positive
 
 	// setup parameters homing to the minimum switch
-	if (hm.min_mode & SW_HOMING) {
+	if (hm.min_mode & SW_HOMING_BIT) {
 		hm.homing_switch = MIN_SWITCH(axis);				// the min is the homing switch
 		hm.limit_switch = MAX_SWITCH(axis);					// the max would be the limit switch
 		hm.search_travel = -cfg.a[axis].travel_max;			// search travels in negative direction
@@ -269,12 +269,12 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.zero_backoff = -cfg.a[axis].zero_backoff;
 	}
     // if homing is disabled for the axis then skip to the next axis
-	uint8_t sw_mode = gpio_get_switch_mode(hm.homing_switch);
+	uint8_t sw_mode = get_switch_mode(hm.homing_switch);
 	if ((sw_mode != SW_MODE_HOMING) && (sw_mode != SW_MODE_HOMING_LIMIT)) {
 		return (_set_hm_func(_homing_axis_start));
 	}
 	// disable the limit switch parameter if there is no limit switch
-	if (gpio_get_switch_mode(hm.limit_switch) == SW_MODE_DISABLED) {
+	if (get_switch_mode(hm.limit_switch) == SW_MODE_DISABLED) {
 		hm.limit_switch = -1;
 	}
 	hm.saved_jerk = cfg.a[axis].jerk_max;					// save the max jerk value
@@ -285,8 +285,10 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-	int8_t homing = gpio_read_switch(hm.homing_switch);
-	int8_t limit = gpio_read_switch(hm.limit_switch);
+//++++	int8_t homing = read_switch(hm.homing_switch);
+//++++	int8_t limit = read_switch(hm.limit_switch);
+	int8_t homing = SW_OPEN;
+	int8_t limit = SW_OPEN;
 
 	if ((homing == SW_OPEN) && (limit != SW_CLOSED)) {
  		return (_set_hm_func(_homing_axis_search));			// OK to start the search

@@ -336,7 +336,9 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			motor_6.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
-		
+		if (--st.timer_ticks_downcount == 0) {			// process end of move
+			_request_load_move();						// load the next move
+		}
 		dda_debug_pin1 = 0;
 	} // dda_timer.getInterruptCause() == kInterruptOnOverflow
 
@@ -352,7 +354,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		motor_6.step.clear();
 
 		// Should we leave this part in the overflow handling portion? -RG
-		
+/*		
 		if (--st.timer_ticks_downcount == 0) {			// process end of move
 														// power-down motors if this feature is enabled
 			if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
@@ -364,6 +366,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			st_disable();
 			_load_move();								// load the next move
 		}
+*/
 		dda_debug_pin2 = 0;
 	}
 }
@@ -527,8 +530,9 @@ void _load_move()
 	} else if (sps.move_type == MOVE_TYPE_DWELL) {
 		st.timer_ticks_downcount = sps.timer_ticks;
 		dwell_timer.start();
-	}
-
+	} else {
+		st_disable();
+	}	
 	// all cases drop to here - such as Null moves queued by Mcodes
 	st_prep_null();									// disable prep buffer, if only temporarily
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back

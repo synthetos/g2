@@ -84,7 +84,7 @@
 //#include "hardware.h"
 /*
 #include "spindle.h"
-#include "gpio.h"
+#include "switch.h"
 */
 #ifdef __cplusplus
 extern "C"{
@@ -556,11 +556,11 @@ void canonical_machine_shutdown(uint8_t value)
 	cm_spindle_control(SPINDLE_OFF);
 
 	// disable all MCode functions
-//	gpio_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
-//	gpio_set_bit_off(SPINDLE_DIR);
-//	gpio_set_bit_off(SPINDLE_PWM);
-//	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
-//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
+//	switch_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
+//	switch_set_bit_off(SPINDLE_DIR);
+//	switch_set_bit_off(SPINDLE_PWM);
+//	switch_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
+//	switch_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
 
 	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
@@ -950,9 +950,9 @@ static void _exec_mist_coolant_control(uint8_t mist_coolant, float float_val)
 {
 	gm.mist_coolant = mist_coolant;
 	if (mist_coolant == true) {
-//++++		gpio_set_bit_on(MIST_COOLANT_BIT);
+//++++		switch_set_bit_on(MIST_COOLANT_BIT);
 	} else {
-//++++		gpio_set_bit_off(MIST_COOLANT_BIT);
+//++++		switch_set_bit_off(MIST_COOLANT_BIT);
 	}
 }
 
@@ -960,9 +960,9 @@ static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val)
 {
 	gm.flood_coolant = flood_coolant;
 	if (flood_coolant == true) {
-//++++		gpio_set_bit_on(FLOOD_COOLANT_BIT);
+//++++		switch_set_bit_on(FLOOD_COOLANT_BIT);
 	} else {
-//++++		gpio_set_bit_off(FLOOD_COOLANT_BIT);
+//++++		switch_set_bit_off(FLOOD_COOLANT_BIT);
 		_exec_mist_coolant_control(false,0);	// M9 special function
 	}
 }

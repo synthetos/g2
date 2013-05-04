@@ -27,6 +27,7 @@
 #include "spindle.h"
 #include "report.h"
 #include "hardware.h"
+#include "switch.h"
 #include "xio.h"
 
 /*
@@ -34,7 +35,6 @@
 #include "json_parser.h"
 #include "gcode_parser.h"
 #include "network.h"
-#include "gpio.h"
 #include "test.h"
 #include "pwm.h"
 */
@@ -78,7 +78,7 @@ static void _application_init(void)
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	config_init();					// config records from eeprom 		- must be next app init
-//	gpio_init();					// switches and parallel IO
+	switch_init();					// switches
 //	pwm_init();						// pulse width modulation drivers	- must follow gpio_init()
 
 	// do these next
