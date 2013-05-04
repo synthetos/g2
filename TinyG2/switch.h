@@ -97,8 +97,6 @@ typedef struct swSwitchArray {		// array of switches
 } switches_t;
 extern switches_t sw;
 
-// Note 1: The term "thrown" is used because switches could be normally-open 
-//		   or normally-closed. "Thrown" means activated or hit.
 
 void switch_init(void);
 uint8_t read_switch(switch_t *s, uint8_t pin_value, uint8_t *edge);

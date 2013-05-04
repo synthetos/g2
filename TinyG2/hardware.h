@@ -131,14 +131,14 @@ Motate::pin_number motor_1_dir_pin_num			= 5;
 Motate::pin_number motor_1_enable_pin_num		= 22;
 Motate::pin_number motor_1_microstep_0_pin_num	= 23;
 Motate::pin_number motor_1_microstep_1_pin_num	= 24;
-Motate::pin_number motor_1_vref_pin_num			= 66;
+Motate::pin_number motor_1_vref_pin_num			= 34;
 
 Motate::pin_number motor_2_step_pin_num			= 3;
 Motate::pin_number motor_2_dir_pin_num			= 6;
 Motate::pin_number motor_2_enable_pin_num		= 25;
 Motate::pin_number motor_2_microstep_0_pin_num	= 26;
 Motate::pin_number motor_2_microstep_1_pin_num	= 27;
-Motate::pin_number motor_2_vref_pin_num			= 67;
+Motate::pin_number motor_2_vref_pin_num			= 62;
 
 #if (MOTORS >= 3)
 Motate::pin_number motor_3_step_pin_num			= 4;
@@ -146,7 +146,7 @@ Motate::pin_number motor_3_dir_pin_num			= 7;
 Motate::pin_number motor_3_enable_pin_num		= 28;
 Motate::pin_number motor_3_microstep_0_pin_num	= 29;
 Motate::pin_number motor_3_microstep_1_pin_num	= 30;
-Motate::pin_number motor_3_vref_pin_num			= 62;
+Motate::pin_number motor_3_vref_pin_num			= 63;
 #else
 Motate::pin_number motor_3_step_pin_num			= -1;
 Motate::pin_number motor_3_dir_pin_num			= -1;
@@ -162,7 +162,7 @@ Motate::pin_number motor_4_dir_pin_num			= 32;
 Motate::pin_number motor_4_enable_pin_num		= 33;
 Motate::pin_number motor_4_microstep_0_pin_num	= 35;
 Motate::pin_number motor_4_microstep_1_pin_num	= 36;
-Motate::pin_number motor_4_vref_pin_num			= 63;
+Motate::pin_number motor_4_vref_pin_num			= 64;
 #else
 Motate::pin_number motor_4_step_pin_num			= -1;
 Motate::pin_number motor_4_dir_pin_num			= -1;
@@ -178,7 +178,7 @@ Motate::pin_number motor_5_dir_pin_num			= 38;
 Motate::pin_number motor_5_enable_pin_num		= 39;
 Motate::pin_number motor_5_microstep_0_pin_num	= 40;
 Motate::pin_number motor_5_microstep_1_pin_num	= 41;
-Motate::pin_number motor_5_vref_pin_num			= 64;
+Motate::pin_number motor_5_vref_pin_num			= 66;
 #else
 Motate::pin_number motor_5_step_pin_num			= -1;
 Motate::pin_number motor_5_dir_pin_num			= -1;
@@ -194,7 +194,7 @@ Motate::pin_number motor_6_dir_pin_num			= 43;
 Motate::pin_number motor_6_enable_pin_num		= 44;
 Motate::pin_number motor_6_microstep_0_pin_num	= 45;
 Motate::pin_number motor_6_microstep_1_pin_num	= 46;
-Motate::pin_number motor_6_vref_pin_num			= 34;
+Motate::pin_number motor_6_vref_pin_num			= 67;
 #else
 Motate::pin_number motor_6_step_pin_num			= -1;
 Motate::pin_number motor_6_dir_pin_num			= -1;

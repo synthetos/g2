@@ -50,15 +50,15 @@ typedef struct controllerState {		// main TG controller struct
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
 	uint8_t state;						// controller state
-	uint8_t active_src;					// active source device
-	uint8_t default_src;				// default source device
+//	uint8_t active_src;					// active source device
+//	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint16_t linelen;					// length of currently processing line
 	uint16_t linemax;					// size of input buffer or some other size
 	uint32_t led_counter;				// a convenience for flashing an LED
 	uint8_t status_report_request;		// set true to request a sr
-	uint32_t status_report_time_due;	// status report RTC counter for minimum timing
+	uint32_t status_report_tick;		// time tick to generate next status report
 	uint32_t nvm_base_addr;				// NVM base address
 	uint32_t nvm_profile_base;			// NVM base address of current profile
 	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
