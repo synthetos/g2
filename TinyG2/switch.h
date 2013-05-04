@@ -99,7 +99,7 @@ extern switches_t sw;
 
 
 void switch_init(void);
-uint8_t read_switch(switch_t *s, uint8_t pin_value, uint8_t *edge);
+uint8_t read_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t sw_num);
 
 /*

@@ -50,6 +50,7 @@ typedef struct controllerState {		// main TG controller struct
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
 	uint8_t state;						// controller state
+	uint8_t reset_flag;					// set true of a system reset should be performed
 //	uint8_t active_src;					// active source device
 //	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON
@@ -63,7 +64,7 @@ typedef struct controllerState {		// main TG controller struct
 	uint32_t nvm_profile_base;			// NVM base address of current profile
 	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
-	char_t saved_buf[SAVED_BUFFER_LEN];// save the input buffer
+	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
 	magic_t magic_end;
 } controller_t;
 

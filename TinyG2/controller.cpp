@@ -46,7 +46,6 @@
 #include "settings.h"
 #include "stepper.h"
 #include "hardware.h"
-#include "gpio.h"
 #include "util.h"
 */
 
@@ -64,15 +63,15 @@ static void _controller_HSM(void);
 static stat_t _command_dispatch(void);
 static stat_t _normal_idler(void);
 static stat_t _sync_to_planner(void);
-/*
-static stat_t _alarm_idler(void);
 static stat_t _reset_handler(void);
-static stat_t _bootloader_handler(void);
 static stat_t _limit_switch_handler(void);
-static stat_t _shutdown_idler(void);
-static stat_t _system_assertions(void);
 static stat_t _feedhold_handler(void);
 static stat_t _cycle_start_handler(void);
+/*
+static stat_t _alarm_idler(void);
+static stat_t _bootloader_handler(void);
+static stat_t _shutdown_idler(void);
+static stat_t _system_assertions(void);
 static stat_t _sync_to_tx_buffer(void);
 */
 
@@ -145,13 +144,13 @@ static void _controller_HSM()
  */
 //----- kernel level ISR handlers ----(flags are set in ISRs)-----------//
 												// Order is important:
-//	DISPATCH(_reset_handler());					// 1. software reset received
+	DISPATCH(_reset_handler());					// 1. software reset received
 //	DISPATCH(_bootloader_handler());			// 2. received ESC char to start bootloader
-//	DISPATCH(_limit_switch_handler());			// 3. limit switch has been thrown
+	DISPATCH(_limit_switch_handler());			// 3. limit switch has been thrown
 //	DISPATCH(_alarm_idler());					// 4. idle in shutdown state (alarmed)
 //	DISPATCH(_system_assertions());				// 5. system integrity assertions
-//	DISPATCH(_feedhold_handler());				// 6. feedhold requested
-//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
+	DISPATCH(_feedhold_handler());				// 6. feedhold requested
+	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 
 //----- planner hierarchy for gcode and cycles -------------------------//
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
@@ -271,6 +270,45 @@ static stat_t _alarm_idler(  )
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
 */
+
+/**** Flag handlers ****
+ * _reset_handler()
+ * _feedhold_handler()
+ * _cycle_start_handler()
+ * _limit_switch_handler() - shut down system if limit switch fired
+ */
+static uint8_t _reset_handler(void)
+{
+	if (cs.reset_flag == false) { return (STAT_NOOP);}
+//	hardware_reset();							// hard reset - identical to hitting RESET button
+	return (STAT_EAGAIN);
+}
+
+static uint8_t _feedhold_handler(void)
+{
+	if (cm.feedhold_flag == false) { return (STAT_NOOP);}
+	cm.feedhold_flag = false;
+	cm_feedhold();
+	return (STAT_EAGAIN);					// best to restart the control loop
+}
+
+static uint8_t _cycle_start_handler(void)
+{
+	if (cm.cycle_start_flag == false) { return (STAT_NOOP);}
+	cm.cycle_start_flag = false;
+	cm_cycle_start();
+	return (STAT_EAGAIN);					// best to restart the control loop
+}
+
+static uint8_t _limit_switch_handler(void)
+{
+	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
+//	if (gpio_get_limit_thrown() == false) return (TG_NOOP);
+//	cm_shutdown(gpio_get_sw_thrown); // unexplained complier warning: passing argument 1 of 'cm_shutdown' makes integer from pointer without a cast
+//	cm_shutdown(sw.sw_num_thrown);
+	return (STAT_OK);
+}
+
 /**** Utilities ****
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
