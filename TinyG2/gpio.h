@@ -27,29 +27,11 @@
 
 #ifndef GPIO_H_ONCE
 #define GPIO_H_ONCE
-
+/*
 #ifdef __cplusplus
 extern "C"{
 #endif
-
-/*
- * Interrupt levels and vectors - The vectors are hard-wired to xmega ports
- * If you change axis port assignments you need to chanage these, too.
- */
-// Interrupt level: pick one:
-//#define GPIO1_INTLVL (PORT_INT0LVL_HI_gc|PORT_INT1LVL_HI_gc)	// can't be hi
-//#define GPIO1_INTLVL (PORT_INT0LVL_MED_gc|PORT_INT1LVL_MED_gc)
-//#define GPIO1_INTLVL (PORT_INT0LVL_LO_gc|PORT_INT1LVL_LO_gc)	// shouldn;t be low
-
-// port assignments for vectors
-#define X_MIN_ISR_vect PORTA_INT0_vect	// these must line up with the SWITCH assignments in hardware.h
-#define Y_MIN_ISR_vect PORTD_INT0_vect
-#define Z_MIN_ISR_vect PORTE_INT0_vect
-#define A_MIN_ISR_vect PORTF_INT0_vect
-#define X_MAX_ISR_vect PORTA_INT1_vect
-#define Y_MAX_ISR_vect PORTD_INT1_vect
-#define Z_MAX_ISR_vect PORTE_INT1_vect
-#define A_MAX_ISR_vect PORTF_INT1_vect
+*/
 
 // macros for finding the index into the switch table give the axis number
 #define MIN_SWITCH(axis) (axis*2)
@@ -136,9 +118,9 @@ void gpio_unit_tests(void);
 #else
 #define	GPIO_UNITS
 #endif // __UNIT_TEST_GPIO
-
+/*
 #ifdef __cplusplus
 }
 #endif
-
+*/
 #endif // End of include guard: GPIO_H_ONCE

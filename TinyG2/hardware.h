@@ -8,7 +8,7 @@
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
  * Free Software Foundation. You should have received a copy of the GNU General Public
- * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/> .
  *
  * As a special exception, you may use this file as part of a software library without
  * restriction. Specifically, if other files instantiate templates or use macros or
@@ -75,14 +75,16 @@ void hardware_get_id(char_t *id);
  *	 5	Serial write character interrupt  
  */
 
-/* Timer assignments. See stepper.h and other headers for setup */
+/**** Motate Definitions ****/
+
+// Timer definitions. See stepper.h and other headers for setup
 
 Motate::timer_number dda_timer_num   = 3;	// stepper pulse generation in stepper.cpp
 Motate::timer_number dwell_timer_num = 4;	// dwell timing in stepper.cpp
 Motate::timer_number load_timer_num  = 5;	// request load timer in stepper.cpp
 Motate::timer_number exec_timer_num  = 6;	// request exec timer in stepper.cpp
 
-/* Pin assignments */
+// Pin assignments
 
 // Communications support
 Motate::pin_number i2c_sda_pin_num = 20;
@@ -106,7 +108,7 @@ Motate::pin_number spindle_enable_pin_num = 12;
 Motate::pin_number spindle_dir_pin_num	  = 13;
 Motate::pin_number spindle_pwm_pin_num	  = 11;
 Motate::pin_number secondary_pwm_pin_num  = 9;
-Motate::pin_number coolant_on_pin_num	  = 54;
+Motate::pin_number coolant_pin_num		  = 54;
 
 // axes
 Motate::pin_number axis_X_min_pin_num = 14;
@@ -202,6 +204,40 @@ Motate::pin_number motor_6_microstep_1_pin_num	= -1;
 Motate::pin_number motor_6_vref_pin_num			= -1;
 #endif
 
+/**** Motate Global Pin Allocations ****/
+
+static Motate::OutputPin<spi_ss1_pin_num> spi_ss1_pin;
+static Motate::OutputPin<spi_ss2_pin_num> spi_ss2_pin;
+static Motate::OutputPin<spi_ss3_pin_num> spi_ss3_pin;
+static Motate::OutputPin<spi_ss4_pin_num> spi_ss4_pin;
+static Motate::OutputPin<spi_ss5_pin_num> spi_ss5_pin;
+static Motate::OutputPin<spi_ss6_pin_num> spi_ss6_pin;
+static Motate::OutputPin<kinen_sync_pin_num> kinen_sync_pin;
+
+static Motate::OutputPin<grbl_reset_pin_num> grbl_reset_pin;
+static Motate::OutputPin<grbl_feedhold_pin_num> grbl_feedhold_pin;
+static Motate::OutputPin<grbl_cycle_start_pin_num> grbl_cycle_start_pin;
+
+static Motate::OutputPin<motor_enable_pin_num> motor_enable_pin;
+static Motate::OutputPin<spindle_enable_pin_num> spindle_enable_pin;
+static Motate::OutputPin<spindle_dir_pin_num> spindle_dir_pin;
+static Motate::OutputPin<spindle_pwm_pin_num> spindle_pwm_pin;
+static Motate::OutputPin<secondary_pwm_pin_num> secondary_pwm_pin;
+static Motate::OutputPin<coolant_pin_num> coolant_pin;
+
+static Motate::OutputPin<axis_X_min_pin_num> axis_X_min_pin;
+static Motate::OutputPin<axis_X_max_pin_num> axis_X_max_pin;
+static Motate::OutputPin<axis_Y_min_pin_num> axis_Y_min_pin;
+static Motate::OutputPin<axis_Y_max_pin_num> axis_Y_max_pin;
+static Motate::OutputPin<axis_Z_min_pin_num> axis_Z_min_pin;
+static Motate::OutputPin<axis_Z_max_pin_num> axis_Z_max_pin;
+
+static Motate::OutputPin<axis_A_min_pin_num> axis_A_min_pin;
+static Motate::OutputPin<axis_A_max_pin_num> axis_A_max_pin;
+static Motate::OutputPin<axis_B_min_pin_num> axis_B_min_pin;
+static Motate::OutputPin<axis_B_max_pin_num> axis_B_max_pin;
+static Motate::OutputPin<axis_C_min_pin_num> axis_C_min_pin;
+static Motate::OutputPin<axis_C_max_pin_num> axis_C_max_pin;
 
 /**** DEPRECATED CODE. BEST TO LEAVE IN UNTIL COMPLETELY REPLACED ****/
 

@@ -69,16 +69,14 @@ switches_t sw;
  * variables and settings 
  */
 											// timer for debouncing switches
-#define SW_LOCKOUT_TICKS 25					// 25=250ms. RTC ticks are ~10ms each
-#define SW_DEGLITCH_TICKS 3					// 3=30ms
-
-//static void _isr_helper(uint8_t sw_num);
+#define SW_LOCKOUT_TICKS 250				// in milliseconds
+#define SW_DEGLITCH_TICKS 30				// in milliseconds
 
 /*
  * gpio_init() - initialize homing/limit switches
  *
  *	This function assumes sys_init() and st_init() have been run previously to 
- *	bind the ports and set bit IO directions, repsectively. See hardware.h for details
+ *	bind the ports and set bit IO directions, respectively. See hardware.h for details
  */
 /* Note: v7 boards have external strong pullups on GPIO2 pins (2.7K ohm). 
  *	v6 and earlier use internal pullups only. Internal pullups are set 
@@ -112,8 +110,8 @@ void gpio_init(void)
 		// set interrupt levels. Interrupts must be enabled in main()
 		device.sw_port[i]->INTCTRL = GPIO1_INTLVL;				// see gpio.h for setting
 	}
-	gpio_reset_switches();
 */
+	gpio_reset_switches();
 }
 
 /*

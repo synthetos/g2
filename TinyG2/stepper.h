@@ -119,7 +119,7 @@ magic_t st_get_sps_magic(void);
 	supposed to fire in that phase. The second phase (match) resets the pins. The duty
 	cycle of the phases can be set but is typically 50%. The combined overhead of these 
 	operations is about 8% of the SAM cpu cycles at 50 KHz.
-
+*/
 /**** Line planning and execution ****
  
    Move planning, execution and pulse generation takes place at 3 levels:
