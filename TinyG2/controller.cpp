@@ -39,13 +39,14 @@
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
+#include "switch.h"
+#include "hardware.h"
 #include "report.h"
 #include "help.h"
 #include "xio.h"
 /*
 #include "settings.h"
 #include "stepper.h"
-#include "hardware.h"
 #include "util.h"
 */
 
@@ -53,7 +54,7 @@
  **** STUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
 
-controller_t cs;				// controller state structure
+controller_t cs;		// controller state structure
 
 /***********************************************************************************
  **** STATICS AND LOCALS ***********************************************************
@@ -61,19 +62,16 @@ controller_t cs;				// controller state structure
 
 static void _controller_HSM(void);
 static stat_t _command_dispatch(void);
+static stat_t _alarm_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _sync_to_planner(void);
 static stat_t _reset_handler(void);
 static stat_t _limit_switch_handler(void);
 static stat_t _feedhold_handler(void);
 static stat_t _cycle_start_handler(void);
-/*
-static stat_t _alarm_idler(void);
-static stat_t _bootloader_handler(void);
-static stat_t _shutdown_idler(void);
-static stat_t _system_assertions(void);
-static stat_t _sync_to_tx_buffer(void);
-*/
+//static stat_t _bootloader_handler(void);
+//static stat_t _system_assertions(void);
+//static stat_t _sync_to_tx_buffer(void);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -145,12 +143,13 @@ static void _controller_HSM()
 //----- kernel level ISR handlers ----(flags are set in ISRs)-----------//
 												// Order is important:
 	DISPATCH(_reset_handler());					// 1. software reset received
-//	DISPATCH(_bootloader_handler());			// 2. received ESC char to start bootloader
-	DISPATCH(_limit_switch_handler());			// 3. limit switch has been thrown
-//	DISPATCH(_alarm_idler());					// 4. idle in shutdown state (alarmed)
-//	DISPATCH(_system_assertions());				// 5. system integrity assertions
+//	DISPATCH(_bootloader_handler());			// 2. received request to start bootloader
+	DISPATCH(_alarm_idler());					// 3. idle in shutdown state (alarmed)
+//	DISPATCH( poll_switches());					// 4. run a switch polling cycle
+	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 	DISPATCH(_feedhold_handler());				// 6. feedhold requested
 	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
+//	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles -------------------------//
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
@@ -239,9 +238,8 @@ static stat_t _command_dispatch()
 }
 
 /* 
- * _normal_idler() - blink LED13 slowly to show everything is OK
+ * _normal_idler() - blink Indicator LED slowly to show everything is OK
  */
-
 static stat_t _normal_idler(  )
 {
 	if (GetTickCount() > cs.led_counter) {
@@ -252,16 +250,15 @@ static stat_t _normal_idler(  )
 }
 
 /* 
- * _alarm_idler() - revent any further activity form occurring if shut down
+ * _alarm_idler() - blink rapidly and prevent further activity from occurring
  *
- *	This function returns EAGAIN causing the control loop to never advance beyond
- *	this point. It's important that the reset handler is still called so a SW reset
- *	(ctrl-x) can be processed.
+ *	Blink Indicator LED rapidly to show everything is not OK. This function returns 
+ *	EAGAIN causing the control loop to never advance beyond this point. It's important 
+ *	that the reset handler is still called so a SW reset (ctrl-x) can be processed.
  */
-/*
 static stat_t _alarm_idler(  )
 {
-//	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
+	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
 
 	if (GetTickCount() > cs.led_counter) {
 		cs.led_counter += LED_ALARM_COUNTER;
@@ -269,7 +266,6 @@ static stat_t _alarm_idler(  )
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
-*/
 
 /**** Flag handlers ****
  * _reset_handler()
@@ -279,23 +275,23 @@ static stat_t _alarm_idler(  )
  */
 static uint8_t _reset_handler(void)
 {
-	if (cs.reset_flag == false) { return (STAT_NOOP);}
+	if (cs.request_reset == false) { return (STAT_NOOP);}
 //	hardware_reset();							// hard reset - identical to hitting RESET button
 	return (STAT_EAGAIN);
 }
 
 static uint8_t _feedhold_handler(void)
 {
-	if (cm.feedhold_flag == false) { return (STAT_NOOP);}
-	cm.feedhold_flag = false;
+	if (cm.request_feedhold == false) { return (STAT_NOOP);}
+	cm.request_feedhold = false;
 	cm_feedhold();
 	return (STAT_EAGAIN);					// best to restart the control loop
 }
 
 static uint8_t _cycle_start_handler(void)
 {
-	if (cm.cycle_start_flag == false) { return (STAT_NOOP);}
-	cm.cycle_start_flag = false;
+	if (cm.request_cycle_start == false) { return (STAT_NOOP);}
+	cm.request_cycle_start = false;
 	cm_cycle_start();
 	return (STAT_EAGAIN);					// best to restart the control loop
 }
@@ -303,15 +299,14 @@ static uint8_t _cycle_start_handler(void)
 static uint8_t _limit_switch_handler(void)
 {
 	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
-//	if (gpio_get_limit_thrown() == false) return (TG_NOOP);
 //	cm_shutdown(gpio_get_sw_thrown); // unexplained complier warning: passing argument 1 of 'cm_shutdown' makes integer from pointer without a cast
-//	cm_shutdown(sw.sw_num_thrown);
+//	cm_shutdown(0);
 	return (STAT_OK);
 }
 
 /**** Utilities ****
- * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
+ * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * tg_reset_source() - reset source to default input device (see note)
  * tg_set_active_source() - set current input source
  *
@@ -334,7 +329,6 @@ static stat_t _sync_to_tx_buffer()
 */
 static stat_t _sync_to_planner()
 {
-//	if (mp_get_planner_buffers_available() == 0) { 
 	if (mp_get_planner_buffers_available() < 3) { 
 		return (STAT_EAGAIN);
 	}

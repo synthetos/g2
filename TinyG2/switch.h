@@ -43,8 +43,8 @@
 /*
  * variables and settings 
  */
-#define SW_LOCKOUT_TICKS 250	// in milliseconds
-#define SW_DEGLITCH_TICKS 30	// in milliseconds
+#define SW_LOCKOUT_TICKS 100	// in milliseconds
+//#define SW_DEGLITCH_TICKS 30	// in milliseconds
 
 #define SW_PAIRS AXES			// array sizing
 #define SW_POSITIONS 2			// array sizing
@@ -71,6 +71,12 @@ enum swState {
 	SW_CLOSED						// also read as 'true'
 };
 
+enum swEdge {
+	SW_NO_EDGE = 0,
+	SW_LEADING,
+	SW_TRAILING,
+};
+
 // switch modes
 #define SW_HOMING_BIT 0x01
 #define SW_LIMIT_BIT 0x02
@@ -84,39 +90,36 @@ typedef struct swSwitch {			// one struct per switch
 	uint8_t type;					// swType: 0=NO, 1=NC
 	uint8_t mode;					// 0=disabled, 1=homing, 2=limit, 3=homing+limit
 	uint8_t state;					// set true if switch is closed
+	uint8_t edge;					// keeps a transient record of edges for immediate inquiry
 	uint16_t debounce_ticks;		// number of millisecond ticks for debounce lockout 
 	uint32_t debounce_timeout;		// time to expire current debounce lockout, or 0 if no lockout
+	void (*when_open)(struct swSwitch *s);		// callback to action function when sw is open - passes *s, returns void
+	void (*when_closed)(struct swSwitch *s);	// callback to action function when closed
+	void (*on_leading)(struct swSwitch *s);		// callback to action function for leading edge onset
+	void (*on_trailing)(struct swSwitch *s);	// callback to action function for trailing edge
 } switch_t;
+typedef void (*sw_callback)(switch_t *s); // typedef for switch action callback
 
 typedef struct swSwitchArray {		// array of switches
 	uint8_t type;					// switch type for entire array
-	uint8_t edge_flag;				// set true if any switch changed state in polling cycle
-	uint8_t edge_pair;				// switch pair thrown (or last in series)
-	uint8_t edge_position;			// position of thwon switch (or last in series)
 	switch_t s[SW_PAIRS][SW_POSITIONS];
 } switches_t;
 extern switches_t sw;
 
+// function prototypes
 
 void switch_init(void);
+uint8_t poll_switches(void);
 uint8_t read_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t sw_num);
-
 /*
 void switch_rtc_callback(void);
 uint8_t switch_get_limit_thrown(void);
 uint8_t switch_get_sw_thrown(void);
 void switch_reset_switches(void);
 uint8_t switch_read_switch(uint8_t sw_num);
-
-void switch_led_on(uint8_t led);
-void switch_led_off(uint8_t led);
-void switch_led_toggle(uint8_t led);
-uint8_t switch_read_bit(uint8_t b);
-void switch_set_bit_on(uint8_t b);
-void switch_set_bit_off(uint8_t b);
-void sw_show_switch(void);
 */
+
 /* unit test setup */
 
 //#define __UNIT_TEST_GPIO				// uncomment to enable GPIO unit tests

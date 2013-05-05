@@ -292,9 +292,9 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 /****************************************************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  *
- *	This interrupt is really 2 interrupts. It fires on timer overflow and also on match
+ *	This interrupt is really 2 interrupts. It fires on timer overflow and also on match.
  *	Overflow interrupts are used to set step pins, match interrupts clear step pins.
- *	This way the duty cycle of the stepper pulse can be controlled by setting the match value
+ *	This way the duty cycle of the stepper pulse can be controlled by setting the match value.
  *
  *	Also note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests.
  *	If motor_N is not defined that entire if {} clause drops out of the complied code.
@@ -337,8 +337,21 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
 		if (--st.timer_ticks_downcount == 0) {			// process end of move
-			_request_load_move();						// load the next move
+			_request_load_move();						// load the next move at a lower interrupt level
 		}
+/*
+		if (--st.timer_ticks_downcount == 0) {			// process end of move
+			// power-down motors if this feature is enabled
+			if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
+			if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
+			if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
+			if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
+			if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
+			if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
+			st_disable();
+			_load_move();								// load the next move
+		}		
+*/
 		dda_debug_pin1 = 0;
 	} // dda_timer.getInterruptCause() == kInterruptOnOverflow
 
@@ -346,15 +359,14 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 	if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 		dda_debug_pin2 = 1;
 
-		motor_1.step.clear();
+		motor_1.step.clear();		// turn step bit off
 		motor_2.step.clear();
 		motor_3.step.clear();
 		motor_4.step.clear();
 		motor_5.step.clear();
 		motor_6.step.clear();
-
-		// Should we leave this part in the overflow handling portion? -RG
-/*		
+/*
+		// Should we leave this part in the overflow handling portion? -RG		
 		if (--st.timer_ticks_downcount == 0) {			// process end of move
 														// power-down motors if this feature is enabled
 			if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }

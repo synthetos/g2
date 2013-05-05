@@ -86,6 +86,9 @@ Motate::timer_number exec_timer_num  = 6;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
+Motate::pin_number indicator_led_pin_num = 13;
+static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
+
 // Communications support
 Motate::pin_number i2c_sda_pin_num = 20;
 Motate::pin_number i2c_scl_pin_num = 21;

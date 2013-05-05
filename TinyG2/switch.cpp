@@ -48,6 +48,8 @@
 // Allocate switch array structure
 switches_t sw;
 
+static void _do_feedhold(switch_t *s);
+
 /*
  * switch_init() - initialize homing/limit switches
  *
@@ -56,56 +58,43 @@ switches_t sw;
  *
  *	Note: `type` and `mode` are not initialized as they should be set from configuration
  */
+static void _no_action(switch_t *s) { return; }
 
 void switch_init(void)
 {
 //	sw.type = SW_NORMALLY_OPEN;						// set from config
-	sw.edge_flag = 0;
-	sw.edge_pair = 0;
-	sw.edge_position = 0;
+//	sw.edge_flag = 0;
+//	sw.edge_pair = 0;
+//	sw.edge_position = 0;
 
-	for (uint8_t i=0; i<SW_PAIRS; i++) {
-		for (uint8_t j=0; j<SW_POSITIONS; j++) {
-			sw.s[i][j].type = sw.type;				// propagate type from global type
-//			sw.s[i][j].mode = SW_MODE_DISABLED;		// set from config			
-			sw.s[i][j].state = false;
-			sw.s[i][j].debounce_ticks = SW_LOCKOUT_TICKS;
-			sw.s[i][j].debounce_timeout = 0;
-		}		
+	switch_t *s;
+	
+	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
+		for (uint8_t position=0; position<SW_POSITIONS; position++) {
+			s = &sw.s[axis][position];
+			
+			s->type = sw.type;				// propagate type from global type
+//			s->mode = SW_MODE_DISABLED;		// set from config			
+			s->state = false;
+			s->edge = SW_NO_EDGE;
+			s->debounce_ticks = SW_LOCKOUT_TICKS;
+			s->debounce_timeout = 0;
+
+			// functions bound to each switch
+			s->when_open = _no_action;
+			s->when_closed = _no_action;
+			s->on_leading = _do_feedhold;
+//			s->on_trailing = _do_feedhold;		
+			s->on_trailing = _no_action;		
+		}
 	}
-//	sw_reset_switches();
+	// functions bound ti individual switches
+	// <none>
 }
 
 /*
- * read_switch() - read switch with NO/NC, debouncing and edge detection
- *
- *	Returns true if switch state changed - e.g. leading or falling edge detected
+ * poll_switches() - run a polling cycle on all switches
  */
-uint8_t read_switch(switch_t *s, uint8_t pin_value)
-{
-	// return if switch is not enabled
-	if (s->mode == SW_MODE_DISABLED) { return (false); }
-
-	// return if no change in state
-	uint8_t pin_sense_corrected = (pin_value ^ s->type);	// correct for NO or NC mode
-  	if (pin_sense_corrected == s->state) { return (false);}
-
-	// switch is in debounce lockout interval
-	if ((s->debounce_timeout != 0) && (s->debounce_timeout < GetTickCount())) { return (false);} 
-
-	// switch changed state
-	s->state = pin_sense_corrected;
-	s->debounce_timeout = (GetTickCount() + s->debounce_ticks);
-
-	// special processing for limits and homing
-	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
-		cm.feedhold_flag = true;
-	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
-		cm.limit_flag = true;
-	}
-	return (true);
-}
-
 uint8_t poll_switches()
 {
 	read_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
@@ -120,8 +109,56 @@ uint8_t poll_switches()
 	read_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
 	read_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
 	read_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
-	return (false);	
-}	
+	return (false);
+}
+
+/*
+ * read_switch() - read switch with NO/NC, debouncing and edge detection
+ *
+ *	Returns true if switch state changed - e.g. leading or falling edge detected
+ *	Assumes pin_value input = 1 means open, 0 is closed. Pin sense is adjusted to mean:
+ *	  0 = open for both NO and NC switches
+ *	  1 = closed for both NO and NC switches
+ */
+uint8_t read_switch(switch_t *s, uint8_t pin_value)
+{
+	// return if switch is not enabled
+	if (s->mode == SW_MODE_DISABLED) { return (false); }
+
+	// return if no change in state
+	uint8_t pin_sense_corrected = (pin_value ^ (s->type ^ 1));	// correct for NO or NC mode
+  	if (pin_sense_corrected == s->state) { 
+		// process switch actions
+		if (s->state == SW_OPEN) { s->when_open(s); }
+		if (s->state == SW_CLOSED) { s->when_closed(s); }
+		return (false);
+	}
+
+	// switch is in debounce lockout interval
+	if ((s->debounce_timeout != 0) && (s->debounce_timeout > GetTickCount())) { return (false);} 
+
+	// switch changed state
+	s->state = pin_sense_corrected;
+	s->debounce_timeout = (GetTickCount() + s->debounce_ticks);
+
+	// process edge switch actions
+	s->edge = ((s->state == SW_OPEN) ? SW_TRAILING : SW_LEADING);
+	if (s->edge == SW_LEADING) { s->on_leading(s); }
+	if (s->edge == SW_TRAILING) { s->on_trailing(s); }
+	return (true);
+}
+
+static void _do_feedhold(switch_t *s) 
+{ 
+	IndicatorLed.toggle();
+	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
+		cm.request_feedhold = true;
+		} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
+		cm.limit_flag = true;
+	}
+	return; 
+}
+
 
 /*
  * switch_get_switch_mode() 	- return switch mode setting

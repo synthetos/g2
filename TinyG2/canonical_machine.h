@@ -46,8 +46,9 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t motion_state;
 	uint8_t hold_state;				// feedhold sub-state machine
 	uint8_t limit_flag;				// set true if limit switch was hit
-	uint8_t feedhold_flag;			// set true to execute a feedhold
-	uint8_t cycle_start_flag;		// flag to end feedhold
+	uint8_t request_feedhold;		// set true to initiate a feedhold
+	uint8_t request_cycle_start;	// set true to end feedhold
+	uint8_t cycle_start_flag;		// assert cycle start (follows the request)
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move
@@ -485,8 +486,8 @@ stat_t cm_goto_g28_position(float target[], float flags[]); 	// G28
 stat_t cm_set_g30_position(void);								// G30.1
 stat_t cm_goto_g30_position(float target[], float flags[]);		// G30
 
-stat_t	cm_set_coord_system(uint8_t coord_system);				// G54 - G59
-stat_t	cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
+stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
+stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
 stat_t cm_set_origin_offsets(float offset[], float flag[]);		// G92
 stat_t cm_reset_origin_offsets(void); 							// G92.1

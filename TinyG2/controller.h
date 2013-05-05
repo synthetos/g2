@@ -30,7 +30,7 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
+#endif
 
 #define STAT_FLAG_PROMPTS_bm (1<<0)		// prompt enabled if set
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
@@ -50,7 +50,7 @@ typedef struct controllerState {		// main TG controller struct
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
 	uint8_t state;						// controller state
-	uint8_t reset_flag;					// set true of a system reset should be performed
+	uint8_t request_reset;				// set true of a system reset should be performed
 //	uint8_t active_src;					// active source device
 //	uint8_t default_src;				// default source device
 	uint8_t comm_mode;					// communications mode 1=JSON
