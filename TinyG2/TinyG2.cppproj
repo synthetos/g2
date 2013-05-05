@@ -30,7 +30,7 @@
       <ToolNumber>000028011884</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1140</port>
+        <port>1169</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
@@ -45,7 +45,6 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
-          <SwdClock>250000</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>

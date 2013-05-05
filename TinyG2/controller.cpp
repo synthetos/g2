@@ -39,6 +39,7 @@
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
+#include "stepper.h"
 #include "switch.h"
 #include "hardware.h"
 #include "report.h"
@@ -46,7 +47,6 @@
 #include "xio.h"
 /*
 #include "settings.h"
-#include "stepper.h"
 #include "util.h"
 */
 
@@ -129,37 +129,32 @@ void controller_run()
 #define	DISPATCH(func) if (func == STAT_EAGAIN) return; 
 static void _controller_HSM()
 {
-//----- ISRs. These should be considered the highest priority scheduler functions ----//
-/*
- *	HI	Stepper DDA pulse generation			// see stepper.h
- *	HI	Stepper load routine SW interrupt		// see stepper.h
- *	HI	Dwell timer counter 					// see stepper.h
- *	MED	GPIO1 switch port - limits / homing		// see gpio.h
- *  MED	Serial RX for USB						// see xio_usart.h
- *  LO	Segment execution SW interrupt			// see stepper.h
- *  LO	Serial TX for USB & RS-485				// see xio_usart.h
- *	LO	Real time clock interrupt				// see xmega_rtc.h
- */
-//----- kernel level ISR handlers ----(flags are set in ISRs)-----------//
+//----- Interrupt Service Routines are the highest priority controller functions ----//
+//      See hardware.h for a list of ISRs and their priorities.
+//
+//----- lowest level functions -------------------------------------------------------//
 												// Order is important:
 	DISPATCH(_reset_handler());					// 1. software reset received
 //	DISPATCH(_bootloader_handler());			// 2. received request to start bootloader
 	DISPATCH(_alarm_idler());					// 3. idle in shutdown state (alarmed)
-//	DISPATCH( poll_switches());					// 4. run a switch polling cycle
-	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-	DISPATCH(_feedhold_handler());				// 6. feedhold requested
-	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
-//	DISPATCH(_system_assertions());				// 8. system integrity assertions
+	DISPATCH( poll_switches());					// 4. run a switch polling cycle
+//	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+//	DISPATCH(_feedhold_handler());				// 6. feedhold requested
+//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
+//	DISPATCH(_system_assertions());				// 9. system integrity assertions
 
-//----- planner hierarchy for gcode and cycles -------------------------//
+//----- planner hierarchy for gcode and cycles ---------------------------------------//
+
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
 	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
 	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
 	DISPATCH(mp_end_hold_callback());			// end a feedhold
 	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
+	DISPATCH(st_delayed_disable_callback());	// timed disable for steppers
 
-//----- command readers and parsers ------------------------------------//
+//----- command readers and parsers --------------------------------------------------//
+
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 //	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 //	DISPATCH(cfg_baud_rate_callback());			// perform baud rate update (must be after TX sync)
@@ -244,7 +239,7 @@ static stat_t _normal_idler(  )
 {
 	if (GetTickCount() > cs.led_counter) {
 		cs.led_counter += LED_NORMAL_COUNTER;
-		IndicatorLed.toggle();
+//		IndicatorLed.toggle();
 	}
 	return (STAT_OK);
 }
@@ -262,7 +257,7 @@ static stat_t _alarm_idler(  )
 
 	if (GetTickCount() > cs.led_counter) {
 		cs.led_counter += LED_ALARM_COUNTER;
-		IndicatorLed.toggle();
+//		IndicatorLed.toggle();
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }

@@ -109,7 +109,7 @@ extern switches_t sw;
 // function prototypes
 
 void switch_init(void);
-uint8_t poll_switches(void);
+stat_t poll_switches(void);
 uint8_t read_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t sw_num);
 /*

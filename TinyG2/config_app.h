@@ -160,14 +160,15 @@ typedef struct cfgPWMParameters {
 
 typedef struct cfgParameters {
 	magic_t magic_start;			// magic number to test memory integity
-	uint16_t nvm_base_addr;			// NVM base address
-	uint16_t nvm_profile_base;		// NVM base address of current profile
+//	uint16_t nvm_base_addr;			// NVM base address
+//	uint16_t nvm_profile_base;		// NVM base address of current profile
 
 	// hidden settings				// not part of system group, but still accessible
 	float min_segment_len;			// line drawing resolution in mm
 	float arc_segment_len;			// arc drawing resolution in mm
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
 	float estd_segment_usec;		// approximate segment time in microseconds
+	float stepper_disable_delay;	// Ms delay for timer disable for power managed motors
 
 	// system group settings
 	float junction_acceleration;	// centripetal acceleration max for cornering
