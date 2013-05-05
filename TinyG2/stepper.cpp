@@ -338,8 +338,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
 		if (--st.dda_ticks_downcount == 0) {			// process end of move
-//			_request_load_move();						// load the next move at a lower interrupt level
-			_load_move();								// load the next move at this interrupt level
+			_request_load_move();						// load the next move at a lower interrupt level
 		}
 		dda_debug_pin1 = 0;
 	} // dda_timer.getInterruptCause() == kInterruptOnOverflow
@@ -347,20 +346,12 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 	else
 	if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 		dda_debug_pin2 = 1;
-
-		motor_1.step.clear();		// turn step bit off
+		motor_1.step.clear();		// turn step bits off
 		motor_2.step.clear();
 		motor_3.step.clear();
 		motor_4.step.clear();
 		motor_5.step.clear();
 		motor_6.step.clear();
-/*
-		// Should we leave this part in the overflow handling portion? -RG		
-		if (--st.dda_ticks_downcount == 0) {			// process end of move
-			st_disable();
-			_load_move();								// load the next move
-		}
-*/
 		dda_debug_pin2 = 0;
 	}
 }

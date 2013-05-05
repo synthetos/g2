@@ -64,13 +64,10 @@ static void _do_feedhold(switch_t *s);
 
 void switch_init(void)
 {
-//	sw.type = SW_NORMALLY_OPEN;						// set from config
-//	sw.edge_flag = 0;
-//	sw.edge_pair = 0;
-//	sw.edge_position = 0;
+//	sw.type = SW_NORMALLY_OPEN;				// set from config
 
-	switch_t *s;
-	
+	switch_t *s;	// shorthand
+
 	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
 		for (uint8_t position=0; position<SW_POSITIONS; position++) {
 			s = &sw.s[axis][position];
@@ -183,11 +180,10 @@ static void _do_feedhold(switch_t *s)
 	return; 
 }
 
-
 /*
- * switch_get_switch_mode() 	- return switch mode setting
- * switch_get_limit_thrown()  - return true if a limit was tripped
- * switch_get_sw_num()  		- return switch number most recently thrown
+ * switch_get_switch_mode()  - return switch mode setting
+ * switch_get_limit_thrown() - return true if a limit was tripped
+ * switch_get_sw_num()  	 - return switch number most recently thrown
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++

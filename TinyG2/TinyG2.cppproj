@@ -18,8 +18,7 @@
     <ToolchainFlavour>Yagarto</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue>
-    </OverrideVtorValue>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>JTAG</avrtoolinterface>
@@ -30,7 +29,7 @@
       <ToolNumber>000028011884</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1169</port>
+        <port>1192</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
