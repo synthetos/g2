@@ -35,6 +35,7 @@
 
 // Machine configuration settings
 #define CHORDAL_TOLERANCE 			0.001			// chord accuracy for arc drawing
+#define DISABLE_DELAY				1000			// Ms stepper disable delay
 #define SWITCH_TYPE 				SW_NORMALLY_OPEN// one of: SW_NORMALLY_OPEN, SW_NORMALLY_CLOSED
 
 // Communications and reporting settings

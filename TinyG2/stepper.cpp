@@ -25,10 +25,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* 	This module provides the low-level stepper drivers and some related
- * 	functions. It dequeues lines queued by the motor_queue routines.
- * 	This is some of the most heavily optimized code in the project.
- *	Please refer to the end of the stepper.h file for a more complete explanation
+/* 	This module provides the low-level stepper drivers and some related functions. 
+ *	This is some of the most heavily optimized code in the project.
+ *	Please refer to the stepper.h end notes for a more complete explanation.
  */
 #include "tinyg2.h"
 #include "config.h"
@@ -46,19 +45,46 @@
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
 #endif
 
-using namespace Motate;
-
 // Setup local resources
+
+static void _load_move(void);
+static void _request_load_move(void);
+static void _clear_diagnostic_counters(void);
+
+enum prepBufferState {
+	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
+	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
+};
+
+using namespace Motate;
+/*
 Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
 Motate::Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
 Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
+
 Motate::OutputPin<31> dda_debug_pin1;
 Motate::OutputPin<33> dda_debug_pin2;
+*/
 
-// Setup a stepper template to hold our pins
-template<pin_number step_num, pin_number dir_num, pin_number enable_num, 
-		 pin_number ms0_num, pin_number ms1_num, pin_number vref_num>
+//Motate::OutputPin<motor_enable_pin_num> enable;
+OutputPin<motor_enable_pin_num> enable;	// shorter form of the above
+OutputPin<31> dda_debug_pin1;
+OutputPin<33> dda_debug_pin2;
+
+//Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
+Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
+Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
+Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
+Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
+
+// Motor structures
+template<pin_number step_num,			// Setup a stepper template to hold our pins
+		 pin_number dir_num, 
+		 pin_number enable_num, 
+		 pin_number ms0_num, 
+		 pin_number ms1_num, 
+		 pin_number vref_num>
 
 struct Stepper {
 	OutputPin<step_num> step;
@@ -109,19 +135,6 @@ Stepper<motor_6_step_pin_num,
 		motor_6_microstep_0_pin_num, 
 		motor_6_microstep_1_pin_num,
 		motor_6_vref_pin_num> motor_6;
-
-OutputPin<motor_enable_pin_num> enable;
-
-//volatile long dummy;					// convenient register to read into
-
-static void _load_move(void);
-static void _request_load_move(void);
-static void _clear_diagnostic_counters(void);
-
-enum prepBufferState {
-	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
-	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
-};
 
 /*
  * Stepper structures
@@ -223,9 +236,7 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
-	_clear_diagnostic_counters();
-	
-	cfg.stepper_disable_delay = 1000;
+//	_clear_diagnostic_counters();
 }
 
 /*
@@ -261,19 +272,17 @@ stat_t st_delayed_disable_callback()
 	if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
 	return (STAT_OK);
 }
-
+/*
 static void _clear_diagnostic_counters()
 {
-/*
 	st.m[MOTOR_1].step_count_diagnostic = 0;
 	st.m[MOTOR_2].step_count_diagnostic = 0;
 	st.m[MOTOR_3].step_count_diagnostic = 0;
 	st.m[MOTOR_4].step_count_diagnostic = 0;
 	st.m[MOTOR_5].step_count_diagnostic = 0;
 	st.m[MOTOR_6].step_count_diagnostic = 0;
-*/
 }
-
+*/
 
 // Define the timer interrupts inside the Motate namespace
 namespace Motate {
@@ -337,14 +346,12 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			motor_6.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
-		if (--st.dda_ticks_downcount == 0) {			// process end of move
-			_request_load_move();						// load the next move at a lower interrupt level
+		if (--st.dda_ticks_downcount == 0) {	// process end of move
+			_request_load_move();				// load the next move at a lower interrupt level
 		}
 		dda_debug_pin1 = 0;
-	} // dda_timer.getInterruptCause() == kInterruptOnOverflow
 
-	else
-	if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
+	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 		dda_debug_pin2 = 1;
 		motor_1.step.clear();		// turn step bits off
 		motor_2.step.clear();
@@ -359,7 +366,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 } // namespace Motate
 
 /****************************************************************************************
- * Exec sequencing code - 
+ * Exec sequencing code - computes and prepares next load segment
  *
  * st_request_exec_move()	- SW interrupt to request to execute a move
  * exec_timer interrupt		- interrupt handler for calling exec function
@@ -428,20 +435,6 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 
 void _load_move()
 {
-/*
-#ifdef TEST_CODE
-    sps.move_type = true;
-
-	sps.dda_ticks = 100000;
-	sps.dda_ticks_X_substeps = 1000000;
-	st.m[MOTOR_1].phase_increment = 90000;
-	st.m[MOTOR_1].phase_accumulator = -sps.dda_ticks;
-	st.dda_ticks_X_substeps = sps.dda_ticks_X_substeps;
-	st_enable(); 
-//    dda_timer.start();
-    return;
-#endif
-*/
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.dda_ticks_downcount = sps.dda_ticks;
@@ -624,3 +617,22 @@ void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 	}
 */
 }
+
+// END NOTES
+/*
+
+This test code can be run from the init or the load
+
+#ifdef TEST_CODE
+    sps.move_type = true;
+
+	sps.dda_ticks = 100000;
+	sps.dda_ticks_X_substeps = 1000000;
+	st.m[MOTOR_1].phase_increment = 90000;
+	st.m[MOTOR_1].phase_accumulator = -sps.dda_ticks;
+	st.dda_ticks_X_substeps = sps.dda_ticks_X_substeps;
+	st_enable(); 
+//    dda_timer.start();
+    return;
+#endif
+*/

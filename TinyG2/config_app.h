@@ -159,20 +159,20 @@ typedef struct cfgPWMParameters {
 } cfgPWM_t;
 
 typedef struct cfgParameters {
-	magic_t magic_start;			// magic number to test memory integity
+	magic_t magic_start;			// magic number to test memory integrity
 //	uint16_t nvm_base_addr;			// NVM base address
 //	uint16_t nvm_profile_base;		// NVM base address of current profile
+
+	// system group settings
+	float junction_acceleration;	// centripetal acceleration max for cornering
+	float chordal_tolerance;		// arc chordal accuracy setting in mm
+	uint32_t stepper_disable_delay;	// Ms delay for timer disable for power managed motors
+	// float max_spindle_speed;		// in RPM
 
 	// hidden settings				// not part of system group, but still accessible
 	float min_segment_len;			// line drawing resolution in mm
 	float arc_segment_len;			// arc drawing resolution in mm
-	float chordal_tolerance;		// arc chordal accuracy setting in mm
 	float estd_segment_usec;		// approximate segment time in microseconds
-	float stepper_disable_delay;	// Ms delay for timer disable for power managed motors
-
-	// system group settings
-	float junction_acceleration;	// centripetal acceleration max for cornering
-	// float max_spindle_speed;		// in RPM
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;			// G10 active coordinate system default

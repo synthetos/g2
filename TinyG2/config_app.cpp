@@ -274,10 +274,13 @@ static const char_t fmt_hv[] = "[hv]  hardware version%16.2f\n";
 static const char_t fmt_id[] = "[id]  TinyG ID%30s\n";
 
 static const char_t fmt_ja[] = "[ja]  junction acceleration%8.0f%s\n";
+static const char_t fmt_dd[] = "$dd   stepper disable delay%8d mSec\n";
+static const char_t fmt_ct[] = "[ct]  chordal tolerance%16.3f%s\n";
+
+static const char_t fmt_mt[] = "[mt]  min segment time%13.0f uSec\n";
 static const char_t fmt_ml[] = "[ml]  min line segment%17.3f%s\n";
 static const char_t fmt_ma[] = "[ma]  min arc segment%18.3f%s\n";
-static const char_t fmt_ct[] = "[ct]  chordal tolerance%16.3f%s\n";
-static const char_t fmt_mt[] = "[mt]  min segment time%13.0f uSec\n";
+
 static const char_t fmt_st[] = "[st]  switch type%18d [0=NO,1=NC]\n";
 static const char_t fmt_si[] = "[si]  status interval%14.0f ms\n";
 static const char_t fmt_ic[] = "[ic]  ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
@@ -661,9 +664,10 @@ const cfgItem_t cfgArray[] = {
 
 	// System parameters
 	// NOTE: Some values have been removed from the system group but are still accessible as individual elements
-	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration,JUNCTION_ACCELERATION },
-	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	CHORDAL_TOLERANCE },
-	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					SWITCH_TYPE },
+	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration, JUNCTION_ACCELERATION },
+	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	  CHORDAL_TOLERANCE },
+	{ "sys","dd",  _f07, 0, fmt_dd, print_int, get_int, set_int, (float *)&cfg.stepper_disable_delay, DISABLE_DELAY },
+	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					  SWITCH_TYPE },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
 	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, set_jv,	 (float *)&cfg.json_verbosity,		JSON_VERBOSITY },
@@ -1326,7 +1330,7 @@ static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 {
 	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_ui8(cmd);
-//++++	switch_init();
+	switch_init();
 	return (STAT_OK);
 }
 
