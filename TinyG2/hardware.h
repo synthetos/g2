@@ -106,7 +106,7 @@ Motate::pin_number grbl_feedhold_pin_num = 55;
 Motate::pin_number grbl_cycle_start_pin_num = 56;
 
 // Gcode support
-Motate::pin_number motor_enable_pin_num	  = 8;
+Motate::pin_number motor_common_enable_pin_num = 8;
 Motate::pin_number spindle_enable_pin_num = 12;
 Motate::pin_number spindle_dir_pin_num	  = 13;
 Motate::pin_number spindle_pwm_pin_num	  = 11;
@@ -221,7 +221,7 @@ static Motate::OutputPin<grbl_reset_pin_num> grbl_reset_pin;
 static Motate::OutputPin<grbl_feedhold_pin_num> grbl_feedhold_pin;
 static Motate::OutputPin<grbl_cycle_start_pin_num> grbl_cycle_start_pin;
 
-static Motate::OutputPin<motor_enable_pin_num> motor_enable_pin;
+static Motate::OutputPin<motor_common_enable_pin_num> motor_common_enable_pin;
 static Motate::OutputPin<spindle_enable_pin_num> spindle_enable_pin;
 static Motate::OutputPin<spindle_dir_pin_num> spindle_dir_pin;
 static Motate::OutputPin<spindle_pwm_pin_num> spindle_pwm_pin;

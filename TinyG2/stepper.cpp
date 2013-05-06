@@ -67,8 +67,9 @@ Motate::OutputPin<31> dda_debug_pin1;
 Motate::OutputPin<33> dda_debug_pin2;
 */
 
-//Motate::OutputPin<motor_enable_pin_num> enable;
-OutputPin<motor_enable_pin_num> enable;	// shorter form of the above
+//Motate::OutputPin<motor_common_enable_pin_num> enable; // defining a pin w/o 'using namespace Motate'
+OutputPin<motor_common_enable_pin_num> common_enable;	 // shorter form of the above
+
 OutputPin<31> dda_debug_pin1;
 OutputPin<33> dda_debug_pin2;
 
@@ -246,7 +247,7 @@ void stepper_init()
  */
 void st_enable()
 {
-	enable.clear();										// enable grblShield common enable
+	common_enable.clear();										// enable grblShield common enable
 	st.disable_delay_timeout = (GetTickCount() + 1000*60*60);	// no move can last longer than an hour
 	dda_timer.start();
 }
@@ -262,7 +263,7 @@ stat_t st_stepper_disable_delay_callback()
 	if (st.disable_delay_timeout > GetTickCount()) { 
 		return (STAT_NOOP);
 	}
-	enable.set();			// disable grblShield common enable
+	common_enable.set();		// disable grblShield common enable
 	// power-down motors if this feature is enabled
 	if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
 	if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }

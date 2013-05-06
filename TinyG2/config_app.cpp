@@ -125,6 +125,9 @@ static stat_t get_am(cmdObj_t *cmd);		// get axis mode
 static stat_t set_am(cmdObj_t *cmd);		// set axis mode
 static void print_am(cmdObj_t *cmd);		// print axis mode with enumeration string
 
+static stat_t get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
+static stat_t set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
+
 static stat_t set_sw(cmdObj_t *cmd);		// set switch (must run any time switch setting changes)
 static stat_t set_sa(cmdObj_t *cmd);		// set motor step angle
 static stat_t set_tr(cmdObj_t *cmd);		// set motor travel per revolution
@@ -333,7 +336,8 @@ static const char_t fmt_Xam[] = "$%s%s  %s axis mode%18d %s\n";
 static const char_t fmt_Xfr[] = "$%s%s  %s feedrate maximum%15.3f%s/min\n";
 static const char_t fmt_Xvm[] = "$%s%s  %s velocity maximum%15.3f%s/min\n";
 static const char_t fmt_Xtm[] = "$%s%s  %s travel maximum%17.3f%s\n";
-static const char_t fmt_Xjm[] = "$%s%s  %s jerk maximum%15.0f%s/min^3\n";
+static const char_t fmt_Xjm[] = "$%s%s  %s jerk maximum (xM)%10.0f%s/min^3\n";
+static const char_t fmt_Xjh[] = "$%s%s  %s jerk homing (xM)%11.0f%s/min^3\n";
 static const char_t fmt_Xjd[] = "$%s%s  %s junction deviation%14.4f%s (larger is faster)\n";
 static const char_t fmt_Xra[] = "$%s%s  %s radius value%20.4f%s\n";
 static const char_t fmt_Xsn[] = "$%s%s  %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
@@ -342,7 +346,6 @@ static const char_t fmt_Xsv[] = "$%s%s  %s search velocity%16.3f%s/min\n";
 static const char_t fmt_Xlv[] = "$%s%s  %s latch velocity%17.3f%s/min\n";
 static const char_t fmt_Xlb[] = "$%s%s  %s latch backoff%18.3f%s\n";
 static const char_t fmt_Xzb[] = "$%s%s  %s zero backoff%19.3f%s\n";
-static const char_t fmt_Xjh[] = "$%s%s  %s jerk homing%16.0f%s/min^3\n";
 
 // PWM strings
 static const char_t fmt_p1frq[] = "$p1frq  pwm frequency   %15.3f Hz\n";
@@ -505,8 +508,8 @@ const cfgItem_t cfgArray[] = {
 	{ "x","xvm",_fip, 0, fmt_Xvm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].velocity_max,		X_VELOCITY_MAX },
 	{ "x","xfr",_fip, 0, fmt_Xfr, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].feedrate_max,		X_FEEDRATE_MAX },
 	{ "x","xtm",_fip, 0, fmt_Xtm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
-	{ "x","xjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].jerk_max,			X_JERK_MAX },
-	{ "x","xjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
+	{ "x","xjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_X].jerk_max,			X_JERK_MAX },
+	{ "x","xjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
 	{ "x","xjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_X].junction_dev,		X_JUNCTION_DEVIATION },
 	{ "x","xsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,		X_SWITCH_MODE_MIN },
 	{ "x","xsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,		X_SWITCH_MODE_MAX },
@@ -519,8 +522,8 @@ const cfgItem_t cfgArray[] = {
 	{ "y","yvm",_fip, 0, fmt_Xvm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].velocity_max,		Y_VELOCITY_MAX },
 	{ "y","yfr",_fip, 0, fmt_Xfr, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].feedrate_max,		Y_FEEDRATE_MAX },
 	{ "y","ytm",_fip, 0, fmt_Xtm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
-	{ "y","yjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].jerk_max,			Y_JERK_MAX },
-	{ "y","yjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].jerk_homing,		Y_JERK_HOMING },
+	{ "y","yjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_Y].jerk_max,			Y_JERK_MAX },
+	{ "y","yjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_Y].jerk_homing,		Y_JERK_HOMING },
 	{ "y","yjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Y].junction_dev,		Y_JUNCTION_DEVIATION },
 	{ "y","ysn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Y][SW_MIN].mode,		Y_SWITCH_MODE_MIN },
 	{ "y","ysx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Y][SW_MAX].mode,		Y_SWITCH_MODE_MAX },
@@ -533,8 +536,8 @@ const cfgItem_t cfgArray[] = {
 	{ "z","zvm",_fip, 0, fmt_Xvm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].velocity_max,	 	Z_VELOCITY_MAX },
 	{ "z","zfr",_fip, 0, fmt_Xfr, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].feedrate_max,	 	Z_FEEDRATE_MAX },
 	{ "z","ztm",_fip, 0, fmt_Xtm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
-	{ "z","zjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].jerk_max,			Z_JERK_MAX },
-	{ "z","zjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].jerk_homing,		Z_JERK_HOMING },
+	{ "z","zjm",_fip, 0, fmt_Xjm, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_Z].jerk_max,			Z_JERK_MAX },
+	{ "z","zjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_Z].jerk_homing,		Z_JERK_HOMING },
 	{ "z","zjd",_fip, 4, fmt_Xjd, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_Z].junction_dev,	 	Z_JUNCTION_DEVIATION },
 	{ "z","zsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Z][SW_MIN].mode,		Z_SWITCH_MODE_MIN },
 	{ "z","zsx",_fip, 0, fmt_Xsx, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_Z][SW_MAX].mode,		Z_SWITCH_MODE_MAX },
@@ -547,8 +550,8 @@ const cfgItem_t cfgArray[] = {
 	{ "a","avm",_fip, 0, fmt_Xvm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].velocity_max,	 	A_VELOCITY_MAX },
 	{ "a","afr",_fip, 0, fmt_Xfr, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].feedrate_max, 	A_FEEDRATE_MAX },
 	{ "a","atm",_fip, 0, fmt_Xtm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].travel_max,		A_TRAVEL_MAX },
-	{ "a","ajm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].jerk_max,			A_JERK_MAX },
-	{ "a","ajh",_fip, 0, fmt_Xjh, pr_ma_lin, get_flu, set_flu,(float *)&cfg.a[AXIS_A].jerk_homing,		A_JERK_HOMING },
+	{ "a","ajm",_fip, 0, fmt_Xjm, pr_ma_rot, get_jrk, set_jrk,(float *)&cfg.a[AXIS_A].jerk_max,			A_JERK_MAX },
+	{ "a","ajh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_A].jerk_homing,		A_JERK_HOMING },
 	{ "a","ajd",_fip, 4, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].junction_dev,	 	A_JUNCTION_DEVIATION },
 	{ "a","ara",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","asn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_A][SW_MIN].mode,		A_SWITCH_MODE_MIN },
@@ -562,7 +565,8 @@ const cfgItem_t cfgArray[] = {
 	{ "b","bvm",_fip, 0, fmt_Xvm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].velocity_max,	 	B_VELOCITY_MAX },
 	{ "b","bfr",_fip, 0, fmt_Xfr, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].feedrate_max, 	B_FEEDRATE_MAX },
 	{ "b","btm",_fip, 0, fmt_Xtm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].travel_max,		B_TRAVEL_MAX },
-	{ "b","bjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].jerk_max,			B_JERK_MAX },
+	{ "b","bjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_jrk, set_jrk,(float *)&cfg.a[AXIS_B].jerk_max,			B_JERK_MAX },
+	{ "b","bjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_B].jerk_homing,		B_JERK_HOMING },
 	{ "b","bjd",_fip, 0, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].junction_dev,	 	B_JUNCTION_DEVIATION },
 	{ "b","bra",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_B].radius,			B_RADIUS },
 	{ "b","bsn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_B][SW_MIN].mode,		B_SWITCH_MODE_MIN },
@@ -576,7 +580,8 @@ const cfgItem_t cfgArray[] = {
 	{ "c","cvm",_fip, 0, fmt_Xvm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].velocity_max,	 	C_VELOCITY_MAX },
 	{ "c","cfr",_fip, 0, fmt_Xfr, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].feedrate_max, 	C_FEEDRATE_MAX },
 	{ "c","ctm",_fip, 0, fmt_Xtm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].travel_max,		C_TRAVEL_MAX },
-	{ "c","cjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].jerk_max,			C_JERK_MAX },
+	{ "c","cjm",_fip, 0, fmt_Xjm, pr_ma_rot, get_jrk, set_jrk,(float *)&cfg.a[AXIS_C].jerk_max,			C_JERK_MAX },
+	{ "c","cjh",_fip, 0, fmt_Xjh, pr_ma_lin, get_jrk, set_jrk,(float *)&cfg.a[AXIS_C].jerk_homing,		C_JERK_HOMING },
 	{ "c","cjd",_fip, 0, fmt_Xjd, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].junction_dev,		C_JUNCTION_DEVIATION },
 	{ "c","cra",_fip, 3, fmt_Xra, pr_ma_rot, get_flt, set_flt,(float *)&cfg.a[AXIS_C].radius,			C_RADIUS },
 	{ "c","csn",_fip, 0, fmt_Xsn, pr_ma_ui8, get_ui8, set_sw, (float *)&sw.s[AXIS_C][SW_MIN].mode,		C_SWITCH_MODE_MIN },
@@ -909,7 +914,6 @@ static stat_t set_jv(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
-
 /* COMMUNICATIONS SETTINGS
  * set_ic() - ignore CR or LF on RX
  * set_ec() - enable CRLF on TX
@@ -1054,6 +1058,7 @@ stat_t set_flu(cmdObj_t *cmd)
 	cmd->type = TYPE_FLOAT_UNITS;
 	return(STAT_OK);
 }
+
 void print_lin(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
@@ -1267,6 +1272,8 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
  *
  * get_am()  - get axis mode w/enumeration string
  * set_am()  - set axis mode w/exception handling for axis type
+ * get_jrk() - get jerk value w/1,000,000 correction
+ * set_jrk() - set jerk value w/1,000,000 correction
  * set_sw()  - run this any time you change a switch setting	
  * set_sa()  - set motor step_angle & recompute steps_per_unit
  * set_tr()  - set motor travel_per_rev & recompute steps_per_unit
@@ -1308,6 +1315,7 @@ int8_t get_axis(const index_t i)
 }
 */
 
+
 static stat_t get_am(cmdObj_t *cmd)
 {
 	get_ui8(cmd);
@@ -1323,6 +1331,28 @@ static stat_t set_am(cmdObj_t *cmd)		// axis mode
 		if (cmd->value > AXIS_MAX_ROTARY) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	}
 	set_ui8(cmd);
+	return(STAT_OK);
+}
+
+stat_t get_jrk(cmdObj_t *cmd)
+{
+	get_flt(cmd);
+	if (cm_get_units_mode() == INCHES) {
+		cmd->value *= (INCH_PER_MM)/1000000;
+	} else {
+		cmd->value /= 1000000;
+	}
+	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->type = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+stat_t set_jrk(cmdObj_t *cmd)
+{
+	if (cm_get_units_mode() == INCHES) { cmd->value *= MM_PER_INCH;}
+	*((float *)cfgArray[cmd->index].target) = (1000000 * cmd->value);
+	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->type = TYPE_FLOAT_UNITS;
 	return(STAT_OK);
 }
 
