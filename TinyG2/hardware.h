@@ -228,19 +228,19 @@ static Motate::OutputPin<spindle_pwm_pin_num> spindle_pwm_pin;
 static Motate::OutputPin<secondary_pwm_pin_num> secondary_pwm_pin;
 static Motate::OutputPin<coolant_pin_num> coolant_pin;
 
-static Motate::InputPin<axis_X_min_pin_num> axis_X_min_pin;
-static Motate::InputPin<axis_X_max_pin_num> axis_X_max_pin;
-static Motate::InputPin<axis_Y_min_pin_num> axis_Y_min_pin;
-static Motate::InputPin<axis_Y_max_pin_num> axis_Y_max_pin;
-static Motate::InputPin<axis_Z_min_pin_num> axis_Z_min_pin;
-static Motate::InputPin<axis_Z_max_pin_num> axis_Z_max_pin;
+static Motate::InputPin<axis_X_min_pin_num> axis_X_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_X_max_pin_num> axis_X_max_pin(Motate::kPullUp);
+static Motate::InputPin<axis_Y_min_pin_num> axis_Y_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_Y_max_pin_num> axis_Y_max_pin(Motate::kPullUp);
+static Motate::InputPin<axis_Z_min_pin_num> axis_Z_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_Z_max_pin_num> axis_Z_max_pin(Motate::kPullUp);
 
-static Motate::InputPin<axis_A_min_pin_num> axis_A_min_pin;
-static Motate::InputPin<axis_A_max_pin_num> axis_A_max_pin;
-static Motate::InputPin<axis_B_min_pin_num> axis_B_min_pin;
-static Motate::InputPin<axis_B_max_pin_num> axis_B_max_pin;
-static Motate::InputPin<axis_C_min_pin_num> axis_C_min_pin;
-static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin;
+static Motate::InputPin<axis_A_min_pin_num> axis_A_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_A_max_pin_num> axis_A_max_pin(Motate::kPullUp);
+static Motate::InputPin<axis_B_min_pin_num> axis_B_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_B_max_pin_num> axis_B_max_pin(Motate::kPullUp);
+static Motate::InputPin<axis_C_min_pin_num> axis_C_min_pin(Motate::kPullUp);
+static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin(Motate::kPullUp);
 
 /**** DEPRECATED CODE. BEST TO LEAVE IN UNTIL COMPLETELY REPLACED ****/
 
