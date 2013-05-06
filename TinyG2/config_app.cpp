@@ -267,38 +267,38 @@ static const char_t fmt_flt[] = "%f\n";	// generic format for floating point
 static const char_t fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
 
 // System group and ungrouped formatting strings
-static const char_t fmt_fv[] = "[fv]  firmware version%16.2f\n";
-static const char_t fmt_fb[] = "[fb]  firmware build%18.2f\n";
-static const char_t fmt_hp[] = "[hp]  hardware platform%15.2f\n";
-static const char_t fmt_hv[] = "[hv]  hardware version%16.2f\n";
-static const char_t fmt_id[] = "[id]  TinyG ID%30s\n";
+static const char_t fmt_fv[] = "$fv   firmware version%16.2f\n";
+static const char_t fmt_fb[] = "$fb   firmware build%18.2f\n";
+static const char_t fmt_hp[] = "$hp   hardware platform%15.2f\n";
+static const char_t fmt_hv[] = "$hv   hardware version%16.2f\n";
+static const char_t fmt_id[] = "$id   TinyG ID%30s\n";
 
-static const char_t fmt_ja[] = "[ja]  junction acceleration%8.0f%s\n";
+static const char_t fmt_ja[] = "$ja   junction acceleration%8.0f%s\n";
 static const char_t fmt_dd[] = "$dd   stepper disable delay%8d mSec\n";
-static const char_t fmt_ct[] = "[ct]  chordal tolerance%16.3f%s\n";
+static const char_t fmt_ct[] = "$ct   chordal tolerance%16.3f%s\n";
 
-static const char_t fmt_mt[] = "[mt]  min segment time%13.0f uSec\n";
-static const char_t fmt_ml[] = "[ml]  min line segment%17.3f%s\n";
-static const char_t fmt_ma[] = "[ma]  min arc segment%18.3f%s\n";
+static const char_t fmt_mt[] = "$mt   min segment time%13.0f uSec\n";
+static const char_t fmt_ml[] = "$ml   min line segment%17.3f%s\n";
+static const char_t fmt_ma[] = "$ma   min arc segment%18.3f%s\n";
 
-static const char_t fmt_st[] = "[st]  switch type%18d [0=NO,1=NC]\n";
-static const char_t fmt_si[] = "[si]  status interval%14.0f ms\n";
-static const char_t fmt_ic[] = "[ic]  ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
-static const char_t fmt_ec[] = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
-static const char_t fmt_ee[] = "[ee]  enable echo%18d [0=off,1=on]\n";
-static const char_t fmt_ex[] = "[ex]  enable xon xoff%14d [0=off,1=on]\n";
-static const char_t fmt_ej[] = "[ej]  enable json mode%13d [0=text,1=JSON]\n";
-static const char_t fmt_jv[] = "[jv]  json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
-static const char_t fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
-static const char_t fmt_sv[] = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
-static const char_t fmt_qv[] = "[qv]  queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
-static const char_t fmt_baud[] = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
+static const char_t fmt_st[] = "$st   switch type%18d [0=NO,1=NC]\n";
+static const char_t fmt_si[] = "$si   status interval%14.0f ms\n";
+static const char_t fmt_ic[] = "$ic   ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
+static const char_t fmt_ec[] = "$ec   expand LF to CRLF on TX%6d [0=off,1=on]\n";
+static const char_t fmt_ee[] = "$ee   enable echo%18d [0=off,1=on]\n";
+static const char_t fmt_ex[] = "$ex   enable xon xoff%14d [0=off,1=on]\n";
+static const char_t fmt_ej[] = "$ej   enable json mode%13d [0=text,1=JSON]\n";
+static const char_t fmt_jv[] = "$jv   json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
+static const char_t fmt_tv[] = "$tv   text verbosity%15d [0=silent,1=verbose]\n";
+static const char_t fmt_sv[] = "$sv   status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+static const char_t fmt_qv[] = "$qv   queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
+static const char_t fmt_baud[] = "$baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
 
 static const char_t fmt_qr[] = "qr:%d\n";
 static const char_t fmt_rx[] = "rx:%d\n";
 
 // Gcode model values for reporting purposes
-static const char_t fmt_vel[]  = "Velocity:%17.3f%s/min\n";
+static const char_t fmt_vel[]   = "Velocity:%17.3f%s/min\n";
 static const char_t fmt_line[] = "Line number:%10.0f\n";
 static const char_t fmt_feed[] = "Feed rate:%16.3f%s/min\n";
 static const char_t fmt_stat[] = "Machine state:       %s\n"; // combined machine state
@@ -321,51 +321,51 @@ static const char_t fmt_ofs[]  = "%c work offset:%12.3f%s\n";
 static const char_t fmt_hom[]  = "%c axis homing state:%2.0f\n";
 
 // Motor print formatting strings
-static const char_t fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
-static const char_t fmt_0sa[] = "[%s%s] m%s step angle%20.3f%s\n";
-static const char_t fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%s\n";
-static const char_t fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
-static const char_t fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-static const char_t fmt_0pm[] = "[%s%s] m%s power management%10d [0=off,1=on]\n";
+static const char_t fmt_0ma[] = "$%s%s  m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
+static const char_t fmt_0sa[] = "$%s%s  m%s step angle%20.3f%s\n";
+static const char_t fmt_0tr[] = "$%s%s  m%s travel per revolution%9.3f%s\n";
+static const char_t fmt_0mi[] = "$%s%s  m%s microsteps%16d [1,2,4,8]\n";
+static const char_t fmt_0po[] = "$%s%s  m%s polarity%18d [0=normal,1=reverse]\n";
+static const char_t fmt_0pm[] = "$%s%s  m%s power management%10d [0=off,1=on]\n";
 
 // Axis print formatting strings
-static const char_t fmt_Xam[] = "[%s%s] %s axis mode%18d %s\n";
-static const char_t fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%s/min\n";
-static const char_t fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%s/min\n";
-static const char_t fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%s\n";
-static const char_t fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%s/min^3\n";
-static const char_t fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
-static const char_t fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
-static const char_t fmt_Xsn[] = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-static const char_t fmt_Xsx[] = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-static const char_t fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%s/min\n";
-static const char_t fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%s/min\n";
-static const char_t fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%s\n";
-static const char_t fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%s\n";
-static const char_t fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%s/min^3\n";
+static const char_t fmt_Xam[] = "$%s%s  %s axis mode%18d %s\n";
+static const char_t fmt_Xfr[] = "$%s%s  %s feedrate maximum%15.3f%s/min\n";
+static const char_t fmt_Xvm[] = "$%s%s  %s velocity maximum%15.3f%s/min\n";
+static const char_t fmt_Xtm[] = "$%s%s  %s travel maximum%17.3f%s\n";
+static const char_t fmt_Xjm[] = "$%s%s  %s jerk maximum%15.0f%s/min^3\n";
+static const char_t fmt_Xjd[] = "$%s%s  %s junction deviation%14.4f%s (larger is faster)\n";
+static const char_t fmt_Xra[] = "$%s%s  %s radius value%20.4f%s\n";
+static const char_t fmt_Xsn[] = "$%s%s  %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+static const char_t fmt_Xsx[] = "$%s%s  %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+static const char_t fmt_Xsv[] = "$%s%s  %s search velocity%16.3f%s/min\n";
+static const char_t fmt_Xlv[] = "$%s%s  %s latch velocity%17.3f%s/min\n";
+static const char_t fmt_Xlb[] = "$%s%s  %s latch backoff%18.3f%s\n";
+static const char_t fmt_Xzb[] = "$%s%s  %s zero backoff%19.3f%s\n";
+static const char_t fmt_Xjh[] = "$%s%s  %s jerk homing%16.0f%s/min^3\n";
 
 // PWM strings
-static const char_t fmt_p1frq[] = "[p1frq] pwm frequency   %15.3f Hz\n";
-static const char_t fmt_p1csl[] = "[p1csl] pwm cw speed lo %15.3f RPM\n";
-static const char_t fmt_p1csh[] = "[p1csh] pwm cw speed hi %15.3f RPM\n";
-static const char_t fmt_p1cpl[] = "[p1cpl] pwm cw phase lo %15.3f [0..1]\n";
-static const char_t fmt_p1cph[] = "[p1cph] pwm cw phase hi %15.3f [0..1]\n";
-static const char_t fmt_p1wsl[] = "[p1wsl] pwm ccw speed lo%15.3f RPM\n";
-static const char_t fmt_p1wsh[] = "[p1wsh] pwm ccw speed hi%15.3f RPM\n";
-static const char_t fmt_p1wpl[] = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";
-static const char_t fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
-static const char_t fmt_p1pof[] = "[p1pof] pwm phase off   %15.3f [0..1]\n";
+static const char_t fmt_p1frq[] = "$p1frq  pwm frequency   %15.3f Hz\n";
+static const char_t fmt_p1csl[] = "$p1csl  pwm cw speed lo %15.3f RPM\n";
+static const char_t fmt_p1csh[] = "$p1csh  pwm cw speed hi %15.3f RPM\n";
+static const char_t fmt_p1cpl[] = "$p1cpl  pwm cw phase lo %15.3f [0..1]\n";
+static const char_t fmt_p1cph[] = "$p1cph  pwm cw phase hi %15.3f [0..1]\n";
+static const char_t fmt_p1wsl[] = "$p1wsl  pwm ccw speed lo%15.3f RPM\n";
+static const char_t fmt_p1wsh[] = "$p1wsh  pwm ccw speed hi%15.3f RPM\n";
+static const char_t fmt_p1wpl[] = "$p1wpl  pwm ccw phase lo%15.3f [0..1]\n";
+static const char_t fmt_p1wph[] = "$p1wph  pwm ccw phase hi%15.3f [0..1]\n";
+static const char_t fmt_p1pof[] = "$p1pof  pwm phase off   %15.3f [0..1]\n";
 
 // Coordinate system offset print formatting strings
-static const char_t fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
-static const char_t fmt_cloc[] = "[%s%s] %s %s location%18.3f%s\n";
+static const char_t fmt_cofs[] = "$%s%s  %s %s offset%20.3f%s\n";
+static const char_t fmt_cloc[] = "$%s%s  %s %s location%18.3f%s\n";
 
 // Gcode model power-on reset default values
-static const char_t fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
-static const char_t fmt_gun[] = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
-static const char_t fmt_gco[] = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
-static const char_t fmt_gpa[] = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
-static const char_t fmt_gdi[] = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
+static const char_t fmt_gpl[] = "$gpl  default gcode plane%10d [0=G17,1=G18,2=G19]\n";
+static const char_t fmt_gun[] = "$gun  default gcode units mode%5d [0=G20,1=G21]\n";
+static const char_t fmt_gco[] = "$gco  default gcode coord system%3d [1-6 (G54-G59)]\n";
+static const char_t fmt_gpa[] = "$gpa  default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
+static const char_t fmt_gdi[] = "$gdi  default gcode distance mode%2d [0=G90,1=G91]\n";
 
 /***********************************************************************************
  **** CONFIG TABLE  ****************************************************************

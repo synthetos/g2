@@ -45,10 +45,10 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t cycle_state;
 	uint8_t motion_state;
 	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t limit_flag;				// set true if limit switch was hit
 	uint8_t request_feedhold;		// set true to initiate a feedhold
 	uint8_t request_cycle_start;	// set true to end feedhold
 	uint8_t cycle_start_flag;		// assert cycle start (follows the request)
+	uint8_t limit_tripped_flag;		// set true if limit switch was hit
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move

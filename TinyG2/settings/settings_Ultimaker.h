@@ -46,33 +46,47 @@
 
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			X			// 1ma
+#define M1_MOTOR_MAP 			AXIS_X		// 1ma
 #define M1_STEP_ANGLE 			1.8			// 1sa
 #define M1_TRAVEL_PER_REV		40.5		// 1tr
 #define M1_MICROSTEPS			8			// 1mi		1,2,4,8
 #define M1_POLARITY				0			// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			1			// 1pm		TRUE=low power idle enabled 
 
-#define M2_MOTOR_MAP	 		Y
+#define M2_MOTOR_MAP	 		AXIS_Y
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		40.5
 #define M2_MICROSTEPS			8
 #define M2_POLARITY				1
 #define M2_POWER_MODE			1
 
-#define M3_MOTOR_MAP			Z
+#define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			8
 #define M3_POLARITY				0
 #define M3_POWER_MODE			1
 
-#define M4_MOTOR_MAP			A
+#define M4_MOTOR_MAP			AXIS_A
 #define M4_STEP_ANGLE			1.8
 #define M4_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M4_MICROSTEPS			8
 #define M4_POLARITY				0
 #define M4_POWER_MODE			1
+
+#define M5_MOTOR_MAP			AXIS_B
+#define M5_STEP_ANGLE			1.8
+#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M5_MICROSTEPS			8
+#define M5_POLARITY				0
+#define M5_POWER_MODE			1
+
+#define M6_MOTOR_MAP			AXIS_C
+#define M6_STEP_ANGLE			1.8
+#define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M6_MICROSTEPS			8
+#define M6_POLARITY				0
+#define M6_POWER_MODE			1
 
 // *** axis settings ***
 
@@ -140,6 +154,13 @@
 #define B_JERK_MAX				20000000
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS				1
+#define B_SWITCH_MODE_MIN		SW_MODE_DISABLED
+#define B_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define B_SEARCH_VELOCITY 		600
+#define B_LATCH_VELOCITY 		100
+#define B_LATCH_BACKOFF			10
+#define B_ZERO_BACKOFF			2
+#define B_JERK_HOMING			A_JERK_MAX
 
 #define C_AXIS_MODE				AXIS_DISABLED
 #define C_VELOCITY_MAX			3600
@@ -148,6 +169,13 @@
 #define C_JERK_MAX				20000000
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_RADIUS				1
+#define C_SWITCH_MODE_MIN		SW_MODE_DISABLED
+#define C_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define C_SEARCH_VELOCITY 		600
+#define C_LATCH_VELOCITY 		100
+#define C_LATCH_BACKOFF			10
+#define C_ZERO_BACKOFF			2
+#define C_JERK_HOMING			A_JERK_MAX
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

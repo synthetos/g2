@@ -164,7 +164,7 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 	uint16_t magic_start;				// magic number to test memory integrity	
 	int32_t dda_ticks_downcount;		// tick down-counter (unscaled)
 	int32_t dda_ticks_X_substeps;		// ticks multiplied by scaling factor
-	uint32_t disable_timeout;			// time (in system ticks) to disable steppers
+	uint32_t disable_delay_timeout;		// time to delay disabling steppers (in system ticks)
 	stRunMotor_t m[MOTORS];				// runtime motor structures
 } stRunSingleton_t;
 
@@ -210,21 +210,11 @@ void stepper_init()
 	memset(&st, 0, sizeof(st));			// clear all values, pointers and status
 	st.magic_start = MAGICNUM;
 	sps.magic_start = MAGICNUM;
+//	_clear_diagnostic_counters();
 
-	// setup DDA timer
-#ifdef BARE_CODE						// left in for comparison to Motate setup
-	//requires: #include <component_tc.h>
-	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
-	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
-	REG_RC_DDA = TC_RC_DDA;				// set frequency
-	REG_IER_DDA = TC_IER_DDA;			// enable interrupts
-	NVIC_EnableIRQ(TC_IRQn_DDA);
-	pmc_enable_periph_clk(TC_ID_DDA);
-	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
-#else
+	// setup DDA timer (see FOOTNOTE)
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
 	dda_timer.setDutyCycleA(0.25);
-#endif
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -236,30 +226,40 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
-//	_clear_diagnostic_counters();
 }
+/*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
+	NB: requires: #include <component_tc.h>
+
+	REG_TC1_WPMR = 0x54494D00;			// enable write to registers
+	TC_Configure(TC_BLOCK_DDA, TC_CHANNEL_DDA, TC_CMR_DDA);
+	REG_RC_DDA = TC_RC_DDA;				// set frequency
+	REG_IER_DDA = TC_IER_DDA;			// enable interrupts
+	NVIC_EnableIRQ(TC_IRQn_DDA);
+	pmc_enable_periph_clk(TC_ID_DDA);
+	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
+*/
 
 /*
  * st_enable() - start the steppers
  * st_disable() - step the stoppers
- * st_delayed_disable_callback() - disable motors after timer expires
+ * st_disable_delay_callback() - disable motors after timer expires
  */
 void st_enable()
 {
 	enable.clear();										// enable grblShield common enable
-	st.disable_timeout = (GetTickCount() + 1000*60*60);	// no move can last longer than an hour
+	st.disable_delay_timeout = (GetTickCount() + 1000*60*60);	// no move can last longer than an hour
 	dda_timer.start();
 }
 
 void st_disable()
 {
 	dda_timer.stop();
-	st.disable_timeout = (GetTickCount() + cfg.stepper_disable_delay);
+	st.disable_delay_timeout = (GetTickCount() + cfg.stepper_disable_delay);
 }
 
-stat_t st_delayed_disable_callback()
+stat_t st_stepper_disable_delay_callback()
 {
-	if (st.disable_timeout > GetTickCount()) { 
+	if (st.disable_delay_timeout > GetTickCount()) { 
 		return (STAT_NOOP);
 	}
 	enable.set();			// disable grblShield common enable
@@ -511,7 +511,7 @@ void _load_move()
 
 	} else {
 		st_disable();
-	}	
+	}
 
 	// all cases drop to here - such as Null moves queued by Mcodes
 	st_prep_null();									// disable prep buffer, if only temporarily
@@ -572,7 +572,7 @@ uint8_t st_prep_line(float steps[], float microseconds)
 	sps.dda_ticks_X_substeps = sps.dda_ticks * DDA_SUBSTEPS;	// see FOOTNOTE
 
 	// anti-stall measure in case change in velocity between segments is too great 
-	if ((sps.dda_ticks * COUNTER_RESET_FACTOR) < sps.dda_ticks_previous) {  // NB: uint32_t math
+	if ((sps.dda_ticks * ACCUMULATOR_RESET_FACTOR) < sps.dda_ticks_previous) {  // NB: uint32_t math
 		sps.accumulator_reset_flag = true;
 	}
 	sps.dda_ticks_previous = sps.dda_ticks;

@@ -37,7 +37,7 @@ void stepper_init(void);			// initialize stepper subsystem
 
 void st_enable(void);				// start the steppers
 void st_disable(void);				// step the stoppers
-stat_t st_delayed_disable_callback(void);// callback to disable the steppers after a delay
+stat_t st_stepper_disable_delay_callback(void);// callback to disable the steppers after a delay
 uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
 
@@ -56,7 +56,8 @@ magic_t st_get_sps_magic(void);
 
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
-#define FREQUENCY_DDA	50000UL
+//#define FREQUENCY_DDA	50000UL
+#define FREQUENCY_DDA	100000UL
 #define FREQUENCY_DWELL	1000UL
 #define FREQUENCY_SGI	200000UL	// 200,000 Hz means software interrupts will fire 5 uSec after being called
 //#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)		// handy macro
@@ -67,13 +68,13 @@ magic_t st_get_sps_magic(void);
 //	Set to 1 to disable, but don't do this or you will lose a lot of accuracy.
 #define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
 
-// Counter resets
-//	You want to reset the DDA counters if the new ticks value is way less than previous 
-//	value, but otherwise you should leave the counters alone. Preserving the counter 
+// Accumulator resets
+//	You want to reset the DDA accumulator if the new ticks value is way less than previous 
+//	value, but otherwise you should leave the accumulator alone. Preserving the accumulator 
 //	value from the previous segment aligns pulse phasing between segments. However, 
-//	if the new counter is going to be much less than the old counter you must reset it 
-//	or risk motor stalls. 
-#define COUNTER_RESET_FACTOR 2	// amount counter range can safely change
+//	if the new accumulator value is going to be much less than the old counter you must 
+//	reset it or risk motor stalls. 
+#define ACCUMULATOR_RESET_FACTOR 2	// amount counter range can safely change
 
 
 /*************************************************************************************

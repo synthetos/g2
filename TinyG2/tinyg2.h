@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	009.10	// working on switch code
+#define TINYG2_FIRMWARE_BUILD   	010.01	// switch code appears to be working
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
