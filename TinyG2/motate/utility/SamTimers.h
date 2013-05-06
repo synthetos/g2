@@ -181,7 +181,8 @@ namespace Motate {
 
 		// Set the mode and frequency.
 		// Returns: The actual frequency that was used, or kFrequencyUnattainable
-		int32_t setModeAndFrequency(const TimerMode mode, const uint32_t freq) {
+		// freq is not const since we may "change" it
+		int32_t setModeAndFrequency(const TimerMode mode, uint32_t freq) {
 			/* Prepare to be able to make changes: */
 			/*   Disable TC clock */
 			tcChan()->TC_CCR = TC_CCR_CLKDIS ;
@@ -191,6 +192,9 @@ namespace Motate {
 			tcChan()->TC_SR ;
 
 			enablePeripheralClock();
+
+			if (mode == kTimerUpDownToMatch || mode == kTimerUpDown)
+				freq *= 2;
 
 			/* Setup clock "prescaler" */
 			/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
@@ -240,7 +244,7 @@ namespace Motate {
 			// Extra mile, set the actual frequency, but only if we're going to RC.
 			if (mode == kTimerInputCaptureToMatch
 				|| mode == kTimerUpToMatch
-			|| mode == kTimerUpDownToMatch) {
+				|| mode == kTimerUpDownToMatch) {
 
 				int32_t newTop = masterClock/(divisor*freq);
 				setTop(newTop);
@@ -283,6 +287,10 @@ namespace Motate {
 
 		void stop() {
 			tcChan()->TC_CCR = TC_CCR_CLKDIS;
+		};
+
+		void stopOnMatch() {
+			tcChan()->TC_CMR = TC_CMR_CPCSTOP;
 		};
 
 		// Channel-specific functions. These are Motate channels, but they happen to line-up.
