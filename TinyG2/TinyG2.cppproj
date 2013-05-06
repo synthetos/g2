@@ -18,7 +18,8 @@
     <ToolchainFlavour>Yagarto</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <OverrideVtorValue>
+    </OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>JTAG</avrtoolinterface>
@@ -26,16 +27,16 @@
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolNumber>000028014010</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
-        <port>1192</port>
+        <port>1623</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>250000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -44,6 +45,7 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
+          <SwdClock>12000000</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -259,6 +261,18 @@
     <Compile Include="arduino\hooks.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="arduino\iar_calls_sam3.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="arduino\IPAddress.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="arduino\IPAddress.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="arduino\itoa.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="arduino\itoa.h">
       <SubType>compile</SubType>
     </Compile>
@@ -337,6 +351,9 @@
     <Compile Include="arduino\WCharacter.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="arduino\WInterrupts.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="arduino\WInterrupts.h">
       <SubType>compile</SubType>
     </Compile>
@@ -364,13 +381,25 @@
     <Compile Include="arduino\wiring_private.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="arduino\wiring_pulse.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="arduino\wiring_pulse.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="arduino\wiring_shift.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\wiring_shift.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="arduino\WMath.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="arduino\WMath.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="arduino\WString.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\WString.h">
@@ -413,6 +442,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="gcode_parser.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="help.cpp">
@@ -571,6 +606,21 @@
     <Compile Include="platform\atmel_sam\libsam\source\adc12_sam3u.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\can.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\dacc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\efc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\emac.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\gpbr.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\libsam\source\interrupt_sam_nvic.c">
       <SubType>compile</SubType>
     </Compile>
@@ -605,6 +655,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\libsam\source\trng.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\libsam\source\twi.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\libsam\source\udp.c">
@@ -685,12 +738,6 @@
     <Compile Include="hardware.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="switch.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="switch.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="text_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -742,6 +789,9 @@
     <Folder Include="variants" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="arduino\Tone.cpp.disabled">
+      <SubType>compile</SubType>
+    </None>
     <None Include="cmsis\linkerScripts\sam3x8e_flash.ld">
       <SubType>compile</SubType>
     </None>
