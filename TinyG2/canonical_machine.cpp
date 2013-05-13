@@ -546,10 +546,10 @@ void canonical_machine_init()
 }
 
 /*
- * canonical_machine_shutdown() - shut down machine
+ * cm_alarm() - alarm state; shut down machine
  */
 
-void canonical_machine_shutdown(uint8_t value)
+void cm_alarm(uint8_t value)
 {
 	// stop the steppers and the spindle
 	st_disable();
@@ -562,8 +562,8 @@ void canonical_machine_shutdown(uint8_t value)
 //	switch_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
 //	switch_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
 
-	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
-	cm.machine_state = MACHINE_SHUTDOWN;
+	rpt_exception(STAT_ALARM,value);			// send shutdown message
+	cm.machine_state = MACHINE_ALARM;
 }
 
 /* 

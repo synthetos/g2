@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	011.01	// Fold in TinyG build 375 changes to G2
+#define TINYG2_FIRMWARE_BUILD   	011.02	// Add cm_request_queue_flush() to homing; alarm language
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -168,7 +168,7 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
-#define	STAT_SHUTDOWN 27
+#define	STAT_ALARM 27					// alarm state - enter shutdown
 #define	STAT_MEMORY_CORRUPTION 28
 #define	STAT_ERROR_29 29
 #define	STAT_ERROR_30 30

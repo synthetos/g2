@@ -251,7 +251,7 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_SHUTDOWN,				// machine is in shutdown state
+	MACHINE_ALARM,					// machine is in alarm (shutdown) state
 	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
 	MACHINE_PROGRAM_END,			// program end
 	MACHINE_CYCLE,					// machine is running (cycling)
@@ -468,7 +468,7 @@ void cm_set_model_linenum(uint32_t linenum);
 
 /*--- canonical machining functions ---*/
 void canonical_machine_init(void);
-void canonical_machine_shutdown(uint8_t value);					// emergency shutdown
+void cm_alarm(uint8_t value);					// emergency shutdown
 
 stat_t cm_set_machine_axis_position(uint8_t axis, const float position);	// set absolute position
 stat_t cm_flush_planner(void);									// flush planner queue with coordinate resets

@@ -136,7 +136,7 @@ static void _controller_HSM()
 												// Order is important:
 	DISPATCH(_reset_handler());					// 1. software reset received
 //	DISPATCH(_bootloader_handler());			// 2. received request to start bootloader
-	DISPATCH(_alarm_idler());					// 3. idle in shutdown state (alarmed)
+	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
@@ -254,11 +254,11 @@ static stat_t _normal_idler(  )
  */
 static stat_t _alarm_idler(  )
 {
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
+	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
 
 	if (GetTickCount() > cs.led_counter) {
 		cs.led_counter += LED_ALARM_COUNTER;
-//		IndicatorLed.toggle();
+		IndicatorLed.toggle();
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
@@ -298,7 +298,7 @@ static uint8_t _limit_switch_handler(void)
 	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
 	if (cm.limit_tripped_flag == false) { return (STAT_NOOP);}
 	cm.limit_tripped_flag = false;
-//	cm_shutdown(0);
+//	cm_alarm(0);
 */
 	return (STAT_OK);
 }
@@ -366,7 +366,7 @@ static stat_t _system_assertions()
 
 	if (value == 0) { return (STAT_OK);}
 	rpt_exception(STAT_MEMORY_CORRUPTION, value);
-	cm_shutdown(ALARM_MEMORY_OFFSET + value);	
+	cm_alarm(ALARM_MEMORY_OFFSET + value);	
 	return (STAT_EAGAIN);
 }
 */
