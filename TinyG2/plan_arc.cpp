@@ -50,9 +50,9 @@ static float _get_theta(const float x, const float y);
  */
 stat_t ar_arc( const float target[], 
 				const float i, const float j, const float k, 
-				const float theta, 		// starting angle
+				const float theta, 			// starting angle
 				const float radius, 		// radius of the circle in mm
-				const float angular_travel,// radians along arc (+CW, -CCW)
+				const float angular_travel,	// radians along arc (+CW, -CCW)
 				const float linear_travel, 
 				const uint8_t axis_1, 		// circle plane in tool space
 				const uint8_t axis_2,  		// circle plane in tool space
@@ -62,25 +62,25 @@ stat_t ar_arc( const float target[],
 				const float min_time)		// minimum time for arc for replanning purposes
 {
 	if (ar.run_state != MOVE_STATE_OFF) {
-		return (STAT_INTERNAL_ERROR);			// (not supposed to fail)
+		return (STAT_INTERNAL_ERROR);		// (not supposed to fail)
 	}
 	ar.linenum = cm_get_model_linenum();	// get gcode model line number as debugging convenience
 
 	// "move_length" is the total mm of travel of the helix (or just arc)
 	ar.length = hypot(angular_travel * radius, fabs(linear_travel));	
 	if (ar.length < cfg.arc_segment_len) {	// too short to draw
-		return (STAT_ZERO_LENGTH_MOVE);
+		return (STAT_MINIMUM_LENGTH_MOVE_ERROR);
 	}
 
 	// load the move struct for an arc
 	cm_get_model_canonical_position_vector(ar.position);// set initial arc position
 
 //	copy_axis_vector(ar.endpoint, target);
-	ar.endpoint[axis_1] = target[0];					// save the arc endpoint
+	ar.endpoint[axis_1] = target[0];				// save the arc endpoint
 	ar.endpoint[axis_2] = target[1];
 	ar.endpoint[axis_linear] = target[2];
 
-	copy_axis_vector(ar.work_offset, work_offset);		// propagate the work offset
+	copy_axis_vector(ar.work_offset, work_offset);	// propagate the work offset
 	ar.time = minutes;
 	ar.min_time = min_time;
 	ar.theta = theta;
@@ -191,7 +191,8 @@ uint8_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// A non-zero radius is a radius arc. Compute the IJK offset coordinates.
 	// These will override any IJK offsets provided in the call
-	if (radius > EPSILON) {
+//	if (radius > EPSILON) {
+	if (fp_NOT_ZERO(radius)) {
 		if ((_get_arc_radius() != STAT_OK)) {
 			return (status);					// error return
 		}

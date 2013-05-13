@@ -136,10 +136,9 @@ uint8_t mp_aline(const float target[], const float minutes, const float work_off
 	float junction_velocity;
 
 	// trap error conditions
-	if (minutes < EPSILON) { return (STAT_ZERO_LENGTH_MOVE);}
-
 	float length = get_axis_vector_length(target, mm.position);
-	if (length < EPSILON) { return (STAT_ZERO_LENGTH_MOVE);}
+	if (length < EPSILON) { return (STAT_MINIMUM_LENGTH_MOVE_ERROR);}
+	if (minutes < EPSILON_2) { return (STAT_MINIMUM_TIME_MOVE_ERROR);}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) { return (STAT_BUFFER_FULL_FATAL);} // never supposed to fail
@@ -818,7 +817,8 @@ uint8_t mp_plan_hold_callback()
 	// is the velocity of the last segment, not the one that's going to be executed next.
 	// The braking_velocity needs to be the velocity of the next segment that has not yet 
 	// been computed. In the eman time, this hack will work. 
-	if ((braking_length > mr_available_length) && (bp->exit_velocity < EPSILON)) {
+//	if ((braking_length > mr_available_length) && (bp->exit_velocity < EPSILON)) {
+	if ((braking_length > mr_available_length) && (fp_ZERO(bp->exit_velocity))) {
 		braking_length = mr_available_length;
 	}
 
@@ -1005,7 +1005,8 @@ static uint8_t _exec_aline(mpBuf_t *bf)
 
 		// initialization to process the new incoming bf buffer
 		bf->replannable = false;
-		if (bf->length < EPSILON) {
+//		if (bf->length < EPSILON) {
+		if (fp_ZERO(bf->length)) {
 			mr.move_state = MOVE_STATE_OFF;			// reset mr buffer
 			mr.section_state = MOVE_STATE_OFF;
 			bf->nx->replannable = false;			// prevent overplanning (Note 2)
@@ -1108,7 +1109,8 @@ static void _init_forward_diffs(float t0, float t2)
 static uint8_t _exec_aline_head()
 {
 	if (mr.section_state == MOVE_STATE_NEW) {	// initialize the move singleton (mr)
-		if (mr.head_length < EPSILON) { 
+//		if (mr.head_length < EPSILON) { 
+		if (fp_ZERO(mr.head_length)) {
 			mr.move_state = MOVE_STATE_BODY;
 			return(_exec_aline_body());			// skip ahead to the body generator
 		}
@@ -1141,7 +1143,10 @@ static uint8_t _exec_aline_head()
 		mr.segment_velocity += mr.forward_diff_1;
 		mr.forward_diff_1 += mr.forward_diff_2;
 		if (_exec_aline_segment(false) == STAT_COMPLETE) {
-			if ((mr.body_length < EPSILON) && (mr.tail_length < EPSILON)) { return(STAT_OK);}	// end the move
+//			if ((mr.body_length < EPSILON) && (mr.tail_length < EPSILON)) { 
+			if ((fp_ZERO(mr.body_length)) && (fp_ZERO(mr.tail_length))) {
+				return(STAT_OK);							// end the move
+			}
 			mr.move_state = MOVE_STATE_BODY;
 			mr.section_state = MOVE_STATE_NEW;
 		}
@@ -1158,7 +1163,8 @@ static uint8_t _exec_aline_head()
 static uint8_t _exec_aline_body()
 {
 	if (mr.section_state == MOVE_STATE_NEW) {
-		if (mr.body_length < EPSILON) {
+//		if (mr.body_length < EPSILON) {
+		if (fp_ZERO(mr.body_length)) {
 			mr.move_state = MOVE_STATE_TAIL;
 			return(_exec_aline_tail());							// skip ahead to tail periods
 		}
@@ -1175,7 +1181,8 @@ static uint8_t _exec_aline_body()
 	}
 	if (mr.section_state == MOVE_STATE_RUN) {					// straight part (period 3)
 		if (_exec_aline_segment(false) == STAT_COMPLETE) {
-			if (mr.tail_length < EPSILON) { return(STAT_OK);}	// end the move
+//			if (mr.tail_length < EPSILON) { return(STAT_OK);}	// end the move
+			if (fp_ZERO(mr.tail_length)) { return(STAT_OK);}	// end the move
 			mr.move_state = MOVE_STATE_TAIL;
 			mr.section_state = MOVE_STATE_NEW;
 		}
@@ -1189,7 +1196,8 @@ static uint8_t _exec_aline_body()
 static uint8_t _exec_aline_tail()
 {
 	if (mr.section_state == MOVE_STATE_NEW) {
-		if (mr.tail_length < EPSILON) { return(STAT_OK);}		// end the move
+//		if (mr.tail_length < EPSILON) { return(STAT_OK);}		// end the move
+		if (fp_ZERO(mr.tail_length)) { return(STAT_OK);}		// end the move
 		mr.midpoint_velocity = (mr.cruise_velocity + mr.exit_velocity) / 2;
 		mr.move_time = mr.tail_length / mr.midpoint_velocity;
 		mr.segments = ceil(uSec(mr.move_time) / (2 * cfg.estd_segment_usec));// # of segments in *each half*

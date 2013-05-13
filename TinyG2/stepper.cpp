@@ -559,8 +559,8 @@ uint8_t st_prep_line(float steps[], float microseconds)
 	// *** defensive programming ***
 	// trap conditions that would prevent queuing the line
 	if (sps.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
-	} else if (isfinite(microseconds) == false) { return (STAT_ZERO_LENGTH_MOVE);
-	} else if (microseconds < EPSILON) { return (STAT_ZERO_LENGTH_MOVE);
+	} else if (isfinite(microseconds) == false) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
 	sps.accumulator_reset_flag = false;		// initialize reset flag for this move.
 
