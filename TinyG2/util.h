@@ -49,6 +49,7 @@ void copy_axis_vector(float dst[], const float src[]);
 									dst[AXIS_B] = src[AXIS_B];\
 									dst[AXIS_C] = src[AXIS_C]; )
 */
+uint8_t vector_equal(float a[], float b[]);
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);

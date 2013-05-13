@@ -156,6 +156,19 @@ void copy_axis_vector(float dst[], const float src[])
 	memcpy(dst, src, sizeof(float)*AXES);
 }
 
+uint8_t vector_equal(float a[], float b[])
+{
+	if ((fp_EQ(a[AXIS_X], b[AXIS_X])) &&
+		(fp_EQ(a[AXIS_Y], b[AXIS_Y])) &&
+		(fp_EQ(a[AXIS_Z], b[AXIS_Z])) &&
+		(fp_EQ(a[AXIS_A], b[AXIS_A])) &&
+		(fp_EQ(a[AXIS_B], b[AXIS_B])) &&
+		(fp_EQ(a[AXIS_C], b[AXIS_C]))) {
+		return (true);
+	}
+	return (false);
+}
+
 float get_axis_vector_length(const float a[], const float b[]) 
 {
 	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +

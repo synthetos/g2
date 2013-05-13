@@ -749,7 +749,9 @@ stat_t cm_resume_origin_offsets()
 stat_t cm_straight_traverse(float target[], float flags[])
 {
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
-	cm_set_target(target,flags);
+	cm_set_target(target, flags);
+	if (vector_equal(gm.target, gm.position)) { return (STAT_OK); }
+
 	cm_cycle_start();							// required for homing & other cycles
 	stat_t status = MP_LINE(gm.target, 
 							_get_move_times(&gm.min_time), 
@@ -874,6 +876,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 //	}
 
 	cm_set_target(target, flags);
+	if (vector_equal(gm.target, gm.position)) { return (STAT_OK); }	
 	cm_cycle_start();						// required for homing & other cycles
 	stat_t status = MP_LINE(gm.target, 
 							 _get_move_times(&gm.min_time), 
