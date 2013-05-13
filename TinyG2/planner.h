@@ -255,7 +255,7 @@ void mp_queue_command(cm_exec cm_func, uint8_t int_value, float float_value);
 uint8_t mp_dwell(const float seconds);
 uint8_t mp_aline(const float target[], const float minutes, const float work_offset[], const float min_time);
 uint8_t mp_plan_hold_callback(void);
-uint8_t mp_end_hold_callback(void);
+uint8_t mp_end_hold(void);
 uint8_t mp_feed_rate_override(uint8_t flag, float parameter);
 
 // planner buffer handlers

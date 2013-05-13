@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	010.02	// Divided jerk values by 1 million
+#define TINYG2_FIRMWARE_BUILD   	011.01	// Fold in TinyG build 375 changes to G2
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number

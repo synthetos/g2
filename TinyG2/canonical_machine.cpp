@@ -566,21 +566,6 @@ void canonical_machine_shutdown(uint8_t value)
 	cm.machine_state = MACHINE_SHUTDOWN;
 }
 
-/*
- * cm_flush_planner() - Flush planner queue and correct model positions
- */
-uint8_t cm_flush_planner()
-{
-	mp_flush_planner();
-
-	for (uint8_t i=0; i<AXES; i++) {
-		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
-		gm.position[i] = mp_get_runtime_machine_position(i);
-		gm.target[i] = gm.position[i];
-	}
-	return (STAT_OK);
-}
-
 /* 
  * Representation (4.3.3)
  *
@@ -1076,9 +1061,79 @@ void cm_message(char_t *message)
  *
  * cm_program_end is a stop that also resets the machine to initial state
  */
+
+/*
+ * cm_request_feedhold()
+ * cm_request_queue_flush()
+ * cm_request_cycle_start()
+ * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
+ * cm_flush_planner() - Flush planner queue and correct model positions
+ *
+ * Feedholds, queue flushes and cycles starts are all related. The request functions set
+ *	flags for these. The sequencing callback interprets the flags according to the 
+ *	following rules:
+ *
+ *	A feedhold request received during motion should be honored
+ *	A feedhold request received during a feedhold should be ignored and reset
+ *	A feedhold request received during a motion stop should be ignored and reset
+ *
+ *	A queue flush request received during motion should be ignored but not reset
+ *	A queue flush request received during a feedhold should be deferred until 
+ *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
+ *	A queue flush request received during a motion stop should be honored
+ *
+ *	A cycle start request received during motion should be ignored and reset
+ *	A cycle start request received during a feedhold should be deferred until 
+ *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
+ *		If a queue flush request is also present the queue flush should be done first
+ *	A cycle start request received during a motion stop should be honored and 
+ *		should start to run anything in the planner queue
+ */
+
+void cm_request_feedhold(void) { cm.feedhold_requested = true; }
+void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
+void cm_request_cycle_start(void) { cm.cycle_start_requested = true; }
+
+uint8_t cm_feedhold_sequencing_callback()
+{
+	if (cm.feedhold_requested == true) {
+		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
+			cm.motion_state = MOTION_HOLD;
+			cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
+		}
+		cm.feedhold_requested = false;
+	}
+	if (cm.queue_flush_requested == true) {
+		if ((cm.motion_state == MOTION_STOP) ||
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) {
+			cm.queue_flush_requested = false;
+			cm_flush_planner();
+		}
+	}
+	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false)) {
+		cm.cycle_start_requested = false;
+		cm.hold_state = FEEDHOLD_END_HOLD;
+		cm_cycle_start();
+		mp_end_hold();
+	}
+	return (STAT_OK);
+}
+
+uint8_t cm_flush_planner()
+{
+	mp_flush_planner();
+
+	for (uint8_t i=0; i<AXES; i++) {
+		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
+		gm.position[i] = mp_get_runtime_machine_position(i);
+		gm.target[i] = gm.position[i];
+	}
+	rpt_request_queue_report();
+	return (STAT_OK);
+}
+
 void cm_cycle_start()
 {
-	cm.cycle_start_flag = true;
 	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.cycle_state = CYCLE_STARTED;	// don't change homing, probe or other cycles
@@ -1089,15 +1144,6 @@ void cm_cycle_end()
 {
 	if (cm.cycle_state == CYCLE_STARTED) {
 		_exec_program_finalize(MACHINE_PROGRAM_STOP,0);
-	}
-}
-
-void cm_feedhold()
-{
-	if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
-		cm.motion_state = MOTION_HOLD;
-		cm.hold_state = FEEDHOLD_SYNC;
-		cm.cycle_start_flag = false;
 	}
 }
 
@@ -1123,7 +1169,7 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	cm.cycle_state = CYCLE_OFF;
 	cm.motion_state = MOTION_STOP;
 	cm.hold_state = FEEDHOLD_OFF;					//...and any feedhold is ended
-	cm.cycle_start_flag = false;
+	cm.cycle_start_requested = false;
 	mp_zero_segment_velocity();						// for reporting purposes
 	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request final status report (not unfiltered)
 //++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made

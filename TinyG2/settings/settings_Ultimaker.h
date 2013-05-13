@@ -49,22 +49,22 @@
 #define M1_MOTOR_MAP 			AXIS_X		// 1ma
 #define M1_STEP_ANGLE 			1.8			// 1sa
 #define M1_TRAVEL_PER_REV		40.5		// 1tr
-#define M1_MICROSTEPS			8			// 1mi		1,2,4,8
+#define M1_MICROSTEPS			4			// 1mi		1,2,4,8
 #define M1_POLARITY				0			// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			1			// 1pm		TRUE=low power idle enabled 
 
 #define M2_MOTOR_MAP	 		AXIS_Y
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		40.5
-#define M2_MICROSTEPS			8
-#define M2_POLARITY				1
+#define M2_MICROSTEPS			4
+#define M2_POLARITY				0
 #define M2_POWER_MODE			1
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
-#define M3_MICROSTEPS			8
-#define M3_POLARITY				0
+#define M3_MICROSTEPS			4
+#define M3_POLARITY				1
 #define M3_POWER_MODE			1
 
 #define M4_MOTOR_MAP			AXIS_A
@@ -91,18 +91,18 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			50000 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			30000 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MAX 			170					// xtm		travel between switches or crashes
-//#define X_JERK_MAX 				100000000000		// xjm		yes, that's "100 billion" mm/(min^3)
-#define X_JERK_MAX 				100000				// xjm		yes, that's "100 billion" mm/(min^3)
+//#define X_JERK_MAX 				100000				// xjm		yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX 				40000				// xjm		yes, that's "100 billion" mm/(min^3)
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
 #define X_SWITCH_MODE_MAX		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
-#define X_SEARCH_VELOCITY 		1000				// xsv		move in negative direction
+#define X_SEARCH_VELOCITY 		2000				// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
 #define X_LATCH_BACKOFF 		10					// xlb		mm
-#define X_ZERO_BACKOFF 			2					// xzb		mm
+#define X_ZERO_BACKOFF 			5					// xzb		mm
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
@@ -114,7 +114,7 @@
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX		SW_MODE_LIMIT
-#define Y_SEARCH_VELOCITY 		1000
+#define Y_SEARCH_VELOCITY 		2000
 #define Y_LATCH_VELOCITY		100
 #define Y_LATCH_BACKOFF			10
 #define Y_ZERO_BACKOFF			2

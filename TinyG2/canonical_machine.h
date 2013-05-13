@@ -45,10 +45,9 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t cycle_state;
 	uint8_t motion_state;
 	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t request_feedhold;		// set true to initiate a feedhold
-	uint8_t request_cycle_start;	// set true to end feedhold
-	uint8_t cycle_start_flag;		// assert cycle start (follows the request)
-	uint8_t limit_tripped_flag;		// set true if limit switch was hit
+	uint8_t feedhold_requested;		// feedhold character has been received
+	uint8_t queue_flush_requested;	// queue flush character has been received
+	uint8_t cycle_start_requested;	// cycle start character has been received	uint8_t request_feedhold;		// set true to initiate a feedhold
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move
@@ -526,9 +525,15 @@ uint8_t cm_select_tool(uint8_t tool);							// T parameter
 
 // canonical machine commands not called from gcode dispatcher
 void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
+
+uint8_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
+void cm_request_feedhold(void);
+void cm_request_queue_flush(void);
+void cm_request_cycle_start(void);
+
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
-void cm_feedhold(void);											// (no Gcode)
+//void cm_feedhold(void);											// (no Gcode)
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2

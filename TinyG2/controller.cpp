@@ -139,16 +139,17 @@ static void _controller_HSM()
 	DISPATCH(_alarm_idler());					// 3. idle in shutdown state (alarmed)
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-	DISPATCH(_feedhold_handler());				// 6. feedhold requested
-	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
+
+	DISPATCH(cm_feedhold_sequencing_callback());
+	DISPATCH(mp_plan_hold_callback());		// plan a feedhold from line runtime
+	
+//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 //	DISPATCH(_system_assertions());				// 9. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
 	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
-	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
-	DISPATCH(mp_end_hold_callback());			// end a feedhold
 	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
 	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
@@ -274,7 +275,7 @@ static uint8_t _reset_handler(void)
 //	hardware_reset();							// hard reset - identical to hitting RESET button
 	return (STAT_EAGAIN);
 }
-
+/*
 static uint8_t _feedhold_handler(void)
 {
 	if (cm.request_feedhold == false) { return (STAT_NOOP);}
@@ -290,13 +291,15 @@ static uint8_t _cycle_start_handler(void)
 	cm_cycle_start();
 	return (STAT_EAGAIN);					// best to restart the control loop
 }
-
+*/
 static uint8_t _limit_switch_handler(void)
 {
+/*
 	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
 	if (cm.limit_tripped_flag == false) { return (STAT_NOOP);}
 	cm.limit_tripped_flag = false;
 //	cm_shutdown(0);
+*/
 	return (STAT_OK);
 }
 
