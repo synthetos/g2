@@ -225,8 +225,6 @@ static stat_t _command_dispatch()
 				json_parser(cs.in_buf);
 			} else {
 				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
-//				text_response(STAT_OK, cs.in_buf);
-//				write (cs.in_buf, cs.linelen);	//++++ test statement
 			}
 		}
 	}
@@ -275,27 +273,11 @@ static uint8_t _reset_handler(void)
 //	hardware_reset();							// hard reset - identical to hitting RESET button
 	return (STAT_EAGAIN);
 }
-/*
-static uint8_t _feedhold_handler(void)
-{
-	if (cm.request_feedhold == false) { return (STAT_NOOP);}
-	cm.request_feedhold = false;
-	cm_feedhold();
-	return (STAT_EAGAIN);					// best to restart the control loop
-}
 
-static uint8_t _cycle_start_handler(void)
-{
-	if (cm.request_cycle_start == false) { return (STAT_NOOP);}
-	cm.request_cycle_start = false;
-	cm_cycle_start();
-	return (STAT_EAGAIN);					// best to restart the control loop
-}
-*/
 static uint8_t _limit_switch_handler(void)
 {
 /*
-	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
+	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
 	if (cm.limit_tripped_flag == false) { return (STAT_NOOP);}
 	cm.limit_tripped_flag = false;
 //	cm_alarm(0);

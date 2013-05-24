@@ -8,7 +8,7 @@
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
  * Free Software Foundation. You should have received a copy of the GNU General Public
- * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
  *
  * As a special exception, you may use this file as part of a software library without
  * restriction. Specifically, if other files instantiate templates or use macros or

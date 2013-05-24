@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	012.03	// Program END behaviors
+#define TINYG2_FIRMWARE_BUILD   	012.04	// Cosmetic changes
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
