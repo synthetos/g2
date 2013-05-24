@@ -88,7 +88,6 @@ float std_dev(float a[], uint8_t n, float *mean);
 
 #ifndef EPSILON
 #define EPSILON		0.00001					// rounding error for floats
-#define EPSILON_2	0.0000001				// for special comparisons
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)

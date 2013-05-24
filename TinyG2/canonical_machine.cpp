@@ -335,7 +335,6 @@ void cm_set_target(float target[], float flag[])
 
 	// process XYZABC for lower modes
 	for (i=AXIS_X; i<=AXIS_Z; i++) {
-//		if ((flag[i] < EPSILON) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 		if ((fp_FALSE(flag[i])) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 			continue;
 		} else if ((cfg.a[i].axis_mode == AXIS_STANDARD) || (cfg.a[i].axis_mode == AXIS_INHIBITED)) {
@@ -349,7 +348,6 @@ void cm_set_target(float target[], float flag[])
 	// FYI: The ABC loop below relies on the XYZ loop having been run first
 	for (i=AXIS_A; i<=AXIS_C; i++) {
 		// skip axis if not flagged for update or its disabled
-//		if ((flag[i] < EPSILON) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 		if ((fp_FALSE(flag[i])) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 			continue;
 		} else {
@@ -373,7 +371,6 @@ static float _calc_ABC(uint8_t i, float target[], float flag[])
 	if ((cfg.a[i].axis_mode == AXIS_STANDARD) || (cfg.a[i].axis_mode == AXIS_INHIBITED)) {
 		tmp = target[i];	// no mm conversion - it's in degrees
 
-//	} else if ((cfg.a[i].axis_mode == AXIS_RADIUS) && (flag[i] > EPSILON)) {
 	} else if ((cfg.a[i].axis_mode == AXIS_RADIUS) && (fp_TRUE(flag[i]))) {
 		tmp = _to_millimeters(target[i]) * 360 / (2 * M_PI * cfg.a[i].radius);
 	}
@@ -666,7 +663,6 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 		return (STAT_INTERNAL_RANGE_ERROR);
 	}
 	for (uint8_t i=0; i<AXES; i++) {
-//		if (flag[i] > EPSILON) {
 		if (fp_TRUE(flag[i])) {
 			cfg.offset[coord_system][i] = offset[i];
 			cm.g10_persist_flag = true;		// this will persist offsets to NVM once move has stopped
@@ -686,7 +682,6 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 stat_t cm_set_absolute_origin(float origin[], float flag[])
 {
 	for (uint8_t i=0; i<AXES; i++) {
-//		if (flag[i] > EPSILON) {
 		if (fp_TRUE(flag[i])) {
 			cm_set_machine_axis_position(i, cfg.offset[gm.coord_system][i] + _to_millimeters(origin[i]));
 			cm.homed[i] = true;
@@ -708,7 +703,6 @@ stat_t cm_set_origin_offsets(float offset[], float flag[])
 {
 	gm.origin_offset_enable = 1;
 	for (uint8_t i=0; i<AXES; i++) {
-//		if (flag[i] > EPSILON) {
 		if (fp_TRUE(flag[i])) {
 			gm.origin_offset[i] = gm.position[i] - cfg.offset[gm.coord_system][i] - _to_millimeters(offset[i]);
 		}

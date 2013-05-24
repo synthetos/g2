@@ -191,7 +191,6 @@ uint8_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// A non-zero radius is a radius arc. Compute the IJK offset coordinates.
 	// These will override any IJK offsets provided in the call
-//	if (radius > EPSILON) {
 	if (fp_NOT_ZERO(radius)) {
 		if ((_get_arc_radius() != STAT_OK)) {
 			return (status);					// error return

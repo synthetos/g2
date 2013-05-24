@@ -40,7 +40,7 @@
 extern "C"{
 #endif
 
-#define TINYG2_FIRMWARE_BUILD   	011.04	// Add cm_request_queue_flush() to homing; alarm language
+#define TINYG2_FIRMWARE_BUILD   	012.01	// Accepted EPSILON changes
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
