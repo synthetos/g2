@@ -327,7 +327,6 @@ void cm_set_model_linenum(uint32_t linenum)
  */
 static float _calc_ABC(uint8_t i, float target[], float flag[]);
 
-//void cm_set_target(float target[], float flag[], uint8_t machine_coords)
 void cm_set_target(float target[], float flag[])
 { 
 	uint8_t i;

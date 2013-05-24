@@ -323,7 +323,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 /*
  *	_reset_replannable_list() - resets all blocks in the planning list to be replannable
  */	
-void _reset_replannable_list()
+static void _reset_replannable_list()
 {
 	mpBuf_t *bf = mp_get_first_buffer();
 	if (bf == NULL) { return;}
@@ -532,7 +532,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 /*	
  * _get_target_length()		- derive accel/decel length from delta V and jerk
- * _get_target_velocity()	- derive velocity achievable from delta V and length
+ * _get_target_velocity()	- derive velocity achievable from initial V, length and length
  *
  *	This set of functions returns the fourth thing knowing the other three.
  *	
@@ -587,8 +587,8 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
 }
 
 /*	
- * _get_target_length2()	- derive accel/decel length from delta V and jerk
- * _get_target_velocity2()	- derive velocity achievable from delta V and length
+ * _get_target_length()	  - derive accel/decel length from delta V and jerk
+ * _get_target_velocity() - derive velocity achievable from initial V, length and length
  *
  *	This set of functions returns the fourth thing knowing the other three.
  *	
@@ -808,7 +808,6 @@ uint8_t mp_plan_hold_callback()
 			  square(mr.endpoint[AXIS_B] - mr.position[AXIS_B]) +
 			  square(mr.endpoint[AXIS_C] - mr.position[AXIS_C])));
 
-//	braking_velocity = mr.segment_velocity;
 	braking_velocity = _compute_next_segment_velocity();
 	braking_length = _get_target_length(braking_velocity, 0, bp); // bp is OK to use here
 	
@@ -1037,10 +1036,11 @@ static uint8_t _exec_aline(mpBuf_t *bf)
 		case (MOVE_STATE_SKIP): { status = STAT_OK; break;}
 	}
 
-	// feed hold post-processing
+	// Feedhold processing. Refer to canonical_machine.h for state machine
+	// Catch the feedhold request and start replanning
 	if (cm.hold_state == FEEDHOLD_SYNC) { cm.hold_state = FEEDHOLD_PLAN;}
 
-	// initiate the hold - look for the end of the decel move
+	// Look for the end of the decel and go into HOLD state
 	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
 		cm.hold_state = FEEDHOLD_HOLD;
 		rpt_request_status_report(SR_IMMEDIATE_REQUEST);

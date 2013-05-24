@@ -176,7 +176,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size)
  *
  *	If a group prefix is passed in it will be pre-pended to any name parsed
  *	to form a token string. For example, if "x" is provided as a group and 
- *	"fr" is found in the name string the parser will search for "xfr"in the 
+ *	"fr" is found in the name string the parser will search for "xfr" in the 
  *	cfgArray.
  */
 static stat_t _get_nv_pair_strict(cmdObj_t *cmd, char_t **pstr, int8_t *depth)
@@ -343,49 +343,6 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 	if (str > out_buf + size) { return (-1);}
 	return (str - out_buf);
 }
-
-/*
-uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf)
-{
-	char_t *str = out_buf;
-	int8_t initial_depth = cmd->depth;
-	int8_t prev_depth = 0;
-	uint8_t need_a_comma = false;
-
-	*str++ = '{'; 								// write opening curly
-	while (true) {
-		if (cmd->type != TYPE_EMPTY) {
-			if (need_a_comma) { *str++ = ',';}
-			need_a_comma = true;
-			str += sprintf((char *)str, (char *)"\"%s\":", (char *)cmd->token);
-			if (cmd->type == TYPE_NULL)	{ str += sprintf((char *)str, (char *)"\"\"");}
-			else if (cmd->type == TYPE_INTEGER)	{ str += sprintf((char *)str, (char *)"%1.0f", cmd->value);}
-			else if (cmd->type == TYPE_FLOAT)	{ str += sprintf((char *)str, (char *)"%0.3f", cmd->value);}
-			else if (cmd->type == TYPE_STRING)	{ str += sprintf((char *)str, (char *)"\"%s\"",*cmd->stringp);}
-			else if (cmd->type == TYPE_ARRAY)	{ str += sprintf((char *)str, (char *)"[%s]",  *cmd->stringp);}
-			else if (cmd->type == TYPE_BOOL) 	{
-//				if (cmd->value == false) { str += sprintf((char *)str, "false");}
-				if (fp_FALSE(cmd->value)) { str += sprintf((char *)str, "false");}
-				else { str += sprintf((char *)str, "true"); }
-			}
-			if (cmd->type == TYPE_PARENT) { 
-				*str++ = '{';
-				need_a_comma = false;
-			}
-		}
-		if ((cmd = cmd->nx) == NULL) { break;}	// end of the list
-		if (cmd->depth < prev_depth) {
-			need_a_comma = true;
-			*str++ = '}';						// and close the level
-		}
-		prev_depth = cmd->depth;
-	}
-	// closing curlies and NEWLINE
-	while (prev_depth-- > initial_depth) { *str++ = '}';}
-	str += sprintf((char *)str, (char *)"}\n");	// using sprintf for this last one ensures a NUL termination
-	return (str - out_buf);
-}
-*/
 
 /*
  * json_print_object() - serialize and print the cmdObj array directly (w/o header & footer)
