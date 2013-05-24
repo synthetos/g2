@@ -114,7 +114,7 @@ static void _exec_select_tool(uint8_t tool, float float_val);
 static void _exec_mist_coolant_control(uint8_t mist_coolant, float float_val);
 static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val);
 //static void _exec_feed_override_enable(uint8_t feed_override, float float_val);
-static void _exec_program_finalize(uint8_t machine_state, float float_val);
+static void _program_finalize(uint8_t machine_state, float float_val);
 
 #define _to_millimeters(a) ((gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 
@@ -1145,20 +1145,20 @@ void cm_cycle_start()
 void cm_cycle_end() 
 {
 	if (cm.cycle_state == CYCLE_STARTED) {
-		_exec_program_finalize(MACHINE_PROGRAM_STOP,0);
+		_program_finalize(MACHINE_PROGRAM_STOP,0);
 	}
 }
 
 void cm_program_stop() 
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_optional_program_stop()	
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
-
+/*
 void cm_program_end()				// M2, M30
 {
 //	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
@@ -1176,6 +1176,42 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request final status report (not unfiltered)
 //++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made
 }
+*/
+void cm_program_end()				// M2, M30
+{
+	// this bunch is defined by NIST 3.6.1
+	cm_reset_origin_offsets();						// G92.1
+	//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
+	cm_set_coord_system(cfg.coord_system);			// default coordinate system
+
+	cm_select_plane(cfg.select_plane);				// default arc plane
+	cm_set_distance_mode(cfg.distance_mode);
+	cm_set_units_mode(cfg.units_mode);				// default units mode
+	cm_spindle_control(SPINDLE_OFF);				// M5
+	cm_flood_coolant_control(false);				// M9
+	cm_set_inverse_feed_rate_mode(false);
+
+	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1
+	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
+
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_END,0);
+}
+
+static void _program_finalize(uint8_t machine_state, float f)
+{
+	cm.machine_state = machine_state;
+	cm.motion_state = MOTION_STOP;
+	cm.cycle_state = CYCLE_OFF;
+	cm.cycle_start_requested = false;				// cancel any cycle start request
+	cm.hold_state = FEEDHOLD_OFF;					//...and any feedhold is ended
+
+	mp_zero_segment_velocity();						// for reporting purposes
+	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request a final status report (not unfiltered)
+//+++++	cmd_persist_offsets(cm.g10_persist_flag);		// persist offsets if any changes made
+}
+
+
+
 
 #ifdef __cplusplus
 }
