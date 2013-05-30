@@ -71,7 +71,7 @@ SERIES:=sam4s
 endif
 
 # GCC toolchain provider
-GCC_TOOLCHAIN = gcc_atmel
+GCC_TOOLCHAIN = gcc
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi-
@@ -86,16 +86,16 @@ DEVICE_PATH = $(SAM_PATH)/$(SERIES)/source
 SAM_SOURCE_DIRS += $(DEVICE_PATH)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
 
-$(eval $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam))
+DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
 # Flags
 DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
 
-LIBS     += -lgcc -lc
+DEVICE_LIBS          = gcc c
 
-LIB_PATH += -L=/lib/thumb2
+# DEVICE_LIB_DIRS = /lib/thumb2
 #LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
 # FIXME: Assumes all sams are Dues
