@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9A175DA4610099576C /* SamUSB.cpp */; };
+		D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9C175DA4690099576C /* AvrUSB.cpp */; };
 		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
 		D432963A171A5564001611B6 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329639171A5564001611B6 /* syscalls_sam3.cpp */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
@@ -421,6 +423,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D4021F9A175DA4610099576C /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
+		D4021F9C175DA4690099576C /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
+		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = switch.cpp; sourceTree = "<group>"; };
 		D41D13F417374B4E00D522D9 /* switch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = switch.h; sourceTree = "<group>"; };
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
@@ -433,7 +438,11 @@
 		D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375.h; sourceTree = "<group>"; };
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
 		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
+		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
 		D4329639171A5564001611B6 /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
+		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
+		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
+		D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
 		D45710C71705334000EA19A8 /* keywords.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
 		D45710C81705334000EA19A8 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
 		D45710C91705334000EA19A8 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
@@ -515,7 +524,7 @@
 		D49EB87717054CB800F2BF9B /* CDC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CDC.cpp; sourceTree = "<group>"; };
 		D49EB87817054CB800F2BF9B /* HID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HID.cpp; sourceTree = "<group>"; };
 		D49EB87917054CB800F2BF9B /* USBAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBAPI.h; sourceTree = "<group>"; };
-		D49EB87A17054CB800F2BF9B /* USBCore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = USBCore.cpp; sourceTree = "<group>"; };
+		D49EB87A17054CB800F2BF9B /* USBCore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = USBCore.cpp; sourceTree = "<group>"; usesTabs = 0; };
 		D49EB87B17054CB800F2BF9B /* USBCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBCore.h; sourceTree = "<group>"; };
 		D49EB87C17054CB800F2BF9B /* USBDesc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBDesc.h; sourceTree = "<group>"; };
 		D49EB87D17054CB800F2BF9B /* WCharacter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WCharacter.h; sourceTree = "<group>"; };
@@ -3421,9 +3430,13 @@
 			isa = PBXGroup;
 			children = (
 				D45710C71705334000EA19A8 /* keywords.txt */,
+				D4021F9C175DA4690099576C /* AvrUSB.cpp */,
+				D4550F5E175536DD006BDBA0 /* MotateUSB.h */,
+				D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */,
 				D45710C81705334000EA19A8 /* MotatePins.h */,
 				D45710C91705334000EA19A8 /* MotateTimers.h */,
 				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
+				D4021F9A175DA4610099576C /* SamUSB.cpp */,
 				D45710D51705334100EA19A8 /* utility */,
 			);
 			path = motate;
@@ -3435,8 +3448,11 @@
 				D4E2B2F017223FCB004A5C70 /* AvrTimers.h */,
 				D4E2B2F117223FCB004A5C70 /* SamTimers.h */,
 				D45710D61705334100EA19A8 /* AvrPins.h */,
+				D406801B1759B71100C593A3 /* AvrUSB.h */,
 				D45710D71705334100EA19A8 /* AvrXPins.h */,
 				D45710D81705334100EA19A8 /* SamPins.h */,
+				D41D14021737528200D522D9 /* SamUSB.h */,
+				D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */,
 			);
 			path = utility;
 			sourceTree = "<group>";
@@ -8180,6 +8196,8 @@
 				D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */,
 				D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */,
 				D41D13F517374B4E00D522D9 /* switch.cpp in Sources */,
+				D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */,
+				D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
