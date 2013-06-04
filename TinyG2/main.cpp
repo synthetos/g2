@@ -45,6 +45,13 @@ extern "C"{
 
 void _init() __attribute__ ((weak));
 void _init() {;}
+
+void __libc_init_array(void);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
 static void _application_init(void);
 
 // collect all weird little globals here
@@ -52,11 +59,43 @@ stat_t status_code;		// declared for ritorno, see tinyg2.h
 
 /******************** Application Code ************************/
 
+const Motate::USBSettings_t Motate::USBSettings = {
+	/*gVendorID         = */ 0x1d50,
+	/*gProductID        = */ 0x606d,
+	/*gProductVersion   = */ 0.1,
+	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
+	/*gPowerConsumption = */ 500
+};
+
+Motate::USBDevice< Motate::USBCDC > usb;
+typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
+
+MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
+MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'J'} )
+
+void init( void )
+{
+	SystemInit();
+
+	// Set Systick to 1ms interval, common to all SAM3 variants
+	if (SysTick_Config(SystemCoreClock / 1000))
+	{
+		// Capture error
+		while (true);
+	}
+
+	// Disable watchdog
+	WDT_Disable(WDT);
+
+	// Initialize C library
+	__libc_init_array();
+}
+
 int main( void )
 {
 	// system initialization
 	init();
-	USBDevice.attach();				// USB setup
+	usb.attach();				// USB setup
 	SerialUSB.begin(115200);
 //	delay(1000);
 
@@ -102,7 +141,3 @@ void tg_reset(void)			// software hard reset using the watchdog timer
 	//	wdt_enable(WDTO_15MS);
 	//	while (true);			// loops for about 15ms then resets
 }
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus

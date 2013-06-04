@@ -33,12 +33,14 @@
 #include <string.h>
 #include <math.h>
 
-#include <MotatePins.h>
-#include "Arduino.h"
+#include "MotatePins.h"
+#include "MotateUSB.h"
+#include "MotateUSBCDC.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+//#include "Arduino.h"
+
+extern Motate::USBDevice< Motate::USBCDC > usb;
+extern typeof usb._mixin_0_type::Serial &SerialUSB;
 
 #define TINYG2_FIRMWARE_BUILD   	009.10	// working on switch code
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
@@ -215,9 +217,5 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_MAX_TRAVEL_EXCEEDED 67
 #define	STAT_MAX_SPINDLE_SPEED_EXCEEDED 68
 #define	STAT_ARC_SPECIFICATION_ERROR 69	// arc specification error
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: TINYG2_H_ONCE
