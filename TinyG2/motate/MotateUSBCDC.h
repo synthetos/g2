@@ -246,6 +246,10 @@ namespace Motate {
 		write_endpoint(new_endpoint_offset+2)
 		{};
 
+		uint16_t readByte() {
+			return usb.readByte(read_endpoint);
+		};
+
 		uint16_t read(const uint8_t * buffer, const uint16_t len) {
 			return usb.read(read_endpoint, buffer, len);
 		};
@@ -253,6 +257,11 @@ namespace Motate {
 		int32_t write(const uint8_t * data, const uint16_t length) {
 			return usb.write(write_endpoint, data, length);
 		}
+
+		// Stub in begin() and end()
+		void begin(uint32_t baud_count) {};
+		void end(void){};
+
 	};
 
 #pragma mark USBMixin< USBCDC, usbIFB, usbIFC, 0 >
