@@ -31,7 +31,7 @@
 #ifndef SAMUSB_ONCE
 #define SAMUSB_ONCE
 
-#include "utility/MotateUSBHelpers.h"
+#include "MotateUSBHelpers.h"
 
 #include "sam.h"
 
@@ -41,13 +41,12 @@
 
 namespace Motate {
 
-	static const uint16_t kUSBControlEnpointSize = 0x10;
-	static const uint16_t kUSBNormalEnpointSize = 0x200;
+	const uint16_t kUSBControlEnpointSize = 0x10;
+	const uint16_t kUSBNormalEnpointSize = 0x200;
 
 	struct USBProxy_t {
-		void (*sendConfig)();
-		void (*sendDescriptor)();
-		void (*sendString)(const uint8_t string_num);
+		void (*sendDescriptorOrConfig)(Setup_t &setup);
+		bool (*handleNonstandardRequest)(Setup_t &setup);
 	};
 	extern USBProxy_t USBProxy;
 
@@ -76,13 +75,19 @@ namespace Motate {
 	{
 		parent* const parent_this;
 
-		uint32_t _inited;
-		uint32_t _configuration;
+		static uint32_t _inited;
+		static uint32_t _configuration;
+		static uint32_t _set_interface; // the interface set by the host
+		static uint8_t  _halted; // Make this into a generic _flags?? -rg
+		static uint8_t  _remoteWakeupEnabled;
 
 	public:
 		// Init
 		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
+			USBProxy.sendDescriptorOrConfig = parent::sendDescriptorOrConfig;
+			USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
+			
 			if (UDD_Init() == 0UL)
 			{
 				_inited = 1UL;
@@ -90,7 +95,7 @@ namespace Motate {
 			_configuration = 0UL;
 		};
 
-		bool attach() {
+		static bool attach() {
 			if (_inited) {
 				UDD_Attach();
 				_configuration = 0;
@@ -99,7 +104,7 @@ namespace Motate {
 			return false;
 		};
 
-		bool detach() {
+		static bool detach() {
 			if (_inited) {
 				UDD_Detach();
 				return true;
@@ -107,11 +112,11 @@ namespace Motate {
 			return false;
 		};
 
-		int32_t available(const uint8_t ep) {
+		static int32_t available(const uint8_t ep) {
 			return UDD_FifoByteCount(ep & 0xF);
 		}
 
-		int32_t readByte(const uint8_t ep) {
+		static int32_t readByte(const uint8_t ep) {
 			uint8_t c;
 			if (read(ep & 0xF, &c, 1) == 1)
 				return c;
@@ -119,7 +124,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		int32_t read(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
+		static int32_t read(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
 //			if (!_usbConfiguration || len < 0)
 //				return -1;
 //
@@ -137,7 +142,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		int32_t write(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
+		static int32_t write(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
 			uint32_t n;
 			int r = length;
 			const uint8_t* data = (const uint8_t*)buffer;
@@ -162,7 +167,11 @@ namespace Motate {
 
 			return r;
 		};
-		
+
+		// This is the stub for the interrupt
+		static void interrupt();
+
+		// This is static to be called from the interrupt.
 		static void sendString(const uint8_t string_num) {
 			uint8_t length = 0;
 			const uint16_t *string;

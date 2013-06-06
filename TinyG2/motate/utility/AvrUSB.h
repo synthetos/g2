@@ -31,7 +31,7 @@
 #ifndef AVRUSB_ONCE
 #define AVRUSB_ONCE
 
-#include "utility/MotateUSBHelpers.h"
+#include "MotateUSBHelpers.h"
 
 // NOOOOOOOOOOO!
 #include "Arduino.h"
@@ -42,9 +42,8 @@ namespace Motate {
 	static const uint16_t kUSBNormalEnpointSize = 0x200;
 	
 	struct USBProxy_t {
-		void (*sendConfig)();
-		void (*sendDescriptor)();
-		void (*sendString)(const uint8_t string_num);
+		void (*sendDescriptorOrConfig)(Setup_t &setup);
+		bool (*handleNonstandardRequest)(Setup_t &setup);
 	};
 	extern USBProxy_t USBProxy;
 	
@@ -80,10 +79,9 @@ namespace Motate {
 		// Init
 		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
-			USBProxy.sendConfig = parent::sendConfig;
-			USBProxy.sendDescriptor = parent::sendDescriptor;
-			USBProxy.sendString = parent::sendString;
-			
+			USBProxy.sendDescriptorOrConfig = parent::sendDescriptorOrConfig;
+			USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
+
 			// if (UDD_Init() == 0UL)
 			// {
 			// 	_inited = 1UL;

@@ -42,7 +42,10 @@ namespace Motate {
 #ifndef ATTR_WEAK
 	#define ATTR_WEAK  __attribute__ ((weak))
 #endif
-	
+
+	extern const uint16_t kUSBControlEnpointSize;
+	extern const uint16_t kUSBNormalEnpointSize;
+
 	/* ############################################# */
 	/* #                                           # */
 	/* #            DESCRIPTORS (etc.)             # */
@@ -312,16 +315,14 @@ namespace Motate {
 		/* Initialization */
 
 		USBDescriptorDeviceQualifier_t(
-									 uint16_t _USBSpecification,
-									 uint8_t  _Class,
-									 uint8_t  _SubClass,
-									 uint8_t  _Protocol,
+									 uint16_t _USBSpecification = 0x0200,
+									 uint8_t  _Class = 0,
+									 uint8_t  _SubClass = 0,
+									 uint8_t  _Protocol = 0,
 
-									 uint8_t  _Endpoint0Size,
-									 uint8_t  _NumberOfConfigurations,
-
-									 uint8_t  _Reserved
-									 )
+									 uint8_t  _Endpoint0Size = kUSBControlEnpointSize,
+									 uint8_t  _NumberOfConfigurations = 1
+									)
 		: Header(sizeof(USBDescriptorDeviceQualifier_t), kDeviceQualifierDescriptor),
 		USBSpecification(_USBSpecification),
 		Class(_Class),
@@ -331,7 +332,7 @@ namespace Motate {
 		Endpoint0Size(_Endpoint0Size),
 		NumberOfConfigurations(_NumberOfConfigurations),
 
-		Reserved(_Reserved)
+		Reserved(0)
 		{};
 	} ATTR_PACKED;
 
@@ -402,6 +403,7 @@ namespace Motate {
 	// This is a templated version of the default descriptor.
 	// Specializations of this can change the default parameters based on mixin proxies.
 	template < typename interface0type, typename interface1type, typename interface2type > struct USBDefaultDescriptor;
+	template < typename interface0type, typename interface1type, typename interface2type > struct USBDefaultQualifier;
 
 	// Forward declare the USBMixin template.
 	// Mixins are described more below.
@@ -619,6 +621,190 @@ namespace Motate {
         };
 	} ATTR_PACKED;
 
+#pragma mark Setup_t
+	struct Setup_t
+	{
+		uint8_t  _bmRequestType;
+		uint8_t  _bRequest;
+		uint8_t  _wValueL;
+		uint8_t  _wValueH;
+		uint16_t _wIndex;
+		uint16_t _wLength;
+
+		// internal enums
+
+		// Possible values of _bRequest
+		enum _requests_t {
+			kGetStatus           = 0,
+			kClearFeature        = 1,
+			kSetFeature          = 3,
+
+			kSetAddress          = 5,
+
+			kGetDescriptor       = 6,
+			kSetDescriptor       = 7,
+
+			kGetConfiguration    = 8,
+			kSetConfiguration    = 9,
+
+			kGetInterface        = 10,
+			kSetInterface        = 11
+		};
+
+		// Possible values of _bmRequestType
+		enum _requestTypes_t {
+			kRequestHostToDevice  = 0x00,
+			kRequestDeviceToHost  = 0x80,
+			kRequestDirectionMask = 0x80,
+
+			kRequestStandard      = 0x00,
+			kRequestClass         = 0x20,
+			kRequestVendor        = 0x40,
+			kRequestTypeMask      = 0x60,
+
+			kRequestDevice        = 0x00,
+			kRequestInterface     = 0x01,
+			kRequestEndpoint      = 0x02,
+			kRequestOther         = 0x03,
+			kRequestRecipientMask = 0x1F
+		};
+
+		// Possible values of wValueL
+		enum _setupValues_t {
+			kSetupEndpointHalt       = 0x00,
+			kSetupDeviceRemoteWakeup = 0x01,
+			kSetupTestMode           = 0x02,
+
+			// OTG-only options:
+			kSetupBHNPEnable         = 0x03,
+			kSetupAHNPSupport        = 0x04,
+			kSetupAALTHNPSupport     = 0x05,
+		};
+
+		const bool isADeviceToHostRequest() const {
+			return (_bmRequestType & kRequestDeviceToHost);
+		};
+
+		const bool isAStandardRequestType() const {
+			return ((_bmRequestType & kRequestTypeMask) == kRequestStandard);
+		};
+
+		const bool isADeviceRequest() const {
+			return ((_bmRequestType & kRequestRecipientMask) == kRequestDevice);
+		}
+
+		// Warning! Proper english making the "isA" into an "isAn"
+		const bool isAnInterfaceRequest() const {
+			return ((_bmRequestType & kRequestRecipientMask) == kRequestInterface);
+		}
+
+		// Warning! Proper english making the "isA" into an "isAn"
+		const bool isAnEndpointRequest() const {
+			return ((_bmRequestType & kRequestRecipientMask) == kRequestEndpoint);
+		}
+
+		const bool isAGetStatusRequest() const {
+			return (_bRequest == kGetStatus);
+		}
+
+		const bool isAClearFeatureRequest() const {
+			return (_bRequest == kClearFeature);
+		}
+
+		const bool isASetFeatureRequest() const {
+			return (_bRequest == kSetFeature);
+		}
+
+		const bool isAGetDescriptorRequest() const {
+			return (_bRequest == kGetDescriptor);
+		}
+
+		const bool isASetDescriptorRequest() const {
+			return (_bRequest == kSetDescriptor);
+		}
+
+		const bool isAGetConfigurationRequest() const {
+			return (_bRequest == kGetConfiguration);
+		}
+
+		const bool isASetConfigurationRequest() const {
+			return (_bRequest == kSetConfiguration);
+		}
+
+		const bool isAGetInterfaceRequest() const {
+			return (_bRequest == kGetInterface);
+		}
+
+		const bool isASetInterfaceRequest() const {
+			return (_bRequest == kSetInterface);
+		}
+
+		const bool isASetAddressRequest() const {
+			return (_bRequest == kSetAddress);
+		}
+
+		const _setupValues_t featureToSetOrClear() {
+			return (_setupValues_t) _wValueL;
+		};
+		
+		const uint8_t valueLow() {
+			return _wValueL;
+		}
+
+		const uint8_t valueHigh() {
+			return _wValueH;
+		}
+	};
+
+
+	// Flags for endpoint information, for use by the hardware to configure
+	// note that these are *arbitrary*, cna change from build-to-build, and
+	// are for runtime use *only*.
+
+	// These are not expected to map to any hardware interface directly!
+
+	enum USBEndpointBufferSettingsFlags_t {
+		// endpoint direction
+		kEndpointBufferInput           =      0,
+		kEndpointBufferOutput          = 1 << 0,
+		kEndpointBufferDirectionMaks   = 1 << 0,
+
+		// buffer sizes
+		kEnpointBufferSizeUpTo32       = 1 << 1,
+		kEnpointBufferSizeUpTo64       = 1 << 2,
+		kEnpointBufferSizeUpTo128      = 1 << 3,
+		kEnpointBufferSizeUpTo256      = 1 << 4,
+		kEnpointBufferSizeUpTo512      = 1 << 5,
+		kEnpointBufferSizeUpTo1024     = 1 << 6,
+		kEnpointBufferSizeMask         = 0x7E,
+
+		// buffer "blocks" -- 2 == "ping pong"
+		kEndpointBufferBlocks1         = 1 << 8,
+		kEndpointBufferBlocksUpTo2     = 1 << 9,
+		kEndpointBufferBlocksUpTo3     = 1 << 10,
+		kEndpointBufferBlocksMask      = 0x700,
+
+		// endpoint types (mildly redundant from the config)
+		kEndpointBufferTypeControl     = 1 << 12,
+		kEndpointBufferTypeIsochronous = 1 << 13,
+		kEndpointBufferTypeBulk        = 1 << 14,
+		kEndpointBufferTypeInterrupt   = 1 << 15,
+		kEndpointBufferTypeMask        = 0x3C0000
+	};
+
+	template< int endpointNum, typename interfaceType >
+	struct USBEndpointBufferSettings_t {
+		const uint32_t enpointSettings;
+		USBEndpointBufferSettings_t(
+									const USBEndpointBufferSettingsFlags_t direction,
+									const USBEndpointBufferSettingsFlags_t size,
+									const USBEndpointBufferSettingsFlags_t block_count,
+									const USBEndpointBufferSettingsFlags_t ep_type
+									)
+		:
+		enpointSettings(direction | size | block_count | ep_type)
+		{};
+	};
 }
 
 #endif

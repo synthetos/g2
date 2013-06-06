@@ -40,7 +40,7 @@
 #define EP_TYPE_CONTROL				UDPHS_EPTCFG_EPT_SIZE_64 \
                                   | UDPHS_EPTCFG_EPT_TYPE_CTRL8 \
                                   | UDPHS_EPTCFG_BK_NUMBER_1
-#ifdef CDC_ENABLED
+//#ifdef CDC_ENABLED
 #define EP_TYPE_BULK_IN				UDPHS_EPTCFG_EPT_SIZE_512 \
                                   | UDPHS_EPTCFG_EPT_DIR \
                                   | UDPHS_EPTCFG_EPT_TYPE_BULK \
@@ -52,7 +52,7 @@
                                   | UDPHS_EPTCFG_EPT_DIR \
                                   | UDPHS_EPTCFG_EPT_TYPE_INT \
                                   | UDPHS_EPTCFG_BK_NUMBER_2
-#endif
+//#endif
 
 #ifdef HID_ENABLED
 #define EP_TYPE_INTERRUPT_IN_HID	UDPHS_EPTCFG_EPT_SIZE_64 \

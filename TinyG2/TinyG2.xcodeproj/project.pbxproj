@@ -8285,7 +8285,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "-D__SAM3X8E__";
+				OTHER_CFLAGS = (
+					"-D__SAM3X8E__",
+					"-Imotate",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -8317,7 +8320,10 @@
 					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/GCC\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_CFLAGS = "-D__SAM3X8E__";
+				OTHER_CFLAGS = (
+					"-D__SAM3X8E__",
+					"-Imotate",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};

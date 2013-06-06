@@ -258,6 +258,10 @@ namespace Motate {
 			return usb.write(write_endpoint, data, length);
 		}
 
+		bool handleNonstandardRequest(Setup_t &setup) {
+			return true;
+		};
+
 		// Stub in begin() and end()
 		void begin(uint32_t baud_count) {};
 		void end(void){};
@@ -276,6 +280,9 @@ namespace Motate {
 		USBMixin< USBCDC, usbIFB, usbIFC, 0 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
+
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
 #pragma mark USBMixin< usbIFA, USBCDC, usbIFC, 1 >
@@ -289,6 +296,9 @@ namespace Motate {
 		USBMixin< usbIFA, USBCDC, usbIFC, 1 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
+
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
 #pragma mark USBMixin< usbIFA, usbIFB, USBCDC, 2 >
@@ -302,6 +312,9 @@ namespace Motate {
 		USBMixin< usbIFA, usbIFB, USBCDC, 2 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
+
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
 #pragma mark USBDefaultDescriptor < USBCDC, USBNullInterface, USBNullInterface >

@@ -98,6 +98,7 @@ namespace Motate {
 		typedef USBMixin<interface0type, interface1type, interface2type, 2> _mixin_2_type;
 		typedef USBDefaultDescriptor<interface0type, interface1type, interface2type> _descriptor_type;
 		typedef USBDescriptorConfiguration_t<interface0type, interface1type, interface2type> _config_type;
+		typedef USBDefaultQualifier<interface0type, interface1type, interface2type> _qualifier_type;
 
 		// Keep track of the endpoint usage
 		// Endpoint zero is the control interface, and is owned by nobody.
@@ -105,12 +106,6 @@ namespace Motate {
 		static const uint8_t _interface_1_first_endpoint = _interface_0_first_endpoint + _mixin_0_type::endpoints_used;
 		static const uint8_t _interface_2_first_endpoint = _interface_1_first_endpoint + _mixin_1_type::endpoints_used;
 		static const uint8_t _total_endpoints_used       = _interface_2_first_endpoint + _mixin_2_type::endpoints_used;
-
-		// Keep track of endpoint descriptor size
-		static const uint16_t _interface_0_descriptor_size = _mixin_0_type::descriptor_size;
-		static const uint16_t _interface_1_descriptor_size = _mixin_1_type::descriptor_size;
-		static const uint16_t _interface_2_descriptor_size = _mixin_2_type::descriptor_size;
-		static const uint16_t _total_interface_descriptor_size = _interface_0_descriptor_size + _interface_1_descriptor_size + _interface_2_descriptor_size;
 				
 		// Init
 		USBDevice() :
@@ -120,19 +115,58 @@ namespace Motate {
 			_mixin_2_type(*this, _interface_2_first_endpoint)
 		{
 			// USBDeviceHardware should handle all of the rest of the init
+			_singleton = this;
+		};
+
+		static void sendDescriptorOrConfig(Setup_t &setup) {
+			const uint8_t type = setup.valueHigh();
+			if (type == kConfigurationDescriptor) {
+				sendConfig();
+			}
+			else
+			if (type == kDeviceDescriptor) {
+				sendDescriptor();
+			}
+			else
+			if (type == kDeviceQualifierDescriptor) {
+				sendQualifierDescriptor();
+			}
+			else
+			if (type == kStringDescriptor) {
+				_this_type::sendString(setup.valueLow());
+			}
+			else
+			{
+				_mixin_0_type::sendSpecialDescriptorOrConfig(setup) ||
+				_mixin_1_type::sendSpecialDescriptorOrConfig(setup) ||
+				_mixin_2_type::sendSpecialDescriptorOrConfig(setup);
+			}
 		};
 
 		static void sendDescriptor() {
 			const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion));
 			_this_type::write(0, (const uint8_t *)(&descriptor), sizeof(_descriptor_type));
-		}
+		};
+
+		static void sendQualifierDescriptor() {
+			const _qualifier_type qualifier;
+			_this_type::write(0, (const uint8_t *)(&qualifier), sizeof(_qualifier_type));
+		};
 
 		static void sendConfig() {
 			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption);
 			_this_type::write(0, (const uint8_t *)(&config), sizeof(_config_type));
-		}
+		};
 
-	};
+		static bool handleNonstandardRequest(Setup_t &setup) {
+			return _mixin_0_type::handleNonstandardRequestInMixin(setup) ||
+			       _mixin_1_type::handleNonstandardRequestInMixin(setup) ||
+			       _mixin_2_type::handleNonstandardRequestInMixin(setup);
+		};
+
+		// This could be abused...
+		static _this_type *_singleton;
+	}; // USBDevice
 
 
 	// Declare the base (Null) USBMixin
@@ -147,6 +181,8 @@ namespace Motate {
 				) {};
 
 		static bool isNull() { return true; };
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
+		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
 	template < typename interface0type, typename interface1type, typename interface2type >
@@ -172,7 +208,14 @@ namespace Motate {
 			)
 		{};
 	};
-}
+
+	template < typename interface0type, typename interface1type, typename interface2type >
+	struct USBDefaultQualifier : USBDescriptorDeviceQualifier_t {
+		USBDefaultQualifier() :
+		USBDescriptorDeviceQualifier_t() // use the defaults
+		{};
+	};
+} // namespace Motate
 
 #endif
 // MOTATEUSB_ONCE
