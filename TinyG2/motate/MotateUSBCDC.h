@@ -266,6 +266,21 @@ namespace Motate {
 		void begin(uint32_t baud_count) {};
 		void end(void){};
 
+		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint) {
+			if (endpoint == control_endpoint)
+			{
+				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocks1 | kEndpointBufferTypeControl;
+			}
+			else if (endpoint == read_endpoint)
+			{
+				return kEndpointBufferOutputFromHost | kEnpointBufferSizeUpTo512 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+			}
+			else if (endpoint == write_endpoint)
+			{
+				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo512 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+			}
+			return kEndpointBufferNull;
+		};
 	};
 
 #pragma mark USBMixin< USBCDC, usbIFB, usbIFC, 0 >
@@ -281,7 +296,12 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
-		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		};
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
@@ -297,6 +317,9 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -313,6 +336,9 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -473,9 +499,9 @@ namespace Motate {
 
 		
 		CDC_DCI_Interface(
-						 /* _InterfaceNumber   = */ _first_interface_number,
+						 /* _InterfaceNumber   = */ _first_interface_number+1,
 						 /* _AlternateSetting  = */ 0,
-						 /* _TotalEndpoints    = */ 1,
+						 /* _TotalEndpoints    = */ 2,
                          
 						 /* _Class             = */ kCDCClass,
 						 /* _SubClass          = */ kACMSubclass,
@@ -485,14 +511,14 @@ namespace Motate {
 						 ),
 		CDC_DataOutEndpoint(
 						   /* _input             = */ false,
-						   /* _EndpointAddress   = */ _first_endpoint_number,
+						   /* _EndpointAddress   = */ _first_endpoint_number+1,
 						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
 						   /* _EndpointSize      = */ kUSBNormalEnpointSize,
 						   /* _PollingIntervalMS = */ 0x05
 						   ),
 		CDC_DataInEndpoint(
 						  /* _input             = */ true,
-						  /* _EndpointAddress   = */ _first_endpoint_number,
+						  /* _EndpointAddress   = */ _first_endpoint_number+2,
 						  /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
 						  /* _EndpointSize      = */ kUSBNormalEnpointSize,
 						  /* _PollingIntervalMS = */ 0x05
@@ -555,9 +581,9 @@ namespace Motate {
 
 
 		CDC_DCI_Interface(
-						 /* _InterfaceNumber   = */ _first_interface_number,
+						 /* _InterfaceNumber   = */ _first_interface_number+1,
 						 /* _AlternateSetting  = */ 0,
-						 /* _TotalEndpoints    = */ 1,
+						 /* _TotalEndpoints    = */ 2,
 
 						 /* _Class             = */ kCDCClass,
 						 /* _SubClass          = */ kACMSubclass,
@@ -567,14 +593,14 @@ namespace Motate {
 						 ),
 		CDC_DataOutEndpoint(
 						   /* _input             = */ false,
-						   /* _EndpointAddress   = */ _first_endpoint_number,
+						   /* _EndpointAddress   = */ _first_endpoint_number+1,
 						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
 						   /* _EndpointSize      = */ kUSBNormalEnpointSize,
 						   /* _PollingIntervalMS = */ 0x05
 						   ),
 		CDC_DataInEndpoint(
 						  /* _input             = */ true,
-						  /* _EndpointAddress   = */ _first_endpoint_number,
+						  /* _EndpointAddress   = */ _first_endpoint_number+2,
 						  /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
 						  /* _EndpointSize      = */ kUSBNormalEnpointSize,
 						  /* _PollingIntervalMS = */ 0x05

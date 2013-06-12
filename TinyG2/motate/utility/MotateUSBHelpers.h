@@ -757,54 +757,43 @@ namespace Motate {
 	};
 
 
-	// Flags for endpoint information, for use by the hardware to configure
-	// note that these are *arbitrary*, cna change from build-to-build, and
-	// are for runtime use *only*.
+	// Flags for endpoint information, for use by the hardware to configure the endpoints internally.
 
-	// These are not expected to map to any hardware interface directly!
+	// These are to be defined in the the hardware-specific USB files, but *all* values must be defined.
+	// For example: On a platform that can only have 64 byte buffers, everything above kEnpointBufferSizeUpTo64
+	//  is equal to kEnpointBufferSizeUpTo64.
 
-	enum USBEndpointBufferSettingsFlags_t {
-		// endpoint direction
-		kEndpointBufferInput           =      0,
-		kEndpointBufferOutput          = 1 << 0,
-		kEndpointBufferDirectionMaks   = 1 << 0,
+	// There is also a typedef: EndpointBufferSettings_t
+	
+/*
+	kEndpointBufferNull
 
-		// buffer sizes
-		kEnpointBufferSizeUpTo32       = 1 << 1,
-		kEnpointBufferSizeUpTo64       = 1 << 2,
-		kEnpointBufferSizeUpTo128      = 1 << 3,
-		kEnpointBufferSizeUpTo256      = 1 << 4,
-		kEnpointBufferSizeUpTo512      = 1 << 5,
-		kEnpointBufferSizeUpTo1024     = 1 << 6,
-		kEnpointBufferSizeMask         = 0x7E,
+	// endpoint direction
+	kEndpointBufferInput
+	kEndpointBufferOutput
 
-		// buffer "blocks" -- 2 == "ping pong"
-		kEndpointBufferBlocks1         = 1 << 8,
-		kEndpointBufferBlocksUpTo2     = 1 << 9,
-		kEndpointBufferBlocksUpTo3     = 1 << 10,
-		kEndpointBufferBlocksMask      = 0x700,
+	// buffer sizes
+	kEnpointBufferSizeUpTo8
+	kEnpointBufferSizeUpTo16
+	kEnpointBufferSizeUpTo32
+	kEnpointBufferSizeUpTo64
+	kEnpointBufferSizeUpTo128
+	kEnpointBufferSizeUpTo256
+	kEnpointBufferSizeUpTo512
+	kEnpointBufferSizeUpTo1024
 
-		// endpoint types (mildly redundant from the config)
-		kEndpointBufferTypeControl     = 1 << 12,
-		kEndpointBufferTypeIsochronous = 1 << 13,
-		kEndpointBufferTypeBulk        = 1 << 14,
-		kEndpointBufferTypeInterrupt   = 1 << 15,
-		kEndpointBufferTypeMask        = 0x3C0000
-	};
+	// buffer "blocks" -- 2 == "ping pong"
+	// Note that there must be one, or this is a null endpoint.
+	kEndpointBufferBlocks1
+	kEndpointBufferBlocksUpTo2
+	kEndpointBufferBlocksUpTo3
 
-	template< int endpointNum, typename interfaceType >
-	struct USBEndpointBufferSettings_t {
-		const uint32_t enpointSettings;
-		USBEndpointBufferSettings_t(
-									const USBEndpointBufferSettingsFlags_t direction,
-									const USBEndpointBufferSettingsFlags_t size,
-									const USBEndpointBufferSettingsFlags_t block_count,
-									const USBEndpointBufferSettingsFlags_t ep_type
-									)
-		:
-		enpointSettings(direction | size | block_count | ep_type)
-		{};
-	};
+	// endpoint types (mildly redundant from the config)
+	kEndpointBufferTypeControl
+	kEndpointBufferTypeIsochronous
+	kEndpointBufferTypeBulk
+	kEndpointBufferTypeInterrupt
+*/
 }
 
 #endif

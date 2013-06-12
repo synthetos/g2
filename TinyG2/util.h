@@ -30,6 +30,13 @@
 
 #include <stdint.h>
 
+inline void delay( uint32_t ms )
+{
+	uint32_t end = GetTickCount() + ms;
+	while (GetTickCount() < end)
+		;
+};
+
 #ifdef __cplusplus
 extern "C"{
 #endif

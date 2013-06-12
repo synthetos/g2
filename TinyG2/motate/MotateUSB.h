@@ -101,8 +101,7 @@ namespace Motate {
 		typedef USBDefaultQualifier<interface0type, interface1type, interface2type> _qualifier_type;
 
 		// Keep track of the endpoint usage
-		// Endpoint zero is the control interface, and is owned by nobody.
-		static const uint8_t _interface_0_first_endpoint = 1;
+		static const uint8_t _interface_0_first_endpoint = 0; // TODO: Verify with mixin control endpoint usage.
 		static const uint8_t _interface_1_first_endpoint = _interface_0_first_endpoint + _mixin_0_type::endpoints_used;
 		static const uint8_t _interface_2_first_endpoint = _interface_1_first_endpoint + _mixin_1_type::endpoints_used;
 		static const uint8_t _total_endpoints_used       = _interface_2_first_endpoint + _mixin_2_type::endpoints_used;
@@ -118,29 +117,34 @@ namespace Motate {
 			_singleton = this;
 		};
 
-		static void sendDescriptorOrConfig(Setup_t &setup) {
+		static bool sendDescriptorOrConfig(Setup_t &setup) {
 			const uint8_t type = setup.valueHigh();
 			if (type == kConfigurationDescriptor) {
 				sendConfig();
+				return true;
 			}
 			else
 			if (type == kDeviceDescriptor) {
 				sendDescriptor();
+				return true;
 			}
 			else
 			if (type == kDeviceQualifierDescriptor) {
 				sendQualifierDescriptor();
+				return true;
 			}
 			else
 			if (type == kStringDescriptor) {
 				_this_type::sendString(setup.valueLow());
+				return true;
 			}
 			else
 			{
-				_mixin_0_type::sendSpecialDescriptorOrConfig(setup) ||
-				_mixin_1_type::sendSpecialDescriptorOrConfig(setup) ||
-				_mixin_2_type::sendSpecialDescriptorOrConfig(setup);
+				return _mixin_0_type::sendSpecialDescriptorOrConfig(setup) ||
+				       _mixin_1_type::sendSpecialDescriptorOrConfig(setup) ||
+				       _mixin_2_type::sendSpecialDescriptorOrConfig(setup);
 			}
+			return false;
 		};
 
 		static void sendDescriptor() {
@@ -164,10 +168,29 @@ namespace Motate {
 			       _mixin_2_type::handleNonstandardRequestInMixin(setup);
 		};
 
+		static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint) {
+			EndpointBufferSettings_t ebs = kEndpointBufferNull;
+			if (!_mixin_0_type::isNull())
+				ebs = _mixin_0_type::getEndpointConfigFromMixin(endpoint);
+			if (!_mixin_1_type::isNull() && ebs == kEndpointBufferNull)
+				ebs = _mixin_1_type::getEndpointConfigFromMixin(endpoint);
+			if (!_mixin_2_type::isNull() && ebs == kEndpointBufferNull)
+				ebs = _mixin_2_type::getEndpointConfigFromMixin(endpoint);
+			return ebs;
+		};
+
+		static const uint8_t getEndpointCount(uint8_t &firstEnpointNum) {
+			firstEnpointNum = _interface_0_first_endpoint;
+			return _total_endpoints_used;
+		}
+
 		// This could be abused...
 		static _this_type *_singleton;
 	}; // USBDevice
 
+
+	template<class interface0type, class interface1type, class interface2type>
+	WEAK USBDevice<interface0type, interface1type, interface2type> *USBDevice<interface0type, interface1type, interface2type>::_singleton;
 
 	// Declare the base (Null) USBMixin
 	// We use template specialization (later) on a combination of *one* of the three interfaces,
@@ -181,6 +204,9 @@ namespace Motate {
 				) {};
 
 		static bool isNull() { return true; };
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint) {
+			return kEndpointBufferNull;
+		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};

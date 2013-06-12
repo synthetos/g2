@@ -29,6 +29,7 @@
 #include "hardware.h"
 #include "switch.h"
 #include "xio.h"
+#include "util.h"
 
 /*
 #include "util.h"				// #2
@@ -68,6 +69,9 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 
 Motate::USBDevice< Motate::USBCDC > usb;
+//template<>
+//Motate::USBDevice< Motate::USBCDC, Motate::USBNullInterface, Motate::USBNullInterface > *Motate::USBDevice< Motate::USBCDC, Motate::USBNullInterface, Motate::USBNullInterface >::_singleton = 0;
+
 typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
@@ -95,6 +99,7 @@ int main( void )
 {
 	// system initialization
 	init();
+	delay(10);
 	usb.attach();				// USB setup
 	SerialUSB.begin(115200);
 //	delay(1000);

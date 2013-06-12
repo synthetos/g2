@@ -37,9 +37,6 @@
 #include "Arduino.h"
 
 namespace Motate {
-
-	static const uint16_t kUSBControlEnpointSize = 0x10;
-	static const uint16_t kUSBNormalEnpointSize = 0x200;
 	
 	struct USBProxy_t {
 		void (*sendDescriptorOrConfig)(Setup_t &setup);

@@ -34,6 +34,9 @@
 
 namespace Motate {
 	USBProxy_t USBProxy;
+
+	static const uint16_t kUSBControlEnpointSize = 0x10;
+	static const uint16_t kUSBNormalEnpointSize = 0x10;
 }
 
 #endif

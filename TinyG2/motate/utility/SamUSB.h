@@ -41,14 +41,67 @@
 
 namespace Motate {
 
-	const uint16_t kUSBControlEnpointSize = 0x10;
-	const uint16_t kUSBNormalEnpointSize = 0x200;
+
+	/*** ENDPOINT CONFIGURATION ***/
+
+	typedef uint32_t EndpointBufferSettings_t;
+
+	enum USBEndpointBufferSettingsFlags_t {
+		// null endpoint is all zeros
+		kEndpointBufferNull            = -1,
+
+		// endpoint direction
+		kEndpointBufferOutputFromHost  = UOTGHS_DEVEPTCFG_EPDIR_OUT,
+		kEndpointBufferInputToHost     = UOTGHS_DEVEPTCFG_EPDIR_IN,
+
+		// This mask is not part of the public interface:
+		kEndpointBufferDirectionMask   = UOTGHS_DEVEPTCFG_EPDIR,
+
+		// buffer sizes
+		kEnpointBufferSizeUpTo8        = UOTGHS_DEVEPTCFG_EPSIZE_8_BYTE,
+		kEnpointBufferSizeUpTo16       = UOTGHS_DEVEPTCFG_EPSIZE_16_BYTE,
+		kEnpointBufferSizeUpTo32       = UOTGHS_DEVEPTCFG_EPSIZE_32_BYTE,
+		kEnpointBufferSizeUpTo64       = UOTGHS_DEVEPTCFG_EPSIZE_64_BYTE,
+		kEnpointBufferSizeUpTo128      = UOTGHS_DEVEPTCFG_EPSIZE_128_BYTE,
+		kEnpointBufferSizeUpTo256      = UOTGHS_DEVEPTCFG_EPSIZE_256_BYTE,
+		kEnpointBufferSizeUpTo512      = UOTGHS_DEVEPTCFG_EPSIZE_512_BYTE,
+		kEnpointBufferSizeUpTo1024     = UOTGHS_DEVEPTCFG_EPSIZE_1024_BYTE,
+
+		// This mask is not part of the public interface:
+		kEnpointBufferSizeMask         = UOTGHS_DEVEPTCFG_EPSIZE_Msk,
+
+		// buffer "blocks" -- 2 == "ping pong"
+		// Note that there must be one, or this is a null endpoint.
+		kEndpointBufferBlocks1         = UOTGHS_DEVEPTCFG_EPBK_1_BANK,
+		kEndpointBufferBlocksUpTo2     = UOTGHS_DEVEPTCFG_EPBK_2_BANK,
+		kEndpointBufferBlocksUpTo3     = UOTGHS_DEVEPTCFG_EPBK_3_BANK,
+
+		// This mask is not part of the public interface:
+		kEndpointBufferBlocksMask      = UOTGHS_DEVEPTCFG_EPBK_Msk,
+
+		// endpoint types (mildly redundant from the config)
+		kEndpointBufferTypeControl     = UOTGHS_DEVEPTCFG_EPTYPE_CTRL,
+		kEndpointBufferTypeIsochronous = UOTGHS_DEVEPTCFG_EPTYPE_ISO,
+		kEndpointBufferTypeBulk        = UOTGHS_DEVEPTCFG_EPTYPE_BLK,
+		kEndpointBufferTypeInterrupt   = UOTGHS_DEVEPTCFG_EPTYPE_INTRPT,
+
+		// This mask is not part of the public interface:
+		kEndpointBufferTypeMask        = UOTGHS_DEVEPTCFG_EPTYPE_Msk
+	};
+
+	
+	/*** PROXY ***/
 
 	struct USBProxy_t {
-		void (*sendDescriptorOrConfig)(Setup_t &setup);
+		bool (*sendDescriptorOrConfig)(Setup_t &setup);
 		bool (*handleNonstandardRequest)(Setup_t &setup);
+		const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
+		const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint);
 	};
 	extern USBProxy_t USBProxy;
+
+
+	/*** STRINGS ***/
 
 	const uint16_t *getUSBVendorString(uint8_t &length) ATTR_WEAK;
 	const uint16_t *getUSBProductString(uint8_t &length) ATTR_WEAK;
@@ -69,25 +122,33 @@ namespace Motate {
 		return MOTATE_USBProductString;\
 	}
 
+
+	/*** USBDeviceHardware ***/
+
+	// This is the stub for the interrupt
+	void _usb_interrupt();
+
+	extern uint32_t _inited;
+	extern uint32_t _configuration;
+
 	// USBDeviceHardware actually talks to the hardware, and marshalls data to/from the interfaces.
 	template< typename parent >
 	class USBDeviceHardware
 	{
 		parent* const parent_this;
 
-		static uint32_t _inited;
-		static uint32_t _configuration;
-		static uint32_t _set_interface; // the interface set by the host
-		static uint8_t  _halted; // Make this into a generic _flags?? -rg
-		static uint8_t  _remoteWakeupEnabled;
-
 	public:
+
 		// Init
 		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
-			USBProxy.sendDescriptorOrConfig = parent::sendDescriptorOrConfig;
+			USBProxy.sendDescriptorOrConfig   = parent::sendDescriptorOrConfig;
 			USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
-			
+			USBProxy.getEndpointConfig        = parent::getEndpointConfig;
+			USBProxy.getEndpointCount         = parent::getEndpointCount;
+
+			UDD_SetStack(&_usb_interrupt);
+
 			if (UDD_Init() == 0UL)
 			{
 				_inited = 1UL;
@@ -168,13 +229,10 @@ namespace Motate {
 			return r;
 		};
 
-		// This is the stub for the interrupt
-		static void interrupt();
-
 		// This is static to be called from the interrupt.
 		static void sendString(const uint8_t string_num) {
 			uint8_t length = 0;
-			const uint16_t *string;
+			const uint16_t *string = 0;
 			if (kManufacturerStringId == string_num && getUSBVendorString) {
 				string = getUSBVendorString(length);
 			} else
@@ -184,10 +242,10 @@ namespace Motate {
 
 			USBDescriptorStringHeader_t string_header(length);
 			write(0, (const uint8_t *)(&string_header), sizeof(string_header));
-			write(0, (const uint8_t *)(string), length);
+			if (string)
+				write(0, (const uint8_t *)(string), length);
 		};
 	}; //class USBDeviceHardware
-
 }
 
 #endif

@@ -35,10 +35,83 @@
 #define TRACE_CORE(x)
 
 namespace Motate {
+	const uint16_t kUSBControlEnpointSize = 0x10;
+	const uint16_t kUSBNormalEnpointSize = 0x200;
+
+	uint32_t _inited = 0;
+	uint32_t _configuration = 0;
+	uint32_t _set_interface = 0; // the interface set by the host
+	uint8_t  _halted = 0; // Make this into a generic _flags?? -rg
+	uint8_t  _remoteWakeupEnabled = 0;
+
 	USBProxy_t USBProxy;
 
-	template< typename parent >
-	void USBDeviceHardware<parent>::interrupt() {
+	/* ############################################# */
+	/* #                                           # */
+	/* #        HW-SPECIFIC ENDPOINT LIMITS        # */
+	/* #                                           # */
+	/* ############################################# */
+
+	// Enpoint 3 config - max 1024b buffer, with two blocks
+	// Enpoint 4 config - max 1024b buffer, with two blocks
+	// Enpoint 5 config - max 1024b buffer, with two blocks
+	// Enpoint 6 config - max 1024b buffer, with two blocks
+	// Enpoint 7 config - max 1024b buffer, with two blocks
+	// Enpoint 8 config - max 1024b buffer, with two blocks
+	// Enpoint 9 config - max 1024b buffer, with two blocks
+	static const EndpointBufferSettings_t _enforce_enpoint_limits(const uint8_t endpoint, EndpointBufferSettings_t config) {
+		if (endpoint > 9)
+			return kEndpointBufferNull;
+
+		if (endpoint == 0) {
+			if ((config & kEnpointBufferSizeMask) > kEnpointBufferSizeUpTo64)
+				config = (config & ~kEnpointBufferSizeMask) | kEnpointBufferSizeUpTo64;
+
+			config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocks1;
+		} else {
+
+			// Enpoint 1 config - max 1024b buffer, with three blocks
+			// Enpoint 2 config - max 1024b buffer, with three blocks
+
+			if ((config & kEnpointBufferSizeMask) > kEnpointBufferSizeUpTo1024)
+				config = (config & ~kEnpointBufferSizeMask) | kEnpointBufferSizeUpTo1024;
+
+			if (endpoint < 3) {
+				if ((config & ~kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo3)
+					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo3;
+			} else {
+				if ((config & ~kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo2)
+					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo2;
+			}
+		}
+		config |= UOTGHS_DEVEPTCFG_NBTRANS_1_TRANS | UOTGHS_DEVEPTCFG_ALLOC;
+
+		return config;
+	};
+
+	// uint32_t since the registers are 32-bit, we'll handle the conversion on entry to the function
+	void _hw_init_endpoint(uint32_t endpoint, const uint32_t configuration) {
+		endpoint = endpoint & 0xF; // EP range is 0..9, hence mask is 0xF.
+
+//		TRACE_UOTGHS_DEVICE(printf("=> UDD_InitEP : init EP %lu\r\n", ul_ep_nb);)
+		uint32_t configuration_fixed = _enforce_enpoint_limits(endpoint, configuration);
+
+		// Configure EP
+		// If we get here, and it's a null endpoint, this will disable it.
+		UOTGHS->UOTGHS_DEVEPTCFG[endpoint] = configuration_fixed;
+		
+		// Enable EP
+		if (configuration_fixed != kEndpointBufferNull) {
+			udd_enable_endpoint(endpoint);
+
+			if (!Is_udd_endpoint_configured(endpoint)) {
+	//			TRACE_UOTGHS_DEVICE(printf("=> UDD_InitEP : ERROR FAILED TO INIT EP %lu\r\n", ul_ep_nb);)
+				while(1);
+			}
+		}
+	}
+
+	void _usb_interrupt() {
 		// End of bus reset
 		if (Is_udd_reset())
 		{
@@ -49,7 +122,7 @@ namespace Motate {
 			udd_enable_address();
 
 			// Configure EP 0
-			UDD_InitEP(0, EP_TYPE_CONTROL);
+			_hw_init_endpoint(0, USBProxy.getEndpointConfig(0));
 			udd_enable_setup_received_interrupt(0);
 			udd_enable_endpoint_interrupt(0);
 
@@ -209,9 +282,12 @@ namespace Motate {
 
 //						UDD_InitEndpoints(EndPoints, (sizeof(EndPoints) / sizeof(EndPoints[0])));
 
-						UDD_InitEP(0, EP_TYPE_CONTROL);
+						uint8_t first_endpoint, total_endpoints;
+						total_endpoints = USBProxy.getEndpointCount(first_endpoint);
+						for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++)
+							_hw_init_endpoint(ep, USBProxy.getEndpointConfig(ep));
 
-						_configuration = setup.valueLow;
+						_configuration = setup.valueLow();
 
 #if 0
 						// Enable interrupt for CDC reception from host (OUT packet)
@@ -232,7 +308,7 @@ namespace Motate {
 				}
 				else if (setup.isASetInterfaceRequest())
 				{
-					_set_interface = setup.valueLow;
+					_set_interface = setup.valueLow();
 					TRACE_CORE(puts(">>> EP0 Int: kSetInterface\r\n");)
 				}
 			}

@@ -471,10 +471,25 @@
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\AvrUSB.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\MotatePins.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\MotateTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\MotateUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\MotateUSBCDC.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\SamTimers.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\SamUSB.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\AvrPins.h">
@@ -483,13 +498,22 @@
     <Compile Include="motate\utility\AvrTimers.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\utility\AvrUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\utility\AvrXPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\utility\MotateUSBHelpers.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamPins.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\utility\SamUSB.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="persistence.cpp">
