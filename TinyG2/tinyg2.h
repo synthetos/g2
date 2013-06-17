@@ -34,13 +34,6 @@
 #include <math.h>
 
 #include "MotatePins.h"
-#include "MotateUSB.h"
-#include "MotateUSBCDC.h"
-
-//#include "Arduino.h"
-
-extern Motate::USBDevice< Motate::USBCDC > usb;
-extern typeof usb._mixin_0_type::Serial &SerialUSB;
 
 #define TINYG2_FIRMWARE_BUILD   	009.10	// working on switch code
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version

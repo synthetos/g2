@@ -35,8 +35,14 @@
 #define TRACE_CORE(x)
 
 namespace Motate {
-	const uint16_t kUSBControlEnpointSize = 0x10;
-	const uint16_t kUSBNormalEnpointSize = 0x200;
+	const uint16_t kUSBControlEnpointSize = EP0_SIZE;
+	const uint16_t kUSBNormalEnpointSize = EPX_SIZE;
+
+	const uint16_t MOTATE_USBLanguageString[] = {0x0409}; // English
+	const uint16_t *getUSBLanguageString(int16_t &length) {
+		length = sizeof(MOTATE_USBLanguageString);
+		return MOTATE_USBLanguageString;
+	}
 
 	uint32_t _inited = 0;
 	uint32_t _configuration = 0;
@@ -77,10 +83,10 @@ namespace Motate {
 				config = (config & ~kEnpointBufferSizeMask) | kEnpointBufferSizeUpTo1024;
 
 			if (endpoint < 3) {
-				if ((config & ~kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo3)
+				if ((config & kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo3)
 					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo3;
 			} else {
-				if ((config & ~kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo2)
+				if ((config & kEndpointBufferBlocksMask) > kEndpointBufferBlocksUpTo2)
 					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo2;
 			}
 		}
@@ -148,25 +154,38 @@ namespace Motate {
 		}
 
 		// EP 0 Interrupt
+		// FIXME! Needs to handle *any* control endpoint.
 		if (Is_udd_endpoint_interrupt(0) )
 		{
 			if (!UDD_ReceivedSetupInt())
 			{
 				return;
 			}
+			/****
+			 A SETUP request is always ACKed. When a new SETUP packet is received, the UOTGHS_DEVEPTISRx.RXSTPI is set; the Received OUT Data Interrupt (UOTGHS_DEVEPTISRx.RXOUTI) bit is not.
+			 ****/
 
-			Setup_t setup;
+			static Setup_t setup;
 			UDD_Recv(EP0, (uint8_t*)&setup, 8);
+			/****
+			 • the UOTGHS_DEVEPTISRx.RXSTPI bit, which is set when a new SETUP packet is received and which shall be cleared by firmware to acknowledge the packet and to **free the bank**;
+			 ****/
 			UDD_ClearSetupInt();
 
 			if (setup.isADeviceToHostRequest())
 			{
 				TRACE_CORE(puts(">>> EP0 Int: IN Request\r\n");)
+				/****
+				 • the Transmitted IN Data Interrupt (UOTGHS_DEVEPTISRx.TXINI) bit, which is set when the current bank is ready to accept a new IN packet and [...]
+				 ****/
 				UDD_WaitIN();
 			}
 			else
 			{
 				TRACE_CORE(puts(">>> EP0 Int: OUT Request\r\n");)
+				/****
+				 [...] which shall be cleared by firmware to send the packet.
+				 ****/
 				UDD_ClearIN();
 			}
 
@@ -288,6 +307,8 @@ namespace Motate {
 							_hw_init_endpoint(ep, USBProxy.getEndpointConfig(ep));
 
 						_configuration = setup.valueLow();
+
+						ok = true;
 
 #if 0
 						// Enable interrupt for CDC reception from host (OUT packet)

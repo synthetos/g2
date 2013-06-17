@@ -35,6 +35,7 @@
 //#include "Reset.h"
 
 #include "tinyg2.h"
+#include "xio.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -101,7 +101,7 @@ namespace Motate {
 		typedef USBDefaultQualifier<interface0type, interface1type, interface2type> _qualifier_type;
 
 		// Keep track of the endpoint usage
-		static const uint8_t _interface_0_first_endpoint = 0; // TODO: Verify with mixin control endpoint usage.
+		static const uint8_t _interface_0_first_endpoint = 1; // TODO: Verify with mixin control endpoint usage.
 		static const uint8_t _interface_1_first_endpoint = _interface_0_first_endpoint + _mixin_0_type::endpoints_used;
 		static const uint8_t _interface_2_first_endpoint = _interface_1_first_endpoint + _mixin_1_type::endpoints_used;
 		static const uint8_t _total_endpoints_used       = _interface_2_first_endpoint + _mixin_2_type::endpoints_used;
@@ -120,22 +120,22 @@ namespace Motate {
 		static bool sendDescriptorOrConfig(Setup_t &setup) {
 			const uint8_t type = setup.valueHigh();
 			if (type == kConfigurationDescriptor) {
-				sendConfig();
+				sendConfig(setup.length());
 				return true;
 			}
 			else
 			if (type == kDeviceDescriptor) {
-				sendDescriptor();
+				sendDescriptor(setup.length());
 				return true;
 			}
 			else
 			if (type == kDeviceQualifierDescriptor) {
-				sendQualifierDescriptor();
+				sendQualifierDescriptor(setup.length());
 				return true;
 			}
 			else
 			if (type == kStringDescriptor) {
-				_this_type::sendString(setup.valueLow());
+				_this_type::sendString(setup.valueLow(), setup.length());
 				return true;
 			}
 			else
@@ -147,19 +147,22 @@ namespace Motate {
 			return false;
 		};
 
-		static void sendDescriptor() {
+		static void sendDescriptor(uint16_t maxLength) {
 			const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion));
-			_this_type::write(0, (const uint8_t *)(&descriptor), sizeof(_descriptor_type));
+			uint16_t length = sizeof(_descriptor_type);
+			_this_type::write(0, (const uint8_t *)(&descriptor), maxLength < length ? maxLength : length);
 		};
 
-		static void sendQualifierDescriptor() {
+		static void sendQualifierDescriptor(uint16_t maxLength) {
 			const _qualifier_type qualifier;
-			_this_type::write(0, (const uint8_t *)(&qualifier), sizeof(_qualifier_type));
+			uint16_t length = sizeof(_qualifier_type);
+			_this_type::write(0, (const uint8_t *)(&qualifier), maxLength < length ? maxLength : length);
 		};
 
-		static void sendConfig() {
+		static void sendConfig(uint16_t maxLength) {
 			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption);
-			_this_type::write(0, (const uint8_t *)(&config), sizeof(_config_type));
+			uint16_t length = sizeof(_config_type);
+			_this_type::write(0, (const uint8_t *)(&config), maxLength < length ? maxLength : length);
 		};
 
 		static bool handleNonstandardRequest(Setup_t &setup) {
@@ -169,8 +172,9 @@ namespace Motate {
 		};
 
 		static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint) {
-			EndpointBufferSettings_t ebs = kEndpointBufferNull;
-			if (!_mixin_0_type::isNull())
+			EndpointBufferSettings_t ebs = _hardware_type::getEndpointConfigFromHardware(endpoint);
+
+			if (!_mixin_0_type::isNull() && ebs == kEndpointBufferNull)
 				ebs = _mixin_0_type::getEndpointConfigFromMixin(endpoint);
 			if (!_mixin_1_type::isNull() && ebs == kEndpointBufferNull)
 				ebs = _mixin_1_type::getEndpointConfigFromMixin(endpoint);

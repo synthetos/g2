@@ -224,7 +224,7 @@ namespace Motate {
 	// Also, used as the base class for the resulting specialized USBMixin.
 	struct USBCDC {
 		static bool isNull() { return false; };
-		static const uint8_t endpoints_used = 2;
+		static const uint8_t endpoints_used = 3;
 	};
 
 #pragma mark USBCDC_impl
@@ -237,13 +237,33 @@ namespace Motate {
 		const uint8_t read_endpoint;
 		const uint8_t write_endpoint;
 
+		struct _line_info_t
+		{
+			uint32_t	dwDTERate;
+			uint8_t		bCharFormat;
+			uint8_t 	bParityType;
+			uint8_t 	bDataBits;
+
+			_line_info_t() :
+				dwDTERate(57600),
+				bCharFormat(0x00),
+				bParityType(0x00),
+				bDataBits(0x08)
+			{};
+		} ATTR_PACKED;
+
+		volatile uint8_t _line_state;
+
+		volatile _line_info_t _line_info;
+
 		USBCDC_impl(usb_parent_type &usb_parent,
 					const uint8_t new_endpoint_offset
 					)
 		: usb(usb_parent),
 		control_endpoint(new_endpoint_offset),
 		read_endpoint(new_endpoint_offset+1),
-		write_endpoint(new_endpoint_offset+2)
+		write_endpoint(new_endpoint_offset+2),
+		_line_state(0x00)
 		{};
 
 		uint16_t readByte() {
@@ -259,7 +279,41 @@ namespace Motate {
 		}
 
 		bool handleNonstandardRequest(Setup_t &setup) {
-			return true;
+			if (setup.isADeviceToHostClassInterfaceRequest()) {
+				if (setup.requestIs(kGetLineEncoding)) {
+					usb.write(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					return true;
+				}
+			}
+
+			if (setup.isAHostToDeviceClassInterfaceRequest()) {
+				if (setup.requestIs(kSetLineEncoding)) {
+					usb.read(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					return true;
+				}
+
+				if (setup.requestIs(kSetControlLineState)) {
+					_line_state = setup.valueLow();
+
+					// Here is where we would reset, like this:
+					/******
+					 // auto-reset into the bootloader is triggered when the port, already
+					 // open at 1200 bps, is closed.
+					 if (1200 == _usbLineInfo.dwDTERate)
+					 {
+					 // We check DTR state to determine if host port is open (bit 0 of lineState).
+					 if ((_usbLineInfo.lineState & 0x01) == 0)
+					 initiateReset(250);
+					 else
+					 cancelReset();
+					 }
+					*****/
+
+					return true;
+				}
+			}
+
+			return false;
 		};
 
 		// Stub in begin() and end()
@@ -269,15 +323,15 @@ namespace Motate {
 		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint) {
 			if (endpoint == control_endpoint)
 			{
-				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocks1 | kEndpointBufferTypeControl;
+				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeInterrupt;
 			}
 			else if (endpoint == read_endpoint)
 			{
-				return kEndpointBufferOutputFromHost | kEnpointBufferSizeUpTo512 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+				return kEndpointBufferOutputFromHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			else if (endpoint == write_endpoint)
 			{
-				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo512 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			return kEndpointBufferNull;
 		};
@@ -357,12 +411,12 @@ namespace Motate {
 	struct USBDefaultDescriptor < USBCDC, USBNullInterface, USBNullInterface > : USBDescriptorDevice_t {
 		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBDescriptorDevice_t(
-							  /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
-							  /*                  Class = */ kCDCClass,
+							  /*    USBSpecificationBCD = */ USBFloatToBCD(1.1),
+							  /*                  Class = */ kNoDeviceClass,
 							  /*               SubClass = */ kNoSpecificSubclass,
 							  /*               Protocol = */ kNoSpecificProtocol,
 
-							  /*          Endpoint0Size = */ 64, /* !!!!!!!!!!! FIXME */
+							  /*          Endpoint0Size = */ 8, /* !!!!!!!!!!! FIXME */
 
 							  /*               VendorID = */ vendorID,
 							  /*              ProductID = */ productID,
@@ -389,7 +443,7 @@ namespace Motate {
 							  /*               SubClass = */ kIADDeviceSubclass,
 							  /*               Protocol = */ kIADDeviceProtocol,
 
-							  /*          Endpoint0Size = */ 64, /* !!!!!!!!!!! FIXME */
+							  /*          Endpoint0Size = */ 8, /* !!!!!!!!!!! FIXME */
 
 							  /*               VendorID = */ vendorID,
 							  /*              ProductID = */ productID,
@@ -493,34 +547,34 @@ namespace Motate {
 								/* _input             = */ true,
 								/* _EndpointAddress   = */ _first_endpoint_number,
 								/* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
-								/* _EndpointSize      = */ kUSBControlEnpointSize,
-								/* _PollingIntervalMS = */ 0x05
+								/* _EndpointSize      = */ 0x10,
+								/* _PollingIntervalMS = */ 0xFF
 								),
 
 		
 		CDC_DCI_Interface(
-						 /* _InterfaceNumber   = */ _first_interface_number+1,
-						 /* _AlternateSetting  = */ 0,
-						 /* _TotalEndpoints    = */ 2,
-                         
-						 /* _Class             = */ kCDCClass,
-						 /* _SubClass          = */ kACMSubclass,
-						 /* _Protocol          = */ kATCommandProtocol,
-                         
-						 /* _InterfaceStrIndex = */ 0 // none
+						  /* _InterfaceNumber   = */ _first_interface_number+1,
+						  /* _AlternateSetting  = */ 0,
+						  /* _TotalEndpoints    = */ 2,
+
+						  /* _Class             = */ kCDCDataClass,
+						  /* _SubClass          = */ kNoDataSubclass,
+						  /* _Protocol          = */ kNoDataProtocol,
+
+						  /* _InterfaceStrIndex = */ 0 // none
 						 ),
 		CDC_DataOutEndpoint(
 						   /* _input             = */ false,
 						   /* _EndpointAddress   = */ _first_endpoint_number+1,
 						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						   /* _EndpointSize      = */ kUSBNormalEnpointSize,
+						   /* _EndpointSize      = */ 0x40,
 						   /* _PollingIntervalMS = */ 0x05
 						   ),
 		CDC_DataInEndpoint(
 						  /* _input             = */ true,
 						  /* _EndpointAddress   = */ _first_endpoint_number+2,
 						  /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						  /* _EndpointSize      = */ kUSBNormalEnpointSize,
+						  /* _EndpointSize      = */ 0x40,
 						  /* _PollingIntervalMS = */ 0x05
 						  )
 		{};
@@ -585,9 +639,9 @@ namespace Motate {
 						 /* _AlternateSetting  = */ 0,
 						 /* _TotalEndpoints    = */ 2,
 
-						 /* _Class             = */ kCDCClass,
-						 /* _SubClass          = */ kACMSubclass,
-						 /* _Protocol          = */ kATCommandProtocol,
+						 /* _Class             = */ kCDCDataClass,
+						 /* _SubClass          = */ kNoDataSubclass,
+						 /* _Protocol          = */ kNoDataProtocol,
 
 						 /* _InterfaceStrIndex = */ 0 // none
 						 ),

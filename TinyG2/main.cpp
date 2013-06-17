@@ -99,7 +99,7 @@ int main( void )
 {
 	// system initialization
 	init();
-	delay(10);
+	delay(1);
 	usb.attach();				// USB setup
 	SerialUSB.begin(115200);
 //	delay(1000);

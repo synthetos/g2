@@ -45,6 +45,8 @@
 #include "hardware.h"
 #include "canonical_machine.h"
 
+#include "chip.h"
+
 // Allocate switch array structure
 switches_t sw;
 

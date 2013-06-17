@@ -540,6 +540,12 @@
     <Compile Include="plan_line.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\cortex_handlers.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\hooks.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\libsam\include\adc.h">
       <SubType>compile</SubType>
     </Compile>
@@ -703,6 +709,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\libsam\source\wdt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\Reset.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\Reset.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\syscalls.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\syscalls_sam3.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="report.cpp">

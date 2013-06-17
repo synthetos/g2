@@ -48,7 +48,7 @@ namespace Motate {
 
 	enum USBEndpointBufferSettingsFlags_t {
 		// null endpoint is all zeros
-		kEndpointBufferNull            = -1,
+		kEndpointBufferNull            = 0,
 
 		// endpoint direction
 		kEndpointBufferOutputFromHost  = UOTGHS_DEVEPTCFG_EPDIR_OUT,
@@ -103,24 +103,27 @@ namespace Motate {
 
 	/*** STRINGS ***/
 
-	const uint16_t *getUSBVendorString(uint8_t &length) ATTR_WEAK;
-	const uint16_t *getUSBProductString(uint8_t &length) ATTR_WEAK;
+	const uint16_t *getUSBVendorString(int16_t &length) ATTR_WEAK;
+	const uint16_t *getUSBProductString(int16_t &length) ATTR_WEAK;
 
 	// We break the rules here, sortof, by providing a macro shortcut that gets used in userland.
 	// I apologize, but this also opens it up to later optimization without changing user code.
 #define MOTATE_SET_USB_VENDOR_STRING(...)\
 	const uint16_t MOTATE_USBVendorString[] = __VA_ARGS__;\
-	const uint16_t *Motate::getUSBVendorString(uint8_t &length) {\
+	const uint16_t *Motate::getUSBVendorString(int16_t &length) {\
 		length = sizeof(MOTATE_USBVendorString);\
 		return MOTATE_USBVendorString;\
 	}
 
 #define MOTATE_SET_USB_PRODUCT_STRING(...)\
 	const uint16_t MOTATE_USBProductString[] = __VA_ARGS__;\
-	const uint16_t *Motate::getUSBProductString(uint8_t &length) {\
+	const uint16_t *Motate::getUSBProductString(int16_t &length) {\
 		length = sizeof(MOTATE_USBProductString);\
 		return MOTATE_USBProductString;\
 	}
+
+	// This needs to be provided in the hardware file
+	const uint16_t *getUSBLanguageString(int16_t &length);
 
 
 	/*** USBDeviceHardware ***/
@@ -185,9 +188,9 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t read(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
-//			if (!_usbConfiguration || len < 0)
-//				return -1;
+		static int32_t read(const uint8_t ep, const uint8_t * buffer, int16_t length) {
+			if (!_configuration || length < 0)
+				return -1;
 //
 //			LockEP lock(ep);
 			uint32_t n = UDD_FifoByteCount(ep & 0xF);
@@ -203,26 +206,21 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t write(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
+		static int32_t write(const uint8_t ep, const uint8_t * buffer, int16_t length) {
 			uint32_t n;
 			int r = length;
 			const uint8_t* data = (const uint8_t*)buffer;
 
-//			if (!_usbConfiguration)
+//			if (!_configuration)
 //			{
 //				TRACE_CORE(printf("pb conf\n\r");)
 //				return -1;
 //			}
 
-			while (length)
+			while (length > 0)
 			{
-				if(ep==0) n = EP0_SIZE;
-				else n =  EPX_SIZE;
-				if (n > length)
-					n = length;
+				n = UDD_Send(ep & 0xF, data, length);
 				length -= n;
-
-				UDD_Send(ep & 0xF, data, n);
 				data += n;
 			}
 
@@ -230,20 +228,46 @@ namespace Motate {
 		};
 
 		// This is static to be called from the interrupt.
-		static void sendString(const uint8_t string_num) {
-			uint8_t length = 0;
-			const uint16_t *string = 0;
+		static void sendString(const uint8_t string_num, int16_t maxLength) {
+			int16_t length = 0;
+			int16_t to_send;
+			const uint16_t *string;
+			if (string_num == 0) {
+				// Language ID
+				string = getUSBLanguageString(length);
+			}
 			if (kManufacturerStringId == string_num && getUSBVendorString) {
 				string = getUSBVendorString(length);
 			} else
 			if (kProductStringId == string_num && getUSBProductString) {
 				string = getUSBProductString(length);
-			}
+			} else
+				return; // This is wrong, but works...?
 
 			USBDescriptorStringHeader_t string_header(length);
+
+			// Make sure we don't send more than maxLength!
+			// If the string is longer, then the host will have to ask again,
+			//  with a bigger maxLength, and probably will.
+			to_send = length + sizeof(string_header);
+			if (to_send > maxLength)
+				to_send = maxLength;
+
 			write(0, (const uint8_t *)(&string_header), sizeof(string_header));
-			if (string)
-				write(0, (const uint8_t *)(string), length);
+
+			// We already "sent" (queued) the header, which is 3 bytes
+			to_send -= sizeof(string_header);
+
+			if (to_send)
+				write(0, (const uint8_t *)(string), to_send);
+		};
+
+		static const EndpointBufferSettings_t getEndpointConfigFromHardware(const uint8_t endpoint) {
+			if (endpoint == 0)
+			{
+				return kEnpointBufferSizeUpTo8 | kEndpointBufferBlocks1 | kEndpointBufferTypeControl;
+			}
+			return kEndpointBufferNull;
 		};
 	}; //class USBDeviceHardware
 }

@@ -29,6 +29,7 @@
 #define UTIL_H_ONCE
 
 #include <stdint.h>
+#include "chip.h"
 
 inline void delay( uint32_t ms )
 {

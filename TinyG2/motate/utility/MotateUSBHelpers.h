@@ -138,7 +138,7 @@ namespace Motate {
 		kNoDescriptorId       = 0, /* Indicates a lack of a string to give */
 		kManufacturerStringId = 1, /* Manufacturer string ID */
 		kProductStringId      = 2, /* Product string ID */
-		kSerialNumberId       = 3, /* Serial Number ID */
+		kSerialNumberId       = 0, /* Serial Number ID -- TODO */
 	};
 
 	/* Endpoint Descriptor Attribute Masks */
@@ -459,7 +459,7 @@ namespace Motate {
 			_config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number),
 			_config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number)
 		{};
-	};
+	} ATTR_PACKED;
 
 	// Declare the base (Null) USBConfigMixin
 	// We use template specialization (later) on a combination of *one* of the three interfaces,
@@ -595,7 +595,7 @@ namespace Motate {
 
 							  uint8_t  _PollingIntervalMS
 							  )
-		: Header(sizeof(USBDescriptorEndpoint_t), kConfigurationDescriptor),
+		: Header(sizeof(USBDescriptorEndpoint_t), kEndpointDescriptor),
 		EndpointAddress(_EndpointAddress | (_input ? 0x80 : 0x00)),
 
 		Attributes(_Attributes),
@@ -743,6 +743,18 @@ namespace Motate {
 			return (_bRequest == kSetAddress);
 		}
 
+		const bool isADeviceToHostClassInterfaceRequest() const {
+			return (_bmRequestType & (kRequestDeviceToHost | kRequestClass | kRequestInterface));
+		};
+		
+		const bool isAHostToDeviceClassInterfaceRequest() const {
+			return (_bmRequestType & (kRequestHostToDevice | kRequestClass | kRequestInterface));
+		};
+
+		const bool requestIs(uint8_t testRequest) const {
+			return _bRequest == testRequest;
+		};
+
 		const _setupValues_t featureToSetOrClear() {
 			return (_setupValues_t) _wValueL;
 		};
@@ -754,7 +766,11 @@ namespace Motate {
 		const uint8_t valueHigh() {
 			return _wValueH;
 		}
-	};
+
+		const uint16_t length() {
+			return _wLength;
+		}
+	} ATTR_PACKED; // Setup_t
 
 
 	// Flags for endpoint information, for use by the hardware to configure the endpoints internally.

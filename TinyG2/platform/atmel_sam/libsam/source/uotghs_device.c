@@ -227,6 +227,8 @@ uint32_t UDD_Send(uint32_t ep, const void* data, uint32_t len)
 	else
 	{
 		ul_send_fifo_ptr[ep] = 0;
+		if (len > EPX_SIZE)
+			len = EPX_SIZE;
 	}
 	for (i = 0, ptr_dest += ul_send_fifo_ptr[ep]; i < len; ++i)
 		*ptr_dest++ = *ptr_src++;
