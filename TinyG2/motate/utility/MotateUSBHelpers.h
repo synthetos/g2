@@ -43,8 +43,12 @@ namespace Motate {
 	#define ATTR_WEAK  __attribute__ ((weak))
 #endif
 
-	extern const uint16_t kUSBControlEnpointSize;
-	extern const uint16_t kUSBNormalEnpointSize;
+	/* Enumerate the possible speed settings. */
+	enum USBDeviceSpeed_t {
+		kUSBDeviceLowSpeed  = 0,
+		kUSBDeviceFullSpeed = 1,
+		kUSBDeviceHighSpeed = 2
+	};
 
 	/* ############################################# */
 	/* #                                           # */
@@ -180,7 +184,10 @@ namespace Motate {
 		kEndpointTypeBulk        = 0x02,
 
 		/** Mask for an INTERRUPT type endpoint or pipe. */
-		kEndpointTypeInterrupt   = 0x03
+		kEndpointTypeInterrupt   = 0x03,
+
+		/** This is NOT and endpoint type, but just the bits needed to mask this from the attributes. */
+		kEndpointTypeMask        = 0x03
 	};
 
 	// *NOTE* These struct/classes are carefully constructed to store in the correct binary format
@@ -320,7 +327,10 @@ namespace Motate {
 									 uint8_t  _SubClass = 0,
 									 uint8_t  _Protocol = 0,
 
-									 uint8_t  _Endpoint0Size = kUSBControlEnpointSize,
+									 uint8_t  _Endpoint0Size = 64, /* Only high-speed (or faster) devices
+																	*   are allowed to respond to Device Qualifier requests.
+																	* High-speed devices must have a control endpoint size of 64.
+																	*/
 									 uint8_t  _NumberOfConfigurations = 1
 									)
 		: Header(sizeof(USBDescriptorDeviceQualifier_t), kDeviceQualifierDescriptor),
@@ -442,22 +452,23 @@ namespace Motate {
 
 		USBDescriptorConfiguration_t(
 									 uint8_t _ConfigAttributes,
-									 uint16_t _MaxPowerConsumption
+									 uint16_t _MaxPowerConsumption,
+									 bool _OtherConfig
 									 ) :
 			USBDescriptorConfigurationHeader_t(
 											   /* _TotalConfigurationSize = */ sizeof(_this_type),
 											   /*        _TotalInterfaces = */ _total_interfaces_used,
 
-											   /*    _ConfigurationNumber = */ 1,
+											   /*    _ConfigurationNumber = */ _OtherConfig ? 2 : 1,
 											   /*  _ConfigurationStrIndex = */ 0, /* Fixme? */
 
 											   /*       _ConfigAttributes = */ _ConfigAttributes,
 
 											   /*    _MaxPowerConsumption = */ _MaxPowerConsumption
 											   ),
-			_config_mixin_0_type(_interface_0_first_endpoint, _interface_0_number),
-			_config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number),
-			_config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number)
+			_config_mixin_0_type(_interface_0_first_endpoint, _interface_0_number, _OtherConfig),
+			_config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number, _OtherConfig),
+			_config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number, _OtherConfig)
 		{};
 	} ATTR_PACKED;
 
@@ -468,7 +479,7 @@ namespace Motate {
 	template < typename usbIFA, typename usbIFB, typename usbIFC, int position >
 	struct USBConfigMixin {
 		static const uint8_t interfaces = 0;
-		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) {};
+		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_config) {};
 		static bool isNull() { return true; };
 	};
 
@@ -565,6 +576,73 @@ namespace Motate {
 	} ATTR_PACKED;
 
 
+	/***
+	 Endpoint maximimum packet sizes, by type, according to the specs:
+	 Control Endpoints:
+	 low speed devices : 8 bytes
+	 full speed devices: 8, 16, 32 or 64 bytes
+	 high speed devices: 64 bytes
+
+	 Interrupt Endpoints:
+	 low speed devices : 8 bytes
+	 full speed devices: up to 64 bytes
+	 high speed devices: up to 1024 bytes
+
+	 Isochronous Endpoints:
+	 low speed devices : not allowed
+	 full speed devices: up to 1023 bytes
+	 high speed devices: up to 1024 bytes
+
+	 Bulk Endpoints:
+	 low speed devices : not allowed
+	 full speed devices: 8, 16, 32 or 64 bytes
+	 high speed devices: up to 512 bytes
+
+	 Useful resources:
+	 http://www.beyondlogic.org/usbnutshell/usb4.shtml
+	 http://wiki.osdev.org/Universal_Serial_Bus
+
+	 ***/
+
+	// This must be defined in the device-specific file:
+	// Sould we remote the const? -Rob
+	extern const USBDeviceSpeed_t USBDeviceSpeed;
+
+	extern uint16_t checkEndpointSizeHardwareLimits(const uint16_t tempSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed);
+
+	// Here we use the above rules for endpoints, and then determine, based on the endpoint number, type, and which if it's the main speed or "other speed."
+	static inline uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed) {
+		uint16_t tempSize = 0;
+		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {
+			// Note that other_speed only applies to high-speed devices
+			if (endpointType == kEndpointTypeIsochronous || endpointType == kEndpointTypeInterrupt) {
+				tempSize = otherSpeed ? 512 : 1024;
+			}
+			if (endpointType == kEndpointTypeBulk) {
+				tempSize = otherSpeed ? 256 : 512;
+			}
+			tempSize = 64; // maximum size for all other full-speed endpoints is 64
+		}
+
+		if (USBDeviceSpeed == kUSBDeviceFullSpeed) {
+			if (endpointType == kEndpointTypeIsochronous) {
+				tempSize = 1023; // WTF?!?
+			}
+			tempSize = 64; // maximum size for all other full-speed endpoints is 64
+		}
+
+		// low speed devices have more restrictions, let's get that out of the way...
+		if (USBDeviceSpeed == kUSBDeviceLowSpeed) {
+			if (endpointType == kEndpointTypeControl || endpointType == kEndpointTypeInterrupt) {
+				tempSize = 8;
+			}
+		}
+
+		tempSize = checkEndpointSizeHardwareLimits(tempSize, endpointNumber, endpointType, otherSpeed);
+
+		return tempSize;
+	};
+
 #pragma mark USBDescriptorEndpoint_t
 	struct USBDescriptorEndpoint_t
 	{
@@ -585,26 +663,65 @@ namespace Motate {
 
 		/* Initialization */
 
-		USBDescriptorEndpoint_t(
-							  bool     _input,
-							  uint8_t  _EndpointAddress,
 
-							  uint8_t  _Attributes,
+		USBDescriptorEndpoint_t (
+								 bool     _otherSpeed,
+								 bool     _input,
+								 uint8_t  _EndpointAddress,
 
-							  uint16_t _EndpointSize,
+								 uint8_t  _Attributes,
 
-							  uint8_t  _PollingIntervalMS
-							  )
+								 uint8_t  _PollingIntervalMS
+								 )
 		: Header(sizeof(USBDescriptorEndpoint_t), kEndpointDescriptor),
 		EndpointAddress(_EndpointAddress | (_input ? 0x80 : 0x00)),
 
 		Attributes(_Attributes),
 
-		EndpointSize(_EndpointSize),
+		EndpointSize(getEndpointSize(_EndpointAddress, (USBEndpointType_t)(_Attributes & kEndpointTypeMask), _otherSpeed)),
 
 		PollingIntervalMS(_PollingIntervalMS)
 		{};
 	} ATTR_PACKED;
+
+
+	// Flags for endpoint information, for use by the hardware to configure the endpoints internally.
+
+	// These are to be defined in the the hardware-specific USB files, but *all* values must be defined.
+	// For example: On a platform that can only have 64 byte buffers, everything above kEnpointBufferSizeUpTo64
+	//  is equal to kEnpointBufferSizeUpTo64.
+
+	// There is also a typedef: EndpointBufferSettings_t
+
+	/*
+	 kEndpointBufferNull
+
+	 // endpoint direction
+	 kEndpointBufferInput
+	 kEndpointBufferOutput
+
+	 // buffer sizes
+	 kEnpointBufferSizeUpTo8
+	 kEnpointBufferSizeUpTo16
+	 kEnpointBufferSizeUpTo32
+	 kEnpointBufferSizeUpTo64
+	 kEnpointBufferSizeUpTo128
+	 kEnpointBufferSizeUpTo256
+	 kEnpointBufferSizeUpTo512
+	 kEnpointBufferSizeUpTo1024
+
+	 // buffer "blocks" -- 2 == "ping pong"
+	 // Note that there must be one, or this is a null endpoint.
+	 kEndpointBufferBlocks1
+	 kEndpointBufferBlocksUpTo2
+	 kEndpointBufferBlocksUpTo3
+
+	 // endpoint types (mildly redundant from the config)
+	 kEndpointBufferTypeControl
+	 kEndpointBufferTypeIsochronous
+	 kEndpointBufferTypeBulk
+	 kEndpointBufferTypeInterrupt
+	 */
 
 #pragma mark template <uint8_t size> USBDescriptorString_t
 	struct USBDescriptorStringHeader_t
@@ -767,49 +884,15 @@ namespace Motate {
 			return _wValueH;
 		}
 
+		const uint16_t index() {
+			return _wIndex;
+		}
+
 		const uint16_t length() {
 			return _wLength;
 		}
 	} ATTR_PACKED; // Setup_t
 
-
-	// Flags for endpoint information, for use by the hardware to configure the endpoints internally.
-
-	// These are to be defined in the the hardware-specific USB files, but *all* values must be defined.
-	// For example: On a platform that can only have 64 byte buffers, everything above kEnpointBufferSizeUpTo64
-	//  is equal to kEnpointBufferSizeUpTo64.
-
-	// There is also a typedef: EndpointBufferSettings_t
-	
-/*
-	kEndpointBufferNull
-
-	// endpoint direction
-	kEndpointBufferInput
-	kEndpointBufferOutput
-
-	// buffer sizes
-	kEnpointBufferSizeUpTo8
-	kEnpointBufferSizeUpTo16
-	kEnpointBufferSizeUpTo32
-	kEnpointBufferSizeUpTo64
-	kEnpointBufferSizeUpTo128
-	kEnpointBufferSizeUpTo256
-	kEnpointBufferSizeUpTo512
-	kEnpointBufferSizeUpTo1024
-
-	// buffer "blocks" -- 2 == "ping pong"
-	// Note that there must be one, or this is a null endpoint.
-	kEndpointBufferBlocks1
-	kEndpointBufferBlocksUpTo2
-	kEndpointBufferBlocksUpTo3
-
-	// endpoint types (mildly redundant from the config)
-	kEndpointBufferTypeControl
-	kEndpointBufferTypeIsochronous
-	kEndpointBufferTypeBulk
-	kEndpointBufferTypeInterrupt
-*/
 }
 
 #endif

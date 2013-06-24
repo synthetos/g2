@@ -34,9 +34,11 @@
 
 #define TRACE_CORE(x)
 
+uint16_t endpointSizes[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 namespace Motate {
-	const uint16_t kUSBControlEnpointSize = EP0_SIZE;
-	const uint16_t kUSBNormalEnpointSize = EPX_SIZE;
+
+	const USBDeviceSpeed_t USBDeviceSpeed = kUSBDeviceHighSpeed;
 
 	const uint16_t MOTATE_USBLanguageString[] = {0x0409}; // English
 	const uint16_t *getUSBLanguageString(int16_t &length) {
@@ -65,6 +67,20 @@ namespace Motate {
 	// Enpoint 7 config - max 1024b buffer, with two blocks
 	// Enpoint 8 config - max 1024b buffer, with two blocks
 	// Enpoint 9 config - max 1024b buffer, with two blocks
+
+	uint16_t checkEndpointSizeHardwareLimits(const uint16_t inSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed) {
+		uint16_t tempSize = inSize;
+
+		if (endpointNumber == 0) {
+			if (tempSize > 64)
+				tempSize = 64;
+		} else if (tempSize > 1024) {
+			tempSize = 1024;
+		}
+
+		return tempSize;
+	};
+
 	static const EndpointBufferSettings_t _enforce_enpoint_limits(const uint8_t endpoint, EndpointBufferSettings_t config) {
 		if (endpoint > 9)
 			return kEndpointBufferNull;
@@ -75,7 +91,6 @@ namespace Motate {
 
 			config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocks1;
 		} else {
-
 			// Enpoint 1 config - max 1024b buffer, with three blocks
 			// Enpoint 2 config - max 1024b buffer, with three blocks
 
@@ -127,8 +142,11 @@ namespace Motate {
 			udd_configure_address(0);
 			udd_enable_address();
 
-			// Configure EP 0
-			_hw_init_endpoint(0, USBProxy.getEndpointConfig(0));
+			// Configure EP 0 -- there's no opportunity to have a second configuration
+			_hw_init_endpoint(0, USBProxy.getEndpointConfig(0, /* otherSpeed = */ false));
+
+			endpointSizes[0] = USBProxy.getEndpointSize(0, /* otherSpeed = */ false);
+
 			udd_enable_setup_received_interrupt(0);
 			udd_enable_endpoint_interrupt(0);
 
@@ -301,13 +319,15 @@ namespace Motate {
 
 //						UDD_InitEndpoints(EndPoints, (sizeof(EndPoints) / sizeof(EndPoints[0])));
 
-						uint8_t first_endpoint, total_endpoints;
-						total_endpoints = USBProxy.getEndpointCount(first_endpoint);
-						for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++)
-							_hw_init_endpoint(ep, USBProxy.getEndpointConfig(ep));
-
+						// _configuration should be set to 1 for high-speed, and 2 for full-speed
 						_configuration = setup.valueLow();
 
+						uint8_t first_endpoint, total_endpoints;
+						total_endpoints = USBProxy.getEndpointCount(first_endpoint);
+						for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
+							_hw_init_endpoint(ep, USBProxy.getEndpointConfig(ep, /* otherSpeed = */ _configuration == 2));
+							endpointSizes[ep] = USBProxy.getEndpointSize(ep, /* otherSpeed = */ _configuration == 2);
+						}
 						ok = true;
 
 #if 0

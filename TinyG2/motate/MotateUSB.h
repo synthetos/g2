@@ -120,7 +120,12 @@ namespace Motate {
 		static bool sendDescriptorOrConfig(Setup_t &setup) {
 			const uint8_t type = setup.valueHigh();
 			if (type == kConfigurationDescriptor) {
-				sendConfig(setup.length());
+				sendConfig(setup.length(), /*other = */ setup.valueLow() == 2);
+				return true;
+			}
+			else
+			if (type == kOtherDescriptor) {
+				sendConfig(setup.length(), /*other = */ true);
 				return true;
 			}
 			else
@@ -159,8 +164,8 @@ namespace Motate {
 			_this_type::write(0, (const uint8_t *)(&qualifier), maxLength < length ? maxLength : length);
 		};
 
-		static void sendConfig(uint16_t maxLength) {
-			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption);
+		static void sendConfig(uint16_t maxLength, const bool other) {
+			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption, other);
 			uint16_t length = sizeof(_config_type);
 			_this_type::write(0, (const uint8_t *)(&config), maxLength < length ? maxLength : length);
 		};
@@ -171,22 +176,34 @@ namespace Motate {
 			       _mixin_2_type::handleNonstandardRequestInMixin(setup);
 		};
 
-		static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint) {
+		static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) {
 			EndpointBufferSettings_t ebs = _hardware_type::getEndpointConfigFromHardware(endpoint);
 
 			if (!_mixin_0_type::isNull() && ebs == kEndpointBufferNull)
-				ebs = _mixin_0_type::getEndpointConfigFromMixin(endpoint);
+				ebs = _mixin_0_type::getEndpointConfigFromMixin(endpoint, otherSpeed);
 			if (!_mixin_1_type::isNull() && ebs == kEndpointBufferNull)
-				ebs = _mixin_1_type::getEndpointConfigFromMixin(endpoint);
+				ebs = _mixin_1_type::getEndpointConfigFromMixin(endpoint, otherSpeed);
 			if (!_mixin_2_type::isNull() && ebs == kEndpointBufferNull)
-				ebs = _mixin_2_type::getEndpointConfigFromMixin(endpoint);
+				ebs = _mixin_2_type::getEndpointConfigFromMixin(endpoint, otherSpeed);
 			return ebs;
 		};
 
 		static const uint8_t getEndpointCount(uint8_t &firstEnpointNum) {
 			firstEnpointNum = _interface_0_first_endpoint;
 			return _total_endpoints_used;
-		}
+		};
+
+		static uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) {
+			uint16_t size = _hardware_type::getEndpointSizeFromHardware(endpointNum, otherSpeed);
+			if (size == 0)
+				size = _mixin_0_type::getEndpointSizeFromMixin(endpointNum, otherSpeed);
+			if (size == 0)
+				size = _mixin_1_type::getEndpointSizeFromMixin(endpointNum, otherSpeed);
+			if (size == 0)
+				size = _mixin_2_type::getEndpointSizeFromMixin(endpointNum, otherSpeed);
+			return size;
+		};
+
 
 		// This could be abused...
 		static _this_type *_singleton;
@@ -208,11 +225,12 @@ namespace Motate {
 				) {};
 
 		static bool isNull() { return true; };
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint) {
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const bool other_speed) {
 			return kEndpointBufferNull;
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
+		static uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const bool otherSpeed) { return 8; };
 	};
 
 	template < typename interface0type, typename interface1type, typename interface2type >
@@ -224,7 +242,7 @@ namespace Motate {
 								  /*               SubClass = */ kNoDeviceSubclass,
 								  /*               Protocol = */ kNoDeviceProtocol,
 
-								  /*          Endpoint0Size = */ 64, /* !!!!!!!!!!! FIXME */
+								  /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, false),
 
 								  /*               VendorID = */ vendorID,
 								  /*              ProductID = */ productID,
@@ -249,3 +267,4 @@ namespace Motate {
 
 #endif
 // MOTATEUSB_ONCE
+

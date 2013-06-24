@@ -39,10 +39,13 @@
 
 #include "chip.h"
 
+// This is used to store the buffer sizes -- MOVE TO THE NAMESPACE
+extern uint16_t enpointSizes[10];
+
 namespace Motate {
 
-
 	/*** ENDPOINT CONFIGURATION ***/
+
 
 	typedef uint32_t EndpointBufferSettings_t;
 
@@ -96,7 +99,8 @@ namespace Motate {
 		bool (*sendDescriptorOrConfig)(Setup_t &setup);
 		bool (*handleNonstandardRequest)(Setup_t &setup);
 		const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
-		const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint);
+		uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
+		const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
 	};
 	extern USBProxy_t USBProxy;
 
@@ -149,6 +153,7 @@ namespace Motate {
 			USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
 			USBProxy.getEndpointConfig        = parent::getEndpointConfig;
 			USBProxy.getEndpointCount         = parent::getEndpointCount;
+			USBProxy.getEndpointSize          = parent::getEndpointSize;
 
 			UDD_SetStack(&_usb_interrupt);
 
@@ -193,7 +198,7 @@ namespace Motate {
 				return -1;
 //
 //			LockEP lock(ep);
-			uint32_t n = UDD_FifoByteCount(ep & 0xF);
+			int16_t n = UDD_FifoByteCount(ep & 0xF);
 			length = min(n, length);
 			n = length;
 			uint8_t* dst = (uint8_t*)buffer;
@@ -228,18 +233,18 @@ namespace Motate {
 		};
 
 		// This is static to be called from the interrupt.
-		static void sendString(const uint8_t string_num, int16_t maxLength) {
+		static void sendString(const uint8_t stringNum, int16_t maxLength) {
 			int16_t length = 0;
 			int16_t to_send;
 			const uint16_t *string;
-			if (string_num == 0) {
+			if (stringNum == 0) {
 				// Language ID
 				string = getUSBLanguageString(length);
 			}
-			if (kManufacturerStringId == string_num && getUSBVendorString) {
+			if (kManufacturerStringId == stringNum && getUSBVendorString) {
 				string = getUSBVendorString(length);
 			} else
-			if (kProductStringId == string_num && getUSBProductString) {
+			if (kProductStringId == stringNum && getUSBProductString) {
 				string = getUSBProductString(length);
 			} else
 				return; // This is wrong, but works...?
@@ -260,6 +265,13 @@ namespace Motate {
 
 			if (to_send)
 				write(0, (const uint8_t *)(string), to_send);
+		};
+
+		static uint16_t getEndpointSizeFromHardware(const uint8_t &endpoint, const bool otherSpeed) {
+			if (endpoint == 0) {
+				return 64;
+			}
+			return 0;
 		};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromHardware(const uint8_t endpoint) {

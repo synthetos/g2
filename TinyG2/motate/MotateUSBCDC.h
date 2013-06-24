@@ -320,21 +320,63 @@ namespace Motate {
 		void begin(uint32_t baud_count) {};
 		void end(void){};
 
-		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint) {
-			if (endpoint == control_endpoint)
-			{
-				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeInterrupt;
+		// This is sam-specific, so we put a _ in front.
+		// This should optimize out.
+		static const EndpointBufferSettings_t _getBufferSizeFlags(const uint16_t speed) {
+			if (speed == 1024) {
+				return kEnpointBufferSizeUpTo1024;
 			}
-			else if (endpoint == read_endpoint)
-			{
-				return kEndpointBufferOutputFromHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
-			}
-			else if (endpoint == write_endpoint)
-			{
-				return kEndpointBufferInputToHost | kEnpointBufferSizeUpTo64 | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+			else if (speed == 512) {
+				return kEnpointBufferSizeUpTo512;
+			} else if (speed == 128) {
+				return kEnpointBufferSizeUpTo128;
+			} else if (speed == 64) {
+				return kEnpointBufferSizeUpTo64;
+			} else if (speed == 32) {
+				return kEnpointBufferSizeUpTo32;
+			} else if (speed == 16) {
+				return kEnpointBufferSizeUpTo16;
+			} else if (speed == 8) {
+				return kEnpointBufferSizeUpTo8;
 			}
 			return kEndpointBufferNull;
 		};
+
+		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const bool otherSpeed) {
+			if (endpoint == control_endpoint)
+			{
+				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
+				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeInterrupt;
+			}
+			else if (endpoint == read_endpoint)
+			{
+				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed));
+				return kEndpointBufferOutputFromHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+			}
+			else if (endpoint == write_endpoint)
+			{
+				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed));
+				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+			}
+			return kEndpointBufferNull;
+		};
+
+		uint16_t getEndpointSize(const uint8_t &endpoint, const bool otherSpeed) {
+			if (endpoint == control_endpoint)
+			{
+				return Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed);
+			}
+			else if (endpoint == read_endpoint)
+			{
+				return Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed);
+			}
+			else if (endpoint == write_endpoint)
+			{
+				return Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed);
+			}
+			return 0;
+		};
+
 	};
 
 #pragma mark USBMixin< USBCDC, usbIFB, usbIFC, 0 >
@@ -350,11 +392,14 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const bool other_speed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
 			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+		};
+		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
 		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -371,10 +416,15 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
 		};
-		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+		};
+		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
+		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
@@ -390,10 +440,15 @@ namespace Motate {
 											   const uint8_t new_endpoint_offset
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint);
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
 		};
-		static bool handleNonstandardRequestInMixin(Setup_t &setup) { return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup); };
+		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+		};
+		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
+			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
+		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
 
@@ -416,7 +471,7 @@ namespace Motate {
 							  /*               SubClass = */ kNoSpecificSubclass,
 							  /*               Protocol = */ kNoSpecificProtocol,
 
-							  /*          Endpoint0Size = */ 8, /* !!!!!!!!!!! FIXME */
+							  /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, false),
 
 							  /*               VendorID = */ vendorID,
 							  /*              ProductID = */ productID,
@@ -426,7 +481,7 @@ namespace Motate {
 							  /*        ProductStrIndex = */ kProductStringId,
 							  /*      SerialNumStrIndex = */ kSerialNumberId,
 
-							  /* NumberOfConfigurations = */ 1  /* !!!!!!!!!!! FIXME */
+							  /* NumberOfConfigurations = */ 1
 							  )
 		{};
 	};
@@ -443,7 +498,7 @@ namespace Motate {
 							  /*               SubClass = */ kIADDeviceSubclass,
 							  /*               Protocol = */ kIADDeviceProtocol,
 
-							  /*          Endpoint0Size = */ 8, /* !!!!!!!!!!! FIXME */
+							  /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, false),
 
 							  /*               VendorID = */ vendorID,
 							  /*              ProductID = */ productID,
@@ -453,7 +508,7 @@ namespace Motate {
 							  /*        ProductStrIndex = */ kProductStringId,
 							  /*      SerialNumStrIndex = */ kSerialNumberId,
 
-							  /* NumberOfConfigurations = */ 1  /* !!!!!!!!!!! FIXME */
+							  /* NumberOfConfigurations = */ 1
 							  )
 		{};
 	};
@@ -528,7 +583,7 @@ namespace Motate {
 		const USBDescriptorEndpoint_t CDC_DataInEndpoint;
 		
 		
-		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number)
+		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed)
 		: CDC_CCI_Interface(
 								   /* _InterfaceNumber   = */ _first_interface_number,
 								   /* _AlternateSetting  = */ 0,
@@ -544,12 +599,12 @@ namespace Motate {
 		CDC_Functional_ACM(),
 		CDC_Functional_Union(_first_interface_number),
 		CDC_NotificationEndpoint(
-								/* _input             = */ true,
-								/* _EndpointAddress   = */ _first_endpoint_number,
-								/* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
-								/* _EndpointSize      = */ 0x10,
-								/* _PollingIntervalMS = */ 0xFF
-								),
+								 /* _otherSpeed        = */ _other_speed,
+								 /* _input             = */ true,
+								 /* _EndpointAddress   = */ _first_endpoint_number,
+								 /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
+								 /* _PollingIntervalMS = */ 0xFF
+								 ),
 
 		
 		CDC_DCI_Interface(
@@ -564,19 +619,19 @@ namespace Motate {
 						  /* _InterfaceStrIndex = */ 0 // none
 						 ),
 		CDC_DataOutEndpoint(
-						   /* _input             = */ false,
-						   /* _EndpointAddress   = */ _first_endpoint_number+1,
-						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						   /* _EndpointSize      = */ 0x40,
-						   /* _PollingIntervalMS = */ 0x05
-						   ),
+							/* _otherSpeed        = */ _other_speed,
+							/* _input             = */ false,
+							/* _EndpointAddress   = */ _first_endpoint_number+1,
+							/* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
+							/* _PollingIntervalMS = */ 0x05
+							),
 		CDC_DataInEndpoint(
-						  /* _input             = */ true,
-						  /* _EndpointAddress   = */ _first_endpoint_number+2,
-						  /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						  /* _EndpointSize      = */ 0x40,
-						  /* _PollingIntervalMS = */ 0x05
-						  )
+						   /* _otherSpeed        = */ _other_speed,
+						   /* _input             = */ true,
+						   /* _EndpointAddress   = */ _first_endpoint_number+2,
+						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
+						   /* _PollingIntervalMS = */ 0x05
+						   )
 		{};
 		
 		static bool isNull() { return false; };
@@ -602,7 +657,7 @@ namespace Motate {
 		const USBDescriptorEndpoint_t CDC_DataOutEndpoint;
 		const USBDescriptorEndpoint_t CDC_DataInEndpoint;
 
-		USBConfigMixinMultiple_t (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number)
+		USBConfigMixinMultiple_t (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed)
 		: CDC_IAD (
 				  /* _FirstInterfaceIndex = */ _first_interface_number,
 				  /* _TotalInterfaces     = */ 2,
@@ -626,13 +681,12 @@ namespace Motate {
 		CDC_Functional_ACM(),
 		CDC_Functional_Union(_first_interface_number),
 		CDC_NotificationEndpoint(
-								/* _input             = */ true,
-								/* _EndpointAddress   = */ _first_endpoint_number,
-								/* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
-								/* _EndpointSize      = */ kUSBControlEnpointSize,
-								/* _PollingIntervalMS = */ 0x05
-								),
-
+								 /* _otherSpeed        = */ _other_speed,
+								 /* _input             = */ true,
+								 /* _EndpointAddress   = */ _first_endpoint_number,
+								 /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
+								 /* _PollingIntervalMS = */ 0x05
+								 ),
 
 		CDC_DCI_Interface(
 						 /* _InterfaceNumber   = */ _first_interface_number+1,
@@ -646,19 +700,19 @@ namespace Motate {
 						 /* _InterfaceStrIndex = */ 0 // none
 						 ),
 		CDC_DataOutEndpoint(
-						   /* _input             = */ false,
-						   /* _EndpointAddress   = */ _first_endpoint_number+1,
-						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						   /* _EndpointSize      = */ kUSBNormalEnpointSize,
-						   /* _PollingIntervalMS = */ 0x05
-						   ),
+							/* _otherSpeed        = */ _other_speed,
+							/* _input             = */ false,
+							/* _EndpointAddress   = */ _first_endpoint_number+1,
+							/* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
+							/* _PollingIntervalMS = */ 0x05
+							),
 		CDC_DataInEndpoint(
-						  /* _input             = */ true,
-						  /* _EndpointAddress   = */ _first_endpoint_number+2,
-						  /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-						  /* _EndpointSize      = */ kUSBNormalEnpointSize,
-						  /* _PollingIntervalMS = */ 0x05
-						  )
+						   /* _otherSpeed        = */ _other_speed,
+						   /* _input             = */ true,
+						   /* _EndpointAddress   = */ _first_endpoint_number+2,
+						   /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
+						   /* _PollingIntervalMS = */ 0x05
+						   )
 		{};
 
 		static bool isNull() { return false; };
@@ -667,24 +721,24 @@ namespace Motate {
 	// CDC is the first interface...
 	template < typename usbIFB, typename usbIFC >
 	struct USBConfigMixin < USBCDC, usbIFB, usbIFC, 0 > : USBConfigMixinMultiple_t {
-		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) :
-		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number)
+		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed) :
+		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _other_speed)
 		{};
 	};
 
 	// CDC is the second interface...
 	template < typename usbIFA, typename usbIFC >
 	struct USBConfigMixin < usbIFA, USBCDC, usbIFC, 1 > : USBConfigMixinMultiple_t {
-		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) :
-		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number)
+		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed) :
+		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _other_speed)
 		{};
 	};
 
 	// CDC is the third interface...
 	template < typename usbIFA, typename usbIFB >
 	struct USBConfigMixin < usbIFA, usbIFB, USBCDC, 2 > : USBConfigMixinMultiple_t {
-		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) :
-		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number)
+		USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed) :
+		USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _other_speed)
 		{};
 	};
 
