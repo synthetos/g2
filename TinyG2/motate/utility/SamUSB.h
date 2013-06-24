@@ -92,7 +92,27 @@ namespace Motate {
 		kEndpointBufferTypeMask        = UOTGHS_DEVEPTCFG_EPTYPE_Msk
 	};
 
-	
+	// Convert from number to EndpointBufferSettings_t
+	// This should optimize out.
+	static const EndpointBufferSettings_t getBufferSizeFlags(const uint16_t speed) {
+		if (speed > 512) {
+			return kEnpointBufferSizeUpTo1024;
+		} else if (speed > 128) {
+			return kEnpointBufferSizeUpTo512;
+		} else if (speed > 64) {
+			return kEnpointBufferSizeUpTo128;
+		} else if (speed > 32) {
+			return kEnpointBufferSizeUpTo64;
+		} else if (speed > 16) {
+			return kEnpointBufferSizeUpTo32;
+		} else if (speed > 8) {
+			return kEnpointBufferSizeUpTo16;
+		} else {
+			return kEnpointBufferSizeUpTo8;
+		}
+		return kEndpointBufferNull;
+	};
+
 	/*** PROXY ***/
 
 	struct USBProxy_t {
@@ -277,7 +297,7 @@ namespace Motate {
 		static const EndpointBufferSettings_t getEndpointConfigFromHardware(const uint8_t endpoint) {
 			if (endpoint == 0)
 			{
-				return kEnpointBufferSizeUpTo8 | kEndpointBufferBlocks1 | kEndpointBufferTypeControl;
+				return getBufferSizeFlags(getEndpointSizeFromHardware(endpoint, false)) | kEndpointBufferBlocks1 | kEndpointBufferTypeControl;
 			}
 			return kEndpointBufferNull;
 		};

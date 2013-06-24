@@ -320,42 +320,20 @@ namespace Motate {
 		void begin(uint32_t baud_count) {};
 		void end(void){};
 
-		// This is sam-specific, so we put a _ in front.
-		// This should optimize out.
-		static const EndpointBufferSettings_t _getBufferSizeFlags(const uint16_t speed) {
-			if (speed == 1024) {
-				return kEnpointBufferSizeUpTo1024;
-			}
-			else if (speed == 512) {
-				return kEnpointBufferSizeUpTo512;
-			} else if (speed == 128) {
-				return kEnpointBufferSizeUpTo128;
-			} else if (speed == 64) {
-				return kEnpointBufferSizeUpTo64;
-			} else if (speed == 32) {
-				return kEnpointBufferSizeUpTo32;
-			} else if (speed == 16) {
-				return kEnpointBufferSizeUpTo16;
-			} else if (speed == 8) {
-				return kEnpointBufferSizeUpTo8;
-			}
-			return kEndpointBufferNull;
-		};
-
 		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const bool otherSpeed) {
 			if (endpoint == control_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
+				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
 				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeInterrupt;
 			}
 			else if (endpoint == read_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed));
+				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed));
 				return kEndpointBufferOutputFromHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			else if (endpoint == write_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = _getBufferSizeFlags(Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed));
+				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed));
 				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			return kEndpointBufferNull;
