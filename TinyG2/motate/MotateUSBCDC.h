@@ -266,7 +266,7 @@ namespace Motate {
 		_line_state(0x00)
 		{};
 
-		uint16_t readByte() {
+		int16_t readByte() {
 			return usb.readByte(read_endpoint);
 		};
 
