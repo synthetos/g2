@@ -35,17 +35,12 @@
 
 #include "sam.h"
 
-// TEMPORARY!! Grab samlib stuff.
-
-#include "chip.h"
-
 // This is used to store the buffer sizes -- MOVE TO THE NAMESPACE
 extern uint16_t enpointSizes[10];
 
 namespace Motate {
 
 	/*** ENDPOINT CONFIGURATION ***/
-
 
 	typedef uint32_t EndpointBufferSettings_t;
 
@@ -152,9 +147,17 @@ namespace Motate {
 
 	/*** USBDeviceHardware ***/
 
-	// This is the stub for the interrupt
-	void _usb_interrupt();
-
+	extern int32_t _getEndpointBufferCount(const uint8_t endpoint);
+	extern int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
+	extern int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
+	extern int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
+	extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
+	extern void _unfreezeUSBClock();
+	extern void _waitForUsableUSBClock();
+	extern void _enableResetInterrupt();
+	extern void _resetEndpointBuffer(const uint8_t endpoint);
+	extern void _freezeUSBClock();
+	
 	extern uint32_t _inited;
 	extern uint32_t _configuration;
 
@@ -166,6 +169,123 @@ namespace Motate {
 
 	public:
 
+		static void _init() {
+			uint32_t endpoint;
+
+			for (endpoint = 0; endpoint < 10; ++endpoint)
+			{
+				_resetEndpointBuffer(endpoint);
+			}
+
+			// Enables the USB Clock
+//			if (ID_UOTGHS < 32) {
+//				uint32_t id_mask = 1u << (ID_UOTGHS);
+//				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
+//					PMC->PMC_PCER0 = id_mask;
+//				}
+//#if (SAM3S_SERIES || SAM3XA_SERIES || SAM4S_SERIES)
+//			} else {
+				uint32_t id_mask = 1u << (ID_UOTGHS - 32);
+				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
+					PMC->PMC_PCER1 = id_mask;
+				}
+//#endif
+//			}
+
+			// Enable UPLL clock.
+			PMC->CKGR_UCKR = CKGR_UCKR_UPLLCOUNT(3) | CKGR_UCKR_UPLLEN;
+
+			/* Wait UTMI PLL Lock Status */
+			while (!(PMC->PMC_SR & PMC_SR_LOCKU))
+				;
+
+
+			// Switch UDP (USB) clock source selection to UPLL clock.
+			// Clock divisor is set to 1 (USBDIV + 1)
+			PMC->PMC_USB = PMC_USB_USBS | PMC_USB_USBDIV(/*USBDIV = */0);
+
+			// Enable UDP (USB) clock.
+# if (SAM3S_SERIES || SAM4S_SERIES)
+			PMC->PMC_SCER = PMC_SCER_UDP;
+# else
+			PMC->PMC_SCER = PMC_SCER_UOTGCLK;
+# endif
+
+			// Configure interrupts
+			NVIC_SetPriority((IRQn_Type) ID_UOTGHS, 0UL);
+			NVIC_EnableIRQ((IRQn_Type) ID_UOTGHS);
+
+			// Always authorize asynchrone USB interrupts to exit from sleep mode
+			//   for SAM3 USB wake up device except BACKUP mode
+			// Set the wake-up inputs for fast startup mode registers (event generation).
+			/* -- DISBALED --
+			 ul_inputs &= (~ PMC_FAST_STARTUP_Msk);
+			 PMC->PMC_FSMR |= PMC_FSMR_USBAL;
+			 */
+
+			// Disable external OTG_ID pin (ignored by USB)
+			UOTGHS->UOTGHS_CTRL |= ~UOTGHS_CTRL_UIDE;
+			//! Force device mode
+			UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_UIMOD;
+
+			// Enable USB hardware
+			//  Enable OTG pad
+			UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_OTGPADE;
+			//  Enable USB macro
+			UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_USBE;
+			//  Unfreeze internal USB clock
+			_unfreezeUSBClock();
+
+			// Check USB clock
+			//_waitForUsableUSBClock();
+
+			// Enable High Speed
+			//  Disable "Forced" Low Speed first..
+			UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_LS;
+			//  Then enable High Speed
+			/* UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
+			 * "The peripheral starts in full-speed mode and performs a high-speed reset to switch to the high-speed mode if
+			 *  the host is high-speed capable."
+			 */
+			UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~ UOTGHS_DEVCTRL_SPDCONF_Msk) | UOTGHS_DEVCTRL_SPDCONF_NORMAL;
+
+			// // otg_ack_vbus_transition();
+			// UOTGHS->UOTGHS_SCR = UOTGHS_SCR_VBUSTIC
+			// Force Vbus interrupt in case of Vbus always with a high level
+			// This is possible with a short timing between a Host mode stop/start.
+			/*
+			 if (UOTGHS->UOTGHS_SR & UOTGHS_SR_VBUS) {
+			 UOTGHS->UOTGHS_SFR = UOTGHS_SFR_VBUSTIS;
+			 }
+			 UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_VBUSTE;
+			 */
+			_freezeUSBClock();
+
+		};
+
+		static void _attach() {
+			//		irqflags_t flags = cpu_irq_save();
+
+			_unfreezeUSBClock();
+
+			// Check USB clock because the source can be a PLL
+			_waitForUsableUSBClock();
+
+			// Authorize attach if Vbus is present
+			UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_DETACH;
+
+			// Enable USB line events
+			_enableResetInterrupt();
+			//	udd_enable_sof_interrupt();
+
+			//		cpu_irq_restore(flags);
+
+		};
+
+		static void _detach() {
+			UOTGHS->UOTGHS_DEVCTRL |= UOTGHS_DEVCTRL_DETACH;
+		};
+
 		// Init
 		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
@@ -175,18 +295,14 @@ namespace Motate {
 			USBProxy.getEndpointCount         = parent::getEndpointCount;
 			USBProxy.getEndpointSize          = parent::getEndpointSize;
 
-			UDD_SetStack(&_usb_interrupt);
-
-			if (UDD_Init() == 0UL)
-			{
-				_inited = 1UL;
-			}
+			USBDeviceHardware::_init();
+			_inited = 1UL;
 			_configuration = 0UL;
 		};
 
 		static bool attach() {
 			if (_inited) {
-				UDD_Attach();
+				_attach();
 				_configuration = 0;
 				return true;
 			}
@@ -195,14 +311,14 @@ namespace Motate {
 
 		static bool detach() {
 			if (_inited) {
-				UDD_Detach();
+				_detach();
 				return true;
 			}
 			return false;
 		};
 
-		static int32_t available(const uint8_t ep) {
-			return UDD_FifoByteCount(ep & 0xF);
+		static int32_t availableToRead(const uint8_t ep) {
+			return Motate::_getEndpointBufferCount(ep);
 		}
 
 		static int32_t readByte(const uint8_t ep) {
@@ -213,43 +329,17 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t read(const uint8_t ep, const uint8_t * buffer, int16_t length) {
+		static int32_t read(const uint8_t ep, uint8_t *buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
 //
 //			LockEP lock(ep);
-			int16_t n = UDD_FifoByteCount(ep & 0xF);
-			length = min(n, length);
-			n = length;
-			uint8_t* dst = (uint8_t*)buffer;
-			while (n--)
-				*dst++ = UDD_Recv8(ep & 0xF);
-			if (length && !UDD_FifoByteCount(ep & 0xF)) // release empty buffer
-				UDD_ReleaseRX(ep & 0xF);
-			
-			return length;
+			return _readFromEndpoint(ep, buffer, length);
 		};
 
 		/* Data is const. The pointer to data is not. */
 		static int32_t write(const uint8_t ep, const uint8_t * buffer, int16_t length) {
-			uint32_t n;
-			int r = length;
-			const uint8_t* data = (const uint8_t*)buffer;
-
-//			if (!_configuration)
-//			{
-//				TRACE_CORE(printf("pb conf\n\r");)
-//				return -1;
-//			}
-
-			while (length > 0)
-			{
-				n = UDD_Send(ep & 0xF, data, length);
-				length -= n;
-				data += n;
-			}
-
-			return r;
+			return _sendToEndpoint(ep, buffer, length);
 		};
 
 		// This is static to be called from the interrupt.
@@ -278,13 +368,13 @@ namespace Motate {
 			if (to_send > maxLength)
 				to_send = maxLength;
 
-			write(0, (const uint8_t *)(&string_header), sizeof(string_header));
+			_sendToControlEndpoint(0, (const uint8_t *)(&string_header), sizeof(string_header));
 
 			// We already "sent" (queued) the header, which is 3 bytes
 			to_send -= sizeof(string_header);
 
 			if (to_send)
-				write(0, (const uint8_t *)(string), to_send);
+				_sendToControlEndpoint(0, (const uint8_t *)(string), to_send);
 		};
 
 		static uint16_t getEndpointSizeFromHardware(const uint8_t &endpoint, const bool otherSpeed) {

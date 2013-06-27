@@ -31,6 +31,9 @@
 #include "xio.h"
 #include "util.h"
 
+#include "MotateTimers.h"
+using Motate::delay;
+
 /*
 #include "util.h"				// #2
 #include "json_parser.h"
@@ -81,15 +84,8 @@ void init( void )
 {
 	SystemInit();
 
-	// Set Systick to 1ms interval, common to all SAM3 variants
-	if (SysTick_Config(SystemCoreClock / 1000))
-	{
-		// Capture error
-		while (true);
-	}
-
 	// Disable watchdog
-	WDT_Disable(WDT);
+	WDT->WDT_MR = WDT_MR_WDDIS;
 
 	// Initialize C library
 	__libc_init_array();

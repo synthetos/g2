@@ -29,14 +29,11 @@
 #define UTIL_H_ONCE
 
 #include <stdint.h>
-#include "chip.h"
+#include "sam.h"
 
-inline void delay( uint32_t ms )
-{
-	uint32_t end = GetTickCount() + ms;
-	while (GetTickCount() < end)
-		;
-};
+#include "MotateTimers.h"
+using Motate::delay;
+using Motate::SysTickTimer;
 
 #ifdef __cplusplus
 extern "C"{

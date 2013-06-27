@@ -148,9 +148,9 @@ ifeq ("$(PLATFORM)","due")
     PLATFORM_BASE = platform/atmel_sam
 
     CMSIS_ROOT = CMSIS
-    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
-    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
-                           $(PLATFORM_BASE)/libsam/include
+#    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
+#    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
+#                           $(PLATFORM_BASE)/libsam/include
 
     include $(PLATFORM_BASE).mk
 endif

@@ -81,6 +81,12 @@ namespace Motate {
 		return tempSize;
 	};
 
+	/* ############################################# */
+	/* #                                           # */
+	/* #        INTERNAL FUNCTIONS FOR SAM         # */
+	/* #                                           # */
+	/* ############################################# */
+
 	static const EndpointBufferSettings_t _enforce_enpoint_limits(const uint8_t endpoint, EndpointBufferSettings_t config) {
 		if (endpoint > 9)
 			return kEndpointBufferNull;
@@ -110,8 +116,19 @@ namespace Motate {
 		return config;
 	};
 
-	// uint32_t since the registers are 32-bit, we'll handle the conversion on entry to the function
-	void _hw_init_endpoint(uint32_t endpoint, const uint32_t configuration) {
+	inline void _setEndpointConfiguration(const uint8_t endpoint, uint32_t configuration) {
+		UOTGHS->UOTGHS_DEVEPTCFG[endpoint] = configuration;
+	}
+
+	inline bool _isEndpointConfigOK(const uint8_t endpoint)  {
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_CFGOK) != 0;
+	}
+
+	inline void _enableEndpoint(const uint8_t endpoint) {
+		UOTGHS->UOTGHS_DEVEPT |= UOTGHS_DEVEPT_EPEN0 << (endpoint);
+	}
+
+	void _initEndpoint(uint32_t endpoint, const uint32_t configuration) {
 		endpoint = endpoint & 0xF; // EP range is 0..9, hence mask is 0xF.
 
 //		TRACE_UOTGHS_DEVICE(printf("=> UDD_InitEP : init EP %lu\r\n", ul_ep_nb);)
@@ -119,63 +136,285 @@ namespace Motate {
 
 		// Configure EP
 		// If we get here, and it's a null endpoint, this will disable it.
-		UOTGHS->UOTGHS_DEVEPTCFG[endpoint] = configuration_fixed;
+		_setEndpointConfiguration(endpoint, configuration_fixed);
 		
 		// Enable EP
 		if (configuration_fixed != kEndpointBufferNull) {
-			udd_enable_endpoint(endpoint);
+			_enableEndpoint(endpoint);
 
-			if (!Is_udd_endpoint_configured(endpoint)) {
+			if (!_isEndpointConfigOK(endpoint)) {
 	//			TRACE_UOTGHS_DEVICE(printf("=> UDD_InitEP : ERROR FAILED TO INIT EP %lu\r\n", ul_ep_nb);)
 				while(1);
 			}
 		}
 	}
 
-	void _usb_interrupt() {
+	
+	volatile uint8_t *_endpointBuffer[10];
+
+	void _resetEndpointBuffer(const uint8_t endpoint) {
+		// Wow, here's a brain breaker:
+		_endpointBuffer[endpoint] = (((volatile uint8_t (*)[0x8000])UOTGHS_RAM_ADDR)[(endpoint)]);
+	}
+
+	// Return the number of bytes in the buffer.
+	// For reads, it returns the number of bytes that hasn't been read yet.
+	// For writes, it returns the number of bytes has been put into the buffer that hasn't been sent yet.
+	// This does *NOT* return the total size of the buffer, nor the amount in the buffer from the beginning.
+	// Note that this may not be updated enough to poll.
+	// Use _isReadWriteAllowed(endpoint) to tell if an endpoint is ready and has room to be read or written.
+	inline int32_t _getEndpointBufferCount(const uint8_t endpoint) {
+		return ((UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_BYCT_Msk) >> UOTGHS_DEVEPTISR_BYCT_Pos);
+	}
+
+	// A few inline helpers, mainly for readability
+	//  Set and test interrupts
+	bool _inAResetInterrupt() { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_EORST) != 0; }
+	void _clearResetInterrupt() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_EORSTC; }
+	void _enableResetInterrupt() { UOTGHS->UOTGHS_DEVIER = UOTGHS_DEVIER_EORSTES; }
+	void _disableResetInterrupt() { UOTGHS->UOTGHS_DEVIDR = UOTGHS_DEVIDR_EORSTEC; }
+	bool _isResetInterruptEnabled() { return (UOTGHS->UOTGHS_DEVIMR & UOTGHS_DEVIMR_EORSTE) != 0; }
+
+	inline bool _inAStartOfFrameInterrupt() { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_SOF) != 0; }
+	inline void _clearStartOfFrameInterrupt() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_SOFC; }
+	inline void _enableStartOfFrameInterrupt() { UOTGHS->UOTGHS_DEVIER = UOTGHS_DEVIER_SOFES; }
+	inline void _disableStartOfFrameInterrupt() { UOTGHS->UOTGHS_DEVIDR = UOTGHS_DEVIDR_SOFEC; }
+	inline bool _isStartOfFrameInterruptEnabled() { return (UOTGHS->UOTGHS_DEVIMR & UOTGHS_DEVIMR_SOFE) != 0; }
+
+	
+	// Endpoint interrupts, and subinterrupts (!)
+	inline bool _inAnEndpointInterrupt(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_0 << (endpoint)) != 0; }
+	// Cleared automatically after the ISR fires
+	inline void _enableEndpointInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVIER = UOTGHS_DEVIER_PEP_0 << (endpoint); }
+	inline void _disableEndpointInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVIDR = UOTGHS_DEVIDR_PEP_0 << (endpoint); }
+	inline bool _isEndpointInterruptEnabled(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVIMR & UOTGHS_DEVIMR_PEP_0 << (endpoint)) != 0; }
+
+
+	inline bool _inAReceivedSetupInterrupt(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RXSTPI) != 0; }
+	inline void _clearReceivedSetupInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_RXSTPIC; }
+	inline void _enableReceivedSetupInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIER[endpoint] = UOTGHS_DEVEPTIER_RXSTPES; }
+	inline void _disableReceivedSetupInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_RXSTPEC; }
+	inline bool _isReceivedSetupInterruptEnabled(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVEPTIMR[endpoint] & UOTGHS_DEVEPTIMR_RXSTPE) != 0; }
+
+	
+	//  Set the address
+	inline void _setUSBAddress(uint8_t address) {
+		UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~UOTGHS_DEVCTRL_UADD_Msk) | UOTGHS_DEVCTRL_UADD(address) | UOTGHS_DEVCTRL_ADDEN;
+	}
+
+	// Request a STALL handshake
+	inline void _requestStall(const uint8_t endpoint) {
+		_enableEndpoint(endpoint); // Why!? -Rob
+		
+		UOTGHS->UOTGHS_DEVEPTIER[endpoint] = UOTGHS_DEVEPTIER_STALLRQS;
+	}
+
+	// Freeze/Unfreeze the USB clock
+	void _freezeUSBClock() {
+		// Freeze the USB clock...
+		UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_FRZCLK;
+	}
+
+	void _unfreezeUSBClock() {
+		// Freeze the USB clock...
+		UOTGHS->UOTGHS_CTRL &= ~UOTGHS_CTRL_FRZCLK;
+	}
+
+	void _waitForUsableUSBClock() {
+		while (!UOTGHS->UOTGHS_SR & UOTGHS_SR_CLKUSABLE)
+			;
+	}
+
+
+	// Tests / Clears
+
+	inline bool _isTransmitINAvailable(const uint8_t endpoint) {
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI);
+	}
+
+	inline bool _isReadWriteAllowed(const uint8_t endpoint) {
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL);
+	}
+
+	inline void _waitForTransmitINAvailable(const uint8_t endpoint) {
+		while (!(UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI))
+			;
+		_resetEndpointBuffer(endpoint);
+	}
+
+	inline void _clearTransmitIN(const uint8_t endpoint) {
+		
+		UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_TXINIC;
+	}
+
+	inline void _clearFIFOControl(const uint8_t endpoint) {
+		UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_FIFOCONC;
+	}
+
+	// Acknowledges
+	inline void _ackReset() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_EORSTC; }
+	inline void _ackStartOfFrame() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_SOFC; }
+	inline void _ackOutRecieved(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_RXOUTIC; }
+	inline void _ackFIFOControl(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_FIFOCONC; }
+
+
+
+	/* Control endpoints are handled differently (simpler, actually):
+	 *  * There is no ping-pong mode.
+	 *  * The RWALL (Read/Write ALLowed) bit and the FIFOCON (FIFO CONtrol) are ignored and read zero.
+	 */
+	int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len) {
+		//		_resetEndpointBuffer(endpoint);
+		uint8_t *ptr_dest = data;
+		int16_t available = _getEndpointBufferCount(endpoint);
+
+		// If there's nothing to read, return -1
+		if (available == 0 || len < 1)
+			return -1;
+
+		int32_t to_read = available < len ? available : len;
+		int32_t i = to_read;
+
+		while (i--)
+			*ptr_dest++ = *_endpointBuffer[endpoint]++;
+
+		return to_read;
+	}
+
+	int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length) {
+		const uint8_t *ptr_src = data;
+
+		if (!_isTransmitINAvailable(endpoint))
+			return -1;
+
+		int16_t sent = 0;
+
+		while (length-- && _isReadWriteAllowed(endpoint)) {
+			*_endpointBuffer[endpoint]++ = *ptr_src++;
+			sent++;
+		}
+
+		// If we filled the buffer, flush
+		// Note that this flush is different for a control endpoint.
+		if (!_isReadWriteAllowed(endpoint))
+			_clearTransmitIN(endpoint);
+
+		return sent;
+	}
+
+	
+	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len) {
+		//		_resetEndpointBuffer(endpoint);
+		uint8_t *ptr_dest = data;
+		int16_t available = _getEndpointBufferCount(endpoint);
+
+		// If there's nothing to read, return -1
+		if (available == 0 || len < 1)
+			return -1;
+
+		int32_t to_read = available < len ? available : len;
+		int32_t i = to_read;
+
+		while (i--)
+			*ptr_dest++ = *_endpointBuffer[endpoint]++;
+
+		return to_read;
+	}
+
+	// Flush an endpoint after sending data.
+	void _flushEndpoint(uint8_t endpoint) {
+		_clearFIFOControl(endpoint);
+	}
+
+	// Send the data in a buffer to an endpoint.
+	// Does not automatically flush UNLESS it fills an endpoint buffer exactly.
+	int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length) {
+		const uint8_t *ptr_src = data;
+		int16_t sent = 0;
+
+		// While we have more to send AND the buffer is available
+		while (length && _isReadWriteAllowed(endpoint)) {
+			if (_isTransmitINAvailable(endpoint)) {
+				// Ack the Transmit IN.
+				_clearTransmitIN(endpoint);
+
+				// Reset the endpoint buffer -- it probably just changed.
+				_resetEndpointBuffer(endpoint);
+			}
+
+			while (length-- && _isReadWriteAllowed(endpoint)) {
+				*_endpointBuffer[endpoint]++ = *ptr_src++;
+				sent++;
+			}
+
+			// If we filled the buffer then flush.
+			// The loop will check to see if the next buffer, if any, is available.
+			// Note that this flush is different than that for a control endpoint.
+			if (!_isReadWriteAllowed(endpoint)) {
+				_flushEndpoint(endpoint);
+			}
+		}
+
+		return sent == 0 ? -1 : sent;
+	}
+
+	// Send a single byte
+	// NOTE: This is the same for control endpoints, since it doesn't attempt to flush.
+	// WARNING: The doesn't check to see if the device is ready to send or has buffer available.
+	// ONLY USE THIS WHEN YOU KNOW THE STATE OF THE USB DEVICE.
+	void _sendToEndpoint(const uint8_t endpoint, uint8_t data) {
+		*_endpointBuffer[endpoint]++ = data;
+	}
+
+	/* ############################################# */
+	/* #                                           # */
+	/* #             SAM USB Interrupt             # */
+	/* #                                           # */
+	/* ############################################# */
+
+	void UOTGHS_Handler( void ) {
 		// End of bus reset
-		if (Is_udd_reset())
+		if ( _inAResetInterrupt() )
 		{
 			TRACE_CORE(printf(">>> End of Reset\r\n");)
 
 			// Reset USB address to 0
-			udd_configure_address(0);
-			udd_enable_address();
+			_setUSBAddress(0);
 
 			// Configure EP 0 -- there's no opportunity to have a second configuration
-			_hw_init_endpoint(0, USBProxy.getEndpointConfig(0, /* otherSpeed = */ false));
+			_initEndpoint(0, USBProxy.getEndpointConfig(0, /* otherSpeed = */ false));
 
 			endpointSizes[0] = USBProxy.getEndpointSize(0, /* otherSpeed = */ false);
 
-			udd_enable_setup_received_interrupt(0);
-			udd_enable_endpoint_interrupt(0);
+			_enableReceivedSetupInterrupt(0);
+			_enableEndpointInterrupt(0);
 
 			_configuration = 0;
-			udd_ack_reset();
+			_ackReset();
 		}
 /*
-		if (Is_udd_endpoint_interrupt(CDC_RX))
+		if ( _inAnEndpointInterrupt(CDC_RX) )
 		{
-			udd_ack_out_received(CDC_RX);
+			_ackOutRecieved(CDC_RX);
 
 			// Handle received bytes
 			while (USBD_Available(CDC_RX))
 				SerialUSB.accept();
 
-			udd_ack_fifocon(CDC_RX);
+			_ackFIFOControl(CDC_RX);
 		}
 */
-		if (Is_udd_sof())
+		if (_inAStartOfFrameInterrupt())
 		{
-			udd_ack_sof();
-			//	USBD_Flush(CDC_TX); // jcb
+			// Every millisecond ...
+			_ackStartOfFrame();
 		}
 
 		// EP 0 Interrupt
 		// FIXME! Needs to handle *any* control endpoint.
-		if (Is_udd_endpoint_interrupt(0) )
+		if ( _inAnEndpointInterrupt(0) )
 		{
-			if (!UDD_ReceivedSetupInt())
+			if ( !_inAReceivedSetupInterrupt(0) )
 			{
 				return;
 			}
@@ -184,11 +423,11 @@ namespace Motate {
 			 ****/
 
 			static Setup_t setup;
-			UDD_Recv(EP0, (uint8_t*)&setup, 8);
+			_readFromControlEndpoint(0, (uint8_t*)&setup, 8);
 			/****
 			 • the UOTGHS_DEVEPTISRx.RXSTPI bit, which is set when a new SETUP packet is received and which shall be cleared by firmware to acknowledge the packet and to **free the bank**;
 			 ****/
-			UDD_ClearSetupInt();
+			_clearReceivedSetupInterrupt(0);
 
 			if (setup.isADeviceToHostRequest())
 			{
@@ -196,16 +435,16 @@ namespace Motate {
 				/****
 				 • the Transmitted IN Data Interrupt (UOTGHS_DEVEPTISRx.TXINI) bit, which is set when the current bank is ready to accept a new IN packet and [...]
 				 ****/
-				UDD_WaitIN();
+				_waitForTransmitINAvailable(0);
 			}
-			else
-			{
-				TRACE_CORE(puts(">>> EP0 Int: OUT Request\r\n");)
-				/****
-				 [...] which shall be cleared by firmware to send the packet.
-				 ****/
-				UDD_ClearIN();
-			}
+//			else
+//			{
+//				TRACE_CORE(puts(">>> EP0 Int: OUT Request\r\n");)
+//				/****
+//				 [...] which shall be cleared by firmware to send the packet.
+//				 ****/
+//				_clearTransmitIN(0);
+//			}
 
 			bool ok = true;
 			if (setup.isAStandardRequestType())
@@ -221,8 +460,8 @@ namespace Motate {
 						// TODO
 						// Check if remote wake-up is enabled
 						// TODO
-						UDD_Send8(EP0, 0); // TODO
-						UDD_Send8(EP0, 0);
+						_sendToEndpoint(0, 0); // TODO
+						_sendToEndpoint(0, 0);
 					}
 					// if( setup.isAnEndpointRequest() )
 					else
@@ -230,10 +469,10 @@ namespace Motate {
 						// Send the endpoint status
 						// Check if the endpoint if currently halted
 						if( _halted == 1 )
-							UDD_Send8(EP0, 1); // TODO
+							_sendToEndpoint(0, 1); // TODO
 						else
-							UDD_Send8(EP0, 0); // TODO
-						UDD_Send8(EP0, 0);
+							_sendToEndpoint(0, 0); // TODO
+						_sendToEndpoint(0, 0);
 					}
 				}
 				else if ( setup.isAClearFeatureRequest() )
@@ -243,16 +482,16 @@ namespace Motate {
 					{
 						// Enable remote wake-up and send a ZLP
 						if( _remoteWakeupEnabled == 1 )
-							UDD_Send8(EP0, 1);
+							_sendToEndpoint(0, 1);
 						else
-							UDD_Send8(EP0, 0);
-						UDD_Send8(EP0, 0);
+							_sendToEndpoint(0, 0);
+						_sendToEndpoint(0, 0);
 					}
 					else // if( setup.featureToSetOrClear() == kSetupEndpointHalt )
 					{
 						_halted = 0;  // TODO
-						UDD_Send8(EP0, 0);
-						UDD_Send8(EP0, 0);
+						_sendToEndpoint(0, 0);
+						_sendToEndpoint(0, 0);
 					}
 
 				}
@@ -263,14 +502,14 @@ namespace Motate {
 					{
 						// Enable remote wake-up and send a ZLP
 						_remoteWakeupEnabled = 1;
-						UDD_Send8(EP0, 0);
+						_sendToEndpoint(0, 0);
 					}
 					if( setup.featureToSetOrClear() == Setup_t::kSetupEndpointHalt )
 					{
 						// Halt endpoint
 						_halted = 1;
 						//USBD_Halt(USBGenericRequest_GetEndpointNumber(pRequest));
-						UDD_Send8(EP0, 0);
+						_sendToEndpoint(0, 0);
 					}
 					if( setup.featureToSetOrClear() == Setup_t::kSetupTestMode )
 					{
@@ -293,8 +532,8 @@ namespace Motate {
 				else if (setup.isASetAddressRequest())
 				{
 					TRACE_CORE(puts(">>> EP0 Int: kSetAddress\r\n");)
-					UDD_WaitIN();
-					UDD_SetAddress(setup.valueLow());
+					_waitForTransmitINAvailable(0); // <-- Why?! -RG
+					_setUSBAddress(setup.valueLow());
 				}
 				else if (setup.isAGetDescriptorRequest())
 				{
@@ -309,7 +548,7 @@ namespace Motate {
 				else if (setup.isAGetConfigurationRequest())
 				{
 					TRACE_CORE(puts(">>> EP0 Int: kGetConfiguration\r\n");)
-					UDD_Send8(EP0, _configuration);
+					_sendToEndpoint(0, _configuration);
 				}
 				else if (setup.isASetConfigurationRequest())
 				{
@@ -325,16 +564,16 @@ namespace Motate {
 						uint8_t first_endpoint, total_endpoints;
 						total_endpoints = USBProxy.getEndpointCount(first_endpoint);
 						for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
-							_hw_init_endpoint(ep, USBProxy.getEndpointConfig(ep, /* otherSpeed = */ _configuration == 2));
+							_initEndpoint(ep, USBProxy.getEndpointConfig(ep, /* otherSpeed = */ _configuration == 2));
 							endpointSizes[ep] = USBProxy.getEndpointSize(ep, /* otherSpeed = */ _configuration == 2);
 						}
 						ok = true;
 
-#if 0
+/* OLD CODE
 						// Enable interrupt for CDC reception from host (OUT packet)
 						udd_enable_out_received_interrupt(CDC_RX);
 						udd_enable_endpoint_interrupt(CDC_RX);
-#endif
+*/
 					}
 					else
 					{
@@ -345,7 +584,7 @@ namespace Motate {
 				else if (setup.isAGetInterfaceRequest())
 				{
 					TRACE_CORE(puts(">>> EP0 Int: kGetInterface\r\n");)
-					UDD_Send8(EP0, _set_interface);
+					_sendToEndpoint(0, _set_interface);
 				}
 				else if (setup.isASetInterfaceRequest())
 				{
@@ -357,21 +596,22 @@ namespace Motate {
 			{
 				TRACE_CORE(puts(">>> EP0 Int: ClassInterfaceRequest\r\n");)
 
-				UDD_WaitIN(); // Workaround: need tempo here, else CDC serial won't open correctly
+				// GAH! This is ugly.
+				_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
 
-				// Note: setup._wLength may hold the max length of transfer
+				// Note: setup.length() holds the max length of transfer
 				ok = USBProxy.handleNonstandardRequest(setup);
 			}
 
 			if (ok)
 			{
 				TRACE_CORE(puts(">>> EP0 Int: Send packet\r\n");)
-				UDD_ClearIN();
+				_clearTransmitIN(0);
 			}
 			else
 			{
 				TRACE_CORE(puts(">>> EP0 Int: Stall\r\n");)
-				UDD_Stall();
+				_requestStall(0);
 			}
 		}
 	}

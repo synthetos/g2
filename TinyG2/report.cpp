@@ -314,7 +314,7 @@ uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 		return (STAT_NOOP);
 	}
 	if (cs.status_report_request == SR_TIMED_REQUEST) {
-		if (GetTickCount() < cs.status_report_tick) {
+		if (SysTickTimer.getValue() < cs.status_report_tick) {
 			return (STAT_NOOP);
 		}		
 	}
@@ -326,7 +326,7 @@ uint8_t rpt_status_report_callback() 		// called by controller dispatcher
 		rpt_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
-	cs.status_report_tick = GetTickCount() + cfg.status_report_interval;
+	cs.status_report_tick = SysTickTimer.getValue() + cfg.status_report_interval;
 	cs.status_report_request = SR_NO_REQUEST;
 	return (STAT_OK);
 }

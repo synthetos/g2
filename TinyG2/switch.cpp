@@ -44,8 +44,8 @@
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
-
-#include "chip.h"
+#include "MotateTimers.h"
+using Motate::SysTickTimer;
 
 // Allocate switch array structure
 switches_t sw;
@@ -134,7 +134,7 @@ stat_t poll_switches()
 uint8_t read_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
-	if ((s->mode == SW_MODE_DISABLED) || (s->debounce_timeout > GetTickCount())) { 
+	if ((s->mode == SW_MODE_DISABLED) || (s->debounce_timeout > SysTickTimer.getValue())) { 
 		return (false); 
 	}
 
@@ -151,13 +151,13 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 
 	// the switch legitimately changed state - process edges
 	if ((s->state = pin_sense_corrected) == SW_OPEN) {
-			s->edge == SW_TRAILING;
+			s->edge = SW_TRAILING;
 			s->on_trailing(s);
 		} else {
-			s->edge == SW_LEADING;
+			s->edge = SW_LEADING;
 			s->on_leading(s);
 	}
-	s->debounce_timeout = (GetTickCount() + s->debounce_ticks);
+	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
 }
 /*
@@ -167,7 +167,7 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 	} else {
 		s->on_trailing(s);
 	}
-	s->debounce_timeout = (GetTickCount() + s->debounce_ticks);
+	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
 }
 */

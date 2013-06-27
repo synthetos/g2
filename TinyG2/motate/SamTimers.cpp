@@ -86,7 +86,31 @@ namespace Motate {
 	template<> const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
 	template<> const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
 	//    static Timer<8> timer8;
-	
+
+	/* System-wide tick counter */
+	/*  Inspired by code from Atmel and Arduino.
+	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
+	 *  Some of which is:   Copyright (c) 2011-2012, Atmel Corporation. All rights reserved.
+	 */
+
+	Timer<SysTickTimerNum> SysTickTimer;
+
+	volatile uint32_t Timer<SysTickTimerNum>::_motateTickCount = 0;
+
+} // namespace Motate
+
+
+extern "C" void SysTick_Handler(void)
+{
+	//		if (sysTickHook())
+	//			return;
+	//
+	//		tickReset();
+
+	Motate::SysTickTimer._increment();
+
+	if (Motate::SysTickTimer.interrupt)
+		Motate::SysTickTimer.interrupt();
 }
 
 extern "C" {

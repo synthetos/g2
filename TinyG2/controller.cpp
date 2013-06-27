@@ -45,9 +45,10 @@
 #include "report.h"
 #include "help.h"
 #include "xio.h"
+#include "util.h"
+
 /*
 #include "settings.h"
-#include "util.h"
 */
 
 /***********************************************************************************
@@ -237,7 +238,7 @@ static stat_t _command_dispatch()
  */
 static stat_t _normal_idler(  )
 {
-	if (GetTickCount() > cs.led_counter) {
+	if (SysTickTimer.getValue() > cs.led_counter) {
 		cs.led_counter += LED_NORMAL_COUNTER;
 //		IndicatorLed.toggle();
 	}
@@ -255,7 +256,7 @@ static stat_t _alarm_idler(  )
 {
 	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
 
-	if (GetTickCount() > cs.led_counter) {
+	if (SysTickTimer.getValue() > cs.led_counter) {
 		cs.led_counter += LED_ALARM_COUNTER;
 //		IndicatorLed.toggle();
 	}

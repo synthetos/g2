@@ -412,6 +412,61 @@ namespace Motate {
 		static void interrupt() __attribute__ ((weak));
 	};
 
+	static const timer_number SysTickTimerNum = 0xFF;
+	template <>
+	struct Timer<SysTickTimerNum> {
+		static volatile uint32_t _motateTickCount;
+		
+		/********************************************************************
+		 **                          WARNING                                **
+		 ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
+		 **                          WARNING           (u been warned)      **
+		 *********************************************************************/
+
+		Timer() { init(); };
+		Timer(const TimerMode mode, const uint32_t freq) {
+			init();
+//			setModeAndFrequency(mode, freq);
+		};
+
+		void init() {
+			// Set Systick to 1ms interval, common to all SAM3 variants
+			if (SysTick_Config(SystemCoreClock / 1000))
+			{
+				_motateTickCount = 0 ;
+
+				// Capture error
+				while (true);
+			}
+		};
+
+		// Set the mode and frequency.
+		// Should we offer this one? -RG
+//		int32_t setModeAndFrequency(const TimerMode mode, uint32_t freq) {};
+
+		// Return the current value of the counter. This is a fleeting thing...
+		uint32_t getValue() {
+			return _motateTickCount;
+		};
+
+		void _increment() {
+			_motateTickCount++;
+		};
+
+		// Placeholder for user code.
+		static void interrupt() __attribute__ ((weak));
+	};
+	extern Timer<SysTickTimerNum> SysTickTimer;
+
+	// Provide a Arduino-compatible blocking-delay function
+	inline void delay( uint32_t microseconds )
+	{
+		uint32_t doneTime = SysTickTimer.getValue() + microseconds;
+
+		do
+		{} while ( doneTime < SysTickTimer.getValue() );
+	}
+
 } // namespace Motate
 
 #define MOTATE_TIMER_INTERRUPT(number) template<> void Timer<number>::interrupt()

@@ -211,7 +211,7 @@ namespace Motate {
 
 
 	template<class interface0type, class interface1type, class interface2type>
-	WEAK USBDevice<interface0type, interface1type, interface2type> *USBDevice<interface0type, interface1type, interface2type>::_singleton;
+	ATTR_WEAK USBDevice<interface0type, interface1type, interface2type> *USBDevice<interface0type, interface1type, interface2type>::_singleton;
 
 	// Declare the base (Null) USBMixin
 	// We use template specialization (later) on a combination of *one* of the three interfaces,

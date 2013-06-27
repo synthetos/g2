@@ -16,8 +16,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "chip.h"
+//#include "chip.h"
 #include "Reset.h"
+//#include "MotateTimers.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,16 +44,7 @@ void DebugMon_Handler  (void) __attribute__ ((weak, alias("__halt")));
 void SVC_Handler       (void) { svcHook(); }
 void PendSV_Handler    (void) {	pendSVHook(); }
 
-void SysTick_Handler(void)
-{
-	if (sysTickHook())
-		return;
-
-	tickReset();
-
-	// Increment tick count each ms
-	TimeTick_Increment();
-}
+void SysTick_Handler(void) __attribute__ ((weak, alias("__halt")));
 
 /* Peripherals handlers */
 void SUPC_Handler       (void) __attribute__ ((weak, alias("__halt")));

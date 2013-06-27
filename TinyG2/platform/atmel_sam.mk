@@ -97,9 +97,6 @@ DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
 
 DEVICE_LIBS          = gcc c
 
-# DEVICE_LIB_DIRS = /lib/thumb2
-#LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
-
 # FIXME: Assumes all sams are Dues
 VARIANT=arduino_due_x
 CFLAGS   += -D__$(CHIP)__ -D$(VARIANT)
