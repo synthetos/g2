@@ -232,6 +232,10 @@ namespace Motate {
 
 	// Tests / Clears
 
+	inline bool _isFIFOControlAvailable(const uint8_t endpoint) {
+		return UOTGHS->UOTGHS_DEVEPTIMR[endpoint] & UOTGHS_DEVEPTIMR_FIFOCON;
+	}
+
 	inline bool _isTransmitINAvailable(const uint8_t endpoint) {
 		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI);
 	}
@@ -368,6 +372,9 @@ namespace Motate {
 
 		// While we have more to send AND the buffer is available
 		while (length > 0 && _isReadWriteAllowed(endpoint)) {
+			if (!_isFIFOControlAvailable(endpoint))
+				return sent;
+
 			if (_isTransmitINAvailable(endpoint)) {
 				// Ack the Transmit IN.
 				_clearTransmitIN(endpoint);
@@ -389,7 +396,7 @@ namespace Motate {
 			}
 		}
 
-		return sent == 0 ? -1 : sent;
+		return sent;
 	}
 
 	// Send a single byte

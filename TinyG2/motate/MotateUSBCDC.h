@@ -284,14 +284,13 @@ namespace Motate {
 			do {
 				written = usb.write(write_endpoint, out_buffer, length);
 
-				// TODO: Do this better... -Rob
-				if (written > 0) {
-					total_written += written;
-					to_write -= written;
-					out_buffer += written;
-				} else {
+				if (written < 0) // ERROR!
 					break;
-				}
+
+				// TODO: Do this better... -Rob
+				total_written += written;
+				to_write -= written;
+				out_buffer += written;
 			} while (to_write);
 
 			// HACK! Autoflush forced...
