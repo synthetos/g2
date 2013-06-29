@@ -274,21 +274,48 @@ namespace Motate {
 			return usb.read(read_endpoint, buffer, len);
 		};
 
-		int32_t write(const uint8_t * data, const uint16_t length) {
-			return usb.write(write_endpoint, data, length);
+		int32_t write(const uint8_t *data, const uint16_t length) {
+			int16_t total_written = 0;
+			int16_t written = 1; // start with a non-zero value
+			const uint8_t *out_buffer = data;
+			int16_t to_write = length;
+
+			// BLOCKING!!
+			do {
+				written = usb.write(write_endpoint, out_buffer, length);
+
+				// TODO: Do this better... -Rob
+				if (written > 0) {
+					total_written += written;
+					to_write -= written;
+					out_buffer += written;
+				} else {
+					break;
+				}
+			} while (to_write);
+
+			// HACK! Autoflush forced...
+			if (total_written > 0)
+				flush();
+
+			return total_written;
+		}
+
+		void flush() {
+			usb.flush(write_endpoint);
 		}
 
 		bool handleNonstandardRequest(Setup_t &setup) {
 			if (setup.isADeviceToHostClassInterfaceRequest()) {
 				if (setup.requestIs(kGetLineEncoding)) {
-					usb.write(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					usb.writeToControl(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
 					return true;
 				}
 			}
 
 			if (setup.isAHostToDeviceClassInterfaceRequest()) {
 				if (setup.requestIs(kSetLineEncoding)) {
-					usb.read(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					usb.readFromControl(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
 					return true;
 				}
 

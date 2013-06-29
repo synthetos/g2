@@ -44,7 +44,7 @@ void DebugMon_Handler  (void) __attribute__ ((weak, alias("__halt")));
 void SVC_Handler       (void) { svcHook(); }
 void PendSV_Handler    (void) {	pendSVHook(); }
 
-void SysTick_Handler(void) __attribute__ ((weak, alias("__halt")));
+void SysTick_Handler(void) __attribute__ ((weak));
 
 /* Peripherals handlers */
 void SUPC_Handler       (void) __attribute__ ((weak, alias("__halt")));
@@ -105,7 +105,7 @@ void PWM_Handler        (void) __attribute__ ((weak, alias("__halt")));
 void ADC_Handler        (void) __attribute__ ((weak, alias("__halt")));
 void DACC_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void DMAC_Handler       (void) __attribute__ ((weak, alias("__halt")));
-void UOTGHS_Handler     (void) __attribute__ ((weak, alias("__halt")));
+void UOTGHS_Handler     (void) __attribute__ ((weak));
 void TRNG_Handler       (void) __attribute__ ((weak, alias("__halt")));
 #ifdef _SAM3XA_EMAC_INSTANCE_
 void EMAC_Handler       (void) __attribute__ ((weak, alias("__halt")));

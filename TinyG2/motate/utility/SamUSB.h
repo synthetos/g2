@@ -157,7 +157,8 @@ namespace Motate {
 	extern void _enableResetInterrupt();
 	extern void _resetEndpointBuffer(const uint8_t endpoint);
 	extern void _freezeUSBClock();
-	
+	extern void _flushEndpoint(uint8_t endpoint);
+
 	extern uint32_t _inited;
 	extern uint32_t _configuration;
 
@@ -317,29 +318,50 @@ namespace Motate {
 			return false;
 		};
 
-		static int32_t availableToRead(const uint8_t ep) {
-			return Motate::_getEndpointBufferCount(ep);
+		static int32_t availableToRead(const uint8_t endpoint) {
+			return Motate::_getEndpointBufferCount(endpoint);
 		}
 
-		static int32_t readByte(const uint8_t ep) {
+		static int32_t readByte(const uint8_t endpoint) {
 			uint8_t c;
-			if (read(ep & 0xF, &c, 1) == 1)
+			if (read(endpoint & 0xF, &c, 1) == 1)
 				return c;
 			return -1;
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t read(const uint8_t ep, uint8_t *buffer, int16_t length) {
+		static int32_t read(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
 //
 //			LockEP lock(ep);
-			return _readFromEndpoint(ep, buffer, length);
+			return _readFromEndpoint(endpoint, buffer, length);
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t write(const uint8_t ep, const uint8_t * buffer, int16_t length) {
-			return _sendToEndpoint(ep, buffer, length);
+		static int32_t write(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
+			if (!_configuration || length < 0)
+				return -1;
+
+			return _sendToEndpoint(endpoint, buffer, length);
+		};
+
+		static void flush(const uint8_t ependpoint) {
+			_flushEndpoint(ependpoint);
+		};
+
+		/* Data is const. The pointer to data is not. */
+		static int32_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
+			if (!_configuration || length < 0)
+				return -1;
+			//
+			//			LockEP lock(ep);
+			return _readFromControlEndpoint(endpoint, buffer, length);
+		};
+
+		/* Data is const. The pointer to data is not. */
+		static int32_t writeToControl(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
+			return _sendToControlEndpoint(endpoint, buffer, length);
 		};
 
 		// This is static to be called from the interrupt.

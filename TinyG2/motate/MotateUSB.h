@@ -155,19 +155,19 @@ namespace Motate {
 		static void sendDescriptor(uint16_t maxLength) {
 			const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion));
 			uint16_t length = sizeof(_descriptor_type);
-			_this_type::write(0, (const uint8_t *)(&descriptor), maxLength < length ? maxLength : length);
+			_this_type::writeToControl(0, (const uint8_t *)(&descriptor), maxLength < length ? maxLength : length);
 		};
 
 		static void sendQualifierDescriptor(uint16_t maxLength) {
 			const _qualifier_type qualifier;
 			uint16_t length = sizeof(_qualifier_type);
-			_this_type::write(0, (const uint8_t *)(&qualifier), maxLength < length ? maxLength : length);
+			_this_type::writeToControl(0, (const uint8_t *)(&qualifier), maxLength < length ? maxLength : length);
 		};
 
 		static void sendConfig(uint16_t maxLength, const bool other) {
 			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption, other);
 			uint16_t length = sizeof(_config_type);
-			_this_type::write(0, (const uint8_t *)(&config), maxLength < length ? maxLength : length);
+			_this_type::writeToControl(0, (const uint8_t *)(&config), maxLength < length ? maxLength : length);
 		};
 
 		static bool handleNonstandardRequest(Setup_t &setup) {

@@ -147,6 +147,9 @@ namespace Motate {
 				while(1);
 			}
 		}
+
+		// Is this necessary? -Rob
+		_resetEndpointBuffer(endpoint);
 	}
 
 	
@@ -199,7 +202,8 @@ namespace Motate {
 	
 	//  Set the address
 	inline void _setUSBAddress(uint8_t address) {
-		UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~UOTGHS_DEVCTRL_UADD_Msk) | UOTGHS_DEVCTRL_UADD(address) | UOTGHS_DEVCTRL_ADDEN;
+		UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~UOTGHS_DEVCTRL_UADD_Msk) | UOTGHS_DEVCTRL_UADD(address);
+		UOTGHS->UOTGHS_DEVCTRL |= UOTGHS_DEVCTRL_ADDEN;
 	}
 
 	// Request a STALL handshake
@@ -232,6 +236,10 @@ namespace Motate {
 		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI);
 	}
 
+	inline bool _isReceiveOUTAvailable(const uint8_t endpoint) {
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RXOUTI);
+	}
+
 	inline bool _isReadWriteAllowed(const uint8_t endpoint) {
 		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL);
 	}
@@ -243,8 +251,11 @@ namespace Motate {
 	}
 
 	inline void _clearTransmitIN(const uint8_t endpoint) {
-		
 		UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_TXINIC;
+	}
+
+	inline void _clearReceiveOUT(const uint8_t endpoint) {
+		UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_RXOUTIC;
 	}
 
 	inline void _clearFIFOControl(const uint8_t endpoint) {
@@ -287,38 +298,61 @@ namespace Motate {
 		if (!_isTransmitINAvailable(endpoint))
 			return -1;
 
-		int16_t sent = 0;
+		int16_t to_send = endpointSizes[endpoint] - _getEndpointBufferCount(endpoint);
+		if (to_send > length)
+			to_send = length;
 
-		while (length-- && _isReadWriteAllowed(endpoint)) {
+		// Conveniently, of to_send starts as 0, it ends up returning -1
+		while (to_send--) {
 			*_endpointBuffer[endpoint]++ = *ptr_src++;
-			sent++;
 		}
 
 		// If we filled the buffer, flush
 		// Note that this flush is different for a control endpoint.
-		if (!_isReadWriteAllowed(endpoint))
+		if (_getEndpointBufferCount(endpoint) == endpointSizes[endpoint]) {
 			_clearTransmitIN(endpoint);
-
-		return sent;
+			_resetEndpointBuffer(endpoint);
+		}
+		return to_send;
 	}
 
 	
-	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len) {
+	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t length) {
 		//		_resetEndpointBuffer(endpoint);
 		uint8_t *ptr_dest = data;
+		int16_t read = 0;
 		int16_t available = _getEndpointBufferCount(endpoint);
 
 		// If there's nothing to read, return -1
-		if (available == 0 || len < 1)
+		if (available == 0 || length < 1)
 			return -1;
 
-		int32_t to_read = available < len ? available : len;
-		int32_t i = to_read;
+		while(length && available) {
+			if (_isReceiveOUTAvailable(endpoint)) {
+				_clearReceiveOUT(endpoint);
+				_resetEndpointBuffer(endpoint);
+			}
 
-		while (i--)
-			*ptr_dest++ = *_endpointBuffer[endpoint]++;
+			int32_t to_read = available < length ? available : length;
+			int32_t i = to_read;
 
-		return to_read;
+			while (i--)
+				*ptr_dest++ = *_endpointBuffer[endpoint]++;
+
+			if (!_getEndpointBufferCount(endpoint)) {
+				_clearFIFOControl(endpoint);
+				_resetEndpointBuffer(endpoint);
+
+				// If there's another buffer already ready already,
+				//  then find out how full it is...
+				available = _getEndpointBufferCount(endpoint);
+			}
+
+			length -= to_read;
+			read += to_read;
+		}
+
+		return read == 0 ? -1 : read;
 	}
 
 	// Flush an endpoint after sending data.
@@ -333,7 +367,7 @@ namespace Motate {
 		int16_t sent = 0;
 
 		// While we have more to send AND the buffer is available
-		while (length && _isReadWriteAllowed(endpoint)) {
+		while (length > 0 && _isReadWriteAllowed(endpoint)) {
 			if (_isTransmitINAvailable(endpoint)) {
 				// Ack the Transmit IN.
 				_clearTransmitIN(endpoint);
@@ -372,6 +406,7 @@ namespace Motate {
 	/* #                                           # */
 	/* ############################################# */
 
+	extern "C"
 	void UOTGHS_Handler( void ) {
 		// End of bus reset
 		if ( _inAResetInterrupt() )
@@ -422,6 +457,7 @@ namespace Motate {
 			 A SETUP request is always ACKed. When a new SETUP packet is received, the UOTGHS_DEVEPTISRx.RXSTPI is set; the Received OUT Data Interrupt (UOTGHS_DEVEPTISRx.RXOUTI) bit is not.
 			 ****/
 
+			_resetEndpointBuffer(0);
 			static Setup_t setup;
 			_readFromControlEndpoint(0, (uint8_t*)&setup, 8);
 			/****
@@ -437,14 +473,15 @@ namespace Motate {
 				 ****/
 				_waitForTransmitINAvailable(0);
 			}
-//			else
-//			{
-//				TRACE_CORE(puts(">>> EP0 Int: OUT Request\r\n");)
-//				/****
-//				 [...] which shall be cleared by firmware to send the packet.
-//				 ****/
-//				_clearTransmitIN(0);
-//			}
+			else
+			{
+				TRACE_CORE(puts(">>> EP0 Int: OUT Request\r\n");)
+				/****
+				 [...] which shall be cleared by firmware to send the packet.
+				 ****/
+				_clearTransmitIN(0);
+				_resetEndpointBuffer(0);
+			}
 
 			bool ok = true;
 			if (setup.isAStandardRequestType())
@@ -607,6 +644,7 @@ namespace Motate {
 			{
 				TRACE_CORE(puts(">>> EP0 Int: Send packet\r\n");)
 				_clearTransmitIN(0);
+				_resetEndpointBuffer(0);
 			}
 			else
 			{
@@ -616,7 +654,7 @@ namespace Motate {
 		}
 	}
 
-}
+} // Motate
 
 #endif
 //__SAM3X8E__

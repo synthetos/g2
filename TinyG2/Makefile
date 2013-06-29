@@ -28,7 +28,7 @@ PROJECT  = TinyG2
 SOURCE_DIRS = . motate
 # arduino arduino/USB variants
 
-FIRST_LINK_SOURCES := motate/SamTimers.cpp
+FIRST_LINK_SOURCES := 
 
 # List all user directories here
 USER_INCLUDE_DIRS := $(SOURCE_DIRS)
@@ -143,10 +143,10 @@ DEPDIR = $(OBJ)/dep
 PLATFORM ?= due
 
 ifeq ("$(PLATFORM)","due")
-    CHIP = SAM3X8E
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
 
+	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
-
     CMSIS_ROOT = CMSIS
 #    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
 #    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \

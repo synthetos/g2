@@ -78,7 +78,7 @@ Motate::USBDevice< Motate::USBCDC > usb;
 typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
-MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'J'} )
+MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
 
 void init( void )
 {
