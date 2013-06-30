@@ -181,7 +181,7 @@ typedef struct stPrepSingleton {
 	uint16_t magic_start;				// magic number to test memory integrity	
 	uint8_t move_type;					// move type
 	volatile uint8_t exec_state;		// move execution state 
-	volatile uint8_t accumulator_reset_flag; // set TRUE if accumulator should be reset
+	volatile uint8_t reset_flag;        // set TRUE if accumulator should be reset
 	uint32_t dda_ticks;					// DDA (or dwell) ticks for the move
 	uint32_t dda_ticks_previous;		// DDA tick count from previous move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
@@ -442,7 +442,7 @@ void _load_move()
 		st.dda_ticks_X_substeps = sps.dda_ticks_X_substeps;
  
 		st.m[MOTOR_1].phase_increment = sps.m[MOTOR_1].phase_increment;
-		if (sps.accumulator_reset_flag == true) {	// compensate for pulse phasing
+		if (sps.reset_flag == true) {           // compensate for pulse phasing
 			st.m[MOTOR_1].phase_accumulator = -(st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_1].phase_increment != 0) {
@@ -455,7 +455,7 @@ void _load_move()
 		}
 
 		st.m[MOTOR_2].phase_increment = sps.m[MOTOR_2].phase_increment;
-		if (sps.accumulator_reset_flag == true) {
+		if (sps.reset_flag == true) {
 			st.m[MOTOR_2].phase_accumulator = -(st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_2].phase_increment != 0) {
@@ -465,7 +465,7 @@ void _load_move()
 		}
 
 		st.m[MOTOR_3].phase_increment = sps.m[MOTOR_3].phase_increment;
-		if (sps.accumulator_reset_flag == true) {
+		if (sps.reset_flag == true) {
 			st.m[MOTOR_3].phase_accumulator = -(st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_3].phase_increment != 0) {
@@ -475,7 +475,7 @@ void _load_move()
 		}
 
 		st.m[MOTOR_4].phase_increment = sps.m[MOTOR_4].phase_increment;
-		if (sps.accumulator_reset_flag == true) {
+		if (sps.reset_flag == true) {
 			st.m[MOTOR_4].phase_accumulator = (st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_4].phase_increment != 0) {
@@ -485,7 +485,7 @@ void _load_move()
 		}
 
 		st.m[MOTOR_5].phase_increment = sps.m[MOTOR_5].phase_increment;
-		if (sps.accumulator_reset_flag == true) {
+		if (sps.reset_flag == true) {
 			st.m[MOTOR_5].phase_accumulator = (st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_5].phase_increment != 0) {
@@ -495,7 +495,7 @@ void _load_move()
 		}
 
 		st.m[MOTOR_6].phase_increment = sps.m[MOTOR_6].phase_increment;
-		if (sps.accumulator_reset_flag == true) {
+		if (sps.reset_flag == true) {
 			st.m[MOTOR_6].phase_accumulator = (st.dda_ticks_downcount);
 		}
 		if (st.m[MOTOR_6].phase_increment != 0) {
@@ -562,7 +562,7 @@ uint8_t st_prep_line(float steps[], float microseconds)
 	} else if (isfinite(microseconds) == false) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
-	sps.accumulator_reset_flag = false;		// initialize reset flag for this move.
+	sps.reset_flag = false;         // initialize accumulator reset flag for this move.
 
 	// setup motor parameters
 	for (uint8_t i=0; i<MOTORS; i++) {
@@ -574,7 +574,7 @@ uint8_t st_prep_line(float steps[], float microseconds)
 
 	// anti-stall measure in case change in velocity between segments is too great 
 	if ((sps.dda_ticks * ACCUMULATOR_RESET_FACTOR) < sps.dda_ticks_previous) {  // NB: uint32_t math
-		sps.accumulator_reset_flag = true;
+		sps.reset_flag = true;
 	}
 	sps.dda_ticks_previous = sps.dda_ticks;
 	sps.move_type = MOVE_TYPE_ALINE;

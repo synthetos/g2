@@ -79,7 +79,7 @@ static void _application_init(void)
 	hardware_init();				// system hardware setup 			- must be first
 	config_init();					// config records from eeprom 		- must be next app init
 	switch_init();					// switches
-//	pwm_init();						// pulse width modulation drivers	- must follow gpio_init()
+//	pwm_init();						// pulse width modulation drivers
 
 	// do these next
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
@@ -88,10 +88,10 @@ static void _application_init(void)
 	spindle_init();					// spindle PWM and variables
 
 	// do these last
-	stepper_init(); 				// must precede gpio_init()
+	stepper_init();
 
-	// now bring up the interrupts and get started
-//	rpt_print_system_ready_message();// (LAST) announce system is ready
+	// now get started
+	rpt_print_system_ready_message();// (LAST) announce system is ready
 //	_unit_tests();					// run any unit tests that are enabled
 //	tg_canned_startup();			// run any pre-loaded commands
 	return;
