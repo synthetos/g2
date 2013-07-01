@@ -45,10 +45,9 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t cycle_state;
 	uint8_t motion_state;
 	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t limit_flag;				// set true if limit switch was hit
-	uint8_t request_feedhold;		// set true to initiate a feedhold
-	uint8_t request_cycle_start;	// set true to end feedhold
-	uint8_t cycle_start_flag;		// assert cycle start (follows the request)
+	uint8_t feedhold_requested;		// feedhold character has been received
+	uint8_t queue_flush_requested;	// queue flush character has been received
+	uint8_t cycle_start_requested;	// cycle start character has been received	uint8_t request_feedhold;		// set true to initiate a feedhold
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move
@@ -252,7 +251,7 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_SHUTDOWN,				// machine is in shutdown state
+	MACHINE_ALARM,					// machine is in alarm (shutdown) state
 	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
 	MACHINE_PROGRAM_END,			// program end
 	MACHINE_CYCLE,					// machine is running (cycling)
@@ -272,13 +271,13 @@ enum cmMotionState {
 	MOTION_HOLD						// feedhold in progress
 };
 
-enum cmFeedholdState {				// applies to cm.feedhold_state
+enum cmFeedholdState {				// feedhold_state machine
 	FEEDHOLD_OFF = 0,				// no feedhold in effect
-	FEEDHOLD_SYNC, 					// sync to latest aline segment
+	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
 	FEEDHOLD_PLAN, 					// replan blocks for feedhold
 	FEEDHOLD_DECEL,					// decelerate to hold point
 	FEEDHOLD_HOLD,					// holding
-	FEEDHOLD_END_HOLD				// end hold (transient state)
+	FEEDHOLD_END_HOLD				// end hold (transient state to OFF)
 };
 
 enum cmHomingState {				// applies to cm.homing_state
@@ -469,7 +468,7 @@ void cm_set_model_linenum(uint32_t linenum);
 
 /*--- canonical machining functions ---*/
 void canonical_machine_init(void);
-void canonical_machine_shutdown(uint8_t value);					// emergency shutdown
+void cm_alarm(uint8_t value);					// emergency shutdown
 
 stat_t cm_set_machine_axis_position(uint8_t axis, const float position);	// set absolute position
 stat_t cm_flush_planner(void);									// flush planner queue with coordinate resets
@@ -505,10 +504,10 @@ stat_t cm_arc_feed(float target[], float flags[], 				// G2, G3
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 stat_t cm_set_spindle_speed(float speed);						// S parameter
-stat_t cm_start_spindle_clockwise(void);						// M3
-stat_t cm_start_spindle_counterclockwise(void);					// M4
-stat_t cm_stop_spindle_turning(void);							// M5
 stat_t cm_spindle_control(uint8_t spindle_mode);				// integrated spindle control
+//stat_t cm_start_spindle_clockwise(void);						// M3
+//stat_t cm_start_spindle_counterclockwise(void);				// M4
+//stat_t cm_stop_spindle_turning(void);							// M5
 
 stat_t cm_mist_coolant_control(uint8_t mist_coolant); 			// M7
 stat_t cm_flood_coolant_control(uint8_t flood_coolant);			// M8, M9
@@ -526,9 +525,15 @@ uint8_t cm_select_tool(uint8_t tool);							// T parameter
 
 // canonical machine commands not called from gcode dispatcher
 void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
+
+uint8_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
+void cm_request_feedhold(void);
+void cm_request_queue_flush(void);
+void cm_request_cycle_start(void);
+
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
-void cm_feedhold(void);											// (no Gcode)
+//void cm_feedhold(void);											// (no Gcode)
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2

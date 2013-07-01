@@ -54,6 +54,7 @@ void copy_axis_vector(float dst[], const float src[]);
 									dst[AXIS_B] = src[AXIS_B];\
 									dst[AXIS_C] = src[AXIS_C]; )
 */
+uint8_t vector_equal(float a[], float b[]);
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
@@ -91,7 +92,7 @@ float std_dev(float a[], uint8_t n, float *mean);
 #endif
 
 #ifndef EPSILON
-#define EPSILON 0.00001						// rounding error for floats
+#define EPSILON		0.00001					// rounding error for floats
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)

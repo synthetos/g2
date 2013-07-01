@@ -137,10 +137,13 @@ static void _controller_HSM()
 												// Order is important:
 	DISPATCH(_reset_handler());					// 1. software reset received
 //	DISPATCH(_bootloader_handler());			// 2. received request to start bootloader
-	DISPATCH(_alarm_idler());					// 3. idle in shutdown state (alarmed)
+	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
-//	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-//	DISPATCH(_feedhold_handler());				// 6. feedhold requested
+	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+
+	DISPATCH(cm_feedhold_sequencing_callback());
+	DISPATCH(mp_plan_hold_callback());		// plan a feedhold from line runtime
+	
 //	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 //	DISPATCH(_system_assertions());				// 9. system integrity assertions
 
@@ -148,11 +151,9 @@ static void _controller_HSM()
 
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
 	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
-	DISPATCH(mp_plan_hold_callback());			// plan a feedhold
-	DISPATCH(mp_end_hold_callback());			// end a feedhold
 	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
-	DISPATCH(st_delayed_disable_callback());	// timed disable for steppers
+	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
 
 //----- command readers and parsers --------------------------------------------------//
 
@@ -225,8 +226,6 @@ static stat_t _command_dispatch()
 				json_parser(cs.in_buf);
 			} else {
 				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
-//				text_response(STAT_OK, cs.in_buf);
-//				write (cs.in_buf, cs.linelen);	//++++ test statement
 			}
 		}
 	}
@@ -254,11 +253,11 @@ static stat_t _normal_idler(  )
  */
 static stat_t _alarm_idler(  )
 {
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
+	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
 
 	if (SysTickTimer.getValue() > cs.led_counter) {
 		cs.led_counter += LED_ALARM_COUNTER;
-//		IndicatorLed.toggle();
+		IndicatorLed.toggle();
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
@@ -276,27 +275,14 @@ static uint8_t _reset_handler(void)
 	return (STAT_EAGAIN);
 }
 
-static uint8_t _feedhold_handler(void)
-{
-	if (cm.request_feedhold == false) { return (STAT_NOOP);}
-	cm.request_feedhold = false;
-	cm_feedhold();
-	return (STAT_EAGAIN);					// best to restart the control loop
-}
-
-static uint8_t _cycle_start_handler(void)
-{
-	if (cm.request_cycle_start == false) { return (STAT_NOOP);}
-	cm.request_cycle_start = false;
-	cm_cycle_start();
-	return (STAT_EAGAIN);					// best to restart the control loop
-}
-
 static uint8_t _limit_switch_handler(void)
 {
-	if (cm_get_machine_state() == MACHINE_SHUTDOWN) { return (STAT_NOOP);}
-//	cm_shutdown(gpio_get_sw_thrown); // unexplained complier warning: passing argument 1 of 'cm_shutdown' makes integer from pointer without a cast
-//	cm_shutdown(0);
+/*
+	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
+	if (cm.limit_tripped_flag == false) { return (STAT_NOOP);}
+	cm.limit_tripped_flag = false;
+//	cm_alarm(0);
+*/
 	return (STAT_OK);
 }
 
@@ -363,7 +349,7 @@ static stat_t _system_assertions()
 
 	if (value == 0) { return (STAT_OK);}
 	rpt_exception(STAT_MEMORY_CORRUPTION, value);
-	cm_shutdown(ALARM_MEMORY_OFFSET + value);	
+	cm_alarm(ALARM_MEMORY_OFFSET + value);	
 	return (STAT_EAGAIN);
 }
 */

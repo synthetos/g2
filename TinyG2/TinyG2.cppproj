@@ -444,12 +444,6 @@
     <Compile Include="gcode_parser.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="gpio.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="gpio.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="help.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -778,6 +772,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hardware.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="switch.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="switch.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="text_parser.cpp">

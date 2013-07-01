@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	009.10	// working on switch code
+#define TINYG2_FIRMWARE_BUILD   	012.04	// Cosmetic changes
 #define TINYG2_FIRMWARE_VERSION		0.1		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -163,7 +163,7 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
-#define	STAT_SHUTDOWN 27
+#define	STAT_ALARM 27					// alarm state - enter shutdown
 #define	STAT_MEMORY_CORRUPTION 28
 #define	STAT_ERROR_29 29
 #define	STAT_ERROR_30 30
@@ -200,15 +200,16 @@ extern stat_t status_code;				// declared in main.cpp
 #define	STAT_ERROR_59 59
 
 // Gcode and machining errors
-#define	STAT_ZERO_LENGTH_MOVE 60		// move is zero length
-#define	STAT_GCODE_BLOCK_SKIPPED 61		// block is too short - was skipped
-#define	STAT_GCODE_INPUT_ERROR 62		// general error for gcode input 
-#define	STAT_GCODE_FEEDRATE_ERROR 63	// move has no feedrate
-#define	STAT_GCODE_AXIS_WORD_MISSING 64	// command requires at least one axis present
-#define	STAT_MODAL_GROUP_VIOLATION 65	// gcode modal group error
-#define	STAT_HOMING_CYCLE_FAILED 66		// homing cycle did not complete
-#define	STAT_MAX_TRAVEL_EXCEEDED 67
-#define	STAT_MAX_SPINDLE_SPEED_EXCEEDED 68
-#define	STAT_ARC_SPECIFICATION_ERROR 69	// arc specification error
+#define	STAT_MINIMUM_LENGTH_MOVE_ERROR 60	// move is less than minimum length
+#define	STAT_MINIMUM_TIME_MOVE_ERROR 61	// move is less than minimum time
+#define	STAT_GCODE_BLOCK_SKIPPED 62		// block is too short - was skipped
+#define	STAT_GCODE_INPUT_ERROR 63			// general error for gcode input
+#define	STAT_GCODE_FEEDRATE_ERROR 64		// move has no feedrate
+#define	STAT_GCODE_AXIS_WORD_MISSING 65	// command requires at least one axis present
+#define	STAT_MODAL_GROUP_VIOLATION 66		// gcode modal group error
+#define	STAT_HOMING_CYCLE_FAILED 67		// homing cycle did not complete
+#define	STAT_MAX_TRAVEL_EXCEEDED 68
+#define	STAT_MAX_SPINDLE_SPEED_EXCEEDED 69
+#define	STAT_ARC_SPECIFICATION_ERROR 70	// arc specification error
 
 #endif // End of include guard: TINYG2_H_ONCE

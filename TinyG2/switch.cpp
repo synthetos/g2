@@ -8,7 +8,7 @@
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
  * Free Software Foundation. You should have received a copy of the GNU General Public
- * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+ * License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
  *
  * As a special exception, you may use this file as part of a software library without
  * restriction. Specifically, if other files instantiate templates or use macros or
@@ -53,7 +53,8 @@ switches_t sw;
 static void _no_action(switch_t *s);
 static void _led_on(switch_t *s);
 static void _led_off(switch_t *s);
-static void _do_feedhold(switch_t *s);
+static void _trigger_feedhold(switch_t *s);
+static void _trigger_cycle_start(switch_t *s);
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -84,19 +85,14 @@ void switch_init(void)
 			// functions bound to each switch
 			s->when_open = _no_action;
 			s->when_closed = _no_action;
-//			s->on_leading = _no_action;
-//			s->on_trailing = _no_action;		
-
-//			s->when_open = _led_off;
-//			s->when_closed = _led_on;
-			s->on_leading = _do_feedhold;
-			s->on_trailing = _do_feedhold;
+			s->on_leading = _trigger_feedhold;
+			s->on_trailing = _trigger_cycle_start;
 		}
 	}
-	// functions bound ti individual switches
+	// functions bound to individual switches
 	// <none>
-	sw.s[AXIS_X][SW_MIN].when_open = _led_off;
-	sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
+	// sw.s[AXIS_X][SW_MIN].when_open = _led_off;
+	// sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
 }
 
 static void _no_action(switch_t *s) { return; }
@@ -134,13 +130,16 @@ stat_t poll_switches()
 uint8_t read_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
-	if ((s->mode == SW_MODE_DISABLED) || (s->debounce_timeout > SysTickTimer.getValue())) { 
+	if (s->mode == SW_MODE_DISABLED) {
 		return (false); 
 	}
-
+	if (s->debounce_timeout > GetTickCount()) {
+		return (false);
+	}
 	// return if no change in state
 	uint8_t pin_sense_corrected = (pin_value ^ (s->type ^ 1));	// correct for NO or NC mode
   	if ( s->state == pin_sense_corrected) { 
+		s->edge = SW_NO_EDGE;
 		if (s->state == SW_OPEN) { 
 			s->when_open(s);
 		} else {
@@ -148,7 +147,6 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 		}
 		return (false);
 	}
-
 	// the switch legitimately changed state - process edges
 	if ((s->state = pin_sense_corrected) == SW_OPEN) {
 			s->edge = SW_TRAILING;
@@ -160,26 +158,24 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
 }
+
+static void _trigger_feedhold(switch_t *s) 
+{
+	IndicatorLed.toggle();
+	cm_request_feedhold();
 /*
-	s->edge = ((s->state == SW_OPEN) ? SW_TRAILING : SW_LEADING);
-	if (s->edge == SW_LEADING) { 
-		s->on_leading(s); 
-	} else {
-		s->on_trailing(s);
-	}
-	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
-	return (true);
-}
-*/
-static void _do_feedhold(switch_t *s) 
-{ 
-//	IndicatorLed.toggle();
 	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
 		cm.request_feedhold = true;
 	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
-		cm.limit_flag = true;
+		cm.limit_tripped_flag = true;
 	}
-	return; 
+*/
+}
+
+static void _trigger_cycle_start(switch_t *s) 
+{
+	IndicatorLed.toggle();
+	cm_request_cycle_start();
 }
 
 /*

@@ -128,7 +128,8 @@ void text_response(const uint8_t status, char_t *buf)
 
 	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
 
-	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
+//	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
+	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
 		if (cm_get_units_mode() == INCHES) {
 			fprintf(stderr, prompt_in_ok);
 		} else {

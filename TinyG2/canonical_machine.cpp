@@ -114,7 +114,7 @@ static void _exec_select_tool(uint8_t tool, float float_val);
 static void _exec_mist_coolant_control(uint8_t mist_coolant, float float_val);
 static void _exec_flood_coolant_control(uint8_t flood_coolant, float float_val);
 //static void _exec_feed_override_enable(uint8_t feed_override, float float_val);
-static void _exec_program_finalize(uint8_t machine_state, float float_val);
+static void _program_finalize(uint8_t machine_state, float float_val);
 
 #define _to_millimeters(a) ((gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 
@@ -327,7 +327,6 @@ void cm_set_model_linenum(uint32_t linenum)
  */
 static float _calc_ABC(uint8_t i, float target[], float flag[]);
 
-//void cm_set_target(float target[], float flag[], uint8_t machine_coords)
 void cm_set_target(float target[], float flag[])
 { 
 	uint8_t i;
@@ -335,7 +334,7 @@ void cm_set_target(float target[], float flag[])
 
 	// process XYZABC for lower modes
 	for (i=AXIS_X; i<=AXIS_Z; i++) {
-		if ((flag[i] < EPSILON) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
+		if ((fp_FALSE(flag[i])) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 			continue;
 		} else if ((cfg.a[i].axis_mode == AXIS_STANDARD) || (cfg.a[i].axis_mode == AXIS_INHIBITED)) {
 			if (gm.distance_mode == ABSOLUTE_MODE) {
@@ -348,7 +347,7 @@ void cm_set_target(float target[], float flag[])
 	// FYI: The ABC loop below relies on the XYZ loop having been run first
 	for (i=AXIS_A; i<=AXIS_C; i++) {
 		// skip axis if not flagged for update or its disabled
-		if ((flag[i] < EPSILON) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
+		if ((fp_FALSE(flag[i])) || (cfg.a[i].axis_mode == AXIS_DISABLED)) {
 			continue;
 		} else {
 			tmp = _calc_ABC(i, target, flag);		
@@ -371,7 +370,7 @@ static float _calc_ABC(uint8_t i, float target[], float flag[])
 	if ((cfg.a[i].axis_mode == AXIS_STANDARD) || (cfg.a[i].axis_mode == AXIS_INHIBITED)) {
 		tmp = target[i];	// no mm conversion - it's in degrees
 
-	} else if ((cfg.a[i].axis_mode == AXIS_RADIUS) && (flag[i] > EPSILON)) {
+	} else if ((cfg.a[i].axis_mode == AXIS_RADIUS) && (fp_TRUE(flag[i]))) {
 		tmp = _to_millimeters(target[i]) * 360 / (2 * M_PI * cfg.a[i].radius);
 	}
 	return tmp;
@@ -546,10 +545,10 @@ void canonical_machine_init()
 }
 
 /*
- * canonical_machine_shutdown() - shut down machine
+ * cm_alarm() - alarm state; shut down machine
  */
 
-void canonical_machine_shutdown(uint8_t value)
+void cm_alarm(uint8_t value)
 {
 	// stop the steppers and the spindle
 	st_disable();
@@ -562,23 +561,8 @@ void canonical_machine_shutdown(uint8_t value)
 //	switch_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
 //	switch_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
 
-	rpt_exception(STAT_SHUTDOWN,value);		// send shutdown message
-	cm.machine_state = MACHINE_SHUTDOWN;
-}
-
-/*
- * cm_flush_planner() - Flush planner queue and correct model positions
- */
-uint8_t cm_flush_planner()
-{
-	mp_flush_planner();
-
-	for (uint8_t i=0; i<AXES; i++) {
-		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
-		gm.position[i] = mp_get_runtime_machine_position(i);
-		gm.target[i] = gm.position[i];
-	}
-	return (STAT_OK);
+	rpt_exception(STAT_ALARM,value);			// send shutdown message
+	cm.machine_state = MACHINE_ALARM;
 }
 
 /* 
@@ -678,7 +662,7 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 		return (STAT_INTERNAL_RANGE_ERROR);
 	}
 	for (uint8_t i=0; i<AXES; i++) {
-		if (flag[i] > EPSILON) {
+		if (fp_TRUE(flag[i])) {
 			cfg.offset[coord_system][i] = offset[i];
 			cm.g10_persist_flag = true;		// this will persist offsets to NVM once move has stopped
 		}
@@ -697,7 +681,7 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 stat_t cm_set_absolute_origin(float origin[], float flag[])
 {
 	for (uint8_t i=0; i<AXES; i++) {
-		if (flag[i] > EPSILON) {
+		if (fp_TRUE(flag[i])) {
 			cm_set_machine_axis_position(i, cfg.offset[gm.coord_system][i] + _to_millimeters(origin[i]));
 			cm.homed[i] = true;
 		}
@@ -718,7 +702,7 @@ stat_t cm_set_origin_offsets(float offset[], float flag[])
 {
 	gm.origin_offset_enable = 1;
 	for (uint8_t i=0; i<AXES; i++) {
-		if (flag[i] > EPSILON) {
+		if (fp_TRUE(flag[i])) {
 			gm.origin_offset[i] = gm.position[i] - cfg.offset[gm.coord_system][i] - _to_millimeters(offset[i]);
 		}
 	}
@@ -758,7 +742,9 @@ stat_t cm_resume_origin_offsets()
 stat_t cm_straight_traverse(float target[], float flags[])
 {
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
-	cm_set_target(target,flags);
+	cm_set_target(target, flags);
+	if (vector_equal(gm.target, gm.position)) { return (STAT_OK); }
+
 	cm_cycle_start();							// required for homing & other cycles
 	stat_t status = MP_LINE(gm.target, 
 							_get_move_times(&gm.min_time), 
@@ -883,6 +869,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 //	}
 
 	cm_set_target(target, flags);
+	if (vector_equal(gm.target, gm.position)) { return (STAT_OK); }	
 	cm_cycle_start();						// required for homing & other cycles
 	stat_t status = MP_LINE(gm.target, 
 							 _get_move_times(&gm.min_time), 
@@ -1076,9 +1063,79 @@ void cm_message(char_t *message)
  *
  * cm_program_end is a stop that also resets the machine to initial state
  */
+
+/*
+ * cm_request_feedhold()
+ * cm_request_queue_flush()
+ * cm_request_cycle_start()
+ * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
+ * cm_flush_planner() - Flush planner queue and correct model positions
+ *
+ * Feedholds, queue flushes and cycles starts are all related. The request functions set
+ *	flags for these. The sequencing callback interprets the flags according to the 
+ *	following rules:
+ *
+ *	A feedhold request received during motion should be honored
+ *	A feedhold request received during a feedhold should be ignored and reset
+ *	A feedhold request received during a motion stop should be ignored and reset
+ *
+ *	A queue flush request received during motion should be ignored but not reset
+ *	A queue flush request received during a feedhold should be deferred until 
+ *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
+ *	A queue flush request received during a motion stop should be honored
+ *
+ *	A cycle start request received during motion should be ignored and reset
+ *	A cycle start request received during a feedhold should be deferred until 
+ *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
+ *		If a queue flush request is also present the queue flush should be done first
+ *	A cycle start request received during a motion stop should be honored and 
+ *		should start to run anything in the planner queue
+ */
+
+void cm_request_feedhold(void) { cm.feedhold_requested = true; }
+void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
+void cm_request_cycle_start(void) { cm.cycle_start_requested = true; }
+
+uint8_t cm_feedhold_sequencing_callback()
+{
+	if (cm.feedhold_requested == true) {
+		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
+			cm.motion_state = MOTION_HOLD;
+			cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
+		}
+		cm.feedhold_requested = false;
+	}
+	if (cm.queue_flush_requested == true) {
+		if ((cm.motion_state == MOTION_STOP) ||
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) {
+			cm.queue_flush_requested = false;
+			cm_flush_planner();
+		}
+	}
+	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false)) {
+		cm.cycle_start_requested = false;
+		cm.hold_state = FEEDHOLD_END_HOLD;
+		cm_cycle_start();
+		mp_end_hold();
+	}
+	return (STAT_OK);
+}
+
+uint8_t cm_flush_planner()
+{
+	mp_flush_planner();
+
+	for (uint8_t i=0; i<AXES; i++) {
+		mp_set_axis_position(i, mp_get_runtime_machine_position(i));	// set mm from mr
+		gm.position[i] = mp_get_runtime_machine_position(i);
+		gm.target[i] = gm.position[i];
+	}
+	rpt_request_queue_report();
+	return (STAT_OK);
+}
+
 void cm_cycle_start()
 {
-	cm.cycle_start_flag = true;
 	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.cycle_state = CYCLE_STARTED;	// don't change homing, probe or other cycles
@@ -1088,29 +1145,20 @@ void cm_cycle_start()
 void cm_cycle_end() 
 {
 	if (cm.cycle_state == CYCLE_STARTED) {
-		_exec_program_finalize(MACHINE_PROGRAM_STOP,0);
-	}
-}
-
-void cm_feedhold()
-{
-	if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
-		cm.motion_state = MOTION_HOLD;
-		cm.hold_state = FEEDHOLD_SYNC;
-		cm.cycle_start_flag = false;
+		_program_finalize(MACHINE_PROGRAM_STOP,0);
 	}
 }
 
 void cm_program_stop() 
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
 
 void cm_optional_program_stop()	
 { 
-	mp_queue_command(_exec_program_finalize, MACHINE_PROGRAM_STOP,0);
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_STOP,0);
 }
-
+/*
 void cm_program_end()				// M2, M30
 {
 //	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
@@ -1123,11 +1171,47 @@ static void _exec_program_finalize(uint8_t machine_state, float f)
 	cm.cycle_state = CYCLE_OFF;
 	cm.motion_state = MOTION_STOP;
 	cm.hold_state = FEEDHOLD_OFF;					//...and any feedhold is ended
-	cm.cycle_start_flag = false;
+	cm.cycle_start_requested = false;
 	mp_zero_segment_velocity();						// for reporting purposes
 	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request final status report (not unfiltered)
 //++++	cmd_persist_offsets(cm.g10_persist_flag);	// persist offsets if any changes made
 }
+*/
+void cm_program_end()				// M2, M30
+{
+	// this bunch is defined by NIST 3.6.1
+	cm_reset_origin_offsets();						// G92.1
+	//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
+	cm_set_coord_system(cfg.coord_system);			// default coordinate system
+
+	cm_select_plane(cfg.select_plane);				// default arc plane
+	cm_set_distance_mode(cfg.distance_mode);
+	cm_set_units_mode(cfg.units_mode);				// default units mode
+	cm_spindle_control(SPINDLE_OFF);				// M5
+	cm_flood_coolant_control(false);				// M9
+	cm_set_inverse_feed_rate_mode(false);
+
+	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1
+	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
+
+	mp_queue_command(_program_finalize, MACHINE_PROGRAM_END,0);
+}
+
+static void _program_finalize(uint8_t machine_state, float f)
+{
+	cm.machine_state = machine_state;
+	cm.motion_state = MOTION_STOP;
+	cm.cycle_state = CYCLE_OFF;
+	cm.cycle_start_requested = false;				// cancel any cycle start request
+	cm.hold_state = FEEDHOLD_OFF;					//...and any feedhold is ended
+
+	mp_zero_segment_velocity();						// for reporting purposes
+	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request a final status report (not unfiltered)
+//+++++	cmd_persist_offsets(cm.g10_persist_flag);		// persist offsets if any changes made
+}
+
+
+
 
 #ifdef __cplusplus
 }

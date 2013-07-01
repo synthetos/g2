@@ -76,7 +76,7 @@ static const char_t stat_23[] = "Divide by zero";
 static const char_t stat_24[] = "Invalid Address";
 static const char_t stat_25[] = "Read-only address";
 static const char_t stat_26[] = "Initialization failure";
-static const char_t stat_27[] = "System shutdown";
+static const char_t stat_27[] = "System alarm - shutting down";
 static const char_t stat_28[] = "Memory corruption";
 static const char_t stat_29[] = "stat_29";
 static const char_t stat_30[] = "stat_30";
@@ -111,16 +111,17 @@ static const char_t stat_57[] = "stat_57";
 static const char_t stat_58[] = "stat_58";
 static const char_t stat_59[] = "stat_59";
 
-static const char_t stat_60[] = "Zero length move";
-static const char_t stat_61[] = "Gcode block skipped";
-static const char_t stat_62[] = "Gcode input error";
-static const char_t stat_63[] = "Gcode feedrate error";
-static const char_t stat_64[] = "Gcode axis word missing";
-static const char_t stat_65[] = "Gcode modal group violation";
-static const char_t stat_66[] = "Homing cycle failed";
-static const char_t stat_67[] = "Max travel exceeded";
-static const char_t stat_68[] = "Max spindle speed exceeded";
-static const char_t stat_69[] = "Arc specification error";
+static const char_t stat_60[] = "Move less than minimum length";
+static const char_t stat_61[] = "Move less than minimum time";
+static const char_t stat_62[] = "Gcode block skipped";
+static const char_t stat_63[] = "Gcode input error";
+static const char_t stat_64[] = "Gcode feedrate error";
+static const char_t stat_65[] = "Gcode axis word missing";
+static const char_t stat_66[] = "Gcode modal group violation";
+static const char_t stat_67[] = "Homing cycle failed";
+static const char_t stat_68[] = "Max travel exceeded";
+static const char_t stat_69[] = "Max spindle speed exceeded";
+static const char_t stat_70[] = "Arc specification error";
 
 static const char_t *stat_msg[] = {
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
@@ -129,7 +130,8 @@ static const char_t *stat_msg[] = {
 	stat_30, stat_31, stat_32, stat_33, stat_34, stat_35, stat_36, stat_37, stat_38, stat_39,
 	stat_40, stat_41, stat_42, stat_43, stat_44, stat_45, stat_46, stat_47, stat_48, stat_49,
 	stat_50, stat_51, stat_52, stat_53, stat_54, stat_55, stat_56, stat_57, stat_58, stat_59,
-	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69
+	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69,
+	stat_70
 };
 
 const char_t *get_status_message(stat_t status)
