@@ -285,7 +285,7 @@ namespace Motate {
 
 		// If there's nothing to read, return -1
 		if (available == 0 || len < 1)
-			return -1;
+			return 0;
 
 		int32_t to_read = available < len ? available : len;
 		int32_t i = to_read;
@@ -300,13 +300,15 @@ namespace Motate {
 		const uint8_t *ptr_src = data;
 
 		if (!_isTransmitINAvailable(endpoint))
-			return -1;
+			return 0;
 
 		int16_t to_send = endpointSizes[endpoint] - _getEndpointBufferCount(endpoint);
 		if (to_send > length)
 			to_send = length;
 
-		// Conveniently, of to_send starts as 0, it ends up returning -1
+		if (to_send == 0)
+			return 0;
+
 		while (to_send--) {
 			*_endpointBuffer[endpoint]++ = *ptr_src++;
 		}
@@ -319,7 +321,6 @@ namespace Motate {
 		}
 		return to_send;
 	}
-
 	
 	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t length) {
 		//		_resetEndpointBuffer(endpoint);
@@ -352,11 +353,12 @@ namespace Motate {
 				available = _getEndpointBufferCount(endpoint);
 			}
 
+			available -= to_read;
 			length -= to_read;
 			read += to_read;
 		}
 
-		return read == 0 ? -1 : read;
+		return read;
 	}
 
 	// Flush an endpoint after sending data.
