@@ -133,7 +133,7 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 	if (s->mode == SW_MODE_DISABLED) {
 		return (false); 
 	}
-	if (s->debounce_timeout > GetTickCount()) {
+	if (s->debounce_timeout > SysTickTimer.getValue()) {
 		return (false);
 	}
 	// return if no change in state
