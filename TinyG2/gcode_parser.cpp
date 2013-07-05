@@ -35,9 +35,9 @@ struct gcodeParserSingleton {	 	  // struct to manage globals
 static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
+static stat_t _validate_gcode_block(void);
 static stat_t _parse_gcode_block(char_t *line);	// Parse the block into structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
-static stat_t _check_gcode_block(void);			// check the block for correctness
 
 #define SET_MODAL(m,parm,val) ({gn.parm=val; gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({gn.parm=val; gf.parm=1; break;})
@@ -120,6 +120,7 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	// Perform Octal stripping - remove invalid leading zeros in number strings
 	rd = cmd;
 	while (*rd != NUL) {
+        if (*rd == '.') break;							// don't strip past a decimal point
 		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
 			wr = rd+1;
 			while (*wr != NUL) { *wr = *(wr+1); wr++;}	// copy forward w/overwrite
@@ -172,10 +173,40 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	return (STAT_OK);			// pointer points to next character after the word
 }
 
+/*
+* _point() - isolate the decimal point value as an integer
+*/
+
 static uint8_t _point(float value) 
 {
 	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
 }
+
+/*
+* _validate_gcode_block() - check for some gross Gcode block semantic violations
+*/
+    
+static stat_t _validate_gcode_block()
+{
+    //	Check for modal group violations. From NIST, section 3.4 "It is an error to put
+    //	a G-code from group 1 and a G-code from group 0 on the same line if both of them
+    //	use axis words. If an axis word-using G-code from group 1 is implicitly in effect
+    //	on a line (by having been activated on an earlier line), and a group 0 G-code that
+    //	uses axis words appears on the line, the activity of the group 1 G-code is suspended
+    //	for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
+        
+    //	if ((gp.modals[MODAL_GROUP_G0] == true) && (gp.modals[MODAL_GROUP_G1] == true)) {
+    //		return (STAT_MODAL_GROUP_VIOLATION);
+    //	}
+        
+    // look for commands that require an axis word to be present
+    //	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
+    //		if (_axis_changed() == false)
+    //		return (STAT_GCODE_AXIS_WORD_MISSING);
+    //	}
+    return (STAT_OK);
+}
+
 /*
  * _parse_gcode_block() - parses one line of NULL terminated G-Code. 
  *
@@ -324,7 +355,7 @@ static stat_t _parse_gcode_block(char_t *buf)
 		if(status != STAT_OK) break;
 	}
 	if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
-	ritorno(_check_gcode_block());			// perform Gcode error checking
+	ritorno(_validate_gcode_block());
 	return (_execute_gcode_block());		// if successful execute the block
 }
 
@@ -436,31 +467,6 @@ static stat_t _execute_gcode_block()
 		else { cm_program_end(); }
 	}
 	return (status);
-}
-
-/*
- * _check_gcode_block() - return a STAT_ error if an error is detected
- */
-
-static stat_t _check_gcode_block()
-{
-	// Check for modal group violations. From NIST, section 3.4 "It is an error 
-	// to put a G-code from group 1 and a G-code from group 0 on the same line 
-	// if both of them use axis words. If an axis word-using G-code from group 
-	// 1 is implicitly in effect on a line (by having been activated on an 
-	// earlier line), and a group 0 G-code that uses axis words appears on the 
-	// line, the activity of the group 1 G-code is suspended for that line. 
-	// The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
-//	if ((gp.modals[MODAL_GROUP_G0] == true) && (gp.modals[MODAL_GROUP_G1] == true)) {
-//		return (STAT_MODAL_GROUP_VIOLATION);
-//	}
-	
-	// look for commands that require an axis word to be present
-//	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
-//		if (_axis_changed() == false)
-//		return (STAT_GCODE_AXIS_WORD_MISSING);
-//	}
-	return (STAT_OK);
 }
 
 #ifdef __cplusplus
