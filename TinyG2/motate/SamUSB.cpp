@@ -233,19 +233,19 @@ namespace Motate {
 	// Tests / Clears
 
 	inline bool _isFIFOControlAvailable(const uint8_t endpoint) {
-		return UOTGHS->UOTGHS_DEVEPTIMR[endpoint] & UOTGHS_DEVEPTIMR_FIFOCON;
+		return (UOTGHS->UOTGHS_DEVEPTIMR[endpoint] & UOTGHS_DEVEPTIMR_FIFOCON) != 0;
 	}
 
 	inline bool _isTransmitINAvailable(const uint8_t endpoint) {
-		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI);
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI) != 0;
 	}
 
 	inline bool _isReceiveOUTAvailable(const uint8_t endpoint) {
-		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RXOUTI);
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RXOUTI) != 0;
 	}
 
 	inline bool _isReadWriteAllowed(const uint8_t endpoint) {
-		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL);
+		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL) != 0;
 	}
 
 	inline void _waitForTransmitINAvailable(const uint8_t endpoint) {
@@ -326,36 +326,49 @@ namespace Motate {
 		//		_resetEndpointBuffer(endpoint);
 		uint8_t *ptr_dest = data;
 		int16_t read = 0;
-		int16_t available = _getEndpointBufferCount(endpoint);
 
-		// If there's nothing to read, return -1
-		if (available == 0 || length < 1)
-			return -1;
+		// Available = -1 means that FIFOCONtrol might not be high.
+		// It should only be >= 0 once we've proven that it is.
+		int16_t available = -1;
 
-		while(length && available) {
-			if (_isReceiveOUTAvailable(endpoint)) {
+		while (length > 0 && _isFIFOControlAvailable(endpoint)) {
+			available = _getEndpointBufferCount(endpoint);
+
+			if (!available) {
+				// We cheat and lazily clear the RXOUT interrupt.
+				// Once we might actually use that interru;t, we might need to be more proactive.
 				_clearReceiveOUT(endpoint);
-				_resetEndpointBuffer(endpoint);
-			}
 
-			int32_t to_read = available < length ? available : length;
-			int32_t i = to_read;
-
-			while (i--)
-				*ptr_dest++ = *_endpointBuffer[endpoint]++;
-
-			if (!_getEndpointBufferCount(endpoint)) {
+				// Clearing FIFOCon will also mark this bank as "read".
 				_clearFIFOControl(endpoint);
 				_resetEndpointBuffer(endpoint);
 
-				// If there's another buffer already ready already,
-				//  then find out how full it is...
-				available = _getEndpointBufferCount(endpoint);
+				// FOFCon will either be low now
+				// -OR- will be high again if there's another bank of data available.
+				// If it stays low, we ned to make sure we don't reset it again when we test available before returning.
+				// BECAUSE we don't have interrupts off, and it could, possibly, go high again before then.
+				// In that case, we would be flushing a full buffer.
+				available = -1;
+				continue;
 			}
 
+			int16_t to_read = available < length ? available : length;
+			int16_t i = to_read;
+
+			while (i--) {
+				*ptr_dest++ = *_endpointBuffer[endpoint]++;
+			}
 			available -= to_read;
 			length -= to_read;
 			read += to_read;
+		}
+
+		// If available is negative, we don't want to flush.
+		if (!available) {
+			// Flush. See notes at the top of the function.
+			_clearReceiveOUT(endpoint);
+			_clearFIFOControl(endpoint);
+			_resetEndpointBuffer(endpoint);
 		}
 
 		return read;
@@ -373,9 +386,11 @@ namespace Motate {
 		int16_t sent = 0;
 
 		// While we have more to send AND the buffer is available
-		while (length > 0 && _isReadWriteAllowed(endpoint)) {
-			if (!_isFIFOControlAvailable(endpoint))
-				return sent;
+		while (length > 0 && _isFIFOControlAvailable(endpoint)) {
+			if (!_isReadWriteAllowed(endpoint)) {
+				_clearFIFOControl(endpoint);
+				continue;
+			}
 
 			if (_isTransmitINAvailable(endpoint)) {
 				// Ack the Transmit IN.
@@ -385,7 +400,7 @@ namespace Motate {
 				_resetEndpointBuffer(endpoint);
 			}
 
-			while (length-- && _isReadWriteAllowed(endpoint)) {
+			while (_isReadWriteAllowed(endpoint) && length--) {
 				*_endpointBuffer[endpoint]++ = *ptr_src++;
 				sent++;
 			}

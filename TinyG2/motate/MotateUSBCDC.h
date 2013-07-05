@@ -270,8 +270,23 @@ namespace Motate {
 			return usb.readByte(read_endpoint);
 		};
 
-		uint16_t read(const uint8_t * buffer, const uint16_t len) {
-			return usb.read(read_endpoint, buffer, len);
+		uint16_t read(const uint8_t *buffer, const uint16_t length) {
+			int16_t total_read = 0;
+			int16_t to_read = length;
+			const uint8_t *read_ptr = buffer;
+
+			// BLOCKING!!
+			while (to_read > 0) {
+				// Oddity of english: "to read" and "amount read" makes the same read.
+				// So, we'll call it "amount_read".
+				int16_t amount_read = usb.read(read_endpoint, read_ptr, length);
+
+				total_read += amount_read;
+				to_read -= amount_read;
+				read_ptr += amount_read;
+			};
+
+			return total_read;
 		};
 
 		int32_t write(const uint8_t *data, const uint16_t length) {
@@ -349,8 +364,8 @@ namespace Motate {
 		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const bool otherSpeed) {
 			if (endpoint == control_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
-				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeInterrupt;
+				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeControl, otherSpeed));
+				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocks1 | kEndpointBufferTypeInterrupt;
 			}
 			else if (endpoint == read_endpoint)
 			{
