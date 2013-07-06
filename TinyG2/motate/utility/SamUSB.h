@@ -150,6 +150,7 @@ namespace Motate {
 	extern int32_t _getEndpointBufferCount(const uint8_t endpoint);
 	extern int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
 	extern int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
+	extern int16_t _readByteFromEndpoint(const uint8_t endpoint);
 	extern int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
 	extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
 	extern void _unfreezeUSBClock();
@@ -318,19 +319,16 @@ namespace Motate {
 			return false;
 		};
 
-		static int32_t availableToRead(const uint8_t endpoint) {
-			return Motate::_getEndpointBufferCount(endpoint);
+		static int16_t availableToRead(const uint8_t endpoint) {
+			return _getEndpointBufferCount(endpoint);
 		}
 
-		static int32_t readByte(const uint8_t endpoint) {
-			uint8_t c;
-			if (read(endpoint & 0xF, &c, 1) == 1)
-				return c;
-			return -1;
+		static int16_t readByte(const uint8_t endpoint) {
+			return _readByteFromEndpoint(endpoint);
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t read(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
+		static int16_t read(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
 //
@@ -339,7 +337,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t write(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
+		static int16_t write(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
 
@@ -351,7 +349,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
+		static int16_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
 			//
@@ -360,7 +358,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int32_t writeToControl(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
+		static int16_t writeToControl(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
 			return _sendToControlEndpoint(endpoint, buffer, length);
 		};
 

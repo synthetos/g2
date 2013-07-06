@@ -321,7 +321,31 @@ namespace Motate {
 		}
 		return to_send;
 	}
-	
+
+	// Returns -1 if nothing was available.
+	int16_t _readByteFromEndpoint(const uint8_t endpoint) {
+		// We use a while in the case where the last read emptied the buffer.
+		// If we get a character we just return right out.
+		while (_isFIFOControlAvailable(endpoint)) {
+			if (!_isReadWriteAllowed(endpoint)) {
+				// We cheat and lazily clear the RXOUT interrupt.
+				// Once we might actually use that interru;t, we might need to be more proactive.
+				_clearReceiveOUT(endpoint);
+
+				// Clearing FIFOCon will also mark this bank as "read".
+				_clearFIFOControl(endpoint);
+				_resetEndpointBuffer(endpoint);
+
+				// FOFCon will either be low now
+				// -OR- will be high again if there's another bank of data available.
+				continue;
+			}
+
+			return *_endpointBuffer[endpoint]++;
+		}
+		return -1;
+	}
+
 	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t length) {
 		//		_resetEndpointBuffer(endpoint);
 		uint8_t *ptr_dest = data;

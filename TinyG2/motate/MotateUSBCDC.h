@@ -231,7 +231,7 @@ namespace Motate {
 
 	//Actual implementation of CDC
 	template <typename usb_parent_type>
-	struct USBCDC_impl {
+	struct USBSerial {
 		usb_parent_type &usb;
 		const uint8_t control_endpoint;
 		const uint8_t read_endpoint;
@@ -256,7 +256,7 @@ namespace Motate {
 
 		volatile _line_info_t _line_info;
 
-		USBCDC_impl(usb_parent_type &usb_parent,
+		USBSerial(usb_parent_type &usb_parent,
 					const uint8_t new_endpoint_offset
 					)
 		: usb(usb_parent),
@@ -405,7 +405,7 @@ namespace Motate {
 
 		typedef USBDevice<USBCDC, usbIFB, usbIFC> usb_parent_type;
 
-		USBCDC_impl< usb_parent_type > Serial;
+		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< USBCDC, usbIFB, usbIFC, 0 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
@@ -429,7 +429,7 @@ namespace Motate {
 
 		typedef USBDevice<usbIFA, USBCDC, usbIFC> usb_parent_type;
 
-		USBCDC_impl< usb_parent_type > Serial;
+		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< usbIFA, USBCDC, usbIFC, 1 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
@@ -453,7 +453,7 @@ namespace Motate {
 
 		typedef USBDevice<usbIFA, usbIFB, USBCDC> usb_parent_type;
 
-		USBCDC_impl< usb_parent_type > Serial;
+		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< usbIFA, usbIFB, USBCDC, 2 > (usb_parent_type &usb_parent,
 											   const uint8_t new_endpoint_offset
