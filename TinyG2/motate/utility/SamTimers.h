@@ -32,18 +32,36 @@
 
 #include "sam.h"
 
-/* Sam hardware timers have three channels each. Each channel is actually an
-* independent timer, so we have a little nomenclature clash.
-*
-* Sam Timer != Motate::Timer!!!
-*
-* A Sam Timer CHANNEL is actually the portion that a Motate::Timer controls
-* direcly. Each SAM CHANNEL has two Motate:Timers (A and B).
-* (Actually, the Quadrature Decoder and Block Control can mix them up some,
-* but we ignore that.)
-* So, for the Sam, we have to maintain the same interface, and treat each
-* channel as an independent timer.
-*/
+/* Sam hardware has two types of timer: "Timers" and "PWMTimers"
+ *
+ * Timers:
+ *
+ * Sam hardware timers have three channels each. Each channel is actually an
+ * independent timer, so we have a little nomenclature clash.
+ *
+ * Sam Timer != Motate::Timer!!!
+ *
+ * A Sam Timer CHANNEL is actually the portion that a Motate::Timer controls
+ * direcly. Each SAM CHANNEL has two Motate:Timers (A and B).
+ * (Actually, the Quadrature Decoder and Block Control can mix them up some,
+ * but we ignore that.)
+ * So, for the Sam, we have to maintain the same interface, and treat each
+ * channel as an independent timer.
+ *
+ *
+ * PWMTimers:
+ * 
+ * For compatibility and transparency with Timers, we use the same TimerModes,
+ * even through they actually use bitmaps for Timer registers.
+ *
+ * Timers have more modes than PWM Timers, and more interrupts.
+ * We return kInvalidMode for the ones that don't map, except that we treat "Up"
+ * and "UpToMatch" both as "LeftAligned," and "UpDown" and "UpDownToMatch"
+ * as "CenterAligned."
+ *
+ * Consequently, you can use kPWMLeftAligned and kPWMCenterAligned as valid modes
+ * on a Timer.
+ */
 
 namespace Motate {
 	enum TimerMode {
@@ -56,10 +74,14 @@ namespace Motate {
 		kTimerUp            = TC_CMR_WAVE | TC_CMR_WAVSEL_UP,
 		/* Waveform select, Up to TOP (RC) */
 		kTimerUpToMatch     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
+		/* For PWM, we'll alias kTimerUpToMatch as: */
+		kPWMLeftAligned     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
 		/* Waveform select, Up to 0xFFFFFFFF, then Down */
 		kTimerUpDown        = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN,
 		/* Waveform select, Up to TOP (RC), then Down */
 		kTimerUpDownToMatch = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
+		/* For PWM, we'll alias kTimerUpDownToMatch as: */
+		kPWMCenterAligned     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
 	};
 
 	/* We're trading acronyms for verbose CamelCase. Dubious. */
@@ -112,6 +134,13 @@ namespace Motate {
 
 	enum TimerErrorCodes {
 		kFrequencyUnattainable = -1,
+		kInvalidMode = -2,
+	};
+
+	enum PWMTimerClockOptions {
+		kPWMClockPrescalerOnly = 0,
+		kPWMClockPrescaleAndDivA = 1,
+		kPWMClockPrescaleAndDivB = 2,
 	};
 
 	typedef const uint8_t timer_number;
@@ -408,6 +437,302 @@ namespace Motate {
 			return kInterruptUnknown;
 		}
 
+		// Placeholder for user code.
+		static void interrupt() __attribute__ ((weak));
+	};
+
+
+	template <uint8_t timerNum>
+	struct PWMTimer {
+
+		// NOTE: Notice! The *pointers* are const, not the *values*.
+		static Pwm * const pwm();
+		static PwmCh_num * const pwmChan();
+		static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
+		static const IRQn_Type tcIRQ();
+
+		/********************************************************************
+		 **                          WARNING                                **
+		 ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
+		 **                          WARNING           (u been warned)      **
+		 *********************************************************************/
+
+		PWMTimer() { init(); };
+		PWMTimer(const TimerMode mode, const uint32_t freq) {
+			init();
+			setModeAndFrequency(mode, freq);
+		};
+
+		void init() {
+			/* Unlock this thing */
+			unlock();
+		}
+
+#if YOU_REALLY_WANT_PWM_LOCK_AND_UNLOCK
+		// You probably don't....
+		void unlock() {
+			pwm()->PWM_WPCR = PWM_WPCR_WPKEY(0x50574D /* "PWM" */);
+		}
+
+		/* WHOA!! Only do this if you know what you're doing!! */
+		void lock() {
+			// This locks EVERYTHING!!!
+			pwm()->PWM_WPCR = PWM_WPCR_WPCMD(1) | PWM_WPCR_WPRG0 | PWM_WPCR_WPRG1 | PWM_WPCR_WPRG2 | PWM_WPCR_WPRG3 | PWM_WPCR_WPRG4 | PWM_WPCR_WPRG5 | TC_WPMR_WPKEY(0x54494D);
+		}
+#else
+		// Non-ops to keep the compiler happy.
+		void unlock() {};
+		void lock() {};
+#endif
+
+		void enablePeripheralClock() {
+			if (peripheralId() < 32) {
+				uint32_t id_mask = 1u << ( peripheralId() );
+				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
+					PMC->PMC_PCER0 = id_mask;
+				}
+			} else {
+				uint32_t id_mask = 1u << ( peripheralId() - 32 );
+				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
+					PMC->PMC_PCER1 = id_mask;
+				}
+			}
+		};
+
+		void disablePeripheralClock() {
+			if (peripheralId() < 32) {
+				uint32_t id_mask = 1u << ( peripheralId() );
+				if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
+					PMC->PMC_PCDR0 = id_mask;
+				}
+			} else {
+				uint32_t id_mask = 1u << ( peripheralId() - 32 );
+				if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
+					PMC->PMC_PCDR1 = id_mask;
+				}
+			}
+		};
+
+		/* Set the mode and frequency.
+		 * Returns: The actual frequency that was used, or kFrequencyUnattainable
+		 * freq is not const since we may "change" it.
+		 * PWM module can optionally use one of two additional prescale multipliers:
+		 * A (kPWMClockPrescaleAndDivA) or B (kPWMClockPrescaleAndDivB).
+		 * However, these are shared clocks used by all PWM channels.
+		 * Use the second, clock 1, on PWMs that will have drastically different periods.
+		 */
+		int32_t setModeAndFrequency(const TimerMode mode, uint32_t frequency, const uint8_t clock = kPWMClockPrescalerOnly) {
+			/* Prepare to be able to make changes: */
+			/*   Disable TC clock */
+			pwm()->PWM_DIS = 1 << timerNum ;
+			/*   Disable interrupts */
+			pwm()->PWM_IDR1 = 0xFFFFFFFF ;
+			pwm()->PWM_IDR2	= 0xFFFFFFFF ;
+
+			enablePeripheralClock();
+
+			if (mode == kTimerInputCapture || mode == kTimerInputCaptureToMatch)
+				return kFrequencyUnattainable;
+
+			// Remember: kTimerUpDownToMatch and kPWMCenterAligned are identical.
+			if (mode == kTimerUpDownToMatch || mode == kTimerUpDown)
+				frequency *= 2;
+
+			/* Setup clock "prescaler" */
+			/* Divisors: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 */
+
+			// Grab the SystemCoreClock value, in case it's volatile.
+			uint32_t masterClock = SystemCoreClock;
+
+			// Store the divisor temporarily, to avoid looking it up again...
+			uint32_t divisors[11] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+			uint8_t divisor_index = 0;
+			uint32_t prescaler;
+
+			// Find prescaler value
+			prescaler = (masterClock / divisors[divisor_index]) / frequency;
+			while ((prescaler > 255) && (divisor_index < 11)) {
+				divisor_index++;
+				prescaler = (masterClock / divisors[divisor_index]) / frequency;
+			}
+
+			/* Return result */
+			if ( divisor_index < 11 )
+			{
+				return prescaler | (divisor_index << 8) ;
+			}
+			else
+			{
+				return 0 ;
+			}
+
+			// Set the actual frequency, if we found a match.
+			if (mode == kTimerInputCaptureToMatch
+				|| mode == kTimerUpToMatch
+				|| mode == kTimerUpDownToMatch) {
+
+				int32_t newTop = masterClock/(divisor*freq);
+				setTop(newTop);
+
+				// Determine and return the new frequency.
+				return masterClock/(divisor*newTop);
+			}
+
+			// Optimization -- we can't use RC for much when we're not using it,
+			//  so, instead of looking up if we're using it or not, just set it to
+			//  0xFFFF when we're not using it.
+			setTop(0xFFFF);
+
+			// Determine and return the new frequency.
+			return masterClock/(divisor*0xFFFF);
+		};
+
+		// Set the TOP value for modes that use it.
+		// WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
+		void setTop(const uint32_t topValue) {
+			pwmChan()->TC_RC = topValue;
+		};
+
+		// Here we want to get what the TOP value is. Is the mode is one that resets on RC, then RC is the TOP.
+		// Otherwise, TOP is 0xFFFF. In order to see if TOP is RC, we need to look at the CPCTRG (RC Compare
+		// Trigger Enable) bit of the CMR (Channel Mode Register). Note that this bit position is the same for
+		// waveform or Capture mode, even though the Datasheet seems to obfuscate this fact.
+		uint32_t getTopValue() {
+			return pwmChan()->TC_CMR & TC_CMR_CPCTRG ? pwmChan()->TC_RC : 0xFFFF;
+		};
+
+		// Return the current value of the counter. This is a fleeting thing...
+		uint32_t getValue() {
+			return pwmChan()->TC_CV;
+		}
+
+		void start() {
+			pwmChan()->TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
+		};
+
+		void stop() {
+			pwmChan()->TC_CCR = TC_CCR_CLKDIS;
+		};
+
+		void stopOnMatch() {
+			pwmChan()->TC_CMR = TC_CMR_CPCSTOP;
+		};
+
+		// Channel-specific functions. These are Motate channels, but they happen to line-up.
+		// Motate channel A = Sam channel A.
+		// Motate channel B = Sam channel B.
+
+		// Specify the duty cycle as a value from 0.0 .. 1.0;
+		void setDutyCycleA(const float ratio) {
+			pwmChan()->TC_RA = getTopValue() * ratio;
+		};
+
+		void setDutyCycleB(const float ratio) {
+			pwmChan()->TC_RB = getTopValue() * ratio;
+		};
+
+		// Specify channel A/B duty cycle as a integer value from 0 .. TOP.
+		// TOP in this case is either RC_RC or 0xFFFF.
+		void setExactDutyCycleA(const uint32_t absolute) {
+			pwmChan()->TC_RA = absolute;
+		};
+
+		void setExactDutyCycleB(const uint32_t absolute) {
+			pwmChan()->TC_RB = absolute;
+		};
+
+		void setOutputOptions(const uint32_t options) {
+
+			// Note that we carefully crafted the TimerChannelOutputOptions
+			// to match the bits in CMR, so we just mask and set!
+			pwmChan()->TC_CMR = (pwmChan()->TC_CMR & ~(
+													 TC_CMR_ACPA_Msk |
+													 TC_CMR_BCPB_Msk |
+													 TC_CMR_ACPC_Msk |
+													 TC_CMR_BCPC_Msk
+													 )
+								) | options;
+		};
+
+		void setInterrupts(const uint32_t interrupts) {
+			if (interrupts != kInterruptsOff) {
+				pwmChan()->TC_IDR = 0xFFFFFFFF;
+				NVIC_EnableIRQ(tcIRQ());
+
+				if (interrupts | kInterruptOnOverflow) {
+					// Check to see if we're overflowing on C. See getTopValue() description.
+					if (pwmChan()->TC_CMR & TC_CMR_CPCTRG) {
+						pwmChan()->TC_IER = TC_IER_CPCS; // RC Compare
+					} else {
+						pwmChan()->TC_IER = TC_IER_COVFS; // Counter Overflow
+					}
+				}
+				if (interrupts | kInterruptOnMatchA) {
+					pwmChan()->TC_IER = TC_IER_CPAS; // RA Compare
+				}
+				if (interrupts | kInterruptOnMatchB) {
+					pwmChan()->TC_IER = TC_IER_CPBS; // RB Compare
+				}
+
+				/* Set interrupt priority */
+				if (interrupts | kInterruptPriorityHighest) {
+					NVIC_SetPriority(tcIRQ(), 0);
+				}
+				else if (interrupts | kInterruptPriorityHigh) {
+					NVIC_SetPriority(tcIRQ(), 3);
+				}
+				else if (interrupts | kInterruptPriorityMedium) {
+					NVIC_SetPriority(tcIRQ(), 7);
+				}
+				else if (interrupts | kInterruptPriorityLow) {
+					NVIC_SetPriority(tcIRQ(), 11);
+				}
+				else if (interrupts | kInterruptPriorityLowest) {
+					NVIC_SetPriority(tcIRQ(), 15);
+				}
+
+			} else {
+				pwmChan()->TC_IDR = 0xFFFFFFFF;
+				NVIC_DisableIRQ(tcIRQ());
+			}
+		}
+
+		void setInterruptPending() {
+			NVIC_SetPendingIRQ(tcIRQ());
+		}
+
+		/* Here for reference (most we don't use):
+		 TC_SR_COVFS   (TC_SR) Counter Overflow Status
+		 TC_SR_LOVRS   (TC_SR) Load Overrun Status
+		 TC_SR_CPAS    (TC_SR) RA Compare Status
+		 TC_SR_CPBS    (TC_SR) RB Compare Status
+		 TC_SR_CPCS    (TC_SR) RC Compare Status
+		 TC_SR_LDRAS   (TC_SR) RA Loading Status
+		 TC_SR_LDRBS   (TC_SR) RB Loading Status
+		 TC_SR_ETRGS   (TC_SR) External Trigger Status
+		 TC_SR_CLKSTA  (TC_SR) Clock Enabling Status
+		 TC_SR_MTIOA   (TC_SR) TIOA Mirror
+		 TC_SR_MTIOB   (TC_SR) TIOB Mirror
+		 */
+
+		TimerChannelInterruptOptions getInterruptCause() {
+			uint32_t sr = pwmChan()->TC_SR;
+			// if it is either an overflow or a RC compare
+			if (sr & (TC_SR_COVFS | TC_SR_CPCS)) {
+				return kInterruptOnOverflow;
+			}
+			else if (sr & (TC_SR_CPAS)) {
+				return kInterruptOnMatchA;
+			}
+			else if (sr & (TC_SR_CPBS)) {
+				return kInterruptOnMatchB;
+			}
+			else if (sr & (TC_SR_ETRGS)) {
+				return kInterruptOnMatchA;
+			}
+			return kInterruptUnknown;
+		}
+		
 		// Placeholder for user code.
 		static void interrupt() __attribute__ ((weak));
 	};
