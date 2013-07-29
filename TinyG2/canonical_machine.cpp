@@ -32,16 +32,26 @@
  * motion control code for a specific robot. It keeps state and executes
  * commands - passing the stateless commands to the motion control layer. 
  */
-/* --- Synchronous and immediate commands ---
+/* --- System state contexts and canonical machine command execution ---
  *
  *	Useful reference for doing C callbacks http://www.newty.de/fpt/fpt.html
  *
- *	Some commands in the canonical machine need to be executed immediately and 
- *	some need to be synchronized with movement (the planner queue). In general,
- *	commands that only affect the gcode model are done immediately whereas 
- *	commands that have a physical effect must be synchronized.
+ *	There are 3 temporal contexts for system state:
+ *	  - The Gcode model in the canonical machine (the "model" context, held in gm)
+ *	  - The machine model used by the planner for planning ("planner" context, held in mm)
+ *	  - The "runtime" context used for move execution (held in mr)
  *
- *	Immediate commands are obvious - just write to the GM struct. 
+ *	Functions in the canonical machine may apply to one or more contexts. Commands that
+ *	apply to the Gcode model and/or planner are executed immediately (i.e. when called)
+ *
+ *	Commands that affect the runtime need to be synchronized with movement and are 
+ *	therefore queued into the planner queue and execute from the queue - Synchronous commands
+ *
+ *	There are a few commands that affect all 3 contexts and are therefore executed
+ *	to the gm amd mm structs and are also queued to execute their runtine part.  
+ *
+ *	The applicable context is in the function name as "model", "planner" or "runtime"
+ *
  *	Synchronous commands work like this:
  *
  *	  - Call the cm_xxx_xxx() function which will do any input validation and 
@@ -54,14 +64,15 @@
  *
  *	  - mp_queue_command() stores the callback and the args in a planner buffer.
  *
- *	  - When planner execution reaches the buffer is executes the callback w/ the 
+ *	  - When planner execution reaches the buffer is tectures the callback w/ the 
  *		args.  Take careful note that the callback executes under an interrupt, 
  *		so beware of variables that may need to be Volatile.
  *
- *	For a list of the synchronous commands see the static function prototypes
- *	for the planner queue callbacks. Some other notes:
- *
- *	  - All getters are immediate. These just return values from the Gcode model (gm).
+ *	Notes:
+ *	  - The synchronous command execution mechanism uses 2 vectors in the bf buffer
+ *		to store and return values for the callback. It's obvious, but impractical
+ *		to pass the entire bf buffer to the callback as some of these commands are 
+ *		actually executed locally and have no buffer.
  *
  *	  - Commands that are used to set the gm model state for interpretation of the
  *		current Gcode block. For example, cm_set_feed_rate(). This sets the model
@@ -70,6 +81,7 @@
  *		move time) is carried forward into the planner - planned moves are not 
  *		affected by upstream changes to the gm model. Many other vars also fall into
  *		this category.
+ *
  */
 
 #include "tinyg2.h"

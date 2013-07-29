@@ -47,10 +47,6 @@
 #include "xio.h"
 #include "util.h"
 
-/*
-#include "settings.h"
-*/
-
 /***********************************************************************************
  **** STUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
@@ -142,7 +138,7 @@ static void _controller_HSM()
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
 	DISPATCH(cm_feedhold_sequencing_callback());
-	DISPATCH(mp_plan_hold_callback());		// plan a feedhold from line runtime
+	DISPATCH(mp_plan_hold_callback());			// plan a feedhold from line runtime
 	
 //	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
 //	DISPATCH(_system_assertions());				// 9. system integrity assertions
@@ -184,7 +180,7 @@ static stat_t _command_dispatch()
 	} else if (cs.state == CONTROLLER_STARTUP) {
 //		strcpy(cs.in_buf, "$x");
 //		strcpy(cs.in_buf, "g1f400x100");
-		strcpy(cs.in_buf, "?");
+//		strcpy(cs.in_buf, "?");
 		cs.state = CONTROLLER_READY;
 	} else {
 		return (STAT_OK);
@@ -311,7 +307,7 @@ static stat_t _sync_to_tx_buffer()
 */
 static stat_t _sync_to_planner()
 {
-	if (mp_get_planner_buffers_available() < 3) { 
+	if (mp_get_planner_buffers_available() < 4) { 
 		return (STAT_EAGAIN);
 	}
 	return (STAT_OK);
