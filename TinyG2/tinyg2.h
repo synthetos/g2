@@ -42,6 +42,7 @@
 
 #define TINYG2_HARDWARE_VERSION_MAX (TINYG2_HARDWARE_VERSION)
 
+
 /****** DEVELOPMENT SETTINGS ******/
 
 //#define __CANNED_STARTUP					// run any canned startup moves
