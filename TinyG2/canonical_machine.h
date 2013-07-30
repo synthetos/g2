@@ -50,6 +50,8 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t cycle_start_requested;	// cycle start character has been received	uint8_t request_feedhold;		// set true to initiate a feedhold
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
+	uint8_t status_report_request;	// 0=no request, 1=timed request, 2=run one now
+	uint32_t status_report_counter;	// status report RTC counter for minimum timing
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
 	uint8_t g10_persist_flag;		// G10 changed offsets - persist them
@@ -232,19 +234,19 @@ extern GCodeInput_t gf;					// gcode input flags
 // *** Note: check config printout strings align with all the state variables
 
 // #### LAYER 8 CRITICAL REGION ###
-// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT #### 
+// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ####
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
-	COMBINED_INITIALIZING = 0,		// machine is initializing
-	COMBINED_READY,					// machine is ready for use
-	COMBINED_SHUTDOWN,				// machine is shut down
-	COMBINED_PROGRAM_STOP,			// program stop or no more blocks
-	COMBINED_PROGRAM_END,			// program end
-	COMBINED_RUN,					// motion is running
-	COMBINED_HOLD,					// motion is holding
-	COMBINED_PROBE,					// probe cycle active
-	COMBINED_CYCLE,					// machine is running (cycling)
-	COMBINED_HOMING,				// homing is treated as a cycle
-	COMBINED_JOG					// jogging is treated as a cycle
+	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
+	COMBINED_READY,					// [1] machine is ready for use
+	COMBINED_ALARM,					// [2] machine is in alarm state (shut down)
+	COMBINED_PROGRAM_STOP,			// [3] program stop or no more blocks
+	COMBINED_PROGRAM_END,			// [4] program end
+	COMBINED_RUN,					// [5] motion is running
+	COMBINED_HOLD,					// [6] motion is holding
+	COMBINED_PROBE,					// [7] probe cycle active
+	COMBINED_CYCLE,					// [8] machine is running (cycling)
+	COMBINED_HOMING,				// [9] homing is treated as a cycle
+	COMBINED_JOG					// [10] jogging is treated as a cycle
 };
 //#### END CRITICAL REGION ####
 
@@ -259,8 +261,8 @@ enum cmMachineState {
 
 enum cmCycleState {
 	CYCLE_OFF = 0,					// machine is idle
-	CYCLE_STARTED,					// machine in normal cycle
-	CYCLE_PROBE,					// machine in probe cycle
+	CYCLE_MACHINING,				// in normal machining cycle
+	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// homing is treated as a specialized cycle
 	CYCLE_JOG						// jogging is treated as a specialized cycle
 };
@@ -284,6 +286,13 @@ enum cmHomingState {				// applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
 	HOMING_HOMED = 1				// machine is homed (1=true)
 };
+/*
+enum cmStatusReportRequest {
+	SR_NO_REQUEST = 0,				// no status report is requested
+	SR_TIMED_REQUEST,				// request a status report at next timer interval
+	SR_IMMEDIATE_REQUEST			// request a status report ASAP
+};
+*/
 
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
@@ -294,6 +303,7 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 	NEXT_ACTION_DEFAULT = 0,			// Must be zero (invokes motion modes)
 	NEXT_ACTION_SEARCH_HOME,			// G28.2 homing cycle
 	NEXT_ACTION_SET_ABSOLUTE_ORIGIN,	// G28.3 origin set
+	NEXT_ACTION_HOMING_NO_SET,			// G28.4 homing cycle with no coordinate setting
 	NEXT_ACTION_SET_G28_POSITION,		// G28.1 set position in abs coordingates 
 	NEXT_ACTION_GOTO_G28_POSITION,		// G28 go to machine position
 	NEXT_ACTION_SET_G30_POSITION,		// G30.1
@@ -431,18 +441,18 @@ uint8_t cm_get_motion_state(void);
 uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
 
-uint8_t cm_get_motion_mode(void);
-uint8_t cm_get_coord_system(void);
-uint8_t cm_get_units_mode(void);
-uint8_t cm_get_select_plane(void);
-uint8_t cm_get_path_control(void);
-uint8_t cm_get_distance_mode(void);
-uint8_t cm_get_inverse_feed_rate_mode(void);
-uint8_t cm_get_spindle_mode(void);
+uint8_t cm_get_model_motion_mode(void);
+uint8_t cm_get_runtime_motion_mode(void);
+uint8_t cm_get_model_coord_system(void);
+uint8_t cm_get_model_units_mode(void);
+uint8_t cm_get_model_select_plane(void);
+uint8_t cm_get_model_path_control(void);
+uint8_t cm_get_model_distance_mode(void);
+uint8_t cm_get_model_inverse_feed_rate_mode(void);
+uint8_t cm_get_model_spindle_mode(void);
 uint32_t cm_get_model_linenum(void);
 uint8_t	cm_get_block_delete_switch(void);
-
-uint8_t cm_isbusy(void);
+uint8_t cm_get_runtime_busy(void);
 
 void cm_set_motion_mode(uint8_t motion_mode);
 void cm_set_absolute_override(uint8_t absolute_override);
@@ -450,28 +460,28 @@ void cm_set_spindle_mode(uint8_t spindle_mode);
 void cm_set_spindle_speed_parameter(float speed);
 void cm_set_tool_number(uint8_t tool);
 
-float cm_get_coord_offset(uint8_t axis);
-float *cm_get_coord_offset_vector(float vector[]);
+float cm_get_model_coord_offset(uint8_t axis);
+float *cm_get_model_coord_offset_vector(float vector[]);
 float cm_get_model_work_position(uint8_t axis);
 //float *cm_get_model_work_position_vector(float position[]);
 float cm_get_model_canonical_target(uint8_t axis);
 float *cm_get_model_canonical_position_vector(float vector[]);
+
 float cm_get_runtime_machine_position(uint8_t axis);
 float cm_get_runtime_work_position(uint8_t axis);
 float cm_get_runtime_work_offset(uint8_t axis);
 
-void cm_set_arc_offset(float i, float j, float k);
-void cm_set_arc_radius(float r);
-void cm_set_target(float target[], float flag[]);
-void cm_set_gcode_model_endpoint_position(uint8_t status);
+void cm_set_model_arc_offset(float i, float j, float k);
+void cm_set_model_arc_radius(float r);
+void cm_set_model_target(float target[], float flag[]);
+void cm_set_model_endpoint_position(stat_t status);
 void cm_set_model_linenum(uint32_t linenum);
 
 /*--- canonical machining functions ---*/
 void canonical_machine_init(void);
-void cm_alarm(uint8_t value);					// emergency shutdown
+void cm_alarm(uint8_t value);								// emergency shutdown
 
-stat_t cm_set_machine_axis_position(uint8_t axis, const float position);	// set absolute position
-stat_t cm_flush_planner(void);									// flush planner queue with coordinate resets
+stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
 stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
@@ -479,6 +489,7 @@ stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_callback(void);								// G28.2 main loop callback
 stat_t cm_set_absolute_origin(float origin[], float flags[]);	// G28.3  (special function)
+void cm_set_axis_origin(uint8_t axis, const float position);	// set absolute position (used by G28's)
 
 stat_t cm_set_g28_position(void);								// G28.1
 stat_t cm_goto_g28_position(float target[], float flags[]); 	// G28
@@ -505,9 +516,6 @@ stat_t cm_dwell(float seconds);									// G4, P parameter
 
 stat_t cm_set_spindle_speed(float speed);						// S parameter
 stat_t cm_spindle_control(uint8_t spindle_mode);				// integrated spindle control
-//stat_t cm_start_spindle_clockwise(void);						// M3
-//stat_t cm_start_spindle_counterclockwise(void);				// M4
-//stat_t cm_stop_spindle_turning(void);							// M5
 
 stat_t cm_mist_coolant_control(uint8_t mist_coolant); 			// M7
 stat_t cm_flood_coolant_control(uint8_t flood_coolant);			// M8, M9
@@ -533,7 +541,7 @@ void cm_request_cycle_start(void);
 
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
-//void cm_feedhold(void);											// (no Gcode)
+void cm_feedhold(void);											// (no Gcode)
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2

@@ -130,13 +130,13 @@ void text_response(const uint8_t status, char_t *buf)
 
 //	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		if (cm_get_units_mode() == INCHES) {
+		if (cm_get_model_units_mode() == INCHES) {
 			fprintf(stderr, prompt_in_ok);
 		} else {
 			fprintf(stderr, prompt_mm_ok);
 		}
 	} else {
-		if (cm_get_units_mode() == INCHES) {
+		if (cm_get_model_units_mode() == INCHES) {
 			fprintf(stderr, prompt_in_err, (char *)get_status_message(status), buf);
 		} else {
 			fprintf(stderr, prompt_mm_err, (char *)get_status_message(status), buf);			

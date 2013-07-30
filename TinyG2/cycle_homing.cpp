@@ -163,7 +163,7 @@ stat_t cm_homing_cycle_start(void)
 stat_t cm_homing_callback(void)
 {
 	if (cm.cycle_state != CYCLE_HOMING) { return (STAT_NOOP);} // exit if not in a homing cycle
-	if (cm_isbusy() == true) { return (STAT_EAGAIN);}	 // sync to planner move ends
+	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}	 // sync to planner move ends
 	return (hm.func(hm.axis));					// execute the current homing move
 }
 
@@ -176,7 +176,7 @@ static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 	cm_set_feed_rate(hm.saved_feed_rate);
 	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
 	cm.homing_state = HOMING_HOMED;
-	cm.cycle_state = CYCLE_STARTED;
+	cm.cycle_state = CYCLE_MACHINING;
 	cm_cycle_end();
 	return (STAT_OK);
 }
@@ -229,7 +229,7 @@ static stat_t _homing_axis_start(int8_t axis)
 		} else if (axis == -2) { 							// -2 is error
 			cm_set_units_mode(hm.saved_units_mode);
 			cm_set_distance_mode(hm.saved_distance_mode);
-			cm.cycle_state = CYCLE_STARTED;
+			cm.cycle_state = CYCLE_MACHINING;
 			cm_cycle_end();
 			return (_homing_error_exit(-2));
 		}
@@ -335,7 +335,8 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
-	cm_set_machine_axis_position(axis, 0);
+	cm_set_axis_origin(axis, 0);
+	mp_set_runtime_position(axis, 0);
 	cfg.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
 	cm.homed[axis] = true;
 	return (_set_hm_func(_homing_axis_start));

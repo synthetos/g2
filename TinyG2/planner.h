@@ -113,7 +113,7 @@ enum moveState {
 //#define MP_LINE(t,m,o,n) ((cfg.enable_acceleration == TRUE) ? mp_aline(t,m,o,n) : mp_line(t,m))
 #define MP_LINE(t,m,o,n) (mp_aline(t,m,o,n))	// non-planned lines are disabled
 
-typedef void (*cm_exec)(uint8_t, float);	// callback to canonical_machine execution function
+typedef void (*cm_exec)(float[], float[]);	// callback to canonical_machine execution function
 
 /*
  *	Planner structures
@@ -135,6 +135,7 @@ typedef struct mpBuffer {		// See Planning Velocity Notes for variable usage
 	uint8_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function - passes *bf, returns uint8_t
 	cm_exec cm_func;			// callback to canonical machine execution function
 	uint32_t linenum;			// runtime line number; or line index if not numbered
+	uint8_t motion_mode;		// runtime motion mode for status reporting
 	uint8_t buffer_state;		// used to manage queueing/dequeueing
 	uint8_t move_type;			// used to dispatch to run routine
 	uint8_t move_code;			// byte that can be used by used exec functions
@@ -195,6 +196,7 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	uint16_t magic_start;		// magic number to test memory integity	
 	uint32_t linenum;			// runtime line/block number of BF being executed
+	uint8_t motion_mode;		// runtime motion mode for status reports
 	uint8_t move_state;			// state of the overall move
 	uint8_t section_state;		// state within a move section
 
@@ -246,14 +248,12 @@ void planner_init(void);
 void mp_init_buffers(void);
 
 void mp_flush_planner(void);
-float *mp_get_plan_position(float position[]);
-void mp_set_plan_position(const float position[]);
-void mp_set_axes_position(const float position[]);
-void mp_set_axis_position(uint8_t axis, const float position);
+void mp_set_planner_position(uint8_t axis, const float position);
+void mp_set_runtime_position(uint8_t axis, const float position);
 
 uint8_t mp_exec_move(void);
-//void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_value, float float_value);
-void mp_queue_command(cm_exec cm_func, uint8_t int_value, float float_value);
+void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag);
+
 uint8_t mp_dwell(const float seconds);
 uint8_t mp_aline(const float target[], const float minutes, const float work_offset[], const float min_time);
 uint8_t mp_plan_hold_callback(void);
@@ -274,7 +274,8 @@ mpBuf_t * mp_get_last_buffer(void);
 #define mp_get_next_buffer(b) ((mpBuf_t *)(b->nx))
 
 // plan_line.c functions
-uint8_t mp_isbusy(void);
+uint8_t mp_get_runtime_busy(void);
+uint8_t mp_get_runtime_motion_mode(void);
 float mp_get_runtime_linenum(void);
 float mp_get_runtime_velocity(void);
 float mp_get_runtime_work_position(uint8_t axis);
