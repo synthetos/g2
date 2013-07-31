@@ -178,9 +178,11 @@ enum jsonVerbosity {
 /**** Structures ****/
 
 typedef struct cmdString {				// shared string object
-	uint8_t wp;							// current string array index for len < 256 bytes
-//	uint16_t wp;						// use this value is string len > 255 bytes
+	uint16_t magic_start;
+//	uint8_t wp;							// current string array index for len < 256 bytes
+	uint16_t wp;						// use this value is string len > 255 bytes
 	char_t string[CMD_SHARED_STRING_LEN];
+	uint16_t magic_end;
 } cmdStr_t;
 
 typedef struct cmdObject {				// depending on use, not all elements may be populated
@@ -188,7 +190,7 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	struct cmdObject *nx;				// pointer to next object or NULL if last object
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
-	int8_t type;						// see cmdType
+	int8_t objtype;						// see objType enum
 	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
 	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
@@ -232,6 +234,9 @@ void cmd_print(cmdObj_t *cmd);			// main entry point for set value
 void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 
 // helpers
+uint8_t cmd_get_type(cmdObj_t *cmd);
+stat_t cmd_persist_offsets(uint8_t flag);
+
 index_t cmd_get_index(const char_t *group, const char_t *token);
 index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);

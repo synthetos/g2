@@ -814,7 +814,7 @@ static stat_t get_id(cmdObj_t *cmd)
 {
 	char_t tmp[SYS_ID_LEN];
 //++++	sys_get_id(tmp);
-	cmd->type = TYPE_STRING;
+	cmd->objtype = TYPE_STRING;
 	ritorno(cmd_copy_string(cmd, tmp));
 
 	return (STAT_OK);
@@ -871,7 +871,7 @@ static stat_t set_si(cmdObj_t *cmd)
 static stat_t get_qr(cmdObj_t *cmd) 
 {
 	cmd->value = (float)mp_get_planner_buffers_available();
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
@@ -890,7 +890,7 @@ static stat_t get_er(cmdObj_t *cmd)
 static stat_t get_rx(cmdObj_t *cmd)
 {
 //++++	cmd->value = (float)xio_get_usb_rx_free();
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
@@ -1017,7 +1017,7 @@ uint8_t cfg_baud_rate_callback(void)
 static stat_t get_gc(cmdObj_t *cmd)
 {
 	ritorno(cmd_copy_string(cmd, cs.in_buf));
-	cmd->type = TYPE_STRING;
+	cmd->objtype = TYPE_STRING;
 	return (STAT_OK);
 }
 
@@ -1046,7 +1046,7 @@ stat_t get_flu(cmdObj_t *cmd)
 		cmd->value *= INCH_PER_MM;
 	}
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT;
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1055,7 +1055,7 @@ stat_t set_flu(cmdObj_t *cmd)
 	if (cm_get_model_units_mode() == INCHES) { cmd->value *= MM_PER_INCH;}
 	*((float *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT_UNITS;
+	cmd->objtype = TYPE_FLOAT_UNITS;
 	return(STAT_OK);
 }
 
@@ -1097,8 +1097,8 @@ static stat_t get_pos(cmdObj_t *cmd)
 {
 	cmd->value = cm_get_runtime_work_position(_get_pos_axis(cmd->index));
 	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->type = TYPE_FLOAT;
+//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1106,8 +1106,8 @@ static stat_t get_mpos(cmdObj_t *cmd)
 {
 	cmd->value = cm_get_runtime_machine_position(_get_pos_axis(cmd->index));
 	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->type = TYPE_FLOAT;
+//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1115,8 +1115,8 @@ static stat_t get_ofs(cmdObj_t *cmd)
 {
 	cmd->value = cm_get_runtime_work_offset(_get_pos_axis(cmd->index));
 	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->type = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->type = TYPE_FLOAT;
+//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1163,7 +1163,7 @@ static void print_mpos(cmdObj_t *cmd)		// print position with fixed unit display
 static stat_t _get_msg_helper(cmdObj_t *cmd, const char_t *msg_array[], uint8_t value)
 {
 	cmd->value = (float)value;
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (cmd_copy_string(cmd, msg_array[value]));
 //	return (cmd_copy_string_P(cmd, (PGM_P)pgm_read_word(&msg[value*2]))); // hack alert: direct computation of index
 }
@@ -1237,7 +1237,7 @@ static stat_t get_frmo(cmdObj_t *cmd)
 static stat_t get_line(cmdObj_t *cmd)
 {
 	cmd->value = (float)mp_get_runtime_linenum();
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
@@ -1246,8 +1246,8 @@ static stat_t get_vel(cmdObj_t *cmd)
 	cmd->value = mp_get_runtime_velocity();
 	if (cm_get_model_units_mode() == INCHES) cmd->value *= INCH_PER_MM;
 	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->type = TYPE_FLOAT_UNITS;
-	cmd->type = TYPE_FLOAT;
+//	cmd->objtype = TYPE_FLOAT_UNITS;
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1343,7 +1343,7 @@ stat_t get_jrk(cmdObj_t *cmd)
 		cmd->value /= 1000000;
 	}
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT;
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -1352,7 +1352,7 @@ stat_t set_jrk(cmdObj_t *cmd)
 	if (cm_get_model_units_mode() == INCHES) { cmd->value *= MM_PER_INCH;}
 	*((float *)cfgArray[cmd->index].target) = (1000000 * cmd->value);
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT_UNITS;
+	cmd->objtype = TYPE_FLOAT_UNITS;
 	return(STAT_OK);
 }
 
@@ -1441,7 +1441,7 @@ static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // help
 		cmd = cmd_body;
 		strncpy(cmd->token, list[i], CMD_TOKEN_LEN);
 		cmd->index = cmd_get_index((char_t *)"", (char_t *)cmd->token);
-//		cmd->type = TYPE_PARENT;
+//		cmd->objtype = TYPE_PARENT;
 		cmd_get_cmdObj(cmd);
 		cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 	}

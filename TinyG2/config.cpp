@@ -141,21 +141,21 @@ stat_t set_defa(cmdObj_t *cmd)
  */
 stat_t get_nul(cmdObj_t *cmd) 
 { 
-	cmd->type = TYPE_NULL;
+	cmd->objtype = TYPE_NULL;
 	return (STAT_NOOP);
 }
 
 stat_t get_ui8(cmdObj_t *cmd)
 {
 	cmd->value = (float)*((uint8_t *)cfgArray[cmd->index].target);
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
 stat_t get_int(cmdObj_t *cmd)
 {
 	cmd->value = (float)*((uint32_t *)cfgArray[cmd->index].target);
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
@@ -163,7 +163,7 @@ stat_t get_flt(cmdObj_t *cmd)
 {
 	cmd->value = *((float *)cfgArray[cmd->index].target);
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT;
+	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
 
@@ -187,7 +187,7 @@ stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 stat_t set_ui8(cmdObj_t *cmd)
 {
 	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return(STAT_OK);
 }
 
@@ -212,7 +212,7 @@ stat_t set_012(cmdObj_t *cmd)
 stat_t set_int(cmdObj_t *cmd)
 {
 	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	return(STAT_OK);
 }
 
@@ -220,7 +220,7 @@ stat_t set_flt(cmdObj_t *cmd)
 {
 	*((float *)cfgArray[cmd->index].target) = cmd->value;
 	cmd->precision = cfgArray[cmd->index].precision;
-	cmd->type = TYPE_FLOAT;
+	cmd->objtype = TYPE_FLOAT;
 	return(STAT_OK);
 }
 
@@ -280,7 +280,7 @@ stat_t get_grp(cmdObj_t *cmd)
 {
 	uint8_t *parent_group = cmd->token;		// token in the parent cmd object is the group
 	uint8_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
-	cmd->type = TYPE_PARENT;				// make first object the parent 
+	cmd->objtype = TYPE_PARENT;				// make first object the parent 
 	for (index_t i=0; cmd_index_is_single(i); i++) {
 		strcpy(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
 		if (strcmp(parent_group, group) != 0) continue;
@@ -295,7 +295,7 @@ stat_t get_grp(cmdObj_t *cmd)
  *
  *	This functions is called "set_group()" but technically it's a getter and a setter. 
  *	It iterates the group children and either gets the value or sets the value for each 
- *	depending on the cmd->type.
+ *	depending on the cmd->objtype.
  *
  *	This function serves JSON mode only as text mode shouldn't call it.
  */
@@ -304,8 +304,8 @@ stat_t set_grp(cmdObj_t *cmd)
 	if (cs.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
 	for (uint8_t i=0; i<CMD_MAX_OBJECTS; i++) {
 		if ((cmd = cmd->nx) == NULL) break;
-		if (cmd->type == TYPE_EMPTY) break;
-		else if (cmd->type == TYPE_NULL)	// NULL means GET the value
+		if (cmd->objtype == TYPE_EMPTY) break;
+		else if (cmd->objtype == TYPE_NULL)	// NULL means GET the value
 			cmd_get(cmd);
 		else {
 			cmd_set(cmd);
@@ -336,13 +336,45 @@ uint8_t cmd_group_is_prefixed(uint8_t *group)
 
 /*****************************************************************************
  * cmdObj helper functions and other low-level cmd helpers
- * cmd_get_index() 		 - get index from mnenonic token + group
  * cmd_get_type()		 - returns command type as a CMD_TYPE enum
  * cmd_persist_offsets() - write any changed G54 (et al) offsets back to NVM
- * 
- * cmd_get_index() is the most expensive routine in the whole config. It does a linear table scan 
- * of the Flash strings, which of course could be further optimized with indexes or hashing.
+ * cmd_get_index() 		 - get index from mnenonic token + group
  */
+
+uint8_t cmd_get_type(cmdObj_t *cmd)
+{
+	if (cmd->token[0] == NUL) return (CMD_TYPE_NULL);
+	if (strcmp("gc", cmd->token) == 0) return (CMD_TYPE_GCODE);
+	if (strcmp("sr", cmd->token) == 0) return (CMD_TYPE_REPORT);
+	if (strcmp("qr", cmd->token) == 0) return (CMD_TYPE_REPORT);
+	if (strcmp("msg",cmd->token) == 0) return (CMD_TYPE_MESSAGE);
+	if (strcmp("n",  cmd->token) == 0) return (CMD_TYPE_LINENUM);
+	return (CMD_TYPE_CONFIG);
+}
+
+stat_t cmd_persist_offsets(uint8_t flag)
+{
+/*
+	if (flag == true) {
+		cmdObj_t cmd;
+		for (uint8_t i=1; i<=COORDS; i++) {
+			for (uint8_t j=0; j<AXES; j++) {
+				sprintf(cmd.token, "g%2d%c", 53+i, ("xyzabc")[j]);
+				cmd.index = cmd_get_index("", cmd.token);
+				cmd.value = cfg.offset[i][j];
+				cmd_persist(&cmd);				// only writes changed values
+			}
+		}
+	}
+*/
+	return (STAT_OK);
+}
+
+/* 
+ * cmd_get_index() is the most expensive routine in the whole config. It does a linear table scan 
+ * of the PROGMEM strings, which of course could be further optimized with indexes or hashing.
+ */
+
 index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
@@ -413,7 +445,7 @@ void cmd_get_cmdObj(cmdObj_t *cmd)
  
 cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)		// clear a single cmdObj structure
 {
-	cmd->type = TYPE_EMPTY;					// selective clear is much faster than calling memset
+	cmd->objtype = TYPE_EMPTY;					// selective clear is much faster than calling memset
 	cmd->index = 0;
 	cmd->value = 0;
 	cmd->precision = 0;
@@ -424,7 +456,7 @@ cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)		// clear a single cmdObj structure
 	if (cmd->pv == NULL) { 					// set depth correctly
 		cmd->depth = 0;
 	} else {
-		if (cmd->pv->type == TYPE_PARENT) { 
+		if (cmd->pv->objtype == TYPE_PARENT) { 
 			cmd->depth = cmd->pv->depth + 1;
 		} else {
 			cmd->depth = cmd->pv->depth;
@@ -443,14 +475,14 @@ cmdObj_t *cmd_reset_list()					// clear the header and response body
 		cmd->index = 0;
 		cmd->depth = 1;						// header and footer are corrected later
 		cmd->precision = 0;
-		cmd->type = TYPE_EMPTY;
+		cmd->objtype = TYPE_EMPTY;
 		cmd->token[0] = NUL;
 	}
 	(--cmd)->nx = NULL;
 	cmd = cmd_list;							// setup response header element ('r')
 	cmd->pv = NULL;
 	cmd->depth = 0;
-	cmd->type = TYPE_PARENT;
+	cmd->objtype = TYPE_PARENT;
 	strcpy(cmd->token, "r");
 	return (cmd_body);						// this is a convenience for calling routines
 }
@@ -469,7 +501,7 @@ cmdObj_t *cmd_add_object(const char_t *token) // add an object to the body using
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
-		if (cmd->type != TYPE_EMPTY) {
+		if (cmd->objtype != TYPE_EMPTY) {
 			cmd = cmd->nx;
 			continue;
 		}
@@ -485,13 +517,13 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value)// add an in
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
-		if (cmd->type != TYPE_EMPTY) {
+		if (cmd->objtype != TYPE_EMPTY) {
 			cmd = cmd->nx;
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
 		cmd->value = (float) value;
-		cmd->type = TYPE_INTEGER;
+		cmd->objtype = TYPE_INTEGER;
 		return (cmd);
 	}
 	return (NULL);
@@ -501,13 +533,13 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
-		if (cmd->type != TYPE_EMPTY) {
+		if (cmd->objtype != TYPE_EMPTY) {
 			cmd = cmd->nx;
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
 		cmd->value = value;
-		cmd->type = TYPE_FLOAT;
+		cmd->objtype = TYPE_FLOAT;
 		return (cmd);
 	}
 	return (NULL);
@@ -517,14 +549,14 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a str
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
-		if (cmd->type != TYPE_EMPTY) {
+		if (cmd->objtype != TYPE_EMPTY) {
 			cmd = cmd->nx;
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
 		if (cmd_copy_string(cmd, string) != STAT_OK) { return (NULL);}
 		cmd->index = cmd_get_index((const uint8_t *)"", cmd->token);
-		cmd->type = TYPE_STRING;
+		cmd->objtype = TYPE_STRING;
 		return (cmd);
 	}
 	return (NULL);
