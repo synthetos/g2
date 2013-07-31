@@ -169,6 +169,8 @@ typedef struct cfgParameters {
 	float junction_acceleration;	// centripetal acceleration max for cornering
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
 	uint32_t stepper_disable_delay;	// Ms delay for timer disable for power managed motors
+	uint32_t motor_disable_timeout;	// time in seconds before disabling motors
+	uint32_t motor_disable_timer;	// down counter for above (in system ticks - 10ms increments)
 	// float max_spindle_speed;		// in RPM
 
 	// hidden settings				// not part of system group, but still accessible

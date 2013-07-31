@@ -35,8 +35,8 @@ extern "C"{
 */
 void stepper_init(void);			// initialize stepper subsystem
 
-void st_enable(void);				// start the steppers
-void st_disable(void);				// step the stoppers
+void st_enable_motors(void);		// start the steppers
+void st_disable_motors(void);		// step the stoppers
 stat_t st_stepper_disable_delay_callback(void);// callback to disable the steppers after a delay
 uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
 void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);

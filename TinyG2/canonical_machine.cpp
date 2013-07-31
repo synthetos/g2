@@ -290,19 +290,19 @@ float cm_get_runtime_work_offset(uint8_t axis)
  *	The setters take care of coordinate system, units, and 
  *	distance mode conversions and normalizations.
  *
- * cm_set_arc_offset()	  - set all IJK offsets
- * cm_set_radius()		  - set radius value
- * cm_set_model_linenum() - set line number in the model
+ * cm_set_model_arc_offset() - set all IJK offsets
+ * cm_set_model_radius()	 - set radius value
+ * cm_set_model_linenum()	 - set line number in the model
  */
 
-void cm_set_arc_offset(float i, float j, float k)
+void cm_set_model_arc_offset(float i, float j, float k)
 { 
 	gm.arc_offset[0] = _to_millimeters(i);
 	gm.arc_offset[1] = _to_millimeters(j);
 	gm.arc_offset[2] = _to_millimeters(k);
 }
 
-void cm_set_arc_radius(float r) 
+void cm_set_model_arc_radius(float r) 
 { 
 	gm.arc_radius = _to_millimeters(r);
 }
@@ -564,7 +564,7 @@ void canonical_machine_init()
 void cm_alarm(uint8_t value)
 {
 	// stop the steppers and the spindle
-	st_disable();
+	st_disable_motors();
 	cm_spindle_control(SPINDLE_OFF);
 
 	// disable all MCode functions

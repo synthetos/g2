@@ -133,6 +133,10 @@ static stat_t set_sa(cmdObj_t *cmd);		// set motor step angle
 static stat_t set_tr(cmdObj_t *cmd);		// set motor travel per revolution
 static stat_t set_mi(cmdObj_t *cmd);		// set motor microsteps
 static stat_t set_po(cmdObj_t *cmd);		// set motor polarity
+static stat_t set_pm(cmdObj_t *cmd);		// set motor power management mode
+
+static stat_t set_md(cmdObj_t *cmd);		// disable all motors
+static stat_t set_me(cmdObj_t *cmd);		// enable motors with power-mode set to 0 (on)
 
 // other
 
@@ -280,7 +284,7 @@ static const char_t fmt_ja[] = "$ja   junction acceleration%8.0f%s\n";
 static const char_t fmt_dd[] = "$dd   stepper disable delay%8d mSec\n";
 static const char_t fmt_ct[] = "$ct   chordal tolerance%16.3f%s\n";
 
-static const char_t fmt_mt[] = "$mt   min segment time%13.0f uSec\n";
+static const char_t fmt_ms[] = "$ms   min segment time%13.0f uSec\n";
 static const char_t fmt_ml[] = "$ml   min line segment%17.3f%s\n";
 static const char_t fmt_ma[] = "$ma   min arc segment%18.3f%s\n";
 
@@ -299,6 +303,10 @@ static const char_t fmt_baud[] = "$baud] USB baud rate%15d [1=9600,2=19200,3=384
 
 static const char_t fmt_qr[] = "qr:%d\n";
 static const char_t fmt_rx[] = "rx:%d\n";
+
+static const char_t fmt_md[] PROGMEM = "motors disabled\n";
+static const char_t fmt_me[] PROGMEM = "motors enabled\n";
+static const char_t fmt_mt[] PROGMEM = "[mt]  motor disable timeout%8d Sec\n";
 
 // Gcode model values for reporting purposes
 static const char_t fmt_vel[]   = "Velocity:%17.3f%s/min\n";
@@ -394,7 +402,7 @@ const cfgItem_t cfgArray[] = {
 	{ "sys", "fb", _f07, 2, fmt_fb, print_flt, get_flt, set_nul, (float *)&cs.fw_build,   TINYG2_FIRMWARE_BUILD }, // MUST BE FIRST!
 	{ "sys", "fv", _f07, 3, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version, TINYG2_FIRMWARE_VERSION },
 	{ "sys", "hp", _f07, 0, fmt_hp, print_flt, get_flt, set_flt, (float *)&cs.hw_platform, TINYG2_HARDWARE_PLATFORM },
-//	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG2_HARDWARE_VERSION },
+	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG2_HARDWARE_VERSION },
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, fmt_line,print_int, get_int, set_int,(float *)&gm.linenum,0 },	// Gcode line number - gets model line number
@@ -462,14 +470,14 @@ const cfgItem_t cfgArray[] = {
 	{ "1","1tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu ,set_tr, (float *)&cfg.m[MOTOR_1].travel_rev,	M1_TRAVEL_PER_REV },
 	{ "1","1mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_1].microsteps,	M1_MICROSTEPS },
 	{ "1","1po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_1].polarity,	M1_POLARITY },
-	{ "1","1pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_1].power_mode,	M1_POWER_MODE },
+	{ "1","1pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_1].power_mode,	M1_POWER_MODE },
 #if (MOTORS >= 2)
 	{ "2","2ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_2].motor_map,	M2_MOTOR_MAP },
 	{ "2","2sa",_fip, 2, fmt_0sa, pr_ma_rot, get_flt, set_sa, (float *)&cfg.m[MOTOR_2].step_angle,	M2_STEP_ANGLE },
 	{ "2","2tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_2].travel_rev,	M2_TRAVEL_PER_REV },
 	{ "2","2mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_2].microsteps,	M2_MICROSTEPS },
 	{ "2","2po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_2].polarity,	M2_POLARITY },
-	{ "2","2pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_2].power_mode,	M2_POWER_MODE },
+	{ "2","2pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_2].power_mode,	M2_POWER_MODE },
 #endif
 #if (MOTORS >= 3)
 	{ "3","3ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_3].motor_map,	M3_MOTOR_MAP },
@@ -477,7 +485,7 @@ const cfgItem_t cfgArray[] = {
 	{ "3","3tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_3].travel_rev,	M3_TRAVEL_PER_REV },
 	{ "3","3mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_3].microsteps,	M3_MICROSTEPS },
 	{ "3","3po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_3].polarity,	M3_POLARITY },
-	{ "3","3pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_3].power_mode,	M3_POWER_MODE },
+	{ "3","3pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_3].power_mode,	M3_POWER_MODE },
 #endif
 #if (MOTORS >= 4)
 	{ "4","4ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_4].motor_map,	M4_MOTOR_MAP },
@@ -485,7 +493,7 @@ const cfgItem_t cfgArray[] = {
 	{ "4","4tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_4].travel_rev,	M4_TRAVEL_PER_REV },
 	{ "4","4mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_4].microsteps,	M4_MICROSTEPS },
 	{ "4","4po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_4].polarity,	M4_POLARITY },
-	{ "4","4pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_4].power_mode,	M4_POWER_MODE },
+	{ "4","4pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_4].power_mode,	M4_POWER_MODE },
 #endif
 #if (MOTORS >= 5)
 	{ "5","5ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_5].motor_map,	M5_MOTOR_MAP },
@@ -493,7 +501,7 @@ const cfgItem_t cfgArray[] = {
 	{ "5","5tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_5].travel_rev,	M5_TRAVEL_PER_REV },
 	{ "5","5mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_5].microsteps,	M5_MICROSTEPS },
 	{ "5","5po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_5].polarity,	M5_POLARITY },
-	{ "5","5pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_5].power_mode,	M5_POWER_MODE },
+	{ "5","5pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_5].power_mode,	M5_POWER_MODE },
 #endif
 #if (MOTORS >= 6)
 	{ "6","6ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_6].motor_map,	M6_MOTOR_MAP },
@@ -501,7 +509,7 @@ const cfgItem_t cfgArray[] = {
 	{ "6","6tr",_fip, 3, fmt_0tr, pr_ma_lin, get_flu, set_tr, (float *)&cfg.m[MOTOR_6].travel_rev,	M6_TRAVEL_PER_REV },
 	{ "6","6mi",_fip, 0, fmt_0mi, pr_ma_ui8, get_ui8, set_mi, (float *)&cfg.m[MOTOR_6].microsteps,	M6_MICROSTEPS },
 	{ "6","6po",_fip, 0, fmt_0po, pr_ma_ui8, get_ui8, set_po, (float *)&cfg.m[MOTOR_6].polarity,	M6_POLARITY },
-	{ "6","6pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_01, (float *)&cfg.m[MOTOR_6].power_mode,	M6_POWER_MODE },
+	{ "6","6pm",_fip, 0, fmt_0pm, pr_ma_ui8, get_ui8, set_pm, (float *)&cfg.m[MOTOR_6].power_mode,	M6_POWER_MODE },
 #endif
 	// Axis parameters
 	{ "x","xam",_fip, 0, fmt_Xam, print_am,  get_am,  set_am, (float *)&cfg.a[AXIS_X].axis_mode,		X_AXIS_MODE },
@@ -673,6 +681,10 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	  CHORDAL_TOLERANCE },
 	{ "sys","dd",  _f07, 0, fmt_dd, print_int, get_int, set_int, (float *)&cfg.stepper_disable_delay, DISABLE_DELAY },
 	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					  SWITCH_TYPE },
+	{ "sys","mt",  _f07, 0, fmt_mt, print_int, get_int, set_int, (float *)&cfg.motor_disable_timeout, MOTOR_DISABLE_TIMEOUT},
+	// Note:"me" must initialize after "mt" so it can use the timeout value
+	{ "",   "me",  _fin, 0, fmt_me, print_str, set_me,  set_me,  (float *)&cs.null, 0 },
+	{ "",   "md",  _f00, 0, fmt_md, print_str, set_md,  set_md,  (float *)&cs.null, 0 },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
 	{ "sys","jv",  _f07, 0, fmt_jv, print_ui8, get_ui8, set_jv,	 (float *)&cfg.json_verbosity,		JSON_VERBOSITY },
@@ -688,7 +700,7 @@ const cfgItem_t cfgArray[] = {
 //	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 
 	// removed from system group as "hidden" parameters
-	{ "",   "mt",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
+	{ "",	"ms",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
 	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
 	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
 	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
@@ -796,16 +808,14 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
 /*
  * set_hv() - set hardware version number
  */
-/*
+
 static stat_t set_hv(cmdObj_t *cmd) 
 {
 	if (cmd->value > TINYG2_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_flt(cmd);					// record the hardware version
-//++++	sys_port_bindings(cmd->value);	// reset port bindings
-//++++	switch_init();					// re-initialize the GPIO ports
 	return (STAT_OK);
 }
-*/
+
 /*
  * get_id() - get device ID (signature)
  */
@@ -816,7 +826,6 @@ static stat_t get_id(cmdObj_t *cmd)
 //++++	sys_get_id(tmp);
 	cmd->objtype = TYPE_STRING;
 	ritorno(cmd_copy_string(cmd, tmp));
-
 	return (STAT_OK);
 }
 */
@@ -831,12 +840,60 @@ static stat_t run_boot(cmdObj_t *cmd)
 }
 */
 
-/* STATUS REPORT FUNCTIONS
- * get_sr()	  - run status report
- * set_sr()	  - set status report elements
+/**** REPORT FUNCTIONS ********************************************************
+ * set_md() - disable all motors
+ * set_me() - enable motors with $Npm=0
+ * set_qv() - get a queue report verbosity
+ * get_qr() - get a queue report (as data)
+ * run_qf() - execute a planner buffer flush
+ * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
+ * get_rx()	- get bytes available in RX buffer
+ * get_sr()	- run status report
+ * set_sr()	- set status report elements
  * print_sr() - print multiline text status report
  * set_si()	  - set status report interval
+ * run_boot() - request boot loader entry
+ * cmd_set_jv() - set JSON verbosity level (exposed) - for details see jsonVerbosity in config.h
  */
+
+static stat_t set_md(cmdObj_t *cmd)
+{
+//+++++	st_disable_motors();
+	return (STAT_OK);
+}
+
+static stat_t set_me(cmdObj_t *cmd)
+{
+//+++++	st_enable_motors();
+	return (STAT_OK);
+}
+
+static stat_t get_qr(cmdObj_t *cmd)
+{
+	cmd->value = (float)mp_get_planner_buffers_available();
+	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+}
+
+static stat_t run_qf(cmdObj_t *cmd)
+{
+	cm_queue_flush();
+	return (STAT_OK);
+}
+
+static stat_t get_er(cmdObj_t *cmd)
+{
+	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
+	return (STAT_OK);
+}
+
+static stat_t get_rx(cmdObj_t *cmd)
+{
+	//++++	cmd->value = (float)xio_get_usb_rx_free();
+	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+}
+
 static stat_t get_sr(cmdObj_t *cmd)
 {
 	rpt_populate_unfiltered_status_report();
@@ -859,39 +916,6 @@ static stat_t set_si(cmdObj_t *cmd)
 	if (cmd->value < STATUS_REPORT_MIN_MS) { cmd->value = STATUS_REPORT_MIN_MS;}
 	cfg.status_report_interval = (uint32_t)cmd->value;
 	return(STAT_OK);
-}
-
-/* RANDOM SYSTEM FUNCTIONS
- * get_qr() - get a queue report (as data)
- * run_qf() - execute a planner buffer flush
- * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
- * get_rx()	- get bytes available in RX buffer
- * set_jv()	- set JSON verbosity level (exposed) - for details see jsonVerbosity in config.h
- */
-static stat_t get_qr(cmdObj_t *cmd) 
-{
-	cmd->value = (float)mp_get_planner_buffers_available();
-	cmd->objtype = TYPE_INTEGER;
-	return (STAT_OK);
-}
-
-static stat_t run_qf(cmdObj_t *cmd) 
-{
-	cm_queue_flush();
-	return (STAT_OK);
-}
-
-static stat_t get_er(cmdObj_t *cmd) 
-{
-	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
-	return (STAT_OK);
-}
-
-static stat_t get_rx(cmdObj_t *cmd)
-{
-//++++	cmd->value = (float)xio_get_usb_rx_free();
-	cmd->objtype = TYPE_INTEGER;
-	return (STAT_OK);
 }
 
 static stat_t set_jv(cmdObj_t *cmd) 
@@ -1279,14 +1303,18 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
  * set_tr()  - set motor travel_per_rev & recompute steps_per_unit
  * set_mi()  - set microsteps & recompute steps_per_unit
  * set_po()  - set polarity and update stepper structs
+ * set_pm()  - set motor power mode and take action
  *
  * pr_ma_ui8() - print motor or axis uint8_t value w/no units or unit conversion
  * pr_ma_lin() - print linear value with units and in/mm unit conversion
  * pr_ma_rot() - print rotary value with units
  * print_am()  - print axis mode with enumeration string
+ * print_coor()- print coordinate offsets with linear units
+ * print_corr()- print coordinate offsets with rotary units
+
  */
 
-int8_t _get_motor(const index_t index)
+int8_t get_motor(const index_t index)
 {
 	int motor = (int)cfgArray[index].token[0];
 	char motors[] = {"1234"};
@@ -1296,9 +1324,9 @@ int8_t _get_motor(const index_t index)
 }
 
 // NB: This function will need to be rethought if microstep morphing is implemented
-static stat_t _set_motor_steps_per_unit(cmdObj_t *cmd) 
+static stat_t set_motor_steps_per_unit(cmdObj_t *cmd) 
 {
-	uint8_t m = _get_motor(cmd->index);
+	uint8_t m = get_motor(cmd->index);
 	cfg.m[m].steps_per_unit = (360 / (cfg.m[m].step_angle / cfg.m[m].microsteps) / cfg.m[m].travel_rev);
 	return (STAT_OK);
 }
@@ -1367,14 +1395,14 @@ static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 static stat_t set_sa(cmdObj_t *cmd)		// motor step angle
 { 
 	set_flt(cmd);
-	_set_motor_steps_per_unit(cmd); 
+	set_motor_steps_per_unit(cmd); 
 	return (STAT_OK);
 }
 
 static stat_t set_tr(cmdObj_t *cmd)		// motor travel per revolution
 { 
 	set_flu(cmd);
-	_set_motor_steps_per_unit(cmd); 
+	set_motor_steps_per_unit(cmd); 
 	return (STAT_OK);
 }
 
@@ -1384,14 +1412,26 @@ static stat_t set_mi(cmdObj_t *cmd)		// motor microsteps
 		cmd_add_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
-	_set_motor_steps_per_unit(cmd);
-	st_set_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
+	set_motor_steps_per_unit(cmd);
+	st_set_microsteps(get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 
 static stat_t set_po(cmdObj_t *cmd)			// motor polarity
 {
 	return(set_01(cmd));
+}
+
+static stat_t set_pm(cmdObj_t *cmd)			// motor power mode
+{
+	ritorno (set_01(cmd));
+/*+++++	if (fp_ZERO(cmd->value)) {				// zero means enable motor - i.e. disable power management mode
+		st_enable_motor(get_motor(cmd->index));
+		} else {
+		st_disable_motor(get_motor(cmd->index));
+	}
+*/
+	return (STAT_OK);
 }
 
 static void pr_ma_ui8(cmdObj_t *cmd)		// print uint8_t value

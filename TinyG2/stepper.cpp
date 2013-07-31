@@ -241,18 +241,18 @@ void stepper_init()
 */
 
 /*
- * st_enable() - start the steppers
- * st_disable() - step the stoppers
+ * st_enable_motors() - start the steppers
+ * st_disable_motors() - step the stoppers
  * st_disable_delay_callback() - disable motors after timer expires
  */
-void st_enable()
+void st_enable_motors()
 {
 	common_enable.clear();										// enable grblShield common enable
 	st.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
 	dda_timer.start();
 }
 
-void st_disable()
+void st_disable_motors()
 {
 	dda_timer.stop();
 	st.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
@@ -284,7 +284,21 @@ static void _clear_diagnostic_counters()
 	st.m[MOTOR_6].step_count_diagnostic = 0;
 }
 */
+/*
+void st_disable_motors_rtc_callback() 		// called by 10ms real-time clock
+{
+	if (--cfg.motor_disable_timer == 0) { st_disable_motors(); }
+}
 
+void st_kill_motors()
+{
+	for (uint8_t i=0; i<MOTORS; i++) {
+		device.st_port[i]->DIR = MOTOR_PORT_DIR_gm;  // sets outputs for motors & GPIO1, and GPIO2 inputs
+		device.st_port[i]->OUT = MOTOR_ENABLE_BIT_bm;// zero port bits AND disable motor
+	}
+	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;			// turn timer off
+}
+*/
 // Define the timer interrupts inside the Motate namespace
 namespace Motate {
 
@@ -503,7 +517,7 @@ void _load_move()
 			else motor_6.dir.set();
 			motor_6.enable.clear();
 		}
-		st_enable();
+		st_enable_motors();
 
 	// handle dwells
 	} else if (sps.move_type == MOVE_TYPE_DWELL) {
@@ -511,7 +525,7 @@ void _load_move()
 		dwell_timer.start();
 
 	} else {
-		st_disable();
+		st_disable_motors();
 	}
 
 	// all cases drop to here - such as Null moves queued by Mcodes
