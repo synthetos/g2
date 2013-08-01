@@ -256,7 +256,7 @@ static stat_t _get_nv_pair_strict(cmdObj_t *cmd, char_t **pstr, int8_t *depth)
 }
 
 /****************************************************************************
- * js_serialize_json() - make a JSON object string from JSON object array
+ * json_serialize() - make a JSON object string from JSON object array
  *
  *	*cmd is a pointer to the first element in the cmd list to serialize
  *	*out_buf is a pointer to the output string - usually what was the input string
@@ -290,7 +290,7 @@ static stat_t _get_nv_pair_strict(cmdObj_t *cmd, char_t **pstr, int8_t *depth)
  *		  that was previously converted to MM mode for internal operations.
  */
 
-#define BUFFER_MARGIN 8			// safety margin to avoid buffer overruns
+#define BUFFER_MARGIN 8			// safety margin to avoid buffer overruns during footer checksum generation
 
 uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 {
@@ -302,49 +302,49 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 
 	*str++ = '{'; 								// write opening curly
 
-	while (true) {
-		if (cmd->objtype != TYPE_EMPTY) {
-			if (need_a_comma) { *str++ = ',';}
-			need_a_comma = true;
-			str += sprintf((char *)str, (char *)"\"%s\":", (char *)cmd->token);
+		while (true) {
+			if (cmd->objtype != TYPE_EMPTY) {
+				if (need_a_comma) { *str++ = ',';}
+				need_a_comma = true;
+				str += sprintf((char *)str, "\"%s\":", cmd->token);
 
-			if (cmd->objtype == TYPE_FLOAT_UNITS)	{ 
-				if (cm_get_model_units_mode() == INCHES) { cmd->value /= MM_PER_INCH;}
-				cmd->objtype = TYPE_FLOAT;
-			}
-			if (cmd->objtype == TYPE_NULL)	{ str += sprintf((char *)str, (char *)"\"\"");}
-			else if (cmd->objtype == TYPE_INTEGER)	{ str += sprintf((char *)str, "%1.0f", cmd->value);}
-			else if (cmd->objtype == TYPE_STRING)	{ str += sprintf((char *)str, "\"%s\"",(char *)*cmd->stringp);}
-			else if (cmd->objtype == TYPE_ARRAY)	{ str += sprintf((char *)str, "[%s]",  (char *)*cmd->stringp);}
-			else if (cmd->objtype == TYPE_FLOAT) {
-				if 		(cmd->precision == 0) { str += sprintf((char *)str, "%0.0f", cmd->value);}
-				else if (cmd->precision == 1) { str += sprintf((char *)str, "%0.1f", cmd->value);}
-				else if (cmd->precision == 2) { str += sprintf((char *)str, "%0.2f", cmd->value);}
-				else if (cmd->precision == 3) { str += sprintf((char *)str, "%0.3f", cmd->value);}
-				else if (cmd->precision == 4) { str += sprintf((char *)str, "%0.4f", cmd->value);}
-				else 						  { str += sprintf((char *)str, "%f", cmd->value);}
-			}
-			else if (cmd->objtype == TYPE_BOOL) {
-				if (fp_FALSE(cmd->value)) { str += sprintf((char *)str, "false");}
-				else { str += sprintf((char *)str, "true"); }
-			}
-			if (cmd->objtype == TYPE_PARENT) { 
-				*str++ = '{';
-				need_a_comma = false;
-			}
-		}
-		if (str >= str_max) { return (-1);}		// signal buffer overrun
-		if ((cmd = cmd->nx) == NULL) { break;}	// end of the list
-			
-		while (cmd->depth < prev_depth--) {		// iterate the closing curlies
-			need_a_comma = true;
-			*str++ = '}';
-		}
-		prev_depth = cmd->depth;
-	}
+				if (cmd->objtype == TYPE_FLOAT_UNITS)	{
+					if (cm_get_model_units_mode() == INCHES) { cmd->value /= MM_PER_INCH;}
+					cmd->objtype = TYPE_FLOAT;
+				}
+				if		(cmd->objtype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "\"\"");}
+				else if (cmd->objtype == TYPE_INTEGER)	{ str += (char_t)sprintf((char *)str, "%1.0f", (double)cmd->value);}
+				else if (cmd->objtype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*cmd->stringp);}
+				else if (cmd->objtype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*cmd->stringp);}
+				else if (cmd->objtype == TYPE_FLOAT) {
+					if 		(cmd->precision == 0) { str += (char_t)sprintf((char *)str, "%0.0f", (double)cmd->value);}
+					else if (cmd->precision == 1) { str += (char_t)sprintf((char *)str, "%0.1f", (double)cmd->value);}
+					else if (cmd->precision == 2) { str += (char_t)sprintf((char *)str, "%0.2f", (double)cmd->value);}
+					else if (cmd->precision == 3) { str += (char_t)sprintf((char *)str, "%0.3f", (double)cmd->value);}
+					else if (cmd->precision == 4) { str += (char_t)sprintf((char *)str, "%0.4f", (double)cmd->value);}
+					else 						  { str += (char_t)sprintf((char *)str, "%f",    (double)cmd->value);}
+				}
+				else if (cmd->objtype == TYPE_BOOL) {
+					if (fp_FALSE(cmd->value)) { str += sprintf((char *)str, "false");}
+					else { str += (char_t)sprintf((char *)str, "true"); }
+				}
+				if (cmd->objtype == TYPE_PARENT) {
+					*str++ = '{';
+						need_a_comma = false;
+					}
+				}
+				if (str >= str_max) { return (-1);}		// signal buffer overrun
+				if ((cmd = cmd->nx) == NULL) { break;}	// end of the list
 
-	// closing curlies and NEWLINE
-	while (prev_depth-- > initial_depth) { *str++ = '}';}
+				while (cmd->depth < prev_depth--) {		// iterate the closing curlies
+					need_a_comma = true;
+				*str++ = '}';
+			}
+			prev_depth = cmd->depth;
+		}
+
+		// closing curlies and NEWLINE
+		while (prev_depth-- > initial_depth) { *str++ = '}';}
 	str += sprintf((char *)str, "}\n");	// using sprintf for this last one ensures a NUL termination
 	if (str > out_buf + size) { return (-1);}
 	return (str - out_buf);
@@ -360,7 +360,7 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 void json_print_object(cmdObj_t *cmd)
 {
 	json_serialize(cmd, cs.out_buf, sizeof(cs.out_buf));
-	fprintf(stderr, "%s", cs.out_buf);
+	fprintf(stderr, "%s", (char *)cs.out_buf);
 }
 
 /*
@@ -406,10 +406,10 @@ void json_print_response(stat_t status)
 					cmd->objtype = TYPE_EMPTY;
 				}
 
-				//			} else if (cmd_type == CMD_TYPE_CONFIG) {	// kill config echo if not enabled
-				//				if (cfg.echo_json_configs == false) {
-				//					cmd->objtype = TYPE_EMPTY;
-				//				}
+//			} else if (cmd_type == CMD_TYPE_CONFIG) {	// kill config echo if not enabled
+//				if (cfg.echo_json_configs == false) {
+//					cmd->objtype = TYPE_EMPTY;
+//				}
 
 				} else if (cmd_type == CMD_TYPE_MESSAGE) {	// kill message echo if not enabled
 				if (cfg.echo_json_messages == false) {
@@ -417,7 +417,7 @@ void json_print_response(stat_t status)
 				}
 
 				} else if (cmd_type == CMD_TYPE_LINENUM) {	// kill line number echo if not enabled
-				if ((cfg.echo_json_linenum == false) || (cmd->value == 0)) { // do not report line# 0
+				if ((cfg.echo_json_linenum == false) || (fp_ZERO(cmd->value))) { // do not report line# 0
 					cmd->objtype = TYPE_EMPTY;
 				}
 			}
