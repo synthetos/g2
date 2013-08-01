@@ -286,13 +286,6 @@ enum cmHomingState {				// applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
 	HOMING_HOMED = 1				// machine is homed (1=true)
 };
-/*
-enum cmStatusReportRequest {
-	SR_NO_REQUEST = 0,				// no status report is requested
-	SR_TIMED_REQUEST,				// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST			// request a status report ASAP
-};
-*/
 
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
@@ -479,7 +472,7 @@ void cm_set_model_linenum(uint32_t linenum);
 
 /*--- canonical machining functions ---*/
 void canonical_machine_init(void);
-void cm_alarm(uint8_t value);								// emergency shutdown
+void canonical_machine_alarm(uint8_t value);					// emergency shutdown
 
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 

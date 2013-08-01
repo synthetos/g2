@@ -103,10 +103,8 @@ extern "C"{
 
 
 /***********************************************************************************
- **** STRUCTURE ALLOCATIONS *********************************************************
+ **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
-// NOTE: The canonical machine singleton "cm" would normally be declared here
-// but it's also used by cycles so it's in canonical_machine.h instead.
 
 cmSingleton_t cm;		// canonical machine control structure
 GCodeModel_t gm;		// active gcode model
@@ -142,10 +140,17 @@ static void _exec_program_finalize(float *value, float *flag);
  *
  ************************************************************************/
 
-/*
+/* Runtime State functions
+ *
  * cm_get_combined_state() - combines raw states into something a user might want to see
+ * cm_get_machine_state()
+ * cm_get_motion_state() 
+ * cm_get_cycle_state() 
+ * cm_get_hold_state() 
+ * cm_get_homing_state()
+ * cm_get_runtime_motion_mode()
+ * cm_get_runtime_busy()
  */
-
 uint8_t cm_get_combined_state() 
 {
 	if (cm.machine_state == MACHINE_CYCLE) {
@@ -257,15 +262,13 @@ float *cm_get_model_canonical_position_vector(float position[])
 float cm_get_runtime_machine_position(uint8_t axis) 
 {
 	return (mp_get_runtime_machine_position(axis));
-//	return (0);
 }
-// deprecated behavior
+//	deprecated behavior - left in for reference
 //	if (gm.units_mode == INCHES) {
 //		return (mp_get_runtime_machine_position(axis) / MM_PER_INCH);
 //	} else {
 //		return (mp_get_runtime_machine_position(axis));
 //	}
-
 
 float cm_get_runtime_work_position(uint8_t axis) 
 {
@@ -308,8 +311,9 @@ void cm_set_model_arc_radius(float r)
 
 void cm_set_model_linenum(uint32_t linenum)
 {
-	gm.linenum = linenum;		// you must first set the model line number,
-	cmd_add_object((const char_t *)"n");		// then add the line number to the cmd list
+	gm.linenum = linenum;				// you must first set the model line number,
+	cmd_add_object((const char_t *)"n"); // then add the line number to the cmd list
+//	cmd_add_object("n");				// then add the line number to the cmd list
 }
 
 /* 
@@ -321,19 +325,12 @@ void cm_set_model_linenum(uint32_t linenum)
  *	- translation of work coordinates to machine coordinates (internal canonical form)
  *	- computation and application of axis modes as so:
  *
- *		DISABLED
- *		  - Incoming value is ignored. Target value is not changed
- *
- *		ENABLED 
- *		  - Convert axis values to canonical format and store as target
- *
- *		INHIBITED
- *	  	  - Same processing as ENABLED, but axis will not actually be run
- *
- * 		RADIUS
- *		  - ABC axis value is provided in Gcode block in linear units
- *		  - Target is set to degrees based on axis' Radius value
- *		  - Radius mode is only processed for ABC axes. Application to XYZ is ignored.
+ *	DISABLED  - Incoming value is ignored. Target value is not changed
+ *	ENABLED	  - Convert axis values to canonical format and store as target
+ *	INHIBITED - Same processing as ENABLED, but axis will not actually be run
+ * 	RADIUS	  - ABC axis value is provided in Gcode block in linear units
+ *			  - Target is set to degrees based on axis' Radius value
+ *			  - Radius mode is only processed for ABC axes. Application to XYZ is ignored.
  *
  *	Target coordinates are provided in target[]
  *	Axes that need processing are signaled in flag[]
@@ -411,13 +408,13 @@ void cm_set_model_endpoint_position(uint8_t status)
  * _get_move_times() - get minimum and optimal move times
  *
  *	The minimum time is the fastest the move can be performed given the velocity 
- *	constraints on each particpating axis - regardless of the feedrate requested. 
+ *	constraints on each participating axis - regardless of the feed rate requested. 
  *	The minimum time is the time limited by the rate-limiting axis. The minimum 
  *	time is needed to compute the optimal time and is recorded for possible 
  *	feed override computation..
  *
- *	The optimal time is either the time resulting from the requested feedrate or 
- *	the minimum time if the requested feedrate is not achievable. Optimal times for 
+ *	The optimal time is either the time resulting from the requested feed rate or 
+ *	the minimum time if the requested feed rate is not achievable. Optimal times for 
  *	traverses are always the minimum time.
  *
  *	Axis modes are taken into account by having cm_set_target() load the targets 
@@ -551,16 +548,20 @@ void canonical_machine_init()
 	// never start a machine in a motion mode	
 	gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
 
+	// reset request flags
+	cm.feedhold_requested = false;
+	cm.queue_flush_requested = false;
+	cm.cycle_start_requested = false;
+
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;	
 	cm.combined_state = COMBINED_READY;
 }
 
 /*
- * cm_alarm() - alarm state; shut down machine
+ * canonical_machine_alarm() - alarm state; shut down machine
  */
-
-void cm_alarm(uint8_t value)
+void canonical_machine_alarm(uint8_t value)
 {
 	// stop the steppers and the spindle
 	st_disable_motors();

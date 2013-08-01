@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.01	// Wiring in the output bits
+#define TINYG2_FIRMWARE_BUILD   	015.02	// Monir changes to canonical machine naming
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	1.00	// hardware platform indicator (Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
