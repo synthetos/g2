@@ -200,7 +200,6 @@ magic_t st_get_sps_magic() { return (sps.magic_start);}
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
- *		This init is a precursor for gpio_init()
  * 	  - microsteps are setup during cfg_init()
  *	  - motor polarity is setup during cfg_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete

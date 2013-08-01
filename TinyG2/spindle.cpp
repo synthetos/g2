@@ -31,7 +31,6 @@
 #include "spindle.h"
 #include "planner.h"
 #include "hardware.h"
-//#include "gpio.h"
 //#include "gcode_parser.h"
 //#include "pwm.h"
 
@@ -102,20 +101,23 @@ static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
 	cm_set_spindle_mode(spindle_mode);
-/*++++++++++++++
 	if (spindle_mode == SPINDLE_CW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_off(SPINDLE_DIR);
-		} else if (spindle_mode == SPINDLE_CCW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_on(SPINDLE_DIR);
-		} else {
-		gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
+		spindle_enable_pin.set();
+		spindle_dir_pin.clear();
+//+++++	gpio_set_bit_on(SPINDLE_BIT);
+//+++++	gpio_set_bit_off(SPINDLE_DIR);
+	} else if (spindle_mode == SPINDLE_CCW) {
+		spindle_enable_pin.set();
+		spindle_dir_pin.set();
+//+++++	gpio_set_bit_on(SPINDLE_BIT);
+//+++++	gpio_set_bit_on(SPINDLE_DIR);
+	} else {
+		spindle_enable_pin.clear();
+//+++++	gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
 	}
 	
 	// PWM spindle control
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
-*/
+//	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
 }
 
 /*

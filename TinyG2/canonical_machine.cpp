@@ -81,7 +81,6 @@
  *		move time) is carried forward into the planner - planned moves are not 
  *		affected by upstream changes to the gm model. Many other vars also fall into
  *		this category.
- *
  */
 
 #include "tinyg2.h"
@@ -92,12 +91,12 @@
 #include "planner.h"
 #include "stepper.h"
 #include "report.h"
-
-//#include "hardware.h"
+#include "hardware.h"
 /*
 #include "spindle.h"
 #include "switch.h"
 */
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -986,13 +985,13 @@ stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 static void _exec_mist_coolant_control(float *value, float *flag)
 {
 	gm.mist_coolant = (uint8_t)value[0];
-/*+++++++++++
 	if (gm.mist_coolant == true) {
-		gpio_set_bit_on(MIST_COOLANT_BIT);
-		} else {
-		gpio_set_bit_off(MIST_COOLANT_BIT);
+//+++++	gpio_set_bit_on(MIST_COOLANT_BIT);
+		coolant_pin.set();
+	} else {
+//+++++	gpio_set_bit_off(MIST_COOLANT_BIT);
+		coolant_pin.clear();
 	}
-*/
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_coolant)
@@ -1004,15 +1003,15 @@ stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 static void _exec_flood_coolant_control(float *value, float *flag)
 {
 	gm.flood_coolant = (uint8_t)value[0];
-/*++++++++++++++
 	if (gm.flood_coolant == true) {
-		gpio_set_bit_on(FLOOD_COOLANT_BIT);
+//+++++	gpio_set_bit_on(FLOOD_COOLANT_BIT);
+		coolant_pin.set();
 	} else {
-		gpio_set_bit_off(FLOOD_COOLANT_BIT);
+//+++++	gpio_set_bit_off(FLOOD_COOLANT_BIT);
+		coolant_pin.clear();
 		float value[AXES] = { 0,0,0,0,0,0 };
 		_exec_mist_coolant_control(value, value);		// M9 special function
 	}
-*/
 }
 
 /*

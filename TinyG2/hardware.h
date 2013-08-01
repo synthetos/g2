@@ -111,7 +111,7 @@ Motate::pin_number spindle_enable_pin_num = 12;
 Motate::pin_number spindle_dir_pin_num	  = 13;
 Motate::pin_number spindle_pwm_pin_num	  = 11;
 Motate::pin_number secondary_pwm_pin_num  = 9;
-Motate::pin_number coolant_pin_num		  = 54;
+Motate::pin_number coolant_pin_num		  = 57;
 
 // axes
 Motate::pin_number axis_X_min_pin_num = 14;
