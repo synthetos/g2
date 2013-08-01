@@ -111,7 +111,7 @@ Motate::pin_number spindle_enable_pin_num = 12;
 Motate::pin_number spindle_dir_pin_num	  = 13;
 Motate::pin_number spindle_pwm_pin_num	  = 11;
 Motate::pin_number secondary_pwm_pin_num  = 9;
-Motate::pin_number coolant_pin_num		  = 57;
+Motate::pin_number coolant_enable_pin_num = 57;
 
 // axes
 Motate::pin_number axis_X_min_pin_num = 14;
@@ -226,7 +226,7 @@ static Motate::OutputPin<spindle_enable_pin_num> spindle_enable_pin;
 static Motate::OutputPin<spindle_dir_pin_num> spindle_dir_pin;
 static Motate::OutputPin<spindle_pwm_pin_num> spindle_pwm_pin;
 static Motate::OutputPin<secondary_pwm_pin_num> secondary_pwm_pin;
-static Motate::OutputPin<coolant_pin_num> coolant_pin;
+static Motate::OutputPin<coolant_enable_pin_num> coolant_enable_pin;
 
 static Motate::InputPin<axis_X_min_pin_num> axis_X_min_pin(Motate::kPullUp);
 static Motate::InputPin<axis_X_max_pin_num> axis_X_max_pin(Motate::kPullUp);
