@@ -13,6 +13,9 @@ Expand the downloaded zip file and move Arduino.app to /Applications on your har
 * Now drag the *folder* that you found this ReadMe.txt file in to the Terminal.app window that has the "cd " you just typed. It should type in a path for you.
 * Now hit return.
 
+Either place the .elf file you want to program into that directory or remove the trailing version number from the elf file that is present; e.g. 
+	mv TinyG2.elf.13.01 TinyG2.elf
+
 Plug a USB cable from the computer to the Programming port of the Due (the one closest to the power jack). Make sure there are no shields, programmers or other devices plugged into the Due. The Due does not need external power for programming - it will be powered by the USB programming cable.
 
 Copy and paste the following line into the Terminal window:
