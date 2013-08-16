@@ -240,8 +240,8 @@ void stepper_init()
 */
 
 /*
- * st_enable_motors() - start the steppers
- * st_disable_motors() - step the stoppers
+ * st_enable_motors() - start the steppers and set a very very long enable timeout
+ * st_disable_motors() - step the stoppers and set the current power management timeout 
  * st_disable_delay_callback() - disable motors after timer expires
  */
 void st_enable_motors()
@@ -254,9 +254,7 @@ void st_enable_motors()
 void st_disable_motors()
 {
 	dda_timer.stop();
-	st.disable_delay_timeout = (
-		st.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
-		) + cfg.stepper_disable_delay);
+	st.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
 }
 
 stat_t st_stepper_disable_delay_callback()
@@ -283,21 +281,6 @@ static void _clear_diagnostic_counters()
 	st.m[MOTOR_4].step_count_diagnostic = 0;
 	st.m[MOTOR_5].step_count_diagnostic = 0;
 	st.m[MOTOR_6].step_count_diagnostic = 0;
-}
-*/
-/*
-void st_disable_motors_rtc_callback() 		// called by 10ms real-time clock
-{
-	if (--cfg.motor_disable_timer == 0) { st_disable_motors(); }
-}
-
-void st_kill_motors()
-{
-	for (uint8_t i=0; i<MOTORS; i++) {
-		device.st_port[i]->DIR = MOTOR_PORT_DIR_gm;  // sets outputs for motors & GPIO1, and GPIO2 inputs
-		device.st_port[i]->OUT = MOTOR_ENABLE_BIT_bm;// zero port bits AND disable motor
-	}
-	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;			// turn timer off
 }
 */
 // Define the timer interrupts inside the Motate namespace
@@ -443,7 +426,7 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
  *	higher level as the DDA or dwell ISR. A software interrupt has been 
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
  *
- *	In aline code:
+ *	In aline() code:
  *	 - All axes must set steps and compensate for out-of-range pulse phasing.
  *	 - If axis has 0 steps the direction setting can be omitted
  *	 - If axis has 0 steps the motor must not be enabled to support power mode = 1
@@ -451,7 +434,7 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 
 void _load_move()
 {
-	// handle aline loads first (most common case)  NB: there are no more lines, only alines
+	// handle aline() loads first (most common case)  NB: there are no more lines, only alines()
 	if (sps.move_type == MOVE_TYPE_ALINE) {
 		st.dda_ticks_downcount = sps.dda_ticks;
 		st.dda_ticks_X_substeps = sps.dda_ticks_X_substeps;
@@ -529,7 +512,7 @@ void _load_move()
 		st_disable_motors();
 	}
 
-	// all cases drop to here - such as Null moves queued by Mcodes
+	// all cases drop to here - such as Null moves queued by MCodes
 	st_prep_null();									// disable prep buffer, if only temporarily
 	sps.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
 	st_request_exec_move();							// compute and prepare the next move
