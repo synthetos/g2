@@ -404,11 +404,12 @@ static const char_t PROGMEM fmt_gdi[] = "[gdi] default gcode distance mode%2d [0
  */
 
 const cfgItem_t cfgArray[] = {
-	// group token flags p, format print_func get_func, set_func target for get/set,      default value
+	// group token flags p, format* print_func get_func, set_func, target for get/set,      default value
 	{ "sys", "fb", _f07, 2, fmt_fb, print_flt, get_flt, set_nul, (float *)&cs.fw_build,   TINYG2_FIRMWARE_BUILD }, // MUST BE FIRST!
 	{ "sys", "fv", _f07, 3, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version, TINYG2_FIRMWARE_VERSION },
 	{ "sys", "hp", _f07, 0, fmt_hp, print_flt, get_flt, set_flt, (float *)&cs.hw_platform, TINYG2_HARDWARE_PLATFORM },
 	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version, TINYG2_HARDWARE_VERSION },
+//	{ "sys", "id", _fns, 0, fmt_id, print_str, get_id,  set_nul, (float *)&cs.null, 0 },		// device ID (ASCII signature)
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, fmt_line,print_int, get_int, set_int,(float *)&gm.linenum,0 },	// Gcode line number - gets model line number
@@ -469,6 +470,7 @@ const cfgItem_t cfgArray[] = {
 //	{ "", "boot",_f00, 0, fmt_nul, print_nul, print_boot_loader_help,run_boot,(float *)&cs.null,0 },
 	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
 	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
+//	{ "", "sx",  _f00, 0, fmt_nul, print_nul, run_sx,  run_sx , (float *)&cs.null, 0 },		// send XOFF, XON test
 
 	// Motor parameters
 	{ "1","1ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_1].motor_map,	M1_MOTOR_MAP },
@@ -702,16 +704,19 @@ const cfgItem_t cfgArray[] = {
 //	{ "sys","ic",  _f07, 0, fmt_ic, print_ui8, get_ui8, set_ic,  (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
 //	{ "sys","ec",  _f07, 0, fmt_ec, print_ui8, get_ui8, set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
 //	{ "sys","ee",  _f07, 0, fmt_ee, print_ui8, get_ui8, set_ee,  (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
-//	{ "sys","ex",  _f07, 0, fmt_ex, print_ui8, get_ui8, set_ex,  (float *)&cfg.enable_xon,			COM_ENABLE_XON },
+//	{ "sys","ex",  _f07, 0, fmt_ex, print_ui8, get_ui8, set_ex,  (float *)&cfg.enable_xon,			COM_ENABLE_FLOW_CONTROL },
+//	{ "sys","fs",  _f07, 0, fmt_fs, print_ui8, get_ui8, set_ui8, (float *)&cfg.footer_style,		0 },
 //	{ "sys","baud",_fns, 0, fmt_baud,print_ui8,get_ui8, set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 
-	// removed from system group as "hidden" parameters
-	{ "",	"ms",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
-	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
-	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
-	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
-	{ "",   "qrl", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_lo_water, QR_LO_WATER },
-//	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
+	// switch state readers
+//	{ "ss","ss0",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[0], 0 },
+//	{ "ss","ss1",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[1], 0 },
+//	{ "ss","ss2",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[2], 0 },
+//	{ "ss","ss3",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[3], 0 },
+//	{ "ss","ss4",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[4], 0 },
+//	{ "ss","ss5",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[5], 0 },
+//	{ "ss","ss6",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[6], 0 },
+//	{ "ss","ss7",  _f00, 0, fmt_ss, print_ss, get_ui8, set_nul, (float *)&sw.state[7], 0 },
 
 	// NOTE: The ordering within the gcode defaults is important for token resolution
 	{ "sys","gpl", _f07, 0, fmt_gpl, print_ui8, get_ui8,set_012, (float *)&cfg.select_plane,		GCODE_DEFAULT_PLANE },
@@ -720,6 +725,14 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","gpa", _f07, 0, fmt_gpa, print_ui8, get_ui8,set_012, (float *)&cfg.path_control,		GCODE_DEFAULT_PATH_CONTROL },
 	{ "sys","gdi", _f07, 0, fmt_gdi, print_ui8, get_ui8,set_01,  (float *)&cfg.distance_mode,		GCODE_DEFAULT_DISTANCE_MODE },
 	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
+
+	// removed from system group as "hidden" parameters
+	{ "",	"ms",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
+	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
+	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
+	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
+	{ "",   "qrl", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_lo_water, QR_LO_WATER },
+//	{ "sys","net", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cs.network_mode,			NETWORK_MODE },
 
 	// Persistence for status report - must be in sequence
 	// *** Count must agree with CMD_STATUS_REPORT_LEN in config.h ***
@@ -764,6 +777,7 @@ const cfgItem_t cfgArray[] = {
 	{ "","a",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","b",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","c",  _f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","ss", _f00, 0, fmt_nul, print_nul, get_grp, set_nul,(float *)&cs.null,0 },
 	{ "","g54",_f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g56",_f00, 0, fmt_nul, print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -788,14 +802,15 @@ const cfgItem_t cfgArray[] = {
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define CMD_COUNT_GROUPS 		27		// count of simple groups
+#define CMD_COUNT_GROUPS 		28		// count of simple groups
 #define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups
 
-/* <DO NOT MESS WITH THESE ITEMS> */
+/* <DO NOT MESS WITH THESE DEFINES> */
 #define CMD_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))
 #define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS - CMD_STATUS_REPORT_LEN)
 #define CMD_INDEX_START_GROUPS		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
 #define CMD_INDEX_START_UBER_GROUPS (CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS)
+/* </DO NOT MESS WITH THESE DEFINES> */
 
 index_t	cmd_index_max() { return ( CMD_INDEX_MAX );}
 uint8_t cmd_index_lt_max(index_t index) { return ((index < CMD_INDEX_MAX) ? true : false);}
@@ -803,7 +818,6 @@ uint8_t cmd_index_ge_max(index_t index) { return ((index >= CMD_INDEX_MAX) ? tru
 uint8_t cmd_index_is_single(index_t index) { return ((index <= CMD_INDEX_END_SINGLES) ? true : false);}
 uint8_t cmd_index_is_group(index_t index) { return (((index >= CMD_INDEX_START_GROUPS) && (index < CMD_INDEX_START_UBER_GROUPS)) ? true : false);}
 uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_GROUPS) ? true : false);}
-/* </DO NOT MESS WITH THESE ITEMS> */
 
 /***********************************************************************************
  **** APPLICATION SPECIFIC FUNCTIONS ***********************************************
