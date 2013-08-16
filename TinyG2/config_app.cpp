@@ -62,34 +62,37 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 //static stat_t get_id(cmdObj_t *cmd);		// get device ID
 //static stat_t run_boot(cmdObj_t *cmd);	// jump to conclusions
 
-static stat_t get_sr(cmdObj_t *cmd);		// run status report (as data)
+static stat_t get_gc(cmdObj_t *cmd);		// get current gcode block
+static stat_t run_gc(cmdObj_t *cmd);		// run a gcode block
+static stat_t run_home(cmdObj_t *cmd);		// invoke a homing cycle
+
 static stat_t set_sr(cmdObj_t *cmd);		// set status report specification
+static stat_t get_sr(cmdObj_t *cmd);		// run status report (as data)
 static void print_sr(cmdObj_t *cmd);		// run status report (as printout)
 static stat_t set_si(cmdObj_t *cmd);		// set status report interval
+//static stat_t run_sx(cmdObj_t *cmd);		// send XOFF, XON
+
+static stat_t set_jv(cmdObj_t *cmd);		// set JSON verbosity
 static stat_t get_qr(cmdObj_t *cmd);		// get a queue report (as data)
 static stat_t run_qf(cmdObj_t *cmd);		// execute a queue flush block
 static stat_t get_er(cmdObj_t *cmd);		// invoke a bogus exception report for testing purposes
 static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
-static stat_t set_jv(cmdObj_t *cmd);
+
+static stat_t set_md(cmdObj_t *cmd);		// disable all motors
+static stat_t set_me(cmdObj_t *cmd);		// enable motors with power-mode set to 0 (on)
+
+
+// communications settings
 
 /*
 static stat_t set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
 static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX output
 static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
-static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF
+static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF and RTS/CTS flow control
 static stat_t set_baud(cmdObj_t *cmd);		// set USB baud rate
 */
 
 // gcode model variables and functions
-
-static stat_t get_gc(cmdObj_t *cmd);		// get current gcode block
-static stat_t run_gc(cmdObj_t *cmd);		// run a gcode block
-static stat_t run_home(cmdObj_t *cmd);		// invoke a homing cycle
-
-static stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
-static stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
-static void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
-static void print_rot(cmdObj_t *cmd);		// print floating point rotary value
 
 static stat_t get_pos(cmdObj_t *cmd);		// get runtime work position...
 static stat_t get_mpos(cmdObj_t *cmd);		// get runtime machine position...
@@ -117,26 +120,27 @@ static stat_t get_vel(cmdObj_t *cmd);		// get runtime velocity...
 
 // motor and axis variables and functions
 
+static stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
+static stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
+static void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
+static void print_rot(cmdObj_t *cmd);		// print floating point rotary value
+
 static void pr_ma_ui8(cmdObj_t *cmd);		// print motor/axis uint8_t value
 static void pr_ma_lin(cmdObj_t *cmd);		// print motor/axis linear value in prevailing units
 static void pr_ma_rot(cmdObj_t *cmd);		// print motor/axis rotary value in degrees units
 
-static stat_t get_am(cmdObj_t *cmd);		// get axis mode
-static stat_t set_am(cmdObj_t *cmd);		// set axis mode
-static void print_am(cmdObj_t *cmd);		// print axis mode with enumeration string
-
-static stat_t get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
-static stat_t set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
-
-static stat_t set_sw(cmdObj_t *cmd);		// set switch (must run any time switch setting changes)
 static stat_t set_sa(cmdObj_t *cmd);		// set motor step angle
 static stat_t set_tr(cmdObj_t *cmd);		// set motor travel per revolution
 static stat_t set_mi(cmdObj_t *cmd);		// set motor microsteps
 static stat_t set_po(cmdObj_t *cmd);		// set motor polarity
 static stat_t set_pm(cmdObj_t *cmd);		// set motor power management mode
 
-static stat_t set_md(cmdObj_t *cmd);		// disable all motors
-static stat_t set_me(cmdObj_t *cmd);		// enable motors with power-mode set to 0 (on)
+static stat_t get_am(cmdObj_t *cmd);		// get axis mode
+static stat_t set_am(cmdObj_t *cmd);		// set axis mode
+static void print_am(cmdObj_t *cmd);		// print axis mode with enumeration string
+static stat_t get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
+static stat_t set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
+static stat_t set_sw(cmdObj_t *cmd);		// set switch (must run any time switch setting changes)
 
 // other
 
@@ -153,234 +157,236 @@ static stat_t do_all(cmdObj_t *cmd);		// print all parameters
  */
 
 /* printf() formatting strings */
-static const char_t msg_units0[] = " in";	// used by generic print functions
-static const char_t msg_units1[] = " mm";
-static const char_t msg_units2[] = " deg";
-static const char_t *msg_units[] = { msg_units0, msg_units1, msg_units2 };
+static const char_t PROGMEM msg_units0[] = " in";	// used by generic print functions
+static const char_t PROGMEM msg_units1[] = " mm";
+static const char_t PROGMEM msg_units2[] = " deg";
+static const char_t PROGMEM *msg_units[] = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
 
-static const char_t msg_g20[] = "G20 - inches mode";
-static const char_t msg_g21[] = "G21 - millimeter mode";
-static const char_t *msg_unit[] = { msg_g20, msg_g21 };
+static const char_t PROGMEM msg_g20[] = "G20 - inches mode";
+static const char_t PROGMEM msg_g21[] = "G21 - millimeter mode";
+static const char_t PROGMEM *msg_unit[] = { msg_g20, msg_g21 };
 
-static const char_t msg_stat0[] = "Initializing";	// combined state (stat) uses this array
-static const char_t msg_stat1[] = "Ready";
-static const char_t msg_stat2[] = "Shutdown";
-static const char_t msg_stat3[] = "Stop";
-static const char_t msg_stat4[] = "End";
-static const char_t msg_stat5[] = "Run";
-static const char_t msg_stat6[] = "Hold";
-static const char_t msg_stat7[] = "Probe";
-static const char_t msg_stat8[] = "Cycle";
-static const char_t msg_stat9[] = "Homing";
-static const char_t msg_stat10[] = "Jog";
-static const char_t *msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_stat3, msg_stat4, msg_stat5, 
-									msg_stat6, msg_stat7, msg_stat8, msg_stat9, msg_stat10};
+static const char_t PROGMEM msg_stat0[] = "Initializing";	// combined state (stat) uses this array
+static const char_t PROGMEM msg_stat1[] = "Ready";
+static const char_t PROGMEM msg_stat2[] = "Shutdown";
+static const char_t PROGMEM msg_stat3[] = "Stop";
+static const char_t PROGMEM msg_stat4[] = "End";
+static const char_t PROGMEM msg_stat5[] = "Run";
+static const char_t PROGMEM msg_stat6[] = "Hold";
+static const char_t PROGMEM msg_stat7[] = "Probe";
+static const char_t PROGMEM msg_stat8[] = "Cycle";
+static const char_t PROGMEM msg_stat9[] = "Homing";
+static const char_t PROGMEM msg_stat10[] = "Jog";
+static const char_t PROGMEM *msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_stat3, msg_stat4, msg_stat5, 
+											msg_stat6, msg_stat7, msg_stat8, msg_stat9, msg_stat10};
 
-static const char_t msg_macs0[] = "Initializing";
-static const char_t msg_macs1[] = "Reset";
-static const char_t msg_macs2[] = "Cycle";
-static const char_t msg_macs3[] = "Stop";
-static const char_t msg_macs4[] = "End";
-static const char_t *msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3 , msg_macs4};
+static const char_t PROGMEM msg_macs0[] = "Initializing";
+static const char_t PROGMEM msg_macs1[] = "Reset";
+static const char_t PROGMEM msg_macs2[] = "Cycle";
+static const char_t PROGMEM msg_macs3[] = "Stop";
+static const char_t PROGMEM msg_macs4[] = "End";
+static const char_t PROGMEM *msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3 , msg_macs4};
 
-static const char_t msg_cycs0[] = "Off";
-static const char_t msg_cycs1[] = "Started";
-static const char_t msg_cycs2[] = "Homing";
-static const char_t msg_cycs3[] = "Probe";
-static const char_t *msg_cycs[] = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3 };
+static const char_t PROGMEM msg_cycs0[] = "Off";
+static const char_t PROGMEM msg_cycs1[] = "Started";
+static const char_t PROGMEM msg_cycs2[] = "Homing";
+static const char_t PROGMEM msg_cycs3[] = "Probe";
+static const char_t PROGMEM *msg_cycs[] = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3 };
 
-static const char_t msg_mots0[] = "Stop";
-static const char_t msg_mots1[] = "Run";
-static const char_t msg_mots2[] = "Hold";
-static const char_t *msg_mots[] = { msg_mots0, msg_mots1, msg_mots2 };
+static const char_t PROGMEM msg_mots0[] = "Stop";
+static const char_t PROGMEM msg_mots1[] = "Run";
+static const char_t PROGMEM msg_mots2[] = "Hold";
+static const char_t PROGMEM *msg_mots[] = { msg_mots0, msg_mots1, msg_mots2 };
 
-static const char_t msg_hold0[] = "Off";
-static const char_t msg_hold1[] = "Sync";
-static const char_t msg_hold2[] = "Plan";
-static const char_t msg_hold3[] = "Decel";
-static const char_t msg_hold4[] = "Hold";
-static const char_t *msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, msg_hold4 };
+static const char_t PROGMEM msg_hold0[] = "Off";
+static const char_t PROGMEM msg_hold1[] = "Sync";
+static const char_t PROGMEM msg_hold2[] = "Plan";
+static const char_t PROGMEM msg_hold3[] = "Decel";
+static const char_t PROGMEM msg_hold4[] = "Hold";
+static const char_t PROGMEM *msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, msg_hold4 };
 
-static const char_t msg_home0[] = "Not Homed";
-static const char_t msg_home1[] = "Homed";
-static const char_t *msg_home[] = { msg_home0, msg_home1 };
+static const char_t PROGMEM msg_home0[] = "Not Homed";
+static const char_t PROGMEM msg_home1[] = "Homed";
+static const char_t PROGMEM *msg_home[] = { msg_home0, msg_home1 };
 /*
-static const char_t msg_baud0[] = "0";
-static const char_t msg_baud1[] = "9600";
-static const char_t msg_baud2[] = "19200";
-static const char_t msg_baud3[] = "38400";
-static const char_t msg_baud4[] = "57600";
-static const char_t msg_baud5[] = "115200";
-static const char_t msg_baud6[] = "230400";
-static const char_t *msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
+static const char_t PROGMEM msg_baud0[] = "0";
+static const char_t PROGMEM msg_baud1[] = "9600";
+static const char_t PROGMEM msg_baud2[] = "19200";
+static const char_t PROGMEM msg_baud3[] = "38400";
+static const char_t PROGMEM msg_baud4[] = "57600";
+static const char_t PROGMEM msg_baud5[] = "115200";
+static const char_t PROGMEM msg_baud6[] = "230400";
+static const char_t PROGMEM *msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
 */
-static const char_t msg_sw0[] = "Disabled";
-static const char_t msg_sw1[] = "NO homing";
-static const char_t msg_sw2[] = "NO homing & limit";
-static const char_t msg_sw3[] = "NC homing";
-static const char_t msg_sw4[] = "NC homing & limit";
-static const char_t *msg_sw[] = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
+static const char_t PROGMEM msg_sw0[] = "Disabled";
+static const char_t PROGMEM msg_sw1[] = "NO homing";
+static const char_t PROGMEM msg_sw2[] = "NO homing & limit";
+static const char_t PROGMEM msg_sw3[] = "NC homing";
+static const char_t PROGMEM msg_sw4[] = "NC homing & limit";
+static const char_t PROGMEM *msg_sw[] = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
 
-static const char_t msg_g53[] = "G53 - machine coordinate system";
-static const char_t msg_g54[] = "G54 - coordinate system 1";
-static const char_t msg_g55[] = "G55 - coordinate system 2";
-static const char_t msg_g56[] = "G56 - coordinate system 3";
-static const char_t msg_g57[] = "G57 - coordinate system 4";
-static const char_t msg_g58[] = "G58 - coordinate system 5";
-static const char_t msg_g59[] = "G59 - coordinate system 6";
-static const char_t *msg_coor[] = { msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59 };
+static const char_t PROGMEM msg_g53[] = "G53 - machine coordinate system";
+static const char_t PROGMEM msg_g54[] = "G54 - coordinate system 1";
+static const char_t PROGMEM msg_g55[] = "G55 - coordinate system 2";
+static const char_t PROGMEM msg_g56[] = "G56 - coordinate system 3";
+static const char_t PROGMEM msg_g57[] = "G57 - coordinate system 4";
+static const char_t PROGMEM msg_g58[] = "G58 - coordinate system 5";
+static const char_t PROGMEM msg_g59[] = "G59 - coordinate system 6";
+static const char_t PROGMEM *msg_coor[] = { msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59 };
 
-static const char_t msg_g00[] = "G0  - linear traverse (seek)";
-static const char_t msg_g01[] = "G1  - linear feed";
-static const char_t msg_g02[] = "G2  - clockwise arc feed";
-static const char_t msg_g03[] = "G3  - counter clockwise arc feed";
-static const char_t msg_g80[] = "G80 - cancel motion mode (none active)";
-static const char_t *msg_momo[] = { msg_g00, msg_g01, msg_g02, msg_g03, msg_g80 };
+static const char_t PROGMEM msg_g00[] = "G0  - linear traverse (seek)";
+static const char_t PROGMEM msg_g01[] = "G1  - linear feed";
+static const char_t PROGMEM msg_g02[] = "G2  - clockwise arc feed";
+static const char_t PROGMEM msg_g03[] = "G3  - counter clockwise arc feed";
+static const char_t PROGMEM msg_g80[] = "G80 - cancel motion mode (none active)";
+static const char_t PROGMEM *msg_momo[] = { msg_g00, msg_g01, msg_g02, msg_g03, msg_g80 };
 
-static const char_t msg_g17[] = "G17 - XY plane";
-static const char_t msg_g18[] = "G18 - XZ plane";
-static const char_t msg_g19[] = "G19 - YZ plane";
-static const char_t *msg_plan[] = { msg_g17, msg_g18, msg_g19 };
+static const char_t PROGMEM msg_g17[] = "G17 - XY plane";
+static const char_t PROGMEM msg_g18[] = "G18 - XZ plane";
+static const char_t PROGMEM msg_g19[] = "G19 - YZ plane";
+static const char_t PROGMEM *msg_plan[] = { msg_g17, msg_g18, msg_g19 };
 
-static const char_t msg_g61[] = "G61 - exact stop mode";
-static const char_t msg_g6a[] = "G61.1 - exact path mode";
-static const char_t msg_g64[] = "G64 - continuous mode";
-static const char_t *msg_path[] = { msg_g61, msg_g61, msg_g64 };
+static const char_t PROGMEM msg_g61[] = "G61 - exact stop mode";
+static const char_t PROGMEM msg_g6a[] = "G61.1 - exact path mode";
+static const char_t PROGMEM msg_g64[] = "G64 - continuous mode";
+static const char_t PROGMEM *msg_path[] = { msg_g61, msg_g61, msg_g64 };
 
-static const char_t msg_g90[] = "G90 - absolute distance mode";
-static const char_t msg_g91[] = "G91 - incremental distance mode";
-static const char_t *msg_dist[] = { msg_g90, msg_g91 };
+static const char_t PROGMEM msg_g90[] = "G90 - absolute distance mode";
+static const char_t PROGMEM msg_g91[] = "G91 - incremental distance mode";
+static const char_t PROGMEM *msg_dist[] = { msg_g90, msg_g91 };
 
-static const char_t msg_g94[] = "G94 - units-per-minute mode (i.e. feedrate mode)";
-static const char_t msg_g93[] = "G93 - inverse time mode";
-static const char_t *msg_frmo[] = { msg_g94, msg_g93 };
+static const char_t PROGMEM msg_g94[] = "G94 - units-per-minute mode (i.e. feedrate mode)";
+static const char_t PROGMEM msg_g93[] = "G93 - inverse time mode";
+static const char_t PROGMEM *msg_frmo[] = { msg_g94, msg_g93 };
 
-static const char_t msg_am00[] = "[disabled]";
-static const char_t msg_am01[] = "[standard]";
-static const char_t msg_am02[] = "[inhibited]";
-static const char_t msg_am03[] = "[radius]";
-static const char_t *msg_am[] = {
-	msg_am00, msg_am01, msg_am02, msg_am03
-};
+static const char_t PROGMEM msg_am00[] = "[disabled]";
+static const char_t PROGMEM msg_am01[] = "[standard]";
+static const char_t PROGMEM msg_am02[] = "[inhibited]";
+static const char_t PROGMEM msg_am03[] = "[radius]";
+static const char_t PROGMEM *msg_am[] = { msg_am00, msg_am01, msg_am02, msg_am03 };
 
 /* strings for print formatting
  * NOTE: DO NOT USE TABS IN FORMAT STRINGS
  */
 // generic format strings
-static const char_t fmt_nul[] = "";
-static const char_t fmt_ui8[] = "%d\n";	// generic format for ui8s
-static const char_t fmt_flt[] = "%f\n";	// generic format for floating point
-static const char_t fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
+static const char_t PROGMEM fmt_nul[] = "";
+static const char_t PROGMEM fmt_ui8[] = "%d\n";	// generic format for ui8s
+static const char_t PROGMEM fmt_flt[] = "%f\n";	// generic format for floating point
+static const char_t PROGMEM fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
 
 // System group and ungrouped formatting strings
-static const char_t fmt_fv[] = "$fv   firmware version%16.2f\n";
-static const char_t fmt_fb[] = "$fb   firmware build%18.2f\n";
-static const char_t fmt_hp[] = "$hp   hardware platform%15.2f\n";
-static const char_t fmt_hv[] = "$hv   hardware version%16.2f\n";
-static const char_t fmt_id[] = "$id   TinyG ID%30s\n";
+static const char_t PROGMEM fmt_fb[] = "[fb]  firmware build%18.2f\n";
+static const char_t PROGMEM fmt_fv[] = "[fv]  firmware version%16.2f\n";
+static const char_t PROGMEM fmt_hp[] = "[hp]  hardware platform%15.2f\n";
+static const char_t PROGMEM fmt_hv[] = "[hv]  hardware version%16.2f\n";
+static const char_t PROGMEM fmt_id[] = "[id]  TinyG ID%30s\n";
 
-static const char_t fmt_ja[] = "$ja   junction acceleration%8.0f%s\n";
-static const char_t fmt_dd[] = "$dd   stepper disable delay%8d mSec\n";
-static const char_t fmt_ct[] = "$ct   chordal tolerance%16.3f%s\n";
+static const char_t PROGMEM fmt_ja[] = "[ja]  junction acceleration%8.0f%S\n";
+static const char_t PROGMEM fmt_ct[] = "[ct]  chordal tolerance%16.3f%s\n";
 
-static const char_t fmt_ms[] = "$ms   min segment time%13.0f uSec\n";
-static const char_t fmt_ml[] = "$ml   min line segment%17.3f%s\n";
-static const char_t fmt_ma[] = "$ma   min arc segment%18.3f%s\n";
+static const char_t PROGMEM fmt_ms[] = "[ms]  min segment time%13.0f uSec\n";
+static const char_t PROGMEM fmt_ml[] = "[ml]  min line segment%17.3f%s\n";
+static const char_t PROGMEM fmt_ma[] = "[ma]  min arc segment%18.3f%s\n";
 
-static const char_t fmt_st[] = "$st   switch type%18d [0=NO,1=NC]\n";
-static const char_t fmt_si[] = "$si   status interval%14.0f ms\n";
-static const char_t fmt_ic[] = "$ic   ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
-static const char_t fmt_ec[] = "$ec   expand LF to CRLF on TX%6d [0=off,1=on]\n";
-static const char_t fmt_ee[] = "$ee   enable echo%18d [0=off,1=on]\n";
-static const char_t fmt_ex[] = "$ex   enable xon xoff%14d [0=off,1=on]\n";
-static const char_t fmt_ej[] = "$ej   enable json mode%13d [0=text,1=JSON]\n";
-static const char_t fmt_jv[] = "$jv   json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
-static const char_t fmt_tv[] = "$tv   text verbosity%15d [0=silent,1=verbose]\n";
-static const char_t fmt_sv[] = "$sv   status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
-static const char_t fmt_qv[] = "$qv   queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
-static const char_t fmt_baud[] = "$baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
+static const char_t PROGMEM fmt_st[] = "[st]  switch type%18d [0=NO,1=NC]\n";
+static const char_t PROGMEM fmt_si[] = "[si]  status interval%14.0f ms\n";
 
-static const char_t fmt_qr[] = "qr:%d\n";
-static const char_t fmt_rx[] = "rx:%d\n";
+static const char_t PROGMEM fmt_ic[] = "[ic]  ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
+static const char_t PROGMEM fmt_ec[] = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
+static const char_t PROGMEM fmt_ee[] = "[ee]  enable echo%18d [0=off,1=on]\n";
+static const char_t PROGMEM fmt_ex[] = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
 
-static const char_t fmt_md[] PROGMEM = "motors disabled\n";
-static const char_t fmt_me[] PROGMEM = "motors enabled\n";
-static const char_t fmt_mt[] PROGMEM = "[mt]  motor disable timeout%8d Sec\n";
+static const char_t PROGMEM fmt_fs[] = "[fs]  footer style%17d [0=old,1]\n";
+static const char_t PROGMEM fmt_ej[] = "[ej]  enable json mode%13d [0=text,1=JSON]\n";
+static const char_t PROGMEM fmt_jv[] = "[jv]  json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
+static const char_t PROGMEM fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
+static const char_t PROGMEM fmt_sv[] = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+static const char_t PROGMEM fmt_qv[] = "[qv]  queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
+static const char_t PROGMEM fmt_baud[] = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
+
+static const char_t PROGMEM fmt_qr[] = "qr:%d\n";
+static const char_t PROGMEM fmt_rx[] = "rx:%d\n";
+
+static const char_t PROGMEM fmt_md[] = "motors disabled\n";
+static const char_t PROGMEM fmt_me[] = "motors enabled\n";
+static const char_t PROGMEM fmt_mt[] = "[mt]  motor disable timeout%8d Sec\n";
+static const char_t PROGMEM fmt_dd[] = "[dd]  stepper disable delay%8d mSec\n";
 
 // Gcode model values for reporting purposes
-static const char_t fmt_vel[]   = "Velocity:%17.3f%s/min\n";
-static const char_t fmt_line[] = "Line number:%10.0f\n";
-static const char_t fmt_feed[] = "Feed rate:%16.3f%s/min\n";
-static const char_t fmt_stat[] = "Machine state:       %s\n"; // combined machine state
-static const char_t fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
-static const char_t fmt_cycs[] = "Cycle state:         %s\n";
-static const char_t fmt_mots[] = "Motion state:        %s\n";
-static const char_t fmt_hold[] = "Feedhold state:      %s\n";
-static const char_t fmt_home[] = "Machine homing stat: %s\n";
-static const char_t fmt_unit[] = "Units:               %s\n"; // units mode as ASCII string
-static const char_t fmt_coor[] = "Coordinate system:   %s\n";
-static const char_t fmt_momo[] = "Motion mode:         %s\n";
-static const char_t fmt_plan[] = "Plane:               %s\n";
-static const char_t fmt_path[] = "Path Mode:           %s\n";
-static const char_t fmt_dist[] = "Distance mode:       %s\n";
-static const char_t fmt_frmo[] = "Feed rate mode:      %s\n";
+static const char_t PROGMEM fmt_vel[]   = "Velocity:%17.3f%s/min\n";
+static const char_t PROGMEM fmt_line[] = "Line number:%10.0f\n";
+static const char_t PROGMEM fmt_feed[] = "Feed rate:%16.3f%s/min\n";
+static const char_t PROGMEM fmt_stat[] = "Machine state:       %s\n"; // combined machine state
+static const char_t PROGMEM fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
+static const char_t PROGMEM fmt_cycs[] = "Cycle state:         %s\n";
+static const char_t PROGMEM fmt_mots[] = "Motion state:        %s\n";
+static const char_t PROGMEM fmt_hold[] = "Feedhold state:      %s\n";
+static const char_t PROGMEM fmt_home[] = "Homing State:        %s\n";
+static const char_t PROGMEM fmt_unit[] = "Units:               %s\n"; // units mode as ASCII string
+static const char_t PROGMEM fmt_coor[] = "Coordinate system:   %s\n";
+static const char_t PROGMEM fmt_momo[] = "Motion mode:         %s\n";
+static const char_t PROGMEM fmt_plan[] = "Plane:               %s\n";
+static const char_t PROGMEM fmt_path[] = "Path Mode:           %s\n";
+static const char_t PROGMEM fmt_dist[] = "Distance mode:       %s\n";
+static const char_t PROGMEM fmt_frmo[] = "Feed rate mode:      %s\n";
+//static const char_t PROGMEM fmt_ss[]   = "Switch %s state:     %d\n";
 
-static const char_t fmt_pos[]  = "%c position:%15.3f%s\n";
-static const char_t fmt_mpos[] = "%c machine posn:%11.3f%s\n";
-static const char_t fmt_ofs[]  = "%c work offset:%12.3f%s\n";
-static const char_t fmt_hom[]  = "%c axis homing state:%2.0f\n";
+static const char_t PROGMEM fmt_pos[]  = "%c position:%15.3f%s\n";
+static const char_t PROGMEM fmt_mpos[] = "%c machine posn:%11.3f%s\n";
+static const char_t PROGMEM fmt_ofs[]  = "%c work offset:%12.3f%s\n";
+static const char_t PROGMEM fmt_hom[]  = "%c axis homing state:%2.0f\n";
 
 // Motor print formatting strings
-static const char_t fmt_0ma[] = "$%s%s  m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
-static const char_t fmt_0sa[] = "$%s%s  m%s step angle%20.3f%s\n";
-static const char_t fmt_0tr[] = "$%s%s  m%s travel per revolution%9.3f%s\n";
-static const char_t fmt_0mi[] = "$%s%s  m%s microsteps%16d [1,2,4,8]\n";
-static const char_t fmt_0po[] = "$%s%s  m%s polarity%18d [0=normal,1=reverse]\n";
-static const char_t fmt_0pm[] = "$%s%s  m%s power management%10d [0=off,1=on]\n";
+static const char_t PROGMEM fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
+static const char_t PROGMEM fmt_0sa[] = "[%s%s] m%s step angle%20.3f%s\n";
+static const char_t PROGMEM fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%s\n";
+static const char_t PROGMEM fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
+static const char_t PROGMEM fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
+static const char_t PROGMEM fmt_0pm[] = "[%s%s] m%s power management%10d [0=remain powered,1=power down off when idle]\n";
 
 // Axis print formatting strings
-static const char_t fmt_Xam[] = "$%s%s  %s axis mode%18d %s\n";
-static const char_t fmt_Xfr[] = "$%s%s  %s feedrate maximum%15.3f%s/min\n";
-static const char_t fmt_Xvm[] = "$%s%s  %s velocity maximum%15.3f%s/min\n";
-static const char_t fmt_Xtm[] = "$%s%s  %s travel maximum%17.3f%s\n";
-static const char_t fmt_Xjm[] = "$%s%s  %s jerk maximum (xM)%10.0f%s/min^3\n";
-static const char_t fmt_Xjh[] = "$%s%s  %s jerk homing (xM)%11.0f%s/min^3\n";
-static const char_t fmt_Xjd[] = "$%s%s  %s junction deviation%14.4f%s (larger is faster)\n";
-static const char_t fmt_Xra[] = "$%s%s  %s radius value%20.4f%s\n";
-static const char_t fmt_Xsn[] = "$%s%s  %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-static const char_t fmt_Xsx[] = "$%s%s  %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-static const char_t fmt_Xsv[] = "$%s%s  %s search velocity%16.3f%s/min\n";
-static const char_t fmt_Xlv[] = "$%s%s  %s latch velocity%17.3f%s/min\n";
-static const char_t fmt_Xlb[] = "$%s%s  %s latch backoff%18.3f%s\n";
-static const char_t fmt_Xzb[] = "$%s%s  %s zero backoff%19.3f%s\n";
+static const char_t PROGMEM fmt_Xam[] = "[%s%s] %s axis mode%18d %s\n";
+static const char_t PROGMEM fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%s/min\n";
+static const char_t PROGMEM fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%s/min\n";
+static const char_t PROGMEM fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%s\n";
+static const char_t PROGMEM fmt_Xjm[] = "[%s%s] %s jerk maximum (xM)%10.0f%s/min^3\n";
+static const char_t PROGMEM fmt_Xjh[] = "[%s%s] %s jerk homing (xM)%11.0f%s/min^3\n";
+static const char_t PROGMEM fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+static const char_t PROGMEM fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
+static const char_t PROGMEM fmt_Xsn[] = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+static const char_t PROGMEM fmt_Xsx[] = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+static const char_t PROGMEM fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%s/min\n";
+static const char_t PROGMEM fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%s/min\n";
+static const char_t PROGMEM fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%s\n";
+static const char_t PROGMEM fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%s\n";
 
 // PWM strings
-static const char_t fmt_p1frq[] = "$p1frq  pwm frequency   %15.3f Hz\n";
-static const char_t fmt_p1csl[] = "$p1csl  pwm cw speed lo %15.3f RPM\n";
-static const char_t fmt_p1csh[] = "$p1csh  pwm cw speed hi %15.3f RPM\n";
-static const char_t fmt_p1cpl[] = "$p1cpl  pwm cw phase lo %15.3f [0..1]\n";
-static const char_t fmt_p1cph[] = "$p1cph  pwm cw phase hi %15.3f [0..1]\n";
-static const char_t fmt_p1wsl[] = "$p1wsl  pwm ccw speed lo%15.3f RPM\n";
-static const char_t fmt_p1wsh[] = "$p1wsh  pwm ccw speed hi%15.3f RPM\n";
-static const char_t fmt_p1wpl[] = "$p1wpl  pwm ccw phase lo%15.3f [0..1]\n";
-static const char_t fmt_p1wph[] = "$p1wph  pwm ccw phase hi%15.3f [0..1]\n";
-static const char_t fmt_p1pof[] = "$p1pof  pwm phase off   %15.3f [0..1]\n";
+static const char_t PROGMEM fmt_p1frq[] = "[p1frq] pwm frequency   %15.3f Hz\n";
+static const char_t PROGMEM fmt_p1csl[] = "[p1csl] pwm cw speed lo %15.3f RPM\n";
+static const char_t PROGMEM fmt_p1csh[] = "[p1csh] pwm cw speed hi %15.3f RPM\n";
+static const char_t PROGMEM fmt_p1cpl[] = "[p1cpl] pwm cw phase lo %15.3f [0..1]\n";
+static const char_t PROGMEM fmt_p1cph[] = "[p1cph] pwm cw phase hi %15.3f [0..1]\n";
+static const char_t PROGMEM fmt_p1wsl[] = "[p1wsl] pwm ccw speed lo%15.3f RPM\n";
+static const char_t PROGMEM fmt_p1wsh[] = "[p1wsh] pwm ccw speed hi%15.3f RPM\n";
+static const char_t PROGMEM fmt_p1wpl[] = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";
+static const char_t PROGMEM fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
+static const char_t PROGMEM fmt_p1pof[] = "[p1pof] pwm phase off   %15.3f [0..1]\n";
 
 // Coordinate system offset print formatting strings
-static const char_t fmt_cofs[] = "$%s%s  %s %s offset%20.3f%s\n";
-static const char_t fmt_cloc[] = "$%s%s  %s %s location%18.3f%s\n";
+static const char_t PROGMEM fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
+static const char_t PROGMEM fmt_cloc[] = "[%s%s] %s %s location%18.3f%s\n";
 
 // Gcode model power-on reset default values
-static const char_t fmt_gpl[] = "$gpl  default gcode plane%10d [0=G17,1=G18,2=G19]\n";
-static const char_t fmt_gun[] = "$gun  default gcode units mode%5d [0=G20,1=G21]\n";
-static const char_t fmt_gco[] = "$gco  default gcode coord system%3d [1-6 (G54-G59)]\n";
-static const char_t fmt_gpa[] = "$gpa  default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
-static const char_t fmt_gdi[] = "$gdi  default gcode distance mode%2d [0=G90,1=G91]\n";
+static const char_t PROGMEM fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
+static const char_t PROGMEM fmt_gun[] = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
+static const char_t PROGMEM fmt_gco[] = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
+static const char_t PROGMEM fmt_gpa[] = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
+static const char_t PROGMEM fmt_gdi[] = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
 
 /***********************************************************************************
  **** CONFIG TABLE  ****************************************************************
- **********************************************************************************
+ ***********************************************************************************
  *	NOTES:
  *
  *	- Token matching occurs from the most specific to the least specific. This means 
@@ -1093,7 +1099,7 @@ void print_lin(cmdObj_t *cmd)
 void print_rot(cmdObj_t *cmd)
 {
 	cmd_get(cmd);
-	//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[F_DEG]));
+	//	fprintf(stderr, get_format(cmd->index), cmd->value, (PGM_P)pgm_read_word(&msg_units[DEGREE_INDEX]));
 	fprintf(stderr, get_format(cmd->index), cmd->value, msg_units[DEGREE_INDEX]);
 }
 

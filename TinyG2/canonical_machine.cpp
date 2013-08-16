@@ -714,7 +714,7 @@ stat_t cm_set_absolute_origin(float origin[], float flag[])
 static void _exec_absolute_origin(float *value, float *flag)
 {
 	for (uint8_t i=0; i<AXES; i++) {
-		if (flag[i] == true) {
+		if (fp_TRUE(flag[i])) {		
 			mp_set_runtime_position(i, value[i]);
 			cm.homed[i] = true;					// it's not considered homed until you get to the runtime
 		}
@@ -1259,7 +1259,7 @@ static void _exec_program_finalize(float *value, float *flag)
 	}
 
 	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// request a final status report (not unfiltered)
-//++++++	cmd_persist_offsets(cm.g10_persist_flag);		// persist offsets if any changes made
+//	cmd_persist_offsets(cm.g10_persist_flag);		//+++++ persist offsets if any changes made
 }
 
 void cm_cycle_start()
@@ -1267,14 +1267,13 @@ void cm_cycle_start()
 	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.cycle_state = CYCLE_MACHINING;			// don't change homing, probe or other cycles
-//+++++++		rpt_clear_queue_report();					// clear queue reporting buffer counts
-//+++++++		st_enable_motors();							// enable motors if not already enabled
+//		rpt_clear_queue_report();					//+++++ clear queue reporting buffer counts
+//		st_enable_motors();							//+++++ (THIS IS BROKEN) enable motors if not already enabled
 	}
 }
 
 void cm_cycle_end() 
 {
-//	if (cm.cycle_state == CYCLE_MACHINING) {
 	if (cm.cycle_state != CYCLE_OFF) {
 		float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 		_exec_program_finalize(value,value);
