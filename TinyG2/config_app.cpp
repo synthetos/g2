@@ -81,16 +81,13 @@ static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
 static stat_t set_md(cmdObj_t *cmd);		// disable all motors
 static stat_t set_me(cmdObj_t *cmd);		// enable motors with power-mode set to 0 (on)
 
-
 // communications settings
 
-/*
-static stat_t set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
-static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX output
-static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
-static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF and RTS/CTS flow control
-static stat_t set_baud(cmdObj_t *cmd);		// set USB baud rate
-*/
+//static stat_t set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
+//static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX output
+//static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
+//static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF and RTS/CTS flow control
+//static stat_t set_baud(cmdObj_t *cmd);		// set USB baud rate
 
 // gcode model variables and functions
 
@@ -823,266 +820,12 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
  **** APPLICATION SPECIFIC FUNCTIONS ***********************************************
  ***********************************************************************************/
 
-// ****** System and application control variables and functions ******
-
-/*
- * set_hv() - set hardware version number
- */
-
-static stat_t set_hv(cmdObj_t *cmd) 
-{
-	if (cmd->value > TINYG2_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	set_flt(cmd);					// record the hardware version
-	return (STAT_OK);
-}
-
-/*
- * get_id() - get device ID (signature)
- */
-/*
-static stat_t get_id(cmdObj_t *cmd) 
-{
-	char_t tmp[SYS_ID_LEN];
-//++++	sys_get_id(tmp);
-	cmd->objtype = TYPE_STRING;
-	ritorno(cmd_copy_string(cmd, tmp));
-	return (STAT_OK);
-}
-*/
-/*
- * run_boot() - enter boot loader from application
- */
-/*
-static stat_t run_boot(cmdObj_t *cmd)
-{
-//++++	sig_request_bootloader();
-	return(STAT_OK);
-}
-*/
-
-/**** REPORT FUNCTIONS ********************************************************
- * set_md() - disable all motors
- * set_me() - enable motors with $Npm=0
- * set_qv() - get a queue report verbosity
- * get_qr() - get a queue report (as data)
- * run_qf() - execute a planner buffer flush
- * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
- * get_rx()	- get bytes available in RX buffer
- * get_sr()	- run status report
- * set_sr()	- set status report elements
- * print_sr() - print multiline text status report
- * set_si()	  - set status report interval
- * run_boot() - request boot loader entry
- * cmd_set_jv() - set JSON verbosity level (exposed) - for details see jsonVerbosity in config.h
- */
-
-static stat_t set_md(cmdObj_t *cmd)
-{
-//+++++	st_disable_motors();
-	return (STAT_OK);
-}
-
-static stat_t set_me(cmdObj_t *cmd)
-{
-//+++++	st_enable_motors();
-	return (STAT_OK);
-}
-
-static stat_t get_qr(cmdObj_t *cmd)
-{
-	cmd->value = (float)mp_get_planner_buffers_available();
-	cmd->objtype = TYPE_INTEGER;
-	return (STAT_OK);
-}
-
-static stat_t run_qf(cmdObj_t *cmd)
-{
-	cm_queue_flush();
-	return (STAT_OK);
-}
-
-static stat_t get_er(cmdObj_t *cmd)
-{
-	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
-	return (STAT_OK);
-}
-
-static stat_t get_rx(cmdObj_t *cmd)
-{
-	//++++	cmd->value = (float)xio_get_usb_rx_free();
-	cmd->objtype = TYPE_INTEGER;
-	return (STAT_OK);
-}
-
-static stat_t get_sr(cmdObj_t *cmd)
-{
-	rpt_populate_unfiltered_status_report();
-	return (STAT_OK);
-}
-
-static stat_t set_sr(cmdObj_t *cmd)
-{
-	return (rpt_set_status_report(cmd));
-	return (STAT_OK);
-}
-
-static void print_sr(cmdObj_t *cmd)
-{
-	rpt_populate_unfiltered_status_report();
-}
-
-static stat_t set_si(cmdObj_t *cmd)
-{
-	if (cmd->value < STATUS_REPORT_MIN_MS) { cmd->value = STATUS_REPORT_MIN_MS;}
-	cfg.status_report_interval = (uint32_t)cmd->value;
-	return(STAT_OK);
-}
-
-static stat_t set_jv(cmdObj_t *cmd) 
-{
-	if (cmd->value > JV_VERBOSE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.json_verbosity = cmd->value;
-
-	cfg.echo_json_footer = false;
-	cfg.echo_json_messages = false;
-	cfg.echo_json_configs = false;
-	cfg.echo_json_linenum = false;
-	cfg.echo_json_gcode_block = false;
-
-	if (cmd->value >= JV_FOOTER) 	{ cfg.echo_json_footer = true;}
-	if (cmd->value >= JV_MESSAGES)	{ cfg.echo_json_messages = true;}
-	if (cmd->value >= JV_CONFIGS)	{ cfg.echo_json_configs = true;}
-	if (cmd->value >= JV_LINENUM)	{ cfg.echo_json_linenum = true;}
-	if (cmd->value >= JV_VERBOSE)	{ cfg.echo_json_gcode_block = true;}
-
-	return(STAT_OK);
-}
-
-/* COMMUNICATIONS SETTINGS
- * set_ic() - ignore CR or LF on RX
- * set_ec() - enable CRLF on TX
- * set_ee() - enable character echo
- * set_ex() - enable XON/XOFF
- * set_baud() - set USB baud rate
- *	The above assume USB is the std device
- */
-/*
-static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
-{
-
-	if (fp_NOT_ZERO(cmd->value)) { 
-		(void)xio_ctrl(XIO_DEV_USB, yes);
-	} else { 
-		(void)xio_ctrl(XIO_DEV_USB, no);
-	}
-	return (STAT_OK);
-}
-
-static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
-{
-	if (cmd->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.ignore_crlf = (uint8_t)cmd->value;
-	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORECR);	// clear them both
-	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORELF);
-
-	if (cfg.ignore_crlf == IGNORE_CR) {				// $ic=1
-		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORECR);
-	} else if (cfg.ignore_crlf == IGNORE_LF) {		// $ic=2
-		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORELF);
-	}
-	return (STAT_OK);
-}
-
-static stat_t set_ec(cmdObj_t *cmd) 				// expand CR to CRLF on TX
-{
-	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_cr = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_CRLF, XIO_NOCRLF));
-	return (STAT_OK);
-}
-
-static stat_t set_ee(cmdObj_t *cmd) 				// enable character echo
-{
-	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_echo = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_ECHO, XIO_NOECHO));
-	return (STAT_OK);
-}
-
-static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF
-{
-	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_xon = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_XOFF, XIO_NOXOFF));
-	return (STAT_OK);
-}
-*/
-/*
- * set_baud() - set USB baud rate
- *
- *	See xio_usart.h for valid values. Works as a callback.
- *	The initial routine changes the baud config setting and sets a flag
- *	Then it posts a user message indicating the new baud rate
- *	Then it waits for the TX buffer to empty (so the message is sent)
- *	Then it performs the callback to apply the new baud rate
- */
-/*
-static stat_t set_baud(cmdObj_t *cmd)
-{
-	uint8_t baud = (uint8_t)cmd->value;
-	if ((baud < 1) || (baud > 6)) {
-		cmd_add_message("*** WARNING *** Illegal baud rate specified");
-		return (STAT_INPUT_VALUE_UNSUPPORTED);
-	}
-	cfg.usb_baud_rate = baud;
-	cfg.usb_baud_flag = true;
-	char message[CMD_MESSAGE_LEN]; 
-	sprintf(message, "*** NOTICE *** Resetting baud rate to %s", msg_baud[baud]);
-	cmd_add_message((char_t *)message);
-	return (STAT_OK);
-}
-
-uint8_t cfg_baud_rate_callback(void) 
-{
-	if (cfg.usb_baud_flag == false) { return(STAT_NOOP);}
-	cfg.usb_baud_flag = false;
-	xio_set_baud(XIO_DEV_USB, cfg.usb_baud_rate);
-	return (STAT_OK);
-}
-*/
-
-// ****** Gcode Model Variables and Functions ******
-
-/* GCODE COMMANDS
- * get_gc()	  - get gcode block
- * run_gc()	  - launch the gcode parser on a block of gcode
- * run_home() - invoke a homing cycle
- */
-static stat_t get_gc(cmdObj_t *cmd)
-{
-	ritorno(cmd_copy_string(cmd, cs.in_buf));
-	cmd->objtype = TYPE_STRING;
-	return (STAT_OK);
-}
-
-static stat_t run_gc(cmdObj_t *cmd)
-{
-	return(gc_gcode_parser(*cmd->stringp));
-}
-
-static stat_t run_home(cmdObj_t *cmd)
-{
-	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
-	return (STAT_OK);
-}
-
-/* UNIT CONVERSION FUNCTIONS
+/***** UNIT CONVERSION FUNCTIONS ***************************************************
  * get_flu() - get floating point number with Gcode units conversion
  * set_flu() - set floating point number with Gcode units conversion
  * print_lin - print linear axis value with Gcode units conversion
  * print_rot - print rotary axis value with Gcode units conversion
  */
-
 stat_t get_flu(cmdObj_t *cmd)
 {
 	get_flt(cmd);
@@ -1117,74 +860,171 @@ void print_rot(cmdObj_t *cmd)
 	fprintf(stderr, get_format(cmd->index), cmd->value, msg_units[DEGREE_INDEX]);
 }
 
-
-/* POSITION RELATED
- * _get_pos_axis() - returns the axis index given the token string (hack hack)
- * get_pos()	- get runtime work position
- * get_mpos()	- get runtime machine position
- * get_ofs()	- get runtime work offset
- *
- * _print_pos_helper()
- * print_pos()	- print work position (with proper units)
- * print_mpos()	- print machine position (always mm units)
+/******* System and application control variables and functions ******
+ * set_hv() - set hardweare version number
+ * get_id() - get device ID (signature)
  */
-int8_t _get_pos_axis(const index_t index)	// index into configArray
-{
-	int axis = (int)cfgArray[index].token[3];
-	char axes[] = {"xyzabc"};
-	char *ptr = (char *)strchr(axes, axis);
-	if (ptr == NULL) { return (-1);}
-	return (ptr - axes);
-}
 
-static stat_t get_pos(cmdObj_t *cmd) 
+static stat_t set_hv(cmdObj_t *cmd) 
 {
-	cmd->value = cm_get_runtime_work_position(_get_pos_axis(cmd->index));
-	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->objtype = TYPE_FLOAT;
+	if (cmd->value > TINYG2_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_flt(cmd);					// record the hardware version
 	return (STAT_OK);
 }
 
-static stat_t get_mpos(cmdObj_t *cmd) 
+/*
+static stat_t get_id(cmdObj_t *cmd) 
 {
-	cmd->value = cm_get_runtime_machine_position(_get_pos_axis(cmd->index));
-	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->objtype = TYPE_FLOAT;
+	char_t tmp[SYS_ID_LEN];
+	sys_get_id(tmp);
+	cmd->objtype = TYPE_STRING;
+	ritorno(cmd_copy_string(cmd, tmp));
+	return (STAT_OK);
+}
+*/
+
+/**** COMMAND AND REPORT FUNCTIONS ********************************************************
+ * set_qv() - set queue report verbosity
+ * get_qr() - run a queue report (as data)
+ * run_qf() - execute a planner buffer flush
+ * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
+ * get_rx()	- get bytes available in RX buffer
+ * set_si()	- set status report interval
+ * get_sr()	- run status report
+ * set_sr()	- set status report elements
+ * print_sr() - print multiline text status report
+ * set_md() - disable all motors
+ * set_me() - enable motors with $Npm=0
+ * run_sx()	- send XOFF, XON
+ * set_jv() - set JSON verbosity level (exposed) - for details see jsonVerbosity in config.h
+ * get_gc()	- get gcode block
+ * run_gc()	- launch the gcode parser on a block of gcode
+ * run_home() - invoke a homing cycle
+ * run_boot() - request boot loader entry
+ */
+
+static stat_t get_qr(cmdObj_t *cmd)
+{
+	cmd->value = (float)mp_get_planner_buffers_available();
+	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
-static stat_t get_ofs(cmdObj_t *cmd) 
+static stat_t run_qf(cmdObj_t *cmd)
 {
-	cmd->value = cm_get_runtime_work_offset(_get_pos_axis(cmd->index));
-	cmd->precision = cfgArray[cmd->index].precision;
-//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
-	cmd->objtype = TYPE_FLOAT;
+	cm_queue_flush();
 	return (STAT_OK);
 }
 
-static void _print_pos_helper(cmdObj_t *cmd, uint8_t units)
+static stat_t get_er(cmdObj_t *cmd)
 {
-	cmd_get(cmd);
-	char axes[] = {"XYZABC"};
-	uint8_t axis = _get_pos_axis(cmd->index);
-	if (axis >= AXIS_A) { units = DEGREES;}
-	fprintf(stderr, get_format(cmd->index), axes[axis], cmd->value, msg_units[units]);
+	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
+	return (STAT_OK);
 }
 
-static void print_pos(cmdObj_t *cmd)		// print position with unit displays for MM or Inches
+static stat_t get_rx(cmdObj_t *cmd)
 {
-	_print_pos_helper(cmd, cm_get_model_units_mode());
+//	cmd->value = (float)xio_get_usb_rx_free();	//+++++
+//	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
 }
 
-static void print_mpos(cmdObj_t *cmd)		// print position with fixed unit display - always in Degrees or MM
+static stat_t set_si(cmdObj_t *cmd)
 {
-	_print_pos_helper(cmd, MILLIMETERS);
+	if (cmd->value < STATUS_REPORT_MIN_MS) { cmd->value = STATUS_REPORT_MIN_MS;}
+	cfg.status_report_interval = (uint32_t)cmd->value;
+	return(STAT_OK);
 }
 
-/* GCODE MODEL VARIABLES FOR STATUS REPORTING
- * get_msg_helper() - helper to get display message
+static stat_t get_sr(cmdObj_t *cmd)
+{
+	rpt_populate_unfiltered_status_report();
+	return (STAT_OK);
+}
+
+static stat_t set_sr(cmdObj_t *cmd)
+{
+	return (rpt_set_status_report(cmd));
+	return (STAT_OK);
+}
+
+static void print_sr(cmdObj_t *cmd)
+{
+	rpt_populate_unfiltered_status_report();
+}
+
+static stat_t set_md(cmdObj_t *cmd)
+{
+	//	st_disable_motors();	//+++++ not working
+	return (STAT_OK);
+}
+
+static stat_t set_me(cmdObj_t *cmd)
+{
+	//	st_enable_motors();		//+++++ not working
+	return (STAT_OK);
+}
+
+static stat_t run_sx(cmdObj_t *cmd)
+{
+	//	xio_putc(XIO_DEV_USB, XOFF);		// NWIH will this work here
+	//	xio_putc(XIO_DEV_USB, XON);			// NWIH will this work here
+	return (STAT_OK);
+}
+
+static stat_t set_jv(cmdObj_t *cmd) 
+{
+	if (cmd->value > JV_VERBOSE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.json_verbosity = cmd->value;
+
+	cfg.echo_json_footer = false;
+	cfg.echo_json_messages = false;
+	cfg.echo_json_configs = false;
+	cfg.echo_json_linenum = false;
+	cfg.echo_json_gcode_block = false;
+
+	if (cmd->value >= JV_FOOTER) 	{ cfg.echo_json_footer = true;}
+	if (cmd->value >= JV_MESSAGES)	{ cfg.echo_json_messages = true;}
+	if (cmd->value >= JV_CONFIGS)	{ cfg.echo_json_configs = true;}
+	if (cmd->value >= JV_LINENUM)	{ cfg.echo_json_linenum = true;}
+	if (cmd->value >= JV_VERBOSE)	{ cfg.echo_json_gcode_block = true;}
+
+	return(STAT_OK);
+}
+
+static stat_t get_gc(cmdObj_t *cmd)
+{
+	ritorno(cmd_copy_string(cmd, cs.in_buf));
+	cmd->objtype = TYPE_STRING;
+	return (STAT_OK);
+}
+
+static stat_t run_gc(cmdObj_t *cmd)
+{
+	return(gc_gcode_parser(*cmd->stringp));
+}
+
+static stat_t run_home(cmdObj_t *cmd)
+{
+	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
+	return (STAT_OK);
+}
+/*+++++
+ * run_boot() - enter boot loader from application
+ */
+/*
+static stat_t run_boot(cmdObj_t *cmd)
+{
+	sig_request_bootloader();
+	return(STAT_OK);
+}
+*/
+
+
+/**** GCODE MODEL ITEMS ****************************************
+ * _get_msg_helper()- helper to get display message
+ * _get_pos_axis()	- returns the axis index given the token string (hack hack)
+ *
  * get_stat() - get combined machine state as value and string
  * get_macs() - get raw machine state as value and string
  * get_cycs() - get raw cycle state as value and string
@@ -1201,15 +1041,35 @@ static void print_mpos(cmdObj_t *cmd)		// print position with fixed unit display
  * get_feed() - get feed rate 
  * get_line() - get runtime line number for status reports
  * get_vel()  - get runtime velocity
- * print_coor() - print coordinate offsets with linear units
- * print_corr() - print coordinate offsets with rotary units
+ * get_ofs()  - get runtime work offset
+ * get_pos()  - get runtime work position
+ * get_mpos() - get runtime machine position
+ *
+ * print_pos()- print work position (with proper units)
+ * print_mpos()- print machine position (always mm units)
+ * print_coor()- print coordinate offsets with linear units
+ * print_corr()- print coordinate offsets with rotary units
  */
 static stat_t _get_msg_helper(cmdObj_t *cmd, const char_t *msg_array[], uint8_t value)
 {
 	cmd->value = (float)value;
 	cmd->objtype = TYPE_INTEGER;
 	return (cmd_copy_string(cmd, msg_array[value]));
-//	return (cmd_copy_string_P(cmd, (PGM_P)pgm_read_word(&msg[value*2]))); // hack alert: direct computation of index
+/* Xmega code:
+		cmd->value = (float)value;
+		cmd->objtype = TYPE_INTEGER;
+		ritorno(cmd_copy_string_P(cmd, (PGM_P)pgm_read_word(&msg[value*2]))); // hack alert: direct computation of index
+		return (STAT_OK);
+*/
+}
+
+int8_t _get_pos_axis(const index_t index)	// index into configArray
+{
+	int axis = (int)cfgArray[index].token[3];
+	char axes[] = {"xyzabc"};
+	char *ptr = (char *)strchr(axes, axis);
+	if (ptr == NULL) { return (-1);}
+	return (ptr - axes);
 }
 
 static stat_t get_stat(cmdObj_t *cmd)
@@ -1295,6 +1155,52 @@ static stat_t get_vel(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
+static stat_t get_ofs(cmdObj_t *cmd)
+{
+	cmd->value = cm_get_runtime_work_offset(_get_pos_axis(cmd->index));
+	cmd->precision = cfgArray[cmd->index].precision;
+	//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+static stat_t get_pos(cmdObj_t *cmd)
+{
+	cmd->value = cm_get_runtime_work_position(_get_pos_axis(cmd->index));
+	cmd->precision = cfgArray[cmd->index].precision;
+	//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+static stat_t get_mpos(cmdObj_t *cmd)
+{
+	cmd->value = cm_get_runtime_machine_position(_get_pos_axis(cmd->index));
+	cmd->precision = cfgArray[cmd->index].precision;
+	//	cmd->objtype = TYPE_FLOAT_UNITS;	//++++ UNTESTED
+	cmd->objtype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+static void _print_pos_helper(cmdObj_t *cmd, uint8_t units)
+{
+	cmd_get(cmd);
+	char axes[] = {"XYZABC"};
+	uint8_t axis = _get_pos_axis(cmd->index);
+	if (axis >= AXIS_A) { units = DEGREES;}
+	fprintf(stderr, get_format(cmd->index), axes[axis], cmd->value, msg_units[units]);
+}
+
+static void print_pos(cmdObj_t *cmd)		// print position with unit displays for MM or Inches
+{
+	_print_pos_helper(cmd, cm_get_model_units_mode());
+}
+
+static void print_mpos(cmdObj_t *cmd)		// print position with fixed unit display - always in Degrees or MM
+{
+	_print_pos_helper(cmd, MILLIMETERS);
+}
+
 static void print_coor(cmdObj_t *cmd)	// print coordinate offsets with linear units
 {
 	cmd_get(cmd);
@@ -1308,9 +1214,8 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
 	fprintf(stderr, get_format(cmd->index), cmd->group, cmd->token, cmd->group, cmd->token, cmd->value, msg_units[DEGREE_INDEX]);
 }
 
-// ****** Axes Motors, Etc. *******
-
-/*
+/**** AXIS AND MOTOR FUNCTIONS ************************************************
+ *
  * _get_motor() - return motor index from token value
  * _set_motor_steps_per_unit() - update this derived value
  *
@@ -1478,6 +1383,100 @@ static void print_am(cmdObj_t *cmd)		// print axis mode with enumeration string
 	cmd_get(cmd);
 	fprintf(stderr, get_format(cmd->index), cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, msg_am[(uint8_t)cmd->value]);
 }
+
+
+/**** COMMUNICATIONS SETTINGS *************************************************
+ * set_ic() - ignore CR or LF on RX
+ * set_ec() - enable CRLF on TX
+ * set_ee() - enable character echo
+ * set_ex() - enable XON/XOFF
+ * set_baud() - set USB baud rate
+ *	The above assume USB is the std device
+ */
+/*
+static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
+{
+
+	if (fp_NOT_ZERO(cmd->value)) { 
+		(void)xio_ctrl(XIO_DEV_USB, yes);
+	} else { 
+		(void)xio_ctrl(XIO_DEV_USB, no);
+	}
+	return (STAT_OK);
+}
+
+static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
+{
+	if (cmd->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.ignore_crlf = (uint8_t)cmd->value;
+	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORECR);	// clear them both
+	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORELF);
+
+	if (cfg.ignore_crlf == IGNORE_CR) {				// $ic=1
+		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORECR);
+	} else if (cfg.ignore_crlf == IGNORE_LF) {		// $ic=2
+		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORELF);
+	}
+	return (STAT_OK);
+}
+
+static stat_t set_ec(cmdObj_t *cmd) 				// expand CR to CRLF on TX
+{
+	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_cr = (uint8_t)cmd->value;
+	return(_set_comm_helper(cmd, XIO_CRLF, XIO_NOCRLF));
+	return (STAT_OK);
+}
+
+static stat_t set_ee(cmdObj_t *cmd) 				// enable character echo
+{
+	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_echo = (uint8_t)cmd->value;
+	return(_set_comm_helper(cmd, XIO_ECHO, XIO_NOECHO));
+	return (STAT_OK);
+}
+
+static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF
+{
+	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_xon = (uint8_t)cmd->value;
+	return(_set_comm_helper(cmd, XIO_XOFF, XIO_NOXOFF));
+	return (STAT_OK);
+}
+*/
+/*
+ * set_baud() - set USB baud rate
+ *
+ *	See xio_usart.h for valid values. Works as a callback.
+ *	The initial routine changes the baud config setting and sets a flag
+ *	Then it posts a user message indicating the new baud rate
+ *	Then it waits for the TX buffer to empty (so the message is sent)
+ *	Then it performs the callback to apply the new baud rate
+ */
+/*
+static stat_t set_baud(cmdObj_t *cmd)
+{
+	uint8_t baud = (uint8_t)cmd->value;
+	if ((baud < 1) || (baud > 6)) {
+		cmd_add_message("*** WARNING *** Illegal baud rate specified");
+		return (STAT_INPUT_VALUE_UNSUPPORTED);
+	}
+	cfg.usb_baud_rate = baud;
+	cfg.usb_baud_flag = true;
+	char message[CMD_MESSAGE_LEN]; 
+	sprintf(message, "*** NOTICE *** Resetting baud rate to %s", msg_baud[baud]);
+	cmd_add_message((char_t *)message);
+	return (STAT_OK);
+}
+
+uint8_t cfg_baud_rate_callback(void) 
+{
+	if (cfg.usb_baud_flag == false) { return(STAT_NOOP);}
+	cfg.usb_baud_flag = false;
+	xio_set_baud(XIO_DEV_USB, cfg.usb_baud_rate);
+	return (STAT_OK);
+}
+*/
 
 /**** UberGroup Operations ****************************************************
  * Uber groups are groups of groups organized for convenience:

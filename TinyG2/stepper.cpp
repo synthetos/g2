@@ -246,6 +246,7 @@ void stepper_init()
  */
 void st_enable_motors()
 {
+//+++++ not working
 	common_enable.clear();										// enable grblShield common enable
 	st.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
 	dda_timer.start();
@@ -253,6 +254,7 @@ void st_enable_motors()
 
 void st_disable_motors()
 {
+//+++++ not working
 	dda_timer.stop();
 	st.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
 }
