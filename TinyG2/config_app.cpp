@@ -141,10 +141,10 @@ static stat_t set_sw(cmdObj_t *cmd);		// set switch (must run any time switch se
 
 // other
 
-static stat_t do_motors(cmdObj_t *cmd);		// print parameters for all motor groups
-static stat_t do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
-static stat_t do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
-static stat_t do_all(cmdObj_t *cmd);		// print all parameters
+static stat_t _do_motors(cmdObj_t *cmd);	// print parameters for all motor groups
+static stat_t _do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
+static stat_t _do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
 
 /***********************************************************************************
  **** FLASH STRINGS AND STRING ARRAYS **********************************************
@@ -791,10 +791,10 @@ const cfgItem_t cfgArray[] = {
 
 	// Uber-group (groups of groups, for text-mode displays only)
 	// *** Must agree with CMD_COUNT_UBER_GROUPS below ****
-	{ "", "m", _f00, 0, fmt_nul, print_nul, do_motors, set_nul,(float *)&cs.null,0 },
-	{ "", "q", _f00, 0, fmt_nul, print_nul, do_axes,   set_nul,(float *)&cs.null,0 },
-	{ "", "o", _f00, 0, fmt_nul, print_nul, do_offsets,set_nul,(float *)&cs.null,0 },
-	{ "", "$", _f00, 0, fmt_nul, print_nul, do_all,    set_nul,(float *)&cs.null,0 }
+	{ "", "m", _f00, 0, fmt_nul, print_nul, _do_motors, set_nul,(float *)&cs.null,0 },
+	{ "", "q", _f00, 0, fmt_nul, print_nul, _do_axes,   set_nul,(float *)&cs.null,0 },
+	{ "", "o", _f00, 0, fmt_nul, print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
+	{ "", "$", _f00, 0, fmt_nul, print_nul, _do_all,    set_nul,(float *)&cs.null,0 }
 };
 
 /***** Make sure these defines line up with any changes in the above table *****/
@@ -924,7 +924,6 @@ static stat_t get_id(cmdObj_t *cmd)
 */
 
 /**** REPORT AND COMMAND FUNCTIONS ********************************************************
- * set_qv() - set queue report verbosity
  * get_qr() - run a queue report (as data)
  * run_qf() - request a planner buffer flush
  * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
@@ -1062,6 +1061,8 @@ static stat_t run_boot(cmdObj_t *cmd)
 
 
 /**** GCODE MODEL ITEMS ****************************************
+ * _get_msg_helper() - helper to get display message
+ *
  * get_stat() - get combined machine state as value and string
  * get_macs() - get raw machine state as value and string
  * get_cycs() - get raw cycle state as value and string
@@ -1243,7 +1244,7 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
 }
 
 /**** AXIS AND MOTOR FUNCTIONS ************************************************
- * set_motor_steps_per_unit() - update this derived value
+ * _set_motor_steps_per_unit() - update this derived value
  *
  * get_am()  - get axis mode w/enumeration string
  * set_am()  - set axis mode w/exception handling for axis type
@@ -1267,7 +1268,7 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
  */
 
 // NB: This function will need to be rethought if microstep morphing is implemented
-static stat_t set_motor_steps_per_unit(cmdObj_t *cmd) 
+static stat_t _set_motor_steps_per_unit(cmdObj_t *cmd) 
 {
 	uint8_t m = get_motor(cmd->index);
 	cfg.m[m].steps_per_unit = (360 / (cfg.m[m].step_angle / cfg.m[m].microsteps) / cfg.m[m].travel_rev);
@@ -1325,14 +1326,14 @@ static stat_t set_sw(cmdObj_t *cmd)		// switch setting
 static stat_t set_sa(cmdObj_t *cmd)		// motor step angle
 { 
 	set_flt(cmd);
-	set_motor_steps_per_unit(cmd); 
+	_set_motor_steps_per_unit(cmd); 
 	return (STAT_OK);
 }
 
 static stat_t set_tr(cmdObj_t *cmd)		// motor travel per revolution
 { 
 	set_flu(cmd);
-	set_motor_steps_per_unit(cmd); 
+	_set_motor_steps_per_unit(cmd); 
 	return (STAT_OK);
 }
 
@@ -1342,7 +1343,7 @@ static stat_t set_mi(cmdObj_t *cmd)		// motor microsteps
 		cmd_add_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
-	set_motor_steps_per_unit(cmd);
+	_set_motor_steps_per_unit(cmd);
 	st_set_microsteps(get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
@@ -1489,14 +1490,14 @@ uint8_t cfg_baud_rate_callback(void)
  *	- offsets	- group of all offsets and stored positions
  *	- all		- group of all groups
  *
- * do_group_list()	- get and print all groups in the list (iteration)
- * do_motors()		- get and print motor uber group 1-6
- * do_axes()		- get and print axis uber group XYZABC
- * do_offsets()		- get and print offset uber group G54-G59, G28, G30, G92
- * do_all()			- get and print all groups uber group
+ * _do_group_list()	- get and print all groups in the list (iteration)
+ * _do_motors()		- get and print motor uber group 1-6
+ * _do_axes()		- get and print axis uber group XYZABC
+ * _do_offsets()		- get and print offset uber group G54-G59, G28, G30, G92
+ * _do_all()			- get and print all groups uber group
  */
 
-static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // helper to print multiple groups in a list
+static stat_t _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // helper to print multiple groups in a list
 {
 	for (uint8_t i=0; i < CMD_MAX_OBJECTS; i++) {
 		if (list[i][0] == NUL) { return (STAT_COMPLETE);}
@@ -1511,38 +1512,38 @@ static stat_t do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]) // help
 	return (STAT_COMPLETE);
 }
 
-static stat_t do_motors(cmdObj_t *cmd)	// print parameters for all motor groups
+static stat_t _do_motors(cmdObj_t *cmd)	// print parameters for all motor groups
 {
 	char list[][CMD_TOKEN_LEN+1] = {"1","2","3","4","5","6",""}; // must have a terminating element
-	return (do_group_list(cmd, list));
+	return (_do_group_list(cmd, list));
 }
 
-static stat_t do_axes(cmdObj_t *cmd)	// print parameters for all axis groups
+static stat_t _do_axes(cmdObj_t *cmd)	// print parameters for all axis groups
 {
 	char list[][CMD_TOKEN_LEN+1] = {"x","y","z","a","b","c",""}; // must have a terminating element
-	return (do_group_list(cmd, list));
+	return (_do_group_list(cmd, list));
 }
 
-static stat_t do_offsets(cmdObj_t *cmd)	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_offsets(cmdObj_t *cmd)	// print offset parameters for G54-G59,G92, G28, G30
 {
 	char list[][CMD_TOKEN_LEN+1] = {"g54","g55","g56","g57","g58","g59","g92","g28","g30",""}; // must have a terminating element
-	return (do_group_list(cmd, list));
+	return (_do_group_list(cmd, list));
 }
 
-static stat_t do_all(cmdObj_t *cmd)	// print all parameters
+static stat_t _do_all(cmdObj_t *cmd)	// print all parameters
 {
 	strcpy(cmd->token,"sys");			// print system group
 	get_grp(cmd);
 	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
-	do_motors(cmd);					// print all motor groups
-	do_axes(cmd);						// print all axis groups
+	_do_motors(cmd);					// print all motor groups
+	_do_axes(cmd);						// print all axis groups
 
 	strcpy(cmd->token,"p1");			// print PWM group		
 	get_grp(cmd);
 	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
-	return (do_offsets(cmd));			// print all offsets
+	return (_do_offsets(cmd));			// print all offsets
 }
 
 #ifdef __cplusplus

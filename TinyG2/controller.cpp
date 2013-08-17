@@ -58,17 +58,18 @@ controller_t cs;		// controller state structure
  ***********************************************************************************/
 
 static void _controller_HSM(void);
-static stat_t _command_dispatch(void);
 static stat_t _alarm_idler(void);
 static stat_t _normal_idler(void);
-static stat_t _sync_to_planner(void);
-static stat_t _reset_handler(void);
 static stat_t _limit_switch_handler(void);
-//static stat_t _feedhold_handler(void);
-//static stat_t _cycle_start_handler(void);
-//static stat_t _bootloader_handler(void);
 //static stat_t _system_assertions(void);
+//static stat_t _cycle_start_handler(void);
+static stat_t _sync_to_planner(void);
 //static stat_t _sync_to_tx_buffer(void);
+static stat_t _command_dispatch(void);
+
+// prep for export to other modules:
+stat_t hardware_hard_reset_handler(void);
+//stat_t hardware_bootloader_handler(void);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -84,14 +85,17 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.fw_build = TINYG2_FIRMWARE_BUILD;
 	cs.fw_version = TINYG2_FIRMWARE_VERSION;
 	cs.hw_platform = TINYG2_HARDWARE_PLATFORM;// NB: HW version is set from EEPROM
-	cs.state = CONTROLLER_STARTUP;			// ready to run startup lines	
+	
 	cs.linelen = 0;							// initialize index for read_line()
+	cs.state = CONTROLLER_STARTUP;			// ready to run startup lines	
+//	cs.reset_requested = false;
+//	cs.bootloader_requested = false;
 
 //	xio_set_stdin(std_in);
 //	xio_set_stdout(std_out);
 //	xio_set_stderr(std_err);
 //	cs.default_src = std_in;
-//	tg_set_active_source(cs.default_src);	// set initial active source
+//	tg_set_active_source(cs.default_src);	// set active source
 }
 
 /* 
@@ -111,9 +115,6 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
  * and runs the next routine in the list.
  *
  * A routine that had no action (i.e. is OFF or idle) should return STAT_NOOP
- *
- * Useful reference on state machines:
- * http://johnsantic.com/comp/state.html, "Writing Efficient State Machines in C"
  */
 
 void controller_run() 
@@ -131,25 +132,26 @@ static void _controller_HSM()
 //
 //----- lowest level functions -------------------------------------------------------//
 												// Order is important:
-	DISPATCH(_reset_handler());					// 1. software reset received
-//	DISPATCH(_bootloader_handler());			// 2. received request to start bootloader
+	DISPATCH(hardware_hard_reset_handler());	// 1. received hard reset request
+//	DISPATCH(hardware_bootloader_handler());	// 2. received request to start bootloader
 	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());
-	DISPATCH(mp_plan_hold_callback());			// plan a feedhold from line runtime
+	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
+	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	
 //	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
-//	DISPATCH(_system_assertions());				// 9. system integrity assertions
+//	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
+	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
+//	DISPATCH(switch_debounce_callback());		// debounce switches
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
 	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
 	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
-	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
 
 //----- command readers and parsers --------------------------------------------------//
 
@@ -228,49 +230,77 @@ static stat_t _command_dispatch()
 	return (STAT_OK);
 }
 
-/* 
- * _normal_idler() - blink Indicator LED slowly to show everything is OK
- */
-static stat_t _normal_idler(  )
-{
-	if (SysTickTimer.getValue() > cs.led_counter) {
-		cs.led_counter += LED_NORMAL_COUNTER;
-//		IndicatorLed.toggle();
-	}
-	return (STAT_OK);
-}
-
-/* 
+/**** Local Utilities ********************************************************/
+/*
  * _alarm_idler() - blink rapidly and prevent further activity from occurring
+ * _normal_idler() - blink Indicator LED slowly to show everything is OK
  *
- *	Blink Indicator LED rapidly to show everything is not OK. This function returns 
- *	EAGAIN causing the control loop to never advance beyond this point. It's important 
- *	that the reset handler is still called so a SW reset (ctrl-x) can be processed.
+ *	Alarm idler flashes indicator LED rapidly to show everything is not OK. 
+ *	Alarm function returns EAGAIN causing the control loop to never advance beyond 
+ *	this point. It's important that the reset handler is still called so a SW reset 
+ *	(ctrl-x) or bootloader request can be processed.
  */
+
 static stat_t _alarm_idler(  )
 {
 	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
 
-	if (SysTickTimer.getValue() > cs.led_counter) {
-		cs.led_counter += LED_ALARM_COUNTER;
+	if (SysTickTimer.getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer.getValue() + LED_ALARM_TIMER;
 		IndicatorLed.toggle();
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
 
-/**** Flag handlers ****
- * _reset_handler()
- * _feedhold_handler()
- * _cycle_start_handler()
- * _limit_switch_handler() - shut down system if limit switch fired
- */
-static uint8_t _reset_handler(void)
+static stat_t _normal_idler(  )
 {
-	if (cs.request_reset == false) { return (STAT_NOOP);}
-//	hardware_reset();							// hard reset - identical to hitting RESET button
-	return (STAT_EAGAIN);
+	if (SysTickTimer.getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER;
+		IndicatorLed.toggle();
+	}
+	return (STAT_OK);
 }
 
+/*
+ * tg_reset_source() 		 - reset source to default input device (see note)
+ * tg_set_primary_source() 	 - set current primary input source
+ * tg_set_secondary_source() - set current primary input source
+ *
+ * Note: Once multiple serial devices are supported reset_source() should
+ * be expanded to also set the stdout/stderr console device so the prompt
+ * and other messages are sent to the active device.
+ */
+/*
+void tg_reset_source() { tg_set_primary_source(tg.default_src);}
+void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
+void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}
+*/
+
+/*
+ * _sync_to_tx_buffer() - return eagain if TX queue is backed up
+ * _sync_to_planner() - return eagain if planner is not ready for a new command
+ */
+/*
+static stat_t _sync_to_tx_buffer()
+{
+	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
+		return (STAT_EAGAIN);
+	}
+	return (STAT_OK);
+}
+*/
+
+static stat_t _sync_to_planner()
+{
+if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+	return (STAT_EAGAIN);
+	}
+	return (STAT_OK);
+}
+
+/*
+ * _limit_switch_handler() - shut down system if limit switch fired
+ */
 static uint8_t _limit_switch_handler(void)
 {
 /*
@@ -281,38 +311,6 @@ static uint8_t _limit_switch_handler(void)
 */
 	return (STAT_OK);
 }
-
-/**** Utilities ****
- * _sync_to_planner() - return eagain if planner is not ready for a new command
- * _sync_to_tx_buffer() - return eagain if TX queue is backed up
- * tg_reset_source() - reset source to default input device (see note)
- * tg_set_active_source() - set current input source
- *
- * Note: Once multiple serial devices are supported reset_source() should
- *	be expanded to also set the stdout/stderr console device so the prompt
- *	and other messages are sent to the active device.
- */
-/*
-void tg_reset_source() { tg_set_primary_source(tg.default_src);}
-void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
-void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}
-
-static stat_t _sync_to_tx_buffer()
-{
-	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
-		return (STAT_EAGAIN);
-	}
-	return (STAT_OK);
-}
-*/
-static stat_t _sync_to_planner()
-{
-	if (mp_get_planner_buffers_available() < 4) { 
-		return (STAT_EAGAIN);
-	}
-	return (STAT_OK);
-}
-
 
 /* 
  * _system_assertions() - check memory integrity and other assertions
@@ -349,3 +347,25 @@ static stat_t _system_assertions()
 	return (STAT_EAGAIN);
 }
 */
+
+//============================================================================
+//=========== MOVE TO xmega_tinyg.c ==========================================
+//============================================================================
+
+/**** Hardware Reset Handlers *************************************************
+ * hardware_request_hard_reset()
+ * hardware_hard_reset()		 - hard reset using watchdog timer
+ * hardware_hard_reset_handler() - controller's rest handler
+ */
+
+void hardware_request_hard_reset() { cs.hard_reset_requested = true; }
+
+void hardware_hard_reset(void)				// hard reset using... (TBD+++++)
+{}
+
+stat_t hardware_hard_reset_handler(void)
+{
+	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
+	hardware_hard_reset();					// hard reset - identical to hitting RESET button
+	return (STAT_EAGAIN);
+}
