@@ -1,5 +1,6 @@
 /*
  * config.h - configuration sub-system
+ * Part of TinyG2 project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -68,7 +69,7 @@
 #define CONFIG_H_ONCE
 
 /***** PLEASE NOTE *****
-# include "config_app.h"	// is present at the end of this file 
+#include "config_app.h"	// is present at the end of this file 
 */
 
 #ifdef __cplusplus
@@ -100,8 +101,8 @@ typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 
 									// pre-allocated defines (take RAM permanently)
 #define CMD_SHARED_STRING_LEN 512	// shared string for string values
-#define CMD_BODY_LEN 25				// body elements - allow for 1 parent + N children
-									// (each body element takes 23 bytes of RAM)
+#define CMD_BODY_LEN 30				// body elements - allow for 1 parent + N children
+									// (each body element takes 25 bytes of RAM)
 
 // Stuff you probably don't want to change 
 
@@ -214,6 +215,7 @@ typedef struct cfgItem {
 	float def_value;					// default value for config item
 } cfgItem_t;
 
+
 /**** static allocation and definitions ****/
 
 extern cmdStr_t cmdStr;
@@ -226,6 +228,7 @@ extern const cfgItem_t cfgArray[];
 /**** Global scope function prototypes ****/
 
 void config_init(void);
+stat_t set_defaults(cmdObj_t *cmd);		// reset config to default values
 
 // main entry points for core access functions
 stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
@@ -281,8 +284,6 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value);
 cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
 cmdObj_t *cmd_add_message(const char_t *string);
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
-
-stat_t set_defa(cmdObj_t *cmd);	// reset config to default values
 
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************

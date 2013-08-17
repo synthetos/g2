@@ -62,9 +62,9 @@ stat_t gc_gcode_parser(char_t *block)
 	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {
 		return (STAT_NOOP);
 	}
-	if (*msg != NUL) {
-		(void)cm_message(msg);				// queue the message	
-	}	
+//	if (*msg != NUL) { // +++++ THIS HAS A SERIOUS BUG IN IT SO FOR NOW IT'S DISABLED
+//		(void)cm_message(msg);				// queue the message
+//	}
 	return(_parse_gcode_block(block));
 }
 
@@ -111,7 +111,7 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	// normalize the command block & find the comment(if any)
 	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
-		else if (*rd == '(') { *wr = NUL; *com = rd+1; } 
+		else if ((*rd == '(') || (*rd == ';')) { *wr = NUL; *com = rd+1; }
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
 			*(wr++) = (char_t)toupper((char)*(rd));
 		}
@@ -195,15 +195,15 @@ static stat_t _validate_gcode_block()
     //	uses axis words appears on the line, the activity of the group 1 G-code is suspended
     //	for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
         
-    //	if ((gp.modals[MODAL_GROUP_G0] == true) && (gp.modals[MODAL_GROUP_G1] == true)) {
-    //		return (STAT_MODAL_GROUP_VIOLATION);
-    //	}
+//	if ((gp.modals[MODAL_GROUP_G0] == true) && (gp.modals[MODAL_GROUP_G1] == true)) {
+//		return (STAT_MODAL_GROUP_VIOLATION);
+//	}
         
     // look for commands that require an axis word to be present
-    //	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
-    //		if (_axis_changed() == false)
-    //		return (STAT_GCODE_AXIS_WORD_MISSING);
-    //	}
+//	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
+//		if (_axis_changed() == false)
+//		return (STAT_GCODE_AXIS_WORD_MISSING);
+//	}
     return (STAT_OK);
 }
 
@@ -254,6 +254,7 @@ static stat_t _parse_gcode_block(char_t *buf)
 							case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G28_POSITION); 
 							case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME); 
 							case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ABSOLUTE_ORIGIN);
+							case 4: SET_NON_MODAL (next_action, NEXT_ACTION_HOMING_NO_SET);
 							default: status = STAT_UNRECOGNIZED_COMMAND;
 						}
 						break;
@@ -432,13 +433,16 @@ static stat_t _execute_gcode_block()
 	//--> set retract mode goes here
 
 	switch (gn.next_action) {
-		case NEXT_ACTION_SEARCH_HOME: { status = cm_homing_cycle_start(); break;}								// G28.2
-//		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}
-		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gn.target, gf.target); break;}	// G28.3
-		case NEXT_ACTION_SET_G28_POSITION: { status = cm_set_g28_position(); break;}							// G28.1
+		case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}							// G28.1
 		case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(gn.target, gf.target); break;}		// G28
-		case NEXT_ACTION_SET_G30_POSITION: { status = cm_set_g30_position(); break;}							// G30.1
-		case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(gn.target, gf.target); break;}		// G30	
+		case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}							// G30.1
+		case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(gn.target, gf.target); break;}		// G30
+
+		case NEXT_ACTION_SEARCH_HOME: { status = cm_homing_cycle_start(); break;}								// G28.2
+		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gn.target, gf.target); break;}	// G28.3
+		case NEXT_ACTION_HOMING_NO_SET: { status = cm_homing_cycle_start_no_set(); break;}						// G28.4
+
+//		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}								// G38.2
 
 		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(gn.parameter, gn.target, gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(gn.target, gf.target); break;}

@@ -37,10 +37,8 @@
 #include "util.h"
 #include "help.h"
 #include "xio.h"
-/*
-#include "network.h"
-#include "test.h"
-*/
+//#include "network.h"
+//#include "test.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -56,15 +54,29 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 // See config.cpp/.h for generic variables and functions that are not specific to 
 // TinyG or the motion control application domain
   
+// helpers (most helpers are defined immediately above their usage so they don't need prototypes here)
+
+static stat_t _do_motors(cmdObj_t *cmd);	// print parameters for all motor groups
+static stat_t _do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
+static stat_t _do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
+
+// Gcode domain specific functions
+
+static stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
+static stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
+static void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
+static void print_rot(cmdObj_t *cmd);		// print floating point rotary value
+
 // system and application control variables and functions
 
-//static stat_t set_hv(cmdObj_t *cmd);		// set hardware version
-//static stat_t get_id(cmdObj_t *cmd);		// get device ID
-//static stat_t run_boot(cmdObj_t *cmd);	// jump to conclusions
+static stat_t set_hv(cmdObj_t *cmd);		// set hardware version
+static stat_t get_id(cmdObj_t *cmd);		// get device ID
 
 static stat_t get_gc(cmdObj_t *cmd);		// get current gcode block
 static stat_t run_gc(cmdObj_t *cmd);		// run a gcode block
 static stat_t run_home(cmdObj_t *cmd);		// invoke a homing cycle
+//static stat_t run_boot(cmdObj_t *cmd);	// jump to conclusions
 
 static stat_t set_sr(cmdObj_t *cmd);		// set status report specification
 static stat_t get_sr(cmdObj_t *cmd);		// run status report (as data)
@@ -117,15 +129,6 @@ static stat_t get_vel(cmdObj_t *cmd);		// get runtime velocity...
 
 // motor and axis variables and functions
 
-static stat_t get_flu(cmdObj_t *cmd);		// get floating point value with unit conversion
-static stat_t set_flu(cmdObj_t *cmd);		// set floating point value with unit conversion
-static void print_lin(cmdObj_t *cmd);		// print floating point linear value w/unit conversion
-static void print_rot(cmdObj_t *cmd);		// print floating point rotary value
-
-static void pr_ma_ui8(cmdObj_t *cmd);		// print motor/axis uint8_t value
-static void pr_ma_lin(cmdObj_t *cmd);		// print motor/axis linear value in prevailing units
-static void pr_ma_rot(cmdObj_t *cmd);		// print motor/axis rotary value in degrees units
-
 static stat_t set_sa(cmdObj_t *cmd);		// set motor step angle
 static stat_t set_tr(cmdObj_t *cmd);		// set motor travel per revolution
 static stat_t set_mi(cmdObj_t *cmd);		// set motor microsteps
@@ -139,12 +142,12 @@ static stat_t get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
 static stat_t set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 static stat_t set_sw(cmdObj_t *cmd);		// set switch (must run any time switch setting changes)
 
-// other
-
-static stat_t _do_motors(cmdObj_t *cmd);	// print parameters for all motor groups
-static stat_t _do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
-static stat_t _do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
-static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
+//static void pr_ma_str(cmdObj_t *cmd); // generic print functions for motors and axes
+static void pr_ma_ui8(cmdObj_t *cmd);		// print motor/axis uint8_t value
+//static void pr_ma_int(cmdObj_t *cmd); // placeholder
+//static void pr_ma_flt(cmdObj_t *cmd); // placeholder
+static void pr_ma_lin(cmdObj_t *cmd);		// print motor/axis linear value in prevailing units
+static void pr_ma_rot(cmdObj_t *cmd);		// print motor/axis rotary value in degrees units
 
 /***********************************************************************************
  **** FLASH STRINGS AND STRING ARRAYS **********************************************
@@ -462,12 +465,12 @@ const cfgItem_t cfgArray[] = {
 	{ "", "er",  _f00, 0, fmt_nul, print_nul, get_er,  set_nul, (float *)&cs.null, 0 },		// invoke bogus exception report for testing
 	{ "", "rx",  _f00, 0, fmt_rx,  print_int, get_rx,  set_nul, (float *)&cs.null, 0 },		// space in RX buffer
 	{ "", "msg", _f00, 0, fmt_str, print_str, get_nul, set_nul, (float *)&cs.null, 0 },		// string for generic messages
-	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defa,(float *)&cs.null,0},// prints defaults help screen
-//	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },// prints test help screen
+	{ "", "defa",_f00, 0, fmt_nul, print_nul, print_defaults_help,set_defaults,(float *)&cs.null,0},	// set defaults or help screen
+//	{ "", "test",_f00, 0, fmt_nul, print_nul, print_test_help, tg_test, (float *)&cs.test,0 },			// print test help screen
 //	{ "", "boot",_f00, 0, fmt_nul, print_nul, print_boot_loader_help,run_boot,(float *)&cs.null,0 },
-	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// prints config help screen
-	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },// alias for "help"
-//	{ "", "sx",  _f00, 0, fmt_nul, print_nul, run_sx,  run_sx , (float *)&cs.null, 0 },		// send XOFF, XON test
+	{ "", "help",_f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },		// print config help screen
+	{ "", "h",   _f00, 0, fmt_nul, print_nul, print_config_help, set_nul, (float *)&cs.null,0 },		// alias for "help"
+//	{ "", "sx",  _f00, 0, fmt_nul, print_nul, run_sx,  run_sx , (float *)&cs.null, 0 },					// send XOFF, XON test
 
 	// Motor parameters
 	{ "1","1ma",_fip, 0, fmt_0ma, pr_ma_ui8, get_ui8, set_ui8,(float *)&cfg.m[MOTOR_1].motor_map,	M1_MOTOR_MAP },
@@ -757,6 +760,13 @@ const cfgItem_t cfgArray[] = {
 	{ "","se21",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[21],0 },
 	{ "","se22",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[22],0 },
 	{ "","se23",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[23],0 },
+	{ "","se23",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[23],0 },
+	{ "","se24",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[24],0 },
+	{ "","se25",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[25],0 },
+	{ "","se26",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[26],0 },
+	{ "","se27",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[27],0 },
+	{ "","se28",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[28],0 },
+	{ "","se29",_fpe, 0, fmt_nul, print_nul, get_int, set_int,(float *)&cfg.status_report_list[29],0 },
 
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
 	// *** Must agree with CMD_COUNT_GROUPS below ****
@@ -820,21 +830,19 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
  **** APPLICATION SPECIFIC FUNCTIONS ***********************************************
  ***********************************************************************************/
 
-/***** SUPPORTING FUNCTIONS: ACCESSORS, HELPERS, UNIT CONVERSIONS ******************
- * get_format() - return format string for an index
- * get_motor()	- return motor number as an index or -1 if na
- * get_axis()	- return axis number or -1 if NA
- * get_pos_axis()- return axis number for pos values or -1 if none - e.g. posx
- * get_flu()	- get floating point number with Gcode units conversion
- * set_flu()	- set floating point number with Gcode units conversion
- * print_lin	- print linear axis value with Gcode units conversion
- * print_rot	- print rotary axis value with Gcode units conversion
+/***** HELPERS *********************************************************************
+ *
+ * Helpers are defined first so they don;t need separate function prototypes
+ *
+ * _get_motor()	- return motor number as an index or -1 if na
+ * _get_axis()	- return axis number or -1 if NA
+ * _get_pos_axis()- return axis number for pos values or -1 if none - e.g. posx
  */
 
 // get_format() for ARM is defined in config.h as:
 //#define get_format(index) (const char *)cfgArray[index].format
 
-int8_t get_motor(const index_t index)
+int8_t _get_motor(const index_t index)
 {
 	int motor = (int)cfgArray[index].token[0];
 	char motors[] = {"1234"};
@@ -844,7 +852,7 @@ int8_t get_motor(const index_t index)
 }
 
 /*
-int8_t get_axis(const index_t index)
+int8_t _get_axis(const index_t index)
 {
 	char *ptr;
 	char tmp[CMD_TOKEN_LEN+1];
@@ -865,7 +873,12 @@ int8_t _get_pos_axis(const index_t index)	// index into configArray
 	return (ptr - axes);
 }
 
-
+/***** DOMAIN SPECIFIC EXTENSIONS TO GENERIC FUNCTIONS ************************
+ * get_flu()   - get floating point number with Gcode units conversion
+ * set_flu()   - set floating point number with Gcode units conversion
+ * print_lin() - print linear axis value with Gcode units conversion
+ * print_rot() - print rotary axis value with Gcode units conversion
+ */
 stat_t get_flu(cmdObj_t *cmd)
 {
 	get_flt(cmd);
@@ -1270,7 +1283,7 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
 // NB: This function will need to be rethought if microstep morphing is implemented
 static stat_t _set_motor_steps_per_unit(cmdObj_t *cmd) 
 {
-	uint8_t m = get_motor(cmd->index);
+	uint8_t m = _get_motor(cmd->index);
 	cfg.m[m].steps_per_unit = (360 / (cfg.m[m].step_angle / cfg.m[m].microsteps) / cfg.m[m].travel_rev);
 	return (STAT_OK);
 }
@@ -1344,7 +1357,7 @@ static stat_t set_mi(cmdObj_t *cmd)		// motor microsteps
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(cmd);
-	st_set_microsteps(get_motor(cmd->index), (uint8_t)cmd->value);
+	st_set_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 
@@ -1357,9 +1370,9 @@ static stat_t set_pm(cmdObj_t *cmd)			// motor power mode
 {
 	ritorno (set_01(cmd));
 /*+++++	if (fp_ZERO(cmd->value)) {				// zero means enable motor - i.e. disable power management mode
-		st_enable_motor(get_motor(cmd->index));
+		st_enable_motor(_get_motor(cmd->index));
 	} else {
-		st_disable_motor(get_motor(cmd->index));
+		st_disable_motor(_get_motor(cmd->index));
 	}
 */
 	return (STAT_OK);

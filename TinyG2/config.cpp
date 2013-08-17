@@ -47,12 +47,6 @@ cmdStr_t cmdStr;
 cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
 
 /***********************************************************************************
- **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
- ***********************************************************************************/
-
-//static void _do_group_list(cmdObj_t *cmd, char list[][CMD_TOKEN_LEN+1]); // helper to print multiple groups in a list
-
-/***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
 /* Primary access points to cmd functions
@@ -66,13 +60,15 @@ cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
  */
 stat_t cmd_set(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
+//	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
+	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
 	return (cfgArray[cmd->index].set(cmd));
 }
 
 stat_t cmd_get(cmdObj_t *cmd)
 {
-	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
+//	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
+	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
 	return (cfgArray[cmd->index].get(cmd));
 }
 
@@ -84,6 +80,9 @@ void cmd_print(cmdObj_t *cmd)
 
 void cmd_persist(cmdObj_t *cmd)
 {
+#ifdef __DISABLE_PERSISTENCE	// cutout for faster simulation in test
+	return;
+#endif
 	if (!cmd_index_is_single(cmd->index)) return;	// validate index to < groups or return
 	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
 		write_persistent_value(cmd);
@@ -91,8 +90,8 @@ void cmd_persist(cmdObj_t *cmd)
 }
 
 /****************************************************************************
- * config_init() - called once on hard reset
- * set_defa() - reset NVM with default values for active profile
+ * config_init()  - called once on hard reset
+ * set_defaults() - reset NVM with default values for active profile
  *
  * Will perform one of 2 actions:
  *	(1) if NVM is set up or out-of-rev: load RAM and NVM with hardwired default settings
@@ -104,19 +103,50 @@ void cmd_persist(cmdObj_t *cmd)
 void config_init()
 {
 	cmdObj_t *cmd = cmd_reset_list();
-	cs.comm_mode = JSON_MODE;		// initial value until EEPROM is read
+	cmdStr.magic_start = MAGICNUM;
+	cmdStr.magic_end = MAGICNUM;
+	cfg.magic_start = MAGICNUM;
+	cfg.magic_end = MAGICNUM;
+
+//+++++ There is a chunk of code missing from here until persistence is implemented
+/*	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
+	cfg.nvm_base_addr = NVM_BASE_ADDR;
+	cfg.nvm_profile_base = cfg.nvm_base_addr;
+	cmd->index = 0;							// this will read the first record in NVM
+
+	cmd_read_NVM_value(cmd);
+	if (cmd->value != cs.fw_build) {
+		cmd->value = true;					// case (1) NVM is not setup or not in revision
+		set_defaults(cmd);
+		} else {								// case (2) NVM is setup and in revision
+		rpt_print_loading_configs_message();
+		for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
+			if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_INITIALIZE) {
+				strcpy_P(cmd->token, cfgArray[cmd->index].token);	// read the token from the array
+				cmd_read_NVM_value(cmd);
+				cmd_set(cmd);
+			}
+		}
+		rpt_init_status_report();
+	}
+*/
+// do this instead:
+	cs.comm_mode = JSON_MODE;				// initial value until EEPROM is read
 	persistence_init();
 	cmd->value = true;
-	set_defa(cmd);		
+	set_defaults(cmd);		
 }
 
-// this subroutine called during init and from the $defa=1 command
-stat_t set_defa(cmdObj_t *cmd) 
+/*
+ * set_defaults() - reset NVM with default values for active profile
+ */
+stat_t set_defaults(cmdObj_t *cmd) 
 {
-	if (fp_FALSE(cmd->value)) { return (STAT_OK);}	// failsafe. Must set true or no action occurs
-	cm_set_units_mode(MILLIMETERS);					// must do inits in MM mode
-
-//	rpt_print_initializing_message();
+	if (fp_FALSE(cmd->value)) {				// failsafe. Must set true or no action occurs
+//		print_defaults_help(cmd);			//+++++
+		return (STAT_OK);
+	}
+	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
 	
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 		if ((cfgArray[cmd->index].flags & F_INITIALIZE) != 0) {
@@ -126,6 +156,7 @@ stat_t set_defa(cmdObj_t *cmd)
 			cmd_persist(cmd);
 		}
 	}
+	rpt_print_initializing_message();
 	rpt_init_status_report();	// set default status report
 	return (STAT_OK);
 }
@@ -167,18 +198,15 @@ stat_t get_flt(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-/* REPLACED BY A MACRO - See config.h
-char *get_format(const index_t index)
-{
-	return ((char *)cfgArray[index].format);
-}
-*/
+//char *get_format(const index_t index) { return ((char *)cfgArray[index].format);}
+// REPLACED BY A MACRO - See config.h
 
 /* Generic sets()
  *  set_nul() - set nothing (returns STAT_NOOP)
  *  set_ui8() - set value as 8 bit uint8_t value
  *  set_01()  - set a 0 or 1 uint8_t value with validation
  *  set_012() - set a 0, 1 or 2 uint8_t value with validation
+ *	set_0123()- set a 0, 1, 2 or 3 uint8_t value with validation
  *  set_int() - set value as 32 bit integer
  *  set_flt() - set value as float
  */
@@ -209,6 +237,15 @@ stat_t set_012(cmdObj_t *cmd)
 	}
 }
 
+static stat_t set_0123(cmdObj_t *cmd)
+{
+	if (cmd->value > 3) { 
+		return (STAT_INPUT_VALUE_UNSUPPORTED);
+	} else {
+		return (set_ui8(cmd));
+	}
+}
+
 stat_t set_int(cmdObj_t *cmd)
 {
 	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
@@ -225,11 +262,11 @@ stat_t set_flt(cmdObj_t *cmd)
 }
 
 /* Generic prints()
- * print_nul() - print nothing
- * print_str() - print string value
- * print_ui8() - print uint8_t value w/no units or unit conversion
- * print_int() - print integer value w/no units or unit conversion
- * print_flt() - print float value w/no units or unit conversion
+ *	print_nul() - print nothing
+ *	print_str() - print string value
+ *	print_ui8() - print uint8_t value w/no units or unit conversion
+ *	print_int() - print integer value w/no units or unit conversion
+ *	print_flt() - print float value w/no units or unit conversion
  */
 void print_nul(cmdObj_t *cmd) {}
 
@@ -259,9 +296,30 @@ void print_flt(cmdObj_t *cmd)
 
 /********************************************************************************
  * Group operations
+ *
+ *	Group operations work on parent/child groups where the parent is one of:
+ *	  axis group 			x,y,z,a,b,c
+ *	  motor group			1,2,3,4
+ *	  PWM group				p1
+ *	  coordinate group		g54,g55,g56,g57,g58,g59,g92
+ *	  system group			"sys" - a collection of otherwise unrelated variables
+ *
+ *	Text mode can only GET groups. For example:
+ *	  $x					get all members of an axis group
+ *	  $1					get all members of a motor group
+ *	  $<grp>				get any named group from the above lists
+ *
+ *	In JSON groups are carried as parent / child objects & can get and set elements:
+ *	  {"x":""}						get all X axis parameters
+ *	  {"x":{"vm":""}}				get X axis velocity max 
+ *	  {"x":{"vm":1000}}				set X axis velocity max
+ *	  {"x":{"vm":"","fr":""}}		get X axis velocity max and feed rate 
+ *	  {"x":{"vm":1000,"fr";900}}	set X axis velocity max and feed rate
+ *	  {"x":{"am":1,"fr":800,....}}	set multiple or all X axis parameters
  */
+
 /* 
- * get_grp() - read data from a group
+ * get_grp() - read data from axis, motor, system or other group
  *
  *	get_grp() is a group expansion function that expands the parent group and  returns 
  *	the values of all the children in that group. It expects the first cmdObj in the 
@@ -323,12 +381,11 @@ stat_t set_grp(cmdObj_t *cmd)
  */
 uint8_t cmd_group_is_prefixed(uint8_t *group)
 {
-	if (strstr("sr", group) != NULL) {	// you can extend like this: "sr,sys,xyzzy"
+	if (strstr("sr,sys",group) != NULL) {	// you can extend like this: "sr,sys,xyzzy"
 		return (false);
 	}
 	return (true);
 }
-
 
 /***********************************************************************************
  ***** cmdObj functions ************************************************************
@@ -354,7 +411,7 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 
 stat_t cmd_persist_offsets(uint8_t flag)
 {
-/*
+/*++++ No persistence yet
 	if (flag == true) {
 		cmdObj_t cmd;
 		for (uint8_t i=1; i<=COORDS; i++) {
@@ -379,7 +436,6 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
 	char_t str[CMD_TOKEN_LEN+1];
-//	strcpy_U(str, group);
 	strcpy(str, group);
 	strcat(str, token);
 
@@ -399,7 +455,8 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
 	}
 	return (NO_MATCH);
 }
-/*
+
+/******************************************************************************
  * cmdObj low-level object and list operations
  * cmd_get_cmdObj()		- setup a cmd object by providing the index
  * cmd_reset_obj()		- quick clear for a new cmd object

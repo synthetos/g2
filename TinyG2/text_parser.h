@@ -1,6 +1,6 @@
 /*
  * text_parser.h - text parser and text mode support for tinyg2
- * This file is part of the TinyG2 project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *

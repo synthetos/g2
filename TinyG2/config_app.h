@@ -1,6 +1,6 @@
 /*
  * config_app.h - application-specific part of configuration data
- * Part of Kinen project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *

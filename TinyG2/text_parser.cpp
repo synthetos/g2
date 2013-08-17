@@ -1,6 +1,6 @@
 /*
  * text_parser.cpp - text parser for TinyG
- * This file is part of the TinyG2 project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *
@@ -62,7 +62,8 @@ stat_t text_parser(uint8_t *str)
 	if ((str[0] == '$') && (str[1] == NUL)) {  // treat a lone $ as a sys request
 		strcat(str,"sys");
 	}
-	// single-unit parser processing
+
+	// parse and execute the command (only processes 1 command per line)
 	ritorno(_text_parser_kernal(str, cmd));	// decode the request or return if error
 	if ((cmd->objtype == TYPE_PARENT) || (cmd->objtype == TYPE_NULL)) {
 		if (cmd_get(cmd) == STAT_COMPLETE) {// populate value, group values, or run uber-group displays
