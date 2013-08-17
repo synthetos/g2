@@ -820,12 +820,52 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
  **** APPLICATION SPECIFIC FUNCTIONS ***********************************************
  ***********************************************************************************/
 
-/***** UNIT CONVERSION FUNCTIONS ***************************************************
- * get_flu() - get floating point number with Gcode units conversion
- * set_flu() - set floating point number with Gcode units conversion
- * print_lin - print linear axis value with Gcode units conversion
- * print_rot - print rotary axis value with Gcode units conversion
+/***** SUPPORTING FUNCTIONS: ACCESSORS, HELPERS, UNIT CONVERSIONS ******************
+ * get_format() - return format string for an index
+ * get_motor()	- return motor number as an index or -1 if na
+ * get_axis()	- return axis number or -1 if NA
+ * get_pos_axis()- return axis number for pos values or -1 if none - e.g. posx
+ * get_flu()	- get floating point number with Gcode units conversion
+ * set_flu()	- set floating point number with Gcode units conversion
+ * print_lin	- print linear axis value with Gcode units conversion
+ * print_rot	- print rotary axis value with Gcode units conversion
  */
+
+// get_format() for ARM is defined in config.h as:
+//#define get_format(index) (const char *)cfgArray[index].format
+
+int8_t get_motor(const index_t index)
+{
+	int motor = (int)cfgArray[index].token[0];
+	char motors[] = {"1234"};
+	char *ptr = (char *)strchr(motors, motor);
+	if (ptr == NULL) { return (-1);}
+	return (ptr - motors);
+}
+
+/*
+int8_t get_axis(const index_t index)
+{
+	char *ptr;
+	char tmp[CMD_TOKEN_LEN+1];
+	char axes[] = {"xyzabc"};
+
+	strcpy(tmp, cfgArray[index].token);
+	if ((ptr = strchr(axes, tmp[0])) == NULL) { return (-1);}
+	return (ptr - axes);
+}
+*/
+
+int8_t _get_pos_axis(const index_t index)	// index into configArray
+{
+	int axis = (int)cfgArray[index].token[3];
+	char axes[] = {"xyzabc"};
+	char *ptr = (char *)strchr(axes, axis);
+	if (ptr == NULL) { return (-1);}
+	return (ptr - axes);
+}
+
+
 stat_t get_flu(cmdObj_t *cmd)
 {
 	get_flt(cmd);
@@ -860,8 +900,8 @@ void print_rot(cmdObj_t *cmd)
 	fprintf(stderr, get_format(cmd->index), cmd->value, msg_units[DEGREE_INDEX]);
 }
 
-/******* System and application control variables and functions ******
- * set_hv() - set hardweare version number
+/******* SYSTEM ID AND CONTROL VARIABLES ****************************************************
+ * set_hv() - set hardware version number
  * get_id() - get device ID (signature)
  */
 
@@ -883,10 +923,10 @@ static stat_t get_id(cmdObj_t *cmd)
 }
 */
 
-/**** COMMAND AND REPORT FUNCTIONS ********************************************************
+/**** REPORT AND COMMAND FUNCTIONS ********************************************************
  * set_qv() - set queue report verbosity
  * get_qr() - run a queue report (as data)
- * run_qf() - execute a planner buffer flush
+ * run_qf() - request a planner buffer flush
  * get_er()	- invoke a bogus exception report for testing purposes (it's not real)
  * get_rx()	- get bytes available in RX buffer
  * set_si()	- set status report interval
@@ -1022,9 +1062,6 @@ static stat_t run_boot(cmdObj_t *cmd)
 
 
 /**** GCODE MODEL ITEMS ****************************************
- * _get_msg_helper()- helper to get display message
- * _get_pos_axis()	- returns the axis index given the token string (hack hack)
- *
  * get_stat() - get combined machine state as value and string
  * get_macs() - get raw machine state as value and string
  * get_cycs() - get raw cycle state as value and string
@@ -1061,15 +1098,6 @@ static stat_t _get_msg_helper(cmdObj_t *cmd, const char_t *msg_array[], uint8_t 
 		ritorno(cmd_copy_string_P(cmd, (PGM_P)pgm_read_word(&msg[value*2]))); // hack alert: direct computation of index
 		return (STAT_OK);
 */
-}
-
-int8_t _get_pos_axis(const index_t index)	// index into configArray
-{
-	int axis = (int)cfgArray[index].token[3];
-	char axes[] = {"xyzabc"};
-	char *ptr = (char *)strchr(axes, axis);
-	if (ptr == NULL) { return (-1);}
-	return (ptr - axes);
 }
 
 static stat_t get_stat(cmdObj_t *cmd)
@@ -1215,15 +1243,14 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
 }
 
 /**** AXIS AND MOTOR FUNCTIONS ************************************************
- *
- * _get_motor() - return motor index from token value
- * _set_motor_steps_per_unit() - update this derived value
+ * set_motor_steps_per_unit() - update this derived value
  *
  * get_am()  - get axis mode w/enumeration string
  * set_am()  - set axis mode w/exception handling for axis type
  * get_jrk() - get jerk value w/1,000,000 correction
  * set_jrk() - set jerk value w/1,000,000 correction
- * set_sw()  - run this any time you change a switch setting	
+ * set_sw()  - run this any time you change a switch setting
+ *
  * set_sa()  - set motor step_angle & recompute steps_per_unit
  * set_tr()  - set motor travel_per_rev & recompute steps_per_unit
  * set_mi()  - set microsteps & recompute steps_per_unit
@@ -1239,15 +1266,6 @@ static void print_corr(cmdObj_t *cmd)	// print coordinate offsets with rotary un
 
  */
 
-int8_t get_motor(const index_t index)
-{
-	int motor = (int)cfgArray[index].token[0];
-	char motors[] = {"1234"};
-	char *ptr = (char *)strchr(motors, motor);
-	if (ptr == NULL) { return (-1);}
-	return (ptr - motors);
-}
-
 // NB: This function will need to be rethought if microstep morphing is implemented
 static stat_t set_motor_steps_per_unit(cmdObj_t *cmd) 
 {
@@ -1255,19 +1273,6 @@ static stat_t set_motor_steps_per_unit(cmdObj_t *cmd)
 	cfg.m[m].steps_per_unit = (360 / (cfg.m[m].step_angle / cfg.m[m].microsteps) / cfg.m[m].travel_rev);
 	return (STAT_OK);
 }
-/*
-int8_t get_axis(const index_t i)
-{
-	char *ptr;
-	char tmp[CMD_TOKEN_LEN+1];
-	char axes[] = {"xyzabc"};
-
-	strcpy(tmp, cfgArray[i].token);
-	if ((ptr = strchr(axes, tmp[0])) == NULL) { return (-1);}
-	return (ptr - axes);
-}
-*/
-
 
 static stat_t get_am(cmdObj_t *cmd)
 {
@@ -1352,7 +1357,7 @@ static stat_t set_pm(cmdObj_t *cmd)			// motor power mode
 	ritorno (set_01(cmd));
 /*+++++	if (fp_ZERO(cmd->value)) {				// zero means enable motor - i.e. disable power management mode
 		st_enable_motor(get_motor(cmd->index));
-		} else {
+	} else {
 		st_disable_motor(get_motor(cmd->index));
 	}
 */
@@ -1383,7 +1388,6 @@ static void print_am(cmdObj_t *cmd)		// print axis mode with enumeration string
 	cmd_get(cmd);
 	fprintf(stderr, get_format(cmd->index), cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, msg_am[(uint8_t)cmd->value]);
 }
-
 
 /**** COMMUNICATIONS SETTINGS *************************************************
  * set_ic() - ignore CR or LF on RX
