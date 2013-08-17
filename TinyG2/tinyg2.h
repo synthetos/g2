@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.08	// Bring JSON serializer up to rev with TinyG build 387.xx
+#define TINYG2_FIRMWARE_BUILD   	015.09	// Changes to json_parser to align with tg as of build 387.15
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number

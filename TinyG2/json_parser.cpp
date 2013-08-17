@@ -391,9 +391,6 @@ void json_print_object(cmdObj_t *cmd)
 #define MAX_TAIL_LEN 8
 
 void json_print_response(stat_t status)
-//{
-//	json_print_object(cmd_list);
-//}
 {
 	if (cfg.json_verbosity == JV_SILENT) return;		// silent responses
 
@@ -401,7 +398,8 @@ void json_print_response(stat_t status)
 	cmdObj_t *cmd = cmd_body;
 	if (status == STAT_JSON_SYNTAX_ERROR) {
 		cmd_reset_list();
-		cmd_add_string((const char_t *)"msg", cs.saved_buf);
+		cmd_add_string((const char_t *)"msg", escape_string(cs.in_buf, cs.saved_buf));
+//		cmd_add_string((const char_t *)"msg", cs.saved_buf);
 
 		} else if (cm.machine_state != MACHINE_INITIALIZING) {		// always do full echo during startup
 		uint8_t cmd_type;
@@ -413,8 +411,8 @@ void json_print_response(stat_t status)
 					cmd->objtype = TYPE_EMPTY;
 				}
 
-//			} else if (cmd_type == CMD_TYPE_CONFIG) {	// kill config echo if not enabled
-//				if (cfg.echo_json_configs == false) {
+//+++++		} else if (cmd_type == CMD_TYPE_CONFIG) {	// kill config echo if not enabled
+//fix me		if (cfg.echo_json_configs == false) {
 //					cmd->objtype = TYPE_EMPTY;
 //				}
 
@@ -459,8 +457,7 @@ void json_print_response(stat_t status)
 	strcpy(tail, cs.out_buf + strcount + 1);			// save the json termination
 
 	while (cs.out_buf[strcount2] != ',') { strcount2--; }// find start of checksum
-	sprintf( (char *)(cs.out_buf + strcount2 + 1), "%d%s", 
-		compute_checksum(cs.out_buf, strcount2), tail );
+	sprintf((char *)(cs.out_buf + strcount2 + 1), "%d%s", compute_checksum(cs.out_buf, strcount2), tail);
 	fprintf(stderr, "%s", cs.out_buf);
 }
 
