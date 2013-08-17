@@ -302,49 +302,56 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 
 	*str++ = '{'; 								// write opening curly
 
-		while (true) {
-			if (cmd->objtype != TYPE_EMPTY) {
-				if (need_a_comma) { *str++ = ',';}
-				need_a_comma = true;
-				str += sprintf((char *)str, "\"%s\":", cmd->token);
+	while (true) {
+		if (cmd->objtype != TYPE_EMPTY) {
+			if (need_a_comma) { *str++ = ',';}
+			need_a_comma = true;
+			str += sprintf((char *)str, "\"%s\":", cmd->token);
 
-				if (cmd->objtype == TYPE_FLOAT_UNITS)	{
-					if (cm_get_model_units_mode() == INCHES) { cmd->value /= MM_PER_INCH;}
-					cmd->objtype = TYPE_FLOAT;
-				}
-				if		(cmd->objtype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "\"\"");}
-				else if (cmd->objtype == TYPE_INTEGER)	{ str += (char_t)sprintf((char *)str, "%1.0f", (double)cmd->value);}
-				else if (cmd->objtype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*cmd->stringp);}
-				else if (cmd->objtype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*cmd->stringp);}
-				else if (cmd->objtype == TYPE_FLOAT) {
-					if 		(cmd->precision == 0) { str += (char_t)sprintf((char *)str, "%0.0f", (double)cmd->value);}
-					else if (cmd->precision == 1) { str += (char_t)sprintf((char *)str, "%0.1f", (double)cmd->value);}
-					else if (cmd->precision == 2) { str += (char_t)sprintf((char *)str, "%0.2f", (double)cmd->value);}
-					else if (cmd->precision == 3) { str += (char_t)sprintf((char *)str, "%0.3f", (double)cmd->value);}
-					else if (cmd->precision == 4) { str += (char_t)sprintf((char *)str, "%0.4f", (double)cmd->value);}
-					else 						  { str += (char_t)sprintf((char *)str, "%f",    (double)cmd->value);}
-				}
-				else if (cmd->objtype == TYPE_BOOL) {
-					if (fp_FALSE(cmd->value)) { str += sprintf((char *)str, "false");}
-					else { str += (char_t)sprintf((char *)str, "true"); }
-				}
-				if (cmd->objtype == TYPE_PARENT) {
-					*str++ = '{';
-						need_a_comma = false;
-					}
-				}
-				if (str >= str_max) { return (-1);}		// signal buffer overrun
-				if ((cmd = cmd->nx) == NULL) { break;}	// end of the list
-
-				while (cmd->depth < prev_depth--) {		// iterate the closing curlies
-					need_a_comma = true;
-				*str++ = '}';
+			if (cmd->objtype == TYPE_FLOAT_UNITS)	{
+				if (cm_get_model_units_mode() == INCHES) { cmd->value /= MM_PER_INCH;}
+				cmd->objtype = TYPE_FLOAT;
 			}
-			prev_depth = cmd->depth;
-		}
+			if		(cmd->objtype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "\"\"");} // Note that that "" is NOT null.
+			else if (cmd->objtype == TYPE_INTEGER)	{
+				double tmp_value = (double)cmd->value;
+				if (tmp_value == NAN || tmp_value == INFINITY) { tmp_value = 0;}
+				str += (char_t)sprintf((char *)str, "%1.0f", tmp_value);
+			}
+			else if (cmd->objtype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*cmd->stringp);}
+			else if (cmd->objtype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*cmd->stringp);}
+			else if (cmd->objtype == TYPE_FLOAT) {
+				double tmp_value = (double)cmd->value;
+				if (tmp_value == NAN || tmp_value == INFINITY) {tmp_value = 0;}
 
-		// closing curlies and NEWLINE
-		while (prev_depth-- > initial_depth) { *str++ = '}';}
+				if 		(cmd->precision == 0) { str += (char_t)sprintf((char *)str, "%0.0f", tmp_value);}
+				else if (cmd->precision == 1) { str += (char_t)sprintf((char *)str, "%0.1f", tmp_value);}
+				else if (cmd->precision == 2) { str += (char_t)sprintf((char *)str, "%0.2f", tmp_value);}
+				else if (cmd->precision == 3) { str += (char_t)sprintf((char *)str, "%0.3f", tmp_value);}
+				else if (cmd->precision == 4) { str += (char_t)sprintf((char *)str, "%0.4f", tmp_value);}
+				else 						  { str += (char_t)sprintf((char *)str, "%f",    tmp_value);}
+			}
+			else if (cmd->objtype == TYPE_BOOL) {
+				if (fp_FALSE(cmd->value)) { str += sprintf((char *)str, "false");}
+				else { str += (char_t)sprintf((char *)str, "true"); }
+			}
+			if (cmd->objtype == TYPE_PARENT) {
+				*str++ = '{';
+				need_a_comma = false;
+			}
+		}
+		if (str >= str_max) { return (-1);}		// signal buffer overrun
+		if ((cmd = cmd->nx) == NULL) { break;}	// end of the list
+
+		while (cmd->depth < prev_depth--) {		// iterate the closing curlies
+			need_a_comma = true;
+			*str++ = '}';
+		}
+		prev_depth = cmd->depth;
+	}
+
+	// closing curlies and NEWLINE
+	while (prev_depth-- > initial_depth) { *str++ = '}';}
 	str += sprintf((char *)str, "}\n");	// using sprintf for this last one ensures a NUL termination
 	if (str > out_buf + size) { return (-1);}
 	return (str - out_buf);
