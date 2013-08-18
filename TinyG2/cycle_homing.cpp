@@ -188,6 +188,19 @@ static const char_t *msg_axis[] = { msg_axis0, msg_axis1, msg_axis2, msg_axis3};
 
 static stat_t _homing_error_exit(int8_t axis)
 {
+	// generate the warning message
+	cmd_reset_list();
+	if (axis == -2) {
+		cmd_add_conditional_message_P((const char_t *)PSTR("*** WARNING *** Homing error: Specified axis(es) cannot be homed"));
+		} else {
+		char message[CMD_MESSAGE_LEN];
+//		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), (PGM_P)pgm_read_word(&msg_axis[axis]));
+//		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), msg_axis[axis]);
+		sprintf_P(message, PSTR("*** WARNING *** Homing error: %c axis settings misconfigured"), get_axis_char(axis));
+		cmd_add_conditional_message((const char_t *)message);
+	}
+	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
+/*	
 	char message[CMD_MESSAGE_LEN]; 
 	if (axis == -2) {
 		sprintf(message, "*** WARNING *** Homing error: Specified axis(es) cannot be homed");
@@ -196,7 +209,7 @@ static stat_t _homing_error_exit(int8_t axis)
 	}
 	cmd_add_conditional_message((const char_t *)message);
 	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_PAIRS, JSON_RESPONSE_FORMAT);
-
+*/
 //	mp_flush_planner();
 	cm_request_queue_flush(); 						// should be stopped, but in case of switch closure
 	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system

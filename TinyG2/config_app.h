@@ -14,7 +14,7 @@
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IsN THE SOFTWARE.
  */
 /* config_app.cpp/.h contain application specific data for the config system:
  *	-,application-specific functions and function prototypes 
@@ -115,7 +115,8 @@ enum cmdType {						// classification of commands
 enum qrVerbosity {					// planner queue enable and verbosity
 	QR_OFF = 0,						// no response is provided
 	QR_FILTERED,					// queue depth reported only above hi-water mark and below lo-water mark
-	QR_VERBOSE						// queue depth reported for all buffers
+	QR_VERBOSE,						// queue depth reported for all buffers
+	QR_TRIPLE						// queue depth reported for all buffers, and buffers added, buffered removed
 };
 
 /***********************************************************************************
@@ -224,6 +225,12 @@ typedef struct cfgParameters {
 } cfgParameters_t;
 extern cfgParameters_t cfg; 		// declared in config_app.cpp
 
+
+/***********************************************************************************
+ **** EXPOSED APPLICATION SPECIFIC FUNCTIONS ***************************************
+ ***********************************************************************************/
+
+char_t get_axis_char(int8_t axis);
 
 #ifdef __cplusplus
 }

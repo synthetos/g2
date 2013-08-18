@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.13	// more more text_parser alignment work
+#define TINYG2_FIRMWARE_BUILD   	015.14	// sync homing with TinyG build 388.11
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -57,9 +57,26 @@
 void tg_setup(void);
 
 /*************************************************************************
- * String handling help - strings are handled as uint8_t's typedef'd to char_t
+ * String handling help
+ *
+ * In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++
+ * uint8_t and char are distinct types. In AVR char_t is typedef'd to char
+ *
+ * The ARM stdio functions we are using still use char as input and output. 
+ * The macros below do the casts for most cases, but not all. Vararg functions 
+ * like the printf() family need special handling. These require explicit 
+ * casts as per:
+ *
+ *   printf((const char *)"Good Morning Hoboken!\n");
+ *
+ * The AVR also has "_P" variants that take PROGMEM strings as args. On the
+ * ARM/GCC++ the _P functions are just aliases of the non-P variants. 
+ *
+ * Lastly, we use macros to "neutralize" AVR's PROGMEM and other AVRisms.
  */
-typedef uint8_t char_t;
+//typedef char char_t;		// AVR/C
+typedef uint8_t char_t;		// ARM/C++
+
 #define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
 #define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
 #define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
@@ -67,27 +84,22 @@ typedef uint8_t char_t;
 #define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
 #define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
 #define strcmp(d,s) strcmp((char *)d, (char *)s)
-#define strtod(d,s) strtod((char *)d, (char **)s)
-#define strtof(d,s) strtof((char *)d, (char **)s)
+#define strtod(d,p) strtod((char *)d, (char **)p)
+#define strtof(d,p) strtof((char *)d, (char **)p)
 #define strlen(s) strlen((char *)s)
 #define isdigit(c) isdigit((char) c)
 #define isalnum(c) isalnum((char) c)
 #define tolower(c) (char_t)tolower((char) c)
 #define toupper(c) (char_t)toupper((char) c)
 
-/* Note: The printf() family of functions (printf(), fprintf(), sprintf()...) 
- * still requires char pointers as input argument types - not char_t's. 
- * You may need to do casts to (char *) for inputs to printf()'s
- */
-
-// definitions for AVR style PROGMEM code to be mapped to ARM/GCC++
-#define PROGMEM					// ignores7 PROGMEM declarations in ARM/GCC++
-#define PGM_P const char *		// USAGE: (PGM_P) -- must be used in a cast
-#define PSTR 					// AVR macro defines as: PSTR(s) ((const PROGMEM char *)(s))
-#define printf_P printf
+#define printf_P printf		
 #define fprintf_P fprintf
 #define sprintf_P sprintf
 #define strcpy_P strcpy
+
+#define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
+#define PSTR (const char *)		// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
+#define PGM_P const char *		// USAGE: (PGM_P) -- must be used in a cast
 
 /* Axes, motors & PWM channels used by the application
  */
@@ -108,6 +120,7 @@ typedef uint8_t char_t;
 #define AXIS_U 	6			// reserved
 #define AXIS_V 	7			// reserved
 #define AXIS_W 	8			// reserved
+#define AXIS_MAX AXIS_C
 
 #define MOTOR_1	0 			// define motor numbers and array indexes
 #define MOTOR_2	1			// must be defines. enums don't work
@@ -115,9 +128,11 @@ typedef uint8_t char_t;
 #define MOTOR_4	3
 #define MOTOR_5 4
 #define MOTOR_6 5
+#define MOTOR_MAX MOTOR_6
 
 #define PWM_1	0
 #define PWM_2	1
+#define PWM_MAX PWM_2
 
 /*************************************************************************
  * TinyG application-specific prototypes, defines and globals

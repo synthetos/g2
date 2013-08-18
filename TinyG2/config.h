@@ -287,7 +287,7 @@ cmdObj_t *cmd_add_conditional_message(const char_t *string);
 //cmdObj_t *cmd_add_string_P(const char *token, const char *string);	// AVR
 //cmdObj_t *cmd_add_conditional_message_P(const char *string);
 #define cmd_add_string_P(tok, str) cmd_add_string(tok, str)				// ARM
-#define cmd_add_conditional_message_P(str) cmd_add_message(str)
+#define cmd_add_conditional_message_P(string) cmd_add_conditional_message((const char_t *)string)
 
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 

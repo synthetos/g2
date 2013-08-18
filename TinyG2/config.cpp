@@ -603,7 +603,6 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 	return (NULL);
 }
 
-//cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a string object to the body
 cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a string object to the body
 {
 	cmdObj_t *cmd = cmd_body;

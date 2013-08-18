@@ -834,13 +834,18 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
  *
  * Helpers are defined first so they don;t need separate function prototypes
  *
+ * get_axis_char() - return ASCII char for axis given the axis number
  * _get_motor()	- return motor number as an index or -1 if na
  * _get_axis()	- return axis number or -1 if NA
  * _get_pos_axis()- return axis number for pos values or -1 if none - e.g. posx
  */
 
-// get_format() for ARM is defined in config.h as:
-//#define get_format(index) (const char *)cfgArray[index].format
+char_t get_axis_char(int8_t axis)
+{
+	char_t axis_char[] = "XYZABC";
+	if ((axis < 0) || (axis > AXIS_MAX)) return (' ');
+	return (axis_char[axis]);
+}
 
 int8_t _get_motor(const index_t index)
 {
