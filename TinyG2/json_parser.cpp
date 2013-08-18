@@ -398,8 +398,7 @@ void json_print_response(stat_t status)
 	cmdObj_t *cmd = cmd_body;
 	if (status == STAT_JSON_SYNTAX_ERROR) {
 		cmd_reset_list();
-		cmd_add_string((const char_t *)"msg", escape_string(cs.in_buf, cs.saved_buf));
-//		cmd_add_string((const char_t *)"msg", cs.saved_buf);
+		cmd_add_string((const char_t *)"err", escape_string(cs.in_buf, cs.saved_buf));
 
 		} else if (cm.machine_state != MACHINE_INITIALIZING) {		// always do full echo during startup
 		uint8_t cmd_type;

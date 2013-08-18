@@ -603,6 +603,7 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 	return (NULL);
 }
 
+//cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a string object to the body
 cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a string object to the body
 {
 	cmdObj_t *cmd = cmd_body;
@@ -620,8 +621,9 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a str
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_message(const char_t *string)	// conditionally add a message object to the body
+cmdObj_t *cmd_add_conditional_message(const char_t *string)	// conditionally add a message object to the body
 {
+	if ((cfg.comm_mode == JSON_MODE) && (cfg.echo_json_messages != true)) { return (NULL);}
 	return(cmd_add_string((const char_t *)"msg", string));
 }
 
@@ -646,29 +648,11 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
 	if (cfg.comm_mode == JSON_MODE) {
 		json_print_list(status, json_flags);
-		} else {
+	} else {
 		text_print_list(status, text_flags);
 	}
 }
-/*
-void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
-{
-	if (cs.comm_mode == JSON_MODE) {
-		switch (json_flags) {
-			case JSON_NO_PRINT: { break; } 
-			case JSON_OBJECT_FORMAT: { json_print_object(cmd_body); break; }
-			case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
-		}
-	} else {
-		switch (text_flags) {
-			case TEXT_NO_PRINT: { break; } 
-			case TEXT_INLINE_PAIRS: { text_print_inline_pairs(cmd_body); break; }
-			case TEXT_INLINE_VALUES: { text_print_inline_values(cmd_body); break; }
-			case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(cmd_body);}
-		}
-	}
-}
-*/
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

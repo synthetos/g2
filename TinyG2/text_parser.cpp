@@ -172,15 +172,15 @@ void text_print_inline_pairs(cmdObj_t *cmd)
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:	{ fprintf_P(stderr,(PSTR)("%s:%1.3f"), cmd->token, cmd->value); break;}
-			case TYPE_INTEGER:	{ fprintf_P(stderr,(PSTR)("%s:%1.0f"), cmd->token, cmd->value); break;}
-			case TYPE_STRING:	{ fprintf_P(stderr,(PSTR)("%s:%s"), cmd->token, *cmd->stringp); break;}
-			case TYPE_EMPTY:	{ fprintf_P(stderr,(PSTR)("\n")); return; }
+			case TYPE_FLOAT:	{ fprintf_P(stderr, PSTR("%s:%1.3f"), cmd->token, cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr, PSTR("%s:%1.0f"), cmd->token, cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr, PSTR("%s:%s"), cmd->token, *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr, PSTR("\n")); return; }
 		}
 		cmd = cmd->nx;			// +++++ discrepancy in final CR from here
 //		if ((cmd = cmd->nx) == NULL) return;
 
-		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,(PSTR)(","));}
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr, PSTR(","));}
 	}
 /*
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
@@ -202,15 +202,15 @@ void text_print_inline_values(cmdObj_t *cmd)
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:	{ fprintf_P(stderr,(PSTR)("%1.3f"), cmd->value); break;}
-			case TYPE_INTEGER:	{ fprintf_P(stderr,(PSTR)("%1.0f"), cmd->value); break;}
-			case TYPE_STRING:	{ fprintf_P(stderr,(PSTR)("%s"), *cmd->stringp); break;}
-			case TYPE_EMPTY:	{ fprintf_P(stderr,(PSTR)("\n")); return; }
+			case TYPE_FLOAT:	{ fprintf_P(stderr, PSTR("%1.3f"), cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr, PSTR("%1.0f"), cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr, PSTR("%s"), *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr, PSTR("\n")); return; }
 		}
 		cmd = cmd->nx;			// +++++ discrepancy in final CR from here
 //		if ((cmd = cmd->nx) == NULL) return;
 
-		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,(PSTR)(","));}
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr, PSTR(","));}
 	}
 /*
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {

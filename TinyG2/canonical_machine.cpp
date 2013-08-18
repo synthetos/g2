@@ -1086,10 +1086,11 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
  * cm_message() - send a message to the console (or JSON)
  */
 
-void cm_message(char_t *message)
+void cm_message(const char_t *message)
 {
-	cmd_add_message(message);			// conditionally adds the message to the response object
 //	cmd_add_string("msg", message);		// adds the message to the response object
+//	cmd_add_string("msg", (const char *)message);		// adds the message to the response object
+//	cmd_add_conditional_message((const char *)message);	// conditionally adds the message to the response object
 }
 
 /*

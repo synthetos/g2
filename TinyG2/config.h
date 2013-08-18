@@ -281,9 +281,18 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src);
 cmdObj_t *cmd_add_object(const char_t *token);
 cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
 cmdObj_t *cmd_add_float(const char_t *token, const float value);
-cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_message(const char_t *string);
+cmdObj_t *cmd_add_string(const char_t *token, const char_t *string);
+cmdObj_t *cmd_add_conditional_message(const char_t *string);
+
+//cmdObj_t *cmd_add_string_P(const char *token, const char *string);	// AVR
+//cmdObj_t *cmd_add_conditional_message_P(const char *string);
+#define cmd_add_string_P(tok, str) cmd_add_string(tok, str)				// ARM
+#define cmd_add_conditional_message_P(str) cmd_add_message(str)
+
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
+
+//stat_t cmd_read_NVM_value(cmdObj_t *cmd);
+//stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************

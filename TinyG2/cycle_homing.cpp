@@ -194,7 +194,7 @@ static stat_t _homing_error_exit(int8_t axis)
 	} else {
 		sprintf(message, "*** WARNING *** Homing error: %s axis settings incorrect", (char *)msg_axis[axis]);
 	}
-	cmd_add_message((const char_t *)message);
+	cmd_add_conditional_message((const char_t *)message);
 	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_PAIRS, JSON_RESPONSE_FORMAT);
 
 //	mp_flush_planner();

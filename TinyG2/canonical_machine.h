@@ -526,7 +526,7 @@ stat_t cm_change_tool(uint8_t tool);							// M6, T
 uint8_t cm_select_tool(uint8_t tool);							// T parameter
 
 // canonical machine commands not called from gcode dispatcher
-void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
+void cm_message(const char_t *message);							// msg to console (e.g. Gcode comments)
 
 uint8_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 void cm_request_feedhold(void);
