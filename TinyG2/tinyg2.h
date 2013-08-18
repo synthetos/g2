@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.09	// Changes to json_parser to align with tg as of build 387.15
+#define TINYG2_FIRMWARE_BUILD   	015.10	// Mods to text_parser
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -61,7 +61,7 @@ void tg_setup(void);
  */
 typedef uint8_t char_t;
 #define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
-#define strpbrk(d,s) (char_t* )strpbrk((char *)d, (char *)s)
+#define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
 #define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
 #define strcat(d,s) (char_t *)strcat((char *)d, (char *)s)
 #define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
@@ -75,10 +75,18 @@ typedef uint8_t char_t;
 #define tolower(c) (char_t)tolower((char) c)
 #define toupper(c) (char_t)toupper((char) c)
 
-// You still need to do casts in the code for printf()s
-//#define sprintf(a,b) sprintf(char *)a, (char *)b)
+/* Note: The printf() family of functions (printf(), fprintf(), sprintf()...) 
+ * still requires char pointers as input argument types - not char_t's. 
+ * You may need to do casts to (char *) for inputs to printf()'s
+ */
 
-#define PROGMEM			// ignore PROGMEM declarations in ARM/C++
+// definitions for AVR style PROGMEM code to be mapped to ARM/GCC++
+#define PROGMEM			// ignore PROGMEM declarations in ARM/GCC++
+#define PGM_P const char *
+#define PSTR const char *
+#define printf_P printf
+#define fprintf_P fprintf
+#define sprintf_P sprintf
 
 /* Axes, motors & PWM channels used by the application
  */

@@ -44,7 +44,8 @@ enum srStatusReportRequest {
 	SR_IMMEDIATE_REQUEST			// request a status report ASAP
 };
 
-const char_t *get_status_message(uint8_t status);
+const char *get_status_message(uint8_t status);
+
 void rpt_print_message(char_t *msg);
 void rpt_exception(uint8_t status, int16_t value);
 void rpt_print_loading_configs_message(void);

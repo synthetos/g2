@@ -123,7 +123,8 @@ static const char_t stat_68[] = "Max travel exceeded";
 static const char_t stat_69[] = "Max spindle speed exceeded";
 static const char_t stat_70[] = "Arc specification error";
 
-static const char_t *stat_msg[] = {
+//PGM_P const PROGMEM stat_msg[] = {		// AVR/GCC version
+static const char_t *stat_msg[] = {			// ARM/GCC++ version
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
 	stat_10, stat_11, stat_12, stat_13, stat_14, stat_15, stat_16, stat_17, stat_18, stat_19,
 	stat_20, stat_21, stat_22, stat_23, stat_24, stat_25, stat_26, stat_27, stat_28, stat_29,
@@ -134,9 +135,15 @@ static const char_t *stat_msg[] = {
 	stat_70
 };
 
-const char_t *get_status_message(stat_t status)
+const char *get_status_message(stat_t status)
 {
-	return (stat_msg[status]);
+	return ((const char *)stat_msg[status]);
+
+/* AVR code
+	// see tinyg.h for allocation of status_message string
+	strncpy_P(status_message,(PGM_P)pgm_read_word(&stat_msg[status]), STATUS_MESSAGE_LEN);
+	return (status_message);
+*/
 }
 
 /*

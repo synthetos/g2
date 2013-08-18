@@ -77,23 +77,23 @@ stat_t text_parser(uint8_t *str)
 	return (status);
 }
 
-static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
+static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 {
-	uint8_t *rd, *wr;						// read and write pointers
-	uint8_t separators[] = {"="};			// only separator allowed is = sign
-//	uint8_t separators[] = {" =:|\t"};		// more permissive: any separator someone might use
+	char_t *rd, *wr;						// read and write pointers
+//	char_t separators[] = {"="};			// only separator allowed is = sign
+	char_t separators[] = {" =:|\t"};		// more permissive: any separator someone might use
 
-	// string pre-processing
+	// pre-process and normalize the string
 //	cmd_reset_obj(cmd);						// initialize config object
 	cmd_copy_string(cmd, str);				// make a copy for eventual reporting
 	if (*str == '$') str++;					// ignore leading $
 	for (rd = wr = str; *rd!=NUL; rd++, wr++) {
-		*wr = tolower(*rd);			// convert string to lower case
-		if (*rd==',') {
-			*wr = *(++rd);			// skip over comma
-		}
+		*wr = tolower(*rd);					// convert string to lower case
+		if (*rd == ',') { *wr = *(++rd);}	// skip over comma
 	}
-	*wr = NUL;
+	*wr = NUL;								// terminate the string
+
+	// parse fields into the cmd struct
 
 	// field processing
 	cmd->objtype = TYPE_NULL;
@@ -108,45 +108,47 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
 			cmd->objtype = TYPE_FLOAT;
 		}
 	}
-	if ((cmd->index = cmd_get_index((char_t *)"", cmd->token)) == NO_MATCH) { 
+
+	// validate and post-process the token
+	if ((cmd->index = cmd_get_index((const char_t *)"", cmd->token)) == NO_MATCH) { // get index or fail it
 		return (STAT_UNRECOGNIZED_COMMAND);
 	}
+	strcpy(cmd->group, cfgArray[cmd->index].group);		// capture the group string if there is one
+
+	if (strlen(cmd->group) > 0) {			// see if you need to strip the token
+		wr = cmd->token;
+		rd = cmd->token + strlen(cmd->group);
+		while (*rd != NUL) { *(wr)++ = *(rd)++;}
+		*wr = NUL;
+	}
 	return (STAT_OK);
+
 }
 
 
 /************************************************************************************
  * text_response() - text mode responses
  */
-static const char prompt_mm_ok[] = "tinyg [mm] ok> ";
-static const char prompt_in_ok[] = "tinyg [in] ok> ";
-static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s\n";
-static const char prompt_in_err[] = "tinyg [in] err: %s: %s\n";
+static const char prompt_ok[] PROGMEM = "tinyg [%s] ok> ";
+static const char prompt_err[] PROGMEM = "tinyg [%s] err: %s: %s ";
 
 void text_response(const uint8_t status, char_t *buf)
 {
-	cmdObj_t *cmd = cmd_body;
+	if (cfg.text_verbosity == TV_SILENT) return;	// skip all this
 
-	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
+	char units[] = "inch";
+	if (cm_get_model_units_mode() != INCHES) { strcpy(units, "mm"); }
 
-//	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		if (cm_get_model_units_mode() == INCHES) {
-			fprintf(stderr, prompt_in_ok);
-		} else {
-			fprintf(stderr, prompt_mm_ok);
-		}
+		fprintf_P(stderr, (PGM_P)prompt_ok, units);
 	} else {
-		if (cm_get_model_units_mode() == INCHES) {
-			fprintf(stderr, prompt_in_err, (char *)get_status_message(status), buf);
-		} else {
-			fprintf(stderr, prompt_mm_err, (char *)get_status_message(status), buf);			
-		}
+		fprintf_P(stderr, (PGM_P)prompt_err, units, get_status_message(status), buf);
 	}
-	cmd = cmd_body+1;
+	cmdObj_t *cmd = cmd_body+1;
 	if (cmd->token[0] == 'm') {
 		fprintf(stderr, (char *)*cmd->stringp);
 	}
+	fprintf(stderr, "\n");	
 }
 
 /************************************************************************************
