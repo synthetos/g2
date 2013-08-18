@@ -179,20 +179,20 @@ static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 	cm_cycle_end();
 	return (STAT_OK);
 }
-
+/*
 static const char_t msg_axis0[] = "X";
 static const char_t msg_axis1[] = "Y";
 static const char_t msg_axis2[] = "Z";
 static const char_t msg_axis3[] = "A";
 static const char_t *msg_axis[] = { msg_axis0, msg_axis1, msg_axis2, msg_axis3};
-
+*/
 static stat_t _homing_error_exit(int8_t axis)
 {
 	// generate the warning message
 	cmd_reset_list();
 	if (axis == -2) {
 		cmd_add_conditional_message_P((const char_t *)PSTR("*** WARNING *** Homing error: Specified axis(es) cannot be homed"));
-		} else {
+	} else {
 		char message[CMD_MESSAGE_LEN];
 //		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), (PGM_P)pgm_read_word(&msg_axis[axis]));
 //		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), msg_axis[axis]);
