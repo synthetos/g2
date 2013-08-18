@@ -405,6 +405,7 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 	if (strcmp("sr", cmd->token) == 0) return (CMD_TYPE_REPORT);
 	if (strcmp("qr", cmd->token) == 0) return (CMD_TYPE_REPORT);
 	if (strcmp("msg",cmd->token) == 0) return (CMD_TYPE_MESSAGE);
+	if (strcmp("err",cmd->token) == 0) return (CMD_TYPE_MESSAGE); 	// errors are reported as messages
 	if (strcmp("n",  cmd->token) == 0) return (CMD_TYPE_LINENUM);
 	return (CMD_TYPE_CONFIG);
 }
@@ -643,6 +644,15 @@ cmdObj_t *cmd_add_message(const char_t *string)	// conditionally add a message o
 
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
+	if (cfg.comm_mode == JSON_MODE) {
+		json_print_list(status, json_flags);
+		} else {
+		text_print_list(status, text_flags);
+	}
+}
+/*
+void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
+{
 	if (cs.comm_mode == JSON_MODE) {
 		switch (json_flags) {
 			case JSON_NO_PRINT: { break; } 
@@ -658,7 +668,7 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 		}
 	}
 }
-
+*/
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.11	// text_parser aligned with tg build 388.08
+#define TINYG2_FIRMWARE_BUILD   	015.12	// more text_parser alignment work
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -81,9 +81,9 @@ typedef uint8_t char_t;
  */
 
 // definitions for AVR style PROGMEM code to be mapped to ARM/GCC++
-#define PROGMEM			// ignore PROGMEM declarations in ARM/GCC++
-#define PGM_P const char *
-#define PSTR const char *
+#define PROGMEM					// ignores7 PROGMEM declarations in ARM/GCC++
+#define PGM_P const char *		// USAGE: (PGM_P) -- must be used in a cast
+#define PSTR const char *		// USAGE: (PSTR)  -- must be used in a cast
 #define printf_P printf
 #define fprintf_P fprintf
 #define sprintf_P sprintf
