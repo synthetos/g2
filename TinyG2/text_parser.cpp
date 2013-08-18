@@ -31,8 +31,8 @@
 #include "canonical_machine.h"
 #include "text_parser.h"
 #include "report.h"
-#include "util.h"
-#include "xio.h"					// for char definitions
+//#include "util.h"
+#include "xio.h"					// for ASCII char definitions
 
 #ifdef __cplusplus
 extern "C"{
@@ -53,8 +53,9 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
 stat_t text_parser(uint8_t *str)
 {
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
-	uint8_t status = STAT_OK;
+	stat_t status = STAT_OK;
 
+	// pre-process the command
 	if (str[0] == '?') {					// handle status report case
 		rpt_run_text_status_report();
 		return (STAT_OK);
@@ -65,7 +66,7 @@ stat_t text_parser(uint8_t *str)
 
 	// parse and execute the command (only processes 1 command per line)
 	ritorno(_text_parser_kernal(str, cmd));	// decode the request or return if error
-	if ((cmd->objtype == TYPE_PARENT) || (cmd->objtype == TYPE_NULL)) {
+	if ((cmd->objtype == TYPE_NULL) || (cmd->objtype == TYPE_PARENT)) {
 		if (cmd_get(cmd) == STAT_COMPLETE) {// populate value, group values, or run uber-group displays
 			return (STAT_OK);				// return for uber-group displays so they don't print twice
 		}
@@ -80,8 +81,8 @@ stat_t text_parser(uint8_t *str)
 static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 {
 	char_t *rd, *wr;						// read and write pointers
-//	char_t separators[] = {"="};			// only separator allowed is = sign
-	char_t separators[] = {" =:|\t"};		// more permissive: any separator someone might use
+//	char_t separators[] = {"="};			// STRICT: only separator allowed is = sign
+	char_t separators[] = {" =:|\t"};		// RELAXED: any separator someone might use
 
 	// pre-process and normalize the string
 //	cmd_reset_obj(cmd);						// initialize config object
@@ -94,16 +95,14 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 	*wr = NUL;								// terminate the string
 
 	// parse fields into the cmd struct
-
-	// field processing
 	cmd->objtype = TYPE_NULL;
 	if ((rd = strpbrk(str, separators)) == NULL) { // no value part
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 	} else {
-		*rd = NUL;						// terminate at end of name
+		*rd = NUL;							// terminate at end of name
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 		str = ++rd;
-		cmd->value = strtof(str, &rd);	// rd used as end pointer
+		cmd->value = strtof(str, &rd);		// rd used as end pointer
 		if (rd != str) {
 			cmd->objtype = TYPE_FLOAT;
 		}
@@ -113,7 +112,7 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 	if ((cmd->index = cmd_get_index((const char_t *)"", cmd->token)) == NO_MATCH) { // get index or fail it
 		return (STAT_UNRECOGNIZED_COMMAND);
 	}
-	strcpy(cmd->group, cfgArray[cmd->index].group);		// capture the group string if there is one
+	strcpy_P(cmd->group, cfgArray[cmd->index].group);// capture the group string if there is one
 
 	if (strlen(cmd->group) > 0) {			// see if you need to strip the token
 		wr = cmd->token;
@@ -124,7 +123,6 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 	return (STAT_OK);
 
 }
-
 
 /************************************************************************************
  * text_response() - text mode responses
@@ -140,12 +138,13 @@ void text_response(const uint8_t status, char_t *buf)
 	if (cm_get_model_units_mode() != INCHES) { strcpy(units, "mm"); }
 
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		fprintf_P(stderr, (PGM_P)prompt_ok, units);
+		fprintf_P(stderr, prompt_ok, units); // Note: in AVR it's safer to cast (PGM_P)prompt_ok but not mandatory
 	} else {
-		fprintf_P(stderr, (PGM_P)prompt_err, units, get_status_message(status), buf);
+		fprintf_P(stderr, prompt_err, units, get_status_message(status), buf);
 	}
 	cmdObj_t *cmd = cmd_body+1;
-	if (cmd->token[0] == 'm') {
+	
+	if (cmd_get_type(cmd) == CMD_TYPE_MESSAGE) {
 		fprintf(stderr, (char *)*cmd->stringp);
 	}
 	fprintf(stderr, "\n");	

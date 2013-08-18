@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG2_FIRMWARE_BUILD   	015.10	// Mods to text_parser
+#define TINYG2_FIRMWARE_BUILD   	015.11	// text_parser aligned with tg build 388.08
 #define TINYG2_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG2_HARDWARE_PLATFORM	2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG2_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -87,6 +87,7 @@ typedef uint8_t char_t;
 #define printf_P printf
 #define fprintf_P fprintf
 #define sprintf_P sprintf
+#define strcpy_P strcpy
 
 /* Axes, motors & PWM channels used by the application
  */
