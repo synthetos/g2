@@ -179,13 +179,7 @@ static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 	cm_cycle_end();
 	return (STAT_OK);
 }
-/*
-static const char_t msg_axis0[] = "X";
-static const char_t msg_axis1[] = "Y";
-static const char_t msg_axis2[] = "Z";
-static const char_t msg_axis3[] = "A";
-static const char_t *msg_axis[] = { msg_axis0, msg_axis1, msg_axis2, msg_axis3};
-*/
+
 static stat_t _homing_error_exit(int8_t axis)
 {
 	// generate the warning message
@@ -194,24 +188,13 @@ static stat_t _homing_error_exit(int8_t axis)
 		cmd_add_conditional_message_P((const char_t *)PSTR("*** WARNING *** Homing error: Specified axis(es) cannot be homed"));
 	} else {
 		char message[CMD_MESSAGE_LEN];
-//		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), (PGM_P)pgm_read_word(&msg_axis[axis]));
-//		sprintf_P(message, PSTR("*** WARNING *** Homing error: %S axis settings misconfigured"), msg_axis[axis]);
 		sprintf_P(message, PSTR("*** WARNING *** Homing error: %c axis settings misconfigured"), get_axis_char(axis));
 		cmd_add_conditional_message((const char_t *)message);
 	}
 	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
-/*	
-	char message[CMD_MESSAGE_LEN]; 
-	if (axis == -2) {
-		sprintf(message, "*** WARNING *** Homing error: Specified axis(es) cannot be homed");
-	} else {
-		sprintf(message, "*** WARNING *** Homing error: %s axis settings incorrect", (char *)msg_axis[axis]);
-	}
-	cmd_add_conditional_message((const char_t *)message);
-	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_PAIRS, JSON_RESPONSE_FORMAT);
-*/
-//	mp_flush_planner();
-	cm_request_queue_flush(); 						// should be stopped, but in case of switch closure
+	
+	// clean up and exit
+	mp_flush_planner();							// should be stopped, but in case of switch closure
 	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -234,18 +217,17 @@ static stat_t _homing_error_exit(int8_t axis)
  *	_homing_axis_move()			- helper that actually executes the above moves
  */
 
-static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
-{
-	hm.func = func;
-	return (STAT_EAGAIN);
-}
-
-
 stat_t cm_homing_callback(void)
 {
 	if (cm.cycle_state != CYCLE_HOMING) { return (STAT_NOOP);} // exit if not in a homing cycle
 	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}	 // sync to planner move ends
 	return (hm.func(hm.axis));					// execute the current homing move
+}
+
+static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
+{
+	hm.func = func;
+	return (STAT_EAGAIN);
 }
 
 static stat_t _homing_axis_start(int8_t axis)
@@ -257,7 +239,7 @@ static stat_t _homing_axis_start(int8_t axis)
 		} else if (axis == -2) { 							// -2 is error
 			cm_set_units_mode(hm.saved_units_mode);
 			cm_set_distance_mode(hm.saved_distance_mode);
-			cm.cycle_state = CYCLE_MACHINING;
+			cm.cycle_state = CYCLE_OFF;
 			cm_cycle_end();
 			return (_homing_error_exit(-2));
 		}
@@ -307,7 +289,7 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.limit_switch = -1;
 	}
 	hm.saved_jerk = cfg.a[axis].jerk_max;					// save the max jerk value
-	return (_set_homing_func(_homing_axis_clear));				// start the clear
+	return (_set_homing_func(_homing_axis_clear));			// start the clear
 }
 
 // Handle an initial switch closure by backing off switches
@@ -320,14 +302,14 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 	int8_t limit = SW_OPEN;
 
 	if ((homing == SW_OPEN) && (limit != SW_CLOSED)) {
- 		return (_set_homing_func(_homing_axis_search));			// OK to start the search
+ 		return (_set_homing_func(_homing_axis_search));		// OK to start the search
 	}
 	if (homing == SW_CLOSED) {
 		_homing_axis_move(axis, hm.latch_backoff, hm.search_velocity);
- 		return (_set_homing_func(_homing_axis_backoff_home));	// will backoff homing switch some more
+ 		return (_set_homing_func(_homing_axis_backoff_home));// will backoff homing switch some more
 	}
 	_homing_axis_move(axis, -hm.latch_backoff, hm.search_velocity);
- 	return (_set_homing_func(_homing_axis_backoff_limit));		// will backoff limit switch some more
+ 	return (_set_homing_func(_homing_axis_backoff_limit));	// will backoff limit switch some more
 }
 
 static stat_t _homing_axis_backoff_home(int8_t axis)		// back off cleared homing switch
@@ -367,18 +349,12 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 		cm_set_axis_origin(axis, 0);
 		mp_set_runtime_position(axis, 0);
 	} else {
-		cm_set_axis_origin(axis, cm_get_runtime_work_position(AXIS_X));
+//		cm_set_axis_origin(axis, cm_get_runtime_work_position(AXIS_X));
+		cm_set_axis_origin(axis, cm_get_runtime_work_position(axis));
 	}
 	cfg.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
 	cm.homed[axis] = true;
 	return (_set_homing_func(_homing_axis_start));
-/*
-	cm_set_axis_origin(axis, 0);
-	mp_set_runtime_position(axis, 0);
-	cfg.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
-	cm.homed[axis] = true;
-	return (_set_homing_func(_homing_axis_start));
-*/
 }
 
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
@@ -394,7 +370,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	return (STAT_EAGAIN);
 }
 
-/* _run_homing_dual_axis() - kernal routine for running homing on a dual axis */
+// _run_homing_dual_axis() - kernal routine for running homing on a dual axis
 //static stat_t _run_homing_dual_axis(int8_t axis) { return (STAT_OK);}
 
 /*
