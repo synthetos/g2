@@ -163,15 +163,15 @@ typedef struct cfgPWMParameters {
 
 typedef struct cfgParameters {
 	magic_t magic_start;			// magic number to test memory integrity
-//	uint16_t nvm_base_addr;			// NVM base address
-//	uint16_t nvm_profile_base;		// NVM base address of current profile
+	uint16_t nvm_base_addr;			// NVM base address
+	uint16_t nvm_profile_base;		// NVM base address of current profile
 
 	// system group settings
 	float junction_acceleration;	// centripetal acceleration max for cornering
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
-	uint32_t stepper_disable_delay;	// Ms delay for timer disable for power managed motors
+//	uint32_t stepper_disable_delay;	// Ms delay for timer disable for power managed motors
 	uint32_t motor_disable_timeout;	// time in seconds before disabling motors
-	uint32_t motor_disable_timer;	// down counter for above (in system ticks - 10ms increments)
+//	uint32_t motor_disable_timer;	// down counter for above (in system ticks - 10ms increments)
 	// float max_spindle_speed;		// in RPM
 
 	// hidden settings				// not part of system group, but still accessible
@@ -191,11 +191,13 @@ typedef struct cfgParameters {
 	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
 	uint8_t enable_cr;				// enable CR in CRFL expansion on TX
 	uint8_t enable_echo;			// enable text-mode echo
-	uint8_t enable_xon;				// enable XON/XOFF mode
+	uint8_t enable_flow_control;	// enable XON/XOFF or RTS/CTS flow control
+	uint8_t footer_style;			// select footer style
 
 	uint8_t queue_report_verbosity;	// queue reports enabled and verbosity level
 	uint8_t queue_report_hi_water;
 	uint8_t queue_report_lo_water;
+
 	uint8_t json_verbosity;			// see enum in this file for settings
 	uint8_t text_verbosity;			// see enum in this file for settings
 	uint8_t usb_baud_rate;			// see xio_usart.h for XIO_BAUD values

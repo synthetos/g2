@@ -54,10 +54,9 @@ typedef struct controllerState {		// main TG controller struct
 	// communications state variables
 	uint8_t primary_src;				// primary input source device
 	uint8_t secondary_src;				// secondary input source device
-	uint8_t comm_mode;					// communications mode 1=JSON
+	uint8_t default_src;				// default source device
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint16_t linelen;					// length of currently processing line
-//	uint16_t linemax;					// size of input buffer or some other size
 
 	// system state variables
 	uint32_t led_timer;					// used by idlers to flash indicator LED

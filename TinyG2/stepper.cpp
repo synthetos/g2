@@ -256,7 +256,7 @@ void st_disable_motors()
 {
 //+++++ not working
 	dda_timer.stop();
-	st.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
+//	st.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
 }
 
 stat_t st_stepper_disable_delay_callback()

@@ -191,34 +191,33 @@ static stat_t _command_dispatch()
 	// execute the text line
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
 	cs.linelen = 0;
-
 	// dispatch the new text line
 	switch (toupper(cs.in_buf[0])) {
 
 		case NUL: { 							// blank line (just a CR)
-			if (cs.comm_mode != JSON_MODE) {
+			if (cfg.comm_mode != JSON_MODE) {
 				text_response(STAT_OK, cs.saved_buf);
 			}
 			break;
 		}
 		case 'H': { 							// intercept help screens
-			cs.comm_mode = TEXT_MODE;
+			cfg.comm_mode = TEXT_MODE;
 			print_general_help();
 			text_response(STAT_OK, cs.in_buf);
 			break;
 		}
 		case '$': case '?':{ 					// text-mode configs
-			cs.comm_mode = TEXT_MODE;
+			cfg.comm_mode = TEXT_MODE;
 			text_response(text_parser(cs.in_buf), cs.saved_buf);
 			break;
 		}
 		case '{': { 							// JSON input
-			cs.comm_mode = JSON_MODE;
+			cfg.comm_mode = JSON_MODE;
 			json_parser(cs.in_buf);
 			break;
 		}
 		default: {								// anything else must be Gcode
-			if (cs.comm_mode == JSON_MODE) {
+			if (cfg.comm_mode == JSON_MODE) {
 				strncpy(cs.out_buf, cs.in_buf, INPUT_BUFFER_LEN -8);	// use out_buf as temp
 				sprintf((char *)cs.in_buf,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);		// '-8' is used for JSON chars
 				json_parser(cs.in_buf);

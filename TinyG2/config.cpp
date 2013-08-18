@@ -131,7 +131,7 @@ void config_init()
 	}
 */
 // do this instead:
-	cs.comm_mode = JSON_MODE;				// initial value until EEPROM is read
+	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
 	persistence_init();
 	cmd->value = true;
 	set_defaults(cmd);		
@@ -359,7 +359,7 @@ stat_t get_grp(cmdObj_t *cmd)
  */
 stat_t set_grp(cmdObj_t *cmd)
 {
-	if (cs.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
+	if (cfg.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
 	for (uint8_t i=0; i<CMD_MAX_OBJECTS; i++) {
 		if ((cmd = cmd->nx) == NULL) break;
 		if (cmd->objtype == TYPE_EMPTY) break;

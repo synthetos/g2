@@ -31,7 +31,6 @@
 #include "canonical_machine.h"
 #include "text_parser.h"
 #include "report.h"
-//#include "util.h"
 #include "xio.h"					// for ASCII char definitions
 
 #ifdef __cplusplus
@@ -151,7 +150,7 @@ void text_response(const uint8_t status, char_t *buf)
 }
 
 /***** PRINT FUNCTIONS ********************************************************
- * json_print_list() - command to select and produce a JSON formatted output
+ * text_print_list()
  * text_print_inline_pairs()
  * text_print_inline_values()
  * text_print_multiline_formatted()

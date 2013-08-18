@@ -687,7 +687,7 @@ const cfgItem_t cfgArray[] = {
 	// NOTE: Some values have been removed from the system group but are still accessible as individual elements
 	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration, JUNCTION_ACCELERATION },
 	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	  CHORDAL_TOLERANCE },
-	{ "sys","dd",  _f07, 0, fmt_dd, print_int, get_int, set_int, (float *)&cfg.stepper_disable_delay, DISABLE_DELAY },
+//	{ "sys","dd",  _f07, 0, fmt_dd, print_int, get_int, set_int, (float *)&cfg.stepper_disable_delay, DISABLE_DELAY },
 	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					  SWITCH_TYPE },
 	{ "sys","mt",  _f07, 0, fmt_mt, print_int, get_int, set_int, (float *)&cfg.motor_disable_timeout, MOTOR_DISABLE_TIMEOUT},
 	// Note:"me" must initialize after "mt" so it can use the timeout value
