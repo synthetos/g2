@@ -574,7 +574,7 @@ void canonical_machine_alarm(uint8_t value)
 //	switch_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
 //	switch_set_bit_off(FLOOD_COOLANT_BIT);		//###### replace with exec function
 
-	rpt_exception(STAT_ALARM,value);			// send shutdown message
+	rpt_exception(STAT_ALARMED,value);			// send shutdown message
 	cm.machine_state = MACHINE_ALARM;
 }
 

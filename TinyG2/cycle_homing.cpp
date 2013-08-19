@@ -169,20 +169,25 @@ stat_t cm_homing_cycle_start_no_set(void)
 static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 {
 	cm_request_queue_flush();
-	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
+	cm_set_coord_system(hm.saved_coord_system);		// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
 	cm_set_feed_rate(hm.saved_feed_rate);
 	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
 	cm.homing_state = HOMING_HOMED;
-	cm.cycle_state = CYCLE_MACHINING;
+	cm.cycle_state = CYCLE_OFF;						// required
 	cm_cycle_end();
 	return (STAT_OK);
 }
 
+/* 
+ * _homing_error_exit()
+ */
+
 static stat_t _homing_error_exit(int8_t axis)
 {
-	// generate the warning message
+	// Generate the warning message. Since the error exit returns via the homing callback
+	// - and not the main controller - it requires its own display processing
 	cmd_reset_list();
 	if (axis == -2) {
 		cmd_add_conditional_message_P((const char_t *)PSTR("*** WARNING *** Homing error: Specified axis(es) cannot be homed"));
@@ -201,7 +206,8 @@ static stat_t _homing_error_exit(int8_t axis)
 	cm_set_feed_rate(hm.saved_feed_rate);
 	cm_set_motion_mode(MOTION_MODE_CANCEL_MOTION_MODE);
 	cm.cycle_state = CYCLE_OFF;
-	return (STAT_HOMING_CYCLE_FAILED);		// homing state remains HOMING_NOT_HOMED
+	cm_cycle_end();
+	return (STAT_HOMING_CYCLE_FAILED);			// homing state remains HOMING_NOT_HOMED
 }
 
 /* Homing axis moves - these execute in sequence for each axis
@@ -349,7 +355,6 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 		cm_set_axis_origin(axis, 0);
 		mp_set_runtime_position(axis, 0);
 	} else {
-//		cm_set_axis_origin(axis, cm_get_runtime_work_position(AXIS_X));
 		cm_set_axis_origin(axis, cm_get_runtime_work_position(axis));
 	}
 	cfg.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
@@ -360,6 +365,17 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 {
 	float vector[AXES] = {0,0,0,0,0,0};
+	float flags[] = {false, false, false, false, false, false};
+
+	vector[axis] = target;
+	flags[axis] = true;
+	cm_set_feed_rate(velocity);
+	cm_request_queue_flush();
+	cm_request_cycle_start();
+	ritorno(cm_straight_feed(vector, flags));
+	return (STAT_EAGAIN);
+/*
+	float vector[AXES] = {0,0,0,0,0,0};
 	float flags[] = {1,1,1,1,1,1};
 
 	vector[axis] = target;
@@ -368,6 +384,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	cm_request_cycle_start();	
 	ritorno(cm_straight_feed(vector, flags));
 	return (STAT_EAGAIN);
+*/
 }
 
 // _run_homing_dual_axis() - kernal routine for running homing on a dual axis

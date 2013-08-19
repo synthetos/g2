@@ -50,11 +50,16 @@ using Motate::SysTickTimer;
 // Allocate switch array structure
 switches_t sw;
 
-static void _no_action(switch_t *s);
-static void _led_on(switch_t *s);
-static void _led_off(switch_t *s);
+//static void _no_action(switch_t *s);
+//static void _led_on(switch_t *s);
+//static void _led_off(switch_t *s);
 static void _trigger_feedhold(switch_t *s);
 static void _trigger_cycle_start(switch_t *s);
+
+static void _no_action(switch_t *s) { return; }
+//static void _led_on(switch_t *s) { IndicatorLed.clear(); }
+//static void _led_off(switch_t *s) { IndicatorLed.set(); }
+
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -94,10 +99,6 @@ void switch_init(void)
 	// sw.s[AXIS_X][SW_MIN].when_open = _led_off;
 	// sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
 }
-
-static void _no_action(switch_t *s) { return; }
-static void _led_on(switch_t *s) { IndicatorLed.clear(); }
-static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
 /*
  * poll_switches() - run a polling cycle on all switches
@@ -181,7 +182,7 @@ static void _trigger_cycle_start(switch_t *s)
 /*
  * switch_get_switch_mode()  - return switch mode setting
  * switch_get_limit_thrown() - return true if a limit was tripped
- * switch_get_sw_num()  	 - return switch number most recently thrown
+ * switch_get_switch_num()   - return switch number most recently thrown
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++

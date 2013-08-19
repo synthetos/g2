@@ -45,16 +45,17 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t cycle_state;
 	uint8_t motion_state;
 	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t feedhold_requested;		// feedhold character has been received
-	uint8_t queue_flush_requested;	// queue flush character has been received
-	uint8_t cycle_start_requested;	// cycle start character has been received	uint8_t request_feedhold;		// set true to initiate a feedhold
 	uint8_t homing_state;			// homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
-	uint8_t status_report_request;	// 0=no request, 1=timed request, 2=run one now
-	uint32_t status_report_counter;	// status report RTC counter for minimum timing
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
 	uint8_t g10_persist_flag;		// G10 changed offsets - persist them
+	uint8_t feedhold_requested;		// feedhold character has been received
+	uint8_t queue_flush_requested;	// queue flush character has been received
+	uint8_t cycle_start_requested;	// cycle start character has been received	uint8_t request_feedhold;		// set true to initiate a feedhold
+	uint8_t status_report_requested;// 0=no request, 1=timed request, 2=run one now
+	uint32_t status_report_systick;	// SysTick value for next status report
+//	uint32_t status_report_counter;	// status report RTC counter for minimum timing
 	magic_t magic_end;
 } cmSingleton_t;
 extern cmSingleton_t cm;
