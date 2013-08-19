@@ -416,7 +416,6 @@ uint8_t rpt_populate_filtered_status_report()
 			has_data = true;
 		}
 	}
-//	cmd->pv->nx = NULL;						// back up one and terminate the body
 	return (has_data);
 }
 
@@ -430,14 +429,30 @@ struct qrIndexes {				// static data for queue reports
 	uint8_t request;			// set to true to request a report
 	uint8_t buffers_available;	// stored value used by callback
 	uint8_t prev_available;		// used to filter reports
+	uint8_t buffers_added;		// buffers added since last report
+	uint8_t buffers_removed;	// buffers removed since last report
 };
 static struct qrIndexes qr;
 
-void rpt_request_queue_report() 
+void rpt_clear_queue_report()
+{
+	qr.request = false;
+	qr.buffers_added = 0;
+	qr.buffers_removed = 0;
+}
+
+void rpt_request_queue_report(int8_t buffers)
+//void rpt_request_queue_report() 
 { 
 	if (cfg.queue_report_verbosity == QR_OFF) return;
 
 	qr.buffers_available = mp_get_planner_buffers_available();
+
+	if (buffers > 0) {
+		qr.buffers_added += buffers;
+		} else {
+		qr.buffers_removed -= buffers;
+	}
 
 	// perform filtration for QR_FILTERED reports
 	if (cfg.queue_report_verbosity == QR_FILTERED) {
@@ -458,6 +473,23 @@ stat_t rpt_queue_report_callback()
 	if (qr.request == false) { return (STAT_NOOP);}
 	qr.request = false;
 
+	if (cfg.comm_mode == TEXT_MODE) {
+		if (cfg.queue_report_verbosity == QR_VERBOSE) {
+			fprintf(stderr, "qr:%d\n", qr.buffers_available);
+			} else  if (cfg.queue_report_verbosity == QR_TRIPLE) {
+			fprintf(stderr, "qr:%d,added:%d,removed:%d\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
+		}
+		} else {
+		if (cfg.queue_report_verbosity == QR_VERBOSE) {
+			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
+			} else  if (cfg.queue_report_verbosity == QR_TRIPLE) {
+			fprintf(stderr, "{\"qr\":[%d,%d,%d]}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
+			rpt_clear_queue_report();
+		}
+	}
+	return (STAT_OK);
+
+/*
 	// cget a clean cmd object
 //	cmdObj_t *cmd = cmd_reset_list();		// normally you do a list reset but the following is more time efficient
 	cmdObj_t *cmd = cmd_body;
@@ -470,6 +502,7 @@ stat_t rpt_queue_report_callback()
 	cmd->objtype = TYPE_INTEGER;
 	cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	return (STAT_OK);
+*/
 }
 
 /****************************************************************************

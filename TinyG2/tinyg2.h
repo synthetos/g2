@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		016.01	// working tough compatibility in report.cpp (tg build 389.02)
+#define TINYG_FIRMWARE_BUILD   		016.02	// queue report compatibility in report.cpp (tg build 389.03)
 #define TINYG_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1.00	// hardware platform revision number
