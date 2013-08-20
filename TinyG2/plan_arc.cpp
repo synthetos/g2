@@ -21,6 +21,7 @@
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
+#include "stepper.h"
 #include "util.h"
 
 #ifdef __cplusplus
@@ -39,7 +40,7 @@ static float _get_arc_time (const float linear_travel, const float angular_trave
 static float _get_theta(const float x, const float y);
 
 /*****************************************************************************
- * mp_arc() - setup an arc move for runtime
+ * ar_arc() - setup an arc move for runtime
  *
  *	Generates an arc by queueing line segments to the move buffer.
  *	The arc is approximated by generating a large number of tiny, linear
@@ -61,9 +62,8 @@ stat_t ar_arc( const float target[],
 				const float work_offset[],	// offset from work coordinate system
 				const float min_time)		// minimum time for arc for replanning purposes
 {
-	if (ar.run_state != MOVE_STATE_OFF) {
-		return (STAT_INTERNAL_ERROR);		// (not supposed to fail)
-	}
+	if (ar.run_state != MOVE_STATE_OFF) { return (STAT_INTERNAL_ERROR); } // (not supposed to fail)
+
 	ar.linenum = cm_get_model_linenum();	// get gcode model line number as debugging convenience
 
 	// "move_length" is the total mm of travel of the helix (or just arc)
@@ -75,13 +75,12 @@ stat_t ar_arc( const float target[],
 	// load the move struct for an arc
 	cm_get_model_canonical_position_vector(ar.position);// set initial arc position
 
-//	copy_axis_vector(ar.endpoint, target);
-	ar.endpoint[axis_1] = target[0];				// save the arc endpoint
+	ar.endpoint[axis_1] = target[0];					// save the arc endpoint
 	ar.endpoint[axis_2] = target[1];
 	ar.endpoint[axis_linear] = target[2];
 
-	copy_axis_vector(ar.work_offset, work_offset);	// propagate the work offset
-	ar.time = minutes;
+	copy_axis_vector(ar.work_offset, work_offset);		// propagate the work offset
+	ar.time = minutes;									// load the singleton
 	ar.min_time = min_time;
 	ar.theta = theta;
 	ar.radius = radius;
@@ -143,7 +142,7 @@ stat_t ar_arc_callback()
 }
 
 /*
- * ar_abort_arc() - stop an arc.
+ * ar_abort_arc() - stop arc movement without maintaining position
  *
  *	OK to call if no arc is running
  */
@@ -160,12 +159,12 @@ void ar_abort_arc()
  * _get_arc_radius() 	 - compute arc center (offset) from radius.
  * _get_arc_time()		 - compute time to complete arc at current feed rate
  */
-uint8_t cm_arc_feed(float target[], float flags[],// arc endpoints
-					float i, float j, float k, 	// offsets
-					float radius, 					// non-zero sets radius mode
-					uint8_t motion_mode)			// defined motion mode
+stat_t cm_arc_feed(float target[], float flags[],	// arc endpoints
+				   float i, float j, float k, 		// offsets
+				   float radius, 					// non-zero sets radius mode
+				   uint8_t motion_mode)				// defined motion mode
 {
-	uint8_t status = STAT_OK;
+	stat_t status = STAT_OK;
 
 	// copy parameters into the current state
 	gm.motion_mode = motion_mode;
@@ -191,14 +190,15 @@ uint8_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// A non-zero radius is a radius arc. Compute the IJK offset coordinates.
 	// These will override any IJK offsets provided in the call
-	if (fp_NOT_ZERO(radius)) {
-		if ((_get_arc_radius() != STAT_OK)) {
-			return (status);					// error return
-		}
-	}
+	if (fp_NOT_ZERO(radius)) { ritorno(_get_arc_radius());}	// returns if error
+//		if ((_get_arc_radius() != STAT_OK)) {
+//			return (status);					// error return
+//		}
+//	}
 
 	// Introduce a short dwell if the machine is idle to enable the planning
 	// queue to begin to fill (avoids first block having to plan down to zero)
+// DOESN'T WORK - FIND ANOTHER WAY
 //	if (st_isbusy() == false) {
 //		cm_dwell(PLANNER_STARTUP_DELAY_SECONDS);
 //	}
@@ -409,9 +409,9 @@ static float _get_arc_time (const float linear_travel, 		// in mm
 							const float angular_travel, 	// in radians
 							const float radius)				// in mm
 {
+	float tmp;
 	float move_time = 0;	// picks through the times and retains the slowest
 	float planar_travel = fabs(angular_travel * radius);// travel in arc plane
-	float tmp;
 
 	if (gm.inverse_feed_rate_mode == true) {
 		move_time = gm.inverse_feed_rate;
@@ -455,7 +455,7 @@ static float _get_theta(const float x, const float y)
 //##########################################
 //############## UNIT TESTS ################
 //##########################################
-/*
+
 #ifdef __UNIT_TESTS
 #ifdef __UNIT_TEST_PLANNER
 
@@ -466,7 +466,7 @@ void mp_plan_arc_unit_tests()
 
 #endif
 #endif
-*/
+
 #ifdef __cplusplus
 }
 #endif

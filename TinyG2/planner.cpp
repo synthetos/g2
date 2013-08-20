@@ -94,14 +94,14 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 
 void planner_init()
 {
-// You can assume all memory has been zeroed by a hard reset. If not, use this code:
-//	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
-//	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
+// If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
+	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
+	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-//++++	ar.magic_start = MAGICNUM;
-//++++	ar.magic_end = MAGICNUM;
+	ar.magic_start = MAGICNUM;
+	ar.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 

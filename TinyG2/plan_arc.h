@@ -26,20 +26,20 @@ extern "C"{
 
 // See planner.h for MM_PER_ARC_SEGMENT setting
 
-typedef struct arArcSingleton {			// persistent planner and runtime variables
-	float magic_start;
+typedef struct arArcSingleton {	// persistent planner and runtime variables
+	magic_t magic_start;
 	uint8_t run_state;			// runtime state machine sequence
 	uint32_t linenum;			// line number of the arc feed move (Nxxxxx)
 	uint32_t lineindex;			// line index of the arc feed move (autoincrement)
 	
 	float endpoint[AXES];		// endpoint position
 	float position[AXES];		// accumulating runtime position
-	float target[AXES];		// runtime target position
+	float target[AXES];			// runtime target position
 	float work_offset[AXES];	// offset from machine coord system for reporting
 
 	float length;				// length of line or helix in mm
-	float time;				// total running time (derived)
-	float min_time;			// not sure this is needed
+	float time;					// total running time (derived)
+	float min_time;				// not sure this is needed
 	float theta;				// total angle specified by arc
 	float radius;				// computed via offsets
 	float angular_travel;		// travel along the arc
@@ -48,16 +48,16 @@ typedef struct arArcSingleton {			// persistent planner and runtime variables
 	uint8_t axis_2;				// arc plane axis
 	uint8_t axis_linear;		// transverse axis (helical)
 
-	float segments;			// number of segments in arc or blend
+	float segments;				// number of segments in arc or blend
 	int32_t segment_count;		// count of running segments
-	float segment_time;		// constant time per aline segment
+	float segment_time;			// constant time per aline segment
 	float segment_theta;		// angular motion per segment
 	float segment_linear_travel;// linear motion per segment
-	float center_1;			// center of circle at axis 1 (typ X)
-	float center_2;			// center of circle at axis 2 (typ Y)
-	float magic_end;
+	float center_1;				// center of circle at axis 1 (typ X)
+	float center_2;				// center of circle at axis 2 (typ Y)
+	magic_t  magic_end;
 } arc_t;
-//extern arc_t ar;
+extern arc_t ar;
 
 // function prototypes
 stat_t ar_arc(	const float target[],
