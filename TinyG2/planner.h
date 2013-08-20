@@ -169,7 +169,7 @@ typedef struct mpBuffer {		// See Planning Velocity Notes for variable usage
 } mpBuf_t;
 
 typedef struct mpBufferPool {	// ring buffer for sub-moves
-	uint16_t magic_start;		// magic number to test memory integity	
+	magic_t magic_start;		// magic number to test memory integity	
 	uint8_t buffers_available;	// running count of available buffers
 	mpBuf_t *w;					// get_write_buffer pointer
 	mpBuf_t *q;					// queue_write_buffer pointer
@@ -194,7 +194,7 @@ typedef struct mpMoveMasterSingleton {	// common variables for planning (move ma
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
-	uint16_t magic_start;		// magic number to test memory integity	
+	magic_t magic_start;		// magic number to test memory integity	
 	uint32_t linenum;			// runtime line/block number of BF being executed
 	uint8_t motion_mode;		// runtime motion mode for status reports
 	uint8_t move_state;			// state of the overall move
@@ -226,14 +226,8 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float segment_velocity;	// computed velocity for aline segment
 	float forward_diff_1;      // forward difference level 1 (Acceleration)
 	float forward_diff_2;      // forward difference level 2 (Jerk - constant)
-//	float accel_time;			// total pseudo-time for acceleration calculation
-//	float elapsed_accel_time;	// current running time for accel calculation
-//	float midpoint_acceleration;//acceleration at the midpoint
-//	float jerk_div2;			// max linear jerk divided by 2
-//	float segment_accel_time;	// time increment for accel computation purposes
-	uint16_t magic_end;
+	magic_t magic_end;
 } mpMoveRuntimeSingleton_t;
-
 
 // Reference global scope structs
 extern mpBufferPool_t mb;				// move buffer queue
@@ -251,14 +245,14 @@ void mp_flush_planner(void);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 
-uint8_t mp_exec_move(void);
+stat_t mp_exec_move(void);
 void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag);
 
-uint8_t mp_dwell(const float seconds);
-uint8_t mp_aline(const float target[], const float minutes, const float work_offset[], const float min_time);
-uint8_t mp_plan_hold_callback(void);
-uint8_t mp_end_hold(void);
-uint8_t mp_feed_rate_override(uint8_t flag, float parameter);
+stat_t mp_dwell(const float seconds);
+stat_t mp_aline(const float target[], const float minutes, const float work_offset[], const float min_time);
+stat_t mp_plan_hold_callback(void);
+stat_t mp_end_hold(void);
+stat_t mp_feed_rate_override(uint8_t flag, float parameter);
 
 // planner buffer handlers
 uint8_t mp_get_planner_buffers_available(void);

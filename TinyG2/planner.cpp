@@ -118,7 +118,6 @@ void mp_flush_planner()
 	ar_abort_arc();
 	mp_init_buffers();
 	cm.motion_state = MOTION_STOP;
-//	copy_axis_vector(mm.position, mr.position);		//++++ Is this right?
 }
 
 /*
@@ -155,7 +154,7 @@ void mp_set_runtime_position(uint8_t axis, const float position)
  *	Manages run buffers and other details
  */
 
-uint8_t mp_exec_move() 
+stat_t mp_exec_move() 
 {
 	mpBuf_t *bf;
 
@@ -165,15 +164,12 @@ uint8_t mp_exec_move()
 	// cycle auto-start for lines only. Add other move types as appropriate.
 	if (bf->move_type == MOVE_TYPE_ALINE) {
 		if (cm.cycle_state == CYCLE_OFF) cm_cycle_start();
+		if (cm.motion_state == MOTION_STOP) cm.motion_state = MOTION_RUN;		
 	}
-	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
-		cm.motion_state = MOTION_RUN;
-	}
-
-	// run the move callback in the buffer
-	if (bf->bf_func != NULL) {
-		return (bf->bf_func(bf));
-	}
+//	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
+//		cm.motion_state = MOTION_RUN;
+//	}
+	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the buffer
 	return (STAT_INTERNAL_ERROR);		// never supposed to get here
 }
 
@@ -211,7 +207,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 		bf->flag_vector[i] = flag[i];
 	}
 	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
-	return;
+//	return;
 }
 
 static stat_t _exec_command(mpBuf_t *bf)
@@ -224,21 +220,21 @@ static stat_t _exec_command(mpBuf_t *bf)
 
 /*************************************************************************
  * mp_dwell() 	 - queue a dwell
- * _exec_dwell() - dwell continuation
+ * _exec_dwell() - dwell execution 
  *
  * Dwells are performed by passing a dwell move to the stepper drivers.
- * When the stepper driver sees a dwell it times the swell on a separate 
+ * When the stepper driver sees a dwell it times the dwell on a separate 
  * timer than the stepper pulse timer.
  */
 
-uint8_t mp_dwell(float seconds) 
+stat_t mp_dwell(float seconds) 
 {
 	mpBuf_t *bf; 
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
-		return (STAT_BUFFER_FULL_FATAL);		  	// (not supposed to fail)
+		return (STAT_BUFFER_FULL_FATAL);		// (not ever supposed to fail)
 	}
-	bf->bf_func = _exec_dwell;					// register the callback to the exec function
+	bf->bf_func = _exec_dwell;					// register the callback to dwell start
 	bf->time = seconds;						  	// in seconds, not minutes
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
