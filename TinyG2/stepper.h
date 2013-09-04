@@ -67,6 +67,12 @@ uint16_t st_get_stepper_prep_magic(void);
  * Stepper configs and constants
  */
 
+enum cmStepperPowerMode {
+	POWER_MODE_ENABLE_FULL_CYCLE =0,// fully powered during cycles
+	POWER_MODE_DISABLE_ON_IDLE		// power down motor immediately when idle
+//	POWER_MODE_LOW_POWER_IDLE		// not implemented yet
+};
+
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
 //#define FREQUENCY_DDA	50000UL

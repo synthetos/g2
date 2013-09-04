@@ -251,88 +251,55 @@ void stepper_init()
  * st_set_motor_disable_timeout()
  * st_motor_disable_callback()
  */
-/*
+
+void st_enable_motor(const uint8_t motor)
+{
+}
+
 void st_enable_motors()
 {
-	common_enable.clear();										// enable grblShield common enable
-	//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
-	dda_timer.start();
-	
 	if (cfg.m[MOTOR_1].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_1);}
 	if (cfg.m[MOTOR_2].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_2);}
 	if (cfg.m[MOTOR_3].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_3);}
 	if (cfg.m[MOTOR_4].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_4);}
 	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
+	common_enable.clear();										// enable grblShield common enable
+	dda_timer.start();
 }
-*/
+
+void st_disable_motor(const uint8_t motor)
+{
+}
+
+void st_disable_motors()
+{
+	// power-down motors if this feature is enabled
+	if (cfg.m[MOTOR_1].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_1.enable.set(); }
+	if (cfg.m[MOTOR_2].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_2.enable.set(); }
+	if (cfg.m[MOTOR_3].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_3.enable.set(); }
+	if (cfg.m[MOTOR_4].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_4.enable.set(); }
+	if (cfg.m[MOTOR_5].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_5.enable.set(); }
+	if (cfg.m[MOTOR_6].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_6.enable.set(); }
+
+	common_enable.set();		// disable grblShield common enable
+	dda_timer.stop();
+//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
+}
+
 void st_set_motor_disable_timeout(uint32_t seconds)
 {
-//	st_run.motor_disable_systick = SysTickTimer_getValue() + (seconds * 1000);
 	st_run.motor_disable_systick = SysTickTimer.getValue() + (seconds * 1000);
 }
 
 stat_t st_motor_disable_callback() 	// called by controller
 {
-//	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
-	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) {
-		return (STAT_NOOP);
-	}
-	common_enable.set();		// disable grblShield common enable
-	// power-down motors if this feature is enabled
-	if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
-	if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
-	if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
-	if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
-	if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
-	if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
-	return (STAT_OK);
-/*
-//	if (SysTickTimer_getValue() < st_run.motor_disable_systick ) {
 	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) {
 		return (STAT_NOOP);
 	}
 	st_disable_motors();
 	return (STAT_OK);
-*/
 }
 
-/*
- * st_enable_motors() - start the steppers and set a very very long enable timeout
- * st_disable_motors() - step the stoppers and set the current power management timeout 
- * st_disable_delay_callback() - disable motors after timer expires
- */
-
-void st_enable_motors()
-{
-	common_enable.clear();										// enable grblShield common enable
-//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
-	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
-	dda_timer.start();
-}
-
-void st_disable_motors()
-{
-//+++++ not working
-	dda_timer.stop();
-//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
-}
-/*
-stat_t st_stepper_disable_delay_callback()
-{
-	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
-		return (STAT_NOOP);
-	}
-	common_enable.set();		// disable grblShield common enable
-	// power-down motors if this feature is enabled
-	if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
-	if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
-	if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
-	if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
-	if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
-	if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
-	return (STAT_OK);
-}
-*/
 /*
 static void _clear_diagnostic_counters()
 {
@@ -407,7 +374,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
 		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
-			_request_load_move();				// load the next move at a lower interrupt level
+			_request_load_move();					// load the next move at a lower interrupt level
 		}
 		dda_debug_pin1 = 0;
 
