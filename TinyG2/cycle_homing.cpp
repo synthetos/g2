@@ -42,8 +42,8 @@ extern "C"{
 struct hmHomingSingleton {		// persistent homing runtime variables
 	// controls for homing cycle
 	int8_t axis;				// axis currently being homed
-	uint8_t min_mode;			// mode for min switch fo this axis
-	uint8_t max_mode;			// mode for max switch fo this axis
+	uint8_t min_mode;			// mode for min switch for this axis
+	uint8_t max_mode;			// mode for max switch for this axis
 	int8_t homing_switch;		// homing switch for current axis (index into switch flag table)
 	int8_t limit_switch;		// limit switch for current axis, or -1 if none
 	uint8_t homing_closed;		// 0=open, 1=closed
@@ -168,7 +168,10 @@ stat_t cm_homing_cycle_start_no_set(void)
 
 static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
 {
-	cm_request_queue_flush();
+//	cm_request_queue_flush();
+	mp_flush_planner(); 							// should be stopped, but in case of switch closure.
+													// don't use cm_request_queue_flush() here
+
 	cm_set_coord_system(hm.saved_coord_system);		// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -199,7 +202,8 @@ static stat_t _homing_error_exit(int8_t axis)
 	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
 	
 	// clean up and exit
-	mp_flush_planner();							// should be stopped, but in case of switch closure
+	mp_flush_planner(); 						// should be stopped, but in case of switch closure
+												// don't use cm_request_queue_flush() here
 	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -370,21 +374,10 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	vector[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
-	cm_request_queue_flush();
+	mp_flush_planner();										// don't use cm_request_queue_flush() here
 	cm_request_cycle_start();
 	ritorno(cm_straight_feed(vector, flags));
 	return (STAT_EAGAIN);
-/*
-	float vector[AXES] = {0,0,0,0,0,0};
-	float flags[] = {1,1,1,1,1,1};
-
-	vector[axis] = target;
-	cm_set_feed_rate(velocity);
-	cm_request_queue_flush();
-	cm_request_cycle_start();	
-	ritorno(cm_straight_feed(vector, flags));
-	return (STAT_EAGAIN);
-*/
 }
 
 // _run_homing_dual_axis() - kernal routine for running homing on a dual axis
@@ -436,19 +429,7 @@ static int8_t _get_next_axis(int8_t axis)
 	}
 	return (-1);	// done
 }
-/*
-static void _set_vector_by_axis(float *vector[], float value, uint8_t axis)
-{
-	for (uint8_t i=0; i<AXES; i++) {
-		if (axis == i) {
-			*vector[i] = value;
-		} else {
-			*vector[i] = 0;
-		}		
-	}
-	return;
-}
-*/
+
 /*
  * _get_next_axes() - return next axis in sequence based on axis in arg
  *

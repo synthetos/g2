@@ -146,12 +146,14 @@ static void _controller_HSM()
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
+//	DISPATCH(st_motor_disable_callback());		// stepper motor disable timer
 	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
 //	DISPATCH(switch_debounce_callback());		// debounce switches
 	DISPATCH(rpt_status_report_callback());		// conditionally send status report
 	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
 	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
+//	DISPATCH(cm_probe_callback());				// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
 

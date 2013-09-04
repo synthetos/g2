@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		016.03	// Aligned plan_arc
+#define TINYG_FIRMWARE_BUILD   		017.01	// Working on stepper motor disable timeouts
 #define TINYG_FIRMWARE_VERSION		0.2		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2.00	// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1.00	// hardware platform revision number
@@ -47,6 +47,7 @@
 //#define __CANNED_STARTUP					// run any canned startup moves
 //#define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
 //#define __SUPPRESS_STARTUP_MESSAGES 		// what it says
+//#define __SUPPRESS_CANNED_TESTS 			// to save space in debug compiles
 //#define __UNIT_TESTS						// master enable for unit tests; uncomment modules in .h files
 //#define __DEBUG							// complies debug functions found in test.c
 

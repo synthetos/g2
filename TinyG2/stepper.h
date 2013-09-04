@@ -35,20 +35,33 @@ extern "C"{
 */
 void stepper_init(void);			// initialize stepper subsystem
 
-void st_enable_motors(void);		// start the steppers
-void st_disable_motors(void);		// step the stoppers
-stat_t st_stepper_disable_delay_callback(void);// callback to disable the steppers after a delay
-uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
-void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
+void st_enable_motor(const uint8_t motor);
+void st_enable_motors(void);
+void st_disable_motor(const uint8_t motor);
+void st_disable_motors(void);
+void st_set_motor_disable_timeout(uint32_t seconds);
+stat_t st_motor_disable_callback(void);
 
-void st_prep_null(void);
-void st_prep_dwell(float microseconds);
+//void st_enable_motors(void);		// start the steppers
+//void st_disable_motors(void);		// step the stoppers
+stat_t st_stepper_disable_delay_callback(void);// callback to disable the steppers after a delay
+
+uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
+void st_set_polarity(const uint8_t motor, const uint8_t polarity);
+void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
+void st_set_power_mode(const uint8_t motor, const uint8_t power_mode);
+
 uint8_t st_test_prep_state(void);
 void st_request_exec_move(void);
+void st_prep_null(void);
+void st_prep_dwell(float microseconds);
 uint8_t st_prep_line(float steps[], float microseconds);
 
-magic_t st_get_st_magic(void);
-magic_t st_get_sps_magic(void);
+uint16_t st_get_stepper_run_magic(void);
+uint16_t st_get_stepper_prep_magic(void);
+
+//magic_t st_get_st_magic(void);
+//magic_t st_get_sps_magic(void);
 
 /*
  * Stepper configs and constants
