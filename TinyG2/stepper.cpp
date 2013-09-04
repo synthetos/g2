@@ -167,7 +167,7 @@ typedef struct stRunSingleton {		// Stepper static values and axis parameters
 	int32_t dda_ticks_downcount;	// tick down-counter (unscaled)
 	int32_t dda_ticks_X_substeps;	// ticks multiplied by scaling factor
 	uint32_t motor_disable_systick;	// sys_tick at which to disable the motors
-	uint32_t disable_delay_timeout;	// time to delay disabling steppers (in system ticks)
+//	uint32_t disable_delay_timeout;	// time to delay disabling steppers (in system ticks)
 	stRunMotor_t m[MOTORS];			// runtime motor structures
 } stRunSingleton_t;
 
@@ -273,7 +273,8 @@ void st_set_motor_disable_timeout(uint32_t seconds)
 
 stat_t st_motor_disable_callback() 	// called by controller
 {
-	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
+//	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
+	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) {
 		return (STAT_NOOP);
 	}
 	common_enable.set();		// disable grblShield common enable
@@ -304,7 +305,8 @@ stat_t st_motor_disable_callback() 	// called by controller
 void st_enable_motors()
 {
 	common_enable.clear();										// enable grblShield common enable
-	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
+//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
+	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
 	dda_timer.start();
 }
 
@@ -314,7 +316,7 @@ void st_disable_motors()
 	dda_timer.stop();
 //	st_run.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
 }
-
+/*
 stat_t st_stepper_disable_delay_callback()
 {
 	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
@@ -330,6 +332,7 @@ stat_t st_stepper_disable_delay_callback()
 	if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
 	return (STAT_OK);
 }
+*/
 /*
 static void _clear_diagnostic_counters()
 {
