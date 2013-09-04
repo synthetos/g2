@@ -31,11 +31,11 @@
  */
 #include "tinyg2.h"
 #include "config.h"
-#include "hardware.h"
-#include "planner.h"
 #include "stepper.h"
+#include "planner.h"
 //#include "motatePins.h"		// defined in hardware.h   Not needed here
 #include "motateTimers.h"
+#include "hardware.h"
 #include "util.h"
 
 //#define ENABLE_DIAGNOSTICS
@@ -45,16 +45,16 @@
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
 #endif
 
-// Setup local resources
-
-static void _load_move(void);
-static void _request_load_move(void);
-static void _clear_diagnostic_counters(void);
-
 enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
 	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
 };
+
+// Setup local resources
+
+static void _load_move(void);
+static void _request_load_move(void);
+//static void _clear_diagnostic_counters(void);
 
 using namespace Motate;
 /*
@@ -185,10 +185,9 @@ typedef struct stPrepSingleton {
 //	uint8_t prep_state;				// set TRUE to load, false to skip	
 	volatile uint8_t exec_state;	// move execution state 
 	volatile uint8_t reset_flag;	// set TRUE if accumulator should be reset
-//	uint32_t prev_ticks;			// tick count from previous move
+	uint32_t prev_ticks;			// tick count from previous move
 //	uint16_t dda_period;			// DDA or dwell clock period setting	
 	uint32_t dda_ticks;				// DDA (or dwell) ticks for the move
-	uint32_t dda_ticks_previous;	// DDA tick count from previous move
 	uint32_t dda_ticks_X_substeps;	// DDA ticks scaled by substep factor
 	stPrepMotor_t m[MOTORS];		// per-motor structures
 } stPrepSingleton_t;
@@ -252,7 +251,20 @@ void stepper_init()
  * st_set_motor_disable_timeout()
  * st_motor_disable_callback()
  */
-
+/*
+void st_enable_motors()
+{
+	common_enable.clear();										// enable grblShield common enable
+	//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
+	dda_timer.start();
+	
+	if (cfg.m[MOTOR_1].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_1);}
+	if (cfg.m[MOTOR_2].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_2);}
+	if (cfg.m[MOTOR_3].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_3);}
+	if (cfg.m[MOTOR_4].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_4);}
+	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
+}
+*/
 void st_set_motor_disable_timeout(uint32_t seconds)
 {
 //	st_run.motor_disable_systick = SysTickTimer_getValue() + (seconds * 1000);
@@ -261,12 +273,26 @@ void st_set_motor_disable_timeout(uint32_t seconds)
 
 stat_t st_motor_disable_callback() 	// called by controller
 {
+	if (st_run.disable_delay_timeout > SysTickTimer.getValue()) {
+		return (STAT_NOOP);
+	}
+	common_enable.set();		// disable grblShield common enable
+	// power-down motors if this feature is enabled
+	if (cfg.m[MOTOR_1].power_mode == true) { motor_1.enable.set(); }
+	if (cfg.m[MOTOR_2].power_mode == true) { motor_2.enable.set(); }
+	if (cfg.m[MOTOR_3].power_mode == true) { motor_3.enable.set(); }
+	if (cfg.m[MOTOR_4].power_mode == true) { motor_4.enable.set(); }
+	if (cfg.m[MOTOR_5].power_mode == true) { motor_5.enable.set(); }
+	if (cfg.m[MOTOR_6].power_mode == true) { motor_6.enable.set(); }
+	return (STAT_OK);
+/*
 //	if (SysTickTimer_getValue() < st_run.motor_disable_systick ) {
 	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) {
 		return (STAT_NOOP);
 	}
 	st_disable_motors();
 	return (STAT_OK);
+*/
 }
 
 /*
@@ -274,9 +300,9 @@ stat_t st_motor_disable_callback() 	// called by controller
  * st_disable_motors() - step the stoppers and set the current power management timeout 
  * st_disable_delay_callback() - disable motors after timer expires
  */
+
 void st_enable_motors()
 {
-//+++++ not working
 	common_enable.clear();										// enable grblShield common enable
 	st_run.disable_delay_timeout = (SysTickTimer.getValue() + 1000*60*60);	// no move can last longer than an hour
 	dda_timer.start();
@@ -603,10 +629,10 @@ uint8_t st_prep_line(float steps[], float microseconds)
 	st_prep.dda_ticks_X_substeps = st_prep.dda_ticks * DDA_SUBSTEPS;	// see FOOTNOTE
 
 	// anti-stall measure in case change in velocity between segments is too great 
-	if ((st_prep.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_prep.dda_ticks_previous) {  // NB: uint32_t math
+	if ((st_prep.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_prep.prev_ticks) {  // NB: uint32_t math
 		st_prep.reset_flag = true;
 	}
-	st_prep.dda_ticks_previous = st_prep.dda_ticks;
+	st_prep.prev_ticks = st_prep.dda_ticks;
 	st_prep.move_type = MOVE_TYPE_ALINE;
 	return (STAT_OK);
 }

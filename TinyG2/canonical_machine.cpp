@@ -1269,7 +1269,7 @@ void cm_cycle_start()
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.cycle_state = CYCLE_MACHINING;			// don't change homing, probe or other cycles
 //		rpt_clear_queue_report();					//+++++ clear queue reporting buffer counts
-//		st_enable_motors();							//+++++ (THIS IS BROKEN) enable motors if not already enabled
+//		st_enable_motors();							//+++++ EXPERIMENTAL // enable motors if not already enabled
 	}
 }
 
