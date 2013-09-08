@@ -90,6 +90,7 @@ static stat_t run_qf(cmdObj_t *cmd);		// execute a queue flush block
 static stat_t get_er(cmdObj_t *cmd);		// invoke a bogus exception report for testing purposes
 static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
 
+static stat_t set_mt(cmdObj_t *cmd);		// set motor disable timeout in deconds
 static stat_t set_md(cmdObj_t *cmd);		// disable all motors
 static stat_t set_me(cmdObj_t *cmd);		// enable motors with power-mode set to 0 (on)
 
@@ -308,10 +309,9 @@ static const char_t PROGMEM fmt_baud[] = "[baud] USB baud rate%15d [1=9600,2=192
 static const char_t PROGMEM fmt_qr[] = "qr:%d\n";
 static const char_t PROGMEM fmt_rx[] = "rx:%d\n";
 
+static const char_t PROGMEM fmt_mt[] = "[mt]  motor disable timeout%11.2f Sec\n";
 static const char_t PROGMEM fmt_md[] = "motors disabled\n";
 static const char_t PROGMEM fmt_me[] = "motors enabled\n";
-static const char_t PROGMEM fmt_mt[] = "[mt]  motor disable timeout%8d Sec\n";
-static const char_t PROGMEM fmt_dd[] = "[dd]  stepper disable delay%8d mSec\n";
 
 // Gcode model values for reporting purposes
 static const char_t PROGMEM fmt_vel[]   = "Velocity:%17.3f%s/min\n";
@@ -409,7 +409,7 @@ const cfgItem_t cfgArray[] = {
 	{ "sys", "fv", _f07, 3, fmt_fv, print_flt, get_flt, set_nul, (float *)&cs.fw_version,	TINYG_FIRMWARE_VERSION },
 	{ "sys", "hp", _f07, 0, fmt_hp, print_flt, get_flt, set_flt, (float *)&cs.hw_platform,	TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _f07, 0, fmt_hv, print_flt, get_flt, set_flt, (float *)&cs.hw_version,	TINYG_HARDWARE_VERSION },
-//	{ "sys", "id", _fns, 0, fmt_id, print_str, get_id,  set_nul, (float *)&cs.null, 0 },		// device ID (ASCII signature)
+//	{ "sys", "id", _fns, 0, fmt_id, print_str, get_id,  set_nul, (float *)&cs.null, 0 },	// device ID (ASCII signature)
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, fmt_line,print_int, get_int, set_int,(float *)&gm.linenum,0 },	// Gcode line number - gets model line number
@@ -687,11 +687,9 @@ const cfgItem_t cfgArray[] = {
 	// NOTE: Some values have been removed from the system group but are still accessible as individual elements
 	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration, JUNCTION_ACCELERATION },
 	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	  CHORDAL_TOLERANCE },
-//	{ "sys","dd",  _f07, 0, fmt_dd, print_int, get_int, set_int, (float *)&cfg.stepper_disable_delay, DISABLE_DELAY },
 	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					  SWITCH_TYPE },
-	{ "sys","mt",  _f07, 0, fmt_mt, print_int, get_int, set_int, (float *)&cfg.motor_disable_timeout, MOTOR_DISABLE_TIMEOUT},
-	// Note:"me" must initialize after "mt" so it can use the timeout value
-	{ "",   "me",  _fin, 0, fmt_me, print_str, set_me,  set_me,  (float *)&cs.null, 0 },
+	{ "sys","mt",  _f07, 2, fmt_mt, print_flt, get_flt, set_mt,  (float *)&cfg.motor_disable_timeout, MOTOR_DISABLE_TIMEOUT},
+	{ "",   "me",  _f00, 0, fmt_me, print_str, set_me,  set_me,  (float *)&cs.null, 0 },
 	{ "",   "md",  _f00, 0, fmt_md, print_str, set_md,  set_md,  (float *)&cs.null, 0 },
 
 	{ "sys","ej",  _f07, 0, fmt_ej, print_ui8, get_ui8, set_01,  (float *)&cfg.comm_mode,			COMM_MODE },
@@ -727,7 +725,7 @@ const cfgItem_t cfgArray[] = {
 	{ "",   "gc",  _f00, 0, fmt_nul, print_nul, get_gc, run_gc,  (float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// removed from system group as "hidden" parameters
-	{ "",	"ms",  _fip, 0, fmt_mt, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
+	{ "",	"ms",  _fip, 0, fmt_ms, print_lin, get_flt, set_flt, (float *)&cfg.estd_segment_usec,	NOM_SEGMENT_USEC },
 	{ "",   "ml",  _fip, 4, fmt_ml, print_lin, get_flu, set_flu, (float *)&cfg.min_segment_len,		MIN_LINE_LENGTH },
 	{ "",   "ma",  _fip, 4, fmt_ma, print_lin, get_flu, set_flu, (float *)&cfg.arc_segment_len,		ARC_SEGMENT_LENGTH },
 	{ "",   "qrh", _fip, 0, fmt_ui8,print_ui8, get_ui8, set_ui8, (float *)&cfg.queue_report_hi_water, QR_HI_WATER },
@@ -950,6 +948,7 @@ static stat_t get_id(cmdObj_t *cmd)
  * get_sr()	- run status report
  * set_sr()	- set status report elements
  * print_sr() - print multiline text status report
+ * set_mt() - set motor disable timeout in seconds
  * set_md() - disable all motors
  * set_me() - enable motors with $Npm=0
  * run_sx()	- send XOFF, XON
@@ -1010,15 +1009,21 @@ static void print_sr(cmdObj_t *cmd)
 	rpt_populate_unfiltered_status_report();
 }
 
-static stat_t set_md(cmdObj_t *cmd)
+static stat_t set_mt(cmdObj_t *cmd)
 {
-	//	st_disable_motors();	//+++++ not working
+	st_set_motor_disable_timeout(cmd->value);	
 	return (STAT_OK);
 }
 
-static stat_t set_me(cmdObj_t *cmd)
+static stat_t set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	//	st_enable_motors();		//+++++ not working
+	st_disable_motors();
+	return (STAT_OK);
+}
+
+static stat_t set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
+{
+	st_enable_motors();
 	return (STAT_OK);
 }
 

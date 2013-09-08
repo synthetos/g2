@@ -246,11 +246,31 @@ static void _clear_diagnostic_counters()
 */
 
 /* 
+ * st_set_motor_disable_timeout() - set the timeout in the config
+ */
+
+void st_set_motor_disable_timeout(float seconds)
+{
+	cfg.motor_disable_timeout = min(STEPPER_MAX_TIMEOUT_SECONDS, max(seconds, STEPPER_MIN_TIMEOUT_SECONDS));
+}
+
+/* 
+ * st_do_motor_disable_timeout()  - execute the timeout
+ *
+ *	Sets a point N seconds in the future when the motors will be disabled (time out)
+ *	Can be called at any time to extend N seconds from the current time
+ */
+
+void st_do_motor_disable_timeout()
+{
+	st_run.motor_disable_systick = SysTickTimer.getValue() + uint32_t(cfg.motor_disable_timeout * 1000);
+}
+
+/* 
  * st_enable_motor()  - enable a motor
  * st_disable_motor() - disable a motor
  * st_enable_motors() - enable all motors with $pm set to POWER_MODE_DELAYED_DISABLE
  * st_disable_motors()- disable all motors
- * st_conditional_disable_motors()- disable all motors that are set to power-off-when-idle
  * st_motor_disable_callback()
  */
 
@@ -278,7 +298,6 @@ void st_disable_motor(const uint8_t motor)
 
 void st_enable_motors()
 {
-
 	motor_1.enable.clear();		// clear enables the motor
 	motor_2.enable.clear();		// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.clear();
@@ -287,13 +306,13 @@ void st_enable_motors()
 	motor_6.enable.clear();
 	common_enable.clear();		// enable gShield common enable
 
-	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
+//	st_do_motor_disable_timeout(cfg.motor_disable_timeout);
+	st_do_motor_disable_timeout();
 	dda_timer.start();
 }
 
 void st_disable_motors()
 {
-
 	motor_1.enable.set();		// set disables the motor
 	motor_2.enable.set();		// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.set();
@@ -303,11 +322,6 @@ void st_disable_motors()
 //	common_enable.set();		// disable gShield common enable
 
 	dda_timer.stop();
-}
-
-void st_set_motor_disable_timeout(uint32_t seconds)
-{
-	st_run.motor_disable_systick = SysTickTimer.getValue() + (seconds * 1000);
 }
 
 stat_t st_motor_disable_callback() 	// called by controller
