@@ -25,10 +25,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* 	This module provides the low-level stepper drivers and some related functions. 
- *	This is some of the most heavily optimized code in the project.
- *	Please refer to the stepper.h end notes for a more complete explanation.
+/* 
+ * See stepper.h for a detailed explanation of this part of the code 
  */
+
 #include "tinyg2.h"
 #include "config.h"
 #include "stepper.h"
@@ -45,11 +45,6 @@
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
 #endif
 
-enum prepBufferState {
-	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
-	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
-};
-
 // Setup local resources
 
 static void _load_move(void);
@@ -57,22 +52,12 @@ static void _request_load_move(void);
 //static void _clear_diagnostic_counters(void);
 
 using namespace Motate;
-/*
-Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
-Motate::Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
-Motate::Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
-Motate::Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
 
-Motate::OutputPin<31> dda_debug_pin1;
-Motate::OutputPin<33> dda_debug_pin2;
-*/
-
-//Motate::OutputPin<motor_common_enable_pin_num> enable; // defining a pin w/o 'using namespace Motate'
 OutputPin<motor_common_enable_pin_num> common_enable;	 // shorter form of the above
-
 OutputPin<31> dda_debug_pin1;
 OutputPin<33> dda_debug_pin2;
 
+// Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
 Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
 Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
@@ -95,6 +80,7 @@ struct Stepper {
 	OutputPin<ms1_num> ms1;
 	OutputPin<vref_num> vref;
 };
+
 Stepper<motor_1_step_pin_num, 
 		motor_1_dir_pin_num, 
 		motor_1_enable_pin_num, 
@@ -138,6 +124,12 @@ Stepper<motor_6_step_pin_num,
 		motor_6_vref_pin_num> motor_6;
 
 /*
+struct Steppers {
+	struct *Stepper[] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_5 };	
+};
+*/
+
+/*
  * Stepper structures
  *
  *	There are 4 sets of structures involved in loading and running step pulses:
@@ -167,7 +159,6 @@ typedef struct stRunSingleton {		// Stepper static values and axis parameters
 	int32_t dda_ticks_downcount;	// tick down-counter (unscaled)
 	int32_t dda_ticks_X_substeps;	// ticks multiplied by scaling factor
 	uint32_t motor_disable_systick;	// sys_tick at which to disable the motors
-//	uint32_t disable_delay_timeout;	// time to delay disabling steppers (in system ticks)
 	stRunMotor_t m[MOTORS];			// runtime motor structures
 } stRunSingleton_t;
 
@@ -182,11 +173,10 @@ typedef struct stPrepMotor {
 typedef struct stPrepSingleton {
 	uint16_t magic_start;			// magic number to test memory integrity	
 	uint8_t move_type;				// move type
-//	uint8_t prep_state;				// set TRUE to load, false to skip	
 	volatile uint8_t exec_state;	// move execution state 
 	volatile uint8_t reset_flag;	// set TRUE if accumulator should be reset
 	uint32_t prev_ticks;			// tick count from previous move
-//	uint16_t dda_period;			// DDA or dwell clock period setting	
+//	uint16_t dda_period;			// DDA or dwell clock period setting (not needed for Motate)
 	uint32_t dda_ticks;				// DDA (or dwell) ticks for the move
 	uint32_t dda_ticks_X_substeps;	// DDA ticks scaled by substep factor
 	stPrepMotor_t m[MOTORS];		// per-motor structures
@@ -245,45 +235,79 @@ void stepper_init()
 
 /* 
  * st_enable_motor()  - enable a motor
- * st_enable_motors() - enable all motors with $pm set to POWER_MODE_DELAYED_DISABLE
  * st_disable_motor() - disable a motor
+ * st_enable_motors() - enable all motors with $pm set to POWER_MODE_DELAYED_DISABLE
  * st_disable_motors()- disable all motors
- * st_set_motor_disable_timeout()
+ * st_conditional_disable_motors()- disable all motors that are set to power-off-when-idle
  * st_motor_disable_callback()
  */
 
 void st_enable_motor(const uint8_t motor)
 {
-}
-
-void st_enable_motors()
-{
-	if (cfg.m[MOTOR_1].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_1);}
-	if (cfg.m[MOTOR_2].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_2);}
-	if (cfg.m[MOTOR_3].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_3);}
-	if (cfg.m[MOTOR_4].power_mode == POWER_MODE_ENABLE_FULL_CYCLE) { st_enable_motor(MOTOR_4);}
-	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
-	common_enable.clear();										// enable grblShield common enable
-	dda_timer.start();
+	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
+	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.clear();	// clear enables the motor
+	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.clear();
+	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.clear();
+	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.clear();
+	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.clear();
+	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.clear();
 }
 
 void st_disable_motor(const uint8_t motor)
 {
+	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.set();	// set disables the motor
+	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.set();
+	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.set();
+	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.set();
+	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.set();
+	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.set();
+}
+
+void st_enable_motors()
+{
+/*
+	motor_1.enable.clear();		// clear enables the motor
+	motor_2.enable.clear();		// any motor-N.enable defined as -1 will drop out of compile
+	motor_3.enable.clear();
+	motor_4.enable.clear();
+	motor_5.enable.clear();
+	motor_6.enable.clear();
+*/
+	common_enable.clear();									// enable grblShield common enable
+
+//	st_run.motor_disable_systick = SysTickTimer.getValue() + (cfg.motor_disable_timeout * 1000);
+	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
+	dda_timer.start();
 }
 
 void st_disable_motors()
 {
-	// power-down motors if this feature is enabled
-	if (cfg.m[MOTOR_1].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_1.enable.set(); }
-	if (cfg.m[MOTOR_2].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_2.enable.set(); }
-	if (cfg.m[MOTOR_3].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_3.enable.set(); }
-	if (cfg.m[MOTOR_4].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_4.enable.set(); }
-	if (cfg.m[MOTOR_5].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_5.enable.set(); }
-	if (cfg.m[MOTOR_6].power_mode == POWER_MODE_DISABLE_ON_IDLE) { motor_6.enable.set(); }
-
-	common_enable.set();		// disable grblShield common enable
+/*
+	motor_1.enable.set();		// set disables the motor
+	motor_2.enable.set();		// any motor-N.enable defined as -1 will drop out of compile
+	motor_3.enable.set();
+	motor_4.enable.set();
+	motor_5.enable.set();
+	motor_6.enable.set();
+	common_enable.set();		// disable gShield common enable
+*/
 	dda_timer.stop();
-//	st_run.disable_delay_timeout = (SysTickTimer.getValue() + cfg.stepper_disable_delay);
+}
+
+void st_conditional_disable_motors()
+{
+	st_run.motor_disable_systick = (SysTickTimer.getValue() + (1000 * cfg.motor_disable_timeout));
+
+	// power-down motors if this feature is enabled
+	if (!motor_1.enable.isNull()) if (cfg.m[MOTOR_1].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_1.enable.set();
+	if (!motor_2.enable.isNull()) if (cfg.m[MOTOR_2].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_2.enable.set();
+	if (!motor_3.enable.isNull()) if (cfg.m[MOTOR_3].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_3.enable.set();
+	if (!motor_4.enable.isNull()) if (cfg.m[MOTOR_4].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_4.enable.set();
+	if (!motor_5.enable.isNull()) if (cfg.m[MOTOR_5].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_5.enable.set();
+	if (!motor_6.enable.isNull()) if (cfg.m[MOTOR_6].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_6.enable.set();
+
+	common_enable.set();		// disable gShield common enable
+	dda_timer.stop();
 }
 
 void st_set_motor_disable_timeout(uint32_t seconds)
@@ -293,10 +317,17 @@ void st_set_motor_disable_timeout(uint32_t seconds)
 
 stat_t st_motor_disable_callback() 	// called by controller
 {
-	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) {
-		return (STAT_NOOP);
-	}
-	st_disable_motors();
+	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) return (STAT_NOOP);
+//
+//	st_conditional_disable_motors();
+	common_enable.set();		// disable gShield common enable
+	// power-down motors if this feature is enabled
+	if (!motor_1.enable.isNull()) if (cfg.m[MOTOR_1].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_1.enable.set();
+	if (!motor_2.enable.isNull()) if (cfg.m[MOTOR_2].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_2.enable.set();
+	if (!motor_3.enable.isNull()) if (cfg.m[MOTOR_3].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_3.enable.set();
+	if (!motor_4.enable.isNull()) if (cfg.m[MOTOR_4].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_4.enable.set();
+	if (!motor_5.enable.isNull()) if (cfg.m[MOTOR_5].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_5.enable.set();
+	if (!motor_6.enable.isNull()) if (cfg.m[MOTOR_6].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_6.enable.set();
 	return (STAT_OK);
 }
 
@@ -373,9 +404,10 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			motor_6.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
-		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
-			_request_load_move();					// load the next move at a lower interrupt level
-		}
+//		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
+//			st_conditional_disable_motors();
+//			_load_move();							// load the next move at the current interrupt level
+//		}
 		dda_debug_pin1 = 0;
 
 	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
@@ -386,6 +418,11 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		motor_4.step.clear();
 		motor_5.step.clear();
 		motor_6.step.clear();
+
+		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
+//			st_conditional_disable_motors();
+			_load_move();							// load the next move at the current interrupt level
+		}
 		dda_debug_pin2 = 0;
 	}
 }
@@ -541,9 +578,9 @@ void _load_move()
 	}
 
 	// all cases drop to here - such as Null moves queued by MCodes
-	st_prep_null();									// disable prep buffer, if only temporarily
+	st_prep_null();										// disable prep buffer, if only temporarily
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
-	st_request_exec_move();							// compute and prepare the next move
+	st_request_exec_move();								// compute and prepare the next move
 }
 
 /* 

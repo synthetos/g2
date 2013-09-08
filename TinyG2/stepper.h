@@ -24,8 +24,115 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* See END NOTES for a lot of documentation about the stepper and planning in general */
 
+/**** Line planning and execution ****
+ *
+ *	Move planning, execution and pulse generation takes place at 3 levels:
+ *
+ *	Move planning occurs in the main-loop. The canonical machine calls the planner to 
+ *	generate lines, arcs, dwells and synchronous stop/starts. The planner module 
+ *	generates blocks (bf's) that hold parameters for lines and the other move types. 
+ *	The blocks are backplanned to join lines, and to take dwells and stops into account. 
+ *	("plan" stage).
+ *
+ *	Arc movement is planned above the above the line planner. The arc planner generates 
+ *	short lines that are passed to the line planner.
+ *
+ *	Move execution and load prep takes place at a LOW interrupt level. Move execution 
+ *	generates the next acceleration, cruise, or deceleration segment for planned lines, or 
+ *	just transfers parameters needed for dwells and stops. This layer also prepares moves 
+ *	for loading by pre-calculating the values needed by the DDA, and converting the executed 
+ *	move into parameters that can be directly loaded into the steppers ("exec" and "prep" stages).
+ *
+ *	Pulse train generation takes place at a HI interrupt level. The stepper DDA fires timer 
+ *	interrupts that generate the stepper pulses. This level also transfers new stepper 
+ *	parameters once each pulse train ("segment") is complete ("load" and "run" stages). 
+ */
+/* 	What happens when the pulse generator is done with the current pulse train (segment)
+*	is a multi-stage "pull" that looks like this:
+ *
+ *	As long as the steppers are running the sequence of events is:
+ *	  - The stepper interrupt (HI) runs the DDA to generate a pulse train for the current move. 
+ *		  This runs for the length of the pulse train currently executing - the "segment", 
+ *		  usually 5ms worth of pulses.
+ *
+ *	  - When the current segment is finished the stepper interrupt LOADs the next segment from
+ *		  the prep buffer, reloads the timers, and starts the next segment. At the end of the 
+ *		  load the stepper interrupt routine requests an "exec" of the next move in order to
+ *		  prepare for the next load operation. It does this by calling the exec using a software 
+ *		  interrupt (actually a timer, since that's all we've got).
+ *
+ *	  - As a result of the above, the EXEC handler fires at the LO interrupt level. It computes 
+ *		  the next accel/decel segment for the current move (i.e. the move in the planner's 
+ *		  runtime buffer) by calling back to the exec routine in planner.c. Or it gets and runs 
+ *		  the next buffer in the planning queue - depending on the move_type and state. 
+ *
+ *	  - Once the segment has been computed the exec handler finishes up by running the PREP 
+ *		  routine in stepper.c. This computes the DDA values and gets the segment into the 
+ *		  prep buffer - and ready for the next LOAD operation.
+ *
+ *	  - The main loop runs in background to receive gcode blocks, parse them, and send them to 
+ *		  the planner in order to keep the planner queue full so that when the planner's runtime 
+ *		  buffer completes the next move(a gcode block or perhaps an arc segment) is ready to run.
+ *
+ *	If the steppers are not running the above is similar, except that the exec is invoked from the 
+ *	main loop by the software interrupt, and the stepper load is invoked from the exec by another 
+ *	software interrupt.
+ */
+/*	Control flow can be a bit confusing. This is a typical sequence for planning 
+ *	executing, and running an acceleration planned line:
+ *
+ *	 1  planner.mp_aline() is called, which populates a planning buffer (bf) 
+ *		and back-plans any pre-existing buffers.
+ *
+ *	 2  When a new buffer is added _mp_queue_write_buffer() tries to invoke
+ *	    execution of the move by calling stepper.st_request_exec_move(). 
+ *
+ *	 3a If the steppers are running this request is ignored.
+ *	 3b If the steppers are not running this will set a timer to cause an 
+ *		EXEC "software interrupt" that will ultimately call st_exec_move().
+ *
+ *   4  At this point a call to _exec_move() is made, either by the 
+ *		software interrupt from 3b, or once the steppers finish running 
+ *		the current segment and have loaded the next segment. In either 
+ *		case the call is initated via the EXEC software interrupt which 
+ *		causes _exec_move() to run at the MEDium interupt level.
+ *		 
+ *	 5	_exec_move() calls back to planner.mp_exec_move() which generates 
+ *		the next segment using the mr singleton.
+ *
+ *	 6	When this operation is complete mp_exec_move() calls the appropriate
+ *		PREP routine in stepper.c to derive the stepper parameters that will 
+ *		be needed to run the move - in this example st_prep_line().
+ *
+ *	 7	st_prep_line() generates the timer and DDA values and stages these into 
+ *		the prep structure (sp) - ready for loading into the stepper runtime struct
+ *
+ *	 8	stepper.st_prep_line() returns back to planner.mp_exec_move(), which 
+ *		frees the planning buffer (bf) back to the planner buffer pool if the 
+ *		move is complete. This is done by calling _mp_request_finalize_run_buffer()
+ *
+ *	 9	At this point the MED interrupt is complete, but the planning buffer has 
+ *		not actually been returned to the pool yet. The buffer will be returned
+ *		by the main-loop prior to testing for an available write buffer in order
+ *		to receive the next Gcode block. This handoff prevents possible data 
+ *		conflicts between the interrupt and main loop.
+ *
+ *	10	The final step in the sequence is _load_move() requesting the next 
+ *		segment to be executed and prepared by calling st_request_exec() 
+ *		- control goes back to step 4.
+ *
+ *	Note: For this to work you have to be really careful about what structures
+ *	are modified at what level, and use volatiles where necessary.
+ */
+/* Partial steps and phase angle compensation
+ *
+ *	The DDA accepts partial steps as input. Fractional steps are managed by the 
+ *	sub-step value as explained elsewhere. The fraction initially loaded into 
+ *	the DDA and the remainder left at the end of a move (the "residual") can
+ *	be thought of as a phase angle value for the DDA accumulation. Each 360
+ *	degrees of phase angle results in a step being generated. 
+ */
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 /*
@@ -39,6 +146,7 @@ void st_enable_motor(const uint8_t motor);
 void st_enable_motors(void);
 void st_disable_motor(const uint8_t motor);
 void st_disable_motors(void);
+void st_conditional_disable_motors(void);
 void st_set_motor_disable_timeout(uint32_t seconds);
 stat_t st_motor_disable_callback(void);
 
@@ -67,10 +175,15 @@ uint16_t st_get_stepper_prep_magic(void);
  * Stepper configs and constants
  */
 
+enum prepBufferState {
+	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
+	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
+};
+
 enum cmStepperPowerMode {
-	POWER_MODE_ENABLE_FULL_CYCLE =0,// fully powered during cycles
-	POWER_MODE_DISABLE_ON_IDLE		// power down motor immediately when idle
-//	POWER_MODE_LOW_POWER_IDLE		// not implemented yet
+	ENABLE_AXIS_DURING_CYCLE =0,		// axis is fully powered during cycles
+	DISABLE_AXIS_WHEN_IDLE				// power down motor immediately when idle
+//	REDUCE_AXIS_POWER_WHEN_IDLE			// not implemented yet
 };
 
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
