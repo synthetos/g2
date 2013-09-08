@@ -124,12 +124,6 @@ Stepper<motor_6_step_pin_num,
 		motor_6_vref_pin_num> motor_6;
 
 /*
-struct Steppers {
-	struct *Stepper[] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_5 };	
-};
-*/
-
-/*
  * Stepper structures
  *
  *	There are 4 sets of structures involved in loading and running step pulses:
@@ -297,7 +291,7 @@ void st_deenergize_motor(const uint8_t motor)
 
 void st_set_motor_power(const uint8_t motor)
 {
-
+	// code for PWM driven Vref goes here
 }
 
 /* 
@@ -308,34 +302,31 @@ void st_set_motor_power(const uint8_t motor)
 
 void st_energize_motors()
 {
-	motor_1.enable.clear();		// clear enables the motor
-	motor_2.enable.clear();		// any motor-N.enable defined as -1 will drop out of compile
+	motor_1.enable.clear();			// clear enables the motor
+	motor_2.enable.clear();			// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.clear();
 	motor_4.enable.clear();
 	motor_5.enable.clear();
 	motor_6.enable.clear();
-	common_enable.clear();		// enable gShield common enable
+	common_enable.clear();			// enable gShield common enable
 
 	st_do_motor_idle_timeout();
-	dda_timer.start();
 }
 
 void st_deenergize_motors()
 {
-	motor_1.enable.set();		// set disables the motor
-	motor_2.enable.set();		// any motor-N.enable defined as -1 will drop out of compile
+	motor_1.enable.set();			// set disables the motor
+	motor_2.enable.set();			// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.set();
 	motor_4.enable.set();
 	motor_5.enable.set();
 	motor_6.enable.set();
-//	common_enable.set();		// disable gShield common enable
-
-	dda_timer.stop();
+	common_enable.set();			// disable gShield common enable
 }
 
 void st_idle_motors()
 {
-	st_deenergize_motors();		// for now idle is the same as de-energized
+	st_deenergize_motors();			// for now idle is the same as de-energized
 }
 
 /*
@@ -350,7 +341,7 @@ stat_t st_motor_power_callback() 	// called by controller
 	}
 	if (SysTickTimer.getValue() < st_run.motor_idle_systick ) return (STAT_NOOP);
 
-	common_enable.set();		// disable gShield common enable
+	common_enable.set();			// disable gShield common enable
 	st_idle_motors();
 	return (STAT_OK);
 }
@@ -429,6 +420,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		motor_6.step.clear();
 
 		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
+			dda_timer.stop();						// turn it off or it will keep stepping out the last segment
 			st_run.motor_stop_flags = ALL_MOTORS_STOPPED;
 			_load_move();							// load the next move at the current interrupt level
 		}
@@ -576,14 +568,12 @@ void _load_move()
 			motor_6.enable.clear();
 		}
 		st_energize_motors();	// apply power to the motors
+		dda_timer.start();		// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_prep.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_prep.dda_ticks;
 		dwell_timer.start();
-
-	} else {
-		st_deenergize_motors();
 	}
 
 	// all cases drop to here - such as Null moves queued by MCodes

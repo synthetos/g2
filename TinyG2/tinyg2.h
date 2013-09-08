@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		017.10	// Bring stepper motor disable timeouts up to build 392.08
+#define TINYG_FIRMWARE_BUILD   		017.11	// Some small but important stepper power handling changes. Now runs much more like the Xmega code.
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
