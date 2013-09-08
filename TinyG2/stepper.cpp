@@ -176,9 +176,9 @@ typedef struct stPrepSingleton {
 	volatile uint8_t exec_state;	// move execution state 
 	volatile uint8_t reset_flag;	// set TRUE if accumulator should be reset
 	uint32_t prev_ticks;			// tick count from previous move
-//	uint16_t dda_period;			// DDA or dwell clock period setting (not needed for Motate)
+	uint16_t dda_period;			// DDA or dwell clock period setting (unused for Motate)
 	uint32_t dda_ticks;				// DDA (or dwell) ticks for the move
-	uint32_t dda_ticks_X_substeps;	// DDA ticks scaled by substep factor
+	uint32_t dda_ticks_X_substeps;	// DDA ticks scaled by sub-step factor
 	stPrepMotor_t m[MOTORS];		// per-motor structures
 } stPrepSingleton_t;
 
@@ -233,6 +233,18 @@ void stepper_init()
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 */
 
+/*
+static void _clear_diagnostic_counters()
+{
+	st_run.m[MOTOR_1].step_count_diagnostic = 0;
+	st_run.m[MOTOR_2].step_count_diagnostic = 0;
+	st_run.m[MOTOR_3].step_count_diagnostic = 0;
+	st_run.m[MOTOR_4].step_count_diagnostic = 0;
+	st_run.m[MOTOR_5].step_count_diagnostic = 0;
+	st_run.m[MOTOR_6].step_count_diagnostic = 0;
+}
+*/
+
 /* 
  * st_enable_motor()  - enable a motor
  * st_disable_motor() - disable a motor
@@ -255,6 +267,7 @@ void st_enable_motor(const uint8_t motor)
 
 void st_disable_motor(const uint8_t motor)
 {
+	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.set();	// set disables the motor
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.set();
 	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.set();
@@ -265,48 +278,30 @@ void st_disable_motor(const uint8_t motor)
 
 void st_enable_motors()
 {
-/*
+
 	motor_1.enable.clear();		// clear enables the motor
 	motor_2.enable.clear();		// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.clear();
 	motor_4.enable.clear();
 	motor_5.enable.clear();
 	motor_6.enable.clear();
-*/
-	common_enable.clear();									// enable grblShield common enable
+	common_enable.clear();		// enable gShield common enable
 
-//	st_run.motor_disable_systick = SysTickTimer.getValue() + (cfg.motor_disable_timeout * 1000);
 	st_set_motor_disable_timeout(cfg.motor_disable_timeout);
 	dda_timer.start();
 }
 
 void st_disable_motors()
 {
-/*
+
 	motor_1.enable.set();		// set disables the motor
 	motor_2.enable.set();		// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.set();
 	motor_4.enable.set();
 	motor_5.enable.set();
 	motor_6.enable.set();
-	common_enable.set();		// disable gShield common enable
-*/
-	dda_timer.stop();
-}
+//	common_enable.set();		// disable gShield common enable
 
-void st_conditional_disable_motors()
-{
-	st_run.motor_disable_systick = (SysTickTimer.getValue() + (1000 * cfg.motor_disable_timeout));
-
-	// power-down motors if this feature is enabled
-	if (!motor_1.enable.isNull()) if (cfg.m[MOTOR_1].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_1.enable.set();
-	if (!motor_2.enable.isNull()) if (cfg.m[MOTOR_2].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_2.enable.set();
-	if (!motor_3.enable.isNull()) if (cfg.m[MOTOR_3].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_3.enable.set();
-	if (!motor_4.enable.isNull()) if (cfg.m[MOTOR_4].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_4.enable.set();
-	if (!motor_5.enable.isNull()) if (cfg.m[MOTOR_5].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_5.enable.set();
-	if (!motor_6.enable.isNull()) if (cfg.m[MOTOR_6].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_6.enable.set();
-
-	common_enable.set();		// disable gShield common enable
 	dda_timer.stop();
 }
 
@@ -318,8 +313,7 @@ void st_set_motor_disable_timeout(uint32_t seconds)
 stat_t st_motor_disable_callback() 	// called by controller
 {
 	if (SysTickTimer.getValue() < st_run.motor_disable_systick ) return (STAT_NOOP);
-//
-//	st_conditional_disable_motors();
+
 	common_enable.set();		// disable gShield common enable
 	// power-down motors if this feature is enabled
 	if (!motor_1.enable.isNull()) if (cfg.m[MOTOR_1].power_mode == DISABLE_AXIS_WHEN_IDLE) motor_1.enable.set();
@@ -331,17 +325,6 @@ stat_t st_motor_disable_callback() 	// called by controller
 	return (STAT_OK);
 }
 
-/*
-static void _clear_diagnostic_counters()
-{
-	st_run.m[MOTOR_1].step_count_diagnostic = 0;
-	st_run.m[MOTOR_2].step_count_diagnostic = 0;
-	st_run.m[MOTOR_3].step_count_diagnostic = 0;
-	st_run.m[MOTOR_4].step_count_diagnostic = 0;
-	st_run.m[MOTOR_5].step_count_diagnostic = 0;
-	st_run.m[MOTOR_6].step_count_diagnostic = 0;
-}
-*/
 // Define the timer interrupts inside the Motate namespace
 namespace Motate {
 
@@ -404,10 +387,6 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			motor_6.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
-//		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
-//			st_conditional_disable_motors();
-//			_load_move();							// load the next move at the current interrupt level
-//		}
 		dda_debug_pin1 = 0;
 
 	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
@@ -420,7 +399,6 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		motor_6.step.clear();
 
 		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
-//			st_conditional_disable_motors();
 			_load_move();							// load the next move at the current interrupt level
 		}
 		dda_debug_pin2 = 0;

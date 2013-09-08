@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		017.07	// Stepper motor disable timeouts - working (in process)
+#define TINYG_FIRMWARE_BUILD   		017.08	// Stepper motor disable timeouts - working (work in process)
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number

@@ -143,10 +143,9 @@ extern "C"{
 void stepper_init(void);			// initialize stepper subsystem
 
 void st_enable_motor(const uint8_t motor);
-void st_enable_motors(void);
 void st_disable_motor(const uint8_t motor);
+void st_enable_motors(void);
 void st_disable_motors(void);
-void st_conditional_disable_motors(void);
 void st_set_motor_disable_timeout(uint32_t seconds);
 stat_t st_motor_disable_callback(void);
 
