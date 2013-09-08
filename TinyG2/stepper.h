@@ -135,21 +135,31 @@
  */
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
-/*
-#ifdef __cplusplus
-extern "C"{
-#endif
-*/
+
 void stepper_init(void);			// initialize stepper subsystem
 
+void st_set_motor_idle_timeout(float seconds);
+void st_do_motor_idle_timeout(void);
+
+void st_energize_motor(const uint8_t motor);
+void st_deenergize_motor(const uint8_t motor);
+void st_set_motor_power(const uint8_t motor);
+
+void st_energize_motors(void);
+void st_deenergize_motors(void);
+void st_idle_motors(void);
+
+stat_t st_motor_power_callback(void);
+
+/*
 void st_set_motor_disable_timeout(float seconds);
 void st_do_motor_disable_timeout(void);
-
 void st_enable_motor(const uint8_t motor);
 void st_disable_motor(const uint8_t motor);
 void st_enable_motors(void);
 void st_disable_motors(void);
 stat_t st_motor_disable_callback(void);
+*/
 
 uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
 void st_set_polarity(const uint8_t motor, const uint8_t polarity);
@@ -172,17 +182,44 @@ uint16_t st_get_stepper_prep_magic(void);
  * Stepper configs and constants
  */
 
-enum prepBufferState {
-	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
-	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
+// Currently there is no distinction between IDLE and OFF (DEENERGIZED)
+// In the future IDLE will be powered at a low, torque-maintaining current
+
+enum motorState {					// used w/start and stop flags to sequence motor power
+	MOTOR_OFF = 0,					// motor is stopped and deenergized
+	MOTOR_IDLE,						// motor is stopped and may be partially energized for torque maintenance
+	MOTOR_STOPPED,					// motor is stopped and fully energized
+	MOTOR_RUNNING					// motor is running (and fully energized)
 };
 
 enum cmStepperPowerMode {
-	ENABLE_AXIS_DURING_CYCLE =0,		// axis is fully powered during cycles
-	DISABLE_AXIS_WHEN_IDLE,				// power down motor shortly after it's idle
-	REDUCE_AXIS_POWER_WHEN_IDLE,		// enable Vref current reduction (not implemented yet)
-	DYNAMIC_AXIS_POWER					// adjust motor current with velocity (not implemented yet)
+	MOTOR_ENERGIZED_DURING_CYCLE=0,	// motor is fully powered during cycles
+	MOTOR_IDLE_WHEN_STOPPED,		// idle motor shortly after it's stopped - even in cycle
+	MOTOR_POWER_REDUCED_WHEN_IDLE,	// enable Vref current reduction (not implemented yet)
+	DYNAMIC_MOTOR_POWER				// adjust motor current with velocity (not implemented yet)
 };
+
+enum prepBufferState {
+	PREP_BUFFER_OWNED_BY_LOADER = 0,// staging buffer is ready for load
+	PREP_BUFFER_OWNED_BY_EXEC		// staging buffer is being loaded
+};
+
+// motor stop bitfields
+#define M1_STOP (0x01)				// used to set st_run.motor_stop_flags
+#define M2_STOP	(0x02)
+#define M3_STOP	(0x04)
+#define M4_STOP	(0x08)
+#define M5_STOP	(0x10)
+#define M6_STOP	(0x20)
+#define ALL_MOTORS_STOPPED	(M1_STOP | M2_STOP | M3_STOP | M4_STOP | M5_STOP | M6_STOP)
+
+/* Timer settings for stepper module. See hardware.h for overall timer assignments */
+
+// Stepper power management settings
+//	Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
+#define IDLE_TIMEOUT_SECONDS_MIN 	0.1				 // seconds !!! SHOULD NEVER BE ZERO !!!
+#define IDLE_TIMEOUT_SECONDS_MAX   (4294967295/1000) // for conversion to uint32_t
+#define IDLE_TIMEOUT_SECONDS 		0.1				 // seconds in DISABLE_AXIS_WHEN_IDLE mode
 
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
@@ -211,9 +248,4 @@ enum cmStepperPowerMode {
 //	reset it or risk motor stalls. 
 #define ACCUMULATOR_RESET_FACTOR 2	// amount counter range can safely change
 
-/*
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-*/
 #endif	// End of include guard: STEPPER_H_ONCE

@@ -686,9 +686,9 @@ const cfgItem_t cfgArray[] = {
 	// System parameters
 	// NOTE: Some values have been removed from the system group but are still accessible as individual elements
 	{ "sys","ja",  _f07, 0, fmt_ja, print_lin, get_flu, set_flu, (float *)&cfg.junction_acceleration, JUNCTION_ACCELERATION },
-	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	  CHORDAL_TOLERANCE },
-	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					  SWITCH_TYPE },
-	{ "sys","mt",  _f07, 2, fmt_mt, print_flt, get_flt, set_mt,  (float *)&cfg.motor_disable_timeout, MOTOR_DISABLE_TIMEOUT},
+	{ "sys","ct",  _f07, 4, fmt_ct, print_lin, get_flu, set_flu, (float *)&cfg.chordal_tolerance,	CHORDAL_TOLERANCE },
+	{ "sys","st",  _f07, 0, fmt_st, print_ui8, get_ui8, set_sw,  (float *)&sw.type,					SWITCH_TYPE },
+	{ "sys","mt",  _f07, 2, fmt_mt, print_flt, get_flt, set_mt,  (float *)&cfg.motor_idle_timeout,	MOTOR_IDLE_TIMEOUT},
 	{ "",   "me",  _f00, 0, fmt_me, print_str, set_me,  set_me,  (float *)&cs.null, 0 },
 	{ "",   "md",  _f00, 0, fmt_md, print_str, set_md,  set_md,  (float *)&cs.null, 0 },
 
@@ -1011,19 +1011,19 @@ static void print_sr(cmdObj_t *cmd)
 
 static stat_t set_mt(cmdObj_t *cmd)
 {
-	st_set_motor_disable_timeout(cmd->value);	
+	st_set_motor_idle_timeout(cmd->value);	
 	return (STAT_OK);
 }
 
 static stat_t set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	st_disable_motors();
+	st_deenergize_motors();
 	return (STAT_OK);
 }
 
 static stat_t set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	st_enable_motors();
+	st_energize_motors();
 	return (STAT_OK);
 }
 

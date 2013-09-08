@@ -131,37 +131,36 @@ static void _controller_HSM()
 //      See hardware.h for a list of ISRs and their priorities.
 //
 //----- lowest level functions -------------------------------------------------------//
-												// Order is important:
-	DISPATCH(hardware_hard_reset_handler());	// 1. received hard reset request
-//	DISPATCH(hardware_bootloader_handler());	// 2. received request to start bootloader
-	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
-	DISPATCH( poll_switches());					// 4. run a switch polling cycle
-	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+													// Order is important:
+	DISPATCH(hardware_hard_reset_handler());		// 1. received hard reset request
+//	DISPATCH(hardware_bootloader_handler());		// 2. received request to start bootloader
+	DISPATCH(_alarm_idler());						// 3. idle in alarm state (shutdown)
+	DISPATCH( poll_switches());						// 4. run a switch polling cycle
+	DISPATCH(_limit_switch_handler());				// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
+	DISPATCH(cm_feedhold_sequencing_callback());	// 6a. feedhold state machine runner
+	DISPATCH(mp_plan_hold_callback());				// 6b. plan a feedhold from line runtime
 	
-//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
-//	DISPATCH(_system_assertions());				// 8. system integrity assertions
+//	DISPATCH(_cycle_start_handler());				// 7. cycle start requested
+//	DISPATCH(_system_assertions());					// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-	DISPATCH(st_motor_disable_callback());		// stepper motor disable timer
-//	DISPATCH(st_stepper_disable_delay_callback());// delayed disable for steppers
-//	DISPATCH(switch_debounce_callback());		// debounce switches
-	DISPATCH(rpt_status_report_callback());		// conditionally send status report
-	DISPATCH(rpt_queue_report_callback());		// conditionally send queue report
-	DISPATCH(ar_arc_callback());				// arc generation runs behind lines
-	DISPATCH(cm_homing_callback());				// G28.2 continuation
-//	DISPATCH(cm_probe_callback());				// G38.2 continuation
+	DISPATCH(st_motor_power_callback());			// stepper motor disable timer
+//	DISPATCH(switch_debounce_callback());			// debounce switches
+	DISPATCH(rpt_status_report_callback());			// conditionally send status report
+	DISPATCH(rpt_queue_report_callback());			// conditionally send queue report
+	DISPATCH(ar_arc_callback());					// arc generation runs behind lines
+	DISPATCH(cm_homing_callback());					// G28.2 continuation
+//	DISPATCH(cm_probe_callback());					// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
 
-	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
-//	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
-//	DISPATCH(cfg_baud_rate_callback());			// perform baud rate update (must be after TX sync)
-	DISPATCH(_command_dispatch());				// read and execute next command
-	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
+	DISPATCH(_sync_to_planner());					// ensure there is at least one free buffer in planning queue
+//	DISPATCH(_sync_to_tx_buffer());					// sync with TX buffer (pseudo-blocking)
+//	DISPATCH(cfg_baud_rate_callback());				// perform baud rate update (must be after TX sync)
+	DISPATCH(_command_dispatch());					// read and execute next command
+	DISPATCH(_normal_idler());						// blink LEDs slowly to show everything is OK
 }
 
 /***************************************************************************** 
