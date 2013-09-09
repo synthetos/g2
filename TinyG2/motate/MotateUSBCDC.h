@@ -32,6 +32,7 @@
 #define MOTATEUSBCDC_ONCE
 
 #include "utility/MotateUSBHelpers.h"
+#include "Reset.h"
 
 namespace Motate {
 
@@ -319,6 +320,18 @@ namespace Motate {
 			usb.flush(write_endpoint);
 		}
 
+		bool isConnected() {
+			return _line_state & (0x01 << 1);
+		}
+
+		bool getDTR() {
+			return _line_state & (0x01 << 0);
+		}
+
+		bool getRTS() {
+			return _line_state & (0x01 << 1);
+		}
+
 		bool handleNonstandardRequest(Setup_t &setup) {
 			if (setup.isADeviceToHostClassInterfaceRequest()) {
 				if (setup.requestIs(kGetLineEncoding)) {
@@ -337,18 +350,18 @@ namespace Motate {
 					_line_state = setup.valueLow();
 
 					// Here is where we would reset, like this:
-					/******
+					/******/
 					 // auto-reset into the bootloader is triggered when the port, already
 					 // open at 1200 bps, is closed.
-					 if (1200 == _usbLineInfo.dwDTERate)
+					 if (1200 == _line_info.dwDTERate)
 					 {
 					 // We check DTR state to determine if host port is open (bit 0 of lineState).
-					 if ((_usbLineInfo.lineState & 0x01) == 0)
-					 initiateReset(250);
+					 if ((isConnected()) == false)
+						 initiateReset(250);
 					 else
-					 cancelReset();
+						 cancelReset();
 					 }
-					*****/
+					/*****/
 
 					return true;
 				}

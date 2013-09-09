@@ -31,6 +31,7 @@
 #ifdef __SAM3X8E__
 
 #include "utility/SamTimers.h"
+#include "Reset.h"
 
 namespace Motate {
 	template<> Tc * const        Timer<0>::tc()           { return TC0; };
@@ -99,13 +100,12 @@ namespace Motate {
 
 } // namespace Motate
 
-
 extern "C" void SysTick_Handler(void)
 {
 	//		if (sysTickHook())
 	//			return;
-	//
-	//		tickReset();
+
+	tickReset();
 
 	Motate::SysTickTimer._increment();
 
