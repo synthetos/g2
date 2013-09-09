@@ -1176,7 +1176,7 @@ uint8_t cm_feedhold_sequencing_callback()
 
 stat_t cm_queue_flush()
 {
-//+++++	xio_reset_usb_rx_buffers();		// flush serial queues
+//+++++	xio_reset_usb_rx_buffers();	// flush serial queues - no way to do this yet on G2
 	mp_flush_planner();				// flush planner queue
 
 	for (uint8_t i=0; i<AXES; i++) {

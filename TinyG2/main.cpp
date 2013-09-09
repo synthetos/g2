@@ -34,8 +34,7 @@
 #include "MotateTimers.h"
 using Motate::delay;
 
-/*
-#include "util.h"				// #2
+/* more may be needed
 #include "json_parser.h"
 #include "gcode_parser.h"
 #include "network.h"
@@ -66,10 +65,11 @@ stat_t status_code;		// declared for ritorno, see tinyg2.h
 const Motate::USBSettings_t Motate::USBSettings = {
 	/*gVendorID         = */ 0x1d50,
 	/*gProductID        = */ 0x606d,
-	/*gProductVersion   = */ 0.1,
+	/*gProductVersion   = */ TINYG_FIRMWARE_VERSION,
 	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
 	/*gPowerConsumption = */ 500
 };
+	/*gProductVersion   = */ //0.1,
 
 Motate::USBDevice< Motate::USBCDC > usb;
 //template<>
@@ -96,8 +96,7 @@ int main( void )
 	// system initialization
 	init();
 	delay(1);
-	usb.attach();				// USB setup
-//	SerialUSB.begin(115200);
+	usb.attach();					// USB setup
 	delay(1000);
 
 	// TinyG application setup
@@ -117,21 +116,21 @@ static void _application_init(void)
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	config_init();					// config records from eeprom 		- must be next app init
-	switch_init();					// switches
+	config_init();					// config records from eeprom 		- must be second
+	switch_init();					// switches and other inputs
 //	pwm_init();						// pulse width modulation drivers
 
 	// do these next
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
 	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine				- must follow cfg_init()
+	canonical_machine_init();		// canonical machine				- must follow config_init()
 	spindle_init();					// spindle PWM and variables
 
 	// do these last
 	stepper_init();
 
 	// now get started
-	rpt_print_system_ready_message();// (LAST) announce system is ready
+//	rpt_print_system_ready_message();// (LAST) announce system is ready
 //	_unit_tests();					// run any unit tests that are enabled
 //	tg_canned_startup();			// run any pre-loaded commands
 	return;

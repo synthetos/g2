@@ -174,8 +174,10 @@ static void _controller_HSM()
 
 static stat_t _command_dispatch()
 {
-	// read input line or return if not a completed line
+	// detect USB connection and transition to disconnected state if it disconnected
+	if (SerialUSB.isConnected() == false) cs.controller_state = CONTROLLER_NOT_CONNECTED;
 
+	// read input line or return if not a completed line
 	if (cs.controller_state == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
@@ -183,6 +185,7 @@ static stat_t _command_dispatch()
 
 	} else if (cs.controller_state == CONTROLLER_NOT_CONNECTED) {
 		if (SerialUSB.isConnected() == false) return (STAT_OK);
+		cm_request_queue_flush();
 		rpt_print_system_ready_message();
 		cs.controller_state = CONTROLLER_STARTUP;
 
