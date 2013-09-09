@@ -84,10 +84,10 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.magic_end = MAGICNUM;
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
-	cs.hw_platform = TINYG_HARDWARE_PLATFORM;// NB: HW version is set from EEPROM
+	cs.hw_platform = TINYG_HARDWARE_PLATFORM;	// NB: HW version is set from EEPROM
 	
-	cs.linelen = 0;							// initialize index for read_line()
-	cs.state = CONTROLLER_STARTUP;			// ready to run startup lines	
+	cs.linelen = 0;									// initialize index for read_line()
+	cs.controller_state = CONTROLLER_NOT_CONNECTED;	// find USB next
 //	cs.reset_requested = false;
 //	cs.bootloader_requested = false;
 
@@ -175,16 +175,23 @@ static void _controller_HSM()
 static stat_t _command_dispatch()
 {
 	// read input line or return if not a completed line
-	stat_t status;
-	if (cs.state == CONTROLLER_READY) {
-		if ((status = read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf))) != STAT_OK) {
+
+	if (cs.controller_state == CONTROLLER_READY) {
+		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
 		}
-	} else if (cs.state == CONTROLLER_STARTUP) {
+
+	} else if (cs.controller_state == CONTROLLER_NOT_CONNECTED) {
+		if (SerialUSB.isConnected() == false) return (STAT_OK);
+		rpt_print_system_ready_message();
+		cs.controller_state = CONTROLLER_STARTUP;
+
+	} else if (cs.controller_state == CONTROLLER_STARTUP) {		// run startup code
 //		strcpy(cs.in_buf, "$x");
 //		strcpy(cs.in_buf, "g1f400x100");
 //		strcpy(cs.in_buf, "?");
-		cs.state = CONTROLLER_READY;
+		cs.controller_state = CONTROLLER_READY;
+
 	} else {
 		return (STAT_OK);
 	}

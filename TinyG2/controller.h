@@ -44,7 +44,7 @@ extern "C"{
 
 typedef struct controllerState {		// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
-	uint8_t state;						// controller state
+	uint8_t controller_state;			// controller state
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
@@ -81,7 +81,9 @@ extern controller_t cs;					// controller state structure
 
 enum cmControllerState {				// manages startup lines
 	CONTROLLER_INITIALIZING = 0,		// controller is initializing - not ready for use
-	CONTROLLER_STARTUP,					// controller is running startup lines
+	CONTROLLER_NOT_CONNECTED,			// controller has not yet detected connection to USB (or other comm channel)
+	CONTROLLER_CONNECTED,				// controller has connected to USB (or other comm channel)
+	CONTROLLER_STARTUP,					// controller is running startup messages and lines
 	CONTROLLER_READY					// controller is active and ready for use
 };
 
