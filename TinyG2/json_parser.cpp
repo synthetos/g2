@@ -315,14 +315,14 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 			if		(cmd->objtype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "\"\"");} // Note that that "" is NOT null.
 			else if (cmd->objtype == TYPE_INTEGER)	{
 				double tmp_value = (double)cmd->value;
-				if (tmp_value == NAN || tmp_value == INFINITY) { tmp_value = 0;}
+				if (isnan(tmp_value) || isinf(tmp_value)) tmp_value = 0;
 				str += (char_t)sprintf((char *)str, "%1.0f", tmp_value);
 			}
 			else if (cmd->objtype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*cmd->stringp);}
 			else if (cmd->objtype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*cmd->stringp);}
 			else if (cmd->objtype == TYPE_FLOAT) {
 				double tmp_value = (double)cmd->value;
-				if (tmp_value == NAN || tmp_value == INFINITY) {tmp_value = 0;}
+				if (isnan(tmp_value) || isinf(tmp_value)) tmp_value = 0;
 
 				if 		(cmd->precision == 0) { str += (char_t)sprintf((char *)str, "%0.0f", tmp_value);}
 				else if (cmd->precision == 1) { str += (char_t)sprintf((char *)str, "%0.1f", tmp_value);}
