@@ -179,7 +179,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float  spindle_speed;				// in RPM
-	float  spindle_override_factor;	// 1.0000 x S spindle speed. Go up or down from there
+	float  spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
 // unimplemented gcode parameters
@@ -192,6 +192,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 } GCodeInput_t;
 
 // structure externs - declared in canonical_machine.cpp
+
 extern GCodeModel_t gm;					// active gcode model
 extern GCodeInput_t gn;					// gcode input values
 extern GCodeInput_t gf;					// gcode input flags
