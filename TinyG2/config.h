@@ -1,5 +1,6 @@
 /*
  * config.h - configuration sub-system
+ * Part of TinyG2 project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -68,7 +69,7 @@
 #define CONFIG_H_ONCE
 
 /***** PLEASE NOTE *****
-# include "config_app.h"	// is present at the end of this file 
+#include "config_app.h"	// is present at the end of this file 
 */
 
 #ifdef __cplusplus
@@ -100,8 +101,8 @@ typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 
 									// pre-allocated defines (take RAM permanently)
 #define CMD_SHARED_STRING_LEN 512	// shared string for string values
-#define CMD_BODY_LEN 25				// body elements - allow for 1 parent + N children
-									// (each body element takes 23 bytes of RAM)
+#define CMD_BODY_LEN 30				// body elements - allow for 1 parent + N children
+									// (each body element takes 25 bytes of RAM)
 
 // Stuff you probably don't want to change 
 
@@ -178,9 +179,11 @@ enum jsonVerbosity {
 /**** Structures ****/
 
 typedef struct cmdString {				// shared string object
-	uint8_t wp;							// current string array index for len < 256 bytes
-//	uint16_t wp;						// use this value is string len > 255 bytes
+	uint16_t magic_start;
+//	uint8_t wp;							// current string array index for len < 256 bytes
+	uint16_t wp;						// use this value is string len > 255 bytes
 	char_t string[CMD_SHARED_STRING_LEN];
+	uint16_t magic_end;
 } cmdStr_t;
 
 typedef struct cmdObject {				// depending on use, not all elements may be populated
@@ -188,7 +191,7 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	struct cmdObject *nx;				// pointer to next object or NULL if last object
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
-	int8_t type;						// see cmdType
+	int8_t objtype;						// see objType enum
 	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
 	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
@@ -212,6 +215,7 @@ typedef struct cfgItem {
 	float def_value;					// default value for config item
 } cfgItem_t;
 
+
 /**** static allocation and definitions ****/
 
 extern cmdStr_t cmdStr;
@@ -224,6 +228,7 @@ extern const cfgItem_t cfgArray[];
 /**** Global scope function prototypes ****/
 
 void config_init(void);
+stat_t set_defaults(cmdObj_t *cmd);		// reset config to default values
 
 // main entry points for core access functions
 stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
@@ -232,6 +237,9 @@ void cmd_print(cmdObj_t *cmd);			// main entry point for set value
 void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 
 // helpers
+uint8_t cmd_get_type(cmdObj_t *cmd);
+stat_t cmd_persist_offsets(uint8_t flag);
+
 index_t cmd_get_index(const char_t *group, const char_t *token);
 index_t	cmd_index_max (void);
 uint8_t cmd_index_lt_max(index_t index);
@@ -273,11 +281,18 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src);
 cmdObj_t *cmd_add_object(const char_t *token);
 cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value);
 cmdObj_t *cmd_add_float(const char_t *token, const float value);
-cmdObj_t *cmd_add_string(const char_t *token, const uint8_t *string);
-cmdObj_t *cmd_add_message(const char_t *string);
+cmdObj_t *cmd_add_string(const char_t *token, const char_t *string);
+cmdObj_t *cmd_add_conditional_message(const char_t *string);
+
+//cmdObj_t *cmd_add_string_P(const char *token, const char *string);	// AVR
+//cmdObj_t *cmd_add_conditional_message_P(const char *string);
+#define cmd_add_string_P(tok, str) cmd_add_string(tok, str)				// ARM
+#define cmd_add_conditional_message_P(string) cmd_add_conditional_message((const char_t *)string)
+
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
-stat_t set_defa(cmdObj_t *cmd);	// reset config to default values
+//stat_t cmd_read_NVM_value(cmdObj_t *cmd);
+//stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************

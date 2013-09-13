@@ -1,6 +1,6 @@
 /*
  * config_app.h - application-specific part of configuration data
- * Part of Kinen project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *
@@ -14,7 +14,7 @@
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IsN THE SOFTWARE.
  */
 /* config_app.cpp/.h contain application specific data for the config system:
  *	-,application-specific functions and function prototypes 
@@ -107,13 +107,16 @@ enum cmdType {						// classification of commands
 	CMD_TYPE_NULL = 0,
 	CMD_TYPE_CONFIG,				// configuration commands
 	CMD_TYPE_GCODE,					// gcode
-	CMD_TYPE_REPORT					// SR, QR and any other report
+	CMD_TYPE_REPORT,				// SR, QR and any other report
+	CMD_TYPE_MESSAGE,				// cmd object carries a message
+	CMD_TYPE_LINENUM				// cmd object carries a gcode line number
 };
 
 enum qrVerbosity {					// planner queue enable and verbosity
 	QR_OFF = 0,						// no response is provided
 	QR_FILTERED,					// queue depth reported only above hi-water mark and below lo-water mark
-	QR_VERBOSE						// queue depth reported for all buffers
+	QR_VERBOSE,						// queue depth reported for all buffers
+	QR_TRIPLE						// queue depth reported for all buffers, and buffers added, buffered removed
 };
 
 /***********************************************************************************
@@ -160,13 +163,13 @@ typedef struct cfgPWMParameters {
 
 typedef struct cfgParameters {
 	magic_t magic_start;			// magic number to test memory integrity
-//	uint16_t nvm_base_addr;			// NVM base address
-//	uint16_t nvm_profile_base;		// NVM base address of current profile
+	uint16_t nvm_base_addr;			// NVM base address
+	uint16_t nvm_profile_base;		// NVM base address of current profile
 
 	// system group settings
 	float junction_acceleration;	// centripetal acceleration max for cornering
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
-	uint32_t stepper_disable_delay;	// Ms delay for timer disable for power managed motors
+	float motor_idle_timeout;		// time in seconds before idling motors
 	// float max_spindle_speed;		// in RPM
 
 	// hidden settings				// not part of system group, but still accessible
@@ -186,11 +189,13 @@ typedef struct cfgParameters {
 	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
 	uint8_t enable_cr;				// enable CR in CRFL expansion on TX
 	uint8_t enable_echo;			// enable text-mode echo
-	uint8_t enable_xon;				// enable XON/XOFF mode
+	uint8_t enable_flow_control;	// enable XON/XOFF or RTS/CTS flow control
+	uint8_t footer_style;			// select footer style
 
 	uint8_t queue_report_verbosity;	// queue reports enabled and verbosity level
 	uint8_t queue_report_hi_water;
 	uint8_t queue_report_lo_water;
+
 	uint8_t json_verbosity;			// see enum in this file for settings
 	uint8_t text_verbosity;			// see enum in this file for settings
 	uint8_t usb_baud_rate;			// see xio_usart.h for XIO_BAUD values
@@ -220,6 +225,12 @@ typedef struct cfgParameters {
 } cfgParameters_t;
 extern cfgParameters_t cfg; 		// declared in config_app.cpp
 
+
+/***********************************************************************************
+ **** EXPOSED APPLICATION SPECIFIC FUNCTIONS ***************************************
+ ***********************************************************************************/
+
+char_t get_axis_char(int8_t axis);
 
 #ifdef __cplusplus
 }

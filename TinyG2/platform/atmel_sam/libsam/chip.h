@@ -49,6 +49,10 @@
     #define NO_INIT __no_init
 #endif
 
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus
+
 /*
  * Peripherals
  */
@@ -84,5 +88,9 @@
 #include "include/uotghs_device.h"
 #include "include/uotghs_host.h"
 #endif /* (SAM3XA_SERIES) */
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* _LIB_SAM_ */

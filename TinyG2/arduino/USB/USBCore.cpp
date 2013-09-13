@@ -82,14 +82,11 @@ const uint16_t STRING_IMANUFACTURER[12] = {
 #endif
 
 //	DEVICE DESCRIPTOR
-const DeviceDescriptor USB_DeviceDescriptor =
-	D_DEVICE(0x00,0x00,0x00,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,0,1);
+const DeviceDescriptor USB_DeviceDescriptor(0x00,0x00,0x00,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,0,1);
 
-const DeviceDescriptor USB_DeviceDescriptorA =
-	D_DEVICE(DEVICE_CLASS,0x00,0x00,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,0,1);
+const DeviceDescriptor USB_DeviceDescriptorA(DEVICE_CLASS,0x00,0x00,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,0,1);
 
-const DeviceDescriptor USB_DeviceQualifier =
-	D_QUALIFIER(0x00,0x00,0x00,64,1);
+const DeviceQualifier USB_DeviceQualifier(0x00,0x00,0x00,64,1);
 
 //! 7.1.20 Test Mode Support
 static const unsigned char test_packet_buffer[] = {
@@ -325,9 +322,9 @@ static bool USBD_SendConfiguration(int maxlen)
 	//TRACE_CORE(printf("=> USBD_SendConfiguration _cmark2=%d\r\n", _cmark);)
 	//TRACE_CORE(printf("=> USBD_SendConfiguration sizeof=%d\r\n", sizeof(ConfigDescriptor));)
 
-_Pragma("pack(1)")
-	ConfigDescriptor config = D_CONFIG(_cmark + sizeof(ConfigDescriptor),interfaces);
-_Pragma("pack()")
+//_Pragma("pack(1)")
+	ConfigDescriptor config(ConfigDescriptor::kConfig, _cmark + sizeof(ConfigDescriptor), interfaces);
+//_Pragma("pack()")
 	//TRACE_CORE(printf("=> USBD_SendConfiguration clen=%d\r\n", config.clen);)
 
 	//TRACE_CORE(printf("=> USBD_SendConfiguration maxlen=%d\r\n", maxlen);)
@@ -348,9 +345,9 @@ static bool USBD_SendOtherConfiguration(int maxlen)
 	//TRACE_CORE(printf("=> USBD_SendConfiguration _cmark2=%d\r\n", _cmark);)
 	//TRACE_CORE(printf("=> USBD_SendConfiguration sizeof=%d\r\n", sizeof(ConfigDescriptor));)
 
-_Pragma("pack(1)")
-	ConfigDescriptor config = D_OTHERCONFIG(_cmark + sizeof(ConfigDescriptor),interfaces);
-_Pragma("pack()")
+//_Pragma("pack(1)")
+	ConfigDescriptor config(ConfigDescriptor::kOtherConfig, _cmark + sizeof(ConfigDescriptor), interfaces);
+//_Pragma("pack()")
 	//TRACE_CORE(printf("=> USBD_SendConfiguration clen=%d\r\n", config.clen);)
 
 	//TRACE_CORE(printf("=> USBD_SendConfiguration maxlen=%d\r\n", maxlen);)
@@ -575,8 +572,6 @@ static void Test_Mode_Support( uint8_t wIndex )
 //	Endpoint 0 interrupt
 static void USB_ISR(void)
 {
-//    printf("ISR=0x%X\n\r", UOTGHS->UOTGHS_DEVISR); // jcb
-//    if( iii++ > 1500 ) while(1); // jcb
     // End of bus reset
     if (Is_udd_reset())
     {

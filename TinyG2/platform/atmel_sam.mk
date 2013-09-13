@@ -85,6 +85,8 @@ DEVICE_PATH = $(SAM_PATH)/$(SERIES)/source
 
 SAM_SOURCE_DIRS += $(DEVICE_PATH)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
+SAM_SOURCE_DIRS += platform/atmel_sam
+FIRST_LINK_SOURCES += platform/atmel_sam/syscalls_sam3.c
 
 DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
@@ -92,11 +94,9 @@ DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
+DEVICE_INCLUDE_DIRS += platform/atmel_sam
 
 DEVICE_LIBS          = gcc c
-
-# DEVICE_LIB_DIRS = /lib/thumb2
-#LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
 
 # FIXME: Assumes all sams are Dues
 VARIANT=arduino_due_x

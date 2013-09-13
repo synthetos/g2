@@ -1,6 +1,6 @@
 /*
  * text_parser.cpp - text parser for TinyG
- * This file is part of the TinyG2 project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *
@@ -31,8 +31,7 @@
 #include "canonical_machine.h"
 #include "text_parser.h"
 #include "report.h"
-#include "util.h"
-#include "xio.h"					// for char definitions
+#include "xio.h"					// for ASCII char definitions
 
 #ifdef __cplusplus
 extern "C"{
@@ -53,8 +52,9 @@ static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd);
 stat_t text_parser(uint8_t *str)
 {
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
-	uint8_t status = STAT_OK;
+	stat_t status = STAT_OK;
 
+	// pre-process the command
 	if (str[0] == '?') {					// handle status report case
 		rpt_run_text_status_report();
 		return (STAT_OK);
@@ -62,9 +62,10 @@ stat_t text_parser(uint8_t *str)
 	if ((str[0] == '$') && (str[1] == NUL)) {  // treat a lone $ as a sys request
 		strcat(str,"sys");
 	}
-	// single-unit parser processing
+
+	// parse and execute the command (only processes 1 command per line)
 	ritorno(_text_parser_kernal(str, cmd));	// decode the request or return if error
-	if ((cmd->type == TYPE_PARENT) || (cmd->type == TYPE_NULL)) {
+	if ((cmd->objtype == TYPE_NULL) || (cmd->objtype == TYPE_PARENT)) {
 		if (cmd_get(cmd) == STAT_COMPLETE) {// populate value, group values, or run uber-group displays
 			return (STAT_OK);				// return for uber-group displays so they don't print twice
 		}
@@ -76,89 +77,113 @@ stat_t text_parser(uint8_t *str)
 	return (status);
 }
 
-static stat_t _text_parser_kernal(uint8_t *str, cmdObj_t *cmd)
+static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 {
-	uint8_t *rd, *wr;						// read and write pointers
-	uint8_t separators[] = {"="};			// only separator allowed is = sign
-//	uint8_t separators[] = {" =:|\t"};		// more permissive: any separator someone might use
+	char_t *rd, *wr;						// read and write pointers
+//	char_t separators[] = {"="};			// STRICT: only separator allowed is = sign
+	char_t separators[] = {" =:|\t"};		// RELAXED: any separator someone might use
 
-	// string pre-processing
+	// pre-process and normalize the string
 //	cmd_reset_obj(cmd);						// initialize config object
 	cmd_copy_string(cmd, str);				// make a copy for eventual reporting
 	if (*str == '$') str++;					// ignore leading $
 	for (rd = wr = str; *rd!=NUL; rd++, wr++) {
-		*wr = tolower(*rd);			// convert string to lower case
-		if (*rd==',') {
-			*wr = *(++rd);			// skip over comma
-		}
+		*wr = tolower(*rd);					// convert string to lower case
+		if (*rd == ',') { *wr = *(++rd);}	// skip over comma
 	}
-	*wr = NUL;
+	*wr = NUL;								// terminate the string
 
-	// field processing
-	cmd->type = TYPE_NULL;
+	// parse fields into the cmd struct
+	cmd->objtype = TYPE_NULL;
 	if ((rd = strpbrk(str, separators)) == NULL) { // no value part
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 	} else {
-		*rd = NUL;						// terminate at end of name
+		*rd = NUL;							// terminate at end of name
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 		str = ++rd;
-		cmd->value = strtof(str, &rd);	// rd used as end pointer
+		cmd->value = strtof(str, &rd);		// rd used as end pointer
 		if (rd != str) {
-			cmd->type = TYPE_FLOAT;
+			cmd->objtype = TYPE_FLOAT;
 		}
 	}
-	if ((cmd->index = cmd_get_index((char_t *)"", cmd->token)) == NO_MATCH) { 
+
+	// validate and post-process the token
+	if ((cmd->index = cmd_get_index((const char_t *)"", cmd->token)) == NO_MATCH) { // get index or fail it
 		return (STAT_UNRECOGNIZED_COMMAND);
 	}
-	return (STAT_OK);
-}
+	strcpy_P(cmd->group, cfgArray[cmd->index].group);// capture the group string if there is one
 
+	if (strlen(cmd->group) > 0) {			// see if you need to strip the token
+		wr = cmd->token;
+		rd = cmd->token + strlen(cmd->group);
+		while (*rd != NUL) { *(wr)++ = *(rd)++;}
+		*wr = NUL;
+	}
+	return (STAT_OK);
+
+}
 
 /************************************************************************************
  * text_response() - text mode responses
  */
-static const char prompt_mm_ok[] = "tinyg [mm] ok> ";
-static const char prompt_in_ok[] = "tinyg [in] ok> ";
-static const char prompt_mm_err[] = "tinyg [mm] err: %s: %s\n";
-static const char prompt_in_err[] = "tinyg [in] err: %s: %s\n";
+static const char prompt_ok[] PROGMEM = "tinyg [%s] ok> ";
+static const char prompt_err[] PROGMEM = "tinyg [%s] err: %s: %s ";
 
 void text_response(const uint8_t status, char_t *buf)
 {
-	cmdObj_t *cmd = cmd_body;
+	if (cfg.text_verbosity == TV_SILENT) return;	// skip all this
 
-	if (cfg.text_verbosity == TV_SILENT) return;		// skip all this
+	char units[] = "inch";
+	if (cm_get_model_units_mode() != INCHES) { strcpy(units, "mm"); }
 
-//	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP) || (status == STAT_ZERO_LENGTH_MOVE)) {
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		if (cm_get_units_mode() == INCHES) {
-			fprintf(stderr, prompt_in_ok);
-		} else {
-			fprintf(stderr, prompt_mm_ok);
-		}
+		fprintf_P(stderr, prompt_ok, units); // Note: in AVR it's safer to cast (PGM_P)prompt_ok but not mandatory
 	} else {
-		if (cm_get_units_mode() == INCHES) {
-			fprintf(stderr, prompt_in_err, (char *)get_status_message(status), buf);
-		} else {
-			fprintf(stderr, prompt_mm_err, (char *)get_status_message(status), buf);			
-		}
+		fprintf_P(stderr, prompt_err, units, get_status_message(status), buf);
 	}
-	cmd = cmd_body+1;
-	if (cmd->token[0] == 'm') {
+	cmdObj_t *cmd = cmd_body+1;
+	
+	if (cmd_get_type(cmd) == CMD_TYPE_MESSAGE) {
 		fprintf(stderr, (char *)*cmd->stringp);
 	}
+	fprintf(stderr, "\n");	
 }
 
-/************************************************************************************
+/***** PRINT FUNCTIONS ********************************************************
+ * text_print_list()
  * text_print_inline_pairs()
  * text_print_inline_values()
  * text_print_multiline_formatted()
  */
 
+void text_print_list(stat_t status, uint8_t flags)
+{
+	switch (flags) {
+		case TEXT_NO_PRINT: { break; } 
+		case TEXT_INLINE_PAIRS: { text_print_inline_pairs(cmd_body); break; }
+		case TEXT_INLINE_VALUES: { text_print_inline_values(cmd_body); break; }
+		case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(cmd_body);}
+	}
+}
+
 void text_print_inline_pairs(cmdObj_t *cmd)
 {
-//	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
-		switch (cmd->type) {
+		switch (cmd->objtype) {
+			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
+			case TYPE_FLOAT:	{ fprintf_P(stderr, PSTR("%s:%1.3f"), cmd->token, cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr, PSTR("%s:%1.0f"), cmd->token, cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr, PSTR("%s:%s"), cmd->token, *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr, PSTR("\n")); return; }
+		}
+		cmd = cmd->nx;			// +++++ discrepancy in final CR from here
+//		if ((cmd = cmd->nx) == NULL) return;
+
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr, PSTR(","));}
+	}
+/*
+	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
+		switch (cmd->objtype) {
 			case TYPE_PARENT:	{ cmd = cmd->nx; continue; }
 			case TYPE_FLOAT:	{ fprintf(stderr,("%s:%1.3f"), cmd->token, cmd->value); break;}
 			case TYPE_INTEGER:	{ fprintf(stderr,("%s:%1.0f"), cmd->token, cmd->value); break;}
@@ -166,15 +191,29 @@ void text_print_inline_pairs(cmdObj_t *cmd)
 			case TYPE_EMPTY:	{ fprintf(stderr,("\n")); return; }
 		}
 		cmd = cmd->nx;
-		if (cmd->type != TYPE_EMPTY) { fprintf(stderr,(","));}
+		if (cmd->objtype != TYPE_EMPTY) { fprintf(stderr,(","));}
 	}
+*/
 }
 
 void text_print_inline_values(cmdObj_t *cmd)
 {
-//	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
-		switch (cmd->type) {
+		switch (cmd->objtype) {
+			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
+			case TYPE_FLOAT:	{ fprintf_P(stderr, PSTR("%1.3f"), cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr, PSTR("%1.0f"), cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr, PSTR("%s"), *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr, PSTR("\n")); return; }
+		}
+		cmd = cmd->nx;			// +++++ discrepancy in final CR from here
+//		if ((cmd = cmd->nx) == NULL) return;
+
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr, PSTR(","));}
+	}
+/*
+	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
+		switch (cmd->objtype) {
 			case TYPE_PARENT:	{ cmd = cmd->nx; continue; }
 			case TYPE_FLOAT:	{ fprintf(stderr,("%1.3f"), cmd->value); break;}
 			case TYPE_INTEGER:	{ fprintf(stderr,("%1.0f"), cmd->value); break;}
@@ -182,21 +221,17 @@ void text_print_inline_values(cmdObj_t *cmd)
 			case TYPE_EMPTY:	{ fprintf(stderr,("\n")); return; }
 		}
 		cmd = cmd->nx;
-		if (cmd->type != TYPE_EMPTY) { fprintf(stderr,(","));}
+		if (cmd->objtype != TYPE_EMPTY) { fprintf(stderr,(","));}
 	}
+*/
 }
 
 void text_print_multiline_formatted(cmdObj_t *cmd)
 {
-//	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
-		if (cmd->type != TYPE_PARENT) { 
-			cmd_print(cmd);
-		}
-		cmd = cmd->nx;
-		if (cmd->type == TYPE_EMPTY) { 
-			break;
-		}
+		if (cmd->objtype != TYPE_PARENT) { cmd_print(cmd);}
+		if ((cmd = cmd->nx) == NULL) return;
+		if (cmd->objtype == TYPE_EMPTY) break;
 	}
 }
 

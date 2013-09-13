@@ -1,30 +1,30 @@
 /*
-utility/SamTimers.hpp - Library for the Arduino-compatible Motate system
-http://tinkerin.gs/
+  utility/SamTimers.h - Library for the Arduino-compatible Motate system
+  http://tinkerin.gs/
 
-Copyright (c) 2013 Robert Giseburt
+  Copyright (c) 2013 Robert Giseburt
 
-This file is part of the Motate Library.
+	This file is part of the Motate Library.
 
-This file ("the software") is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License, version 2 as published by the
-Free Software Foundation. You should have received a copy of the GNU General Public
-License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
+	This file ("the software") is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2 as published by the
+	Free Software Foundation. You should have received a copy of the GNU General Public
+	License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
 
-As a special exception, you may use this file as part of a software library without
-restriction. Specifically, if other files instantiate templates or use macros or
-inline functions from this file, or you compile this file and link it with  other
-files to produce an executable, this file does not by itself cause the resulting
-executable to be covered by the GNU General Public License. This exception does not
-however invalidate any other reasons why the executable file might be covered by the
-GNU General Public License.
+	As a special exception, you may use this file as part of a software library without
+	restriction. Specifically, if other files instantiate templates or use macros or
+	inline functions from this file, or you compile this file and link it with  other
+	files to produce an executable, this file does not by itself cause the resulting
+	executable to be covered by the GNU General Public License. This exception does not
+	however invalidate any other reasons why the executable file might be covered by the
+	GNU General Public License.
 
-THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
-WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+	WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+	SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef SAMTIMERS_H_ONCE
@@ -181,7 +181,8 @@ namespace Motate {
 
 		// Set the mode and frequency.
 		// Returns: The actual frequency that was used, or kFrequencyUnattainable
-		int32_t setModeAndFrequency(const TimerMode mode, const uint32_t freq) {
+		// freq is not const since we may "change" it
+		int32_t setModeAndFrequency(const TimerMode mode, uint32_t freq) {
 			/* Prepare to be able to make changes: */
 			/*   Disable TC clock */
 			tcChan()->TC_CCR = TC_CCR_CLKDIS ;
@@ -191,6 +192,9 @@ namespace Motate {
 			tcChan()->TC_SR ;
 
 			enablePeripheralClock();
+
+			if (mode == kTimerUpDownToMatch || mode == kTimerUpDown)
+				freq *= 2;
 
 			/* Setup clock "prescaler" */
 			/* Divisors: TC1: 2, TC2: 8, TC3: 32, TC4: 128, TC5: ???! */
@@ -240,7 +244,7 @@ namespace Motate {
 			// Extra mile, set the actual frequency, but only if we're going to RC.
 			if (mode == kTimerInputCaptureToMatch
 				|| mode == kTimerUpToMatch
-			|| mode == kTimerUpDownToMatch) {
+				|| mode == kTimerUpDownToMatch) {
 
 				int32_t newTop = masterClock/(divisor*freq);
 				setTop(newTop);
@@ -283,6 +287,10 @@ namespace Motate {
 
 		void stop() {
 			tcChan()->TC_CCR = TC_CCR_CLKDIS;
+		};
+
+		void stopOnMatch() {
+			tcChan()->TC_CMR = TC_CMR_CPCSTOP;
 		};
 
 		// Channel-specific functions. These are Motate channels, but they happen to line-up.
@@ -403,6 +411,61 @@ namespace Motate {
 		// Placeholder for user code.
 		static void interrupt() __attribute__ ((weak));
 	};
+
+	static const timer_number SysTickTimerNum = 0xFF;
+	template <>
+	struct Timer<SysTickTimerNum> {
+		static volatile uint32_t _motateTickCount;
+		
+		/********************************************************************
+		 **                          WARNING                                **
+		 ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
+		 **                          WARNING           (u been warned)      **
+		 *********************************************************************/
+
+		Timer() { init(); };
+		Timer(const TimerMode mode, const uint32_t freq) {
+			init();
+//			setModeAndFrequency(mode, freq);
+		};
+
+		void init() {
+			// Set Systick to 1ms interval, common to all SAM3 variants
+			if (SysTick_Config(SystemCoreClock / 1000))
+			{
+				_motateTickCount = 0 ;
+
+				// Capture error
+				while (true);
+			}
+		};
+
+		// Set the mode and frequency.
+		// Should we offer this one? -RG
+//		int32_t setModeAndFrequency(const TimerMode mode, uint32_t freq) {};
+
+		// Return the current value of the counter. This is a fleeting thing...
+		uint32_t getValue() {
+			return _motateTickCount;
+		};
+
+		void _increment() {
+			_motateTickCount++;
+		};
+
+		// Placeholder for user code.
+		static void interrupt() __attribute__ ((weak));
+	};
+	extern Timer<SysTickTimerNum> SysTickTimer;
+
+	// Provide a Arduino-compatible blocking-delay function
+	inline void delay( uint32_t microseconds )
+	{
+		uint32_t doneTime = SysTickTimer.getValue() + microseconds;
+
+		do
+		{} while ( doneTime < SysTickTimer.getValue() );
+	}
 
 } // namespace Motate
 

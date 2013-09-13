@@ -25,7 +25,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "tinyg2.h"
 #include "xio.h"
 
@@ -34,7 +34,7 @@
  */
 int read_char (void)
 {
-	return SerialUSB.read();
+	return SerialUSB.readByte();
 }
 
 /* 

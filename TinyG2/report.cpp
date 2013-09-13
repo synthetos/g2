@@ -31,6 +31,7 @@
 #include "report.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "canonical_machine.h"
 #include "planner.h"
 #include "settings.h"
 #include "hardware.h"
@@ -48,82 +49,85 @@ extern "C"{
  * These strings must align with the status codes in tinyg.h
  * The number of elements in the indexing array must match the # of strings
  */
-static const char_t stat_00[] = "OK";
-static const char_t stat_01[] = "Error";
-static const char_t stat_02[] = "Eagain";
-static const char_t stat_03[] = "Noop";
-static const char_t stat_04[] = "Complete";
-static const char_t stat_05[] = "Terminated";
-static const char_t stat_06[] = "Hard reset";
-static const char_t stat_07[] = "End of line";
-static const char_t stat_08[] = "End of file";
-static const char_t stat_09[] = "File not open";
-static const char_t stat_10[] = "Max file size exceeded";
-static const char_t stat_11[] = "No such device";
-static const char_t stat_12[] = "Buffer empty";
-static const char_t stat_13[] = "Buffer full";
-static const char_t stat_14[] = "Buffer full - fatal";
-static const char_t stat_15[] = "Initializing";
-static const char_t stat_16[] = "Entering boot loader";
-static const char_t stat_17[] = "Function is stubbed";
-static const char_t stat_18[] = "stat_18";
-static const char_t stat_19[] = "stat_19";
+static const char_t PROGMEM stat_00[] = "OK";
+static const char_t PROGMEM stat_01[] = "Error";
+static const char_t PROGMEM stat_02[] = "Eagain";
+static const char_t PROGMEM stat_03[] = "Noop";
+static const char_t PROGMEM stat_04[] = "Complete";
+static const char_t PROGMEM stat_05[] = "Terminated";
+static const char_t PROGMEM stat_06[] = "Hard reset";
+static const char_t PROGMEM stat_07[] = "End of line";
+static const char_t PROGMEM stat_08[] = "End of file";
+static const char_t PROGMEM stat_09[] = "File not open";
+static const char_t PROGMEM stat_10[] = "Max file size exceeded";
+static const char_t PROGMEM stat_11[] = "No such device";
+static const char_t PROGMEM stat_12[] = "Buffer empty";
+static const char_t PROGMEM stat_13[] = "Buffer full";
+static const char_t PROGMEM stat_14[] = "Buffer full - fatal";
+static const char_t PROGMEM stat_15[] = "Initializing";
+static const char_t PROGMEM stat_16[] = "Entering boot loader";
+static const char_t PROGMEM stat_17[] = "Function is stubbed";
+static const char_t PROGMEM stat_18[] = "stat_18";
+static const char_t PROGMEM stat_19[] = "stat_19";
 
-static const char_t stat_20[] = "Internal error";
-static const char_t stat_21[] = "Internal range error";
-static const char_t stat_22[] = "Floating point error";
-static const char_t stat_23[] = "Divide by zero";
-static const char_t stat_24[] = "Invalid Address";
-static const char_t stat_25[] = "Read-only address";
-static const char_t stat_26[] = "Initialization failure";
-static const char_t stat_27[] = "System alarm - shutting down";
-static const char_t stat_28[] = "Memory corruption";
-static const char_t stat_29[] = "stat_29";
-static const char_t stat_30[] = "stat_30";
-static const char_t stat_31[] = "stat_31";
-static const char_t stat_32[] = "stat_32";
-static const char_t stat_33[] = "stat_33";
-static const char_t stat_34[] = "stat_34";
-static const char_t stat_35[] = "stat_35";
-static const char_t stat_36[] = "stat_36";
-static const char_t stat_37[] = "stat_37";
-static const char_t stat_38[] = "stat_38";
-static const char_t stat_39[] = "stat_39";
+static const char_t PROGMEM stat_20[] = "Internal error";
+static const char_t PROGMEM stat_21[] = "Internal range error";
+static const char_t PROGMEM stat_22[] = "Floating point error";
+static const char_t PROGMEM stat_23[] = "Divide by zero";
+static const char_t PROGMEM stat_24[] = "Invalid Address";
+static const char_t PROGMEM stat_25[] = "Read-only address";
+static const char_t PROGMEM stat_26[] = "Initialization failure";
+static const char_t PROGMEM stat_27[] = "System alarm - shutting down";
+static const char_t PROGMEM stat_28[] = "Memory corruption";
+static const char_t PROGMEM stat_29[] = "stat_29";
+static const char_t PROGMEM stat_30[] = "stat_30";
+static const char_t PROGMEM stat_31[] = "stat_31";
+static const char_t PROGMEM stat_32[] = "stat_32";
+static const char_t PROGMEM stat_33[] = "stat_33";
+static const char_t PROGMEM stat_34[] = "stat_34";
+static const char_t PROGMEM stat_35[] = "stat_35";
+static const char_t PROGMEM stat_36[] = "stat_36";
+static const char_t PROGMEM stat_37[] = "stat_37";
+static const char_t PROGMEM stat_38[] = "stat_38";
+static const char_t PROGMEM stat_39[] = "stat_39";
 
-static const char_t stat_40[] = "Unrecognized command";
-static const char_t stat_41[] = "Expected command letter";
-static const char_t stat_42[] = "Bad number format";
-static const char_t stat_43[] = "Input exceeds max length";
-static const char_t stat_44[] = "Input value too small";
-static const char_t stat_45[] = "Input value too large";
-static const char_t stat_46[] = "Input value range error";
-static const char_t stat_47[] = "Input value unsupported";
-static const char_t stat_48[] = "JSON syntax error";
-static const char_t stat_49[] = "JSON input has too many pairs";
-static const char_t stat_50[] = "JSON output too long";
-static const char_t stat_51[] = "Out of buffer space";
-static const char_t stat_52[] = "stat_52";
-static const char_t stat_53[] = "stat_53";
-static const char_t stat_54[] = "stat_54";
-static const char_t stat_55[] = "stat_55";
-static const char_t stat_56[] = "stat_56";
-static const char_t stat_57[] = "stat_57";
-static const char_t stat_58[] = "stat_58";
-static const char_t stat_59[] = "stat_59";
+static const char_t PROGMEM stat_40[] = "Unrecognized command";
+static const char_t PROGMEM stat_41[] = "Expected command letter";
+static const char_t PROGMEM stat_42[] = "Bad number format";
+static const char_t PROGMEM stat_43[] = "Input exceeds max length";
+static const char_t PROGMEM stat_44[] = "Input value too small";
+static const char_t PROGMEM stat_45[] = "Input value too large";
+static const char_t PROGMEM stat_46[] = "Input value range error";
+static const char_t PROGMEM stat_47[] = "Input value unsupported";
+static const char_t PROGMEM stat_48[] = "JSON syntax error";
+static const char_t PROGMEM stat_49[] = "JSON input has too many pairs";
+static const char_t PROGMEM stat_50[] = "JSON output too long";
+static const char_t PROGMEM stat_51[] = "Out of buffer space";
+static const char_t PROGMEM stat_52[] = "Config rejected during cycle";
+static const char_t PROGMEM stat_53[] = "stat_53";
+static const char_t PROGMEM stat_54[] = "stat_54";
+static const char_t PROGMEM stat_55[] = "stat_55";
+static const char_t PROGMEM stat_56[] = "stat_56";
+static const char_t PROGMEM stat_57[] = "stat_57";
+static const char_t PROGMEM stat_58[] = "stat_58";
+static const char_t PROGMEM stat_59[] = "stat_59";
 
-static const char_t stat_60[] = "Move less than minimum length";
-static const char_t stat_61[] = "Move less than minimum time";
-static const char_t stat_62[] = "Gcode block skipped";
-static const char_t stat_63[] = "Gcode input error";
-static const char_t stat_64[] = "Gcode feedrate error";
-static const char_t stat_65[] = "Gcode axis word missing";
-static const char_t stat_66[] = "Gcode modal group violation";
-static const char_t stat_67[] = "Homing cycle failed";
-static const char_t stat_68[] = "Max travel exceeded";
-static const char_t stat_69[] = "Max spindle speed exceeded";
-static const char_t stat_70[] = "Arc specification error";
+static const char_t PROGMEM stat_60[] = "Move less than minimum length";
+static const char_t PROGMEM stat_61[] = "Move less than minimum time";
+static const char_t PROGMEM stat_62[] = "Gcode block skipped";
+static const char_t PROGMEM stat_63[] = "Gcode input error";
+static const char_t PROGMEM stat_64[] = "Gcode feedrate error";
+static const char_t PROGMEM stat_65[] = "Gcode axis word missing";
+static const char_t PROGMEM stat_66[] = "Gcode modal group violation";
+static const char_t PROGMEM stat_67[] = "Homing cycle failed";
+static const char_t PROGMEM stat_68[] = "Max travel exceeded";
+static const char_t PROGMEM stat_69[] = "Max spindle speed exceeded";
+static const char_t PROGMEM stat_70[] = "Arc specification error";
+static const char_t PROGMEM stat_71[] = "Soft limit exceeded";
+static const char_t PROGMEM stat_72[] = "Command not accepted";
 
-static const char_t *stat_msg[] = {
+//PGM_P const PROGMEM stat_msg[] = {		// AVR/GCC version
+static const char_t *stat_msg[] = {			// ARM/GCC++ version
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
 	stat_10, stat_11, stat_12, stat_13, stat_14, stat_15, stat_16, stat_17, stat_18, stat_19,
 	stat_20, stat_21, stat_22, stat_23, stat_24, stat_25, stat_26, stat_27, stat_28, stat_29,
@@ -131,12 +135,18 @@ static const char_t *stat_msg[] = {
 	stat_40, stat_41, stat_42, stat_43, stat_44, stat_45, stat_46, stat_47, stat_48, stat_49,
 	stat_50, stat_51, stat_52, stat_53, stat_54, stat_55, stat_56, stat_57, stat_58, stat_59,
 	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69,
-	stat_70
+	stat_70, stat_71, stat_72
 };
 
-const char_t *get_status_message(stat_t status)
+const char *get_status_message(stat_t status)
 {
-	return (stat_msg[status]);
+	return ((const char *)stat_msg[status]);
+
+/* AVR code
+	// see tinyg.h for allocation of status_message string
+	strncpy_P(status_message,(PGM_P)pgm_read_word(&stat_msg[status]), STATUS_MESSAGE_LEN);
+	return (status_message);
+*/
 }
 
 /*
@@ -144,8 +154,8 @@ const char_t *get_status_message(stat_t status)
  */
 void rpt_exception(uint8_t status, int16_t value)
 {
-	printf("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}\n", 
-		TINYG2_FIRMWARE_BUILD, status, stat_msg[status], value);
+	printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}}\n"),
+		TINYG_FIRMWARE_BUILD, status, get_status_message(status), value);
 }
 
 /**** Application Messages *********************************************************
@@ -157,7 +167,7 @@ void rpt_exception(uint8_t status, int16_t value)
  *	These messages are always in JSON format to allow UIs to sync
  */
 
-void _startup_helper(uint8_t status, const char *msg)
+void _startup_helper(stat_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
 	cmd_reset_list();
@@ -165,24 +175,24 @@ void _startup_helper(uint8_t status, const char *msg)
 	cmd_add_object((const char_t *)"fv");
 	cmd_add_object((const char_t *)"hv");
 	cmd_add_object((const char_t *)"id");
-	cmd_add_string((const char_t *)"msg", (char_t *)msg);
+	cmd_add_string_P((const char_t *)"msg", (const char_t *)msg);
 	json_print_response(status);
 #endif
 }
 
 void rpt_print_initializing_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, INIT_MESSAGE);
+	_startup_helper(STAT_INITIALIZING, PSTR(INIT_MESSAGE));
 }
 
 void rpt_print_loading_configs_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, "Loading configs from EEPROM");
+	_startup_helper(STAT_INITIALIZING, PSTR("Loading configs from EEPROM"));
 }
 
 void rpt_print_system_ready_message(void)
 {
-	_startup_helper(STAT_OK, "SYSTEM READY");
+	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
 	if (cfg.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
 }
 
@@ -238,13 +248,14 @@ void rpt_print_system_ready_message(void)
 
 void rpt_init_status_report()
 {
-	const char_t nul[] = "";	
-	const char_t se00[] = "se00";
-	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
 	cmdObj_t *cmd = cmd_reset_list();					// used for status report persistence locations
-//	cs.status_report_counter = (cfg.status_report_interval / MILLISECONDS_PER_TICK);	// RTC fires every 10 ms
-
+	cm.status_report_requested = false;
+	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
+		
+	const char_t nul[] = "";
+	const char_t se00[] = "se00";
 	cmd->index = cmd_get_index(nul, se00);				// set first SR persistence index
+
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
 		cfg.status_report_value[i] = -1234567;			// pre-load values with an unlikely number
@@ -267,8 +278,8 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
 	index_t sr_start = cmd_get_index((const char_t *)"",(const char_t *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<CMD_STATUS_REPORT_LEN; i++) {
-		if (((cmd = cmd->nx) == NULL) || (cmd->type == TYPE_EMPTY)) { break;}
-		if ((cmd->type == TYPE_BOOL) && (fp_TRUE(cmd->value))) {
+		if (((cmd = cmd->nx) == NULL) || (cmd->objtype == TYPE_EMPTY)) { break;}
+		if ((cmd->objtype == TYPE_BOOL) && (fp_TRUE(cmd->value))) {
 			status_report_list[i] = cmd->index;
 			cmd->value = cmd->index;					// persist the index as the value
 			cmd->index = sr_start + i;					// index of the SR persistence location
@@ -307,29 +318,34 @@ void rpt_run_text_status_report()
 
 void rpt_request_status_report(uint8_t request_type)
 {
-	cs.status_report_request = request_type;
+	if (request_type == SR_IMMEDIATE_REQUEST) {
+		cm.status_report_systick = SysTickTimer.getValue();
+		cm.status_report_requested = true;
+		return;
+	}
+	if (request_type == SR_TIMED_REQUEST) {
+		if (cm.status_report_requested == false) {
+			cm.status_report_systick = SysTickTimer.getValue() + cfg.status_report_interval;
+		}
+		cm.status_report_requested = true;
+	}
 }
 
-uint8_t rpt_status_report_callback() 		// called by controller dispatcher
+stat_t rpt_status_report_callback() 		// called by controller dispatcher
 {
-	if ((cfg.status_report_verbosity == SR_OFF) || (cs.status_report_request == SR_NO_REQUEST)) {
-		return (STAT_NOOP);
-	}
-	if (cs.status_report_request == SR_TIMED_REQUEST) {
-		if (GetTickCount() < cs.status_report_tick) {
-			return (STAT_NOOP);
-		}		
-	}
+	if (cfg.status_report_verbosity == SR_OFF) return (STAT_NOOP);
+	if (cm.status_report_requested == false) return (STAT_NOOP);
+	if (SysTickTimer.getValue() < cm.status_report_systick) return (STAT_NOOP);
+
 	if (cfg.status_report_verbosity == SR_FILTERED) {
 		if (rpt_populate_filtered_status_report() == true) {
 			cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 		}
-	} else {
+		} else {
 		rpt_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
-	cs.status_report_tick = GetTickCount() + cfg.status_report_interval;
-	cs.status_report_request = SR_NO_REQUEST;
+	cm.status_report_requested = false;		// disable reports until requested again
 	return (STAT_OK);
 }
 
@@ -345,7 +361,8 @@ void rpt_populate_unfiltered_status_report()
 	const char_t sr[] = "sr";
 	char_t tmp[CMD_TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets *cmd to the start of the body
-	cmd->type = TYPE_PARENT; 				// setup the parent object
+
+	cmd->objtype = TYPE_PARENT; 			// setup the parent object
 	strcpy(cmd->token, sr);
 	cmd->index = cmd_get_index(nul, sr);	// set the index - may be needed by calling function
 	cmd = cmd->nx;
@@ -356,7 +373,7 @@ void rpt_populate_unfiltered_status_report()
 		strcpy(tmp, cmd->group);			// concatenate groups and tokens
 		strcat(tmp, cmd->token);
 		strcpy(cmd->token, tmp);
-		cmd = cmd->nx;
+		if ((cmd = cmd->nx) == NULL) return; // should never be NULL unless SR length exceeds available buffer array
 	}
 }
 
@@ -374,13 +391,12 @@ void rpt_populate_unfiltered_status_report()
 uint8_t rpt_populate_filtered_status_report()
 {
 	const char_t sr[] = "sr";
-	char_t tmp[CMD_TOKEN_LEN+1];
 	uint8_t has_data = false;
+	char_t tmp[CMD_TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets cmd to the start of the body
 
-	cmd->type = TYPE_PARENT; 				// setup the parent object
+	cmd->objtype = TYPE_PARENT; 			// setup the parent object
 	strcpy(cmd->token, sr);
-//	sprintf_P(cmd->token, PSTR("sr"));		// alternate form of above: less RAM, more FLASH & cycles
 //	cmd->index = cmd_get_index(nul, sr);	// OMITTED - set the index - may be needed by calling function
 	cmd = cmd->nx;
 
@@ -388,20 +404,18 @@ uint8_t rpt_populate_filtered_status_report()
 		if ((cmd->index = cfg.status_report_list[i]) == 0) { break;}
 
 		cmd_get_cmdObj(cmd);
-//		if (cfg.status_report_value[i] == cmd->value) {	// float == comparison runs the risk of overreporting. So be it
 		if (fp_EQ(cmd->value, cfg.status_report_value[i])) {
+			cmd->objtype = TYPE_EMPTY;
 			continue;
 		} else {
 			strcpy(tmp, cmd->group);		// flatten out groups
 			strcat(tmp, cmd->token);
 			strcpy(cmd->token, tmp);
 			cfg.status_report_value[i] = cmd->value;
-			cmd = cmd->nx;
-//			if (cmd == NULL) { return (false);}	// This is never supposed to happen
+			if ((cmd = cmd->nx) == NULL) return (false); // should never be NULL unless SR length exceeds available buffer array
 			has_data = true;
 		}
 	}
-	cmd->pv->nx = NULL;						// back up one and terminate the body
 	return (has_data);
 }
 
@@ -415,14 +429,30 @@ struct qrIndexes {				// static data for queue reports
 	uint8_t request;			// set to true to request a report
 	uint8_t buffers_available;	// stored value used by callback
 	uint8_t prev_available;		// used to filter reports
+	uint8_t buffers_added;		// buffers added since last report
+	uint8_t buffers_removed;	// buffers removed since last report
 };
 static struct qrIndexes qr;
 
-void rpt_request_queue_report() 
+void rpt_clear_queue_report()
+{
+	qr.request = false;
+	qr.buffers_added = 0;
+	qr.buffers_removed = 0;
+}
+
+void rpt_request_queue_report(int8_t buffers)
+//void rpt_request_queue_report() 
 { 
 	if (cfg.queue_report_verbosity == QR_OFF) return;
 
 	qr.buffers_available = mp_get_planner_buffers_available();
+
+	if (buffers > 0) {
+		qr.buffers_added += buffers;
+		} else {
+		qr.buffers_removed -= buffers;
+	}
 
 	// perform filtration for QR_FILTERED reports
 	if (cfg.queue_report_verbosity == QR_FILTERED) {
@@ -443,6 +473,23 @@ stat_t rpt_queue_report_callback()
 	if (qr.request == false) { return (STAT_NOOP);}
 	qr.request = false;
 
+	if (cfg.comm_mode == TEXT_MODE) {
+		if (cfg.queue_report_verbosity == QR_VERBOSE) {
+			fprintf(stderr, "qr:%d\n", qr.buffers_available);
+			} else  if (cfg.queue_report_verbosity == QR_TRIPLE) {
+			fprintf(stderr, "qr:%d,added:%d,removed:%d\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
+		}
+		} else {
+		if (cfg.queue_report_verbosity == QR_VERBOSE) {
+			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
+			} else  if (cfg.queue_report_verbosity == QR_TRIPLE) {
+			fprintf(stderr, "{\"qr\":[%d,%d,%d]}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
+			rpt_clear_queue_report();
+		}
+	}
+	return (STAT_OK);
+
+/*
 	// cget a clean cmd object
 //	cmdObj_t *cmd = cmd_reset_list();		// normally you do a list reset but the following is more time efficient
 	cmdObj_t *cmd = cmd_body;
@@ -452,9 +499,10 @@ stat_t rpt_queue_report_callback()
 	// make a qr object and print it
 	sprintf((char *)cmd->token, "qr");
 	cmd->value = qr.buffers_available;
-	cmd->type = TYPE_INTEGER;
+	cmd->objtype = TYPE_INTEGER;
 	cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	return (STAT_OK);
+*/
 }
 
 /****************************************************************************
@@ -467,7 +515,7 @@ stat_t rpt_queue_report_callback()
 void sr_unit_tests(void)
 {
 	sr_init();
-	tg.communications_mode = STAT_JSON_MODE;
+	cs.communications_mode = STAT_JSON_MODE;
 	sr_run_status_report();
 }
 #endif

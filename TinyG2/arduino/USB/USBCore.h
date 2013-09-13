@@ -128,40 +128,130 @@
 _Pragma("pack(1)")
 
 //	Device
-typedef struct {
-	uint8_t len;				// 18
-	uint8_t dtype;				// 1 USB_DEVICE_DESCRIPTOR_TYPE
+class DeviceDescriptor {
+public:
+	uint8_t  len;				// 18
+	uint8_t  dtype;				// 1 USB_DEVICE_DESCRIPTOR_TYPE
 	uint16_t usbVersion;		// 0x200
-	uint8_t	deviceClass;
-	uint8_t	deviceSubClass;
-	uint8_t	deviceProtocol;
-	uint8_t	packetSize0;		// Packet 0
-	uint16_t	idVendor;
-	uint16_t	idProduct;
-	uint16_t	deviceVersion;	// 0x100
-	uint8_t	iManufacturer;
-	uint8_t	iProduct;
-	uint8_t	iSerialNumber;
-	uint8_t	bNumConfigurations;
-} DeviceDescriptor;
+	uint8_t  deviceClass;
+	uint8_t  deviceSubClass;
+	uint8_t  deviceProtocol;
+	uint8_t  packetSize0;		// Packet 0
+	uint16_t idVendor;
+	uint16_t idProduct;
+	uint16_t deviceVersion;	// 0x100
+	uint8_t  iManufacturer;
+	uint8_t  iProduct;
+	uint8_t  iSerialNumber;
+	uint8_t  bNumConfigurations;
+
+	DeviceDescriptor(
+					 uint8_t _class,
+					 uint8_t _subClass,
+					 uint8_t _proto,
+					 uint8_t _packetSize0,
+					 uint16_t _vid,
+					 uint16_t _pid,
+					 uint16_t _version,
+					 uint8_t _im,
+					 uint8_t _ip,
+					 uint8_t _is,
+					 uint8_t _configs
+					 )
+	:
+	len(18),
+	dtype(1 /* USB_DEVICE_DESCRIPTOR_TYPE */),
+	usbVersion(0x200 /* Little Endien */),
+	deviceClass(_class),
+	deviceSubClass(_subClass),
+	deviceProtocol(_proto),
+	packetSize0(_packetSize0),
+	idVendor(_vid),
+	idProduct(_pid),
+	deviceVersion(_version),
+	iManufacturer(_im),
+	iProduct(_ip),
+	iSerialNumber(_is),
+	bNumConfigurations(_configs)
+	{
+	};
+};
+
+class DeviceQualifier {
+public:
+	uint8_t  len;				// 10
+	uint8_t  dtype;				// 6 ???
+	uint16_t usbVersion;		// 0x200
+	uint8_t  deviceClass;
+	uint8_t  deviceSubClass;
+	uint8_t  deviceProtocol;
+	uint8_t  packetSize0;		// Packet 0
+	uint8_t  bNumConfigurations;
+
+	DeviceQualifier(
+					 uint8_t _class,
+					 uint8_t _subClass,
+					 uint8_t _proto,
+					 uint8_t _packetSize0,
+					 uint8_t _configs
+					)
+	:
+	len(10),
+	dtype(6 /* ??? */),
+	usbVersion(0x200 /* Little Endien */),
+	deviceClass(_class),
+	deviceSubClass(_subClass),
+	deviceProtocol(_proto),
+	packetSize0(_packetSize0),
+	bNumConfigurations(_configs)
+	{ /* Nothing to do here */ };
+};
+
 
 //	Config
-typedef struct {
+class ConfigDescriptor {
+public:
+	enum _cd_otherOrNot {
+		kConfig = 0,
+		kOtherConfig = 1,
+	};
+	
 	uint8_t	len;			// 9
-	uint8_t	dtype;			// 2
+	uint8_t	dtype;			// 2 or 7 (other)
 	uint16_t clen;			// total length
 	uint8_t	numInterfaces;
 	uint8_t	config;
 	uint8_t	iconfig;
 	uint8_t	attributes;
 	uint8_t	maxPower;
-} ConfigDescriptor;
+
+	ConfigDescriptor(
+					 _cd_otherOrNot _other,
+					 uint16_t _totalLength,
+					 uint8_t _interfaces
+					 )
+	:
+	len(9),
+	dtype(!_other ? 2 : 7),
+	clen(_totalLength),
+	numInterfaces(_interfaces),
+	config(1),
+	iconfig(0),
+	attributes(USB_CONFIG_SELF_POWERED),
+	maxPower(USB_CONFIG_POWER_MA(500))
+	{ /* Nothing to do here */ };
+};
 
 //	String
 
 //	Interface
-typedef struct
-{
+#if 0
+#define D_INTERFACE(_n,_numEndpoints,_class,_subClass,_protocol) \
+{ 9, 4, _n, 0, _numEndpoints, _class,_subClass, _protocol, 0 }
+#endif
+class InterfaceDescriptor {
+public:
+
 	uint8_t len;		// 9
 	uint8_t dtype;		// 4
 	uint8_t number;
@@ -171,23 +261,69 @@ typedef struct
 	uint8_t interfaceSubClass;
 	uint8_t protocol;
 	uint8_t iInterface;
-} InterfaceDescriptor;
+
+
+	InterfaceDescriptor(
+						uint8_t _number,
+						uint8_t _numEndpoints,
+						uint8_t _interfaceClass,
+						uint8_t _interfaceSubClass,
+						uint8_t _protocol
+						)
+	:
+	len(9),
+	dtype(4),
+	number(_number),
+	alternate(0),
+	numEndpoints(_numEndpoints),
+	interfaceClass(_interfaceClass),
+	interfaceSubClass(_interfaceSubClass),
+	protocol(_protocol),
+	iInterface(0)
+	{ /* Nothing to do here */ };
+};
 
 //	Endpoint
-typedef struct
-{
+#if 0
+#define D_ENDPOINT(_addr,_attr,_packetSize, _interval) \
+{ 7, 5, _addr,_attr,_packetSize, _interval }
+#endif
+
+class EndpointDescriptor {
+public:
+
 	uint8_t len;		// 7
 	uint8_t dtype;		// 5
 	uint8_t addr;
 	uint8_t attr;
 	uint16_t packetSize;
 	uint8_t interval;
-} EndpointDescriptor;
+
+	EndpointDescriptor(
+					   uint8_t _addr,
+					   uint8_t _attr,
+					   uint16_t _packetSize,
+					   uint8_t _interval
+					   )
+	:
+	len(7),
+	dtype(5),
+	addr(_addr),
+	attr(_attr),
+	packetSize(_packetSize),
+	interval(_interval)
+	{ /* Nothing to do here */ };
+};
 
 // Interface Association Descriptor
 // Used to bind 2 interfaces together in CDC compostite device
-typedef struct
-{
+#if 0
+#define D_IAD(_firstInterface, _count, _class, _subClass, _protocol) \
+{ 8, 11, _firstInterface, _count, _class, _subClass, _protocol, 0 }
+#endif
+class IADDescriptor {
+public:
+
 	uint8_t len;				// 8
 	uint8_t dtype;				// 11
 	uint8_t firstInterface;
@@ -196,42 +332,117 @@ typedef struct
 	uint8_t funtionSubClass;
 	uint8_t functionProtocol;
 	uint8_t iInterface;
-} IADDescriptor;
+
+	IADDescriptor(
+				  uint8_t _firstInterface,
+				  uint8_t _interfaceCount,
+				  uint8_t _functionClass,
+				  uint8_t _funtionSubClass,
+				  uint8_t _functionProtocol
+				  )
+	:
+	len(8),
+	dtype(11),
+	firstInterface(_firstInterface),
+	interfaceCount(_interfaceCount),
+	functionClass(_functionClass),
+	funtionSubClass(_funtionSubClass),
+	functionProtocol(_functionProtocol),
+	iInterface(0)
+	{ /* Nothing to do here */ };
+} ;
 
 //	CDC CS interface descriptor
-typedef struct
-{
+#if 0
+#define D_CDCCS(_subtype,_d0,_d1)	{ 5, 0x24, _subtype, _d0, _d1 }
+#define D_CDCCS4(_subtype,_d0)		{ 4, 0x24, _subtype, _d0 }
+#endif
+class CDCCSInterfaceDescriptor {
+public:
 	uint8_t len;		// 5
 	uint8_t dtype;		// 0x24
 	uint8_t subtype;
 	uint8_t d0;
 	uint8_t d1;
-} CDCCSInterfaceDescriptor;
 
-typedef struct
-{
+	CDCCSInterfaceDescriptor(
+							 uint8_t _subtype,
+							 uint8_t _d0,
+							 uint8_t _d1
+				  )
+	:
+	len(5),
+	dtype(0x24),
+	subtype(_subtype),
+	d0(_d0),
+	d1(_d1)
+	{ /* Nothing to do here */ };
+};
+
+#if 0
+//UNUSED?
+class CDCCSInterfaceDescriptor4 {
+public:
+
 	uint8_t len;		// 4
 	uint8_t dtype;		// 0x24
 	uint8_t subtype;
 	uint8_t d0;
-} CDCCSInterfaceDescriptor4;
 
-typedef struct
-{
+	CDCCSInterfaceDescriptor4(
+							 uint8_t _subtype,
+							 uint8_t _d0
+							 )
+	:
+	len(4),
+	dtype(0x24),
+	subtype(_subtype),
+	d0(_d0)
+	{ /* Nothing to do here */ };
+};
+#endif
+
+class CMFunctionalDescriptor {
+public:
+
+    uint8_t	len;
+    uint8_t	dtype;		// 0x24
+    uint8_t	subtype;	// 1
+    uint8_t	bmCapabilities;
+    uint8_t	bDataInterface;
+
+	CMFunctionalDescriptor(
+							 uint8_t _subtype,
+							 uint8_t _bmCapabilities,
+							 uint8_t _bDataInterface
+							 )
+	:
+	len(5),
+	dtype(0x24),
+	subtype(_subtype),
+	bmCapabilities(_bmCapabilities),
+	bDataInterface(_bDataInterface)
+	{ /* Nothing to do here */ };
+} ;
+
+class ACMFunctionalDescriptor {
+public:
     uint8_t	len;
     uint8_t 	dtype;		// 0x24
     uint8_t 	subtype;	// 1
     uint8_t 	bmCapabilities;
-    uint8_t 	bDataInterface;
-} CMFunctionalDescriptor;
-
-typedef struct
-{
-    uint8_t	len;
-    uint8_t 	dtype;		// 0x24
-    uint8_t 	subtype;	// 1
-    uint8_t 	bmCapabilities;
-} ACMFunctionalDescriptor;
+	
+	ACMFunctionalDescriptor(
+							  uint8_t _subtype,
+							  uint8_t _bmCapabilities
+							  )
+	:
+	len(4),
+	dtype(0x24),
+	subtype(_subtype),
+	bmCapabilities(_bmCapabilities)
+	{ /* Nothing to do here */ };
+};
 
 typedef struct
 {
@@ -252,15 +463,22 @@ typedef struct
 	EndpointDescriptor			out;
 } CDCDescriptor;
 
+/* UNUSED?
 typedef struct
 {
 	InterfaceDescriptor			msc;
 	EndpointDescriptor			in;
 	EndpointDescriptor			out;
 } MSCDescriptor;
+*/
 
-typedef struct
+#if 0
+#define D_HIDREPORT(_descriptorLength) \
+{ 9, 0x21, 0x1, 0x1, 0, 1, 0x22, _descriptorLength, 0 }
+#endif
+class HIDDescDescriptor
 {
+public:
 	uint8_t len;			// 9
 	uint8_t dtype;			// 0x21
 	uint8_t addr;
@@ -270,7 +488,22 @@ typedef struct
 	uint8_t	desctype;		// 0x22 report
 	uint8_t	descLenL;
 	uint8_t	descLenH;
-} HIDDescDescriptor;
+
+	HIDDescDescriptor(
+						   uint16_t	_descriptorLength
+						   )
+	:
+	len(9),
+	dtype(0x21),
+	addr(0x1),
+	versionL(0x1),
+	versionH(0x0),
+	country(0x1),
+	desctype(0x22),
+	descLenL(_descriptorLength & 0xFF),
+	descLenH((_descriptorLength & 0xFF00) >> 8)
+	{ /* Nothing to do here */ };
+};
 
 typedef struct
 {
@@ -281,6 +514,7 @@ typedef struct
 
 _Pragma("pack()")
 
+#if 0
 #define D_DEVICE(_class,_subClass,_proto,_packetSize0,_vid,_pid,_version,_im,_ip,_is,_configs) \
 	{ 18, 1, 0x200, _class,_subClass,_proto,_packetSize0,_vid,_pid,_version,_im,_ip,_is,_configs }
 
@@ -307,5 +541,7 @@ _Pragma("pack()")
 
 #define D_CDCCS(_subtype,_d0,_d1)	{ 5, 0x24, _subtype, _d0, _d1 }
 #define D_CDCCS4(_subtype,_d0)		{ 4, 0x24, _subtype, _d0 }
+
+#endif
 
 #endif

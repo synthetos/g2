@@ -76,8 +76,8 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
  */
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed time		// local alias for spindle_speed to the time variable
-#define int_val move_code		// local alias for uint8_t to the move_code
-#define dbl_val time			// local alias for float to the time variable
+#define value_vector target		// alias for vector of values
+#define flag_vector unit		// alias for vector of flags
 
 // execution routines (NB: These are all called from the LO interrupt)
 static uint8_t _exec_dwell(mpBuf_t *bf);
@@ -94,14 +94,14 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 
 void planner_init()
 {
-// You can assume all memory has been zeroed by a hard reset. If not, use this code:
-//	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
-//	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
+// If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
+	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
+	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-//++++	ar.magic_start = MAGICNUM;
-//++++	ar.magic_end = MAGICNUM;
+	ar.magic_start = MAGICNUM;
+	ar.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 
@@ -118,13 +118,11 @@ void mp_flush_planner()
 	ar_abort_arc();
 	mp_init_buffers();
 	cm.motion_state = MOTION_STOP;
-//	copy_axis_vector(mm.position, mr.position);		//++++ Is this right?
 }
 
 /*
- * mp_set_plan_position() 	- sets planning position (for G92)
- * mp_get_plan_position() 	- returns planning position
- * mp_set_axis_position() 	- sets both planning and runtime positions (for G2/G3)
+ * mp_set_planner_position() - sets both planner position by axis (mm struct)
+ * mp_set_runtime_position() - sets both runtime position by axis (mr struct)
  *
  * 	Keeping track of position is complicated by the fact that moves exist in 
  *	several reference frames. The scheme to keep this straight is:
@@ -134,42 +132,29 @@ void mp_flush_planner()
  *	 - mr.target	- target position of runtime segment
  *	 - mr.endpoint	- final target position of runtime segment
  *
- *	Note that the positions are set immediately when they are computed and 
- *	are not an accurate representation of the tool position. In reality 
- *	the motors will still be processing the action and the real tool 
- *	position is still close to the starting point.
+ *	Note that position is set immediately when called and may not be not an accurate 
+ *	representation of the tool position. The motors are still processing the 
+ *	action and the real tool position is still close to the starting point.
  */
-float *mp_get_plan_position(float position[])
-{
-	copy_axis_vector(position, mm.position);	
-	return (position);
-}
 
-void mp_set_plan_position(const float position[])
-{
-	copy_axis_vector(mm.position, position);
-}
-
-void mp_set_axes_position(const float position[])
-{
-	copy_axis_vector(mm.position, position);
-	copy_axis_vector(mr.position, position);
-}
-
-void mp_set_axis_position(uint8_t axis, const float position)
+void mp_set_planner_position(uint8_t axis, const float position)
 {
 	mm.position[axis] = position;
+}
+
+void mp_set_runtime_position(uint8_t axis, const float position)
+{
 	mr.position[axis] = position;
 }
 
-/*************************************************************************/
-/* mp_exec_move() - execute runtime functions to prep move for steppers
+/*************************************************************************
+ * mp_exec_move() - execute runtime functions to prep move for steppers
  *
  *	Dequeues the buffer queue and executes the move continuations.
  *	Manages run buffers and other details
  */
 
-uint8_t mp_exec_move() 
+stat_t mp_exec_move() 
 {
 	mpBuf_t *bf;
 
@@ -179,20 +164,18 @@ uint8_t mp_exec_move()
 	// cycle auto-start for lines only. Add other move types as appropriate.
 	if (bf->move_type == MOVE_TYPE_ALINE) {
 		if (cm.cycle_state == CYCLE_OFF) cm_cycle_start();
+		if (cm.motion_state == MOTION_STOP) cm.motion_state = MOTION_RUN;		
 	}
-	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
-		cm.motion_state = MOTION_RUN;
-	}
-
-	// run the move callback in the buffer
-	if (bf->bf_func != NULL) {
-		return (bf->bf_func(bf));
-	}
+//	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
+//		cm.motion_state = MOTION_RUN;
+//	}
+	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the buffer
 	return (STAT_INTERNAL_ERROR);		// never supposed to get here
 }
 
 /************************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
+ * _exec_command() 	  - callback to execute command
  *
  *	How this works:
  *	  - The command is called by the Gcode interpreter (cm_<command>, e.g. an M code)
@@ -204,12 +187,11 @@ uint8_t mp_exec_move()
  *	  - To finish up _exec_command() needs to run a null pre and free the planner buffer
  *
  *	Doing it this way instead of synchronizing on queue empty simplifies the
- *	handling of feed holds, feed overrides, buffer flushes, and thread blocking,
+ *	handling of feedholds, feed overrides, buffer flushes, and thread blocking,
  *	and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-//void mp_queue_command(void(*cm_exec)(uint8_t, float), uint8_t int_val, float float_val)
-void mp_queue_command(cm_exec cm_func, uint8_t int_value, float float_value)
+void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag)
 {
 	mpBuf_t *bf;
 
@@ -218,39 +200,41 @@ void mp_queue_command(cm_exec cm_func, uint8_t int_value, float float_value)
 
 	bf->move_type = MOVE_TYPE_COMMAND;
 	bf->bf_func = _exec_command;		// callback to planner queue exec function
-	bf->cm_func = cm_func;				// callback to canonical machine exec function
-//	bf->cm_func = cm_exec;				// callback to canonical machine exec function
-	bf->int_val = int_value;
-	bf->dbl_val = float_value;
+	bf->cm_func = cm_exec;				// callback to canonical machine exec function
+
+	for (uint8_t i=0; i<AXES; i++) {
+		bf->value_vector[i] = value[i];
+		bf->flag_vector[i] = flag[i];
+	}
 	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
-	return;
+//	return;
 }
 
-static uint8_t _exec_command(mpBuf_t *bf)
+static stat_t _exec_command(mpBuf_t *bf)
 {
-	bf->cm_func(bf->int_val, bf->dbl_val);
-	st_prep_null();			// Must call a null prep to keep the loader happy. 
+	bf->cm_func(bf->value_vector, bf->flag_vector);	// 2 vectors used by callbacks
+	st_prep_null();									// Must call a null prep to keep the loader happy. 
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
 
 /*************************************************************************
  * mp_dwell() 	 - queue a dwell
- * _exec_dwell() - dwell continuation
+ * _exec_dwell() - dwell execution 
  *
  * Dwells are performed by passing a dwell move to the stepper drivers.
- * When the stepper driver sees a dwell it times the swell on a separate 
+ * When the stepper driver sees a dwell it times the dwell on a separate 
  * timer than the stepper pulse timer.
  */
 
-uint8_t mp_dwell(float seconds) 
+stat_t mp_dwell(float seconds) 
 {
 	mpBuf_t *bf; 
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
-		return (STAT_BUFFER_FULL_FATAL);		  	// (not supposed to fail)
+		return (STAT_BUFFER_FULL_FATAL);		// (not ever supposed to fail)
 	}
-	bf->bf_func = _exec_dwell;					// register the callback to the exec function
+	bf->bf_func = _exec_dwell;					// register the callback to dwell start
 	bf->time = seconds;						  	// in seconds, not minutes
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
@@ -366,6 +350,7 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	st_request_exec_move();						// request a move exec if not busy
+	rpt_request_queue_report(+1);				// add to the "added buffers" count
 }
 
 mpBuf_t * mp_get_run_buffer() 
@@ -392,7 +377,7 @@ void mp_free_run_buffer()						// EMPTY current run buf & adv to next
 	}
 	if (mb.w == mb.r) cm_cycle_end();			// end the cycle if the queue empties
 	mb.buffers_available++;
-	rpt_request_queue_report();
+	rpt_request_queue_report(-1);				// add to the "removed buffers" count
 }
 
 mpBuf_t * mp_get_first_buffer(void)

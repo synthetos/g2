@@ -60,13 +60,13 @@ static void _init_forward_diffs(float t0, float t2);
 static float _compute_next_segment_velocity(void);
 
 /* 
- * mp_isbusy() - return TRUE if motion control busy (i.e. robot is moving)
+ * mp_get_runtime_busy() - return TRUE if motion control busy (i.e. robot is moving)
  *
  *	Use this function to sync to the queue. If you wait until it returns
  *	FALSE you know the queue is empty and the motors have stopped.
  */
 
-uint8_t mp_isbusy()
+uint8_t mp_get_runtime_busy()
 {
 	if ((st_isbusy() == true) || (mr.move_state > MOVE_STATE_NEW)) {
 		return (true);
@@ -75,15 +75,17 @@ uint8_t mp_isbusy()
 }
 
 /*
- * mp_get_runtime_linenum()	 - returns currently executing line number
- * mp_get_runtime_velocity() - returns current velocity (aggregate)
+ * mp_get_runtime_motion_mode() 	- returns motion mode of currently executing command
+ * mp_get_runtime_linenum()	 		- returns currently executing line number
+ * mp_get_runtime_velocity() 		- returns current velocity (aggregate)
  * mp_get_runtime_machine_position() - returns current axis position in machine coordinates
- * mp_get_runtime_work_position() - returns current axis position in work coordinates
- *									that were in effect at move planning time
+ * mp_get_runtime_work_position() 	- returns current axis position in work coordinates
+ *									  that were in effect at move planning time
  * mp_set_runtime_work_offset()
- * mp_zero_segment_velocity() - correct velocity in last segment for reporting purposes
+ * mp_zero_segment_velocity() 		- correct velocity in last segment for reporting purposes
  */
 
+uint8_t mp_get_runtime_motion_mode(void) { return (mr.motion_mode);}
 float mp_get_runtime_linenum(void) { return (mr.linenum);}
 float mp_get_runtime_velocity(void) { return (mr.segment_velocity);}
 
@@ -140,12 +142,12 @@ uint8_t mp_aline(const float target[], const float minutes, const float work_off
 	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE_ERROR);}
 	if (minutes < MIN_TIME_MOVE) { return (STAT_MINIMUM_TIME_MOVE_ERROR);}
 
-
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) { return (STAT_BUFFER_FULL_FATAL);} // never supposed to fail
 
 	bf->bf_func = _exec_aline;					// register the callback to the exec function
 	bf->linenum = cm_get_model_linenum();		// block being planned
+	bf->motion_mode = cm_get_model_motion_mode();
 	bf->time = minutes;
 	bf->min_time = min_time;
 	bf->length = length;
@@ -193,7 +195,7 @@ uint8_t mp_aline(const float target[], const float minutes, const float work_off
 	}
 
 	// finish up the current block variables
-	if (cm_get_path_control() != PATH_EXACT_STOP) { // exact stop cases already zeroed
+	if (cm_get_model_path_control() != PATH_EXACT_STOP) { // exact stop cases already zeroed
 		bf->replannable = true;
 		exact_stop = 12345678;					// an arbitrarily large floating point number
 	}
@@ -1236,7 +1238,7 @@ static uint8_t _exec_aline_segment(uint8_t correction_flag)
 	// each axis. Set the target in absolute coords and compute relative steps.
 
 	if ((correction_flag == true) && (mr.segment_count == 1) && 
-		(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_STARTED)) {
+		(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_MACHINING)) {
 		mr.target[AXIS_X] = mr.endpoint[AXIS_X];	// rounding error correction for last segment
 		mr.target[AXIS_Y] = mr.endpoint[AXIS_Y];
 		mr.target[AXIS_Z] = mr.endpoint[AXIS_Z];

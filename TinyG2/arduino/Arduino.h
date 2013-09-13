@@ -195,6 +195,7 @@ extern const PinDescription g_APinDescription[] ;
 #include "wiring_shift.h"
 #include "WInterrupts.h"
 
+#ifdef __cplusplus
 // USB Device
 #define USB_VID            0x2341 // arduino LLC vid
 #define USB_PID_LEONARDO   0x0034
@@ -203,5 +204,7 @@ extern const PinDescription g_APinDescription[] ;
 #include "USB/USBDesc.h"
 #include "USB/USBCore.h"
 #include "USB/USBAPI.h"
+#endif // __cplusplus
+
 
 #endif // Arduino_h

@@ -29,6 +29,13 @@
 #define _XIO_H_
 
 #include "tinyg2.h"
+#include "MotateUSB.h"
+#include "MotateUSBCDC.h"
+
+//#include "Arduino.h"
+
+extern Motate::USBDevice< Motate::USBCDC > usb;
+extern typeof usb._mixin_0_type::Serial &SerialUSB;
 
 #define _FDEV_ERR -1
 #define _FDEV_EOF -2

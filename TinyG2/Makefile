@@ -25,8 +25,10 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino arduino/USB variants motate
-FIRST_LINK_SOURCES := motate/SamTimers.cpp arduino/syscalls_sam3.c
+SOURCE_DIRS = . motate
+# arduino arduino/USB variants
+
+FIRST_LINK_SOURCES := 
 
 # List all user directories here
 USER_INCLUDE_DIRS := $(SOURCE_DIRS)
@@ -38,8 +40,8 @@ USER_LIB_DIRS =
 USER_LIBS =
 
 # Define optimisation level here
-OPTIMIZATION ?= 0
-#OPTIMIZATION ?= s
+#OPTIMIZATION ?= 0
+OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
 CFLAGS   :=
@@ -57,7 +59,7 @@ DEFAULT_MEMORY = flash
 CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
 CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
 CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
 CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
@@ -82,7 +84,7 @@ CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
 CPPFLAGS += -Wmain -Wparentheses -Wunreachable-code
 #CPPFLAGS += -Wcast-align
 CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
@@ -141,14 +143,14 @@ DEPDIR = $(OBJ)/dep
 PLATFORM ?= due
 
 ifeq ("$(PLATFORM)","due")
-    CHIP = SAM3X8E
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
 
+	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
-
     CMSIS_ROOT = CMSIS
-    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
-    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
-                           $(PLATFORM_BASE)/libsam/include
+#    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
+#    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
+#                           $(PLATFORM_BASE)/libsam/include
 
     include $(PLATFORM_BASE).mk
 endif

@@ -29,9 +29,12 @@
 #include "hardware.h"
 #include "switch.h"
 #include "xio.h"
+#include "util.h"
 
-/*
-#include "util.h"				// #2
+#include "MotateTimers.h"
+using Motate::delay;
+
+/* more may be needed
 #include "json_parser.h"
 #include "gcode_parser.h"
 #include "network.h"
@@ -45,6 +48,13 @@ extern "C"{
 
 void _init() __attribute__ ((weak));
 void _init() {;}
+
+void __libc_init_array(void);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
 static void _application_init(void);
 
 // collect all weird little globals here
@@ -52,13 +62,42 @@ stat_t status_code;		// declared for ritorno, see tinyg2.h
 
 /******************** Application Code ************************/
 
+const Motate::USBSettings_t Motate::USBSettings = {
+	/*gVendorID         = */ 0x1d50,
+	/*gProductID        = */ 0x606d,
+	/*gProductVersion   = */ TINYG_FIRMWARE_VERSION,
+	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
+	/*gPowerConsumption = */ 500
+};
+	/*gProductVersion   = */ //0.1,
+
+Motate::USBDevice< Motate::USBCDC > usb;
+//template<>
+//Motate::USBDevice< Motate::USBCDC, Motate::USBNullInterface, Motate::USBNullInterface > *Motate::USBDevice< Motate::USBCDC, Motate::USBNullInterface, Motate::USBNullInterface >::_singleton = 0;
+
+typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
+
+MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
+MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
+
+void init( void )
+{
+	SystemInit();
+
+	// Disable watchdog
+	WDT->WDT_MR = WDT_MR_WDDIS;
+
+	// Initialize C library
+	__libc_init_array();
+}
+
 int main( void )
 {
 	// system initialization
 	init();
-	USBDevice.attach();				// USB setup
-	SerialUSB.begin(115200);
-//	delay(1000);
+	delay(1);
+	usb.attach();					// USB setup
+	delay(1000);
 
 	// TinyG application setup
 	_application_init();
@@ -77,20 +116,20 @@ static void _application_init(void)
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	config_init();					// config records from eeprom 		- must be next app init
-	switch_init();					// switches
-//	pwm_init();						// pulse width modulation drivers	- must follow gpio_init()
+	config_init();					// config records from eeprom 		- must be second
+	switch_init();					// switches and other inputs
+//	pwm_init();						// pulse width modulation drivers
 
 	// do these next
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
 	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine				- must follow cfg_init()
+	canonical_machine_init();		// canonical machine				- must follow config_init()
 	spindle_init();					// spindle PWM and variables
 
 	// do these last
-	stepper_init(); 				// must precede gpio_init()
+	stepper_init();
 
-	// now bring up the interrupts and get started
+	// now get started
 //	rpt_print_system_ready_message();// (LAST) announce system is ready
 //	_unit_tests();					// run any unit tests that are enabled
 //	tg_canned_startup();			// run any pre-loaded commands
@@ -102,7 +141,3 @@ void tg_reset(void)			// software hard reset using the watchdog timer
 	//	wdt_enable(WDTO_15MS);
 	//	while (true);			// loops for about 15ms then resets
 }
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus

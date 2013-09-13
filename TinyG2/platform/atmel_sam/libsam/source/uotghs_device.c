@@ -40,6 +40,8 @@ extern void (*gpf_isr)(void);
 static volatile uint32_t ul_send_fifo_ptr[MAX_ENDPOINTS];
 static volatile uint32_t ul_recv_fifo_ptr[MAX_ENDPOINTS];
 
+extern uint16_t endpointSizes[10];
+
 void UDD_SetStack(void (*pf_isr)(void))
 {
 	gpf_isr = pf_isr;
@@ -221,12 +223,14 @@ uint32_t UDD_Send(uint32_t ep, const void* data, uint32_t len)
 
 	if (ep == EP0)
 	{
-		if (ul_send_fifo_ptr[ep] + len > EP0_SIZE)
-			len = EP0_SIZE - ul_send_fifo_ptr[ep];
+		if (ul_send_fifo_ptr[ep] + len > endpointSizes[0])
+			len = endpointSizes[0] - ul_send_fifo_ptr[ep];
 	}
 	else
 	{
 		ul_send_fifo_ptr[ep] = 0;
+		if (len > endpointSizes[ep])
+			len = endpointSizes[ep];
 	}
 	for (i = 0, ptr_dest += ul_send_fifo_ptr[ep]; i < len; ++i)
 		*ptr_dest++ = *ptr_src++;
@@ -236,7 +240,7 @@ uint32_t UDD_Send(uint32_t ep, const void* data, uint32_t len)
 	if (ep == EP0)
 	{
 		TRACE_UOTGHS_DEVICE(printf("=> UDD_Send (2): ep=%lu ptr_dest=%lu maxlen=%d\r\n", ep, ul_send_fifo_ptr[ep], EP0_SIZE);)
-		if (ul_send_fifo_ptr[ep] == EP0_SIZE)
+		if (ul_send_fifo_ptr[ep] == endpointSizes[0])
 		{
 			UDD_ClearIN();	// Fifo is full, release this packet  // UOTGHS->UOTGHS_DEVEPTICR[EP0] = UOTGHS_DEVEPTICR_TXINIC;
         }

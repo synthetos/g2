@@ -44,15 +44,22 @@
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "MotateTimers.h"
+using Motate::SysTickTimer;
 
 // Allocate switch array structure
 switches_t sw;
 
-static void _no_action(switch_t *s);
-static void _led_on(switch_t *s);
-static void _led_off(switch_t *s);
+//static void _no_action(switch_t *s);
+//static void _led_on(switch_t *s);
+//static void _led_off(switch_t *s);
 static void _trigger_feedhold(switch_t *s);
 static void _trigger_cycle_start(switch_t *s);
+
+static void _no_action(switch_t *s) { return; }
+//static void _led_on(switch_t *s) { IndicatorLed.clear(); }
+//static void _led_off(switch_t *s) { IndicatorLed.set(); }
+
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -93,10 +100,6 @@ void switch_init(void)
 	// sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
 }
 
-static void _no_action(switch_t *s) { return; }
-static void _led_on(switch_t *s) { IndicatorLed.clear(); }
-static void _led_off(switch_t *s) { IndicatorLed.set(); }
-
 /*
  * poll_switches() - run a polling cycle on all switches
  */
@@ -128,10 +131,10 @@ stat_t poll_switches()
 uint8_t read_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
-	if (s->mode == SW_MODE_DISABLED) { 
+	if (s->mode == SW_MODE_DISABLED) {
 		return (false); 
 	}
-	if (s->debounce_timeout > GetTickCount()) {
+	if (s->debounce_timeout > SysTickTimer.getValue()) {
 		return (false);
 	}
 	// return if no change in state
@@ -153,7 +156,7 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 			s->edge = SW_LEADING;
 			s->on_leading(s);
 	}
-	s->debounce_timeout = (GetTickCount() + s->debounce_ticks);
+	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
 }
 
@@ -179,7 +182,7 @@ static void _trigger_cycle_start(switch_t *s)
 /*
  * switch_get_switch_mode()  - return switch mode setting
  * switch_get_limit_thrown() - return true if a limit was tripped
- * switch_get_sw_num()  	 - return switch number most recently thrown
+ * switch_get_switch_num()   - return switch number most recently thrown
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++

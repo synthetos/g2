@@ -31,7 +31,6 @@
 #include "spindle.h"
 #include "planner.h"
 #include "hardware.h"
-//#include "gpio.h"
 //#include "gcode_parser.h"
 //#include "pwm.h"
 
@@ -39,8 +38,8 @@
 extern "C"{
 #endif
 
-static void _exec_spindle_control(uint8_t spindle_mode, float f);
-static void _exec_spindle_speed(uint8_t i, float speed);
+static void _exec_spindle_control(float *value, float *flag);
+static void _exec_spindle_speed(float *value, float *flag);
 
 /* 
  * spindle_init()
@@ -90,29 +89,35 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
  * cm_exec_spindle_control() - execute the spindle command (called from planner)
  */
 
-uint8_t cm_spindle_control(uint8_t spindle_mode)
+stat_t cm_spindle_control(uint8_t spindle_mode)
 {
-	mp_queue_command(_exec_spindle_control, spindle_mode, 0);
+	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
 }
 
-static void _exec_spindle_control(uint8_t spindle_mode, float f)
+//static void _exec_spindle_control(uint8_t spindle_mode, float f, float *vector, float *flag)
+static void _exec_spindle_control(float *value, float *flag)
 {
+	uint8_t spindle_mode = (uint8_t)value[0];
 	cm_set_spindle_mode(spindle_mode);
-/*++++	
- 	if (spindle_mode == SPINDLE_CW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_off(SPINDLE_DIR);
+	if (spindle_mode == SPINDLE_CW) {
+		spindle_enable_pin.set();
+		spindle_dir_pin.clear();
+//+++++	gpio_set_bit_on(SPINDLE_BIT);
+//+++++	gpio_set_bit_off(SPINDLE_DIR);
 	} else if (spindle_mode == SPINDLE_CCW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_on(SPINDLE_DIR);
+		spindle_enable_pin.set();
+		spindle_dir_pin.set();
+//+++++	gpio_set_bit_on(SPINDLE_BIT);
+//+++++	gpio_set_bit_on(SPINDLE_DIR);
 	} else {
-		gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
+		spindle_enable_pin.clear();
+//+++++	gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
 	}
-    
-    // PWM spindle control
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
-*/
+	
+	// PWM spindle control
+//	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
 }
 
 /*
@@ -120,24 +125,24 @@ static void _exec_spindle_control(uint8_t spindle_mode, float f)
  * cm_exec_spindle_speed() 	- execute the S command (called from the planner buffer)
  * _exec_spindle_speed()	- spindle speed callback from planner queue
  */
-
-uint8_t cm_set_spindle_speed(float speed)
+stat_t cm_set_spindle_speed(float speed)
 {
-//	if (speed > cfg.max_spindle speed) { return (TG_MAX_SPINDLE_SPEED_EXCEEDED);}
-	mp_queue_command(_exec_spindle_speed, 0, speed);
-    return (STAT_OK);
+	//	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
+	float value[AXES] = { speed, 0,0,0,0,0 };
+	mp_queue_command(_exec_spindle_speed, value, value);
+	return (STAT_OK);
 }
 
 void cm_exec_spindle_speed(float speed)
 {
-// TODO: Link in S command and calibrations to allow dynamic spindle speed setting 
+	// TODO: Link in S command and calibrations to allow dynamic spindle speed setting
 	cm_set_spindle_speed(speed);
 }
 
-static void _exec_spindle_speed(uint8_t i, float speed)
+static void _exec_spindle_speed(float *value, float *flag)
 {
-	cm_set_spindle_speed_parameter(speed);
-//++++	pwm_set_duty(PWM_1, cm_get_spindle_pwm(gm.spindle_mode) ); // update spindle speed if we're running
+	cm_set_spindle_speed_parameter(value[0]);
+//++++++	pwm_set_duty(PWM_1, cm_get_spindle_pwm(gm.spindle_mode) ); // update spindle speed if we're running
 }
 
 #ifdef __cplusplus
