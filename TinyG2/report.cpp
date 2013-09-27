@@ -42,6 +42,11 @@
 extern "C"{
 #endif
 
+/**** Allocation ****/
+
+srSingleton_t sr;
+qrSingleton_t qr;
+
 /**** Status and Exception Messages **************************************************
  * rpt_get_status_message() - return the status message
  * rpt_exception() - send an exception report (JSON formatted)
@@ -125,6 +130,7 @@ static const char_t PROGMEM stat_69[] = "Max spindle speed exceeded";
 static const char_t PROGMEM stat_70[] = "Arc specification error";
 static const char_t PROGMEM stat_71[] = "Soft limit exceeded";
 static const char_t PROGMEM stat_72[] = "Command not accepted";
+static const char_t PROGMEM stat_73[] = "Probing cycle failed";
 
 //PGM_P const PROGMEM stat_msg[] = {		// AVR/GCC version
 static const char_t *stat_msg[] = {			// ARM/GCC++ version
@@ -135,7 +141,7 @@ static const char_t *stat_msg[] = {			// ARM/GCC++ version
 	stat_40, stat_41, stat_42, stat_43, stat_44, stat_45, stat_46, stat_47, stat_48, stat_49,
 	stat_50, stat_51, stat_52, stat_53, stat_54, stat_55, stat_56, stat_57, stat_58, stat_59,
 	stat_60, stat_61, stat_62, stat_63, stat_64, stat_65, stat_66, stat_67, stat_68, stat_69,
-	stat_70, stat_71, stat_72
+	stat_70, stat_71, stat_72, stat_73
 };
 
 const char *get_status_message(stat_t status)
@@ -151,6 +157,7 @@ const char *get_status_message(stat_t status)
 
 /*
  * rpt_exception() - generate an exception message
+ * rpt_er()		   - send a bogus exception report for testing purposes (it's not real)
  */
 void rpt_exception(uint8_t status, int16_t value)
 {
@@ -158,8 +165,13 @@ void rpt_exception(uint8_t status, int16_t value)
 		TINYG_FIRMWARE_BUILD, status, get_status_message(status), value);
 }
 
+stat_t rpt_er(cmdObj_t *cmd)
+{
+	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
+	return (STAT_OK);
+}
+
 /**** Application Messages *********************************************************
- * rpt_print_message() 				   - print a character string passed as argument
  * rpt_print_initializing_message()	   - initializing configs from hard-coded profile
  * rpt_print_loading_configs_message() - loading configs from EEPROM
  * rpt_print_system_ready_message()    - system ready message
@@ -170,6 +182,7 @@ void rpt_exception(uint8_t status, int16_t value)
 void _startup_helper(stat_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
+	js.json_footer_depth = JSON_FOOTER_DEPTH;	//++++ temporary until changeover is complete
 	cmd_reset_list();
 	cmd_add_object((const char_t *)"fb");
 	cmd_add_object((const char_t *)"fv");
@@ -240,13 +253,13 @@ void rpt_print_system_ready_message(void)
  */
 
 /* 
- * rpt_init_status_report()
+ * sr_init_status_report()
  *
  *	Call this function to completely re-initialize the status report
  *	Sets SR list to hard-coded defaults and re-initializes sr values in NVM
  */
 
-void rpt_init_status_report()
+void sr_init_status_report()
 {
 	cmdObj_t *cmd = cmd_reset_list();					// used for status report persistence locations
 	cm.status_report_requested = false;
@@ -267,10 +280,10 @@ void rpt_init_status_report()
 }
 
 /* 
- * rpt_set_status_report() - interpret an sr setup string and return current report
+ * sr_set_status_report() - interpret an sr setup string and return current report
  */
 
-stat_t rpt_set_status_report(cmdObj_t *cmd)
+stat_t sr_set_status_report(cmdObj_t *cmd)
 {
 	uint8_t elements = 0;
 	index_t status_report_list[CMD_STATUS_REPORT_LEN];
@@ -291,16 +304,16 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
 	}
 	if (elements == 0) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	memcpy(cfg.status_report_list, status_report_list, sizeof(status_report_list));
-	rpt_populate_unfiltered_status_report();			// return current values
+	sr_populate_unfiltered_status_report();			// return current values
 	return (STAT_OK);
 }
 
 /* 
- * rpt_run_text_status_report()	- generate a text mode status report in multiline format
- * rpt_request_status_report()	- request a status report to run after minimum interval
- * rpt_force_status_report()	- request a status report to run at the next main loop opporunity
- * rpt_status_report_rtc_callback()	- real-time clock downcount for minimum reporting interval
- * rpt_status_report_callback()	- main loop callback to send a report if one is ready
+ * sr_run_text_status_report()	- generate a text mode status report in multiline format
+ * sr_request_status_report()	- request a status report to run after minimum interval
+ * sr_force_status_report()	- request a status report to run at the next main loop opporunity
+ * sr_status_report_rtc_callback()	- real-time clock downcount for minimum reporting interval
+ * sr_status_report_callback()	- main loop callback to send a report if one is ready
  *
  *	Status reports can be request from a number of sources including:
  *	  - direct request from command line in the form of ? or {"sr:""}
@@ -310,13 +323,13 @@ stat_t rpt_set_status_report(cmdObj_t *cmd)
  *	Status reports are generally returned with minimal delay (from the controller callback), 
  *	but will not be provided more frequently than the status report interval.
  */
-void rpt_run_text_status_report()
+void sr_run_text_status_report()
 {
-	rpt_populate_unfiltered_status_report();
+	sr_populate_unfiltered_status_report();
 	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 }
 
-void rpt_request_status_report(uint8_t request_type)
+void sr_request_status_report(uint8_t request_type)
 {
 	if (request_type == SR_IMMEDIATE_REQUEST) {
 		cm.status_report_systick = SysTickTimer.getValue();
@@ -331,18 +344,18 @@ void rpt_request_status_report(uint8_t request_type)
 	}
 }
 
-stat_t rpt_status_report_callback() 		// called by controller dispatcher
+stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
 	if (cfg.status_report_verbosity == SR_OFF) return (STAT_NOOP);
 	if (cm.status_report_requested == false) return (STAT_NOOP);
 	if (SysTickTimer.getValue() < cm.status_report_systick) return (STAT_NOOP);
 
 	if (cfg.status_report_verbosity == SR_FILTERED) {
-		if (rpt_populate_filtered_status_report() == true) {
+		if (sr_populate_filtered_status_report() == true) {
 			cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 		}
 		} else {
-		rpt_populate_unfiltered_status_report();
+		sr_populate_unfiltered_status_report();
 		cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	}
 	cm.status_report_requested = false;		// disable reports until requested again
@@ -350,12 +363,12 @@ stat_t rpt_status_report_callback() 		// called by controller dispatcher
 }
 
 /*
- * rpt_populate_unfiltered_status_report() - populate cmdObj body with status values
+ * sr_populate_unfiltered_status_report() - populate cmdObj body with status values
  *
  *	Designed to be run as a response; i.e. have a "r" header and a footer.
  */
 
-void rpt_populate_unfiltered_status_report()
+void sr_populate_unfiltered_status_report()
 {
 	const char_t nul[] = "";
 	const char_t sr[] = "sr";
@@ -378,17 +391,17 @@ void rpt_populate_unfiltered_status_report()
 }
 
 /*
- * rpt_populate_filtered_status_report() - populate cmdObj body with status values
+ * sr_populate_filtered_status_report() - populate cmdObj body with status values
  *
  *	Designed to be displayed as a JSON object; i;e; no footer or header
  *	Returns 'true' if the report has new data, 'false' if there is nothing to report.
  *
- *	NOTE: Unlike rpt_populate_unfiltered_status_report(), this function does NOT set 
+ *	NOTE: Unlike sr_populate_unfiltered_status_report(), this function does NOT set 
  *	the SR index, which is a relatively expensive operation. In current use this 
  *	doesn't matter, but if the caller assumes its set it may lead to a side-effect (bug)
  */
 
-uint8_t rpt_populate_filtered_status_report()
+uint8_t sr_populate_filtered_status_report()
 {
 	const char_t sr[] = "sr";
 	uint8_t has_data = false;
