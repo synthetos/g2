@@ -66,10 +66,37 @@ void tg_setup(void);
  ***** PLATFORM COMPATIBILITY *************************************************
  ******************************************************************************/
 
-//#ifdef __ARM_GCC++
+//#undef __AVR
+//#define __AVR
+#undef __ARM
+#define __ARM
 
-/******************************************************************************
- * String handling help
+/**** AVR Compatibility ****/
+#ifdef __AVR
+#include <avr/pgmspace.h>
+
+typedef char char_t;
+typedef const char PROGMEM *char_P;		// access to PROGMEM arrays of PROGMEM strings
+
+#define GET_VALUE(a) pgm_read_word(&cfgArray[cmd->index].a)
+#define GET_UNITS(a) (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)])
+
+//#define SysTickTimer.getValue SysTickTimer_getValue
+#endif // __AVR
+
+/**** ARM Compatibility ****/
+#ifdef __ARM
+#define PROGMEM						// ignore PROGMEM declarations in ARM/GCC++
+#define PSTR (const char *)			// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
+#define PGM_P const char_t *		// USAGE: (PGM_P) -- must be used in a cast
+
+typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
+typedef const char *char_P;			// ARM/C++ version requires this typedef instead
+
+#define GET_VALUE(a) cfgArray[cmd->index].a;
+#define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
+
+/**** String handling help ***
  *
  * In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++
  * uint8_t and char are distinct types. In AVR char_t is typedef'd to char
@@ -86,9 +113,6 @@ void tg_setup(void);
  *
  * Lastly, we use macros to "neutralize" AVR's PROGMEM and other AVRisms.
  */
-//typedef char char_t;		// AVR/C
-typedef uint8_t char_t;		// ARM/C++
-
 #define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
 #define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
 #define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
@@ -109,11 +133,7 @@ typedef uint8_t char_t;		// ARM/C++
 #define sprintf_P sprintf
 #define strcpy_P strcpy
 
-#define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
-#define PSTR (const char *)		// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
-#define PGM_P const char *		// USAGE: (PGM_P) -- must be used in a cast
-
-//#endif // __ARM_GCC++
+#endif // __ARM
 
 /******************************************************************************
  ***** TINYG APPLICATION DEFINITIONS ******************************************
