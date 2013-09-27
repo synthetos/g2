@@ -35,20 +35,12 @@
 extern "C"{
 #endif
 
-void hardware_init(void);				// master hardware init
-void hardware_get_id(char_t *id);
-
-#define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
-
 /**** Global System Defines ****/
-/* CPU clock */	
 
-#undef F_CPU							// set for delays
+#undef F_CPU							// CPU clock - set for delays
 #define F_CPU 84000000UL
-
 #define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
-
-/* Refer to tinyg2.h for Axes, motors & PWM channels used by the application */
+#define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
 
 /**** Resource Assignment via Motate ****
  *
@@ -257,6 +249,38 @@ static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin(Motate::kPullUp);
 #define SPINDLE_PWM_LED		2
 #define COOLANT_LED			3
 */
+
+/*** function prototypes ***/
+
+void hardware_init(void);				// master hardware init
+void hw_request_hard_reset();
+void hw_hard_reset(void);
+stat_t hw_hard_reset_handler(void);
+
+void hw_request_bootloader(void);
+stat_t hw_bootloader_handler(void);
+stat_t hw_run_boot(cmdObj_t *cmd);
+
+stat_t hw_set_hv(cmdObj_t *cmd);
+stat_t hw_get_id(cmdObj_t *cmd);
+
+#ifdef __TEXT_MODE
+
+	void hw_print_fb(cmdObj_t *cmd);
+	void hw_print_fv(cmdObj_t *cmd);
+	void hw_print_hp(cmdObj_t *cmd);
+	void hw_print_hv(cmdObj_t *cmd);
+	void hw_print_id(cmdObj_t *cmd);
+
+#else
+
+	#define hw_print_fb tx_print_stub
+	#define hw_print_fv tx_print_stub
+	#define hw_print_hp tx_print_stub
+	#define hw_print_hv tx_print_stub
+	#define hw_print_id tx_print_stub
+
+#endif // __TEXT_MODE
 
 #ifdef __cplusplus
 }

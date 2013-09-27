@@ -35,19 +35,24 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		018.02	// More work on SerialUSB state management
+#define TINYG_FIRMWARE_BUILD   		019.01	// Beginning major refactoring to align with Xmega build 392.79
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
 
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
 
+/****** COMPILE-TIME SETTINGS ******/
+
+#define __TEXT_MODE							// comment out to disable text mode support (saves ~9Kb)
+#define __HELP_SCREENS						// comment out to disable help screens 		(saves ~3.5Kb)
+#define __CANNED_TESTS 						// comment out to remove canned tests 		(saves ~12Kb)
+
 /****** DEVELOPMENT SETTINGS ******/
 
 //#define __CANNED_STARTUP					// run any canned startup moves
 //#define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
 //#define __SUPPRESS_STARTUP_MESSAGES 		// what it says
-//#define __SUPPRESS_CANNED_TESTS 			// to save space in debug compiles
 //#define __UNIT_TESTS						// master enable for unit tests; uncomment modules in .h files
 //#define __DEBUG							// complies debug functions found in test.c
 

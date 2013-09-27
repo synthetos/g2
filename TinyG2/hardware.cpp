@@ -25,8 +25,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "tinyg2.h"
+#include "tinyg2.h"		// #1
+#include "config.h"		// #2
 #include "hardware.h"
+#include "text_parser.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -41,8 +43,8 @@ void hardware_init()
 	return;
 }
 
-/*
-uint8_t sys_read_calibration_byte(uint8_t index)
+/* UNUSED
+uint8_t _read_calibration_byte(uint8_t index)
 { 
 	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc; 	// Load NVM Command register to read the calibration row
 	uint8_t result = pgm_read_byte(index); 
@@ -52,7 +54,7 @@ uint8_t sys_read_calibration_byte(uint8_t index)
 */
 
 /*
- * hardware_get_id() - get a human readable signature
+ * hw_get_id() - get a human readable signature
  *
  *	Produces a unique deviceID based on the factory calibration data. Format is:
  *		123456-ABC
@@ -76,7 +78,7 @@ enum {
 	COORDY1,    // Wafer Coordinate Y Byte 1 
 }; 
 
-void hardware_get_id(char_t *id)
+void hw_get_id(char_t *id)
 {
 	char printable[33] = {"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"};
 	uint8_t i;
@@ -98,6 +100,110 @@ void hardware_get_id(char_t *id)
 }
 */
  
+ /*
+ * Hardware Reset Handlers
+ *
+ * hw_request_hard_reset()
+ * hw_hard_reset()			- hard reset using watchdog timer
+ * hw_hard_reset_handler()	- controller's rest handler
+ */
+void hw_request_hard_reset() { cs.hard_reset_requested = true; }
+
+void hw_hard_reset(void)			// software hard reset using the watchdog timer
+{
+//	wdt_enable(WDTO_15MS);
+//	while (true);					// loops for about 15ms then resets
+}
+
+stat_t hw_hard_reset_handler(void)
+{
+//	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
+//	hw_hard_reset();				// hard reset - identical to hitting RESET button
+	return (STAT_EAGAIN);
+}
+
+/*
+ * Bootloader Handlers
+ *
+ * hw_request_bootloader()
+ * hw_request_bootloader_handler() - executes a software reset using CCPWrite
+ */
+
+void hw_request_bootloader() { cs.bootloader_requested = true;}
+
+stat_t hw_bootloader_handler(void)
+{
+//	if (cs.bootloader_requested == false) { return (STAT_NOOP);}
+//	cli();
+//	CCPWrite(&RST.CTRL, RST_SWRST_bm);  // fire a software reset
+	return (STAT_EAGAIN);					// never gets here but keeps the compiler happy
+}
+
+/***** END OF SYSTEM FUNCTIONS *****/
+
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/*
+ * hw_run_boot() - invoke boot form the cfgArray
+ */
+stat_t hw_run_boot(cmdObj_t *cmd)
+{
+	hw_request_bootloader();
+	return(STAT_OK);
+}
+
+/*
+ * hw_set_hv() - set hardware version number
+ */
+stat_t hw_set_hv(cmdObj_t *cmd) 
+{
+	if (cmd->value > TINYG_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_flt(cmd);					// record the hardware version
+//	_port_bindings(cmd->value);		// reset port bindings
+	switch_init();					// re-initialize the GPIO ports
+//+++++	gpio_init();				// re-initialize the GPIO ports
+	return (STAT_OK);
+}
+
+/*
+ * hw_get_id() - get device ID (signature)
+ */
+
+stat_t hw_get_id(cmdObj_t *cmd) 
+{
+	char_t tmp[SYS_ID_LEN];
+	_get_id(tmp);
+	cmd->objtype = TYPE_STRING;
+	ritorno(cmd_copy_string(cmd, tmp));
+	return (STAT_OK);
+}
+
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+const char_t PROGMEM fmt_fb[] = "[fb]  firmware build%18.2f\n";
+const char_t PROGMEM fmt_fv[] = "[fv]  firmware version%16.2f\n";
+const char_t PROGMEM fmt_hv[] = "[hp]  hardware platform%15.2f\n";
+const char_t PROGMEM fmt_hv[] = "[hv]  hardware version%16.2f\n";
+const char_t PROGMEM fmt_id[] = "[id]  TinyG ID%30s\n";
+
+void hw_print_fb(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fb);}
+void hw_print_fv(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fv);}
+void hw_print_hp(cmdObj_t *cmd) { text_print_flt(cmd, fmt_hp);}
+void hw_print_hv(cmdObj_t *cmd) { text_print_flt(cmd, fmt_hv);}
+void hw_print_id(cmdObj_t *cmd) { text_print_str(cmd, fmt_id);}
+
+#endif //__TEXT_MODE 
+
  #ifdef __cplusplus
  }
  #endif
