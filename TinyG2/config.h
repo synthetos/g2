@@ -142,19 +142,14 @@ enum jsonFormats {					// json output print modes
 	JSON_OBJECT_FORMAT,				// print just the body as a json object
 	JSON_RESPONSE_FORMAT			// print the header/body/footer as a response object
 };
-
+/*
 enum textFormats {					// text output print modes
 	TEXT_NO_PRINT = 0,				// don't print anything if you find yourself in TEXT mode
 	TEXT_INLINE_PAIRS,				// print key:value pairs as comma separated pairs
 	TEXT_INLINE_VALUES,				// print values as commas separated values
 	TEXT_MULTILINE_FORMATTED		// print formatted values on separate lines with formatted print per line
 };
-
-enum textVerbosity {
-	TV_SILENT = 0,					// no response is provided
-	TV_VERBOSE						// returns all prompts, messages, configs and gcode blocks
-};
-
+*/
 enum jsonVerbosity {
 	JV_SILENT = 0,					// no response is provided for any command
 	JV_FOOTER,						// responses contain  footer only; no command echo, gcode blocks or messages
