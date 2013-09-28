@@ -155,12 +155,12 @@ const cfgItem_t cfgArray[] = {
 	{ "", "qr",  _f00, 0, qr_print_qr,  qr_get,  set_nul,  (float *)&cs.null, 0 },	// queue report setting
 	{ "", "er",  _f00, 0, tx_print_nul, rpt_er,  set_nul,  (float *)&cs.null, 0 },	// invoke bogus exception report for testing
 	{ "", "qf",  _f00, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
-	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
+//	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
 	{ "", "msg", _f00, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "sx",  _f00, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
 
 #ifdef __HELP_SCREENS
-	{ "", "defa",_f00, 0, tx_print_nul, help_defaults,	 set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
+	{ "", "defa",_f00, 0, tx_print_nul, help_defa,	     set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
 //	{ "", "test",_f00, 0, tx_print_nul, help_test,		 tg_test, 	  (float *)&cs.null,0 },	// run tests, print test help screen
 //	{ "", "boot",_f00, 0, tx_print_nul, help_boot_loader,hw_run_boot, (float *)&cs.null,0 },
 	{ "", "help",_f00, 0, tx_print_nul, help_config,	 set_nul, 	  (float *)&cs.null,0 },	// prints config help screen
@@ -302,7 +302,7 @@ const cfgItem_t cfgArray[] = {
 	{ "c","clv",_fip, 0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
 	{ "c","clb",_fip, 3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
 	{ "c","czb",_fip, 3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,	C_ZERO_BACKOFF },
-
+/*
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, set_flt,(float *)&pwm_cfg.p.frequency,	P1_PWM_FREQUENCY },
 	{ "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, set_flt,(float *)&pwm_cfg.p.cw_speed_lo,	P1_CW_SPEED_LO },
@@ -314,7 +314,7 @@ const cfgItem_t cfgArray[] = {
 	{ "p1","p1wpl",_fip, 3, pwm_print_p1wpl, get_flt, set_flt,(float *)&pwm_cfg.p.ccw_phase_lo,	P1_CCW_PHASE_LO },
 	{ "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, set_flt,(float *)&pwm_cfg.p.ccw_phase_hi,	P1_CCW_PHASE_HI },
 	{ "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, set_flt,(float *)&pwm_cfg.p.phase_off,	P1_PWM_PHASE_OFF },
-
+*/
 	// Coordinate system offsets (G54-G59 and G92)
 	{ "g54","g54x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },
 	{ "g54","g54y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_Y], G54_Y_OFFSET },
@@ -365,19 +365,19 @@ const cfgItem_t cfgArray[] = {
 	{ "g92","g92b",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&gmx.origin_offset[AXIS_B], 0 },
 	{ "g92","g92c",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&gmx.origin_offset[AXIS_C], 0 },
 
-	{ "g28","g28x",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_X], 0 },// g28 handled differently
-	{ "g28","g28y",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_Y], 0 },
-	{ "g28","g28z",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_Z], 0 },
-	{ "g28","g28a",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_A], 0 },
-	{ "g28","g28b",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_B], 0 },
-	{ "g28","g28c",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_C], 0 },
+	{ "g28","g28x",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_X], 0 },// g28 handled differently
+	{ "g28","g28y",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_Y], 0 },
+	{ "g28","g28z",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g28_position[AXIS_Z], 0 },
+	{ "g28","g28a",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_A], 0 },
+	{ "g28","g28b",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_B], 0 },
+	{ "g28","g28c",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g28_position[AXIS_C], 0 },
 
-	{ "g30","g30x",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_X], 0 },// g30 handled differently
-	{ "g30","g30y",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_Y], 0 },
-	{ "g30","g30z",_fin, 3, cm_print_cloc, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_Z], 0 },
-	{ "g30","g30a",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_A], 0 },
-	{ "g30","g30b",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_B], 0 },
-	{ "g30","g30c",_fin, 3, cm_print_cloc, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_C], 0 },
+	{ "g30","g30x",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_X], 0 },// g30 handled differently
+	{ "g30","g30y",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_Y], 0 },
+	{ "g30","g30z",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&gmx.g30_position[AXIS_Z], 0 },
+	{ "g30","g30a",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_A], 0 },
+	{ "g30","g30b",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_B], 0 },
+	{ "g30","g30c",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&gmx.g30_position[AXIS_C], 0 },
 
 	{ "sys","ja",  _f07, 0, cm_print_ja,  get_flu,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
 	{ "sys","ct",  _f07, 4, cm_print_ct,  get_flu,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
@@ -394,12 +394,12 @@ const cfgItem_t cfgArray[] = {
 	{ "sys","si",  _f07, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
 
 //	{ "sys","ic",  _f07, 0, print_ui8,    get_ui8,   set_ic,     (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
-	{ "sys","ec",  _f07, 0, co_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },
-	{ "sys","ee",  _f07, 0, co_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
-	{ "sys","ex",  _f07, 0, co_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,	COM_ENABLE_FLOW_CONTROL },
+//	{ "sys","ec",  _f07, 0, co_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },
+//	{ "sys","ee",  _f07, 0, co_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
+//	{ "sys","ex",  _f07, 0, co_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,	COM_ENABLE_FLOW_CONTROL },
 //	{ "sys","fs",  _f07, 0, js_print_fs,  get_ui8,   set_ui8,    (float *)&js.json_footer_style,	0 },
-	{ "sys","baud",_fns, 0, co_print_baud,get_ui8,   set_baud,   (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
-	{ "sys","net", _fip, 0, co_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,			NETWORK_MODE },
+//	{ "sys","baud",_fns, 0, co_print_baud,get_ui8,   set_baud,   (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
+//	{ "sys","net", _fip, 0, co_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,			NETWORK_MODE },
 
 	// switch state readers
 /*

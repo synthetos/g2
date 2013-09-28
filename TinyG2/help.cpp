@@ -28,13 +28,34 @@
 extern "C"{
 #endif
 
-static void _status_report_advisory(void);
-static void _postscript(void);
+// help helper functions (snicker)
+
+stat_t help_stub(cmdObj_t *cmd) {return (STAT_OK);}
+
+#ifdef __HELP_SCREENS
+
+static void _status_report_advisory()
+{
+fprintf(stderr, "\n\
+Note: TinyG generates automatic status reports by default\n\
+This can be disabled by entering $sv=0\n\
+See the wiki below for more details.\n\
+");
+}
+
+static void _postscript()
+{
+fprintf(stderr, "\n\
+For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
+For the latest firmware see: https://github.com/synthetos/TinyG\n\
+Please log any issues at http://www.synthetos.com/forums\n\
+Have fun\n");
+}
 
 /*
- * print_general_help() - help invoked as h from the command line
+ * help_general() - help invoked as h from the command line
  */
-stat_t print_general_help()
+stat_t help_general(cmdObj_t *cmd)
 {
 fprintf(stderr, "\n\n\n#### TinyG Help ####\n");
 fprintf(stderr, "\
@@ -58,9 +79,9 @@ return(STAT_OK);
 }
 
 /*
- * print_config_help() - help invoked as $h
+ * help_config() - help invoked as $h
  */
-stat_t print_config_help(cmdObj_t *cmd)
+stat_t help_config(cmdObj_t *cmd)
 {
 fprintf(stderr, "\n\n\n#### TinyG CONFIGURATION Help ####\n");
 fprintf(stderr, "\
@@ -90,9 +111,9 @@ return(STAT_OK);
 }
 
 /*
- * print_test_help() - help invoked for tests
+ * help_test() - help invoked for tests
  */
-stat_t print_test_help(cmdObj_t *cmd)
+stat_t help_test(cmdObj_t *cmd)
 {
 fprintf(stderr, "\n\n\n#### TinyG SELF TEST Help ####\n");
 fprintf(stderr, "\
@@ -116,22 +137,22 @@ return(STAT_OK);
 }
 
 /*
- * print_defaults_help() - help invoked for defaults
+ * help_defa() - help invoked for defaults
  */
-stat_t print_defaults_help(cmdObj_t *cmd)
+stat_t help_defa(cmdObj_t *cmd)
 {
 fprintf(stderr, "\n\n\n#### TinyG RESTORE DEFAULTS Help ####\n");
 fprintf(stderr, "\
-Enter $defaults=1 to reset the system to the factory default values.\n\
+Enter $defa=1 to reset the system to the factory default values.\n\
 This will overwrite any changes you have made.\n");
 _postscript();
 return(STAT_OK);
 }
 
 /*
- * print_boot_loader_help()
+ * help_boot_loader()
  */
-stat_t print_boot_loader_help(cmdObj_t *cmd)
+stat_t help_boot_loader(cmdObj_t *cmd)
 {
 fprintf(stderr, "\n\n\n#### TinyG BOOT LOADER Help ####\n");
 fprintf(stderr, "\
@@ -140,25 +161,7 @@ _postscript();
 return(STAT_OK);
 }
 
-// help helper functions (snicker)
-
-static void _status_report_advisory()
-{
-fprintf(stderr, "\n\
-Note: TinyG generates automatic status reports by default\n\
-This can be disabled by entering $sv=0\n\
-See the wiki below for more details.\n\
-");
-}
-
-static void _postscript()
-{
-fprintf(stderr, "\n\
-For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
-For the latest firmware see: https://github.com/synthetos/TinyG\n\
-Please log any issues at http://www.synthetos.com/forums\n\
-Have fun\n");
-} 
+#endif // __HELP_SCREENS
 
 #ifdef __cplusplus
 }

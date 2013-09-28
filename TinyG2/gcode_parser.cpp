@@ -16,8 +16,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "tinyg2.h"
-#include "config.h"
+#include "tinyg2.h"		// #1
+#include "config.h"		// #2
+#include "controller.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "util.h"
@@ -59,7 +60,10 @@ stat_t gc_gcode_parser(char_t *block)
 
 	_normalize_gcode_block(cmd, &com, &msg, &block_delete_flag);
 	
-	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {
+	// Block delete omits the line if a / char is present in the first space
+	// For now this is unconditional and will always delete
+//	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {
+	if (block_delete_flag == true) {
 		return (STAT_NOOP);
 	}
 //	if (*msg != NUL) { // +++++ THIS HAS A SERIOUS BUG IN IT SO FOR NOW IT'S DISABLED
@@ -81,14 +85,23 @@ stat_t gc_gcode_parser(char_t *block)
  *	So this: "  g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *	Comment and message handling:
+ *	 - Comments field start with a '(' char or alternately a semicolon ';' 
  *	 - Comments and messages are not normalized - they are left alone
- *	 - Comments always terminate the block (i.e. embedded comments are not supported)
  *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
  *	 - Normalization returns true if there was a message to display, false otherwise
- *	 - Processing splits string into command and comment portions - supported cases are:
- *		 COMMAND
- *		 (comment)
- *		 COMMAND (comment)
+ *	 - Comments always terminate the block - i.e. leading or embedded comments are not supported
+ *	 	- Valid cases (examples)			Notes:
+ *		    G0X10							 - command only - no comment
+ *		    (comment text)                   - There is no command on this line
+ *		    G0X10 (comment text)
+ *		    G0X10 (comment text				 - It's OK to drop the trailing paren
+ *		    G0X10 ;comment text				 - It's OK to drop the trailing paren
+ *
+ *	 	- Invalid cases (examples)			Notes:
+ *		    G0X10 comment text				 - Comment with no separator
+ *		    N10 (comment) G0X10 			 - embedded comment. G0X10 will be ignored
+ *		    (comment) G0X10 				 - leading comment. G0X10 will be ignored
+ * 			G0X10 # comment					 - invalid separator
  *
  *	Returns:
  *	 - com points to comment string or to NUL if no comment
@@ -267,14 +280,14 @@ static stat_t _parse_gcode_block(char_t *buf)
 						}
 						break;
 					}
-/*					case 38: 
+					case 38: 
 						switch (_point(value)) {
 							case 2: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE); 
 							default: status = STAT_UNRECOGNIZED_COMMAND;
 						}
 						break;
 					}
-*/					case 40: break;	// ignore cancel cutter radius compensation
+					case 40: break;	// ignore cancel cutter radius compensation
 					case 49: break;	// ignore cancel tool length offset comp.
 					case 53: SET_NON_MODAL (absolute_override, true);
 					case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
@@ -410,8 +423,8 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_traverse_override_factor, traverse_override_factor);
 	EXEC_FUNC(cm_set_spindle_speed, spindle_speed);
 	EXEC_FUNC(cm_spindle_override_factor, spindle_override_factor);
-	EXEC_FUNC(cm_select_tool, tool);
-	EXEC_FUNC(cm_change_tool, tool);
+	EXEC_FUNC(cm_select_tool, tool_select);			// tool_select is where it's written
+	EXEC_FUNC(cm_change_tool, tool_change);
 	EXEC_FUNC(cm_spindle_control, spindle_mode); 	// spindle on or off
 	EXEC_FUNC(cm_mist_coolant_control, mist_coolant); 
 	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);	// also disables mist coolant if OFF 
@@ -442,7 +455,7 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gn.target, gf.target); break;}	// G28.3
 		case NEXT_ACTION_HOMING_NO_SET: { status = cm_homing_cycle_start_no_set(); break;}						// G28.4
 
-//		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}								// G38.2
+		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}								// G38.2
 
 		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(gn.parameter, gn.target, gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(gn.target, gf.target); break;}
@@ -451,7 +464,7 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS: { status = cm_resume_origin_offsets(); break;}
 
 		case NEXT_ACTION_DEFAULT: { 
-			cm_set_absolute_override(gn.absolute_override);	// apply override setting to gm struct
+			cm_set_absolute_override(MODEL, gn.absolute_override);	// apply override setting to gm struct
 			switch (gn.motion_mode) {
 				case MOTION_MODE_CANCEL_MOTION_MODE: { gm.motion_mode = gn.motion_mode; break;}
 				case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(gn.target, gf.target); break;}
@@ -463,7 +476,7 @@ static stat_t _execute_gcode_block()
 			}
 		}
 	}
-	cm_set_absolute_override(false);		// un-set abs overrride (for reporting purposes) 
+	cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
 
 	// do the M stops: M0, M1, M2, M30, M60
 	if (gf.program_flow == true) {
@@ -473,6 +486,30 @@ static stat_t _execute_gcode_block()
 	return (status);
 }
 
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+stat_t gc_get_gc(cmdObj_t *cmd)
+{
+	ritorno(cmd_copy_string(cmd, cs.in_buf));
+	cmd->objtype = TYPE_STRING;
+	return (STAT_OK);
+}
+
+stat_t gc_run_gc(cmdObj_t *cmd)
+{
+	return(gc_gcode_parser(*cmd->stringp));
+}
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+// none
 #ifdef __cplusplus
 }
 #endif

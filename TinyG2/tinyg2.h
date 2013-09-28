@@ -62,58 +62,60 @@
 
 void tg_setup(void);
 
-/******************************************************************************
- ***** PLATFORM COMPATIBILITY *************************************************
- ******************************************************************************/
-
+/************************************************************************************
+ ***** PLATFORM COMPATIBILITY *******************************************************
+ ************************************************************************************/
 //#undef __AVR
 //#define __AVR
 #undef __ARM
 #define __ARM
 
-/**** AVR Compatibility ****/
+/************************************************************************************
+ **** AVR Compatibility *************************************************************/
 #ifdef __AVR
-#include <avr/pgmspace.h>
+#include <avr/pgmspace.h>			// defines PROGMEM, PSTR, PGM_P (must be first)
 
-typedef char char_t;
-typedef const char PROGMEM *char_P;		// access to PROGMEM arrays of PROGMEM strings
+typedef char char_t;				// see ARM for why this is here
+typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strings
 
-#define GET_VALUE(a) pgm_read_word(&cfgArray[cmd->index].a)
-#define GET_ITEM(b,a) (PGM_P)pgm_read_word(&b[a])
+// The table getters rely on cmd->index having been set
+#define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[cmd->index].a)// get word value from cfgArray
+#define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[cmd->index].a)// get byte value from cfgArray
+#define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)// get float value from cfgArray
+#define GET_TEXT_ITEM(b,a) (PGM_P)pgm_read_word(&b[a])			// get text from an array of strings in PGM
 #define GET_UNITS(a) (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)])
 
 //#define SysTickTimer.getValue SysTickTimer_getValue
 #endif // __AVR
 
-/**** ARM Compatibility ****/
+/************************************************************************************
+ **** ARM Compatibility ************************************************************/
 #ifdef __ARM
+// Use macros to "neutralize" AVR's PROGMEM and other AVRisms.
 #define PROGMEM						// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)			// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
 #define PGM_P const char *			// USAGE: (PGM_P) -- must be used in a cast
 
+// In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
+// are distinct types and we want chars to behave as uint8's
 typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
 typedef const char *char_P;			// ARM/C++ version requires this typedef instead
 
-#define GET_VALUE(a) cfgArray[cmd->index].a;
-#define GET_ITEM(b,a) b[a]
+// The table getters rely on cmd->index having been set
+#define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
+#define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
+#define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
+#define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in PGM
 #define GET_UNITS(a) (PGM_P)msg_units[cm_get_units_mode(a)]
 
-/**** String handling help ***
- *
- * In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++
- * uint8_t and char are distinct types. In AVR char_t is typedef'd to char
- *
- * The ARM stdio functions we are using still use char as input and output. 
- * The macros below do the casts for most cases, but not all. Vararg functions 
- * like the printf() family need special handling. These require explicit 
- * casts as per:
+/* The ARM stdio functions we are using still use char as input and output. The macros 
+ * below do the casts for most cases, but not all. Vararg functions like the printf() 
+ * family need special handling. These like char * as input and require casts as per:
  *
  *   printf((const char *)"Good Morning Hoboken!\n");
  *
- * The AVR also has "_P" variants that take PROGMEM strings as args. On the
- * ARM/GCC++ the _P functions are just aliases of the non-P variants. 
- *
- * Lastly, we use macros to "neutralize" AVR's PROGMEM and other AVRisms.
+ * The AVR also has "_P" variants that take PROGMEM strings as args. 
+ * On the ARM/GCC++ the _P functions are just aliases of the non-P variants. 
  */
 #define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
 #define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
@@ -130,8 +132,8 @@ typedef const char *char_P;			// ARM/C++ version requires this typedef instead
 #define tolower(c) (char_t)tolower((char) c)
 #define toupper(c) (char_t)toupper((char) c)
 
-#define printf_P printf		
-#define fprintf_P fprintf
+#define printf_P printf		// these functions want char * as inputs, not char_t *
+#define fprintf_P fprintf	// just sayin'
 #define sprintf_P sprintf
 #define strcpy_P strcpy
 
