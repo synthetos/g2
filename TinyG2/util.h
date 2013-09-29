@@ -41,11 +41,18 @@ extern "C"{
 
 /****** Global Scope Variables and Functions ******/
 
-uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//*** vector utilities ***
+
+extern float vector[AXES]; // vector of axes for passing to subroutines
 
 //void copy_vector(float dest[], const float src[], uint8_t length);
 float get_axis_vector_length(const float a[], const float b[]);
 void copy_axis_vector(float dst[], const float src[]);
+uint8_t vector_equal(float a[], float b[]);
+float *set_vector(float x, float y, float z, float a, float b, float c);
+float *set_vector_by_axis(float value, uint8_t axis);
+#define clear_vector(a) memset(a,0,sizeof(a))
+
 /*
 #define copy_axis_vector(dst,src) ( dst[AXIS_X] = src[AXIS_X];\
 									dst[AXIS_Y] = src[AXIS_Y];\
@@ -54,17 +61,27 @@ void copy_axis_vector(float dst[], const float src[]);
 									dst[AXIS_B] = src[AXIS_B];\
 									dst[AXIS_C] = src[AXIS_C]; )
 */
-uint8_t vector_equal(float a[], float b[]);
+
+//*** math utilities ***
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
 float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
+float std_dev(float a[], uint8_t n, float *mean);
 
+//*** string utilities ***
+
+uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
-float std_dev(float a[], uint8_t n, float *mean);
+
+//*** other utilities ***
+
+#ifdef __ARM
+uint32_t SysTickTimer_getValue(void);
+#endif
 
 /***** Math Support *****/
 
@@ -125,8 +142,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 #define RADIAN (57.2957795)
 //		M_PI is pi as defined in math.h
 //		M_SQRT2 is radical2 as defined in math.h
-//#define M_SQRT3 (1.73205080756888)
-
+#ifndef M_SQRT3
+#define M_SQRT3 (1.73205080756888)
+#endif
 
 #ifdef __cplusplus
 }

@@ -30,6 +30,7 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "kinematics.h"
+#include "stepper.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -64,14 +65,14 @@ void ik_kinematics(float travel[], float steps[], float microseconds)
 	// Most of the conversion math has already been done in steps_per_unit
 	// which takes axis travel, step angle and microsteps into account.
 	for (i=0; i<AXES; i++) {
-		if (cfg.a[i].axis_mode == AXIS_INHIBITED) { joint[i] = 0;}
-		if (cfg.m[MOTOR_1].motor_map == i) { steps[MOTOR_1] = joint[i] * cfg.m[MOTOR_1].steps_per_unit;}
-		if (cfg.m[MOTOR_2].motor_map == i) { steps[MOTOR_2] = joint[i] * cfg.m[MOTOR_2].steps_per_unit;}
-		if (cfg.m[MOTOR_3].motor_map == i) { steps[MOTOR_3] = joint[i] * cfg.m[MOTOR_3].steps_per_unit;}
-		if (cfg.m[MOTOR_4].motor_map == i) { steps[MOTOR_4] = joint[i] * cfg.m[MOTOR_4].steps_per_unit;}
+		if (cm.a[i].axis_mode == AXIS_INHIBITED) { joint[i] = 0;}
+		if (st.m[MOTOR_1].motor_map == i) { steps[MOTOR_1] = joint[i] * st.m[MOTOR_1].steps_per_unit;}
+		if (st.m[MOTOR_2].motor_map == i) { steps[MOTOR_2] = joint[i] * st.m[MOTOR_2].steps_per_unit;}
+		if (st.m[MOTOR_3].motor_map == i) { steps[MOTOR_3] = joint[i] * st.m[MOTOR_3].steps_per_unit;}
+		if (st.m[MOTOR_4].motor_map == i) { steps[MOTOR_4] = joint[i] * st.m[MOTOR_4].steps_per_unit;}
 	// the above is a loop unrolled version of this:
 	//	for (uint8_t j=0; j<MOTORS; j++) {
-	//		if (cfg.m[j].motor_map == i) { steps[j] = joint[i] * cfg.m[j].steps_per_unit;}
+	//		if (st.m[j].motor_map == i) { steps[j] = joint[i] * st.m[j].steps_per_unit;}
 	//	}
 	}
 }

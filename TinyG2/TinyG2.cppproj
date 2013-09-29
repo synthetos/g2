@@ -716,6 +716,12 @@
     <Compile Include="platform\atmel_sam\syscalls_sam3.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="pwm.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="pwm.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="report.cpp">
       <SubType>compile</SubType>
     </Compile>

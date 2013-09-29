@@ -45,6 +45,8 @@
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "text_parser.h"
+
 #include "MotateTimers.h"
 using Motate::SysTickTimer;
 

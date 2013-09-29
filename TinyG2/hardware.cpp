@@ -52,7 +52,7 @@ void hardware_init()
  *		123456-ABC
  */
 
-void hw_get_id(char_t *id)
+void _get_id(char_t *id)
 {
 	return;
 }
@@ -93,7 +93,7 @@ stat_t hw_bootloader_handler(void)
 //	if (cs.bootloader_requested == false) { return (STAT_NOOP);}
 //	cli();
 //	CCPWrite(&RST.CTRL, RST_SWRST_bm);  // fire a software reset
-	return (STAT_EAGAIN);					// never gets here but keeps the compiler happy
+	return (STAT_EAGAIN);				// never gets here but keeps the compiler happy
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/

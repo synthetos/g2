@@ -29,6 +29,8 @@
 #ifndef PLANNER_H_ONCE
 #define PLANNER_H_ONCE 
 
+#include "canonical_machine.h"	// need GCodeState_t
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -83,7 +85,7 @@ enum moveState {
  *	Used to introduce a short dwell before planning an idle machine.
  *  If you don;t do this the first block will always plan to zero as it will
  *	start executing before the next block arrives from the serial port.
- *	This cuases the machine to stutter once on startup.
+ *	This causes the machine to stutter once on startup.
  */
 #define PLANNER_STARTUP_DELAY_SECONDS 0.05	// in seconds
 
@@ -110,7 +112,7 @@ enum moveState {
  *	Macros and typedefs
  */
 
-//#define MP_LINE(t,m,o,n) ((cfg.enable_acceleration == TRUE) ? mp_aline(t,m,o,n) : mp_line(t,m))
+//#define MP_LINE(t,m,o,n) ((cm.enable_acceleration == TRUE) ? mp_aline(t,m,o,n) : mp_line(t,m))
 #define MP_LINE(t,m,o,n) (mp_aline(t,m,o,n))	// non-planned lines are disabled
 
 typedef void (*cm_exec)(float[], float[]);	// callback to canonical_machine execution function
@@ -178,20 +180,20 @@ typedef struct mpBufferPool {	// ring buffer for sub-moves
 
 typedef struct mpMoveMasterSingleton {	// common variables for planning (move master)
 	float position[AXES];		// final move position for planning purposes
-	//	float ms_in_queue;			// UNUSED - total ms of movement & dwell in planner queue
+//	float ms_in_queue;			// UNUSED - total ms of movement & dwell in planner queue
 	float prev_jerk;			// jerk values cached from previous move
 	float prev_recip_jerk;
 	float prev_cbrt_jerk;
-	#ifdef __UNIT_TEST_PLANNER
+ #ifdef __UNIT_TEST_PLANNER
 	float test_case;
 	float test_velocity;
 	float a_unit[AXES];
 	float b_unit[AXES];
-	#endif
+#endif
 } mpMoveMasterSingleton_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
-	//	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
+//	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	magic_t magic_start;		// magic number to test memory integrity
 	uint8_t move_state;			// state of the overall move
 	uint8_t section_state;		// state within a move section

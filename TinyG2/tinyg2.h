@@ -85,7 +85,6 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 #define GET_TEXT_ITEM(b,a) (PGM_P)pgm_read_word(&b[a])			// get text from an array of strings in PGM
 #define GET_UNITS(a) (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)])
 
-//#define SysTickTimer.getValue SysTickTimer_getValue
 #endif // __AVR
 
 /************************************************************************************
@@ -99,7 +98,7 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 // In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
 // are distinct types and we want chars to behave as uint8's
 typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
-typedef const char *char_P;			// ARM/C++ version requires this typedef instead
+typedef const char_t *char_P;		// ARM/C++ version requires this typedef instead
 
 // The table getters rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
@@ -194,10 +193,10 @@ typedef uint16_t magic_t;		// magic number size
  */
 typedef uint8_t stat_t;
 #define STATUS_MESSAGE_LEN 48			// status message string storage allocation
-char status_message[STATUS_MESSAGE_LEN];// allocate string for global use
 
-stat_t status_code;						// allocate a variable for this macro
-//extern stat_t status_code;				// declared in main.cpp
+extern stat_t status_code;				// declared in main.cpp
+extern char status_message[];			// declared in main.cpp
+
 #define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)

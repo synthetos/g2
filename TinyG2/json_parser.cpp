@@ -91,7 +91,7 @@ void json_parser(char_t *str)
 {
 	stat_t status = _json_parser_kernal(str);
 	cmd_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-	rpt_request_status_report(SR_IMMEDIATE_REQUEST);// generate an incremental status report if there are gcode model changes
+	sr_request_status_report(SR_IMMEDIATE_REQUEST);// generate an incremental status report if there are gcode model changes
 }
 
 static stat_t _json_parser_kernal(char_t *str)

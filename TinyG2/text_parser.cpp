@@ -30,6 +30,7 @@
 #include "controller.h"
 #include "canonical_machine.h"
 #include "text_parser.h"
+#include "json_parser.h"
 #include "report.h"
 #include "xio.h"					// for ASCII char definitions
 
@@ -219,10 +220,10 @@ void text_print_multiline_formatted(cmdObj_t *cmd)
 /*
  * Text print primitives using generic formats
  */
-const char_t PROGMEM fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
-const char_t PROGMEM fmt_ui8[] = "%d\n";	// generic format for ui8s
-const char_t PROGMEM fmt_int[] = "%d\n";	// generic format for ui8s
-const char_t PROGMEM fmt_flt[] = "%f\n";	// generic format for floats
+const char PROGMEM fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
+const char PROGMEM fmt_ui8[] = "%d\n";	// generic format for ui8s
+const char PROGMEM fmt_int[] = "%d\n";	// generic format for ui8s
+const char PROGMEM fmt_flt[] = "%f\n";	// generic format for floats
 
 void tx_print_nul(cmdObj_t *cmd) {}
 void tx_print_str(cmdObj_t *cmd) { text_print_str(cmd, fmt_str);}
@@ -250,7 +251,7 @@ void text_print_flt_units(cmdObj_t *cmd, const char *format, const char *units)
 /*
  * Formatted print supporting the text parser
  */
-const char_t PROGMEM fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
+const char PROGMEM fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
 
 void tx_print_tv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_tv);}
 

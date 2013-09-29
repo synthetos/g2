@@ -508,7 +508,8 @@ void cm_set_move_times(GCodeState_t *gcode_state)
 			xyz_time = sqrt(square(gm.target[AXIS_X] - gmx.position[AXIS_X]) + // in mm
 							square(gm.target[AXIS_Y] - gmx.position[AXIS_Y]) +
 							square(gm.target[AXIS_Z] - gmx.position[AXIS_Z])) / gm.feed_rate; // in linear units
-			if (xyz_time ==0) {
+//			if (xyz_time == 0) {
+			if (fp_ZERO(xyz_time)) {
 				abc_time = sqrt(square(gm.target[AXIS_A] - gmx.position[AXIS_A]) + // in deg
 								square(gm.target[AXIS_B] - gmx.position[AXIS_B]) +
 								square(gm.target[AXIS_C] - gmx.position[AXIS_C])) / gm.feed_rate; // in degree units
@@ -1082,7 +1083,8 @@ stat_t cm_override_enables(uint8_t flag)			// M48, M49
 
 stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.feed_rate_override_enable = false;
 		} else {
 		gmx.feed_rate_override_enable = true;
@@ -1100,7 +1102,8 @@ stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 
 stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.traverse_override_enable = false;
 		} else {
 		gmx.traverse_override_enable = true;
@@ -1118,7 +1121,8 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 
 stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 {
-	if ((gf.parameter == true) && (gn.parameter == 0)) {
+//	if ((gf.parameter == true) && (gn.parameter == 0)) {
+	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.spindle_override_enable = false;
 		} else {
 		gmx.spindle_override_enable = true;
@@ -1555,7 +1559,7 @@ stat_t _get_msg_helper(cmdObj_t *cmd, char_P msg, uint8_t value)
 		ritorno(cmd_copy_string(cmd, buf));
 	#endif // __AVR
 	#ifdef __ARM
-		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
+		ritorno(cmd_copy_string(cmd, (char_t *)msg[value]));
 	#endif // __ARM
 #endif // __TEXT_MODE
 

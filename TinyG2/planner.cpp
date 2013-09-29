@@ -75,8 +75,8 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
  * Local Scope Data and Functions
  */
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
-#define spindle_speed time		// local alias for spindle_speed to the time variable
-#define value_vector target		// alias for vector of values
+#define spindle_speed move_time	// local alias for spindle_speed to the time variable
+#define value_vector gm.target	// alias for vector of values
 #define flag_vector unit		// alias for vector of flags
 
 // execution routines (NB: These are all called from the LO interrupt)
@@ -227,22 +227,23 @@ static stat_t _exec_command(mpBuf_t *bf)
  * timer than the stepper pulse timer.
  */
 
-stat_t mp_dwell(float seconds) 
+stat_t mp_dwell(float seconds)
 {
-	mpBuf_t *bf; 
+	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
 		return (STAT_BUFFER_FULL_FATAL);		// (not ever supposed to fail)
 	}
-	bf->bf_func = _exec_dwell;					// register the callback to dwell start
-	bf->time = seconds;						  	// in seconds, not minutes
+	bf->bf_func = _exec_dwell;					// register callback to dwell start
+	bf->gm.move_time = seconds;					// in seconds, not minutes
+	bf->move_state = MOVE_STATE_NEW;
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
 }
 
-static uint8_t _exec_dwell(mpBuf_t *bf)
+static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
@@ -350,7 +351,7 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	st_request_exec_move();						// request a move exec if not busy
-	rpt_request_queue_report(+1);				// add to the "added buffers" count
+	qr_request_queue_report(+1);				// add to the "added buffers" count
 }
 
 mpBuf_t * mp_get_run_buffer() 
@@ -377,7 +378,7 @@ void mp_free_run_buffer()						// EMPTY current run buf & adv to next
 	}
 	if (mb.w == mb.r) cm_cycle_end();			// end the cycle if the queue empties
 	mb.buffers_available++;
-	rpt_request_queue_report(-1);				// add to the "removed buffers" count
+	qr_request_queue_report(-1);				// add to the "removed buffers" count
 }
 
 mpBuf_t * mp_get_first_buffer(void)

@@ -1,6 +1,6 @@
 /*
  * report.h - TinyG status report and other reporting functions
- * This file is part of the TinyG3 project
+ * This file is part of the TinyG2 project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -113,7 +113,7 @@ uint8_t sr_populate_filtered_status_report(void);
 stat_t sr_get(cmdObj_t *cmd);
 stat_t sr_set(cmdObj_t *cmd);
 stat_t sr_set_si(cmdObj_t *cmd);
-void sr_print_sr(cmdObj_t *cmd);
+//void sr_print_sr(cmdObj_t *cmd);
 
 stat_t qr_get(cmdObj_t *cmd);
 void qr_clear_queue_report(void);
@@ -122,46 +122,22 @@ stat_t qr_queue_report_callback(void);
 
 #ifdef __TEXT_MODE
 
-void sr_print_sr(cmdObj_t *cmd);
-void sr_print_si(cmdObj_t *cmd);
-void sr_print_sv(cmdObj_t *cmd);
-void qr_print_qv(cmdObj_t *cmd);
-void qr_print_qr(cmdObj_t *cmd);
+	void sr_print_sr(cmdObj_t *cmd);
+	void sr_print_si(cmdObj_t *cmd);
+	void sr_print_sv(cmdObj_t *cmd);
+	void qr_print_qv(cmdObj_t *cmd);
+	void qr_print_qr(cmdObj_t *cmd);
 
 #else
 
-#define sr_print_sr tx_print_stub
-#define sr_print_si tx_print_stub
-#define sr_print_sv tx_print_stub
-#define qr_print_qv tx_print_stub
-#define qr_print_qr tx_print_stub
+	#define sr_print_sr tx_print_stub
+	#define sr_print_si tx_print_stub
+	#define sr_print_sv tx_print_stub
+	#define qr_print_qv tx_print_stub
+	#define qr_print_qr tx_print_stub
 
 #endif // __TEXT_MODE
-/*
-const char *get_status_message(uint8_t status);
 
-void rpt_print_message(char_t *msg);
-void rpt_exception(uint8_t status, int16_t value);
-void rpt_print_loading_configs_message(void);
-void rpt_print_initializing_message(void);
-void rpt_print_system_ready_message(void);
-
-void rpt_init_status_report(void);
-stat_t rpt_set_status_report(cmdObj_t *cmd);
-void rpt_decr_status_report(void);
-void rpt_request_status_report(uint8_t request_type);
-void rpt_status_report_rtc_callback(void);
-stat_t rpt_status_report_callback(void);
-void rpt_run_text_status_report(void);
-void rpt_populate_unfiltered_status_report(void);
-uint8_t rpt_populate_filtered_status_report(void);
-
-void rpt_request_queue_report(int8_t buffers);
-//void rpt_request_queue_report(void);
-stat_t rpt_queue_report_callback(void);
-
-// If you are looking for the defaults for the status report see config.h
-*/
 
 /* unit test setup */
 //#define __UNIT_TEST_REPORT	// uncomment to enable report unit tests

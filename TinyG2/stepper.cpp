@@ -42,11 +42,21 @@
 #include "config.h"
 #include "stepper.h"
 #include "planner.h"
-//#include "motatePins.h"		// defined in hardware.h   Not needed here
-#include "motateTimers.h"
+////#include "motatePins.h"		// defined in hardware.h   Not needed here
+//#include "motateTimers.h"
 #include "hardware.h"
 #include "text_parser.h"
 #include "util.h"
+
+#ifdef __AVR
+#include <avr/interrupt.h>
+#include "xmega/xmega_rtc.h"	// Xmega only. Goes away with RTC refactoring
+#endif
+
+#ifdef __ARM
+//#include "motatePins.h"		// defined in hardware.h   Not needed here
+#include "motateTimers.h"
+#endif
 
 //#define ENABLE_DIAGNOSTICS
 #ifdef ENABLE_DIAGNOSTICS
@@ -270,7 +280,12 @@ void st_energize_motors()
 	motor_6.enable.clear();
 	common_enable.clear();			// enable gShield common enable
 
-	st_do_motor_idle_timeout();
+	st_run.m[MOTOR_1].power_state = MOTOR_START_IDLE_TIMEOUT;
+	st_run.m[MOTOR_2].power_state = MOTOR_START_IDLE_TIMEOUT;
+	st_run.m[MOTOR_3].power_state = MOTOR_START_IDLE_TIMEOUT;
+	st_run.m[MOTOR_4].power_state = MOTOR_START_IDLE_TIMEOUT;
+	st_run.m[MOTOR_5].power_state = MOTOR_START_IDLE_TIMEOUT;
+	st_run.m[MOTOR_6].power_state = MOTOR_START_IDLE_TIMEOUT;
 }
 
 void st_deenergize_motors()
@@ -323,9 +338,9 @@ stat_t st_motor_power_callback() 	// called by controller
 				}
 			}
 
-			//		} else if(cfg.m[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// future
+			//		} else if(st.m[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// future
 			
-			//		} else if(cfg.m[motor].power_mode == DYNAMIC_MOTOR_POWER) {				// future
+			//		} else if(st.m[motor].power_mode == DYNAMIC_MOTOR_POWER) {				// future
 			
 		}
 	}
@@ -651,7 +666,7 @@ uint8_t st_prep_line(float steps[], float microseconds)
 
 	// setup motor parameters
 	for (uint8_t i=0; i<MOTORS; i++) {
-		st_prep.m[i].dir = ((steps[i] < 0) ? 1 : 0) ^ cfg.m[i].polarity;
+		st_prep.m[i].dir = ((steps[i] < 0) ? 1 : 0) ^ st.m[i].polarity;
 		st_prep.m[i].phase_increment = (uint32_t)fabs(steps[i] * DDA_SUBSTEPS);
 	}
 	st_prep.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
@@ -685,7 +700,7 @@ uint8_t st_isbusy()
 	return (true);
 }
 
-void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
+void _set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
 /*
 	if (microstep_mode == 8) {
@@ -752,9 +767,9 @@ stat_t st_set_tr(cmdObj_t *cmd)			// motor travel per revolution
 }
 
 stat_t st_set_mi(cmdObj_t *cmd)			// motor microsteps
-{
+{	
 	if (fp_NE(cmd->value,1) && fp_NE(cmd->value,2) && fp_NE(cmd->value,4) && fp_NE(cmd->value,8)) {
-		cmd_add_conditional_message_P(PSTR("*** WARNING *** Setting non-standard microstep value"));
+		cmd_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(cmd);
@@ -781,12 +796,14 @@ stat_t st_set_mt(cmdObj_t *cmd)
 
 stat_t st_set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	return(st_deenergize_motors());
+	st_deenergize_motors();
+	return (STAT_OK);
 }
 
 stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	return(st_energize_motors());
+	st_energize_motors();
+	return (STAT_OK);
 }
 
 
@@ -797,35 +814,34 @@ stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initia
 
 #ifdef __TEXT_MODE
 
-static const char_t PROGMEM msg_units0[] = " in";	// used by generic print functions
-static const char_t PROGMEM msg_units1[] = " mm";
-static const char_t PROGMEM msg_units2[] = " deg";
+static const char PROGMEM msg_units0[] = " in";	// used by generic print functions
+static const char PROGMEM msg_units1[] = " mm";
+static const char PROGMEM msg_units2[] = " deg";
 static PGM_P const  PROGMEM msg_units[] = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
 
-const char_t PROGMEM fmt_mt[] = "[mt]  motor idle timeout%14.2f Sec\n";
-const char_t PROGMEM fmt_me[] = "motors energized\n";
-const char_t PROGMEM fmt_md[] = "motors de-energized\n";
-const char_t PROGMEM fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
-const char_t PROGMEM fmt_0sa[] = "[%s%s] m%s step angle%20.3f%S\n";
-const char_t PROGMEM fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%S\n";
-const char_t PROGMEM fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
-const char_t PROGMEM fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-const char_t PROGMEM fmt_0pm[] = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
+const char PROGMEM fmt_mt[] = "[mt]  motor idle timeout%14.2f Sec\n";
+const char PROGMEM fmt_me[] = "motors energized\n";
+const char PROGMEM fmt_md[] = "motors de-energized\n";
+const char PROGMEM fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
+const char PROGMEM fmt_0sa[] = "[%s%s] m%s step angle%20.3f%S\n";
+const char PROGMEM fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%S\n";
+const char PROGMEM fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
+const char PROGMEM fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
+const char PROGMEM fmt_0pm[] = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}
 void st_print_md(cmdObj_t *cmd) { text_print_nul(cmd, fmt_md);}
 
-static void _print_motor_ui8(cmdObj_t *cmd, const char_t *format)
+static void _print_motor_ui8(cmdObj_t *cmd, const char *format)
 {
 	fprintf_P(stderr, format, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value);
 }
 
-static void _print_motor_flt_units(cmdObj_t *cmd, const char_t *format, uint8_t units)
+static void _print_motor_flt_units(cmdObj_t *cmd, const char *format, uint8_t units)
 {
-	fprintf_P(stderr, format, cmd->group, cmd->token, cmd->group, cmd->value,
-			 (PGM_P)pgm_read_word(&msg_units[units]));
+	fprintf_P(stderr, format, cmd->group, cmd->token, cmd->group, cmd->value, GET_TEXT_ITEM(msg_units, units));
 }
 
 void st_print_ma(cmdObj_t *cmd) { _print_motor_ui8(cmd, fmt_0ma);}

@@ -460,8 +460,8 @@ int8_t _get_next_axes(int8_t axis)
 	// Scan target vector for case where no valid axes are specified
 	for (next_axis = 0; next_axis < AXES; next_axis++) {	
 		if ((fp_TRUE(gf.target[next_axis])) &&
-			(cfg.a[next_axis].axis_mode != AXIS_INHIBITED) &&
-			(cfg.a[next_axis].axis_mode != AXIS_DISABLED)) {	
+			(cm.a[next_axis].axis_mode != AXIS_INHIBITED) &&
+			(cm.a[next_axis].axis_mode != AXIS_DISABLED)) {	
 			break;
 		}
 	}
@@ -473,8 +473,8 @@ int8_t _get_next_axes(int8_t axis)
 	// Scan target vector from the current axis to find next axis or the end
 	for (next_axis = ++axis; next_axis < AXES; next_axis++) {
 		if (fp_TRUE(gf.target[next_axis])) { 
-			if ((cfg.a[next_axis].axis_mode == AXIS_INHIBITED) || 	
-				(cfg.a[next_axis].axis_mode == AXIS_DISABLED)) {	// Skip if axis disabled or inhibited
+			if ((cm.a[next_axis].axis_mode == AXIS_INHIBITED) || 	
+				(cm.a[next_axis].axis_mode == AXIS_DISABLED)) {	// Skip if axis disabled or inhibited
 				continue;
 			}
 			break;		// got a good one

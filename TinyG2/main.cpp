@@ -57,6 +57,10 @@ void __libc_init_array(void);
 
 static void _application_init(void);
 
+/**** Random global variables ****/
+char status_message[STATUS_MESSAGE_LEN];// allocate string for global use
+stat_t status_code;						// allocate a variable for this macro
+
 /******************** Application Code ************************/
 
 const Motate::USBSettings_t Motate::USBSettings = {
