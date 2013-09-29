@@ -100,9 +100,9 @@ uint32_t SysTickTimer_getValue(void);
 
 #ifndef min
 #define min(a,b) \
-   ({ __typeof__ (a) termA = (a); \
-      __typeof__ (b) termB = (b); \
-      termA<termB ? termA:termB; })
+   ({ __typeof__ (a) termC = (a); \
+      __typeof__ (b) termD = (b); \
+      termC<termD ? termC:termD; })
 #endif
 
 #ifndef avg

@@ -216,7 +216,7 @@ static void _clear_diagnostic_counters()
 /*
  * stepper_isbusy() - return TRUE if motors are running or a dwell is running
  */
-inline uint8_t stepper_isbusy()
+uint8_t stepper_isbusy()
 {
 	if (st_run.dda_ticks_downcount == 0) {
 		return (false);

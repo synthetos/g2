@@ -74,8 +74,8 @@ stat_t cm_arc(const GCodeState_t *gm,
 			  const uint8_t axis_2,
 			  const uint8_t axis_linear);
 
-stat_t ar_arc_callback(void);
-void ar_abort_arc(void);
+stat_t cm_arc_callback(void);
+void cm_abort_arc(void);
 
 #ifdef __cplusplus
 }

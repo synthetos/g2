@@ -82,8 +82,12 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[cmd->index].a)// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[cmd->index].a)// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)// get float value from cfgArray
-#define GET_TEXT_ITEM(b,a) (PGM_P)pgm_read_word(&b[a])			// get text from an array of strings in PGM
-#define GET_UNITS(a) (PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)])
+
+// get text from an array of strings in PGM and convert to RAM string
+#define GET_TEXT_ITEM(b,a) strcpy_P(status_message,(PGM_P)pgm_read_word(&b[a]))
+
+// get units from array of strings in PGM and convert to RAM string
+#define GET_UNITS(a) 	   strcpy_P(status_message,(PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
 
 #endif // __AVR
 
@@ -98,14 +102,16 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 // In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
 // are distinct types and we want chars to behave as uint8's
 typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
-typedef const char_t *char_P;		// ARM/C++ version requires this typedef instead
+//typedef const char_t *char_P;		// ARM/C++ version requires this typedef instead
+typedef const char *char_P;		// ARM/C++ version requires this typedef instead
 
 // The table getters rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in PGM
-#define GET_UNITS(a) (PGM_P)msg_units[cm_get_units_mode(a)]
+//#define GET_UNITS(a) (PGM_P)msg_units[cm_get_units_mode(a)]
+#define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
 
 /* The ARM stdio functions we are using still use char as input and output. The macros 
  * below do the casts for most cases, but not all. Vararg functions like the printf() 
@@ -279,6 +285,7 @@ extern char status_message[];			// declared in main.cpp
 #define	STAT_ARC_SPECIFICATION_ERROR 70		// arc specification error
 #define	STAT_SOFT_LIMIT_EXCEEDED 71			// soft limit error
 #define	STAT_COMMAND_NOT_ACCEPTED 72		// command cannot be accepted at this time
+#define	STAT_PROBING_CYCLE_FAILED 73		// probing cycle did not complete
 
 /*** Alarm States ***/
 #define ALARM_LIMIT_OFFSET 0

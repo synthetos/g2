@@ -437,6 +437,9 @@
     <Compile Include="cycle_homing.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="cycle_probing.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="gcode_parser.cpp">
       <SubType>compile</SubType>
     </Compile>

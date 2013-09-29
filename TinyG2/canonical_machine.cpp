@@ -508,7 +508,6 @@ void cm_set_move_times(GCodeState_t *gcode_state)
 			xyz_time = sqrt(square(gm.target[AXIS_X] - gmx.position[AXIS_X]) + // in mm
 							square(gm.target[AXIS_Y] - gmx.position[AXIS_Y]) +
 							square(gm.target[AXIS_Z] - gmx.position[AXIS_Z])) / gm.feed_rate; // in linear units
-//			if (xyz_time == 0) {
 			if (fp_ZERO(xyz_time)) {
 				abc_time = sqrt(square(gm.target[AXIS_A] - gmx.position[AXIS_A]) + // in deg
 								square(gm.target[AXIS_B] - gmx.position[AXIS_B]) +
@@ -1055,8 +1054,9 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 	} else {
 //+++++	gpio_set_bit_off(FLOOD_COOLANT_BIT);
 		coolant_enable_pin.clear();
-		float value[AXES] = { 0,0,0,0,0,0 };
-		_exec_mist_coolant_control(value, value);		// M9 special function
+//		float vect[AXES] = { 0,0,0,0,0,0 };
+		float vect[] = { 0,0,0,0,0,0 };
+		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}
 }
 
@@ -1083,7 +1083,6 @@ stat_t cm_override_enables(uint8_t flag)			// M48, M49
 
 stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
-//	if ((gf.parameter == true) && (gn.parameter == 0)) {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.feed_rate_override_enable = false;
 		} else {
@@ -1096,13 +1095,12 @@ stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 {
 	gmx.feed_rate_override_enable = flag;
 	gmx.feed_rate_override_factor = gn.parameter;
-	//	mp_feed_rate_override(flag, gn.parameter);		// replan the queue for new feed rate
+//	mp_feed_rate_override(flag, gn.parameter);		// replan the queue for new feed rate
 	return (STAT_OK);
 }
 
 stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 {
-//	if ((gf.parameter == true) && (gn.parameter == 0)) {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.traverse_override_enable = false;
 		} else {
@@ -1115,13 +1113,12 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 {
 	gmx.traverse_override_enable = flag;
 	gmx.traverse_override_factor = gn.parameter;
-	//	mp_feed_rate_override(flag, gn.parameter);		// replan the queue for new feed rate
+//	mp_feed_rate_override(flag, gn.parameter);		// replan the queue for new feed rate
 	return (STAT_OK);
 }
 
 stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 {
-//	if ((gf.parameter == true) && (gn.parameter == 0)) {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.spindle_override_enable = false;
 		} else {
@@ -1559,7 +1556,7 @@ stat_t _get_msg_helper(cmdObj_t *cmd, char_P msg, uint8_t value)
 		ritorno(cmd_copy_string(cmd, buf));
 	#endif // __AVR
 	#ifdef __ARM
-		ritorno(cmd_copy_string(cmd, (char_t *)msg[value]));
+		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
 	#endif // __ARM
 #endif // __TEXT_MODE
 
@@ -1646,7 +1643,7 @@ stat_t cm_get_ofs(cmdObj_t *cmd)
 
 stat_t cm_run_home(cmdObj_t *cmd)
 {
-	if (cmd->value == true) { cm_homing_cycle_start();}
+	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
 	return (STAT_OK);
 }
 
@@ -1717,8 +1714,8 @@ stat_t cm_run_qf(cmdObj_t *cmd)
 
 /* model state print functions */
 
-const char PROGMEM fmt_vel[]  = "Velocity:%17.3f%S/min\n";
-const char PROGMEM fmt_feed[] = "Feed rate:%16.3f%S/min\n";
+const char PROGMEM fmt_vel[]  = "Velocity:%17.3f%s/min\n";
+const char PROGMEM fmt_feed[] = "Feed rate:%16.3f%s/min\n";
 const char PROGMEM fmt_line[] = "Line number:%10.0f\n";
 const char PROGMEM fmt_stat[] = "Machine state:       %s\n"; // combined machine state
 const char PROGMEM fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
@@ -1735,9 +1732,9 @@ const char PROGMEM fmt_dist[] = "Distance mode:       %s\n";
 const char PROGMEM fmt_frmo[] = "Feed rate mode:      %s\n";
 const char PROGMEM fmt_tool[] = "Tool number          %d\n";
 
-const char PROGMEM fmt_pos[] = "%c position:%15.3f%S\n";
-const char PROGMEM fmt_mpo[] = "%c machine posn:%11.3f%S\n";
-const char PROGMEM fmt_ofs[] = "%c work offset:%12.3f%S\n";
+const char PROGMEM fmt_pos[] = "%c position:%15.3f%s\n";
+const char PROGMEM fmt_mpo[] = "%c machine posn:%11.3f%s\n";
+const char PROGMEM fmt_ofs[] = "%c work offset:%12.3f%s\n";
 const char PROGMEM fmt_hom[] = "%c axis homing state:%2.0f\n";
 
 const char PROGMEM fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
@@ -1772,10 +1769,10 @@ void cm_print_gdi(cmdObj_t *cmd) { text_print_int(cmd, fmt_gdi);}
 
 /* system state print functions */
 
-const char PROGMEM fmt_ja[] = "[ja]  junction acceleration%8.0f%S\n";
-const char PROGMEM fmt_ct[] = "[ct]  chordal tolerance%16.3f%S\n";
-const char PROGMEM fmt_ml[] = "[ml]  min line segment%17.3f%S\n";
-const char PROGMEM fmt_ma[] = "[ma]  min arc segment%18.3f%S\n";
+const char PROGMEM fmt_ja[] = "[ja]  junction acceleration%8.0f%s\n";
+const char PROGMEM fmt_ct[] = "[ct]  chordal tolerance%16.3f%s\n";
+const char PROGMEM fmt_ml[] = "[ml]  min line segment%17.3f%s\n";
+const char PROGMEM fmt_ma[] = "[ma]  min arc segment%18.3f%s\n";
 const char PROGMEM fmt_ms[] = "[ms]  min segment time%13.0f uSec\n";
 
 void cm_print_ja(cmdObj_t *cmd) { text_print_flt_units(cmd, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
@@ -1809,23 +1806,23 @@ void cm_print_ms(cmdObj_t *cmd) { text_print_flt_units(cmd, fmt_ms, GET_UNITS(AC
  * 	cm_print_mpo() - print position with fixed unit display - always in Degrees or MM
  */
 
-const char PROGMEM fmt_Xam[] = "[%s%s] %s axis mode%18d %S\n";
-const char PROGMEM fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%S/min\n";
-const char PROGMEM fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%S/min\n";
-const char PROGMEM fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%S\n";
-const char PROGMEM fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%S/min^3 * 1 million\n";
-const char PROGMEM fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%S/min^3 * 1 million\n";
-const char PROGMEM fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%S (larger is faster)\n";
-const char PROGMEM fmt_Xra[] = "[%s%s] %s radius value%20.4f%S\n";
+const char PROGMEM fmt_Xam[] = "[%s%s] %s axis mode%18d %s\n";
+const char PROGMEM fmt_Xfr[] = "[%s%s] %s feedrate maximum%15.3f%s/min\n";
+const char PROGMEM fmt_Xvm[] = "[%s%s] %s velocity maximum%15.3f%s/min\n";
+const char PROGMEM fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%s\n";
+const char PROGMEM fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
+const char PROGMEM fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
+const char PROGMEM fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+const char PROGMEM fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
 const char PROGMEM fmt_Xsn[] = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
 const char PROGMEM fmt_Xsx[] = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-const char PROGMEM fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%S/min\n";
-const char PROGMEM fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%S/min\n";
-const char PROGMEM fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%S\n";
-const char PROGMEM fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%S\n";
+const char PROGMEM fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%s/min\n";
+const char PROGMEM fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%s/min\n";
+const char PROGMEM fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%s\n";
+const char PROGMEM fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%s\n";
 
-const char PROGMEM fmt_cofs[] = "[%s%s] %s %s offset%20.3f%S\n";
-const char PROGMEM fmt_cpos[] = "[%s%s] %s %s position%18.3f%S\n";
+const char PROGMEM fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
+const char PROGMEM fmt_cpos[] = "[%s%s] %s %s position%18.3f%s\n";
 
 static void _print_axis_ui8(cmdObj_t *cmd, const char *format)
 {
@@ -1859,8 +1856,7 @@ void _print_pos(cmdObj_t *cmd, const char *format, uint8_t units)
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(cmd->index);
 	if (axis >= AXIS_A) { units = DEGREES;}
-//	fprintf_P(stderr, format, axes[axis], cmd->value, (PGM_P)pgm_read_word(&msg_units[(uint8_t)units]));
-	fprintf_P(stderr, format, axes[axis], cmd->value, (PGM_P)GET_TEXT_ITEM(msg_units, units));	
+	fprintf_P(stderr, format, axes[axis], cmd->value, GET_TEXT_ITEM(msg_units, units));
 }
 
 void cm_print_fr(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xfr);}
@@ -1885,8 +1881,7 @@ void cm_print_mpo(cmdObj_t *cmd) { _print_pos(cmd, fmt_mpo, MILLIMETERS);}
 
 void cm_print_am(cmdObj_t *cmd)	// print axis mode with enumeration string
 {
-	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value,
-			 (PGM_P)GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));			
+	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));			
 }
 
 #endif // __TEXT_MODE
