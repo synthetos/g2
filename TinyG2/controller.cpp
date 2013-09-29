@@ -132,8 +132,8 @@ static void _controller_HSM()
 //
 //----- lowest level functions -------------------------------------------------------//
 													// Order is important:
-	DISPATCH(hardware_hard_reset_handler());		// 1. received hard reset request
-//	DISPATCH(hardware_bootloader_handler());		// 2. received request to start bootloader
+	DISPATCH(hw_hard_reset_handler());				// 1. received hard reset request
+//	DISPATCH(hw_bootloader_handler());				// 2. received request to start bootloader
 	DISPATCH(_alarm_idler());						// 3. idle in alarm state (shutdown)
 	DISPATCH( poll_switches());						// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());				// 5. limit switch has been thrown
@@ -148,8 +148,8 @@ static void _controller_HSM()
 
 	DISPATCH(st_motor_power_callback());			// stepper motor disable timer
 //	DISPATCH(switch_debounce_callback());			// debounce switches
-	DISPATCH(rpt_status_report_callback());			// conditionally send status report
-	DISPATCH(rpt_queue_report_callback());			// conditionally send queue report
+	DISPATCH(sr_status_report_callback());			// conditionally send status report
+	DISPATCH(qr_queue_report_callback());			// conditionally send queue report
 	DISPATCH(ar_arc_callback());					// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());					// G28.2 continuation
 //	DISPATCH(cm_probe_callback());					// G38.2 continuation
@@ -213,7 +213,7 @@ static stat_t _command_dispatch()
 		}
 		case 'H': { 							// intercept help screens
 			cfg.comm_mode = TEXT_MODE;
-			print_general_help();
+			help_general(NULL);
 			text_response(STAT_OK, cs.in_buf);
 			break;
 		}

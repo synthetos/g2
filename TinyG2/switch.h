@@ -120,6 +120,15 @@ void switch_reset_switches(void);
 uint8_t switch_read_switch(uint8_t sw_num);
 */
 
+stat_t sw_set_st(cmdObj_t *cmd);
+stat_t sw_set_sw(cmdObj_t *cmd);
+
+#ifdef __TEXT_MODE
+	void sw_print_st(cmdObj_t *cmd);
+#else
+	#define sw_print_st tx_print_stub
+#endif // __TEXT_MODE
+
 /* unit test setup */
 
 //#define __UNIT_TEST_GPIO				// uncomment to enable GPIO unit tests

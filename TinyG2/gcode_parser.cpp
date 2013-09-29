@@ -243,135 +243,135 @@ static stat_t _parse_gcode_block(char_t *buf)
 	memset(&gp, 0, sizeof(gp));		// clear all parser values
 	memset(&gf, 0, sizeof(gf));		// clear all next-state flags
 	memset(&gn, 0, sizeof(gn));		// clear all next-state values
-	gn.motion_mode = cm_get_model_motion_mode();	// get motion mode from previous block
+	gn.motion_mode = cm_get_motion_mode(MODEL);// get motion mode from previous block
 
-  	// extract commands and parameters
-	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
-		switch(letter) {
-			case 'G':
-				switch((uint8_t)value) {
-					case 0:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_STRAIGHT_TRAVERSE);
-					case 1:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_STRAIGHT_FEED);
-					case 2:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CW_ARC);
-					case 3:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CCW_ARC);
-					case 4:  SET_NON_MODAL (next_action, NEXT_ACTION_DWELL);
-					case 10: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_COORD_DATA);
-					case 17: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XY);
-					case 18: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XZ);
-					case 19: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_YZ);
-					case 20: SET_MODAL (MODAL_GROUP_G6, units_mode, INCHES);
-					case 21: SET_MODAL (MODAL_GROUP_G6, units_mode, MILLIMETERS);
-					case 28: {
-						switch (_point(value)) {
-							case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G28_POSITION);
-							case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G28_POSITION); 
-							case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME); 
-							case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ABSOLUTE_ORIGIN);
-							case 4: SET_NON_MODAL (next_action, NEXT_ACTION_HOMING_NO_SET);
-							default: status = STAT_UNRECOGNIZED_COMMAND;
-						}
-						break;
-					}
-					case 30: {
-						switch (_point(value)) {
-							case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G30_POSITION);
-							case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G30_POSITION); 
-							default: status = STAT_UNRECOGNIZED_COMMAND;
-						}
-						break;
-					}
-					case 38: 
-						switch (_point(value)) {
-							case 2: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE); 
-							default: status = STAT_UNRECOGNIZED_COMMAND;
-						}
-						break;
-					}
-					case 40: break;	// ignore cancel cutter radius compensation
-					case 49: break;	// ignore cancel tool length offset comp.
-					case 53: SET_NON_MODAL (absolute_override, true);
-					case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
-					case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
-					case 56: SET_MODAL (MODAL_GROUP_G12, coord_system, G56);
-					case 57: SET_MODAL (MODAL_GROUP_G12, coord_system, G57);
-					case 58: SET_MODAL (MODAL_GROUP_G12, coord_system, G58);
-					case 59: SET_MODAL (MODAL_GROUP_G12, coord_system, G59);
-					case 61: {
-						switch (_point(value)) {
-							case 0: SET_MODAL (MODAL_GROUP_G13, path_control, PATH_EXACT_PATH);
-							case 1: SET_MODAL (MODAL_GROUP_G13, path_control, PATH_EXACT_STOP); 
-							default: status = STAT_UNRECOGNIZED_COMMAND;
-						}
-						break;
-					}
-					case 64: SET_MODAL (MODAL_GROUP_G13,path_control, PATH_CONTINUOUS);
-					case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
-					case 90: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
-					case 91: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
-					case 92: {
-						switch (_point(value)) {
-							case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_ORIGIN_OFFSETS);
-							case 1: SET_NON_MODAL (next_action, NEXT_ACTION_RESET_ORIGIN_OFFSETS);
-							case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS);
-							case 3: SET_NON_MODAL (next_action, NEXT_ACTION_RESUME_ORIGIN_OFFSETS); 
-							default: status = STAT_UNRECOGNIZED_COMMAND;
-						}
-						break;
-					}
-					case 93: SET_MODAL (MODAL_GROUP_G5, inverse_feed_rate_mode, true);
-					case 94: SET_MODAL (MODAL_GROUP_G5, inverse_feed_rate_mode, false);
-					default: status = STAT_UNRECOGNIZED_COMMAND;
-				}
-				break;
+   	// extract commands and parameters
+   	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
+	   	switch(letter) {
+		   	case 'G':
+		   	switch((uint8_t)value) {
+			   	case 0:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_STRAIGHT_TRAVERSE);
+			   	case 1:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_STRAIGHT_FEED);
+			   	case 2:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CW_ARC);
+			   	case 3:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CCW_ARC);
+			   	case 4:  SET_NON_MODAL (next_action, NEXT_ACTION_DWELL);
+			   	case 10: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_COORD_DATA);
+			   	case 17: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XY);
+			   	case 18: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XZ);
+			   	case 19: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_YZ);
+			   	case 20: SET_MODAL (MODAL_GROUP_G6, units_mode, INCHES);
+			   	case 21: SET_MODAL (MODAL_GROUP_G6, units_mode, MILLIMETERS);
+			   	case 28: {
+				   	switch (_point(value)) {
+					   	case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G28_POSITION);
+					   	case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G28_POSITION);
+					   	case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME);
+					   	case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ABSOLUTE_ORIGIN);
+					   	case 4: SET_NON_MODAL (next_action, NEXT_ACTION_HOMING_NO_SET);
+					   	default: status = STAT_UNRECOGNIZED_COMMAND;
+				   	}
+				   	break;
+			   	}
+			   	case 30: {
+				   	switch (_point(value)) {
+					   	case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G30_POSITION);
+					   	case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G30_POSITION);
+					   	default: status = STAT_UNRECOGNIZED_COMMAND;
+				   	}
+				   	break;
+			   	}
+			   	case 38: {
+				   	switch (_point(value)) {
+					   	case 2: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE);
+					   	default: status = STAT_UNRECOGNIZED_COMMAND;
+				   	}
+				   	break;
+			   	}
+			   	case 40: break;	// ignore cancel cutter radius compensation
+			   	case 49: break;	// ignore cancel tool length offset comp.
+			   	case 53: SET_NON_MODAL (absolute_override, true);
+			   	case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
+			   	case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
+			   	case 56: SET_MODAL (MODAL_GROUP_G12, coord_system, G56);
+			   	case 57: SET_MODAL (MODAL_GROUP_G12, coord_system, G57);
+			   	case 58: SET_MODAL (MODAL_GROUP_G12, coord_system, G58);
+			   	case 59: SET_MODAL (MODAL_GROUP_G12, coord_system, G59);
+			   	case 61: {
+				   	switch (_point(value)) {
+					   	case 0: SET_MODAL (MODAL_GROUP_G13, path_control, PATH_EXACT_PATH);
+					   	case 1: SET_MODAL (MODAL_GROUP_G13, path_control, PATH_EXACT_STOP);
+					   	default: status = STAT_UNRECOGNIZED_COMMAND;
+				   	}
+				   	break;
+			   	}
+			   	case 64: SET_MODAL (MODAL_GROUP_G13,path_control, PATH_CONTINUOUS);
+			   	case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
+			   	case 90: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
+			   	case 91: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
+			   	case 92: {
+				   	switch (_point(value)) {
+					   	case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_ORIGIN_OFFSETS);
+					   	case 1: SET_NON_MODAL (next_action, NEXT_ACTION_RESET_ORIGIN_OFFSETS);
+					   	case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS);
+					   	case 3: SET_NON_MODAL (next_action, NEXT_ACTION_RESUME_ORIGIN_OFFSETS);
+					   	default: status = STAT_UNRECOGNIZED_COMMAND;
+				   	}
+				   	break;
+			   	}
+			   	case 93: SET_MODAL (MODAL_GROUP_G5, inverse_feed_rate_mode, true);
+			   	case 94: SET_MODAL (MODAL_GROUP_G5, inverse_feed_rate_mode, false);
+			   	default: status = STAT_UNRECOGNIZED_COMMAND;
+		   	}
+		   	break;
 
-			case 'M':
-				switch((uint8_t)value) {
-					case 0: case 1: 
-							SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_STOP);
-					case 2: case 30: case 60:
-							SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_END);
-					case 3: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CW);
-					case 4: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CCW);
-					case 5: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_OFF);
-					case 6: SET_NON_MODAL (change_tool, true);
-					case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
-					case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
-					case 9: SET_MODAL (MODAL_GROUP_M8, flood_coolant, false);
-					case 48: SET_MODAL (MODAL_GROUP_M9, override_enables, true);
-					case 49: SET_MODAL (MODAL_GROUP_M9, override_enables, false);
-					case 50: SET_MODAL (MODAL_GROUP_M9, feed_rate_override_enable, true); // conditionally true
-					case 51: SET_MODAL (MODAL_GROUP_M9, spindle_override_enable, true);	  // conditionally true
-					default: status = STAT_UNRECOGNIZED_COMMAND;
-				}
-				break;
+		   	case 'M':
+		   	switch((uint8_t)value) {
+			   	case 0: case 1: case 60:
+			   	SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_STOP);
+			   	case 2: case 30:
+			   	SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_END);
+			   	case 3: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CW);
+			   	case 4: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CCW);
+			   	case 5: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_OFF);
+			   	case 6: SET_NON_MODAL (tool_change, true);
+			   	case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
+			   	case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
+			   	case 9: SET_MODAL (MODAL_GROUP_M8, flood_coolant, false);
+			   	case 48: SET_MODAL (MODAL_GROUP_M9, override_enables, true);
+			   	case 49: SET_MODAL (MODAL_GROUP_M9, override_enables, false);
+			   	case 50: SET_MODAL (MODAL_GROUP_M9, feed_rate_override_enable, true); // conditionally true
+			   	case 51: SET_MODAL (MODAL_GROUP_M9, spindle_override_enable, true);	  // conditionally true
+			   	default: status = STAT_UNRECOGNIZED_COMMAND;
+		   	}
+		   	break;
 
-			case 'T': SET_NON_MODAL (tool, (uint8_t)trunc(value));
-			case 'F': SET_NON_MODAL (feed_rate, value);
-			case 'P': SET_NON_MODAL (parameter, value);				// used for dwell time, G10 coord select
-			case 'S': SET_NON_MODAL (spindle_speed, value); 
-			case 'X': SET_NON_MODAL (target[AXIS_X], value);
-			case 'Y': SET_NON_MODAL (target[AXIS_Y], value);
-			case 'Z': SET_NON_MODAL (target[AXIS_Z], value);
-			case 'A': SET_NON_MODAL (target[AXIS_A], value);
-			case 'B': SET_NON_MODAL (target[AXIS_B], value);
-			case 'C': SET_NON_MODAL (target[AXIS_C], value);
-		//	case 'U': SET_NON_MODAL (target[AXIS_U], value);		// reserved
-		//	case 'V': SET_NON_MODAL (target[AXIS_V], value);		// reserved
-		//	case 'W': SET_NON_MODAL (target[AXIS_W], value);		// reserved
-			case 'I': SET_NON_MODAL (arc_offset[0], value);
-			case 'J': SET_NON_MODAL (arc_offset[1], value);
-			case 'K': SET_NON_MODAL (arc_offset[2], value);
-			case 'R': SET_NON_MODAL (arc_radius, value);
-			case 'N': SET_NON_MODAL (linenum,(uint32_t)value);		// line number
-			case 'L': break;										// not used for anything
-			default: status = STAT_UNRECOGNIZED_COMMAND;
-		}
-		if(status != STAT_OK) break;
-	}
-	if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
-	ritorno(_validate_gcode_block());
-	return (_execute_gcode_block());		// if successful execute the block
-}
+		   	case 'T': SET_NON_MODAL (tool_select, (uint8_t)trunc(value));
+		   	case 'F': SET_NON_MODAL (feed_rate, value);
+		   	case 'P': SET_NON_MODAL (parameter, value);				// used for dwell time, G10 coord select
+		   	case 'S': SET_NON_MODAL (spindle_speed, value);
+		   	case 'X': SET_NON_MODAL (target[AXIS_X], value);
+		   	case 'Y': SET_NON_MODAL (target[AXIS_Y], value);
+		   	case 'Z': SET_NON_MODAL (target[AXIS_Z], value);
+		   	case 'A': SET_NON_MODAL (target[AXIS_A], value);
+		   	case 'B': SET_NON_MODAL (target[AXIS_B], value);
+		   	case 'C': SET_NON_MODAL (target[AXIS_C], value);
+		   	//	case 'U': SET_NON_MODAL (target[AXIS_U], value);		// reserved
+		   	//	case 'V': SET_NON_MODAL (target[AXIS_V], value);		// reserved
+		   	//	case 'W': SET_NON_MODAL (target[AXIS_W], value);		// reserved
+		   	case 'I': SET_NON_MODAL (arc_offset[0], value);
+		   	case 'J': SET_NON_MODAL (arc_offset[1], value);
+		   	case 'K': SET_NON_MODAL (arc_offset[2], value);
+		   	case 'R': SET_NON_MODAL (arc_radius, value);
+		   	case 'N': SET_NON_MODAL (linenum,(uint32_t)value);		// line number
+		   	case 'L': break;										// not used for anything
+		   	default: status = STAT_UNRECOGNIZED_COMMAND;
+	   	}
+	   	if(status != STAT_OK) break;
+   	}
+   	if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
+   	ritorno(_validate_gcode_block());
+   	return (_execute_gcode_block());		// if successful execute the block
+   }
 
 /*
  * _execute_gcode_block() - execute parsed block

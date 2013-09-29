@@ -27,20 +27,23 @@
  */
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
-
-#include "motatePins.h"
-#include "motateTimers.h" // for Motate::timer_number
-
+/*
 #ifdef __cplusplus
 extern "C"{
 #endif
-
+*/
 /**** Global System Defines ****/
 
 #undef F_CPU							// CPU clock - set for delays
 #define F_CPU 84000000UL
 #define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
 #define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
+
+/************************************************************************************
+ **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
+ ************************************************************************************/
+#include "motatePins.h"
+#include "motateTimers.h" // for Motate::timer_number
 
 /**** Resource Assignment via Motate ****
  *
@@ -281,9 +284,9 @@ stat_t hw_get_id(cmdObj_t *cmd);
 	#define hw_print_id tx_print_stub
 
 #endif // __TEXT_MODE
-
+/*
 #ifdef __cplusplus
 }
 #endif
-
+*/
 #endif	// end of include guard: HARDWARE_H_ONCE

@@ -381,7 +381,7 @@ const cfgItem_t cfgArray[] = {
 
 	{ "sys","ja",  _f07, 0, cm_print_ja,  get_flu,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
 	{ "sys","ct",  _f07, 4, cm_print_ct,  get_flu,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
-	{ "sys","st",  _f07, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.switch_type,			SWITCH_TYPE },
+//	{ "sys","st",  _f07, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.switch_type,			SWITCH_TYPE },
 	{ "sys","mt",  _f07, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st.motor_idle_timeout, 	MOTOR_IDLE_TIMEOUT},
 	{ "",   "me",  _f00, 0, tx_print_str, st_set_me, st_set_me,  (float *)&cs.null, 0 },
 	{ "",   "md",  _f00, 0, tx_print_str, st_set_md, st_set_md,  (float *)&cs.null, 0 },
@@ -601,7 +601,7 @@ static stat_t _do_all(cmdObj_t *cmd)	// print all parameters
  *
  *	The above assume USB is the std device
  */
-
+/*
 static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
 {
 	if (fp_NOT_ZERO(cmd->value)) { 
@@ -611,7 +611,7 @@ static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
 	}
 	return (STAT_OK);
 }
-
+*/
 /* REMOVED - too easy to make the board appear to be bricked
 static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
 {
@@ -628,7 +628,7 @@ static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
 	return (STAT_OK);
 }
 */
-
+/*
 static stat_t set_ec(cmdObj_t *cmd) 				// expand CR to CRLF on TX
 {
 	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
@@ -656,7 +656,7 @@ static stat_t get_rx(cmdObj_t *cmd)
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
-
+*/
 /* run_sx()	- send XOFF, XON --- test only 
 static stat_t run_sx(cmdObj_t *cmd)
 {
@@ -718,12 +718,12 @@ stat_t set_baud_callback(void)
 #ifdef __TEXT_MODE
 
 //const char_t PROGMEM fmt_ic[] = "[ic]  ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
-const char_t PROGMEM fmt_ec[] = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
-const char_t PROGMEM fmt_ee[] = "[ee]  enable echo%18d [0=off,1=on]\n";
-const char_t PROGMEM fmt_ex[] = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
-const char_t PROGMEM fmt_baud[] = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
-const char_t PROGMEM fmt_net[] = "[net]  network mode%16d [0=master]\n";
-const char_t PROGMEM fmt_rx[] = "rx:%d\n";
+const char PROGMEM fmt_ec[] = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
+const char PROGMEM fmt_ee[] = "[ee]  enable echo%18d [0=off,1=on]\n";
+const char PROGMEM fmt_ex[] = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
+const char PROGMEM fmt_baud[] = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
+const char PROGMEM fmt_net[] = "[net]  network mode%16d [0=master]\n";
+const char PROGMEM fmt_rx[] = "rx:%d\n";
 
 void co_print_ec(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ec);}
 void co_print_ee(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ee);}

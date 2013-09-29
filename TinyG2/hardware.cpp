@@ -27,6 +27,8 @@
 
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
+//#include "switch.h"
+#include "controller.h"
 #include "hardware.h"
 #include "text_parser.h"
 
@@ -43,62 +45,17 @@ void hardware_init()
 	return;
 }
 
-/* UNUSED
-uint8_t _read_calibration_byte(uint8_t index)
-{ 
-	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc; 	// Load NVM Command register to read the calibration row
-	uint8_t result = pgm_read_byte(index); 
-	NVM_CMD = NVM_CMD_NO_OPERATION_gc; 	 	// Clean up NVM Command register 
-	return(result); 
-}
-*/
-
 /*
- * hw_get_id() - get a human readable signature
+ * _get_id() - get a human readable signature
  *
- *	Produces a unique deviceID based on the factory calibration data. Format is:
+ *	Produce a unique deviceID based on the factory calibration data. Format is:
  *		123456-ABC
- *
- *	The number part is a direct readout of the 6 digit lot number
- *	The alpha is the lo 5 bits of wafer number and XY coords in printable ASCII
- *	Refer to NVM_PROD_SIGNATURES_t in iox192a3.h for details.
  */
- /*
-enum { 
-	LOTNUM0=8,  // Lot Number Byte 0, ASCII 
-	LOTNUM1,    // Lot Number Byte 1, ASCII 
-	LOTNUM2,    // Lot Number Byte 2, ASCII 
-	LOTNUM3,    // Lot Number Byte 3, ASCII 
-	LOTNUM4,    // Lot Number Byte 4, ASCII 
-	LOTNUM5,    // Lot Number Byte 5, ASCII 
-	WAFNUM =16, // Wafer Number 
-	COORDX0=18, // Wafer Coordinate X Byte 0 
-	COORDX1,    // Wafer Coordinate X Byte 1 
-	COORDY0,    // Wafer Coordinate Y Byte 0 
-	COORDY1,    // Wafer Coordinate Y Byte 1 
-}; 
 
 void hw_get_id(char_t *id)
 {
-	char printable[33] = {"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"};
-	uint8_t i;
-
-	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc; 	// Load NVM Command register to read the calibration row
-
-	for (i=0; i<6; i++) {
-		id[i] = pgm_read_byte(LOTNUM0 + i);
-	}
-	id[i++] = '-';
-	id[i++] = printable[(pgm_read_byte(WAFNUM) & 0x1F)];
-	id[i++] = printable[(pgm_read_byte(COORDX0) & 0x1F)];
-//	id[i++] = printable[(pgm_read_byte(COORDX1) & 0x1F)];
-	id[i++] = printable[(pgm_read_byte(COORDY0) & 0x1F)];
-//	id[i++] = printable[(pgm_read_byte(COORDY1) & 0x1F)];
-	id[i] = 0;
-
-	NVM_CMD = NVM_CMD_NO_OPERATION_gc; 	 	// Clean up NVM Command register 
+	return;
 }
-*/
  
  /*
  * Hardware Reset Handlers
@@ -117,8 +74,8 @@ void hw_hard_reset(void)			// software hard reset using the watchdog timer
 
 stat_t hw_hard_reset_handler(void)
 {
-//	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
-//	hw_hard_reset();				// hard reset - identical to hitting RESET button
+	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
+	hw_hard_reset();				// hard reset - identical to hitting RESET button
 	return (STAT_EAGAIN);
 }
 
@@ -148,6 +105,19 @@ stat_t hw_bootloader_handler(void)
  ***********************************************************************************/
 
 /*
+ * hw_get_id() - get device ID (signature)
+ */
+
+stat_t hw_get_id(cmdObj_t *cmd) 
+{
+//	char_t tmp[SYS_ID_LEN];
+//	_get_id(tmp);
+//	cmd->objtype = TYPE_STRING;
+//	ritorno(cmd_copy_string(cmd, tmp));
+	return (STAT_OK);
+}
+
+/*
  * hw_run_boot() - invoke boot form the cfgArray
  */
 stat_t hw_run_boot(cmdObj_t *cmd)
@@ -161,24 +131,6 @@ stat_t hw_run_boot(cmdObj_t *cmd)
  */
 stat_t hw_set_hv(cmdObj_t *cmd) 
 {
-	if (cmd->value > TINYG_HARDWARE_VERSION_MAX) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	set_flt(cmd);					// record the hardware version
-//	_port_bindings(cmd->value);		// reset port bindings
-	switch_init();					// re-initialize the GPIO ports
-//+++++	gpio_init();				// re-initialize the GPIO ports
-	return (STAT_OK);
-}
-
-/*
- * hw_get_id() - get device ID (signature)
- */
-
-stat_t hw_get_id(cmdObj_t *cmd) 
-{
-	char_t tmp[SYS_ID_LEN];
-	_get_id(tmp);
-	cmd->objtype = TYPE_STRING;
-	ritorno(cmd_copy_string(cmd, tmp));
 	return (STAT_OK);
 }
 
@@ -190,11 +142,11 @@ stat_t hw_get_id(cmdObj_t *cmd)
 
 #ifdef __TEXT_MODE
 
-const char_t PROGMEM fmt_fb[] = "[fb]  firmware build%18.2f\n";
-const char_t PROGMEM fmt_fv[] = "[fv]  firmware version%16.2f\n";
-const char_t PROGMEM fmt_hv[] = "[hp]  hardware platform%15.2f\n";
-const char_t PROGMEM fmt_hv[] = "[hv]  hardware version%16.2f\n";
-const char_t PROGMEM fmt_id[] = "[id]  TinyG ID%30s\n";
+const char PROGMEM fmt_fb[] = "[fb]  firmware build%18.2f\n";
+const char PROGMEM fmt_fv[] = "[fv]  firmware version%16.2f\n";
+const char PROGMEM fmt_hp[] = "[hp]  hardware platform%15.2f\n";
+const char PROGMEM fmt_hv[] = "[hv]  hardware version%16.2f\n";
+const char PROGMEM fmt_id[] = "[id]  TinyG ID%30s\n";
 
 void hw_print_fb(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fb);}
 void hw_print_fv(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fv);}

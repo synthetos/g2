@@ -57,9 +57,6 @@ void __libc_init_array(void);
 
 static void _application_init(void);
 
-// collect all weird little globals here
-stat_t status_code;		// declared for ritorno, see tinyg2.h
-
 /******************** Application Code ************************/
 
 const Motate::USBSettings_t Motate::USBSettings = {

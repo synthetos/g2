@@ -193,7 +193,11 @@ typedef uint16_t magic_t;		// magic number size
  * It returns only if an error occurred. (ritorno is Italian for return)
  */
 typedef uint8_t stat_t;
-extern stat_t status_code;				// declared in main.cpp
+#define STATUS_MESSAGE_LEN 48			// status message string storage allocation
+char status_message[STATUS_MESSAGE_LEN];// allocate string for global use
+
+stat_t status_code;						// allocate a variable for this macro
+//extern stat_t status_code;				// declared in main.cpp
 #define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
 // OS, communications and low-level status (must align with XIO_xxxx codes in xio.h)
