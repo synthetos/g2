@@ -103,7 +103,6 @@
 extern "C"{
 #endif
 
-
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
@@ -136,8 +135,10 @@ static int8_t _get_axis_type(const index_t index);
  **** CODE *************************************************************************
  ***********************************************************************************/
 
-/**** Internal getters and setters ****
- *
+/********************************
+ * Internal getters and setters *
+ ********************************/
+/*
  * Canonical Machine State functions
  *
  * cm_get_combined_state() - combines raw states into something a user might want to see
@@ -178,9 +179,9 @@ void cm_set_motion_state(uint8_t motion_state)
 	}
 }
 
-/* 
- * Model State Getters and Setters
- */
+/***********************************
+ * Model State Getters and Setters *
+ ***********************************/
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state) { return gcode_state->linenum;}
 uint8_t cm_get_motion_mode(GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
@@ -542,19 +543,16 @@ stat_t _test_soft_limits()
 	return (STAT_OK);
 }
 
-
 /*************************************************************************
- *
  * CANONICAL MACHINING FUNCTIONS
- *
  *	Values are passed in pre-unit_converted state (from gn structure)
  *	All operations occur on gm (current model state)
- *
  ************************************************************************/
 
-/* 
- * Initialization and Termination (4.3.2)
- *
+/****************************************** 
+ * Initialization and Termination (4.3.2) *
+ ******************************************/
+/*
  * canonical_machine_init() 
  * canonical_machine_ahutdown() 
  *
@@ -620,16 +618,19 @@ void canonical_machine_alarm(uint8_t value)
 	cm.machine_state = MACHINE_ALARM;
 }
 
+/**************************
+ * Representation (4.3.3) *
+ **************************/
 /*
- * Representation (4.3.3)
- *
  * Functions that affect the Gcode model only:
+ *
  * cm_select_plane()			- G17,G18,G19 select axis plane
  * cm_set_units_mode()			- G20, G21
  * cm_set_distance_mode()		- G90, G91
  * cm_set_coord_offsets()		- G10 (delayed persistence)
  *
  * Functions that affect gcode model and are queued to planner
+ *
  * cm_set_coord_system()		- G54-G59
  * cm_set_absolute_origin()		- G28.3 - model, planner and queue to runtime
  * cm_set_axis_origin()			- set the origin of a single axis - model and planner
@@ -726,7 +727,6 @@ static void _exec_offset(float *value, float *flag)
 	mp_set_runtime_work_offset(offsets);
 //	cm_set_work_offsets(RUNTIME);
 }
-
 
 /*
  * cm_set_absolute_origin() - G28.3 - model, planner and queue to runtime
@@ -830,9 +830,10 @@ stat_t cm_resume_origin_offsets()
 	return (STAT_OK);
 }
 
-/* 
- * Free Space Motion (4.3.4)
- *
+/***************************** 
+ * Free Space Motion (4.3.4) *
+ *****************************/
+/*
  * cm_straight_traverse() - G0 linear rapid
  */
 
@@ -841,7 +842,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target,flags);
 	if (vector_equal(gm.target, gmx.position)) { return (STAT_OK); }
-	//	ritorno(_test_soft_limits());
+//	ritorno(_test_soft_limits());
 
 	cm_set_work_offsets(&gm);					// capture the fully resolved offsets to the state
 	cm_set_move_times(&gm);						// set move time and minimum time in the state
@@ -888,12 +889,12 @@ stat_t cm_goto_g30_position(float target[], float flags[])
 	return(cm_straight_traverse(gmx.g30_position, f));// execute actual stored move
 }
 
-/* 
- * Machining Attributes (4.3.5)
- */ 
+/********************************
+ * Machining Attributes (4.3.5) *
+ ********************************/ 
 
 /*
- * cm_set_feed_rate() - F parameter
+ * cm_set_feed_rate() - F parameter  (affects MODEL only)
  *
  * Sets feed rate; or sets inverse feed rate if it's active.
  * Converts all values to internal format (mm's)
@@ -912,7 +913,7 @@ stat_t cm_set_feed_rate(float feed_rate)
 }
 
 /*
- * cm_set_inverse_feed_rate() - G93, G94
+ * cm_set_inverse_feed_rate() - G93, G94 (affects MODEL only)
  *
  *	TRUE = inverse time feed rate in effect - for this block only
  *	FALSE = units per minute feed rate in effect
@@ -934,10 +935,11 @@ stat_t cm_set_path_control(uint8_t mode)
 	return (STAT_OK);
 }
 
+/******************************* 
+ * Machining Functions (4.3.6) *
+ *******************************/
 /* 
- * Machining Functions (4.3.6)
- *
- * cm_arc_feed() - see arc.c
+ * cm_arc_feed() - see plan_arc.cpp
  * cm_dwell() - G4, P parameter (seconds)
  * cm_straight_feed() - G1
  */ 
@@ -975,14 +977,15 @@ stat_t cm_straight_feed(float target[], float flags[])
 	return (status);
 }
 
-/* 
- * Spindle Functions (4.3.7)
- */
+/***************************** 
+ * Spindle Functions (4.3.7) *
+ *****************************/
 // see spindle.c, spindle.h
 
+/**************************
+ * Tool Functions (4.3.8) *
+ **************************/
 /*
- * Tool Functions (4.3.8)
- *
  * cm_select_tool() - T parameter
  * cm_change_tool() - M6 (This might become a complete tool change cycle)
  *
@@ -1014,9 +1017,10 @@ static void _exec_change_tool(float *value, float *flag)
 	gm.tool = (uint8_t)value[0];
 }
 
-/* 
- * Miscellaneous Functions (4.3.9)
- *
+/*********************************** 
+ * Miscellaneous Functions (4.3.9) *
+ ***********************************/
+/*
  * cm_mist_coolant_control() - M7
  * cm_flood_coolant_control() - M8, M9
  */
@@ -1030,13 +1034,18 @@ stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 static void _exec_mist_coolant_control(float *value, float *flag)
 {
 	gm.mist_coolant = (uint8_t)value[0];
-	if (gm.mist_coolant == true) {
-//+++++	gpio_set_bit_on(MIST_COOLANT_BIT);
-		coolant_enable_pin.set();
-	} else {
-//+++++	gpio_set_bit_off(MIST_COOLANT_BIT);
-		coolant_enable_pin.clear();
-	}
+
+#ifdef __AVR
+	if (gm.mist_coolant == true)
+		gpio_set_bit_on(MIST_COOLANT_BIT);	// if
+	gpio_set_bit_off(MIST_COOLANT_BIT);		// else
+#endif // __AVR
+
+#ifdef __ARM
+	if (gm.mist_coolant == true)
+		coolant_enable_pin.set();	// if
+	coolant_enable_pin.clear();		// else
+#endif // __ARM
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_coolant)
@@ -1048,16 +1057,27 @@ stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 static void _exec_flood_coolant_control(float *value, float *flag)
 {
 	gm.flood_coolant = (uint8_t)value[0];
+	
+#ifdef __AVR
 	if (gm.flood_coolant == true) {
-//+++++	gpio_set_bit_on(FLOOD_COOLANT_BIT);
-		coolant_enable_pin.set();
+		gpio_set_bit_on(FLOOD_COOLANT_BIT);
 	} else {
-//+++++	gpio_set_bit_off(FLOOD_COOLANT_BIT);
+		gpio_set_bit_off(FLOOD_COOLANT_BIT);
 		coolant_enable_pin.clear();
-//		float vect[AXES] = { 0,0,0,0,0,0 };
-		float vect[] = { 0,0,0,0,0,0 };
+		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
 		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}
+#endif // __AVR
+
+#ifdef __ARM
+	if (gm.flood_coolant == true) {
+		coolant_enable_pin.set();
+	} else {
+		coolant_enable_pin.clear();
+		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
+		_exec_mist_coolant_control(vect, vect);		// M9 special function
+	}
+#endif // __ARM
 }
 
 /*
@@ -1139,17 +1159,18 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
  * cm_message() - send a message to the console (or JSON)
  */
 
-//void cm_message(const char_t *message)
-void cm_message(char *message)
+//void cm_message(const char_t *message) //+++++++++++++ not the same as AVR code
+void cm_message(char_t *message)
 {
-//	cmd_add_string("msg", message);		// adds the message to the response object
+	cmd_add_string((const char_t *)"msg", message);		// adds the message to the response object
 //	cmd_add_string("msg", (const char *)message);		// adds the message to the response object
 //	cmd_add_conditional_message((const char *)message);	// conditionally adds the message to the response object
 }
 
+/******************************
+ * Program Functions (4.3.10) *
+ ******************************/
 /*
- * Program Functions (4.3.10)
- *
  * This group implements stop, start, end, and hold. 
  * It is extended beyond the NIST spec to handle various situations.
  *
@@ -1230,7 +1251,9 @@ uint8_t cm_feedhold_sequencing_callback()
 
 stat_t cm_queue_flush()
 {
-//+++++	xio_reset_usb_rx_buffers();	// flush serial queues - no way to do this yet on G2
+#ifdef __AVR
+	xio_reset_usb_rx_buffers();		// flush serial queues
+#endif
 	mp_flush_planner();				// flush planner queue
 
 	// Note: The following uses low-level mp calls for absolute position.
@@ -1296,7 +1319,7 @@ static void _exec_program_finalize(float *value, float *flag)
 	// execute program END resets
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
 		cm_reset_origin_offsets();					// G92.1 - we do G91.1 instead of G92.2
-		//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
+	//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
 		cm_set_coord_system(cm.coord_system);	// reset to default coordinate system
 		cm_select_plane(cm.select_plane);		// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
@@ -1304,7 +1327,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_spindle_control(SPINDLE_OFF);			// M5
 		cm_flood_coolant_control(false);			// M9
 		cm_set_inverse_feed_rate_mode(false);
-		//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
+	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	}
 
@@ -1472,7 +1495,6 @@ static const char PROGMEM *msg_frmo[] = { msg_g94, msg_g93 };
 #define msg_frmo NULL
 #define msg_am NULL
 
-
 #endif // __TEXT_MODE
 
 /***** AXIS HELPERS *****************************************************************
@@ -1551,16 +1573,11 @@ stat_t _get_msg_helper(cmdObj_t *cmd, const char *msg_array[], uint8_t value)
 	
 #ifdef __TEXT_MODE
 	#ifdef __AVR
-		char_t buf[CMD_SHARED_STRING_LEN];
+		char buf[CMD_SHARED_STRING_LEN];
 		strncpy_P(buf, (PGM_P)pgm_read_word(&msg_array[value*2]), CMD_SHARED_STRING_LEN);// hack alert: direct computation of index
-//		ritorno(cmd_copy_string(cmd, buf));
 		return(cmd_copy_string(cmd, buf));
 	#endif // __AVR
 	#ifdef __ARM
-//		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
-//		cmd_copy_string(cmd, (const char_t *)msg[value]);
-//		cmd_copy_string(cmd, &msg[value]);
-//		cmd_copy_string(cmd, (const char_t *)&msg[value]);
 		return(cmd_copy_string(cmd, (const char_t *)msg_array[value]));
 	#endif // __ARM
 #else // __TEXT_MODE
@@ -1590,22 +1607,6 @@ stat_t cm_get_plan(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_plan, cm_get
 stat_t cm_get_path(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
 stat_t cm_get_dist(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_frmo, cm_get_inverse_feed_rate_mode(ACTIVE_MODEL)));}
-
-/*
-stat_t cm_get_macs(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_cycs(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_mots(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_hold(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_home(cmdObj_t *cmd) { return(STAT_OK);}
-	
-stat_t cm_get_unit(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
-stat_t cm_get_coor(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_momo(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_plan(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_path(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_dist(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_frmo(cmdObj_t *cmd) { return(STAT_OK);}
-*/
 
 stat_t cm_get_toolv(cmdObj_t *cmd)
 {
@@ -1658,12 +1659,6 @@ stat_t cm_get_ofs(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-stat_t cm_run_home(cmdObj_t *cmd)
-{
-	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
-	return (STAT_OK);
-}
-
 /* 
  * AXIS GET AND SET FUNCTIONS
  *
@@ -1713,13 +1708,18 @@ stat_t cm_set_jrk(cmdObj_t *cmd)
  * Commands
  *
  * cm_run_qf() - flush planner queue 
- * get_gc()	- get gcode block
- * run_gc()	- launch the gcode parser on a block of gcode
+ * cm_run_home() - run homing sequence
  */
 
 stat_t cm_run_qf(cmdObj_t *cmd) 
 {
 	cm_request_queue_flush();
+	return (STAT_OK);
+}
+
+stat_t cm_run_home(cmdObj_t *cmd)
+{
+	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
 	return (STAT_OK);
 }
 
@@ -1838,7 +1838,6 @@ const char PROGMEM fmt_Xsv[] = "[%s%s] %s search velocity%16.3f%s/min\n";
 const char PROGMEM fmt_Xlv[] = "[%s%s] %s latch velocity%17.3f%s/min\n";
 const char PROGMEM fmt_Xlb[] = "[%s%s] %s latch backoff%18.3f%s\n";
 const char PROGMEM fmt_Xzb[] = "[%s%s] %s zero backoff%19.3f%s\n";
-
 const char PROGMEM fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
 const char PROGMEM fmt_cpos[] = "[%s%s] %s %s position%18.3f%s\n";
 
@@ -1890,10 +1889,8 @@ void cm_print_sv(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xsv);}
 void cm_print_lv(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xlv);}
 void cm_print_lb(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xlb);}
 void cm_print_zb(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xzb);}
-
 void cm_print_cofs(cmdObj_t *cmd) { _print_axis_coord_flt(cmd, fmt_cofs);}
 void cm_print_cpos(cmdObj_t *cmd) { _print_axis_coord_flt(cmd, fmt_cpos);}
-
 void cm_print_pos(cmdObj_t *cmd) { _print_pos(cmd, fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(cmdObj_t *cmd) { _print_pos(cmd, fmt_mpo, MILLIMETERS);}
 

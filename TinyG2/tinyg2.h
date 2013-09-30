@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		019.02	// Compiles now. Refactored text display strings - UNTESTED
+#define TINYG_FIRMWARE_BUILD   		019.03	// Cleanup and eliminated some warnings - UNTESTED
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
