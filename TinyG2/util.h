@@ -72,7 +72,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 
 //*** string utilities ***
 
-uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//#ifdef __ARM
+//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//#endif
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
@@ -83,7 +85,7 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length);
 uint32_t SysTickTimer_getValue(void);
 #endif
 
-/***** Math Support *****/
+//**** Math Support *****
 
 #ifndef square
 #define square(x) ((x)*(x))		/* UNSAFE */
@@ -100,9 +102,9 @@ uint32_t SysTickTimer_getValue(void);
 
 #ifndef min
 #define min(a,b) \
-   ({ __typeof__ (a) termC = (a); \
-      __typeof__ (b) termD = (b); \
-      termC<termD ? termC:termD; })
+({ __typeof__ (a) term1 = (a); \
+	__typeof__ (b) term2 = (b); \
+term1<term2 ? term1:term2; })
 #endif
 
 #ifndef avg
@@ -110,7 +112,15 @@ uint32_t SysTickTimer_getValue(void);
 #endif
 
 #ifndef EPSILON
-#define EPSILON		0.00001					// rounding error for floats
+#define EPSILON		0.00001					// allowable rounding error for floats
+//#define EPSILON 	0.000001				// allowable rounding error for floats
+#endif
+
+#ifndef fp_EQ
+#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
+#endif
+#ifndef fp_NE
+#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
@@ -123,12 +133,6 @@ uint32_t SysTickTimer_getValue(void);
 #endif
 #ifndef fp_NOT_ZERO
 #define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
-#endif
-#ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
-#endif
-#ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
 
 // Constants

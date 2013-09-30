@@ -357,25 +357,3 @@ static stat_t _system_assertions()
 	return (STAT_EAGAIN);
 }
 */
-
-//============================================================================
-//=========== MOVE TO xmega_tinyg.c ==========================================
-//============================================================================
-
-/**** Hardware Reset Handlers *************************************************
- * hardware_request_hard_reset()
- * hardware_hard_reset()		 - hard reset using watchdog timer
- * hardware_hard_reset_handler() - controller's rest handler
- */
-
-void hardware_request_hard_reset() { cs.hard_reset_requested = true; }
-
-void hardware_hard_reset(void)				// hard reset using... (TBD+++++)
-{}
-
-stat_t hardware_hard_reset_handler(void)
-{
-	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
-	hardware_hard_reset();					// hard reset - identical to hitting RESET button
-	return (STAT_EAGAIN);
-}

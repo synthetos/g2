@@ -683,19 +683,19 @@ static const char PROGMEM msg_baud3[] = "38400";
 static const char PROGMEM msg_baud4[] = "57600";
 static const char PROGMEM msg_baud5[] = "115200";
 static const char PROGMEM msg_baud6[] = "230400";
-static PGM_P const  PROGMEM msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
+static const char PROGMEM *msg_baud[] = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
 
 static stat_t set_baud(cmdObj_t *cmd)
 {
 	uint8_t baud = (uint8_t)cmd->value;
 	if ((baud < 1) || (baud > 6)) {
-		cmd_add_conditional_message_P(PSTR("*** WARNING *** Illegal baud rate specified"));
+		cmd_add_conditional_message_P((const PROGMEM char *)("*** WARNING *** Unsupported baud rate specified"));
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	cfg.usb_baud_rate = baud;
 	cfg.usb_baud_flag = true;
 	char_t message[CMD_MESSAGE_LEN]; 
-	sprintf_P(message, PSTR("*** NOTICE *** Restting baud rate to %S"),(PGM_P)pgm_read_word(&msg_baud[baud]));
+	sprintf_P(message, (const PROGMEM char *)("*** NOTICE *** Restting baud rate to %S"),(PGM_P)pgm_read_word(&msg_baud[baud]));
 	cmd_add_conditional_message(message);
 	return (STAT_OK);
 }
@@ -708,7 +708,6 @@ stat_t set_baud_callback(void)
 	return (STAT_OK);
 }
 */
-
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

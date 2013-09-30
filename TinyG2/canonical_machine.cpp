@@ -1063,7 +1063,6 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 		gpio_set_bit_on(FLOOD_COOLANT_BIT);
 	} else {
 		gpio_set_bit_off(FLOOD_COOLANT_BIT);
-		coolant_enable_pin.clear();
 		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
 		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}

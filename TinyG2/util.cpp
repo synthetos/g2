@@ -164,7 +164,8 @@ float max4(float x1, float x2, float x3, float x4)
  * escape_string() - add escapes to a string - currently for quotes only
  * read_float()    - read a float from a normalized char array
  */
-
+/*
+#ifdef __ARM
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 {
 	uint16_t index = 0;
@@ -173,6 +174,8 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 	} while (src[index++] != 0);
 	return dst;
 }
+#endif
+*/
 
 uint8_t isnumber(char_t c)
 {
@@ -251,7 +254,6 @@ uint32_t SysTickTimer_getValue()
 	return (SysTickTimer.getValue());
 }
 #endif
-
 
 #ifdef __cplusplus
 }
