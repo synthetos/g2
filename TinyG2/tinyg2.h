@@ -103,7 +103,7 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 // are distinct types and we want chars to behave as uint8's
 typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
 //typedef const char_t *char_P;		// ARM/C++ version requires this typedef instead
-typedef const char *char_P;		// ARM/C++ version requires this typedef instead
+typedef const char_t *char_P;			// ARM/C++ version requires this typedef instead
 
 // The table getters rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray

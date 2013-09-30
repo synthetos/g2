@@ -1364,12 +1364,12 @@ void cm_program_end()
 static const char  PROGMEM msg_units0[] = " in";	// used by generic print functions
 static const char  PROGMEM msg_units1[] = " mm";
 static const char  PROGMEM msg_units2[] = " deg";
-static PGM_P const PROGMEM msg_units[] = { msg_units0, msg_units1, msg_units2 };
+static (PGM_P) const PROGMEM msg_units[] = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
 
 static const char  PROGMEM msg_g20[] = "G20 - inches mode";
 static const char  PROGMEM msg_g21[] = "G21 - millimeter mode";
-static PGM_P const PROGMEM msg_unit[] = { msg_g20, msg_g21 };
+static (PGM_P) const PROGMEM msg_unit[] = { msg_g20, msg_g21 };
 
 static const char  PROGMEM msg_stat0[] = "Initializing";	// combined state (stat) uses this array
 static const char  PROGMEM msg_stat1[] = "Ready";
@@ -1544,7 +1544,8 @@ static int8_t _get_axis_type(const index_t index)
  * cm_print_corr()- print coordinate offsets with rotary units
  */
 
-stat_t _get_msg_helper(cmdObj_t *cmd, char_P msg, uint8_t value)
+//stat_t _get_msg_helper(cmdObj_t *cmd, char_P msg, uint8_t value)
+stat_t _get_msg_helper(cmdObj_t *cmd, const char *msg, uint8_t value)
 {
 	cmd->value = (float)value;
 	cmd->objtype = TYPE_INTEGER;
@@ -1556,7 +1557,10 @@ stat_t _get_msg_helper(cmdObj_t *cmd, char_P msg, uint8_t value)
 		ritorno(cmd_copy_string(cmd, buf));
 	#endif // __AVR
 	#ifdef __ARM
-		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
+//		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
+//		cmd_copy_string(cmd, (const char_t *)msg[value]);
+//		cmd_copy_string(cmd, msg[value]);
+		cmd_copy_string(cmd, (const char_t *)((char_t *)msg[value]));
 	#endif // __ARM
 #endif // __TEXT_MODE
 
@@ -1575,7 +1579,21 @@ stat_t cm_get_stat(cmdObj_t *cmd)
 
 //	strncpy_P(cmd->string_value,(PGM_P)pgm_read_word(&msg_stat[(uint8_t)cmd->value]),CMD_STRING_LEN);
 }
+stat_t cm_get_macs(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_macs, cm_get_machine_state()));}
+stat_t cm_get_cycs(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_cycs, cm_get_cycle_state()));}
+stat_t cm_get_mots(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_mots, cm_get_motion_state()));}
+stat_t cm_get_hold(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_hold, cm_get_hold_state()));}
+stat_t cm_get_home(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_home, cm_get_homing_state()));}
 
+stat_t cm_get_unit(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
+stat_t cm_get_coor(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_coor, cm_get_coord_system(ACTIVE_MODEL)));}
+stat_t cm_get_momo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_momo, cm_get_motion_mode(ACTIVE_MODEL)));}
+stat_t cm_get_plan(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_plan, cm_get_select_plane(ACTIVE_MODEL)));}
+stat_t cm_get_path(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
+stat_t cm_get_dist(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
+stat_t cm_get_frmo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_frmo, cm_get_inverse_feed_rate_mode(ACTIVE_MODEL)));}
+
+/*
 stat_t cm_get_macs(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_macs, cm_get_machine_state()));}
 stat_t cm_get_cycs(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_cycs, cm_get_cycle_state()));}
 stat_t cm_get_mots(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_mots, cm_get_motion_state()));}
@@ -1589,7 +1607,7 @@ stat_t cm_get_plan(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_plan
 stat_t cm_get_path(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_path, cm_get_path_control(ACTIVE_MODEL)));}
 stat_t cm_get_dist(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, (char_P)msg_frmo, cm_get_inverse_feed_rate_mode(ACTIVE_MODEL)));}
-
+*/
 stat_t cm_get_toolv(cmdObj_t *cmd)
 {
 	cmd->value = (float)cm_get_tool(ACTIVE_MODEL);

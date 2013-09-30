@@ -578,6 +578,17 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 	cmd->stringp = (char_t (*)[])dst;
 	return (STAT_OK);
 }
+/*
+stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
+{
+	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
+	char_t *dst = &cmdStr.string[cmdStr.wp];
+	strcpy(dst, src);						// copy string to current head position
+	cmdStr.wp += strlen(src)+1;				// advance head for next string
+	cmd->stringp = (char_t (*)[])dst;
+	return (STAT_OK);
+}
+*/
 /* UNUSED
 stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P)
 {
