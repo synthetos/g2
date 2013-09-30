@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		019.01	// Beginning major refactoring to align with Xmega build 392.79
+#define TINYG_FIRMWARE_BUILD   		019.02	// Compiles now. Refactored text display strings - UNTESTED
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
@@ -94,23 +94,22 @@ typedef const char PROGMEM *char_P;	// access to PROGMEM arrays of PROGMEM strin
 /************************************************************************************
  **** ARM Compatibility ************************************************************/
 #ifdef __ARM
-// Use macros to "neutralize" AVR's PROGMEM and other AVRisms.
-#define PROGMEM						// ignore PROGMEM declarations in ARM/GCC++
+// Use macros to fake out AVR's PROGMEM and other AVRisms.
+#define PROGMEM						// ignore __ATTR_PROGMEM__ attributes in ARM/GCC++
 #define PSTR (const char *)			// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
 #define PGM_P const char *			// USAGE: (PGM_P) -- must be used in a cast
 
 // In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
-// are distinct types and we want chars to behave as uint8's
+// are distinct types and we want chars to behave as uint8's. Except when they are destined
+// to be passed directly to a printf() family function, in which case why bother
 typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
-//typedef const char_t *char_P;		// ARM/C++ version requires this typedef instead
-typedef const char_t *char_P;			// ARM/C++ version requires this typedef instead
 
 // The table getters rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
+
 #define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in PGM
-//#define GET_UNITS(a) (PGM_P)msg_units[cm_get_units_mode(a)]
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
 
 /* The ARM stdio functions we are using still use char as input and output. The macros 
