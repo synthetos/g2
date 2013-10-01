@@ -478,8 +478,8 @@ enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
 	AXIS_INHIBITED,					// axis is computed but not activated
 	AXIS_RADIUS						// rotary axis calibrated to circumference
 };	// ordering must be preserved. See _cm_get_feed_time() and seek time()
-#define AXIS_MAX_LINEAR AXIS_INHIBITED
-#define AXIS_MAX_ROTARY AXIS_RADIUS
+#define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
+#define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
 
 /*****************************************************************************
  * FUNCTION PROTOTYPES
@@ -588,7 +588,7 @@ stat_t cm_select_tool(uint8_t tool);							// T parameter
 stat_t cm_change_tool(uint8_t tool);							// M6
 
 // canonical machine commands not called from gcode dispatcher
-void cm_message(char *message);									// msg to console (e.g. Gcode comments)
+void cm_message(char_t *message);									// msg to console (e.g. Gcode comments)
 
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 void cm_request_feedhold(void);

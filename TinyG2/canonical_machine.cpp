@@ -92,9 +92,10 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
-//#include "spindle.h"
+#include "spindle.h"
 #include "report.h"
-//#include "switch.h"
+//#include "gpio.h"
+#include "switch.h"
 #include "hardware.h"
 #include "util.h"
 //#include "xio/xio.h"			// for serial queue flush
@@ -554,13 +555,8 @@ stat_t _test_soft_limits()
  * Initialization and Termination (4.3.2) *
  ******************************************/
 /*
- * canonical_machine_init() 
- * canonical_machine_ahutdown() 
- *
- *	Config init cfg_init() must have been run beforehand. Many parameters 
- *	used by the canonical machine are actually set during cfg_init().
+ * canonical_machine_init() - Config init cfg_init() must have been run beforehand
  */
-
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
@@ -624,19 +620,21 @@ void canonical_machine_alarm(uint8_t value)
  **************************/
 /*
  * Functions that affect the Gcode model only:
- * cm_select_plane()			- G17,G18,G19 select axis plane
- * cm_set_units_mode()			- G20, G21
- * cm_set_distance_mode()		- G90, G91
- * cm_set_coord_offsets()		- G10 (delayed persistence)
+ *
+ *	cm_select_plane()			- G17,G18,G19 select axis plane
+ *	cm_set_units_mode()			- G20, G21
+ *	cm_set_distance_mode()		- G90, G91
+ *	cm_set_coord_offsets()		- G10 (delayed persistence)
  *
  * Functions that affect gcode model and are queued to planner
- * cm_set_coord_system()		- G54-G59
- * cm_set_absolute_origin()		- G28.3 - model, planner and queue to runtime
- * cm_set_axis_origin()			- set the origin of a single axis - model and planner
- * cm_set_origin_offsets()		- G92
- * cm_reset_origin_offsets()	- G92.1
- * cm_suspend_origin_offsets()	- G92.2
- * cm_resume_origin_offsets()	- G92.3
+ *
+ *	cm_set_coord_system()		- G54-G59
+ *	cm_set_absolute_origin()	- G28.3 - model, planner and queue to runtime
+ *	cm_set_axis_origin()		- set the origin of a single axis - model and planner
+ *	cm_set_origin_offsets()		- G92
+ *	cm_reset_origin_offsets()	- G92.1
+ *	cm_suspend_origin_offsets()	- G92.2
+ *	cm_resume_origin_offsets()	- G92.3
  */
 
 /*
@@ -937,11 +935,13 @@ stat_t cm_set_path_control(uint8_t mode)
  * Machining Functions (4.3.6) *
  *******************************/
 /* 
- * cm_arc_feed() - see arc.c
+ * cm_arc_feed()
+ */
+// see plan_arc.cpp
+ 
+/*
  * cm_dwell() - G4, P parameter (seconds)
- * cm_straight_feed() - G1
- */ 
-
+ */
 stat_t cm_dwell(float seconds)
 {
 	gm.parameter = seconds;
@@ -949,6 +949,9 @@ stat_t cm_dwell(float seconds)
 	return (STAT_OK);
 }
 
+/*
+ * cm_straight_feed() - G1
+ */
 stat_t cm_straight_feed(float target[], float flags[])
 {
 	gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
@@ -966,6 +969,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 	cm_set_model_target(target, flags);
 	if (vector_equal(gm.target, gmx.position)) { return (STAT_OK); }
+//	ritorno(_test_soft_limits());
 
 	cm_set_work_offsets(&gm);					// capture the fully resolved offsets to the state
 	cm_set_move_times(&gm);						// set move time and minimum time in the state
@@ -984,13 +988,15 @@ stat_t cm_straight_feed(float target[], float flags[])
  * Tool Functions (4.3.8) *
  **************************/
 /*
- * cm_select_tool() - T parameter
- * cm_change_tool() - M6 (This might become a complete tool change cycle)
+ * cm_select_tool()		- T parameter
+ * _exec_select_tool()	- execution callback
+ *
+ * cm_change_tool()		- M6 (This might become a complete tool change cycle)
+ * _exec_change_tool()	- execution callback
  *
  * Note: These functions don't actually do anything for now, and there's a bug 
  *		 where T and M in different blocks don;t work correctly
  */
-
 stat_t cm_select_tool(uint8_t tool_select)
 {
 	float value[AXES] = { (float)tool_select,0,0,0,0,0 };
@@ -1154,10 +1160,9 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
  * cm_message() - send a message to the console (or JSON)
  */
 
-//void cm_message(const char_t *message)
-void cm_message(char *message)
+void cm_message(char_t *message)
 {
-	cmd_add_string((const char_t *)"msg", (char_t *)message);	// adds the message to the response object
+	cmd_add_string((const char_t *)"msg", message);	// add message to the response object
 }
 
 /******************************
@@ -1244,7 +1249,9 @@ uint8_t cm_feedhold_sequencing_callback()
 
 stat_t cm_queue_flush()
 {
-//+++++	xio_reset_usb_rx_buffers();	// flush serial queues - no way to do this yet on G2
+#ifdef __AVR
+	xio_reset_usb_rx_buffers();		// flush serial queues
+#endif
 	mp_flush_planner();				// flush planner queue
 
 	// Note: The following uses low-level mp calls for absolute position.
@@ -1310,15 +1317,15 @@ static void _exec_program_finalize(float *value, float *flag)
 	// execute program END resets
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
 		cm_reset_origin_offsets();					// G92.1 - we do G91.1 instead of G92.2
-		//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
-		cm_set_coord_system(cm.coord_system);	// reset to default coordinate system
-		cm_select_plane(cm.select_plane);		// reset to default arc plane
+	//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
+		cm_set_coord_system(cm.coord_system);		// reset to default coordinate system
+		cm_select_plane(cm.select_plane);			// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
-		cm_set_units_mode(cm.units_mode);		// reset to default units mode
+		cm_set_units_mode(cm.units_mode);			// reset to default units mode
 		cm_spindle_control(SPINDLE_OFF);			// M5
 		cm_flood_coolant_control(false);			// M9
 		cm_set_inverse_feed_rate_mode(false);
-		//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
+	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);// NIST specifies G1, but we cancel motion mode. Safer.
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	}
 
@@ -1361,9 +1368,9 @@ void cm_program_end()
 	mp_queue_command(_exec_program_finalize, value, value);
 }
 
-
-/***** END OF CANONICAL MACHINE FUNCTIONS *****/
-
+/**************************************
+ * END OF CANONICAL MACHINE FUNCTIONS *
+ **************************************/
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
@@ -1403,7 +1410,7 @@ static const char PROGMEM msg_stat8[] = "Cycle";
 static const char PROGMEM msg_stat9[] = "Homing";
 static const char PROGMEM msg_stat10[] = "Jog";
 static const char PROGMEM *msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_stat3, msg_stat4, msg_stat5,
-msg_stat6, msg_stat7, msg_stat8, msg_stat9, msg_stat10};
+										  msg_stat6, msg_stat7, msg_stat8, msg_stat9, msg_stat10};
 
 static const char PROGMEM msg_macs0[] = "Initializing";
 static const char PROGMEM msg_macs1[] = "Reset";
@@ -1562,28 +1569,8 @@ stat_t _get_msg_helper(cmdObj_t *cmd, const char *msg_array[], uint8_t value)
 {
 	cmd->value = (float)value;
 	cmd->objtype = TYPE_INTEGER;
-
-#ifdef __TEXT_MODE
-  #ifdef __AVR
-	char buf[CMD_SHARED_STRING_LEN];
-	strncpy_P(buf, (PGM_P)pgm_read_word(&msg_array[value*2]), CMD_SHARED_STRING_LEN);// hack alert: direct computation of index
-	return(cmd_copy_string(cmd, buf));
-  #endif // __AVR
-  #ifdef __ARM
-	return(cmd_copy_string(cmd, (const char_t *)msg_array[value]));
-  #endif // __ARM
-#else // __TEXT_MODE
-	return (STAT_OK);
-#endif // __TEXT_MODE
+	return(cmd_copy_string(cmd, (const char_t *)GET_TEXT_ITEM(msg_array, value)));
 }
-
-// Example of cm_get_stat() w/o calling the helper routine - See 331.09 for original routines
-//	cmd->value = cm_get_machine_state();
-//	cmd->objtype = TYPE_INTEGER;
-//	ritorno(cmd_copy_string_P(cmd, (PGM_P)pgm_read_word(&msg_stat[(uint8_t)cmd->value]),CMD_STRING_LEN));
-//	return (STAT_OK);
-
-//	strncpy_P(cmd->string_value,(PGM_P)pgm_read_word(&msg_stat[(uint8_t)cmd->value]),CMD_STRING_LEN);
 
 stat_t cm_get_stat(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_stat, cm_get_combined_state()));}
 stat_t cm_get_macs(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_macs, cm_get_machine_state()));}
@@ -1670,9 +1657,9 @@ stat_t cm_get_am(cmdObj_t *cmd)
 stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 {
 	if (_get_axis_type(cmd->index) == 0) {	// linear
-		if (cmd->value > AXIS_MAX_LINEAR) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+		if (cmd->value > AXIS_MODE_MAX_LINEAR) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	} else {
-		if (cmd->value > AXIS_MAX_ROTARY) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+		if (cmd->value > AXIS_MODE_MAX_ROTARY) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	}
 	set_ui8(cmd);
 	return(STAT_OK);
@@ -1899,7 +1886,8 @@ void cm_print_mpo(cmdObj_t *cmd) { _print_pos(cmd, fmt_mpo, MILLIMETERS);}
 
 void cm_print_am(cmdObj_t *cmd)	// print axis mode with enumeration string
 {
-	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));			
+	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, 
+					  GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));			
 }
 
 #endif // __TEXT_MODE

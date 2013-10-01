@@ -70,8 +70,9 @@ void tg_setup(void);
 #undef __ARM
 #define __ARM
 
-/************************************************************************************
- **** AVR Compatibility *************************************************************/
+/*********************
+ * AVR Compatibility *
+ *********************/
 #ifdef __AVR
 #include <avr/pgmspace.h>			// defines PROGMEM, PSTR, PGM_P (must be first)
 
@@ -83,22 +84,28 @@ typedef char char_t;				// see ARM for why this is here
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)	// get float value from cfgArray
 
 // get text from an array of strings in PGM and convert to RAM string
-#define GET_TEXT_ITEM(b,a) strcpy_P(status_message,(const char *)pgm_read_word(&b[a]))
+#define GET_TEXT_ITEM(b,a) strcpy_P(shared_buf,(PGM_P)pgm_read_word(&b[a]))
 
 // get units from array of strings in PGM and convert to RAM string
-#define GET_UNITS(a) 	   strcpy_P(status_message,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
+#define GET_UNITS(a) 	   strcpy_P(shared_buf,(PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
 
 #endif // __AVR
 
-/************************************************************************************
- **** ARM Compatibility ************************************************************/
+/*********************
+ * ARM Compatibility *
+ *********************/
 #ifdef __ARM
 
 // Ignore <avr/pgmspace.h>'s  __ATTR_PROGMEM__ attributes in ARM/GCC++
 // Also, do not use  or PGM_P. Instead use:
 //		PSTR is		(const PROGMEM char *)
 //		PGM_P is	  const char *
-#define PROGMEM
+//#define PROGMEM
+
+// Use macros to fake out AVR's PROGMEM and other AVRisms.
+#define PROGMEM						// ignore PROGMEM declarations in ARM/GCC++
+#define PSTR (const char *)			// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
+#define PGM_P const char *			// USAGE: (PGM_P) -- must be used in a cast
 
 // In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
 // are distinct types and we want chars to behave as uint8's. Except when they are destined
@@ -185,23 +192,25 @@ typedef uint16_t magic_t;		// magic number size
 #define PWM_1	0
 #define PWM_2	1
 
-/* 
+/************************************************************************************ 
  * STATUS CODES
  *
  * The first code range (0-19) is aligned with the XIO codes and must be so.
  * Please don't change them without checking the corresponding values in xio.h
  *
  * Any changes to the ranges also require changing the message strings and 
- * string array in controller.c
+ * string array in report.c
  *
- * ritorno is a handy way to provide exception returns
- * It returns only if an error occurred. (ritorno is Italian for return)
+ * ritorno is a handy way to provide exception returns 
+ * It returns only if an error occurred. (ritorno is Italian for return) 
  */
 typedef uint8_t stat_t;
 #define STATUS_MESSAGE_LEN 48			// status message string storage allocation
 
-extern stat_t status_code;				// declared in main.cpp
-extern char status_message[];			// declared in main.cpp
+extern stat_t status_code;				// allocated in main.c
+extern char shared_buf[];				// allocated in main.c
+
+char *get_status_message(stat_t status);
 
 #define ritorno(a) if((status_code=a) != STAT_OK) { return(status_code); }
 
