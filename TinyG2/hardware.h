@@ -28,6 +28,10 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
+////////////////////////////
+/////// ARM VERSION ////////
+////////////////////////////
+
 #include "motatePins.h"
 #include "motateTimers.h" // for Motate::timer_number
 
@@ -70,6 +74,13 @@ extern "C"{
  *	 4	EXEC software generated interrupt (STIR / SGI)
  *	 5	Serial write character interrupt  
  */
+
+/**** Stepper DDA and dwell timer settings ****/
+
+//#define FREQUENCY_DDA		50000UL
+#define FREQUENCY_DDA		100000UL
+#define FREQUENCY_DWELL		1000UL
+#define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
 
 /**** Motate Definitions ****/
 
