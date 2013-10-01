@@ -1,7 +1,7 @@
 /* stepper.h - stepper motor interface
  * This file is part of TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -204,20 +204,11 @@ enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_EXEC		// staging buffer is being loaded
 };
 
-/* Timer settings for stepper module. See hardware.h for overall timer assignments */
-
-//#define FREQUENCY_DDA				50000UL
-#define FREQUENCY_DDA				100000UL
-#define FREQUENCY_DWELL				1000UL
-#define FREQUENCY_SGI				200000UL	// 200,000 Hz means software interrupts will fire 5 uSec after being called
-//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)		// handy macro
-
 // Stepper power management settings
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define IDLE_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
 #define IDLE_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
 #define IDLE_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
-//#define IDLE_TIMEOUT_SECONDS_MAX	4294967UL	// (4294967295/1000) -- for conversion to uint32_t
 
 // DDA substepping
 // 	DDA_SUBSTEPS sets the amount of fractional precision for substepping. Substepping 
@@ -232,6 +223,46 @@ enum prepBufferState {
 //	if the new accumulator value is going to be much less than the old counter you must 
 //	reset it or risk motor stalls. 
 #define ACCUMULATOR_RESET_FACTOR 2	// amount counter range can safely change
+
+/* Platform specific */
+
+#ifdef __AVR
+
+#define F_DDA 				(float)50000	// DDA frequency in hz.
+#define F_DWELL				(float)10000	// Dwell count frequency in hz.
+#define SWI_PERIOD 			100				// cycles you have to shut off SW interrupt
+#define TIMER_PERIOD_MIN	(20)			// used to trap bad timer loads
+
+/* Xmega Timer setup */
+#define STEP_TIMER_TYPE		TC0_struct 		// stepper subsubstem uses all the TC0's
+#define STEP_TIMER_DISABLE 	0				// turn timer off (clock = 0 Hz)
+#define STEP_TIMER_ENABLE	1				// turn timer clock on (F_CPU = 32 Mhz)
+#define STEP_TIMER_WGMODE	0				// normal mode (count to TOP and rollover)
+
+#define TIMER_DDA_ISR_vect	TCC0_OVF_vect	// must agree with assignment in system.h
+#define TIMER_DWELL_ISR_vect TCD0_OVF_vect	// must agree with assignment in system.h
+#define TIMER_LOAD_ISR_vect	TCE0_OVF_vect	// must agree with assignment in system.h
+#define TIMER_EXEC_ISR_vect	TCF0_OVF_vect	// must agree with assignment in system.h
+
+#define TIMER_OVFINTLVL_HI	3				// timer interrupt level (3=hi)
+#define	TIMER_OVFINTLVL_MED 2;				// timer interrupt level (2=med)
+#define	TIMER_OVFINTLVL_LO  1;				// timer interrupt level (1=lo)
+
+#define TIMER_DDA_INTLVL 	TIMER_OVFINTLVL_HI
+#define TIMER_DWELL_INTLVL	TIMER_OVFINTLVL_HI
+#define TIMER_LOAD_INTLVL	TIMER_OVFINTLVL_HI
+#define TIMER_EXEC_INTLVL	TIMER_OVFINTLVL_LO
+#endif // __AVR
+
+#ifdef __ARM
+
+//#define FREQUENCY_DDA		50000UL
+#define FREQUENCY_DDA		100000UL
+#define FREQUENCY_DWELL		1000UL
+#define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
+//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)		// handy macro
+
+#endif // __ARM
 
 /*
  * Stepper structures
@@ -360,36 +391,4 @@ stat_t st_set_me(cmdObj_t *cmd);
 
 #endif // __TEXT_MODE
 
-/*
-void st_set_motor_idle_timeout(float seconds);
-void st_do_motor_idle_timeout(void);
-
-void st_energize_motor(const uint8_t motor);
-void st_deenergize_motor(const uint8_t motor);
-void st_set_motor_power(const uint8_t motor);
-
-void st_energize_motors(void);
-void st_deenergize_motors(void);
-void st_idle_motors(void);
-
-stat_t st_motor_power_callback(void);
-*/
-/*
-//uint8_t st_isbusy(void);			// return TRUE is any axis is running (F=idle)
-void st_set_polarity(const uint8_t motor, const uint8_t polarity);
-void st_set_microsteps(const uint8_t motor, const uint8_t microstep_mode);
-void st_set_power_mode(const uint8_t motor, const uint8_t power_mode);
-
-uint8_t st_test_prep_state(void);
-void st_request_exec_move(void);
-void st_prep_null(void);
-void st_prep_dwell(float microseconds);
-uint8_t st_prep_line(float steps[], float microseconds);
-
-uint16_t st_get_stepper_run_magic(void);
-uint16_t st_get_stepper_prep_magic(void);
-
-//magic_t st_get_st_magic(void);
-//magic_t st_get_sps_magic(void);
-*/
 #endif	// End of include guard: STEPPER_H_ONCE
