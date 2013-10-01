@@ -103,7 +103,6 @@
 extern "C"{
 #endif
 
-
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
@@ -136,8 +135,10 @@ static int8_t _get_axis_type(const index_t index);
  **** CODE *************************************************************************
  ***********************************************************************************/
 
-/**** Internal getters and setters ****
- *
+/********************************
+ * Internal getters and setters *
+ ********************************/
+/*
  * Canonical Machine State functions
  *
  * cm_get_combined_state() - combines raw states into something a user might want to see
@@ -178,9 +179,9 @@ void cm_set_motion_state(uint8_t motion_state)
 	}
 }
 
-/* 
- * Model State Getters and Setters
- */
+/***********************************
+ * Model State Getters and Setters *
+ ***********************************/
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state) { return gcode_state->linenum;}
 uint8_t cm_get_motion_mode(GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
@@ -544,17 +545,15 @@ stat_t _test_soft_limits()
 
 
 /*************************************************************************
- *
  * CANONICAL MACHINING FUNCTIONS
- *
  *	Values are passed in pre-unit_converted state (from gn structure)
  *	All operations occur on gm (current model state)
- *
  ************************************************************************/
 
-/* 
- * Initialization and Termination (4.3.2)
- *
+/****************************************** 
+ * Initialization and Termination (4.3.2) *
+ ******************************************/
+/*
  * canonical_machine_init() 
  * canonical_machine_ahutdown() 
  *
@@ -620,9 +619,10 @@ void canonical_machine_alarm(uint8_t value)
 	cm.machine_state = MACHINE_ALARM;
 }
 
+/**************************
+ * Representation (4.3.3) *
+ **************************/
 /*
- * Representation (4.3.3)
- *
  * Functions that affect the Gcode model only:
  * cm_select_plane()			- G17,G18,G19 select axis plane
  * cm_set_units_mode()			- G20, G21
@@ -727,7 +727,6 @@ static void _exec_offset(float *value, float *flag)
 //	cm_set_work_offsets(RUNTIME);
 }
 
-
 /*
  * cm_set_absolute_origin() - G28.3 - model, planner and queue to runtime
  * _exec_absolute_origin()  - callback from planner
@@ -830,9 +829,10 @@ stat_t cm_resume_origin_offsets()
 	return (STAT_OK);
 }
 
-/* 
- * Free Space Motion (4.3.4)
- *
+/***************************** 
+ * Free Space Motion (4.3.4) *
+ *****************************/
+/*
  * cm_straight_traverse() - G0 linear rapid
  */
 
@@ -888,10 +888,9 @@ stat_t cm_goto_g30_position(float target[], float flags[])
 	return(cm_straight_traverse(gmx.g30_position, f));// execute actual stored move
 }
 
-/* 
- * Machining Attributes (4.3.5)
- */ 
-
+/********************************
+ * Machining Attributes (4.3.5) *
+ ********************************/ 
 /*
  * cm_set_feed_rate() - F parameter
  *
@@ -934,9 +933,10 @@ stat_t cm_set_path_control(uint8_t mode)
 	return (STAT_OK);
 }
 
+/******************************* 
+ * Machining Functions (4.3.6) *
+ *******************************/
 /* 
- * Machining Functions (4.3.6)
- *
  * cm_arc_feed() - see arc.c
  * cm_dwell() - G4, P parameter (seconds)
  * cm_straight_feed() - G1
@@ -975,14 +975,15 @@ stat_t cm_straight_feed(float target[], float flags[])
 	return (status);
 }
 
-/* 
- * Spindle Functions (4.3.7)
- */
+/***************************** 
+ * Spindle Functions (4.3.7) *
+ *****************************/
 // see spindle.c, spindle.h
 
+/**************************
+ * Tool Functions (4.3.8) *
+ **************************/
 /*
- * Tool Functions (4.3.8)
- *
  * cm_select_tool() - T parameter
  * cm_change_tool() - M6 (This might become a complete tool change cycle)
  *
@@ -1014,9 +1015,10 @@ static void _exec_change_tool(float *value, float *flag)
 	gm.tool = (uint8_t)value[0];
 }
 
-/* 
- * Miscellaneous Functions (4.3.9)
- *
+/*********************************** 
+ * Miscellaneous Functions (4.3.9) *
+ ***********************************/
+/*
  * cm_mist_coolant_control() - M7
  * cm_flood_coolant_control() - M8, M9
  */
@@ -1029,14 +1031,17 @@ stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 }
 static void _exec_mist_coolant_control(float *value, float *flag)
 {
-	gm.mist_coolant = (uint8_t)value[0];
-	if (gm.mist_coolant == true) {
-//+++++	gpio_set_bit_on(MIST_COOLANT_BIT);
-		coolant_enable_pin.set();
-	} else {
-//+++++	gpio_set_bit_off(MIST_COOLANT_BIT);
-		coolant_enable_pin.clear();
-	}
+#ifdef __AVR
+	if (gm.mist_coolant == true)
+		gpio_set_bit_on(MIST_COOLANT_BIT);	// if
+	gpio_set_bit_off(MIST_COOLANT_BIT);		// else
+#endif // __AVR
+
+#ifdef __ARM
+	if (gm.mist_coolant == true)
+		coolant_enable_pin.set();	// if
+	coolant_enable_pin.clear();		// else
+#endif // __ARM
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_coolant)
@@ -1048,7 +1053,6 @@ stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 static void _exec_flood_coolant_control(float *value, float *flag)
 {
 	gm.flood_coolant = (uint8_t)value[0];
-<<<<<<< HEAD
 	
 #ifdef __AVR
 	if (gm.flood_coolant == true) {
@@ -1061,18 +1065,14 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 #endif // __AVR
 
 #ifdef __ARM
-=======
->>>>>>> 59fe900... 019.03 Cleanup and eliminated some warnings - UNTESTED
 	if (gm.flood_coolant == true) {
-//+++++	gpio_set_bit_on(FLOOD_COOLANT_BIT);
 		coolant_enable_pin.set();
 	} else {
-//+++++	gpio_set_bit_off(FLOOD_COOLANT_BIT);
 		coolant_enable_pin.clear();
-//		float vect[AXES] = { 0,0,0,0,0,0 };
 		float vect[] = { 0,0,0,0,0,0 };
 		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}
+#endif // __ARM
 }
 
 /*
@@ -1157,14 +1157,13 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
 //void cm_message(const char_t *message)
 void cm_message(char *message)
 {
-//	cmd_add_string("msg", message);		// adds the message to the response object
-//	cmd_add_string("msg", (const char *)message);		// adds the message to the response object
-//	cmd_add_conditional_message((const char *)message);	// conditionally adds the message to the response object
+	cmd_add_string((const char_t *)"msg", (char_t *)message);	// adds the message to the response object
 }
 
+/******************************
+ * Program Functions (4.3.10) *
+ ******************************/
 /*
- * Program Functions (4.3.10)
- *
  * This group implements stop, start, end, and hold. 
  * It is extended beyond the NIST spec to handle various situations.
  *
@@ -1563,21 +1562,16 @@ stat_t _get_msg_helper(cmdObj_t *cmd, const char *msg_array[], uint8_t value)
 {
 	cmd->value = (float)value;
 	cmd->objtype = TYPE_INTEGER;
-	
+
 #ifdef __TEXT_MODE
-	#ifdef __AVR
-		char_t buf[CMD_SHARED_STRING_LEN];
-		strncpy_P(buf, (PGM_P)pgm_read_word(&msg_array[value*2]), CMD_SHARED_STRING_LEN);// hack alert: direct computation of index
-//		ritorno(cmd_copy_string(cmd, buf));
-		return(cmd_copy_string(cmd, buf));
-	#endif // __AVR
-	#ifdef __ARM
-//		ritorno(cmd_copy_string(cmd, (const char_t *)msg[value]));
-//		cmd_copy_string(cmd, (const char_t *)msg[value]);
-//		cmd_copy_string(cmd, &msg[value]);
-//		cmd_copy_string(cmd, (const char_t *)&msg[value]);
-		return(cmd_copy_string(cmd, (const char_t *)msg_array[value]));
-	#endif // __ARM
+  #ifdef __AVR
+	char buf[CMD_SHARED_STRING_LEN];
+	strncpy_P(buf, (PGM_P)pgm_read_word(&msg_array[value*2]), CMD_SHARED_STRING_LEN);// hack alert: direct computation of index
+	return(cmd_copy_string(cmd, buf));
+  #endif // __AVR
+  #ifdef __ARM
+	return(cmd_copy_string(cmd, (const char_t *)msg_array[value]));
+  #endif // __ARM
 #else // __TEXT_MODE
 	return (STAT_OK);
 #endif // __TEXT_MODE
@@ -1605,22 +1599,6 @@ stat_t cm_get_plan(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_plan, cm_get
 stat_t cm_get_path(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
 stat_t cm_get_dist(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_frmo, cm_get_inverse_feed_rate_mode(ACTIVE_MODEL)));}
-
-/*
-stat_t cm_get_macs(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_cycs(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_mots(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_hold(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_home(cmdObj_t *cmd) { return(STAT_OK);}
-	
-stat_t cm_get_unit(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
-stat_t cm_get_coor(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_momo(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_plan(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_path(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_dist(cmdObj_t *cmd) { return(STAT_OK);}
-stat_t cm_get_frmo(cmdObj_t *cmd) { return(STAT_OK);}
-*/
 
 stat_t cm_get_toolv(cmdObj_t *cmd)
 {
@@ -1673,12 +1651,6 @@ stat_t cm_get_ofs(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
-stat_t cm_run_home(cmdObj_t *cmd)
-{
-	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
-	return (STAT_OK);
-}
-
 /* 
  * AXIS GET AND SET FUNCTIONS
  *
@@ -1692,12 +1664,19 @@ stat_t cm_run_home(cmdObj_t *cmd)
 stat_t cm_get_am(cmdObj_t *cmd)
 {
 	get_ui8(cmd);
-//	return(_get_msg_helper(cmd, (char_P)msg_am, cmd->value)); // see 331.09 for old method
-	return(_get_msg_helper(cmd, msg_am, cmd->value)); // see 331.09 for old method
+	return(_get_msg_helper(cmd, msg_am, cmd->value));
 }
 
 stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 {
+	if (_get_axis_type(cmd->index) == 0) {	// linear
+		if (cmd->value > AXIS_MAX_LINEAR) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	} else {
+		if (cmd->value > AXIS_MAX_ROTARY) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	}
+	set_ui8(cmd);
+	return(STAT_OK);
+/*
 	char_t linear_axes[] = {"xyz"};
 	if (strchr(linear_axes, cmd->token[0]) != NULL) { // true if it's a linear axis
 		if (cmd->value > AXIS_MAX_LINEAR) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
@@ -1706,6 +1685,7 @@ stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 	}
 	set_ui8(cmd);
 	return(STAT_OK);
+*/
 }
 
 stat_t cm_get_jrk(cmdObj_t *cmd)
@@ -1728,13 +1708,18 @@ stat_t cm_set_jrk(cmdObj_t *cmd)
  * Commands
  *
  * cm_run_qf() - flush planner queue 
- * get_gc()	- get gcode block
- * run_gc()	- launch the gcode parser on a block of gcode
+ * cm_run_home() - run homing sequence
  */
 
 stat_t cm_run_qf(cmdObj_t *cmd) 
 {
 	cm_request_queue_flush();
+	return (STAT_OK);
+}
+
+stat_t cm_run_home(cmdObj_t *cmd)
+{
+	if (fp_TRUE(cmd->value)) { cm_homing_cycle_start();}
 	return (STAT_OK);
 }
 
