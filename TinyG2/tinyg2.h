@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		019.04	// Change out PSTRs and other string stuff - UNTESTED
+#define TINYG_FIRMWARE_BUILD   		019.05	// Status codes relocated, removed PGM_P references
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
@@ -74,20 +74,21 @@ void tg_setup(void);
  * AVR Compatibility *
  *********************/
 #ifdef __AVR
-#include <avr/pgmspace.h>			// defines PROGMEM, PSTR, PGM_P (must be first)
 
-typedef char char_t;				// see ARM for why this is here
+#include <avr/pgmspace.h>		// defines PROGMEM and PSTR
 
-// The table getters rely on cmd->index having been set
+typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
+
+																	// gets rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[cmd->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[cmd->index].a)	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)	// get float value from cfgArray
 
 // get text from an array of strings in PGM and convert to RAM string
-#define GET_TEXT_ITEM(b,a) strcpy_P(shared_buf,(PGM_P)pgm_read_word(&b[a]))
+#define GET_TEXT_ITEM(b,a) strcpy_P(shared_buf,(const char *)pgm_read_word(&b[a])) 
 
 // get units from array of strings in PGM and convert to RAM string
-#define GET_UNITS(a) 	   strcpy_P(shared_buf,(PGM_P)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
+#define GET_UNITS(a) 	   strcpy_P(shared_buf,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
 
 #endif // __AVR
 
@@ -95,29 +96,20 @@ typedef char char_t;				// see ARM for why this is here
  * ARM Compatibility *
  *********************/
 #ifdef __ARM
+								// Use macros to fake out AVR's PROGMEM and other AVRisms.
+#define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
+#define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
 
-// Ignore <avr/pgmspace.h>'s  __ATTR_PROGMEM__ attributes in ARM/GCC++
-// Also, do not use  or PGM_P. Instead use:
-//		PSTR is		(const PROGMEM char *)
-//		PGM_P is	  const char *
-//#define PROGMEM
+typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t 
+								// because in C++ uint8_t and char are distinct types and 
+								// we want chars to behave as uint8's
 
-// Use macros to fake out AVR's PROGMEM and other AVRisms.
-#define PROGMEM						// ignore PROGMEM declarations in ARM/GCC++
-#define PSTR (const char *)			// AVR macro is:  PSTR(s) ((const PROGMEM char *)(s))
-#define PGM_P const char *			// USAGE: (PGM_P) -- must be used in a cast
-
-// In the ARM/GCC++ version char_t is typedef'd to uint8_t because in C++ uint8_t and char
-// are distinct types and we want chars to behave as uint8's. Except when they are destined
-// to be passed directly to a printf() family function, in which case why bother
-typedef uint8_t char_t;				// C++ version uses uint8_t as char_t
-
-// The table getters rely on cmd->index having been set
+													// gets rely on cmd->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
 
-#define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in PGM
+#define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in flash
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
 
 /* The ARM stdio functions we are using still use char as input and output. The macros 

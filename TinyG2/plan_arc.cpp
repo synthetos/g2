@@ -50,34 +50,34 @@ static float _get_theta(const float x, const float y);
  *
  *  Parts of this routine were originally sourced from the grbl project.
  */
-stat_t cm_arc(const GCodeState_t *gm, 		// gcode model state
-			  const float i,
-			  const float j,
-			  const float k,
-			  const float theta, 			// starting angle
-			  const float radius, 			// radius of the circle in mm
-			  const float angular_travel,	// radians along arc (+CW, -CCW)
-			  const float linear_travel, 
-			  const uint8_t axis_1, 		// circle plane in tool space
-			  const uint8_t axis_2,  		// circle plane in tool space
-			  const uint8_t axis_linear)	// linear travel if helical motion
+stat_t cm_arc(const GCodeState_t *gm_arc, 	// gcode model state
+const float i,
+const float j,
+const float k,
+const float theta, 			// starting angle
+const float radius, 			// radius of the circle in mm
+const float angular_travel,	// radians along arc (+CW, -CCW)
+const float linear_travel,
+const uint8_t axis_1, 		// circle plane in tool space
+const uint8_t axis_2,  		// circle plane in tool space
+const uint8_t axis_linear)	// linear travel if helical motion
 {
 	if (ar.run_state != MOVE_STATE_OFF) { return (STAT_INTERNAL_ERROR); } // (not supposed to fail)
 
 	ar.gm.linenum = cm_get_linenum(MODEL);
 
-// length is the total mm of travel of the helix (or just arc)
-	ar.length = hypot(angular_travel * radius, fabs(linear_travel));	
+	// length is the total mm of travel of the helix (or just arc)
+	ar.length = hypot(angular_travel * radius, fabs(linear_travel));
 	if (ar.length < cm.arc_segment_len) return (STAT_MINIMUM_LENGTH_MOVE_ERROR); // too short to draw
 
-// load the arc controller singleton
-	memcpy(&ar.gm, gm, sizeof(GCodeState_t));		// get the entire GCode context - some will be overwritten to run segments
+	// load the arc controller singleton
+	memcpy(&ar.gm, gm_arc, sizeof(GCodeState_t));	// get the entire GCode context - some will be overwritten to run segments
 	copy_axis_vector(ar.position, gmx.position);	// set initial arc position from gcode model
 
-	ar.endpoint[axis_1] = gm->target[0];			// save the arc endpoint
-	ar.endpoint[axis_2] = gm->target[1];
-	ar.endpoint[axis_linear] = gm->target[2];
-	ar.arc_time = gm->move_time;
+	ar.endpoint[axis_1] = gm_arc->target[0];			// save the arc endpoint
+	ar.endpoint[axis_2] = gm_arc->target[1];
+	ar.endpoint[axis_linear] = gm_arc->target[2];
+	ar.arc_time = gm_arc->move_time;
 	ar.theta = theta;
 	ar.radius = radius;
 	ar.axis_1 = axis_1;
@@ -86,13 +86,13 @@ stat_t cm_arc(const GCodeState_t *gm, 		// gcode model state
 	ar.angular_travel = angular_travel;
 	ar.linear_travel = linear_travel;
 	
-// Find the minimum number of segments that meets these constraints...
+	// Find the minimum number of segments that meets these constraints...
 	float segments_required_for_chordal_accuracy = ar.length / sqrt(4*cm.chordal_tolerance * (2 * radius - cm.chordal_tolerance));
 	float segments_required_for_minimum_distance = ar.length / cm.arc_segment_len;
 	float segments_required_for_minimum_time = ar.arc_time * MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC;
 	ar.segments = floor(min3(segments_required_for_chordal_accuracy,
-							 segments_required_for_minimum_distance,
-							 segments_required_for_minimum_time));
+	segments_required_for_minimum_distance,
+	segments_required_for_minimum_time));
 
 	ar.segments = max(ar.segments,1);				//...but is at least 1 segment
 	ar.gm.move_time = ar.arc_time / ar.segments;	// gcode state struct gets segment_time, not arc time
@@ -167,7 +167,7 @@ stat_t cm_arc_feed(float target[], float flags[],	// arc endpoints
 	gm.motion_mode = motion_mode;
 
 	// trap zero feed rate condition
-	if ((gm.inverse_feed_rate_mode == false) && (gm.feed_rate == 0)) {
+	if ((gm.inverse_feed_rate_mode == false) && (fp_ZERO(gm.feed_rate))) {
 		return (STAT_GCODE_FEEDRATE_ERROR);
 	}
 
@@ -237,14 +237,14 @@ static stat_t _compute_center_arc()
 	// compute angular travel and invert if gcode wants a counterclockwise arc
 	// if angular travel is zero interpret it as a full circle
 	float angular_travel = theta_end - theta_start;
-	if (angular_travel == 0) {
-		if (gm.motion_mode == MOTION_MODE_CCW_ARC) { 
+	if (fp_ZERO(angular_travel)) {
+		if (gm.motion_mode == MOTION_MODE_CCW_ARC) {
 			angular_travel -= 2*M_PI;
-		} else {
+			} else {
 			angular_travel = 2*M_PI;
 		}
-	} else {
-		if (gm.motion_mode == MOTION_MODE_CCW_ARC) { 
+		} else {
+		if (gm.motion_mode == MOTION_MODE_CCW_ARC) {
 			angular_travel -= 2*M_PI;
 		}
 	}

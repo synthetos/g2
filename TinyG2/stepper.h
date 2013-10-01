@@ -204,25 +204,20 @@ enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_EXEC		// staging buffer is being loaded
 };
 
-// Stepper power management settings
-//	Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
-#define IDLE_TIMEOUT_SECONDS_MIN 	0.1				 // seconds !!! SHOULD NEVER BE ZERO !!!
-#define IDLE_TIMEOUT_SECONDS_MAX   (4294967295/1000) // for conversion to uint32_t
-#define IDLE_TIMEOUT_SECONDS 		0.1				 // seconds in DISABLE_AXIS_WHEN_IDLE mode
-
 /* Timer settings for stepper module. See hardware.h for overall timer assignments */
 
-//#define FREQUENCY_DDA	50000UL
-#define FREQUENCY_DDA	100000UL
-#define FREQUENCY_DWELL	1000UL
-#define FREQUENCY_SGI	200000UL	// 200,000 Hz means software interrupts will fire 5 uSec after being called
+//#define FREQUENCY_DDA				50000UL
+#define FREQUENCY_DDA				100000UL
+#define FREQUENCY_DWELL				1000UL
+#define FREQUENCY_SGI				200000UL	// 200,000 Hz means software interrupts will fire 5 uSec after being called
 //#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)		// handy macro
 
 // Stepper power management settings
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
-#define IDLE_TIMEOUT_SECONDS_MIN 	0.1				 // seconds !!! SHOULD NEVER BE ZERO !!!
-#define IDLE_TIMEOUT_SECONDS_MAX   (4294967295/1000) // for conversion to uint32_t
-#define IDLE_TIMEOUT_SECONDS 		0.1				 // seconds in DISABLE_AXIS_WHEN_IDLE mode
+#define IDLE_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
+#define IDLE_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
+#define IDLE_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
+//#define IDLE_TIMEOUT_SECONDS_MAX	4294967UL	// (4294967295/1000) -- for conversion to uint32_t
 
 // DDA substepping
 // 	DDA_SUBSTEPS sets the amount of fractional precision for substepping. Substepping 
