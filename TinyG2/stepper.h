@@ -265,6 +265,7 @@ typedef struct stRunMotor { 		// one per controlled motor
 	uint8_t power_state;			// state machine for managing motor power
 	uint32_t power_systick;			// sys_tick for next state transition
 	uint32_t power_level;			// power level for this segment (FUTURE)
+	uint8_t step_count_diagnostic;	// step count diagnostic
 } stRunMotor_t;
 
 typedef struct stRunSingleton {		// Stepper static values and axis parameters

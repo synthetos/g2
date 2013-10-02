@@ -1,5 +1,5 @@
 /*
- * stepper.cpp - stepper motor controls
+ * stepper.cpp - stepper motor controls (build 019.08)
  * This file is part of the TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
@@ -42,8 +42,6 @@
 #include "config.h"
 #include "stepper.h"
 #include "planner.h"
-////#include "motatePins.h"		// defined in hardware.h   Not needed here
-//#include "motateTimers.h"
 #include "hardware.h"
 #include "text_parser.h"
 #include "util.h"
@@ -54,6 +52,7 @@
 #endif
 
 #ifdef __ARM
+////#include "motatePins.h"		// defined in hardware.h   Not needed here
 //#include "motatePins.h"		// defined in hardware.h   Not needed here
 #include "motateTimers.h"
 #endif
@@ -64,6 +63,7 @@
 #else
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
 #endif
+static void _clear_diagnostic_counters(void);
 
 /**** Allocate structures ****/
 
@@ -157,7 +157,6 @@ Stepper<motor_6_step_pin_num,
 /************************************************************************************
  **** CODE **************************************************************************
  ************************************************************************************/
-
 /*
  * stepper_init() - initialize stepper motor subsystem 
  *
@@ -173,7 +172,7 @@ void stepper_init()
 	memset(&st_run, 0, sizeof(st_run));		// clear all values, pointers and status
 	st_run.magic_start = MAGICNUM;
 	st_prep.magic_start = MAGICNUM;
-//	_clear_diagnostic_counters();
+	_clear_diagnostic_counters();
 
 	// setup DDA timer (see FOOTNOTE)
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
@@ -202,7 +201,6 @@ void stepper_init()
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 */
 
-/*
 static void _clear_diagnostic_counters()
 {
 	st_run.m[MOTOR_1].step_count_diagnostic = 0;
@@ -212,7 +210,7 @@ static void _clear_diagnostic_counters()
 	st_run.m[MOTOR_5].step_count_diagnostic = 0;
 	st_run.m[MOTOR_6].step_count_diagnostic = 0;
 }
-*/
+
 /*
  * stepper_isbusy() - return TRUE if motors are running or a dwell is running
  */
@@ -347,14 +345,14 @@ stat_t st_motor_power_callback() 	// called by controller
 	return (STAT_OK);
 }
 
-/***** Interrupt Service Routines *****
- */
-// Define the timer interrupts inside the Motate namespace
-namespace Motate {
+/******************************
+ * Interrupt Service Routines *
+ ******************************/
 
 /*
  * Dwell timer interrupt
  */
+namespace Motate {			// Must define timer interrupts inside the Motate namespace
 MOTATE_TIMER_INTERRUPT(dwell_timer_num) 
 {
 	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
@@ -363,6 +361,7 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 		_load_move();
 	}
 }
+} // namespace Motate
 
 /****************************************************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
@@ -371,9 +370,10 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
  *	Overflow interrupts are used to set step pins, match interrupts clear step pins.
  *	This way the duty cycle of the stepper pulse can be controlled by setting the match value.
  *
- *	Also note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests.
- *	If motor_N is not defined that entire if {} clause drops out of the complied code.
+ *	Note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests. 
+ *	If motor_N is not defined that if{} clause (i.e. that motor) drops out of the complied code.
  */
+namespace Motate {			// Must define timer interrupts inside the Motate namespace
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
@@ -424,13 +424,11 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 
 		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
 			dda_timer.stop();						// turn it off or it will keep stepping out the last segment
-//			st_run.motor_stop_flags = ALL_MOTORS_STOPPED;
 			_load_move();							// load the next move at the current interrupt level
 		}
 		dda_debug_pin2 = 0;
 	}
 }
-
 } // namespace Motate
 
 /****************************************************************************************
@@ -614,7 +612,7 @@ void _load_move()
 	}
 
 	// all cases drop to here - such as Null moves queued by MCodes
-//	st_prep_null();										// disable prep buffer, if only temporarily
+	st_prep_null();										// needed to shut off timers if no moves left
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
 	st_request_exec_move();								// compute and prepare the next move
 }
@@ -636,8 +634,8 @@ void st_prep_null()
 void st_prep_dwell(float microseconds)
 {
 	st_prep.move_type = MOVE_TYPE_DWELL;
-//	st_prep.dda_period = _f_to_period(F_DWELL);	// AVR only
-	st_prep.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
+	st_prep.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL); // ARM code
+//	st_prep.dda_period = _f_to_period(F_DWELL);	// AVR code
 }
 
 /***********************************************************************************
