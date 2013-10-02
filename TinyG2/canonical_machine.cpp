@@ -1106,7 +1106,7 @@ stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.feed_rate_override_enable = false;
-		} else {
+	} else {
 		gmx.feed_rate_override_enable = true;
 	}
 	return (STAT_OK);
@@ -1142,7 +1142,7 @@ stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.spindle_override_enable = false;
-		} else {
+	} else {
 		gmx.spindle_override_enable = true;
 	}
 	return (STAT_OK);
@@ -1152,7 +1152,7 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
 {
 	gmx.spindle_override_enable = flag;
 	gmx.spindle_override_factor = gn.parameter;
-	//	change spindle speed
+//	change spindle speed
 	return (STAT_OK);
 }
 
@@ -1677,17 +1677,25 @@ stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 
 stat_t cm_get_jrk(cmdObj_t *cmd)
 {
+//	get_flt(cmd);
+	get_flu(cmd);
+//	if (cmd->value > 1000000) cmd->value /= 1000000;
+//	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= INCH_PER_MM;
+	return (STAT_OK);
+/*
 	get_flt(cmd);
 	if (cfg.comm_mode == TEXT_MODE) cmd->value /= 1000000;
 	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= INCH_PER_MM;
 	return (STAT_OK);
+*/
 }
 
 stat_t cm_set_jrk(cmdObj_t *cmd)
 {
-	if (cmd->value < 1000000) cmd->value *= 1000000;
-	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= MM_PER_INCH;
-	set_flt(cmd);
+//	if (cmd->value < 1000000) cmd->value *= 1000000;
+//	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= MM_PER_INCH;
+	set_flu(cmd);
+//	set_flu(cmd);
 	return(STAT_OK);
 }
 

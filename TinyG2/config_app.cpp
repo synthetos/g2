@@ -101,6 +101,7 @@ const cfgItem_t cfgArray[] = {
 	{ "sys", "hp", _f07, 0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform,TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _f07, 0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
 //	{ "sys", "id", _fns, 0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },  // device ID (ASCII signature)
+	{ "",   "ms",  _fip, 0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,		NOM_SEGMENT_USEC },
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, cm_print_line, cm_get_line, set_int,(float *)&gm.linenum,0 },// Gcode line number - gets model or runtime line number
@@ -222,6 +223,8 @@ const cfgItem_t cfgArray[] = {
 	{ "x","xtm",_fip, 0, cm_print_tm, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
 	{ "x","xjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
 	{ "x","xjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
+//	{ "x","xjm",_fip, 0, cm_print_jm, get_flu,	 set_flu,	(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
+//	{ "x","xjh",_fip, 0, cm_print_jh, get_flu,	 set_flu,	(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
 	{ "x","xjd",_fip, 4, cm_print_jd, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
 	{ "x","xsn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,	X_SWITCH_MODE_MIN },
 	{ "x","xsx",_fip, 0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,	X_SWITCH_MODE_MAX },
@@ -421,7 +424,7 @@ const cfgItem_t cfgArray[] = {
 	{ "",   "gc",  _f00, 0, tx_print_nul, gc_get_gc, gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// "hidden" parameters (not in system group)
-	{ "",   "ms",  _fip, 0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,		NOM_SEGMENT_USEC },
+//	{ "",   "ms",  _fip, 0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,		NOM_SEGMENT_USEC },
 	{ "",   "ml",  _fip, 4, cm_print_ml,  get_flu, set_flu, (float *)&cm.min_segment_len,		MIN_LINE_LENGTH },
 	{ "",   "ma",  _fip, 4, cm_print_ma,  get_flu, set_flu, (float *)&cm.arc_segment_len,		ARC_SEGMENT_LENGTH },
 	{ "",   "qrh", _fip, 0, tx_print_ui8, get_ui8, set_ui8, (float *)&qr.queue_report_hi_water,	QR_HI_WATER },
