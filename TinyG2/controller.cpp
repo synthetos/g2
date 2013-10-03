@@ -140,7 +140,6 @@ static void _controller_HSM()
 
 	DISPATCH(cm_feedhold_sequencing_callback());	// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());				// 6b. plan a feedhold from line runtime
-	
 //	DISPATCH(_cycle_start_handler());				// 7. cycle start requested
 //	DISPATCH(_system_assertions());					// 8. system integrity assertions
 

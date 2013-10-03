@@ -210,10 +210,12 @@ stat_t sr_set_status_report(cmdObj_t *cmd)
 stat_t sr_request_status_report(uint8_t request_type)
 {
 	if (request_type == SR_IMMEDIATE_REQUEST) {
-		sr.status_report_systick = SysTickTimer_getValue();
+//		sr.status_report_systick = SysTickTimer_getValue();
+		sr.status_report_systick = SysTickTimer.getValue();
 	}
 	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
+//		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
+		sr.status_report_systick = SysTickTimer.getValue() + sr.status_report_interval;
 	}
 	sr.status_report_requested = true;
 	return (STAT_OK);
@@ -223,7 +225,8 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
 	if (sr.status_report_requested == false) return (STAT_NOOP);
-	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
+//	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
+	if (SysTickTimer.getValue() < sr.status_report_systick) return (STAT_NOOP);
 
 	sr.status_report_requested = false;		// disable reports until requested again
 
