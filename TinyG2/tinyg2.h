@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		019.09	// Working on motor timeouts - looks like SysTickTimer.getValue() is not working or it's not being used correctly
+#define TINYG_FIRMWARE_BUILD   		019.10	// Fixed jerk settings and displays
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number
