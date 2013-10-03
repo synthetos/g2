@@ -1643,8 +1643,6 @@ stat_t cm_get_ofs(cmdObj_t *cmd)
  *
  * cm_get_am()	- get axis mode w/enumeration string
  * cm_set_am()	- set axis mode w/exception handling for axis type
- * cm_get_jrk()	- get jerk value w/1,000,000 correction
- * cm_set_jrk()	- set jerk value w/1,000,000 correction
  * cm_set_sw()	- run this any time you change a switch setting
  */
 
@@ -1663,39 +1661,29 @@ stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 	}
 	set_ui8(cmd);
 	return(STAT_OK);
-/*
-	char_t linear_axes[] = {"xyz"};
-	if (strchr(linear_axes, cmd->token[0]) != NULL) { // true if it's a linear axis
-		if (cmd->value > AXIS_MAX_LINEAR) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	} else {
-		if (cmd->value > AXIS_MAX_ROTARY) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	}
-	set_ui8(cmd);
-	return(STAT_OK);
-*/
 }
 
+/*
+ * cm_get_jrk()	- get jerk value w/1,000,000 correction
+ * cm_set_jrk()	- set jerk value w/1,000,000 correction
+ *
+ *	Jerk values are stored in the system in "raw" format. This makes for some pretty big 
+ *	numbers for people to deal with. These functions will accept raw jerk numbers or if they 
+ *	Are less than 1,000,000 they are bumped in and out of raw form. JSON mode always
+ *	reports full raw jerk values, but will accept either form.
+ */
 stat_t cm_get_jrk(cmdObj_t *cmd)
 {
-//	get_flt(cmd);
 	get_flu(cmd);
-//	if (cmd->value > 1000000) cmd->value /= 1000000;
-//	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= INCH_PER_MM;
-	return (STAT_OK);
-/*
-	get_flt(cmd);
 	if (cfg.comm_mode == TEXT_MODE) cmd->value /= 1000000;
-	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= INCH_PER_MM;
 	return (STAT_OK);
-*/
 }
 
 stat_t cm_set_jrk(cmdObj_t *cmd)
 {
-//	if (cmd->value < 1000000) cmd->value *= 1000000;
-//	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= MM_PER_INCH;
+	if (cmd->value < 1000000) cmd->value *= 1000000;
 	set_flu(cmd);
-//	set_flu(cmd);
+	if (cfg.comm_mode == TEXT_MODE) cmd->value /= 1000000;
 	return(STAT_OK);
 }
 
@@ -1864,12 +1852,18 @@ static void _print_axis_coord_flt(cmdObj_t *cmd, const char *format)
 	fprintf_P(stderr, format, cmd->group, cmd->token, cmd->group, cmd->token, cmd->value, units);
 }
 
-void _print_pos(cmdObj_t *cmd, const char *format, uint8_t units)
+static void _print_pos(cmdObj_t *cmd, const char *format, uint8_t units)
 {
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(cmd->index);
 	if (axis >= AXIS_A) { units = DEGREES;}
 	fprintf_P(stderr, format, axes[axis], cmd->value, GET_TEXT_ITEM(msg_units, units));
+}
+
+void cm_print_am(cmdObj_t *cmd)	// print axis mode with enumeration string
+{
+	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value,
+	GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));
 }
 
 void cm_print_fr(cmdObj_t *cmd) { _print_axis_flt(cmd, fmt_Xfr);}
@@ -1891,12 +1885,6 @@ void cm_print_cpos(cmdObj_t *cmd) { _print_axis_coord_flt(cmd, fmt_cpos);}
 
 void cm_print_pos(cmdObj_t *cmd) { _print_pos(cmd, fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(cmdObj_t *cmd) { _print_pos(cmd, fmt_mpo, MILLIMETERS);}
-
-void cm_print_am(cmdObj_t *cmd)	// print axis mode with enumeration string
-{
-	fprintf_P(stderr, fmt_Xam, cmd->group, cmd->token, cmd->group, (uint8_t)cmd->value, 
-					  GET_TEXT_ITEM(msg_am, (uint8_t)cmd->value));			
-}
 
 #endif // __TEXT_MODE
 

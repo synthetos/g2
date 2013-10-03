@@ -46,22 +46,11 @@
 #include "text_parser.h"
 #include "util.h"
 
-#ifdef __AVR
-#include <avr/interrupt.h>
-#include "xmega/xmega_rtc.h"	// Xmega only. Goes away with RTC refactoring
-#endif
-
-#ifdef __ARM
-////#include "motatePins.h"		// defined in hardware.h   Not needed here
-//#include "motatePins.h"		// defined in hardware.h   Not needed here
-#include "motateTimers.h"
-#endif
-
 //#define ENABLE_DIAGNOSTICS
 #ifdef ENABLE_DIAGNOSTICS
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor) st_run.m[motor].step_count_diagnostic++;
 #else
-#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// chose this one to disable counters
+#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// choose this one to disable counters
 #endif
 static void _clear_diagnostic_counters(void);
 
@@ -306,13 +295,15 @@ stat_t st_motor_power_callback() 	// called by controller
 
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
-					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st.motor_idle_timeout * 1000);
+//					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st.motor_idle_timeout * 1000);
+					st_run.m[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st.motor_idle_timeout * 1000);
 					st_run.m[motor].power_state = MOTOR_TIME_IDLE_TIMEOUT;
 					break;
 				}
 
 				case (MOTOR_TIME_IDLE_TIMEOUT): {
-					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
+//					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
+					if (SysTickTimer.getValue() > st_run.m[motor].power_systick ) {
 						st_run.m[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
 					}
@@ -322,13 +313,15 @@ stat_t st_motor_power_callback() 	// called by controller
 			} else if(st.m[motor].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
-					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(250);
+//					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
+					st_run.m[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
 					st_run.m[motor].power_state = MOTOR_TIME_IDLE_TIMEOUT;
 					break;
 				}
 
 				case (MOTOR_TIME_IDLE_TIMEOUT): {
-					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
+//					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
+					if (SysTickTimer.getValue() > st_run.m[motor].power_systick ) {
 						st_run.m[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
 					}
@@ -443,9 +436,7 @@ void st_request_exec_move()
 	}
 }
 
-// Define the timers inside the Motate namespace
-namespace Motate {
-
+namespace Motate {	// Define timer inside Motate namespace
 MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 {
 	exec_timer.getInterruptCause();				// clears the interrupt condition
@@ -475,9 +466,7 @@ static void _request_load_move()
 		// You'll just trigger an interrupt and find out the loader is not ready
 }
 
-// Define the timers inside the Motate namespace
-namespace Motate {
-
+namespace Motate {	// Define timer inside Motate namespace
 MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
 {
 	load_timer.getInterruptCause();			// read SR to clear interrupt condition
@@ -509,7 +498,7 @@ void _load_move()
 		if (st_prep.reset_flag == true) {           // compensate for pulse phasing
 			st_run.m[MOTOR_1].phase_accumulator = -(st_run.dda_ticks_downcount);
 		}
-		if (st_run.m[MOTOR_1].phase_increment != 0) {
+		if (st_run.m[MOTOR_1].phase_increment != 0) {	// motor is in this move
 			if (st_prep.m[MOTOR_1].dir == 0) {
 				motor_1.dir.clear();			// clear the bit for clockwise motion 
 			} else {
@@ -517,7 +506,7 @@ void _load_move()
 			}
 			motor_1.enable.clear();				// enable the motor (clear the ~Enable line)
 			st_run.m[MOTOR_1].power_state = MOTOR_RUNNING;
-		} else {
+		} else {								// motor is not in this move
 			if (st.m[MOTOR_1].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
 				motor_1.enable.clear();			// energize motor
 				st_run.m[MOTOR_1].power_state = MOTOR_START_IDLE_TIMEOUT;
@@ -529,8 +518,7 @@ void _load_move()
 			st_run.m[MOTOR_2].phase_accumulator = -(st_run.dda_ticks_downcount);
 		}
 		if (st_run.m[MOTOR_2].phase_increment != 0) {
-			if (st_prep.m[MOTOR_2].dir == 0) motor_2.dir.clear(); 
-			else motor_2.dir.set();
+			if (st_prep.m[MOTOR_2].dir == 0) motor_2.dir.clear(); else motor_2.dir.set();
 			motor_2.enable.clear();
 			st_run.m[MOTOR_2].power_state = MOTOR_RUNNING;
 		} else {
@@ -545,8 +533,7 @@ void _load_move()
 			st_run.m[MOTOR_3].phase_accumulator = -(st_run.dda_ticks_downcount);
 		}
 		if (st_run.m[MOTOR_3].phase_increment != 0) {
-			if (st_prep.m[MOTOR_3].dir == 0) motor_3.dir.clear();
-			else motor_3.dir.set();
+			if (st_prep.m[MOTOR_3].dir == 0) motor_3.dir.clear(); else motor_3.dir.set();
 			motor_3.enable.clear();
 			st_run.m[MOTOR_3].power_state = MOTOR_RUNNING;
 		} else {
@@ -561,8 +548,7 @@ void _load_move()
 			st_run.m[MOTOR_4].phase_accumulator = (st_run.dda_ticks_downcount);
 		}
 		if (st_run.m[MOTOR_4].phase_increment != 0) {
-			if (st_prep.m[MOTOR_4].dir == 0) motor_4.dir.clear();
-			else motor_4.dir.set();
+			if (st_prep.m[MOTOR_4].dir == 0) motor_4.dir.clear(); else motor_4.dir.set();
 			motor_4.enable.clear();
 			st_run.m[MOTOR_4].power_state = MOTOR_RUNNING;
 		} else {
@@ -577,8 +563,7 @@ void _load_move()
 			st_run.m[MOTOR_5].phase_accumulator = (st_run.dda_ticks_downcount);
 		}
 		if (st_run.m[MOTOR_5].phase_increment != 0) {
-			if (st_prep.m[MOTOR_5].dir == 0) motor_5.dir.clear();
-			else motor_5.dir.set();
+			if (st_prep.m[MOTOR_5].dir == 0) motor_5.dir.clear(); else motor_5.dir.set();
 			motor_5.enable.clear();
 			st_run.m[MOTOR_5].power_state = MOTOR_RUNNING;
 		} else {
@@ -593,8 +578,7 @@ void _load_move()
 			st_run.m[MOTOR_6].phase_accumulator = (st_run.dda_ticks_downcount);
 		}
 		if (st_run.m[MOTOR_6].phase_increment != 0) {
-			if (st_prep.m[MOTOR_6].dir == 0) motor_6.dir.clear();
-			else motor_6.dir.set();
+			if (st_prep.m[MOTOR_6].dir == 0) motor_6.dir.clear(); else motor_6.dir.set();
 			motor_6.enable.clear();
 			st_run.m[MOTOR_6].power_state = MOTOR_RUNNING;
 		} else {
