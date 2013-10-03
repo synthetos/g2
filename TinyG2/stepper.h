@@ -306,7 +306,6 @@ uint8_t stepper_isbusy(void);
 uint16_t st_get_stepper_run_magic(void);
 uint16_t st_get_stepper_prep_magic(void);
 
-
 void st_energize_motors(void);
 void st_deenergize_motors(void);
 void st_set_motor_power(const uint8_t motor);

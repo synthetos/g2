@@ -223,8 +223,6 @@ const cfgItem_t cfgArray[] = {
 	{ "x","xtm",_fip, 0, cm_print_tm, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
 	{ "x","xjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
 	{ "x","xjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
-//	{ "x","xjm",_fip, 0, cm_print_jm, get_flu,	 set_flu,	(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
-//	{ "x","xjh",_fip, 0, cm_print_jh, get_flu,	 set_flu,	(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
 	{ "x","xjd",_fip, 4, cm_print_jd, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
 	{ "x","xsn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,	X_SWITCH_MODE_MIN },
 	{ "x","xsx",_fip, 0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,	X_SWITCH_MODE_MAX },
