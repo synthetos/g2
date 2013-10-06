@@ -86,10 +86,10 @@ extern "C"{
 
 // Timer definitions. See stepper.h and other headers for setup
 
-Motate::timer_number dda_timer_num   = 3;	// stepper pulse generation in stepper.cpp
-Motate::timer_number dwell_timer_num = 4;	// dwell timing in stepper.cpp
-Motate::timer_number load_timer_num  = 5;	// request load timer in stepper.cpp
-Motate::timer_number exec_timer_num  = 6;	// request exec timer in stepper.cpp
+Motate::timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
+Motate::timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
+Motate::timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
+Motate::timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 

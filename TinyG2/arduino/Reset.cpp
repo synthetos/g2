@@ -55,7 +55,7 @@ void banzai() {
 	while (true);
 }
 
-static int ticks = -1;
+static volatile int ticks = -1;
 
 void initiateReset(int _ticks) {
 	ticks = _ticks;
@@ -65,7 +65,7 @@ void cancelReset() {
 	ticks = -1;
 }
 
-void tickReset() {
+inline void tickReset() {
 	if (ticks == -1)
 		return;
 	ticks--;

@@ -40,7 +40,7 @@ extern "C"{
 //#define STATUS_MESSAGE_LEN __			// see tinyg2.h for status message string storage allocation
 
 #define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 100				// blink rate for alarm state (in ms)
+#define LED_ALARM_TIMER 3000				// blink rate for alarm state (in ms)
 
 typedef struct controllerState {		// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity

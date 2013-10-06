@@ -171,6 +171,8 @@ namespace Motate {
 
 	public:
 
+		static const uint8_t master_control_endpoint = 0;
+
 		static void _init() {
 			uint32_t endpoint;
 

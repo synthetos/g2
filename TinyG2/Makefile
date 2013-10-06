@@ -153,6 +153,24 @@ ifeq ("$(PLATFORM)","due")
 #                           $(PLATFORM_BASE)/libsam/include
 
     include $(PLATFORM_BASE).mk
+
+else
+
+ifeq ("$(PLATFORM)","v9_3x8c")
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+
+	CHIP = SAM3X8C
+	PLATFORM_BASE = platform/atmel_sam
+	CMSIS_ROOT = CMSIS
+
+	include $(PLATFORM_BASE).mk
+
+else
+
+$(error Unknown platform "$(PLATFORM)")
+
+endif
+
 endif
 
 #

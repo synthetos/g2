@@ -28,7 +28,7 @@
 */
 
 
-#ifdef __SAM3X8E__
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
 #include "utility/SamTimers.h"
 #include "Reset.h"
@@ -70,6 +70,7 @@ namespace Motate {
 	template<> const IRQn_Type   Timer<5>::tcIRQ()        { return TC5_IRQn; };
 	//    static Timer<5> timer5;
 
+#ifdef TC2
 	template<> Tc * const        Timer<6>::tc()           { return TC2; };
 	template<> TcChannel * const Timer<6>::tcChan()       { return TC2->TC_CHANNEL + 0; };
 	template<> const uint32_t    Timer<6>::peripheralId() { return ID_TC6; };
@@ -87,7 +88,8 @@ namespace Motate {
 	template<> const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
 	template<> const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
 	//    static Timer<8> timer8;
-
+#endif
+	
 	/* System-wide tick counter */
 	/*  Inspired by code from Atmel and Arduino.
 	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
@@ -102,15 +104,16 @@ namespace Motate {
 
 extern "C" void SysTick_Handler(void)
 {
-	//		if (sysTickHook())
-	//			return;
+//	if (sysTickHook)
+//		sysTickHook();
 
 	tickReset();
 
 	Motate::SysTickTimer._increment();
 
-	if (Motate::SysTickTimer.interrupt)
+	if (Motate::SysTickTimer.interrupt) {
 		Motate::SysTickTimer.interrupt();
+	}
 }
 
 extern "C" {
