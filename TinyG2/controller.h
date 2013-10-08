@@ -36,32 +36,41 @@ extern "C"{
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
 #define SAVED_BUFFER_LEN 100			// saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
-#define STATUS_MESSAGE_LEN 32			// status message string storage allocation
 #define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
+//#define STATUS_MESSAGE_LEN __			// see tinyg2.h for status message string storage allocation
 
-#define LED_NORMAL_COUNTER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_COUNTER 100			// blink rate for alarm state (in ms)
+#define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
+#define LED_ALARM_TIMER 3000				// blink rate for alarm state (in ms)
 
 typedef struct controllerState {		// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
+	uint8_t controller_state;			// controller state
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
-	uint8_t state;						// controller state
-	uint8_t request_reset;				// set true of a system reset should be performed
-//	uint8_t active_src;					// active source device
-//	uint8_t default_src;				// default source device
-	uint8_t comm_mode;					// communications mode 1=JSON
+
+	// communications state variables
+	uint8_t primary_src;				// primary input source device
+	uint8_t secondary_src;				// secondary input source device
+	uint8_t default_src;				// default source device
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint16_t linelen;					// length of currently processing line
-	uint16_t linemax;					// size of input buffer or some other size
-	uint32_t led_counter;				// a convenience for flashing an LED
+
+	// system state variables
+	uint32_t led_timer;					// used by idlers to flash indicator LED
+	uint8_t hard_reset_requested;		// flag to perform a hard reset
+	uint8_t bootloader_requested;		// flag to enter the bootloader
+
+	//+++++ These need to be moved
 	uint8_t status_report_request;		// set true to request a sr
 	uint32_t status_report_tick;		// time tick to generate next status report
 	uint32_t nvm_base_addr;				// NVM base address
 	uint32_t nvm_profile_base;			// NVM base address of current profile
+
+	// controller serial buffers
+	char *bufp;							// pointer to primary or secondary in buffer
 	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
@@ -72,7 +81,9 @@ extern controller_t cs;					// controller state structure
 
 enum cmControllerState {				// manages startup lines
 	CONTROLLER_INITIALIZING = 0,		// controller is initializing - not ready for use
-	CONTROLLER_STARTUP,					// controller is running startup lines
+	CONTROLLER_NOT_CONNECTED,			// controller has not yet detected connection to USB (or other comm channel)
+	CONTROLLER_CONNECTED,				// controller has connected to USB (or other comm channel)
+	CONTROLLER_STARTUP,					// controller is running startup messages and lines
 	CONTROLLER_READY					// controller is active and ready for use
 };
 

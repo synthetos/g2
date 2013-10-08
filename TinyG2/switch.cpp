@@ -41,20 +41,28 @@
  */
 
 #include "tinyg2.h"
+#include "config.h"
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "text_parser.h"
+
 #include "MotateTimers.h"
 using Motate::SysTickTimer;
 
 // Allocate switch array structure
 switches_t sw;
 
-static void _no_action(switch_t *s);
-static void _led_on(switch_t *s);
-static void _led_off(switch_t *s);
+//static void _no_action(switch_t *s);
+//static void _led_on(switch_t *s);
+//static void _led_off(switch_t *s);
 static void _trigger_feedhold(switch_t *s);
 static void _trigger_cycle_start(switch_t *s);
+
+static void _no_action(switch_t *s) { return; }
+//static void _led_on(switch_t *s) { IndicatorLed.clear(); }
+//static void _led_off(switch_t *s) { IndicatorLed.set(); }
+
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -94,10 +102,6 @@ void switch_init(void)
 	// sw.s[AXIS_X][SW_MIN].when_open = _led_off;
 	// sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
 }
-
-static void _no_action(switch_t *s) { return; }
-static void _led_on(switch_t *s) { IndicatorLed.clear(); }
-static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
 /*
  * poll_switches() - run a polling cycle on all switches
@@ -181,10 +185,57 @@ static void _trigger_cycle_start(switch_t *s)
 /*
  * switch_get_switch_mode()  - return switch mode setting
  * switch_get_limit_thrown() - return true if a limit was tripped
- * switch_get_sw_num()  	 - return switch number most recently thrown
+ * switch_get_switch_num()   - return switch number most recently thrown
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ * These functions are not part of the NIST defined functions
+ ***********************************************************************************/
+
+stat_t sw_set_st(cmdObj_t *cmd)			// switch type (global)
+{
+//	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_01(cmd);
+	switch_init();
+	return (STAT_OK);
+}
+
+stat_t sw_set_sw(cmdObj_t *cmd)			// switch setting
+{
+	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_ui8(cmd);
+	switch_init();
+	return (STAT_OK);
+}
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+const char PROGMEM fmt_st[] = "[st]  switch type%18d [0=NO,1=NC]\n";
+void sw_print_st(cmdObj_t *cmd) { text_print_flt(cmd, fmt_st);}
+
+//const char PROGMEM fmt_ss[]   = "Switch %s state:     %d\n";
+//void sw_print_ss(cmdObj_t *cmd) { fprintf(stderr, fmt_ss, cmd->token, (uint8_t)cmd->value);}
+
+/*
+static const char PROGMEM msg_sw0[] = "Disabled";
+static const char PROGMEM msg_sw1[] = "NO homing";
+static const char PROGMEM msg_sw2[] = "NO homing & limit";
+static const char PROGMEM msg_sw3[] = "NC homing";
+static const char PROGMEM msg_sw4[] = "NC homing & limit";
+static const char PROGMEM *msg_sw[] = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
+*/
+
+
+#endif
 
 //###########################################################################
 //##### UNIT TESTS ##########################################################

@@ -611,7 +611,7 @@ namespace Motate {
 	extern uint16_t checkEndpointSizeHardwareLimits(const uint16_t tempSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed);
 
 	// Here we use the above rules for endpoints, and then determine, based on the endpoint number, type, and which if it's the main speed or "other speed."
-	static inline uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed) {
+	static inline uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed, uint16_t maxSize = 2048) {
 		uint16_t tempSize = 0;
 		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {
 			// Note that other_speed only applies to high-speed devices
@@ -639,6 +639,9 @@ namespace Motate {
 				tempSize = 8;
 			}
 		}
+
+		if (tempSize > maxSize)
+			tempSize = maxSize;
 
 		tempSize = checkEndpointSizeHardwareLimits(tempSize, endpointNumber, endpointType, otherSpeed);
 
@@ -673,14 +676,16 @@ namespace Motate {
 
 								 uint8_t  _Attributes,
 
-								 uint8_t  _PollingIntervalMS
+								 uint8_t  _PollingIntervalMS,
+
+								 uint16_t _maxSize = 2048
 								 )
 		: Header(sizeof(USBDescriptorEndpoint_t), kEndpointDescriptor),
 		EndpointAddress(_EndpointAddress | (_input ? 0x80 : 0x00)),
 
 		Attributes(_Attributes),
 
-		EndpointSize(getEndpointSize(_EndpointAddress, (USBEndpointType_t)(_Attributes & kEndpointTypeMask), _otherSpeed)),
+		EndpointSize(getEndpointSize(_EndpointAddress, (USBEndpointType_t)(_Attributes & kEndpointTypeMask), _otherSpeed, _maxSize)),
 
 		PollingIntervalMS(_PollingIntervalMS)
 		{};

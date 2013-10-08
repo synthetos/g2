@@ -75,8 +75,8 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
  * Local Scope Data and Functions
  */
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
-#define spindle_speed time		// local alias for spindle_speed to the time variable
-#define value_vector target		// alias for vector of values
+#define spindle_speed move_time	// local alias for spindle_speed to the time variable
+#define value_vector gm.target	// alias for vector of values
 #define flag_vector unit		// alias for vector of flags
 
 // execution routines (NB: These are all called from the LO interrupt)
@@ -94,14 +94,14 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 
 void planner_init()
 {
-// You can assume all memory has been zeroed by a hard reset. If not, use this code:
-//	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
-//	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
+// If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
+	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
+	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-//++++	ar.magic_start = MAGICNUM;
-//++++	ar.magic_end = MAGICNUM;
+	ar.magic_start = MAGICNUM;
+	ar.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 
@@ -115,10 +115,9 @@ void planner_init()
  */
 void mp_flush_planner()
 {
-	ar_abort_arc();
+	cm_abort_arc();
 	mp_init_buffers();
 	cm.motion_state = MOTION_STOP;
-//	copy_axis_vector(mm.position, mr.position);		//++++ Is this right?
 }
 
 /*
@@ -155,7 +154,7 @@ void mp_set_runtime_position(uint8_t axis, const float position)
  *	Manages run buffers and other details
  */
 
-uint8_t mp_exec_move() 
+stat_t mp_exec_move() 
 {
 	mpBuf_t *bf;
 
@@ -165,15 +164,12 @@ uint8_t mp_exec_move()
 	// cycle auto-start for lines only. Add other move types as appropriate.
 	if (bf->move_type == MOVE_TYPE_ALINE) {
 		if (cm.cycle_state == CYCLE_OFF) cm_cycle_start();
+		if (cm.motion_state == MOTION_STOP) cm.motion_state = MOTION_RUN;		
 	}
-	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
-		cm.motion_state = MOTION_RUN;
-	}
-
-	// run the move callback in the buffer
-	if (bf->bf_func != NULL) {
-		return (bf->bf_func(bf));
-	}
+//	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
+//		cm.motion_state = MOTION_RUN;
+//	}
+	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the buffer
 	return (STAT_INTERNAL_ERROR);		// never supposed to get here
 }
 
@@ -211,7 +207,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 		bf->flag_vector[i] = flag[i];
 	}
 	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
-	return;
+//	return;
 }
 
 static stat_t _exec_command(mpBuf_t *bf)
@@ -224,29 +220,30 @@ static stat_t _exec_command(mpBuf_t *bf)
 
 /*************************************************************************
  * mp_dwell() 	 - queue a dwell
- * _exec_dwell() - dwell continuation
+ * _exec_dwell() - dwell execution 
  *
  * Dwells are performed by passing a dwell move to the stepper drivers.
- * When the stepper driver sees a dwell it times the swell on a separate 
+ * When the stepper driver sees a dwell it times the dwell on a separate 
  * timer than the stepper pulse timer.
  */
 
-uint8_t mp_dwell(float seconds) 
+stat_t mp_dwell(float seconds)
 {
-	mpBuf_t *bf; 
+	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
-		return (STAT_BUFFER_FULL_FATAL);		  	// (not supposed to fail)
+		return (STAT_BUFFER_FULL_FATAL);		// (not ever supposed to fail)
 	}
-	bf->bf_func = _exec_dwell;					// register the callback to the exec function
-	bf->time = seconds;						  	// in seconds, not minutes
+	bf->bf_func = _exec_dwell;					// register callback to dwell start
+	bf->gm.move_time = seconds;					// in seconds, not minutes
+	bf->move_state = MOVE_STATE_NEW;
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
 }
 
-static uint8_t _exec_dwell(mpBuf_t *bf)
+static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
@@ -354,6 +351,7 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	st_request_exec_move();						// request a move exec if not busy
+	qr_request_queue_report(+1);				// add to the "added buffers" count
 }
 
 mpBuf_t * mp_get_run_buffer() 
@@ -380,7 +378,7 @@ void mp_free_run_buffer()						// EMPTY current run buf & adv to next
 	}
 	if (mb.w == mb.r) cm_cycle_end();			// end the cycle if the queue empties
 	mb.buffers_available++;
-	rpt_request_queue_report();
+	qr_request_queue_report(-1);				// add to the "removed buffers" count
 }
 
 mpBuf_t * mp_get_first_buffer(void)
@@ -452,55 +450,55 @@ void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[inde
 
 static void _dump_plan_buffer(mpBuf_t *bf)
 {
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
+	fprintf_P(stderr, (const PROGMEM char *)("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
 			_get_buffer_index(bf),
 			bf->buffer_state,
 			bf->move_type,
 			bf->move_state,
 			bf->replannable);
 
-	print_scalar(PSTR("line number:     "), bf->linenum);
-	print_vector(PSTR("position:        "), mm.position, AXES);
-	print_vector(PSTR("target:          "), bf->target, AXES);
-	print_vector(PSTR("unit:            "), bf->unit, AXES);
-	print_scalar(PSTR("jerk:            "), bf->jerk);
-	print_scalar(PSTR("time:            "), bf->time);
-	print_scalar(PSTR("length:          "), bf->length);
-	print_scalar(PSTR("head_length:     "), bf->head_length);
-	print_scalar(PSTR("body_length:     "), bf->body_length);
-	print_scalar(PSTR("tail_length:     "), bf->tail_length);
-	print_scalar(PSTR("entry_velocity:  "), bf->entry_velocity);
-	print_scalar(PSTR("cruise_velocity: "), bf->cruise_velocity);
-	print_scalar(PSTR("exit_velocity:   "), bf->exit_velocity);
-	print_scalar(PSTR("exit_vmax:       "), bf->exit_vmax);
-	print_scalar(PSTR("entry_vmax:      "), bf->entry_vmax);
-	print_scalar(PSTR("cruise_vmax:     "), bf->cruise_vmax);
-	print_scalar(PSTR("delta_vmax:      "), bf->delta_vmax);
-	print_scalar(PSTR("braking_velocity:"), bf->braking_velocity);
+	print_scalar((const PROGMEM char *)("line number:     "), bf->linenum);
+	print_vector((const PROGMEM char *)("position:        "), mm.position, AXES);
+	print_vector((const PROGMEM char *)("target:          "), bf->target, AXES);
+	print_vector((const PROGMEM char *)("unit:            "), bf->unit, AXES);
+	print_scalar((const PROGMEM char *)("jerk:            "), bf->jerk);
+	print_scalar((const PROGMEM char *)("time:            "), bf->time);
+	print_scalar((const PROGMEM char *)("length:          "), bf->length);
+	print_scalar((const PROGMEM char *)("head_length:     "), bf->head_length);
+	print_scalar((const PROGMEM char *)("body_length:     "), bf->body_length);
+	print_scalar((const PROGMEM char *)("tail_length:     "), bf->tail_length);
+	print_scalar((const PROGMEM char *)("entry_velocity:  "), bf->entry_velocity);
+	print_scalar((const PROGMEM char *)("cruise_velocity: "), bf->cruise_velocity);
+	print_scalar((const PROGMEM char *)("exit_velocity:   "), bf->exit_velocity);
+	print_scalar((const PROGMEM char *)("exit_vmax:       "), bf->exit_vmax);
+	print_scalar((const PROGMEM char *)("entry_vmax:      "), bf->entry_vmax);
+	print_scalar((const PROGMEM char *)("cruise_vmax:     "), bf->cruise_vmax);
+	print_scalar((const PROGMEM char *)("delta_vmax:      "), bf->delta_vmax);
+	print_scalar((const PROGMEM char *)("braking_velocity:"), bf->braking_velocity);
 }
 
 void mp_dump_runtime_state(void)
 {
-	fprintf_P(stderr, PSTR("***Runtime Singleton (mr)\n"));
-	print_scalar(PSTR("line number:       "), mr.linenum);
-	print_vector(PSTR("position:          "), mr.position, AXES);
-	print_vector(PSTR("target:            "), mr.target, AXES);
-	print_scalar(PSTR("length:            "), mr.length);
+	fprintf_P(stderr, (const PROGMEM char *)("***Runtime Singleton (mr)\n"));
+	print_scalar((const PROGMEM char *)("line number:       "), mr.linenum);
+	print_vector((const PROGMEM char *)("position:          "), mr.position, AXES);
+	print_vector((const PROGMEM char *)("target:            "), mr.target, AXES);
+	print_scalar((const PROGMEM char *)("length:            "), mr.length);
 
-	print_scalar(PSTR("move_time:         "), mr.move_time);
-//	print_scalar(PSTR("accel_time;        "), mr.accel_time);
-//	print_scalar(PSTR("elapsed_accel_time:"), mr.elapsed_accel_time);
-	print_scalar(PSTR("midpoint_velocity: "), mr.midpoint_velocity);
-//	print_scalar(PSTR("midpoint_accel:    "), mr.midpoint_acceleration);
-//	print_scalar(PSTR("jerk_div2:         "), mr.jerk_div2);
+	print_scalar((const PROGMEM char *)("move_time:         "), mr.move_time);
+//	print_scalar((const PROGMEM char *)("accel_time;        "), mr.accel_time);
+//	print_scalar((const PROGMEM char *)("elapsed_accel_time:"), mr.elapsed_accel_time);
+	print_scalar((const PROGMEM char *)("midpoint_velocity: "), mr.midpoint_velocity);
+//	print_scalar((const PROGMEM char *)("midpoint_accel:    "), mr.midpoint_acceleration);
+//	print_scalar((const PROGMEM char *)("jerk_div2:         "), mr.jerk_div2);
 
-	print_scalar(PSTR("segments:          "), mr.segments);
-	print_scalar(PSTR("segment_count:     "), mr.segment_count);
-	print_scalar(PSTR("segment_move_time: "), mr.segment_move_time);
-//	print_scalar(PSTR("segment_accel_time:"), mr.segment_accel_time);
-	print_scalar(PSTR("microseconds:      "), mr.microseconds);
-	print_scalar(PSTR("segment_length:	  "), mr.segment_length);
-	print_scalar(PSTR("segment_velocity:  "), mr.segment_velocity);
+	print_scalar((const PROGMEM char *)("segments:          "), mr.segments);
+	print_scalar((const PROGMEM char *)("segment_count:     "), mr.segment_count);
+	print_scalar((const PROGMEM char *)("segment_move_time: "), mr.segment_move_time);
+//	print_scalar((const PROGMEM char *)("segment_accel_time:"), mr.segment_accel_time);
+	print_scalar((const PROGMEM char *)("microseconds:      "), mr.microseconds);
+	print_scalar((const PROGMEM char *)("segment_length:	  "), mr.segment_length);
+	print_scalar((const PROGMEM char *)("segment_velocity:  "), mr.segment_velocity);
 }
 #endif // __DEBUG
 

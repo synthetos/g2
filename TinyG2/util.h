@@ -41,11 +41,18 @@ extern "C"{
 
 /****** Global Scope Variables and Functions ******/
 
-uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//*** vector utilities ***
+
+extern float vector[AXES]; // vector of axes for passing to subroutines
 
 //void copy_vector(float dest[], const float src[], uint8_t length);
 float get_axis_vector_length(const float a[], const float b[]);
 void copy_axis_vector(float dst[], const float src[]);
+uint8_t vector_equal(float a[], float b[]);
+float *set_vector(float x, float y, float z, float a, float b, float c);
+float *set_vector_by_axis(float value, uint8_t axis);
+#define clear_vector(a) memset(a,0,sizeof(a))
+
 /*
 #define copy_axis_vector(dst,src) ( dst[AXIS_X] = src[AXIS_X];\
 									dst[AXIS_Y] = src[AXIS_Y];\
@@ -54,18 +61,31 @@ void copy_axis_vector(float dst[], const float src[]);
 									dst[AXIS_B] = src[AXIS_B];\
 									dst[AXIS_C] = src[AXIS_C]; )
 */
-uint8_t vector_equal(float a[], float b[]);
+
+//*** math utilities ***
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
 float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
-
-uint8_t isnumber(char_t c);
-uint16_t compute_checksum(char_t const *string, const uint16_t length);
 float std_dev(float a[], uint8_t n, float *mean);
 
-/***** Math Support *****/
+//*** string utilities ***
+
+//#ifdef __ARM
+//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//#endif
+uint8_t isnumber(char_t c);
+char_t *escape_string(char_t *dst, char_t *src);
+uint16_t compute_checksum(char_t const *string, const uint16_t length);
+
+//*** other utilities ***
+
+#ifdef __ARM
+uint32_t SysTickTimer_getValue(void);
+#endif
+
+//**** Math Support *****
 
 #ifndef square
 #define square(x) ((x)*(x))		/* UNSAFE */
@@ -82,9 +102,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 
 #ifndef min
 #define min(a,b) \
-   ({ __typeof__ (a) termA = (a); \
-      __typeof__ (b) termB = (b); \
-      termA<termB ? termA:termB; })
+({ __typeof__ (a) term1 = (a); \
+	__typeof__ (b) term2 = (b); \
+term1<term2 ? term1:term2; })
 #endif
 
 #ifndef avg
@@ -92,7 +112,15 @@ float std_dev(float a[], uint8_t n, float *mean);
 #endif
 
 #ifndef EPSILON
-#define EPSILON		0.00001					// rounding error for floats
+#define EPSILON		0.00001					// allowable rounding error for floats
+//#define EPSILON 	0.000001				// allowable rounding error for floats
+#endif
+
+#ifndef fp_EQ
+#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
+#endif
+#ifndef fp_NE
+#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
@@ -106,12 +134,6 @@ float std_dev(float a[], uint8_t n, float *mean);
 #ifndef fp_NOT_ZERO
 #define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
 #endif
-#ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
-#endif
-#ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
-#endif
 
 // Constants
 #define MAX_LONG (2147483647)
@@ -124,8 +146,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 #define RADIAN (57.2957795)
 //		M_PI is pi as defined in math.h
 //		M_SQRT2 is radical2 as defined in math.h
-//#define M_SQRT3 (1.73205080756888)
-
+#ifndef M_SQRT3
+#define M_SQRT3 (1.73205080756888)
+#endif
 
 #ifdef __cplusplus
 }

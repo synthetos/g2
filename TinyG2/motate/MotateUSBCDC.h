@@ -32,6 +32,7 @@
 #define MOTATEUSBCDC_ONCE
 
 #include "utility/MotateUSBHelpers.h"
+#include "Reset.h"
 
 namespace Motate {
 
@@ -319,36 +320,47 @@ namespace Motate {
 			usb.flush(write_endpoint);
 		}
 
+		bool isConnected() {
+			return _line_state & (0x01 << 1);
+		}
+
+		bool getDTR() {
+			return _line_state & (0x01 << 0);
+		}
+
+		bool getRTS() {
+			return _line_state & (0x01 << 1);
+		}
+
 		bool handleNonstandardRequest(Setup_t &setup) {
 			if (setup.isADeviceToHostClassInterfaceRequest()) {
 				if (setup.requestIs(kGetLineEncoding)) {
-					usb.writeToControl(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					usb.writeToControl(usb.master_control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
 					return true;
 				}
 			}
 
 			if (setup.isAHostToDeviceClassInterfaceRequest()) {
 				if (setup.requestIs(kSetLineEncoding)) {
-					usb.readFromControl(control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
+					usb.readFromControl(usb.master_control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
 					return true;
 				}
 
 				if (setup.requestIs(kSetControlLineState)) {
 					_line_state = setup.valueLow();
 
-					// Here is where we would reset, like this:
-					/******
-					 // auto-reset into the bootloader is triggered when the port, already
-					 // open at 1200 bps, is closed.
-					 if (1200 == _usbLineInfo.dwDTERate)
-					 {
-					 // We check DTR state to determine if host port is open (bit 0 of lineState).
-					 if ((_usbLineInfo.lineState & 0x01) == 0)
-					 initiateReset(250);
-					 else
-					 cancelReset();
-					 }
-					*****/
+					// Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
+
+					// Note that it may be reopened immediately at a different rate.
+					// That will *NOT* cancel the reset.
+					if (1200 == _line_info.dwDTERate)
+					{
+						// We check DTR state to determine if host port is open (bit 0 of lineState).
+						if ((getDTR()) == false)
+							initiateReset(250);
+//						else
+//							 cancelReset();
+					}
 
 					return true;
 				}
@@ -404,6 +416,7 @@ namespace Motate {
 	struct USBMixin< USBCDC, usbIFB, usbIFC, 0 > : USBCDC {
 
 		typedef USBDevice<USBCDC, usbIFB, usbIFC> usb_parent_type;
+		typedef USBMixin< USBCDC, usbIFB, usbIFC, 0 > this_type;
 
 		USBSerial< usb_parent_type > Serial;
 
@@ -412,13 +425,13 @@ namespace Motate {
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const bool other_speed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
-			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+			return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
 		};
 		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSize(endpoint, otherSpeed);
 		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -428,6 +441,7 @@ namespace Motate {
 	struct USBMixin< usbIFA, USBCDC, usbIFC, 1 > : USBCDC {
 
 		typedef USBDevice<usbIFA, USBCDC, usbIFC> usb_parent_type;
+		typedef USBMixin< usbIFA, USBCDC, usbIFC, 1 > this_type;
 
 		USBSerial< usb_parent_type > Serial;
 
@@ -436,13 +450,13 @@ namespace Motate {
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
-			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+			return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
 		};
 		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSize(endpoint, otherSpeed);
 		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -452,6 +466,7 @@ namespace Motate {
 	struct USBMixin< usbIFA, usbIFB, USBCDC, 2 > : USBCDC {
 
 		typedef USBDevice<usbIFA, usbIFB, USBCDC> usb_parent_type;
+		typedef USBMixin< usbIFA, usbIFB, USBCDC, 2 > this_type;
 
 		USBSerial< usb_parent_type > Serial;
 
@@ -460,13 +475,13 @@ namespace Motate {
 											   ) : Serial(usb_parent, new_endpoint_offset) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSettings(endpoint, other_speed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
-			return usb_parent_type::_singleton->Serial.handleNonstandardRequest(setup);
+			return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
 		};
 		static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const bool otherSpeed) {
-			return usb_parent_type::_singleton->Serial.getEndpointSize(endpoint, otherSpeed);
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSize(endpoint, otherSpeed);
 		};
 		static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
 	};
@@ -512,7 +527,7 @@ namespace Motate {
 	struct USBCDCIADDescriptor : USBDescriptorDevice_t {
 		USBCDCIADDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBDescriptorDevice_t(
-							  /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
+							  /*    USBSpecificationBCD = */ USBFloatToBCD(1.1),
 							  /*                  Class = */ kIADDeviceClass,
 							  /*               SubClass = */ kIADDeviceSubclass,
 							  /*               Protocol = */ kIADDeviceProtocol,
@@ -577,7 +592,7 @@ namespace Motate {
 	// Define the CDC ConfigMixins
 
 	// The configuration for CDC has similar rules to the descriptor, since it's composite interface:
-	//  1- If the ONLY interface is a CDC interface, then we can just present the insterfaces, and the descriptor will
+	//  1- If the ONLY interface is a CDC interface, then we can just present the interfaces, and the descriptor will
 	//     instruct the host that they need to be bound.
 	//  2- If there are any other interfaces (in any position), then we need to insert an IAD before any CDC interface
 	//     to inform the host to associate the two interfaces to one driver.
@@ -622,7 +637,8 @@ namespace Motate {
 								 /* _input             = */ true,
 								 /* _EndpointAddress   = */ _first_endpoint_number,
 								 /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
-								 /* _PollingIntervalMS = */ 0xFF
+								 /* _PollingIntervalMS = */ 0xFF,
+								 /* _maxSize (optional) =*/ 64
 								 ),
 
 		
@@ -704,7 +720,8 @@ namespace Motate {
 								 /* _input             = */ true,
 								 /* _EndpointAddress   = */ _first_endpoint_number,
 								 /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
-								 /* _PollingIntervalMS = */ 0x05
+								 /* _PollingIntervalMS = */ 0xFF,
+								 /* _maxSize (optional) =*/ 64
 								 ),
 
 		CDC_DCI_Interface(
@@ -761,13 +778,13 @@ namespace Motate {
 		{};
 	};
 
-	// // CDC is the first and second interface...
-	// template < typename usbIFC >
-	// struct USBConfigMixin < USBCDC, USBCDC, usbIFC > : USBConfigMixinMultiple_t {
-	// 	USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) :
-	// 	USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number)
-	// 	{};
-	// };
+	 // CDC is the first and second interface...
+//	 template < typename usbIFC >
+//	 struct USBConfigMixin < USBCDC, USBCDC, usbIFC, 0> : USBConfigMixinMultiple_t {
+//		 USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed) :
+//		 USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _other_speed)
+//		{};
+//	 };
 	// // CDC is the second and third interface...
 	// template < typename usbIFA >
 	// struct USBConfigMixin < usbIFA, USBCDC, USBCDC > : USBConfigMixinMultiple_t {

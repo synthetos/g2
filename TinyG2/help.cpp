@@ -17,27 +17,46 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "tinyg2.h"
-#include "config.h"
+#include "tinyg2.h"		// #1
+#include "config.h"		// #2
 #include "report.h"
-#include "help.h"				// must follow config.h
-//#include "controller.h"
-//#include "util.h"
+#include "help.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-static void _status_report_advisory(void);
-static void _postscript(void);
+// help helper functions (snicker)
+
+stat_t help_stub(cmdObj_t *cmd) {return (STAT_OK);}
+
+#ifdef __HELP_SCREENS
+
+static void _status_report_advisory()
+{
+fprintf_P(stderr, (const PROGMEM char *)("\n\
+Note: TinyG generates automatic status reports by default\n\
+This can be disabled by entering $sv=0\n\
+See the wiki below for more details.\n\
+"));
+}
+
+static void _postscript()
+{
+fprintf_P(stderr, (const PROGMEM char *)("\n\
+For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
+For the latest firmware see: https://github.com/synthetos/TinyG\n\
+Please log any issues at http://www.synthetos.com/forums\n\
+Have fun\n"));
+} 
 
 /*
- * print_general_help() - help invoked as h from the command line
+ * help_general() - help invoked as h from the command line
  */
-stat_t print_general_help()
+uint8_t help_general(cmdObj_t *cmd)
 {
-fprintf(stderr, "\n\n\n#### TinyG Help ####\n");
-fprintf(stderr, "\
+fprintf_P(stderr, (const PROGMEM char *)("\n\n\n#### TinyG Help ####\n"));
+fprintf_P(stderr, (const PROGMEM char *)("\
 These commands are active from the command line:\n\
  ^x             Reset (control x) - software reset\n\
   ?             Machine position and gcode model state\n\
@@ -50,7 +69,7 @@ These commands are active from the command line:\n\
   $test=N       Run self-test N\n\
   $home=1       Run a homing cycle\n\
   $defa=1       Restore all settings to \"factory\" defaults\n\
-");
+"));
 _status_report_advisory();
 _postscript();
 rpt_print_system_ready_message();
@@ -58,12 +77,12 @@ return(STAT_OK);
 }
 
 /*
- * print_config_help() - help invoked as $h
+ * help_config() - help invoked as $h
  */
-stat_t print_config_help(cmdObj_t *cmd)
+stat_t help_config(cmdObj_t *cmd)
 {
-fprintf(stderr, "\n\n\n#### TinyG CONFIGURATION Help ####\n");
-fprintf(stderr, "\
+fprintf_P(stderr, (const PROGMEM char *)("\n\n\n#### TinyG CONFIGURATION Help ####\n"));
+fprintf_P(stderr, (const PROGMEM char *)("\
 These commands are active for configuration:\n\
   $sys Show system (general) settings\n\
   $1   Show motor 1 settings (or whatever motor you want 1,2,3,4)\n\
@@ -73,8 +92,8 @@ These commands are active for configuration:\n\
   $o   Show all offset settings\n\
   $$   Show all settings\n\
   $h   Show this help screen\n\n\
-");
-fprintf(stderr, "\
+"));
+fprintf_P(stderr, (const PROGMEM char *)("\
 Each $ command above also displays the token for each setting in [ ] brackets\n\
 To view settings enter a token:\n\n\
   $<token>\n\n\
@@ -83,22 +102,22 @@ To update settings enter token equals value:\n\n\
   $<token>=<value>\n\n\
 For example $yfr=800 to set the Y max feed rate to 800 mm/minute\n\
 For configuration details see: https://github.com/synthetos/TinyG/wiki/TinyG-Configuration\n\
-");
+"));
 _status_report_advisory();
 _postscript();
 return(STAT_OK);
 }
 
 /*
- * print_test_help() - help invoked for tests
+ * help_test() - help invoked for tests
  */
-stat_t print_test_help(cmdObj_t *cmd)
+stat_t help_test(cmdObj_t *cmd)
 {
-fprintf(stderr, "\n\n\n#### TinyG SELF TEST Help ####\n");
-fprintf(stderr, "\
+fprintf_P(stderr, (const PROGMEM char *)("\n\n\n#### TinyG SELF TEST Help ####\n"));
+fprintf_P(stderr, (const PROGMEM char *)("\
 Invoke self test by entering $test=N where N is one of:\n\
-  $test=1  homing test   (you must trip homing switches)\n\
-  $test=2  smoke test\n\
+  $test=1  smoke test\n\
+  $test=2  homing test   (you must trip homing switches)\n\
   $test=3  square test   (a series of squares)\n\
   $test=4  arc test      (some large circles)\n\
   $test=5  dwell test    (moves spaced by 1 second dwells)\n\
@@ -110,55 +129,42 @@ Invoke self test by entering $test=N where N is one of:\n\
   $test=11 small moves test\n\
   $test=12 slow moves test\n\
   $test=13 coordinate system offset test (G92, G54-G59)\n\
-");
+\n\
+Tests assume a centered XY origin and at least 80mm clearance in all directions\n\
+Tests assume Z has at least 40mm posiitive clearance\n\
+Tests start with a G0 X0 Y0 Z0 move\n\
+Homing is the exception. No initial position or clearance is assumed\n\
+"));
 _postscript();
 return(STAT_OK);
 }
 
 /*
- * print_defaults_help() - help invoked for defaults
+ * help_defa() - help invoked for defaults
  */
-stat_t print_defaults_help(cmdObj_t *cmd)
+stat_t help_defa(cmdObj_t *cmd)
 {
-fprintf(stderr, "\n\n\n#### TinyG RESTORE DEFAULTS Help ####\n");
-fprintf(stderr, "\
-Enter $defaults=1 to reset the system to the factory default values.\n\
-This will overwrite any changes you have made.\n");
+fprintf_P(stderr, (const PROGMEM char *)("\n\n\n#### TinyG RESTORE DEFAULTS Help ####\n"));
+fprintf_P(stderr, (const PROGMEM char *)("\
+Enter $defa=1 to reset the system to the factory default values.\n\
+This will overwrite any changes you have made.\n"));
 _postscript();
 return(STAT_OK);
 }
 
 /*
- * print_boot_loader_help()
+ * help_boot_loader()
  */
-stat_t print_boot_loader_help(cmdObj_t *cmd)
+stat_t help_boot_loader(cmdObj_t *cmd)
 {
-fprintf(stderr, "\n\n\n#### TinyG BOOT LOADER Help ####\n");
-fprintf(stderr, "\
-Enter $boot=1 to enter the boot loader.\n");
+fprintf_P(stderr, (const PROGMEM char *)("\n\n\n#### TinyG BOOT LOADER Help ####\n"));
+fprintf_P(stderr, (const PROGMEM char *)("\
+Enter $boot=1 to enter the boot loader.\n"));
 _postscript();
 return(STAT_OK);
 }
 
-// help helper functions (snicker)
-
-static void _status_report_advisory()
-{
-fprintf(stderr, "\n\
-Note: TinyG generates automatic status reports by default\n\
-This can be disabled by entering $sv=0\n\
-See the wiki below for more details.\n\
-");
-}
-
-static void _postscript()
-{
-fprintf(stderr, "\n\
-For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
-For the latest firmware see: https://github.com/synthetos/TinyG\n\
-Please log any issues at http://www.synthetos.com/forums\n\
-Have fun\n");
-} 
+#endif // __HELP_SCREENS
 
 #ifdef __cplusplus
 }

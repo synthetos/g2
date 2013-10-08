@@ -24,11 +24,24 @@
 extern "C"{
 #endif
 
-stat_t print_general_help(void);
-stat_t print_config_help(cmdObj_t *cmd);
-stat_t print_test_help(cmdObj_t *cmd);
-stat_t print_defaults_help(cmdObj_t *cmd);
-stat_t print_boot_loader_help(cmdObj_t *cmd);
+#ifdef __HELP_SCREENS
+
+	stat_t help_general(cmdObj_t *cmd);
+	stat_t help_config(cmdObj_t *cmd);
+	stat_t help_test(cmdObj_t *cmd);
+	stat_t help_defa(cmdObj_t *cmd);
+	stat_t help_boot_loader(cmdObj_t *cmd);
+
+#else
+
+	stat_t help_stub(cmdObj_t *cmd);
+	#define help_general help_stub
+	#define help_config help_stub
+	#define help_test help_stub
+	#define help_defa help_stub
+	#define help_boot_loader help_stub
+
+#endif // __HELP_SCREENS
 
 #ifdef __cplusplus
 }

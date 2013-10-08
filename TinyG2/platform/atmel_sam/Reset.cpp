@@ -55,7 +55,7 @@ void banzai() {
 	while (true);
 }
 
-static int ticks = -1;
+static int volatile ticks = -1;
 
 void initiateReset(int _ticks) {
 	ticks = _ticks;

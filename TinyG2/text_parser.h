@@ -1,6 +1,6 @@
 /*
  * text_parser.h - text parser and text mode support for tinyg2
- * This file is part of the TinyG2 project
+ * Part of TinyG project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  *
@@ -32,17 +32,81 @@
 extern "C"{
 #endif
 
-/*
- * Global Scope Functions
- */
+enum textVerbosity {
+	TV_SILENT = 0,					// no response is provided
+	TV_VERBOSE						// response is provided. Error responses ech message and failed commands
+};
 
-stat_t text_parser(uint8_t *str);
-void text_response(const uint8_t status, char_t *buf);
-void text_print_inline_pairs(cmdObj_t *cmd);
-void text_print_inline_values(cmdObj_t *cmd);
-void text_print_multiline_formatted(cmdObj_t *cmd);
+enum textFormats {					// text output print modes
+	TEXT_NO_PRINT = 0,				// don't print anything if you find yourself in TEXT mode
+	TEXT_INLINE_PAIRS,				// print key:value pairs as comma separated pairs
+	TEXT_INLINE_VALUES,				// print values as commas separated values
+	TEXT_MULTILINE_FORMATTED		// print formatted values on separate lines with formatted print per line
+};
 
-/* unit test setup */
+typedef struct txtSingleton {		// text mode data
+
+	/*** config values (PUBLIC) ***/
+
+	char_t format[CMD_FORMAT_LEN+1];
+
+	/*** runtime values (PRIVATE) ***/
+
+	uint8_t text_verbosity;			// see enum in this file for settings
+
+} txtSingleton_t;
+extern txtSingleton_t txt;
+
+/**** Global Scope Functions ****/
+
+#ifdef __TEXT_MODE
+
+	stat_t text_parser(char_t *str);
+	void text_response(const stat_t status, char_t *buf);
+	void text_print_list(stat_t status, uint8_t flags);
+	void text_print_inline_pairs(cmdObj_t *cmd);
+	void text_print_inline_values(cmdObj_t *cmd);
+	void text_print_multiline_formatted(cmdObj_t *cmd);
+
+	void tx_print_nul(cmdObj_t *cmd);
+	void tx_print_str(cmdObj_t *cmd);
+	void tx_print_ui8(cmdObj_t *cmd);
+	void tx_print_int(cmdObj_t *cmd);
+	void tx_print_flt(cmdObj_t *cmd);
+
+	void text_print_nul(cmdObj_t *cmd, const char *format);
+	void text_print_str(cmdObj_t *cmd, const char *format);
+	void text_print_ui8(cmdObj_t *cmd, const char *format);
+	void text_print_int(cmdObj_t *cmd, const char *format);
+	void text_print_flt(cmdObj_t *cmd, const char *format);
+	void text_print_flt_units(cmdObj_t *cmd, const char *format, const char *units);
+
+	void tx_print_tv(cmdObj_t *cmd);
+
+#else
+
+	#define text_parser text_parser_stub
+	#define text_response text_response_stub
+	#define text_print_list text_print_list_stub
+	#define tx_print_nul tx_print_stub
+	#define tx_print_ui8 tx_print_stub
+	#define tx_print_int tx_print_stub
+	#define tx_print_flt tx_print_stub
+	#define tx_print_str tx_print_stub
+	#define tx_print_tv tx_print_stub
+
+	void tx_print_stub(cmdObj_t *cmd);
+
+#endif
+
+stat_t text_parser_stub(char_t *str);
+void text_response_stub(const stat_t status, char_t *buf);
+void text_print_list_stub(stat_t status, uint8_t flags);
+
+
+/****************************************************************************
+ ***** Unit Tests ***********************************************************
+ ****************************************************************************/
 
 //#define __UNIT_TEST_TEXT				// uncomment to enable TEXT unit tests
 #ifdef __UNIT_TEST_TEXT
