@@ -63,9 +63,8 @@ static stat_t _alarm_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
 static stat_t _system_assertions(void);
-//static stat_t _cycle_start_handler(void);
 static stat_t _sync_to_planner(void);
-//static stat_t _sync_to_tx_buffer(void);
+static stat_t _sync_to_tx_buffer(void);
 static stat_t _command_dispatch(void);
 
 // prep for export to other modules:
@@ -141,8 +140,7 @@ static void _controller_HSM()
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
-//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
-	DISPATCH(_system_assertions());				// 8. system integrity assertions
+	DISPATCH(_system_assertions());				// 7. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -157,7 +155,7 @@ static void _controller_HSM()
 //----- command readers and parsers --------------------------------------------------//
 
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
-//	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
+	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 //	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 	DISPATCH(_command_dispatch());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
@@ -194,6 +192,7 @@ static stat_t _command_dispatch()
 //		strcpy(cs.in_buf, "$x");
 //		strcpy(cs.in_buf, "g1f400x100");
 //		strcpy(cs.in_buf, "?");
+//		cs.bufp = cs.in_buf;
 		cs.state = CONTROLLER_READY;
 
 	} else {
@@ -201,7 +200,8 @@ static stat_t _command_dispatch()
 	}
 	
 	// execute the text line
-	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+//	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
 	cs.linelen = 0;
 
 	// dispatch the new text line
@@ -292,20 +292,19 @@ void tg_set_secondary_source(uint8_t dev) { cs.secondary_src = dev;}
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
  */
-/*
+
 static stat_t _sync_to_tx_buffer()
 {
-	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
-		return (STAT_EAGAIN);
-	}
+//	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
+//		return (STAT_EAGAIN);
+//	}
 	return (STAT_OK);
 }
-*/
 
 static stat_t _sync_to_planner()
 {
-if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
-	return (STAT_EAGAIN);
+	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) { // allow up to N planner buffers for this line
+		return (STAT_EAGAIN);
 	}
 	return (STAT_OK);
 }
@@ -313,7 +312,7 @@ if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
 /*
  * _limit_switch_handler() - shut down system if limit switch fired
  */
-static uint8_t _limit_switch_handler(void)
+static stat_t _limit_switch_handler(void)
 {
 /*
 	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
@@ -336,9 +335,9 @@ stat_t _controller_assertions()
 /* 
  * _system_assertions() - check memory integrity and other assertions
  */
-uint8_t _system_assertions()
+stat_t _system_assertions()
 {
-	uint8_t status;
+	stat_t status;
 
 	for (;;) {	// run this loop only once, but enable breaks
 
@@ -357,38 +356,3 @@ uint8_t _system_assertions()
 	return (STAT_EAGAIN);	// do not allow main loop to advance beyond this point
 }
 
-/* 
- * _system_assertions() - check memory integrity and other assertions
- */
-/*
-static stat_t _system_assertions()
-{
-	uint8_t value = 0;
-	
-	if (cs.magic_start		!= MAGICNUM) { value = 1; }		// Note: reported VALue is offset by ALARM_MEMORY_OFFSET
-	if (cs.magic_end		!= MAGICNUM) { value = 2; }
-	if (cm.magic_start 		!= MAGICNUM) { value = 3; }
-	if (cm.magic_end		!= MAGICNUM) { value = 4; }
-	if (gm.magic_start		!= MAGICNUM) { value = 5; }
-	if (gm.magic_end 		!= MAGICNUM) { value = 6; }
-	if (cfg.magic_start		!= MAGICNUM) { value = 7; }
-	if (cfg.magic_end		!= MAGICNUM) { value = 8; }
-	if (cmdStr.magic_start	!= MAGICNUM) { value = 9; }
-	if (cmdStr.magic_end	!= MAGICNUM) { value = 10; }
-	if (mb.magic_start		!= MAGICNUM) { value = 11; }
-	if (mb.magic_end		!= MAGICNUM) { value = 12; }
-	if (mr.magic_start		!= MAGICNUM) { value = 13; }
-	if (mr.magic_end		!= MAGICNUM) { value = 14; }
-	if (ar.magic_start		!= MAGICNUM) { value = 15; }
-	if (ar.magic_end		!= MAGICNUM) { value = 16; }
-	if (st_get_st_magic()	!= MAGICNUM) { value = 17; }
-	if (st_get_sps_magic()	!= MAGICNUM) { value = 18; }
-	if (rtc.magic_end 		!= MAGICNUM) { value = 19; }
-	xio_assertions(&value);									// run xio assertions
-
-	if (value == 0) { return (STAT_OK);}
-	rpt_exception(STAT_MEMORY_CORRUPTION, value);
-	cm_alarm(ALARM_MEMORY_OFFSET + value);	
-	return (STAT_EAGAIN);
-}
-*/

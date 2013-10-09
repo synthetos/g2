@@ -302,9 +302,7 @@ extern stConfig_t st;
 
 void stepper_init(void);			// initialize stepper subsystem
 uint8_t stepper_isbusy(void);
-
-uint16_t st_get_stepper_run_magic(void);
-uint16_t st_get_stepper_prep_magic(void);
+stat_t st_assertions(void);
 
 void st_energize_motors(void);
 void st_deenergize_motors(void);
