@@ -93,7 +93,8 @@ extern qrSingleton_t qr;
 /**** Function Prototypes ****/
 
 void rpt_print_message(char *msg);
-void rpt_exception(uint8_t status, int16_t value);
+//void rpt_exception(uint8_t status, int16_t value);
+void rpt_exception(uint8_t status);
 stat_t rpt_er(cmdObj_t *cmd);
 void rpt_print_loading_configs_message(void);
 void rpt_print_initializing_message(void);

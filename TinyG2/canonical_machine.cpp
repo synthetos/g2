@@ -2,7 +2,7 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * Part of TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -544,7 +544,6 @@ stat_t _test_soft_limits()
 	return (STAT_OK);
 }
 
-
 /*************************************************************************
  * CANONICAL MACHINING FUNCTIONS
  *	Values are passed in pre-unit_converted state (from gn structure)
@@ -596,8 +595,30 @@ void canonical_machine_init()
 }
 
 /*
- * canonical_machine_alarm() - alarm state; shut down machine
+ * cm_alarm() - alarm state; shut down machine
  */
+/*
+ * cm_alarm() - alarm state; send an exception report and shut down machine
+ */
+stat_t cm_alarm(stat_t status)
+{
+	// stop the steppers and the spindle
+	st_deenergize_motors();
+	cm_spindle_control(SPINDLE_OFF);
+
+	// disable all MCode functions
+//	gpio_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
+//	gpio_set_bit_off(SPINDLE_DIR);
+//	gpio_set_bit_off(SPINDLE_PWM);
+//	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
+//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
+
+	cm.machine_state = MACHINE_ALARM;
+	rpt_exception(status);					// send shutdown message
+	return (status);
+}
+
+/*
 void canonical_machine_alarm(uint8_t value)
 {
 	// stop the steppers and the spindle
@@ -614,7 +635,7 @@ void canonical_machine_alarm(uint8_t value)
 	rpt_exception(STAT_ALARMED,value);			// send shutdown message
 	cm.machine_state = MACHINE_ALARM;
 }
-
+*/
 /**************************
  * Representation (4.3.3) *
  **************************/

@@ -92,12 +92,12 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-	uint8_t combined_state;			// combination of states for display purposes
-	uint8_t machine_state;			// machine/cycle/motion is the actual machine state
-	uint8_t cycle_state;
-	uint8_t motion_state;
-	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t homing_state;			// homing cycle sub-state machine
+	uint8_t combined_state;			// stat: combination of states for display purposes
+	uint8_t machine_state;			// macs: machine/cycle/motion is the actual machine state
+	uint8_t cycle_state;			// cycs
+	uint8_t motion_state;			// momo
+	uint8_t hold_state;				// hold: feedhold sub-state machine
+	uint8_t homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
@@ -326,8 +326,8 @@ enum cmCycleState {
 };
 
 enum cmMotionState {
-	MOTION_STOP = 0,
-	MOTION_RUN,						// machine is running
+	MOTION_STOP = 0,				// motion has stopped
+	MOTION_RUN,						// machine is in motion
 	MOTION_HOLD						// feedhold in progress
 };
 
@@ -369,10 +369,10 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 };
 
 enum cmMotionMode {						// G Modal Group 1
-	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - traverse
-	MOTION_MODE_STRAIGHT_FEED,			// G1 - feed
-	MOTION_MODE_CW_ARC,					// G2 - arc feed
-	MOTION_MODE_CCW_ARC,				// G3 - arc feed
+	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - straight traverse
+	MOTION_MODE_STRAIGHT_FEED,			// G1 - straight feed
+	MOTION_MODE_CW_ARC,					// G2 - clockwise arc feed
+	MOTION_MODE_CCW_ARC,				// G3 - counter-clockwise arc feed
 	MOTION_MODE_CANCEL_MOTION_MODE,		// G80
 	MOTION_MODE_STRAIGHT_PROBE,			// G38.2
 	MOTION_MODE_CANNED_CYCLE_81,		// G81 - drilling
@@ -477,7 +477,7 @@ enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
 	AXIS_STANDARD,					// axis in coordinated motion w/standard behaviors
 	AXIS_INHIBITED,					// axis is computed but not activated
 	AXIS_RADIUS						// rotary axis calibrated to circumference
-};	// ordering must be preserved. See _cm_get_feed_time() and seek time()
+};	// ordering must be preserved. See cm_set_move_times()
 #define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
 #define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
 
@@ -529,7 +529,8 @@ void cm_conditional_set_model_position(stat_t status);
 /*--- canonical machining functions (loosely patterned after NIST) ---*/
 
 void canonical_machine_init(void);
-void canonical_machine_alarm(uint8_t value);					// emergency shutdown
+stat_t cm_alarm(stat_t status);									// enter alarm state. returns same status code
+stat_t cm_assertions(void);
 
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
@@ -606,11 +607,10 @@ void cm_exec_program_end(void);
 
 /*--- cmdArray interface functions ---*/
 
-stat_t cm_run_qf(cmdObj_t *cmd);
-
 char_t cm_get_axis_char(const int8_t axis);
 
-stat_t cm_get_line(cmdObj_t *cmd);		// get runtime line number
+stat_t cm_get_mline(cmdObj_t *cmd);		// get model line number
+stat_t cm_get_line(cmdObj_t *cmd);		// get active (model or runtime) line number
 stat_t cm_get_stat(cmdObj_t *cmd);		// get combined machine state as value and string
 stat_t cm_get_macs(cmdObj_t *cmd);		// get raw machine state as value and string
 stat_t cm_get_cycs(cmdObj_t *cmd);		// get raw cycle state (etc etc)...
@@ -630,6 +630,7 @@ stat_t cm_get_pos(cmdObj_t *cmd);		// get runtime work position...
 stat_t cm_get_mpo(cmdObj_t *cmd);		// get runtime machine position...
 stat_t cm_get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 
+stat_t cm_run_qf(cmdObj_t *cmd);		// run queue flush
 stat_t cm_run_home(cmdObj_t *cmd);		// start homing cycle
 
 stat_t cm_get_am(cmdObj_t *cmd);		// get axis mode
