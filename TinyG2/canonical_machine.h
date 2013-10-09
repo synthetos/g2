@@ -53,14 +53,14 @@ typedef struct cmAxis {
 	float feedrate_max;				// max velocity in mm/min or deg/min
 	float velocity_max;				// max velocity in mm/min or deg/min
 	float travel_max;				// work envelope w/warned or rejected blocks
-	float jerk_max;					// max jerk (Jm) in mm/min^3
+	float jerk_max;					// max jerk (Jm) in mm/min^3 divided by 1 million
+	float jerk_homing;				// homing jerk (Jh) in mm/min^3 divided by 1 million
 	float junction_dev;				// aka cornering delta
 	float radius;					// radius in mm for rotary axis modes
 	float search_velocity;			// homing search velocity
 	float latch_velocity;			// homing latch velocity
 	float latch_backoff;			// backoff from switches prior to homing latch movement
 	float zero_backoff;				// backoff from switches for machine zero
-	float jerk_homing;				// homing jerk (Jh) in mm/min^3
 } cfgAxis_t;
 
 typedef struct cmSingleton {		// struct to manage cm globals and cycles

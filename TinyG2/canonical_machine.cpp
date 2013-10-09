@@ -595,9 +595,6 @@ void canonical_machine_init()
 }
 
 /*
- * cm_alarm() - alarm state; shut down machine
- */
-/*
  * cm_alarm() - alarm state; send an exception report and shut down machine
  */
 stat_t cm_alarm(stat_t status)
@@ -619,23 +616,17 @@ stat_t cm_alarm(stat_t status)
 }
 
 /*
-void canonical_machine_alarm(uint8_t value)
+ * cm_assertions() - test assertions, return error code if violation exists
+ */
+stat_t cm_assertions()
 {
-	// stop the steppers and the spindle
-	st_deenergize_motors();
-	cm_spindle_control(SPINDLE_OFF);
-
-	// disable all MCode functions
-//	switch_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
-//	switch_set_bit_off(SPINDLE_DIR);
-//	switch_set_bit_off(SPINDLE_PWM);
-//	switch_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
-//	switch_set_bit_off(FLOOD_COOLANT_BIT);		//###### replace with exec function
-
-	rpt_exception(STAT_ALARMED,value);			// send shutdown message
-	cm.machine_state = MACHINE_ALARM;
+	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((gmx.magic_start 	!= MAGICNUM) || (gmx.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	return (STAT_OK);
 }
-*/
+
 /**************************
  * Representation (4.3.3) *
  **************************/
@@ -860,7 +851,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target,flags);
 	if (vector_equal(gm.target, gmx.position)) { return (STAT_OK); }
-	//	ritorno(_test_soft_limits());
+//	ritorno(_test_soft_limits());
 
 	cm_set_work_offsets(&gm);					// capture the fully resolved offsets to the state
 	cm_set_move_times(&gm);						// set move time and minimum time in the state
@@ -909,9 +900,9 @@ stat_t cm_goto_g30_position(float target[], float flags[])
 
 /********************************
  * Machining Attributes (4.3.5) *
- ********************************/ 
+ ********************************/
 /*
- * cm_set_feed_rate() - F parameter
+ * cm_set_feed_rate() - F parameter (affects MODEL only)
  *
  * Sets feed rate; or sets inverse feed rate if it's active.
  * Converts all values to internal format (mm's)
@@ -930,7 +921,7 @@ stat_t cm_set_feed_rate(float feed_rate)
 }
 
 /*
- * cm_set_inverse_feed_rate() - G93, G94
+ * cm_set_inverse_feed_rate() - G93, G94 (affects MODEL only)
  *
  *	TRUE = inverse time feed rate in effect - for this block only
  *	FALSE = units per minute feed rate in effect
@@ -984,9 +975,9 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 	// Introduce a short delay if the machine is not busy to enable the planning
 	// queue to begin to fill (avoids first block having to plan down to zero)
-	//	if (st_isbusy() == false) {
-	//		cm_dwell(PLANNER_STARTUP_DELAY_SECONDS);
-	//	}
+//	if (st_isbusy() == false) {
+//		cm_dwell(PLANNER_STARTUP_DELAY_SECONDS);
+//	}
 
 	cm_set_model_target(target, flags);
 	if (vector_equal(gm.target, gmx.position)) { return (STAT_OK); }
@@ -1058,6 +1049,8 @@ stat_t cm_mist_coolant_control(uint8_t mist_coolant)
 }
 static void _exec_mist_coolant_control(float *value, float *flag)
 {
+	gm.mist_coolant = (uint8_t)value[0];
+
 #ifdef __AVR
 	if (gm.mist_coolant == true)
 		gpio_set_bit_on(MIST_COOLANT_BIT);	// if
@@ -1080,7 +1073,7 @@ stat_t cm_flood_coolant_control(uint8_t flood_coolant)
 static void _exec_flood_coolant_control(float *value, float *flag)
 {
 	gm.flood_coolant = (uint8_t)value[0];
-	
+
 #ifdef __AVR
 	if (gm.flood_coolant == true) {
 		gpio_set_bit_on(FLOOD_COOLANT_BIT);
@@ -1096,7 +1089,7 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 		coolant_enable_pin.set();
 	} else {
 		coolant_enable_pin.clear();
-		float vect[] = { 0,0,0,0,0,0 };
+		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
 		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}
 #endif // __ARM
@@ -1145,7 +1138,7 @@ stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 {
 	if (fp_TRUE(gf.parameter) && fp_ZERO(gn.parameter)) {
 		gmx.traverse_override_enable = false;
-		} else {
+	} else {
 		gmx.traverse_override_enable = true;
 	}
 	return (STAT_OK);
@@ -1178,7 +1171,7 @@ stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
 }
 
 /*
- * cm_message() - send a message to the console (or JSON)
+ * cm_message() - queue a message to the response string (unconditionally)
  */
 
 void cm_message(char_t *message)
@@ -1243,11 +1236,11 @@ void cm_request_feedhold(void) { cm.feedhold_requested = true; }
 void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
 void cm_request_cycle_start(void) { cm.cycle_start_requested = true; }
 
-uint8_t cm_feedhold_sequencing_callback()
+stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
 		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
-			cm.motion_state = MOTION_HOLD;
+			cm_set_motion_state(MOTION_HOLD);
 			cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
 		}
 		cm.feedhold_requested = false;
@@ -1432,8 +1425,8 @@ static const char msg_stat8[] PROGMEM = "Cycle";
 static const char msg_stat9[] PROGMEM = "Homing";
 static const char msg_stat10[] PROGMEM = "Jog";
 static const char *const msg_stat[] PROGMEM = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
-	msg_stat4, msg_stat5, msg_stat6, msg_stat7,
-msg_stat8, msg_stat9, msg_stat10};
+												msg_stat4, msg_stat5, msg_stat6, msg_stat7,
+												msg_stat8, msg_stat9, msg_stat10};
 
 static const char msg_macs0[] PROGMEM = "Initializing";
 static const char msg_macs1[] PROGMEM = "Reset";
@@ -1516,15 +1509,13 @@ static const char *const msg_frmo[] PROGMEM = { msg_g94, msg_g93 };
 #define msg_frmo NULL
 #define msg_am NULL
 
-
 #endif // __TEXT_MODE
 
 /***** AXIS HELPERS *****************************************************************
  *
- * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * cm_get_axis_char()	- return ASCII char for axis given the axis number
  * _get_axis()		- return axis number or -1 if NA
  * _get_axis_type()	- return 0 -f axis is linear, 1 if rotary, -1 if NA
- * _get_pos_axis()	- return axis number for pos values or -1 if none - e.g. posx
  */
 
 char_t cm_get_axis_char(const int8_t axis)
@@ -1557,6 +1548,7 @@ static int8_t _get_axis_type(const index_t index)
 	return (0);
 }
 
+
 /**** Functions called directly from cmdArray table - mostly wrappers ****
  * _get_msg_helper() - helper to get string values
  *
@@ -1575,8 +1567,9 @@ static int8_t _get_axis_type(const index_t index)
  * cm_get_dist() - get model gcode distance mode
  * cm_get_frmo() - get model gcode feed rate mode
  * cm_get_tool() - get tool
- * cm_get_feed() - get feed rate 
- * cm_get_line() - get runtime line number for status reports
+ * cm_get_feed() - get feed rate
+ * cm_get_mline()- get model line number for status reports
+ * cm_get_line() - get active (model or runtime) line number for status reports
  * cm_get_vel()  - get runtime velocity
  * cm_get_ofs()  - get runtime work offset
  * cm_get_pos()  - get runtime work position
@@ -1613,6 +1606,13 @@ stat_t cm_get_frmo(cmdObj_t *cmd) { return(_get_msg_helper(cmd, msg_frmo, cm_get
 stat_t cm_get_toolv(cmdObj_t *cmd)
 {
 	cmd->value = (float)cm_get_tool(ACTIVE_MODEL);
+	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+}
+
+stat_t cm_get_mline(cmdObj_t *cmd)
+{
+	cmd->value = (float)cm_get_linenum(MODEL);
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
@@ -1687,8 +1687,8 @@ stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 }
 
 /*
- * cm_get_jrk()	- get jerk value w/1,000,000 correction
- * cm_set_jrk()	- set jerk value w/1,000,000 correction
+ * cm_get_jrk()	- get jerk value 
+ * cm_set_jrk()	- set jerk value 
  *
  *	Jerk values are stored in the system in "raw" format. This makes for some pretty big 
  *	numbers for people to deal with. These functions will accept raw jerk numbers or if they 
@@ -1698,15 +1698,13 @@ stat_t cm_set_am(cmdObj_t *cmd)		// axis mode
 stat_t cm_get_jrk(cmdObj_t *cmd)
 {
 	get_flu(cmd);
-	if (cfg.comm_mode == TEXT_MODE) cmd->value /= 1000000;
 	return (STAT_OK);
 }
 
 stat_t cm_set_jrk(cmdObj_t *cmd)
 {
-	if (cmd->value < 1000000) cmd->value *= 1000000;
+	if (cmd->value > 1000000) cmd->value /= 1000000;
 	set_flu(cmd);
-	if (cfg.comm_mode == TEXT_MODE) cmd->value /= 1000000;
 	return(STAT_OK);
 }
 
@@ -1811,7 +1809,7 @@ void cm_print_ms(cmdObj_t *cmd) { text_print_flt_units(cmd, fmt_ms, GET_UNITS(AC
  *	_print_axis_ui8() - helper to print an integer value with no units
  *	_print_axis_flt() - helper to print a floating point linear value in prevailing units
  *	_print_pos_helper()
- * 
+ *
  *	cm_print_am()
  *	cm_print_fr()
  *	cm_print_vm()
@@ -1859,7 +1857,7 @@ static void _print_axis_flt(cmdObj_t *cmd, const char *format)
 		units = (char *)GET_UNITS(MODEL);
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
-	}		
+	}
 	fprintf_P(stderr, format, cmd->group, cmd->token, cmd->group, cmd->value, units);
 }
 
