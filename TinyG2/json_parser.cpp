@@ -520,9 +520,9 @@ stat_t json_set_jv(cmdObj_t *cmd)
  * js_print_fs()
  */
 
-const char PROGMEM fmt_ej[] = "[ej]  enable json mode%13d [0=text,1=JSON]\n";
-const char PROGMEM fmt_jv[] = "[jv]  json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
-const char PROGMEM fmt_fs[] = "[fs]  footer style%17d [0=new,1=old]\n";
+static const char fmt_ej[] PROGMEM = "[ej]  enable json mode%13d [0=text,1=JSON]\n";
+static const char fmt_jv[] PROGMEM = "[jv]  json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
+static const char fmt_fs[] PROGMEM = "[fs]  footer style%17d [0=new,1=old]\n";
 
 void js_print_ej(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ej);}
 void js_print_jv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_jv);}
@@ -530,11 +530,13 @@ void js_print_fs(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_fs);}
 
 #endif // __TEXT_MODE 
 
-//###########################################################################
-//##### UNIT TESTS ##########################################################
-//###########################################################################
 
-#if defined __UNIT_TEST_JSON
+
+/****************************************************************************
+ ***** Unit Tests ***********************************************************
+ ****************************************************************************/
+
+#if defined (__UNIT_TESTS) && defined (__UNIT_TEST_JSON)
 
 void _test_parser(void);
 void _test_serialize(void);
