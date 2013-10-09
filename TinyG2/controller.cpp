@@ -62,7 +62,7 @@ static void _controller_HSM(void);
 static stat_t _alarm_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
-//static stat_t _system_assertions(void);
+static stat_t _system_assertions(void);
 //static stat_t _cycle_start_handler(void);
 static stat_t _sync_to_planner(void);
 //static stat_t _sync_to_tx_buffer(void);
@@ -85,10 +85,10 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.magic_end = MAGICNUM;
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
-	cs.hw_platform = TINYG_HARDWARE_PLATFORM;	// NB: HW version is set from EEPROM
+	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
 	
 	cs.linelen = 0;									// initialize index for read_line()
-	cs.controller_state = CONTROLLER_NOT_CONNECTED;	// find USB next
+	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
 //	cs.reset_requested = false;
 //	cs.bootloader_requested = false;
 
@@ -96,7 +96,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 //	xio_set_stdout(std_out);
 //	xio_set_stderr(std_err);
 //	cs.default_src = std_in;
-//	tg_set_active_source(cs.default_src);	// set active source
+//	tg_set_primary_source(cs.default_src);
 }
 
 /* 
@@ -131,36 +131,36 @@ static void _controller_HSM()
 //----- Interrupt Service Routines are the highest priority controller functions ----//
 //      See hardware.h for a list of ISRs and their priorities.
 //
-//----- lowest level functions -------------------------------------------------------//
-													// Order is important:
-	DISPATCH(hw_hard_reset_handler());				// 1. received hard reset request
-//	DISPATCH(hw_bootloader_handler());				// 2. received request to start bootloader
-	DISPATCH(_alarm_idler());						// 3. idle in alarm state (shutdown)
-	DISPATCH( poll_switches());						// 4. run a switch polling cycle
-	DISPATCH(_limit_switch_handler());				// 5. limit switch has been thrown
+//----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
+												// Order is important:
+	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
+//	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
+	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
+	DISPATCH( poll_switches());					// 4. run a switch polling cycle
+	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());	// 6a. feedhold state machine runner
-	DISPATCH(mp_plan_hold_callback());				// 6b. plan a feedhold from line runtime
-//	DISPATCH(_cycle_start_handler());				// 7. cycle start requested
-//	DISPATCH(_system_assertions());					// 8. system integrity assertions
+	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
+	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
+//	DISPATCH(_cycle_start_handler());			// 7. cycle start requested
+	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-	DISPATCH(st_motor_power_callback());			// stepper motor disable timer
-//	DISPATCH(switch_debounce_callback());			// debounce switches
-	DISPATCH(sr_status_report_callback());			// conditionally send status report
-	DISPATCH(qr_queue_report_callback());			// conditionally send queue report
-	DISPATCH(cm_arc_callback());					// arc generation runs behind lines
-	DISPATCH(cm_homing_callback());					// G28.2 continuation
-//	DISPATCH(cm_probe_callback());					// G38.2 continuation
+	DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
+//	DISPATCH(switch_debounce_callback());		// debounce switches
+	DISPATCH(sr_status_report_callback());		// conditionally send status report
+	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
+	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
+	DISPATCH(cm_homing_callback());				// G28.2 continuation
+//	DISPATCH(cm_probe_callback());				// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
 
-	DISPATCH(_sync_to_planner());					// ensure there is at least one free buffer in planning queue
-//	DISPATCH(_sync_to_tx_buffer());					// sync with TX buffer (pseudo-blocking)
-//	DISPATCH(cfg_baud_rate_callback());				// perform baud rate update (must be after TX sync)
-	DISPATCH(_command_dispatch());					// read and execute next command
-	DISPATCH(_normal_idler());						// blink LEDs slowly to show everything is OK
+	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
+//	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
+//	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+	DISPATCH(_command_dispatch());				// read and execute next command
+	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
 /***************************************************************************** 
@@ -175,25 +175,26 @@ static void _controller_HSM()
 static stat_t _command_dispatch()
 {
 	// detect USB connection and transition to disconnected state if it disconnected
-	if (SerialUSB.isConnected() == false) cs.controller_state = CONTROLLER_NOT_CONNECTED;
+	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
 	// read input line or return if not a completed line
-	if (cs.controller_state == CONTROLLER_READY) {
+	if (cs.state == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
+			cs.bufp = cs.in_buf;
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
 		}
 
-	} else if (cs.controller_state == CONTROLLER_NOT_CONNECTED) {
+	} else if (cs.state == CONTROLLER_NOT_CONNECTED) {
 		if (SerialUSB.isConnected() == false) return (STAT_OK);
 		cm_request_queue_flush();
 		rpt_print_system_ready_message();
-		cs.controller_state = CONTROLLER_STARTUP;
+		cs.state = CONTROLLER_STARTUP;
 
-	} else if (cs.controller_state == CONTROLLER_STARTUP) {		// run startup code
+	} else if (cs.state == CONTROLLER_STARTUP) {		// run startup code
 //		strcpy(cs.in_buf, "$x");
 //		strcpy(cs.in_buf, "g1f400x100");
 //		strcpy(cs.in_buf, "?");
-		cs.controller_state = CONTROLLER_READY;
+		cs.state = CONTROLLER_READY;
 
 	} else {
 		return (STAT_OK);
@@ -202,8 +203,9 @@ static stat_t _command_dispatch()
 	// execute the text line
 	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
 	cs.linelen = 0;
+
 	// dispatch the new text line
-	switch (toupper(cs.in_buf[0])) {
+	switch (toupper(*cs.bufp)) {				// first char
 
 		case NUL: { 							// blank line (just a CR)
 			if (cfg.comm_mode != JSON_MODE) {
@@ -213,27 +215,27 @@ static stat_t _command_dispatch()
 		}
 		case 'H': { 							// intercept help screens
 			cfg.comm_mode = TEXT_MODE;
-			help_general(NULL);
-			text_response(STAT_OK, cs.in_buf);
+			help_general((cmdObj_t *)NULL);
+			text_response(STAT_OK, cs.bufp);
 			break;
 		}
 		case '$': case '?':{ 					// text-mode configs
 			cfg.comm_mode = TEXT_MODE;
-			text_response(text_parser(cs.in_buf), cs.saved_buf);
+			text_response(text_parser(cs.bufp), cs.saved_buf);
 			break;
 		}
 		case '{': { 							// JSON input
 			cfg.comm_mode = JSON_MODE;
-			json_parser(cs.in_buf);
+			json_parser(cs.bufp);
 			break;
 		}
 		default: {								// anything else must be Gcode
 			if (cfg.comm_mode == JSON_MODE) {
-				strncpy(cs.out_buf, cs.in_buf, INPUT_BUFFER_LEN -8);	// use out_buf as temp
-				sprintf((char *)cs.in_buf,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);		// '-8' is used for JSON chars
-				json_parser(cs.in_buf);
+				strncpy(cs.out_buf, cs.bufp, INPUT_BUFFER_LEN -8);					// use out_buf as temp
+				sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);	// '-8' is used for JSON chars
+				json_parser(cs.bufp);
 			} else {
-				text_response(gc_gcode_parser(cs.in_buf), cs.saved_buf);
+				text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
 			}
 		}
 	}
@@ -251,7 +253,7 @@ static stat_t _command_dispatch()
  *	(ctrl-x) or bootloader request can be processed.
  */
 
-static stat_t _alarm_idler(  )
+static stat_t _alarm_idler()
 {
 	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
 
@@ -262,7 +264,7 @@ static stat_t _alarm_idler(  )
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
 
-static stat_t _normal_idler(  )
+static stat_t _normal_idler()
 {
 	if (SysTickTimer.getValue() > cs.led_timer) {
 		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER;
@@ -281,9 +283,9 @@ static stat_t _normal_idler(  )
  * and other messages are sent to the active device.
  */
 /*
-void tg_reset_source() { tg_set_primary_source(tg.default_src);}
-void tg_set_primary_source(uint8_t dev) { tg.primary_src = dev;}
-void tg_set_secondary_source(uint8_t dev) { tg.secondary_src = dev;}
+void tg_reset_source() { tg_set_primary_source(cs.default_src);}
+void tg_set_primary_source(uint8_t dev) { cs.primary_src = dev;}
+void tg_set_secondary_source(uint8_t dev) { cs.secondary_src = dev;}
 */
 
 /*
@@ -320,6 +322,39 @@ static uint8_t _limit_switch_handler(void)
 //	cm_alarm(0);
 */
 	return (STAT_OK);
+}
+
+/* 
+ * _controller_assertions() - check memory integrity of controller
+ */
+stat_t _controller_assertions()
+{
+	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	return (STAT_OK);
+}
+
+/* 
+ * _system_assertions() - check memory integrity and other assertions
+ */
+uint8_t _system_assertions()
+{
+	uint8_t status;
+
+	for (;;) {	// run this loop only once, but enable breaks
+
+		if ((status = _controller_assertions()) != STAT_OK)  break;
+		if ((status = cm_assertions()) != STAT_OK) break;
+//+++++		if ((status = mp_assertions()) != STAT_OK) break;
+//+++++		if ((status = st_assertions()) != STAT_OK) break;
+//+++++		if ((status = xio_assertions()) != STAT_OK) break;
+//		if (rtc.magic_end 		!= MAGICNUM) { value = 19; }
+//		xio_assertions(&value);									// run xio assertions
+
+		break;
+	}
+	if (status == STAT_OK) return (STAT_OK);
+	cm_alarm(status);		// else report exception and shut down
+	return (STAT_EAGAIN);	// do not allow main loop to advance beyond this point
 }
 
 /* 

@@ -44,7 +44,7 @@ extern "C"{
 
 typedef struct controllerSingleton {			// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
-	uint8_t controller_state;			// controller state
+	uint8_t state;						// controller state
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
@@ -70,7 +70,7 @@ typedef struct controllerSingleton {			// main TG controller struct
 	uint32_t nvm_profile_base;			// NVM base address of current profile
 
 	// controller serial buffers
-	char *bufp;							// pointer to primary or secondary in buffer
+	char_t *bufp;						// pointer to primary or secondary in buffer
 	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
