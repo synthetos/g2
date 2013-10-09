@@ -42,7 +42,7 @@ extern "C"{
 #define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
 #define LED_ALARM_TIMER 3000				// blink rate for alarm state (in ms)
 
-typedef struct controllerState {		// main TG controller struct
+typedef struct controllerSingleton {			// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
 	uint8_t controller_state;			// controller state
 	float null;							// dumping ground for items with no target
