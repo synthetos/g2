@@ -1,8 +1,8 @@
 /*
  * hardware.cpp - general hardware support functions
- * This file is part of TinyG2 project
+ * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,9 +27,9 @@
 
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
-//#include "switch.h"
-#include "controller.h"
 #include "hardware.h"
+#include "switch.h"
+#include "controller.h"
 #include "text_parser.h"
 
 #ifdef __cplusplus
@@ -48,8 +48,7 @@ void hardware_init()
 /*
  * _get_id() - get a human readable signature
  *
- *	Produce a unique deviceID based on the factory calibration data. Format is:
- *		123456-ABC
+ *	Produce a unique deviceID based on the factory calibration data.
  */
 
 void _get_id(char_t *id)
@@ -156,6 +155,6 @@ void hw_print_id(cmdObj_t *cmd) { text_print_str(cmd, fmt_id);}
 
 #endif //__TEXT_MODE 
 
- #ifdef __cplusplus
- }
- #endif
+#ifdef __cplusplus
+}
+#endif
