@@ -2,8 +2,8 @@
  * plan_line.cpp - acceleration managed line planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2013 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -103,7 +103,7 @@ uint8_t mp_get_runtime_busy()
  *
  *	Note: Returning a status that is not STAT_OK means the endpoint is NOT
  *	advanced. So lines that are too short to move will accumulate and get 
- *	executed once the accumlated error exceeds the minimums 
+ *	executed once the accumulated error exceeds the minimums 
  */
 
 stat_t mp_aline(const GCodeState_t *gm_line)
@@ -115,7 +115,7 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	// trap error conditions
 	float length = get_axis_vector_length(gm_line->target, mm.position);
 	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE_ERROR);}
-	//	if (gm_line->move_time < MIN_TIME_MOVE) { return (STAT_MINIMUM_TIME_MOVE_ERROR);}	// remove this line
+//	if (gm_line->move_time < MIN_TIME_MOVE) { return (STAT_MINIMUM_TIME_MOVE_ERROR);}	// remove this line
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) { return(cm_alarm(STAT_BUFFER_FULL_FATAL));} // never supposed to fail
@@ -155,7 +155,7 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
 		bf->cbrt_jerk = mm.prev_cbrt_jerk;
 		bf->recip_jerk = mm.prev_recip_jerk;
-		} else {
+	} else {
 		bf->cbrt_jerk = cbrt(bf->jerk);
 		bf->recip_jerk = 1/bf->jerk;
 		mm.prev_jerk = bf->jerk;
@@ -466,7 +466,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = _get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
 			}
-			if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,(const PROGMEM char *)("_calculate_trapezoid() failed to converge"));}
+			if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
 		} while ((fabs(bf->cruise_velocity - computed_velocity) / computed_velocity) > TRAPEZOID_ITERATION_ERROR_PERCENT);
 
 		// set velocity and clean up any parts that are too short 
@@ -986,11 +986,12 @@ static stat_t _exec_aline(mpBuf_t *bf)
 		// initialization to process the new incoming bf buffer
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
 		bf->replannable = false;
-		if (fp_ZERO(bf->length)) {
+														// too short lines have already been removed
+		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_STATE_OFF;				// reset mr buffer
 			mr.section_state = MOVE_STATE_OFF;
 			bf->nx->replannable = false;				// prevent overplanning (Note 2)
-			st_prep_null();								// call this to leep the loader happy
+			st_prep_null();								// call this to keep the loader happy
 			mp_free_run_buffer();
 			return (STAT_NOOP);
 		}
