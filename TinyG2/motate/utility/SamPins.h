@@ -172,7 +172,49 @@ namespace Motate {
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
-	
+
+	static const uint16_t kDefaultPWMFrequency = 1000;
+	template<int8_t pinNum>
+	struct PWMOutputPin : Pin<pinNum> {
+		PWMOutputPin() : Pin<pinNum>(kOutput) {};
+		PWMOutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+		void init(const PinOptions options = kNormal) {
+			Pin<pinNum>::init(kOutput, options);
+		};
+		void operator=(const float value) { ; };
+		/*Override these to pick up new methods */
+
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB)\
+		template<>\
+		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
+			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init();};\
+			PWMOutputPin(const PinOptions options) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+				{pwmpin_init();};\
+			void pwmpin_init() {\
+				timerOrPWM::setOutput ## channelAorB ## Options(kClear ## channelAorB ## OnCompare ## channelAorB | kSet ## channelAorB ## OnMatch);\
+				timerOrPWM::start();\
+			};\
+			void operator=(const float value) { timerOrPWM::setDutyCycle ## channelAorB(value); };\
+			/*Override these to pick up new methods */\
+		private: /* Make these private to catch them early. */\
+			/* These are intentially not defined. */\
+			void init(const PinMode type, const PinOptions options = kNormal);\
+			/* WARNING: Covariant return types! */\
+			bool get();\
+			operator bool();\
+		};
+
+
 	typedef const int8_t pin_number;
 	
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
@@ -419,7 +461,14 @@ namespace Motate {
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
 
+} // end namespace Motate
+
+// Note: We end the namespace before including in case the included file need to include
+//   another Motate file. If it does include another Motate file, we end up with
+//   Motate::Motate::* definitions and weird compiler errors.
 #include <motate_pin_assignments.h>
+
+namespace Motate {
 
 // disable pinholder for Due for now -- nned to convert to 32bit
 	// PinHolder - 32bit virtual ports (I've never made a template with 32 parameters before.)

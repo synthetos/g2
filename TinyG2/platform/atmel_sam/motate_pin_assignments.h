@@ -31,6 +31,10 @@
 #ifndef motate_pin_assignments_h
 #define motate_pin_assignments_h
 
+#include <MotateTimers.h>
+
+namespace Motate {
+
 #if part_is_defined( SAM3X8E )
 
 // DUE
@@ -40,27 +44,45 @@ _MAKE_MOTATE_PORT32(C, 'C');
 _MAKE_MOTATE_PORT32(D, 'D');
 // Arduino pin name & function
 _MAKE_MOTATE_PIN( 0, A, 'A',  8);	// D0, RX0
+	_MAKE_MOTATE_PWM_PIN(0, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN( 1, A, 'A',  9);	// D1, TX0
+	_MAKE_MOTATE_PWM_PIN(1, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN( 2, B, 'B', 25);	// D2, PWM2
+	_MAKE_MOTATE_PWM_PIN(2, Motate::Timer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 3, C, 'C', 28);	// D3, PWM3
+	_MAKE_MOTATE_PWM_PIN(3, Motate::Timer<7>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 4, C, 'C', 26);	// D4, PWM4
+	_MAKE_MOTATE_PWM_PIN(4, Motate::Timer<6>, /*Timer channel:*/ B, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 5, C, 'C', 25);	// D5, PWM5
+	_MAKE_MOTATE_PWM_PIN(5, Motate::Timer<6>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 6, C, 'C', 24);	// D6, PWM6
+	_MAKE_MOTATE_PWM_PIN(6, Motate::PWMTimer<7>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 7, C, 'C', 23);	// D7, PWM7
+	_MAKE_MOTATE_PWM_PIN(7, Motate::PWMTimer<6>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 8, C, 'C', 22);	// D8, PWM8
+	_MAKE_MOTATE_PWM_PIN(8, Motate::PWMTimer<5>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN( 9, C, 'C', 21);	// D9, PWM9
+	_MAKE_MOTATE_PWM_PIN(9, Motate::PWMTimer<4>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(10, C, 'C', 29);	// D10, PWM10
+	_MAKE_MOTATE_PWM_PIN(10, Motate::Timer<7>, /*Timer channel:*/ B, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(11, D, 'D',  7);	// D11, PWM11
+	_MAKE_MOTATE_PWM_PIN(11, Motate::Timer<8>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(12, D, 'D',  8);	// D12, PWM12
+	_MAKE_MOTATE_PWM_PIN(12, Motate::Timer<8>, /*Timer channel:*/ B, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(13, B, 'B', 27);	// D13, PWM13, LED Indicator
+	_MAKE_MOTATE_PWM_PIN(13, Motate::Timer<0>, /*Timer channel:*/ B, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(14, D, 'D',  4);	// D14, TX3
 _MAKE_MOTATE_PIN(15, D, 'D',  5);	// D15, RX3
 _MAKE_MOTATE_PIN(16, A, 'A', 13);	// D16, TX2
+	_MAKE_MOTATE_PWM_PIN(16, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(17, A, 'A', 12);	// D17, RX2
+	_MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(18, A, 'A', 11);	// D18, TX1
 _MAKE_MOTATE_PIN(19, A, 'A', 10);	// D19, RX1
 _MAKE_MOTATE_PIN(20, B, 'B', 12);	// D20, SDA
+	_MAKE_MOTATE_PWM_PIN(20, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(21, B, 'B', 13);	// D21, SCL
+	_MAKE_MOTATE_PWM_PIN(21, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 
 _MAKE_MOTATE_PIN(22, B, 'B', 26);	// D22	- begins dual inline header
 _MAKE_MOTATE_PIN(23, A, 'A', 14);	// D23
@@ -75,17 +97,29 @@ _MAKE_MOTATE_PIN(31, A, 'A',  7);	// D31
 _MAKE_MOTATE_PIN(32, D, 'D', 10);	// D32
 _MAKE_MOTATE_PIN(33, C, 'C',  1);	// D33
 _MAKE_MOTATE_PIN(34, C, 'C',  2);	// D34
+	_MAKE_MOTATE_PWM_PIN(34, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(35, C, 'C',  3);	// D35
+	_MAKE_MOTATE_PWM_PIN(35, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(36, C, 'C',  4);	// D36
+	_MAKE_MOTATE_PWM_PIN(36, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(37, C, 'C',  5);	// D37
+	_MAKE_MOTATE_PWM_PIN(37, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(38, C, 'C',  6);	// D38
+	_MAKE_MOTATE_PWM_PIN(38, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(39, C, 'C',  7);	// D39
+	_MAKE_MOTATE_PWM_PIN(39, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(40, C, 'C',  8);	// D40
+	_MAKE_MOTATE_PWM_PIN(40, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(41, C, 'C',  9);	// D41
+	_MAKE_MOTATE_PWM_PIN(41, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(42, A, 'A', 19);	// D42
+	_MAKE_MOTATE_PWM_PIN(42, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(43, A, 'A', 20);	// D43
+	_MAKE_MOTATE_PWM_PIN(43, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(44, C, 'C', 19);	// D44
+	_MAKE_MOTATE_PWM_PIN(44, Motate::PWMTimer<5>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(45, C, 'C', 18);	// D45
+	_MAKE_MOTATE_PWM_PIN(45, Motate::PWMTimer<6>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(46, C, 'C', 17);	// D46
 _MAKE_MOTATE_PIN(47, C, 'C', 16);	// D47
 _MAKE_MOTATE_PIN(48, C, 'C', 15);	// D48
@@ -94,28 +128,39 @@ _MAKE_MOTATE_PIN(50, C, 'C', 13);	// D50
 _MAKE_MOTATE_PIN(51, C, 'C', 12);	// D51
 _MAKE_MOTATE_PIN(52, B, 'B', 21);	// D52
 _MAKE_MOTATE_PIN(53, B, 'B', 14);	// D53
+	_MAKE_MOTATE_PWM_PIN(53, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 
 _MAKE_MOTATE_PIN(54, A, 'A', 16);	// A0 - begins analog headers
 _MAKE_MOTATE_PIN(55, A, 'A', 24);	// A1
 _MAKE_MOTATE_PIN(56, A, 'A', 23);	// A2
 _MAKE_MOTATE_PIN(57, A, 'A', 22);	// A3
 _MAKE_MOTATE_PIN(58, A, 'A',  6);	// A4
+	_MAKE_MOTATE_PWM_PIN(58, Motate::Timer<2>, /*Timer channel:*/ B, /*Peripheral:*/ A);
 _MAKE_MOTATE_PIN(59, A, 'A',  4);	// A5
 _MAKE_MOTATE_PIN(60, A, 'A',  3);	// A6
+_MAKE_MOTATE_PWM_PIN(60, Motate::Timer<1>, /*Timer channel:*/ B, /*Peripheral:*/ A);
 _MAKE_MOTATE_PIN(61, A, 'A',  2);	// A7
+_MAKE_MOTATE_PWM_PIN(61, Motate::Timer<1>, /*Timer channel:*/ A, /*Peripheral:*/ A);
 _MAKE_MOTATE_PIN(62, B, 'B', 17);	// A8
+	_MAKE_MOTATE_PWM_PIN(62, Motate::PWMTimer<1>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(63, B, 'B', 18);	// A9
+	_MAKE_MOTATE_PWM_PIN(63, Motate::PWMTimer<2>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(64, B, 'B', 19);	// A10
+	_MAKE_MOTATE_PWM_PIN(64, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(65, B, 'B', 20);	// A11
 _MAKE_MOTATE_PIN(66, B, 'B', 15);	// DAC0
+	_MAKE_MOTATE_PWM_PIN(66, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B); // INVERTED!
 _MAKE_MOTATE_PIN(67, B, 'B', 16);	// DAC1
+	_MAKE_MOTATE_PWM_PIN(67, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(68, A, 'A',  1);	// CANRX
 _MAKE_MOTATE_PIN(69, A, 'A',  0);	// CANTX
+	_MAKE_MOTATE_PWM_PIN(69, Motate::PWMTimer<3>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 
 _MAKE_MOTATE_PIN(70, A, 'A', 17);	// SDA1
 _MAKE_MOTATE_PIN(71, A, 'A', 18);	// SCL1
 _MAKE_MOTATE_PIN(72, C, 'C', 30);	// RXL, LED Indicator
 _MAKE_MOTATE_PIN(73, A, 'A', 21);	// TXL, LED Indicator
+	_MAKE_MOTATE_PWM_PIN(73, Motate::PWMTimer<0>, /*Timer channel:*/ A, /*Peripheral:*/ B);
 _MAKE_MOTATE_PIN(74, A, 'A', 25);	// SPI-MISO (on ICSP header only)
 _MAKE_MOTATE_PIN(75, A, 'A', 26);	// SPI-MOSI (on ICSP header only)
 _MAKE_MOTATE_PIN(76, A, 'A', 27);	// SPI-SCK  (on ICSP header only)
@@ -218,6 +263,8 @@ _MAKE_MOTATE_PIN(77, A, 'A', 28);	// SS0
 _MAKE_MOTATE_PIN(78, B, 'B', 23);	// SS1
 #endif
 // end SAM3X8C
+
+} // namespace Motate
 
 #endif
 
