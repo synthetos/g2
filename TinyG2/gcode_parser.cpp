@@ -37,7 +37,7 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
 static stat_t _validate_gcode_block(void);
-static stat_t _parse_gcode_block(char_t *line);	// Parse the block into structs
+static stat_t _parse_gcode_block(char_t *line);	// Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({gn.parm=val; gf.parm=1; gp.modals[m]+=1; break;})
@@ -121,7 +121,7 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	if (*rd == '/') { *block_delete_flag = true; } 
 	else { *block_delete_flag = false; }
 	
-	// normalize the command block & find the comment(if any)
+	// normalize the command block & find the comment (if any)
 	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
 		else if ((*rd == '(') || (*rd == ';')) { *wr = NUL; *com = rd+1; }
@@ -133,7 +133,7 @@ static void _normalize_gcode_block(char_t *cmd, char_t **com, char_t **msg, uint
 	// Perform Octal stripping - remove invalid leading zeros in number strings
 	rd = cmd;
 	while (*rd != NUL) {
-        if (*rd == '.') break;							// don't strip past a decimal point
+		if (*rd == '.') break;							// don't strip past a decimal point
 		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
 			wr = rd+1;
 			while (*wr != NUL) { *wr = *(wr+1); wr++;}	// copy forward w/overwrite
@@ -180,7 +180,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 
 	// get-value general case
 	char *end; 
-	*value = strtof(*pstr, &end);
+	*value = strtod(*pstr, &end);
 	if(end == *pstr) { return(STAT_BAD_NUMBER_FORMAT); }	// more robust test then checking for value=0;
 	*pstr = end;
 	return (STAT_OK);			// pointer points to next character after the word
