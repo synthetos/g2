@@ -29,8 +29,6 @@
 #include "config.h"		// #2
 #include "spindle.h"
 //#include "gpio.h"
-//#include "gcode_parser.h"
-//#include "canonical_machine.h"
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
@@ -59,31 +57,30 @@ void cm_spindle_init()
  */
 float cm_get_spindle_pwm( uint8_t spindle_mode )
 {
-    float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-    if (spindle_mode == SPINDLE_CW ) {
-	    speed_lo = pwm.c[PWM_1].cw_speed_lo;
-	    speed_hi = pwm.c[PWM_1].cw_speed_hi;
-	    phase_lo = pwm.c[PWM_1].cw_phase_lo;
-	    phase_hi = pwm.c[PWM_1].cw_phase_hi;
-	    } else if (spindle_mode == SPINDLE_CCW ) {
-	    speed_lo = pwm.c[PWM_1].ccw_speed_lo;
-	    speed_hi = pwm.c[PWM_1].ccw_speed_hi;
-	    phase_lo = pwm.c[PWM_1].ccw_phase_lo;
-	    phase_hi = pwm.c[PWM_1].ccw_phase_hi;
-    }
-    
-    if (spindle_mode==SPINDLE_CW || spindle_mode==SPINDLE_CCW ) {
-	    // clamp spindle speed to lo/hi range
-	    if( gm.spindle_speed < speed_lo ) gm.spindle_speed = speed_lo;
-	    if( gm.spindle_speed > speed_hi ) gm.spindle_speed = speed_hi;
-	    
-	    // normalize speed to [0..1]
-	    float speed = (gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
-	    return (speed * (phase_hi - phase_lo)) + phase_lo;
-	    
-    } else {
-	    return pwm.c[PWM_1].phase_off;
-    }
+	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
+	if (spindle_mode == SPINDLE_CW ) {
+		speed_lo = pwm.c[PWM_1].cw_speed_lo;
+		speed_hi = pwm.c[PWM_1].cw_speed_hi;
+		phase_lo = pwm.c[PWM_1].cw_phase_lo;
+		phase_hi = pwm.c[PWM_1].cw_phase_hi;
+	} else if (spindle_mode == SPINDLE_CCW ) {
+		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
+		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
+		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
+		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
+	}
+		
+	if (spindle_mode==SPINDLE_CW || spindle_mode==SPINDLE_CCW ) {
+		// clamp spindle speed to lo/hi range
+		if( gm.spindle_speed < speed_lo ) gm.spindle_speed = speed_lo;
+		if( gm.spindle_speed > speed_hi ) gm.spindle_speed = speed_hi;
+
+		// normalize speed to [0..1]
+		float speed = (gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
+		return (speed * (phase_hi - phase_lo)) + phase_lo;
+	} else {
+		return pwm.c[PWM_1].phase_off;
+	}
 }
 
 /*
@@ -112,7 +109,7 @@ static void _exec_spindle_control(float *value, float *flag)
 		gpio_set_bit_on(SPINDLE_BIT);
 		gpio_set_bit_on(SPINDLE_DIR);
 	} else {
-		 gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
+		gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
 	}
 #endif // __AVR
 #ifdef __ARM
@@ -126,7 +123,7 @@ static void _exec_spindle_control(float *value, float *flag)
 		spindle_enable_pin.clear();	// failsafe: any error causes stop
 	}
 #endif // __ARM
-	
+
 	// PWM spindle control
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
 }
@@ -146,7 +143,6 @@ stat_t cm_set_spindle_speed(float speed)
 
 void cm_exec_spindle_speed(float speed)
 {
-	// TODO: Link in S command and calibrations to allow dynamic spindle speed setting
 	cm_set_spindle_speed(speed);
 }
 

@@ -1,8 +1,8 @@
 /*
- * stepper.cpp - stepper motor controls (build 019.08)
+ * stepper.cpp - stepper motor controls
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -150,8 +150,8 @@ Stepper<motor_6_step_pin_num,
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
- * 	  - microsteps are setup during cfg_init()
- *	  - motor polarity is setup during cfg_init()
+ * 	  - microsteps are setup during config_init()
+ *	  - motor polarity is setup during config_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete
  */
 
@@ -643,7 +643,7 @@ stat_t st_prep_line(float steps[], float microseconds)
 	// *** defensive programming ***
 	// trap conditions that would prevent queuing the line
 	if (st_prep.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
-	} else if (isfinite(microseconds) == false) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	} else if (isfinite(microseconds) == false) { return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
 	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
 	st_prep.reset_flag = false;         // initialize accumulator reset flag for this move.
@@ -676,7 +676,7 @@ stat_t st_prep_line(float steps[], float microseconds)
  *	This may change if microstep morphing is implemented.
  */
 
-void _set_hw_microsteps(const uint8_t motor, const uint8_t microstep_mode)
+static void _set_hw_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
 /*
 	if (microstep_mode == 8) {
