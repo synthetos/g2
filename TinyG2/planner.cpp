@@ -100,8 +100,8 @@ void planner_init()
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-	ar.magic_start = MAGICNUM;
-	ar.magic_end = MAGICNUM;
+	arc.magic_start = MAGICNUM;
+	arc.magic_end = MAGICNUM;
 	mp_init_buffers();
 }
 

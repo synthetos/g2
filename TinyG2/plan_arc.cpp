@@ -2,7 +2,7 @@
  * plan_arc.cpp - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -16,21 +16,25 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/* This module actually contains some parts that belong ion the canonical machine, 
+ * and other parts that belong at the motion planner level, but the whole thing is 
+ * treated as if it were part of the motion planner.
+ */
+
 #include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
-//#include "stepper.h"
 #include "util.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-// Allocate arc planner structure
+// Allocate arc planner singleton structure
 
-arc_t ar;
+arc_t arc;
 
 /*
  * Local functions
@@ -40,121 +44,38 @@ static stat_t _get_arc_radius(void);
 static float _get_arc_time (const float linear_travel, const float angular_travel, const float radius);
 static float _get_theta(const float x, const float y);
 
-/*****************************************************************************
- * cm_arc() - setup an arc move for runtime
- *
- *	Generates an arc by queueing line segments to the move buffer.
- *	The arc is approximated by generating a large number of tiny, linear
- *	segments. The length of the segments is configured in motion_control.h
- *	as MM_PER_ARC_SEGMENT.
- *
- *  Parts of this routine were originally sourced from the grbl project.
- */
-stat_t cm_arc(const GCodeState_t *gm_arc, 	// gcode model state
-const float i,
-const float j,
-const float k,
-const float theta, 			// starting angle
-const float radius, 			// radius of the circle in mm
-const float angular_travel,	// radians along arc (+CW, -CCW)
-const float linear_travel,
-const uint8_t axis_1, 		// circle plane in tool space
-const uint8_t axis_2,  		// circle plane in tool space
-const uint8_t axis_linear)	// linear travel if helical motion
-{
-	if (ar.run_state != MOVE_STATE_OFF) { return (STAT_INTERNAL_ERROR); } // (not supposed to fail)
-
-	ar.gm.linenum = cm_get_linenum(MODEL);
-
-	// length is the total mm of travel of the helix (or just arc)
-	ar.length = hypot(angular_travel * radius, fabs(linear_travel));
-	if (ar.length < cm.arc_segment_len) return (STAT_MINIMUM_LENGTH_MOVE_ERROR); // too short to draw
-
-	// load the arc controller singleton
-	memcpy(&ar.gm, gm_arc, sizeof(GCodeState_t));	// get the entire GCode context - some will be overwritten to run segments
-	copy_axis_vector(ar.position, gmx.position);	// set initial arc position from gcode model
-
-	ar.endpoint[axis_1] = gm_arc->target[0];			// save the arc endpoint
-	ar.endpoint[axis_2] = gm_arc->target[1];
-	ar.endpoint[axis_linear] = gm_arc->target[2];
-	ar.arc_time = gm_arc->move_time;
-	ar.theta = theta;
-	ar.radius = radius;
-	ar.axis_1 = axis_1;
-	ar.axis_2 = axis_2;
-	ar.axis_linear = axis_linear;
-	ar.angular_travel = angular_travel;
-	ar.linear_travel = linear_travel;
-	
-	// Find the minimum number of segments that meets these constraints...
-	float segments_required_for_chordal_accuracy = ar.length / sqrt(4*cm.chordal_tolerance * (2 * radius - cm.chordal_tolerance));
-	float segments_required_for_minimum_distance = ar.length / cm.arc_segment_len;
-	float segments_required_for_minimum_time = ar.arc_time * MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC;
-	ar.segments = floor(min3(segments_required_for_chordal_accuracy,
-	segments_required_for_minimum_distance,
-	segments_required_for_minimum_time));
-
-	ar.segments = max(ar.segments,1);				//...but is at least 1 segment
-	ar.gm.move_time = ar.arc_time / ar.segments;	// gcode state struct gets segment_time, not arc time
-
-	ar.segment_count = (uint32_t)ar.segments;
-	ar.segment_theta = ar.angular_travel / ar.segments;
-	ar.segment_linear_travel = ar.linear_travel / ar.segments;
-	ar.center_1 = ar.position[ar.axis_1] - sin(ar.theta) * ar.radius;
-	ar.center_2 = ar.position[ar.axis_2] - cos(ar.theta) * ar.radius;
-	ar.gm.target[ar.axis_linear] = ar.position[ar.axis_linear];
-	ar.run_state = MOVE_STATE_RUN;
-	return (STAT_OK);
-}
-
-/*
- * cm_arc_callback() - generate an arc
- *
- *	ar_arc_callback() is structured as a continuation called by mp_move_dispatcher.
- *	Each time it's called it queues as many arc segments (lines) as it can 
- *	before it blocks, then returns.
- *
- *  Parts of this routine were originally sourced from the grbl project.
- */
-
-stat_t cm_arc_callback() 
-{
-	if (ar.run_state == MOVE_STATE_OFF) { return (STAT_NOOP);}
-	if (mp_get_planner_buffers_available() == 0) { return (STAT_EAGAIN);}
-	if (ar.run_state == MOVE_STATE_RUN) {
-		if (--ar.segment_count > 0) {
-			ar.theta += ar.segment_theta;
-			ar.gm.target[ar.axis_1] = ar.center_1 + sin(ar.theta) * ar.radius;
-			ar.gm.target[ar.axis_2] = ar.center_2 + cos(ar.theta) * ar.radius;
-			ar.gm.target[ar.axis_linear] += ar.segment_linear_travel;
-			mp_aline(&ar.gm);								// run the line
-			copy_axis_vector(ar.position, ar.gm.target);	// update arc current position	
-			return (STAT_EAGAIN);
-		} else {
-			mp_aline(&ar.gm);		// do last segment to the exact endpoint
-		}
-	}
-	ar.run_state = MOVE_STATE_OFF;
-	return (STAT_OK);
-}
-
-/*
- * cm_abort_arc() - stop arc movement without maintaining position
- *
- *	OK to call if no arc is running
- */
-
-void cm_abort_arc() 
-{
-	ar.run_state = MOVE_STATE_OFF;
-}
+static stat_t _setup_arc(const GCodeState_t *gm_arc, 	// gcode model state
+			  const float i, const float j, const float k,
+			  const float theta, const float radius, const float angular_travel, // radians along arc (+CW, -CCW)
+			  const float linear_travel,
+			  const uint8_t axis_1, const uint8_t axis_2, const uint8_t axis_linear);
 
 /*****************************************************************************
  * Canonical Machining arc functions (arc prep for planning and runtime)
- * cm_arc_feed() 		 - entry point for arc prep
- * _compute_center_arc() - compute arc from I and J (arc center point)
- * _get_arc_radius() 	 - compute arc center (offset) from radius.
- * _get_arc_time()		 - compute time to complete arc at current feed rate
+ *
+ * cm_arc_init()	 - initialize arcs
+ * cm_arc_feed() 	 - canonical machine entry point for arc
+ * cm_arc_callback() - mail-loop callback for arc generation
+ * cm_abort_arc()	 - stop an arc in process
+ */
+
+/*
+ * cm_arc_init() - initialize arc structures
+ */
+/*
+void cm_arc_init()
+{
+	arc.magic_start = MAGICNUM;
+	arc.magic_end = MAGICNUM;
+}
+*/
+
+/*
+ * cm_arc_feed() - canonical machine entry point for arc
+ *
+ * Generates an arc by queueing line segments to the move buffer.
+ * The arc is approximated by generating a large number of tiny, linear
+ * segments.
  */
 stat_t cm_arc_feed(float target[], float flags[],	// arc endpoints
 				   float i, float j, float k, 		// offsets
@@ -171,19 +92,26 @@ stat_t cm_arc_feed(float target[], float flags[],	// arc endpoints
 		return (STAT_GCODE_FEEDRATE_ERROR);
 	}
 
-	// Trap conditions where no arc movement will occur, 
+	// Trap conditions where no arc movement will occur,
 	// but the system is still in arc motion mode - this is not an error.
 	// This can happen when a F word or M word is by itself.
 	// (The tests below are organized for execution efficiency)
 	if ( fp_ZERO(i) && fp_ZERO(j) && fp_ZERO(k) && fp_ZERO(radius) ) {
-		if ( fp_ZERO((flags[AXIS_X] + flags[AXIS_Y] + flags[AXIS_Z] + flags[AXIS_A] + flags[AXIS_B] + flags[AXIS_C]))) {
+		if ( fp_ZERO((flags[AXIS_X] + flags[AXIS_Y] + flags[AXIS_Z] + 
+					  flags[AXIS_A] + flags[AXIS_B] + flags[AXIS_C]))) {
 			return (STAT_OK);
 		}
 	}
-	// set parameters
+	// set parameters and model state
 	cm_set_model_target(target,flags);
+//	if (vector_equal(gm.target, gmx.position)) { return (STAT_OK); }
+
 	cm_set_model_arc_offset(i,j,k);
 	cm_set_model_arc_radius(radius);
+//	ritorno(_test_arc_soft_limits());
+
+//	cm_set_work_offsets(&gm);						// capture the fully resolved offsets to the state
+//	cm_cycle_start();								// if not already started
 
 	// A non-zero radius is a radius arc. Compute the IJK offset coordinates.
 	// These will override any IJK offsets provided in the call
@@ -196,10 +124,122 @@ stat_t cm_arc_feed(float target[], float flags[],	// arc endpoints
 //		cm_dwell(PLANNER_STARTUP_DELAY_SECONDS);
 //	}
 
-	// execute the move
+	// execute the move by calling a bunch of helpers
 	status = _compute_center_arc();
 	cm_conditional_set_model_position(status);	// set endpoint position if the move was successful
 	return (status);
+}
+
+/*
+ * cm_arc_callback() - generate an arc
+ *
+ *	cm_arc_callback() is structured as a continuation called by mp_move_dispatcher.
+ *	Each time it's called it queues as many arc segments (lines) as it can 
+ *	before it blocks, then returns.
+ *
+ *  Parts of this routine were originally sourced from the grbl project.
+ */
+
+stat_t cm_arc_callback() 
+{
+	if (arc.run_state == MOVE_STATE_OFF) { return (STAT_NOOP);}
+	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) { return (STAT_EAGAIN);}
+	if (arc.run_state == MOVE_STATE_RUN) {
+		if (--arc.segment_count > 0) {
+			arc.theta += arc.segment_theta;
+			arc.gm.target[arc.axis_1] = arc.center_1 + sin(arc.theta) * arc.radius;
+			arc.gm.target[arc.axis_2] = arc.center_2 + cos(arc.theta) * arc.radius;
+			arc.gm.target[arc.axis_linear] += arc.segment_linear_travel;
+			mp_aline(&arc.gm);								// run the line
+			copy_axis_vector(arc.position, arc.gm.target);	// update arc current position	
+			return (STAT_EAGAIN);
+		} else {
+			mp_aline(&arc.gm);		// do last segment to the exact endpoint
+			arc.run_state = MOVE_STATE_OFF;
+		}
+	}
+	return (STAT_OK);
+}
+
+/*
+ * cm_abort_arc() - stop arc movement without maintaining position
+ *
+ *	OK to call if no arc is running
+ */
+
+void cm_abort_arc() 
+{
+	arc.run_state = MOVE_STATE_OFF;
+}
+
+/************************************************************************************
+ * Arc helper functions
+ *
+ * _setup_arc()			 - set up arc singleton for an arc move
+ * _compute_center_arc() - compute arc from I and J (arc center point)
+ * _get_arc_radius() 	 - compute arc center (offset) from radius.
+ * _get_arc_time()		 - compute time to complete arc at current feed rate
+ */
+/*
+ * _setup_arc() - setup an arc move for runtime
+ *
+ *  Parts of this routine were originally sourced from the grbl project.
+ */
+static stat_t _setup_arc(const GCodeState_t *gm_arc, 	// gcode model state
+			  const float i,
+			  const float j,
+			  const float k,
+			  const float theta, 			// starting angle
+			  const float radius, 			// radius of the circle in mm
+			  const float angular_travel,	// radians along arc (+CW, -CCW)
+			  const float linear_travel, 
+			  const uint8_t axis_1, 		// circle plane in tool space
+			  const uint8_t axis_2,  		// circle plane in tool space
+			  const uint8_t axis_linear)	// linear travel if helical motion
+{
+	if (arc.run_state != MOVE_STATE_OFF) { return (STAT_INTERNAL_ERROR); } // (not supposed to fail)
+
+	arc.gm.linenum = cm_get_linenum(MODEL);
+
+	// length is the total mm of travel of the helix (or just a planar arc)
+	arc.length = hypot(angular_travel * radius, fabs(linear_travel));
+	if (arc.length < cm.arc_segment_len) return (STAT_MINIMUM_LENGTH_MOVE_ERROR); // too short to draw
+
+	// load the arc controller singleton
+	memcpy(&arc.gm, gm_arc, sizeof(GCodeState_t));	// get the entire GCode context - some will be overwritten to run segments
+	copy_axis_vector(arc.position, gmx.position);	// set initial arc position from gcode model
+
+	arc.endpoint[axis_1] = gm_arc->target[0];		// save the arc endpoint
+	arc.endpoint[axis_2] = gm_arc->target[1];
+	arc.endpoint[axis_linear] = gm_arc->target[2];
+	arc.arc_time = gm_arc->move_time;
+	arc.theta = theta;
+	arc.radius = radius;
+	arc.axis_1 = axis_1;
+	arc.axis_2 = axis_2;
+	arc.axis_linear = axis_linear;
+	arc.angular_travel = angular_travel;
+	arc.linear_travel = linear_travel;
+	
+	// Find the minimum number of segments that meets these constraints...
+	float segments_required_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * radius - cm.chordal_tolerance));
+	float segments_required_for_minimum_distance = arc.length / cm.arc_segment_len;
+	float segments_required_for_minimum_time = arc.arc_time * MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC;
+	arc.segments = floor(min3(segments_required_for_chordal_accuracy,
+							  segments_required_for_minimum_distance,
+							  segments_required_for_minimum_time));
+
+	arc.segments = max(arc.segments,1);				//...but is at least 1 segment
+	arc.gm.move_time = arc.arc_time / arc.segments;	// gcode state struct gets segment_time, not arc time
+
+	arc.segment_count = (uint32_t)arc.segments;
+	arc.segment_theta = arc.angular_travel / arc.segments;
+	arc.segment_linear_travel = arc.linear_travel / arc.segments;
+	arc.center_1 = arc.position[arc.axis_1] - sin(arc.theta) * arc.radius;
+	arc.center_2 = arc.position[arc.axis_2] - cos(arc.theta) * arc.radius;
+	arc.gm.target[arc.axis_linear] = arc.position[arc.axis_linear];
+	arc.run_state = MOVE_STATE_RUN;
+	return (STAT_OK);
 }
 
 /*
@@ -240,10 +280,10 @@ static stat_t _compute_center_arc()
 	if (fp_ZERO(angular_travel)) {
 		if (gm.motion_mode == MOTION_MODE_CCW_ARC) {
 			angular_travel -= 2*M_PI;
-			} else {
+		} else {
 			angular_travel = 2*M_PI;
 		}
-		} else {
+	} else {
 		if (gm.motion_mode == MOTION_MODE_CCW_ARC) {
 			angular_travel -= 2*M_PI;
 		}
@@ -260,7 +300,7 @@ static stat_t _compute_center_arc()
 	set_vector(gm.target[gmx.plane_axis_0], gm.target[gmx.plane_axis_1], gm.target[gmx.plane_axis_2],
 			   gm.target[AXIS_A], gm.target[AXIS_B], gm.target[AXIS_C]);
 
-	return(cm_arc(&gm, gmx.arc_offset[gmx.plane_axis_0],
+	return(_setup_arc(&gm, gmx.arc_offset[gmx.plane_axis_0],
 					   gmx.arc_offset[gmx.plane_axis_1],
 					   gmx.arc_offset[gmx.plane_axis_2],
 					   theta_start, radius_tmp, angular_travel, linear_travel, 
@@ -376,22 +416,20 @@ static stat_t _get_arc_radius()
 	gmx.arc_offset[gmx.plane_axis_1] = (y+(x*h_x2_div_d))/2;
 	return (STAT_OK);
 } 
-    
+
 /*
  * _get_arc_time ()
  *
- *	This is a naiive rate-limiting function. The arc drawing time is computed 
- *	not to exceed the time taken in the slowest dimension - in the arc plane
- *	or in linear travel. Maximum feed rates are compared in each dimension,
- *	but the comparison assumes that the arc will have at least one segment
- *	where the unit vector is 1 in that dimension. This is not true for any
- *	arbitrary arc, with the result that the time returned may be less than 
- *	optimal.
+ *	This is a naiive rate-limiting function. The arc drawing time is computed not 
+ *	to exceed the time taken in the slowest dimension - in the arc plane or in 
+ *	linear travel. Maximum feed rates are compared in each dimension, but the 
+ *	comparison assumes that the arc will have at least one segment where the unit 
+ *	vector is 1 in that dimension. This is not true for any arbitrary arc, with 
+ *	the result that the time returned may be less than optimal.
  *
- *	Room for improvement: At least take the hypotenuse of the planar movement 
- *	and the linear travel into account, but how many people actually use helixes?
+ *	Room for improvement: At least take the hypotenuse of the planar movement and
+ *	the linear travel into account, but how many people actually use helixes?
  */
-
 static float _get_arc_time (const float linear_travel, 		// in mm
 							 const float angular_travel, 	// in radians
 							 const float radius)			// in mm
@@ -420,7 +458,7 @@ static float _get_arc_time (const float linear_travel, 		// in mm
 /* 
  * _get_theta(float x, float y)
  *
- *	Find the angle in radians of deviance from the positive y axis. 
+ *	Find the angle in radians of deviance from the positive y axis
  *	negative angles to the left of y-axis, positive to the right.
  */
 
@@ -457,4 +495,3 @@ void mp_plan_arc_unit_tests()
 #ifdef __cplusplus
 }
 #endif
-

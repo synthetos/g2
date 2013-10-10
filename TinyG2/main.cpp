@@ -281,3 +281,21 @@ char *get_status_message(stat_t status)
 {
 	return ((char *)GET_TEXT_ITEM(stat_msg, status));
 }
+
+/*******************************************************************************
+ * _unit_tests() - uncomment __UNITS... line in .h files to enable unit tests
+ */
+
+static void _unit_tests(void) 
+{
+#ifdef __UNIT_TESTS
+	XIO_UNITS;				// conditional unit tests for xio sub-system
+//	EEPROM_UNITS;			// if you want this you must include the .h file in this file
+	CONFIG_UNITS;
+	JSON_UNITS;
+	GPIO_UNITS;
+	REPORT_UNITS;
+	PLANNER_UNITS;
+	PWM_UNITS;
+#endif
+}
