@@ -1,8 +1,8 @@
 /*
  * main.cpp - TinyG - An embedded rs274/ngc CNC controller
- * This file is part of the TinyG2 project.
+ * This file is part of the TinyG project.
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -22,21 +22,18 @@
 
 #include "tinyg2.h"				// #1 There are some dependencies
 #include "config.h"				// #2
-#include "controller.h"
 #include "hardware.h"
+#include "controller.h"
 #include "canonical_machine.h"
-//#include "json_parser.h"
-//#include "gcode_parser.h"
 #include "report.h"
 #include "planner.h"
 #include "stepper.h"
-#include "spindle.h"
 //#include "network.h"
 #include "switch.h"
 //#include "gpio.h"
 //#include "test.h"
-//#include "pwm.h"
-#include "util.h"
+#include "pwm.h"
+//#include "util.h"
 
 #include "xio.h"
 
@@ -116,13 +113,12 @@ static void _application_init(void)
 	hardware_init();				// system hardware setup 			- must be first
 	config_init();					// config records from eeprom 		- must be second
 	switch_init();					// switches and other inputs
-//	pwm_init();						// pulse width modulation drivers
+	pwm_init();						// pulse width modulation drivers
 
 	// do these next
 	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
-	spindle_init();					// spindle PWM and variables
 
 	// do these last
 	stepper_init();

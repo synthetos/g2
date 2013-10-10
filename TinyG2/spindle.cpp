@@ -1,8 +1,8 @@
 /*
  * spindle.cpp - canonical machine spindle driver
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,10 +27,10 @@
 
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
-//#include "gpio.h"
-#include "gcode_parser.h"
-#include "canonical_machine.h"
 #include "spindle.h"
+//#include "gpio.h"
+//#include "gcode_parser.h"
+//#include "canonical_machine.h"
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
@@ -43,9 +43,9 @@ static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
 
 /* 
- * spindle_init()
+ * cm_spindle_init()
  */
-void spindle_init()
+void cm_spindle_init()
 {
 	if( pwm.c[PWM_1].frequency < 0 )
 		pwm.c[PWM_1].frequency = 0;

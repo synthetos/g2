@@ -1,6 +1,6 @@
 /*
  * canonical_machine.cpp - rs274/ngc canonical machine.
- * Part of TinyG2 project
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2013 Alden S Hart, Jr.
  *
@@ -592,6 +592,9 @@ void canonical_machine_init()
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
 	cm.combined_state = COMBINED_READY;
+
+	// sub-system inits
+	cm_spindle_init();
 }
 
 /*
