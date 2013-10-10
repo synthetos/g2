@@ -1,8 +1,8 @@
 /*
- * pwm.c - pulse width modulation drivers
- * Part of TinyG project
+ * pwm.cpp - pulse width modulation drivers
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2012 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2012 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,16 +30,15 @@
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
 #include "hardware.h"
-#include "pwm.h"
-//#include "gpio.h"
 #include "text_parser.h"
+//#include "gpio.h"
+#include "pwm.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-/***** PWM defines, structures and memory allocation *****
- */
+/***** PWM defines, structures and memory allocation *****/
 
 pwmSingleton_t pwm;
 
@@ -140,16 +139,16 @@ stat_t pwm_set_freq(uint8_t chan, float freq)
 	if (prescale <= 1) {
 		pwm.p[chan].timer->PER = F_CPU/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV1_gc;
-		} else if (prescale <= 2) {
+	} else if (prescale <= 2) {
 		pwm.p[chan].timer->PER = F_CPU/2/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV2_gc;
-		} else if (prescale <= 4) {
+	} else if (prescale <= 4) {
 		pwm.p[chan].timer->PER = F_CPU/4/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV4_gc;
-		} else if (prescale <= 8) {
+	} else if (prescale <= 8) {
 		pwm.p[chan].timer->PER = F_CPU/8/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV8_gc;
-		} else {
+	} else {
 		pwm.p[chan].timer->PER = F_CPU/64/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV64_gc;
 	}
@@ -178,8 +177,8 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 	// Ffrq = Fper/(2N(CCA+1))
 	// Fpwm = Fper/((N(PER+1))
 /*	
-    float period_scalar = pwm.p[chan].timer->PER;
-    pwm.p[chan].timer->CCB = (uint16_t)(period_scalar * duty) + 1;
+	float period_scalar = pwm.p[chan].timer->PER;
+	pwm.p[chan].timer->CCB = (uint16_t)(period_scalar * duty) + 1;
 */
 	return (STAT_OK);
 }
@@ -190,7 +189,7 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
 
-
+// none
 
 
 /***********************************************************************************
