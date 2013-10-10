@@ -1,8 +1,8 @@
 /*
  * report.cpp - TinyG status report and other reporting functions.
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,14 +27,11 @@
 
 #include "tinyg2.h"
 #include "config.h"
-#include "controller.h"
 #include "report.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "canonical_machine.h"
 #include "planner.h"
 #include "settings.h"
-#include "hardware.h"
 #include "util.h"
 #include "xio.h"		// for ASCII definitions
 
@@ -56,13 +53,7 @@ void rpt_exception(uint8_t status)
 	printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
 	TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 }
-/*
-void rpt_exception(stat_t status, int16_t value)
-{
-	printf_P((const PROGMEM char *)("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}}\n"),
-		TINYG_FIRMWARE_BUILD, status, get_status_message(status), value);
-}
-*/
+
 stat_t rpt_er(cmdObj_t *cmd)
 {
 	rpt_exception(STAT_GENERIC_EXCEPTION_REPORT);	// bogus exception report
@@ -82,28 +73,29 @@ void _startup_helper(stat_t status, const char *msg)
 #ifndef __SUPPRESS_STARTUP_MESSAGES
 	js.json_footer_depth = JSON_FOOTER_DEPTH;	//++++ temporary until changeover is complete
 	cmd_reset_list();
-	cmd_add_object((const char_t *)"fb");
-	cmd_add_object((const char_t *)"fv");
-	cmd_add_object((const char_t *)"hv");
-	cmd_add_object((const char_t *)"id");
-	cmd_add_string((const char_t *)"msg", (const char_t *)msg);
+	cmd_add_object((const char_t *)"fv");		// firmware version
+	cmd_add_object((const char_t *)"fb");		// firmware build
+	cmd_add_object((const char_t *)"hp");		// hardware platform
+	cmd_add_object((const char_t *)"hv");		// hardware version
+//	cmd_add_object((const char_t *)"id");		// hardware ID
+	cmd_add_string((const char_t *)"msg", (const char_t *)msg);	// startup message
 	json_print_response(status);
 #endif
 }
 
 void rpt_print_initializing_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, (const PROGMEM char *)(INIT_MESSAGE));
+	_startup_helper(STAT_INITIALIZING, PSTR(INIT_MESSAGE));
 }
 
 void rpt_print_loading_configs_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, (const PROGMEM char *)("Loading configs from EEPROM"));
+	_startup_helper(STAT_INITIALIZING, PSTR("Loading configs from EEPROM"));
 }
 
 void rpt_print_system_ready_message(void)
 {
-	_startup_helper(STAT_OK, (const PROGMEM char *)("SYSTEM READY"));
+	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
 	if (cfg.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
 }
 
@@ -147,7 +139,7 @@ void rpt_print_system_ready_message(void)
  *		report in multi-line format. Additionally, a line starting with ? will put 
  *		the system into text mode.
  *
- *	  - Automatic status reports in text mode return CSV format
+ *	  - Automatic status reports in text mode return CSV format according to si setting
  */
 
 /* 
@@ -281,7 +273,7 @@ stat_t sr_populate_unfiltered_status_report()
 		strcat(tmp, cmd->token);
 		strcpy(cmd->token, tmp);
 		if ((cmd = cmd->nx) == NULL) 
-			return (STAT_OK);				 // should never be NULL unless SR length exceeds available buffer array 
+			return (cm_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
 	}
 	return (STAT_OK);
 }
@@ -347,7 +339,6 @@ stat_t sr_set_si(cmdObj_t *cmd)
 	sr.status_report_interval = (uint32_t)cmd->value;
 	return(STAT_OK);
 }
-
 
 /*****************************************************************************
  * Queue Reports
@@ -432,7 +423,7 @@ uint8_t qr_queue_report_callback()
 	cmd->nx = NULL;							// terminate the list
 
 	// make a qr object and print it
-	sprintf_P(cmd->token, (const PROGMEM char *)("qr"));
+	sprintf_P(cmd->token, PSTR("qr"));
 	cmd->value = qr.buffers_available;
 	cmd->objtype = TYPE_INTEGER;
 	cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
@@ -467,7 +458,7 @@ void qr_print_qv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_qv);}
 #endif // __TEXT_MODE
 
 /****************************************************************************
- ***** Report Unit Tests ****************************************************
+ ***** Unit Tests ***********************************************************
  ****************************************************************************/
 
 #ifdef __UNIT_TESTS
