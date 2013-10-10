@@ -1,8 +1,8 @@
 /*
- * json_parser.h - JSON parser and JSON support
- * This file is part of the TinyG2 project
+ * json_parser.h - JSON parser and JSON support for TinyG
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2011 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -101,23 +101,6 @@ stat_t json_set_jv(cmdObj_t *cmd);
 	#define js_print_fs tx_print_stub
 
 #endif // __TEXT_MODE
-
-
-
-/*
-// for now there is only one JSON array in use - the footer
-// if you add these make sure there are no collisions w/present or past numbers
-
-#define FOOTER_REVISION 1
-#define JSON_OUTPUT_STRING_MAX (OUTPUT_BUFFER_LEN)
-#define JSON_MAX_DEPTH 4
-
-void json_parser(char_t *str);
-uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size);
-void json_print_object(cmdObj_t *cmd);
-void json_print_response(uint8_t status);
-void json_print_list(stat_t status, uint8_t flags);
-*/
 
 /* unit test setup */
 

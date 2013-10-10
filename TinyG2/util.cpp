@@ -213,7 +213,7 @@ uint8_t read_float(char *buf, uint8_t *i, float *float_ptr)
 	char *start = buf + *i;
 	char *end;
   
-	*float_ptr = strtod(start, &end);
+	*float_ptr = strtof(start, &end);
 	if(end == start) { 
 		return(false); 
 	}
