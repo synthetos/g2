@@ -1,8 +1,8 @@
 /*
  * util.cpp - a random assortment of useful functions
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -22,10 +22,10 @@
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util contains a dog's breakfast of supporting functions that are 
- * not specific to tinyg: including:
+/* util contains a dog's breakfast of supporting functions that are not specific to tinyg: 
+ * including:
  *	  - math and min/max utilities and extensions 
  *	  - vector manipulation utilities
  */
@@ -48,18 +48,18 @@ extern "C"{
 float vector[AXES];	// statically allocated global for vector utilities
 
 /*
-void copy_vector(float dst[], const float src[], uint8_t length) 
+void copy_vector(float dst[], const float src[], uint8_t length)
 {
 	for (uint8_t i=0; i<length; i++) { dst[i] = src[i]; }
 }
 */
 
-void copy_axis_vector(float dst[], const float src[]) 
+void copy_axis_vector(float dst[], const float src[])
 {
 	memcpy(dst, src, sizeof(float)*AXES);
 }
 
-uint8_t vector_equal(float a[], float b[])
+uint8_t vector_equal(const float a[], const float b[])
 {
 	if ((fp_EQ(a[AXIS_X], b[AXIS_X])) &&
 		(fp_EQ(a[AXIS_Y], b[AXIS_Y])) &&
@@ -117,7 +117,7 @@ float *set_vector_by_axis(float value, uint8_t axis)
  *
  * Implementation tip: Order the min and max values from most to least likely in the calling args
  *
- * (*) Macro min4 is about 20uSec, inline function version is closer to 10 uSec
+ * (*) Macro min4 is about 20uSec, inline function version is closer to 10 uSec (Xmega 32 MHz)
  * 	#define min3(a,b,c) (min(min(a,b),c))
  *	#define min4(a,b,c,d) (min(min(a,b),min(c,d)))
  *	#define max3(a,b,c) (max(max(a,b),c))
@@ -162,10 +162,9 @@ float max4(float x1, float x2, float x3, float x4)
  * strcpy_U() 	   - strcpy workalike to get around initial NUL for blank string - possibly wrong
  * isnumber() 	   - isdigit that also accepts plus, minus, and decimal point
  * escape_string() - add escapes to a string - currently for quotes only
- * read_float()    - read a float from a normalized char array
  */
+
 /*
-#ifdef __ARM
 uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 {
 	uint16_t index = 0;
@@ -174,7 +173,6 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
 	} while (src[index++] != 0);
 	return dst;
 }
-#endif
 */
 
 uint8_t isnumber(char_t c)
@@ -197,30 +195,6 @@ char_t *escape_string(char_t *dst, char_t *src)
 	return (start_dst);
 }
 
-/* 
- * read_float() - read a float from a normalized char array
- *
- *	buf			normalized char array (line)
- *	i			char array index must point to start of number
- *	float_ptr	pointer to float to write value into
- *
- *	The line is normalized when it is all caps, has no white space,
- *	no non-alphnumeric characters, and no newline or CR.
- */
-/*
-uint8_t read_float(char *buf, uint8_t *i, float *float_ptr) 
-{
-	char *start = buf + *i;
-	char *end;
-  
-	*float_ptr = strtof(start, &end);
-	if(end == start) { 
-		return(false); 
-	}
-	*i = (uint8_t)(end - buf);
-	return(true);
-}
-*/
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 
