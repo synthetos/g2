@@ -33,9 +33,10 @@ extern "C"{
 #endif
 
 /**** Configs, Definitions and Structures ****/
+// Note: If you are looking for the defaults for the status report see settings.h
 
 #define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
-// **** must also line up in cfgArray, se00 - seXX ****
+												// **** must also line up in cfgArray, se00 - seXX ****
 
 enum srVerbosity {					// status report enable and verbosity
 	SR_OFF = 0,						// no reports
