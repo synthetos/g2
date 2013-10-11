@@ -32,7 +32,6 @@
 extern "C"{
 #endif
 
-
 /**** Configs, Definitions and Structures ****/
 
 /* JSON array definitions / revisions */

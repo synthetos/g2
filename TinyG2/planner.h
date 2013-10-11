@@ -2,7 +2,7 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -27,9 +27,9 @@
  */
 
 #ifndef PLANNER_H_ONCE
-#define PLANNER_H_ONCE 
+#define PLANNER_H_ONCE
 
-#include "canonical_machine.h"	// need GCodeState_t
+#include "canonical_machine.h"	// used for GCodeState_t
 
 #ifdef __cplusplus
 extern "C"{
@@ -54,7 +54,8 @@ enum moveState {
 	MOVE_STATE_HEAD,		// aline() acceleration portions
 	MOVE_STATE_BODY,		// aline() cruise portions
 	MOVE_STATE_TAIL,		// aline() deceleration portions
-	MOVE_STATE_SKIP			// mark a skipped block
+	MOVE_STATE_SKIP,		// mark a skipped block
+	MOVE_STATE_END			// move is marked as done (used by dwells)
 };
 #define MOVE_STATE_RUN1 MOVE_STATE_RUN // a convenience
 

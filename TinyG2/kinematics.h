@@ -2,7 +2,7 @@
  * kinematics.h - inverse kinematics routines
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -23,12 +23,6 @@
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-/*
- * At some point this whole thing ought to be renamed as the line buffer,
- * segment buffer, motor buffer, motor command buffer, joint buffer, or 
- * something that's more descriptive and not in conflict with the 
- * upper-level move buffer used by the planner.
  */
 
 #ifndef KINEMATICS_H_ONCE
