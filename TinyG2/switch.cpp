@@ -2,7 +2,7 @@
  * switch.cpp - switch handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
