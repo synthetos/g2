@@ -1,8 +1,8 @@
 /*
  * controller.h - tinyg controller and main dispatch loop
- * Part of TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -32,7 +32,6 @@
 extern "C"{
 #endif
 
-#define STAT_FLAG_PROMPTS_bm (1<<0)		// prompt enabled if set
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
 #define SAVED_BUFFER_LEN 100			// saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
@@ -40,9 +39,9 @@ extern "C"{
 //#define STATUS_MESSAGE_LEN __			// see tinyg2.h for status message string storage allocation
 
 #define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 3000				// blink rate for alarm state (in ms)
+#define LED_ALARM_TIMER 100				// blink rate for alarm state (in ms)
 
-typedef struct controllerSingleton {			// main TG controller struct
+typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
 	uint8_t state;						// controller state
 	float null;							// dumping ground for items with no target
@@ -59,20 +58,16 @@ typedef struct controllerSingleton {			// main TG controller struct
 	uint16_t linelen;					// length of currently processing line
 
 	// system state variables
+	uint8_t led_state;		// LEGACY	// 0=off, 1=on
+	int32_t led_counter;	// LEGACY	// a convenience for flashing an LED
 	uint32_t led_timer;					// used by idlers to flash indicator LED
 	uint8_t hard_reset_requested;		// flag to perform a hard reset
 	uint8_t bootloader_requested;		// flag to enter the bootloader
 
-	//+++++ These need to be moved
-	uint8_t status_report_request;		// set true to request a sr
-	uint32_t status_report_tick;		// time tick to generate next status report
-	uint32_t nvm_base_addr;				// NVM base address
-	uint32_t nvm_profile_base;			// NVM base address of current profile
-
 	// controller serial buffers
 	char_t *bufp;						// pointer to primary or secondary in buffer
-	char_t in_buf[INPUT_BUFFER_LEN];	// input text buffer
-	char_t out_buf[OUTPUT_BUFFER_LEN];	// output text buffer
+	char_t in_buf[INPUT_BUFFER_LEN];	// primary input buffer
+	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
 	magic_t magic_end;
 } controller_t;
@@ -90,10 +85,16 @@ enum cmControllerState {				// manages startup lines
 /**** function prototypes ****/
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
-void controller_reset();
-void controller_run();
-void tg_text_response(const uint8_t status, const uint8_t *buf);
+void controller_run(void);
+//void controller_reset(void);
 
+//void tg_reset_source(void);
+//void tg_set_primary_source(uint8_t dev);
+//void tg_set_secondary_source(uint8_t dev);
+
+//void tg_text_response(const uint8_t status, const char *buf);
+//void tg_reset(void);
+//void tg_application_startup(void);
 
 #ifdef __cplusplus
 }

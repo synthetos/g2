@@ -1,8 +1,8 @@
 /*
- * config_app.h - application-specific part of configuration data
- * Part of TinyG project
+ * config_app.h - application-specific part of configuration sub-system
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -14,7 +14,7 @@
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IsN THE SOFTWARE.
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef CONFIG_APP_H_ONCE
@@ -41,7 +41,7 @@ enum cmdType {						// classification of commands
  **** APPLICATION_SPECIFIC CONFIG STRUCTURE(S) *************************************
  ***********************************************************************************/
 
-typedef struct cfgParameters {
+typedef struct cfgParameters {		// mostly communications variables at this point
 	uint16_t magic_start;			// magic number to test memory integrity
 
 	// communications settings
@@ -49,14 +49,10 @@ typedef struct cfgParameters {
 	uint8_t enable_cr;				// enable CR in CRFL expansion on TX
 	uint8_t enable_echo;			// enable text-mode echo
 	uint8_t enable_flow_control;	// enable XON/XOFF or RTS/CTS flow control
-	//	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
+//	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
 
 	uint8_t usb_baud_rate;			// see xio_usart.h for XIO_BAUD values
 	uint8_t usb_baud_flag;			// technically this belongs in the controller singleton
-
-	// Non-volatile RAM
-	//	uint16_t nvm_base_addr;			// NVM base address
-	//	uint16_t nvm_profile_base;		// NVM base address of current profile
 
 	uint16_t magic_end;
 } cfgParameters_t;
