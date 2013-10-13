@@ -233,10 +233,10 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <OutputDirectory />
     <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=due</BuildTarget>
     <CleanTarget>clean PLATFORM=due</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputDirectory />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release (v9_x8c)' ">
     <ToolchainSettings>
