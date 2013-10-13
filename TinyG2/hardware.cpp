@@ -1,8 +1,8 @@
 /*
  * hardware.cpp - general hardware support functions
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2012 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,6 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+#ifdef __AVR
+#include <avr/wdt.h>			// used for software reset
+#endif
 
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2

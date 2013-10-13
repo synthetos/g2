@@ -1,6 +1,6 @@
 /*
- * gcode_parser.cpp - rs274/ngc Gcode parser.
- * Part of TinyG2 project
+ * gcode_parser.cpp - rs274/ngc Gcode parser
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
@@ -16,14 +16,14 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "tinyg2.h"		// #1
-#include "config.h"		// #2
+#include "tinyg2.h"			// #1
+#include "config.h"			// #2
 #include "controller.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "spindle.h"
 #include "util.h"
-#include "xio.h"					// for char definitions
+#include "xio.h"			// for char definitions
 
 #ifdef __cplusplus
 extern "C"{

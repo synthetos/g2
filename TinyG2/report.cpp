@@ -33,7 +33,7 @@
 #include "planner.h"
 #include "settings.h"
 #include "util.h"
-#include "xio.h"		// for ASCII definitions
+#include "xio.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -44,14 +44,14 @@ extern "C"{
 srSingleton_t sr;
 qrSingleton_t qr;
 
-/**** Exception Messages **************************************************
- * rpt_exception() - generate an exception message
+/**** Exception Messages ************************************************************
+ * rpt_exception() - generate an exception message - always in JSON format
  * rpt_er()		   - send a bogus exception report for testing purposes (it's not real)
  */
 void rpt_exception(uint8_t status)
 {
 	printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
-	TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+		TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 }
 
 stat_t rpt_er(cmdObj_t *cmd)
@@ -374,17 +374,6 @@ void qr_request_queue_report(int8_t buffers)
 	} else {
 		qr.buffers_removed -= buffers;
 	}
-
-	// perform filtration for QR_FILTERED reports
-	if (qr.queue_report_verbosity == QR_FILTERED) {
-		if (qr.buffers_available == qr.prev_available) {
-			return;
-		}
-		if ((qr.buffers_available > qr.queue_report_lo_water) && 	// e.g. > 2 buffers available
-			(qr.buffers_available < qr.queue_report_hi_water)) {	// e.g. < 20 buffers available
-			return;
-		}
-	}
 	qr.prev_available = qr.buffers_available;
 	qr.request = true;
 }
@@ -395,7 +384,7 @@ uint8_t qr_queue_report_callback()
 	qr.request = false;
 
 	if (cfg.comm_mode == TEXT_MODE) {
-		if (qr.queue_report_verbosity == QR_VERBOSE) {
+		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "qr:%d\n", qr.buffers_available);
 		} else  {
 			if (qr.queue_report_verbosity == QR_TRIPLE) {
@@ -403,7 +392,7 @@ uint8_t qr_queue_report_callback()
 			}
 		}
 	} else {
-		if (qr.queue_report_verbosity == QR_VERBOSE) {
+		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
 		} else {
 			if (qr.queue_report_verbosity == QR_TRIPLE) {
@@ -470,8 +459,8 @@ void sr_unit_tests(void)
 	cs.communications_mode = STAT_JSON_MODE;
 	sr_run_status_report();
 }
-#endif
-#endif
+#endif	// __UNIT_TESTS
+#endif	// __UNIT_TESTS_REPORT
 
 #ifdef __cplusplus
 }

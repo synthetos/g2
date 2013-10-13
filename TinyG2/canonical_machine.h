@@ -292,7 +292,7 @@ extern GCodeInput_t  gf;		// gcode input flags - transient
 // *** Note: check config printout strings align with all the state variables
 
 // #### LAYER 8 CRITICAL REGION ###
-// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ####
+// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT #### 
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
 	COMBINED_READY,					// [1] machine is ready for use
@@ -311,7 +311,7 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_ALARM,					// machine is in alarm (shutdown) state
+	MACHINE_ALARM,					// machine is in alarm state (shutdown)
 	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
 	MACHINE_PROGRAM_END,			// program end
 	MACHINE_CYCLE,					// machine is running (cycling)
@@ -588,7 +588,7 @@ stat_t cm_select_tool(uint8_t tool);							// T parameter
 stat_t cm_change_tool(uint8_t tool);							// M6
 
 // canonical machine commands not called from gcode dispatcher
-void cm_message(char_t *message);									// msg to console (e.g. Gcode comments)
+void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 void cm_request_feedhold(void);
@@ -690,7 +690,6 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	void cm_print_lv(cmdObj_t *cmd);
 	void cm_print_lb(cmdObj_t *cmd);
 	void cm_print_zb(cmdObj_t *cmd);
-
 	void cm_print_cofs(cmdObj_t *cmd);
 	void cm_print_cpos(cmdObj_t *cmd);
 
@@ -745,7 +744,6 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	#define cm_print_lv tx_print_stub
 	#define cm_print_lb tx_print_stub
 	#define cm_print_zb tx_print_stub
-
 	#define cm_print_cofs tx_print_stub
 	#define cm_print_cpos tx_print_stub
 
