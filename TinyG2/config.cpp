@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling 
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -90,7 +90,7 @@ void cmd_persist(cmdObj_t *cmd)
 	if (GET_TABLE_BYTE(flags) & F_PERSIST) cmd_write_NVM_value(cmd);
 }
 
-/****************************************************************************
+/************************************************************************************
  * config_init()  - called once on hard reset
  *
  * Performs one of 2 actions:
@@ -704,7 +704,97 @@ stat_t cmd_write_NVM_value(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
+/****************************************************************************
+ ***** Config Unit Tests ****************************************************
+ ****************************************************************************/
+
+#ifdef __UNIT_TESTS
+#ifdef __UNIT_TEST_CONFIG
+
+#define NVMwr(i,v) { cmd.index=i; cmd.value=v; cmd_write_NVM_value(&cmd);}
+#define NVMrd(i)   { cmd.index=i; cmd_read_NVM_value(&cmd); printf("%f\n", (char *)cmd.value);}
+
+void cfg_unit_tests()
+{
+
+// NVM tests
+/*	cmdObj_t cmd;
+	NVMwr(0, 329.01)
+	NVMwr(1, 111.01)
+	NVMwr(2, 222.02)
+	NVMwr(3, 333.03)
+	NVMwr(4, 444.04)
+	NVMwr(10, 10.10)
+	NVMwr(100, 100.100)
+	NVMwr(479, 479.479)
+
+	NVMrd(0)
+	NVMrd(1)
+	NVMrd(2)
+	NVMrd(3)
+	NVMrd(4)
+	NVMrd(10)
+	NVMrd(100)
+	NVMrd(479)
+*/
+
+// config table tests
+
+	index_t i;
+//	float val;
+
+//	print_configs("$", NUL);					// no filter (show all)
+//	print_configs("$", 'g');					// filter for general parameters
+//	print_configs("$", '1');					// filter for motor 1
+//	print_configs("$", 'x');					// filter for x axis
+
+	i = cmd_get_index((const char_t *)"fb");
+	i = cmd_get_index((const char_t *)"xfr");
+	i = cmd_get_index((const char_t *)"g54");
+
+//	i = get_pos_axis(55);
+//	i = get_pos_axis(73);
+//	i = get_pos_axis(93);
+//	i = get_pos_axis(113);
+
+/*
+	for (i=0; i<CMD_MAX_INDEX; i++) {
+
+		cmd_get(&cmd);
+
+		cmd.value = 42;
+		cmd_set(&cmd);
+
+		val = get_flt_value(i);
+		cmd_get_token(i, cmd.token);
+
+//		get_friendly(i, string);
+		get_format(i, cmd.vstring);
+		get_axis(i);							// uncomment main function to test
+		get_motor(i);
+		cmd_set(i, &cmd);
+		cmd_print(i);
+	}
+
+	_parse_config_string("$1po 1", &c);			// returns a number
+	_parse_config_string("XFR=1200", &c);		// returns a number
+	_parse_config_string("YFR 1300", &c);		// returns a number
+	_parse_config_string("zfr	1400", &c);		// returns a number
+	_parse_config_string("afr", &c);			// returns a null
+	_parse_config_string("Bfr   ", &c);			// returns a null
+	_parse_config_string("cfr=wordy", &c);		// returns a null
+
+//	i = cfgget_config_index("gc");
+//	i = cfgget_config_index("gcode");
+//	i = cfgget_config_index("c_axis_mode");
+//	i = cfgget_config_index("AINT_NOBODY_HOME");
+	i = cfgget_config_index("firmware_version");
+*/
+}
+
+#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-

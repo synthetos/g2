@@ -33,8 +33,6 @@
 //#include "gpio.h"
 //#include "test.h"
 #include "pwm.h"
-//#include "util.h"
-
 #include "xio.h"
 
 #include "MotateTimers.h"
@@ -75,8 +73,9 @@ typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
 
-void init( void )
+void init(void)
 {
+#ifdef __ARM
 	SystemInit();
 
 	// Disable watchdog
@@ -84,9 +83,10 @@ void init( void )
 
 	// Initialize C library
 	__libc_init_array();
+#endif
 }
 
-int main( void )
+int main(void)
 {
 	// system initialization
 	init();
