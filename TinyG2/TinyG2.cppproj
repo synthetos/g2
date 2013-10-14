@@ -823,13 +823,7 @@
     <Compile Include="settings\settings_othercutter.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="settings\settings_otherfab.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketcnc_linear.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketcnc_rotary.h">
+    <Compile Include="settings\settings_othermill.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_probotixV90.h">
