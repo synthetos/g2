@@ -1,8 +1,8 @@
 /*
  * util.h - a random assortment of useful functions
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,16 +24,24 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/* util.c/.h contains a dog's breakfast of supporting functions that are 
+ * not specific to tinyg: including:
+ *
+ *	  - math and min/max utilities and extensions 
+ *	  - vector manipulation utilities
+ *	  - support for debugging routines
+ */
 
 #ifndef UTIL_H_ONCE
 #define UTIL_H_ONCE
 
-#include <stdint.h>
-#include "sam.h"
-
+#ifdef __ARM
+//#include <stdint.h>
+//#include "sam.h"
 #include "MotateTimers.h"
 using Motate::delay;
 using Motate::SysTickTimer;
+#endif
 
 #ifdef __cplusplus
 extern "C"{
@@ -41,10 +49,17 @@ extern "C"{
 
 /****** Global Scope Variables and Functions ******/
 
-uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//*** vector utilities ***
 
-//void copy_vector(float dest[], const float src[], uint8_t length);
+extern float vector[AXES]; // vector of axes for passing to subroutines
+
+#define clear_vector(a) memset(a,0,sizeof(a))
 float get_axis_vector_length(const float a[], const float b[]);
+uint8_t vector_equal(const float a[], const float b[]);
+float *set_vector(float x, float y, float z, float a, float b, float c);
+float *set_vector_by_axis(float value, uint8_t axis);
+//void copy_vector(float dst[], const float src[], uint8_t length);
+
 void copy_axis_vector(float dst[], const float src[]);
 /*
 #define copy_axis_vector(dst,src) ( dst[AXIS_X] = src[AXIS_X];\
@@ -54,26 +69,38 @@ void copy_axis_vector(float dst[], const float src[]);
 									dst[AXIS_B] = src[AXIS_B];\
 									dst[AXIS_C] = src[AXIS_C]; )
 */
-uint8_t vector_equal(float a[], float b[]);
+
+//*** math utilities ***
 
 float min3(float x1, float x2, float x3);
 float min4(float x1, float x2, float x3, float x4);
 float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
+//float std_dev(float a[], uint8_t n, float *mean);
+
+//*** string utilities ***
+
+//#ifdef __ARM
+//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
+//#endif
 
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
-float std_dev(float a[], uint8_t n, float *mean);
 
-/***** Math Support *****/
+//*** other utilities ***
+
+#ifdef __ARM
+uint32_t SysTickTimer_getValue(void);
+#endif
+
+//**** Math Support *****
 
 #ifndef square
 #define square(x) ((x)*(x))		/* UNSAFE */
 #endif
 
 // side-effect safe forms of min and max
-
 #ifndef max
 #define max(a,b) \
    ({ __typeof__ (a) termA = (a); \
@@ -83,9 +110,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 
 #ifndef min
 #define min(a,b) \
-   ({ __typeof__ (a) termA = (a); \
-      __typeof__ (b) termB = (b); \
-      termA<termB ? termA:termB; })
+	({ __typeof__ (a) term1 = (a); \
+	   __typeof__ (b) term2 = (b); \
+	   term1<term2 ? term1:term2; })
 #endif
 
 #ifndef avg
@@ -93,13 +120,15 @@ float std_dev(float a[], uint8_t n, float *mean);
 #endif
 
 #ifndef EPSILON
-#define EPSILON		0.00001					// rounding error for floats
+#define EPSILON		((float)0.00001)		// allowable rounding error for floats
+//#define EPSILON 	((float)0.000001)		// allowable rounding error for floats
 #endif
-#ifndef fp_FALSE
-#define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
+
+#ifndef fp_EQ
+#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
 #endif
-#ifndef fp_TRUE
-#define fp_TRUE(a) (a > EPSILON)			// float is interpreted as TRUE (not equal to zero)
+#ifndef fp_NE
+#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_ZERO
 #define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
@@ -107,11 +136,11 @@ float std_dev(float a[], uint8_t n, float *mean);
 #ifndef fp_NOT_ZERO
 #define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
 #endif
-#ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
+#ifndef fp_FALSE
+#define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
 #endif
-#ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
+#ifndef fp_TRUE
+#define fp_TRUE(a) (a > EPSILON)			// float is interpreted as TRUE (not equal to zero)
 #endif
 
 // Constants
@@ -125,8 +154,9 @@ float std_dev(float a[], uint8_t n, float *mean);
 #define RADIAN (57.2957795)
 //		M_PI is pi as defined in math.h
 //		M_SQRT2 is radical2 as defined in math.h
-//#define M_SQRT3 (1.73205080756888)
-
+#ifndef M_SQRT3
+#define M_SQRT3 (1.73205080756888)
+#endif
 
 #ifdef __cplusplus
 }

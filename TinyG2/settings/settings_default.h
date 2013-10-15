@@ -2,7 +2,7 @@
  * settings_default.h - default machine profile
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2012 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2012 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -41,7 +41,7 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to default settings"
 
-#define JERK_MAX 				20			// in million mm/min^3
+#define JERK_MAX 				20			// yes, that's "20,000,000" mm/(min^3)
 #define JUNCTION_DEVIATION		0.05		// default value, in mm
 #define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
 
@@ -54,7 +54,7 @@
 #define M1_TRAVEL_PER_REV		1.25		// 1tr
 #define M1_MICROSTEPS			8			// 1mi		1,2,4,8
 #define M1_POLARITY				0			// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			0			// 1pm		TRUE=low power idle enabled 
+#define M1_POWER_MODE			0			// 1pm		standard
 
 #define M2_MOTOR_MAP	 		AXIS_Y
 #define M2_STEP_ANGLE			1.8
@@ -99,8 +99,8 @@
 #define X_TRAVEL_MAX 			150					// xtm		travel between switches or crashes
 #define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
-#define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
-#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
+#define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SEARCH_VELOCITY 		500					// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
 #define X_LATCH_BACKOFF 		2					// xlb		mm
@@ -135,13 +135,14 @@
 #define Z_ZERO_BACKOFF 			1
 #define Z_JERK_HOMING			Z_JERK_MAX
 
-#define A_AXIS_MODE 			AXIS_STANDARD
-#define A_VELOCITY_MAX 			3600
+// A values are chosen to make the A motor react the same as X for testing
+#define A_AXIS_MODE 			AXIS_RADIUS
+#define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			A_VELOCITY_MAX
 #define A_TRAVEL_MAX 			-1
-#define A_JERK_MAX 				JERK_MAX
+#define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_RADIUS 				1
+#define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
 #define A_SEARCH_VELOCITY 		600

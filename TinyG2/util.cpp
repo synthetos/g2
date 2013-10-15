@@ -1,8 +1,8 @@
 /*
  * util.cpp - a random assortment of useful functions
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -22,10 +22,10 @@
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util contains a dog's breakfast of supporting functions that are 
- * not specific to tinyg: including:
+/* util contains a dog's breakfast of supporting functions that are not specific to tinyg: 
+ * including:
  *	  - math and min/max utilities and extensions 
  *	  - vector manipulation utilities
  */
@@ -37,19 +37,74 @@
 extern "C"{
 #endif
 
-/*** statically allocated global for vector operations ***/
-float vector[AXES];		// vector used by util.cpp and other functions
+/**** Vector utilities ****
+ * copy_vector()			- copy vector of arbitrary length
+ * copy_axis_vector()		- copy an axis vector
+ * get_axis_vector_length()	- return the length of an axis vector
+ * set_vector()				- load values into vector form
+ * set_vector_by_axis()		- load a single value into a zero vector
+ */
+
+float vector[AXES];	// statically allocated global for vector utilities
 
 /*
- * strcpy_U() - strcpy workalike to get around initial NUL for blank string - possibly wrong
- */
-uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
+void copy_vector(float dst[], const float src[], uint8_t length)
 {
-	uint16_t index = 0;
-	do {
-		dst[index] = src[index];	
-	} while (src[index++] != 0);
-	return dst;
+	for (uint8_t i=0; i<length; i++) { dst[i] = src[i]; }
+}
+*/
+
+void copy_axis_vector(float dst[], const float src[])
+{
+	memcpy(dst, src, sizeof(float)*AXES);
+}
+
+uint8_t vector_equal(const float a[], const float b[])
+{
+	if ((fp_EQ(a[AXIS_X], b[AXIS_X])) &&
+		(fp_EQ(a[AXIS_Y], b[AXIS_Y])) &&
+		(fp_EQ(a[AXIS_Z], b[AXIS_Z])) &&
+		(fp_EQ(a[AXIS_A], b[AXIS_A])) &&
+		(fp_EQ(a[AXIS_B], b[AXIS_B])) &&
+		(fp_EQ(a[AXIS_C], b[AXIS_C]))) {
+		return (true);
+	}
+	return (false);
+}
+
+float get_axis_vector_length(const float a[], const float b[]) 
+{
+	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
+				 square(a[AXIS_Y] - b[AXIS_Y]) +
+				 square(a[AXIS_Z] - b[AXIS_Z]) +
+				 square(a[AXIS_A] - b[AXIS_A]) +
+				 square(a[AXIS_B] - b[AXIS_B]) +
+				 square(a[AXIS_C] - b[AXIS_C])));
+}
+
+float *set_vector(float x, float y, float z, float a, float b, float c)
+{
+	vector[AXIS_X] = x;
+	vector[AXIS_Y] = y;
+	vector[AXIS_Z] = z;
+	vector[AXIS_A] = a;
+	vector[AXIS_B] = b;
+	vector[AXIS_C] = c;
+	return (vector);
+}
+
+float *set_vector_by_axis(float value, uint8_t axis)
+{
+	clear_vector(vector);
+	switch (axis) {
+		case (AXIS_X): vector[AXIS_X] = value; break;
+		case (AXIS_Y): vector[AXIS_Y] = value; break;
+		case (AXIS_Z): vector[AXIS_Z] = value; break;
+		case (AXIS_A): vector[AXIS_A] = value; break;
+		case (AXIS_B): vector[AXIS_B] = value; break;
+		case (AXIS_C): vector[AXIS_C] = value;
+	}
+	return (vector);
 }
 
 /**** Math and other general purpose functions ****/
@@ -62,7 +117,7 @@ uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
  *
  * Implementation tip: Order the min and max values from most to least likely in the calling args
  *
- * (*) Macro min4 is about 20uSec, inline function version is closer to 10 uSec
+ * (*) Macro min4 is about 20uSec, inline function version is closer to 10 uSec (Xmega 32 MHz)
  * 	#define min3(a,b,c) (min(min(a,b),c))
  *	#define min4(a,b,c,d) (min(min(a,b),min(c,d)))
  *	#define max3(a,b,c) (max(max(a,b),c))
@@ -103,9 +158,23 @@ float max4(float x1, float x2, float x3, float x4)
 	return (max);
 }
 
-/*
- * isnumber() - isdigit that also accepts plus, minus, and decimal point
+/**** String utilities ****
+ * strcpy_U() 	   - strcpy workalike to get around initial NUL for blank string - possibly wrong
+ * isnumber() 	   - isdigit that also accepts plus, minus, and decimal point
+ * escape_string() - add escapes to a string - currently for quotes only
  */
+
+/*
+uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src )
+{
+	uint16_t index = 0;
+	do {
+		dst[index] = src[index];	
+	} while (src[index++] != 0);
+	return dst;
+}
+*/
+
 uint8_t isnumber(char_t c)
 {
 	if (c == '.') { return (true); }
@@ -113,10 +182,6 @@ uint8_t isnumber(char_t c)
 	if (c == '+') { return (true); }
 	return (isdigit(c));
 }
-
-/*
- * escape_string() - add escapes to a string - currently for quotes only
- */
 
 char_t *escape_string(char_t *dst, char_t *src) 
 {
@@ -154,46 +219,15 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
     return (h % HASHMASK);
 }
 
-
-/**** Vector utilities ****
- * copy_vector()			- copy vector of arbitrary length
- * copy_axis_vector()		- copy an axis vector
- * get_axis_vector_length()	- return the length of an axis vector
- */
 /*
-void copy_vector(float dst[], const float src[], uint8_t length) 
+ * SysTickTimer_getValue() - this is a hack to get around some compatibility problems
+ */
+#ifdef __ARM
+uint32_t SysTickTimer_getValue()
 {
-	for (uint8_t i=0; i<length; i++) { dst[i] = src[i]; }
+	return (SysTickTimer.getValue());
 }
-*/
-
-void copy_axis_vector(float dst[], const float src[]) 
-{
-	memcpy(dst, src, sizeof(float)*AXES);
-}
-
-uint8_t vector_equal(float a[], float b[])
-{
-	if ((fp_EQ(a[AXIS_X], b[AXIS_X])) &&
-		(fp_EQ(a[AXIS_Y], b[AXIS_Y])) &&
-		(fp_EQ(a[AXIS_Z], b[AXIS_Z])) &&
-		(fp_EQ(a[AXIS_A], b[AXIS_A])) &&
-		(fp_EQ(a[AXIS_B], b[AXIS_B])) &&
-		(fp_EQ(a[AXIS_C], b[AXIS_C]))) {
-		return (true);
-	}
-	return (false);
-}
-
-float get_axis_vector_length(const float a[], const float b[]) 
-{
-	return (sqrt(square(a[AXIS_X] - b[AXIS_X]) +
-				 square(a[AXIS_Y] - b[AXIS_Y]) +
-				 square(a[AXIS_Z] - b[AXIS_Z]) +
-				 square(a[AXIS_A] - b[AXIS_A]) +
-				 square(a[AXIS_B] - b[AXIS_B]) +
-				 square(a[AXIS_C] - b[AXIS_C])));
-}
+#endif
 
 #ifdef __cplusplus
 }

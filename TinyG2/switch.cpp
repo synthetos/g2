@@ -2,7 +2,7 @@
  * switch.cpp - switch handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -41,9 +41,12 @@
  */
 
 #include "tinyg2.h"
+#include "config.h"
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "text_parser.h"
+
 #include "MotateTimers.h"
 using Motate::SysTickTimer;
 
@@ -186,6 +189,53 @@ static void _trigger_cycle_start(switch_t *s)
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ * These functions are not part of the NIST defined functions
+ ***********************************************************************************/
+
+stat_t sw_set_st(cmdObj_t *cmd)			// switch type (global)
+{
+//	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_01(cmd);
+	switch_init();
+	return (STAT_OK);
+}
+
+stat_t sw_set_sw(cmdObj_t *cmd)			// switch setting
+{
+	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	set_ui8(cmd);
+	switch_init();
+	return (STAT_OK);
+}
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+static const char fmt_st[] PROGMEM = "[st]  switch type%18d [0=NO,1=NC]\n";
+void sw_print_st(cmdObj_t *cmd) { text_print_flt(cmd, fmt_st);}
+
+//static const char fmt_ss[] PROGMEM = "Switch %s state:     %d\n";
+//void sw_print_ss(cmdObj_t *cmd) { fprintf(stderr, fmt_ss, cmd->token, (uint8_t)cmd->value);}
+
+/*
+static const char msg_sw0[] PROGMEM = "Disabled";
+static const char msg_sw1[] PROGMEM = "NO homing";
+static const char msg_sw2[] PROGMEM = "NO homing & limit";
+static const char msg_sw3[] PROGMEM = "NC homing";
+static const char msg_sw4[] PROGMEM = "NC homing & limit";
+static const char *const msg_sw[] PROGMEM = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
+*/
+
+
+#endif
 
 //###########################################################################
 //##### UNIT TESTS ##########################################################

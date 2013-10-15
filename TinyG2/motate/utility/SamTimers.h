@@ -430,11 +430,11 @@ namespace Motate {
 		};
 
 		void init() {
+			_motateTickCount = 0;
+
 			// Set Systick to 1ms interval, common to all SAM3 variants
 			if (SysTick_Config(SystemCoreClock / 1000))
 			{
-				_motateTickCount = 0 ;
-
 				// Capture error
 				while (true);
 			}

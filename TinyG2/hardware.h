@@ -1,8 +1,10 @@
 /*
- * hardware.h - system hardware configuration 
- * This file is part of the TinyG2 project
+ * hardware.h - system hardware configuration - this file is platform specific
+ *			  - ARM version
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * This file is part of the TinyG project
+ *
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -28,6 +30,10 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
+////////////////////////////
+/////// ARM VERSION ////////
+////////////////////////////
+
 #include "motatePins.h"
 #include "motateTimers.h" // for Motate::timer_number
 
@@ -35,20 +41,16 @@
 extern "C"{
 #endif
 
-void hardware_init(void);				// master hardware init
-void hardware_get_id(char_t *id);
+/**** Global System Defines ****/
 
+#undef F_CPU							// CPU clock - set for delays
+#define F_CPU 84000000UL
+#define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
 #define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
 
-/**** Global System Defines ****/
-/* CPU clock */	
-
-#undef F_CPU							// set for delays
-#define F_CPU 84000000UL
-
-#define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
-
-/* Refer to tinyg2.h for Axes, motors & PWM channels used by the application */
+/************************************************************************************
+ **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
+ ************************************************************************************/
 
 /**** Resource Assignment via Motate ****
  *
@@ -75,14 +77,21 @@ void hardware_get_id(char_t *id);
  *	 5	Serial write character interrupt  
  */
 
+/**** Stepper DDA and dwell timer settings ****/
+
+//#define FREQUENCY_DDA		50000UL
+#define FREQUENCY_DDA		100000UL
+#define FREQUENCY_DWELL		1000UL
+#define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
+
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
 
-Motate::timer_number dda_timer_num   = 3;	// stepper pulse generation in stepper.cpp
-Motate::timer_number dwell_timer_num = 4;	// dwell timing in stepper.cpp
-Motate::timer_number load_timer_num  = 5;	// request load timer in stepper.cpp
-Motate::timer_number exec_timer_num  = 6;	// request exec timer in stepper.cpp
+Motate::timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
+Motate::timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
+Motate::timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
+Motate::timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
@@ -242,21 +251,37 @@ static Motate::InputPin<axis_B_max_pin_num> axis_B_max_pin(Motate::kPullUp);
 static Motate::InputPin<axis_C_min_pin_num> axis_C_min_pin(Motate::kPullUp);
 static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin(Motate::kPullUp);
 
-/**** DEPRECATED CODE. BEST TO LEAVE IN UNTIL COMPLETELY REPLACED ****/
+/*** function prototypes ***/
 
-/* Bit assignments for GPIO1_OUTs for spindle, PWM and coolant */
-/*
-#define SPINDLE_BIT			0x08		// spindle on/off
-#define SPINDLE_DIR			0x04		// spindle direction, 1=CW, 0=CCW
-#define SPINDLE_PWM			0x02		// spindle PWMs output bit
-#define MIST_COOLANT_BIT	0x01		// coolant on/off - these are the same due to limited ports
-#define FLOOD_COOLANT_BIT	0x01		// coolant on/off
+void hardware_init(void);			// master hardware init
+void hw_request_hard_reset();
+void hw_hard_reset(void);
+stat_t hw_hard_reset_handler(void);
 
-#define SPINDLE_LED			0
-#define SPINDLE_DIR_LED		1
-#define SPINDLE_PWM_LED		2
-#define COOLANT_LED			3
-*/
+void hw_request_bootloader(void);
+stat_t hw_bootloader_handler(void);
+stat_t hw_run_boot(cmdObj_t *cmd);
+
+stat_t hw_set_hv(cmdObj_t *cmd);
+stat_t hw_get_id(cmdObj_t *cmd);
+
+#ifdef __TEXT_MODE
+
+	void hw_print_fb(cmdObj_t *cmd);
+	void hw_print_fv(cmdObj_t *cmd);
+	void hw_print_hp(cmdObj_t *cmd);
+	void hw_print_hv(cmdObj_t *cmd);
+	void hw_print_id(cmdObj_t *cmd);
+
+#else
+
+	#define hw_print_fb tx_print_stub
+	#define hw_print_fv tx_print_stub
+	#define hw_print_hp tx_print_stub
+	#define hw_print_hv tx_print_stub
+	#define hw_print_id tx_print_stub
+
+#endif // __TEXT_MODE
 
 #ifdef __cplusplus
 }

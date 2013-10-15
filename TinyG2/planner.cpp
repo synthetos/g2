@@ -2,8 +2,8 @@
  * planner.cpp - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2013 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -57,7 +57,6 @@
 #include "plan_arc.h"
 #include "plan_line.h"
 #include "planner.h"
-//#include "spindle.h"
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
@@ -67,6 +66,7 @@ extern "C"{
 #endif
 
 // Allocate planner structures
+
 mpBufferPool_t mb;				// move buffer queue
 mpMoveMasterSingleton_t mm;		// context for line planning
 mpMoveRuntimeSingleton_t mr;	// context for line runtime
@@ -75,13 +75,13 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
  * Local Scope Data and Functions
  */
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
-#define spindle_speed time		// local alias for spindle_speed to the time variable
-#define value_vector target		// alias for vector of values
+#define spindle_speed move_time	// local alias for spindle_speed to the time variable
+#define value_vector gm.target	// alias for vector of values
 #define flag_vector unit		// alias for vector of flags
 
 // execution routines (NB: These are all called from the LO interrupt)
-static uint8_t _exec_dwell(mpBuf_t *bf);
-static uint8_t _exec_command(mpBuf_t *bf);
+static stat_t _exec_dwell(mpBuf_t *bf);
+static stat_t _exec_command(mpBuf_t *bf);
 
 #ifdef __DEBUG
 static uint8_t _get_buffer_index(mpBuf_t *bf); 
@@ -91,7 +91,6 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 /* 
  * planner_init()
  */
-
 void planner_init()
 {
 // If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
@@ -100,9 +99,20 @@ void planner_init()
 
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
-	ar.magic_start = MAGICNUM;
-	ar.magic_end = MAGICNUM;
+	arc.magic_start = MAGICNUM;
+	arc.magic_end = MAGICNUM;
 	mp_init_buffers();
+}
+
+/*
+ * mp_assertions() - test assertions, return error code if violation exists
+ */
+stat_t mp_assertions()
+{
+	if ((mb.magic_start  != MAGICNUM) || (mb.magic_end 	 != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((mr.magic_start  != MAGICNUM) || (mr.magic_end 	 != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((arc.magic_start != MAGICNUM) || (arc.magic_end  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	return (STAT_OK);
 }
 
 /* 
@@ -111,13 +121,13 @@ void planner_init()
  *	Does not affect the move currently running in mr.
  *	Does not affect mm or gm model positions
  *	This function is designed to be called during a hold to reset the planner
- *	This function should not generally be called; call cm_flush_planner() instead
+ *	This function should not generally be called; call cm_queue_flush() instead
  */
 void mp_flush_planner()
 {
-	ar_abort_arc();
+	cm_abort_arc();
 	mp_init_buffers();
-	cm.motion_state = MOTION_STOP;
+	cm_set_motion_state(MOTION_STOP);
 }
 
 /*
@@ -154,23 +164,20 @@ void mp_set_runtime_position(uint8_t axis, const float position)
  *	Manages run buffers and other details
  */
 
-stat_t mp_exec_move() 
+stat_t mp_exec_move()
 {
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_run_buffer()) == NULL) return (STAT_NOOP);	// NULL means nothing's running
 
 	// Manage cycle and motion state transitions
-	// cycle auto-start for lines only. Add other move types as appropriate.
+	// Cycle auto-start for lines only
 	if (bf->move_type == MOVE_TYPE_ALINE) {
 		if (cm.cycle_state == CYCLE_OFF) cm_cycle_start();
-		if (cm.motion_state == MOTION_STOP) cm.motion_state = MOTION_RUN;		
+		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
 	}
-//	if ((cm.motion_state == MOTION_STOP) && (bf->move_type == MOVE_TYPE_ALINE)) {
-//		cm.motion_state = MOTION_RUN;
-//	}
-	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the buffer
-	return (STAT_INTERNAL_ERROR);		// never supposed to get here
+	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the planner buffer
+	return(cm_alarm(STAT_INTERNAL_ERROR));	// never supposed to get here
 }
 
 /************************************************************************************
@@ -202,12 +209,11 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 	bf->bf_func = _exec_command;		// callback to planner queue exec function
 	bf->cm_func = cm_exec;				// callback to canonical machine exec function
 
-	for (uint8_t i=0; i<AXES; i++) {
-		bf->value_vector[i] = value[i];
-		bf->flag_vector[i] = flag[i];
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		bf->value_vector[axis] = value[axis];
+		bf->flag_vector[axis] = flag[axis];
 	}
 	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
-//	return;
 }
 
 static stat_t _exec_command(mpBuf_t *bf)
@@ -226,23 +232,23 @@ static stat_t _exec_command(mpBuf_t *bf)
  * When the stepper driver sees a dwell it times the dwell on a separate 
  * timer than the stepper pulse timer.
  */
-
-stat_t mp_dwell(float seconds) 
+stat_t mp_dwell(float seconds)
 {
-	mpBuf_t *bf; 
+	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {	// get write buffer or fail
 		return (STAT_BUFFER_FULL_FATAL);		// (not ever supposed to fail)
 	}
-	bf->bf_func = _exec_dwell;					// register the callback to dwell start
-	bf->time = seconds;						  	// in seconds, not minutes
+	bf->bf_func = _exec_dwell;					// register callback to dwell start
+	bf->gm.move_time = seconds;					// in seconds, not minutes
+	bf->move_state = MOVE_STATE_NEW;
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
 }
 
-static uint8_t _exec_dwell(mpBuf_t *bf)
+static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->time * 1000000));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
 	mp_free_run_buffer();
 	return (STAT_OK);
 }
@@ -350,34 +356,34 @@ void mp_queue_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	st_request_exec_move();						// request a move exec if not busy
-	rpt_request_queue_report(+1);				// add to the "added buffers" count
+	qr_request_queue_report(+1);				// add to the "added buffers" count
 }
 
 mpBuf_t * mp_get_run_buffer() 
 {
-	// condition: fresh buffer; becomes running if queued or pending
+	// CASE: fresh buffer; becomes running if queued or pending
 	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) || 
 		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
 		 mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
-	// condition: asking for the same run buffer for the Nth time
+	// CASE: asking for the same run buffer for the Nth time
 	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer
 		return (mb.r);
 	}
-	return (NULL);								// condition: no queued buffers. fail it.
+	return (NULL);								// CASE: no queued buffers. fail it.
 }
 
 void mp_free_run_buffer()						// EMPTY current run buf & adv to next
 {
 	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
-	mb.r->buffer_state = MP_BUFFER_EMPTY;
-	mb.r = mb.r->nx;							 // advance to next run buffer
+//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
+	mb.r = mb.r->nx;							// advance to next run buffer
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-		mb.r->buffer_state = MP_BUFFER_PENDING;  // pend next buffer
+		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
 	}
 	if (mb.w == mb.r) cm_cycle_end();			// end the cycle if the queue empties
 	mb.buffers_available++;
-	rpt_request_queue_report(-1);				// add to the "removed buffers" count
+	qr_request_queue_report(-1);				// add to the "removed buffers" count
 }
 
 mpBuf_t * mp_get_first_buffer(void)
@@ -406,7 +412,7 @@ mpBuf_t * mp_get_last_buffer(void)
 
 void mp_clear_buffer(mpBuf_t *bf) 
 {
-	mpBuf_t *nx = bf->nx;	// save pointers
+	mpBuf_t *nx = bf->nx;			// save pointers
 	mpBuf_t *pv = bf->pv;
 	memset(bf, 0, sizeof(mpBuf_t));
 	bf->nx = nx;					// restore pointers
@@ -415,7 +421,7 @@ void mp_clear_buffer(mpBuf_t *bf)
 
 void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 {
-	mpBuf_t *nx = bf->nx;	// save pointers
+	mpBuf_t *nx = bf->nx;			// save pointers
 	mpBuf_t *pv = bf->pv;
  	memcpy(bf, bp, sizeof(mpBuf_t));
 	bf->nx = nx;					// restore pointers
@@ -425,7 +431,7 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 #ifdef __DEBUG	// currently this routine is only used by debug routines
 uint8_t mp_get_buffer_index(mpBuf_t *bf) 
 {
-	mpBuf_t *b = bf;		// temp buffer pointer
+	mpBuf_t *b = bf;				// temp buffer pointer
 
 	for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
 		if (b->pv > b) {
@@ -433,7 +439,7 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
 		}
 		b = b->pv;
 	}
-	return (PLANNER_BUFFER_POOL_SIZE);	// should never happen
+	return(cm_alarm(PLANNER_BUFFER_POOL_SIZE));	// should never happen
 }
 #endif
 

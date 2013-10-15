@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling 
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,14 +24,19 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "tinyg2.h"
-#include "config.h"
-#include "json_parser.h"
-#include "text_parser.h"
+/*
+ *	See config.h for a Config system overview and a bunch of details.
+ */
+
+#include "tinyg2.h"		// #1
+#include "config.h"		// #2
+#include "report.h"
 #include "controller.h"
 #include "canonical_machine.h"
-#include "persistence.h"
-#include "report.h"
+#include "json_parser.h"
+#include "text_parser.h"
+#include "hardware.h"
+#include "help.h"
 #include "util.h"
 #include "xio.h"
 
@@ -60,22 +65,20 @@ cmdObj_t cmd_list[CMD_LIST_LEN];	// JSON header element
  */
 stat_t cmd_set(cmdObj_t *cmd)
 {
-//	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
 	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
-	return (cfgArray[cmd->index].set(cmd));
+	return (((fptrCmd)GET_TABLE_WORD(set))(cmd));
 }
 
 stat_t cmd_get(cmdObj_t *cmd)
 {
-//	ritorno(cmd_index_ge_max(cmd->index));	// validate index or return
-	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
-	return (cfgArray[cmd->index].get(cmd));
+	if (cmd->index >= cmd_index_max()) { return(STAT_INTERNAL_RANGE_ERROR);}
+	return (((fptrCmd)GET_TABLE_WORD(get))(cmd));
 }
 
 void cmd_print(cmdObj_t *cmd)
 {
-	if (cmd_index_ge_max(cmd->index)) return;	// validate index or return
-	cfgArray[cmd->index].print(cmd);
+	if (cmd->index >= cmd_index_max()) return;
+	((fptrCmd)GET_TABLE_WORD(print))(cmd);
 }
 
 void cmd_persist(cmdObj_t *cmd)
@@ -83,21 +86,18 @@ void cmd_persist(cmdObj_t *cmd)
 #ifdef __DISABLE_PERSISTENCE	// cutout for faster simulation in test
 	return;
 #endif
-	if (!cmd_index_is_single(cmd->index)) return;	// validate index to < groups or return
-	if ((cfgArray[cmd->index].flags) & F_PERSIST) {
-		write_persistent_value(cmd);
-	}
+	if (cmd_index_lt_groups(cmd->index) == false) return;
+	if (GET_TABLE_BYTE(flags) & F_PERSIST) cmd_write_NVM_value(cmd);
 }
 
-/****************************************************************************
+/************************************************************************************
  * config_init()  - called once on hard reset
- * set_defaults() - reset NVM with default values for active profile
  *
- * Will perform one of 2 actions:
- *	(1) if NVM is set up or out-of-rev: load RAM and NVM with hardwired default settings
- *	(2) if NVM is set up and at current config version: use NVM data for config
+ * Performs one of 2 actions:
+ *	(1) if NVM is set up or out-of-rev load RAM and NVM with settings.h defaults
+ *	(2) if NVM is set up and at current config version use NVM data for config
  *
- *	You can assume the cfg struct has been zeroed by a hard reset. 
+ *	You can assume the cfg struct has been zeroed by a hard reset.
  *	Do not clear it as the version and build numbers have already been set by tg_init()
  */
 void config_init()
@@ -109,32 +109,33 @@ void config_init()
 	cfg.magic_end = MAGICNUM;
 
 //+++++ There is a chunk of code missing from here until persistence is implemented
-/*	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
-	cfg.nvm_base_addr = NVM_BASE_ADDR;
-	cfg.nvm_profile_base = cfg.nvm_base_addr;
+/*
+	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
+	hw.nvm_base_addr = NVM_BASE_ADDR;
+	hw.nvm_profile_base = hw.nvm_base_addr;
 	cmd->index = 0;							// this will read the first record in NVM
 
 	cmd_read_NVM_value(cmd);
 	if (cmd->value != cs.fw_build) {
 		cmd->value = true;					// case (1) NVM is not setup or not in revision
 		set_defaults(cmd);
-		} else {								// case (2) NVM is setup and in revision
+	} else {								// case (2) NVM is setup and in revision
 		rpt_print_loading_configs_message();
 		for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
-			if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_INITIALIZE) {
+			if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 				strcpy_P(cmd->token, cfgArray[cmd->index].token);	// read the token from the array
 				cmd_read_NVM_value(cmd);
 				cmd_set(cmd);
 			}
 		}
-		rpt_init_status_report();
+		sr_init_status_report();
 	}
 */
 // do this instead:
 	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
-	persistence_init();
+//	persistence_init();
 	cmd->value = true;
-	set_defaults(cmd);		
+	set_defaults(cmd);	
 }
 
 /*
@@ -143,21 +144,21 @@ void config_init()
 stat_t set_defaults(cmdObj_t *cmd) 
 {
 	if (fp_FALSE(cmd->value)) {				// failsafe. Must set true or no action occurs
-//		print_defaults_help(cmd);			//+++++
+		help_defa(cmd);
 		return (STAT_OK);
 	}
 	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
-	
+
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
-		if ((cfgArray[cmd->index].flags & F_INITIALIZE) != 0) {
-			cmd->value = cfgArray[cmd->index].def_value;
-			strcpy(cmd->token, cfgArray[cmd->index].token);
+		if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
+			cmd->value = GET_TABLE_FLOAT(def_value);
+			strcpy_P(cmd->token, cfgArray[cmd->index].token);
 			cmd_set(cmd);
-			cmd_persist(cmd);
+			cmd_persist(cmd);				// persist must occur when no other interrupts are firing
 		}
 	}
-	rpt_print_initializing_message();
-	rpt_init_status_report();	// set default status report
+	rpt_print_initializing_message();		// don't start TX until all the NVM persistence is done
+	sr_init_status_report();				// reset status reports
 	return (STAT_OK);
 }
 
@@ -178,28 +179,25 @@ stat_t get_nul(cmdObj_t *cmd)
 
 stat_t get_ui8(cmdObj_t *cmd)
 {
-	cmd->value = (float)*((uint8_t *)cfgArray[cmd->index].target);
+	cmd->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
 stat_t get_int(cmdObj_t *cmd)
 {
-	cmd->value = (float)*((uint32_t *)cfgArray[cmd->index].target);
+	cmd->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
 }
 
 stat_t get_flt(cmdObj_t *cmd)
 {
-	cmd->value = *((float *)cfgArray[cmd->index].target);
-	cmd->precision = cfgArray[cmd->index].precision;
+	cmd->value = *((float *)GET_TABLE_WORD(target));
+	cmd->precision = (int8_t)GET_TABLE_WORD(precision);
 	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
-
-//char *get_format(const index_t index) { return ((char *)cfgArray[index].format);}
-// REPLACED BY A MACRO - See config.h
 
 /* Generic sets()
  *  set_nul() - set nothing (returns STAT_NOOP)
@@ -214,87 +212,79 @@ stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 
 stat_t set_ui8(cmdObj_t *cmd)
 {
-	*((uint8_t *)cfgArray[cmd->index].target) = cmd->value;
+	*((uint8_t *)GET_TABLE_WORD(target)) = cmd->value;
 	cmd->objtype = TYPE_INTEGER;
 	return(STAT_OK);
 }
 
 stat_t set_01(cmdObj_t *cmd)
 {
-	if (cmd->value > 1) {
-		return (STAT_INPUT_VALUE_UNSUPPORTED);
-	} else {
-		return (set_ui8(cmd));
-	}
+	if (cmd->value > 1) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
+	return (set_ui8(cmd));										// else
 }
 
 stat_t set_012(cmdObj_t *cmd)
 {
-	if (cmd->value > 2) {
-		return (STAT_INPUT_VALUE_UNSUPPORTED);
-	} else {
-		return (set_ui8(cmd));
-	}
+	if (cmd->value > 2) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
+	return (set_ui8(cmd));										// else
 }
 
-static stat_t set_0123(cmdObj_t *cmd)
+stat_t set_0123(cmdObj_t *cmd)
 {
-	if (cmd->value > 3) { 
-		return (STAT_INPUT_VALUE_UNSUPPORTED);
-	} else {
-		return (set_ui8(cmd));
-	}
+	if (cmd->value > 3) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
+	return (set_ui8(cmd));										// else
 }
 
 stat_t set_int(cmdObj_t *cmd)
 {
-	*((uint32_t *)cfgArray[cmd->index].target) = cmd->value;
+	*((uint32_t *)GET_TABLE_WORD(target)) = cmd->value;
 	cmd->objtype = TYPE_INTEGER;
 	return(STAT_OK);
 }
 
 stat_t set_flt(cmdObj_t *cmd)
 {
-	*((float *)cfgArray[cmd->index].target) = cmd->value;
-	cmd->precision = cfgArray[cmd->index].precision;
+	*((float *)GET_TABLE_WORD(target)) = cmd->value;
+	cmd->precision = GET_TABLE_WORD(precision);
 	cmd->objtype = TYPE_FLOAT;
 	return(STAT_OK);
 }
 
-/* Generic prints()
- *	print_nul() - print nothing
- *	print_str() - print string value
- *	print_ui8() - print uint8_t value w/no units or unit conversion
- *	print_int() - print integer value w/no units or unit conversion
- *	print_flt() - print float value w/no units or unit conversion
+/***** GCODE SPECIFIC EXTENSIONS TO GENERIC FUNCTIONS *****/
+
+/*
+ * get_flu() - get floating point number with G20/G21 units conversion
+ *
+ * The number "getted" will be in internal canonical units (mm), which is  
+ * returned in external units (inches or mm) 
  */
-void print_nul(cmdObj_t *cmd) {}
 
-void print_str(cmdObj_t *cmd)
+stat_t get_flu(cmdObj_t *cmd)
 {
-	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index), *(cmd->stringp));
+	get_flt(cmd);
+	if (cm_get_units_mode(MODEL) == INCHES) cmd->value *= INCH_PER_MM;
+	return (STAT_OK);
 }
 
-void print_ui8(cmdObj_t *cmd)
+/*
+ * set_flu() - set floating point number with G20/G21 units conversion
+ *
+ * The number "setted" will have been delivered in external units (inches or mm).
+ * It is written to the target memory location in internal canonical units (mm),
+ * but the original cmd->value is not changed so display works correctly.
+ */
+
+stat_t set_flu(cmdObj_t *cmd)
 {
-	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index), (uint8_t)cmd->value);
+	float tmp_value = cmd->value;
+	if (cm_get_units_mode(MODEL) == INCHES) tmp_value *= MM_PER_INCH; // convert to canonical units
+	*((float *)GET_TABLE_WORD(target)) = tmp_value;
+	cmd->precision = GET_TABLE_WORD(precision);
+	cmd->objtype = TYPE_FLOAT;
+	return(STAT_OK);
 }
 
-void print_int(cmdObj_t *cmd)
-{
-	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index), (uint32_t)cmd->value);
-}
-
-void print_flt(cmdObj_t *cmd)
-{
-	cmd_get(cmd);
-	fprintf(stderr, get_format(cmd->index), cmd->value);
-}
-
-/********************************************************************************
+/************************************************************************************
  * Group operations
  *
  *	Group operations work on parent/child groups where the parent is one of:
@@ -321,7 +311,7 @@ void print_flt(cmdObj_t *cmd)
 /* 
  * get_grp() - read data from axis, motor, system or other group
  *
- *	get_grp() is a group expansion function that expands the parent group and  returns 
+ *	get_grp() is a group expansion function that expands the parent group and returns 
  *	the values of all the children in that group. It expects the first cmdObj in the 
  *	cmdBody to have a valid group name in the token field. This first object will be set 
  *	to a TYPE_PARENT. The group field is left nul - as the group field refers to a parent 
@@ -330,17 +320,17 @@ void print_flt(cmdObj_t *cmd)
  *	All subsequent cmdObjs in the body will be populated with their values.
  *	The token field will be populated as will the parent name in the group field. 
  *
- *	The sys group is an exception where the childern carry a blank group field, even though 
+ *	The sys group is an exception where the children carry a blank group field, even though 
  *	the sys parent is labeled as a TYPE_PARENT.
  */
 
 stat_t get_grp(cmdObj_t *cmd)
 {
-	uint8_t *parent_group = cmd->token;		// token in the parent cmd object is the group
-	uint8_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
+	char_t *parent_group = cmd->token;		// token in the parent cmd object is the group
+	char_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
 	cmd->objtype = TYPE_PARENT;				// make first object the parent 
 	for (index_t i=0; cmd_index_is_single(i); i++) {
-		strcpy(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
+		strcpy_P(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
 		if (strcmp(parent_group, group) != 0) continue;
 		(++cmd)->index = i;
 		cmd_get_cmdObj(cmd);
@@ -351,12 +341,13 @@ stat_t get_grp(cmdObj_t *cmd)
 /*
  * set_grp() - get or set one or more values in a group
  *
- *	This functions is called "set_group()" but technically it's a getter and a setter. 
- *	It iterates the group children and either gets the value or sets the value for each 
- *	depending on the cmd->objtype.
+ *	This functions is called "_set_group()" but technically it's a getter and 
+ *	a setter. It iterates the group children and either gets the value or sets
+ *	the value for each depending on the cmd->objtype.
  *
  *	This function serves JSON mode only as text mode shouldn't call it.
  */
+
 stat_t set_grp(cmdObj_t *cmd)
 {
 	if (cfg.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
@@ -376,14 +367,13 @@ stat_t set_grp(cmdObj_t *cmd)
 /*
  * cmd_group_is_prefixed() - hack
  *
- *	This little function deals with the fact that some groups don't use the parent 
- *	token as a prefix to the child elements; SR being a good example.
+ *	This little function deals with the exception cases that some groups don't use
+ *	the parent token as a prefix to the child elements; SR being a good example.
  */
-uint8_t cmd_group_is_prefixed(uint8_t *group)
+uint8_t cmd_group_is_prefixed(char_t *group)
 {
-	if (strstr("sr,sys",group) != NULL) {	// you can extend like this: "sr,sys,xyzzy"
-		return (false);
-	}
+	if (strcmp("sr",group) == 0) return (false);
+	if (strcmp("sys",group) == 0) return (false);
 	return (true);
 }
 
@@ -391,11 +381,42 @@ uint8_t cmd_group_is_prefixed(uint8_t *group)
  ***** cmdObj functions ************************************************************
  ***********************************************************************************/
 
-/*****************************************************************************
+/***********************************************************************************
  * cmdObj helper functions and other low-level cmd helpers
- * cmd_get_type()		 - returns command type as a CMD_TYPE enum
- * cmd_persist_offsets() - write any changed G54 (et al) offsets back to NVM
- * cmd_get_index() 		 - get index from mnenonic token + group
+ */
+
+/* cmd_get_index() - get index from mnenonic token + group
+ *
+ * cmd_get_index() is the most expensive routine in the whole config. It does a 
+ * linear table scan of the PROGMEM strings, which of course could be further 
+ * optimized with indexes or hashing.
+ */
+index_t cmd_get_index(const char_t *group, const char_t *token)
+{
+	char_t c;
+	char_t str[CMD_TOKEN_LEN+1];
+	strcpy(str, group);
+	strcat(str, token);
+
+	index_t index_max = cmd_index_max();
+
+	for (index_t i=0; i < index_max; i++) {
+		if ((c = GET_TOKEN_BYTE(token[0])) != str[0]) {	continue; }					// 1st character mismatch
+		if ((c = GET_TOKEN_BYTE(token[1])) == NUL) { if (str[1] == NUL) return(i);}	// one character match
+		if (c != str[1]) continue;													// 2nd character mismatch
+		if ((c = GET_TOKEN_BYTE(token[2])) == NUL) { if (str[2] == NUL) return(i);}	// two character match
+		if (c != str[2]) continue;													// 3rd character mismatch
+		if ((c = GET_TOKEN_BYTE(token[3])) == NUL) { if (str[3] == NUL) return(i);}	// three character match
+		if (c != str[3]) continue;													// 4th character mismatch
+		if ((c = GET_TOKEN_BYTE(token[4])) == NUL) { if (str[4] == NUL) return(i);}	// four character match
+		if (c != str[4]) continue;													// 5th character mismatch
+		return (i);																	// five character match
+	}
+	return (NO_MATCH);
+}
+
+/* 
+ * cmd_get_type() - returns command type as a CMD_TYPE enum
  */
 
 uint8_t cmd_get_type(cmdObj_t *cmd)
@@ -410,16 +431,20 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 	return (CMD_TYPE_CONFIG);
 }
 
+/*
+ * cmd_persist_offsets() - write any changed G54 (et al) offsets back to NVM
+ */
+
 stat_t cmd_persist_offsets(uint8_t flag)
 {
-/*++++ No persistence yet
+/*
 	if (flag == true) {
 		cmdObj_t cmd;
 		for (uint8_t i=1; i<=COORDS; i++) {
 			for (uint8_t j=0; j<AXES; j++) {
 				sprintf(cmd.token, "g%2d%c", 53+i, ("xyzabc")[j]);
-				cmd.index = cmd_get_index("", cmd.token);
-				cmd.value = cfg.offset[i][j];
+				cmd.index = cmd_get_index((const char_t *)"", cmd.token);
+				cmd.value = cm.offset[i][j];
 				cmd_persist(&cmd);				// only writes changed values
 			}
 		}
@@ -428,82 +453,60 @@ stat_t cmd_persist_offsets(uint8_t flag)
 	return (STAT_OK);
 }
 
-/* 
- * cmd_get_index() is the most expensive routine in the whole config. It does a linear table scan 
- * of the PROGMEM strings, which of course could be further optimized with indexes or hashing.
- */
-
-index_t cmd_get_index(const char_t *group, const char_t *token)
-{
-	char_t c;
-	char_t str[CMD_TOKEN_LEN+1];
-	strcpy(str, group);
-	strcat(str, token);
-
-	index_t index_max = cmd_index_max();
-
-	for (index_t i=0; i < index_max; i++) {
-		if ((c = cfgArray[i].token[0]) != str[0]) {	continue; }					// 1st character mismatch
-		if ((c = cfgArray[i].token[1]) == NUL) { if (str[1] == NUL) return(i);}	// one character match
-		if (c != str[1]) continue;												// 2nd character mismatch
-		if ((c = cfgArray[i].token[2]) == NUL) { if (str[2] == NUL) return(i);}	// two character match
-		if (c != str[2]) continue;												// 3rd character mismatch
-		if ((c = cfgArray[i].token[3]) == NUL) { if (str[3] == NUL) return(i);}	// three character match
-		if (c != str[3]) continue;												// 4th character mismatch
-		if ((c = cfgArray[i].token[4]) == NUL) { if (str[4] == NUL) return(i);}	// four character match
-		if (c != str[4]) continue;												// 5th character mismatch
-		return (i);																// five character match
-	}
-	return (NO_MATCH);
-}
-
 /******************************************************************************
  * cmdObj low-level object and list operations
  * cmd_get_cmdObj()		- setup a cmd object by providing the index
  * cmd_reset_obj()		- quick clear for a new cmd object
  * cmd_reset_list()		- clear entire header, body and footer for a new use
  * cmd_copy_string()	- used to write a string to shared string storage and link it
- * cmd_copy_string_P()	- same, but for progmem string sources
  * cmd_add_object()		- write contents of parameter to  first free object in the body
  * cmd_add_integer()	- add an integer value to end of cmd body (Note 1)
  * cmd_add_float()		- add a floating point value to end of cmd body
  * cmd_add_string()		- add a string object to end of cmd body
- * cmd_add_string_P()	- add a program memory string as a string object to end of cmd body
- * cmd_add_message()	- add a mesasge to cmd body
- * cmd_add_message_P()	- add a program memory message the the cmd body
+ * cmd_add_conditional_message() - add a message to cmd body if messages are enabled
  *
- *	Note: Functions that return a cmd pointer point to the object that was modified
- *	or a NULL pointer if there was an error
+ *	Note: Functions that return a cmd pointer point to the object that was modified or
+ *	a NULL pointer if there was an error.
  *
- *	Note Adding a really large integer (like a checksum value) may lose precision 
- *	due to the cast to a float. Sometimes it's better to load an integer as a 
- *	string if all you want to do is display it.
+ *	Note: Adding a really large integer (like a checksum value) may lose precision due
+ *	to the cast to a float. Sometimes it's better to load an integer as a string if
+ *	all you want to do is display it.
+ *
+ *	Note: A trick is to cast all string constants for cmd_copy_string(), cmd_add_object(),
+ *	cmd_add_string() and cmd_add_conditional_message() to (const char_t *). Examples:
+ *
+ *		cmd_add_string((const char_t *)"msg", string);
+ *
+ *	On the AVR this will save a little static RAM. The "msg" string will occupy flash
+ *	as an initializer and be instantiated in stack RAM when the function executes.
+ *	On the ARM (however) this will put the string into flash and skip RAM allocation.
  */
 
 void cmd_get_cmdObj(cmdObj_t *cmd)
 {
 	if (cmd->index >= cmd_index_max()) { return; }	// sanity
+
 	index_t tmp = cmd->index;
 	cmd_reset_obj(cmd);
 	cmd->index = tmp;
 
-	strcpy(cmd->group, cfgArray[cmd->index].group); // group field is always terminated
-	strcpy(cmd->token, cfgArray[cmd->index].token); // token field is always terminated
+	strcpy_P(cmd->token, cfgArray[cmd->index].token); // token field is always terminated
+	strcpy_P(cmd->group, cfgArray[cmd->index].group); // group field is always terminated
 
 	// special processing for system groups and stripping tokens for groups
 	if (cmd->group[0] != NUL) {
-		if (cfgArray[cmd->index].flags & F_NOSTRIP) {
+		if (GET_TABLE_BYTE(flags) & F_NOSTRIP) {
 			cmd->group[0] = NUL;
 		} else {
 			strcpy(cmd->token, &cmd->token[strlen(cmd->group)]); // strip group from the token
 		}
 	}
-	((fptrCmd)(cfgArray[cmd->index].get))(cmd);	// populate the value
+	((fptrCmd)GET_TABLE_WORD(get))(cmd);	// populate the value
 }
  
 cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)		// clear a single cmdObj structure
 {
-	cmd->objtype = TYPE_EMPTY;					// selective clear is much faster than calling memset
+	cmd->objtype = TYPE_EMPTY;				// selective clear is much faster than calling memset
 	cmd->index = 0;
 	cmd->value = 0;
 	cmd->precision = 0;
@@ -520,7 +523,7 @@ cmdObj_t *cmd_reset_obj(cmdObj_t *cmd)		// clear a single cmdObj structure
 			cmd->depth = cmd->pv->depth;
 		}
 	}
-	return (cmd);
+	return (cmd);							// return pointer to cmd as a convenience to callers
 }
 
 cmdObj_t *cmd_reset_list()					// clear the header and response body
@@ -555,16 +558,25 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 	return (STAT_OK);
 }
 
-cmdObj_t *cmd_add_object(const char_t *token) // add an object to the body using a token
+/* UNUSED
+stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P)
+{
+	char_t buf[CMD_SHARED_STRING_LEN];
+	strncpy_P(buf, src_P, CMD_SHARED_STRING_LEN);
+	return (cmd_copy_string(cmd, buf));
+}
+*/
+
+cmdObj_t *cmd_add_object(const char_t *token)  // add an object to the body using a token
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
 		if (cmd->objtype != TYPE_EMPTY) {
-			cmd = cmd->nx;
+			if ((cmd = cmd->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
 			continue;
 		}
 		// load the index from the token or die trying
-		if ((cmd->index = cmd_get_index((const uint8_t*)"", token)) == NO_MATCH) { return (NULL);}
+		if ((cmd->index = cmd_get_index((const char_t *)"",token)) == NO_MATCH) { return (NULL);}
 		cmd_get_cmdObj(cmd);				// populate the object from the index
 		return (cmd);
 	}
@@ -576,7 +588,7 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value)// add an in
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
 		if (cmd->objtype != TYPE_EMPTY) {
-			cmd = cmd->nx;
+			if ((cmd = cmd->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
@@ -592,7 +604,7 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
 		if (cmd->objtype != TYPE_EMPTY) {
-			cmd = cmd->nx;
+			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
@@ -603,17 +615,17 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 	return (NULL);
 }
 
-cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a string object to the body
+cmdObj_t *cmd_add_string(const char_t *token, const char_t *string) // add a string object to the body
 {
 	cmdObj_t *cmd = cmd_body;
 	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
 		if (cmd->objtype != TYPE_EMPTY) {
-			cmd = cmd->nx;
+			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
 		strncpy(cmd->token, token, CMD_TOKEN_LEN);
 		if (cmd_copy_string(cmd, string) != STAT_OK) { return (NULL);}
-		cmd->index = cmd_get_index((const uint8_t *)"", cmd->token);
+		cmd->index = cmd_get_index((const char_t *)"", cmd->token);
 		cmd->objtype = TYPE_STRING;
 		return (cmd);
 	}
@@ -622,17 +634,15 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string)	// add a str
 
 cmdObj_t *cmd_add_conditional_message(const char_t *string)	// conditionally add a message object to the body
 {
-	if ((cfg.comm_mode == JSON_MODE) && (cfg.echo_json_messages != true)) { return (NULL);}
+	if ((cfg.comm_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL);}
 	return(cmd_add_string((const char_t *)"msg", string));
 }
 
-/**** cmd_print_list() - print cmd_array as JSON or text ****
+/**** cmd_print_list() - print cmd_array as JSON or text **********************
  *
- * 	Use this function for all text and JSON output that wants to be in a response header
- *	(don't just printf stuff)
- * 	It generates and prints the JSON and text mode output strings 
- *	In JSON mode it generates the footer with the status code, buffer count and checksum
- *	In text mode it uses the the textmode variable to set the output format
+ * 	Generate and print the JSON and text mode output strings. Use this function 
+ *	for all text and JSON output that wants to be in a response header. 
+ *	Don't just printf stuff.
  *
  *	Inputs:
  *	  json_flags = JSON_OBJECT_FORMAT - print just the body w/o header or footer
@@ -652,7 +662,139 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 	}
 }
 
+/************************************************************************************
+ ***** EEPROM access functions ******************************************************
+ ************************************************************************************
+ * cmd_read_NVM_value()	 - return value (as float) by index
+ * cmd_write_NVM_value() - write to NVM by index, but only if the value has changed
+ *
+ *	It's the responsibility of the caller to make sure the index does not exceed range
+ */
+stat_t cmd_read_NVM_value(cmdObj_t *cmd)
+{
+#ifdef __AVR
+	int8_t nvm_byte_array[NVM_VALUE_LEN];
+	uint16_t nvm_address = hw.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
+	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
+	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
+#endif // __AVR
+#ifdef __ARM
+	//+++++ No ARM persistence yet
+#endif // __ARM
+	return (STAT_OK);
+}
+
+stat_t cmd_write_NVM_value(cmdObj_t *cmd)
+{
+#ifdef __AVR
+	if (cm.cycle_state != CYCLE_OFF) return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving
+	float tmp = cmd->value;
+	ritorno(cmd_read_NVM_value(cmd));
+	if (cmd->value != tmp) {		// catches the isnan() case as well
+		cmd->value = tmp;
+		int8_t nvm_byte_array[NVM_VALUE_LEN];
+		memcpy(&nvm_byte_array, &tmp, NVM_VALUE_LEN);
+		uint16_t nvm_address = hw.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
+		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
+	}
+#endif // __AVR
+#ifdef __ARM
+	//+++++ No ARM persistence yet
+#endif // __ARM
+	return (STAT_OK);
+}
+
+/****************************************************************************
+ ***** Config Unit Tests ****************************************************
+ ****************************************************************************/
+
+#ifdef __UNIT_TESTS
+#ifdef __UNIT_TEST_CONFIG
+
+#define NVMwr(i,v) { cmd.index=i; cmd.value=v; cmd_write_NVM_value(&cmd);}
+#define NVMrd(i)   { cmd.index=i; cmd_read_NVM_value(&cmd); printf("%f\n", (char *)cmd.value);}
+
+void cfg_unit_tests()
+{
+
+// NVM tests
+/*	cmdObj_t cmd;
+	NVMwr(0, 329.01)
+	NVMwr(1, 111.01)
+	NVMwr(2, 222.02)
+	NVMwr(3, 333.03)
+	NVMwr(4, 444.04)
+	NVMwr(10, 10.10)
+	NVMwr(100, 100.100)
+	NVMwr(479, 479.479)
+
+	NVMrd(0)
+	NVMrd(1)
+	NVMrd(2)
+	NVMrd(3)
+	NVMrd(4)
+	NVMrd(10)
+	NVMrd(100)
+	NVMrd(479)
+*/
+
+// config table tests
+
+	index_t i;
+//	float val;
+
+//	print_configs("$", NUL);					// no filter (show all)
+//	print_configs("$", 'g');					// filter for general parameters
+//	print_configs("$", '1');					// filter for motor 1
+//	print_configs("$", 'x');					// filter for x axis
+
+	i = cmd_get_index((const char_t *)"fb");
+	i = cmd_get_index((const char_t *)"xfr");
+	i = cmd_get_index((const char_t *)"g54");
+
+//	i = get_pos_axis(55);
+//	i = get_pos_axis(73);
+//	i = get_pos_axis(93);
+//	i = get_pos_axis(113);
+
+/*
+	for (i=0; i<CMD_MAX_INDEX; i++) {
+
+		cmd_get(&cmd);
+
+		cmd.value = 42;
+		cmd_set(&cmd);
+
+		val = get_flt_value(i);
+		cmd_get_token(i, cmd.token);
+
+//		get_friendly(i, string);
+		get_format(i, cmd.vstring);
+		get_axis(i);							// uncomment main function to test
+		get_motor(i);
+		cmd_set(i, &cmd);
+		cmd_print(i);
+	}
+
+	_parse_config_string("$1po 1", &c);			// returns a number
+	_parse_config_string("XFR=1200", &c);		// returns a number
+	_parse_config_string("YFR 1300", &c);		// returns a number
+	_parse_config_string("zfr	1400", &c);		// returns a number
+	_parse_config_string("afr", &c);			// returns a null
+	_parse_config_string("Bfr   ", &c);			// returns a null
+	_parse_config_string("cfr=wordy", &c);		// returns a null
+
+//	i = cfgget_config_index("gc");
+//	i = cfgget_config_index("gcode");
+//	i = cfgget_config_index("c_axis_mode");
+//	i = cfgget_config_index("AINT_NOBODY_HOME");
+	i = cfgget_config_index("firmware_version");
+*/
+}
+
+#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-
