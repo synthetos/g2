@@ -1,22 +1,22 @@
 # 
 # Makefile
 # 
-# Copyright (c) 2012 Robert Giseburt
+# Copyright (c) 2012 - 2013 Robert Giseburt
+# Copyright (c) 2013 Alden S. Hart Jr.
 # 
 # This file is part of the TinyG2 project.
 # 
-# This file is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This file is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-# 
-# You should have received a copy of the GNU Lesser General Public License
-# along with the Motate Library.  If not, see <http://www.gnu.org/licenses/>.
+# This file ("the software") is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2 as published by the
+# Free Software Foundation. You should have received a copy of the GNU General Public
+# License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+#
+# THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+# WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+# SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+# OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
 
 ##############################################################################################
@@ -25,11 +25,13 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . arduino variants
-FIRST_LINK_SOURCES := arduino/syscalls_sam3.c
+SOURCE_DIRS = . motate
+# arduino arduino/USB variants
+
+FIRST_LINK_SOURCES := 
 
 # List all user directories here
-USER_INCLUDE_DIRS := motate $(SOURCE_DIRS)
+USER_INCLUDE_DIRS := $(SOURCE_DIRS)
 
 # List the user directory to look for the libraries here
 USER_LIB_DIRS =
@@ -38,14 +40,17 @@ USER_LIB_DIRS =
 USER_LIBS =
 
 # Define optimisation level here
-#OPTIMIZATION = -Os
-OPTIMIZATION = -O0
+#OPTIMIZATION ?= 0
+OPTIMIZATION ?= s
+#OPTIMIZATION ?= 3
 
 CFLAGS   :=
 CPPFLAGS :=
 
 # List ASM source files here
 ASRC =
+
+DEFAULT_MEMORY = flash
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
@@ -54,20 +59,23 @@ ASRC =
 CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
 CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
 CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
 CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align
+#CFLAGS += -Wcast-align -Wpacked 
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
+# Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
+CFLAGS += -Wno-format-nonliteral -Wno-format-security
+
 # To reduce application size use only integer printf function.
-CFLAGS += -Dprintf=iprintf
+#CFLAGS += -Dprintf=iprintf
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
@@ -76,16 +84,19 @@ CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
 CPPFLAGS += -Wmain -Wparentheses -Wunreachable-code
 #CPPFLAGS += -Wcast-align
 CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CPPFLAGS += -Wuninitialized -Wunknown-pragmas -Wfloat-equal -Wundef
+CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wpacked -Wredundant-decls -Winline -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn
+CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
 
+# Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
+CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
+
 # To reduce application size use only integer printf function.
-CPPFLAGS += -Dprintf=iprintf
+#CPPFLAGS += -Dprintf=iprintf
 
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
@@ -132,16 +143,34 @@ DEPDIR = $(OBJ)/dep
 PLATFORM ?= due
 
 ifeq ("$(PLATFORM)","due")
-    CHIP = SAM3X8E
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
 
+	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
-
     CMSIS_ROOT = CMSIS
-    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
-    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
-                           $(PLATFORM_BASE)/libsam/include
+#    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
+#    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
+#                           $(PLATFORM_BASE)/libsam/include
 
     include $(PLATFORM_BASE).mk
+
+else
+
+ifeq ("$(PLATFORM)","v9_3x8c")
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+
+	CHIP = SAM3X8C
+	PLATFORM_BASE = platform/atmel_sam
+	CMSIS_ROOT = CMSIS
+
+	include $(PLATFORM_BASE).mk
+
+else
+
+$(error Unknown platform "$(PLATFORM)")
+
+endif
+
 endif
 
 #
@@ -171,6 +200,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB     = $(CROSS_COMPILE)gdb
 NM      = $(CROSS_COMPILE)nm
 RM      = rm
+CP      = cp
 
 
 # ---------------------------------------------------------------------------------------
@@ -195,7 +225,7 @@ ASFLAGS =
 # Linker Flags
 
 LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
-LDFLAGS += -nostartfiles
+LDFLAGS += -nostartfiles -mcpu=cortex-m3
 #LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
 
 
@@ -216,20 +246,30 @@ FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
 
 INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += $(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += $(OPTIMIZATION) $(INCLUDES)
-ASFLAGS  += -g $(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES)
+CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES)
+ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
 
 ifeq ($(VERBOSE),2)
-$(warning INCLUDES: $(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
-$(warning LIBRARIES: $(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
-$(warning SOURCE DIRECTORIES: $(SOURCE_DIRS))
-$(warning C SOURCES: $(C_SOURCES))
-$(warning C++ SOURCES: $(CXX_SOURCES))
-$(warning LINK FIRST SOURCES: $(FIRST_LINK_SOURCES))
+define NEWLINE_ONLY
+
+
+endef
+define NEWLINE_TAB
+
+	
+endef
+
+$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
+$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
+$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
+$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
 endif
 
 
@@ -238,7 +278,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(BIN) $(OBJ) $(MEMORIES)
+all: $(BIN) $(OBJ) $(DEFAULT_MEMORY) $(PROJECT).elf
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -247,6 +287,13 @@ MK_DIRS =   $(shell                              \
               do                                 \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
+
+$(eval $(DEVICE_RULES))
+
+
+#-------------------------------------------------------------------------------
+#		Per-Memory Rules Block
+#-------------------------------------------------------------------------------
 
 define RULES
 OUTDIR = $(OBJ)/$(1)
@@ -279,9 +326,8 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
-
-# @echo "--- SIZE INFO ---"
-# $(QUIET)$(SIZE) $$^ "$(OUTPUT_BIN)_$$@.elf"
+	@echo "--- SIZE INFO ---"
+	$(QUIET)$(SIZE) "$(OUTPUT_BIN)_$(1).elf"
 
 $$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
 	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
@@ -311,7 +357,18 @@ endef
 #$(foreach MEMORY, $(MEMORIES), $(warning $(call RULES,$(MEMORY))))
 $(foreach MEMORY, $(MEMORIES), $(eval $(call RULES,$(MEMORY))))
 
+
+#-------------------------------------------------------------------------------
+#		Default $(PROJECT).elf, and clean
+#-------------------------------------------------------------------------------
+
+$(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
+	$(CP) $< $@
+
+$(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
+	$(CP) $< $@
+
 clean:
-	-$(RM) -fR $(OBJ) $(BIN)
+	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf
 
 # *** EOF ***

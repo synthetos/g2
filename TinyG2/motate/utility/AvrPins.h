@@ -1,23 +1,30 @@
 /*
-  utility/AvrPins.hpp - Library for the Arduino-compatible Motate system
+  utility/AvrPins.h - Library for the Arduino-compatible Motate system
   http://tinkerin.gs/
 
-  Copyright (c) 2012 Robert Giseburt
+  Copyright (c) 2013 Robert Giseburt
 
 	This file is part of the Motate Library.
 
-	The Motate Library is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Lesser General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+	This file ("the software") is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2 as published by the
+	Free Software Foundation. You should have received a copy of the GNU General Public
+	License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
 
-	The Motate Library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Lesser General Public License for more details.
+	As a special exception, you may use this file as part of a software library without
+	restriction. Specifically, if other files instantiate templates or use macros or
+	inline functions from this file, or you compile this file and link it with  other
+	files to produce an executable, this file does not by itself cause the resulting
+	executable to be covered by the GNU General Public License. This exception does not
+	however invalidate any other reasons why the executable file might be covered by the
+	GNU General Public License.
 
-	You should have received a copy of the GNU Lesser General Public License
-	along with the Motate Library.  If not, see <http://www.gnu.org/licenses/>.
+	THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+	WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+	SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef AVRPINS_H_ONCE
@@ -83,6 +90,25 @@ namespace Motate {
 		static const int8_t number = -1;
 		static const uint8_t portLetter = 0;
 		static const uint8_t mask = 0;
+
+		Pin() {};
+		Pin(const PinMode type, const PinOptions options = kNormal) {};
+		void operator=(const bool value) {};
+		operator bool() { return 0; };
+		
+		void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
+		void setMode(const PinMode type, const bool fromConstructor=false) {};
+		PinMode getMode() {};
+		void setOptions(const uint16_t options, const bool fromConstructor=false) {};
+		uint16_t getOptions() { return kNormal; };
+		void set() {};
+		void clear() {};
+		void write(const bool value) {};
+		void toggle() {};
+		uint8_t get() { return 0; };
+		uint8_t getInputValue() { return 0; };
+		uint8_t getOutputValue() { return 0; };
+
 		static uint8_t maskForPort(const uint8_t otherPortLetter) {
 			return 0x00;
 		};
@@ -477,7 +503,7 @@ namespace Motate {
 			
 		};
 		
-		void set(uint8_t in_value) {
+		void write(uint8_t in_value) {
 			uint8_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
 #define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
 			if (PinBit ## bitNumber.maskForPort(port ## portLetter.letter) &&\

@@ -71,7 +71,7 @@ SERIES:=sam4s
 endif
 
 # GCC toolchain provider
-GCC_TOOLCHAIN = gcc_atmel
+GCC_TOOLCHAIN = gcc
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi-
@@ -85,18 +85,18 @@ DEVICE_PATH = $(SAM_PATH)/$(SERIES)/source
 
 SAM_SOURCE_DIRS += $(DEVICE_PATH)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
+SAM_SOURCE_DIRS += platform/atmel_sam
+FIRST_LINK_SOURCES += platform/atmel_sam/syscalls_sam3.c
 
-$(eval $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam))
+DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
 # Flags
 DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
+DEVICE_INCLUDE_DIRS += platform/atmel_sam
 
-LIBS     += -lgcc -lc
-
-LIB_PATH += -L=/lib/thumb2
-#LIB_PATH += -L"$(realpath $(DEVICE_PATH)/$(GCC_TOOLCHAIN))"
+DEVICE_LIBS          = gcc c
 
 # FIXME: Assumes all sams are Dues
 VARIANT=arduino_due_x
