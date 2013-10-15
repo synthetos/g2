@@ -5,6 +5,5 @@
 *.lss
 *.aws
 *.atsuo
-*.cproj
 .DS_Store
 TcfTransactionLog.csv
