@@ -1,8 +1,8 @@
 /*
- * stepper.cpp - stepper motor controls (build 019.08)
+ * stepper.cpp - stepper motor controls
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -52,7 +52,6 @@
 #else
 #define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// choose this one to disable counters
 #endif
-static void _clear_diagnostic_counters(void);
 
 /**** Allocate structures ****/
 
@@ -64,7 +63,7 @@ static stPrepSingleton_t st_prep;
 
 static void _load_move(void);
 static void _request_load_move(void);
-//static void _clear_diagnostic_counters(void);
+static void _clear_diagnostic_counters(void);
 
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
@@ -151,8 +150,8 @@ Stepper<motor_6_step_pin_num,
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
- * 	  - microsteps are setup during cfg_init()
- *	  - motor polarity is setup during cfg_init()
+ * 	  - microsteps are setup during config_init()
+ *	  - motor polarity is setup during config_init()
  *	  - high level interrupts must be enabled in main() once all inits are complete
  */
 
@@ -201,6 +200,16 @@ static void _clear_diagnostic_counters()
 }
 
 /*
+ * st_assertions() - test assertions, return error code if violation exists
+ */
+stat_t st_assertions()
+{
+	if (st_run.magic_start  != MAGICNUM) return (STAT_MEMORY_FAULT);
+	if (st_prep.magic_start != MAGICNUM) return (STAT_MEMORY_FAULT);
+	return (STAT_OK);
+}
+
+/*
  * stepper_isbusy() - return TRUE if motors are running or a dwell is running
  */
 uint8_t stepper_isbusy()
@@ -210,13 +219,6 @@ uint8_t stepper_isbusy()
 	} 
 	return (true);
 }
-
-/*
- * Magic Numbers for assertions
- */
-
-magic_t st_get_stepper_run_magic() { return (st_run.magic_start);}
-magic_t st_get_stepper_prep_magic() { return (st_prep.magic_start);}
 
 /*
  * Motor power management functions
@@ -329,9 +331,9 @@ stat_t st_motor_power_callback() 	// called by controller
 				}
 			}
 
-			//		} else if(st.m[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// future
+//		} else if(st_run.m[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// future
 			
-			//		} else if(st.m[motor].power_mode == DYNAMIC_MOTOR_POWER) {				// future
+//		} else if(st_run.m[motor].power_mode == DYNAMIC_MOTOR_POWER) {				// future
 			
 		}
 	}
@@ -625,23 +627,23 @@ void st_prep_dwell(float microseconds)
 /***********************************************************************************
  * st_prep_line() - Prepare the next move for the loader
  *
- *	This function does the math on the next pulse segment and gets it ready for the 
- *	loader. It deals with all the DDA optimizations and timer setups so that loading 
- *	can be performed as rapidly as possible. It works in joint space (motors) and it 
- *	works in steps, not length units. All args are provided as floats and converted 
- *	to their appropriate integer types for the loader. 
+ *	This function does the math on the next pulse segment and gets it ready for 
+ *	the loader. It deals with all the DDA optimizations and timer setups so that
+ *	loading can be performed as rapidly as possible. It works in joint space 
+ *	(motors) and it works in steps, not length units. All args are provided as 
+ *	floats and converted to their appropriate integer types for the loader. 
  *
  * Args:
  *	steps[] are signed relative motion in steps (can be non-integer values)
  *	Microseconds - how many microseconds the segment should run 
  */
 
-uint8_t st_prep_line(float steps[], float microseconds)
+stat_t st_prep_line(float steps[], float microseconds)
 {
 	// *** defensive programming ***
 	// trap conditions that would prevent queuing the line
 	if (st_prep.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
-	} else if (isfinite(microseconds) == false) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	} else if (isfinite(microseconds) == false) { return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
 	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
 	st_prep.reset_flag = false;         // initialize accumulator reset flag for this move.
@@ -652,7 +654,11 @@ uint8_t st_prep_line(float steps[], float microseconds)
 		st_prep.m[i].phase_increment = (uint32_t)fabs(steps[i] * DDA_SUBSTEPS);
 	}
 	st_prep.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
-	st_prep.dda_ticks_X_substeps = st_prep.dda_ticks * DDA_SUBSTEPS;	// see FOOTNOTE
+	st_prep.dda_ticks_X_substeps = st_prep.dda_ticks * DDA_SUBSTEPS;
+
+	// FOOTNOTE: The above expression was previously computed as below but floating
+	// point rounding errors caused subtle and nasty accumulated position errors:
+	// sp.dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
 
 	// anti-stall measure in case change in velocity between segments is too great 
 	if ((st_prep.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_prep.prev_ticks) {  // NB: uint32_t math
@@ -662,41 +668,29 @@ uint8_t st_prep_line(float steps[], float microseconds)
 	st_prep.move_type = MOVE_TYPE_ALINE;
 	return (STAT_OK);
 }
-// FOOTNOTE: This expression was previously computed as below but floating 
-// point rounding errors caused subtle and nasty accumulated position errors:
-// sp.dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
 
-/****************************************************************************************
- * UTILITIES
- * st_isbusy()			- return TRUE if motors are running or a dwell is running
- * st_set_microsteps()	- set microsteps in hardware
+/*
+ * _set_hw_microsteps() - set microsteps in hardware
  *
  *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
  *	This may change if microstep morphing is implemented.
  */
-uint8_t st_isbusy()
-{
-	if (st_run.dda_ticks_downcount == 0) {
-		return (false);
-	} 
-	return (true);
-}
 
-void _set_microsteps(const uint8_t motor, const uint8_t microstep_mode)
+static void _set_hw_microsteps(const uint8_t motor, const uint8_t microstep_mode)
 {
 /*
 	if (microstep_mode == 8) {
-		device.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
-		device.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
+		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
+		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
 	} else if (microstep_mode == 4) {
-		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
-		device.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
+		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
+		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
 	} else if (microstep_mode == 2) {
-		device.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
-		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
+		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
+		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
 	} else if (microstep_mode == 1) {
-		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
-		device.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
+		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
+		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
 	}
 */
 }
@@ -749,13 +743,13 @@ stat_t st_set_tr(cmdObj_t *cmd)			// motor travel per revolution
 }
 
 stat_t st_set_mi(cmdObj_t *cmd)			// motor microsteps
-{	
+{
 	if (fp_NE(cmd->value,1) && fp_NE(cmd->value,2) && fp_NE(cmd->value,4) && fp_NE(cmd->value,8)) {
 		cmd_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(cmd);							// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(cmd);
-	_set_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
+	_set_hw_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 
@@ -796,21 +790,21 @@ stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initia
 
 #ifdef __TEXT_MODE
 
-static const char PROGMEM msg_units0[] = " in";	// used by generic print functions
-static const char PROGMEM msg_units1[] = " mm";
-static const char PROGMEM msg_units2[] = " deg";
-static const char PROGMEM *msg_units[] = { msg_units0, msg_units1, msg_units2 };
+static const char msg_units0[] PROGMEM = " in";	// used by generic print functions
+static const char msg_units1[] PROGMEM = " mm";
+static const char msg_units2[] PROGMEM = " deg";
+static const char *const msg_units[] PROGMEM = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
 
-const char PROGMEM fmt_mt[] = "[mt]  motor idle timeout%14.2f Sec\n";
-const char PROGMEM fmt_me[] = "motors energized\n";
-const char PROGMEM fmt_md[] = "motors de-energized\n";
-const char PROGMEM fmt_0ma[] = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
-const char PROGMEM fmt_0sa[] = "[%s%s] m%s step angle%20.3f%S\n";
-const char PROGMEM fmt_0tr[] = "[%s%s] m%s travel per revolution%9.3f%S\n";
-const char PROGMEM fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
-const char PROGMEM fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-const char PROGMEM fmt_0pm[] = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
+static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f Sec\n";
+static const char fmt_me[] PROGMEM = "motors energized\n";
+static const char fmt_md[] PROGMEM = "motors de-energized\n";
+static const char fmt_0ma[] PROGMEM = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
+static const char fmt_0sa[] PROGMEM = "[%s%s] m%s step angle%20.3f%s\n";
+static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%9.3f%s\n";
+static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
+static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
+static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}

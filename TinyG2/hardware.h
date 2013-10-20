@@ -1,8 +1,10 @@
 /*
- * hardware.h - system hardware configuration 
- * This file is part of the TinyG2 project
+ * hardware.h - system hardware configuration - this file is platform specific
+ *			  - ARM version
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * This file is part of the TinyG project
+ *
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -252,25 +254,9 @@ static Motate::InputPin<axis_B_max_pin_num> axis_B_max_pin(Motate::kPullUp);
 static Motate::InputPin<axis_C_min_pin_num> axis_C_min_pin(Motate::kPullUp);
 static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin(Motate::kPullUp);
 
-/**** DEPRECATED CODE. BEST TO LEAVE IN UNTIL COMPLETELY REPLACED ****/
-
-/* Bit assignments for GPIO1_OUTs for spindle, PWM and coolant */
-/*
-#define SPINDLE_BIT			0x08		// spindle on/off
-#define SPINDLE_DIR			0x04		// spindle direction, 1=CW, 0=CCW
-#define SPINDLE_PWM			0x02		// spindle PWMs output bit
-#define MIST_COOLANT_BIT	0x01		// coolant on/off - these are the same due to limited ports
-#define FLOOD_COOLANT_BIT	0x01		// coolant on/off
-
-#define SPINDLE_LED			0
-#define SPINDLE_DIR_LED		1
-#define SPINDLE_PWM_LED		2
-#define COOLANT_LED			3
-*/
-
 /*** function prototypes ***/
 
-void hardware_init(void);				// master hardware init
+void hardware_init(void);			// master hardware init
 void hw_request_hard_reset();
 void hw_hard_reset(void);
 stat_t hw_hard_reset_handler(void);

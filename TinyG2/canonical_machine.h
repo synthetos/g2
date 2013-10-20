@@ -53,14 +53,14 @@ typedef struct cmAxis {
 	float feedrate_max;				// max velocity in mm/min or deg/min
 	float velocity_max;				// max velocity in mm/min or deg/min
 	float travel_max;				// work envelope w/warned or rejected blocks
-	float jerk_max;					// max jerk (Jm) in mm/min^3
+	float jerk_max;					// max jerk (Jm) in mm/min^3 divided by 1 million
+	float jerk_homing;				// homing jerk (Jh) in mm/min^3 divided by 1 million
 	float junction_dev;				// aka cornering delta
 	float radius;					// radius in mm for rotary axis modes
 	float search_velocity;			// homing search velocity
 	float latch_velocity;			// homing latch velocity
 	float latch_backoff;			// backoff from switches prior to homing latch movement
 	float zero_backoff;				// backoff from switches for machine zero
-	float jerk_homing;				// homing jerk (Jh) in mm/min^3
 } cfgAxis_t;
 
 typedef struct cmSingleton {		// struct to manage cm globals and cycles
@@ -92,12 +92,12 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-	uint8_t combined_state;			// combination of states for display purposes
-	uint8_t machine_state;			// machine/cycle/motion is the actual machine state
-	uint8_t cycle_state;
-	uint8_t motion_state;
-	uint8_t hold_state;				// feedhold sub-state machine
-	uint8_t homing_state;			// homing cycle sub-state machine
+	uint8_t combined_state;			// stat: combination of states for display purposes
+	uint8_t machine_state;			// macs: machine/cycle/motion is the actual machine state
+	uint8_t cycle_state;			// cycs
+	uint8_t motion_state;			// momo
+	uint8_t hold_state;				// hold: feedhold sub-state machine
+	uint8_t homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
@@ -292,7 +292,7 @@ extern GCodeInput_t  gf;		// gcode input flags - transient
 // *** Note: check config printout strings align with all the state variables
 
 // #### LAYER 8 CRITICAL REGION ###
-// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ####
+// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT #### 
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
 	COMBINED_READY,					// [1] machine is ready for use
@@ -311,7 +311,7 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_ALARM,					// machine is in alarm (shutdown) state
+	MACHINE_ALARM,					// machine is in alarm state (shutdown)
 	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
 	MACHINE_PROGRAM_END,			// program end
 	MACHINE_CYCLE,					// machine is running (cycling)
@@ -326,8 +326,8 @@ enum cmCycleState {
 };
 
 enum cmMotionState {
-	MOTION_STOP = 0,
-	MOTION_RUN,						// machine is running
+	MOTION_STOP = 0,				// motion has stopped
+	MOTION_RUN,						// machine is in motion
 	MOTION_HOLD						// feedhold in progress
 };
 
@@ -369,10 +369,10 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 };
 
 enum cmMotionMode {						// G Modal Group 1
-	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - traverse
-	MOTION_MODE_STRAIGHT_FEED,			// G1 - feed
-	MOTION_MODE_CW_ARC,					// G2 - arc feed
-	MOTION_MODE_CCW_ARC,				// G3 - arc feed
+	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - straight traverse
+	MOTION_MODE_STRAIGHT_FEED,			// G1 - straight feed
+	MOTION_MODE_CW_ARC,					// G2 - clockwise arc feed
+	MOTION_MODE_CCW_ARC,				// G3 - counter-clockwise arc feed
 	MOTION_MODE_CANCEL_MOTION_MODE,		// G80
 	MOTION_MODE_STRAIGHT_PROBE,			// G38.2
 	MOTION_MODE_CANNED_CYCLE_81,		// G81 - drilling
@@ -477,7 +477,7 @@ enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
 	AXIS_STANDARD,					// axis in coordinated motion w/standard behaviors
 	AXIS_INHIBITED,					// axis is computed but not activated
 	AXIS_RADIUS						// rotary axis calibrated to circumference
-};	// ordering must be preserved. See _cm_get_feed_time() and seek time()
+};	// ordering must be preserved. See cm_set_move_times()
 #define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
 #define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
 
@@ -529,7 +529,8 @@ void cm_conditional_set_model_position(stat_t status);
 /*--- canonical machining functions (loosely patterned after NIST) ---*/
 
 void canonical_machine_init(void);
-void canonical_machine_alarm(uint8_t value);					// emergency shutdown
+stat_t cm_alarm(stat_t status);									// enter alarm state. returns same status code
+stat_t cm_assertions(void);
 
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
@@ -570,8 +571,7 @@ stat_t cm_arc_feed(float target[], float flags[], 				// G2, G3
 				   float radius, uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
-stat_t cm_set_spindle_speed(float speed);						// S parameter
-stat_t cm_spindle_control(uint8_t spindle_mode);				// M3, M4, M5 integrated spindle control
+// see spindle.h for spindle definitions - which would go right here
 
 stat_t cm_mist_coolant_control(uint8_t mist_coolant); 			// M7
 stat_t cm_flood_coolant_control(uint8_t flood_coolant);			// M8, M9
@@ -588,7 +588,7 @@ stat_t cm_select_tool(uint8_t tool);							// T parameter
 stat_t cm_change_tool(uint8_t tool);							// M6
 
 // canonical machine commands not called from gcode dispatcher
-void cm_message(char_t *message);									// msg to console (e.g. Gcode comments)
+void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 void cm_request_feedhold(void);
@@ -606,11 +606,10 @@ void cm_exec_program_end(void);
 
 /*--- cmdArray interface functions ---*/
 
-stat_t cm_run_qf(cmdObj_t *cmd);
-
 char_t cm_get_axis_char(const int8_t axis);
 
-stat_t cm_get_line(cmdObj_t *cmd);		// get runtime line number
+stat_t cm_get_mline(cmdObj_t *cmd);		// get model line number
+stat_t cm_get_line(cmdObj_t *cmd);		// get active (model or runtime) line number
 stat_t cm_get_stat(cmdObj_t *cmd);		// get combined machine state as value and string
 stat_t cm_get_macs(cmdObj_t *cmd);		// get raw machine state as value and string
 stat_t cm_get_cycs(cmdObj_t *cmd);		// get raw cycle state (etc etc)...
@@ -630,6 +629,7 @@ stat_t cm_get_pos(cmdObj_t *cmd);		// get runtime work position...
 stat_t cm_get_mpo(cmdObj_t *cmd);		// get runtime machine position...
 stat_t cm_get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 
+stat_t cm_run_qf(cmdObj_t *cmd);		// run queue flush
 stat_t cm_run_home(cmdObj_t *cmd);		// start homing cycle
 
 stat_t cm_get_am(cmdObj_t *cmd);		// get axis mode
@@ -690,7 +690,6 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	void cm_print_lv(cmdObj_t *cmd);
 	void cm_print_lb(cmdObj_t *cmd);
 	void cm_print_zb(cmdObj_t *cmd);
-
 	void cm_print_cofs(cmdObj_t *cmd);
 	void cm_print_cpos(cmdObj_t *cmd);
 
@@ -745,7 +744,6 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	#define cm_print_lv tx_print_stub
 	#define cm_print_lb tx_print_stub
 	#define cm_print_zb tx_print_stub
-
 	#define cm_print_cofs tx_print_stub
 	#define cm_print_cpos tx_print_stub
 

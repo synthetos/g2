@@ -1,8 +1,8 @@
 /*
  * report.h - TinyG status report and other reporting functions
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -33,26 +33,26 @@ extern "C"{
 #endif
 
 /**** Configs, Definitions and Structures ****/
+// Note: If you are looking for the defaults for the status report see settings.h
 
 #define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 // **** must also line up in cfgArray, se00 - seXX ****
 
-enum srVerbosity {					// status report enable and verbosity
-	SR_OFF = 0,						// no reports
-	SR_FILTERED,					// reports only values that have changed from the last report
-	SR_VERBOSE						// reports all values specified
+enum srVerbosity {								// status report enable and verbosity
+	SR_OFF = 0,									// no reports
+	SR_FILTERED,								// reports only values that have changed from the last report
+	SR_VERBOSE									// reports all values specified
 };
 
 enum cmStatusReportRequest {
-	SR_TIMED_REQUEST = 0,			// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST			// request a status report ASAP
+	SR_TIMED_REQUEST = 0,						// request a status report at next timer interval
+	SR_IMMEDIATE_REQUEST						// request a status report ASAP
 };
 
-enum qrVerbosity {					// planner queue enable and verbosity
-	QR_OFF = 0,						// no response is provided
-	QR_FILTERED,					// queue depth reported only above hi-water mark and below lo-water mark
-	QR_VERBOSE,						// queue depth reported for all buffers
-	QR_TRIPLE						// queue depth reported for all buffers, and buffers added, buffered removed
+enum qrVerbosity {								// planner queue enable and verbosity
+	QR_OFF = 0,									// no response is provided
+	QR_SINGLE,									// queue depth reported
+	QR_TRIPLE									// queue depth reported for buffers, buffers added, buffered removed
 };
 
 typedef struct srSingleton {
@@ -73,8 +73,6 @@ typedef struct qrSingleton {		// data for queue reports
 
 	/*** config values (PUBLIC) ***/
 	uint8_t queue_report_verbosity;	// queue reports enabled and verbosity level
-	uint8_t queue_report_hi_water;
-	uint8_t queue_report_lo_water;
 
 	/*** runtime values (PRIVATE) ***/
 	uint8_t request;				// set to true to request a report
@@ -93,7 +91,8 @@ extern qrSingleton_t qr;
 /**** Function Prototypes ****/
 
 void rpt_print_message(char *msg);
-void rpt_exception(uint8_t status, int16_t value);
+void rpt_exception(uint8_t status);
+
 stat_t rpt_er(cmdObj_t *cmd);
 void rpt_print_loading_configs_message(void);
 void rpt_print_initializing_message(void);
@@ -151,4 +150,3 @@ void sr_unit_tests(void);
 #endif
 
 #endif // End of include guard: REPORT_H_ONCE
-

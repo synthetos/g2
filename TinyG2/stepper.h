@@ -1,7 +1,8 @@
-/* stepper.h - stepper motor interface
- * This file is part of TinyG2 project
+/*
+ * stepper.h - stepper motor interface
+ * This file is part of TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -211,18 +212,22 @@ enum prepBufferState {
 #define IDLE_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
 #define IDLE_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
 
-// DDA substepping
-// 	DDA_SUBSTEPS sets the amount of fractional precision for substepping. Substepping 
-//	is kind of like microsteps done in software to make interpolation more accurate.
-//	Set to 1 to disable, but don't do this or you will lose a lot of accuracy.
+/* DDA substepping
+ * 	DDA_SUBSTEPS sets the amount of fractional precision for substepping.
+ *	Substepping is kind of like microsteps done in software to make
+ *	interpolation more accurate.
+ *
+ *	Set to 1 to disable, but don't do this or you will lose a lot of accuracy.
+ */
 #define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
 
-// Accumulator resets
-//	You want to reset the DDA accumulator if the new ticks value is way less than previous 
-//	value, but otherwise you should leave the accumulator alone. Preserving the accumulator 
-//	value from the previous segment aligns pulse phasing between segments. However, 
-//	if the new accumulator value is going to be much less than the old counter you must 
-//	reset it or risk motor stalls. 
+/* Accumulator resets
+ * 	You want to reset the DDA accumulators if the new ticks value is way less 
+ *	than previous value, but otherwise you should leave the accumulators alone.
+ *	Preserving the accumulator value from the previous segment aligns pulse 
+ *	phasing between segments. However, if the new accumulator is going to be 
+ *	much less than the old one you must reset it or risk motor stalls.
+ */
 #define ACCUMULATOR_RESET_FACTOR 2	// amount counter range can safely change
 
 /*
@@ -300,11 +305,9 @@ extern stConfig_t st;
 
 /**** FUNCTION PROTOTYPES ****/
 
-void stepper_init(void);			// initialize stepper subsystem
+void stepper_init(void);
 uint8_t stepper_isbusy(void);
-
-uint16_t st_get_stepper_run_magic(void);
-uint16_t st_get_stepper_prep_magic(void);
+stat_t st_assertions(void);
 
 void st_energize_motors(void);
 void st_deenergize_motors(void);
@@ -315,8 +318,6 @@ void st_request_exec_move(void);
 void st_prep_null(void);
 void st_prep_dwell(float microseconds);
 stat_t st_prep_line(float steps[], float microseconds);
-
-//int8_t st_get_motor(const index_t index);
 
 stat_t st_set_sa(cmdObj_t *cmd);
 stat_t st_set_tr(cmdObj_t *cmd);

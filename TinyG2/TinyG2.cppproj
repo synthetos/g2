@@ -234,10 +234,10 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s</BuildTarget>
-    <CleanTarget>clean</CleanTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=due</BuildTarget>
+    <CleanTarget>clean PLATFORM=due</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputDirectory />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release (v9_x8c)' ">
     <ToolchainSettings>
@@ -341,18 +341,6 @@
     <Compile Include="arduino\hooks.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\iar_calls_sam3.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\IPAddress.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\IPAddress.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\itoa.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="arduino\itoa.h">
       <SubType>compile</SubType>
     </Compile>
@@ -431,9 +419,6 @@
     <Compile Include="arduino\WCharacter.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\WInterrupts.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="arduino\WInterrupts.h">
       <SubType>compile</SubType>
     </Compile>
@@ -461,25 +446,13 @@
     <Compile Include="arduino\wiring_private.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\wiring_pulse.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="arduino\wiring_pulse.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_shift.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\wiring_shift.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="arduino\WMath.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="arduino\WMath.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\WString.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="arduino\WString.h">
@@ -824,13 +797,7 @@
     <Compile Include="settings\settings_othercutter.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="settings\settings_otherfab.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketcnc_linear.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketcnc_rotary.h">
+    <Compile Include="settings\settings_othermill.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_probotixV90.h">
@@ -920,9 +887,6 @@
     <Folder Include="variants" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="arduino\Tone.cpp.disabled">
-      <SubType>compile</SubType>
-    </None>
     <None Include="cmsis\linkerScripts\sam3x8e_flash.ld">
       <SubType>compile</SubType>
     </None>
@@ -945,9 +909,6 @@
       <SubType>compile</SubType>
     </None>
     <None Include="motate\keywords.txt">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="TinyG2.elf">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

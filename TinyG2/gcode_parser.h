@@ -1,6 +1,6 @@
 /*
- * gcode_parser.h - rs274/ngc Gcode parser.
- * This file is part of the TinyG2 project
+ * gcode_parser.h - rs274/ngc Gcode parser
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *

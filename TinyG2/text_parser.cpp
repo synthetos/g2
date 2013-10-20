@@ -1,8 +1,8 @@
 /*
  * text_parser.cpp - text parser for TinyG
- * Part of TinyG project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -40,7 +40,6 @@ extern "C"{
 
 txtSingleton_t txt;					// declare the singleton for either __TEXT_MODE setting
 
-
 #ifndef __TEXT_MODE
 
 stat_t text_parser_stub(char_t *str) {return (STAT_OK);}
@@ -57,10 +56,11 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd);
  * _text_parser_kernal() - helper for above
  *
  * Use cases handled:
- *	- $xfr=1200	set a parameter
- *	- $xfr		display a parameter
- *	- $x		display a group
- *	- ?			generate a status report (multiline format)
+ *	- $xfr=1200		set a parameter (strict separators))
+ *	- $xfr 1200		set a parameter (relaxed separators)
+ *	- $xfr			display a parameter
+ *	- $x			display a group
+ *	- ?				generate a status report (multiline format)
  */
 stat_t text_parser(char_t *str)
 {
@@ -114,7 +114,7 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 		*rd = NUL;							// terminate at end of name
 		strncpy(cmd->token, str, CMD_TOKEN_LEN);
 		str = ++rd;
-		cmd->value = strtod(str, &rd);		// rd used as end pointer
+		cmd->value = strtof(str, &rd);		// rd used as end pointer
 		if (rd != str) {
 			cmd->objtype = TYPE_FLOAT;
 		}
@@ -126,7 +126,8 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 	}
 	strcpy_P(cmd->group, cfgArray[cmd->index].group);// capture the group string if there is one
 
-	if (strlen(cmd->group) > 0) {			// see if you need to strip the token
+	// see if you need to strip the token
+	if ((cmd_index_is_group(cmd->index)) && (cmd_group_is_prefixed(cmd->token))) {
 		wr = cmd->token;
 		rd = cmd->token + strlen(cmd->group);
 		while (*rd != NUL) { *(wr)++ = *(rd)++;}
@@ -183,13 +184,13 @@ void text_print_inline_pairs(cmdObj_t *cmd)
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:	{ fprintf_P(stderr,(const PROGMEM char *)("%s:%1.3f"), cmd->token, cmd->value); break;}
-			case TYPE_INTEGER:	{ fprintf_P(stderr,(const PROGMEM char *)("%s:%1.0f"), cmd->token, cmd->value); break;}
-			case TYPE_STRING:	{ fprintf_P(stderr,(const PROGMEM char *)("%s:%s"), cmd->token, *cmd->stringp); break;}
-			case TYPE_EMPTY:	{ fprintf_P(stderr,(const PROGMEM char *)("\n")); return; }
+			case TYPE_FLOAT:	{ fprintf_P(stderr,PSTR("%s:%1.3f"), cmd->token, cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%s:%1.0f"), cmd->token, cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s:%s"), cmd->token, *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr,PSTR("\n")); return; }
 		}
 		if ((cmd = cmd->nx) == NULL) return;
-		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,(const PROGMEM char *)(","));}		
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
 	}
 }
 
@@ -198,13 +199,13 @@ void text_print_inline_values(cmdObj_t *cmd)
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:	{ fprintf_P(stderr,(const PROGMEM char *)("%1.3f"), cmd->value); break;}
-			case TYPE_INTEGER:	{ fprintf_P(stderr,(const PROGMEM char *)("%1.0f"), cmd->value); break;}
-			case TYPE_STRING:	{ fprintf_P(stderr,(const PROGMEM char *)("%s"), *cmd->stringp); break;}
-			case TYPE_EMPTY:	{ fprintf_P(stderr,(const PROGMEM char *)("\n")); return; }
+			case TYPE_FLOAT:	{ fprintf_P(stderr,PSTR("%1.3f"), cmd->value); break;}
+			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%1.0f"), cmd->value); break;}
+			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s"), *cmd->stringp); break;}
+			case TYPE_EMPTY:	{ fprintf_P(stderr,PSTR("\n")); return; }
 		}
 		if ((cmd = cmd->nx) == NULL) return;
-		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,(const PROGMEM char *)(","));}
+		if (cmd->objtype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
 	}
 }
 
@@ -220,10 +221,10 @@ void text_print_multiline_formatted(cmdObj_t *cmd)
 /*
  * Text print primitives using generic formats
  */
-const char PROGMEM fmt_str[] = "%s\n";	// generic format for string message (with no formatting)
-const char PROGMEM fmt_ui8[] = "%d\n";	// generic format for ui8s
-const char PROGMEM fmt_int[] = "%d\n";	// generic format for ui8s
-const char PROGMEM fmt_flt[] = "%f\n";	// generic format for floats
+static const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
+static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
+static const char fmt_int[] PROGMEM = "%lu\n";	// generic format for ui16's and ui32s
+static const char fmt_flt[] PROGMEM = "%f\n";	// generic format for floats
 
 void tx_print_nul(cmdObj_t *cmd) {}
 void tx_print_str(cmdObj_t *cmd) { text_print_str(cmd, fmt_str);}
@@ -251,7 +252,7 @@ void text_print_flt_units(cmdObj_t *cmd, const char *format, const char *units)
 /*
  * Formatted print supporting the text parser
  */
-const char PROGMEM fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
+static const char fmt_tv[] PROGMEM = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
 
 void tx_print_tv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_tv);}
 

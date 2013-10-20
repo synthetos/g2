@@ -1,8 +1,8 @@
 /*
- * config.h - configuration sub-system
- * Part of TinyG2 project
+ * config.h - configuration sub-system generic part (see config_app for application part)
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -34,7 +34,7 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
 /**** Config System Overview and Usage ***
  *
@@ -134,7 +134,7 @@ extern "C"{
 /*	Token and Group Fields
  * 
  *	The cmdObject struct (cmdObj_t) has strict rules on the use of the token and group fields.
- *	The follwing forms are legal which support the use cases listed:
+ *	The following forms are legal which support the use cases listed:
  *
  *	Forms
  *	  - group is NUL; token is full token including any group profix
@@ -170,7 +170,7 @@ extern "C"{
  */
 
 /***********************************************************************************
- **** DEFINITIONS AND SETTINGS *******************************************************
+ **** DEFINITIONS AND SETTINGS *****************************************************
  ***********************************************************************************/
 
 // Sizing and footprints			// chose one based on # of elements in cmdArray
@@ -225,12 +225,11 @@ enum tgCommunicationsSticky {
 */
 
 enum objType {						// object / value typing for config and JSON
-	TYPE_EMPTY = 0,					// object has no value (which is not the same as "NULL")
-	TYPE_NULL,						// value is 'null' (meaning the JSON null value)
+	TYPE_EMPTY = -1,				// object has no value (which is not the same as "NULL")
+	TYPE_NULL = 0,					// value is 'null' (meaning the JSON null value)
 	TYPE_BOOL,						// value is "true" (1) or "false"(0)
 	TYPE_INTEGER,					// value is a uint32_t
 	TYPE_FLOAT,						// value is a floating point number
-	TYPE_FLOAT_UNITS,				// value is a floating point number that may require units conversion for display
 	TYPE_STRING,					// value is in string field
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
 	TYPE_PARENT						// object is a parent to a sub-object
@@ -252,11 +251,11 @@ enum objType {						// object / value typing for config and JSON
 
 typedef struct cmdString {				// shared string object
 	uint16_t magic_start;
-//  #if (CMD_SHARED_STRING_LEN < 256)
-//	uint8_t wp;							// use this string array index value if string len < 256 bytes
-//  #else
+  #if (CMD_SHARED_STRING_LEN < 256)
+	uint8_t wp;							// use this string array index value if string len < 256 bytes
+  #else
 	uint16_t wp;						// use this string array index value is string len > 255 bytes
-//  #endif
+  #endif
 	char_t string[CMD_SHARED_STRING_LEN];
 	uint16_t magic_end;					// guard to detect string buffer underruns
 } cmdStr_t;
@@ -282,7 +281,7 @@ typedef struct cfgItem {
 	char_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
 	int8_t precision;					// decimal precision for display (JSON)
-	//	const char_t *format;				// pointer to formatted print string in FLASH
+//	const char_t *format;				// pointer to formatted print string in FLASH
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
@@ -299,7 +298,7 @@ extern const cfgItem_t cfgArray[];
 #define cmd_header cmd_list
 #define cmd_body  (cmd_list+1)
 
-/**** Global scope function prototypes ****/
+/**** Prototypes for generic config functions - see individual modules for application-specific functions  ****/
 
 void config_init(void);
 stat_t set_defaults(cmdObj_t *cmd);		// reset config to default values
@@ -307,7 +306,7 @@ stat_t set_defaults(cmdObj_t *cmd);		// reset config to default values
 // main entry points for core access functions
 stat_t cmd_get(cmdObj_t *cmd);			// main entry point for get value
 stat_t cmd_set(cmdObj_t *cmd);			// main entry point for set value
-void cmd_print(cmdObj_t *cmd);			// main entry point for set value
+void cmd_print(cmdObj_t *cmd);			// main entry point for print value
 void cmd_persist(cmdObj_t *cmd);		// main entry point for persistence
 
 // helpers
@@ -315,7 +314,7 @@ uint8_t cmd_get_type(cmdObj_t *cmd);
 stat_t cmd_persist_offsets(uint8_t flag);
 
 index_t cmd_get_index(const char_t *group, const char_t *token);
-index_t	cmd_index_max (void);
+index_t	cmd_index_max(void);
 uint8_t cmd_index_lt_max(index_t index);
 uint8_t cmd_index_ge_max(index_t index);
 uint8_t cmd_index_is_single(index_t index);
@@ -358,7 +357,6 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 stat_t cmd_read_NVM_value(cmdObj_t *cmd);
 stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 
-
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/
@@ -367,7 +365,7 @@ stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 /*** Unit tests ***/
 
 /* unit test setup */
-//#define __UNIT_TEST_CONFIG			// uncomment to enable config unit tests
+//#define __UNIT_TEST_CONFIG		// uncomment to enable config unit tests
 #ifdef __UNIT_TEST_CONFIG
 void cfg_unit_tests(void);
 #define	CONFIG_UNITS cfg_unit_tests();
@@ -379,4 +377,4 @@ void cfg_unit_tests(void);
 }
 #endif
 
-#endif // _CONFIG_H_
+#endif // End of include guard: CONFIG_H_ONCE

@@ -1,8 +1,8 @@
 /*
  * report.cpp - TinyG status report and other reporting functions.
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,16 +27,13 @@
 
 #include "tinyg2.h"
 #include "config.h"
-#include "controller.h"
 #include "report.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "canonical_machine.h"
 #include "planner.h"
 #include "settings.h"
-#include "hardware.h"
 #include "util.h"
-#include "xio.h"		// for ASCII definitions
+#include "xio.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -47,19 +44,19 @@ extern "C"{
 srSingleton_t sr;
 qrSingleton_t qr;
 
-/**** Exception Messages **************************************************
- * rpt_exception() - generate an exception message
+/**** Exception Messages ************************************************************
+ * rpt_exception() - generate an exception message - always in JSON format
  * rpt_er()		   - send a bogus exception report for testing purposes (it's not real)
  */
-void rpt_exception(stat_t status, int16_t value)
+void rpt_exception(uint8_t status)
 {
-	printf_P((const PROGMEM char *)("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",\"val\":%d}}\n"),
-		TINYG_FIRMWARE_BUILD, status, get_status_message(status), value);
+	printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
+		TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 }
 
 stat_t rpt_er(cmdObj_t *cmd)
 {
-	rpt_exception(STAT_INTERNAL_ERROR, 42);	// bogus exception report
+	rpt_exception(STAT_GENERIC_EXCEPTION_REPORT);	// bogus exception report
 	return (STAT_OK);
 }
 
@@ -76,28 +73,29 @@ void _startup_helper(stat_t status, const char *msg)
 #ifndef __SUPPRESS_STARTUP_MESSAGES
 	js.json_footer_depth = JSON_FOOTER_DEPTH;	//++++ temporary until changeover is complete
 	cmd_reset_list();
-	cmd_add_object((const char_t *)"fb");
-	cmd_add_object((const char_t *)"fv");
-	cmd_add_object((const char_t *)"hv");
-	cmd_add_object((const char_t *)"id");
-	cmd_add_string((const char_t *)"msg", (const char_t *)msg);
+	cmd_add_object((const char_t *)"fv");		// firmware version
+	cmd_add_object((const char_t *)"fb");		// firmware build
+	cmd_add_object((const char_t *)"hp");		// hardware platform
+	cmd_add_object((const char_t *)"hv");		// hardware version
+//	cmd_add_object((const char_t *)"id");		// hardware ID
+	cmd_add_string((const char_t *)"msg", (const char_t *)msg);	// startup message
 	json_print_response(status);
 #endif
 }
 
 void rpt_print_initializing_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, (const PROGMEM char *)(INIT_MESSAGE));
+	_startup_helper(STAT_INITIALIZING, PSTR(INIT_MESSAGE));
 }
 
 void rpt_print_loading_configs_message(void)
 {
-	_startup_helper(STAT_INITIALIZING, (const PROGMEM char *)("Loading configs from EEPROM"));
+	_startup_helper(STAT_INITIALIZING, PSTR("Loading configs from EEPROM"));
 }
 
 void rpt_print_system_ready_message(void)
 {
-	_startup_helper(STAT_OK, (const PROGMEM char *)("SYSTEM READY"));
+	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
 	if (cfg.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
 }
 
@@ -141,7 +139,7 @@ void rpt_print_system_ready_message(void)
  *		report in multi-line format. Additionally, a line starting with ? will put 
  *		the system into text mode.
  *
- *	  - Automatic status reports in text mode return CSV format
+ *	  - Automatic status reports in text mode return CSV format according to si setting
  */
 
 /* 
@@ -275,7 +273,7 @@ stat_t sr_populate_unfiltered_status_report()
 		strcat(tmp, cmd->token);
 		strcpy(cmd->token, tmp);
 		if ((cmd = cmd->nx) == NULL) 
-			return (STAT_OK);				 // should never be NULL unless SR length exceeds available buffer array 
+			return (cm_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
 	}
 	return (STAT_OK);
 }
@@ -342,7 +340,6 @@ stat_t sr_set_si(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
-
 /*****************************************************************************
  * Queue Reports
  *
@@ -377,17 +374,6 @@ void qr_request_queue_report(int8_t buffers)
 	} else {
 		qr.buffers_removed -= buffers;
 	}
-
-	// perform filtration for QR_FILTERED reports
-	if (qr.queue_report_verbosity == QR_FILTERED) {
-		if (qr.buffers_available == qr.prev_available) {
-			return;
-		}
-		if ((qr.buffers_available > qr.queue_report_lo_water) && 	// e.g. > 2 buffers available
-			(qr.buffers_available < qr.queue_report_hi_water)) {	// e.g. < 20 buffers available
-			return;
-		}
-	}
 	qr.prev_available = qr.buffers_available;
 	qr.request = true;
 }
@@ -398,7 +384,7 @@ uint8_t qr_queue_report_callback()
 	qr.request = false;
 
 	if (cfg.comm_mode == TEXT_MODE) {
-		if (qr.queue_report_verbosity == QR_VERBOSE) {
+		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "qr:%d\n", qr.buffers_available);
 		} else  {
 			if (qr.queue_report_verbosity == QR_TRIPLE) {
@@ -406,7 +392,7 @@ uint8_t qr_queue_report_callback()
 			}
 		}
 	} else {
-		if (qr.queue_report_verbosity == QR_VERBOSE) {
+		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
 		} else {
 			if (qr.queue_report_verbosity == QR_TRIPLE) {
@@ -426,7 +412,7 @@ uint8_t qr_queue_report_callback()
 	cmd->nx = NULL;							// terminate the list
 
 	// make a qr object and print it
-	sprintf_P(cmd->token, (const PROGMEM char *)("qr"));
+	sprintf_P(cmd->token, PSTR("qr"));
 	cmd->value = qr.buffers_available;
 	cmd->objtype = TYPE_INTEGER;
 	cmd_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
@@ -442,8 +428,8 @@ uint8_t qr_queue_report_callback()
 /*
  * sr_print_sr() - produce SR text output
  */
-const char PROGMEM fmt_si[] = "[si]  status interval%14.0f ms\n";
-const char PROGMEM fmt_sv[] = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+static const char fmt_si[] PROGMEM = "[si]  status interval%14.0f ms\n";
+static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
 
 void sr_print_sr(cmdObj_t *cmd) { sr_populate_unfiltered_status_report();}
 void sr_print_si(cmdObj_t *cmd) { text_print_flt(cmd, fmt_si);}
@@ -452,8 +438,8 @@ void sr_print_sv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_sv);}
 /*
  * qr_print_qr() - produce QR text output
  */
-const char PROGMEM fmt_qr[] = "qr:%d\n";
-const char PROGMEM fmt_qv[] = "[qv]  queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
+static const char fmt_qr[] PROGMEM = "qr:%d\n";
+static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
 
 void qr_print_qr(cmdObj_t *cmd) { text_print_int(cmd, fmt_qr);}
 void qr_print_qv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_qv);}
@@ -461,7 +447,7 @@ void qr_print_qv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_qv);}
 #endif // __TEXT_MODE
 
 /****************************************************************************
- ***** Report Unit Tests ****************************************************
+ ***** Unit Tests ***********************************************************
  ****************************************************************************/
 
 #ifdef __UNIT_TESTS
@@ -473,8 +459,8 @@ void sr_unit_tests(void)
 	cs.communications_mode = STAT_JSON_MODE;
 	sr_run_status_report();
 }
-#endif
-#endif
+#endif	// __UNIT_TESTS
+#endif	// __UNIT_TESTS_REPORT
 
 #ifdef __cplusplus
 }

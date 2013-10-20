@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling 
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,6 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/*
+ *	See config.h for a Config system overview and a bunch of details.
+ */
+
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
 #include "report.h"
@@ -63,21 +67,18 @@ stat_t cmd_set(cmdObj_t *cmd)
 {
 	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
 	return (((fptrCmd)GET_TABLE_WORD(set))(cmd));
-//	return (cfgArray[cmd->index].set(cmd));
 }
 
 stat_t cmd_get(cmdObj_t *cmd)
 {
-	if (cmd->index >= cmd_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
+	if (cmd->index >= cmd_index_max()) { return(STAT_INTERNAL_RANGE_ERROR);}
 	return (((fptrCmd)GET_TABLE_WORD(get))(cmd));
-//	return (cfgArray[cmd->index].get(cmd));
 }
 
 void cmd_print(cmdObj_t *cmd)
 {
-	if (cmd_index_ge_max(cmd->index)) return;	// validate index or return
+	if (cmd->index >= cmd_index_max()) return;
 	((fptrCmd)GET_TABLE_WORD(print))(cmd);
-//	cfgArray[cmd->index].print(cmd);
 }
 
 void cmd_persist(cmdObj_t *cmd)
@@ -89,15 +90,14 @@ void cmd_persist(cmdObj_t *cmd)
 	if (GET_TABLE_BYTE(flags) & F_PERSIST) cmd_write_NVM_value(cmd);
 }
 
-/****************************************************************************
+/************************************************************************************
  * config_init()  - called once on hard reset
- * set_defaults() - reset NVM with default values for active profile
  *
- * Will perform one of 2 actions:
- *	(1) if NVM is set up or out-of-rev: load RAM and NVM with hardwired default settings
- *	(2) if NVM is set up and at current config version: use NVM data for config
+ * Performs one of 2 actions:
+ *	(1) if NVM is set up or out-of-rev load RAM and NVM with settings.h defaults
+ *	(2) if NVM is set up and at current config version use NVM data for config
  *
- *	You can assume the cfg struct has been zeroed by a hard reset. 
+ *	You can assume the cfg struct has been zeroed by a hard reset.
  *	Do not clear it as the version and build numbers have already been set by tg_init()
  */
 void config_init()
@@ -122,7 +122,6 @@ void config_init()
 	} else {								// case (2) NVM is setup and in revision
 		rpt_print_loading_configs_message();
 		for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
-//			if (pgm_read_byte(&cfgArray[cmd->index].flags) & F_INITIALIZE) {
 			if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 				strcpy_P(cmd->token, cfgArray[cmd->index].token);	// read the token from the array
 				cmd_read_NVM_value(cmd);
@@ -149,15 +148,13 @@ stat_t set_defaults(cmdObj_t *cmd)
 		return (STAT_OK);
 	}
 	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
-	
+
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
-//		if ((cfgArray[cmd->index].flags & F_INITIALIZE) != 0) {
 		if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
-//			cmd->value = cfgArray[cmd->index].def_value;
 			cmd->value = GET_TABLE_FLOAT(def_value);
 			strcpy_P(cmd->token, cfgArray[cmd->index].token);
 			cmd_set(cmd);
-			cmd_persist(cmd);
+			cmd_persist(cmd);				// persist must occur when no other interrupts are firing
 		}
 	}
 	rpt_print_initializing_message();		// don't start TX until all the NVM persistence is done
@@ -182,7 +179,6 @@ stat_t get_nul(cmdObj_t *cmd)
 
 stat_t get_ui8(cmdObj_t *cmd)
 {
-//	cmd->value = (float)*((uint8_t *)cfgArray[cmd->index].target);
 	cmd->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
@@ -190,7 +186,6 @@ stat_t get_ui8(cmdObj_t *cmd)
 
 stat_t get_int(cmdObj_t *cmd)
 {
-//	cmd->value = (float)*((uint32_t *)cfgArray[cmd->index].target);
 	cmd->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
@@ -198,16 +193,11 @@ stat_t get_int(cmdObj_t *cmd)
 
 stat_t get_flt(cmdObj_t *cmd)
 {
-//	cmd->value = *((float *)cfgArray[cmd->index].target);
-//	cmd->precision = cfgArray[cmd->index].precision;
 	cmd->value = *((float *)GET_TABLE_WORD(target));
 	cmd->precision = (int8_t)GET_TABLE_WORD(precision);
 	cmd->objtype = TYPE_FLOAT;
 	return (STAT_OK);
 }
-
-//char *get_format(const index_t index) { return ((char *)cfgArray[index].format);}
-// REPLACED BY A MACRO - See config.h
 
 /* Generic sets()
  *  set_nul() - set nothing (returns STAT_NOOP)
@@ -247,7 +237,7 @@ stat_t set_0123(cmdObj_t *cmd)
 
 stat_t set_int(cmdObj_t *cmd)
 {
-	*((uint32_t *)GET_TABLE_WORD(target)) = cmd->value;	
+	*((uint32_t *)GET_TABLE_WORD(target)) = cmd->value;
 	cmd->objtype = TYPE_INTEGER;
 	return(STAT_OK);
 }
@@ -294,7 +284,7 @@ stat_t set_flu(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
-/********************************************************************************
+/************************************************************************************
  * Group operations
  *
  *	Group operations work on parent/child groups where the parent is one of:
@@ -321,7 +311,7 @@ stat_t set_flu(cmdObj_t *cmd)
 /* 
  * get_grp() - read data from axis, motor, system or other group
  *
- *	get_grp() is a group expansion function that expands the parent group and  returns 
+ *	get_grp() is a group expansion function that expands the parent group and returns 
  *	the values of all the children in that group. It expects the first cmdObj in the 
  *	cmdBody to have a valid group name in the token field. This first object will be set 
  *	to a TYPE_PARENT. The group field is left nul - as the group field refers to a parent 
@@ -330,7 +320,7 @@ stat_t set_flu(cmdObj_t *cmd)
  *	All subsequent cmdObjs in the body will be populated with their values.
  *	The token field will be populated as will the parent name in the group field. 
  *
- *	The sys group is an exception where the childern carry a blank group field, even though 
+ *	The sys group is an exception where the children carry a blank group field, even though 
  *	the sys parent is labeled as a TYPE_PARENT.
  */
 
@@ -373,6 +363,7 @@ stat_t set_grp(cmdObj_t *cmd)
 	}
 	return (STAT_OK);
 }
+
 /*
  * cmd_group_is_prefixed() - hack
  *
@@ -390,7 +381,7 @@ uint8_t cmd_group_is_prefixed(char_t *group)
  ***** cmdObj functions ************************************************************
  ***********************************************************************************/
 
-/******************************************************************************
+/***********************************************************************************
  * cmdObj helper functions and other low-level cmd helpers
  */
 
@@ -400,7 +391,6 @@ uint8_t cmd_group_is_prefixed(char_t *group)
  * linear table scan of the PROGMEM strings, which of course could be further 
  * optimized with indexes or hashing.
  */
-
 index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
@@ -411,20 +401,19 @@ index_t cmd_get_index(const char_t *group, const char_t *token)
 	index_t index_max = cmd_index_max();
 
 	for (index_t i=0; i < index_max; i++) {
-		if ((c = cfgArray[i].token[0]) != str[0]) {	continue; }					// 1st character mismatch
-		if ((c = cfgArray[i].token[1]) == NUL) { if (str[1] == NUL) return(i);}	// one character match
-		if (c != str[1]) continue;												// 2nd character mismatch
-		if ((c = cfgArray[i].token[2]) == NUL) { if (str[2] == NUL) return(i);}	// two character match
-		if (c != str[2]) continue;												// 3rd character mismatch
-		if ((c = cfgArray[i].token[3]) == NUL) { if (str[3] == NUL) return(i);}	// three character match
-		if (c != str[3]) continue;												// 4th character mismatch
-		if ((c = cfgArray[i].token[4]) == NUL) { if (str[4] == NUL) return(i);}	// four character match
-		if (c != str[4]) continue;												// 5th character mismatch
-		return (i);																// five character match
+		if ((c = GET_TOKEN_BYTE(token[0])) != str[0]) {	continue; }					// 1st character mismatch
+		if ((c = GET_TOKEN_BYTE(token[1])) == NUL) { if (str[1] == NUL) return(i);}	// one character match
+		if (c != str[1]) continue;													// 2nd character mismatch
+		if ((c = GET_TOKEN_BYTE(token[2])) == NUL) { if (str[2] == NUL) return(i);}	// two character match
+		if (c != str[2]) continue;													// 3rd character mismatch
+		if ((c = GET_TOKEN_BYTE(token[3])) == NUL) { if (str[3] == NUL) return(i);}	// three character match
+		if (c != str[3]) continue;													// 4th character mismatch
+		if ((c = GET_TOKEN_BYTE(token[4])) == NUL) { if (str[4] == NUL) return(i);}	// four character match
+		if (c != str[4]) continue;													// 5th character mismatch
+		return (i);																	// five character match
 	}
 	return (NO_MATCH);
 }
-
 
 /* 
  * cmd_get_type() - returns command type as a CMD_TYPE enum
@@ -448,13 +437,12 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 
 stat_t cmd_persist_offsets(uint8_t flag)
 {
-/*	if (flag == true) {
-		char axes[] = {"xyzabc"};
+/*
+	if (flag == true) {
 		cmdObj_t cmd;
 		for (uint8_t i=1; i<=COORDS; i++) {
 			for (uint8_t j=0; j<AXES; j++) {
-//				sprintf(cmd.token, (const char *)"g%2d%c", 53+i, (char_t *)"xyzabc"[j]);
-				sprintf(cmd.token, "g%2d%c", (53+i), axes[j]);
+				sprintf(cmd.token, "g%2d%c", 53+i, ("xyzabc")[j]);
 				cmd.index = cmd_get_index((const char_t *)"", cmd.token);
 				cmd.value = cm.offset[i][j];
 				cmd_persist(&cmd);				// only writes changed values
@@ -481,16 +469,16 @@ stat_t cmd_persist_offsets(uint8_t flag)
  *	a NULL pointer if there was an error.
  *
  *	Note: Adding a really large integer (like a checksum value) may lose precision due
- *	to the cast to a float. Sometimes it's better to load an integer as a string if 
+ *	to the cast to a float. Sometimes it's better to load an integer as a string if
  *	all you want to do is display it.
  *
- *	Note: A trick is to cast all string constants to cmd_copy_string(), cmd_add_string()
- *	and cmd_add_conditional_message() to (const char_t *). Examples:
+ *	Note: A trick is to cast all string constants for cmd_copy_string(), cmd_add_object(),
+ *	cmd_add_string() and cmd_add_conditional_message() to (const char_t *). Examples:
  *
  *		cmd_add_string((const char_t *)"msg", string);
  *
- *	On the AVR this will have little effect - the "msg" string will occupy flash as 
- *	an initializer and be instantiated in RAM when the function executes. 
+ *	On the AVR this will save a little static RAM. The "msg" string will occupy flash
+ *	as an initializer and be instantiated in stack RAM when the function executes.
  *	On the ARM (however) this will put the string into flash and skip RAM allocation.
  */
 
@@ -502,8 +490,8 @@ void cmd_get_cmdObj(cmdObj_t *cmd)
 	cmd_reset_obj(cmd);
 	cmd->index = tmp;
 
-	strcpy_P(cmd->group, cfgArray[cmd->index].group); // group field is always terminated
 	strcpy_P(cmd->token, cfgArray[cmd->index].token); // token field is always terminated
+	strcpy_P(cmd->group, cfgArray[cmd->index].group); // group field is always terminated
 
 	// special processing for system groups and stripping tokens for groups
 	if (cmd->group[0] != NUL) {
@@ -513,7 +501,6 @@ void cmd_get_cmdObj(cmdObj_t *cmd)
 			strcpy(cmd->token, &cmd->token[strlen(cmd->group)]); // strip group from the token
 		}
 	}
-//	((fptrCmd)(cfgArray[cmd->index].get))(cmd);	// populate the value
 	((fptrCmd)GET_TABLE_WORD(get))(cmd);	// populate the value
 }
  
@@ -570,17 +557,7 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 	cmd->stringp = (char_t (*)[])dst;
 	return (STAT_OK);
 }
-/*
-stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
-{
-	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
-	char_t *dst = &cmdStr.string[cmdStr.wp];
-	strcpy(dst, src);						// copy string to current head position
-	cmdStr.wp += strlen(src)+1;				// advance head for next string
-	cmd->stringp = (char_t (*)[])dst;
-	return (STAT_OK);
-}
-*/
+
 /* UNUSED
 stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P)
 {
@@ -589,6 +566,7 @@ stat_t cmd_copy_string_P(cmdObj_t *cmd, const char_t *src_P)
 	return (cmd_copy_string(cmd, buf));
 }
 */
+
 cmdObj_t *cmd_add_object(const char_t *token)  // add an object to the body using a token
 {
 	cmdObj_t *cmd = cmd_body;
@@ -660,13 +638,11 @@ cmdObj_t *cmd_add_conditional_message(const char_t *string)	// conditionally add
 	return(cmd_add_string((const char_t *)"msg", string));
 }
 
-/**** cmd_print_list() - print cmd_array as JSON or text ****
+/**** cmd_print_list() - print cmd_array as JSON or text **********************
  *
- * 	Use this function for all text and JSON output that wants to be in a response header
- *	(don't just printf stuff)
- * 	It generates and prints the JSON and text mode output strings 
- *	In JSON mode it generates the footer with the status code, buffer count and checksum
- *	In text mode it uses the the textmode variable to set the output format
+ * 	Generate and print the JSON and text mode output strings. Use this function 
+ *	for all text and JSON output that wants to be in a response header. 
+ *	Don't just printf stuff.
  *
  *	Inputs:
  *	  json_flags = JSON_OBJECT_FORMAT - print just the body w/o header or footer
@@ -728,7 +704,97 @@ stat_t cmd_write_NVM_value(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
+/****************************************************************************
+ ***** Config Unit Tests ****************************************************
+ ****************************************************************************/
+
+#ifdef __UNIT_TESTS
+#ifdef __UNIT_TEST_CONFIG
+
+#define NVMwr(i,v) { cmd.index=i; cmd.value=v; cmd_write_NVM_value(&cmd);}
+#define NVMrd(i)   { cmd.index=i; cmd_read_NVM_value(&cmd); printf("%f\n", (char *)cmd.value);}
+
+void cfg_unit_tests()
+{
+
+// NVM tests
+/*	cmdObj_t cmd;
+	NVMwr(0, 329.01)
+	NVMwr(1, 111.01)
+	NVMwr(2, 222.02)
+	NVMwr(3, 333.03)
+	NVMwr(4, 444.04)
+	NVMwr(10, 10.10)
+	NVMwr(100, 100.100)
+	NVMwr(479, 479.479)
+
+	NVMrd(0)
+	NVMrd(1)
+	NVMrd(2)
+	NVMrd(3)
+	NVMrd(4)
+	NVMrd(10)
+	NVMrd(100)
+	NVMrd(479)
+*/
+
+// config table tests
+
+	index_t i;
+//	float val;
+
+//	print_configs("$", NUL);					// no filter (show all)
+//	print_configs("$", 'g');					// filter for general parameters
+//	print_configs("$", '1');					// filter for motor 1
+//	print_configs("$", 'x');					// filter for x axis
+
+	i = cmd_get_index((const char_t *)"fb");
+	i = cmd_get_index((const char_t *)"xfr");
+	i = cmd_get_index((const char_t *)"g54");
+
+//	i = get_pos_axis(55);
+//	i = get_pos_axis(73);
+//	i = get_pos_axis(93);
+//	i = get_pos_axis(113);
+
+/*
+	for (i=0; i<CMD_MAX_INDEX; i++) {
+
+		cmd_get(&cmd);
+
+		cmd.value = 42;
+		cmd_set(&cmd);
+
+		val = get_flt_value(i);
+		cmd_get_token(i, cmd.token);
+
+//		get_friendly(i, string);
+		get_format(i, cmd.vstring);
+		get_axis(i);							// uncomment main function to test
+		get_motor(i);
+		cmd_set(i, &cmd);
+		cmd_print(i);
+	}
+
+	_parse_config_string("$1po 1", &c);			// returns a number
+	_parse_config_string("XFR=1200", &c);		// returns a number
+	_parse_config_string("YFR 1300", &c);		// returns a number
+	_parse_config_string("zfr	1400", &c);		// returns a number
+	_parse_config_string("afr", &c);			// returns a null
+	_parse_config_string("Bfr   ", &c);			// returns a null
+	_parse_config_string("cfr=wordy", &c);		// returns a null
+
+//	i = cfgget_config_index("gc");
+//	i = cfgget_config_index("gcode");
+//	i = cfgget_config_index("c_axis_mode");
+//	i = cfgget_config_index("AINT_NOBODY_HOME");
+	i = cfgget_config_index("firmware_version");
+*/
+}
+
+#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-

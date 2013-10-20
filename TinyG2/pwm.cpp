@@ -1,8 +1,8 @@
 /*
- * pwm.c - pulse width modulation drivers
- * Part of TinyG project
+ * pwm.cpp - pulse width modulation drivers
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2012 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2012 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,16 +30,15 @@
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
 #include "hardware.h"
-#include "pwm.h"
-//#include "gpio.h"
 #include "text_parser.h"
+//#include "gpio.h"
+#include "pwm.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-/***** PWM defines, structures and memory allocation *****
- */
+/***** PWM defines, structures and memory allocation *****/
 
 pwmSingleton_t pwm;
 
@@ -140,16 +139,16 @@ stat_t pwm_set_freq(uint8_t chan, float freq)
 	if (prescale <= 1) {
 		pwm.p[chan].timer->PER = F_CPU/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV1_gc;
-		} else if (prescale <= 2) {
+	} else if (prescale <= 2) {
 		pwm.p[chan].timer->PER = F_CPU/2/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV2_gc;
-		} else if (prescale <= 4) {
+	} else if (prescale <= 4) {
 		pwm.p[chan].timer->PER = F_CPU/4/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV4_gc;
-		} else if (prescale <= 8) {
+	} else if (prescale <= 8) {
 		pwm.p[chan].timer->PER = F_CPU/8/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV8_gc;
-		} else {
+	} else {
 		pwm.p[chan].timer->PER = F_CPU/64/freq;
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV64_gc;
 	}
@@ -178,8 +177,8 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 	// Ffrq = Fper/(2N(CCA+1))
 	// Fpwm = Fper/((N(PER+1))
 /*	
-    float period_scalar = pwm.p[chan].timer->PER;
-    pwm.p[chan].timer->CCB = (uint16_t)(period_scalar * duty) + 1;
+	float period_scalar = pwm.p[chan].timer->PER;
+	pwm.p[chan].timer->CCB = (uint16_t)(period_scalar * duty) + 1;
 */
 	return (STAT_OK);
 }
@@ -190,7 +189,7 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
 
-
+// none
 
 
 /***********************************************************************************
@@ -200,16 +199,16 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 
 #ifdef __TEXT_MODE
 
-const char PROGMEM fmt_p1frq[] = "[p1frq] pwm frequency   %15.3f Hz\n";
-const char PROGMEM fmt_p1csl[] = "[p1csl] pwm cw speed lo %15.3f RPM\n";
-const char PROGMEM fmt_p1csh[] = "[p1csh] pwm cw speed hi %15.3f RPM\n";
-const char PROGMEM fmt_p1cpl[] = "[p1cpl] pwm cw phase lo %15.3f [0..1]\n";
-const char PROGMEM fmt_p1cph[] = "[p1cph] pwm cw phase hi %15.3f [0..1]\n";
-const char PROGMEM fmt_p1wsl[] = "[p1wsl] pwm ccw speed lo%15.3f RPM\n";
-const char PROGMEM fmt_p1wsh[] = "[p1wsh] pwm ccw speed hi%15.3f RPM\n";
-const char PROGMEM fmt_p1wpl[] = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";
-const char PROGMEM fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
-const char PROGMEM fmt_p1pof[] = "[p1pof] pwm phase off   %15.3f [0..1]\n";
+static const char fmt_p1frq[] PROGMEM = "[p1frq] pwm frequency   %15.3f Hz\n";
+static const char fmt_p1csl[] PROGMEM = "[p1csl] pwm cw speed lo %15.3f RPM\n";
+static const char fmt_p1csh[] PROGMEM = "[p1csh] pwm cw speed hi %15.3f RPM\n";
+static const char fmt_p1cpl[] PROGMEM = "[p1cpl] pwm cw phase lo %15.3f [0..1]\n";
+static const char fmt_p1cph[] PROGMEM = "[p1cph] pwm cw phase hi %15.3f [0..1]\n";
+static const char fmt_p1wsl[] PROGMEM = "[p1wsl] pwm ccw speed lo%15.3f RPM\n";
+static const char fmt_p1wsh[] PROGMEM = "[p1wsh] pwm ccw speed hi%15.3f RPM\n";
+static const char fmt_p1wpl[] PROGMEM = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";
+static const char fmt_p1wph[] PROGMEM = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
+static const char fmt_p1pof[] PROGMEM = "[p1pof] pwm phase off   %15.3f [0..1]\n";
 
 void pwm_print_p1frq(cmdObj_t *cmd) { text_print_flt(cmd, fmt_p1frq);}
 void pwm_print_p1csl(cmdObj_t *cmd) { text_print_flt(cmd, fmt_p1csl);}

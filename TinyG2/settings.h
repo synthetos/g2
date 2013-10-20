@@ -1,6 +1,6 @@
 /*
  * settings.h - default runtime settings
- * This file is part of TinyG2 project
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
  *
@@ -9,6 +9,14 @@
  * Free Software Foundation. You should have received a copy of the GNU General Public
  * License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
  * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
  * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
@@ -16,13 +24,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*	The values in this file are the default settings that are loaded into 
- *	a virgin EEPROM, and can be changed using the config commands.
- *	After initial load the EEPROM values (or changed values) are used.
+/*	The values in this file are the default settings that are loaded into a virgin EEPROM, 
+ *	and can be changed using the config commands. After initial load the EEPROM values 
+ *	(or changed values) are used.
  *
- *	System and hardware settings that you shouldn't need to change 
- *	are in hardware.h  Application settings that also shouldn't need 
- *	to be changed are in tinyg.h
+ *	System and hardware settings that you shouldn't need to change are in hardware.h  
+ *	Application settings that also shouldn't need to be changed are in tinyg.h
  */
 
 #ifndef SETTINGS_H_ONCE
@@ -52,33 +59,32 @@
 #define STATUS_REPORT_INTERVAL_MS	250				// milliseconds - set $SV=0 to disable
 #define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
 
-#define QR_VERBOSITY				QR_OFF			// one of: QR_OFF, QR_FILTERED, QR_VERBOSE
-#define QR_HI_WATER					20
-#define QR_LO_WATER					2
+#define QR_VERBOSITY				QR_OFF			// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 // Gcode startup defaults
-#define GCODE_DEFAULT_UNITS			MILLIMETERS
-#define GCODE_DEFAULT_PLANE			CANON_PLANE_XY
-#define GCODE_DEFAULT_COORD_SYSTEM	G54
+#define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE			CANON_PLANE_XY	// CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM	G54				// G54, G55, G56, G57, G58 or G59
 #define GCODE_DEFAULT_PATH_CONTROL 	PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
 // Comm mode and echo levels
-#define COM_IGNORE_CRLF				IGNORE_OFF	// 0=accept either CR or LF, 1=ignore CR, 2=ignoreLF
+#define COM_IGNORE_CRLF				IGNORE_OFF		// 0=accept either CR or LF, 1=ignore CR, 2=ignoreLF
 #define COM_EXPAND_CR				false
 #define COM_ENABLE_ECHO				false
-#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON	// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 /**** MACHINE PROFILES ******************************************************/
 
 // machine default profiles - chose only one:
 
 //#include "settings/settings_default.h"				// Default settings for release
+//#include "settings/settings_hammer.h"					// Hammer torque demo
+//#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_lumenlabMicRoV3.h"		// Lumenlabs micRo v3
-//#include "settings/settings_othercutter.h"			// Otherlab OtherCutter
-//#include "settings/settings_otherfab.h"				// Otherlab OtherFab
-//#include "settings/settings_pocketcnc_linear.h"		// PocketCNC 5 axis mill - linear settings
-//#include "settings/settings_pocketcnc_rotary.h"		// PocketCNC 5 axis mill - rotary settings
+//#include "settings/settings_openpnp.h"				// OpenPnP
+//#include "settings/settings_othercutter.h"			// Otherfab OtherCutter
+//#include "settings/settings_othermill.h"				// Otherfab OtherMill
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
 #include "settings/settings_shapeoko375.h"			// Shapeoko 375mm kit
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer

@@ -2,7 +2,7 @@
  * plan_line.h - acceleration managed line planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  * Copyright (c) 2013 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
  */
 
 #ifndef PLAN_LINE_H_ONCE
-#define PLAN_LINE_H_ONCE 
+#define PLAN_LINE_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{

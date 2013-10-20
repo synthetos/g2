@@ -2,7 +2,7 @@
  * plan_arc.h - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -18,7 +18,7 @@
  */
 
 #ifndef PLAN_ARC_H_ONCE
-#define PLAN_ARC_H_ONCE 
+#define PLAN_ARC_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -58,21 +58,9 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 
 	magic_t magic_end;
 } arc_t;
-extern arc_t ar;
+extern arc_t arc;
 
-// function prototypes
-
-stat_t cm_arc(const GCodeState_t *gm_arc,
-			  const float i,
-			  const float j,
-			  const float k,
-			  const float theta,
-			  const float radius,
-			  const float angular_travel,
-			  const float linear_travel,
-			  const uint8_t axis_1,
-			  const uint8_t axis_2,
-			  const uint8_t axis_linear);
+// function prototypes (see canonical_machine.h for others)
 
 stat_t cm_arc_callback(void);
 void cm_abort_arc(void);

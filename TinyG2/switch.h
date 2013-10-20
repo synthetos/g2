@@ -1,8 +1,8 @@
 /*
  * switch.h - switch handling functions
- * Part of TinyG project
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -41,41 +41,12 @@
 #define SWITCH_H_ONCE
 
 /*
- * variables and settings 
+ * Generic variables and settings 
  */
-#define SW_LOCKOUT_TICKS 100	// in milliseconds
-//#define SW_DEGLITCH_TICKS 30	// in milliseconds
 
-#define SW_PAIRS AXES			// array sizing
-#define SW_POSITIONS 2			// array sizing
-
-/*
- * definitions
- */
 // macros for finding the index into the switch table give the axis number
 #define MIN_SWITCH(axis) (axis*2)
 #define MAX_SWITCH(axis) (axis*2+1)
-
-enum swPosition {
-	SW_MIN = 0,
-	SW_MAX
-};
-
-enum swType {
-	SW_NORMALLY_OPEN = 0,
-	SW_NORMALLY_CLOSED
-};
-
-enum swState {
-	SW_OPEN = 0,					// also read as 'false'
-	SW_CLOSED						// also read as 'true'
-};
-
-enum swEdge {
-	SW_NO_EDGE = 0,
-	SW_LEADING,
-	SW_TRAILING,
-};
 
 // switch modes
 #define SW_HOMING_BIT 0x01
@@ -86,6 +57,41 @@ enum swEdge {
 #define SW_MODE_HOMING_LIMIT   (SW_HOMING_BIT | SW_LIMIT_BIT)// homing and limits
 #define SW_MODE_MAX_VALUE 		SW_MODE_HOMING_LIMIT
 
+enum swType {
+	SW_NORMALLY_OPEN = 0,
+	SW_NORMALLY_CLOSED
+};
+
+
+enum swState {
+	SW_DISABLED = -1,
+	SW_OPEN = 0,					// also read as 'false'
+	SW_CLOSED						// also read as 'true'
+};
+
+/*
+ * ARM specific (new switch handling code)
+ */
+enum swPosition {
+	SW_MIN = 0,
+	SW_MAX
+};
+
+enum swEdge {
+	SW_NO_EDGE = 0,
+	SW_LEADING,
+	SW_TRAILING,
+};
+
+#define SW_LOCKOUT_TICKS 100		// in milliseconds
+//#define SW_DEGLITCH_TICKS 30		// in milliseconds
+
+#define SW_PAIRS AXES				// array sizing
+#define SW_POSITIONS 2				// array sizing
+
+/*
+ * Switch control structures
+ */
 typedef struct swSwitch {			// one struct per switch
 	uint8_t type;					// swType: 0=NO, 1=NC
 	uint8_t mode;					// 0=disabled, 1=homing, 2=limit, 3=homing+limit
@@ -106,20 +112,18 @@ typedef struct swSwitchArray {		// array of switches
 } switches_t;
 extern switches_t sw;
 
-// function prototypes
-
+/*
+ * Function prototypes
+ */
 void switch_init(void);
-stat_t poll_switches(void);
 uint8_t read_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t sw_num);
-/*
-void switch_rtc_callback(void);
-uint8_t switch_get_limit_thrown(void);
-uint8_t switch_get_sw_thrown(void);
-void switch_reset_switches(void);
-uint8_t switch_read_switch(uint8_t sw_num);
-*/
 
+stat_t poll_switches(void);
+
+/*
+ * Switch config accessors and text functions
+ */
 stat_t sw_set_st(cmdObj_t *cmd);
 stat_t sw_set_sw(cmdObj_t *cmd);
 
@@ -129,50 +133,4 @@ stat_t sw_set_sw(cmdObj_t *cmd);
 	#define sw_print_st tx_print_stub
 #endif // __TEXT_MODE
 
-/* unit test setup */
-
-//#define __UNIT_TEST_GPIO				// uncomment to enable GPIO unit tests
-#ifdef __UNIT_TEST_GPIO
-void switch_unit_tests(void);
-#define	GPIO_UNITS switch_unit_tests();
-#else
-#define	GPIO_UNITS
-#endif // __UNIT_TEST_GPIO
-
 #endif // End of include guard: SWITCH_H_ONCE
-
-
-// DEPRECATED
-/*
-enum swNums {	 			// indexes into switch arrays
-	SW_MIN_X = 0,
-	SW_MAX_X,
-	SW_MIN_Y,
-	SW_MAX_Y,
-	SW_MIN_Z, 
-	SW_MAX_Z,
-	SW_MIN_A,
-	SW_MAX_A,
-	SW_MIN_B,
-	SW_MAX_B,
-	SW_MIN_C,
-	SW_MAX_C,
-	NUM_SWITCHES 			// must be last one. Used for array sizing and for loops
-};
-#define SW_OFFSET SW_MAX_X	// offset between MIN and MAX switches
-#define NUM_SWITCH_PAIRS (NUM_SWITCHES/2)
-*/
-
-/*
-#define SW_DISABLED -1
-#define SW_OPEN 	 0
-#define SW_CLOSED	 1
-*/
-
-/*
-enum swState {						// state machine for managing debouncing and lockout
-	SW_IDLE = 0,
-	SW_DEGLITCHING,
-	SW_LOCKOUT	
-};
-*/
