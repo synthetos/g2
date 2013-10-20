@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>g3_due.xcscheme</key>
+		<key>TinyG2.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
@@ -35,6 +35,11 @@
 			<true/>
 		</dict>
 		<key>D457117E170546FC00EA19A8</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D4C12814180D9560002A898C</key>
 		<dict>
 			<key>primary</key>
 			<true/>

@@ -81,7 +81,7 @@ namespace Motate {
 		/* Waveform select, Up to TOP (RC), then Down */
 		kTimerUpDownToMatch = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
 		/* For PWM, we'll alias kTimerUpDownToMatch as: */
-		kPWMCenterAligned     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
+		kPWMCenterAligned     = kTimerUpDownToMatch,
 	};
 
 	/* We're trading acronyms for verbose CamelCase. Dubious. */
@@ -109,7 +109,15 @@ namespace Motate {
 		kToggleBOnMatch     = TC_CMR_BCPC_TOGGLE | TC_CMR_EEVT_XC0,
 		kClearBOnMatch      = TC_CMR_BCPC_CLEAR | TC_CMR_EEVT_XC0,
 		kSetBOnMatch        = TC_CMR_BCPC_SET | TC_CMR_EEVT_XC0,
-	};
+
+
+		/* Aliases for use with PWM */
+		kPWMOnA             = kClearAOnCompareA | kSetAOnMatch,
+		kPWMOnAInverted     = kSetAOnCompareA | kClearAOnMatch,
+
+		kPWMOnB             = kClearBOnCompareB | kSetBOnMatch,
+		kPWMOnBInverted     = kSetBOnCompareB | kClearBOnMatch
+};
 
 	/* We use TC_CMR_EEVT_XC0 in the above to allow TIOB to be an output.
 	 * The defualt is for it to be the input for ExternalEvent.
@@ -334,11 +342,11 @@ namespace Motate {
 
 		// Specify the duty cycle as a value from 0.0 .. 1.0;
 		void setDutyCycleA(const float ratio) {
-			tcChan()->TC_RA = getTopValue() * ratio;
+			setExactDutyCycleA(getTopValue() * ratio);
 		};
 
 		void setDutyCycleB(const float ratio) {
-				tcChan()->TC_RB = getTopValue() * ratio;
+			setExactDutyCycleB(getTopValue() * ratio);
 		};
 
 		// Specify channel A/B duty cycle as a integer value from 0 .. TOP.
@@ -378,7 +386,6 @@ namespace Motate {
 		};
 		// Use this to leave the OutputA options alone.
 		void setOutputBOptions(const uint32_t options) {
-
 			// Note that we carefully crafted the TimerChannelOutputOptions
 			// to match the bits in CMR, so we just mask and set!
 			tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
@@ -388,6 +395,44 @@ namespace Motate {
 													 )
 								) | options;
 		};
+
+		// These are special function for stopping output waveforms.
+		// This is defferent from stopping the timer, which kill both channels and
+		// all interrupts. This simply stops the pin output from changing, and is used
+		// to set the duty cycle to 0.
+
+		// ASSUMPTION: The pin is not in Toggle mode.
+		void stopPWMOutputA() {
+			if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == kSetAOnCompareA)
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kSetAOnMatch;
+			else
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kClearAOnMatch;
+		};
+
+		void stopPWMOutputB() {
+			if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == kSetBOnCompareB)
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kSetBOnMatch;
+			else
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kClearBOnMatch;
+		};
+
+		// These two start the waveform. We try to be as fast as we can.
+		// ASSUMPTION: We stopped it with the corresponding function.
+		// ASSUMPTION: The pin is not and was not in Toggle mode.
+		void startPWMOutputA() {
+			if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == kSetAOnCompareA)
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kClearAOnMatch;
+			else
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kSetAOnMatch;
+		};
+
+		void startPWMOutputB() {
+			if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == kSetBOnCompareB)
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kClearBOnMatch;
+			else
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kSetBOnMatch;
+		};
+
 
 		void setInterrupts(const uint32_t interrupts) {
 			if (interrupts != kInterruptsOff) {
@@ -620,15 +665,17 @@ namespace Motate {
 			uint32_t test_value = masterClock / divisors[divisor_index];
 
 			// We assume if (divisor_index == 10) then 10 will be the value we use...
-			while ((divisor_index < 10) && (frequency < test_value) && (frequency > (test_value / 0x10000))) {
+			// We want OUT of the while loop when we have the right divisor.
+			// AGAIN: FAILING this test means we have the RIGHT divisor.
+			while ((divisor_index < 10) && ((frequency > test_value) || (frequency < (test_value / 0x10000)))) {
 				divisor_index++;
 				test_value = masterClock / divisors[divisor_index];
 			}
 
-			pwmChan()->PWM_CMR = divisor_index | (kPWMCenterAligned ? PWM_CMR_CALG : 0);
+			pwmChan()->PWM_CMR = (divisor_index & 0xff) | (mode == kPWMCenterAligned ? PWM_CMR_CALG : 0);
 			// ToDo: Polarity setttings, Dead-Time control, Counter events
 
-			int32_t newTop = test_value * frequency;
+			int32_t newTop = test_value / frequency;
 			setTop(newTop, /*setOnNext=*/ false);
 
 			// Determine and return the new frequency.
@@ -684,11 +731,29 @@ namespace Motate {
 		};
 
 		void setOutputOptions(const uint32_t options) {
-			// TODO
+			setOutputAOptions(options);
 		};
 
 		void setOutputAOptions(const uint32_t options) {
-			// TODO
+			if (options == kPWMOnAInverted) {
+				pwmChan()->PWM_CMR |= PWM_CMR_CPOL;
+			}
+			else if (options == kPWMOnA) {
+				pwmChan()->PWM_CMR &= ~PWM_CMR_CPOL;
+			}
+		};
+
+
+		// ASSUMPTION: The pin is not in Toggle mode.
+		void stopPWMOutputA() {
+//			stop();
+		};
+
+		// These two start the waveform. We try to be as fast as we can.
+		// ASSUMPTION: We stopped it with the corresponding function.
+		// ASSUMPTION: The pin is not and was not in Toggle mode.
+		void startPWMOutputA() {
+//			start();
 		};
 
 		void setInterrupts(const uint32_t interrupts) {

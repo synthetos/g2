@@ -165,7 +165,7 @@ uint8_t read_switch(switch_t *s, uint8_t pin_value)
 
 static void _trigger_feedhold(switch_t *s) 
 {
-	IndicatorLed.toggle();
+//	IndicatorLed.toggle();
 	cm_request_feedhold();
 /*
 	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
@@ -178,7 +178,7 @@ static void _trigger_feedhold(switch_t *s)
 
 static void _trigger_cycle_start(switch_t *s) 
 {
-	IndicatorLed.toggle();
+//	IndicatorLed.toggle();
 	cm_request_cycle_start();
 }
 

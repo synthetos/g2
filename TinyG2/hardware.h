@@ -93,8 +93,11 @@ Motate::timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
-Motate::pin_number indicator_led_pin_num = 13;
-static Motate::OutputPin<indicator_led_pin_num> IndicatorLed;
+Motate::pin_number indicator_led_pin_num = 9;
+static Motate::PWMOutputPin<indicator_led_pin_num> IndicatorLed;
+
+Motate::pin_number indicator_led2_pin_num = 13;
+static Motate::PWMOutputPin<indicator_led2_pin_num> IndicatorLed2;
 
 // Communications support
 Motate::pin_number i2c_sda_pin_num = 20;
@@ -115,9 +118,9 @@ Motate::pin_number grbl_cycle_start_pin_num = 56;
 // Gcode support
 Motate::pin_number motor_common_enable_pin_num = 8;
 Motate::pin_number spindle_enable_pin_num = 12;
-Motate::pin_number spindle_dir_pin_num	  = 13;
+Motate::pin_number spindle_dir_pin_num	  = -1;//13;
 Motate::pin_number spindle_pwm_pin_num	  = 11;
-Motate::pin_number secondary_pwm_pin_num  = 9;
+Motate::pin_number secondary_pwm_pin_num  = -1;//9;
 Motate::pin_number coolant_enable_pin_num = 57;
 
 // axes
