@@ -35,7 +35,9 @@
 ////////////////////////////
 
 #include "motatePins.h"
-#include "motateTimers.h" // for Motate::timer_number
+#include "motateTimers.h" // for timer_number
+
+using namespace Motate;
 
 #ifdef __cplusplus
 extern "C"{
@@ -88,171 +90,51 @@ extern "C"{
 
 // Timer definitions. See stepper.h and other headers for setup
 
-Motate::timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
-Motate::timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
-Motate::timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
-Motate::timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
+timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
+timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
+timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
+timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
-Motate::pin_number indicator_led_pin_num = 9;
-static Motate::PWMOutputPin<indicator_led_pin_num> IndicatorLed;
+pin_number indicator_led_pin_num = 9;
+static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
-Motate::pin_number indicator_led2_pin_num = 13;
-static Motate::PWMOutputPin<indicator_led2_pin_num> IndicatorLed2;
-
-// Communications support
-Motate::pin_number i2c_sda_pin_num = 20;
-Motate::pin_number i2c_scl_pin_num = 21;
-Motate::pin_number spi_ss1_pin_num = 10;
-Motate::pin_number spi_ss2_pin_num = 47;
-Motate::pin_number spi_ss3_pin_num = 52;
-Motate::pin_number spi_ss4_pin_num = 48;
-Motate::pin_number spi_ss5_pin_num = 49;
-Motate::pin_number spi_ss6_pin_num = 50;
-Motate::pin_number kinen_sync_pin_num = 53;
-
-// grbl compatibility
-Motate::pin_number grbl_reset_pin_num = 54;
-Motate::pin_number grbl_feedhold_pin_num = 55;
-Motate::pin_number grbl_cycle_start_pin_num = 56;
-
-// Gcode support
-Motate::pin_number motor_common_enable_pin_num = 8;
-Motate::pin_number spindle_enable_pin_num = 12;
-Motate::pin_number spindle_dir_pin_num	  = -1;//13;
-Motate::pin_number spindle_pwm_pin_num	  = 11;
-Motate::pin_number secondary_pwm_pin_num  = -1;//9;
-Motate::pin_number coolant_enable_pin_num = 57;
-
-// axes
-Motate::pin_number axis_X_min_pin_num = 14;
-Motate::pin_number axis_X_max_pin_num = 15;
-Motate::pin_number axis_Y_min_pin_num = 16;
-Motate::pin_number axis_Y_max_pin_num = 17;
-Motate::pin_number axis_Z_min_pin_num = 18;
-Motate::pin_number axis_Z_max_pin_num = 19;
-
-Motate::pin_number axis_A_min_pin_num = 58;
-Motate::pin_number axis_A_max_pin_num = 59;
-Motate::pin_number axis_B_min_pin_num = 60;
-Motate::pin_number axis_B_max_pin_num = 61;
-Motate::pin_number axis_C_min_pin_num = 65;
-Motate::pin_number axis_C_max_pin_num = 51;
-
-// motors
-Motate::pin_number motor_1_step_pin_num			= 2;
-Motate::pin_number motor_1_dir_pin_num			= 5;
-Motate::pin_number motor_1_enable_pin_num		= 22;
-Motate::pin_number motor_1_microstep_0_pin_num	= 23;
-Motate::pin_number motor_1_microstep_1_pin_num	= 24;
-Motate::pin_number motor_1_vref_pin_num			= 34;
-
-Motate::pin_number motor_2_step_pin_num			= 3;
-Motate::pin_number motor_2_dir_pin_num			= 6;
-Motate::pin_number motor_2_enable_pin_num		= 25;
-Motate::pin_number motor_2_microstep_0_pin_num	= 26;
-Motate::pin_number motor_2_microstep_1_pin_num	= 27;
-Motate::pin_number motor_2_vref_pin_num			= 62;
-
-#if (MOTORS >= 3)
-Motate::pin_number motor_3_step_pin_num			= 4;
-Motate::pin_number motor_3_dir_pin_num			= 7;
-Motate::pin_number motor_3_enable_pin_num		= 28;
-Motate::pin_number motor_3_microstep_0_pin_num	= 29;
-Motate::pin_number motor_3_microstep_1_pin_num	= 30;
-Motate::pin_number motor_3_vref_pin_num			= 63;
-#else
-Motate::pin_number motor_3_step_pin_num			= -1;
-Motate::pin_number motor_3_dir_pin_num			= -1;
-Motate::pin_number motor_3_enable_pin_num		= -1;
-Motate::pin_number motor_3_microstep_0_pin_num	= -1;
-Motate::pin_number motor_3_microstep_1_pin_num	= -1;
-Motate::pin_number motor_3_vref_pin_num			= -1;
-#endif
-
-#if (MOTORS >= 4)
-Motate::pin_number motor_4_step_pin_num			= 31;
-Motate::pin_number motor_4_dir_pin_num			= 32;
-Motate::pin_number motor_4_enable_pin_num		= 33;
-Motate::pin_number motor_4_microstep_0_pin_num	= 35;
-Motate::pin_number motor_4_microstep_1_pin_num	= 36;
-Motate::pin_number motor_4_vref_pin_num			= 64;
-#else
-Motate::pin_number motor_4_step_pin_num			= -1;
-Motate::pin_number motor_4_dir_pin_num			= -1;
-Motate::pin_number motor_4_enable_pin_num		= -1;
-Motate::pin_number motor_4_microstep_0_pin_num	= -1;
-Motate::pin_number motor_4_microstep_1_pin_num	= -1;
-Motate::pin_number motor_4_vref_pin_num			= -1;
-#endif
-
-#if (MOTORS >= 5)
-Motate::pin_number motor_5_step_pin_num			= 37;
-Motate::pin_number motor_5_dir_pin_num			= 38;
-Motate::pin_number motor_5_enable_pin_num		= 39;
-Motate::pin_number motor_5_microstep_0_pin_num	= 40;
-Motate::pin_number motor_5_microstep_1_pin_num	= 41;
-Motate::pin_number motor_5_vref_pin_num			= 66;
-#else
-Motate::pin_number motor_5_step_pin_num			= -1;
-Motate::pin_number motor_5_dir_pin_num			= -1;
-Motate::pin_number motor_5_enable_pin_num		= -1;
-Motate::pin_number motor_5_microstep_0_pin_num	= -1;
-Motate::pin_number motor_5_microstep_1_pin_num	= -1;
-Motate::pin_number motor_5_vref_pin_num			= -1;
-#endif
-
-#if (MOTORS >= 6)
-Motate::pin_number motor_6_step_pin_num			= 42;
-Motate::pin_number motor_6_dir_pin_num			= 43;
-Motate::pin_number motor_6_enable_pin_num		= 44;
-Motate::pin_number motor_6_microstep_0_pin_num	= 45;
-Motate::pin_number motor_6_microstep_1_pin_num	= 46;
-Motate::pin_number motor_6_vref_pin_num			= 67;
-#else
-Motate::pin_number motor_6_step_pin_num			= -1;
-Motate::pin_number motor_6_dir_pin_num			= -1;
-Motate::pin_number motor_6_enable_pin_num		= -1;
-Motate::pin_number motor_6_microstep_0_pin_num	= -1;
-Motate::pin_number motor_6_microstep_1_pin_num	= -1;
-Motate::pin_number motor_6_vref_pin_num			= -1;
-#endif
 
 /**** Motate Global Pin Allocations ****/
 
-static Motate::OutputPin<spi_ss1_pin_num> spi_ss1_pin;
-static Motate::OutputPin<spi_ss2_pin_num> spi_ss2_pin;
-static Motate::OutputPin<spi_ss3_pin_num> spi_ss3_pin;
-static Motate::OutputPin<spi_ss4_pin_num> spi_ss4_pin;
-static Motate::OutputPin<spi_ss5_pin_num> spi_ss5_pin;
-static Motate::OutputPin<spi_ss6_pin_num> spi_ss6_pin;
-static Motate::OutputPin<kinen_sync_pin_num> kinen_sync_pin;
+static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
+static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
+static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
+static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
+static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
+static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
+static OutputPin<kKinen_SyncPinNumber> kinen_sync_pin;
 
-static Motate::OutputPin<grbl_reset_pin_num> grbl_reset_pin;
-static Motate::OutputPin<grbl_feedhold_pin_num> grbl_feedhold_pin;
-static Motate::OutputPin<grbl_cycle_start_pin_num> grbl_cycle_start_pin;
+static OutputPin<kGRBL_ResetPinNumber> grbl_reset_pin;
+static OutputPin<kGRBL_FeedHoldPinNumber> grbl_feedhold_pin;
+static OutputPin<kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
-static Motate::OutputPin<motor_common_enable_pin_num> motor_common_enable_pin;
-static Motate::OutputPin<spindle_enable_pin_num> spindle_enable_pin;
-static Motate::OutputPin<spindle_dir_pin_num> spindle_dir_pin;
-static Motate::OutputPin<spindle_pwm_pin_num> spindle_pwm_pin;
-static Motate::OutputPin<secondary_pwm_pin_num> secondary_pwm_pin;
-static Motate::OutputPin<coolant_enable_pin_num> coolant_enable_pin;
+static OutputPin<kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
+static OutputPin<kSpindle_EnablePinNumber> spindle_enable_pin;
+static OutputPin<kSpindle_DirPinNumber> spindle_dir_pin;
+static OutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
+static OutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
+static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
 
-static Motate::InputPin<axis_X_min_pin_num> axis_X_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_X_max_pin_num> axis_X_max_pin(Motate::kPullUp);
-static Motate::InputPin<axis_Y_min_pin_num> axis_Y_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_Y_max_pin_num> axis_Y_max_pin(Motate::kPullUp);
-static Motate::InputPin<axis_Z_min_pin_num> axis_Z_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_Z_max_pin_num> axis_Z_max_pin(Motate::kPullUp);
+static InputPin<kXAxis_MaxPinNumber> axis_X_min_pin(kPullUp);
+static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
+static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
+static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
+static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
+static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
 
-static Motate::InputPin<axis_A_min_pin_num> axis_A_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_A_max_pin_num> axis_A_max_pin(Motate::kPullUp);
-static Motate::InputPin<axis_B_min_pin_num> axis_B_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_B_max_pin_num> axis_B_max_pin(Motate::kPullUp);
-static Motate::InputPin<axis_C_min_pin_num> axis_C_min_pin(Motate::kPullUp);
-static Motate::InputPin<axis_C_max_pin_num> axis_C_max_pin(Motate::kPullUp);
+static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
+static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
+static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
+static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
+static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
+static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 
 /*** function prototypes ***/
 

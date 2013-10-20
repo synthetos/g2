@@ -367,6 +367,15 @@ namespace Motate {
 	pin_number kLED_USBTXPinNumber              = 118;
 
 
+	// GRBL / gShield compatibility pins -- Due board ONLY
+
+	pin_number kGRBL_ResetPinNumber             =  -1;
+	pin_number kGRBL_FeedHoldPinNumber          =  -1;
+	pin_number kGRBL_CycleStartPinNumber        =  -1;
+
+	pin_number kGRBL_CommonEnablePinNumber      =  -1;
+
+
 	/** NOTE: When adding pin definitions here, they must be
 	  *        added to ALL board pin assignment files, even if
 	  *        they are defined as -1.

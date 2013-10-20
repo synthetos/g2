@@ -298,7 +298,6 @@ static stat_t _normal_idler()
 		}
 
 		IndicatorLed = indicator_led_value/100.0;
-		IndicatorLed2 = indicator_led_value/100.0;
 	}
 	return (STAT_OK);
 }
