@@ -240,7 +240,7 @@ namespace Motate {
 	pin_number kSocket1_EnablePinNumber         =  22;
 	pin_number kSocket1_Microstep_0PinNumber    =  23;
 	pin_number kSocket1_Microstep_1PinNumber    =  24;
-	pin_number kSocket1_VrefPinNumber           =  34;
+	pin_number kSocket1_VrefPinNumber           =  34; //PWMTimer<0>
 
 	pin_number kSocket2_SPISlaveSelectPinNumber =  47;
 	pin_number kSocket2_InterruptPinNumber      =  -1;
@@ -249,7 +249,7 @@ namespace Motate {
 	pin_number kSocket2_EnablePinNumber         =  25;
 	pin_number kSocket2_Microstep_0PinNumber    =  26;
 	pin_number kSocket2_Microstep_1PinNumber    =  27;
-	pin_number kSocket2_VrefPinNumber           =  62;
+	pin_number kSocket2_VrefPinNumber           =  62; //PWMTimer<1>
 
 	pin_number kSocket3_SPISlaveSelectPinNumber =  52;
 	pin_number kSocket3_InterruptPinNumber      =  -1;
@@ -258,7 +258,7 @@ namespace Motate {
 	pin_number kSocket3_EnablePinNumber         =  28;
 	pin_number kSocket3_Microstep_0PinNumber    =  29;
 	pin_number kSocket3_Microstep_1PinNumber    =  30;
-	pin_number kSocket3_VrefPinNumber           =  63;
+	pin_number kSocket3_VrefPinNumber           =  63; //PWMTimer<2>
 
 	pin_number kSocket4_SPISlaveSelectPinNumber =  48;
 	pin_number kSocket4_InterruptPinNumber      =  -1;
@@ -267,7 +267,7 @@ namespace Motate {
 	pin_number kSocket4_EnablePinNumber         =  33;
 	pin_number kSocket4_Microstep_0PinNumber    =  35;
 	pin_number kSocket4_Microstep_1PinNumber    =  36;
-	pin_number kSocket4_VrefPinNumber           =  64;
+	pin_number kSocket4_VrefPinNumber           =  64; //PWMTimer<3>
 
 	pin_number kSocket5_SPISlaveSelectPinNumber =  49;
 	pin_number kSocket5_InterruptPinNumber      =  -1;
@@ -276,7 +276,7 @@ namespace Motate {
 	pin_number kSocket5_EnablePinNumber         =  39;
 	pin_number kSocket5_Microstep_0PinNumber    =  40;
 	pin_number kSocket5_Microstep_1PinNumber    =  41;
-	pin_number kSocket5_VrefPinNumber           =  66;
+	pin_number kSocket5_VrefPinNumber           =  66; //PWMTimer<3>
 
 	pin_number kSocket6_SPISlaveSelectPinNumber =  50;
 	pin_number kSocket6_InterruptPinNumber      =  -1;
@@ -285,7 +285,7 @@ namespace Motate {
 	pin_number kSocket6_EnablePinNumber         =  44;
 	pin_number kSocket6_Microstep_0PinNumber    =  45;
 	pin_number kSocket6_Microstep_1PinNumber    =  46;
-	pin_number kSocket6_VrefPinNumber           =  67;
+	pin_number kSocket6_VrefPinNumber           =  67; //PWMTimer<0>
 
 
 	pin_number kXAxis_MinPinNumber              =  14;

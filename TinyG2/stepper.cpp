@@ -176,6 +176,13 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
+
+	motor_1.vref = 0.5;
+	motor_2.vref = 0.5;
+	motor_3.vref = 0.5;
+	motor_4.vref = 0.5;
+	motor_5.vref = 0.5;
+	motor_6.vref = 0.5;
 }
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
 	NB: requires: #include <component_tc.h>
