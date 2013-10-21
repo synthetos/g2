@@ -9,3 +9,5 @@ G2 has a number of advanced features, including:
 * Jerk controlled motion for acceleration planning (S curve 3rd order motion planning)
 * RESTful interface using JSON
 * Complete status and system state displays
+
+Refer to the [G2 wiki](https://github.com/synthetos/g2/wiki) for more information
