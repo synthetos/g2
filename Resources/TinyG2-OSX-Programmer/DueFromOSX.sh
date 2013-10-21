@@ -67,8 +67,7 @@ perl -e 'open(my $fh, ">", "${port}"); close($fh);'
 
 sleep 0.1
 
-stty -f "${port}" 2400
-
+# stty -f "${port}" 115200
 
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
 $arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/bossac --port=${port/\/dev\//} -U ${native_port} -e -w -v -b "${file/.elf/.bin}" -R 

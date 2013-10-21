@@ -63,6 +63,9 @@ namespace Motate {
 		kDeglitch       = 1<<4,
 		kDebounce       = 1<<5,
 #endif // !MOTATE_AVR_COMPATIBILITY && !MOTATE_SAM_COMPATIBILITY
+
+		// For use on PWM pins only!
+		kPWMPinInverted    = 1<<7,
 	};
 	
 	typedef uint32_t uintPort_t;
@@ -172,7 +175,63 @@ namespace Motate {
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
-	
+
+	static const uint32_t kDefaultPWMFrequency = 100000;
+	template<int8_t pinNum>
+	struct PWMOutputPin : Pin<pinNum> {
+		PWMOutputPin() : Pin<pinNum>(kOutput) {};
+		PWMOutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+		void init(const PinOptions options = kNormal) {
+			Pin<pinNum>::init(kOutput, options);
+		};
+		void setFrequency(const uint32_t freq) {};
+		void operator=(const float value) { write(value); };
+		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+		/*Override these to pick up new methods */
+
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
+		template<>\
+		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
+			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
+			PWMOutputPin(const PinOptions options) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+				{pwmpin_init(options);};\
+			void pwmpin_init(const PinOptions options) {\
+				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
+				timerOrPWM::start();\
+			};\
+			void setFrequency(const uint32_t freq) {\
+				setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+				timerOrPWM::start();\
+			};\
+			void operator=(const float value) { write(value); };\
+			void write(const float value) {\
+				uint16_t duty = getTopValue() * value;\
+				if (duty < 2)\
+					stopPWMOutput ## channelAorB ();\
+				else\
+					startPWMOutput ## channelAorB ();\
+				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
+			};\
+			/*Override these to pick up new methods */\
+		private: /* Make these private to catch them early. */\
+			/* These are intentially not defined. */\
+			void init(const PinMode type, const PinOptions options = kNormal);\
+			/* WARNING: Covariant return types! */\
+			bool get();\
+			operator bool();\
+		};
+
+
 	typedef const int8_t pin_number;
 	
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
@@ -419,7 +478,14 @@ namespace Motate {
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
 
+} // end namespace Motate
+
+// Note: We end the namespace before including in case the included file need to include
+//   another Motate file. If it does include another Motate file, we end up with
+//   Motate::Motate::* definitions and weird compiler errors.
 #include <motate_pin_assignments.h>
+
+namespace Motate {
 
 // disable pinholder for Due for now -- nned to convert to 32bit
 	// PinHolder - 32bit virtual ports (I've never made a template with 32 parameters before.)

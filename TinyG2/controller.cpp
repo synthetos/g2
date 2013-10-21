@@ -69,6 +69,7 @@ static stat_t _command_dispatch(void);
 stat_t hardware_hard_reset_handler(void);
 //stat_t hardware_bootloader_handler(void);
 
+
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -257,16 +258,46 @@ static stat_t _alarm_idler()
 
 	if (SysTickTimer.getValue() > cs.led_timer) {
 		cs.led_timer = SysTickTimer.getValue() + LED_ALARM_TIMER;
-		IndicatorLed.toggle();
+//		IndicatorLed.toggle();
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
 
 static stat_t _normal_idler()
 {
+	/*
+	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
+	 * See plan_line.cpp for expalanations.
+	 * Here, the "velocity" goes from 0.0 to 1.0, then back.
+	 * t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
+	 */
+
+	// These are statics, and the assigments will only evaluate once.
+	static float indicator_led_value = 0.0;
+	static float indicator_led_forward_diff_1 = 50.0 * square(1.0/100.0);
+	static float indicator_led_forward_diff_2 = indicator_led_forward_diff_1 * 2.0;
+
+
 	if (SysTickTimer.getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER;
-		IndicatorLed.toggle();
+		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER / 100;
+
+		indicator_led_value += indicator_led_forward_diff_1;
+		if (indicator_led_value > 100.0)
+			indicator_led_value = 100.0;
+
+		if ((indicator_led_forward_diff_2 > 0.0 && indicator_led_value >= 50.0) || (indicator_led_forward_diff_2 < 0.0 && indicator_led_value <= 50.0)) {
+			indicator_led_forward_diff_2 = -indicator_led_forward_diff_2;
+		}
+		else if (indicator_led_value <= 0.0) {
+			indicator_led_value = 0.0;
+
+			// Reset to account for rounding errors
+			indicator_led_forward_diff_1 = 50.0 * square(1.0/100.0);
+		} else {
+			indicator_led_forward_diff_1 += indicator_led_forward_diff_2;
+		}
+
+		IndicatorLed = indicator_led_value/100.0;
 	}
 	return (STAT_OK);
 }

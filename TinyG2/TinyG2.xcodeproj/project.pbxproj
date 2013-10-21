@@ -411,6 +411,7 @@
 		D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A817054FDE00F2BF9B /* instance_wdt.h */; };
 		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; };
 		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; };
+		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 /* End PBXBuildFile section */
 
@@ -441,9 +442,6 @@
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
 		D41D13F817374B7D00D522D9 /* settings_lumenlabMicRoV3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_lumenlabMicRoV3.h; sourceTree = "<group>"; };
 		D41D13F917374B7D00D522D9 /* settings_othercutter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othercutter.h; sourceTree = "<group>"; };
-		D41D13FA17374B7D00D522D9 /* settings_otherfab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_otherfab.h; sourceTree = "<group>"; };
-		D41D13FB17374B7D00D522D9 /* settings_pocketcnc_linear.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pocketcnc_linear.h; sourceTree = "<group>"; };
-		D41D13FC17374B7D00D522D9 /* settings_pocketcnc_rotary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pocketcnc_rotary.h; sourceTree = "<group>"; };
 		D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_probotixV90.h; sourceTree = "<group>"; };
 		D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375.h; sourceTree = "<group>"; };
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
@@ -463,7 +461,6 @@
 		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
 		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
-		D47C41DB1800D63F00911ADD /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canonical_machine.cpp; sourceTree = "<group>"; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config_app.cpp; sourceTree = "<group>"; };
 		D48F5A42172CB1F900D0E055 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
@@ -3334,6 +3331,8 @@
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
 		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
+		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
 		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
@@ -3368,9 +3367,6 @@
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D41D13F817374B7D00D522D9 /* settings_lumenlabMicRoV3.h */,
 				D41D13F917374B7D00D522D9 /* settings_othercutter.h */,
-				D41D13FA17374B7D00D522D9 /* settings_otherfab.h */,
-				D41D13FB17374B7D00D522D9 /* settings_pocketcnc_linear.h */,
-				D41D13FC17374B7D00D522D9 /* settings_pocketcnc_rotary.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
 				D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
@@ -3427,11 +3423,11 @@
 				D48F5A80172CB21100D0E055 /* util.h */,
 				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
 				D48F5A81172CB21100D0E055 /* xio.h */,
+				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D45710C61705334000EA19A8 /* motate */,
 				D49EB85517054CB800F2BF9B /* arduino */,
 				D49EC5D51705FC1100F2BF9B /* bin */,
 				D49EB8A917054FD500F2BF9B /* CMSIS */,
-				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D457111C1705334100EA19A8 /* variants */,
 				D41D13F617374B7D00D522D9 /* settings */,
 			);
@@ -7639,6 +7635,7 @@
 		D49EC3FC17054FDF00F2BF9B /* atmel_sam */ = {
 			isa = PBXGroup;
 			children = (
+				D4C12818180F17D3002A898C /* board */,
 				D4B57632170737870070CCAE /* gcc_flash.ld */,
 				D4B57633170737870070CCAE /* gcc_sram.ld */,
 				D4B57631170737730070CCAE /* atmel_sam_series.mk */,
@@ -7649,7 +7646,6 @@
 				D4021FA0175E37BF0099576C /* Reset.h */,
 				D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */,
 				D4021FA2175E37BF0099576C /* syscalls.h */,
-				D47C41DB1800D63F00911ADD /* motate_pin_assignments.h */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
@@ -7758,20 +7754,59 @@
 			name = SAM3X8E;
 			sourceTree = "<group>";
 		};
+		D4C12818180F17D3002A898C /* board */ = {
+			isa = PBXGroup;
+			children = (
+				D4C12819180F17D3002A898C /* due */,
+				D4C1281B180F17D3002A898C /* v9_3x8c */,
+			);
+			path = board;
+			sourceTree = "<group>";
+		};
+		D4C12819180F17D3002A898C /* due */ = {
+			isa = PBXGroup;
+			children = (
+				D4C1281A180F17D3002A898C /* motate_pin_assignments.h */,
+			);
+			path = due;
+			sourceTree = "<group>";
+		};
+		D4C1281B180F17D3002A898C /* v9_3x8c */ = {
+			isa = PBXGroup;
+			children = (
+				D4C1281C180F17D3002A898C /* motate_pin_assignments.h */,
+			);
+			path = v9_3x8c;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		D45710C21705330C00EA19A8 /* g3_due */ = {
+		D45710C21705330C00EA19A8 /* TinyG2 Due */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s";
-			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=due";
+			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "TinyG2 Due" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = .;
 			dependencies = (
 			);
-			name = g3_due;
+			name = "TinyG2 Due";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4C12814180D9560002A898C /* TinyG2 v9_3x8c */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=v9_3x8c";
+			buildConfigurationList = D4C12815180D9560002A898C /* Build configuration list for PBXLegacyTarget "TinyG2 v9_3x8c" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 v9_3x8c";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -7816,7 +7851,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D45710C21705330C00EA19A8 /* g3_due */,
+				D45710C21705330C00EA19A8 /* TinyG2 Due */,
+				D4C12814180D9560002A898C /* TinyG2 v9_3x8c */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -7878,6 +7914,7 @@
 				D49EC61A1706789800F2BF9B /* instance_pmc.h in Sources */,
 				D49EC61B1706789800F2BF9B /* instance_pwm.h in Sources */,
 				D49EC61C1706789800F2BF9B /* instance_rstc.h in Sources */,
+				D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */,
 				D49EC61D1706789800F2BF9B /* instance_rtc.h in Sources */,
 				D49EC61E1706789800F2BF9B /* instance_rtt.h in Sources */,
 				D49EC61F1706789800F2BF9B /* instance_sdramc.h in Sources */,
@@ -8331,6 +8368,22 @@
 			};
 			name = Release;
 		};
+		D4C12816180D9560002A898C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
+			};
+			name = Debug;
+		};
+		D4C12817180D9560002A898C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -8343,7 +8396,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "g3_due" */ = {
+		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "TinyG2 Due" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D45710C41705330D00EA19A8 /* Debug */,
@@ -8357,6 +8410,15 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C12815180D9560002A898C /* Build configuration list for PBXLegacyTarget "TinyG2 v9_3x8c" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C12816180D9560002A898C /* Debug */,
+				D4C12817180D9560002A898C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

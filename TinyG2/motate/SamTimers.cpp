@@ -89,7 +89,47 @@ namespace Motate {
 	template<> const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
 	//    static Timer<8> timer8;
 #endif
-	
+
+	template<> Pwm * const       PWMTimer<0>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<0>::pwmChan()       { return PWM->PWM_CH_NUM + 0; };
+	template<> const uint32_t    PWMTimer<0>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<0>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<1>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<1>::pwmChan()       { return PWM->PWM_CH_NUM + 1; };
+	template<> const uint32_t    PWMTimer<1>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<1>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<2>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<2>::pwmChan()       { return PWM->PWM_CH_NUM + 2; };
+	template<> const uint32_t    PWMTimer<2>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<2>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<3>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<3>::pwmChan()       { return PWM->PWM_CH_NUM + 3; };
+	template<> const uint32_t    PWMTimer<3>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<3>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<4>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<4>::pwmChan()       { return PWM->PWM_CH_NUM + 4; };
+	template<> const uint32_t    PWMTimer<4>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<4>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<5>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<5>::pwmChan()       { return PWM->PWM_CH_NUM + 5; };
+	template<> const uint32_t    PWMTimer<5>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<5>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<6>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<6>::pwmChan()       { return PWM->PWM_CH_NUM + 6; };
+	template<> const uint32_t    PWMTimer<6>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<6>::pwmIRQ()        { return PWM_IRQn; };
+
+	template<> Pwm * const       PWMTimer<7>::pwm()           { return PWM; };
+	template<> PwmCh_num * const PWMTimer<7>::pwmChan()       { return PWM->PWM_CH_NUM + 7; };
+	template<> const uint32_t    PWMTimer<7>::peripheralId()  { return ID_PWM; };
+	template<> const IRQn_Type   PWMTimer<7>::pwmIRQ()        { return PWM_IRQn; };
+
 	/* System-wide tick counter */
 	/*  Inspired by code from Atmel and Arduino.
 	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.

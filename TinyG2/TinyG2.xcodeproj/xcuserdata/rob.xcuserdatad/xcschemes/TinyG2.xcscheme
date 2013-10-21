@@ -15,8 +15,22 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D45710C21705330C00EA19A8"
-               BuildableName = "g3_due"
-               BlueprintName = "g3_due"
+               BuildableName = "TinyG2 Due"
+               BlueprintName = "TinyG2 Due"
+               ReferencedContainer = "container:TinyG2.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D4C12814180D9560002A898C"
+               BuildableName = "TinyG2 v9_3x8c"
+               BlueprintName = "TinyG2 v9_3x8c"
                ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

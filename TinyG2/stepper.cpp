@@ -72,9 +72,9 @@ static void _clear_diagnostic_counters(void);
 
 using namespace Motate;
 
-OutputPin<motor_common_enable_pin_num> common_enable;	 // shorter form of the above
-OutputPin<31> dda_debug_pin1;
-OutputPin<33> dda_debug_pin2;
+OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
+OutputPin<-1> dda_debug_pin1;
+OutputPin<-1> dda_debug_pin2;
 
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
@@ -97,50 +97,50 @@ struct Stepper {
 	OutputPin<enable_num> enable;
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
-	OutputPin<vref_num> vref;
+	PWMOutputPin<vref_num> vref;
 };
 
-Stepper<motor_1_step_pin_num, 
-		motor_1_dir_pin_num, 
-		motor_1_enable_pin_num, 
-		motor_1_microstep_0_pin_num, 
-		motor_1_microstep_1_pin_num,
-		motor_1_vref_pin_num> motor_1;
+Stepper<kSocket1_StepPinNumber,
+		kSocket1_DirPinNumber,
+		kSocket1_EnablePinNumber,
+		kSocket1_Microstep_0PinNumber,
+		kSocket1_Microstep_1PinNumber,
+		kSocket1_VrefPinNumber> motor_1;
 
-Stepper<motor_2_step_pin_num, 
-		motor_2_dir_pin_num, 
-		motor_2_enable_pin_num, 
-		motor_2_microstep_0_pin_num, 
-		motor_2_microstep_1_pin_num,
-		motor_2_vref_pin_num> motor_2;
+Stepper<kSocket2_StepPinNumber,
+		kSocket2_DirPinNumber,
+		kSocket2_EnablePinNumber,
+		kSocket2_Microstep_0PinNumber,
+		kSocket2_Microstep_1PinNumber,
+		kSocket2_VrefPinNumber> motor_2;
 
-Stepper<motor_3_step_pin_num, 
-		motor_3_dir_pin_num, 
-		motor_3_enable_pin_num, 
-		motor_3_microstep_0_pin_num, 
-		motor_3_microstep_1_pin_num,
-		motor_3_vref_pin_num> motor_3;
+Stepper<kSocket3_StepPinNumber,
+		kSocket3_DirPinNumber,
+		kSocket3_EnablePinNumber,
+		kSocket3_Microstep_0PinNumber,
+		kSocket3_Microstep_1PinNumber,
+		kSocket3_VrefPinNumber> motor_3;
 
-Stepper<motor_4_step_pin_num, 
-		motor_4_dir_pin_num, 
-		motor_4_enable_pin_num, 
-		motor_4_microstep_0_pin_num, 
-		motor_4_microstep_1_pin_num,
-		motor_4_vref_pin_num> motor_4;
+Stepper<kSocket4_StepPinNumber,
+		kSocket4_DirPinNumber,
+		kSocket4_EnablePinNumber,
+		kSocket4_Microstep_0PinNumber,
+		kSocket4_Microstep_1PinNumber,
+		kSocket4_VrefPinNumber> motor_4;
 
-Stepper<motor_5_step_pin_num, 
-		motor_5_dir_pin_num, 
-		motor_5_enable_pin_num, 
-		motor_5_microstep_0_pin_num, 
-		motor_5_microstep_1_pin_num,
-		motor_5_vref_pin_num> motor_5;
+Stepper<kSocket5_StepPinNumber,
+		kSocket5_DirPinNumber,
+		kSocket5_EnablePinNumber,
+		kSocket5_Microstep_0PinNumber,
+		kSocket5_Microstep_1PinNumber,
+		kSocket5_VrefPinNumber> motor_5;
 		
-Stepper<motor_6_step_pin_num, 
-		motor_6_dir_pin_num, 
-		motor_6_enable_pin_num, 
-		motor_6_microstep_0_pin_num, 
-		motor_6_microstep_1_pin_num,
-		motor_6_vref_pin_num> motor_6;
+Stepper<kSocket6_StepPinNumber,
+		kSocket6_DirPinNumber,
+		kSocket6_EnablePinNumber,
+		kSocket6_Microstep_0PinNumber,
+		kSocket6_Microstep_1PinNumber,
+		kSocket6_VrefPinNumber> motor_6;
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -176,6 +176,13 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
+
+	motor_1.vref = 0.5;
+	motor_2.vref = 0.5;
+	motor_3.vref = 0.5;
+	motor_4.vref = 0.5;
+	motor_5.vref = 0.5;
+	motor_6.vref = 0.5;
 }
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
 	NB: requires: #include <component_tc.h>
@@ -297,14 +304,12 @@ stat_t st_motor_power_callback() 	// called by controller
 
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
-//					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st.motor_idle_timeout * 1000);
 					st_run.m[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st.motor_idle_timeout * 1000);
 					st_run.m[motor].power_state = MOTOR_TIME_IDLE_TIMEOUT;
 					break;
 				}
 
 				case (MOTOR_TIME_IDLE_TIMEOUT): {
-//					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
 					if (SysTickTimer.getValue() > st_run.m[motor].power_systick ) {
 						st_run.m[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
@@ -315,14 +320,12 @@ stat_t st_motor_power_callback() 	// called by controller
 			} else if(st.m[motor].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
-//					st_run.m[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
 					st_run.m[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
 					st_run.m[motor].power_state = MOTOR_TIME_IDLE_TIMEOUT;
 					break;
 				}
 
 				case (MOTOR_TIME_IDLE_TIMEOUT): {
-//					if (SysTickTimer_getValue() > st_run.m[motor].power_systick ) {
 					if (SysTickTimer.getValue() > st_run.m[motor].power_systick ) {
 						st_run.m[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
