@@ -98,6 +98,8 @@ struct Stepper {
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
 	PWMOutputPin<vref_num> vref;
+
+	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
 };
 
 Stepper<kSocket1_StepPinNumber,

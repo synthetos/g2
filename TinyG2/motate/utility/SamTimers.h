@@ -232,7 +232,7 @@ namespace Motate {
 			/*   Disable interrupts */
 			tcChan()->TC_IDR = 0xFFFFFFFF ;
 			/*   Clear status register */
-			tcChan()->TC_SR ;
+			tcChan()->TC_SR;
 
 			enablePeripheralClock();
 
@@ -252,32 +252,37 @@ namespace Motate {
 			// TC1 = MCK/2
 			if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
 				/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+					mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 				divisor = 2;
 
 			// TC2 = MCK/8
 			} else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
 						/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+					mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
 				divisor = 8;
 
 			// TC3 = MCK/32
 			} else if (freq > ((masterClock / 32) / 0x10000) && freq < (masterClock / 32)) {
 						/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+					mode | TC_CMR_TCCLKS_TIMER_CLOCK3;
 				divisor = 32;
 
 			// TC4 = MCK/128
 			} else if (freq > ((masterClock / 128) / 0x10000) && freq < (masterClock / 128)) {
 						/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+					mode | TC_CMR_TCCLKS_TIMER_CLOCK4;
 				divisor = 128;
 
 			// Nothing fit! Hmm...
 			} else {
 				// PUNT! For now, just guess TC1.
 				/*  Set mode */
-				tcChan()->TC_CMR = mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+					mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
 
 				return kFrequencyUnattainable;
 			}
