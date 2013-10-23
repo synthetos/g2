@@ -95,6 +95,8 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 //	xio_set_stderr(std_err);
 //	cs.default_src = std_in;
 //	tg_set_primary_source(cs.default_src);
+
+	IndicatorLed.setFrequency(100000);
 }
 
 /* 

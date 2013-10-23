@@ -176,17 +176,17 @@ namespace Motate {
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
 
-	static const uint32_t kDefaultPWMFrequency = 100000;
+	static const uint32_t kDefaultPWMFrequency = 1000;
 	template<int8_t pinNum>
 	struct PWMOutputPin : Pin<pinNum> {
 		PWMOutputPin() : Pin<pinNum>(kOutput) {};
-		PWMOutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
-		void init(const PinOptions options = kNormal) {
-			Pin<pinNum>::init(kOutput, options);
-		};
+		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
 		void setFrequency(const uint32_t freq) {};
 		void operator=(const float value) { write(value); };
 		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+		bool canPWM() { return false; };
+
 		/*Override these to pick up new methods */
 
 	private: /* Make these private to catch them early. */
@@ -202,15 +202,18 @@ namespace Motate {
 		template<>\
 		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
 			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
-			PWMOutputPin(const PinOptions options) :\
-				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
 				{pwmpin_init(options);};\
+			PWMOutputPin(const uint32_t freq) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+				{pwmpin_init(kNormal);};\
 			void pwmpin_init(const PinOptions options) {\
 				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
 				timerOrPWM::start();\
 			};\
 			void setFrequency(const uint32_t freq) {\
-				setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
 				timerOrPWM::start();\
 			};\
 			void operator=(const float value) { write(value); };\
@@ -222,6 +225,7 @@ namespace Motate {
 					startPWMOutput ## channelAorB ();\
 				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
 			};\
+			bool canPWM() { return true; };\
 			/*Override these to pick up new methods */\
 		private: /* Make these private to catch them early. */\
 			/* These are intentially not defined. */\
