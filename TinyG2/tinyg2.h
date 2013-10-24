@@ -25,7 +25,7 @@
 #define TINYG_H_ONCE
 
 // common system includes
-#include <ctype.h>					
+#include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		020.20	// Sync-up point with TinyG build 394.25
+#define TINYG_FIRMWARE_BUILD   		021.01	// Sync-up point with TinyG build 394.25
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)

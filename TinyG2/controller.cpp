@@ -85,10 +85,10 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
 	
-	cs.linelen = 0;									// initialize index for read_line()
+	cs.read_index = 0;								// initialize index for read_line()
 	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
-//	cs.reset_requested = false;
-//	cs.bootloader_requested = false;
+	cs.hard_reset_requested = false;
+	cs.bootloader_requested = false;
 
 //	xio_set_stdin(std_in);
 //	xio_set_stdout(std_out);
@@ -178,7 +178,8 @@ static stat_t _command_dispatch()
 
 	// read input line or return if not a completed line
 	if (cs.state == CONTROLLER_READY) {
-		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
+//		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
+		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
 			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
 		}
@@ -201,9 +202,11 @@ static stat_t _command_dispatch()
 	}
 	
 	// execute the text line
+	cs.linelen = strlen(cs.in_buf)+1;						// linelen only tracks primary input
 //	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
-	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
-	cs.linelen = 0;
+	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
+	cs.read_index = 0;
+//	cs.linelen = 0;
 
 	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {				// first char

@@ -99,7 +99,17 @@ struct Stepper {
 	OutputPin<ms1_num> ms1;
 	PWMOutputPin<vref_num> vref;
 
-	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
+	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};	// sets default pwm freq for all motor vrefs
+	
+	void setMicrosteps(const uint8_t microsteps) 
+	{
+		switch (microsteps) {
+			case (1): { ms1=0; ms0=0; break; }
+			case (2): { ms1=0; ms0=1; break; }
+			case (4): { ms1=1; ms0=0; break; }
+			case (8): { ms1=1; ms0=1; break; }
+		}
+	};
 };
 
 Stepper<kSocket1_StepPinNumber,
@@ -179,12 +189,19 @@ void stepper_init()
 
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
-	motor_1.vref = 0.5;
-	motor_2.vref = 0.5;
-	motor_3.vref = 0.5;
-	motor_4.vref = 0.5;
-	motor_5.vref = 0.5;
-	motor_6.vref = 0.5;
+	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
+	motor_2.vref = 0.25;
+	motor_3.vref = 0.25;
+	motor_4.vref = 0.25;
+	motor_5.vref = 0.25;
+	motor_6.vref = 0.25;
+
+//	motor_1.vref = 0.5;		// set vref duty cycle. Freq already set to 100000 Hz.
+//	motor_2.vref = 0.5;
+//	motor_3.vref = 0.5;
+//	motor_4.vref = 0.5;
+//	motor_5.vref = 0.5;
+//	motor_6.vref = 0.5;
 }
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
 	NB: requires: #include <component_tc.h>
@@ -677,27 +694,37 @@ stat_t st_prep_line(float steps[], float microseconds)
 /*
  * _set_hw_microsteps() - set microsteps in hardware
  *
- *	For now the microstep_mode is the same as the microsteps (1,2,4,8)
+ *	For now the microsteps is the same as the microsteps (1,2,4,8)
  *	This may change if microstep morphing is implemented.
  */
 
-static void _set_hw_microsteps(const uint8_t motor, const uint8_t microstep_mode)
+static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
-/*
-	if (microstep_mode == 8) {
+#ifdef __ARM
+	switch (motor) {
+		case (MOTOR_1): { motor_1.setMicrosteps(microsteps); break; }
+		case (MOTOR_2): { motor_2.setMicrosteps(microsteps); break; }
+		case (MOTOR_3): { motor_3.setMicrosteps(microsteps); break; }
+		case (MOTOR_4): { motor_4.setMicrosteps(microsteps); break; }
+		case (MOTOR_5): { motor_5.setMicrosteps(microsteps); break; }
+		case (MOTOR_6): { motor_6.setMicrosteps(microsteps); break; }
+	}
+#endif //__ARM
+#ifdef __AVR
+	if (microsteps == 8) {
 		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
 		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
-	} else if (microstep_mode == 4) {
+	} else if (microsteps == 4) {
 		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
 		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_1_bm;
-	} else if (microstep_mode == 2) {
+	} else if (microsteps == 2) {
 		hw.st_port[motor]->OUTSET = MICROSTEP_BIT_0_bm;
 		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
-	} else if (microstep_mode == 1) {
+	} else if (microsteps == 1) {
 		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_0_bm;
 		hw.st_port[motor]->OUTCLR = MICROSTEP_BIT_1_bm;
 	}
-*/
+#endif // __AVR
 }
 
 /***********************************************************************************
