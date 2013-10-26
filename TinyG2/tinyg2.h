@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		022.01	// Diagnosing v9 board
+#define TINYG_FIRMWARE_BUILD   		022.02	// Added $1mp to control motor power levels from $ and JSON
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)

@@ -64,7 +64,7 @@ static stPrepSingleton_t st_prep;
 static void _load_move(void);
 static void _request_load_move(void);
 static void _clear_diagnostic_counters(void);
-static void _set_motor_power_level(const uint8_t motor);
+static void _set_motor_power_level(const uint8_t motor, const float power_level);
 
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
@@ -100,10 +100,12 @@ struct Stepper {
 	OutputPin<ms1_num> ms1;
 	PWMOutputPin<vref_num> vref;
 
-	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};	// sets default pwm freq for all motor vrefs
+	// sets default pwm freq for all motor vrefs
+	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
 //	Stepper(const uint32_t frequency = 100000) : vref(kDriveLowOnly, frequency) {};	
 
-	void setMicrosteps(const uint8_t microsteps) // bind a microstep function into the stepper structure
+	// bind microstep function into the stepper structure
+	void setMicrosteps(const uint8_t microsteps)
 	{
 		switch (microsteps) {
 			case (1): { ms1=0; ms0=0; break; }
@@ -192,24 +194,16 @@ void stepper_init()
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		_set_motor_power_level(motor);
+		_set_motor_power_level(motor, st_run.m[motor].power_level);
 	}	
 /*
-	motor_1.vref = 1.00;		// set vref duty cycle. Freq already set to 100000 Hz.
-	motor_2.vref = 1.00;
-	motor_3.vref = 1.00;
-	motor_4.vref = 1.00;
-	motor_5.vref = 1.00;
-	motor_6.vref = 1.00;
-*/
-/*	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
+	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
 	motor_2.vref = 0.25;
 	motor_3.vref = 0.25;
 	motor_4.vref = 0.25;
 	motor_5.vref = 0.25;
 	motor_6.vref = 0.25;
 */
-
 }
 
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
@@ -292,14 +286,38 @@ static void _deenergize_motor(const uint8_t motor)
 	st_run.m[motor].power_state = MOTOR_OFF;
 }
 
-static void _set_motor_power_level(const uint8_t motor)
+static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
+	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
+	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
+	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
+	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = power_level;
+	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = power_level;
+	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = power_level;
+/*
+	if (motor == MOTOR_1) motor_1.vref = power_level;
+	if (motor == MOTOR_2) motor_2.vref = power_level;
+	if (motor == MOTOR_3) motor_3.vref = power_level;
+	if (motor == MOTOR_4) motor_4.vref = power_level;
+	if (motor == MOTOR_5) motor_5.vref = power_level;
+	if (motor == MOTOR_6) motor_6.vref = power_level;
+8?
+/*
+	if (motor == MOTOR_1) motor_1.vref = st_run.m[MOTOR_1].power_level;
+	if (motor == MOTOR_2) motor_2.vref = st_run.m[MOTOR_2].power_level;
+	if (motor == MOTOR_3) motor_3.vref = st_run.m[MOTOR_3].power_level;
+	if (motor == MOTOR_4) motor_4.vref = st_run.m[MOTOR_4].power_level;
+	if (motor == MOTOR_5) motor_5.vref = st_run.m[MOTOR_5].power_level;
+	if (motor == MOTOR_6) motor_6.vref = st_run.m[MOTOR_6].power_level;
+*/
+/*
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = st_run.m[MOTOR_1].power_level;
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = st_run.m[MOTOR_2].power_level;
 	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = st_run.m[MOTOR_3].power_level;
 	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = st_run.m[MOTOR_4].power_level;
 	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = st_run.m[MOTOR_5].power_level;
 	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = st_run.m[MOTOR_6].power_level;
+*/
 }
 
 void st_energize_motors()
@@ -836,7 +854,7 @@ stat_t st_set_mp(cmdObj_t *cmd)	// motor power level
 	if (cmd->value < 0) cmd->value = 0;
 	if (cmd->value > 1) cmd->value = 1;
 	set_flt(cmd);
-	_set_motor_power_level(_get_motor(cmd->index));
+	_set_motor_power_level(_get_motor(cmd->index), cmd->value);
 	return(STAT_OK);
 }
 
@@ -862,7 +880,7 @@ static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%9.3f%s\n
 static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
-static const char fmt_0mp[] PROGMEM = "[%s%s] m%s motor power level%12.3f [0.000=minimum, 1.000=maximum]\n";
+static const char fmt_0mp[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}
