@@ -252,6 +252,7 @@ typedef struct cfgMotor {			// per-motor configs
   	uint8_t microsteps;				// microsteps to apply for each axis (ex: 8)
 	uint8_t polarity;				// 0=normal polarity, 1=reverse motor direction
  	uint8_t power_mode;				// See stepper.h for enum
+	float power_level;				// set 0.000 to 1.000 for PMW vref setting 
 	float step_angle;				// degrees per whole step (ex: 1.8)
 	float travel_rev;				// mm or deg of travel per motor revolution
 	float steps_per_unit;			// steps (usteps)/mm or deg of travel
@@ -326,6 +327,7 @@ stat_t st_set_pm(cmdObj_t *cmd);
 stat_t st_set_mt(cmdObj_t *cmd);
 stat_t st_set_md(cmdObj_t *cmd);
 stat_t st_set_me(cmdObj_t *cmd);
+stat_t st_set_mp(cmdObj_t *cmd);
 
 #ifdef __TEXT_MODE
 
@@ -338,6 +340,7 @@ stat_t st_set_me(cmdObj_t *cmd);
 	void st_print_mi(cmdObj_t *cmd);
 	void st_print_po(cmdObj_t *cmd);
 	void st_print_pm(cmdObj_t *cmd);
+	void st_print_mp(cmdObj_t *cmd);
 
 #else
 
@@ -350,6 +353,7 @@ stat_t st_set_me(cmdObj_t *cmd);
 	#define st_print_mi tx_print_stub
 	#define st_print_po tx_print_stub
 	#define st_print_pm tx_print_stub
+	#define st_print_mp tx_print_stub
 
 #endif // __TEXT_MODE
 

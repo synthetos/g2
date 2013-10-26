@@ -176,14 +176,12 @@ static stat_t _command_dispatch()
 	// detect USB connection and transition to disconnected state if it disconnected
 	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
-	// read input line or return if not a completed line
+	// read input line and return if not a completed line
 	if (cs.state == CONTROLLER_READY) {
-//		if (read_line(cs.in_buf, &cs.linelen, sizeof(cs.in_buf)) != STAT_OK) {
 		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
-			return (STAT_OK);	// returns OK for anything NOT OK, so the idler always runs
+			return (STAT_OK);	// This is an exception: returns OK for anything NOT OK, so the idler always runs
 		}
-
 	} else if (cs.state == CONTROLLER_NOT_CONNECTED) {
 		if (SerialUSB.isConnected() == false) return (STAT_OK);
 		cm_request_queue_flush();
@@ -201,39 +199,40 @@ static stat_t _command_dispatch()
 		return (STAT_OK);
 	}
 	
-	// execute the text line
-	cs.linelen = strlen(cs.in_buf)+1;						// linelen only tracks primary input
-//	strncpy(cs.saved_buf, cs.in_buf, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
-	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
-	cs.read_index = 0;
-//	cs.linelen = 0;
-
 	// dispatch the new text line
-	switch (toupper(*cs.bufp)) {				// first char
+	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
+	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+	cs.read_index = 0;
 
-		case NUL: { 							// blank line (just a CR)
+	switch (toupper(*cs.bufp)) {						// first char
+
+		case '!': { cm_request_feedhold(); break; }		// include for diagnostics
+		case '%': { cm_request_queue_flush(); break; }
+		case '~': { cm_request_cycle_start(); break; }
+
+		case NUL: { 									// blank line (just a CR)
 			if (cfg.comm_mode != JSON_MODE) {
 				text_response(STAT_OK, cs.saved_buf);
 			}
 			break;
 		}
-		case 'H': { 							// intercept help screens
+		case 'H': { 									// intercept help screens
 			cfg.comm_mode = TEXT_MODE;
 			help_general((cmdObj_t *)NULL);
 			text_response(STAT_OK, cs.bufp);
 			break;
 		}
-		case '$': case '?':{ 					// text-mode configs
+		case '$': case '?':{ 							// text-mode configs
 			cfg.comm_mode = TEXT_MODE;
 			text_response(text_parser(cs.bufp), cs.saved_buf);
 			break;
 		}
-		case '{': { 							// JSON input
+		case '{': { 									// JSON input
 			cfg.comm_mode = JSON_MODE;
 			json_parser(cs.bufp);
 			break;
 		}
-		default: {								// anything else must be Gcode
+		default: {										// anything else must be Gcode
 			if (cfg.comm_mode == JSON_MODE) {
 				strncpy(cs.out_buf, cs.bufp, INPUT_BUFFER_LEN -8);					// use out_buf as temp
 				sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);	// '-8' is used for JSON chars
@@ -376,10 +375,10 @@ stat_t _system_assertions()
 	for (;;) {	// run this loop only once, but enable breaks
 
 		if ((status = _controller_assertions()) != STAT_OK)  break;
-		if ((status = cm_assertions()) != STAT_OK) break;
-		if ((status = mp_assertions()) != STAT_OK) break;
-		if ((status = st_assertions()) != STAT_OK) break;
-//+++++	if ((status = xio_assertions()) != STAT_OK) break;
+		if ((status = cm_assertions())	!= STAT_OK) break;
+		if ((status = mp_assertions())	!= STAT_OK) break;
+		if ((status = st_assertions())	!= STAT_OK) break;
+		if ((status = xio_assertions())	!= STAT_OK) break;
 //		if (rtc.magic_end 		!= MAGICNUM) { value = 19; }
 //		xio_assertions(&value);									// run xio assertions
 

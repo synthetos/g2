@@ -45,6 +45,7 @@ extern typeof usb._mixin_0_type::Serial &SerialUSB;
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
+stat_t xio_assertions(void);
 
 /* Some useful ASCII definitions */
 
