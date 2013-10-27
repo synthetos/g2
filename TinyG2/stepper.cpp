@@ -194,9 +194,9 @@ void stepper_init()
 
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
-//	for (uint8_t motor=0; motor<MOTORS; motor++) {
-//		_set_motor_power_level(motor, st_run.m[motor].power_level);
-//	}
+	for (uint8_t motor=0; motor<MOTORS; motor++) {
+		_set_motor_power_level(motor, st_run.m[motor].power_level);
+	}
 
 	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
 	motor_2.vref = 0.25;
@@ -873,8 +873,11 @@ stat_t st_set_mp(cmdObj_t *cmd)	// motor power level
 {
 	if (cmd->value < 0) cmd->value = 0;
 	if (cmd->value > 1) cmd->value = 1;
-	set_flt(cmd);
-	_set_motor_power_level(_get_motor(cmd->index), cmd->value);
+	set_flt(cmd);						// set the cfg value
+	
+	uint8_t motor = _get_motor(cmd->index);
+	st_run.m[motor].power_level = cmd->value;
+	_set_motor_power_level(motor, cmd->value);
 	return(STAT_OK);
 }
 
