@@ -195,16 +195,17 @@ void stepper_init()
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		_set_motor_power_level(motor, st_run.m[motor].power_level);
+		_set_motor_power_level(motor, st.m[motor].power_level);
+		st_run.m[motor].power_level = st.m[motor].power_level;
 	}
-
+/*
 	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
 	motor_2.vref = 0.25;
 	motor_3.vref = 0.25;
 	motor_4.vref = 0.25;
 	motor_5.vref = 0.25;
 	motor_6.vref = 0.25;
-
+*/
 }
 
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
@@ -871,9 +872,9 @@ stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initia
 
 stat_t st_set_mp(cmdObj_t *cmd)	// motor power level
 {
-	if (cmd->value < 0) cmd->value = 0;
-	if (cmd->value > 1) cmd->value = 1;
-	set_flt(cmd);						// set the cfg value
+	if (cmd->value < (float)0) cmd->value = 0;
+	if (cmd->value > (float)1) cmd->value = 1;
+	set_flt(cmd);				// set the value in the motor config struct (st)
 	
 	uint8_t motor = _get_motor(cmd->index);
 	st_run.m[motor].power_level = cmd->value;
