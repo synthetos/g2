@@ -101,7 +101,8 @@ struct Stepper {
 	PWMOutputPin<vref_num> vref;
 
 	// sets default pwm freq for all motor vrefs
-	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
+//	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
+	Stepper(const uint32_t frequency = 500000) : vref(frequency) {};
 //	Stepper(const uint32_t frequency = 100000) : vref(kDriveLowOnly, frequency) {};	
 
 	// bind microstep function into the stepper structure
@@ -193,17 +194,17 @@ void stepper_init()
 
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
-	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		_set_motor_power_level(motor, st_run.m[motor].power_level);
-	}	
-/*
+//	for (uint8_t motor=0; motor<MOTORS; motor++) {
+//		_set_motor_power_level(motor, st_run.m[motor].power_level);
+//	}
+
 	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
 	motor_2.vref = 0.25;
 	motor_3.vref = 0.25;
 	motor_4.vref = 0.25;
 	motor_5.vref = 0.25;
 	motor_6.vref = 0.25;
-*/
+
 }
 
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
@@ -288,12 +289,29 @@ static void _deenergize_motor(const uint8_t motor)
 
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = power_level;
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = power_level;
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = power_level;
+	if (!motor_1.enable.isNull()) 
+		if (motor == MOTOR_1) 
+			motor_1.vref = power_level;
+		
+	if (!motor_2.enable.isNull()) 
+		if (motor == MOTOR_2) 
+			motor_2.vref = power_level;
+	
+	if (!motor_3.enable.isNull()) 
+		if (motor == MOTOR_3) 
+			motor_3.vref = power_level;
+	
+	if (!motor_4.enable.isNull()) 
+		if (motor == MOTOR_4) 
+			motor_4.vref = power_level;
+			
+	if (!motor_5.enable.isNull()) 
+		if (motor == MOTOR_5) 
+			motor_5.vref = power_level;
+			
+	if (!motor_6.enable.isNull()) 
+		if (motor == MOTOR_6) 
+			motor_6.vref = power_level;
 /*
 	if (motor == MOTOR_1) motor_1.vref = power_level;
 	if (motor == MOTOR_2) motor_2.vref = power_level;
@@ -301,7 +319,7 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 	if (motor == MOTOR_4) motor_4.vref = power_level;
 	if (motor == MOTOR_5) motor_5.vref = power_level;
 	if (motor == MOTOR_6) motor_6.vref = power_level;
-8?
+*/
 /*
 	if (motor == MOTOR_1) motor_1.vref = st_run.m[MOTOR_1].power_level;
 	if (motor == MOTOR_2) motor_2.vref = st_run.m[MOTOR_2].power_level;
@@ -352,7 +370,7 @@ void st_deenergize_motors()
 stat_t st_motor_power_callback() 	// called by controller
 {
 	// manage power for each motor individually - facilitates advanced features
-	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
 		if (st.m[motor].power_mode == MOTOR_ENERGIZED_DURING_CYCLE) {
 
@@ -553,11 +571,12 @@ void _load_move()
 		st_run.dda_ticks_downcount = st_prep.dda_ticks;
 		st_run.dda_ticks_X_substeps = st_prep.dda_ticks_X_substeps;
  
-		st_run.m[MOTOR_1].phase_increment = st_prep.m[MOTOR_1].phase_increment;
-		if (st_prep.reset_flag == true) {           // compensate for pulse phasing
-			st_run.m[MOTOR_1].phase_accumulator = -(st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_1].phase_increment != 0) {	// motor is in this move
+		// setup motor 1
+		// the if() either sets the accumulation value or zeroes the counter
+		if ((st_run.m[MOTOR_1].phase_increment = st_prep.m[MOTOR_1].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) {           // compensate for pulse phasing
+				st_run.m[MOTOR_1].phase_accumulator = -(st_run.dda_ticks_downcount);
+			}
 			if (st_prep.m[MOTOR_1].dir == 0) {
 				motor_1.dir.clear();			// clear the bit for clockwise motion 
 			} else {
@@ -572,11 +591,8 @@ void _load_move()
 			}			
 		}
 
-		st_run.m[MOTOR_2].phase_increment = st_prep.m[MOTOR_2].phase_increment;
-		if (st_prep.reset_flag == true) {
-			st_run.m[MOTOR_2].phase_accumulator = -(st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_2].phase_increment != 0) {
+		if ((st_run.m[MOTOR_2].phase_increment = st_prep.m[MOTOR_2].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) st_run.m[MOTOR_2].phase_accumulator = -(st_run.dda_ticks_downcount);
 			if (st_prep.m[MOTOR_2].dir == 0) motor_2.dir.clear(); else motor_2.dir.set();
 			motor_2.enable.clear();
 			st_run.m[MOTOR_2].power_state = MOTOR_RUNNING;
@@ -587,11 +603,8 @@ void _load_move()
 			}
 		}
 
-		st_run.m[MOTOR_3].phase_increment = st_prep.m[MOTOR_3].phase_increment;
-		if (st_prep.reset_flag == true) {
-			st_run.m[MOTOR_3].phase_accumulator = -(st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_3].phase_increment != 0) {
+		if ((st_run.m[MOTOR_3].phase_increment = st_prep.m[MOTOR_3].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) st_run.m[MOTOR_3].phase_accumulator = -(st_run.dda_ticks_downcount);
 			if (st_prep.m[MOTOR_3].dir == 0) motor_3.dir.clear(); else motor_3.dir.set();
 			motor_3.enable.clear();
 			st_run.m[MOTOR_3].power_state = MOTOR_RUNNING;
@@ -602,11 +615,8 @@ void _load_move()
 			}
 		}
 
-		st_run.m[MOTOR_4].phase_increment = st_prep.m[MOTOR_4].phase_increment;
-		if (st_prep.reset_flag == true) {
-			st_run.m[MOTOR_4].phase_accumulator = (st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_4].phase_increment != 0) {
+		if ((st_run.m[MOTOR_4].phase_increment = st_prep.m[MOTOR_4].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) st_run.m[MOTOR_4].phase_accumulator = (st_run.dda_ticks_downcount);
 			if (st_prep.m[MOTOR_4].dir == 0) motor_4.dir.clear(); else motor_4.dir.set();
 			motor_4.enable.clear();
 			st_run.m[MOTOR_4].power_state = MOTOR_RUNNING;
@@ -617,11 +627,8 @@ void _load_move()
 			}
 		}
 
-		st_run.m[MOTOR_5].phase_increment = st_prep.m[MOTOR_5].phase_increment;
-		if (st_prep.reset_flag == true) {
-			st_run.m[MOTOR_5].phase_accumulator = (st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_5].phase_increment != 0) {
+		if ((st_run.m[MOTOR_5].phase_increment = st_prep.m[MOTOR_5].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) st_run.m[MOTOR_5].phase_accumulator = (st_run.dda_ticks_downcount);
 			if (st_prep.m[MOTOR_5].dir == 0) motor_5.dir.clear(); else motor_5.dir.set();
 			motor_5.enable.clear();
 			st_run.m[MOTOR_5].power_state = MOTOR_RUNNING;
@@ -632,17 +639,14 @@ void _load_move()
 			}
 		}
 
-		st_run.m[MOTOR_6].phase_increment = st_prep.m[MOTOR_6].phase_increment;
-		if (st_prep.reset_flag == true) {
-			st_run.m[MOTOR_6].phase_accumulator = (st_run.dda_ticks_downcount);
-		}
-		if (st_run.m[MOTOR_6].phase_increment != 0) {
+		if ((st_run.m[MOTOR_6].phase_increment = st_prep.m[MOTOR_6].phase_increment) != 0) {
+			if (st_prep.reset_flag == true) st_run.m[MOTOR_6].phase_accumulator = (st_run.dda_ticks_downcount);
 			if (st_prep.m[MOTOR_6].dir == 0) motor_6.dir.clear(); else motor_6.dir.set();
 			motor_6.enable.clear();
 			st_run.m[MOTOR_6].power_state = MOTOR_RUNNING;
 		} else {
 			if (st.m[MOTOR_6].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
-				motor_6.enable.clear();
+//				motor_6.enable.clear();
 				st_run.m[MOTOR_6].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
 		}
@@ -837,15 +841,31 @@ stat_t st_set_mt(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
+/*
+ * st_set_md() - disable motor power
+ * st_set_me() - enable motor power
+ *
+ * Calling me or md with NULL will enable or disable all motors
+ * Setting a value of 0 will enable or disable all motors
+ * Setting a value from 1 to MOTORS will enable or disable that motor only
+ */ 
 stat_t st_set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	st_deenergize_motors();
+	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
+		st_deenergize_motors();
+	} else {
+		_deenergize_motor((uint8_t)cmd->value-1);
+	}
 	return (STAT_OK);
 }
 
 stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
 {
-	st_energize_motors();
+	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
+		st_energize_motors();
+	} else {
+		_energize_motor((uint8_t)cmd->value-1);
+	}
 	return (STAT_OK);
 }
 

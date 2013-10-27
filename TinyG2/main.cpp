@@ -73,7 +73,7 @@ typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
 
-void init(void)
+void _system_init(void)
 {
 #ifdef __ARM
 	SystemInit();
@@ -89,10 +89,14 @@ void init(void)
 int main(void)
 {
 	// system initialization
-	init();
-	delay(1);
+	_system_init();
+//	delay(1);
+//	usb._init();
 	usb.attach();					// USB setup
 	delay(1000);
+//	usb.detach();					// hack to detach from bootloader USB if it was previously attached.
+//	delay(1000);
+//	usb.attach();
 
 	// TinyG application setup
 	_application_init();
