@@ -290,53 +290,12 @@ static void _deenergize_motor(const uint8_t motor)
 
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
-	if (!motor_1.enable.isNull()) 
-		if (motor == MOTOR_1) 
-			motor_1.vref = power_level;
-		
-	if (!motor_2.enable.isNull()) 
-		if (motor == MOTOR_2) 
-			motor_2.vref = power_level;
-	
-	if (!motor_3.enable.isNull()) 
-		if (motor == MOTOR_3) 
-			motor_3.vref = power_level;
-	
-	if (!motor_4.enable.isNull()) 
-		if (motor == MOTOR_4) 
-			motor_4.vref = power_level;
-			
-	if (!motor_5.enable.isNull()) 
-		if (motor == MOTOR_5) 
-			motor_5.vref = power_level;
-			
-	if (!motor_6.enable.isNull()) 
-		if (motor == MOTOR_6) 
-			motor_6.vref = power_level;
-/*
-	if (motor == MOTOR_1) motor_1.vref = power_level;
-	if (motor == MOTOR_2) motor_2.vref = power_level;
-	if (motor == MOTOR_3) motor_3.vref = power_level;
-	if (motor == MOTOR_4) motor_4.vref = power_level;
-	if (motor == MOTOR_5) motor_5.vref = power_level;
-	if (motor == MOTOR_6) motor_6.vref = power_level;
-*/
-/*
-	if (motor == MOTOR_1) motor_1.vref = st_run.m[MOTOR_1].power_level;
-	if (motor == MOTOR_2) motor_2.vref = st_run.m[MOTOR_2].power_level;
-	if (motor == MOTOR_3) motor_3.vref = st_run.m[MOTOR_3].power_level;
-	if (motor == MOTOR_4) motor_4.vref = st_run.m[MOTOR_4].power_level;
-	if (motor == MOTOR_5) motor_5.vref = st_run.m[MOTOR_5].power_level;
-	if (motor == MOTOR_6) motor_6.vref = st_run.m[MOTOR_6].power_level;
-*/
-/*
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = st_run.m[MOTOR_1].power_level;
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = st_run.m[MOTOR_2].power_level;
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = st_run.m[MOTOR_3].power_level;
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = st_run.m[MOTOR_4].power_level;
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = st_run.m[MOTOR_5].power_level;
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = st_run.m[MOTOR_6].power_level;
-*/
+	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
+	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
+	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
+	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = power_level;
+	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = power_level;
+	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = power_level;
 }
 
 void st_energize_motors()
