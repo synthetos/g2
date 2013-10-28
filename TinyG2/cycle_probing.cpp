@@ -147,10 +147,10 @@ static int8_t _get_next_axis(int8_t axis);
 uint8_t cm_probe_cycle_start(void)
 {
 	// save relevant non-axis parameters from Gcode model
-	pb.saved_units_mode = gm.units_mode;
-	pb.saved_coord_system = gm.coord_system;
-	pb.saved_distance_mode = gm.distance_mode;
-	pb.saved_feed_rate = gm.feed_rate;
+	pb.saved_units_mode = cm.gm.units_mode;
+	pb.saved_coord_system = cm.gm.coord_system;
+	pb.saved_distance_mode = cm.gm.distance_mode;
+	pb.saved_feed_rate = cm.gm.feed_rate;
 	
 	pb.open_position = 0;
 	
@@ -404,33 +404,33 @@ uint8_t _set_pb_func(uint8_t (*func)(int8_t axis))
 int8_t _get_next_axis(int8_t axis)
 {
 	if (axis == -1) {	// inelegant brute force solution
-		if (fp_TRUE(gf.target[AXIS_Z])) return (AXIS_Z);
-		if (fp_TRUE(gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(gf.target[AXIS_A])) return (AXIS_A);
-//		if (fp_TRUE(gf.target[AXIS_B])) return (AXIS_B);
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+		if (fp_TRUE(cm.gf.target[AXIS_Z])) return (AXIS_Z);
+		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
+		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
+		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+//		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 		return (-2);	// error
 	} else if (axis == AXIS_Z) {
-		if (fp_TRUE(gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(gf.target[AXIS_A])) return (AXIS_A);
-//		if (fp_TRUE(gf.target[AXIS_B])) return (AXIS_B);
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
+		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
+		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+//		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 	} else if (axis == AXIS_X) {
-		if (fp_TRUE(gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(gf.target[AXIS_A])) return (AXIS_A);
-//		if (fp_TRUE(gf.target[AXIS_B])) return (AXIS_B);
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
+		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+//		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 	} else if (axis == AXIS_Y) {
-		if (fp_TRUE(gf.target[AXIS_A])) return (AXIS_A);
-//		if (fp_TRUE(gf.target[AXIS_B])) return (AXIS_B);
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+//		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 //	} else if (axis == AXIS_A) {
-//		if (fp_TRUE(gf.target[AXIS_B])) return (AXIS_B);
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+//		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 //	} else if (axis == AXIS_B) {
-//		if (fp_TRUE(gf.target[AXIS_C])) return (AXIS_C);
+//		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
 	}
 	return (-1);	// done
 }

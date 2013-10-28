@@ -41,9 +41,9 @@ static stat_t _validate_gcode_block(void);
 static stat_t _parse_gcode_block(char_t *line);	// Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
 
-#define SET_MODAL(m,parm,val) ({gn.parm=val; gf.parm=1; gp.modals[m]+=1; break;})
-#define SET_NON_MODAL(parm,val) ({gn.parm=val; gf.parm=1; break;})
-#define EXEC_FUNC(f,v) if((uint8_t)gf.v != false) { status = f(gn.v);}
+#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
+#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
+#define EXEC_FUNC(f,v) if((uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
 
 /*
  * gc_gcode_parser() - parse a block (line) of gcode
@@ -237,11 +237,11 @@ static stat_t _parse_gcode_block(char_t *buf)
 	float value = 0;				// value parsed from letter (e.g. 2 for G2)
 	stat_t status = STAT_OK;
 
-	// set initial state for new move 
-	memset(&gp, 0, sizeof(gp));		// clear all parser values
-	memset(&gf, 0, sizeof(gf));		// clear all next-state flags
-	memset(&gn, 0, sizeof(gn));		// clear all next-state values
-	gn.motion_mode = cm_get_motion_mode(MODEL);// get motion mode from previous block
+	// set initial state for new move
+	memset(&gp, 0, sizeof(gp));						// clear all parser values
+	memset(&cm.gf, 0, sizeof(GCodeInput_t));		// clear all next-state flags
+	memset(&cm.gn, 0, sizeof(GCodeInput_t));		// clear all next-state values
+	cm.gn.motion_mode = cm_get_motion_mode(MODEL);	// get motion mode from previous block
 
 	// extract commands and parameters
 	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
@@ -414,7 +414,7 @@ static stat_t _execute_gcode_block()
 {
 	stat_t status = STAT_OK;
 
-	cm_set_model_linenum(gn.linenum);
+	cm_set_model_linenum(cm.gn.linenum);
 	EXEC_FUNC(cm_set_inverse_feed_rate_mode, inverse_feed_rate_mode);
 	EXEC_FUNC(cm_set_feed_rate, feed_rate);
 	EXEC_FUNC(cm_feed_rate_override_factor, feed_rate_override_factor);
@@ -424,15 +424,15 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_select_tool, tool_select);			// tool_select is where it's written
 	EXEC_FUNC(cm_change_tool, tool_change);
 	EXEC_FUNC(cm_spindle_control, spindle_mode); 	// spindle on or off
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant); 
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);	// also disables mist coolant if OFF 
+	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
+	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);	// also disables mist coolant if OFF
 	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
 	EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
 	EXEC_FUNC(cm_spindle_override_enable, spindle_override_enable);
 	EXEC_FUNC(cm_override_enables, override_enables);
 
-	if (gn.next_action == NEXT_ACTION_DWELL) { 		// G4 - dwell
-		ritorno(cm_dwell(gn.parameter));			// return if error, otherwise complete the block
+	if (cm.gn.next_action == NEXT_ACTION_DWELL) { 	// G4 - dwell
+		ritorno(cm_dwell(cm.gn.parameter));			// return if error, otherwise complete the block
 	}
 	EXEC_FUNC(cm_select_plane, select_plane);
 	EXEC_FUNC(cm_set_units_mode, units_mode);
@@ -443,42 +443,42 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);
 	//--> set retract mode goes here
 
-	switch (gn.next_action) {
+	switch (cm.gn.next_action) {
 		case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}							// G28.1
-		case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(gn.target, gf.target); break;}		// G28
+		case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(cm.gn.target, cm.gf.target); break;}		// G28
 		case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}							// G30.1
-		case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(gn.target, gf.target); break;}		// G30
+		case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(cm.gn.target, cm.gf.target); break;}		// G30
 
 		case NEXT_ACTION_SEARCH_HOME: { status = cm_homing_cycle_start(); break;}								// G28.2
-		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gn.target, gf.target); break;}	// G28.3
+		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm.gn.target, cm.gf.target); break;}// G28.3
 		case NEXT_ACTION_HOMING_NO_SET: { status = cm_homing_cycle_start_no_set(); break;}						// G28.4
 
 		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}								// G38.2
 
-		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(gn.parameter, gn.target, gf.target); break;}
-		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(gn.target, gf.target); break;}
+		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.target, cm.gf.target); break;}
+		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_RESET_ORIGIN_OFFSETS: { status = cm_reset_origin_offsets(); break;}
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS: { status = cm_resume_origin_offsets(); break;}
 
-		case NEXT_ACTION_DEFAULT: { 
-			cm_set_absolute_override(MODEL, gn.absolute_override);	// apply override setting to gm struct
-			switch (gn.motion_mode) {
-				case MOTION_MODE_CANCEL_MOTION_MODE: { gm.motion_mode = gn.motion_mode; break;}
-				case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(gn.target, gf.target); break;}
-				case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(gn.target, gf.target); break;}
+		case NEXT_ACTION_DEFAULT: {
+			cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply override setting to gm struct
+			switch (cm.gn.motion_mode) {
+				case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
+				case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
+				case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
 				case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
-					// gf.radius sets radius mode if radius was collected in gn
-					{ status = cm_arc_feed(gn.target, gf.target, gn.arc_offset[0], gn.arc_offset[1],
-								gn.arc_offset[2], gn.arc_radius, gn.motion_mode); break;}
+				// gf.radius sets radius mode if radius was collected in gn
+				{ status = cm_arc_feed(cm.gn.target, cm.gf.target, cm.gn.arc_offset[0], cm.gn.arc_offset[1],
+				cm.gn.arc_offset[2], cm.gn.arc_radius, cm.gn.motion_mode); break;}
 			}
 		}
 	}
 	cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
 
 	// do the M stops: M0, M1, M2, M30, M60
-	if (gf.program_flow == true) {
-		if (gn.program_flow == PROGRAM_STOP) { cm_program_stop(); }
+	if (cm.gf.program_flow == true) {
+		if (cm.gn.program_flow == PROGRAM_STOP) { cm_program_stop(); }
 		else { cm_program_end(); }
 	}
 	return (status);
