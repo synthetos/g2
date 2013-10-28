@@ -118,8 +118,6 @@ GCodeInput_t  gf;		// gcode input flags - transient
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
  ***********************************************************************************/
 
-#define _to_millimeters(a) ((gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
-
 // command execution callbacks from planner queue
 static void _exec_offset(float *value, float *flag);
 static void _exec_change_tool(float *value, float *flag);
@@ -1318,7 +1316,7 @@ void cm_cycle_start()
 	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.cycle_state = CYCLE_MACHINING;			// don't change homing, probe or other cycles
-		qr_clear_queue_report();					// clear queue reporting buffer counts
+		qr_init_queue_report();						// clear queue reporting buffer counts
 	}
 }
 

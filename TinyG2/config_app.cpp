@@ -81,18 +81,18 @@ static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
  ***********************************************************************************
  *	NOTES:
  *
- *	- Token matching occurs from the most specific to the least specific. This means 
- *	  that if shorter tokens overlap longer ones the longer one must precede the 
+ *	- Token matching occurs from the most specific to the least specific. This means
+ *	  that if shorter tokens overlap longer ones the longer one must precede the
  *	  shorter one. E.g. "gco" needs to come before "gc"
  *
  *	- Mark group strings for entries that have no group as nul -->"". 
  *	  This is important for group expansion.
  *
  *	- Groups do not have groups. Neither do uber-groups, e.g.
- *	  'x' is --> { "", "x",  	and 'm' is --> { "", "m", 
+ *	  'x' is --> { "", "x",  	and 'm' is --> { "", "m",  
  *
- *	NOTE: If the count of lines in cfgArray exceeds 255 you need to change index_t 
- *	uint16_t in the config.h file.
+ *	NOTE: If the count of lines in cfgArray exceeds 255 you need to change index_t
+ *	uint16_t in the config.h file. 
  */
 
 const cfgItem_t cfgArray[] PROGMEM = {
@@ -154,9 +154,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// Reports, tests, help, and messages
 	{ "", "sr",  _f00, 0, sr_print_sr,  sr_get,  sr_set,   (float *)&cs.null, 0 },	// status report object
-//	{ "", "qri", _f00, 0, qr_print_qr,  qr_get_i,set_nul,  (float *)&cs.null, 0 },	// queue report - blocks in
-//	{ "", "qro", _f00, 0, qr_print_qr,  qr_get_o,set_nul,  (float *)&cs.null, 0 },	// queue report - block out
 	{ "", "qr",  _f00, 0, qr_print_qr,  qr_get,  set_nul,  (float *)&cs.null, 0 },	// queue report
+	{ "", "qi",  _f00, 0, qr_print_qi,  qi_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - buffers added to queue
+	{ "", "qo",  _f00, 0, qr_print_qo,  qo_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - buffers removed from queue
 	{ "", "er",  _f00, 0, tx_print_nul, rpt_er,  set_nul,  (float *)&cs.null, 0 },	// invoke bogus exception report for testing
 	{ "", "qf",  _f00, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
 //	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer

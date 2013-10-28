@@ -141,6 +141,8 @@ void rpt_print_system_ready_message(void)
  *
  *	  - Automatic status reports in text mode return CSV format according to si setting
  */
+static stat_t _populate_unfiltered_status_report(void);
+static uint8_t _populate_filtered_status_report(void);
 
 /* 
  * sr_init_status_report()
@@ -189,7 +191,7 @@ stat_t sr_set_status_report(cmdObj_t *cmd)
 	}
 	if (elements == 0) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	memcpy(sr.status_report_list, status_report_list, sizeof(status_report_list));
-	sr_populate_unfiltered_status_report();			// return current values
+	_populate_unfiltered_status_report();			// return current values
 	return (STAT_OK);
 }
 
@@ -208,12 +210,20 @@ stat_t sr_set_status_report(cmdObj_t *cmd)
 stat_t sr_request_status_report(uint8_t request_type)
 {
 	if (request_type == SR_IMMEDIATE_REQUEST) {
-//		sr.status_report_systick = SysTickTimer_getValue();
+#ifdef __ARM
 		sr.status_report_systick = SysTickTimer.getValue();
+#endif
+#ifdef __AVR
+		sr.status_report_systick = SysTickTimer_getValue();
+#endif
 	}
 	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-//		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
+#ifdef __ARM
 		sr.status_report_systick = SysTickTimer.getValue() + sr.status_report_interval;
+#endif
+#ifdef __AVR
+		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
+#endif
 	}
 	sr.status_report_requested = true;
 	return (STAT_OK);
@@ -223,15 +233,19 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
 	if (sr.status_report_requested == false) return (STAT_NOOP);
-//	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
+#ifdef __ARM
 	if (SysTickTimer.getValue() < sr.status_report_systick) return (STAT_NOOP);
+#endif
+#ifdef __AVR
+	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
+#endif
 
 	sr.status_report_requested = false;		// disable reports until requested again
 
 	if (sr.status_report_verbosity == SR_VERBOSE) {
-		sr_populate_unfiltered_status_report();
+		_populate_unfiltered_status_report();
 	} else {
-		if (sr_populate_filtered_status_report() == false) {	// no new data
+		if (_populate_filtered_status_report() == false) {	// no new data
 			return (STAT_OK);
 		}
 	}
@@ -244,18 +258,17 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
  */
 stat_t sr_run_text_status_report()
 {
-	sr_populate_unfiltered_status_report();
+	_populate_unfiltered_status_report();
 	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 	return (STAT_OK);
 }
 
 /*
- * sr_populate_unfiltered_status_report() - populate cmdObj body with status values
+ * _populate_unfiltered_status_report() - populate cmdObj body with status values
  *
  *	Designed to be run as a response; i.e. have a "r" header and a footer.
  */
-
-stat_t sr_populate_unfiltered_status_report()
+static stat_t _populate_unfiltered_status_report()
 {
 	const char_t sr_str[] = "sr";
 	char_t tmp[CMD_TOKEN_LEN+1];
@@ -279,7 +292,7 @@ stat_t sr_populate_unfiltered_status_report()
 }
 
 /*
- * sr_populate_filtered_status_report() - populate cmdObj body with status values
+ * _populate_filtered_status_report() - populate cmdObj body with status values
  *
  *	Designed to be displayed as a JSON object; i;e; no footer or header
  *	Returns 'true' if the report has new data, 'false' if there is nothing to report.
@@ -291,7 +304,7 @@ stat_t sr_populate_unfiltered_status_report()
  *	NOTE: Room for improvement - look up the SR index initially and cache it, use the 
  *		  cached value for all remaining reports.
  */
-uint8_t sr_populate_filtered_status_report()
+static uint8_t _populate_filtered_status_report()
 {
 	const char_t sr_str[] = "sr";
 	uint8_t has_data = false;
@@ -329,8 +342,7 @@ uint8_t sr_populate_filtered_status_report()
  * sr_set()		- set status report elements
  * sr_set_si()	- set status report interval
  */
-
-stat_t sr_get(cmdObj_t *cmd) { return (sr_populate_unfiltered_status_report());}
+stat_t sr_get(cmdObj_t *cmd) { return (_populate_unfiltered_status_report());}
 stat_t sr_set(cmdObj_t *cmd) { return (sr_set_status_report(cmd));}
 
 stat_t sr_set_si(cmdObj_t *cmd)
@@ -340,70 +352,112 @@ stat_t sr_set_si(cmdObj_t *cmd)
 	return(STAT_OK);
 }
 
+/*********************
+ * TEXT MODE SUPPORT *
+ *********************/
+#ifdef __TEXT_MODE
+
+static const char fmt_si[] PROGMEM = "[si]  status interval%14.0f ms\n";
+static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+
+void sr_print_sr(cmdObj_t *cmd) { _populate_unfiltered_status_report();}
+void sr_print_si(cmdObj_t *cmd) { text_print_flt(cmd, fmt_si);}
+void sr_print_sv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_sv);}
+
+#endif // __TEXT_MODE
+
+
 /*****************************************************************************
  * Queue Reports
  *
- * qr_get() 					- run a queue report (as data)
- * qr_clear_queue_report()		- wipe stored values
- * qr_request_queue_report()	- request a queue report with current values
- * qr_queue_report_callback()	- run the queue report w/stored values
+ *	Queue reports can report three values:
+ *	  - qr	queue depth - # of buffers availabel in planner queue
+ *	  - qi	buffers added to planner queue since las report
+ *	  - qo	buffers removed from planner queue since last report
+ *
+ *	A QR_SINGLE report returns qr only. A QR_TRIPLE returns all 3 values
+ *
+ *	There are 2 ways to get queue reports:
+ *
+ *	 1.	Enable single ortriple queue reports iusing the QV variable. This will
+ *		return a queue report every time the buffer depth changes
+ *
+ *	 2.	Add qr, qi qne qo (or some combination) to the status report. This will
+ *		reeturn queue report data when status reports are generated.
  */
-
-stat_t qr_get(cmdObj_t *cmd) 
+/*
+ * qr_init_queue_report() - initialize or clear queue report values
+ */
+void qr_init_queue_report()
 {
-	cmd->value = (float)mp_get_planner_buffers_available();
-	cmd->objtype = TYPE_INTEGER;
-	return (STAT_OK);
-}
-
-void qr_clear_queue_report()
-{
-	qr.request = false;
+	qr.queue_report_requested = false;
 	qr.buffers_added = 0;
 	qr.buffers_removed = 0;
 }
 
+/*
+ * qr_request_queue_report() - request a queue report
+ *
+ *	Requests a queue report and also records the buffers added and removed
+ *	since the last init (usually re-initted when a report is generated).
+ */
 void qr_request_queue_report(int8_t buffers)
 {
-	if (qr.queue_report_verbosity == QR_OFF) return;
+	// skip accumulation and reporting while generating arcs
+//	uint8_t motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+	qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+	if ((qr.motion_mode == MOTION_MODE_CW_ARC) || 
+		(qr.motion_mode == MOTION_MODE_CCW_ARC)) {
+		qr.queue_report_requested = false;
+		return;
+	}
 
+//	if ((cm_get_motion_mode(ACTIVE_MODEL) == MOTION_MODE_CW_ARC) || 
+//		(cm_get_motion_mode(ACTIVE_MODEL) == MOTION_MODE_CCW_ARC)) {
+//		return;
+//	}
+
+	// get buffer depth and added/removed count
 	qr.buffers_available = mp_get_planner_buffers_available();
-
 	if (buffers > 0) {
 		qr.buffers_added += buffers;
 	} else {
 		qr.buffers_removed -= buffers;
 	}
-	qr.prev_available = qr.buffers_available;
-	qr.request = true;
+
+	// either return or request a report
+	if (qr.queue_report_verbosity != QR_OFF) {
+		qr.queue_report_requested = true;
+	}
 }
 
-uint8_t qr_queue_report_callback()
+/*
+ * qr_queue_report_callback() - generate a queue report if one has been requested
+ */
+stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
-	if (qr.request == false) { return (STAT_NOOP);}
-	qr.request = false;
+	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
+	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
+	qr.queue_report_requested = false;
 
 	if (cfg.comm_mode == TEXT_MODE) {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "qr:%d\n", qr.buffers_available);
 		} else  {
-			if (qr.queue_report_verbosity == QR_TRIPLE) {
-				fprintf(stderr, "qr:%d,added:%d,removed:%d\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
-			}
+			fprintf(stderr, "qr:%d, qi:%d, qo:%d\n", qr.buffers_available,qr.buffers_added,qr.buffers_removed);
 		}
 	} else {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
 		} else {
-			if (qr.queue_report_verbosity == QR_TRIPLE) {
-				fprintf(stderr, "{\"qr\":[%d,%d,%d]}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
-				qr_clear_queue_report();
-			}
+			fprintf(stderr, "{\"qr\":%d,\"qi\":%d,\"qo\":%d}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
 		}
 	}
+	qr_init_queue_report();
 	return (STAT_OK);
 }
-/* Alternate Formulation - using cmdObj list
+
+/* Alternate Formulation for a Single report - using cmdObj list
 
 	// get a clean cmd object
 //	cmdObj_t *cmd = cmd_reset_list();		// normally you do a list reset but the following is more time efficient
@@ -419,32 +473,64 @@ uint8_t qr_queue_report_callback()
 	return (STAT_OK);
 */
 
-/***********************************************************************************
- * TEXT MODE SUPPORT
- * Functions to print variables from the cfgArray table
- ***********************************************************************************/
+/* 
+ * Wrappers and Setters - for calling from cmdArray table
+ *
+ * qr_get() - run a queue report (as data)
+ * qi_get() - run a queue report - buffers in
+ * qo_get() - run a queue report - buffers out
+ */
+stat_t qr_get(cmdObj_t *cmd) 
+{
+//	cmd->value = (float)mp_get_planner_buffers_available();
+	cmd->value = (float)qr.buffers_available;
+	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+}
 
+stat_t qi_get(cmdObj_t *cmd) 
+{
+	cmd->value = (float)qr.buffers_added;
+	cmd->objtype = TYPE_INTEGER;
+	qr.buffers_added = 0;				// reset it
+	return (STAT_OK);
+}
+
+stat_t qo_get(cmdObj_t *cmd) 
+{
+	cmd->value = (float)qr.buffers_removed;
+	cmd->objtype = TYPE_INTEGER;
+	qr.buffers_removed = 0;				// reset it
+	return (STAT_OK);
+}
+
+/*********************
+ * TEXT MODE SUPPORT *
+ *********************/
 #ifdef __TEXT_MODE
-/*
- * sr_print_sr() - produce SR text output
- */
-static const char fmt_si[] PROGMEM = "[si]  status interval%14.0f ms\n";
-static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
 
-void sr_print_sr(cmdObj_t *cmd) { sr_populate_unfiltered_status_report();}
-void sr_print_si(cmdObj_t *cmd) { text_print_flt(cmd, fmt_si);}
-void sr_print_sv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_sv);}
-
-/*
- * qr_print_qr() - produce QR text output
- */
+//static const char fmt_qr_single[] PROGMEM = "qr:%d\n";
+//static const char fmt_qr_triple[] PROGMEM = "qr:%d, qi:%d, qo:%d\n";
 static const char fmt_qr[] PROGMEM = "qr:%d\n";
-static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=filtered,2=verbose]\n";
+static const char fmt_qi[] PROGMEM = "qi:%d\n";
+static const char fmt_qo[] PROGMEM = "qo:%d\n";
+static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=single,2=triple]\n";
 
+/*
+void qr_print_qr(cmdObj_t *cmd) { 
+	if (qr.queue_report_verbosity == QR_TRIPLE) {
+		text_print_int(cmd, fmt_qr);}
+		
+	}
+}
+*/
 void qr_print_qr(cmdObj_t *cmd) { text_print_int(cmd, fmt_qr);}
+void qr_print_qi(cmdObj_t *cmd) { text_print_int(cmd, fmt_qi);}
+void qr_print_qo(cmdObj_t *cmd) { text_print_int(cmd, fmt_qo);}
 void qr_print_qv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_qv);}
 
 #endif // __TEXT_MODE
+
 
 /****************************************************************************
  ***** Unit Tests ***********************************************************
