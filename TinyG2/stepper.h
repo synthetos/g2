@@ -187,19 +187,19 @@
 
 enum motorPowerState {				// used w/start and stop flags to sequence motor power
 	MOTOR_OFF = 0,					// motor is stopped and deenergized
+//	MOTOR_STOPPED,					// motor is stopped and fully energized
 	MOTOR_IDLE,						// motor is stopped and may be partially energized for torque maintenance
-	MOTOR_TIME_IDLE_TIMEOUT,		// run idle timeout
-	MOTOR_START_IDLE_TIMEOUT,		// transitional state to start idle timers
-	MOTOR_STOPPED,					// motor is stopped and fully energized
-	MOTOR_RUNNING					// motor is running (and fully energized)
+	MOTOR_RUNNING,					// motor is running (and fully energized)
+	MOTOR_INITIATE_TIMEOUT,			// transitional state to start idle timeout
+	MOTOR_COUNTDOWN_TIMEOUT				// run timeout to idle
 };
 
 enum cmStepperPowerMode {
 	MOTOR_DISABLED=0,				// motor enable is deactivated
 	MOTOR_POWERED_IN_CYCLE,			// motor fully powered during cycles
 	MOTOR_POWERED_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
-	MOTOR_POWER_REDUCED_WHEN_IDLE,	// enable Vref current reduction (not implemented yet)
-	DYNAMIC_MOTOR_POWER				// adjust motor current with velocity (not implemented yet)
+	MOTOR_IDLE_POWER,				// enable Vref current reduction (FUTURE)
+	MOTOR_ADAPTIVE_POWER			// adjust motor current with velocity (FUTURE)
 };
 
 #define Vcc	3.3						// volts
