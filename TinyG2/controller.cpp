@@ -379,9 +379,6 @@ stat_t _system_assertions()
 		if ((status = mp_assertions())	!= STAT_OK) break;
 		if ((status = st_assertions())	!= STAT_OK) break;
 		if ((status = xio_assertions())	!= STAT_OK) break;
-//		if (rtc.magic_end 		!= MAGICNUM) { value = 19; }
-//		xio_assertions(&value);									// run xio assertions
-
 		break;
 	}
 	if (status == STAT_OK) return (STAT_OK);
