@@ -195,8 +195,9 @@ enum motorPowerState {				// used w/start and stop flags to sequence motor power
 };
 
 enum cmStepperPowerMode {
-	MOTOR_ENERGIZED_DURING_CYCLE=0,	// motor is fully powered during cycles
-	MOTOR_IDLE_WHEN_STOPPED,		// idle motor shortly after it's stopped - even in cycle
+	MOTOR_DISABLED=0,				// motor enable is deactivated
+	MOTOR_POWERED_IN_CYCLE,			// motor fully powered during cycles
+	MOTOR_POWERED_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
 	MOTOR_POWER_REDUCED_WHEN_IDLE,	// enable Vref current reduction (not implemented yet)
 	DYNAMIC_MOTOR_POWER				// adjust motor current with velocity (not implemented yet)
 };

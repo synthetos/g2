@@ -93,6 +93,8 @@ template<pin_number step_num,			// Setup a stepper template to hold our pins
 		 pin_number vref_num>
 
 struct Stepper {
+	/* motor pin assignments */
+	
 	OutputPin<step_num> step;
 	OutputPin<dir_num> dir;
 	OutputPin<enable_num> enable;
@@ -100,12 +102,15 @@ struct Stepper {
 	OutputPin<ms1_num> ms1;
 	PWMOutputPin<vref_num> vref;
 
-	// sets default pwm freq for all motor vrefs
-//	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
-	Stepper(const uint32_t frequency = 500000) : vref(frequency) {};
-//	Stepper(const uint32_t frequency = 100000) : vref(kDriveLowOnly, frequency) {};	
+	/* motor default values */
 
-	// bind microstep function into the stepper structure
+	// sets default pwm freq for all motor vrefs
+	//	Stepper(const uint32_t frequency = 100000) : vref(frequency) {};
+	Stepper(const uint32_t frequency = 500000) : vref(frequency) {};
+	//	Stepper(const uint32_t frequency = 100000) : vref(kDriveLowOnly, frequency) {};
+
+	/* functions bound to motor structures */
+
 	void setMicrosteps(const uint8_t microsteps)
 	{
 		switch (microsteps) {
@@ -113,6 +118,14 @@ struct Stepper {
 			case (2): { ms1=0; ms0=1; break; }
 			case (4): { ms1=1; ms0=0; break; }
 			case (8): { ms1=1; ms0=1; break; }
+		}
+	};
+
+	void energize(const uint8_t motor)
+	{
+		if (st.m[motor].power_mode != MOTOR_DISABLED) {
+			enable.clear();
+			st_run.m[motor].power_state = MOTOR_START_IDLE_TIMEOUT;
 		}
 	};
 };
@@ -198,14 +211,7 @@ void stepper_init()
 		_set_motor_power_level(motor, st.m[motor].power_level);
 		st_run.m[motor].power_level = st.m[motor].power_level;
 	}
-/*
-	motor_1.vref = 0.25;		// set vref duty cycle. Freq already set to 100000 Hz.
-	motor_2.vref = 0.25;
-	motor_3.vref = 0.25;
-	motor_4.vref = 0.25;
-	motor_5.vref = 0.25;
-	motor_6.vref = 0.25;
-*/
+//	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 100000 Hz.
 }
 
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
@@ -264,15 +270,24 @@ uint8_t stepper_isbusy()
 
 static void _energize_motor(const uint8_t motor)
 {
-	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.clear();	// clear enables the motor
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.clear();
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.clear();
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.clear();
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.clear();
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.clear();
+	switch (motor) {
+		case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
+		case (MOTOR_2): { motor_2.energize(MOTOR_1); break; }
+		case (MOTOR_3): { motor_3.energize(MOTOR_1); break; }
+		case (MOTOR_4): { motor_4.energize(MOTOR_1); break; }
+		case (MOTOR_5): { motor_5.energize(MOTOR_1); break; }
+		case (MOTOR_6): { motor_6.energize(MOTOR_1); break; }
+	}
 
-	st_run.m[motor].power_state = MOTOR_START_IDLE_TIMEOUT;
+	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
+	//	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.clear();	// clear enables the motor
+	//	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.clear();
+	//	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.clear();
+	//	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.clear();
+	//	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.clear();
+	//	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.clear();
+
+	//	st_run.m[motor].power_state = MOTOR_START_IDLE_TIMEOUT;
 }
 
 static void _deenergize_motor(const uint8_t motor)
@@ -300,13 +315,21 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 
 void st_energize_motors()
 {
+	motor_1.energize(MOTOR_1);
+	motor_2.energize(MOTOR_2);
+	motor_3.energize(MOTOR_3);
+	motor_4.energize(MOTOR_4);
+	motor_5.energize(MOTOR_5);
+	motor_6.energize(MOTOR_6);
+
+	common_enable.clear();			// enable gShield common enable
+/*
 	motor_1.enable.clear();			// clear enables the motor
 	motor_2.enable.clear();			// any motor-N.enable defined as -1 will drop out of compile
 	motor_3.enable.clear();
 	motor_4.enable.clear();
 	motor_5.enable.clear();
 	motor_6.enable.clear();
-	common_enable.clear();			// enable gShield common enable
 
 	st_run.m[MOTOR_1].power_state = MOTOR_START_IDLE_TIMEOUT;
 	st_run.m[MOTOR_2].power_state = MOTOR_START_IDLE_TIMEOUT;
@@ -314,6 +337,7 @@ void st_energize_motors()
 	st_run.m[MOTOR_4].power_state = MOTOR_START_IDLE_TIMEOUT;
 	st_run.m[MOTOR_5].power_state = MOTOR_START_IDLE_TIMEOUT;
 	st_run.m[MOTOR_6].power_state = MOTOR_START_IDLE_TIMEOUT;
+*/
 }
 
 void st_deenergize_motors()
@@ -332,7 +356,7 @@ stat_t st_motor_power_callback() 	// called by controller
 	// manage power for each motor individually - facilitates advanced features
 	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
-		if (st.m[motor].power_mode == MOTOR_ENERGIZED_DURING_CYCLE) {
+		if (st.m[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
 
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
@@ -349,7 +373,7 @@ stat_t st_motor_power_callback() 	// called by controller
 					break;
 				}
 			}
-			} else if(st.m[motor].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			} else if(st.m[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
 			switch (st_run.m[motor].power_state) {
 				case (MOTOR_START_IDLE_TIMEOUT): {
 					st_run.m[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
@@ -545,7 +569,7 @@ void _load_move()
 			motor_1.enable.clear();				// enable the motor (clear the ~Enable line)
 			st_run.m[MOTOR_1].power_state = MOTOR_RUNNING;
 		} else {								// motor is not in this move
-			if (st.m[MOTOR_1].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_1].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_1.enable.clear();			// energize motor
 				st_run.m[MOTOR_1].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}			
@@ -557,7 +581,7 @@ void _load_move()
 			motor_2.enable.clear();
 			st_run.m[MOTOR_2].power_state = MOTOR_RUNNING;
 		} else {
-			if (st.m[MOTOR_2].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_2.enable.clear();
 				st_run.m[MOTOR_2].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
@@ -569,7 +593,7 @@ void _load_move()
 			motor_3.enable.clear();
 			st_run.m[MOTOR_3].power_state = MOTOR_RUNNING;
 		} else {
-			if (st.m[MOTOR_3].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_3.enable.clear();
 				st_run.m[MOTOR_3].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
@@ -581,7 +605,7 @@ void _load_move()
 			motor_4.enable.clear();
 			st_run.m[MOTOR_4].power_state = MOTOR_RUNNING;
 		} else {
-			if (st.m[MOTOR_4].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_4.enable.clear();
 				st_run.m[MOTOR_4].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
@@ -593,7 +617,7 @@ void _load_move()
 			motor_5.enable.clear();
 			st_run.m[MOTOR_5].power_state = MOTOR_RUNNING;
 		} else {
-			if (st.m[MOTOR_5].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_5.enable.clear();
 				st_run.m[MOTOR_5].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
@@ -605,7 +629,7 @@ void _load_move()
 			motor_6.enable.clear();
 			st_run.m[MOTOR_6].power_state = MOTOR_RUNNING;
 		} else {
-			if (st.m[MOTOR_6].power_mode == MOTOR_IDLE_WHEN_STOPPED) {
+			if (st.m[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 //				motor_6.enable.clear();
 				st_run.m[MOTOR_6].power_state = MOTOR_START_IDLE_TIMEOUT;
 			}
@@ -862,8 +886,8 @@ static const char fmt_0sa[] PROGMEM = "[%s%s] m%s step angle%20.3f%s\n";
 static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%9.3f%s\n";
 static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=remain powered,1=power down when idle]\n";
-static const char fmt_0mp[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
+static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disable,1=power in cycle,2=power when moving]\n";
+static const char fmt_0mp[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0-100]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}
