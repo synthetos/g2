@@ -202,6 +202,10 @@ enum cmStepperPowerMode {
 	DYNAMIC_MOTOR_POWER				// adjust motor current with velocity (not implemented yet)
 };
 
+#define Vcc	3.3						// volts
+#define MaxVref	2.25				// max vref for driver circuit. Our ckt is 2.25 volts
+#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
+
 enum prepBufferState {
 	PREP_BUFFER_OWNED_BY_LOADER = 0,// staging buffer is ready for load
 	PREP_BUFFER_OWNED_BY_EXEC		// staging buffer is being loaded
@@ -253,7 +257,8 @@ typedef struct cfgMotor {			// per-motor configs
   	uint8_t microsteps;				// microsteps to apply for each axis (ex: 8)
 	uint8_t polarity;				// 0=normal polarity, 1=reverse motor direction
  	uint8_t power_mode;				// See stepper.h for enum
-	float power_level;				// set 0.000 to 1.000 for PMW vref setting 
+	float power_setting;			// user power level setting from 0 to 100%
+	float power_level_scaled;		// scaled to internal range - must be between 0 and 1
 	float step_angle;				// degrees per whole step (ex: 1.8)
 	float travel_rev;				// mm or deg of travel per motor revolution
 	float steps_per_unit;			// steps (usteps)/mm or deg of travel
@@ -271,7 +276,7 @@ typedef struct stRunMotor { 		// one per controlled motor
 	int32_t phase_accumulator;		// DDA phase angle accumulator for axis
 	uint8_t power_state;			// state machine for managing motor power
 	uint32_t power_systick;			// sys_tick for next state transition
-	float power_level;				// power level for this segment
+	float power_level_dynamic;		// dynamic power level for this segment or for idle
 	uint8_t step_count_diagnostic;	// step count diagnostic
 } stRunMotor_t;
 
@@ -328,7 +333,7 @@ stat_t st_set_pm(cmdObj_t *cmd);
 stat_t st_set_mt(cmdObj_t *cmd);
 stat_t st_set_md(cmdObj_t *cmd);
 stat_t st_set_me(cmdObj_t *cmd);
-stat_t st_set_mp(cmdObj_t *cmd);
+stat_t st_set_pl(cmdObj_t *cmd);
 
 #ifdef __TEXT_MODE
 
@@ -341,7 +346,7 @@ stat_t st_set_mp(cmdObj_t *cmd);
 	void st_print_mi(cmdObj_t *cmd);
 	void st_print_po(cmdObj_t *cmd);
 	void st_print_pm(cmdObj_t *cmd);
-	void st_print_mp(cmdObj_t *cmd);
+	void st_print_pl(cmdObj_t *cmd);
 
 #else
 
@@ -354,7 +359,7 @@ stat_t st_set_mp(cmdObj_t *cmd);
 	#define st_print_mi tx_print_stub
 	#define st_print_po tx_print_stub
 	#define st_print_pm tx_print_stub
-	#define st_print_mp tx_print_stub
+	#define st_print_pl tx_print_stub
 
 #endif // __TEXT_MODE
 

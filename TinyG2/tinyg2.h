@@ -35,12 +35,18 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		023.02	// merged in triple queue report changes
+#define TINYG_FIRMWARE_BUILD   		023.04	// work on power level functions; changed $1mp to $1pl (power level)
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
-
+/*
+#if (PLATFORM == v9_3x8c)
+#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
+#else
+#define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
+#endif
+*/
 /****** COMPILE-TIME SETTINGS ******/
 
 #define __TEXT_MODE							// comment out to disable text mode support (saves ~9Kb)

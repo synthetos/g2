@@ -208,8 +208,8 @@ void stepper_init()
 	st_prep.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// initial condition
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		_set_motor_power_level(motor, st.m[motor].power_level);
-		st_run.m[motor].power_level = st.m[motor].power_level;
+		_set_motor_power_level(motor, st.m[motor].power_level_scaled);
+		st_run.m[motor].power_level_dynamic = st.m[motor].power_level_scaled;
 	}
 //	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 100000 Hz.
 }
@@ -262,7 +262,7 @@ uint8_t stepper_isbusy()
  *
  * _energize_motor()			- apply power to a motor
  * _deenergize_motor()			- remove power from a motor
- * st_set_motor_power()			- set motor a specified power level
+ * st_set_motor_power()			- set the actual Vref to a specified power level
  * st_energize_motors()			- apply power to all motors
  * st_deenergize_motors()		- remove power from all motors
  * st_motor_power_callback()	- callback to manage motor power sequencing
@@ -305,6 +305,7 @@ static void _deenergize_motor(const uint8_t motor)
 
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
+	// power_level must be scaled properly for the driver's Vref voltage requirements 
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
 	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
@@ -321,23 +322,7 @@ void st_energize_motors()
 	motor_4.energize(MOTOR_4);
 	motor_5.energize(MOTOR_5);
 	motor_6.energize(MOTOR_6);
-
 	common_enable.clear();			// enable gShield common enable
-/*
-	motor_1.enable.clear();			// clear enables the motor
-	motor_2.enable.clear();			// any motor-N.enable defined as -1 will drop out of compile
-	motor_3.enable.clear();
-	motor_4.enable.clear();
-	motor_5.enable.clear();
-	motor_6.enable.clear();
-
-	st_run.m[MOTOR_1].power_state = MOTOR_START_IDLE_TIMEOUT;
-	st_run.m[MOTOR_2].power_state = MOTOR_START_IDLE_TIMEOUT;
-	st_run.m[MOTOR_3].power_state = MOTOR_START_IDLE_TIMEOUT;
-	st_run.m[MOTOR_4].power_state = MOTOR_START_IDLE_TIMEOUT;
-	st_run.m[MOTOR_5].power_state = MOTOR_START_IDLE_TIMEOUT;
-	st_run.m[MOTOR_6].power_state = MOTOR_START_IDLE_TIMEOUT;
-*/
 }
 
 void st_deenergize_motors()
@@ -853,15 +838,23 @@ stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initia
 	return (STAT_OK);
 }
 
-stat_t st_set_mp(cmdObj_t *cmd)	// motor power level
+/*
+ * st_set_pl() - set motor power level
+ *
+ *	Input value may vary from 0 to 100. The setting is scaled to allowable PWM range.
+ *	This function sets both the scaled and dynamic power levels, and applies the 
+ *	scaled value to the vref.
+ */ 
+stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 {
 	if (cmd->value < (float)0) cmd->value = 0;
-	if (cmd->value > (float)1) cmd->value = 1;
-	set_flt(cmd);				// set the value in the motor config struct (st)
+	if (cmd->value > (float)100) cmd->value = 100;
+	set_flt(cmd);	// set power_setting value in the motor config struct (st)
 	
 	uint8_t motor = _get_motor(cmd->index);
-	st_run.m[motor].power_level = cmd->value;
-	_set_motor_power_level(motor, cmd->value);
+	st.m[motor].power_level_scaled = (cmd->value * POWER_LEVEL_SCALE_FACTOR);
+	st_run.m[motor].power_level_dynamic = (st.m[motor].power_level_scaled);
+	_set_motor_power_level(motor, st.m[motor].power_level_scaled);
 	return(STAT_OK);
 }
 
@@ -887,7 +880,7 @@ static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%9.3f%s\n
 static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disable,1=power in cycle,2=power when moving]\n";
-static const char fmt_0mp[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0-100]\n";
+static const char fmt_0pl[] PROGMEM = "[%s%s] m%s power level%18.2f [0-100]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}
@@ -914,6 +907,6 @@ void st_print_tr(cmdObj_t *cmd) { _print_motor_flt_units(cmd, fmt_0tr, cm_get_un
 void st_print_mi(cmdObj_t *cmd) { _print_motor_ui8(cmd, fmt_0mi);}
 void st_print_po(cmdObj_t *cmd) { _print_motor_ui8(cmd, fmt_0po);}
 void st_print_pm(cmdObj_t *cmd) { _print_motor_ui8(cmd, fmt_0pm);}
-void st_print_mp(cmdObj_t *cmd) { _print_motor_flt(cmd, fmt_0mp);}
+void st_print_pl(cmdObj_t *cmd) { _print_motor_flt(cmd, fmt_0pl);}
 
 #endif // __TEXT_MODE
