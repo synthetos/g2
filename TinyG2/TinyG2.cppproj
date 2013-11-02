@@ -152,7 +152,7 @@
         <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
       </ArmGccCpp>
     </ToolchainSettings>
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s  MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean</CleanTarget>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -232,7 +232,7 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=due</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=due  MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=due</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
@@ -312,7 +312,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=v9_3x8c</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=v9_3x8c MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=v9_3x8c</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Release (v9_x8c)\</OutputPath>
