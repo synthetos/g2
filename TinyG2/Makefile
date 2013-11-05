@@ -153,9 +153,10 @@ ifeq ("$(PLATFORM)","due")
 #                           $(PLATFORM_BASE)/libsam/include
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
+	
 
 	include $(PLATFORM_BASE).mk
-
+	
 
 else
 
@@ -207,6 +208,9 @@ GDB     = $(CROSS_COMPILE)gdb
 NM      = $(CROSS_COMPILE)nm
 RM      = rm
 CP      = cp
+# NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
+#       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
+MKDIR   ?= mkdir
 
 
 # ---------------------------------------------------------------------------------------
@@ -259,7 +263,6 @@ CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES)
 CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES)
 ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
 
-
 ifeq ($(VERBOSE),2)
 define NEWLINE_ONLY
 
@@ -284,7 +287,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(BIN) $(OBJ) $(DEFAULT_MEMORY) $(PROJECT).elf
+all: $(DEFAULT_MEMORY)
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -295,7 +298,6 @@ MK_DIRS =   $(shell                              \
               done)
 
 $(eval $(DEVICE_RULES))
-
 
 #-------------------------------------------------------------------------------
 #		Per-Memory Rules Block
@@ -336,18 +338,18 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN)_$(1).elf"
 
-$$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp | $(MK_DIRS)
-	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp
+	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -xc++ -c -o $$@ $$<
 
-$$(ALL_C_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c | $(MK_DIRS)
-	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(ALL_C_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c
+	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
 	@echo $(START_BOLD)"Compiling c ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
-$$(ALL_ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S | $(MK_DIRS)
-	$(QUIET)if [[ ! -d `dirname $$@` ]]; then mkdir -p `dirname $$@`; fi
+$$(ALL_ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S
+	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
 	@echo $(START_BOLD)"Compiling ($(1)) $$<"; echo "    -> $$@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 

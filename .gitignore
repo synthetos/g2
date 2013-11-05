@@ -20,3 +20,4 @@ TcfTransactionLog.csv
 TinyG2/TinyG2.elf
 TinyG2/TinyG2.xcodeproj/project.xcworkspace/xcuserdata/rob.xcuserdatad/UserInterfaceState.xcuserstate
 *.xcbkptlist
+*.xccheckout
