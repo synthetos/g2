@@ -447,6 +447,8 @@
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
 		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
+		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
+		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
 		D4329639171A5564001611B6 /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
 		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
 		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
@@ -3441,6 +3443,7 @@
 				D4550F5E175536DD006BDBA0 /* MotateUSB.h */,
 				D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */,
 				D45710C81705334000EA19A8 /* MotatePins.h */,
+				D41FC0621826F21C003D66C2 /* MotateSPI.h */,
 				D45710C91705334000EA19A8 /* MotateTimers.h */,
 				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
 				D4021F9A175DA4610099576C /* SamUSB.cpp */,
@@ -3455,6 +3458,7 @@
 				D4E2B2F017223FCB004A5C70 /* AvrTimers.h */,
 				D4E2B2F117223FCB004A5C70 /* SamTimers.h */,
 				D45710D61705334100EA19A8 /* AvrPins.h */,
+				D41FC0631826F29F003D66C2 /* SamSPI.h */,
 				D406801B1759B71100C593A3 /* AvrUSB.h */,
 				D45710D71705334100EA19A8 /* AvrXPins.h */,
 				D45710D81705334100EA19A8 /* SamPins.h */,
