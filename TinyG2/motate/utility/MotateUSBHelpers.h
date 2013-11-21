@@ -611,7 +611,7 @@ namespace Motate {
 	extern uint16_t checkEndpointSizeHardwareLimits(const uint16_t tempSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed);
 
 	// Here we use the above rules for endpoints, and then determine, based on the endpoint number, type, and which if it's the main speed or "other speed."
-	static inline uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed, uint16_t maxSize = 2048) {
+	static /*inline*/ uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed, uint16_t maxSize = 2048) {
 		uint16_t tempSize = 0;
 		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {
 			// Note that other_speed only applies to high-speed devices

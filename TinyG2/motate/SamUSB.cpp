@@ -35,6 +35,7 @@
 #define TRACE_CORE(x)
 
 uint16_t endpointSizes[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t endpointSpaceLeft[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 namespace Motate {
 
@@ -187,7 +188,42 @@ namespace Motate {
 	
 	// Endpoint interrupts, and subinterrupts (!)
 	inline bool _inAnEndpointInterrupt(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_0 << (endpoint)) != 0; }
-	// Cleared automatically after the ISR fires
+
+    inline bool _isAControlEnpointInterrupted(const uint8_t endpoint, bool &keepGoing) {
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_0 << endpoint) {
+            keepGoing = false;
+            if (UOTGHS->UOTGHS_DEVEPTCFG[endpoint] & kEndpointTypeControl) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        keepGoing = true;
+        return false;
+    }
+    
+    // Pass in a uint8_t to have the enpoint number set in.
+    inline bool _inAControlEndpointInterrupt(uint8_t &endpoint_found) {
+        bool keepGoing = true;
+        
+        // The optimizer should clean this up quite a bit...
+        if (             _isAControlEnpointInterrupted(0, keepGoing)) { endpoint_found = 0; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(1, keepGoing)) { endpoint_found = 1; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(2, keepGoing)) { endpoint_found = 2; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(3, keepGoing)) { endpoint_found = 3; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(4, keepGoing)) { endpoint_found = 4; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(5, keepGoing)) { endpoint_found = 5; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(6, keepGoing)) { endpoint_found = 6; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(7, keepGoing)) { endpoint_found = 7; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(8, keepGoing)) { endpoint_found = 8; return true; }
+        if (keepGoing && _isAControlEnpointInterrupted(9, keepGoing)) { endpoint_found = 9; return true; }
+        
+        return false;
+    }
+
+    
+    // Cleared automatically after the ISR fires
 	inline void _enableEndpointInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVIER = UOTGHS_DEVIER_PEP_0 << (endpoint); }
 	inline void _disableEndpointInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVIDR = UOTGHS_DEVIDR_PEP_0 << (endpoint); }
 	inline bool _isEndpointInterruptEnabled(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVIMR & UOTGHS_DEVIMR_PEP_0 << (endpoint)) != 0; }
@@ -248,10 +284,12 @@ namespace Motate {
 		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL) != 0;
 	}
 
-	inline void _waitForTransmitINAvailable(const uint8_t endpoint) {
+	inline void _waitForTransmitINAvailable(const uint8_t endpoint, bool reset_needed = false) {
 		while (!(UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI))
-			;
-		_resetEndpointBuffer(endpoint);
+			reset_needed = true;
+
+        if (reset_needed)
+            _resetEndpointBuffer(endpoint);
 	}
 
 	inline void _clearTransmitIN(const uint8_t endpoint) {
@@ -296,15 +334,17 @@ namespace Motate {
 		return to_read;
 	}
 
-	int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length) {
+	int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length, bool continuation) {
 		const uint8_t *ptr_src = data;
 
-		if (!_isTransmitINAvailable(endpoint))
-			return 0;
+		_waitForTransmitINAvailable(endpoint, /*reset_needed = */continuation);
 
-		int16_t to_send = endpointSizes[endpoint] - _getEndpointBufferCount(endpoint);
+		int16_t to_send = endpointSpaceLeft[endpoint];
 		if (to_send > length)
 			to_send = length;
+        
+        // We return how much we sent...
+        length = to_send;
 
 		if (to_send == 0)
 			return 0;
@@ -312,14 +352,16 @@ namespace Motate {
 		while (to_send--) {
 			*_endpointBuffer[endpoint]++ = *ptr_src++;
 		}
+        
+        endpointSpaceLeft[endpoint] -= length;
 
 		// If we filled the buffer, flush
 		// Note that this flush is different for a control endpoint.
-		if (_getEndpointBufferCount(endpoint) == endpointSizes[endpoint]) {
+		if (endpointSpaceLeft[endpoint] == 0) {
 			_clearTransmitIN(endpoint);
-			_resetEndpointBuffer(endpoint);
+            endpointSpaceLeft[endpoint] = endpointSizes[endpoint];
 		}
-		return to_send;
+		return length;
 	}
 
 	// Returns -1 if nothing was available.
@@ -329,7 +371,7 @@ namespace Motate {
 		while (_isFIFOControlAvailable(endpoint)) {
 			if (!_isReadWriteAllowed(endpoint)) {
 				// We cheat and lazily clear the RXOUT interrupt.
-				// Once we might actually use that interru;t, we might need to be more proactive.
+				// Once we might actually use that interrupt, we might need to be more proactive.
 				_clearReceiveOUT(endpoint);
 
 				// Clearing FIFOCon will also mark this bank as "read".
@@ -520,6 +562,7 @@ namespace Motate {
 				 • the Transmitted IN Data Interrupt (UOTGHS_DEVEPTISRx.TXINI) bit, which is set when the current bank is ready to accept a new IN packet and [...]
 				 ****/
 				_waitForTransmitINAvailable(0);
+                endpointSpaceLeft[0] = endpointSizes[0];
 			}
 			else
 			{

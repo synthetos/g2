@@ -237,6 +237,7 @@ namespace Motate {
 		const uint8_t control_endpoint;
 		const uint8_t read_endpoint;
 		const uint8_t write_endpoint;
+        const uint8_t interface_number;
 
 		struct _line_info_t
 		{
@@ -258,12 +259,14 @@ namespace Motate {
 		volatile _line_info_t _line_info;
 
 		USBSerial(usb_parent_type &usb_parent,
-					const uint8_t new_endpoint_offset
-					)
+                  const uint8_t new_endpoint_offset,
+                  const uint8_t new_interface_number
+                  )
 		: usb(usb_parent),
 		control_endpoint(new_endpoint_offset),
 		read_endpoint(new_endpoint_offset+1),
 		write_endpoint(new_endpoint_offset+2),
+        interface_number(new_interface_number),
 		_line_state(0x00)
 		{};
 
@@ -333,6 +336,9 @@ namespace Motate {
 		}
 
 		bool handleNonstandardRequest(Setup_t &setup) {
+            if (setup.index() != interface_number)
+                return false;
+            
 			if (setup.isADeviceToHostClassInterfaceRequest()) {
 				if (setup.requestIs(kGetLineEncoding)) {
 					usb.writeToControl(usb.master_control_endpoint, (uint8_t*)&_line_info, sizeof(_line_info));
@@ -421,8 +427,9 @@ namespace Motate {
 		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< USBCDC, usbIFB, usbIFC, 0 > (usb_parent_type &usb_parent,
-											   const uint8_t new_endpoint_offset
-											   ) : Serial(usb_parent, new_endpoint_offset) {};
+											   const uint8_t new_endpoint_offset,
+                                               const uint8_t first_interface_number
+											   ) : Serial(usb_parent, new_endpoint_offset, first_interface_number) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const bool other_speed) {
 			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
@@ -446,8 +453,9 @@ namespace Motate {
 		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< usbIFA, USBCDC, usbIFC, 1 > (usb_parent_type &usb_parent,
-											   const uint8_t new_endpoint_offset
-											   ) : Serial(usb_parent, new_endpoint_offset) {};
+											   const uint8_t new_endpoint_offset,
+                                               const uint8_t first_interface_number
+											   ) : Serial(usb_parent, new_endpoint_offset, first_interface_number) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
 			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
@@ -471,8 +479,9 @@ namespace Motate {
 		USBSerial< usb_parent_type > Serial;
 
 		USBMixin< usbIFA, usbIFB, USBCDC, 2 > (usb_parent_type &usb_parent,
-											   const uint8_t new_endpoint_offset
-											   ) : Serial(usb_parent, new_endpoint_offset) {};
+											   const uint8_t new_endpoint_offset,
+                                               const uint8_t first_interface_number
+											   ) : Serial(usb_parent, new_endpoint_offset, first_interface_number) {};
 
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
 			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
@@ -501,7 +510,7 @@ namespace Motate {
 		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBDescriptorDevice_t(
 							  /*    USBSpecificationBCD = */ USBFloatToBCD(1.1),
-							  /*                  Class = */ kNoDeviceClass,
+							  /*                  Class = */ kCDCClass,
 							  /*               SubClass = */ kNoSpecificSubclass,
 							  /*               Protocol = */ kNoSpecificProtocol,
 
@@ -615,7 +624,7 @@ namespace Motate {
 		const USBDescriptorInterface_t CDC_DCI_Interface;
 		const USBDescriptorEndpoint_t CDC_DataOutEndpoint;
 		const USBDescriptorEndpoint_t CDC_DataInEndpoint;
-		
+        
 		
 		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed)
 		: CDC_CCI_Interface(

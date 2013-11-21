@@ -64,11 +64,11 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 	/*gProductVersion   = */ //0.1,
 
-Motate::USBDevice< Motate::USBCDC > usb;
-//Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+//Motate::USBDevice< Motate::USBCDC > usb;
+Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
 typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
-//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
+typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )

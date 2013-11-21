@@ -109,9 +109,9 @@ namespace Motate {
 		// Init
 		USBDevice() :
 			_hardware_type(),
-			_mixin_0_type(*this, _interface_0_first_endpoint),
-			_mixin_1_type(*this, _interface_1_first_endpoint),
-			_mixin_2_type(*this, _interface_2_first_endpoint)
+            _mixin_0_type(*this, _interface_0_first_endpoint, _config_type::_interface_0_number),
+			_mixin_1_type(*this, _interface_1_first_endpoint, _config_type::_interface_1_number),
+			_mixin_2_type(*this, _interface_2_first_endpoint, _config_type::_interface_2_number)
 		{
 			// USBDeviceHardware should handle all of the rest of the init
 			_singleton = this;
@@ -152,22 +152,28 @@ namespace Motate {
 			return false;
 		};
 
-		static void sendDescriptor(uint16_t maxLength) {
+		static void sendDescriptor(int16_t maxLength) {
 			const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion));
-			uint16_t length = sizeof(_descriptor_type);
-			_this_type::writeToControl(0, (const uint8_t *)(&descriptor), maxLength < length ? maxLength : length);
+			int16_t length = sizeof(_descriptor_type);
+            int16_t to_send = maxLength < length ? maxLength : length;
+            const uint8_t *buffer = (const uint8_t *)(&descriptor);
+            _this_type::writeToControl(0, buffer, to_send);
 		};
 
-		static void sendQualifierDescriptor(uint16_t maxLength) {
+		static void sendQualifierDescriptor(int16_t maxLength) {
 			const _qualifier_type qualifier;
-			uint16_t length = sizeof(_qualifier_type);
-			_this_type::writeToControl(0, (const uint8_t *)(&qualifier), maxLength < length ? maxLength : length);
+			int16_t length = sizeof(_qualifier_type);
+            int16_t to_send = maxLength < length ? maxLength : length;
+            const uint8_t *buffer = (const uint8_t *)(&qualifier);
+            _this_type::writeToControl(0, buffer, to_send);
 		};
 
-		static void sendConfig(uint16_t maxLength, const bool other) {
+		static void sendConfig(int16_t maxLength, const bool other) {
 			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption, other);
-			uint16_t length = sizeof(_config_type);
-			_this_type::writeToControl(0, (const uint8_t *)(&config), maxLength < length ? maxLength : length);
+			int16_t length = sizeof(_config_type);
+            int16_t to_send = maxLength < length ? maxLength : length;
+            const uint8_t *buffer = (const uint8_t *)(&config);
+            _this_type::writeToControl(0, buffer, to_send);
 		};
 
 		static bool handleNonstandardRequest(Setup_t &setup) {
@@ -221,8 +227,9 @@ namespace Motate {
 		static const uint8_t endpoints_used = 0;
 		typedef USBDevice<interface0type, interface1type, interface2type> usb_parent_type;
 		USBMixin (usb_parent_type &usb_parent,
-				  const uint8_t new_endpoint_offset
-				) {};
+				  const uint8_t new_endpoint_offset,
+                  const uint8_t first_interface_number
+                  ) {};
 
 		static bool isNull() { return true; };
 		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const bool other_speed) {

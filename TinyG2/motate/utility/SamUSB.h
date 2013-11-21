@@ -152,7 +152,7 @@ namespace Motate {
 	extern int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
 	extern int16_t _readByteFromEndpoint(const uint8_t endpoint);
 	extern int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
-	extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
+	extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length, bool continuation);
 	extern void _unfreezeUSBClock();
 	extern void _waitForUsableUSBClock();
 	extern void _enableResetInterrupt();
@@ -360,8 +360,16 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		static int16_t writeToControl(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
-			return _sendToControlEndpoint(endpoint, buffer, length);
+		static int16_t writeToControl(const uint8_t endpoint, const uint8_t *buffer, int16_t length) {
+            bool continuation = false;
+            int16_t to_send = length;
+            while (to_send > 0) {
+                int16_t sent = _sendToControlEndpoint(endpoint, buffer, to_send, continuation);
+                to_send -= sent;
+                buffer += sent;
+                continuation = true;
+            }
+            return length;
 		};
 
 		// This is static to be called from the interrupt.
@@ -386,17 +394,25 @@ namespace Motate {
 			// Make sure we don't send more than maxLength!
 			// If the string is longer, then the host will have to ask again,
 			//  with a bigger maxLength, and probably will.
-			to_send = length + sizeof(string_header);
+            
+            // The optimizer does this, but I'll do it explicitly for readability:
+            
+            int16_t header_size = sizeof(string_header);
+            
+			to_send = length + header_size;
 			if (to_send > maxLength)
 				to_send = maxLength;
 
-			_sendToControlEndpoint(0, (const uint8_t *)(&string_header), sizeof(string_header));
-
-			// We already "sent" (queued) the header, which is 3 bytes
-			to_send -= sizeof(string_header);
-
-			if (to_send)
-				_sendToControlEndpoint(0, (const uint8_t *)(string), to_send);
+			to_send -= _sendToControlEndpoint(0, (const uint8_t *)(&string_header), to_send > header_size ? header_size : to_send, /*continuation = */false);
+            
+            const uint8_t * buffer = (const uint8_t *)(string);
+            bool continuation = false;
+			while (to_send > 0) {
+                int16_t sent = _sendToControlEndpoint(0, buffer, to_send, continuation);
+				to_send -= sent;
+                buffer += sent;
+                continuation = true;
+            }
 		};
 
 		static uint16_t getEndpointSizeFromHardware(const uint8_t &endpoint, const bool otherSpeed) {
