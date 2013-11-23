@@ -382,18 +382,18 @@ namespace Motate {
 		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const bool otherSpeed) {
 			if (endpoint == control_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeControl, otherSpeed));
-				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocks1 | kEndpointBufferTypeInterrupt;
+				const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
+				return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocks1 | kEndpointBufferTypeInterrupt;
 			}
 			else if (endpoint == read_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed));
-				return kEndpointBufferOutputFromHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+				const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, otherSpeed));
+				return kEndpointBufferOutputFromHost | _buffer_size | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			else if (endpoint == write_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_speed = getBufferSizeFlags(Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed));
-				return kEndpointBufferInputToHost | _buffer_speed | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+				const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, otherSpeed));
+				return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
 			}
 			return kEndpointBufferNull;
 		};

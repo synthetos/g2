@@ -89,18 +89,18 @@ namespace Motate {
 
 	// Convert from number to EndpointBufferSettings_t
 	// This should optimize out.
-	static const EndpointBufferSettings_t getBufferSizeFlags(const uint16_t speed) {
-		if (speed > 512) {
+	static const EndpointBufferSettings_t getBufferSizeFlags(const uint16_t size) {
+		if (size > 512) {
 			return kEnpointBufferSizeUpTo1024;
-		} else if (speed > 128) {
+		} else if (size > 128) {
 			return kEnpointBufferSizeUpTo512;
-		} else if (speed > 64) {
+		} else if (size > 64) {
 			return kEnpointBufferSizeUpTo128;
-		} else if (speed > 32) {
+		} else if (size > 32) {
 			return kEnpointBufferSizeUpTo64;
-		} else if (speed > 16) {
+		} else if (size > 16) {
 			return kEnpointBufferSizeUpTo32;
-		} else if (speed > 8) {
+		} else if (size > 8) {
 			return kEnpointBufferSizeUpTo16;
 		} else {
 			return kEnpointBufferSizeUpTo8;

@@ -112,7 +112,18 @@ namespace Motate {
 					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo2;
 			}
 		}
-		config |= UOTGHS_DEVEPTCFG_NBTRANS_1_TRANS | UOTGHS_DEVEPTCFG_ALLOC;
+        /*
+        if (config & kEndpointTypeInterrupt) {
+            if (config & kEndpointBufferBlocks1) {
+                config |= UOTGHS_DEVEPTCFG_NBTRANS_1_TRANS;
+            } else if (config & kEndpointBufferBlocksUpTo2) {
+                config |= UOTGHS_DEVEPTCFG_NBTRANS_2_TRANS;
+            } else if (config & kEndpointBufferBlocksUpTo3) {
+                config |= UOTGHS_DEVEPTCFG_NBTRANS_3_TRANS;
+            }
+        }*/
+
+		config |= UOTGHS_DEVEPTCFG_ALLOC;
 
 		return config;
 	};
@@ -145,9 +156,15 @@ namespace Motate {
 
 			if (!_isEndpointConfigOK(endpoint)) {
 	//			TRACE_UOTGHS_DEVICE(printf("=> UDD_InitEP : ERROR FAILED TO INIT EP %lu\r\n", ul_ep_nb);)
-				while(1);
+				while(1) {
+                    ;
+                }
 			}
-		}
+		} else {
+            while(1) {
+                ;
+            }
+        }
 
 		// Is this necessary? -Rob
 		_resetEndpointBuffer(endpoint);
@@ -339,7 +356,7 @@ namespace Motate {
 
 		_waitForTransmitINAvailable(endpoint, /*reset_needed = */continuation);
 
-		int16_t to_send = endpointSpaceLeft[endpoint];
+		int16_t to_send = endpointSizes[endpoint] - _getEndpointBufferCount(endpoint);
 		if (to_send > length)
 			to_send = length;
         
@@ -352,14 +369,12 @@ namespace Motate {
 		while (to_send--) {
 			*_endpointBuffer[endpoint]++ = *ptr_src++;
 		}
-        
-        endpointSpaceLeft[endpoint] -= length;
 
 		// If we filled the buffer, flush
 		// Note that this flush is different for a control endpoint.
-		if (endpointSpaceLeft[endpoint] == 0) {
+		if (_getEndpointBufferCount(endpoint) == endpointSizes[endpoint]) {
 			_clearTransmitIN(endpoint);
-            endpointSpaceLeft[endpoint] = endpointSizes[endpoint];
+			_resetEndpointBuffer(endpoint);
 		}
 		return length;
 	}
@@ -508,7 +523,6 @@ namespace Motate {
 
 			// Configure EP 0 -- there's no opportunity to have a second configuration
 			_initEndpoint(0, USBProxy.getEndpointConfig(0, /* otherSpeed = */ false));
-
 			endpointSizes[0] = USBProxy.getEndpointSize(0, /* otherSpeed = */ false);
 
 			_enableReceivedSetupInterrupt(0);
@@ -725,7 +739,7 @@ namespace Motate {
 				TRACE_CORE(puts(">>> EP0 Int: ClassInterfaceRequest\r\n");)
 
 				// GAH! This is ugly.
-				_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
+				//_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
 
 				// Note: setup.length() holds the max length of transfer
 				ok = USBProxy.handleNonstandardRequest(setup);

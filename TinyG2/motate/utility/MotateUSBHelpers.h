@@ -616,10 +616,12 @@ namespace Motate {
 		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {
 			// Note that other_speed only applies to high-speed devices
 			if (endpointType == kEndpointTypeIsochronous || endpointType == kEndpointTypeInterrupt) {
-				tempSize = otherSpeed ? 512 : 1024;
+				tempSize = otherSpeed ? 64 : 1024;
+				tempSize = 64;
 			}
 			else if (endpointType == kEndpointTypeBulk) {
-				tempSize = otherSpeed ? 256 : 512;
+				tempSize = otherSpeed ? 64 : 256;
+				tempSize = 128;
 			} else {
 				tempSize = 64; // maximum size for all other full-speed endpoints is 64
 			}
