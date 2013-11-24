@@ -617,11 +617,11 @@ namespace Motate {
 			// Note that other_speed only applies to high-speed devices
 			if (endpointType == kEndpointTypeIsochronous || endpointType == kEndpointTypeInterrupt) {
 				tempSize = otherSpeed ? 64 : 1024;
-				tempSize = 64;
+                tempSize = 64;
 			}
 			else if (endpointType == kEndpointTypeBulk) {
-				tempSize = otherSpeed ? 64 : 256;
-				tempSize = 128;
+				tempSize = otherSpeed ? 64 : 512;
+                tempSize = 512;
 			} else {
 				tempSize = 64; // maximum size for all other full-speed endpoints is 64
 			}

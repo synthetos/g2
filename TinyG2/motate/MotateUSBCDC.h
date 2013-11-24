@@ -382,7 +382,10 @@ namespace Motate {
 		const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const bool otherSpeed) {
 			if (endpoint == control_endpoint)
 			{
-				const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed));
+                uint16_t ep_size = Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, otherSpeed);
+                if (ep_size > 64)
+                    ep_size = 64;
+				const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(ep_size);
 				return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocks1 | kEndpointBufferTypeInterrupt;
 			}
 			else if (endpoint == read_endpoint)
