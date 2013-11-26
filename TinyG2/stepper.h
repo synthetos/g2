@@ -191,7 +191,7 @@ enum motorPowerState {				// used w/start and stop flags to sequence motor power
 	MOTOR_IDLE,						// motor is stopped and may be partially energized for torque maintenance
 	MOTOR_RUNNING,					// motor is running (and fully energized)
 	MOTOR_INITIATE_TIMEOUT,			// transitional state to start idle timeout
-	MOTOR_COUNTDOWN_TIMEOUT				// run timeout to idle
+	MOTOR_COUNTDOWN_TIMEOUT			// run timeout to idle
 };
 
 enum cmStepperPowerMode {

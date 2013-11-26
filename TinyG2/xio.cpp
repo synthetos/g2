@@ -25,9 +25,23 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-//#include "Arduino.h"
+/*
+ * XIO acts as an entry point into lower level IO routines - mostly serial IO. It supports
+ * the USB, SPI and fiol IO sub-systems, as well as providing low level character functions
+ * used by stdio (printf()). 
+ */
 #include "tinyg2.h"
+#include "config.h"
+#include "util.h"
+#include "hardware.h"
+#include "text_parser.h"
 #include "xio.h"
+
+/**** Allocate structures ****/
+
+xioSingleton_t xio;
+
+/**** CODE ****/
 
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
@@ -59,8 +73,9 @@ int read_char (void)
  *                    Index will equal size.
  *
  *	  STAT_FILE_SIZE_EXCEEDED returned if the starting index exceeds the size.
+ *
+ *	Note: uint8_t aka char_t but you might not have that typedef at this low a level
  */
-
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
@@ -108,3 +123,42 @@ stat_t xio_assertions()
 */
 	return (STAT_OK);
 }
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/*
+ * xio_set_spi() = 0=disable, 1=enable
+ */
+stat_t xio_set_spi(cmdObj_t *cmd)
+{
+	xio.spi_state = (uint8_t)cmd->value;
+
+#ifdef __ARM
+	if (fp_EQ(cmd->value, SPI_ENABLE)) {
+		spi_miso_pin.setMode(kOutput);
+		spi_mosi_pin.setMode(kOutput);
+		spi_sck_pin.setMode(kOutput);
+
+	} else if (fp_EQ(cmd->value, SPI_DISABLE)) {
+		spi_miso_pin.setMode(kInput);
+		spi_mosi_pin.setMode(kInput);
+		spi_sck_pin.setMode(kInput);
+	}
+#endif
+	return (STAT_OK);
+}
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+static const char fmt_spi[] PROGMEM = "[spi] SPI state%20d [0=disabled,1=enabled]\n";
+void xio_print_spi(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_spi);}
+
+#endif // __TEXT_MODE

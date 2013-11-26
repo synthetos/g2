@@ -35,7 +35,7 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		025.01	// Incorporates USB changes from rob branch
+#define TINYG_FIRMWARE_BUILD   		025.02	// Added tri-state code for SPI to enable fin programming
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)

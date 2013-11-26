@@ -414,6 +414,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","qv",  _f07, 0, qr_print_qv,  get_ui8,   set_0123,   (float *)&qr.queue_report_verbosity,QR_VERBOSITY },
 	{ "sys","sv",  _f07, 0, sr_print_sv,  get_ui8,   set_012,    (float *)&sr.status_report_verbosity,SR_VERBOSITY },
 	{ "sys","si",  _f07, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
+	{ "sys","spi", _f07, 0, xio_print_spi,get_ui8,   xio_set_spi,(float *)&xio.spi_state,			0 },
 
 //	{ "sys","ic",  _f07, 0, print_ui8,    get_ui8,   set_ic,     (float *)&cfg.ignore_crlf,			COM_IGNORE_CRLF },
 //	{ "sys","ec",  _f07, 0, co_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },

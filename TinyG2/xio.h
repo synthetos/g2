@@ -1,6 +1,6 @@
 /*
  * xio.h - extended IO functions
- * Part of TInyG2 project
+ * Part of TinyG2 project
  *
  * Copyright (c) 2013 Alden S. Hart Jr.
  * Copyright (c) 2013 Robert Giseburt
@@ -25,10 +25,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _XIO_H_
-#define _XIO_H_
+#ifndef XIO_H_ONCE
+#define XIO_H_ONCE
 
 #include "tinyg2.h"
+#include "config.h"				// required for cmdObj typedef
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
@@ -45,7 +46,20 @@ extern typeof usb._mixin_0_type::Serial &SerialUSB;
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
+stat_t xio_set_spi(cmdObj_t *cmd);
 stat_t xio_assertions(void);
+
+enum xioSPIMode {
+	SPI_DISABLE=0,					// tri-state SPI lines
+	SPI_ENABLE						// enable SPI lines for output
+};
+
+typedef struct xioSingleton {		// Stepper static values and axis parameters
+	uint16_t magic_start;			// magic number to test memory integrity
+	uint8_t spi_state;				// tick down-counter (unscaled)
+} xioSingleton_t;
+
+extern xioSingleton_t xio;
 
 /* Some useful ASCII definitions */
 
@@ -68,7 +82,18 @@ stat_t xio_assertions(void);
 #define Q_EMPTY (char)0xFF	// signal no character
 
 
-#endif // _XIO_H_
+#ifdef __TEXT_MODE
+
+	void xio_print_spi(cmdObj_t *cmd);
+
+#else
+
+	#define xio_print_spi tx_print_stub
+
+#endif // __TEXT_MODE
+
+
+#endif // XIO_H_ONCE
 
 /* Handy reference
 Binary		Oct	Dec	Hex	Glyph
