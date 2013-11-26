@@ -228,7 +228,7 @@ namespace Motate {
 			 */
 
 			// Disable external OTG_ID pin (ignored by USB)
-			UOTGHS->UOTGHS_CTRL |= ~UOTGHS_CTRL_UIDE;
+			UOTGHS->UOTGHS_CTRL &= ~UOTGHS_CTRL_UIDE;
 			//! Force device mode
 			UOTGHS->UOTGHS_CTRL |= UOTGHS_CTRL_UIMOD;
 
