@@ -340,6 +340,10 @@ namespace Motate {
 	 */
 	int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len, bool continuation) {
 		uint8_t *ptr_dest = data;
+        
+        if (!_inAReceivedSetupInterrupt(0))
+            _waitForReceiveOUTAvailable(endpoint, continuation);
+        
 		int16_t available = _getEndpointBufferCount(endpoint);
 
 		// If there's nothing to read, return -1
@@ -351,6 +355,11 @@ namespace Motate {
 
 		while (i--)
 			*ptr_dest++ = *_endpointBuffer[endpoint]++;
+
+        if (_getEndpointBufferCount(endpoint) == 0) {
+			_clearReceiveOUT(endpoint);
+			_resetEndpointBuffer(endpoint);
+		}
 
 		return to_read;
 	}
@@ -587,8 +596,6 @@ namespace Motate {
 				/****
 				 [...] which shall be cleared by firmware to send the packet.
 				 ****/
-//                if (setup.length() > 0)
-//                    _waitForReceiveOUTAvailable(0, /*reset_needed=*/true);
 				_clearTransmitIN(0);
 				_resetEndpointBuffer(0);
 			}
@@ -744,7 +751,7 @@ namespace Motate {
 				TRACE_CORE(puts(">>> EP0 Int: ClassInterfaceRequest\r\n");)
 
 				// GAH! This is ugly.
-//				_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
+				_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
 
 				// Note: setup.length() holds the max length of transfer
 				ok = USBProxy.handleNonstandardRequest(setup);
@@ -753,6 +760,7 @@ namespace Motate {
 			if (ok)
 			{
 				TRACE_CORE(puts(">>> EP0 Int: Send packet\r\n");)
+                _clearReceiveOUT(0);
 				_clearTransmitIN(0);
 				_resetEndpointBuffer(0);
 			}

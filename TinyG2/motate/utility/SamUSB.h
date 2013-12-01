@@ -362,9 +362,16 @@ namespace Motate {
 		static int16_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
 			if (!_configuration || length < 0)
 				return -1;
-			//
-			//			LockEP lock(ep);
-			return _readFromControlEndpoint(endpoint, buffer, length);
+            bool continuation = false;
+            int16_t to_read = length;
+            while (to_read > 0) {
+                int16_t amt_read = _readFromControlEndpoint(endpoint, buffer, to_read, continuation);
+                to_read -= amt_read;
+                buffer += amt_read;
+                continuation = true;
+            }
+			return length;
+//            return _readFromControlEndpoint(endpoint, buffer, to_read, continuation);
 		};
 
 		/* Data is const. The pointer to data is not. */
