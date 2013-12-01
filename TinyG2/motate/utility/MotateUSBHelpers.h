@@ -142,7 +142,7 @@ namespace Motate {
 		kNoDescriptorId       = 0, /* Indicates a lack of a string to give */
 		kManufacturerStringId = 1, /* Manufacturer string ID */
 		kProductStringId      = 2, /* Product string ID */
-		kSerialNumberId       = 0, /* Serial Number ID -- TODO */
+		kSerialNumberId       = 3, /* Serial Number ID -- TODO */
 	};
 
 	/* Endpoint Descriptor Attribute Masks */
@@ -453,22 +453,23 @@ namespace Motate {
 		USBDescriptorConfiguration_t(
 									 uint8_t _ConfigAttributes,
 									 uint16_t _MaxPowerConsumption,
-									 bool _OtherConfig
+                                     const USBDeviceSpeed_t _deviceSpeed,
+									 bool _otherConfig
 									 ) :
 			USBDescriptorConfigurationHeader_t(
 											   /* _TotalConfigurationSize = */ sizeof(_this_type),
 											   /*        _TotalInterfaces = */ _total_interfaces_used,
 
-											   /*    _ConfigurationNumber = */ _OtherConfig ? 2 : 1,
+											   /*    _ConfigurationNumber = */ _otherConfig ? 2 : 1,
 											   /*  _ConfigurationStrIndex = */ 0, /* Fixme? */
 
 											   /*       _ConfigAttributes = */ _ConfigAttributes,
 
 											   /*    _MaxPowerConsumption = */ _MaxPowerConsumption
 											   ),
-			_config_mixin_0_type(_interface_0_first_endpoint, _interface_0_number, _OtherConfig),
-			_config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number, _OtherConfig),
-			_config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number, _OtherConfig)
+			_config_mixin_0_type(_interface_0_first_endpoint, _interface_0_number, _deviceSpeed, _otherConfig),
+			_config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number, _deviceSpeed, _otherConfig),
+			_config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number, _deviceSpeed, _otherConfig)
 		{};
 	} ATTR_PACKED;
 
@@ -479,7 +480,7 @@ namespace Motate {
 	template < typename usbIFA, typename usbIFB, typename usbIFC, int position >
 	struct USBConfigMixin {
 		static const uint8_t interfaces = 0;
-		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_config) {};
+		USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _device_speed, const bool _other_config) {};
 		static bool isNull() { return true; };
 	};
 
@@ -604,24 +605,21 @@ namespace Motate {
 
 	 ***/
 
-	// This must be defined in the device-specific file:
-	// Sould we remote the const? -Rob
-	extern const USBDeviceSpeed_t USBDeviceSpeed;
-
 	extern uint16_t checkEndpointSizeHardwareLimits(const uint16_t tempSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed);
 
 	// Here we use the above rules for endpoints, and then determine, based on the endpoint number, type, and which if it's the main speed or "other speed."
-	static /*inline*/ uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed, uint16_t maxSize = 2048) {
+	static /*inline*/ uint16_t getEndpointSize(const uint8_t endpointNumber, const USBEndpointType_t endpointType, const USBDeviceSpeed_t USBDeviceSpeed, const bool otherSpeed, uint16_t maxSize = 2048) {
 		uint16_t tempSize = 0;
 		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {
 			// Note that other_speed only applies to high-speed devices
-			if (endpointType == kEndpointTypeIsochronous || endpointType == kEndpointTypeInterrupt) {
-				tempSize = otherSpeed ? 64 : 1024;
-                tempSize = 64;
+			if (endpointType == kEndpointTypeIsochronous) {
+				tempSize = otherSpeed ? 64 : 512;
+			}
+			if (endpointType == kEndpointTypeInterrupt) {
+				tempSize = otherSpeed ? 64 : 512;
 			}
 			else if (endpointType == kEndpointTypeBulk) {
 				tempSize = otherSpeed ? 64 : 512;
-                tempSize = 512;
 			} else {
 				tempSize = 64; // maximum size for all other full-speed endpoints is 64
 			}
@@ -629,7 +627,7 @@ namespace Motate {
 
 		if (USBDeviceSpeed == kUSBDeviceFullSpeed) {
 			if (endpointType == kEndpointTypeIsochronous) {
-				tempSize = 1023; // WTF?!?
+				tempSize = 512; // WTF?!?
 			} else {
 				tempSize = 64; // maximum size for all other full-speed endpoints is 64
 			}
@@ -672,22 +670,23 @@ namespace Motate {
 
 
 		USBDescriptorEndpoint_t (
-								 bool     _otherSpeed,
-								 bool     _input,
-								 uint8_t  _EndpointAddress,
+								 USBDeviceSpeed_t _deviceSpeed,
+                                 bool             _otherSpeed,
+								 bool             _input,
+								 uint8_t          _EndpointAddress,
 
-								 uint8_t  _Attributes,
+								 uint8_t          _Attributes,
 
-								 uint8_t  _PollingIntervalMS,
+								 uint8_t          _PollingIntervalMS,
 
-								 uint16_t _maxSize = 2048
+								 uint16_t         _maxSize = 2048
 								 )
 		: Header(sizeof(USBDescriptorEndpoint_t), kEndpointDescriptor),
 		EndpointAddress(_EndpointAddress | (_input ? 0x80 : 0x00)),
 
 		Attributes(_Attributes),
 
-		EndpointSize(getEndpointSize(_EndpointAddress, (USBEndpointType_t)(_Attributes & kEndpointTypeMask), _otherSpeed, _maxSize)),
+		EndpointSize(getEndpointSize(_EndpointAddress, (USBEndpointType_t)(_Attributes & kEndpointTypeMask), _deviceSpeed, _otherSpeed, _maxSize)),
 
 		PollingIntervalMS(_PollingIntervalMS)
 		{};
@@ -870,11 +869,11 @@ namespace Motate {
 		}
 
 		const bool isADeviceToHostClassInterfaceRequest() const {
-			return (_bmRequestType & (kRequestDeviceToHost | kRequestClass | kRequestInterface));
+			return (_bmRequestType == (kRequestDeviceToHost | kRequestClass | kRequestInterface));
 		};
 		
 		const bool isAHostToDeviceClassInterfaceRequest() const {
-			return (_bmRequestType & (kRequestHostToDevice | kRequestClass | kRequestInterface));
+			return (_bmRequestType == (kRequestHostToDevice | kRequestClass | kRequestInterface));
 		};
 
 		const bool requestIs(uint8_t testRequest) const {

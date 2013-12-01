@@ -35,15 +35,12 @@
 #define TRACE_CORE(x)
 
 uint16_t endpointSizes[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint16_t endpointSpaceLeft[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 namespace Motate {
-
-	const USBDeviceSpeed_t USBDeviceSpeed = kUSBDeviceHighSpeed;
-
 	const uint16_t MOTATE_USBLanguageString[] = {0x0409}; // English
 	const uint16_t *getUSBLanguageString(int16_t &length) {
-		length = sizeof(MOTATE_USBLanguageString);
+//		length = sizeof(MOTATE_USBLanguageString);
+        length = 2;
 		return MOTATE_USBLanguageString;
 	}
 
@@ -112,7 +109,7 @@ namespace Motate {
 					config = (config & ~kEndpointBufferBlocksMask) | kEndpointBufferBlocksUpTo2;
 			}
 		}
-        /*
+
         if (config & kEndpointTypeInterrupt) {
             if (config & kEndpointBufferBlocks1) {
                 config |= UOTGHS_DEVEPTCFG_NBTRANS_1_TRANS;
@@ -121,7 +118,7 @@ namespace Motate {
             } else if (config & kEndpointBufferBlocksUpTo3) {
                 config |= UOTGHS_DEVEPTCFG_NBTRANS_3_TRANS;
             }
-        }*/
+        }
 
 		config |= UOTGHS_DEVEPTCFG_ALLOC;
 
@@ -187,7 +184,7 @@ namespace Motate {
 	inline int32_t _getEndpointBufferCount(const uint8_t endpoint) {
 		return ((UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_BYCT_Msk) >> UOTGHS_DEVEPTISR_BYCT_Pos);
 	}
-
+    
 	// A few inline helpers, mainly for readability
 	//  Set and test interrupts
 	bool _inAResetInterrupt() { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_EORST) != 0; }
@@ -309,6 +306,14 @@ namespace Motate {
             _resetEndpointBuffer(endpoint);
 	}
 
+    inline void _waitForReceiveOUTAvailable(const uint8_t endpoint, bool reset_needed = false) {
+		while (!(UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RXOUTI))
+			reset_needed = true;
+        
+        if (reset_needed)
+            _resetEndpointBuffer(endpoint);
+	}
+
 	inline void _clearTransmitIN(const uint8_t endpoint) {
 		UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_TXINIC;
 	}
@@ -333,8 +338,7 @@ namespace Motate {
 	 *  * There is no ping-pong mode.
 	 *  * The RWALL (Read/Write ALLowed) bit and the FIFOCON (FIFO CONtrol) are ignored and read zero.
 	 */
-	int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len) {
-		//		_resetEndpointBuffer(endpoint);
+	int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len, bool continuation) {
 		uint8_t *ptr_dest = data;
 		int16_t available = _getEndpointBufferCount(endpoint);
 
@@ -563,7 +567,7 @@ namespace Motate {
 
 			_resetEndpointBuffer(0);
 			static Setup_t setup;
-			_readFromControlEndpoint(0, (uint8_t*)&setup, 8);
+			_readFromControlEndpoint(0, (uint8_t*)&setup, 8, /*continuation =*/false);
 			/****
 			 • the UOTGHS_DEVEPTISRx.RXSTPI bit, which is set when a new SETUP packet is received and which shall be cleared by firmware to acknowledge the packet and to **free the bank**;
 			 ****/
@@ -576,7 +580,6 @@ namespace Motate {
 				 • the Transmitted IN Data Interrupt (UOTGHS_DEVEPTISRx.TXINI) bit, which is set when the current bank is ready to accept a new IN packet and [...]
 				 ****/
 				_waitForTransmitINAvailable(0);
-                endpointSpaceLeft[0] = endpointSizes[0];
 			}
 			else
 			{
@@ -584,6 +587,8 @@ namespace Motate {
 				/****
 				 [...] which shall be cleared by firmware to send the packet.
 				 ****/
+//                if (setup.length() > 0)
+//                    _waitForReceiveOUTAvailable(0, /*reset_needed=*/true);
 				_clearTransmitIN(0);
 				_resetEndpointBuffer(0);
 			}
@@ -739,7 +744,7 @@ namespace Motate {
 				TRACE_CORE(puts(">>> EP0 Int: ClassInterfaceRequest\r\n");)
 
 				// GAH! This is ugly.
-				//_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
+//				_waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
 
 				// Note: setup.length() holds the max length of transfer
 				ok = USBProxy.handleNonstandardRequest(setup);
