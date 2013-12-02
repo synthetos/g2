@@ -72,6 +72,7 @@ typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
 
 void _system_init(void)
 {
