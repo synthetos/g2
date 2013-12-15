@@ -161,6 +161,7 @@ namespace Motate {
 	// Socket 3
 
 	_MAKE_MOTATE_PIN(30, B, 'B', 23);	// S3_SS, SPI0_CS3
+        _MAKE_MOTATE_SPI_CS_PIN(30, B, 3);
 
 	_MAKE_MOTATE_PIN(31, B, 'B',  5);	// S3_Interrupt
 
@@ -181,6 +182,7 @@ namespace Motate {
 	// Socket 4
 
 	_MAKE_MOTATE_PIN(40, A, 'A', 28);	// S4_SS, SPI0_CS0
+        _MAKE_MOTATE_SPI_CS_PIN(40, A, 0);
 
 	_MAKE_MOTATE_PIN(41, A, 'A',  2);	// S4_Interrupt
 	_MAKE_MOTATE_PWM_PIN(41, Motate::Timer<1>, /*Channel:*/ A, /*Peripheral:*/ A, /*Inverted:*/ false);
@@ -194,6 +196,7 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(45, B, 'B',  1);	// S4_MS0, S4_D3
 
 	_MAKE_MOTATE_PIN(46, B, 'B', 20);	// S4_MS1, S4_D4
+        _MAKE_MOTATE_SPI_CS_PIN(46, B, 1);
 
 	_MAKE_MOTATE_PIN(47, B, 'B', 19);	// S4_VREF, S4_A0
 	_MAKE_MOTATE_PWM_PIN(47, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
@@ -224,6 +227,7 @@ namespace Motate {
 	// Socket 6 (smart half ONLY)
 
 	_MAKE_MOTATE_PIN(60, B, 'B', 21);	// S6_SS, SPI0_CS2
+        _MAKE_MOTATE_SPI_CS_PIN(60, B, 2);
 
 	_MAKE_MOTATE_PIN(61, A, 'A', 16);	// S6_Interrupt
 

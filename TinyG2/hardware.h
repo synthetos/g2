@@ -97,7 +97,7 @@ timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
-pin_number indicator_led_pin_num = kLED_USBRXPinNumber;
+pin_number indicator_led_pin_num = kLED_USBTXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
 

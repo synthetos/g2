@@ -33,6 +33,7 @@
 
 // #include <chip.h>
 #include "sam.h"
+#include "SamCommon.h"
 
 namespace Motate {
 	// Numbering is arbitrary:
@@ -113,10 +114,6 @@ namespace Motate {
 			// stub
 			return 0;
 		};
-		
-		/* SAM specific: */
-		void enablePeripheralClock();
-		void disablePeripheralClock();
 	};
 
 	template<int8_t pinNum>
@@ -124,6 +121,7 @@ namespace Motate {
 		static const int8_t number = -1;
 		static const uint8_t portLetter = 0;
 		static const uint32_t mask = 0;
+
 		Pin() {};
 		Pin(const PinMode type, const PinOptions options = kNormal) {};
 		void operator=(const bool value) {};
@@ -236,12 +234,45 @@ namespace Motate {
 		};
 
 
+    template<int8_t pinNum>
+	struct SPIChipSelectPin : Pin<pinNum> {
+		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
+        
+        static const uint16_t moduleId = 0;
+        static const uint16_t csOffset = 0;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+    
+    #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
+        template<>\
+        struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
+            SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            static const uint16_t csOffset = csNum;\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            void init(const PinMode type, const PinOptions options = kNormal);\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+
+    
 	typedef const int8_t pin_number;
 	
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
 	
-	// (type == OutputOpendrain) ? PIO_OPENDRAIN : PIO_DEFAULT
-	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
+    #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> {\
 		private: /* Lock the copy contructor.*/\
@@ -250,7 +281,7 @@ namespace Motate {
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint32_t mask = (1u << registerPin);\
-			\
+            \
 			Pin() {};\
 			Pin(const PinMode type, const PinOptions options = kNormal) {\
 				init(type, options, /*fromConstructor=*/true);\
@@ -372,34 +403,8 @@ namespace Motate {
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\
-		struct Port32<registerChar> {\
+		struct Port32<registerChar> : SamCommon< Port32<registerChar> > {\
 			static const uint8_t letter = (uint8_t) registerChar;\
-			static void enablePeripheralClock() {\
-				if (pmcId() < 32) {\
-					uint32_t id_mask = 1u << ( pmcId() );\
-					if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
-						PMC->PMC_PCER0 = id_mask;\
-					}\
-				} else {\
-					uint32_t id_mask = 1u << ( pmcId() - 32 );\
-					if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {\
-						PMC->PMC_PCER1 = id_mask;\
-					}\
-				}\
-			};\
-			static void disablePeripheralClock() {\
-				if (pmcId() < 32) {\
-					uint32_t id_mask = 1u << ( pmcId() );\
-					if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
-						PMC->PMC_PCDR0 = id_mask;\
-					}\
-				} else {\
-					uint32_t id_mask = 1u << ( pmcId()-32 );\
-					if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {\
-						PMC->PMC_PCDR1 = id_mask;\
-					}\
-				}\
-			};\
 			void setModes(const uintPort_t value, const uintPort_t mask) {\
 				(*PIO ## registerLetter).PIO_ODR = ~value & mask ;\
 				(*PIO ## registerLetter).PIO_OER = value & mask ;\
@@ -472,7 +477,7 @@ namespace Motate {
 			Pio* portPtr() {\
 				return (PIO ## registerLetter);\
 			};\
-			static const uint32_t pmcId() {\
+			static const uint32_t peripheralId() {\
 				return ID_PIO ## registerLetter;\
 			};\
 		};\

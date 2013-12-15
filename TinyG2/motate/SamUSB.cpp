@@ -471,6 +471,7 @@ namespace Motate {
 	// Flush an endpoint after sending data.
 	void _flushEndpoint(uint8_t endpoint) {
 		_clearFIFOControl(endpoint);
+        _resetEndpointBuffer(endpoint);
 	}
 
 	// Send the data in a buffer to an endpoint.
@@ -482,7 +483,7 @@ namespace Motate {
 		// While we have more to send AND the buffer is available
 		while (length > 0 && _isFIFOControlAvailable(endpoint)) {
 			if (!_isReadWriteAllowed(endpoint)) {
-				_clearFIFOControl(endpoint);
+				_flushEndpoint(endpoint);
 				continue;
 			}
 
