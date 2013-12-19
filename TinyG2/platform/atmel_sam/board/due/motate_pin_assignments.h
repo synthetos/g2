@@ -206,8 +206,14 @@ namespace Motate {
 		_MAKE_MOTATE_PWM_PIN(73, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
 
 	_MAKE_MOTATE_PIN(74, A, 'A', 25);	// SPI-MISO (on ICSP header only)
-	_MAKE_MOTATE_PIN(75, A, 'A', 26);	// SPI-MOSI (on ICSP header only)
-	_MAKE_MOTATE_PIN(76, A, 'A', 27);	// SPI-SCK  (on ICSP header only)
+    _MAKE_MOTATE_SPI_OTHER_PIN(74, A);
+    
+    _MAKE_MOTATE_PIN(75, A, 'A', 26);	// SPI-MOSI (on ICSP header only)
+	_MAKE_MOTATE_SPI_OTHER_PIN(75, A);
+    
+    _MAKE_MOTATE_PIN(76, A, 'A', 27);	// SPI-SCK  (on ICSP header only)
+    _MAKE_MOTATE_SPI_OTHER_PIN(76, A);
+    
 	_MAKE_MOTATE_PIN(77, A, 'A', 28);	// SS0
         _MAKE_MOTATE_SPI_CS_PIN(77, A, 0);
 

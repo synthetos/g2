@@ -32,6 +32,8 @@
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
+#include "MotateSPI.h"
+
 //#include "Arduino.h"
 
 extern Motate::USBDevice< Motate::USBCDC > usb;

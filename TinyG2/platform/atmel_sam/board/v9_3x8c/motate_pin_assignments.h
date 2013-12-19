@@ -103,8 +103,13 @@ namespace Motate {
 	_MAKE_MOTATE_PWM_PIN( 3, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 
 	_MAKE_MOTATE_PIN( 4, A, 'A', 27);	// SPI-SCK
+    _MAKE_MOTATE_SPI_OTHER_PIN( 4, A);
+    
 	_MAKE_MOTATE_PIN( 5, A, 'A', 25);	// SPI-MISO
+    _MAKE_MOTATE_SPI_OTHER_PIN( 5, A);
+
 	_MAKE_MOTATE_PIN( 6, A, 'A', 26);	// SPI-MOSI
+    _MAKE_MOTATE_SPI_OTHER_PIN( 6, A);
 
 	_MAKE_MOTATE_PIN( 7, B, 'B', 15);	// ~Sync, DAC0
 	_MAKE_MOTATE_PWM_PIN( 7, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!

@@ -251,13 +251,46 @@ namespace Motate {
 		bool get();
 		operator bool();
 	};
-    
+
     #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
         template<>\
         struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
             SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
             static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
             static const uint16_t csOffset = csNum;\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            void init(const PinMode type, const PinOptions options = kNormal);\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+
+    
+    template<int8_t pinNum>
+	struct SPIOtherPin : Pin<pinNum> {
+		SPIOtherPin() : Pin<pinNum>(kOutput) {};
+        
+        static const uint16_t moduleId = 0;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+    
+    #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
+        template<>\
+        struct SPIOtherPin<pinNum> : Pin<pinNum> {\
+            SPIOtherPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
             /*Override these to pick up new methods */\
         private: /* Make these private to catch them early. */\
             /* These are intentially not defined. */\
