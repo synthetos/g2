@@ -155,7 +155,7 @@ namespace Motate {
             return true;
         }
         
-        static int16_t read(uint8_t toSendAsNoop = 0, const bool lastXfer = false) {
+        static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
             if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
                 if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
                     spi()->SPI_TDR = toSendAsNoop;
@@ -279,14 +279,15 @@ namespace Motate {
             return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
         };
         
-		int16_t read(const bool lastXfer = false) {
-            return hardware.read(lastXfer);
+		int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
+            return hardware.read(lastXfer, toSendAsNoop);
 		};
         
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
 		int16_t read(const uint8_t *buffer, const uint16_t length) {
 			if (!setChannel())
                 return -1;
+            
 
 			int16_t total_read = 0;
 			int16_t to_read = length;
@@ -297,7 +298,7 @@ namespace Motate {
 			// BLOCKING!!
 			while (to_read > 0) {
                 
-                if (to_write == 1)
+                if (to_read == 1)
                     lastXfer = true;
 
 				int16_t ret = read(lastXfer);
@@ -316,6 +317,10 @@ namespace Motate {
             return hardware.write(data, lastXfer);
 		};
         
+        int16_t write(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
+            return hardware.write(data, lastXfer);
+		};
+
         void flush() {
             hardware.disable();
             hardware.enable();
