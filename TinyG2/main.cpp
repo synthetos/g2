@@ -35,8 +35,6 @@
 #include "pwm.h"
 #include "xio.h"
 
-#include "MotateSPI.h"
-
 #include "MotateTimers.h"
 using Motate::delay;
 

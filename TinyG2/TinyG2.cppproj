@@ -388,6 +388,9 @@
     <Compile Include="motate\MotatePins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\MotateSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\MotateTimers.h">
       <SubType>compile</SubType>
     </Compile>
@@ -395,6 +398,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\MotateUSBCDC.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\SamSPI.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\SamTimers.cpp">
@@ -418,7 +424,13 @@
     <Compile Include="motate\utility\MotateUSBHelpers.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\utility\SamCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\utility\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\utility\SamSPI.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamTimers.h">
@@ -599,6 +611,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="motate\keywords.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\make_utilities.mk">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

@@ -77,51 +77,126 @@ namespace Motate {
     
     // This is an internal representation of the peripheral.
     // This is *not* to be used externally.
-	template<const uint8_t spiPeripheralNum>
-    struct _SPIHardware : SamCommon< _SPIHardware<spiPeripheralNum> > {
+	template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spSCKSPinNumber>
+    struct _SPIHardware {
+        // BITBANG HERE!
+    };
+    
+    template<>
+    struct _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> : SamCommon< _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> > {
+		static Spi * const spi() { return SPI0; };
+        static const uint32_t peripheralId() { return ID_SPI0; }; // ID_SPI0 .. ID_SPI1
+		static const IRQn_Type spiIRQ() { return SPI0_IRQn; };
         
-		static Spi * const spi();
-        static const uint32_t peripheralId(); // ID_SPI0 .. ID_SPI1
-		static const IRQn_Type spiIRQ();
+        static const uint8_t spiPeripheralNum=0;
         
-        typedef SamCommon< _SPIHardware<spiPeripheralNum> > common;
+        typedef _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> this_type_t;
+        typedef SamCommon< this_type_t > common;
 
-        // We'll create a static initilizer object for each SPI peripheral.
-        // Since there is only one, the init for each will only be called once.
-        struct _SPIHardwareInitializer {
-            typedef _SPIHardware<spiPeripheralNum> parent_t;
-            typedef parent_t::common common;
+        /* We have to play some tricks here, because templates and static members are tricky.
+         * See https://groups.google.com/forum/#!topic/comp.lang.c++.moderated/yun9X6OMiY4
+         *
+         * Basically, we want a guard to make sure we dont itinig the SPI0 IC modules every time
+         * we create a new SPI object for the individual chip selects.
+         *
+         * However, since we don't use the module *directly* in the code, other than to init it,
+         * the optimizer removes that object and it's init in it's entrety.
+         *
+         * The solution: Make sure each SPI<> object calls hardware.init(), and then use a static guard
+         * in init() to prevent re-running it.
+         */
+        
+        void init() {
+            static bool inited = false;
+            if (inited)
+                return;
+            inited = true;
+        
+            common::enablePeripheralClock();
+            disable();
             
-            // shortcut to spi() in the parent. The optimizer should make this free.
-            static Spi * const spi() { return parent_t::spi(); };
+            /* Execute a software reset of the SPI twice */
+            /* Why? Because ATMEL said!  -Rob*/
+            spi()->SPI_CR = SPI_CR_SWRST;
+            spi()->SPI_CR = SPI_CR_SWRST;
             
-            _SPIHardwareInitializer() {
-                common::enablePeripheralClock();
-                parent_t::disable();
-                
-                /* Execute a software reset of the SPI twice */
-                /* Why? Because ATMEL said!  -Rob*/
-                spi()->SPI_CR = SPI_CR_SWRST;
-                spi()->SPI_CR = SPI_CR_SWRST;
-                
-                // Set Mode Register to Master mode + Peripheral Select + Mode Fault Detection Disabled
-                spi()->SPI_MR = SPI_MR_MSTR | SPI_MR_PS | SPI_MR_MODFDIS;
-
-                parent_t::enable();
-            };
+            // Set Mode Register to Master mode + Mode Fault Detection Disabled
+            spi()->SPI_MR = SPI_MR_MSTR | SPI_MR_MODFDIS;
         };
         
-        static _SPIHardwareInitializer _hw_initializer; // <-- simply creating it will do the init.
-        
-        void enable() {
-            spi->SPI_CR = SPI_CR_SPIEN ;
+        _SPIHardware() :  SamCommon< this_type_t >() {
+//            init();
+        };
+
+        static void enable() {
+            spi()->SPI_CR = SPI_CR_SPIEN ;
         };
         
-        void disable () {
+        static void disable () {
             spi()->SPI_CR = SPI_CR_SPIDIS;
         };
         
-        uint16_t transmit(uint8_t channel, const uint16_t data, const bool lastXfer = false) {
+        bool setChannel(const uint8_t channel) {
+            // if we are transmitting, we cannot switch
+            while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
+                ;
+            }
+            
+            uint8_t channel_setting;
+            
+            if (!(spi()->SPI_MR & SPI_MR_PCSDEC)) {
+                channel_setting = ~(1 << channel);
+            } else {
+                channel_setting = ~channel; // <- Is this right? -Rob
+            }
+            
+            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_setting);
+            
+            return true;
+        }
+        
+        static int16_t read(uint8_t toSendAsNoop = 0, const bool lastXfer = false) {
+            if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
+                if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
+                    spi()->SPI_TDR = toSendAsNoop;
+                    if (lastXfer) {
+                        spi()->SPI_CR = SPI_CR_LASTXFER;
+                    }
+                }
+                return -1;
+            }
+            
+            return spi()->SPI_RDR;
+        }
+        
+        static int16_t write(uint8_t value, const bool lastXfer = false) {
+            int16_t throw_away;
+            // Let's see what the optimizer does with this...
+            return write(value, throw_away, lastXfer);
+        };
+        
+        static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
+            if (spi()->SPI_SR & SPI_SR_RDRF) {
+                readValue = spi()->SPI_RDR;
+            } else {
+                readValue = -1;
+            }
+            
+            if (spi()->SPI_SR & SPI_SR_TDRE) {
+
+                spi()->SPI_TDR = value;
+
+                if (lastXfer) {
+                    spi()->SPI_CR = SPI_CR_LASTXFER;
+                }
+
+                return 1;
+            }
+            
+            return -1;
+        };
+        
+        int16_t transmit(uint8_t channel, const uint16_t data, const bool lastXfer = false) {
             uint32_t data_with_flags = data;
             
             if (lastXfer)
@@ -130,11 +205,11 @@ namespace Motate {
             // NOTE: Assumes we DON'T have an external decoder/multiplexer!
             data_with_flags |= SPI_TDR_PCS(~(1<< channel));
             
-            while ((spi()->SPI_SR & SPI_SR_TDRE) == 0)
+            while (!(spi()->SPI_SR & SPI_SR_TDRE))
                 ;
             spi()->SPI_TDR = data_with_flags;
             
-            while ((spi()->SPI_SR & SPI_SR_RDRF) == 0)
+            while (!(spi()->SPI_SR & SPI_SR_RDRF))
                 ;
             
             uint16_t outdata = spi()->SPI_RDR;
@@ -142,16 +217,16 @@ namespace Motate {
         };
     };
     
-	template<pin_number spiCSPinNumber, pin_number spiMISOPinNumber=kSPI_MISOPinNumber, pin_number spiMOSIPinNumber=kSPI_MOSIPinNumber, pin_number spSCKSPinNumber=kSPI_SCKPinNumber>
+	template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=kSPI_MISOPinNumber, int8_t spiMOSIPinNumber=kSPI_MOSIPinNumber, int8_t spiSCKSPinNumber=kSPI_SCKPinNumber>
 	struct SPI {
         typedef SPIChipSelectPin<spiCSPinNumber> csPinType;
-        static const csPinType csPin;
+        csPinType csPin;
         
-        static const SPIOtherPin<spiMISOPinNumber> misoPin;
-        static const SPIOtherPin<spiMOSIPinNumber> mosiPin;
-        static const SPIOtherPin<spSCKSPinNumber> sckPin;
+        SPIOtherPin<spiMISOPinNumber> misoPin;
+        SPIOtherPin<spiMOSIPinNumber> mosiPin;
+        SPIOtherPin<spiSCKSPinNumber> sckPin;
         
-        static _SPIHardware< csPinType::moduleId > hardware;
+        static _SPIHardware< csPinType::moduleId, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber > hardware;
         static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
         static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
         
@@ -162,7 +237,14 @@ namespace Motate {
         typedef SamCommon< SPI<spiCSPinNumber> > common;
         
         SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
+            hardware.init();
             init(baud, options, /*fromConstructor =*/ true);
+
+            /* TEMP HACK !! */
+//            csPin.setMode(kPeripheralA);
+//            misoPin.setMode(kPeripheralA);
+//            mosiPin.setMode(kPeripheralA);
+//            sckPin.setMode(kPeripheralA);
         };
         
         void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -183,6 +265,14 @@ namespace Motate {
             // SPI_CSR_DLYBCT(1) keeps CS enabled for 32 MCLK after a completed
             // transfer. Some device needs that for working properly.
             spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
+            
+            // Should be a non-op for already-enabled devices.
+            hardware.enable();
+
+        };
+        
+        bool setChannel() {
+            return hardware.setChannel(spiChannelNumber());
         };
         
         uint16_t getOptions() {
@@ -190,28 +280,40 @@ namespace Motate {
         };
         
 		int16_t read(const bool lastXfer = false) {
-            return hardware.transmit(spiChannelNumber(), 0, lastXfer);
+            return hardware.read(lastXfer);
 		};
         
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-		uint16_t read(const uint8_t *buffer, const uint16_t length) {
+		int16_t read(const uint8_t *buffer, const uint16_t length) {
+			if (!setChannel())
+                return -1;
+
 			int16_t total_read = 0;
 			int16_t to_read = length;
 			const uint8_t *read_ptr = buffer;
-            
+
+            bool lastXfer = false;
+
 			// BLOCKING!!
 			while (to_read > 0) {
-				*read_ptr++ = read();
                 
-				total_read++;
-				to_read--;
+                if (to_write == 1)
+                    lastXfer = true;
+
+				int16_t ret = read(lastXfer);
+                
+                if (ret >= 0) {
+                    *read_ptr++ = ret;
+                    total_read++;
+                    to_read--;
+                }
 			};
             
 			return total_read;
 		};
         
         int16_t write(uint16_t data, const bool lastXfer = false) {
-            return hardware.transmit(spiChannelNumber(), data, lastXfer);
+            return hardware.write(data, lastXfer);
 		};
         
         void flush() {
@@ -220,21 +322,28 @@ namespace Motate {
         };
         
         // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-		int32_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
-			int16_t total_written = 0;
+		int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
+			if (!setChannel())
+                return -1;
+            
+            int16_t total_written = 0;
 			const uint8_t *out_buffer = data;
 			int16_t to_write = length;
+            
             bool lastXfer = false;
             
 			// BLOCKING!!
 			do {
-                if (to_write == 1)
+                if (autoFlush && to_write == 1)
                     lastXfer = true;
                 
-                uint16_t ignored = write(*out_buffer++, lastXfer);
+                int16_t ret = write(*out_buffer, lastXfer);
 				
-                total_written++;
-				to_write--;
+                if (ret > 0) {
+                    out_buffer++;
+                    total_written++;
+                    to_write--;
+                }
 			} while (to_write);
             
 //			// HACK! Autoflush forced...

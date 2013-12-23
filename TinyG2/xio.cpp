@@ -82,8 +82,9 @@ stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 size_t write(uint8_t *buffer, size_t size)
 {
 //	SerialUSB.write(buffer, sizeof(buffer));
-	SerialUSB.write(buffer, size);
-	return (size);
+	size_t written = SerialUSB.write(buffer, size);
+	spi.write(buffer, size);
+	return (written);
 }
 
 /*

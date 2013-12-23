@@ -33,9 +33,9 @@
 #include "utility/SamSPI.h"
 
 namespace Motate {
-	template<> Spi * const     _SPIHardware<0>::spi()          { return SPI0; };
-    template<> const uint32_t  _SPIHardware<0>::peripheralId() { return ID_SPI0; };
-    template<> const IRQn_Type _SPIHardware<0>::spiIRQ()       { return SPI0_IRQn; };
+//	template<> Spi * const     _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spi()          { return SPI0; };
+//    template<> const uint32_t  _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::peripheralId() { return ID_SPI0; };
+//    template<> const IRQn_Type _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spiIRQ()       { return SPI0_IRQn; };
 }
 
 #endif

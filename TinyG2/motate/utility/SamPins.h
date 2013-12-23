@@ -173,133 +173,6 @@ namespace Motate {
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
-
-	static const uint32_t kDefaultPWMFrequency = 1000;
-	template<int8_t pinNum>
-	struct PWMOutputPin : Pin<pinNum> {
-		PWMOutputPin() : Pin<pinNum>(kOutput) {};
-		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
-		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
-		void setFrequency(const uint32_t freq) {};
-		void operator=(const float value) { write(value); };
-		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
-		bool canPWM() { return false; };
-
-		/*Override these to pick up new methods */
-
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
-
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
-	};
-
-	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
-		template<>\
-		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
-			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
-			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
-				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
-				{pwmpin_init(options);};\
-			PWMOutputPin(const uint32_t freq) :\
-				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
-				{pwmpin_init(kNormal);};\
-			void pwmpin_init(const PinOptions options) {\
-				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
-				timerOrPWM::start();\
-			};\
-			void setFrequency(const uint32_t freq) {\
-				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
-				timerOrPWM::start();\
-			};\
-			void operator=(const float value) { write(value); };\
-			void write(const float value) {\
-				uint16_t duty = getTopValue() * value;\
-				if (duty < 2)\
-					stopPWMOutput ## channelAorB ();\
-				else\
-					startPWMOutput ## channelAorB ();\
-				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
-			};\
-			bool canPWM() { return true; };\
-			/*Override these to pick up new methods */\
-		private: /* Make these private to catch them early. */\
-			/* These are intentially not defined. */\
-			void init(const PinMode type, const PinOptions options = kNormal);\
-			/* WARNING: Covariant return types! */\
-			bool get();\
-			operator bool();\
-		};
-
-
-    template<int8_t pinNum>
-	struct SPIChipSelectPin : Pin<pinNum> {
-		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
-        
-        static const uint16_t moduleId = 0;
-        static const uint16_t csOffset = 0;
-        
-		/*Override these to pick up new methods */
-        
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
-        
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
-	};
-
-    #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
-        template<>\
-        struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
-            SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
-            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
-            static const uint16_t csOffset = csNum;\
-            /*Override these to pick up new methods */\
-        private: /* Make these private to catch them early. */\
-            /* These are intentially not defined. */\
-            void init(const PinMode type, const PinOptions options = kNormal);\
-            /* WARNING: Covariant return types! */\
-            bool get();\
-            operator bool();\
-        };
-
-    
-    template<int8_t pinNum>
-	struct SPIOtherPin : Pin<pinNum> {
-		SPIOtherPin() : Pin<pinNum>(kOutput) {};
-        
-        static const uint16_t moduleId = 0;
-        
-		/*Override these to pick up new methods */
-        
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
-        
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
-	};
-
-    
-    #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
-        template<>\
-        struct SPIOtherPin<pinNum> : Pin<pinNum> {\
-            SPIOtherPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
-            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
-            /*Override these to pick up new methods */\
-        private: /* Make these private to catch them early. */\
-            /* These are intentially not defined. */\
-            void init(const PinMode type, const PinOptions options = kNormal);\
-            /* WARNING: Covariant return types! */\
-            bool get();\
-            operator bool();\
-        };
-
     
 	typedef const int8_t pin_number;
 	
@@ -433,6 +306,136 @@ namespace Motate {
 		typedef Pin<pinNum> Pin ## pinNum;\
 		static Pin ## pinNum pin ## pinNum;
 
+    
+
+	static const uint32_t kDefaultPWMFrequency = 1000;
+	template<int8_t pinNum>
+	struct PWMOutputPin : Pin<pinNum> {
+		PWMOutputPin() : Pin<pinNum>(kOutput) {};
+		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
+		void setFrequency(const uint32_t freq) {};
+		void operator=(const float value) { write(value); };
+		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+		bool canPWM() { return false; };
+
+		/*Override these to pick up new methods */
+
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
+		template<>\
+		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
+			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
+			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+				{pwmpin_init(options);};\
+			PWMOutputPin(const uint32_t freq) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+				{pwmpin_init(kNormal);};\
+			void pwmpin_init(const PinOptions options) {\
+				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
+				timerOrPWM::start();\
+			};\
+			void setFrequency(const uint32_t freq) {\
+				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+				timerOrPWM::start();\
+			};\
+			void operator=(const float value) { write(value); };\
+			void write(const float value) {\
+				uint16_t duty = getTopValue() * value;\
+				if (duty < 2)\
+					stopPWMOutput ## channelAorB ();\
+				else\
+					startPWMOutput ## channelAorB ();\
+				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
+			};\
+			bool canPWM() { return true; };\
+			/*Override these to pick up new methods */\
+		private: /* Make these private to catch them early. */\
+			/* These are intentially not defined. */\
+			void init(const PinMode type, const PinOptions options = kNormal);\
+			/* WARNING: Covariant return types! */\
+			bool get();\
+			operator bool();\
+		};
+
+
+    template<int8_t pinNum>
+	struct SPIChipSelectPin {
+		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
+        
+//        static const uint8_t moduleId = 255;
+//        static const uint8_t csOffset = 0;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+//		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+    #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
+        template<>\
+        struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
+            SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            static const uint8_t csOffset = csNum;\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+
+    
+    template<int8_t pinNum>
+	struct SPIOtherPin {
+		SPIOtherPin() : Pin<pinNum>(kOutput) {};
+        
+//        static const uint16_t moduleId = 255;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+//		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+    
+    #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
+        template<>\
+        struct SPIOtherPin<pinNum> : Pin<pinNum> {\
+            SPIOtherPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+    
+    
+    
+    
+    
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\
