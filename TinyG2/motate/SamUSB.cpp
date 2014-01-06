@@ -124,6 +124,7 @@ namespace Motate {
 
 		return config;
 	};
+    
 
 	inline void _setEndpointConfiguration(const uint8_t endpoint, uint32_t configuration) {
 		UOTGHS->UOTGHS_DEVEPTCFG[endpoint] = configuration;

@@ -367,7 +367,7 @@ namespace Motate {
 					if (1200 == _line_info.dwDTERate)
 					{
 						// We check DTR state to determine if host port is open (bit 0 of lineState).
-						if ((getDTR()) == false)
+						if (!getDTR())
 							initiateReset(250);
 						else
 							 cancelReset();

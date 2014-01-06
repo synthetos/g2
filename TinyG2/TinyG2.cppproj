@@ -15,7 +15,7 @@
     <AssemblyName>HW</AssemblyName>
     <Name>HW</Name>
     <RootNamespace>HW</RootNamespace>
-    <ToolchainFlavour>Yagarto</ToolchainFlavour>
+    <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <OverrideVtorValue>exception_table</OverrideVtorValue>

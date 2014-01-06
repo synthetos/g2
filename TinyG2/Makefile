@@ -148,9 +148,6 @@ ifeq ("$(PLATFORM)","due")
 	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
     CMSIS_ROOT = CMSIS
-#    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
-#    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
-#                           $(PLATFORM_BASE)/libsam/include
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
 	
@@ -170,7 +167,6 @@ ifeq ("$(PLATFORM)","v9_3x8c")
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/v9_3x8c
 
 	include $(PLATFORM_BASE).mk
-
 
 else
 
@@ -216,27 +212,25 @@ MKDIR   ?= mkdir
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-CFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99
+CFLAGS +=  $(DEVICE_CFLAGS)
 
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-CPPFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions
+CPPFLAGS +=  $(DEVICE_CPPFLAGS)
 
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
 
-ASFLAGS =
+ASFLAGS = $(DEVICE_ASFLAGS)
 
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
-LDFLAGS += -nostartfiles -mcpu=cortex-m3
-#LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
+LDFLAGS += $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
 
 
 #-------------------------------------------------------------------------------
