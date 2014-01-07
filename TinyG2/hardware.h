@@ -34,8 +34,8 @@
 /////// ARM VERSION ////////
 ////////////////////////////
 
-#include "motatePins.h"
-#include "motateTimers.h" // for timer_number
+#include "MotatePins.h"
+#include "MotateTimers.h" // for timer_number
 
 using namespace Motate;
 
