@@ -28,7 +28,7 @@ PROJECT  = TinyG2
 SOURCE_DIRS = . motate
 # arduino arduino/USB variants
 
-FIRST_LINK_SOURCES := 
+FIRST_LINK_SOURCES :=
 
 # List all user directories here
 USER_INCLUDE_DIRS := $(SOURCE_DIRS)
@@ -143,7 +143,7 @@ DEPDIR = $(OBJ)/dep
 PLATFORM ?= due
 
 ifeq ("$(PLATFORM)","due")
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
@@ -158,7 +158,7 @@ ifeq ("$(PLATFORM)","due")
 else
 
 ifeq ("$(PLATFORM)","v9_3x8c")
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8C
 	PLATFORM_BASE = platform/atmel_sam
@@ -230,7 +230,7 @@ ASFLAGS = $(DEVICE_ASFLAGS)
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
 
 
 #-------------------------------------------------------------------------------

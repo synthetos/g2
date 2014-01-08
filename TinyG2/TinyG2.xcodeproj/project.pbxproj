@@ -15,6 +15,7 @@
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
 		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
 		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
+		D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43CAF9C187BABDB0042B58F /* SamPins.cpp */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
 		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
 		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
@@ -413,6 +414,7 @@
 		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
 		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
 		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
+		D43CAF9C187BABDB0042B58F /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
 		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
 		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
 		D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
@@ -3312,6 +3314,7 @@
 				D41FC0621826F21C003D66C2 /* MotateSPI.h */,
 				D45710C91705334000EA19A8 /* MotateTimers.h */,
 				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
+				D43CAF9C187BABDB0042B58F /* SamPins.cpp */,
 				D4021F9A175DA4610099576C /* SamUSB.cpp */,
 				D478FB85185D7FD1004E35D2 /* SamSPI.cpp */,
 				D45710D51705334100EA19A8 /* utility */,
@@ -7821,6 +7824,7 @@
 				D49EC53017054FDF00F2BF9B /* arm_mat_init_f32.c in Sources */,
 				D49EC53117054FDF00F2BF9B /* arm_mat_init_q15.c in Sources */,
 				D49EC53217054FDF00F2BF9B /* arm_mat_init_q31.c in Sources */,
+				D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */,
 				D49EC53317054FDF00F2BF9B /* arm_mat_inverse_f32.c in Sources */,
 				D49EC53417054FDF00F2BF9B /* arm_mat_mult_f32.c in Sources */,
 				D49EC53517054FDF00F2BF9B /* arm_mat_mult_fast_q15.c in Sources */,
@@ -7954,7 +7958,7 @@
 		D45710C41705330D00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Debug;
@@ -7962,7 +7966,7 @@
 		D45710C51705330D00EA19A8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Release;
@@ -8047,7 +8051,7 @@
 		D4C12816180D9560002A898C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
 			};
 			name = Debug;
@@ -8055,7 +8059,7 @@
 		D4C12817180D9560002A898C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
 			};
 			name = Release;

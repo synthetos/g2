@@ -68,8 +68,36 @@ namespace Motate {
 		// For use on PWM pins only!
 		kPWMPinInverted    = 1<<7,
 	};
+    
+    enum PinInterruptOptions {
+        kPinInterruptsOff                = 0,
+        
+        kPinInterruptOnChange            = 1,
+        
+        kPinInterruptOnRisingEdge        = 1<<1,
+        kPinInterruptOnFallingEdge       = 2<<1,
+        
+        kPinInterruptOnLowLevel          = 3<<1,
+        kPinInterruptOnHighLevel         = 4<<1,
+
+        kPinInterruptAdvancedMask        = ((1<<3)-1)<<1,
+
+        /* This turns the IRQ on, but doesn't set the timer to ever trigger it. */
+		kPinInterruptOnSoftwareTrigger   = 1<<4,
+
+        kPinInterruptTypeMask            = (1<<5)-1,
+        
+		/* Set priority levels here as well: */
+		kPinInterruptPriorityHighest     = 1<<5,
+		kPinInterruptPriorityHigh        = 1<<6,
+		kPinInterruptPriorityMedium      = 1<<7,
+		kPinInterruptPriorityLow         = 1<<8,
+		kPinInterruptPriorityLowest      = 1<<9,
+    };
 	
 	typedef uint32_t uintPort_t;
+    
+	typedef const int8_t pin_number;
 
 	template <unsigned char portLetter>
 	struct Port32 {
@@ -141,8 +169,15 @@ namespace Motate {
 		uint8_t getOutputValue() { return 0; };
 		static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
 		bool isNull() { return true; };
+        
+        /* Placeholder for user code. */\
+        static void interrupt() __attribute__ ((weak));\
 	};
 
+    template<uint8_t portChar, uint8_t portPin>
+	struct ReversePinLookup : Pin<-1> {
+    };
+    
 	template<int8_t pinNum>
 	struct InputPin : Pin<pinNum> {
 		InputPin() : Pin<pinNum>(kInput) {};
@@ -173,8 +208,6 @@ namespace Motate {
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
-    
-	typedef const int8_t pin_number;
 	
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
 	
@@ -298,13 +331,22 @@ namespace Motate {
 			uint8_t getOutputValue() {\
 				return (*PIO ## registerLetter).PIO_OSR & mask;\
 			};\
+            void setInterrupts(const uint32_t interrupts) {\
+                port ## registerLetter.setInterrupts(interrupts, mask);\
+            };\
 			bool isNull() { return false; };\
 			static uint32_t maskForPort(const uint8_t otherPortLetter) {\
 				return portLetter == otherPortLetter ? mask : 0x00u;\
 			};\
+            /* Placeholder for user code. */\
+            static void interrupt() __attribute__ ((weak));\
 		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
-		static Pin ## pinNum pin ## pinNum;
+		static Pin ## pinNum pin ## pinNum;\
+        template<>\
+        struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
+        };
+
 
     
 
@@ -516,14 +558,78 @@ namespace Motate {
 			static const uint32_t peripheralId() {\
 				return ID_PIO ## registerLetter;\
 			};\
+            void setInterrupts(const uint32_t interrupts, const uintPort_t mask) {\
+                if (interrupts != kPinInterruptsOff) {\
+                    (*PIO ## registerLetter).PIO_IDR = mask;\
+                    \
+                    /*Is it an "advanced" interrupt?*/\
+                    if (interrupts & kPinInterruptAdvancedMask) {\
+                        (*PIO ## registerLetter).PIO_AIMER = mask;\
+                        /*Is it an edge interrupt?*/\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnRisingEdge ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnFallingEdge) {\
+                            (*PIO ## registerLetter).PIO_ESR = mask;\
+                        }\
+                        else\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnLowLevel) {\
+                            (*PIO ## registerLetter).PIO_LSR = mask;\
+                        }\
+                        /*Rising Edge/High Level, or Falling Edge/LowLevel?*/\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnRisingEdge ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel) {\
+                            (*PIO ## registerLetter).PIO_REHLSR = mask;\
+                        }\
+                        else\
+                        {\
+                            (*PIO ## registerLetter).PIO_FELLSR = mask;\
+                        }\
+                    }\
+                    else\
+                    {\
+                        (*PIO ## registerLetter).PIO_AIMDR = mask;\
+                    }\
+                    \
+                    /* Set interrupt priority */\
+                    if (interrupts & kPinInterruptPriorityHighest) {\
+                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 0);\
+                    }\
+                    else if (interrupts & kPinInterruptPriorityHigh) {\
+                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 3);\
+                    }\
+                    else if (interrupts & kPinInterruptPriorityMedium) {\
+                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 7);\
+                    }\
+                    else if (interrupts & kPinInterruptPriorityLow) {\
+                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 11);\
+                    }\
+                    else if (interrupts & kPinInterruptPriorityLowest) {\
+                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 15);\
+                    }\
+                    /* Enable the IRQ */\
+                    NVIC_EnableIRQ(PIO ## registerLetter ## _IRQn);\
+                    /* Enable the interrupt */\
+                    (*PIO ## registerLetter).PIO_IER = mask;\
+                } else {\
+                    (*PIO ## registerLetter).PIO_IDR = mask;\
+                    if ((*PIO ## registerLetter).PIO_ISR == 0)\
+                        NVIC_DisableIRQ(PIO ## registerLetter ## _IRQn);\
+                }\
+            };\
 		};\
 		typedef Port32<registerChar> Port ## registerLetter;\
 		static Port ## registerLetter port ## registerLetter;
 
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
-
+    
 } // end namespace Motate
+
+
+#define MOTATE_PIN_INTERRUPT(number) \
+    Pin<number>::interrupt_defined = true;\
+    template<> void Pin<number>::interrupt()
+
 
 // Note: We end the namespace before including in case the included file need to include
 //   another Motate file. If it does include another Motate file, we end up with

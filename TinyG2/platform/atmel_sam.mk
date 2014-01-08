@@ -112,7 +112,7 @@ DEVICE_CPPFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=corte
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-DEVICE_LDFLAGS := -nostartfiles -mcpu=cortex-m3 --specs=nano.specs  -u _printf_float
+DEVICE_LDFLAGS := -nostartfiles -mcpu=cortex-m3 --specs=nano.specs  -u _printf_float  -mthumb 
 
 DEVICE_ASFLAGS  := -D__$(CHIP)__ -mcpu=cortex-m3 -mthumb
 
