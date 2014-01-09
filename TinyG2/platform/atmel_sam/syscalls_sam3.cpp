@@ -116,7 +116,9 @@ extern int _read(int file, char *ptr, int len)
 
 extern int _write( int file, char *ptr, int len )
 {
-	return SerialUSB.write((const uint8_t *)ptr, len);
+	size_t written = SerialUSB.write((const uint8_t *)ptr, len);
+	spi.write((const uint8_t *)ptr, len);
+	return written;
 
 /*
     int iIndex ;

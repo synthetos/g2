@@ -5,7 +5,7 @@
     <ProjectVersion>6.1</ProjectVersion>
     <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
     <ProjectGuid>{44ea8fec-55d7-4149-8a78-a574fc26bf51}</ProjectGuid>
-    <avrdevice>ATSAM3X8E</avrdevice>
+    <avrdevice>ATSAM3X8C</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
     <Language>CPP</Language>
@@ -15,7 +15,7 @@
     <AssemblyName>HW</AssemblyName>
     <Name>HW</Name>
     <RootNamespace>HW</RootNamespace>
-    <ToolchainFlavour>Yagarto</ToolchainFlavour>
+    <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <OverrideVtorValue>exception_table</OverrideVtorValue>
@@ -388,6 +388,9 @@
     <Compile Include="motate\MotatePins.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\MotateSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\MotateTimers.h">
       <SubType>compile</SubType>
     </Compile>
@@ -395,6 +398,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\MotateUSBCDC.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\SamSPI.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\SamTimers.cpp">
@@ -418,7 +424,13 @@
     <Compile Include="motate\utility\MotateUSBHelpers.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motate\utility\SamCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motate\utility\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motate\utility\SamSPI.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motate\utility\SamTimers.h">
@@ -599,6 +611,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="motate\keywords.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\make_utilities.mk">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

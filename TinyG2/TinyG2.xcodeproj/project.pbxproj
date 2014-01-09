@@ -14,15 +14,14 @@
 		D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */; };
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
 		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
-		D432963A171A5564001611B6 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4329639171A5564001611B6 /* syscalls_sam3.cpp */; };
+		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
+		D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43CAF9C187BABDB0042B58F /* SamPins.cpp */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
 		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
 		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
 		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; };
-		D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111D1705334100EA19A8 /* pins_arduino.h */; };
-		D457117517053C3A00EA19A8 /* variant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D457111E1705334100EA19A8 /* variant.cpp */; };
-		D457117617053C3A00EA19A8 /* variant.h in Sources */ = {isa = PBXBuildFile; fileRef = D457111F1705334100EA19A8 /* variant.h */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D478FB87185D7FD1004E35D2 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D478FB85185D7FD1004E35D2 /* SamSPI.cpp */; };
 		D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */; };
 		D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A41172CB1F900D0E055 /* config_app.cpp */; };
 		D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A42172CB1F900D0E055 /* config.cpp */; };
@@ -45,21 +44,6 @@
 		D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A54172CB1FA00D0E055 /* util.cpp */; };
 		D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A55172CB1FA00D0E055 /* xio.cpp */; };
 		D48F5A82172CE34A00D0E055 /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2F217054FDE00F2BF9B /* startup_sam3xa.c */; };
-		D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85917054CB800F2BF9B /* cortex_handlers.c */; };
-		D49EB89117054CB800F2BF9B /* cxxabi-compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */; };
-		D49EB89217054CB800F2BF9B /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB85C17054CB800F2BF9B /* hooks.c */; };
-		D49EB89717054CB800F2BF9B /* Print.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86317054CB800F2BF9B /* Print.cpp */; };
-		D49EB89817054CB800F2BF9B /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86617054CB800F2BF9B /* Reset.cpp */; };
-		D49EB89917054CB800F2BF9B /* RingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86817054CB800F2BF9B /* RingBuffer.cpp */; };
-		D49EB89A17054CB800F2BF9B /* Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB86B17054CB800F2BF9B /* Stream.cpp */; };
-		D49EB89C17054CB800F2BF9B /* UARTClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87117054CB800F2BF9B /* UARTClass.cpp */; };
-		D49EB89D17054CB800F2BF9B /* USARTClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87417054CB800F2BF9B /* USARTClass.cpp */; };
-		D49EB89E17054CB800F2BF9B /* CDC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87717054CB800F2BF9B /* CDC.cpp */; };
-		D49EB89F17054CB800F2BF9B /* HID.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87817054CB800F2BF9B /* HID.cpp */; };
-		D49EB8A017054CB800F2BF9B /* USBCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49EB87A17054CB800F2BF9B /* USBCore.cpp */; };
-		D49EB8A217054CB800F2BF9B /* wiring.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88017054CB800F2BF9B /* wiring.c */; };
-		D49EB8A317054CB800F2BF9B /* wiring_analog.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88217054CB800F2BF9B /* wiring_analog.c */; };
-		D49EB8A417054CB800F2BF9B /* wiring_digital.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EB88517054CB800F2BF9B /* wiring_digital.c */; };
 		D49EC49117054FDF00F2BF9B /* arm_abs_f32.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCFE17054FDC00F2BF9B /* arm_abs_f32.c */; };
 		D49EC49217054FDF00F2BF9B /* arm_abs_q15.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBCFF17054FDC00F2BF9B /* arm_abs_q15.c */; };
 		D49EC49317054FDF00F2BF9B /* arm_abs_q31.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EBD0017054FDC00F2BF9B /* arm_abs_q31.c */; };
@@ -312,25 +296,6 @@
 		D49EC58A17054FDF00F2BF9B /* libarm_cortexM3l_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1B17054FDC00F2BF9B /* libarm_cortexM3l_math.a */; };
 		D49EC58B17054FDF00F2BF9B /* libarm_cortexM4l_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1C17054FDC00F2BF9B /* libarm_cortexM4l_math.a */; };
 		D49EC58C17054FDF00F2BF9B /* libarm_cortexM4lf_math.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D49EBE1D17054FDC00F2BF9B /* libarm_cortexM4lf_math.a */; };
-		D49EC5C017054FDF00F2BF9B /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D49EC40117054FDF00F2BF9B /* Makefile */; };
-		D49EC5C117054FDF00F2BF9B /* adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42117054FDF00F2BF9B /* adc.c */; };
-		D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */; };
-		D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */; };
-		D49EC5C517054FDF00F2BF9B /* pio.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42517054FDF00F2BF9B /* pio.c */; };
-		D49EC5C617054FDF00F2BF9B /* pmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42617054FDF00F2BF9B /* pmc.c */; };
-		D49EC5C717054FDF00F2BF9B /* pwmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42717054FDF00F2BF9B /* pwmc.c */; };
-		D49EC5C817054FDF00F2BF9B /* rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42817054FDF00F2BF9B /* rtc.c */; };
-		D49EC5C917054FDF00F2BF9B /* rtt.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42917054FDF00F2BF9B /* rtt.c */; };
-		D49EC5CA17054FDF00F2BF9B /* spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42A17054FDF00F2BF9B /* spi.c */; };
-		D49EC5CB17054FDF00F2BF9B /* tc.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42B17054FDF00F2BF9B /* tc.c */; };
-		D49EC5CC17054FDF00F2BF9B /* timetick.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42C17054FDF00F2BF9B /* timetick.c */; };
-		D49EC5CE17054FDF00F2BF9B /* udp.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42E17054FDF00F2BF9B /* udp.c */; };
-		D49EC5CF17054FDF00F2BF9B /* udphs.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC42F17054FDF00F2BF9B /* udphs.c */; };
-		D49EC5D017054FDF00F2BF9B /* uotghs.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43017054FDF00F2BF9B /* uotghs.c */; };
-		D49EC5D117054FDF00F2BF9B /* uotghs_device.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43117054FDF00F2BF9B /* uotghs_device.c */; };
-		D49EC5D217054FDF00F2BF9B /* uotghs_host.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43217054FDF00F2BF9B /* uotghs_host.c */; };
-		D49EC5D317054FDF00F2BF9B /* usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43317054FDF00F2BF9B /* usart.c */; };
-		D49EC5D417054FDF00F2BF9B /* wdt.c in Sources */ = {isa = PBXBuildFile; fileRef = D49EC43417054FDF00F2BF9B /* wdt.c */; };
 		D49EC5DF170676AF00F2BF9B /* sam.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5317054FDC00F2BF9B /* sam.h */; };
 		D49EC5E0170676B500F2BF9B /* sam3.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE5417054FDC00F2BF9B /* sam3.h */; };
 		D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EBE0617054FDC00F2BF9B /* arm_common_tables.h */; };
@@ -449,7 +414,7 @@
 		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
 		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
 		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
-		D4329639171A5564001611B6 /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
+		D43CAF9C187BABDB0042B58F /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
 		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
 		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
 		D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
@@ -459,10 +424,9 @@
 		D45710D61705334100EA19A8 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
 		D45710D71705334100EA19A8 /* AvrXPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrXPins.h; sourceTree = "<group>"; };
 		D45710D81705334100EA19A8 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
-		D457111D1705334100EA19A8 /* pins_arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pins_arduino.h; sourceTree = "<group>"; };
-		D457111E1705334100EA19A8 /* variant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant.cpp; sourceTree = "<group>"; };
-		D457111F1705334100EA19A8 /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D478FB84185D7C86004E35D2 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamCommon.h; sourceTree = "<group>"; };
+		D478FB85185D7FD1004E35D2 /* SamSPI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamSPI.cpp; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canonical_machine.cpp; sourceTree = "<group>"; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config_app.cpp; sourceTree = "<group>"; };
 		D48F5A42172CB1F900D0E055 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
@@ -506,51 +470,6 @@
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
 		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
-		D49EB85617054CB800F2BF9B /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
-		D49EB85717054CB800F2BF9B /* binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binary.h; sourceTree = "<group>"; };
-		D49EB85817054CB800F2BF9B /* Client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Client.h; sourceTree = "<group>"; };
-		D49EB85917054CB800F2BF9B /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
-		D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "cxxabi-compat.cpp"; sourceTree = "<group>"; };
-		D49EB85B17054CB800F2BF9B /* HardwareSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HardwareSerial.h; sourceTree = "<group>"; };
-		D49EB85C17054CB800F2BF9B /* hooks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hooks.c; sourceTree = "<group>"; };
-		D49EB86117054CB800F2BF9B /* itoa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = itoa.h; sourceTree = "<group>"; };
-		D49EB86317054CB800F2BF9B /* Print.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Print.cpp; sourceTree = "<group>"; };
-		D49EB86417054CB800F2BF9B /* Print.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Print.h; sourceTree = "<group>"; };
-		D49EB86517054CB800F2BF9B /* Printable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Printable.h; sourceTree = "<group>"; };
-		D49EB86617054CB800F2BF9B /* Reset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Reset.cpp; sourceTree = "<group>"; };
-		D49EB86717054CB800F2BF9B /* Reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reset.h; sourceTree = "<group>"; };
-		D49EB86817054CB800F2BF9B /* RingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RingBuffer.cpp; sourceTree = "<group>"; };
-		D49EB86917054CB800F2BF9B /* RingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RingBuffer.h; sourceTree = "<group>"; };
-		D49EB86A17054CB800F2BF9B /* Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Server.h; sourceTree = "<group>"; };
-		D49EB86B17054CB800F2BF9B /* Stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stream.cpp; sourceTree = "<group>"; };
-		D49EB86C17054CB800F2BF9B /* Stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Stream.h; sourceTree = "<group>"; };
-		D49EB86D17054CB800F2BF9B /* syscalls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syscalls.h; sourceTree = "<group>"; };
-		D49EB87017054CB800F2BF9B /* Tone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tone.h; sourceTree = "<group>"; };
-		D49EB87117054CB800F2BF9B /* UARTClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UARTClass.cpp; sourceTree = "<group>"; };
-		D49EB87217054CB800F2BF9B /* UARTClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UARTClass.h; sourceTree = "<group>"; };
-		D49EB87317054CB800F2BF9B /* Udp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Udp.h; sourceTree = "<group>"; };
-		D49EB87417054CB800F2BF9B /* USARTClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = USARTClass.cpp; sourceTree = "<group>"; };
-		D49EB87517054CB800F2BF9B /* USARTClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USARTClass.h; sourceTree = "<group>"; };
-		D49EB87717054CB800F2BF9B /* CDC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CDC.cpp; sourceTree = "<group>"; };
-		D49EB87817054CB800F2BF9B /* HID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HID.cpp; sourceTree = "<group>"; };
-		D49EB87917054CB800F2BF9B /* USBAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBAPI.h; sourceTree = "<group>"; };
-		D49EB87A17054CB800F2BF9B /* USBCore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = USBCore.cpp; sourceTree = "<group>"; usesTabs = 0; };
-		D49EB87B17054CB800F2BF9B /* USBCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBCore.h; sourceTree = "<group>"; };
-		D49EB87C17054CB800F2BF9B /* USBDesc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBDesc.h; sourceTree = "<group>"; };
-		D49EB87D17054CB800F2BF9B /* WCharacter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WCharacter.h; sourceTree = "<group>"; };
-		D49EB87F17054CB800F2BF9B /* WInterrupts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WInterrupts.h; sourceTree = "<group>"; };
-		D49EB88017054CB800F2BF9B /* wiring.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wiring.c; sourceTree = "<group>"; };
-		D49EB88117054CB800F2BF9B /* wiring.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring.h; sourceTree = "<group>"; };
-		D49EB88217054CB800F2BF9B /* wiring_analog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wiring_analog.c; sourceTree = "<group>"; };
-		D49EB88317054CB800F2BF9B /* wiring_analog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_analog.h; sourceTree = "<group>"; };
-		D49EB88417054CB800F2BF9B /* wiring_constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_constants.h; sourceTree = "<group>"; };
-		D49EB88517054CB800F2BF9B /* wiring_digital.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wiring_digital.c; sourceTree = "<group>"; };
-		D49EB88617054CB800F2BF9B /* wiring_digital.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_digital.h; sourceTree = "<group>"; };
-		D49EB88717054CB800F2BF9B /* wiring_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_private.h; sourceTree = "<group>"; };
-		D49EB88917054CB800F2BF9B /* wiring_pulse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_pulse.h; sourceTree = "<group>"; };
-		D49EB88B17054CB800F2BF9B /* wiring_shift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wiring_shift.h; sourceTree = "<group>"; };
-		D49EB88D17054CB800F2BF9B /* WMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WMath.h; sourceTree = "<group>"; };
-		D49EB88F17054CB800F2BF9B /* WString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WString.h; sourceTree = "<group>"; };
 		D49EB8AB17054FD500F2BF9B /* CMSIS END USER LICENCE AGREEMENT.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "CMSIS END USER LICENCE AGREEMENT.pdf"; sourceTree = "<group>"; };
 		D49EB8AD17054FD500F2BF9B /* CMSIS-SVD_Schema_1_0.xsd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "CMSIS-SVD_Schema_1_0.xsd"; sourceTree = "<group>"; };
 		D49EB8AE17054FD500F2BF9B /* CMSIS_CM4_SIMD.htm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html.documentation; path = CMSIS_CM4_SIMD.htm; sourceTree = "<group>"; };
@@ -3278,55 +3197,6 @@
 		D49EC3F717054FDF00F2BF9B /* SAM4S16C.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S16C.svd; sourceTree = "<group>"; };
 		D49EC3F817054FDF00F2BF9B /* SAM4S8B.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8B.svd; sourceTree = "<group>"; };
 		D49EC3F917054FDF00F2BF9B /* SAM4S8C.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8C.svd; sourceTree = "<group>"; };
-		D49EC3FF17054FDF00F2BF9B /* debug.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = debug.mk; sourceTree = "<group>"; };
-		D49EC40017054FDF00F2BF9B /* gcc.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc.mk; sourceTree = "<group>"; };
-		D49EC40117054FDF00F2BF9B /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		D49EC40217054FDF00F2BF9B /* release.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = release.mk; sourceTree = "<group>"; };
-		D49EC40317054FDF00F2BF9B /* sam3.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3.mk; sourceTree = "<group>"; };
-		D49EC40517054FDF00F2BF9B /* libsam.ewd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = libsam.ewd; sourceTree = "<group>"; };
-		D49EC40617054FDF00F2BF9B /* libsam.ewp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = libsam.ewp; sourceTree = "<group>"; };
-		D49EC40717054FDF00F2BF9B /* libsam.eww */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = libsam.eww; sourceTree = "<group>"; };
-		D49EC40817054FDF00F2BF9B /* chip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = chip.h; sourceTree = "<group>"; };
-		D49EC40A17054FDF00F2BF9B /* adc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = adc.h; sourceTree = "<group>"; };
-		D49EC40B17054FDF00F2BF9B /* dacc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dacc.h; sourceTree = "<group>"; };
-		D49EC40C17054FDF00F2BF9B /* interrupt_sam_nvic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interrupt_sam_nvic.h; sourceTree = "<group>"; };
-		D49EC40D17054FDF00F2BF9B /* pio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio.h; sourceTree = "<group>"; };
-		D49EC40E17054FDF00F2BF9B /* pio_it.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_it.h; sourceTree = "<group>"; };
-		D49EC40F17054FDF00F2BF9B /* pmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pmc.h; sourceTree = "<group>"; };
-		D49EC41017054FDF00F2BF9B /* pwmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwmc.h; sourceTree = "<group>"; };
-		D49EC41117054FDF00F2BF9B /* rtc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtc.h; sourceTree = "<group>"; };
-		D49EC41217054FDF00F2BF9B /* rtt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtt.h; sourceTree = "<group>"; };
-		D49EC41317054FDF00F2BF9B /* spi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spi.h; sourceTree = "<group>"; };
-		D49EC41417054FDF00F2BF9B /* tc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tc.h; sourceTree = "<group>"; };
-		D49EC41517054FDF00F2BF9B /* timetick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timetick.h; sourceTree = "<group>"; };
-		D49EC41617054FDF00F2BF9B /* twi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = twi.h; sourceTree = "<group>"; };
-		D49EC41717054FDF00F2BF9B /* udp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = udp.h; sourceTree = "<group>"; };
-		D49EC41817054FDF00F2BF9B /* udphs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = udphs.h; sourceTree = "<group>"; };
-		D49EC41917054FDF00F2BF9B /* uotghs_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uotghs_device.h; sourceTree = "<group>"; };
-		D49EC41A17054FDF00F2BF9B /* uotghs_host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uotghs_host.h; sourceTree = "<group>"; };
-		D49EC41B17054FDF00F2BF9B /* usart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usart.h; sourceTree = "<group>"; };
-		D49EC41C17054FDF00F2BF9B /* USB_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USB_device.h; sourceTree = "<group>"; };
-		D49EC41D17054FDF00F2BF9B /* USB_host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USB_host.h; sourceTree = "<group>"; };
-		D49EC41E17054FDF00F2BF9B /* wdt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wdt.h; sourceTree = "<group>"; };
-		D49EC41F17054FDF00F2BF9B /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
-		D49EC42117054FDF00F2BF9B /* adc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adc.c; sourceTree = "<group>"; };
-		D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = adc12_sam3u.c; sourceTree = "<group>"; };
-		D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interrupt_sam_nvic.c; sourceTree = "<group>"; };
-		D49EC42517054FDF00F2BF9B /* pio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pio.c; sourceTree = "<group>"; };
-		D49EC42617054FDF00F2BF9B /* pmc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pmc.c; sourceTree = "<group>"; };
-		D49EC42717054FDF00F2BF9B /* pwmc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pwmc.c; sourceTree = "<group>"; };
-		D49EC42817054FDF00F2BF9B /* rtc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rtc.c; sourceTree = "<group>"; };
-		D49EC42917054FDF00F2BF9B /* rtt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rtt.c; sourceTree = "<group>"; };
-		D49EC42A17054FDF00F2BF9B /* spi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spi.c; sourceTree = "<group>"; };
-		D49EC42B17054FDF00F2BF9B /* tc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tc.c; sourceTree = "<group>"; };
-		D49EC42C17054FDF00F2BF9B /* timetick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timetick.c; sourceTree = "<group>"; };
-		D49EC42E17054FDF00F2BF9B /* udp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = udp.c; sourceTree = "<group>"; };
-		D49EC42F17054FDF00F2BF9B /* udphs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = udphs.c; sourceTree = "<group>"; };
-		D49EC43017054FDF00F2BF9B /* uotghs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs.c; sourceTree = "<group>"; };
-		D49EC43117054FDF00F2BF9B /* uotghs_device.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs_device.c; sourceTree = "<group>"; };
-		D49EC43217054FDF00F2BF9B /* uotghs_host.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = uotghs_host.c; sourceTree = "<group>"; };
-		D49EC43317054FDF00F2BF9B /* usart.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = usart.c; sourceTree = "<group>"; };
-		D49EC43417054FDF00F2BF9B /* wdt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wdt.c; sourceTree = "<group>"; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
 		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
@@ -3427,10 +3297,8 @@
 				D48F5A81172CB21100D0E055 /* xio.h */,
 				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D45710C61705334000EA19A8 /* motate */,
-				D49EB85517054CB800F2BF9B /* arduino */,
 				D49EC5D51705FC1100F2BF9B /* bin */,
 				D49EB8A917054FD500F2BF9B /* CMSIS */,
-				D457111C1705334100EA19A8 /* variants */,
 				D41D13F617374B7D00D522D9 /* settings */,
 			);
 			sourceTree = "<group>";
@@ -3446,7 +3314,9 @@
 				D41FC0621826F21C003D66C2 /* MotateSPI.h */,
 				D45710C91705334000EA19A8 /* MotateTimers.h */,
 				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
+				D43CAF9C187BABDB0042B58F /* SamPins.cpp */,
 				D4021F9A175DA4610099576C /* SamUSB.cpp */,
+				D478FB85185D7FD1004E35D2 /* SamSPI.cpp */,
 				D45710D51705334100EA19A8 /* utility */,
 			);
 			path = motate;
@@ -3457,6 +3327,7 @@
 			children = (
 				D4E2B2F017223FCB004A5C70 /* AvrTimers.h */,
 				D4E2B2F117223FCB004A5C70 /* SamTimers.h */,
+				D478FB84185D7C86004E35D2 /* SamCommon.h */,
 				D45710D61705334100EA19A8 /* AvrPins.h */,
 				D41FC0631826F29F003D66C2 /* SamSPI.h */,
 				D406801B1759B71100C593A3 /* AvrUSB.h */,
@@ -3466,77 +3337,6 @@
 				D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */,
 			);
 			path = utility;
-			sourceTree = "<group>";
-		};
-		D457111C1705334100EA19A8 /* variants */ = {
-			isa = PBXGroup;
-			children = (
-				D457111D1705334100EA19A8 /* pins_arduino.h */,
-				D457111E1705334100EA19A8 /* variant.cpp */,
-				D457111F1705334100EA19A8 /* variant.h */,
-			);
-			path = variants;
-			sourceTree = "<group>";
-		};
-		D49EB85517054CB800F2BF9B /* arduino */ = {
-			isa = PBXGroup;
-			children = (
-				D49EB85617054CB800F2BF9B /* Arduino.h */,
-				D49EB85717054CB800F2BF9B /* binary.h */,
-				D49EB85817054CB800F2BF9B /* Client.h */,
-				D49EB85917054CB800F2BF9B /* cortex_handlers.c */,
-				D49EB85A17054CB800F2BF9B /* cxxabi-compat.cpp */,
-				D49EB85B17054CB800F2BF9B /* HardwareSerial.h */,
-				D49EB85C17054CB800F2BF9B /* hooks.c */,
-				D49EB86117054CB800F2BF9B /* itoa.h */,
-				D49EB86317054CB800F2BF9B /* Print.cpp */,
-				D49EB86417054CB800F2BF9B /* Print.h */,
-				D49EB86517054CB800F2BF9B /* Printable.h */,
-				D49EB86617054CB800F2BF9B /* Reset.cpp */,
-				D49EB86717054CB800F2BF9B /* Reset.h */,
-				D49EB86817054CB800F2BF9B /* RingBuffer.cpp */,
-				D49EB86917054CB800F2BF9B /* RingBuffer.h */,
-				D49EB86A17054CB800F2BF9B /* Server.h */,
-				D49EB86B17054CB800F2BF9B /* Stream.cpp */,
-				D49EB86C17054CB800F2BF9B /* Stream.h */,
-				D49EB86D17054CB800F2BF9B /* syscalls.h */,
-				D4329639171A5564001611B6 /* syscalls_sam3.cpp */,
-				D49EB87017054CB800F2BF9B /* Tone.h */,
-				D49EB87117054CB800F2BF9B /* UARTClass.cpp */,
-				D49EB87217054CB800F2BF9B /* UARTClass.h */,
-				D49EB87317054CB800F2BF9B /* Udp.h */,
-				D49EB87417054CB800F2BF9B /* USARTClass.cpp */,
-				D49EB87517054CB800F2BF9B /* USARTClass.h */,
-				D49EB87617054CB800F2BF9B /* USB */,
-				D49EB87D17054CB800F2BF9B /* WCharacter.h */,
-				D49EB87F17054CB800F2BF9B /* WInterrupts.h */,
-				D49EB88017054CB800F2BF9B /* wiring.c */,
-				D49EB88117054CB800F2BF9B /* wiring.h */,
-				D49EB88217054CB800F2BF9B /* wiring_analog.c */,
-				D49EB88317054CB800F2BF9B /* wiring_analog.h */,
-				D49EB88417054CB800F2BF9B /* wiring_constants.h */,
-				D49EB88517054CB800F2BF9B /* wiring_digital.c */,
-				D49EB88617054CB800F2BF9B /* wiring_digital.h */,
-				D49EB88717054CB800F2BF9B /* wiring_private.h */,
-				D49EB88917054CB800F2BF9B /* wiring_pulse.h */,
-				D49EB88B17054CB800F2BF9B /* wiring_shift.h */,
-				D49EB88D17054CB800F2BF9B /* WMath.h */,
-				D49EB88F17054CB800F2BF9B /* WString.h */,
-			);
-			path = arduino;
-			sourceTree = "<group>";
-		};
-		D49EB87617054CB800F2BF9B /* USB */ = {
-			isa = PBXGroup;
-			children = (
-				D49EB87717054CB800F2BF9B /* CDC.cpp */,
-				D49EB87817054CB800F2BF9B /* HID.cpp */,
-				D49EB87917054CB800F2BF9B /* USBAPI.h */,
-				D49EB87A17054CB800F2BF9B /* USBCore.cpp */,
-				D49EB87B17054CB800F2BF9B /* USBCore.h */,
-				D49EB87C17054CB800F2BF9B /* USBDesc.h */,
-			);
-			path = USB;
 			sourceTree = "<group>";
 		};
 		D49EB8A917054FD500F2BF9B /* CMSIS */ = {
@@ -7643,7 +7443,6 @@
 				D4B57632170737870070CCAE /* gcc_flash.ld */,
 				D4B57633170737870070CCAE /* gcc_sram.ld */,
 				D4B57631170737730070CCAE /* atmel_sam_series.mk */,
-				D49EC3FD17054FDF00F2BF9B /* libsam */,
 				D4021F9E175E37BF0099576C /* cortex_handlers.c */,
 				D4021FA6175E388B0099576C /* hooks.c */,
 				D4021F9F175E37BF0099576C /* Reset.cpp */,
@@ -7652,94 +7451,6 @@
 				D4021FA2175E37BF0099576C /* syscalls.h */,
 			);
 			path = atmel_sam;
-			sourceTree = "<group>";
-		};
-		D49EC3FD17054FDF00F2BF9B /* libsam */ = {
-			isa = PBXGroup;
-			children = (
-				D49EC3FE17054FDF00F2BF9B /* build_gcc */,
-				D49EC40417054FDF00F2BF9B /* build_iar */,
-				D49EC40817054FDF00F2BF9B /* chip.h */,
-				D49EC40917054FDF00F2BF9B /* include */,
-				D49EC41F17054FDF00F2BF9B /* readme.txt */,
-				D49EC42017054FDF00F2BF9B /* source */,
-			);
-			path = libsam;
-			sourceTree = "<group>";
-		};
-		D49EC3FE17054FDF00F2BF9B /* build_gcc */ = {
-			isa = PBXGroup;
-			children = (
-				D49EC3FF17054FDF00F2BF9B /* debug.mk */,
-				D49EC40017054FDF00F2BF9B /* gcc.mk */,
-				D49EC40117054FDF00F2BF9B /* Makefile */,
-				D49EC40217054FDF00F2BF9B /* release.mk */,
-				D49EC40317054FDF00F2BF9B /* sam3.mk */,
-			);
-			path = build_gcc;
-			sourceTree = "<group>";
-		};
-		D49EC40417054FDF00F2BF9B /* build_iar */ = {
-			isa = PBXGroup;
-			children = (
-				D49EC40517054FDF00F2BF9B /* libsam.ewd */,
-				D49EC40617054FDF00F2BF9B /* libsam.ewp */,
-				D49EC40717054FDF00F2BF9B /* libsam.eww */,
-			);
-			path = build_iar;
-			sourceTree = "<group>";
-		};
-		D49EC40917054FDF00F2BF9B /* include */ = {
-			isa = PBXGroup;
-			children = (
-				D49EC40A17054FDF00F2BF9B /* adc.h */,
-				D49EC40B17054FDF00F2BF9B /* dacc.h */,
-				D49EC40C17054FDF00F2BF9B /* interrupt_sam_nvic.h */,
-				D49EC40D17054FDF00F2BF9B /* pio.h */,
-				D49EC40E17054FDF00F2BF9B /* pio_it.h */,
-				D49EC40F17054FDF00F2BF9B /* pmc.h */,
-				D49EC41017054FDF00F2BF9B /* pwmc.h */,
-				D49EC41117054FDF00F2BF9B /* rtc.h */,
-				D49EC41217054FDF00F2BF9B /* rtt.h */,
-				D49EC41317054FDF00F2BF9B /* spi.h */,
-				D49EC41417054FDF00F2BF9B /* tc.h */,
-				D49EC41517054FDF00F2BF9B /* timetick.h */,
-				D49EC41617054FDF00F2BF9B /* twi.h */,
-				D49EC41717054FDF00F2BF9B /* udp.h */,
-				D49EC41817054FDF00F2BF9B /* udphs.h */,
-				D49EC41917054FDF00F2BF9B /* uotghs_device.h */,
-				D49EC41A17054FDF00F2BF9B /* uotghs_host.h */,
-				D49EC41B17054FDF00F2BF9B /* usart.h */,
-				D49EC41C17054FDF00F2BF9B /* USB_device.h */,
-				D49EC41D17054FDF00F2BF9B /* USB_host.h */,
-				D49EC41E17054FDF00F2BF9B /* wdt.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		D49EC42017054FDF00F2BF9B /* source */ = {
-			isa = PBXGroup;
-			children = (
-				D49EC42117054FDF00F2BF9B /* adc.c */,
-				D49EC42217054FDF00F2BF9B /* adc12_sam3u.c */,
-				D49EC42417054FDF00F2BF9B /* interrupt_sam_nvic.c */,
-				D49EC42517054FDF00F2BF9B /* pio.c */,
-				D49EC42617054FDF00F2BF9B /* pmc.c */,
-				D49EC42717054FDF00F2BF9B /* pwmc.c */,
-				D49EC42817054FDF00F2BF9B /* rtc.c */,
-				D49EC42917054FDF00F2BF9B /* rtt.c */,
-				D49EC42A17054FDF00F2BF9B /* spi.c */,
-				D49EC42B17054FDF00F2BF9B /* tc.c */,
-				D49EC42C17054FDF00F2BF9B /* timetick.c */,
-				D49EC42E17054FDF00F2BF9B /* udp.c */,
-				D49EC42F17054FDF00F2BF9B /* udphs.c */,
-				D49EC43017054FDF00F2BF9B /* uotghs.c */,
-				D49EC43117054FDF00F2BF9B /* uotghs_device.c */,
-				D49EC43217054FDF00F2BF9B /* uotghs_host.c */,
-				D49EC43317054FDF00F2BF9B /* usart.c */,
-				D49EC43417054FDF00F2BF9B /* wdt.c */,
-			);
-			path = source;
 			sourceTree = "<group>";
 		};
 		D49EC5D51705FC1100F2BF9B /* bin */ = {
@@ -7888,6 +7599,8 @@
 				D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */,
 				D49EC5FD1706789800F2BF9B /* component_smc.h in Sources */,
 				D49EC5FE1706789800F2BF9B /* component_spi.h in Sources */,
+				D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */,
+				D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */,
 				D49EC5FF1706789800F2BF9B /* component_ssc.h in Sources */,
 				D49EC6001706789800F2BF9B /* component_supc.h in Sources */,
 				D49EC6011706789800F2BF9B /* component_tc.h in Sources */,
@@ -7941,31 +7654,14 @@
 				D49EC6301706789800F2BF9B /* instance_usart3.h in Sources */,
 				D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */,
 				D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */,
+				D478FB87185D7FD1004E35D2 /* SamSPI.cpp in Sources */,
 				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
 				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
 				D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */,
 				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
-				D457117417053C3A00EA19A8 /* pins_arduino.h in Sources */,
-				D457117517053C3A00EA19A8 /* variant.cpp in Sources */,
 				D49EC5DF170676AF00F2BF9B /* sam.h in Sources */,
 				D49EC5E0170676B500F2BF9B /* sam3.h in Sources */,
-				D457117617053C3A00EA19A8 /* variant.h in Sources */,
 				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
-				D49EB89017054CB800F2BF9B /* cortex_handlers.c in Sources */,
-				D49EB89117054CB800F2BF9B /* cxxabi-compat.cpp in Sources */,
-				D49EB89217054CB800F2BF9B /* hooks.c in Sources */,
-				D49EB89717054CB800F2BF9B /* Print.cpp in Sources */,
-				D49EB89817054CB800F2BF9B /* Reset.cpp in Sources */,
-				D49EB89917054CB800F2BF9B /* RingBuffer.cpp in Sources */,
-				D49EB89A17054CB800F2BF9B /* Stream.cpp in Sources */,
-				D49EB89C17054CB800F2BF9B /* UARTClass.cpp in Sources */,
-				D49EB89D17054CB800F2BF9B /* USARTClass.cpp in Sources */,
-				D49EB89E17054CB800F2BF9B /* CDC.cpp in Sources */,
-				D49EB89F17054CB800F2BF9B /* HID.cpp in Sources */,
-				D49EB8A017054CB800F2BF9B /* USBCore.cpp in Sources */,
-				D49EB8A217054CB800F2BF9B /* wiring.c in Sources */,
-				D49EB8A317054CB800F2BF9B /* wiring_analog.c in Sources */,
-				D49EB8A417054CB800F2BF9B /* wiring_digital.c in Sources */,
 				D49EC49117054FDF00F2BF9B /* arm_abs_f32.c in Sources */,
 				D49EC49217054FDF00F2BF9B /* arm_abs_q15.c in Sources */,
 				D49EC49317054FDF00F2BF9B /* arm_abs_q31.c in Sources */,
@@ -8128,6 +7824,7 @@
 				D49EC53017054FDF00F2BF9B /* arm_mat_init_f32.c in Sources */,
 				D49EC53117054FDF00F2BF9B /* arm_mat_init_q15.c in Sources */,
 				D49EC53217054FDF00F2BF9B /* arm_mat_init_q31.c in Sources */,
+				D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */,
 				D49EC53317054FDF00F2BF9B /* arm_mat_inverse_f32.c in Sources */,
 				D49EC53417054FDF00F2BF9B /* arm_mat_mult_f32.c in Sources */,
 				D49EC53517054FDF00F2BF9B /* arm_mat_mult_fast_q15.c in Sources */,
@@ -8206,31 +7903,11 @@
 				D49EC57E17054FDF00F2BF9B /* arm_rfft_init_q31.c in Sources */,
 				D49EC57F17054FDF00F2BF9B /* arm_rfft_q15.c in Sources */,
 				D49EC58017054FDF00F2BF9B /* arm_rfft_q31.c in Sources */,
-				D49EC5C017054FDF00F2BF9B /* Makefile in Sources */,
 				D49EC5E31706770A00F2BF9B /* arm_common_tables.h in Sources */,
 				D49EC5E41706770A00F2BF9B /* arm_math.h in Sources */,
 				D49EC5E61706770A00F2BF9B /* core_cm3.h in Sources */,
 				D49EC5E91706770A00F2BF9B /* core_cmFunc.h in Sources */,
 				D49EC5EA1706770A00F2BF9B /* core_cmInstr.h in Sources */,
-				D49EC5C117054FDF00F2BF9B /* adc.c in Sources */,
-				D49EC5C217054FDF00F2BF9B /* adc12_sam3u.c in Sources */,
-				D49EC5C417054FDF00F2BF9B /* interrupt_sam_nvic.c in Sources */,
-				D49EC5C517054FDF00F2BF9B /* pio.c in Sources */,
-				D49EC5C617054FDF00F2BF9B /* pmc.c in Sources */,
-				D49EC5C717054FDF00F2BF9B /* pwmc.c in Sources */,
-				D49EC5C817054FDF00F2BF9B /* rtc.c in Sources */,
-				D49EC5C917054FDF00F2BF9B /* rtt.c in Sources */,
-				D49EC5CA17054FDF00F2BF9B /* spi.c in Sources */,
-				D49EC5CB17054FDF00F2BF9B /* tc.c in Sources */,
-				D49EC5CC17054FDF00F2BF9B /* timetick.c in Sources */,
-				D49EC5CE17054FDF00F2BF9B /* udp.c in Sources */,
-				D49EC5CF17054FDF00F2BF9B /* udphs.c in Sources */,
-				D49EC5D017054FDF00F2BF9B /* uotghs.c in Sources */,
-				D49EC5D117054FDF00F2BF9B /* uotghs_device.c in Sources */,
-				D49EC5D217054FDF00F2BF9B /* uotghs_host.c in Sources */,
-				D49EC5D317054FDF00F2BF9B /* usart.c in Sources */,
-				D49EC5D417054FDF00F2BF9B /* wdt.c in Sources */,
-				D432963A171A5564001611B6 /* syscalls_sam3.cpp in Sources */,
 				D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */,
 				D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */,
 				D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */,
@@ -8255,7 +7932,6 @@
 				D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */,
 				D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */,
 				D41D13F517374B4E00D522D9 /* switch.cpp in Sources */,
-				D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */,
 				D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */,
 				D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */,
 				D4021FA4175E37BF0099576C /* Reset.cpp in Sources */,
@@ -8282,7 +7958,7 @@
 		D45710C41705330D00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Debug;
@@ -8290,7 +7966,7 @@
 		D45710C51705330D00EA19A8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Release;
@@ -8375,7 +8051,7 @@
 		D4C12816180D9560002A898C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
 			};
 			name = Debug;
@@ -8383,7 +8059,7 @@
 		D4C12817180D9560002A898C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/yagarto-4.7.2/bin";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
 			};
 			name = Release;

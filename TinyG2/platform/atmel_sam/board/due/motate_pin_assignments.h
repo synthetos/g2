@@ -156,6 +156,8 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(50, C, 'C', 13);	// D50
 	_MAKE_MOTATE_PIN(51, C, 'C', 12);	// D51
 	_MAKE_MOTATE_PIN(52, B, 'B', 21);	// D52
+        _MAKE_MOTATE_SPI_CS_PIN(52, B, 2);
+
 	_MAKE_MOTATE_PIN(53, B, 'B', 14);	// D53
 		_MAKE_MOTATE_PWM_PIN(53, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 
@@ -184,6 +186,8 @@ namespace Motate {
 		_MAKE_MOTATE_PWM_PIN(64, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
 
 	_MAKE_MOTATE_PIN(65, B, 'B', 20);	// A11
+        _MAKE_MOTATE_SPI_CS_PIN(65, B, 1);
+
 	_MAKE_MOTATE_PIN(66, B, 'B', 15);	// DAC0
 		_MAKE_MOTATE_PWM_PIN(66, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 
@@ -202,10 +206,19 @@ namespace Motate {
 		_MAKE_MOTATE_PWM_PIN(73, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
 
 	_MAKE_MOTATE_PIN(74, A, 'A', 25);	// SPI-MISO (on ICSP header only)
-	_MAKE_MOTATE_PIN(75, A, 'A', 26);	// SPI-MOSI (on ICSP header only)
-	_MAKE_MOTATE_PIN(76, A, 'A', 27);	// SPI-SCK  (on ICSP header only)
+    _MAKE_MOTATE_SPI_OTHER_PIN(74, A);
+    
+    _MAKE_MOTATE_PIN(75, A, 'A', 26);	// SPI-MOSI (on ICSP header only)
+	_MAKE_MOTATE_SPI_OTHER_PIN(75, A);
+    
+    _MAKE_MOTATE_PIN(76, A, 'A', 27);	// SPI-SCK  (on ICSP header only)
+    _MAKE_MOTATE_SPI_OTHER_PIN(76, A);
+    
 	_MAKE_MOTATE_PIN(77, A, 'A', 28);	// SS0
+        _MAKE_MOTATE_SPI_CS_PIN(77, A, 0);
+
 	_MAKE_MOTATE_PIN(78, B, 'B', 23);	// SS1
+        _MAKE_MOTATE_SPI_CS_PIN(78, B, 3);
 
 
 	// NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
@@ -233,7 +246,7 @@ namespace Motate {
 
 	pin_number kKinen_SyncPinNumber             =  53;
 
-	pin_number kSocket1_SPISlaveSelectPinNumber =  10;
+	pin_number kSocket1_SPISlaveSelectPinNumber =  -1;//10;
 	pin_number kSocket1_InterruptPinNumber      =  -1;
 	pin_number kSocket1_StepPinNumber           =   2;
 	pin_number kSocket1_DirPinNumber            =   5;
@@ -242,7 +255,7 @@ namespace Motate {
 	pin_number kSocket1_Microstep_1PinNumber    =  24;
 	pin_number kSocket1_VrefPinNumber           =  -1;//34; //PWMTimer<0>
 
-	pin_number kSocket2_SPISlaveSelectPinNumber =  47;
+	pin_number kSocket2_SPISlaveSelectPinNumber =  65;
 	pin_number kSocket2_InterruptPinNumber      =  -1;
 	pin_number kSocket2_StepPinNumber           =   3;
 	pin_number kSocket2_DirPinNumber            =   6;
@@ -260,7 +273,7 @@ namespace Motate {
 	pin_number kSocket3_Microstep_1PinNumber    =  30;
 	pin_number kSocket3_VrefPinNumber           =  -1;//63; //PWMTimer<2>
 
-	pin_number kSocket4_SPISlaveSelectPinNumber =  48;
+	pin_number kSocket4_SPISlaveSelectPinNumber =  77;
 	pin_number kSocket4_InterruptPinNumber      =  -1;
 	pin_number kSocket4_StepPinNumber           =  31;
 	pin_number kSocket4_DirPinNumber            =  32;
@@ -269,7 +282,7 @@ namespace Motate {
 	pin_number kSocket4_Microstep_1PinNumber    =  36;
 	pin_number kSocket4_VrefPinNumber           =  -1;//64; //PWMTimer<3>
 
-	pin_number kSocket5_SPISlaveSelectPinNumber =  49;
+	pin_number kSocket5_SPISlaveSelectPinNumber =  78;
 	pin_number kSocket5_InterruptPinNumber      =  -1;
 	pin_number kSocket5_StepPinNumber           =  37;
 	pin_number kSocket5_DirPinNumber            =  38;

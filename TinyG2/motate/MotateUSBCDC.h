@@ -367,10 +367,10 @@ namespace Motate {
 					if (1200 == _line_info.dwDTERate)
 					{
 						// We check DTR state to determine if host port is open (bit 0 of lineState).
-//++++++++++ DIAGNOSTIC						if ((getDTR()) == false)
-//++++++++++ DIAGNOSTIC							initiateReset(250);
-//						else
-//							 cancelReset();
+						if (!getDTR())
+							initiateReset(250);
+						else
+							 cancelReset();
 					}
 
 					return true;
@@ -463,8 +463,8 @@ namespace Motate {
                                                const uint8_t first_interface_number
 											   ) : Serial(usb_parent, new_endpoint_offset, first_interface_number) {};
 
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
-			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
 			return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
@@ -489,8 +489,8 @@ namespace Motate {
                                                const uint8_t first_interface_number
 											   ) : Serial(usb_parent, new_endpoint_offset, first_interface_number) {};
 
-		static const EndpointBufferSettings_t getEndpointConfigFromMixin(uint8_t endpoint, const bool other_speed) {
-			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, other_speed);
+		static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+			return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed);
 		};
 		static bool handleNonstandardRequestInMixin(Setup_t &setup) {
 			return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);

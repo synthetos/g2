@@ -31,6 +31,7 @@
 #define SAMTIMERS_H_ONCE
 
 #include "sam.h"
+#include "SamCommon.h"
 
 /* Sam hardware has two types of timer: "Timers" and "PWMTimers"
  *
@@ -160,14 +161,16 @@ namespace Motate {
 	typedef const uint8_t timer_number;
     
 	template <uint8_t timerNum>
-	struct Timer {
+	struct Timer : SamCommon< Timer<timerNum> > {
 
 		// NOTE: Notice! The *pointers* are const, not the *values*.
 		static Tc * const tc();
 		static TcChannel * const tcChan();
 		static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
 		static const IRQn_Type tcIRQ();
-
+        
+        typedef SamCommon< Timer<timerNum> > common;
+        
 		/********************************************************************
 		**                          WARNING                                **
 		** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
@@ -194,34 +197,6 @@ namespace Motate {
 			tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY(0x54494D);
 		}
 
-		void enablePeripheralClock() {
-			if (peripheralId() < 32) {
-				uint32_t id_mask = 1u << ( peripheralId() );
-				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
-					PMC->PMC_PCER0 = id_mask;
-				}
-			} else {
-				uint32_t id_mask = 1u << ( peripheralId() - 32 );
-				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
-					PMC->PMC_PCER1 = id_mask;
-				}
-			}
-		};
-
-		void disablePeripheralClock() {
-			if (peripheralId() < 32) {
-				uint32_t id_mask = 1u << ( peripheralId() );
-				if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
-					PMC->PMC_PCDR0 = id_mask;
-				}
-			} else {
-				uint32_t id_mask = 1u << ( peripheralId() - 32 );
-				if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
-					PMC->PMC_PCDR1 = id_mask;
-				}
-			}
-		};
-
 		// Set the mode and frequency.
 		// Returns: The actual frequency that was used, or kFrequencyUnattainable
 		// freq is not const since we may "change" it
@@ -234,7 +209,7 @@ namespace Motate {
 			/*   Clear status register */
 			tcChan()->TC_SR;
 
-			enablePeripheralClock();
+            common::enablePeripheralClock();
 
 			if (mode == kTimerUpDownToMatch || mode == kTimerUpDown)
 				freq /= 2;
