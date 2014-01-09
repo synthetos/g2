@@ -93,6 +93,8 @@ namespace Motate {
 		kPinInterruptPriorityMedium      = 1<<7,
 		kPinInterruptPriorityLow         = 1<<8,
 		kPinInterruptPriorityLowest      = 1<<9,
+        
+        kPinInterruptPriorityMask        = ((1<<10) - (1<<5))
     };
 	
 	typedef uint32_t uintPort_t;
@@ -591,20 +593,22 @@ namespace Motate {
                     }\
                     \
                     /* Set interrupt priority */\
-                    if (interrupts & kPinInterruptPriorityHighest) {\
-                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 0);\
-                    }\
-                    else if (interrupts & kPinInterruptPriorityHigh) {\
-                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 3);\
-                    }\
-                    else if (interrupts & kPinInterruptPriorityMedium) {\
-                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 7);\
-                    }\
-                    else if (interrupts & kPinInterruptPriorityLow) {\
-                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 11);\
-                    }\
-                    else if (interrupts & kPinInterruptPriorityLowest) {\
-                        NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 15);\
+                    if (interrupts & kPinInterruptPriorityMask) {\
+                        if (interrupts & kPinInterruptPriorityHighest) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 0);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityHigh) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 3);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityMedium) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 7);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityLow) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 11);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityLowest) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 15);\
+                        }\
                     }\
                     /* Enable the IRQ */\
                     NVIC_EnableIRQ(PIO ## registerLetter ## _IRQn);\

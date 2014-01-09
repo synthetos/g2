@@ -39,9 +39,9 @@ if (ReversePinLookup<portChar, portPin>::interrupt != 0 && isr & 1 << portPin) {
     ReversePinLookup<portChar, portPin>::interrupt();\
 }
 
+
 extern "C" void PIOA_Handler(void) {
     uint32_t isr = PIOA->PIO_ISR;
-    NVIC_ClearPendingIRQ(PIOA_IRQn);
     
     CheckAndCallInterruptForPortPin('A', A,  0);
     CheckAndCallInterruptForPortPin('A', A,  1);
@@ -75,12 +75,13 @@ extern "C" void PIOA_Handler(void) {
     CheckAndCallInterruptForPortPin('A', A, 29);
     CheckAndCallInterruptForPortPin('A', A, 30);
     CheckAndCallInterruptForPortPin('A', A, 31);
+
+    NVIC_ClearPendingIRQ(PIOA_IRQn);
 }
 
 
 extern "C" void PIOB_Handler(void) {
     uint32_t isr = PIOB->PIO_ISR;
-    NVIC_ClearPendingIRQ(PIOB_IRQn);
 
     CheckAndCallInterruptForPortPin('B', B,  0);
     CheckAndCallInterruptForPortPin('B', B,  1);
@@ -114,12 +115,13 @@ extern "C" void PIOB_Handler(void) {
     CheckAndCallInterruptForPortPin('B', B, 29);
     CheckAndCallInterruptForPortPin('B', B, 30);
     CheckAndCallInterruptForPortPin('B', B, 31);
+
+    NVIC_ClearPendingIRQ(PIOB_IRQn);
 }
 
 #ifdef PIOC
 extern "C" void PIOC_Handler(void) {
     uint32_t isr = PIOC->PIO_ISR;
-    NVIC_ClearPendingIRQ(PIOC_IRQn);
 
     CheckAndCallInterruptForPortPin('C', C,  0);
     CheckAndCallInterruptForPortPin('C', C,  1);
@@ -153,6 +155,8 @@ extern "C" void PIOC_Handler(void) {
     CheckAndCallInterruptForPortPin('C', C, 29);
     CheckAndCallInterruptForPortPin('C', C, 30);
     CheckAndCallInterruptForPortPin('C', C, 31);
+
+    NVIC_ClearPendingIRQ(PIOC_IRQn);
 }
 
 #endif // PORTC
@@ -160,7 +164,6 @@ extern "C" void PIOC_Handler(void) {
 #ifdef PIOD
 extern "C" void PIOD_Handler(void) {
     uint32_t isr = PIOD->PIO_ISR;
-    NVIC_ClearPendingIRQ(PIOD_IRQn);
 
     CheckAndCallInterruptForPortPin('D', D,  0);
     CheckAndCallInterruptForPortPin('D', D,  1);
@@ -194,6 +197,8 @@ extern "C" void PIOD_Handler(void) {
     CheckAndCallInterruptForPortPin('D', D, 29);
     CheckAndCallInterruptForPortPin('D', D, 30);
     CheckAndCallInterruptForPortPin('D', D, 31);
+
+    NVIC_ClearPendingIRQ(PIOD_IRQn);
 }
 
 #endif // PORTD
