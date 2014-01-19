@@ -306,7 +306,7 @@ namespace Motate {
 
 			// BLOCKING!!
 			do {
-				written = usb.write(write_endpoint, out_buffer, length);
+				written = usb.write(write_endpoint, out_buffer, to_write);
 
 				if (written < 0) // ERROR!
 					break;
@@ -315,7 +315,7 @@ namespace Motate {
 				total_written += written;
 				to_write -= written;
 				out_buffer += written;
-			} while (to_write);
+			} while (to_write > 0);
 
 			// HACK! Autoflush forced...
 			if (total_written > 0)
