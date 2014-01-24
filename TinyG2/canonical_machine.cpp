@@ -1492,7 +1492,7 @@ char_t cm_get_axis_char(const int8_t axis)
 static int8_t _get_axis(const index_t index)
 {
 	char_t *ptr;
-	char_t tmp[CMD_TOKEN_LEN+1];
+	char_t tmp[TOKEN_LEN+1];
 	char_t axes[] = {"xyzabc"};
 
 	strcpy_P(tmp, cfgArray[index].token);			// kind of a hack. Looks for an axis

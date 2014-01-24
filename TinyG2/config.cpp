@@ -327,7 +327,7 @@ stat_t set_flu(cmdObj_t *cmd)
 stat_t get_grp(cmdObj_t *cmd)
 {
 	char_t *parent_group = cmd->token;		// token in the parent cmd object is the group
-	char_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
+	char_t group[GROUP_LEN+1];				// group string retrieved from cfgArray child
 	cmd->objtype = TYPE_PARENT;				// make first object the parent 
 	for (index_t i=0; cmd_index_is_single(i); i++) {
 		strcpy_P(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
@@ -394,7 +394,7 @@ uint8_t cmd_group_is_prefixed(char_t *group)
 index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
-	char_t str[CMD_TOKEN_LEN+1];
+	char_t str[TOKEN_LEN+1];
 	strcpy(str, group);
 	strcat(str, token);
 
@@ -591,7 +591,7 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value)// add an in
 			if ((cmd = cmd->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		cmd->value = (float) value;
 		cmd->objtype = TYPE_INTEGER;
 		return (cmd);
@@ -607,7 +607,7 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		cmd->value = value;
 		cmd->objtype = TYPE_FLOAT;
 		return (cmd);
@@ -623,7 +623,7 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string) // add a str
 			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		if (cmd_copy_string(cmd, string) != STAT_OK) { return (NULL);}
 		cmd->index = cmd_get_index((const char_t *)"", cmd->token);
 		cmd->objtype = TYPE_STRING;
