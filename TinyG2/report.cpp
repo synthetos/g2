@@ -154,6 +154,15 @@ void rpt_print_system_ready_message(void)
 static stat_t _populate_unfiltered_status_report(void);
 static uint8_t _populate_filtered_status_report(void);
 
+uint8_t _is_stat(cmdObj_t *cmd)
+{
+	char_t token[CMD_TOKEN_LEN+1];
+
+	GET_TOKEN_STRING(cmd->value, token);
+	if (strcmp(token, "stat") == 0) { return (true);}
+	return (false);
+}
+
 /* 
  * sr_init_status_report()
  *
@@ -166,6 +175,7 @@ void sr_init_status_report()
 	sr.status_report_requested = false;
 	char_t sr_defaults[CMD_STATUS_REPORT_LEN][CMD_TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
 	cmd->index = cmd_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
+	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < CMD_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
@@ -219,28 +229,32 @@ stat_t sr_set_status_report(cmdObj_t *cmd)
  */
 stat_t sr_request_status_report(uint8_t request_type)
 {
-	if (request_type == SR_IMMEDIATE_REQUEST) {
 #ifdef __ARM
+	if (request_type == SR_IMMEDIATE_REQUEST) {
 		sr.status_report_systick = SysTickTimer.getValue();
-#endif
-#ifdef __AVR
-		sr.status_report_systick = SysTickTimer_getValue();
-#endif
 	}
 	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-#ifdef __ARM
 		sr.status_report_systick = SysTickTimer.getValue() + sr.status_report_interval;
+	}
 #endif
 #ifdef __AVR
-		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
-#endif
+	if (request_type == SR_IMMEDIATE_REQUEST) {
+		sr.status_report_systick = SysTickTimer_getValue();
 	}
+	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
+		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
+	}
+#endif
 	sr.status_report_requested = true;
 	return (STAT_OK);
 }
 
 stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
+#ifdef __SUPPRESS_STATUS_REPORTS
+	return (STAT_NOOP);
+#endif
+
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
 	if (sr.status_report_requested == false) return (STAT_NOOP);
 #ifdef __ARM
@@ -292,9 +306,11 @@ static stat_t _populate_unfiltered_status_report()
 	for (uint8_t i=0; i<CMD_STATUS_REPORT_LEN; i++) {
 		if ((cmd->index = sr.status_report_list[i]) == 0) { break;}
 		cmd_get_cmdObj(cmd);
-		strcpy(tmp, cmd->group);			// concatenate groups and tokens
+
+		strcpy(tmp, cmd->group);			// flatten out groups - WARNING - you cannot use strncpy here...
 		strcat(tmp, cmd->token);
-		strcpy(cmd->token, tmp);
+		strcpy(cmd->token, tmp);			//...or here.
+
 		if ((cmd = cmd->nx) == NULL) 
 			return (cm_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
 	}
@@ -330,13 +346,20 @@ static uint8_t _populate_filtered_status_report()
 		if ((cmd->index = sr.status_report_list[i]) == 0) { break;}
 
 		cmd_get_cmdObj(cmd);
+		// do not report values that have not changed...
+		// ...except for stat=3 (STOP), which is an exception
 		if (fp_EQ(cmd->value, sr.status_report_value[i])) {
-			cmd->objtype = TYPE_EMPTY;
-			continue;
+//			if (cmd->index != sr.stat_index) {
+//				if (fp_EQ(cmd->value, COMBINED_PROGRAM_STOP)) {
+					cmd->objtype = TYPE_EMPTY;
+					continue;
+//				}
+//			}
+			// report anything that has changed
 		} else {
-			strcpy(tmp, cmd->group);		// flatten out groups
+			strcpy(tmp, cmd->group);		// flatten out groups - WARNING - you cannot use strncpy here...
 			strcat(tmp, cmd->token);
-			strcpy(cmd->token, tmp);
+			strcpy(cmd->token, tmp);		//...or here.
 			sr.status_report_value[i] = cmd->value;
 			if ((cmd = cmd->nx) == NULL) return (false); // should never be NULL unless SR length exceeds available buffer array
 			has_data = true;
@@ -446,6 +469,10 @@ void qr_request_queue_report(int8_t buffers)
  */
 stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
+#ifdef __SUPPRESS_QUEUE_REPORTS
+	return (STAT_NOOP);
+#endif
+
 	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
 	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
 	qr.queue_report_requested = false;
@@ -456,6 +483,14 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 		} else  {
 			fprintf(stderr, "qr:%d, qi:%d, qo:%d\n", qr.buffers_available,qr.buffers_added,qr.buffers_removed);
 		}
+
+	} else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+		if (qr.queue_report_verbosity == QR_SINGLE) {
+			fprintf(stderr, "{qr:%d}\n", qr.buffers_available);
+		} else {
+			fprintf(stderr, "{qr:%d,qi:%d,qo:%d}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
+		}
+
 	} else {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "{\"qr\":%d}\n", qr.buffers_available);
@@ -514,6 +549,77 @@ stat_t qo_get(cmdObj_t *cmd)
 	return (STAT_OK);
 }
 
+/*****************************************************************************
+ * JOB ID REPORTS
+ *
+ *	job_populate_job_report()
+ *	job_set_job_report()
+ *	job_report_callback()
+ *	job_get()
+ *	job_set()
+ *	job_print_job()
+ */
+stat_t job_populate_job_report()
+{
+	const char_t job_str[] = "job";
+	char_t tmp[CMD_TOKEN_LEN+1];
+	cmdObj_t *cmd = cmd_reset_list();		// sets *cmd to the start of the body
+
+	cmd->objtype = TYPE_PARENT; 			// setup the parent object
+	strcpy(cmd->token, job_str);
+
+	//cmd->index = cmd_get_index((const char_t *)"", job_str);// set the index - may be needed by calling function
+	cmd = cmd->nx;							// no need to check for NULL as list has just been reset
+
+	index_t job_start = cmd_get_index((const char_t *)"",(const char_t *)"job1");// set first job persistence index
+	for (uint8_t i=0; i<4; i++) {
+		
+		cmd->index = job_start + i;
+		cmd_get_cmdObj(cmd);
+
+		strcpy(tmp, cmd->group);			// concatenate groups and tokens - do NOT use strncpy()
+		strcat(tmp, cmd->token);
+		strcpy(cmd->token, tmp);
+
+		if ((cmd = cmd->nx) == NULL) return (STAT_OK); // should never be NULL unless SR length exceeds available buffer array 
+	}
+	return (STAT_OK);
+}
+
+stat_t job_set_job_report(cmdObj_t *cmd)
+{
+	index_t job_start = cmd_get_index((const char_t *)"",(const char_t *)"job1");// set first job persistence index
+
+	for (uint8_t i=0; i<4; i++) {
+		if (((cmd = cmd->nx) == NULL) || (cmd->objtype == TYPE_EMPTY)) { break;}
+		if (cmd->objtype == TYPE_INTEGER) {
+			cs.job_id[i] = cmd->value;
+			cmd->index = job_start + i;					// index of the SR persistence location
+			cmd_persist(cmd);
+		} else {
+			return (STAT_INPUT_VALUE_UNSUPPORTED);
+		}
+	}
+	job_populate_job_report();			// return current values
+	return (STAT_OK);
+}
+
+uint8_t job_report_callback()
+{
+	if (cfg.comm_mode == TEXT_MODE) {
+		// no-op, job_ids are client app state
+	} else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
+	} else {
+		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
+		//job_clear_report();
+	}
+	return (STAT_OK);
+}
+
+stat_t job_get(cmdObj_t *cmd) { return (job_populate_job_report());}
+stat_t job_set(cmdObj_t *cmd) { return (job_set_job_report(cmd));}
+void job_print_job(cmdObj_t *cmd) { job_populate_job_report();}
 /*********************
  * TEXT MODE SUPPORT *
  *********************/
