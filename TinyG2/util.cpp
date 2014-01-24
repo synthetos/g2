@@ -2,7 +2,7 @@
  * util.cpp - a random assortment of useful functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -193,6 +193,29 @@ char_t *escape_string(char_t *dst, char_t *src)
 		*(dst++) = c;
 	}
 	return (start_dst);
+}
+
+/*
+ * pstr2str() - return an AVR style progmem string as a RAM string. No effect on ARMs
+ *
+ *	This function deals with FLASH memory string confusion between the AVR serias and ARMs. 
+ *	AVRs typically have xxxxx_P() functions which take strings from FLASH as args. 
+ *	On ARMs there is no need for this as strings are handled identically in FLASH and RAM. 
+ *
+ *	This function copies a string from FLASH to a pre-allocated RAM buffer - see main.c for 
+ *	allocation and max length. On the ARM it's a pass through that just returns the address 
+ *	of the input string
+ */
+//char_t *pstr2str(const char_t *pgm_string)
+char_t *pstr2str(const char *pgm_string)
+{
+#ifdef __AVR
+	strncpy_P(shared_buf, pgm_string, MESSAGE_LEN);
+	return (shared_buf);
+#endif
+#ifdef __ARM
+	return ((char_t *)pgm_string);
+#endif
 }
 
 /* 

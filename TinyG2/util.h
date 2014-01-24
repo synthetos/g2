@@ -2,7 +2,7 @@
  * util.h - a random assortment of useful functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -54,21 +54,14 @@ extern "C"{
 extern float vector[AXES]; // vector of axes for passing to subroutines
 
 #define clear_vector(a) memset(a,0,sizeof(a))
+#define	copy_vector(d,s) memcpy(d,s,sizeof(d))
+//void copy_vector(float dst[], const float src[]);
+void copy_axis_vector(float dst[], const float src[]);
+
 float get_axis_vector_length(const float a[], const float b[]);
 uint8_t vector_equal(const float a[], const float b[]);
 float *set_vector(float x, float y, float z, float a, float b, float c);
 float *set_vector_by_axis(float value, uint8_t axis);
-//void copy_vector(float dst[], const float src[], uint8_t length);
-
-void copy_axis_vector(float dst[], const float src[]);
-/*
-#define copy_axis_vector(dst,src) ( dst[AXIS_X] = src[AXIS_X];\
-									dst[AXIS_Y] = src[AXIS_Y];\
-									dst[AXIS_Z] = src[AXIS_Z];\
-									dst[AXIS_A] = src[AXIS_A];\
-									dst[AXIS_B] = src[AXIS_B];\
-									dst[AXIS_C] = src[AXIS_C]; )
-*/
 
 //*** math utilities ***
 
@@ -86,6 +79,7 @@ float max4(float x1, float x2, float x3, float x4);
 
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
+char_t *pstr2str(const char *pgm_string);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
 
 //*** other utilities ***

@@ -2,7 +2,7 @@
  * report.cpp - TinyG status report and other reporting functions.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,6 +28,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "report.h"
+#include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
 #include "planner.h"
@@ -47,11 +48,19 @@ qrSingleton_t qr;
 /**** Exception Messages ************************************************************
  * rpt_exception() - generate an exception message - always in JSON format
  * rpt_er()		   - send a bogus exception report for testing purposes (it's not real)
+ *
+ * WARNING: Do not call this function from MED or HI interrupts (LO is OK) or there is
+ *			a potential for deadlock in the TX buffer.
  */
 void rpt_exception(uint8_t status)
 {
-	printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
-		TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+		printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\"}}\n"),
+			TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+	} else {
+		printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
+			TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+	}
 }
 
 stat_t rpt_er(cmdObj_t *cmd)
@@ -78,7 +87,8 @@ void _startup_helper(stat_t status, const char *msg)
 	cmd_add_object((const char_t *)"hp");		// hardware platform
 	cmd_add_object((const char_t *)"hv");		// hardware version
 //	cmd_add_object((const char_t *)"id");		// hardware ID
-	cmd_add_string((const char_t *)"msg", (const char_t *)msg);	// startup message
+	cmd_add_string((const char_t *)"msg", pstr2str(msg));	// startup message
+//	cmd_add_string((const char_t *)"msg", (const char_t *)msg);	// startup message
 	json_print_response(status);
 #endif
 }
