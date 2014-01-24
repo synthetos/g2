@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart, Jr. 
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,11 +35,14 @@
 
 #include "MotatePins.h"
 
-#define TINYG_FIRMWARE_BUILD   		026.01	// testing with Studio 6.1 SP2
+#ifndef TINYG_FIRMWARE_BUILD
+#define TINYG_FIRMWARE_BUILD   		026.02	// tinyg merge - tinyg headers and some main.c(pp) 
+#endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
-#define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
+
 /*
 #if (PLATFORM == v9_3x8c)
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -47,19 +50,31 @@
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #endif
 */
+
 /****** COMPILE-TIME SETTINGS ******/
 
-#define __TEXT_MODE							// comment out to disable text mode support (saves ~9Kb)
-#define __HELP_SCREENS						// comment out to disable help screens 		(saves ~3.5Kb)
-#define __CANNED_TESTS 						// comment out to remove canned tests 		(saves ~12Kb)
+#define __STEP_CORRECTION
+#define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
+//#define __SIMULATION						// shorthand to keep from having to comment and uncomment the below:
+
+#ifndef __SIMULATION
+  #define __TEXT_MODE						// comment out to disable text mode support (saves ~9Kb)
+  #define __HELP_SCREENS					// comment out to disable help screens 		(saves ~3.5Kb)
+  #define __CANNED_TESTS 					// comment out to remove $tests 			(saves ~12Kb)
+#endif
+//  #define __TEST_99 						// comment out to remove diagnostic test 99
 
 /****** DEVELOPMENT SETTINGS ******/
 
-//#define __CANNED_STARTUP					// run any canned startup moves
-//#define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
-//#define __SUPPRESS_STARTUP_MESSAGES 		// what it says
-//#define __ENABLE_PROBING					// comment out to take out experimental probing code
-//#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
+#ifdef __SIMULATION
+  #define __CANNED_STARTUP					// run any canned startup moves
+  #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
+  #define __SUPPRESS_STARTUP_MESSAGES 		// what it says
+  #define __SUPPRESS_STATUS_REPORTS 		// what it says
+  #define __SUPPRESS_QUEUE_REPORTS 			// what it says
+  #define __SUPRESS_DIAGNOSTIC_DISPLAYS
+  #define __SILENCE_JSON_RESPONSES
+#endif
 
 //#ifndef WEAK
 //#define WEAK  __attribute__ ((weak))
@@ -88,11 +103,14 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)	// get float value from cfgArray
 #define GET_TOKEN_BYTE(a)  (char_t)pgm_read_byte(&cfgArray[i].a)	// get token byte value from cfgArray
 
+// populate the shared buffer with the token string given the index
+#define GET_TOKEN_STRING(i,a) strcpy_P(a, (char *)&cfgArray[(index_t)i].token);
+
 // get text from an array of strings in PGM and convert to RAM string
-#define GET_TEXT_ITEM(b,a) strcpy_P(shared_buf,(const char *)pgm_read_word(&b[a])) 
+#define GET_TEXT_ITEM(b,a) strncpy_P(shared_buf,(const char *)pgm_read_word(&b[a]), MESSAGE_LEN-1)
 
 // get units from array of strings in PGM and convert to RAM string
-#define GET_UNITS(a) 	   strcpy_P(shared_buf,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]))
+#define GET_UNITS(a) 	   strncpy_P(shared_buf,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]), MESSAGE_LEN-1)
 
 // IO settings
 #define STD_IN 	XIO_DEV_USB		// default IO settings
@@ -121,6 +139,10 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 #define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
 #define GET_TOKEN_BYTE(a)  (char_t)cfgArray[i].a	// get token byte value from cfgArray
+//#define GET_TOKEN_BYTE(i,a) (char_t)cfgArray[i].a	// get token byte value from cfgArray
+
+#define GET_TOKEN_STRING(i,a) cfgArray[(index_t)i].a
+//#define GET_TOKEN_STRING(i,a) (char_t)cfgArray[i].token)// populate the token string given the index
 
 #define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in flash
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
@@ -173,32 +195,33 @@ typedef uint16_t magic_t;		// magic number size
 /***** Axes, motors & PWM channels used by the application *****/
 // Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
 
-#define AXES	6				// number of axes supported in this version
-#define MOTORS	6				// number of motors on the board
-#define COORDS	6				// number of supported coordinate systems (1-6)
-#define PWMS	2				// number of supported PWM channels
+#define AXES		6			// number of axes supported in this version
+#define HOMING_AXES	4			// number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS		6			// number of motors on the board
+#define COORDS		6			// number of supported coordinate systems (1-6)
+#define PWMS		2			// number of supported PWM channels
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
-#define AXIS_X	0
-#define AXIS_Y	1
-#define AXIS_Z	2
-#define AXIS_A	3
-#define AXIS_B	4
-#define AXIS_C	5
-#define AXIS_U 	6				// reserved
-#define AXIS_V 	7				// reserved
-#define AXIS_W 	8				// reserved
+#define AXIS_X		0
+#define AXIS_Y		1
+#define AXIS_Z		2
+#define AXIS_A		3
+#define AXIS_B		4
+#define AXIS_C		5
+#define AXIS_U		6			// reserved
+#define AXIS_V		7			// reserved
+#define AXIS_W		8			// reserved
 
-#define MOTOR_1	0 				// define motor numbers and array indexes
-#define MOTOR_2	1				// must be defines. enums don't work
-#define MOTOR_3	2
-#define MOTOR_4	3
-#define MOTOR_5 4
-#define MOTOR_6 5
+#define MOTOR_1		0 			// define motor numbers and array indexes
+#define MOTOR_2		1			// must be defines. enums don't work
+#define MOTOR_3		2
+#define MOTOR_4		3
+#define MOTOR_5		4
+#define MOTOR_6		5
 
-#define PWM_1	0
-#define PWM_2	1
+#define PWM_1		0
+#define PWM_2		1
 
 /************************************************************************************ 
  * STATUS CODES
@@ -212,10 +235,11 @@ typedef uint16_t magic_t;		// magic number size
  * ritorno is a handy way to provide exception returns 
  * It returns only if an error occurred. (ritorno is Italian for return) 
  */
-typedef uint8_t stat_t;
-#define STATUS_MESSAGE_LEN 48			// status message string storage allocation
 
+typedef uint8_t stat_t;
 extern stat_t status_code;				// allocated in main.c
+
+#define MESSAGE_LEN 80					// global message string storage allocation
 extern char shared_buf[];				// allocated in main.c
 
 char *get_status_message(stat_t status);
@@ -253,7 +277,6 @@ char *get_status_message(stat_t status);
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
 #define	STAT_ALARMED 27
-//#define	STAT_MEMORY_FAULT 28
 #define	STAT_ERROR_28 28
 #define	STAT_ERROR_29 29
 #define	STAT_ERROR_30 30
@@ -304,17 +327,17 @@ char *get_status_message(stat_t status);
 #define	STAT_SOFT_LIMIT_EXCEEDED 71			// soft limit error
 #define	STAT_COMMAND_NOT_ACCEPTED 72		// command cannot be accepted at this time
 #define	STAT_PROBING_CYCLE_FAILED 73		// probing cycle did not complete
-#define	STAT_ERROR_74 74
-#define	STAT_ERROR_75 75
-#define	STAT_ERROR_76 76
-#define	STAT_ERROR_77 77
-#define	STAT_ERROR_78 78
-#define	STAT_ERROR_79 79
-#define	STAT_ERROR_80 80
-#define	STAT_ERROR_81 81
-#define	STAT_ERROR_82 82
-#define	STAT_ERROR_83 83
-#define	STAT_ERROR_84 84
+#define	STAT_JOGGING_CYCLE_FAILED 74		// jogging cycle did not complete
+#define	STAT_MACHINE_ALARMED 75				// machine is alarmed. Command not processed
+#define	STAT_LIMIT_SWITCH_HIT 76			// a limit switch was hit causing sutdown
+#define	STAT_HOMING_ERROR_BAD_OR_NO_AXIS 77
+#define	STAT_HOMING_ERROR_ZERO_SEARCH_VELOCITY 78
+#define	STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY 79
+#define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IS_ZERO 80
+#define	STAT_HOMING_ERROR_NEGATIVE_LATCH_BACKOFF 81
+#define	STAT_HOMING_ERROR_SWITCH_MISCONFIGURATION 82
+#define	STAT_PREP_LINE_MOVE_TIME_IS_INFINITE 83
+#define	STAT_PREP_LINE_MOVE_TIME_IS_NAN 84
 #define	STAT_ERROR_85 85
 #define	STAT_ERROR_86 86
 #define	STAT_ERROR_87 87
@@ -336,10 +359,11 @@ char *get_status_message(stat_t status);
 #define STAT_GENERIC_EXCEPTION_REPORT 101	// used for test
 #define	STAT_MEMORY_FAULT 102				// generic memory corruption detected by magic numbers
 #define	STAT_STACK_OVERFLOW 103
-#define	STAT_CONTROLLER_ASSERTION_FAILURE 104
-#define	STAT_CANONICAL_MACHINE_ASSERTION_FAILURE 105
-#define	STAT_PLANNER_ASSERTION_FAILURE 106
-#define	STAT_STEPPER_ASSERTION_FAILURE 107
-#define	STAT_XIO_ASSERTION_FAILURE 108
+#define	STAT_XIO_ASSERTION_FAILURE 104
+#define	STAT_CONTROLLER_ASSERTION_FAILURE 105
+#define	STAT_CANONICAL_MACHINE_ASSERTION_FAILURE 106
+#define	STAT_PLANNER_ASSERTION_FAILURE 107
+#define	STAT_STEPPER_ASSERTION_FAILURE 108
+#define	STAT_ENCODER_ASSERTION_FAILURE 109
 
 #endif // End of include guard: TINYG2_H_ONCE

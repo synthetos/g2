@@ -212,14 +212,14 @@ MKDIR   ?= mkdir
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-CFLAGS +=  $(DEVICE_CFLAGS)
-
+#CFLAGS +=  $(DEVICE_CFLAGS)
+CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM)
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-CPPFLAGS +=  $(DEVICE_CPPFLAGS)
-
+#CPPFLAGS +=  $(DEVICE_CPPFLAGS)
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM)
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags

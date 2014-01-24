@@ -312,7 +312,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=v9_3x8c  MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=v9_3x8c MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=v9_3x8c MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Release (v9_x8c)\</OutputPath>
