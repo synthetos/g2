@@ -101,10 +101,9 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-//	delay(1);
-//	usb._init();
 	usb.attach();					// USB setup
 	delay(1000);
+
 //	usb.detach();					// hack to detach from bootloader USB if it was previously attached.
 //	delay(1000);
 //	usb.attach();
@@ -145,7 +144,7 @@ static void _application_init(void)
 	return;
 }
 
-void tg_reset(void)			// software hard reset using the watchdog timer
+void tg_reset(void)				// software hard reset using the watchdog timer
 {
 	//	wdt_enable(WDTO_15MS);
 	//	while (true);			// loops for about 15ms then resets
