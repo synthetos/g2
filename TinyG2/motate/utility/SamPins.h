@@ -33,6 +33,7 @@
 
 // #include <chip.h>
 #include "sam.h"
+#include "SamCommon.h"
 
 namespace Motate {
 	// Numbering is arbitrary:
@@ -67,8 +68,38 @@ namespace Motate {
 		// For use on PWM pins only!
 		kPWMPinInverted    = 1<<7,
 	};
+    
+    enum PinInterruptOptions {
+        kPinInterruptsOff                = 0,
+        
+        kPinInterruptOnChange            = 1,
+        
+        kPinInterruptOnRisingEdge        = 1<<1,
+        kPinInterruptOnFallingEdge       = 2<<1,
+        
+        kPinInterruptOnLowLevel          = 3<<1,
+        kPinInterruptOnHighLevel         = 4<<1,
+
+        kPinInterruptAdvancedMask        = ((1<<3)-1)<<1,
+
+        /* This turns the IRQ on, but doesn't set the timer to ever trigger it. */
+		kPinInterruptOnSoftwareTrigger   = 1<<4,
+
+        kPinInterruptTypeMask            = (1<<5)-1,
+        
+		/* Set priority levels here as well: */
+		kPinInterruptPriorityHighest     = 1<<5,
+		kPinInterruptPriorityHigh        = 1<<6,
+		kPinInterruptPriorityMedium      = 1<<7,
+		kPinInterruptPriorityLow         = 1<<8,
+		kPinInterruptPriorityLowest      = 1<<9,
+        
+        kPinInterruptPriorityMask        = ((1<<10) - (1<<5))
+    };
 	
 	typedef uint32_t uintPort_t;
+    
+	typedef const int8_t pin_number;
 
 	template <unsigned char portLetter>
 	struct Port32 {
@@ -113,10 +144,6 @@ namespace Motate {
 			// stub
 			return 0;
 		};
-		
-		/* SAM specific: */
-		void enablePeripheralClock();
-		void disablePeripheralClock();
 	};
 
 	template<int8_t pinNum>
@@ -124,6 +151,7 @@ namespace Motate {
 		static const int8_t number = -1;
 		static const uint8_t portLetter = 0;
 		static const uint32_t mask = 0;
+
 		Pin() {};
 		Pin(const PinMode type, const PinOptions options = kNormal) {};
 		void operator=(const bool value) {};
@@ -143,8 +171,15 @@ namespace Motate {
 		uint8_t getOutputValue() { return 0; };
 		static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
 		bool isNull() { return true; };
+        
+        /* Placeholder for user code. */\
+        static void interrupt() __attribute__ ((weak));\
 	};
 
+    template<uint8_t portChar, uint8_t portPin>
+	struct ReversePinLookup : Pin<-1> {
+    };
+    
 	template<int8_t pinNum>
 	struct InputPin : Pin<pinNum> {
 		InputPin() : Pin<pinNum>(kInput) {};
@@ -175,73 +210,10 @@ namespace Motate {
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
-
-	static const uint32_t kDefaultPWMFrequency = 1000;
-	template<int8_t pinNum>
-	struct PWMOutputPin : Pin<pinNum> {
-		PWMOutputPin() : Pin<pinNum>(kOutput) {};
-		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
-		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
-		void setFrequency(const uint32_t freq) {};
-		void operator=(const float value) { write(value); };
-		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
-		bool canPWM() { return false; };
-
-		/*Override these to pick up new methods */
-
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
-
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
-	};
-
-	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
-		template<>\
-		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
-			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
-			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
-				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
-				{pwmpin_init(options);};\
-			PWMOutputPin(const uint32_t freq) :\
-				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
-				{pwmpin_init(kNormal);};\
-			void pwmpin_init(const PinOptions options) {\
-				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
-				timerOrPWM::start();\
-			};\
-			void setFrequency(const uint32_t freq) {\
-				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
-				timerOrPWM::start();\
-			};\
-			void operator=(const float value) { write(value); };\
-			void write(const float value) {\
-				uint16_t duty = getTopValue() * value;\
-				if (duty < 2)\
-					stopPWMOutput ## channelAorB ();\
-				else\
-					startPWMOutput ## channelAorB ();\
-				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
-			};\
-			bool canPWM() { return true; };\
-			/*Override these to pick up new methods */\
-		private: /* Make these private to catch them early. */\
-			/* These are intentially not defined. */\
-			void init(const PinMode type, const PinOptions options = kNormal);\
-			/* WARNING: Covariant return types! */\
-			bool get();\
-			operator bool();\
-		};
-
-
-	typedef const int8_t pin_number;
 	
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
 	
-	// (type == OutputOpendrain) ? PIO_OPENDRAIN : PIO_DEFAULT
-	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
+    #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> {\
 		private: /* Lock the copy contructor.*/\
@@ -250,7 +222,7 @@ namespace Motate {
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint32_t mask = (1u << registerPin);\
-			\
+            \
 			Pin() {};\
 			Pin(const PinMode type, const PinOptions options = kNormal) {\
 				init(type, options, /*fromConstructor=*/true);\
@@ -361,45 +333,158 @@ namespace Motate {
 			uint8_t getOutputValue() {\
 				return (*PIO ## registerLetter).PIO_OSR & mask;\
 			};\
+            void setInterrupts(const uint32_t interrupts) {\
+                port ## registerLetter.setInterrupts(interrupts, mask);\
+            };\
 			bool isNull() { return false; };\
 			static uint32_t maskForPort(const uint8_t otherPortLetter) {\
 				return portLetter == otherPortLetter ? mask : 0x00u;\
 			};\
+            /* Placeholder for user code. */\
+            static void interrupt() __attribute__ ((weak));\
 		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
-		static Pin ## pinNum pin ## pinNum;
+		static Pin ## pinNum pin ## pinNum;\
+        template<>\
+        struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
+        };
 
+
+    
+
+	static const uint32_t kDefaultPWMFrequency = 1000;
+	template<int8_t pinNum>
+	struct PWMOutputPin : Pin<pinNum> {
+		PWMOutputPin() : Pin<pinNum>(kOutput) {};
+		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
+		void setFrequency(const uint32_t freq) {};
+		void operator=(const float value) { write(value); };
+		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+		bool canPWM() { return false; };
+
+		/*Override these to pick up new methods */
+
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
+		template<>\
+		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
+			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
+			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+				{pwmpin_init(options);};\
+			PWMOutputPin(const uint32_t freq) :\
+				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+				{pwmpin_init(kNormal);};\
+			void pwmpin_init(const PinOptions options) {\
+				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
+				timerOrPWM::start();\
+			};\
+			void setFrequency(const uint32_t freq) {\
+				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+				timerOrPWM::start();\
+			};\
+			void operator=(const float value) { write(value); };\
+			void write(const float value) {\
+				uint16_t duty = getTopValue() * value;\
+				if (duty < 2)\
+					stopPWMOutput ## channelAorB ();\
+				else\
+					startPWMOutput ## channelAorB ();\
+				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
+			};\
+			bool canPWM() { return true; };\
+			/*Override these to pick up new methods */\
+		private: /* Make these private to catch them early. */\
+			/* These are intentially not defined. */\
+			void init(const PinMode type, const PinOptions options = kNormal);\
+			/* WARNING: Covariant return types! */\
+			bool get();\
+			operator bool();\
+		};
+
+
+    template<int8_t pinNum>
+	struct SPIChipSelectPin {
+		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
+        
+//        static const uint8_t moduleId = 255;
+//        static const uint8_t csOffset = 0;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+//		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+    #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
+        template<>\
+        struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
+            SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            static const uint8_t csOffset = csNum;\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+
+    
+    template<int8_t pinNum>
+	struct SPIOtherPin {
+		SPIOtherPin() : Pin<pinNum>(kOutput) {};
+        
+//        static const uint16_t moduleId = 255;
+        
+		/*Override these to pick up new methods */
+        
+	private: /* Make these private to catch them early. */
+		/* These are intentially not defined. */
+//		void init(const PinMode type, const PinOptions options = kNormal);
+        
+		/* WARNING: Covariant return types! */
+		bool get();
+		operator bool();
+	};
+
+    
+    #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
+        template<>\
+        struct SPIOtherPin<pinNum> : Pin<pinNum> {\
+            SPIOtherPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
+            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            /*Override these to pick up new methods */\
+        private: /* Make these private to catch them early. */\
+            /* These are intentially not defined. */\
+            /* WARNING: Covariant return types! */\
+            bool get();\
+            operator bool();\
+        };
+    
+    
+    
+    
+    
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\
-		struct Port32<registerChar> {\
+		struct Port32<registerChar> : SamCommon< Port32<registerChar> > {\
 			static const uint8_t letter = (uint8_t) registerChar;\
-			static void enablePeripheralClock() {\
-				if (pmcId() < 32) {\
-					uint32_t id_mask = 1u << ( pmcId() );\
-					if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
-						PMC->PMC_PCER0 = id_mask;\
-					}\
-				} else {\
-					uint32_t id_mask = 1u << ( pmcId() - 32 );\
-					if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {\
-						PMC->PMC_PCER1 = id_mask;\
-					}\
-				}\
-			};\
-			static void disablePeripheralClock() {\
-				if (pmcId() < 32) {\
-					uint32_t id_mask = 1u << ( pmcId() );\
-					if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
-						PMC->PMC_PCDR0 = id_mask;\
-					}\
-				} else {\
-					uint32_t id_mask = 1u << ( pmcId()-32 );\
-					if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {\
-						PMC->PMC_PCDR1 = id_mask;\
-					}\
-				}\
-			};\
 			void setModes(const uintPort_t value, const uintPort_t mask) {\
 				(*PIO ## registerLetter).PIO_ODR = ~value & mask ;\
 				(*PIO ## registerLetter).PIO_OER = value & mask ;\
@@ -472,17 +557,83 @@ namespace Motate {
 			Pio* portPtr() {\
 				return (PIO ## registerLetter);\
 			};\
-			static const uint32_t pmcId() {\
+			static const uint32_t peripheralId() {\
 				return ID_PIO ## registerLetter;\
 			};\
+            void setInterrupts(const uint32_t interrupts, const uintPort_t mask) {\
+                if (interrupts != kPinInterruptsOff) {\
+                    (*PIO ## registerLetter).PIO_IDR = mask;\
+                    \
+                    /*Is it an "advanced" interrupt?*/\
+                    if (interrupts & kPinInterruptAdvancedMask) {\
+                        (*PIO ## registerLetter).PIO_AIMER = mask;\
+                        /*Is it an edge interrupt?*/\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnRisingEdge ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnFallingEdge) {\
+                            (*PIO ## registerLetter).PIO_ESR = mask;\
+                        }\
+                        else\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnLowLevel) {\
+                            (*PIO ## registerLetter).PIO_LSR = mask;\
+                        }\
+                        /*Rising Edge/High Level, or Falling Edge/LowLevel?*/\
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnRisingEdge ||\
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel) {\
+                            (*PIO ## registerLetter).PIO_REHLSR = mask;\
+                        }\
+                        else\
+                        {\
+                            (*PIO ## registerLetter).PIO_FELLSR = mask;\
+                        }\
+                    }\
+                    else\
+                    {\
+                        (*PIO ## registerLetter).PIO_AIMDR = mask;\
+                    }\
+                    \
+                    /* Set interrupt priority */\
+                    if (interrupts & kPinInterruptPriorityMask) {\
+                        if (interrupts & kPinInterruptPriorityHighest) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 0);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityHigh) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 3);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityMedium) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 7);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityLow) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 11);\
+                        }\
+                        else if (interrupts & kPinInterruptPriorityLowest) {\
+                            NVIC_SetPriority(PIO ## registerLetter ## _IRQn, 15);\
+                        }\
+                    }\
+                    /* Enable the IRQ */\
+                    NVIC_EnableIRQ(PIO ## registerLetter ## _IRQn);\
+                    /* Enable the interrupt */\
+                    (*PIO ## registerLetter).PIO_IER = mask;\
+                } else {\
+                    (*PIO ## registerLetter).PIO_IDR = mask;\
+                    if ((*PIO ## registerLetter).PIO_ISR == 0)\
+                        NVIC_DisableIRQ(PIO ## registerLetter ## _IRQn);\
+                }\
+            };\
 		};\
 		typedef Port32<registerChar> Port ## registerLetter;\
 		static Port ## registerLetter port ## registerLetter;
 
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
-
+    
 } // end namespace Motate
+
+
+#define MOTATE_PIN_INTERRUPT(number) \
+    Pin<number>::interrupt_defined = true;\
+    template<> void Pin<number>::interrupt()
+
 
 // Note: We end the namespace before including in case the included file need to include
 //   another Motate file. If it does include another Motate file, we end up with
