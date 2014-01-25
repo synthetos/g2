@@ -548,11 +548,7 @@ void canonical_machine_init()
 	memset(&cm.gn, 0, sizeof(GCodeInput_t));
 	memset(&cm.gf, 0, sizeof(GCodeInput_t));
 
-	// setup magic numbers
-	cm.magic_start = MAGICNUM;
-	cm.magic_end = MAGICNUM;
-	cm.gmx.magic_start = MAGICNUM;
-	cm.gmx.magic_end = MAGICNUM;
+	canonical_machine_init_assertions();
 
 	// set gcode defaults
 	cm_set_units_mode(cm.units_mode);
@@ -582,39 +578,26 @@ void canonical_machine_init()
 }
 
 /*
- * cm_assertions() - test assertions, return error code if violation exists
+ * canonical_machine_init_assertions()
+ * canonical_machine_test_assertions() - test assertions, return error code if violation exists
  */
-
-stat_t cm_assertions()
+void canonical_machine_init_assertions(void)
 {
-	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cm.gmx.magic_start 	!= MAGICNUM) || (cm.gmx.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	cm.magic_start = MAGICNUM;
+	cm.magic_end = MAGICNUM;
+	cm.gmx.magic_start = MAGICNUM;
+	cm.gmx.magic_end = MAGICNUM;
+	arc.magic_start = MAGICNUM;
+	arc.magic_end = MAGICNUM;
+}
+
+stat_t canonical_machine_test_assertions(void)
+{
+	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
+	if ((cm.gmx.magic_start != MAGICNUM) || (cm.gmx.magic_end != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
+	if ((arc.magic_start 	!= MAGICNUM) || (arc.magic_end    != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
 	return (STAT_OK);
 }
-/*
- * cm_alarm() - alarm state; send an exception report and shut down machine
- */
-/*
-stat_t cm_alarm(stat_t status)
-{
-	// stop the steppers and the spindle
-	st_deenergize_motors();
-	cm_spindle_control(SPINDLE_OFF);
-
-	// disable all MCode functions
-//	gpio_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
-//	gpio_set_bit_off(SPINDLE_DIR);
-//	gpio_set_bit_off(SPINDLE_PWM);
-//	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
-//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
-
-	cm.machine_state = MACHINE_ALARM;
-	rpt_exception(status);					// send shutdown message
-	return (status);
-}
-*/
 
 /*
  * cm_soft_alarm() - alarm state; send an exception report and stop processing input

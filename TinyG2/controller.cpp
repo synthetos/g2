@@ -82,8 +82,8 @@ stat_t hardware_hard_reset_handler(void);
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
 {
-	cs.magic_start = MAGICNUM;
-	cs.magic_end = MAGICNUM;
+	controller_init_assertions();
+
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
@@ -93,13 +93,46 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.hard_reset_requested = false;
 	cs.bootloader_requested = false;
 
-//	xio_set_stdin(std_in);
-//	xio_set_stdout(std_out);
-//	xio_set_stderr(std_err);
-//	cs.default_src = std_in;
-//	tg_set_primary_source(cs.default_src);
+	cs.job_id[0] = 0;								// clear the job_id
+	cs.job_id[1] = 0;
+	cs.job_id[2] = 0;
+	cs.job_id[3] = 0;
+
+#ifdef __AVR
+	xio_set_stdin(std_in);
+	xio_set_stdout(std_out);
+	xio_set_stderr(std_err);
+	cs.default_src = std_in;
+	tg_set_primary_source(cs.default_src);
+#endif
 
 	IndicatorLed.setFrequency(100000);
+}
+
+/* 
+ * controller_init_assertions()
+ * controller_test_assertions() - check memory integrity of controller
+ */
+
+void controller_init_assertions()
+{
+	cs.magic_start = MAGICNUM;
+	cs.magic_end = MAGICNUM;
+
+	cfg.magic_start = MAGICNUM;		// assertions for config system are handled from the controller
+	cfg.magic_end = MAGICNUM;
+	cmdStr.magic_start = MAGICNUM;
+	cmdStr.magic_end = MAGICNUM;
+}
+
+stat_t controller_test_assertions()
+{
+	if ((cs.magic_start 	!= MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+//	if (shared_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+
+	return (STAT_OK);
 }
 
 /* 
@@ -384,6 +417,19 @@ stat_t _controller_assertions()
 /* 
  * _system_assertions() - check memory integrity and other assertions
  */
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) { cm_hard_alarm(status_code); return(status_code); }
+
+stat_t _system_assertions()
+{
+	emergency___everybody_to_get_from_street(controller_test_assertions());
+	emergency___everybody_to_get_from_street(canonical_machine_test_assertions());
+	emergency___everybody_to_get_from_street(planner_test_assertions());
+	emergency___everybody_to_get_from_street(stepper_test_assertions());
+//	emergency___everybody_to_get_from_street(encoder_test_assertions());
+//	emergency___everybody_to_get_from_street(xio_test_assertions());
+	return (STAT_OK);
+}
+/*
 stat_t _system_assertions()
 {
 	stat_t status;
@@ -401,4 +447,4 @@ stat_t _system_assertions()
 	cm_hard_alarm(status);		// else report exception and shut down
 	return (STAT_EAGAIN);	// do not allow main loop to advance beyond this point
 }
-
+*/

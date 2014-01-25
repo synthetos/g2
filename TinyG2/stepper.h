@@ -285,6 +285,7 @@ typedef struct stRunSingleton {		// Stepper static values and axis parameters
 	int32_t dda_ticks_downcount;	// tick down-counter (unscaled)
 	int32_t dda_ticks_X_substeps;	// ticks multiplied by scaling factor
 	stRunMotor_t m[MOTORS];			// runtime motor structures
+	uint16_t magic_end;
 } stRunSingleton_t;
 
 // Prep-time structure. Used by exec/prep ISR (MED) and read-only during load
@@ -306,6 +307,7 @@ typedef struct stPrepSingleton {
 	uint32_t dda_ticks_X_substeps;	// DDA ticks scaled by substep factor
 //	float segment_velocity;			// record segment velocity for diagnostics
 	stPrepMotor_t m[MOTORS];		// per-motor structs
+	uint16_t magic_end;
 } stPrepSingleton_t;
 
 extern stConfig_t st;
@@ -313,8 +315,9 @@ extern stConfig_t st;
 /**** FUNCTION PROTOTYPES ****/
 
 void stepper_init(void);
+void stepper_init_assertions(void);
+stat_t stepper_test_assertions(void);
 uint8_t stepper_isbusy(void);
-stat_t st_assertions(void);
 
 void st_energize_motors(void);
 void st_deenergize_motors(void);

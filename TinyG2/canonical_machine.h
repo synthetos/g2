@@ -541,7 +541,6 @@ stat_t cm_test_soft_limits(float target[]);
 /*--- canonical machining functions (loosely patterned after NIST) ---*/
 
 void canonical_machine_init(void);
-stat_t cm_assertions(void);
 void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
