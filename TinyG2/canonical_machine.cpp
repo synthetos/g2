@@ -572,8 +572,21 @@ void canonical_machine_init()
 }
 
 /*
+ * cm_assertions() - test assertions, return error code if violation exists
+ */
+
+stat_t cm_assertions()
+{
+	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((cm.gmx.magic_start 	!= MAGICNUM) || (cm.gmx.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	return (STAT_OK);
+}
+/*
  * cm_alarm() - alarm state; send an exception report and shut down machine
  */
+/*
 stat_t cm_alarm(stat_t status)
 {
 	// stop the steppers and the spindle
@@ -591,17 +604,48 @@ stat_t cm_alarm(stat_t status)
 	rpt_exception(status);					// send shutdown message
 	return (status);
 }
+*/
 
 /*
- * cm_assertions() - test assertions, return error code if violation exists
+ * cm_soft_alarm() - alarm state; send an exception report and stop processing input
+ * cm_hard_alarm() - alarm state; send an exception report and shut down machine
+ * cm_clear() 	   - clear soft alarm
+ *
+ *	Fascinating: http://www.cncalarms.com/
  */
-stat_t cm_assertions()
+stat_t cm_soft_alarm(stat_t status)
 {
-	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cm.gmx.magic_start 	!= MAGICNUM) || (cm.gmx.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	rpt_exception(status);					// send alarm message
+	cm.machine_state = MACHINE_ALARM;
+	return (status);
+}
+
+stat_t cm_clear(cmdObj_t *cmd)				// clear soft alarm
+{
+	if (cm.cycle_state == CYCLE_OFF) {
+		cm.machine_state = MACHINE_PROGRAM_STOP;
+	} else {
+		cm.machine_state = MACHINE_CYCLE;
+	}
 	return (STAT_OK);
+}
+
+stat_t cm_hard_alarm(stat_t status)
+{
+	// stop the steppers and the spindle
+	st_deenergize_motors();
+	cm_spindle_control(SPINDLE_OFF);
+
+	// disable all MCode functions
+//	gpio_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
+//	gpio_set_bit_off(SPINDLE_DIR);
+//	gpio_set_bit_off(SPINDLE_PWM);
+//	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
+//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
+
+	rpt_exception(status);					// send shutdown message
+	cm.machine_state = MACHINE_SHUTDOWN;
+	return (status);
 }
 
 /**************************

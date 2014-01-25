@@ -88,7 +88,6 @@ void _startup_helper(stat_t status, const char *msg)
 	cmd_add_object((const char_t *)"hv");		// hardware version
 //	cmd_add_object((const char_t *)"id");		// hardware ID
 	cmd_add_string((const char_t *)"msg", pstr2str(msg));	// startup message
-//	cmd_add_string((const char_t *)"msg", (const char_t *)msg);	// startup message
 	json_print_response(status);
 #endif
 }
@@ -156,10 +155,10 @@ static uint8_t _populate_filtered_status_report(void);
 
 uint8_t _is_stat(cmdObj_t *cmd)
 {
-	char_t token[TOKEN_LEN+1];
+	char_t tok[TOKEN_LEN+1];
 
-	GET_TOKEN_STRING(cmd->value, token);
-	if (strcmp(token, "stat") == 0) { return (true);}
+	GET_TOKEN_STRING(cmd->value, tok);
+	if (strcmp(tok, "stat") == 0) { return (true);}
 	return (false);
 }
 
@@ -181,6 +180,8 @@ void sr_init_status_report()
 		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
 		sr.status_report_value[i] = -1234567;			// pre-load values with an unlikely number
 		cmd->value = cmd_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
+		if (_is_stat(cmd) == true)
+			sr.stat_index = cmd->value;					// identify index for 'stat' if status is in the report
 		cmd_set(cmd);
 		cmd_persist(cmd);								// conditionally persist - automatic by cmd_persis()
 		cmd->index++;									// increment SR NVM index
@@ -312,7 +313,7 @@ static stat_t _populate_unfiltered_status_report()
 		strcpy(cmd->token, tmp);			//...or here.
 
 		if ((cmd = cmd->nx) == NULL) 
-			return (cm_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
+			return (cm_hard_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
 	}
 	return (STAT_OK);
 }
@@ -337,7 +338,7 @@ static uint8_t _populate_filtered_status_report()
 	char_t tmp[TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets cmd to the start of the body
 
-	cmd->objtype = TYPE_PARENT; 			// setup the parent object
+	cmd->objtype = TYPE_PARENT; 			// setup the parent object (no need to length check the copy)
 	strcpy(cmd->token, sr_str);
 //	cmd->index = cmd_get_index((const char_t *)"", sr_str);// OMITTED - set the index - may be needed by calling function
 	cmd = cmd->nx;							// no need to check for NULL as list has just been reset
@@ -620,26 +621,17 @@ uint8_t job_report_callback()
 stat_t job_get(cmdObj_t *cmd) { return (job_populate_job_report());}
 stat_t job_set(cmdObj_t *cmd) { return (job_set_job_report(cmd));}
 void job_print_job(cmdObj_t *cmd) { job_populate_job_report();}
+
 /*********************
  * TEXT MODE SUPPORT *
  *********************/
 #ifdef __TEXT_MODE
 
-//static const char fmt_qr_single[] PROGMEM = "qr:%d\n";
-//static const char fmt_qr_triple[] PROGMEM = "qr:%d, qi:%d, qo:%d\n";
 static const char fmt_qr[] PROGMEM = "qr:%d\n";
 static const char fmt_qi[] PROGMEM = "qi:%d\n";
 static const char fmt_qo[] PROGMEM = "qo:%d\n";
 static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=single,2=triple]\n";
 
-/*
-void qr_print_qr(cmdObj_t *cmd) { 
-	if (qr.queue_report_verbosity == QR_TRIPLE) {
-		text_print_int(cmd, fmt_qr);}
-		
-	}
-}
-*/
 void qr_print_qr(cmdObj_t *cmd) { text_print_int(cmd, fmt_qr);}
 void qr_print_qi(cmdObj_t *cmd) { text_print_int(cmd, fmt_qi);}
 void qr_print_qo(cmdObj_t *cmd) { text_print_int(cmd, fmt_qo);}

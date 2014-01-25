@@ -382,7 +382,7 @@ stat_t _system_assertions()
 		break;
 	}
 	if (status == STAT_OK) return (STAT_OK);
-	cm_alarm(status);		// else report exception and shut down
+	cm_hard_alarm(status);		// else report exception and shut down
 	return (STAT_EAGAIN);	// do not allow main loop to advance beyond this point
 }
 
