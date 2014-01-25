@@ -187,6 +187,7 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
+//	DISPATCH(cm_jogging_callback());			// jog function
 //	DISPATCH(cm_probe_callback());				// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
@@ -252,13 +253,7 @@ static stat_t _command_dispatch()
 			}
 			break;
 		}
-		case 'H': { 									// intercept help screens
-			cfg.comm_mode = TEXT_MODE;
-			help_general((cmdObj_t *)NULL);
-			text_response(STAT_OK, cs.bufp);
-			break;
-		}
-		case '$': case '?':{ 							// text-mode configs
+		case '$': case '?': case 'H': { 				// text mode input
 			cfg.comm_mode = TEXT_MODE;
 			text_response(text_parser(cs.bufp), cs.saved_buf);
 			break;
@@ -269,11 +264,11 @@ static stat_t _command_dispatch()
 			break;
 		}
 		default: {										// anything else must be Gcode
-			if (cfg.comm_mode == JSON_MODE) {
+			if (cfg.comm_mode == JSON_MODE) {			// run it as JSON...
 				strncpy(cs.out_buf, cs.bufp, INPUT_BUFFER_LEN -8);					// use out_buf as temp
 				sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);	// '-8' is used for JSON chars
 				json_parser(cs.bufp);
-			} else {
+			} else {									//...or run it as text
 				text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
 			}
 		}
@@ -302,19 +297,6 @@ static stat_t _shutdown_idler()
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
-
-/*
-static stat_t _alarm_idler()
-{
-	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
-
-	if (SysTickTimer.getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer.getValue() + LED_ALARM_TIMER;
-//		IndicatorLed.toggle();
-	}
-	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
-}
-*/
 
 static stat_t _normal_idler()
 {
@@ -373,6 +355,7 @@ void tg_set_secondary_source(uint8_t dev) { cs.secondary_src = dev;}
 /*
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
+ * _sync_to_time() - return eagain if planner is not ready for a new command
  */
 
 static stat_t _sync_to_tx_buffer()
@@ -390,6 +373,19 @@ static stat_t _sync_to_planner()
 	}
 	return (STAT_OK);
 }
+/*
+static stat_t _sync_to_time()
+{
+	if (cs.sync_to_time_time == 0) {		// initial pass
+		cs.sync_to_time_time = SysTickTimer_getValue() + 100; //ms
+		return (STAT_OK);
+	}
+	if (SysTickTimer_getValue() < cs.sync_to_time_time) {
+		return (STAT_EAGAIN);
+	}
+	return (STAT_OK);
+}
+*/
 
 /*
  * _limit_switch_handler() - shut down system if limit switch fired
@@ -429,22 +425,3 @@ stat_t _system_assertions()
 //	emergency___everybody_to_get_from_street(xio_test_assertions());
 	return (STAT_OK);
 }
-/*
-stat_t _system_assertions()
-{
-	stat_t status;
-
-	for (;;) {	// run this loop only once, but enable breaks
-
-		if ((status = _controller_assertions()) != STAT_OK)  break;
-		if ((status = cm_assertions())	!= STAT_OK) break;
-		if ((status = mp_assertions())	!= STAT_OK) break;
-		if ((status = st_assertions())	!= STAT_OK) break;
-		if ((status = xio_assertions())	!= STAT_OK) break;
-		break;
-	}
-	if (status == STAT_OK) return (STAT_OK);
-	cm_hard_alarm(status);		// else report exception and shut down
-	return (STAT_EAGAIN);	// do not allow main loop to advance beyond this point
-}
-*/
