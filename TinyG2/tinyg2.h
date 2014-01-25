@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.10	// tinyg merge - updated util.cpp 
+#define TINYG_FIRMWARE_BUILD   		026.11	// tinyg merge - updated xio.cpp/.h - Note xio is completely different in tinyg and g2 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
