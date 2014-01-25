@@ -2,8 +2,8 @@
  * controller.cpp - tinyg2 controller and top level parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr. 
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -36,6 +36,7 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
+//#include "encoder.h"
 #include "hardware.h"
 #include "switch.h"
 //#include "gpio.h"
@@ -44,7 +45,9 @@
 #include "util.h"
 #include "xio.h"
 
+#ifdef __ARM
 #include "Reset.h"
+#endif
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
@@ -57,7 +60,7 @@ controller_t cs;		// controller state structure
  ***********************************************************************************/
 
 static void _controller_HSM(void);
-static stat_t _alarm_idler(void);
+static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
 static stat_t _system_assertions(void);
@@ -135,7 +138,7 @@ static void _controller_HSM()
 												// Order is important:
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 //	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
-	DISPATCH(_alarm_idler());					// 3. idle in alarm state (shutdown)
+	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
@@ -247,15 +250,27 @@ static stat_t _command_dispatch()
 
 /**** Local Utilities ********************************************************/
 /*
- * _alarm_idler() - blink rapidly and prevent further activity from occurring
+ * _shutdown_idler() - blink rapidly and prevent further activity from occurring
  * _normal_idler() - blink Indicator LED slowly to show everything is OK
  *
- *	Alarm idler flashes indicator LED rapidly to show everything is not OK. 
- *	Alarm function returns EAGAIN causing the control loop to never advance beyond 
+ *	Shutdown idler flashes indicator LED rapidly to show everything is not OK. 
+ *	Shutdown idler returns EAGAIN causing the control loop to never advance beyond 
  *	this point. It's important that the reset handler is still called so a SW reset 
  *	(ctrl-x) or bootloader request can be processed.
  */
 
+static stat_t _shutdown_idler()
+{
+	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
+
+	if (SysTickTimer_getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer_getValue() + LED_ALARM_TIMER;
+		IndicatorLed.toggle();
+	}
+	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+}
+
+/*
 static stat_t _alarm_idler()
 {
 	if (cm_get_machine_state() != MACHINE_ALARM) { return (STAT_OK);}
@@ -266,12 +281,13 @@ static stat_t _alarm_idler()
 	}
 	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
 }
+*/
 
 static stat_t _normal_idler()
 {
 	/*
 	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
-	 * See plan_line.cpp for expalanations.
+	 * See plan_line.cpp for explanations.
 	 * Here, the "velocity" goes from 0.0 to 1.0, then back.
 	 * t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
 	 */

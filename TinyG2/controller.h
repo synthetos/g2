@@ -35,11 +35,10 @@ extern "C"{
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
 #define SAVED_BUFFER_LEN 100			// saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
-#define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
-//#define STATUS_MESSAGE_LEN __			// see tinyg2.h for status message string storage allocation
+// see also: tinyg.h MESSAGE_LEN and config.c CMD_ lengths.
 
 #define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 3000			// blink rate for alarm state (in ms)
+#define LED_ALARM_TIMER 100				// blink rate for alarm state (in ms)
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
@@ -100,10 +99,6 @@ void controller_run(void);
 void tg_reset_source(void);
 void tg_set_primary_source(uint8_t dev);
 void tg_set_secondary_source(uint8_t dev);
-
-//void tg_text_response(const uint8_t status, const char *buf);
-//void tg_reset(void);
-//void tg_application_startup(void);
 
 #ifdef __cplusplus
 }
