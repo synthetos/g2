@@ -229,6 +229,7 @@ enum objType {						// object / value typing for config and JSON
 	TYPE_NULL = 0,					// value is 'null' (meaning the JSON null value)
 	TYPE_BOOL,						// value is "true" (1) or "false"(0)
 	TYPE_INTEGER,					// value is a uint32_t
+	TYPE_DATA,						// value is blind cast to uint32_t	
 	TYPE_FLOAT,						// value is a floating point number
 	TYPE_STRING,					// value is in string field
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
