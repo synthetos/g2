@@ -2,7 +2,7 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart Jr.
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
@@ -534,7 +534,8 @@ void cm_set_move_times(GCodeState_t *gcode_state);
 
 void cm_set_model_linenum(uint32_t linenum);
 void cm_set_model_target(float target[], float flag[]);
-void cm_conditional_set_model_position(stat_t status);
+void cm_set_model_position(stat_t status);
+void cm_set_model_position_from_runtime(stat_t status);
 stat_t cm_test_soft_limits(float target[]);
 
 /*--- canonical machining functions (loosely patterned after NIST) ---*/

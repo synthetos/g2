@@ -72,7 +72,7 @@ static void _init_forward_diffs(float t0, float t2);
 float mp_get_runtime_velocity(void) { return (mr.segment_velocity);}
 float mp_get_runtime_absolute_position(uint8_t axis) { return (mr.position[axis]);}
 float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - mr.gm.work_offset[axis]);}
-void mp_set_runtime_work_offset(float offset[]) { copy_axis_vector(mr.gm.work_offset, offset);}
+void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset);}
 void mp_zero_segment_velocity() { mr.segment_velocity = 0;}
 
 /* 
@@ -177,7 +177,7 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 
 	uint8_t mr_flag = false;
 	_plan_block_list(bf, &mr_flag);							// replan block list and commit current block
-	copy_axis_vector(mm.position, bf->gm.target);			// update planning position
+	copy_vector(mm.position, bf->gm.target);				// update planning position
 	mp_queue_write_buffer(MOVE_TYPE_ALINE);
 	return (STAT_OK);
 }
@@ -1005,8 +1005,8 @@ static stat_t _exec_aline(mpBuf_t *bf)
 		mr.entry_velocity = bf->entry_velocity;
 		mr.cruise_velocity = bf->cruise_velocity;
 		mr.exit_velocity = bf->exit_velocity;
-		copy_axis_vector(mr.unit, bf->unit);
-		copy_axis_vector(mr.endpoint, bf->gm.target);	// save the final target of the move
+		copy_vector(mr.unit, bf->unit);
+		copy_vector(mr.endpoint, bf->gm.target);		// save the final target of the move
 	}
 	// NB: from this point on the contents of the bf buffer do not affect execution
 
@@ -1261,7 +1261,7 @@ static stat_t _exec_aline_segment(uint8_t correction_flag)
 	// prep the segment for the steppers and adjust the variables for the next iteration
 	ik_kinematics(travel, steps, mr.microseconds);
 	if (st_prep_line(steps, mr.microseconds) == STAT_OK) {
-		copy_axis_vector(mr.position, mr.gm.target); 	// update runtime position	
+		copy_vector(mr.position, mr.gm.target);			// update runtime position	
 /* TRY THIS
 		mr.position[AXIS_X] = mr.gm.target[AXIS_X];
 		mr.position[AXIS_Y] = mr.gm.target[AXIS_Y];

@@ -98,7 +98,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 	// populate the arc control singleton
 //	copy_axis_vector(arc.endpoint, gm.target);		// +++++ Diagnostic - save target position
 
-	copy_axis_vector(arc.position, cm.gmx.position);// set initial arc position from gcode model
+	copy_vector(arc.position, cm.gmx.position);// set initial arc position from gcode model
 	arc.radius = _to_millimeters(radius);			// set arc radius or zero
 	arc.offset[0] = _to_millimeters(i);				// copy offsets with conversion to canonical form (mm)
 	arc.offset[1] = _to_millimeters(j);
@@ -125,7 +125,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 //	ritorno(_test_arc_soft_limits());			// test if arc will trip soft limits
 	cm_cycle_start();							// if not already started
 	arc.run_state = MOVE_STATE_RUN;				// enable arc to be run from the callback
-	cm_conditional_set_model_position(STAT_OK);	// set endpoint position if the arc was successful
+	cm_set_model_position(STAT_OK);				// set endpoint position if the arc was successful
 	return (STAT_OK);
 }
 
@@ -148,7 +148,7 @@ stat_t cm_arc_callback()
 	arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
 	arc.gm.target[arc.linear_axis] += arc.segment_linear_travel;
 	mp_aline(&arc.gm);								// run the line
-	copy_axis_vector(arc.position, arc.gm.target);	// update arc current position	
+	copy_vector(arc.position, arc.gm.target);		// update arc current position	
 
 	if (--arc.segment_count > 0) return (STAT_EAGAIN);
 	arc.run_state = MOVE_STATE_OFF;

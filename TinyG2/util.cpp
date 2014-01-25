@@ -33,13 +33,17 @@
 #include "tinyg2.h"
 #include "util.h"
 
+#ifdef __AVR
+#include "xmega/xmega_rtc.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 /**** Vector utilities ****
  * copy_vector()			- copy vector of arbitrary length
- * copy_axis_vector()		- copy an axis vector
+ * vector_equal()			- test if vectors are equal
  * get_axis_vector_length()	- return the length of an axis vector
  * set_vector()				- load values into vector form
  * set_vector_by_axis()		- load a single value into a zero vector
@@ -48,16 +52,11 @@ extern "C"{
 float vector[AXES];	// statically allocated global for vector utilities
 
 /*
-void copy_vector(float dst[], const float src[], uint8_t length)
+void copy_vector(float dst[], const float src[])
 {
-	for (uint8_t i=0; i<length; i++) { dst[i] = src[i]; }
+	memcpy(dst, src, sizeof(dst));
 }
 */
-
-void copy_axis_vector(float dst[], const float src[])
-{
-	memcpy(dst, src, sizeof(float)*AXES);
-}
 
 uint8_t vector_equal(const float a[], const float b[])
 {
@@ -206,7 +205,6 @@ char_t *escape_string(char_t *dst, char_t *src)
  *	allocation and max length. On the ARM it's a pass through that just returns the address 
  *	of the input string
  */
-//char_t *pstr2str(const char_t *pgm_string)
 char_t *pstr2str(const char *pgm_string)
 {
 #ifdef __AVR
@@ -233,9 +231,7 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
 	uint32_t h = 0;
 	uint16_t len = strlen(string);
 
-	if (length != 0) {
-		len = min(len, length);
-	}
+	if (length != 0) len = min(len, length);
     for (uint16_t i=0; i<len; i++) {
 		h = 31 * h + string[i];
     }
@@ -245,12 +241,20 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
 /*
  * SysTickTimer_getValue() - this is a hack to get around some compatibility problems
  */
+
+#ifdef __AVR
+uint32_t SysTickTimer_getValue()
+{
+	return (rtc.sys_ticks);
+}
+#endif // __AVR
+
 #ifdef __ARM
 uint32_t SysTickTimer_getValue()
 {
 	return (SysTickTimer.getValue());
 }
-#endif
+#endif	// __ARM
 
 #ifdef __cplusplus
 }

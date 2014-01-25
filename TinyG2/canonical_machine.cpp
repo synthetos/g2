@@ -2,7 +2,7 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -384,23 +384,33 @@ void cm_set_model_target(float target[], float flag[])
 }
 
 /* 
- * cm_conditional_set_model_position() - set endpoint position; uses internal canonical coordinates only
+ * cm_set_model_position() - set endpoint position; uses internal canonical coordinates only
+ * cm_set_model_position_from_runtime() - set endpoint position from final runtime position
  *
- * 	This routine sets the endpoint position in the gccode model if the move was 
- *	successfully completed (no errors). Leaving the endpoint position alone for 
- *	errors allows too-short-lines to accumulate into longer lines (line interpolation).
+ * 	This routine sets the endpoint position in the gcode model if the move was successfully 
+ *	completed (no errors). Leaving the endpoint position alone for errors allows 
+ *	too-short-lines to accumulate into longer lines (line aggregation).
  *
- * 	Note: As far as the canonical machine is concerned the final position is achieved 
- *	as soon at the move is executed and the position is now the target. In reality 
- *	the planner(s) and steppers will still be processing the action and the real tool 
- *	position is still close to the starting point. 
+ * 	Note: As far as the canonical machine is concerned the final position is achieved as soon 
+ *	as the move is executed and the position is now the target. In reality the planner and 
+ *	steppers will still be processing the action and the real tool position is still close 
+ *	to the starting point. 
  */
-
-void cm_conditional_set_model_position(stat_t status) 
+void cm_set_model_position(stat_t status) 
 {
-	if (status == STAT_OK) copy_axis_vector(cm.gmx.position, cm.gm.target);
+	if (status == STAT_OK) copy_vector(cm.gmx.position, cm.gm.target);
 }
 
+void cm_set_model_position_from_runtime(stat_t status)
+{
+	if (status == STAT_OK) copy_vector(cm.gmx.position, mr.gm.target);
+}
+/*
+void cm_conditional_set_model_position(stat_t status) 
+{
+	if (status == STAT_OK) copy_vector(cm.gmx.position, cm.gm.target);
+}
+*/
 /*
  * cm_set_move_times() 	- capture optimal and minimum move times into the gcode_state
  * _get_move_times() 	- get minimum and optimal move times
@@ -865,7 +875,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);			// run the move
-	cm_conditional_set_model_position(status);	// update position if the move was successful
+	cm_set_model_position(status);				// update position if the move was successful
 	return (status);
 }
 
@@ -878,7 +888,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 
 stat_t cm_set_g28_position(void)
 {
-	copy_axis_vector(cm.gmx.g28_position, cm.gmx.position);
+	copy_vector(cm.gmx.g28_position, cm.gmx.position);
 	return (STAT_OK);
 }
 
@@ -893,7 +903,7 @@ stat_t cm_goto_g28_position(float target[], float flags[])
 
 stat_t cm_set_g30_position(void)
 {
-	copy_axis_vector(cm.gmx.g30_position, cm.gmx.position);
+	copy_vector(cm.gmx.g30_position, cm.gmx.position);
 	return (STAT_OK);
 }
 
@@ -995,7 +1005,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);			// run the move
-	cm_conditional_set_model_position(status);	// update position if the move was successful
+	cm_set_model_position(status);				// update position if the move was successful
 	return (status);
 }
 
