@@ -489,6 +489,9 @@
     <Compile Include="cycle_homing.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="cycle_jogging.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="cycle_probing.cpp">
       <SubType>compile</SubType>
     </Compile>
