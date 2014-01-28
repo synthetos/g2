@@ -28,8 +28,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _CANONICAL_MACHINE_H_
-#define _CANONICAL_MACHINE_H_
+#ifndef CANONICAL_MACHINE_H_ONCE
+#define CANONICAL_MACHINE_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -37,7 +37,7 @@ extern "C"{
 
 #include "config.h"
 
-/* Defines and macros */
+/* Defines, Macros, and  Assorted Parameters */
 
 #define MODEL 	(GCodeState_t *)&cm.gm		// absolute pointer from canonical machine gm model
 #define PLANNER (GCodeState_t *)&bf->gm		// relative to buffer *bf is currently pointing to
@@ -45,6 +45,9 @@ extern "C"{
 #define ACTIVE_MODEL cm.am					// active model pointer is maintained by state management
 
 #define _to_millimeters(a) ((cm.gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+
+#define JOGGING_START_VELOCITY ((float)10.0)
+#define DISABLE_SOFT_LIMIT (-1000000)
 
 /*****************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
@@ -211,6 +214,7 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	// system group settings
 	float junction_acceleration;	// centripetal acceleration max for cornering
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
+	uint8_t soft_limit_enable;
 
 	// hidden system settings
 	float min_segment_len;			// line drawing resolution in mm
@@ -249,6 +253,7 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t feedhold_requested;		// feedhold character has been received
 	uint8_t queue_flush_requested;	// queue flush character has been received
 	uint8_t cycle_start_requested;	// cycle start character has been received (flag to end feedhold)
+	float jogging_dest;				// jogging direction as a relative move from current position
 	struct GCodeState *am;			// active Gcode model is maintained by state management
 
 	/**** Model states ****/
@@ -504,6 +509,7 @@ uint8_t cm_get_cycle_state(void);
 uint8_t cm_get_motion_state(void);
 uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
+uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(uint8_t motion_state);
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state);
@@ -556,8 +562,13 @@ stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_cycle_start_no_set(void);						// G28.4
 stat_t cm_homing_callback(void);								// G28.2 main loop callback
+
 stat_t cm_set_absolute_origin(float origin[], float flags[]);	// G28.3  (special function)
 void cm_set_axis_origin(uint8_t axis, const float position);	// set absolute position (used by G28's)
+
+stat_t cm_jogging_callback(void);								// jogging cycle main loop
+stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
+float cm_get_jogging_dest(void);
 
 stat_t cm_set_g28_position(void);								// G28.1
 stat_t cm_goto_g28_position(float target[], float flags[]); 	// G28
@@ -646,6 +657,11 @@ stat_t cm_get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 stat_t cm_run_qf(cmdObj_t *cmd);		// run queue flush
 stat_t cm_run_home(cmdObj_t *cmd);		// start homing cycle
 
+stat_t cm_run_jogx(cmdObj_t *cmd);		// start jogging cycle for x
+stat_t cm_run_jogy(cmdObj_t *cmd);		// start jogging cycle for y
+stat_t cm_run_jogz(cmdObj_t *cmd);		// start jogging cycle for z
+stat_t cm_run_joga(cmdObj_t *cmd);		// start jogging cycle for a
+
 stat_t cm_get_am(cmdObj_t *cmd);		// get axis mode
 stat_t cm_set_am(cmdObj_t *cmd);		// set axis mode
 stat_t cm_get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
@@ -682,9 +698,11 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	void cm_print_lin(cmdObj_t *cmd);		// generic print for linear values 
 	void cm_print_pos(cmdObj_t *cmd);		// print runtime work position in prevailing units
 	void cm_print_mpo(cmdObj_t *cmd);		// print runtime work position always in MM uints
+	void cm_print_ofs(cmdObj_t *cmd);		// print runtime work offset always in MM uints
 
 	void cm_print_ja(cmdObj_t *cmd);		// global CM settings
 	void cm_print_ct(cmdObj_t *cmd);
+	void cm_print_sl(cmdObj_t *cmd);
 	void cm_print_ml(cmdObj_t *cmd);
 	void cm_print_ma(cmdObj_t *cmd);
 	void cm_print_ms(cmdObj_t *cmd);
@@ -737,9 +755,11 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	#define cm_print_lin tx_print_stub		// generic print for linear values 
 	#define cm_print_pos tx_print_stub		// print runtime work position in prevailing units
 	#define cm_print_mpo tx_print_stub		// print runtime work position always in MM uints
+	#define cm_print_ofs tx_print_stub		// print runtime work offset always in MM uints
 
 	#define cm_print_ja tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
+	#define cm_print_sl tx_print_stub
 	#define cm_print_ml tx_print_stub
 	#define cm_print_ma tx_print_stub
 	#define cm_print_ms tx_print_stub
@@ -769,4 +789,4 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 }
 #endif
 
-#endif // _CANONICAL_MACHINE_H_
+#endif // End of include guard: CANONICAL_MACHINE_H_ONCE
