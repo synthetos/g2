@@ -2,7 +2,7 @@
  * config_app.h - application-specific part of configuration sub-system
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -54,6 +54,12 @@ typedef struct cfgParameters {		// mostly communications variables at this point
 	uint8_t usb_baud_rate;			// see xio_usart.h for XIO_BAUD values
 	uint8_t usb_baud_flag;			// technically this belongs in the controller singleton
 
+	// user-defined data groups
+	uint32_t user_data_a[4];
+	uint32_t user_data_b[4];
+	uint32_t user_data_c[4];
+	uint32_t user_data_d[4];
+
 	uint16_t magic_end;
 } cfgParameters_t;
 extern cfgParameters_t cfg;
@@ -64,6 +70,12 @@ extern cfgParameters_t cfg;
  ***********************************************************************************/
 
 stat_t set_baud_callback(void);
+
+// job config
+void job_print_job(cmdObj_t *cmd);
+stat_t job_get(cmdObj_t *cmd);
+stat_t job_set(cmdObj_t *cmd);
+uint8_t job_report_callback();
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
