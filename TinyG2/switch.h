@@ -58,8 +58,8 @@
 #define SW_MODE_MAX_VALUE 		SW_MODE_HOMING_LIMIT
 
 enum swType {
-	SW_NORMALLY_OPEN = 0,
-	SW_NORMALLY_CLOSED
+	SW_TYPE_NORMALLY_OPEN = 0,
+	SW_TYPE_NORMALLY_CLOSED
 };
 
 
@@ -89,6 +89,20 @@ enum swEdge {
 #define SW_PAIRS AXES				// array sizing
 #define SW_POSITIONS 2				// array sizing
 
+enum swNums {	 					// indexes into switch arrays
+	SW_MIN_X = 0,
+	SW_MAX_X,
+	SW_MIN_Y,
+	SW_MAX_Y,
+	SW_MIN_Z,
+	SW_MAX_Z,
+	SW_MIN_A,
+	SW_MAX_A,
+	NUM_SWITCHES 			// must be last one. Used for array sizing and for loops
+};
+#define SW_OFFSET SW_MAX_X	// offset between MIN and MAX switches
+#define NUM_SWITCH_PAIRS (NUM_SWITCHES/2)
+
 /*
  * Switch control structures
  */
@@ -116,7 +130,7 @@ extern switches_t sw;
  * Function prototypes
  */
 void switch_init(void);
-uint8_t read_switch(switch_t *s, uint8_t pin_value);
+uint8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t sw_num);
 
 stat_t poll_switches(void);

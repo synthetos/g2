@@ -108,30 +108,30 @@ void switch_init(void)
  */
 stat_t poll_switches()
 {
-	read_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
-	read_switch(&sw.s[AXIS_X][SW_MAX], axis_X_max_pin);
-	read_switch(&sw.s[AXIS_Y][SW_MIN], axis_Y_min_pin);
-	read_switch(&sw.s[AXIS_Y][SW_MAX], axis_Y_max_pin);
-	read_switch(&sw.s[AXIS_Z][SW_MIN], axis_Z_min_pin);
-	read_switch(&sw.s[AXIS_Z][SW_MAX], axis_Z_max_pin);
-	read_switch(&sw.s[AXIS_A][SW_MIN], axis_A_min_pin);
-	read_switch(&sw.s[AXIS_A][SW_MAX], axis_A_max_pin);
-	read_switch(&sw.s[AXIS_B][SW_MIN], axis_B_min_pin);
-	read_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
-	read_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
-	read_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MAX], axis_X_max_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MIN], axis_Y_min_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MAX], axis_Y_max_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MIN], axis_Z_min_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MAX], axis_Z_max_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MIN], axis_A_min_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MAX], axis_A_max_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MIN], axis_B_min_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
+	poll_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
+	poll_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
 	return (STAT_OK);
 }
 
 /*
- * read_switch() - read switch with NO/NC, debouncing and edge detection
+ * poll_switch() - read switch with NO/NC, debouncing and edge detection
  *
  *	Returns true if switch state changed - e.g. leading or falling edge detected
  *	Assumes pin_value input = 1 means open, 0 is closed. Pin sense is adjusted to mean:
  *	  0 = open for both NO and NC switches
  *	  1 = closed for both NO and NC switches
  */
-uint8_t read_switch(switch_t *s, uint8_t pin_value)
+uint8_t poll_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
 	if (s->mode == SW_MODE_DISABLED) {
@@ -189,6 +189,19 @@ static void _trigger_cycle_start(switch_t *s)
  */
 
 uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++
+
+
+/*
+ * read_switch() - read switch state from the switch structure
+ *				   NOTE: This does NOT read the pin itself. See poll_switch
+ */
+uint8_t read_switch(uint8_t axis, uint8_t position)
+{
+//	if (axis >= AXES) return (SW_DISABLED);
+//	if (axis > SW_MAX) return (SW_DISABLED);
+	return (sw.s[axis][position].state);
+}
+
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
