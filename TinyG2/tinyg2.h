@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.17	// tinyg merge - adding jogging cycle
+#define TINYG_FIRMWARE_BUILD   		026.18	// tinyg merge - updating canonical machine; fixed jogging static prototypes
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -180,6 +180,7 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 #define fprintf_P fprintf	// just sayin'
 #define sprintf_P sprintf
 #define strcpy_P strcpy
+#define strncpy_P strncpy
 
 #endif // __ARM
 
