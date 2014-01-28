@@ -281,6 +281,7 @@ uint8_t stepper_isbusy()
 static void _energize_motor(const uint8_t motor)
 {
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
+	//	case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
 	switch (motor) {
 		if (!motor_1.enable.isNull()) case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
 		if (!motor_2.enable.isNull()) case (MOTOR_2): { motor_2.energize(MOTOR_2); break; }
@@ -289,16 +290,6 @@ static void _energize_motor(const uint8_t motor)
 		if (!motor_5.enable.isNull()) case (MOTOR_5): { motor_5.energize(MOTOR_5); break; }
 		if (!motor_6.enable.isNull()) case (MOTOR_6): { motor_6.energize(MOTOR_6); break; }
 	}
-/*
-	switch (motor) {
-		case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
-		case (MOTOR_2): { motor_2.energize(MOTOR_2); break; }
-		case (MOTOR_3): { motor_3.energize(MOTOR_3); break; }
-		case (MOTOR_4): { motor_4.energize(MOTOR_4); break; }
-		case (MOTOR_5): { motor_5.energize(MOTOR_5); break; }
-		case (MOTOR_6): { motor_6.energize(MOTOR_6); break; }
-	}
-*/
 }
 
 static void _deenergize_motor(const uint8_t motor)
@@ -383,7 +374,9 @@ stat_t st_motor_power_callback() 	// called by controller
 					break;
 				}
 			}
-		} else if(st_cfg.mot[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
+		}
+	
+		if(st_cfg.mot[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
 			switch (st_run.mot[motor].power_state) {
 				case (MOTOR_INITIATE_TIMEOUT): {
 					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
@@ -399,10 +392,10 @@ stat_t st_motor_power_callback() 	// called by controller
 				}
 			}
 
-//		} else if(st_run.mot[motor].power_mode == MOTOR_IDLE_POWER) {		// FUTURE
-			
-//		} else if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {	// FUTURE
-			
+//		} else if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// FUTURE
+
+//		} else if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {			// FUTURE
+
 		}
 	}
 	return (STAT_OK);
