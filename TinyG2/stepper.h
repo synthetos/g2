@@ -185,32 +185,32 @@
 // Currently there is no distinction between IDLE and OFF (DEENERGIZED)
 // In the future IDLE will be powered at a low, torque-maintaining current
 
-enum motorPowerState {				// used w/start and stop flags to sequence motor power
-	MOTOR_OFF = 0,					// motor is stopped and deenergized
-	MOTOR_IDLE,						// motor is stopped and may be partially energized for torque maintenance
-	MOTOR_RUNNING,					// motor is running (and fully energized)
-	MOTOR_INITIATE_TIMEOUT,			// transitional state to start idle timeout
-	MOTOR_COUNTDOWN_TIMEOUT			// run timeout to idle
+enum motorPowerState {					// used w/start and stop flags to sequence motor power
+	MOTOR_OFF = 0,						// motor is stopped and deenergized
+	MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
+	MOTOR_RUNNING,						// motor is running (and fully energized)
+	MOTOR_INITIATE_TIMEOUT,				// transitional state to start idle timeout
+	MOTOR_COUNTDOWN_TIMEOUT				// run timeout to idle
 };
 
 enum cmStepperPowerMode {
-	MOTOR_DISABLED = 0,				// motor enable is deactivated
-	MOTOR_POWERED_IN_CYCLE,			// motor fully powered during cycles
-	MOTOR_POWERED_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
-	MOTOR_POWER_REDUCED_WHEN_IDLE,	// enable Vref current reduction (FUTURE)
-	MOTOR_ADAPTIVE_POWER			// adjust motor current with velocity (FUTURE)
+	MOTOR_DISABLED = 0,					// motor enable is deactivated
+	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles
+	MOTOR_POWERED_WHEN_MOVING,			// motor only powered while moving - idles shortly after it's stopped - even in cycle
+	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction (FUTURE)
+	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
 };
-
-#define Vcc	3.3						// volts
-#define MaxVref	2.25				// max vref for driver circuit. Our ckt is 2.25 volts
-#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
 
 enum prepBufferState {
-	PREP_BUFFER_OWNED_BY_LOADER = 0,// staging buffer is ready for load
-	PREP_BUFFER_OWNED_BY_EXEC		// staging buffer is being loaded
+	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
+	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
 };
 
-// Stepper power management settings
+// Stepper power management settings (applicable to ARM only)
+#define Vcc	3.3							// volts
+#define MaxVref	2.25					// max vref for driver circuit. Our ckt is 2.25 volts
+#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
+
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define IDLE_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
 #define IDLE_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
@@ -224,6 +224,7 @@ enum prepBufferState {
  *	Set to 1 to disable, but don't do this or you will lose a lot of accuracy.
  */
 #define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
+//#define DDA_SUBSTEPS				(float)5000000	// 5,000,000 accumulates substeps to max decimal places
 
 /* Accumulator resets
  * 	You want to reset the DDA accumulators if the new ticks value is way less 
@@ -255,8 +256,8 @@ enum prepBufferState {
  *	data structure:						static to:		runs at:
  *	  mpBuffer planning buffers (bf)	  planner.c		  main loop
  *	  mrRuntimeSingleton (mr)			  planner.c		  MED ISR
- *	  stPrepSingleton (sp)				  stepper.c		  MED ISR
- *	  stRunSingleton (st)				  stepper.c		  HI ISR
+ *	  stPrepSingleton (st_pre)			  stepper.c		  MED ISR
+ *	  stRunSingleton (st_run)			  stepper.c		  HI ISR
  *  
  *	Care has been taken to isolate actions on these structures to the 
  *	execution level in which they run and to use the minimum number of 
@@ -271,7 +272,6 @@ typedef struct cfgMotor {				// per-motor configs
 	uint8_t polarity;					// 0=normal polarity, 1=reverse motor direction
  	uint8_t power_mode;					// See stepper.h for enum
 	float power_level;					// set 0.000 to 1.000 for PMW vref setting
-//	float power_setting;				// user power level setting from 0 to 100%
 	float step_angle;					// degrees per whole step (ex: 1.8)
 	float travel_rev;					// mm or deg of travel per motor revolution
 	float steps_per_unit;				// steps (usteps)/mm or deg of travel
@@ -288,12 +288,15 @@ typedef struct stConfig {				// stepper configs
 // Runtime structure. Used exclusively by step generation ISR (HI)
 
 typedef struct stRunMotor {				// one per controlled motor
-	int32_t phase_increment;			// total steps in axis times substeps factor
-	int32_t phase_accumulator;			// DDA phase angle accumulator for axis
+//	int32_t phase_increment;			// total steps in axis times substeps factor
+//	int32_t phase_accumulator;			// DDA phase angle accumulator for axis
+	uint32_t substep_increment;			// total steps in axis times substeps factor
+	int32_t substep_accumulator;		// DDA phase angle accumulator
+//	float power_level;					// power level for this segment (ARM only)
 	uint8_t power_state;				// state machine for managing motor power
 	uint32_t power_systick;				// sys_tick for next state transition
 	float power_level_dynamic;			// dynamic power level for this segment or for idle
-	uint8_t step_count_diagnostic;		// step count diagnostic
+//	uint8_t step_count_diagnostic;		// step count diagnostic
 } stRunMotor_t;
 
 typedef struct stRunSingleton {			// Stepper static values and axis parameters
@@ -308,20 +311,41 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
- 	uint32_t phase_increment; 			// total steps in axis times substep factor
-	int8_t dir;							// direction
+ 	uint32_t substep_increment; 		// total steps in axis times substep factor
+
+	// direction and direction change
+	int8_t direction;					// travel direction corrected for polarity
+	uint8_t direction_change;			// set true if direction changed
+	int8_t step_sign;					// set to +1 or -1 for encoders
+
+	// following error correction
+	int32_t correction_holdoff;			// count down segments between corrections
+	float corrected_steps;				// accumulated correction steps for the cycle (for diagnostic display only)
+
+	// accumulator phase correction
+	float prev_segment_time;			// segment time from previous segment run for this motor
+	float accumulator_correction;		// factor for adjusting accumulator between segments
+	uint8_t accumulator_correction_flag;// signals accumulator needs correction
+
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
 	uint16_t magic_start;				// magic number to test memory integrity	
+	volatile uint8_t exec_state;		// move execution state
 	uint8_t move_type;					// move type
-	volatile uint8_t exec_state;		// move execution state 
-	volatile uint8_t reset_flag;		// TRUE if accumulator should be reset
-	uint32_t prev_ticks;				// tick count from previous move
+
+//	volatile uint8_t reset_flag;		// TRUE if accumulator should be reset
+//	uint32_t prev_ticks;				// tick count from previous move
+//	uint16_t dda_period;				// DDA or dwell clock period setting
+//	uint32_t dda_ticks;					// DDA or dwell ticks for the move
+//	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
+//	stPrepMotor_t mot[MOTORS];			// per-motor structs
+//	uint16_t magic_end;
+
 	uint16_t dda_period;				// DDA or dwell clock period setting
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
-	stPrepMotor_t mot[MOTORS];			// per-motor structs
+	stPrepMotor_t mot[MOTORS];			// prep time motor structs
 	uint16_t magic_end;
 } stPrepSingleton_t;
 

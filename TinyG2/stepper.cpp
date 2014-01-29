@@ -226,12 +226,12 @@ void stepper_init()
 
 static void _clear_diagnostic_counters()
 {
-	if (!motor_1.enable.isNull()) st_run.mot[MOTOR_1].step_count_diagnostic = 0;
-	if (!motor_2.enable.isNull()) st_run.mot[MOTOR_2].step_count_diagnostic = 0;
-	if (!motor_3.enable.isNull()) st_run.mot[MOTOR_3].step_count_diagnostic = 0;
-	if (!motor_4.enable.isNull()) st_run.mot[MOTOR_4].step_count_diagnostic = 0;
-	if (!motor_5.enable.isNull()) st_run.mot[MOTOR_5].step_count_diagnostic = 0;
-	if (!motor_6.enable.isNull()) st_run.mot[MOTOR_6].step_count_diagnostic = 0;
+//	if (!motor_1.enable.isNull()) st_run.mot[MOTOR_1].step_count_diagnostic = 0;
+//	if (!motor_2.enable.isNull()) st_run.mot[MOTOR_2].step_count_diagnostic = 0;
+//	if (!motor_3.enable.isNull()) st_run.mot[MOTOR_3].step_count_diagnostic = 0;
+//	if (!motor_4.enable.isNull()) st_run.mot[MOTOR_4].step_count_diagnostic = 0;
+//	if (!motor_5.enable.isNull()) st_run.mot[MOTOR_5].step_count_diagnostic = 0;
+//	if (!motor_6.enable.isNull()) st_run.mot[MOTOR_6].step_count_diagnostic = 0;
 }
 
 /*
@@ -437,33 +437,33 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 	if (interrupt_cause == kInterruptOnOverflow) {
 //		dda_debug_pin1 = 1;
 
-		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].phase_accumulator += st_run.mot[MOTOR_1].phase_increment) > 0) {
-			st_run.mot[MOTOR_1].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
+			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_1.step.set();		// turn step bit on
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
 		}
-		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].phase_accumulator += st_run.mot[MOTOR_2].phase_increment) > 0) {
-			st_run.mot[MOTOR_2].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
+			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_2.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_2);
 		}
-		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].phase_accumulator += st_run.mot[MOTOR_3].phase_increment) > 0) {
-			st_run.mot[MOTOR_3].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
+			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_3.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_3);
 		}
-		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].phase_accumulator += st_run.mot[MOTOR_4].phase_increment) > 0) {
-			st_run.mot[MOTOR_4].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
+			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_4.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_4);
 		}
-		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].phase_accumulator += st_run.mot[MOTOR_5].phase_increment) > 0) {
-			st_run.mot[MOTOR_5].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
+			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_5.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_5);
 		}
-		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].phase_accumulator += st_run.mot[MOTOR_6].phase_increment) > 0) {
-			st_run.mot[MOTOR_6].phase_accumulator -= st_run.dda_ticks_X_substeps;
+		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
+			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_6.step.set();
 			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
@@ -558,11 +558,11 @@ void _load_move()
  
 		// setup motor 1
 		// the if() either transfers the accumulation phase angle or zeroes the phase angle
-		if ((st_run.mot[MOTOR_1].phase_increment = st_pre.mot[MOTOR_1].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) {           // compensate for pulse phasing
-				st_run.mot[MOTOR_1].phase_accumulator = -(st_run.dda_ticks_downcount);
-			}
-			if (st_pre.mot[MOTOR_1].dir == 0) {
+		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) {           // compensate for pulse phasing
+//				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_downcount);
+//			}
+			if (st_pre.mot[MOTOR_1].direction == 0) {
 				motor_1.dir.clear();					// clear the bit for clockwise motion 
 			} else {
 				motor_1.dir.set();						// set the bit for CCW motion
@@ -576,45 +576,45 @@ void _load_move()
 			}			
 		}
 #if (MOTORS >= 2)
-		if ((st_run.mot[MOTOR_2].phase_increment = st_pre.mot[MOTOR_2].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) st_run.mot[MOTOR_2].phase_accumulator = -(st_run.dda_ticks_downcount);
-			if (st_pre.mot[MOTOR_2].dir == 0) motor_2.dir.clear(); else motor_2.dir.set();
+		if ((st_run.mot[MOTOR_2].substep_increment = st_pre.mot[MOTOR_2].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_downcount);
+			if (st_pre.mot[MOTOR_2].direction == 0) motor_2.dir.clear(); else motor_2.dir.set();
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
 #endif
 #if (MOTORS >= 3)
-		if ((st_run.mot[MOTOR_3].phase_increment = st_pre.mot[MOTOR_3].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) st_run.mot[MOTOR_3].phase_accumulator = -(st_run.dda_ticks_downcount);
-			if (st_pre.mot[MOTOR_3].dir == 0) motor_3.dir.clear(); else motor_3.dir.set();
+		if ((st_run.mot[MOTOR_3].substep_increment = st_pre.mot[MOTOR_3].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_downcount);
+			if (st_pre.mot[MOTOR_3].direction == 0) motor_3.dir.clear(); else motor_3.dir.set();
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
 #endif
 #if (MOTORS >= 4)
-		if ((st_run.mot[MOTOR_4].phase_increment = st_pre.mot[MOTOR_4].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) st_run.mot[MOTOR_4].phase_accumulator = (st_run.dda_ticks_downcount);
-			if (st_pre.mot[MOTOR_4].dir == 0) motor_4.dir.clear(); else motor_4.dir.set();
+		if ((st_run.mot[MOTOR_4].substep_increment = st_pre.mot[MOTOR_4].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) st_run.mot[MOTOR_4].substep_accumulator = (st_run.dda_ticks_downcount);
+			if (st_pre.mot[MOTOR_4].direction == 0) motor_4.dir.clear(); else motor_4.dir.set();
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
 #endif
 #if (MOTORS >= 5)
-		if ((st_run.mot[MOTOR_5].phase_increment = st_pre.mot[MOTOR_5].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) st_run.mot[MOTOR_5].phase_accumulator = (st_run.dda_ticks_downcount);
-			if (st_pre.mot[MOTOR_5].dir == 0) motor_5.dir.clear(); else motor_5.dir.set();
+		if ((st_run.mot[MOTOR_5].substep_increment = st_pre.mot[MOTOR_5].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) st_run.mot[MOTOR_5].substep_accumulator = (st_run.dda_ticks_downcount);
+			if (st_pre.mot[MOTOR_5].direction == 0) motor_5.dir.clear(); else motor_5.dir.set();
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
 #endif
 #if (MOTORS >= 6)
-		if ((st_run.mot[MOTOR_6].phase_increment = st_pre.mot[MOTOR_6].phase_increment) != 0) {
-			if (st_pre.reset_flag == true) st_run.mot[MOTOR_6].phase_accumulator = (st_run.dda_ticks_downcount);
-			if (st_pre.mot[MOTOR_6].dir == 0) motor_6.dir.clear(); else motor_6.dir.set();
+		if ((st_run.mot[MOTOR_6].substep_increment = st_pre.mot[MOTOR_6].substep_increment) != 0) {
+//			if (st_pre.reset_flag == true) st_run.mot[MOTOR_6].substep_accumulator = (st_run.dda_ticks_downcount);
+			if (st_pre.mot[MOTOR_6].direction == 0) motor_6.dir.clear(); else motor_6.dir.set();
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_INITIATE_TIMEOUT;
@@ -677,12 +677,12 @@ stat_t st_prep_line(float steps[], float microseconds)
 	} else if (isfinite(microseconds) == false) { return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
 	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
-	st_pre.reset_flag = false;         // initialize accumulator reset flag for this move.
+//	st_pre.reset_flag = false;         // initialize accumulator reset flag for this move.
 
 	// setup motor parameters
 	for (uint8_t i=0; i<MOTORS; i++) {
-		st_pre.mot[i].dir = ((steps[i] < 0) ? 1 : 0) ^ st_cfg.mot[i].polarity;
-		st_pre.mot[i].phase_increment = (uint32_t)fabs(steps[i] * DDA_SUBSTEPS);
+		st_pre.mot[i].direction = ((steps[i] < 0) ? 1 : 0) ^ st_cfg.mot[i].polarity;
+		st_pre.mot[i].substep_increment = (uint32_t)fabs(steps[i] * DDA_SUBSTEPS);
 	}
 	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
 	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
@@ -692,10 +692,10 @@ stat_t st_prep_line(float steps[], float microseconds)
 	// sp.dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
 
 	// anti-stall measure in case change in velocity between segments is too great 
-	if ((st_pre.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_pre.prev_ticks) {  // NB: uint32_t math
-		st_pre.reset_flag = true;
-	}
-	st_pre.prev_ticks = st_pre.dda_ticks;
+//	if ((st_pre.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_pre.prev_ticks) {  // NB: uint32_t math
+//		st_pre.reset_flag = true;
+//	}
+//	st_pre.prev_ticks = st_pre.dda_ticks;
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	return (STAT_OK);
 }
