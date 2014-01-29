@@ -1259,7 +1259,7 @@ static stat_t _exec_aline_segment(uint8_t correction_flag)
 	}
 */
 	// prep the segment for the steppers and adjust the variables for the next iteration
-	ik_kinematics(travel, steps, mr.microseconds);
+	ik_kinematics(travel, steps);
 	if (st_prep_line(steps, mr.microseconds) == STAT_OK) {
 		copy_vector(mr.position, mr.gm.target);			// update runtime position	
 /* TRY THIS

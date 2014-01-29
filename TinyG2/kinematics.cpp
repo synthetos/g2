@@ -2,7 +2,7 @@
  * kinematics.cpp - inverse kinematics routines
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,7 +35,7 @@
 extern "C"{
 #endif
 
-//static void _inverse_kinematics(float travel[], float joint[], float microseconds);
+//static void _inverse_kinematics(float travel[], float joint[]);
 
 /*
  * ik_kinematics() - wrapper routine for inverse kinematics
@@ -49,7 +49,7 @@ extern "C"{
  *	as floats and converted to fixed-point binary during queue loading. See stepper.c for details.
  */
 
-void ik_kinematics(float travel[], float steps[], float microseconds)
+void ik_kinematics(float travel[], float steps[])
 {
 	float joint[AXES];
 
@@ -96,7 +96,7 @@ void ik_kinematics(float travel[], float steps[], float microseconds)
  *	time it takes to complete the mp_exec_move() function.
  */
 /*
-static void _inverse_kinematics(float travel[], float joint[], float microseconds)
+static void _inverse_kinematics(float travel[], float joint[])
 {
 	for (uint8_t i=0; i<AXES; i++) {
 		joint[i] = travel[i];
