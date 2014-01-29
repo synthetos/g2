@@ -25,17 +25,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* 	This module provides the low-level stepper drivers and some related
- * 	functions. It dequeues lines queued by the motor_queue routines.
- * 	This is some of the most heavily optimized code in the project.
- *
- *	Note that if you want to use this for something other than TinyG
- *	you may need to stretch the step pulses. They run about 1 uSec 
- *	which is fine for the TI DRV8811/DRV8818 chips in TinyG but may 
- *	not suffice for other stepper driver hardware.
- */
-/* 
- * See stepper.h for a detailed explanation of this module
+/* 	This module provides the low-level stepper drivers and some related functions.
+ *	See stepper.h for a detailed explanation of this module.
  */
 
 #include "tinyg2.h"
@@ -255,7 +246,7 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
-//	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
+//++++	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
 	en_reset_encoders();
 	for (uint8_t i=0; i<MOTORS; i++) {
 		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
@@ -284,20 +275,39 @@ stat_t st_clc(cmdObj_t *cmd)	// clear diagnostic counters, reset stepper prep
 
 static void _energize_motor(const uint8_t motor)
 {
+#ifdef __AVR
+	switch(motor) {
+		case (MOTOR_1): { PORT_MOTOR_1_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_2): { PORT_MOTOR_2_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_3): { PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_4): { PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
+	}
+	st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;
+#endif
+#ifdef __ARM
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
 	//	case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
-	switch (motor) {
-		if (!motor_1.enable.isNull()) case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
-		if (!motor_2.enable.isNull()) case (MOTOR_2): { motor_2.energize(MOTOR_2); break; }
-		if (!motor_3.enable.isNull()) case (MOTOR_3): { motor_3.energize(MOTOR_3); break; }
-		if (!motor_4.enable.isNull()) case (MOTOR_4): { motor_4.energize(MOTOR_4); break; }
-		if (!motor_5.enable.isNull()) case (MOTOR_5): { motor_5.energize(MOTOR_5); break; }
-		if (!motor_6.enable.isNull()) case (MOTOR_6): { motor_6.energize(MOTOR_6); break; }
-	}
+	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.energize(MOTOR_1);
+	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.energize(MOTOR_2);
+	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.energize(MOTOR_3);
+	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.energize(MOTOR_4);
+	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.energize(MOTOR_5);
+	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.energize(MOTOR_6);
+#endif
 }
 
 static void _deenergize_motor(const uint8_t motor)
 {
+#ifdef __AVR
+	switch (motor) {
+		case (MOTOR_1): { PORT_MOTOR_1_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_2): { PORT_MOTOR_2_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_3): { PORT_MOTOR_3_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; break; }
+		case (MOTOR_4): { PORT_MOTOR_4_VPORT.OUT |= MOTOR_ENABLE_BIT_bm; break; }
+	}
+	st_run.mot[motor].power_state = MOTOR_OFF;
+#endif
+#ifdef __ARM
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.set();	// set disables the motor
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.set();
@@ -305,8 +315,8 @@ static void _deenergize_motor(const uint8_t motor)
 	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.set();
 	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.set();
 	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.set();
-
 	st_run.mot[motor].power_state = MOTOR_OFF;
+#endif
 }
 
 /*
@@ -331,6 +341,13 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 
 void st_energize_motors()
 {
+#ifdef __AVR
+	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+		_energize_motor(motor);
+		st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;
+	}
+#endif
+#ifdef __ARM
 	// any motor-N.energize defined as -1 will drop out of compile		// ++++ Rob: Is this true?
 	motor_1.energize(MOTOR_1);
 	motor_2.energize(MOTOR_2);
@@ -339,10 +356,17 @@ void st_energize_motors()
 	motor_5.energize(MOTOR_5);
 	motor_6.energize(MOTOR_6);
 	common_enable.clear();			// enable gShield common enable
+#endif
 }
 
 void st_deenergize_motors()
 {
+#ifdef __AVR
+	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+		_deenergize_motor(motor);
+	}
+#endif
+#ifdef __ARM
 	// any motor-N.enable defined as -1 will drop out of compile
 	motor_1.enable.set();			// set disables the motor
 	motor_2.enable.set();
@@ -351,6 +375,7 @@ void st_deenergize_motors()
 	motor_5.enable.set();
 	motor_6.enable.set();
 	common_enable.set();			// disable gShield common enable
+#endif
 }
 
 /*
@@ -360,7 +385,7 @@ void st_deenergize_motors()
  */
 stat_t st_motor_power_callback() 	// called by controller
 {
-	// manage power for each motor individually - facilitates advanced features
+	// manage power for each motor individually
 	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
 		if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
@@ -369,35 +394,35 @@ stat_t st_motor_power_callback() 	// called by controller
 				case (MOTOR_INITIATE_TIMEOUT): {
 					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_idle_timeout * 1000);
 					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
-					break;
+					continue;
 				}
 				case (MOTOR_COUNTDOWN_TIMEOUT): {
 					if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
 						st_run.mot[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
 					}
-					break;
+					continue;
 				}
 			}
 		}
-	
+
 		if(st_cfg.mot[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
 			switch (st_run.mot[motor].power_state) {
 				case (MOTOR_INITIATE_TIMEOUT): {
 					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
 					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
-					break;
+					continue;
 				}
 				case (MOTOR_COUNTDOWN_TIMEOUT): {
 					if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
 						st_run.mot[motor].power_state = MOTOR_IDLE;
 						_deenergize_motor(motor);
 					}
-					break;
+					continue;
 				}
 			}
 		}
-		
+
 //		if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {}	// FUTURE
 //		if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {}				// FUTURE
 
