@@ -444,28 +444,34 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_1.step.set();		// turn step bit on
+			INCREMENT_ENCODER(MOTOR_1);
 		}
 		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
 			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_2.step.set();
+			INCREMENT_ENCODER(MOTOR_2);
 		}
 		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
 			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_3.step.set();
+			INCREMENT_ENCODER(MOTOR_3);
 		}
 		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
 			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_4.step.set();
+			INCREMENT_ENCODER(MOTOR_4);
 		}
 		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
 			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_5.step.set();
+			INCREMENT_ENCODER(MOTOR_5);
 		}
 		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
 			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_6.step.set();
+			INCREMENT_ENCODER(MOTOR_6);
 		}
-		dda_debug_pin1 = 0;
+//		dda_debug_pin1 = 0;
 
 	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 //		dda_debug_pin2 = 1;
@@ -547,29 +553,70 @@ MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
  *	 - If axis has 0 steps the motor must not be enabled to support power mode = 1
  */
 
-void _load_move()
+static void _load_move()
 {
+	// Be aware that dda_ticks_downcount must equal zero for the loader to run.
+	// So the initial load must also have this set to zero as part of initialization
+	if (st_run.dda_ticks_downcount != 0) return;						// exit if it's still busy
+
+	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_LOADER) {				// if there are no moves to load...
+		for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+			st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;		// ...start motor power timeouts
+		}
+		return;
+	}
+
 	// handle aline() loads first (most common case)  NB: there are no more lines, only alines()
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
+		
+		//**** setup the new segment ****
+
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
 		st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
- 
-		// setup motor 1
-		// the if() either transfers the accumulation phase angle or zeroes the phase angle
+#ifdef __AVR
+		TIMER_DDA.PER = st_pre.dda_period;
+#endif
+		//**** MOTOR_1 LOAD ****
+
+		// These sections are somewhat optimized for execution speed. The whole load operation
+		// is supposed to take < 10 uSec (Xmega). Be careful if you mess with this.
+		
+		// the following if() statement sets the runtime substep increment value or zeroes it
+
 		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
-//			if (st_pre.reset_flag == true) {           // compensate for pulse phasing
-//				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_downcount);
-//			}
-			if (st_pre.mot[MOTOR_1].direction == 0) {
-				motor_1.dir.clear();					// clear the bit for clockwise motion 
-			} else {
-				motor_1.dir.set();						// set the bit for CCW motion
+
+			// Apply accumulator correction if the time base has changed
+			if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
+				st_run.mot[MOTOR_1].substep_accumulator *= st_pre.mot[MOTOR_1].accumulator_correction;
 			}
-			motor_1.enable.clear();						// enable the motor (clear the ~Enable line)
+
+			// Set the direction bit in hardware. Compensate for direction change in the accumulator
+			// If a direction change has occurred flip the value in the substep accumulator about its midpoint
+			// NB: If motor has 0 steps this is all skipped
+/*
+			if (st_pre.mot[MOTOR_1].direction_change == true) {
+				if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) 		// CW motion (bit cleared)
+				PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm; else
+				PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;			// CCW motion
+				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
+			}
+*/
+			if (st_pre.mot[MOTOR_1].direction_change == true) {
+				if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) {
+					motor_1.dir.clear();									// clear the bit for clockwise motion 
+				} else {
+					motor_1.dir.set();										// set the bit for CCW motion
+				}
+				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
+			}
+				
+			// Enable the stepper and start motor power management
+			motor_1.enable.clear();										// enable the motor (clear the ~Enable line)
 			st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
-		} else {										// motor is not in this move
+
+		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
 			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-				motor_1.enable.clear();					// energize motor
+				motor_1.enable.clear();									// energize motor
 				st_run.mot[MOTOR_1].power_state = MOTOR_INITIATE_TIMEOUT;
 			}			
 		}

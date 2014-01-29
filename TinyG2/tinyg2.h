@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.25	// tinyg merge - steppers - aligning inits, power management code
+#define TINYG_FIRMWARE_BUILD   		026.26	// tinyg merge - steppers - start aligning core step generation and load functions
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
