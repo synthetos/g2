@@ -41,17 +41,11 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "stepper.h"
+#include "encoder.h"
 #include "planner.h"
 #include "hardware.h"
 #include "text_parser.h"
 #include "util.h"
-
-//#define ENABLE_DIAGNOSTICS
-#ifdef ENABLE_DIAGNOSTICS
-#define INCREMENT_DIAGNOSTIC_COUNTER(motor) st_run.mot[motor].step_count_diagnostic++;
-#else
-#define INCREMENT_DIAGNOSTIC_COUNTER(motor)	// choose this one to disable counters
-#endif
 
 /**** Allocate structures ****/
 
@@ -63,7 +57,6 @@ static stRunSingleton_t st_run;
 
 static void _load_move(void);
 static void _request_load_move(void);
-static void _clear_diagnostic_counters(void);
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
 
 // handy macro
@@ -186,9 +179,8 @@ Stepper<kSocket6_StepPinNumber,
 
 void stepper_init()
 {
-	memset(&st_run, 0, sizeof(st_run));		// clear all values, pointers and status
+	memset(&st_run, 0, sizeof(st_run));			// clear all values, pointers and status
 	stepper_init_assertions();
-	_clear_diagnostic_counters();
 
 	// setup DDA timer (see FOOTNOTE)
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
@@ -209,7 +201,7 @@ void stepper_init()
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
-//	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 100000 Hz.
+//	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 500000 Hz.
 }
 
 /*	FOOTNOTE: This is the bare code that the Motate timer calls replace.
@@ -223,16 +215,6 @@ void stepper_init()
 	pmc_enable_periph_clk(TC_ID_DDA);
 	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
 */
-
-static void _clear_diagnostic_counters()
-{
-//	if (!motor_1.enable.isNull()) st_run.mot[MOTOR_1].step_count_diagnostic = 0;
-//	if (!motor_2.enable.isNull()) st_run.mot[MOTOR_2].step_count_diagnostic = 0;
-//	if (!motor_3.enable.isNull()) st_run.mot[MOTOR_3].step_count_diagnostic = 0;
-//	if (!motor_4.enable.isNull()) st_run.mot[MOTOR_4].step_count_diagnostic = 0;
-//	if (!motor_5.enable.isNull()) st_run.mot[MOTOR_5].step_count_diagnostic = 0;
-//	if (!motor_6.enable.isNull()) st_run.mot[MOTOR_6].step_count_diagnostic = 0;
-}
 
 /*
  * stepper_init_assertions() - test assertions, return error code if violation exists
@@ -268,11 +250,33 @@ uint8_t stepper_isbusy()
 }
 
 /*
+ * st_reset() - reset stepper internals
+ */
+
+void st_reset()
+{
+//	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
+	en_reset_encoders();
+	for (uint8_t i=0; i<MOTORS; i++) {
+		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
+		st_run.mot[i].substep_accumulator = 0;	// will become max negative during per-motor setup;
+		st_pre.mot[i].corrected_steps = 0;
+	}
+}
+
+stat_t st_clc(cmdObj_t *cmd)	// clear diagnostic counters, reset stepper prep
+{
+	st_reset();
+	return(STAT_OK);
+}
+
+/*
  * Motor power management functions
  *
  * _energize_motor()		 - apply power to a motor
  * _deenergize_motor()		 - remove power from a motor
  * _set_motor_power_level()	 - set the actual Vref to a specified power level
+ *
  * st_energize_motors()		 - apply power to all motors
  * st_deenergize_motors()	 - remove power from all motors
  * st_motor_power_callback() - callback to manage motor power sequencing
@@ -306,7 +310,7 @@ static void _deenergize_motor(const uint8_t motor)
 }
 
 /*
- * st_set_motor_power()	- applies the power level to the requested motor.
+ * _set_motor_power_level()	- applies the power level to the requested motor.
  *
  *	The power_level must be a compensated PWM value - presumably one of:
  *		st_cfg.mot[motor].power_level_scaled 
@@ -314,6 +318,7 @@ static void _deenergize_motor(const uint8_t motor)
  */
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
+#ifdef __ARM
 	// power_level must be scaled properly for the driver's Vref voltage requirements 
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
@@ -321,12 +326,12 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = power_level;
 	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = power_level;
 	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = power_level;
+#endif
 }
 
 void st_energize_motors()
 {
-	// any motor-N.energize defined as -1 will drop out of compile
-	// Rob: Is this true?
+	// any motor-N.energize defined as -1 will drop out of compile		// ++++ Rob: Is this true?
 	motor_1.energize(MOTOR_1);
 	motor_2.energize(MOTOR_2);
 	motor_3.energize(MOTOR_3);
@@ -391,12 +396,11 @@ stat_t st_motor_power_callback() 	// called by controller
 					break;
 				}
 			}
-
-//		} else if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {	// FUTURE
-
-//		} else if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {			// FUTURE
-
 		}
+		
+//		if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {}	// FUTURE
+//		if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {}				// FUTURE
+
 	}
 	return (STAT_OK);
 }
@@ -440,32 +444,26 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_1.step.set();		// turn step bit on
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_1);
 		}
 		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
 			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_2.step.set();
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_2);
 		}
 		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
 			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_3.step.set();
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_3);
 		}
 		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
 			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_4.step.set();
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_4);
 		}
 		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
 			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_5.step.set();
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_5);
 		}
 		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
 			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_6.step.set();
-			INCREMENT_DIAGNOSTIC_COUNTER(MOTOR_6);
 		}
 		dda_debug_pin1 = 0;
 

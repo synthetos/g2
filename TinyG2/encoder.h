@@ -88,6 +88,10 @@
 #ifndef ENCODER_H_ONCE
 #define ENCODER_H_ONCE
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /**** Configs and Constants ****/
 
 //#define ENCODER_STEP_ROUNDING	(float)0.5	// round steps for more accurate following error computation
@@ -125,5 +129,9 @@ stat_t encoder_test_assertions(void);
 
 void en_reset_encoders(void);
 float en_read_encoder(uint8_t motor);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	// End of include guard: ENCODER_H_ONCE

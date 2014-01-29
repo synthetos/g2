@@ -288,15 +288,11 @@ typedef struct stConfig {				// stepper configs
 // Runtime structure. Used exclusively by step generation ISR (HI)
 
 typedef struct stRunMotor {				// one per controlled motor
-//	int32_t phase_increment;			// total steps in axis times substeps factor
-//	int32_t phase_accumulator;			// DDA phase angle accumulator for axis
 	uint32_t substep_increment;			// total steps in axis times substeps factor
 	int32_t substep_accumulator;		// DDA phase angle accumulator
-//	float power_level;					// power level for this segment (ARM only)
 	uint8_t power_state;				// state machine for managing motor power
 	uint32_t power_systick;				// sys_tick for next state transition
 	float power_level_dynamic;			// dynamic power level for this segment or for idle
-//	uint8_t step_count_diagnostic;		// step count diagnostic
 } stRunMotor_t;
 
 typedef struct stRunSingleton {			// Stepper static values and axis parameters
@@ -333,14 +329,6 @@ typedef struct stPrepSingleton {
 	uint16_t magic_start;				// magic number to test memory integrity	
 	volatile uint8_t exec_state;		// move execution state
 	uint8_t move_type;					// move type
-
-//	volatile uint8_t reset_flag;		// TRUE if accumulator should be reset
-//	uint32_t prev_ticks;				// tick count from previous move
-//	uint16_t dda_period;				// DDA or dwell clock period setting
-//	uint32_t dda_ticks;					// DDA or dwell ticks for the move
-//	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
-//	stPrepMotor_t mot[MOTORS];			// per-motor structs
-//	uint16_t magic_end;
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
