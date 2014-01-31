@@ -637,6 +637,9 @@ static void _load_move()
 				st_run.mot[MOTOR_1].power_state = MOTOR_INITIATE_TIMEOUT;
 			}			
 		}
+		// accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
+		ACCUMULATE_ENCODER(MOTOR_1);
+
 #if (MOTORS >= 2)
 		if ((st_run.mot[MOTOR_2].substep_increment = st_pre.mot[MOTOR_2].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_2].accumulator_correction_flag == true) {
@@ -650,6 +653,7 @@ static void _load_move()
 		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
+		ACCUMULATE_ENCODER(MOTOR_2);
 #endif
 #if (MOTORS >= 3)
 		if ((st_run.mot[MOTOR_3].substep_increment = st_pre.mot[MOTOR_3].substep_increment) != 0) {
@@ -664,6 +668,7 @@ static void _load_move()
 			} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
+		ACCUMULATE_ENCODER(MOTOR_3);
 #endif
 #if (MOTORS >= 4)
 		if ((st_run.mot[MOTOR_4].substep_increment = st_pre.mot[MOTOR_4].substep_increment) != 0) {
@@ -678,6 +683,7 @@ static void _load_move()
 			} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
+		ACCUMULATE_ENCODER(MOTOR_4);
 #endif
 #if (MOTORS >= 5)
 		if ((st_run.mot[MOTOR_5].substep_increment = st_pre.mot[MOTOR_5].substep_increment) != 0) {
@@ -692,6 +698,7 @@ static void _load_move()
 			} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
+		ACCUMULATE_ENCODER(MOTOR_5);
 #endif
 #if (MOTORS >= 6)
 		if ((st_run.mot[MOTOR_6].substep_increment = st_pre.mot[MOTOR_6].substep_increment) != 0) {
@@ -706,8 +713,12 @@ static void _load_move()
 			} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_INITIATE_TIMEOUT;
 		}
+		ACCUMULATE_ENCODER(MOTOR_6);
 #endif
-		dda_timer.start();	// start the DDA timer if not already running
+
+		//**** do this last ****
+
+		dda_timer.start();								// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
@@ -719,27 +730,6 @@ static void _load_move()
 	st_prep_null();										// needed to shut off timers if no moves left
 	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
 	st_request_exec_move();								// compute and prepare the next move
-}
-
-/* 
- * st_prep_null() - Keeps the loader happy. Otherwise performs no action
- *
- *	Used by M codes, tool and spindle changes
- */
-void st_prep_null()
-{
-	st_pre.move_type = MOVE_TYPE_NULL;
-}
-
-/* 
- * st_prep_dwell() 	 - Add a dwell to the move buffer
- */
-
-void st_prep_dwell(float microseconds)
-{
-	st_pre.move_type = MOVE_TYPE_DWELL;
-	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL); // ARM code
-//	st_pre.dda_period = _f_to_period(F_DWELL);	// AVR code
 }
 
 /***********************************************************************************
@@ -756,8 +746,91 @@ void st_prep_dwell(float microseconds)
  *	Microseconds - how many microseconds the segment should run 
  */
 
-stat_t st_prep_line(float steps[], float microseconds)
+stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
+	// trap conditions that would prevent queueing the line
+	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));
+		} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
+		} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
+		} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	}
+	// setup segment parameters
+	// - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
+	// - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
+
+	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);
+	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
+	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+
+	// setup motor parameters
+
+	uint8_t previous_direction;
+	float correction_steps;
+	for (uint8_t i=0; i<MOTORS; i++) {
+
+		st_pre.mot[i].accumulator_correction_flag = false;
+
+		// Skip this motor if there are no new steps. Leave all values intact.
+		if (fp_ZERO(travel_steps[i])) { st_pre.mot[i].substep_increment = 0; continue;}
+
+		// Setup the direction, compensating for polarity.
+		// Set the step_sign which is used by the stepper ISR to accumulate step position
+		// Detect direction changes. Needed for accumulator adjustment
+
+		previous_direction = st_pre.mot[i].direction;
+		if (travel_steps[i] >= 0) {					// positive direction
+			st_pre.mot[i].direction = DIRECTION_CW ^ st_cfg.mot[i].polarity;
+			st_pre.mot[i].step_sign = 1;
+			} else {
+			st_pre.mot[i].direction = DIRECTION_CCW ^ st_cfg.mot[i].polarity;
+			st_pre.mot[i].step_sign = -1;
+		}
+		st_pre.mot[i].direction_change = st_pre.mot[i].direction ^ previous_direction;
+
+		// Detect segment time changes and setup the accumulator correction factor and flag.
+		// Putting this here computes the correct factor even if the motor was dormant for some
+		// number of previous moves. Correction is computed based on the last segment time actually used.
+
+//		if (fp_NE(segment_time, st_pre.mot[i].prev_segment_time)) {
+//		if (segment_time != st_pre.mot[i].prev_segment_time) {
+		if (fabs(segment_time - st_pre.mot[i].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
+			if (st_pre.mot[i].prev_segment_time != 0) {		// special case to skip first move
+				st_pre.mot[i].accumulator_correction_flag = true;
+				st_pre.mot[i].accumulator_correction = segment_time / st_pre.mot[i].prev_segment_time;
+			}
+			st_pre.mot[i].prev_segment_time = segment_time;
+		}
+
+		#ifdef __STEP_CORRECTION
+		// 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
+
+		if ((--st_pre.mot[i].correction_holdoff < 0) &&
+		(fabs(following_error[i]) > STEP_CORRECTION_THRESHOLD)) {
+
+			st_pre.mot[i].correction_holdoff = STEP_CORRECTION_HOLDOFF;
+			correction_steps = following_error[i] * STEP_CORRECTION_FACTOR;
+
+			if (correction_steps > 0) {
+				correction_steps = min3(correction_steps, fabs(travel_steps[i]), STEP_CORRECTION_MAX);
+				} else {
+				correction_steps = max3(correction_steps, -fabs(travel_steps[i]), -STEP_CORRECTION_MAX);
+			}
+			st_pre.mot[i].corrected_steps += correction_steps;
+			travel_steps[i] -= correction_steps;
+		}
+		#endif
+		// Compute substeb increment. The accumulator must be *exactly* the incoming
+		// fractional steps times the substep multiplier or positional drift will occur.
+		// Rounding is performed to eliminate a negative bias in the int32 conversion
+		// that results in long-term negative drift. (fabs/round order doesn't matter)
+
+		st_pre.mot[i].substep_increment = round(fabs(travel_steps[i] * DDA_SUBSTEPS));
+	}
+	st_pre.move_type = MOVE_TYPE_ALINE;
+	return (STAT_OK);
+}
+
+/*
 	// *** defensive programming ***
 	// trap conditions that would prevent queuing the line
 	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
@@ -786,6 +859,28 @@ stat_t st_prep_line(float steps[], float microseconds)
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	return (STAT_OK);
 }
+*/
+/* 
+ * st_prep_null() - Keeps the loader happy. Otherwise performs no action
+ *
+ *	Used by M codes, tool and spindle changes
+ */
+void st_prep_null()
+{
+	st_pre.move_type = MOVE_TYPE_NULL;
+}
+
+/* 
+ * st_prep_dwell() 	 - Add a dwell to the move buffer
+ */
+
+void st_prep_dwell(float microseconds)
+{
+	st_pre.move_type = MOVE_TYPE_DWELL;
+	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL); // ARM code
+//	st_pre.dda_period = _f_to_period(F_DWELL);	// AVR code
+}
+
 
 /*
  * _set_hw_microsteps() - set microsteps in hardware

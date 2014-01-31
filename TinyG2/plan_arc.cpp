@@ -2,7 +2,7 @@
  * plan_arc.c - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  * Portions copyright (c) 2009 Simen Svale Skogsrud
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@ static stat_t _compute_arc(void);
 static stat_t _compute_arc_offsets_from_radius(void);
 static float _get_arc_time (const float linear_travel, const float angular_travel, const float radius);
 static float _get_theta(const float x, const float y);
-static stat_t _test_arc_soft_limits(void);
+//static stat_t _test_arc_soft_limits(void);
 
 /*****************************************************************************
  * Canonical Machining arc functions (arc prep for planning and runtime)
@@ -124,7 +124,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 	ritorno(_compute_arc());
 //	ritorno(_test_arc_soft_limits());			// test if arc will trip soft limits
 	cm_cycle_start();							// if not already started
-	arc.run_state = MOVE_STATE_RUN;				// enable arc to be run from the callback
+	arc.run_state = MOVE_RUN;					// enable arc to be run from the callback
 	cm_set_model_position(STAT_OK);				// set endpoint position if the arc was successful
 	return (STAT_OK);
 }
@@ -140,7 +140,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 stat_t cm_arc_callback() 
 {
-	if (arc.run_state == MOVE_STATE_OFF) { return (STAT_NOOP);}
+	if (arc.run_state == MOVE_OFF) { return (STAT_NOOP);}
 	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) { return (STAT_EAGAIN);}
 
 	arc.theta += arc.segment_theta;
@@ -151,7 +151,7 @@ stat_t cm_arc_callback()
 	copy_vector(arc.position, arc.gm.target);		// update arc current position	
 
 	if (--arc.segment_count > 0) return (STAT_EAGAIN);
-	arc.run_state = MOVE_STATE_OFF;
+	arc.run_state = MOVE_OFF;
 	return (STAT_OK);
 }
 
@@ -163,7 +163,7 @@ stat_t cm_arc_callback()
 
 void cm_abort_arc() 
 {
-	arc.run_state = MOVE_STATE_OFF;
+	arc.run_state = MOVE_OFF;
 }
 
 /*
@@ -471,6 +471,7 @@ static float _get_theta(const float x, const float y)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  *
  */
+/*
 static stat_t _test_arc_soft_limits()
 {
 	// test is target falls outside boundaries. This is a 3 dimensional test
@@ -480,7 +481,7 @@ static stat_t _test_arc_soft_limits()
 //	if (arc.gm.target[arc.plane_axis_0] 
 	return(STAT_OK);
 }
-
+*/
 //##########################################
 //############## UNIT TESTS ################
 //##########################################

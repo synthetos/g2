@@ -421,8 +421,7 @@ stat_t st_motor_power_callback(void);
 void st_request_exec_move(void);
 void st_prep_null(void);
 void st_prep_dwell(float microseconds);
-stat_t st_prep_line(float steps[], float microseconds);
-//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
+stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
 stat_t st_set_mt(cmdObj_t *cmd);
 stat_t st_set_md(cmdObj_t *cmd);
