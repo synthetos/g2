@@ -108,7 +108,7 @@ struct Stepper {
 	{
 		if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED) {
 			enable.clear();
-			st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;
+			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 	};
 };
@@ -250,6 +250,7 @@ void st_reset()
 	en_reset_encoders();
 	for (uint8_t i=0; i<MOTORS; i++) {
 //		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
+		st_pre.mot[i].prev_direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[i].substep_accumulator = 0;	// will become max negative during per-motor setup;
 		st_pre.mot[i].corrected_steps = 0;
 	}
@@ -341,6 +342,15 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 
 void st_energize_motors()
 {
+	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+		_energize_motor(motor);
+		st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
+	}
+#ifdef __ARM
+	common_enable.clear();			// enable gShield common enable
+#endif
+
+/*
 #ifdef __AVR
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 		_energize_motor(motor);
@@ -357,10 +367,19 @@ void st_energize_motors()
 	motor_6.energize(MOTOR_6);
 	common_enable.clear();			// enable gShield common enable
 #endif
+*/
 }
 
 void st_deenergize_motors()
 {
+	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+		_deenergize_motor(motor);
+	}
+#ifdef __ARM
+	common_enable.set();			// disable gShield common enable
+#endif
+
+/*
 #ifdef __AVR
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 		_deenergize_motor(motor);
@@ -376,6 +395,7 @@ void st_deenergize_motors()
 	motor_6.enable.set();
 	common_enable.set();			// disable gShield common enable
 #endif
+*/
 }
 
 /*
@@ -389,66 +409,25 @@ stat_t st_motor_power_callback() 	// called by controller
 	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
 		switch (st_cfg.mot[motor].power_mode) {
+//			case (MOTOR_POWER_REDUCED_WHEN_IDLE): { break;}			// FUTURE
+//			case (MOTOR_ADAPTIVE_POWER): { break;}					// FUTURE
 			case (MOTOR_POWERED_IN_CYCLE): 
 			case (MOTOR_POWERED_WHEN_MOVING): {
 				switch (st_run.mot[motor].power_state) {
-					case (MOTOR_INITIATE_TIMEOUT): {
+					case (MOTOR_POWER_TIMEOUT_START): {
 						st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-						st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
+						st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
 						break;
 					}
-					case (MOTOR_COUNTDOWN_TIMEOUT): {
+					case (MOTOR_POWER_TIMEOUT_COUNTDOWN): {
 						if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
 							st_run.mot[motor].power_state = MOTOR_IDLE;
 							_deenergize_motor(motor);
 						}
-						break;
 					}
 				}
 			}
-//			case (MOTOR_POWER_REDUCED_WHEN_IDLE): { break;}			// FUTURE
-//			case (MOTOR_ADAPTIVE_POWER): { break;}					// FUTURE
 		}
-/*
-		if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
-
-			switch (st_run.mot[motor].power_state) {
-				case (MOTOR_INITIATE_TIMEOUT): {
-					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
-					continue;
-				}
-				case (MOTOR_COUNTDOWN_TIMEOUT): {
-					if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
-						st_run.mot[motor].power_state = MOTOR_IDLE;
-						_deenergize_motor(motor);
-					}
-					continue;
-				}
-			}
-		}
-
-		if(st_cfg.mot[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
-			switch (st_run.mot[motor].power_state) {
-				case (MOTOR_INITIATE_TIMEOUT): {
-					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-//					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(POWER_TIMEOUT_SECONDS * 1000);
-					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
-					continue;
-				}
-				case (MOTOR_COUNTDOWN_TIMEOUT): {
-					if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
-						st_run.mot[motor].power_state = MOTOR_IDLE;
-						_deenergize_motor(motor);
-					}
-					continue;
-				}
-			}
-		}
-
-//		if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {}	// FUTURE
-//		if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {}				// FUTURE
-*/
 	}
 	return (STAT_OK);
 }
@@ -610,7 +589,7 @@ static void _load_move()
 
 	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_LOADER) {				// if there are no moves to load...
 		for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-			st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;		// ...start motor power timeouts
+			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START; // ...start motor power timeouts
 		}
 		return;
 	}
@@ -634,25 +613,34 @@ static void _load_move()
 
 		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
 
-			// Apply accumulator correction if the time base has changed
+			// NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
+			//	   always operate on the last segment actually run by this motor, regardless of how many 
+			//	   segments it may have been inactive in between.
+
+			// Apply accumulator correction if the time base has changed since previous segment
 			if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_1].substep_accumulator *= st_pre.mot[MOTOR_1].accumulator_correction;
 			}
 
-			// Set the direction bit in hardware. Compensate for direction change in the accumulator
-			// If a direction change has occurred flip the value in the substep accumulator about its midpoint
-			// NB: If motor has 0 steps this is all skipped
-		printf("%d,%d\n", st_pre.mot[MOTOR_1].direction, st_pre.mot[MOTOR_1].direction_change);
+			// Detect direction change and if so:
+			//	- Set the direction bit in hardware. 
+			//	- Compensate for direction change in the accumulator by flipping the value in the substep accumulator 
+			//	  about its midpoint.
+			
+//		printf("%d,%d\n", st_pre.mot[MOTOR_1].direction, st_pre.mot[MOTOR_1].direction_change);
 
-			if (st_pre.mot[MOTOR_1].direction_change == true) {
-				if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) {
-					motor_1.dir.clear();									// clear the bit for clockwise motion 
-				} else {
-					motor_1.dir.set();										// set the bit for CCW motion
-				}
+			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
+				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
+				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_1.dir.clear() : motor_1.dir.set(); // set the bit for CCW motion
 			}
-				
+//			if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) {
+//					motor_1.dir.clear();								// clear the bit for clockwise motion 
+//				} else {
+//					motor_1.dir.set();									// set the bit for CCW motion
+//				}
+//			}
+
 			// Enable the stepper and start motor power management
 			motor_1.enable.clear();										// enable the motor (clear the ~Enable line)
 			st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
@@ -660,7 +648,7 @@ static void _load_move()
 		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
 			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 				motor_1.enable.clear();									// energize motor
-				st_run.mot[MOTOR_1].power_state = MOTOR_INITIATE_TIMEOUT;
+				st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
 			}			
 		}
 		// accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
@@ -671,13 +659,18 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_2].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_2].substep_accumulator *= st_pre.mot[MOTOR_2].accumulator_correction;
 			}
-			if (st_pre.mot[MOTOR_2].direction_change == true) {
-				if (st_pre.mot[MOTOR_2].direction == DIRECTION_CW) motor_2.dir.clear(); else motor_2.dir.set();
+			if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
+				st_pre.mot[MOTOR_2].prev_direction = st_pre.mot[MOTOR_2].direction;
 				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
+				st_pre.mot[MOTOR_2].direction == DIRECTION_CW ? motor_2.dir.clear() : motor_2.dir.set(); // set the bit for CCW motion
 			}
+//			if (st_pre.mot[MOTOR_2].direction_change == true) {
+//				if (st_pre.mot[MOTOR_2].direction == DIRECTION_CW) motor_2.dir.clear(); else motor_2.dir.set();
+//				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
+//			}
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_INITIATE_TIMEOUT;
+			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_2);
 #endif
@@ -686,13 +679,18 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_3].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_3].substep_accumulator *= st_pre.mot[MOTOR_3].accumulator_correction;
 			}
-			if (st_pre.mot[MOTOR_3].direction_change == true) {
-				if (st_pre.mot[MOTOR_3].direction == DIRECTION_CW) motor_3.dir.clear(); else motor_3.dir.set();
+			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
+				st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
 				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
+				st_pre.mot[MOTOR_3].direction == DIRECTION_CW ? motor_3.dir.clear() : motor_3.dir.set(); // set the bit for CCW motion
 			}
+//			if (st_pre.mot[MOTOR_3].direction_change == true) {
+//				if (st_pre.mot[MOTOR_3].direction == DIRECTION_CW) motor_3.dir.clear(); else motor_3.dir.set();
+//				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
+//			}
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
-			} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_INITIATE_TIMEOUT;
+		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_3);
 #endif
@@ -701,13 +699,18 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_4].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_4].substep_accumulator *= st_pre.mot[MOTOR_4].accumulator_correction;
 			}
-			if (st_pre.mot[MOTOR_4].direction_change == true) {
-				if (st_pre.mot[MOTOR_4].direction == DIRECTION_CW) motor_4.dir.clear(); else motor_4.dir.set();
+			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
+				st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
 				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
+				st_pre.mot[MOTOR_4].direction == DIRECTION_CW ? motor_4.dir.clear() : motor_4.dir.set(); // set the bit for CCW motion
 			}
+//			if (st_pre.mot[MOTOR_4].direction_change == true) {
+//				if (st_pre.mot[MOTOR_4].direction == DIRECTION_CW) motor_4.dir.clear(); else motor_4.dir.set();
+//				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
+//			}
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
-			} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_INITIATE_TIMEOUT;
+		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_4);
 #endif
@@ -716,13 +719,18 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_5].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_5].substep_accumulator *= st_pre.mot[MOTOR_5].accumulator_correction;
 			}
-			if (st_pre.mot[MOTOR_5].direction_change == true) {
-				if (st_pre.mot[MOTOR_5].direction == DIRECTION_CW) motor_5.dir.clear(); else motor_5.dir.set();
+			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
+				st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
 				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
+				st_pre.mot[MOTOR_5].direction == DIRECTION_CW ? motor_5.dir.clear() : motor_5.dir.set(); // set the bit for CCW motion
 			}
+//			if (st_pre.mot[MOTOR_5].direction_change == true) {
+//				if (st_pre.mot[MOTOR_5].direction == DIRECTION_CW) motor_5.dir.clear(); else motor_5.dir.set();
+//				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
+//			}
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
-			} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_INITIATE_TIMEOUT;
+		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_5);
 #endif
@@ -731,13 +739,18 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_6].accumulator_correction_flag == true) {
 				st_run.mot[MOTOR_6].substep_accumulator *= st_pre.mot[MOTOR_6].accumulator_correction;
 			}
-			if (st_pre.mot[MOTOR_6].direction_change == true) {
-				if (st_pre.mot[MOTOR_6].direction == DIRECTION_CW) motor_6.dir.clear(); else motor_6.dir.set();
+			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
+				st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
 				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
+				st_pre.mot[MOTOR_6].direction == DIRECTION_CW ? motor_6.dir.clear() : motor_6.dir.set(); // set the bit for CCW motion
 			}
+//			if (st_pre.mot[MOTOR_6].direction_change == true) {
+//				if (st_pre.mot[MOTOR_6].direction == DIRECTION_CW) motor_6.dir.clear(); else motor_6.dir.set();
+//				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
+//			}
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
-			} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
-			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_INITIATE_TIMEOUT;
+		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_6);
 #endif
@@ -810,9 +823,9 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 		// Setup the direction, compensating for polarity.
 		// Set the step_sign which is used by the stepper ISR to accumulate step position
-		// Detect direction changes. Needed for accumulator adjustment
 
-		previous_direction = st_pre.mot[i].direction;
+//		// Detect direction changes. Needed for accumulator adjustment
+//		previous_direction = st_pre.mot[i].direction;
 		if (travel_steps[i] >= 0) {					// positive direction
 			st_pre.mot[i].direction = DIRECTION_CW ^ st_cfg.mot[i].polarity;
 			st_pre.mot[i].step_sign = 1;
@@ -820,16 +833,14 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 			st_pre.mot[i].direction = DIRECTION_CCW ^ st_cfg.mot[i].polarity;
 			st_pre.mot[i].step_sign = -1;
 		}
-		st_pre.mot[i].direction_change = st_pre.mot[i].direction ^ previous_direction;
 
-		printf("%d,%d ==> ", st_pre.mot[i].direction, st_pre.mot[i].direction_change);
+//		st_pre.mot[i].direction_change = st_pre.mot[i].direction ^ previous_direction;
+//		printf("%d,%d ==> ", st_pre.mot[i].direction, st_pre.mot[i].direction_change);
 
 		// Detect segment time changes and setup the accumulator correction factor and flag.
 		// Putting this here computes the correct factor even if the motor was dormant for some
 		// number of previous moves. Correction is computed based on the last segment time actually used.
 
-//		if (fp_NE(segment_time, st_pre.mot[i].prev_segment_time)) {
-//		if (segment_time != st_pre.mot[i].prev_segment_time) {
 		if (fabs(segment_time - st_pre.mot[i].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
 			if (st_pre.mot[i].prev_segment_time != 0) {		// special case to skip first move
 				st_pre.mot[i].accumulator_correction_flag = true;

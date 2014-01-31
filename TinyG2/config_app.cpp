@@ -327,8 +327,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cvm",_fip, 0, cm_print_vm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].velocity_max,	C_VELOCITY_MAX },
 	{ "c","cfr",_fip, 0, cm_print_fr, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].feedrate_max,	C_FEEDRATE_MAX },
 	{ "c","ctm",_fip, 0, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,		C_TRAVEL_MAX },
-	{ "c","cjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
 	{ "c","ctn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_C].travel_min,		C_TRAVEL_MIN },
+	{ "c","cjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
 	{ "c","cjd",_fip, 0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },
 	{ "c","cra",_fip, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters

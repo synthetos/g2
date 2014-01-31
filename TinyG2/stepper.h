@@ -253,15 +253,15 @@ enum motorPowerState {					// used w/start and stop flags to sequence motor powe
 	MOTOR_OFF = 0,						// motor is stopped and deenergized
 	MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
 	MOTOR_RUNNING,						// motor is running (and fully energized)
-	MOTOR_INITIATE_TIMEOUT,				// transitional state to start idle timeout
-	MOTOR_COUNTDOWN_TIMEOUT				// run timeout to idle
+	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
+	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motors
 };
 
 enum cmStepperPowerMode {
 	MOTOR_DISABLED = 0,					// motor enable is deactivated
 	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles
 	MOTOR_POWERED_WHEN_MOVING,			// motor only powered while moving - idles shortly after it's stopped - even in cycle
-	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction (FUTURE)
+	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
 	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
 };
 
@@ -373,7 +373,8 @@ typedef struct stPrepMotor {
 
 	// direction and direction change
 	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
-	uint8_t direction_change;			// set true if direction changed
+	uint8_t prev_direction;				// travel direction from previous segment run for this motor
+//	uint8_t direction_change;			// set true if direction changed
 	int8_t step_sign;					// set to +1 or -1 for encoders
 
 	// following error correction
