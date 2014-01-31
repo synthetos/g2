@@ -276,36 +276,36 @@ enum prepBufferState {
 #define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
-#define IDLE_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
-#define IDLE_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
-#define IDLE_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
+#define POWER_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
+#define POWER_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
+//#define POWER_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
 
 /* DDA substepping
- * 	DDA_SUBSTEPS sets the amount of fractional precision for substepping in the DDA.
- *	Substepping is a fixed.point substitute allowing integer math (rather than FP) to be
- *	used in the pulse generation (DDA) and make pulse timing interpolation more accurate. 
- *	The loss of number range implies that the overall maximum length move is shortened 
- *	(which is true), but this is compensated for the fact that long moves are broken up 
- *	into a series of short moves (5 ms) by the planner so that feed holds and overrides 
- *	can interrupt a long move.
+ * 	DDA_SUBSTEPS sets the amount of fractional precision for substepping in the DDA. Substepping is a 
+ *	fixed.point substitute allowing integer math (rather than FP) to be used in the pulse generation 
+ *	(DDA) and make pulse timing interpolation more accurate. The loss of number range implies that 
+ *	the overall maximum length move is shortened (which is true), but this is compensated for the fact 
+ *	that long moves are broken up into a series of short moves (5 ms) by the planner so that feed holds 
+ *	and overrides can interrupt a long move.
  *
  *	This value is set for maximum accuracy; best not to mess with this.
  */
-#define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
-//#define DDA_SUBSTEPS				(float)5000000	// 5,000,000 accumulates substeps to max decimal places
+#define DDA_SUBSTEPS				(float)4000000	// preserves maximum FP precision
+//#define DDA_SUBSTEPS				(float)5000000	// 5,000,000 preserves maximum FP precision
+//#define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position.
  *	Since the following error is running 2 segments behind the current segment you have to be careful 
  *	not to overcompensate. The threshold determines if a correction should be applied, and the factor
- *	is how much. If threshold is to small and/or amount too large you will get a runaway correction
+ *	is how much. If threshold is too small and/or amount too large you will get a runaway correction
  *	and error will grow instead of shrink
  */
 #define STEP_CORRECTION_THRESHOLD	(float)2.00		// magnitude of forwarding error to apply correction 
 #define STEP_CORRECTION_FACTOR		(float)0.05		// factor to apply to step correction for a single segment
 #define STEP_CORRECTION_MAX			(float)0.50		// max step correction allowed in a single segment
 #define STEP_CORRECTION_HOLDOFF		 	 	  6		// minimum number of segments to wait between error correction
-#define STEP_INITIAL_DIRECTION				false
+#define STEP_INITIAL_DIRECTION		DIRECTION_CW
 
 /*
  * Stepper control structures
@@ -343,7 +343,7 @@ typedef struct cfgMotor {				// per-motor configs
 } cfgMotor_t;
 
 typedef struct stConfig {				// stepper configs
-	float motor_idle_timeout;			// seconds before setting motors to idle current (currently this is OFF)
+	float motor_power_timeout;			// seconds before setting motors to idle current (currently this is OFF)
 	cfgMotor_t mot[MOTORS];				// settings for motors 1-N
 } stConfig_t;
 
@@ -372,7 +372,7 @@ typedef struct stPrepMotor {
 	uint32_t substep_increment;			// total steps in axis times substep factor
 
 	// direction and direction change
-	int8_t direction;					// travel direction corrected for polarity
+	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
 	uint8_t direction_change;			// set true if direction changed
 	int8_t step_sign;					// set to +1 or -1 for encoders
 

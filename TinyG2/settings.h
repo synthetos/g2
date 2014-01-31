@@ -2,7 +2,7 @@
  * settings.h - default runtime settings
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -43,21 +43,24 @@
 // Machine configuration settings
 #define CHORDAL_TOLERANCE 			0.001			// chord accuracy for arc drawing
 #define SWITCH_TYPE 				SW_NORMALLY_OPEN// one of: SW_NORMALLY_OPEN, SW_NORMALLY_CLOSED
-#define MOTOR_IDLE_TIMEOUT			2.00			// motor power timeout in seconds
-#define MOTOR_POWER_LEVEL			25				// default motor power level 0-100
+
+#define MOTOR_POWER_TIMEOUT			2.00			// motor power timeout in seconds
+#define MOTOR_POWER_LEVEL			25				// default motor power level 0-100 (ARM only)
 
 // Communications and reporting settings
 #define COMM_MODE					TEXT_MODE		// one of: TEXT_MODE, JSON_MODE
 #define NETWORK_MODE				NETWORK_STANDALONE
+
 #define TEXT_VERBOSITY				TV_VERBOSE		// one of: TV_SILENT, TV_VERBOSE
 
 #define JSON_VERBOSITY				JV_VERBOSE		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_SYNTAX_MODE 			JSON_SYNTAX_STRICT	// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 #define JSON_FOOTER_DEPTH			0				// 0 = new style, 1 = old style
-//#define JSON_FOOTER_DEPTH			1				// 0 = new style, 1 = old style
 
 #define SR_VERBOSITY				SR_FILTERED		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS		50				// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250				// milliseconds - set $SV=0 to disable
+
 #define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #define QR_VERBOSITY				QR_OFF			// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -87,6 +90,7 @@
 // machine default profiles - chose only one:
 
 #include "settings/settings_default.h"				// Default settings for release
+//#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_lumenlabMicRoV3.h"		// Lumenlabs micRo v3
@@ -114,5 +118,24 @@
 #define P1_CCW_PHASE_HI                 0.2
 #define P1_PWM_PHASE_OFF                0.1
 #endif//P1_PWM_FREQUENCY
+
+/*** User-Defined Data Defaults ***/
+
+#define USER_DATA_A0	0
+#define USER_DATA_A1	0
+#define USER_DATA_A2	0
+#define USER_DATA_A3	0
+#define USER_DATA_B0	0
+#define USER_DATA_B1	0
+#define USER_DATA_B2	0
+#define USER_DATA_B3	0
+#define USER_DATA_C0	0
+#define USER_DATA_C1	0
+#define USER_DATA_C2	0
+#define USER_DATA_C3	0
+#define USER_DATA_D0	0
+#define USER_DATA_D1	0
+#define USER_DATA_D2	0
+#define USER_DATA_D3	0
 
 #endif // End of include guard: SETTINGS_H_ONCE

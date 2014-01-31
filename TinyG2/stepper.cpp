@@ -180,10 +180,10 @@ void stepper_init()
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
-	// setup LOAD timer
+	// setup software interrupt load timer
 	load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 
-	// setup EXEC timer & initial condition
+	// setup software interrupt exec timer & initial condition
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
 
@@ -246,7 +246,7 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
-//++++	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
+	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
 	en_reset_encoders();
 	for (uint8_t i=0; i<MOTORS; i++) {
 		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
@@ -388,11 +388,33 @@ stat_t st_motor_power_callback() 	// called by controller
 	// manage power for each motor individually
 	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
+		switch (st_cfg.mot[motor].power_mode) {
+			case (MOTOR_POWERED_IN_CYCLE): 
+			case (MOTOR_POWERED_WHEN_MOVING): {
+				switch (st_run.mot[motor].power_state) {
+					case (MOTOR_INITIATE_TIMEOUT): {
+						st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
+						st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
+						break;
+					}
+					case (MOTOR_COUNTDOWN_TIMEOUT): {
+						if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
+							st_run.mot[motor].power_state = MOTOR_IDLE;
+							_deenergize_motor(motor);
+						}
+						break;
+					}
+				}
+			}
+//			case (MOTOR_POWER_REDUCED_WHEN_IDLE): { break;}			// FUTURE
+//			case (MOTOR_ADAPTIVE_POWER): { break;}					// FUTURE
+		}
+/*
 		if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
 
 			switch (st_run.mot[motor].power_state) {
 				case (MOTOR_INITIATE_TIMEOUT): {
-					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_idle_timeout * 1000);
+					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
 					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
 					continue;
 				}
@@ -409,7 +431,8 @@ stat_t st_motor_power_callback() 	// called by controller
 		if(st_cfg.mot[motor].power_mode == MOTOR_POWERED_WHEN_MOVING) {	//... but idled after timeout when stopped
 			switch (st_run.mot[motor].power_state) {
 				case (MOTOR_INITIATE_TIMEOUT): {
-					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(IDLE_TIMEOUT_SECONDS * 1000);
+					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
+//					st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(POWER_TIMEOUT_SECONDS * 1000);
 					st_run.mot[motor].power_state = MOTOR_COUNTDOWN_TIMEOUT;
 					continue;
 				}
@@ -425,7 +448,7 @@ stat_t st_motor_power_callback() 	// called by controller
 
 //		if(st_run.mot[motor].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {}	// FUTURE
 //		if(st_run.mot[motor].power_mode == MOTOR_ADAPTIVE_POWER) {}				// FUTURE
-
+*/
 	}
 	return (STAT_OK);
 }
@@ -467,50 +490,51 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 //		dda_debug_pin1 = 1;
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_1.step.set();		// turn step bit on
+			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_1);
 		}
 		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_2.step.set();
+			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_2);
 		}
 		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_3.step.set();
+			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_3);
 		}
 		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_4.step.set();
+			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_4);
 		}
 		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_5.step.set();
+			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_5);
 		}
 		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			motor_6.step.set();
+			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_6);
 		}
 //		dda_debug_pin1 = 0;
 
 	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 //		dda_debug_pin2 = 1;
-		motor_1.step.clear();		// turn step bits off
+		motor_1.step.clear();							// turn step bits off
 		motor_2.step.clear();
 		motor_3.step.clear();
 		motor_4.step.clear();
 		motor_5.step.clear();
 		motor_6.step.clear();
 
-		if (--st_run.dda_ticks_downcount == 0) {	// process end of move
-			dda_timer.stop();						// turn it off or it will keep stepping out the last segment
-			_load_move();							// load the next move at the current interrupt level
-		}
+		if (--st_run.dda_ticks_downcount != 0) return;
+
+		// process end of segment
+		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
+		_load_move();									// load the next move at the current interrupt level
 //		dda_debug_pin2 = 0;
 	}
 } // MOTATE_TIMER_INTERRUPT
@@ -718,7 +742,7 @@ static void _load_move()
 
 		//**** do this last ****
 
-		dda_timer.start();								// start the DDA timer if not already running
+		dda_timer.start();									// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
@@ -727,38 +751,47 @@ static void _load_move()
 	}
 
 	// all cases drop to here - such as Null moves queued by MCodes
-	st_prep_null();										// needed to shut off timers if no moves left
-	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;		// flip it back
-	st_request_exec_move();								// compute and prepare the next move
+	st_prep_null();											// needed to shut off timers if no moves left
+	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
+	st_request_exec_move();									// exec and prep next move
 }
 
 /***********************************************************************************
  * st_prep_line() - Prepare the next move for the loader
  *
- *	This function does the math on the next pulse segment and gets it ready for 
- *	the loader. It deals with all the DDA optimizations and timer setups so that
- *	loading can be performed as rapidly as possible. It works in joint space 
- *	(motors) and it works in steps, not length units. All args are provided as 
- *	floats and converted to their appropriate integer types for the loader. 
+ *	This function does the math on the next pulse segment and gets it ready for the loader. 
+ *	It deals with all the DDA optimizations and timer setups so that loading can be performed 
+ *	as rapidly as possible. It works in joint space (motors) and it works in steps, not length 
+ *	units. All args are provided as floats and converted to their appropriate integer types for the loader. 
  *
  * Args:
- *	steps[] are signed relative motion in steps (can be non-integer values)
- *	Microseconds - how many microseconds the segment should run 
+ *	  - travel_steps[] are signed relative motion in steps for each motor. Steps are floats
+ *		that typically have fractional values (fractional steps). The sign indicates
+ *		direction. Motors that are not in the move should be 0 steps on input.
+ *
+ *	  - following_error[] is a vector of measured errors to the step count. Used for correction.
+ *
+ *	  - segment_time - how many minutes the segment should run. If timing is not
+ *		100% accurate this will affect the move velocity, but not the distance traveled.
+ *
+ * NOTE:  Many of the expressions are sensitive to casting and execution order to avoid long-term
+ *		  accuracy errors due to floating point round off. One earlier failed attempt was:
+ *		    dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
  */
-
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queueing the line
-	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));
+	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
 		} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
 		} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
 		} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
 	}
+
 	// setup segment parameters
 	// - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
 	// - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
-	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);
+	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);				// NB: AVR only (non Motate)
 	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
 	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
 
@@ -770,7 +803,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 		st_pre.mot[i].accumulator_correction_flag = false;
 
-		// Skip this motor if there are no new steps. Leave all values intact.
+		// Skip this motor if there are no new steps. Leave all other values intact.
 		if (fp_ZERO(travel_steps[i])) { st_pre.mot[i].substep_increment = 0; continue;}
 
 		// Setup the direction, compensating for polarity.
@@ -781,7 +814,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		if (travel_steps[i] >= 0) {					// positive direction
 			st_pre.mot[i].direction = DIRECTION_CW ^ st_cfg.mot[i].polarity;
 			st_pre.mot[i].step_sign = 1;
-			} else {
+		} else {
 			st_pre.mot[i].direction = DIRECTION_CCW ^ st_cfg.mot[i].polarity;
 			st_pre.mot[i].step_sign = -1;
 		}
@@ -801,24 +834,24 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 			st_pre.mot[i].prev_segment_time = segment_time;
 		}
 
-		#ifdef __STEP_CORRECTION
+#ifdef __STEP_CORRECTION
 		// 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
 
 		if ((--st_pre.mot[i].correction_holdoff < 0) &&
-		(fabs(following_error[i]) > STEP_CORRECTION_THRESHOLD)) {
+			(fabs(following_error[i]) > STEP_CORRECTION_THRESHOLD)) {
 
 			st_pre.mot[i].correction_holdoff = STEP_CORRECTION_HOLDOFF;
 			correction_steps = following_error[i] * STEP_CORRECTION_FACTOR;
 
 			if (correction_steps > 0) {
 				correction_steps = min3(correction_steps, fabs(travel_steps[i]), STEP_CORRECTION_MAX);
-				} else {
+			} else {
 				correction_steps = max3(correction_steps, -fabs(travel_steps[i]), -STEP_CORRECTION_MAX);
 			}
 			st_pre.mot[i].corrected_steps += correction_steps;
 			travel_steps[i] -= correction_steps;
 		}
-		#endif
+#endif
 		// Compute substeb increment. The accumulator must be *exactly* the incoming
 		// fractional steps times the substep multiplier or positional drift will occur.
 		// Rounding is performed to eliminate a negative bias in the int32 conversion
@@ -830,41 +863,12 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 	return (STAT_OK);
 }
 
-/*
-	// *** defensive programming ***
-	// trap conditions that would prevent queuing the line
-	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (STAT_INTERNAL_ERROR);
-	} else if (isfinite(microseconds) == false) { return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
-	} else if (microseconds < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
-	}
-//	st_pre.reset_flag = false;         // initialize accumulator reset flag for this move.
-
-	// setup motor parameters
-	for (uint8_t i=0; i<MOTORS; i++) {
-		st_pre.mot[i].direction = ((steps[i] < 0) ? 1 : 0) ^ st_cfg.mot[i].polarity;
-		st_pre.mot[i].substep_increment = (uint32_t)fabs(steps[i] * DDA_SUBSTEPS);
-	}
-	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
-	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
-
-	// FOOTNOTE: The above expression was previously computed as below but floating
-	// point rounding errors caused subtle and nasty accumulated position errors:
-	// sp.dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
-
-	// anti-stall measure in case change in velocity between segments is too great 
-//	if ((st_pre.dda_ticks * ACCUMULATOR_RESET_FACTOR) < st_pre.prev_ticks) {  // NB: uint32_t math
-//		st_pre.reset_flag = true;
-//	}
-//	st_pre.prev_ticks = st_pre.dda_ticks;
-	st_pre.move_type = MOVE_TYPE_ALINE;
-	return (STAT_OK);
-}
-*/
 /* 
  * st_prep_null() - Keeps the loader happy. Otherwise performs no action
  *
  *	Used by M codes, tool and spindle changes
  */
+
 void st_prep_null()
 {
 	st_pre.move_type = MOVE_TYPE_NULL;
@@ -877,10 +881,9 @@ void st_prep_null()
 void st_prep_dwell(float microseconds)
 {
 	st_pre.move_type = MOVE_TYPE_DWELL;
-	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL); // ARM code
-//	st_pre.dda_period = _f_to_period(F_DWELL);	// AVR code
+	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
+	st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);	// only needed by AVR
 }
-
 
 /*
  * _set_hw_microsteps() - set microsteps in hardware
@@ -893,7 +896,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
 #ifdef __ARM
 	switch (motor) {
- 		if (!motor_1.enable.isNull()) case (MOTOR_1): { motor_1.setMicrosteps(microsteps); break; }
+		if (!motor_1.enable.isNull()) case (MOTOR_1): { motor_1.setMicrosteps(microsteps); break; }
 		if (!motor_2.enable.isNull()) case (MOTOR_2): { motor_2.setMicrosteps(microsteps); break; }
 		if (!motor_3.enable.isNull()) case (MOTOR_3): { motor_3.setMicrosteps(microsteps); break; }
 		if (!motor_4.enable.isNull()) case (MOTOR_4): { motor_4.setMicrosteps(microsteps); break; }
@@ -989,7 +992,7 @@ stat_t st_set_pm(cmdObj_t *cmd)			// motor power mode
 
 stat_t st_set_mt(cmdObj_t *cmd)
 {
-	st_cfg.motor_idle_timeout = min(IDLE_TIMEOUT_SECONDS_MAX, max(cmd->value, IDLE_TIMEOUT_SECONDS_MIN));
+	st_cfg.motor_power_timeout = min(POWER_TIMEOUT_SECONDS_MAX, max(cmd->value, POWER_TIMEOUT_SECONDS_MIN));
 	return (STAT_OK);
 }
 
