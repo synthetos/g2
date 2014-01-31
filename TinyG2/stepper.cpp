@@ -249,7 +249,7 @@ void st_reset()
 	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
 	en_reset_encoders();
 	for (uint8_t i=0; i<MOTORS; i++) {
-		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
+//		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
 		st_run.mot[i].substep_accumulator = 0;	// will become max negative during per-motor setup;
 		st_pre.mot[i].corrected_steps = 0;
 	}
@@ -642,6 +642,8 @@ static void _load_move()
 			// Set the direction bit in hardware. Compensate for direction change in the accumulator
 			// If a direction change has occurred flip the value in the substep accumulator about its midpoint
 			// NB: If motor has 0 steps this is all skipped
+		printf("%d,%d\n", st_pre.mot[MOTOR_1].direction, st_pre.mot[MOTOR_1].direction_change);
+
 			if (st_pre.mot[MOTOR_1].direction_change == true) {
 				if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) {
 					motor_1.dir.clear();									// clear the bit for clockwise motion 
@@ -819,6 +821,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 			st_pre.mot[i].step_sign = -1;
 		}
 		st_pre.mot[i].direction_change = st_pre.mot[i].direction ^ previous_direction;
+
+		printf("%d,%d ==> ", st_pre.mot[i].direction, st_pre.mot[i].direction_change);
 
 		// Detect segment time changes and setup the accumulator correction factor and flag.
 		// Putting this here computes the correct factor even if the motor was dormant for some
