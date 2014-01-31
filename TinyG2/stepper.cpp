@@ -283,7 +283,7 @@ static void _energize_motor(const uint8_t motor)
 		case (MOTOR_3): { PORT_MOTOR_3_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
 		case (MOTOR_4): { PORT_MOTOR_4_VPORT.OUT &= ~MOTOR_ENABLE_BIT_bm; break; }
 	}
-	st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;
+	st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
 #endif
 #ifdef __ARM
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
@@ -411,7 +411,7 @@ stat_t st_motor_power_callback() 	// called by controller
 		switch (st_cfg.mot[motor].power_mode) {
 //			case (MOTOR_POWER_REDUCED_WHEN_IDLE): { break;}			// FUTURE
 //			case (MOTOR_ADAPTIVE_POWER): { break;}					// FUTURE
-			case (MOTOR_POWERED_IN_CYCLE): 
+			case (MOTOR_POWERED_IN_CYCLE):
 			case (MOTOR_POWERED_WHEN_MOVING): {
 				switch (st_run.mot[motor].power_state) {
 					case (MOTOR_POWER_TIMEOUT_START): {
@@ -439,8 +439,19 @@ stat_t st_motor_power_callback() 	// called by controller
 /*
  * Dwell timer interrupt
  */
+
+#ifdef __AVR
+ISR(TIMER_DWELL_ISR_vect) {								// DWELL timer interrupt
+	if (--st_run.dda_ticks_downcount == 0) {
+		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;			// disable DWELL timer
+//		mp_end_dwell();									// free the planner buffer
+		_load_move();
+	}
+}
+#endif
+#ifdef __ARM
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
-MOTATE_TIMER_INTERRUPT(dwell_timer_num) 
+MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 {
 	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
 	if (--st_run.dda_ticks_downcount == 0) {
@@ -449,6 +460,7 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 	}
 }
 } // namespace Motate
+#endif
 
 /****************************************************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
@@ -524,51 +536,99 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
  * st_request_exec_move()	- SW interrupt to request to execute a move
  * exec_timer interrupt		- interrupt handler for calling exec function
  */
+#ifdef __AVR
 void st_request_exec_move()
 {
 	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
-		exec_timer.setInterruptPending();
+		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
+		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
 	}
 }
 
-namespace Motate {	// Define timer inside Motate namespace
-MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
-{
-	exec_timer.getInterruptCause();				// clears the interrupt condition
-   	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
+	TIMER_EXEC.CTRLA = EXEC_TIMER_DISABLE;				// disable SW interrupt timer
+
+	// exec_move
+	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
 			_request_load_move();
 		}
 	}
 }
-} // namespace Motate
+#endif // __AVR
 
-/****************************************************************************************
- * Load sequencing code
- *
- * _request_load()		- fires a software interrupt (timer) to request to load a move
- *  load_mode interrupt	- interrupt handler for running the loader
- * _load_move() 		- load a move into steppers, load a dwell, or process a Null move
- */
-
-static void _request_load_move()
+#ifdef __ARM
+void st_request_exec_move()
 {
-	if (st_run.dda_ticks_downcount == 0) {	// bother interrupting
-		load_timer.setInterruptPending();
-	} 	// ...else don't bother to interrupt. 
-		// You'll just trigger an interrupt and find out the loader is not ready
+	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
+		#ifdef __AVR
+		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
+		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
+		#endif
+		#ifdef __ARM
+		exec_timer.setInterruptPending();
+		#endif
+	}
 }
 
 namespace Motate {	// Define timer inside Motate namespace
-MOTATE_TIMER_INTERRUPT(load_timer_num)		// load steppers SW interrupt
-{
-	load_timer.getInterruptCause();			// read SR to clear interrupt condition
-	_load_move();
-}
+	MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
+	{
+		exec_timer.getInterruptCause();				// clears the interrupt condition
+		if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+			if (mp_exec_move() != STAT_NOOP) {
+				st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
+				_request_load_move();
+			}
+		}
+	}
 } // namespace Motate
 
-/*
+#endif // __ARM
+
+/****************************************************************************************
+ * Loader sequencing code
+ *
+ * _request_load()		- fires a software interrupt (timer) to request to load a move
+ *  load_mode interrupt	- interrupt handler for running the loader
+ */
+
+#ifdef __AVR
+static void _request_load_move()
+{
+	if (st_run.dda_ticks_downcount == 0) {				// bother interrupting
+		TIMER_LOAD.PER = LOAD_TIMER_PERIOD;
+		TIMER_LOAD.CTRLA = LOAD_TIMER_ENABLE;			// trigger a HI interrupt
+	} 	// else don't bother to interrupt. You'll just trigger an
+		// interrupt and find out the load routine is not ready for you
+}
+
+ISR(TIMER_LOAD_ISR_vect) {								// load steppers SW interrupt
+	TIMER_LOAD.CTRLA = LOAD_TIMER_DISABLE;				// disable SW interrupt timer
+	_load_move();
+}
+#endif // __AVR
+
+#ifdef __ARM
+static void _request_load_move()
+{
+	if (st_run.dda_ticks_downcount == 0) {				// bother interrupting
+		load_timer.setInterruptPending();
+	} 	// ...else don't bother to interrupt.
+	// You'll just trigger an interrupt and find out the loader is not ready
+}
+
+namespace Motate {	// Define timer inside Motate namespace
+	MOTATE_TIMER_INTERRUPT(load_timer_num)				// load steppers SW interrupt
+	{
+		load_timer.getInterruptCause();					// read SR to clear interrupt condition
+		_load_move();
+	}
+} // namespace Motate
+#endif // __ARM
+
+/****************************************************************************************
  * _load_move() - Dequeue move and load into stepper struct
  *
  *	This routine can only be called be called from an ISR at the same or 
@@ -589,14 +649,14 @@ static void _load_move()
 
 	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_LOADER) {				// if there are no moves to load...
 		for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START; // ...start motor power timeouts
+			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
 		}
 		return;
 	}
 
 	// handle aline() loads first (most common case)  NB: there are no more lines, only alines()
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
-		
+
 		//**** setup the new segment ****
 
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
@@ -608,7 +668,7 @@ static void _load_move()
 
 		// These sections are somewhat optimized for execution speed. The whole load operation
 		// is supposed to take < 10 uSec (Xmega). Be careful if you mess with this.
-		
+
 		// the following if() statement sets the runtime substep increment value or zeroes it
 
 		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
@@ -619,13 +679,13 @@ static void _load_move()
 
 			// Apply accumulator correction if the time base has changed since previous segment
 			if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_1].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_1].substep_accumulator *= st_pre.mot[MOTOR_1].accumulator_correction;
 			}
 
 			// Detect direction change and if so:
 			//	- Set the direction bit in hardware. 
-			//	- Compensate for direction change in the accumulator by flipping the value in the substep accumulator 
-			//	  about its midpoint.
+			//	- Compensate for direction change by flipping substep accumulator value about its midpoint.
 			
 //		printf("%d,%d\n", st_pre.mot[MOTOR_1].direction, st_pre.mot[MOTOR_1].direction_change);
 
@@ -657,6 +717,7 @@ static void _load_move()
 #if (MOTORS >= 2)
 		if ((st_run.mot[MOTOR_2].substep_increment = st_pre.mot[MOTOR_2].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_2].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_2].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_2].substep_accumulator *= st_pre.mot[MOTOR_2].accumulator_correction;
 			}
 			if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
@@ -677,6 +738,7 @@ static void _load_move()
 #if (MOTORS >= 3)
 		if ((st_run.mot[MOTOR_3].substep_increment = st_pre.mot[MOTOR_3].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_3].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_3].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_3].substep_accumulator *= st_pre.mot[MOTOR_3].accumulator_correction;
 			}
 			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
@@ -697,6 +759,7 @@ static void _load_move()
 #if (MOTORS >= 4)
 		if ((st_run.mot[MOTOR_4].substep_increment = st_pre.mot[MOTOR_4].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_4].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_4].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_4].substep_accumulator *= st_pre.mot[MOTOR_4].accumulator_correction;
 			}
 			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
@@ -717,6 +780,7 @@ static void _load_move()
 #if (MOTORS >= 5)
 		if ((st_run.mot[MOTOR_5].substep_increment = st_pre.mot[MOTOR_5].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_5].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_5].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_5].substep_accumulator *= st_pre.mot[MOTOR_5].accumulator_correction;
 			}
 			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
@@ -737,6 +801,7 @@ static void _load_move()
 #if (MOTORS >= 6)
 		if ((st_run.mot[MOTOR_6].substep_increment = st_pre.mot[MOTOR_6].substep_increment) != 0) {
 			if (st_pre.mot[MOTOR_6].accumulator_correction_flag == true) {
+				st_pre.mot[MOTOR_6].accumulator_correction_flag = false;
 				st_run.mot[MOTOR_6].substep_accumulator *= st_pre.mot[MOTOR_6].accumulator_correction;
 			}
 			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
@@ -793,6 +858,7 @@ static void _load_move()
  *		  accuracy errors due to floating point round off. One earlier failed attempt was:
  *		    dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
  */
+
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queueing the line

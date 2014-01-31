@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.33	// tinyg merge - working on a fix for the direction change problem - ready to test
+#define TINYG_FIRMWARE_BUILD   		026.34	// tinyg merge - preparing flag reset for accumulator correction
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

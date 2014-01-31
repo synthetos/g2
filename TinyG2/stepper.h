@@ -292,7 +292,6 @@ enum prepBufferState {
  */
 #define DDA_SUBSTEPS				(float)4000000	// preserves maximum FP precision
 //#define DDA_SUBSTEPS				(float)5000000	// 5,000,000 preserves maximum FP precision
-//#define DDA_SUBSTEPS 100000		// 100,000 accumulates substeps to 6 decimal places
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position.
