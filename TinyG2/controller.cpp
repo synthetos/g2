@@ -36,7 +36,7 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
-//#include "encoder.h"
+#include "encoder.h"
 #include "hardware.h"
 #include "switch.h"
 //#include "gpio.h"
@@ -82,23 +82,15 @@ stat_t hardware_hard_reset_handler(void);
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
 {
+	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
 	controller_init_assertions();
 
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
-	
-	cs.read_index = 0;								// initialize index for read_line()
-	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
-	cs.hard_reset_requested = false;
-	cs.bootloader_requested = false;
-
-	cs.job_id[0] = 0;								// clear the job_id
-	cs.job_id[1] = 0;
-	cs.job_id[2] = 0;
-	cs.job_id[3] = 0;
 
 #ifdef __AVR
+	cs.state = CONTROLLER_STARTUP;					// ready to run startup lines
 	xio_set_stdin(std_in);
 	xio_set_stdout(std_out);
 	xio_set_stderr(std_err);
@@ -106,7 +98,10 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	tg_set_primary_source(cs.default_src);
 #endif
 
+#ifdef __ARM
+	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
 	IndicatorLed.setFrequency(100000);
+#endif
 }
 
 /* 
@@ -130,7 +125,7 @@ stat_t controller_test_assertions()
 	if ((cs.magic_start 	!= MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
 	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
 	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-//	if (shared_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+	if (shared_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONTROLLER_ASSERTION_FAILURE);
 
 	return (STAT_OK);
 }
@@ -243,7 +238,7 @@ static stat_t _command_dispatch()
 
 	switch (toupper(*cs.bufp)) {						// first char
 
-		case '!': { cm_request_feedhold(); break; }		// include for diagnostics
+		case '!': { cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial
 		case '%': { cm_request_queue_flush(); break; }
 		case '~': { cm_request_cycle_start(); break; }
 
@@ -300,6 +295,7 @@ static stat_t _shutdown_idler()
 
 static stat_t _normal_idler()
 {
+#ifdef __ARM
 	/*
 	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
 	 * See plan_line.cpp for explanations.
@@ -307,7 +303,7 @@ static stat_t _normal_idler()
 	 * t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
 	 */
 
-	// These are statics, and the assigments will only evaluate once.
+	// These are statics, and the assignments will only evaluate once.
 	static float indicator_led_value = 0.0;
 	static float indicator_led_forward_diff_1 = 50.0 * square(1.0/100.0);
 	static float indicator_led_forward_diff_2 = indicator_led_forward_diff_1 * 2.0;
@@ -334,6 +330,15 @@ static stat_t _normal_idler()
 
 		IndicatorLed = indicator_led_value/100.0;
 	}
+#endif
+#ifdef __AVR
+/*
+	if (SysTickTimer_getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer_getValue() + LED_NORMAL_TIMER;
+//		IndicatorLed_toggle();
+	}
+*/
+#endif
 	return (STAT_OK);
 }
 
@@ -394,19 +399,11 @@ static stat_t _limit_switch_handler(void)
 {
 /*
 	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
-	if (cm.limit_tripped_flag == false) { return (STAT_NOOP);}
-	cm.limit_tripped_flag = false;
-//	cm_alarm(0);
+	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
+//	cm_alarm(gpio_get_sw_thrown); 		// unexplained complier warning: passing argument 1 of 'cm_shutdown' makes integer from pointer without a cast
+//	cm_hard_alarm(sw.sw_num_thrown);	// no longer the correct behavior
+	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
 */
-	return (STAT_OK);
-}
-
-/* 
- * _controller_assertions() - check memory integrity of controller
- */
-stat_t _controller_assertions()
-{
-	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_MEMORY_FAULT);
 	return (STAT_OK);
 }
 
@@ -421,7 +418,7 @@ stat_t _system_assertions()
 	emergency___everybody_to_get_from_street(canonical_machine_test_assertions());
 	emergency___everybody_to_get_from_street(planner_test_assertions());
 	emergency___everybody_to_get_from_street(stepper_test_assertions());
-//	emergency___everybody_to_get_from_street(encoder_test_assertions());
+	emergency___everybody_to_get_from_street(encoder_test_assertions());
 //	emergency___everybody_to_get_from_street(xio_test_assertions());
 	return (STAT_OK);
 }
