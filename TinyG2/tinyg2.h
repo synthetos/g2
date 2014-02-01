@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.37	// tinyg merge - inspection and cleanup pass; corrected sign in arc radius calculations; substituted FP friend planner optimization tests
+#define TINYG_FIRMWARE_BUILD   		026.38	// tinyg merge - inspection and cleanup; aligned config_app table w/changes instigated by that
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -65,6 +65,8 @@
 //  #define __TEST_99 						// comment out to remove diagnostic test 99
 
 /****** DEVELOPMENT SETTINGS ******/
+
+//#define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
 
 #ifdef __SIMULATION
   #define __CANNED_STARTUP					// run any canned startup moves

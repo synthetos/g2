@@ -114,8 +114,7 @@ void config_init()
 	cfg.magic_start = MAGICNUM;
 	cfg.magic_end = MAGICNUM;
 
-//+++++ There is a chunk of code missing from here until persistence is implemented
-/*
+/*+++++ This chunk of code is missing from here until persistence is implemented
 	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
 	hw.nvm_base_addr = NVM_BASE_ADDR;
 	hw.nvm_profile_base = hw.nvm_base_addr;
@@ -464,7 +463,7 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 
 stat_t cmd_persist_offsets(uint8_t flag)
 {
-/*
+/*++++ add in once persistence is implemented
 	if (flag == true) {
 		cmdObj_t cmd;
 		for (uint8_t i=1; i<=COORDS; i++) {

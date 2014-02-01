@@ -85,14 +85,14 @@
  *		and have no buffer.
  */
 
-#include "tinyg2.h"		// #1
-#include "config.h"		// #2
+#include "tinyg2.h"			// #1
+#include "config.h"			// #2
 #include "text_parser.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
-//#include "encoder.h"
+#include "encoder.h"
 #include "spindle.h"
 #include "report.h"
 //#include "gpio.h"
@@ -799,8 +799,8 @@ void cm_set_axis_origin(uint8_t axis, const float position)
 	mp_set_planner_position(axis, position);
 
 	// reset all steps counters and encoders - these are in motor space
-//	mp_reset_step_counts();		//++++ uncomment once encoders are in place
-//	en_reset_encoders();		//++++ uncomment once encoders are in place
+	mp_reset_step_counts();
+	en_reset_encoders();
 }
 
 /* 
