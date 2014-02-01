@@ -71,8 +71,6 @@
 
 #include "MotateSPI.h"
 
-//#include "Arduino.h"
-
 extern Motate::USBDevice< Motate::USBCDC > usb;
 //extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 extern typeof usb._mixin_0_type::Serial &SerialUSB;
@@ -85,6 +83,10 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
+
+void xio_init(void);
+void xio_init_assertions(void);
+stat_t xio_test_assertions(void);
 
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);

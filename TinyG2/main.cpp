@@ -29,7 +29,7 @@
 #include "report.h"
 #include "planner.h"
 #include "stepper.h"
-//#include "encoder.h"
+#include "encoder.h"
 //#include "network.h"
 #include "switch.h"
 //#include "test.h"
@@ -59,8 +59,6 @@ void __libc_init_array(void);
 }
 #endif // __cplusplus
 
-static void _application_init(void);
-
 /******************** Application Code ************************/
 
 const Motate::USBSettings_t Motate::USBSettings = {
@@ -84,6 +82,10 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
 
 Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 
+/*
+ * _system_init()
+ */
+
 void _system_init(void)
 {
 #ifdef __ARM
@@ -97,16 +99,49 @@ void _system_init(void)
 #endif
 }
 
+/*
+ * _application_init()
+ */
+
+static void _application_init(void)
+{
+	// There are a lot of dependencies in the order of these inits.
+	// Don't change the ordering unless you understand this.
+
+	// do these first
+	hardware_init();				// system hardware setup 			- must be first
+	xio_init();						// xtended io subsystem				- must be second
+	config_init();					// config records from eeprom 		- must be third
+	
+	// do these next
+	stepper_init();
+	encoder_init();					// virtual encoders	
+	switch_init();					// switches and other inputs
+//	gpio_init();					// parallel IO
+	pwm_init();						// pulse width modulation drivers
+
+	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+//	network_init();					// reset std devices if required	- must follow config_init()
+	planner_init();					// motion planning subsystem
+	canonical_machine_init();		// canonical machine				- must follow config_init()
+
+	// now get started
+//	rpt_print_system_ready_message();// (LAST) announce system is ready
+//	_unit_tests();					// run any unit tests that are enabled
+//	tg_canned_startup();			// run any pre-loaded commands
+	return;
+}
+
+/*
+ * main()
+ */
+
 int main(void)
 {
 	// system initialization
 	_system_init();
 	usb.attach();					// USB setup
 	delay(1000);
-
-//	usb.detach();					// hack to detach from bootloader USB if it was previously attached.
-//	delay(1000);
-//	usb.attach();
 
 	// TinyG application setup
 	_application_init();
@@ -116,32 +151,6 @@ int main(void)
 		controller_run( );			// single pass through the controller
 	}
 	return 0;
-}
-
-static void _application_init(void)
-{
-	// There are a lot of dependencies in the order of these inits.
-	// Don't change the ordering unless you understand this.
-
-	// do these first
-	hardware_init();				// system hardware setup 			- must be first
-	config_init();					// config records from eeprom 		- must be second
-	switch_init();					// switches and other inputs
-	pwm_init();						// pulse width modulation drivers
-
-	// do these next
-	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
-	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine				- must follow config_init()
-
-	// do these last
-	stepper_init();
-
-	// now get started
-//	rpt_print_system_ready_message();// (LAST) announce system is ready
-//	_unit_tests();					// run any unit tests that are enabled
-//	tg_canned_startup();			// run any pre-loaded commands
-	return;
 }
 
 void tg_reset(void)				// software hard reset using the watchdog timer
