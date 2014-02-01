@@ -96,9 +96,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 	memcpy(&arc.gm, &cm.gm, sizeof(GCodeState_t));	// copy GCode context to arc singleton - some will be overwritten to run segments
 
 	// populate the arc control singleton
-//	copy_axis_vector(arc.endpoint, gm.target);		// +++++ Diagnostic - save target position
-
-	copy_vector(arc.position, cm.gmx.position);// set initial arc position from gcode model
+	copy_vector(arc.position, cm.gmx.position);		// set initial arc position from gcode model
 	arc.radius = _to_millimeters(radius);			// set arc radius or zero
 	arc.offset[0] = _to_millimeters(i);				// copy offsets with conversion to canonical form (mm)
 	arc.offset[1] = _to_millimeters(j);
@@ -185,8 +183,7 @@ void cm_abort_arc()
  */
 static stat_t _compute_arc()
 {
-
-	// A non-zero radius value indicated a radius arc
+	// A non-zero radius value indicates a radius arc
 	// Compute IJK offset coordinates. These override any current IJK offsets
 	if (fp_NOT_ZERO(arc.radius)) ritorno(_compute_arc_offsets_from_radius()); // returns if error
 
@@ -331,7 +328,7 @@ static stat_t _compute_arc_offsets_from_radius()
 	float y = cm.gm.target[arc.plane_axis_1] - cm.gmx.position[arc.plane_axis_1];
 
 	// == -(h * 2 / d)
-	float h_x2_div_d = -sqrt(4 * square(arc.radius) - (square(x) - square(y))) / hypot(x,y);
+	float h_x2_div_d = -sqrt(4 * square(arc.radius) - (square(x) + square(y))) / hypot(x,y);
 
 	// If r is smaller than d the arc is now traversing the complex plane beyond
 	// the reach of any real CNC, and thus - for practical reasons - we will 
@@ -460,7 +457,7 @@ static float _get_theta(const float x, const float y)
  *			the distance from Cx to the positive X boundary
  *
  *	The arc plane is defined by 0 and 1 depending on G17/G18/G19 plane selected,
- *	corresponding to arc pane XY, XZ, YZ, respectively.
+ *	corresponding to arc planes XY, XZ, YZ, respectively.
  *	
  *	Must be called with all the following set in the arc struct
  *	  -	arc starting position (arc.position)
@@ -482,6 +479,7 @@ static stat_t _test_arc_soft_limits()
 	return(STAT_OK);
 }
 */
+
 //##########################################
 //############## UNIT TESTS ################
 //##########################################

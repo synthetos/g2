@@ -249,7 +249,6 @@ void st_reset()
 	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
 	en_reset_encoders();
 	for (uint8_t i=0; i<MOTORS; i++) {
-//		st_pre.mot[i].direction_change = STEP_INITIAL_DIRECTION;
 		st_pre.mot[i].prev_direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[i].substep_accumulator = 0;	// will become max negative during per-motor setup;
 		st_pre.mot[i].corrected_steps = 0;
@@ -349,25 +348,6 @@ void st_energize_motors()
 #ifdef __ARM
 	common_enable.clear();			// enable gShield common enable
 #endif
-
-/*
-#ifdef __AVR
-	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		_energize_motor(motor);
-		st_run.mot[motor].power_state = MOTOR_INITIATE_TIMEOUT;
-	}
-#endif
-#ifdef __ARM
-	// any motor-N.energize defined as -1 will drop out of compile		// ++++ Rob: Is this true?
-	motor_1.energize(MOTOR_1);
-	motor_2.energize(MOTOR_2);
-	motor_3.energize(MOTOR_3);
-	motor_4.energize(MOTOR_4);
-	motor_5.energize(MOTOR_5);
-	motor_6.energize(MOTOR_6);
-	common_enable.clear();			// enable gShield common enable
-#endif
-*/
 }
 
 void st_deenergize_motors()
@@ -378,24 +358,6 @@ void st_deenergize_motors()
 #ifdef __ARM
 	common_enable.set();			// disable gShield common enable
 #endif
-
-/*
-#ifdef __AVR
-	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		_deenergize_motor(motor);
-	}
-#endif
-#ifdef __ARM
-	// any motor-N.enable defined as -1 will drop out of compile
-	motor_1.enable.set();			// set disables the motor
-	motor_2.enable.set();
-	motor_3.enable.set();
-	motor_4.enable.set();
-	motor_5.enable.set();
-	motor_6.enable.set();
-	common_enable.set();			// disable gShield common enable
-#endif
-*/
 }
 
 /*
@@ -562,13 +524,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 void st_request_exec_move()
 {
 	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
-		#ifdef __AVR
-		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
-		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
-		#endif
-		#ifdef __ARM
 		exec_timer.setInterruptPending();
-		#endif
 	}
 }
 
@@ -616,7 +572,7 @@ static void _request_load_move()
 	if (st_run.dda_ticks_downcount == 0) {				// bother interrupting
 		load_timer.setInterruptPending();
 	} 	// ...else don't bother to interrupt.
-	// You'll just trigger an interrupt and find out the loader is not ready
+		// You'll just trigger an interrupt and find out the loader is not ready
 }
 
 namespace Motate {	// Define timer inside Motate namespace
@@ -686,20 +642,12 @@ static void _load_move()
 			// Detect direction change and if so:
 			//	- Set the direction bit in hardware. 
 			//	- Compensate for direction change by flipping substep accumulator value about its midpoint.
-			
-//		printf("%d,%d\n", st_pre.mot[MOTOR_1].direction, st_pre.mot[MOTOR_1].direction_change);
 
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
 				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
 				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_1.dir.clear() : motor_1.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) {
-//					motor_1.dir.clear();								// clear the bit for clockwise motion 
-//				} else {
-//					motor_1.dir.set();									// set the bit for CCW motion
-//				}
-//			}
 
 			// Enable the stepper and start motor power management
 			motor_1.enable.clear();										// enable the motor (clear the ~Enable line)
@@ -725,10 +673,6 @@ static void _load_move()
 				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
 				st_pre.mot[MOTOR_2].direction == DIRECTION_CW ? motor_2.dir.clear() : motor_2.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_2].direction_change == true) {
-//				if (st_pre.mot[MOTOR_2].direction == DIRECTION_CW) motor_2.dir.clear(); else motor_2.dir.set();
-//				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
-//			}
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
@@ -746,10 +690,6 @@ static void _load_move()
 				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
 				st_pre.mot[MOTOR_3].direction == DIRECTION_CW ? motor_3.dir.clear() : motor_3.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_3].direction_change == true) {
-//				if (st_pre.mot[MOTOR_3].direction == DIRECTION_CW) motor_3.dir.clear(); else motor_3.dir.set();
-//				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
-//			}
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
@@ -767,10 +707,6 @@ static void _load_move()
 				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
 				st_pre.mot[MOTOR_4].direction == DIRECTION_CW ? motor_4.dir.clear() : motor_4.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_4].direction_change == true) {
-//				if (st_pre.mot[MOTOR_4].direction == DIRECTION_CW) motor_4.dir.clear(); else motor_4.dir.set();
-//				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
-//			}
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
@@ -788,10 +724,6 @@ static void _load_move()
 				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
 				st_pre.mot[MOTOR_5].direction == DIRECTION_CW ? motor_5.dir.clear() : motor_5.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_5].direction_change == true) {
-//				if (st_pre.mot[MOTOR_5].direction == DIRECTION_CW) motor_5.dir.clear(); else motor_5.dir.set();
-//				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
-//			}
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
@@ -809,10 +741,6 @@ static void _load_move()
 				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
 				st_pre.mot[MOTOR_6].direction == DIRECTION_CW ? motor_6.dir.clear() : motor_6.dir.set(); // set the bit for CCW motion
 			}
-//			if (st_pre.mot[MOTOR_6].direction_change == true) {
-//				if (st_pre.mot[MOTOR_6].direction == DIRECTION_CW) motor_6.dir.clear(); else motor_6.dir.set();
-//				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
-//			}
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
 		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
@@ -878,7 +806,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 	// setup motor parameters
 
-	uint8_t previous_direction;
 	float correction_steps;
 	for (uint8_t i=0; i<MOTORS; i++) {
 
@@ -889,9 +816,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 		// Setup the direction, compensating for polarity.
 		// Set the step_sign which is used by the stepper ISR to accumulate step position
-
-//		// Detect direction changes. Needed for accumulator adjustment
-//		previous_direction = st_pre.mot[i].direction;
 		if (travel_steps[i] >= 0) {					// positive direction
 			st_pre.mot[i].direction = DIRECTION_CW ^ st_cfg.mot[i].polarity;
 			st_pre.mot[i].step_sign = 1;
@@ -900,15 +824,12 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 			st_pre.mot[i].step_sign = -1;
 		}
 
-//		st_pre.mot[i].direction_change = st_pre.mot[i].direction ^ previous_direction;
-//		printf("%d,%d ==> ", st_pre.mot[i].direction, st_pre.mot[i].direction_change);
-
 		// Detect segment time changes and setup the accumulator correction factor and flag.
 		// Putting this here computes the correct factor even if the motor was dormant for some
 		// number of previous moves. Correction is computed based on the last segment time actually used.
-
 		if (fabs(segment_time - st_pre.mot[i].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
-			if (st_pre.mot[i].prev_segment_time != 0) {		// special case to skip first move
+//			if (st_pre.mot[i].prev_segment_time != 0) {							// special case to skip first move
+			if (fp_NOT_ZERO(st_pre.mot[i].prev_segment_time)) {					// special case to skip first move
 				st_pre.mot[i].accumulator_correction_flag = true;
 				st_pre.mot[i].accumulator_correction = segment_time / st_pre.mot[i].prev_segment_time;
 			}
