@@ -107,7 +107,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys", "fv", _f07, 3, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
 	{ "sys", "hp", _f07, 0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform,TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _f07, 0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
-//	{ "sys", "id", _fns, 0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },  // device ID (ASCII signature)
+	{ "sys", "id", _fns, 0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },  // device ID (ASCII signature)
 
 	// dynamic model attributes for reporting purposes (up front for speed)
 	{ "",   "n",   _fin, 0, cm_print_line, cm_get_mline,set_int,(float *)&cm.gm.linenum,0 },	// Model line number
