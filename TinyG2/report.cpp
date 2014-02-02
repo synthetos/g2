@@ -299,7 +299,7 @@ static stat_t _populate_unfiltered_status_report()
 	char_t tmp[TOKEN_LEN+1];
 	cmdObj_t *cmd = cmd_reset_list();		// sets *cmd to the start of the body
 
-	cmd->objtype = TYPE_PARENT; 			// setup the parent object
+	cmd->objtype = TYPE_PARENT; 			// setup the parent object (no length checking required)
 	strcpy(cmd->token, sr_str);
 	cmd->index = cmd_get_index((const char_t *)"", sr_str);// set the index - may be needed by calling function
 	cmd = cmd->nx;							// no need to check for NULL as list has just been reset
@@ -413,11 +413,11 @@ void sr_print_sv(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_sv);}
  *
  *	There are 2 ways to get queue reports:
  *
- *	 1.	Enable single ortriple queue reports iusing the QV variable. This will
+ *	 1.	Enable single or triple queue reports using the QV variable. This will
  *		return a queue report every time the buffer depth changes
  *
- *	 2.	Add qr, qi qne qo (or some combination) to the status report. This will
- *		reeturn queue report data when status reports are generated.
+ *	 2.	Add qr, qi and qo (or some combination) to the status report. This will
+ *		return queue report data when status reports are generated.
  */
 /*
  * qr_init_queue_report() - initialize or clear queue report values

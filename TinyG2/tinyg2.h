@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.45	// tinyg merge - PWM and some other prep. No functional changes. Added ID, returns null
+#define TINYG_FIRMWARE_BUILD   		026.46	// tinyg merge - PWM and some other prep. No functional changes. Added ID, returns null
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
