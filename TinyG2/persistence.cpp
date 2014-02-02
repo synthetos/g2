@@ -2,7 +2,7 @@
  * persistence.cpp - persistence functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -26,6 +26,11 @@
  */
 #include "tinyg2.h"
 #include "persistence.h"
+#include "canonical_machine.h"
+
+#ifdef __AVR
+#include "xmega/xmega_eeprom.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"{
@@ -35,6 +40,7 @@ extern "C"{
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
+nvmSingleton_t nvm;
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
@@ -47,40 +53,62 @@ extern "C"{
 
 void persistence_init()
 {
-//	cs.nvm_base_addr = NVM_BASE_ADDR;
-//	cs.nvm_profile_base = cfg.nvm_base_addr;
+#ifdef __AVR
+	nvm.nvm_base_addr = NVM_BASE_ADDR;
+	nvm.nvm_profile_base = 0;
+#endif
 	return;	
 }
 
-/* 
+/************************************************************************************
  * read_persistent_value()	- return value (as float) by index
  * write_persistent_value() - write to NVM by index, but only if the value has changed
  *
  *	It's the responsibility of the caller to make sure the index does not exceed range
  */
 
+#ifdef __AVR
 stat_t read_persistent_value(cmdObj_t *cmd)
 {
-//	int8_t nvm_byte_array[NVM_VALUE_LEN];
-//	uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-//	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-//	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
+	int8_t nvm_byte_array[NVM_VALUE_LEN];
+	uint16_t nvm_address = nvm.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
+	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
+	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
 	return (STAT_OK);
 }
+#endif // __AVR
 
+#ifdef __ARM
+stat_t read_persistent_value(cmdObj_t *cmd)
+{
+	cmd->value = 0;
+	return (STAT_OK);
+}
+#endif // __ARM
+
+#ifdef __AVR
 stat_t write_persistent_value(cmdObj_t *cmd)
 {
-//	float tmp = cmd->value;
-//	ritorno(cmd_read_NVM_value(cmd));
-//	if (cmd->value != tmp) {		// catches the isnan() case as well
-//		cmd->value = tmp;
-//		int8_t nvm_byte_array[NVM_VALUE_LEN];
-//		memcpy(&nvm_byte_array, &tmp, NVM_VALUE_LEN);
-//		uint16_t nvm_address = cfg.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-//		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-//	}
+	if (cm.cycle_state != CYCLE_OFF) return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving
+	float tmp = cmd->value;
+	ritorno(read_persistent_value(cmd));
+	if (cmd->value != tmp) {		// catches the isnan() case as well
+		cmd->value = tmp;
+		int8_t nvm_byte_array[NVM_VALUE_LEN];
+		memcpy(&nvm_byte_array, &tmp, NVM_VALUE_LEN);
+		uint16_t nvm_address = nvm.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
+		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
+	}
 	return (STAT_OK);
 }
+#endif // __AVR
+
+#ifdef __ARM
+stat_t write_persistent_value(cmdObj_t *cmd)
+{
+	return (STAT_OK);
+}
+#endif // __ARM
 
 #ifdef __cplusplus
 }

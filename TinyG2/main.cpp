@@ -23,6 +23,7 @@
 #include "tinyg2.h"					// #1 There are some dependencies
 #include "config.h"					// #2
 #include "hardware.h"
+#include "persistence.h"
 #include "controller.h"
 #include "canonical_machine.h"
 #include "json_parser.h"			// required for unit tests only
@@ -118,8 +119,9 @@ static void _application_init(void)
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	xio_init();						// xtended io subsystem				- must be second
-	config_init();					// config records from eeprom 		- must be third
+	persistence_init();				// set up EEPROM or other NVM		- must be second
+	xio_init();						// xtended io subsystem				- must be third
+	config_init();					// config records from eeprom
 
 	// do these next
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()

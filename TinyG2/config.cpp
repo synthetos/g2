@@ -35,6 +35,7 @@
 #include "canonical_machine.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "persistence.h"
 #include "hardware.h"
 #include "help.h"
 #include "util.h"
@@ -91,7 +92,7 @@ void cmd_persist(cmdObj_t *cmd)
 	return;
 #endif
 	if (cmd_index_lt_groups(cmd->index) == false) return;
-	if (GET_TABLE_BYTE(flags) & F_PERSIST) cmd_write_NVM_value(cmd);
+	if (GET_TABLE_BYTE(flags) & F_PERSIST) write_persistent_value(cmd);
 }
 
 /************************************************************************************
@@ -114,13 +115,16 @@ void config_init()
 	cfg.magic_start = MAGICNUM;
 	cfg.magic_end = MAGICNUM;
 
-/*+++++ This chunk of code is missing from here until persistence is implemented
+// The following chunk of code is commented out until persistence is implemented 
+// Do this instead:
+	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
+	cmd->value = true;
+	set_defaults(cmd);
+/*	
 	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
-	hw.nvm_base_addr = NVM_BASE_ADDR;
-	hw.nvm_profile_base = hw.nvm_base_addr;
 	cmd->index = 0;							// this will read the first record in NVM
 
-	cmd_read_NVM_value(cmd);
+	read_persistent_value(cmd);
 	if (cmd->value != cs.fw_build) {
 		cmd->value = true;					// case (1) NVM is not setup or not in revision
 		set_defaults(cmd);
@@ -129,18 +133,13 @@ void config_init()
 		for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 			if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 				strncpy_P(cmd->token, cfgArray[cmd->index].token, TOKEN_LEN);	// read the token from the array
-				cmd_read_NVM_value(cmd);
+				read_persistent_value(cmd);
 				cmd_set(cmd);
 			}
 		}
 		sr_init_status_report();
 	}
 */
-// do this instead:
-	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
-//	persistence_init();
-	cmd->value = true;
-	set_defaults(cmd);	
 }
 
 /*
