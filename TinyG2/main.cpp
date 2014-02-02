@@ -39,10 +39,10 @@
 #ifdef __AVR
 #include <avr/interrupt.h>
 #include "xmega/xmega_interrupts.h"
-//#include "xmega/xmega_rtc.h"		// included via hardware.h
 //#include "xmega/xmega_eeprom.h"	// uncomment for unit tests
-#endif
+#endif // __AVR
 
+#ifdef __ARM
 #include "MotateTimers.h"
 using Motate::delay;
 
@@ -58,9 +58,13 @@ void __libc_init_array(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+#endif // __ARM
+
+static void _unit_tests(void);
 
 /******************** Application Code ************************/
 
+#ifdef __ARM
 const Motate::USBSettings_t Motate::USBSettings = {
 	/*gVendorID         = */ 0x1d50,
 	/*gProductID        = */ 0x606d,
@@ -81,6 +85,7 @@ MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
 
 Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
+#endif
 
 /*
  * _system_init()
@@ -96,6 +101,9 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
+
+	usb.attach();					// USB setup
+	delay(1000);
 #endif
 }
 
@@ -112,24 +120,21 @@ static void _application_init(void)
 	hardware_init();				// system hardware setup 			- must be first
 	xio_init();						// xtended io subsystem				- must be second
 	config_init();					// config records from eeprom 		- must be third
-	
+
 	// do these next
-	stepper_init();
-	encoder_init();					// virtual encoders	
-	switch_init();					// switches and other inputs
+	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
+	encoder_init();					// virtual encoders
+	switch_init();					// switches
 //	gpio_init();					// parallel IO
 	pwm_init();						// pulse width modulation drivers
 
-	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
 //	network_init();					// reset std devices if required	- must follow config_init()
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
 
-	// now get started
-//	rpt_print_system_ready_message();// (LAST) announce system is ready
-//	_unit_tests();					// run any unit tests that are enabled
-//	tg_canned_startup();			// run any pre-loaded commands
-	return;
+	// start the application
+	rpt_print_system_ready_message();// (LAST) announce system is ready
 }
 
 /*
@@ -140,11 +145,11 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-	usb.attach();					// USB setup
-	delay(1000);
 
 	// TinyG application setup
 	_application_init();
+	_unit_tests();					// run any unit tests that are enabled
+//	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
 	for (;;) {
@@ -153,11 +158,6 @@ int main(void)
 	return 0;
 }
 
-void tg_reset(void)				// software hard reset using the watchdog timer
-{
-	//	wdt_enable(WDTO_15MS);
-	//	while (true);			// loops for about 15ms then resets
-}
 
 /**** Status Messages ***************************************************************
  * get_status_message() - return the status message
@@ -317,7 +317,7 @@ static void _unit_tests(void)
 //	EEPROM_UNITS;			// if you want this you must include the .h file in this file
 	CONFIG_UNITS;
 	JSON_UNITS;
-	GPIO_UNITS;
+//	GPIO_UNITS;
 	REPORT_UNITS;
 	PLANNER_UNITS;
 	PWM_UNITS;

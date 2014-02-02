@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.42	// tinyg merge - that was weird
+#define TINYG_FIRMWARE_BUILD   		026.43	// tinyg merge - 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -115,7 +115,7 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 #define GET_UNITS(a) 	   strncpy_P(shared_buf,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]), MESSAGE_LEN-1)
 
 // IO settings
-#define STD_IN 	XIO_DEV_USB		// default IO settings
+#define STD_IN 	XIO_DEV_USB		// default IO settings (stdio is not yet used in the ARM version)
 #define STD_OUT	XIO_DEV_USB
 #define STD_ERR	XIO_DEV_USB
 
@@ -148,9 +148,9 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
 
 // IO settings
-#define DEV_STDIN 0				// STDIO defaults - stdio is not yet used in the ARM version
-#define DEV_STDOUT 0
-#define DEV_STDERR 0
+#define STD_IN 0				// STDIO defaults (stdio is not yet used in the ARM version)
+#define STD_OUT 0
+#define STD_ERR 0
 
 /* String compatibility
  *
