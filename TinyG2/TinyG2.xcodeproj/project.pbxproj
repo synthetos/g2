@@ -459,7 +459,6 @@
 		D48F5A75172CB21100D0E055 /* kinematics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kinematics.h; sourceTree = "<group>"; };
 		D48F5A76172CB21100D0E055 /* persistence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = persistence.h; sourceTree = "<group>"; };
 		D48F5A77172CB21100D0E055 /* plan_arc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = plan_arc.h; sourceTree = "<group>"; };
-		D48F5A78172CB21100D0E055 /* plan_line.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = plan_line.h; sourceTree = "<group>"; };
 		D48F5A79172CB21100D0E055 /* planner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = planner.h; sourceTree = "<group>"; };
 		D48F5A7A172CB21100D0E055 /* report.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = report.h; sourceTree = "<group>"; };
 		D48F5A7B172CB21100D0E055 /* settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings.h; sourceTree = "<group>"; };
@@ -3276,7 +3275,6 @@
 				D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */,
 				D48F5A77172CB21100D0E055 /* plan_arc.h */,
 				D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */,
-				D48F5A78172CB21100D0E055 /* plan_line.h */,
 				D48F5A4F172CB1FA00D0E055 /* planner.cpp */,
 				D48F5A79172CB21100D0E055 /* planner.h */,
 				D48F5A50172CB1FA00D0E055 /* report.cpp */,
