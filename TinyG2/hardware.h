@@ -100,6 +100,10 @@ timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 pin_number indicator_led_pin_num = kLED_USBTXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
+// Init these to input to keep them high-z
+static Pin<kSPI0_MISOPinNumber> spi_miso_pin(kInput);
+static Pin<kSPI0_MOSIPinNumber> spi_mosi_pin(kInput);
+static Pin<kSPI0_SCKPinNumber>  spi_sck_pin(kInput);
 
 /**** Motate Global Pin Allocations ****/
 
@@ -122,7 +126,7 @@ static OutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static OutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
 
-static InputPin<kXAxis_MaxPinNumber> axis_X_min_pin(kPullUp);
+static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);

@@ -51,33 +51,33 @@
 #define M1_STEP_ANGLE 			1.8			// 1sa
 #define M1_TRAVEL_PER_REV		40.64		// 1tr
 #define M1_MICROSTEPS			8			// 1mi		1,2,4,8
-#define M1_POLARITY				0			// 1po		0=normal, 1=reversed
+#define M1_POLARITY				1			// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			1			// 1pm		TRUE=low power idle enabled
 
-#define M2_MOTOR_MAP	 		AXIS_Y
+#define M2_MOTOR_MAP	 		AXIS_B
 #define M2_STEP_ANGLE			1.8
-#define M2_TRAVEL_PER_REV		40.64
+#define M2_TRAVEL_PER_REV		360
 #define M2_MICROSTEPS			8
-#define M2_POLARITY				1
+#define M2_POLARITY				0
 #define M2_POWER_MODE			1
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			8
-#define M3_POLARITY				0
+#define M3_POLARITY				1
 #define M3_POWER_MODE			1
 
 #define M4_MOTOR_MAP			AXIS_A
 #define M4_STEP_ANGLE			1.8
 #define M4_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M4_MICROSTEPS			8
-#define M4_POLARITY				1
+#define M4_POLARITY				0
 #define M4_POWER_MODE			1
 
-#define M5_MOTOR_MAP			AXIS_B
+#define M5_MOTOR_MAP			AXIS_Y
 #define M5_STEP_ANGLE			1.8
-#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M5_TRAVEL_PER_REV		40.64			// degrees moved per motor rev
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
 #define M5_POWER_MODE			1
