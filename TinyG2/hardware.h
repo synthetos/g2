@@ -126,7 +126,7 @@ static OutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static OutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
 
-static InputPin<kXAxis_MaxPinNumber> axis_X_min_pin(kPullUp);
+static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
