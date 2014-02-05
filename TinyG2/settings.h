@@ -58,11 +58,13 @@
 #define JSON_SYNTAX_MODE 			JSON_SYNTAX_STRICT	// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 #define JSON_FOOTER_DEPTH			0					// 0 = new style, 1 = old style
 
-#define STATUS_REPORT_VERBOSITY		SR_FILTERED			// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY		SR_FILTERED			// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY		SR_VERBOSE			// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS		100					// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250					// milliseconds - set $SV=0 to disable
 
-#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+//#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF				// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
