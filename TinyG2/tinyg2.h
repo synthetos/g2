@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.48	// tinyg merge - debugging
+#define TINYG_FIRMWARE_BUILD   		026.48	// tinyg merge - fixed encoder step sign bug
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -66,7 +66,7 @@
 
 /****** DEVELOPMENT SETTINGS ******/
 
-//#define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
+#define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
 
 #ifdef __SIMULATION
   #define __CANNED_STARTUP					// run any canned startup moves
