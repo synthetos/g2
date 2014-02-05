@@ -161,7 +161,8 @@
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HOMING			A_JERK_MAX
 
-#define B_AXIS_MODE 			AXIS_RADIUS
+//#define B_AXIS_MODE 			AXIS_RADIUS
+#define B_AXIS_MODE 			AXIS_STANDARD
 #define B_VELOCITY_MAX 			7200 // set to the same speed as X axis
 #define B_FEEDRATE_MAX 			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			-1

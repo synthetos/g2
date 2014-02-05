@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		026.49	// tinyg merge - removed verbose diagnostics
+#define TINYG_FIRMWARE_BUILD   		026.50	// tinyg merge - PocketNC experiments
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
