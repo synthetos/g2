@@ -45,6 +45,9 @@
 #define JUNCTION_DEVIATION		0.05		// default value, in mm
 #define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
 
+#ifndef PI
+#define PI 3.14159628
+
 // **** settings.h overrides ****
 
 // *** motor settings ***
@@ -144,16 +147,16 @@
 #define Z_ZERO_BACKOFF 			1
 #define Z_JERK_HOMING			Z_JERK_MAX
 
-// Rotary values are chosen to make the A/B/C motors react the same as X for testing
-#define A_AXIS_MODE 			AXIS_RADIUS
+//#define A_AXIS_MODE 			AXIS_RADIUS
+#define A_AXIS_MODE 			AXIS_STANDARD
 #define A_VELOCITY_MAX 			7200 // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			7200
 #define A_TRAVEL_MIN 			-1
 #define A_TRAVEL_MAX 			-1
 #define A_JERK_MAX 				150
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
+#define A_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))	// Radius to make the A/B/C motors react the same as X for testing
+#define A_SWITCH_MODE_MIN 		SW_MODE_HOMING				// ...need to select Radius Mode for the axis for this to happen
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
@@ -169,7 +172,7 @@
 #define B_TRAVEL_MAX 			-1
 #define B_JERK_MAX 				150
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
+#define B_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))
 #define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
 #define B_SEARCH_VELOCITY 		600
@@ -185,7 +188,7 @@
 #define C_TRAVEL_MAX 			-1
 #define C_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define C_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
+#define C_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))
 #define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
 #define C_SEARCH_VELOCITY 		600
@@ -193,7 +196,6 @@
 #define C_LATCH_BACKOFF 		5
 #define C_ZERO_BACKOFF 			2
 #define C_JERK_HOMING			C_JERK_MAX
-
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

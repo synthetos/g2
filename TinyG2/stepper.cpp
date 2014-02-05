@@ -55,6 +55,7 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 
 /**** Setup motate ****/
 
+#ifdef __ARM
 using namespace Motate;
 
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
@@ -154,6 +155,8 @@ Stepper<kSocket6_StepPinNumber,
 		kSocket6_Microstep_0PinNumber,
 		kSocket6_Microstep_1PinNumber,
 		kSocket6_VrefPinNumber> motor_6;
+
+#endif // __ARM
 
 /************************************************************************************
  **** CODE **************************************************************************
