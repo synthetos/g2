@@ -32,6 +32,7 @@
 #include "text_parser.h"
 #include "json_parser.h"
 #include "report.h"
+#include "help.h"
 #include "xio.h"					// for ASCII char definitions
 
 #ifdef __cplusplus
@@ -67,11 +68,17 @@ stat_t text_parser(char_t *str)
 	cmdObj_t *cmd = cmd_reset_list();		// returns first object in the body
 	stat_t status = STAT_OK;
 
-	// pre-process the command 
+	// trap special displays
 	if (str[0] == '?') {					// handle status report case
 		sr_run_text_status_report();
 		return (STAT_OK);
 	}
+	if (str[0] == 'H') {					// print help screens
+		help_general((cmdObj_t *)NULL);
+		return (STAT_OK);
+	}
+
+	// pre-process the command
 	if ((str[0] == '$') && (str[1] == NUL)) { // treat a lone $ as a sys request
 		strcat(str,"sys");
 	}
@@ -83,6 +90,7 @@ stat_t text_parser(char_t *str)
 			return (STAT_OK);				// return for uber-group displays so they don't print twice
 		}
 	} else { 								// process SET and RUN commands
+		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
 		status = cmd_set(cmd);				// set (or run) single value
 		cmd_persist(cmd);					// conditionally persist depending on flags in array
 	}
@@ -109,10 +117,10 @@ static stat_t _text_parser_kernal(char_t *str, cmdObj_t *cmd)
 	// parse fields into the cmd struct
 	cmd->objtype = TYPE_NULL;
 	if ((rd = strpbrk(str, separators)) == NULL) { // no value part
-		strncpy(cmd->token, str, CMD_TOKEN_LEN);
+		strncpy(cmd->token, str, TOKEN_LEN);
 	} else {
 		*rd = NUL;							// terminate at end of name
-		strncpy(cmd->token, str, CMD_TOKEN_LEN);
+		strncpy(cmd->token, str, TOKEN_LEN);
 		str = ++rd;
 		cmd->value = strtof(str, &rd);		// rd used as end pointer
 		if (rd != str) {
@@ -181,11 +189,13 @@ void text_print_list(stat_t status, uint8_t flags)
 
 void text_print_inline_pairs(cmdObj_t *cmd)
 {
+	uint32_t *v = (uint32_t*)&cmd->value;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
 			case TYPE_FLOAT:	{ fprintf_P(stderr,PSTR("%s:%1.3f"), cmd->token, cmd->value); break;}
 			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%s:%1.0f"), cmd->token, cmd->value); break;}
+			case TYPE_DATA:	    { fprintf_P(stderr,PSTR("%s:%lu"), cmd->token, *v); break;}
 			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s:%s"), cmd->token, *cmd->stringp); break;}
 			case TYPE_EMPTY:	{ fprintf_P(stderr,PSTR("\n")); return; }
 		}
@@ -196,11 +206,13 @@ void text_print_inline_pairs(cmdObj_t *cmd)
 
 void text_print_inline_values(cmdObj_t *cmd)
 {
+	uint32_t *v = (uint32_t*)&cmd->value;
 	for (uint8_t i=0; i<CMD_BODY_LEN-1; i++) {
 		switch (cmd->objtype) {
 			case TYPE_PARENT: 	{ if ((cmd = cmd->nx) == NULL) return; continue;} // NULL means parent with no child
 			case TYPE_FLOAT:	{ fprintf_P(stderr,PSTR("%1.3f"), cmd->value); break;}
 			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%1.0f"), cmd->value); break;}
+			case TYPE_DATA:	    { fprintf_P(stderr,PSTR("%lu"), *v); break;}
 			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s"), *cmd->stringp); break;}
 			case TYPE_EMPTY:	{ fprintf_P(stderr,PSTR("\n")); return; }
 		}

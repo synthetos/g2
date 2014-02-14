@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling 
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,10 +35,15 @@
 #include "canonical_machine.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "persistence.h"
 #include "hardware.h"
 #include "help.h"
 #include "util.h"
 #include "xio.h"
+
+#ifdef __AVR
+#include "xmega/xmega_eeprom.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"{
@@ -87,7 +92,7 @@ void cmd_persist(cmdObj_t *cmd)
 	return;
 #endif
 	if (cmd_index_lt_groups(cmd->index) == false) return;
-	if (GET_TABLE_BYTE(flags) & F_PERSIST) cmd_write_NVM_value(cmd);
+	if (GET_TABLE_BYTE(flags) & F_PERSIST) write_persistent_value(cmd);
 }
 
 /************************************************************************************
@@ -97,8 +102,10 @@ void cmd_persist(cmdObj_t *cmd)
  *	(1) if NVM is set up or out-of-rev load RAM and NVM with settings.h defaults
  *	(2) if NVM is set up and at current config version use NVM data for config
  *
- *	You can assume the cfg struct has been zeroed by a hard reset.
+ *	You can assume the cfg struct has been zeroed by a hard reset. 
  *	Do not clear it as the version and build numbers have already been set by tg_init()
+ *
+ * NOTE: Config assertions are handled from the controller
  */
 void config_init()
 {
@@ -108,14 +115,16 @@ void config_init()
 	cfg.magic_start = MAGICNUM;
 	cfg.magic_end = MAGICNUM;
 
-//+++++ There is a chunk of code missing from here until persistence is implemented
-/*
+// The following chunk of code is commented out until persistence is implemented 
+// Do this instead:
+	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
+	cmd->value = true;
+	set_defaults(cmd);
+/*	
 	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
-	hw.nvm_base_addr = NVM_BASE_ADDR;
-	hw.nvm_profile_base = hw.nvm_base_addr;
 	cmd->index = 0;							// this will read the first record in NVM
 
-	cmd_read_NVM_value(cmd);
+	read_persistent_value(cmd);
 	if (cmd->value != cs.fw_build) {
 		cmd->value = true;					// case (1) NVM is not setup or not in revision
 		set_defaults(cmd);
@@ -123,19 +132,14 @@ void config_init()
 		rpt_print_loading_configs_message();
 		for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 			if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
-				strcpy_P(cmd->token, cfgArray[cmd->index].token);	// read the token from the array
-				cmd_read_NVM_value(cmd);
+				strncpy_P(cmd->token, cfgArray[cmd->index].token, TOKEN_LEN);	// read the token from the array
+				read_persistent_value(cmd);
 				cmd_set(cmd);
 			}
 		}
 		sr_init_status_report();
 	}
 */
-// do this instead:
-	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
-//	persistence_init();
-	cmd->value = true;
-	set_defaults(cmd);	
 }
 
 /*
@@ -152,7 +156,7 @@ stat_t set_defaults(cmdObj_t *cmd)
 	for (cmd->index=0; cmd_index_is_single(cmd->index); cmd->index++) {
 		if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 			cmd->value = GET_TABLE_FLOAT(def_value);
-			strcpy_P(cmd->token, cfgArray[cmd->index].token);
+			strncpy_P(cmd->token, cfgArray[cmd->index].token, TOKEN_LEN);
 			cmd_set(cmd);
 			cmd_persist(cmd);				// persist must occur when no other interrupts are firing
 		}
@@ -165,10 +169,11 @@ stat_t set_defaults(cmdObj_t *cmd)
 /***** Generic Internal Functions *********************************************/
 
 /* Generic gets()
- *  get_nul() - get nothing (returns STAT_NOOP)
- *  get_ui8() - get value as 8 bit uint8_t
- *  get_int() - get value as 32 bit integer
- *  get_flt() - get value as float
+ *	get_nul()  - get nothing (returns STAT_NOOP)
+ *	get_ui8()  - get value as 8 bit uint8_t
+ *	get_int()  - get value as 32 bit integer
+ *	get_data() - get value as 32 bit integer blind cast
+ *	get_flt()  - get value as float
  *	get_format() - internal accessor for printf() format string
  */
 stat_t get_nul(cmdObj_t *cmd) 
@@ -186,8 +191,17 @@ stat_t get_ui8(cmdObj_t *cmd)
 
 stat_t get_int(cmdObj_t *cmd)
 {
-	cmd->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
+//	cmd->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
+	cmd->value = *((uint32_t *)GET_TABLE_WORD(target));
 	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+}
+
+stat_t get_data(cmdObj_t *cmd)
+{
+	uint32_t *v = (uint32_t*)&cmd->value;
+	*v = *((uint32_t *)GET_TABLE_WORD(target));
+	cmd->objtype = TYPE_DATA;
 	return (STAT_OK);
 }
 
@@ -200,13 +214,14 @@ stat_t get_flt(cmdObj_t *cmd)
 }
 
 /* Generic sets()
- *  set_nul() - set nothing (returns STAT_NOOP)
- *  set_ui8() - set value as 8 bit uint8_t value
- *  set_01()  - set a 0 or 1 uint8_t value with validation
- *  set_012() - set a 0, 1 or 2 uint8_t value with validation
- *	set_0123()- set a 0, 1, 2 or 3 uint8_t value with validation
- *  set_int() - set value as 32 bit integer
- *  set_flt() - set value as float
+ *	set_nul()  - set nothing (returns STAT_NOOP)
+ *	set_ui8()  - set value as 8 bit uint8_t value
+ *	set_01()   - set a 0 or 1 uint8_t value with validation
+ *	set_012()  - set a 0, 1 or 2 uint8_t value with validation
+ *	set_0123() - set a 0, 1, 2 or 3 uint8_t value with validation
+ *	set_int()  - set value as 32 bit integer
+ *	set_data() - set value as 32 bit integer blind cast 
+ *	set_flt()  - set value as float
  */
 stat_t set_nul(cmdObj_t *cmd) { return (STAT_NOOP);}
 
@@ -237,8 +252,17 @@ stat_t set_0123(cmdObj_t *cmd)
 
 stat_t set_int(cmdObj_t *cmd)
 {
-	*((uint32_t *)GET_TABLE_WORD(target)) = cmd->value;
+//	*((uint32_t *)GET_TABLE_WORD(target)) = cmd->value;
+	*((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)cmd->value;
 	cmd->objtype = TYPE_INTEGER;
+	return(STAT_OK);
+}
+
+stat_t set_data(cmdObj_t *cmd)
+{
+	uint32_t *v = (uint32_t*)&cmd->value;
+	*((uint32_t *)GET_TABLE_WORD(target)) = *v;
+	cmd->objtype = TYPE_DATA;
 	return(STAT_OK);
 }
 
@@ -327,7 +351,7 @@ stat_t set_flu(cmdObj_t *cmd)
 stat_t get_grp(cmdObj_t *cmd)
 {
 	char_t *parent_group = cmd->token;		// token in the parent cmd object is the group
-	char_t group[CMD_GROUP_LEN+1];			// group string retrieved from cfgArray child
+	char_t group[GROUP_LEN+1];				// group string retrieved from cfgArray child
 	cmd->objtype = TYPE_PARENT;				// make first object the parent 
 	for (index_t i=0; cmd_index_is_single(i); i++) {
 		strcpy_P(group, cfgArray[i].group);  // don't need strncpy as it's always terminated
@@ -394,13 +418,14 @@ uint8_t cmd_group_is_prefixed(char_t *group)
 index_t cmd_get_index(const char_t *group, const char_t *token)
 {
 	char_t c;
-	char_t str[CMD_TOKEN_LEN+1];
-	strcpy(str, group);
-	strcat(str, token);
+	char_t str[TOKEN_LEN + GROUP_LEN+1];	// should actually never be more than TOKEN_LEN+1
+	strncpy(str, group, GROUP_LEN+1);
+	strncat(str, token, TOKEN_LEN+1);
 
+	index_t i;
 	index_t index_max = cmd_index_max();
 
-	for (index_t i=0; i < index_max; i++) {
+	for (i=0; i < index_max; i++) {
 		if ((c = GET_TOKEN_BYTE(token[0])) != str[0]) {	continue; }					// 1st character mismatch
 		if ((c = GET_TOKEN_BYTE(token[1])) == NUL) { if (str[1] == NUL) return(i);}	// one character match
 		if (c != str[1]) continue;													// 2nd character mismatch
@@ -437,7 +462,7 @@ uint8_t cmd_get_type(cmdObj_t *cmd)
 
 stat_t cmd_persist_offsets(uint8_t flag)
 {
-/*
+/*++++ add in once persistence is implemented
 	if (flag == true) {
 		cmdObj_t cmd;
 		for (uint8_t i=1; i<=COORDS; i++) {
@@ -553,6 +578,7 @@ stat_t cmd_copy_string(cmdObj_t *cmd, const char_t *src)
 	if ((cmdStr.wp + strlen(src)) > CMD_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
 	char_t *dst = &cmdStr.string[cmdStr.wp];
 	strcpy(dst, src);						// copy string to current head position
+											// string has already been tested for overflow, above
 	cmdStr.wp += strlen(src)+1;				// advance head for next string
 	cmd->stringp = (char_t (*)[])dst;
 	return (STAT_OK);
@@ -591,9 +617,26 @@ cmdObj_t *cmd_add_integer(const char_t *token, const uint32_t value)// add an in
 			if ((cmd = cmd->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		cmd->value = (float) value;
 		cmd->objtype = TYPE_INTEGER;
+		return (cmd);
+	}
+	return (NULL);
+}
+
+cmdObj_t *cmd_add_data(const char_t *token, const uint32_t value)// add an integer object to the body
+{
+	cmdObj_t *cmd = cmd_body;
+	for (uint8_t i=0; i<CMD_BODY_LEN; i++) {
+		if (cmd->objtype != TYPE_EMPTY) {
+			if ((cmd = cmd->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+			continue;
+		}
+		strcpy(cmd->token, token);
+		float *v = (float*)&value;
+		cmd->value = *v;
+		cmd->objtype = TYPE_DATA;
 		return (cmd);
 	}
 	return (NULL);
@@ -607,7 +650,7 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		cmd->value = value;
 		cmd->objtype = TYPE_FLOAT;
 		return (cmd);
@@ -615,6 +658,7 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value)	// add a float o
 	return (NULL);
 }
 
+// ASSUMES A RAM STRING. If you need to post a FLASH string use pstr2str to convert it to a RAM string
 cmdObj_t *cmd_add_string(const char_t *token, const char_t *string) // add a string object to the body
 {
 	cmdObj_t *cmd = cmd_body;
@@ -623,7 +667,7 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string) // add a str
 			if ((cmd = cmd->nx) == NULL) return(NULL);		// not supposed to find a NULL; here for safety
 			continue;
 		}
-		strncpy(cmd->token, token, CMD_TOKEN_LEN);
+		strncpy(cmd->token, token, TOKEN_LEN);
 		if (cmd_copy_string(cmd, string) != STAT_OK) { return (NULL);}
 		cmd->index = cmd_get_index((const char_t *)"", cmd->token);
 		cmd->objtype = TYPE_STRING;
@@ -631,6 +675,12 @@ cmdObj_t *cmd_add_string(const char_t *token, const char_t *string) // add a str
 	}
 	return (NULL);
 }
+
+/*
+ * cm_conditional_message() - queue a RAM string as a message in the response (conditionally)
+ *
+ *	Note: If you need to post a FLASH string use pstr2str to convert it to a RAM string
+ */
 
 cmdObj_t *cmd_add_conditional_message(const char_t *string)	// conditionally add a message object to the body
 {

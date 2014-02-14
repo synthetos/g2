@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,9 +25,63 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-//#include "Arduino.h"
+/*
+ * XIO acts as an entry point into lower level IO routines - mostly serial IO. It supports
+ * the USB, SPI and fiol IO sub-systems, as well as providing low level character functions
+ * used by stdio (printf()). 
+ */
 #include "tinyg2.h"
+#include "config.h"
+#include "util.h"
+#include "hardware.h"
+#include "text_parser.h"
 #include "xio.h"
+
+/**** Allocate structures ****/
+
+xioSingleton_t xio;
+
+/**** CODE ****/
+
+/*
+ * xio_init()
+ */
+
+void xio_init()
+{
+	xio_init_assertions();
+}
+
+/* 
+ * xio_init_assertions()
+ * xio_test_assertions() - check memory integrity of xio sub-systems
+ */
+
+void xio_init_assertions()
+{
+//	cs.magic_start = MAGICNUM;
+//	cs.magic_end = MAGICNUM;
+}
+
+stat_t xio_test_assertions()
+{
+/*
+	if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
+*/
+	return (STAT_OK);
+}
+
+
 
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
@@ -59,8 +113,9 @@ int read_char (void)
  *                    Index will equal size.
  *
  *	  STAT_FILE_SIZE_EXCEEDED returned if the starting index exceeds the size.
+ *
+ *	Note: uint8_t aka char_t but you might not have that typedef at this low a level
  */
-
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
 	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
@@ -87,25 +142,41 @@ size_t write(uint8_t *buffer, size_t size)
 	return (written);
 }
 
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
 /*
- * xio_assertions() - validate operating state
- *
- *	Returns status code (0 if everything is OK) and sets a value if there is a failure.
+ * xio_set_spi() = 0=disable, 1=enable
  */
-stat_t xio_assertions()
+stat_t xio_set_spi(cmdObj_t *cmd)
 {
-/*
-	if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
-*/
+	xio.spi_state = (uint8_t)cmd->value;
+
+#ifdef __ARM
+	if (fp_EQ(cmd->value, SPI_ENABLE)) {
+		spi_miso_pin.setMode(kOutput);
+		spi_mosi_pin.setMode(kOutput);
+		spi_sck_pin.setMode(kOutput);
+
+	} else if (fp_EQ(cmd->value, SPI_DISABLE)) {
+		spi_miso_pin.setMode(kInput);
+		spi_mosi_pin.setMode(kInput);
+		spi_sck_pin.setMode(kInput);
+	}
+#endif
 	return (STAT_OK);
 }
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+static const char fmt_spi[] PROGMEM = "[spi] SPI state%20d [0=disabled,1=enabled]\n";
+void xio_print_spi(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_spi);}
+
+#endif // __TEXT_MODE

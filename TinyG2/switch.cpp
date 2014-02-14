@@ -2,8 +2,8 @@
  * switch.cpp - switch handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart, Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -84,7 +84,7 @@ void switch_init(void)
 			s = &sw.s[axis][position];
 			
 			s->type = sw.type;				// propagate type from global type
-//			s->mode = SW_MODE_DISABLED;		// set from config			
+//			s->mode = SW_MODE_DISABLED;		// commented out: mode is set from configs			
 			s->state = false;
 			s->edge = SW_NO_EDGE;
 			s->debounce_ticks = SW_LOCKOUT_TICKS;
@@ -97,7 +97,7 @@ void switch_init(void)
 			s->on_trailing = _trigger_cycle_start;
 		}
 	}
-	// functions bound to individual switches
+	// bind functions to individual switches
 	// <none>
 	// sw.s[AXIS_X][SW_MIN].when_open = _led_off;
 	// sw.s[AXIS_X][SW_MIN].when_closed = _led_on;
@@ -108,30 +108,36 @@ void switch_init(void)
  */
 stat_t poll_switches()
 {
-	read_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
-	read_switch(&sw.s[AXIS_X][SW_MAX], axis_X_max_pin);
-	read_switch(&sw.s[AXIS_Y][SW_MIN], axis_Y_min_pin);
-	read_switch(&sw.s[AXIS_Y][SW_MAX], axis_Y_max_pin);
-	read_switch(&sw.s[AXIS_Z][SW_MIN], axis_Z_min_pin);
-	read_switch(&sw.s[AXIS_Z][SW_MAX], axis_Z_max_pin);
-	read_switch(&sw.s[AXIS_A][SW_MIN], axis_A_min_pin);
-	read_switch(&sw.s[AXIS_A][SW_MAX], axis_A_max_pin);
-	read_switch(&sw.s[AXIS_B][SW_MIN], axis_B_min_pin);
-	read_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
-	read_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
-	read_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MAX], axis_X_max_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MIN], axis_Y_min_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MAX], axis_Y_max_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MIN], axis_Z_min_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MAX], axis_Z_max_pin);
+#if (HOMING_AXES >= 4)
+	poll_switch(&sw.s[AXIS_A][SW_MIN], axis_A_min_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MAX], axis_A_max_pin);
+#endif
+#if (HOMING_AXES >= 5)
+	poll_switch(&sw.s[AXIS_B][SW_MIN], axis_B_min_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
+#endif
+#if (HOMING_AXES >= 6)
+	poll_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
+	poll_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
+#endif
 	return (STAT_OK);
 }
 
 /*
- * read_switch() - read switch with NO/NC, debouncing and edge detection
+ * poll_switch() - read switch with NO/NC, debouncing and edge detection
  *
  *	Returns true if switch state changed - e.g. leading or falling edge detected
  *	Assumes pin_value input = 1 means open, 0 is closed. Pin sense is adjusted to mean:
  *	  0 = open for both NO and NC switches
  *	  1 = closed for both NO and NC switches
  */
-uint8_t read_switch(switch_t *s, uint8_t pin_value)
+uint8_t poll_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
 	if (s->mode == SW_MODE_DISABLED) {
@@ -183,12 +189,29 @@ static void _trigger_cycle_start(switch_t *s)
 }
 
 /*
- * switch_get_switch_mode()  - return switch mode setting
- * switch_get_limit_thrown() - return true if a limit was tripped
- * switch_get_switch_num()   - return switch number most recently thrown
+ * get_switch_mode() - return switch mode setting
+ * get_switch_type() - return switch type setting
  */
 
-uint8_t get_switch_mode(uint8_t sw_num) { return (0);}	// ++++
+uint8_t get_switch_mode(uint8_t axis, uint8_t position) { 
+	return (sw.s[axis][position].mode);
+}
+
+uint8_t get_switch_type(uint8_t axis, uint8_t position) {
+	return (sw.s[axis][position].type);
+}
+
+/*
+ * read_switch() - read switch state from the switch structure
+ *				   NOTE: This does NOT read the pin itself. See poll_switch
+ */
+uint8_t read_switch(uint8_t axis, uint8_t position)
+{
+//	if (axis >= AXES) return (SW_DISABLED);
+//	if (axis > SW_MAX) return (SW_DISABLED);
+	return (sw.s[axis][position].state);
+}
+
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

@@ -17,12 +17,6 @@
  * however invalidate any other reasons why the executable file might be covered by the
  * GNU General Public License.
  *
- * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
- * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
- * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*	The values in this file are the default settings that are loaded into a virgin EEPROM, 
  *	and can be changed using the config commands. After initial load the EEPROM values 
@@ -116,5 +110,11 @@
 #define P1_CCW_PHASE_HI                 0.2
 #define P1_PWM_PHASE_OFF                0.1
 #endif//P1_PWM_FREQUENCY
+
+#endif // End of include guard: SETTINGS_H_ONCE
+#define USER_DATA_D0	0
+#define USER_DATA_D1	0
+#define USER_DATA_D2	0
+#define USER_DATA_D3	0
 
 #endif // End of include guard: SETTINGS_H_ONCE

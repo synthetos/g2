@@ -2,8 +2,8 @@
  * controller.h - tinyg controller and main dispatch loop
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,11 +35,10 @@ extern "C"{
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
 #define SAVED_BUFFER_LEN 100			// saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
-#define APPLICATION_MESSAGE_LEN 64		// application message string storage allocation
-//#define STATUS_MESSAGE_LEN __			// see tinyg2.h for status message string storage allocation
+// see also: tinyg.h MESSAGE_LEN and config.c CMD_ lengths.
 
 #define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 3000			// blink rate for alarm state (in ms)
+#define LED_ALARM_TIMER 100				// blink rate for alarm state (in ms)
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
@@ -64,6 +63,12 @@ typedef struct controllerSingleton {	// main TG controller struct
 	uint32_t led_timer;					// used by idlers to flash indicator LED
 	uint8_t hard_reset_requested;		// flag to perform a hard reset
 	uint8_t bootloader_requested;		// flag to enter the bootloader
+	uint8_t shared_buf_overrun;			// flag for shared string buffer overrun condition
+
+//	uint8_t sync_to_time_state;
+//	uint32_t sync_to_time_time;
+
+	int32_t job_id[4];					// uuid to identify the job
 
 	// controller serial buffers
 	char_t *bufp;						// pointer to primary or secondary in buffer
@@ -86,16 +91,14 @@ enum cmControllerState {				// manages startup lines
 /**** function prototypes ****/
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
+void controller_init_assertions(void);
+stat_t controller_test_assertions(void);
 void controller_run(void);
 //void controller_reset(void);
 
-//void tg_reset_source(void);
-//void tg_set_primary_source(uint8_t dev);
-//void tg_set_secondary_source(uint8_t dev);
-
-//void tg_text_response(const uint8_t status, const char *buf);
-//void tg_reset(void);
-//void tg_application_startup(void);
+void tg_reset_source(void);
+void tg_set_primary_source(uint8_t dev);
+void tg_set_secondary_source(uint8_t dev);
 
 #ifdef __cplusplus
 }

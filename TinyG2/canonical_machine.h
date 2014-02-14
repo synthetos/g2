@@ -2,7 +2,7 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart Jr.
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
@@ -28,8 +28,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _CANONICAL_MACHINE_H_
-#define _CANONICAL_MACHINE_H_
+#ifndef CANONICAL_MACHINE_H_ONCE
+#define CANONICAL_MACHINE_H_ONCE
 
 #ifdef __cplusplus
 extern "C"{
@@ -37,7 +37,7 @@ extern "C"{
 
 #include "config.h"
 
-/* Defines and macros */
+/* Defines, Macros, and  Assorted Parameters */
 
 #define MODEL 	(GCodeState_t *)&cm.gm		// absolute pointer from canonical machine gm model
 #define PLANNER (GCodeState_t *)&bf->gm		// relative to buffer *bf is currently pointing to
@@ -45,6 +45,9 @@ extern "C"{
 #define ACTIVE_MODEL cm.am					// active model pointer is maintained by state management
 
 #define _to_millimeters(a) ((cm.gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+
+#define JOGGING_START_VELOCITY ((float)10.0)
+#define DISABLE_SOFT_LIMIT (-1000000)
 
 /*****************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
@@ -211,6 +214,7 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	// system group settings
 	float junction_acceleration;	// centripetal acceleration max for cornering
 	float chordal_tolerance;		// arc chordal accuracy setting in mm
+	uint8_t soft_limit_enable;
 
 	// hidden system settings
 	float min_segment_len;			// line drawing resolution in mm
@@ -239,12 +243,17 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 	uint8_t hold_state;				// hold: feedhold sub-state machine
 	uint8_t homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];			// individual axis homing flags
+
+    uint8_t probe_state;            // 1==success, 0==failed
+    float   probe_results[AXES];    // probing results
+
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
 	uint8_t g10_persist_flag;		//.G10 changed offsets - persist them
 	uint8_t feedhold_requested;		// feedhold character has been received
 	uint8_t queue_flush_requested;	// queue flush character has been received
 	uint8_t cycle_start_requested;	// cycle start character has been received (flag to end feedhold)
+	float jogging_dest;				// jogging direction as a relative move from current position
 	struct GCodeState *am;			// active Gcode model is maintained by state management
 
 	/**** Model states ****/
@@ -259,10 +268,6 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
 /**** Externs - See canonical_machine.c for allocation ****/
 
 extern cmSingleton_t cm;		// canonical machine controller singleton
-//extern GCodeState_t  gm;		// core gcode model state
-//extern GCodeStateX_t gmx;		// extended gcode model state
-//extern GCodeInput_t  gn;		// gcode input values - transient
-//extern GCodeInput_t  gf;		// gcode input flags - transient
 
 /*****************************************************************************
  * 
@@ -298,8 +303,8 @@ extern cmSingleton_t cm;		// canonical machine controller singleton
 // #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT #### 
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
-	COMBINED_READY,					// [1] machine is ready for use
-	COMBINED_ALARM,					// [2] machine is in alarm state (shut down)
+	COMBINED_READY,					// [1] machine is ready for use. Also used to force STOP state for null moves
+	COMBINED_ALARM,					// [2] machine in soft alarm state
 	COMBINED_PROGRAM_STOP,			// [3] program stop or no more blocks
 	COMBINED_PROGRAM_END,			// [4] program end
 	COMBINED_RUN,					// [5] motion is running
@@ -307,17 +312,19 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 	COMBINED_PROBE,					// [7] probe cycle active
 	COMBINED_CYCLE,					// [8] machine is running (cycling)
 	COMBINED_HOMING,				// [9] homing is treated as a cycle
-	COMBINED_JOG					// [10] jogging is treated as a cycle
+	COMBINED_JOG,					// [10] jogging is treated as a cycle
+	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown)
 };
 //#### END CRITICAL REGION ####
 
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_ALARM,					// machine is in alarm state (shutdown)
+	MACHINE_ALARM,					// machine in soft alarm state
 	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
 	MACHINE_PROGRAM_END,			// program end
 	MACHINE_CYCLE,					// machine is running (cycling)
+	MACHINE_SHUTDOWN,				// machine in hard alarm state (shutdown)
 };
 
 enum cmCycleState {
@@ -345,7 +352,14 @@ enum cmFeedholdState {				// feedhold_state machine
 
 enum cmHomingState {				// applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
-	HOMING_HOMED = 1				// machine is homed (1=true)
+	HOMING_HOMED = 1,				// machine is homed (1=true)
+	HOMING_WAITING					// machine waiting to be homed
+};
+
+enum cmProbeState {					// applies to cm.probe_state
+	PROBE_FAILED = 0,				// probe reached endpoint without triggering
+	PROBE_SUCCEDED = 1,				// probe was triggered, cm.probe_results has position
+	PROBE_WAITING					// probe is waiting to be started
 };
 
 /* The difference between NextAction and MotionMode is that NextAction is 
@@ -495,6 +509,7 @@ uint8_t cm_get_cycle_state(void);
 uint8_t cm_get_motion_state(void);
 uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
+uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(uint8_t motion_state);
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state);
@@ -525,14 +540,19 @@ void cm_set_move_times(GCodeState_t *gcode_state);
 
 void cm_set_model_linenum(uint32_t linenum);
 void cm_set_model_target(float target[], float flag[]);
-void cm_conditional_set_model_position(stat_t status);
+void cm_set_model_position(stat_t status);
+void cm_set_model_position_from_runtime(stat_t status);
 stat_t cm_test_soft_limits(float target[]);
 
 /*--- canonical machining functions (loosely patterned after NIST) ---*/
 
 void canonical_machine_init(void);
-stat_t cm_alarm(stat_t status);									// enter alarm state. returns same status code
-stat_t cm_assertions(void);
+void canonical_machine_init_assertions(void);
+stat_t canonical_machine_test_assertions(void);
+
+stat_t cm_soft_alarm(stat_t status);							// enter soft alarm state. returns same status code
+stat_t cm_hard_alarm(stat_t status);							// enter hard alarm state. returns same status code
+stat_t cm_clear(cmdObj_t *cmd);
 
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
@@ -542,18 +562,21 @@ stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_cycle_start_no_set(void);						// G28.4
 stat_t cm_homing_callback(void);								// G28.2 main loop callback
+
 stat_t cm_set_absolute_origin(float origin[], float flags[]);	// G28.3  (special function)
 void cm_set_axis_origin(uint8_t axis, const float position);	// set absolute position (used by G28's)
+
+stat_t cm_jogging_callback(void);								// jogging cycle main loop
+stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
+float cm_get_jogging_dest(void);
 
 stat_t cm_set_g28_position(void);								// G28.1
 stat_t cm_goto_g28_position(float target[], float flags[]); 	// G28
 stat_t cm_set_g30_position(void);								// G30.1
 stat_t cm_goto_g30_position(float target[], float flags[]);		// G30
 
-stat_t cm_probe_cycle_start(void);								// G38.2
+stat_t cm_straight_probe(float target[], float flags[]);		// G38.2
 stat_t cm_probe_callback(void);									// G38.2 main loop callback
-int8_t cm_probe_get_axis(void);
-void cm_probe_set_position(float);
 
 stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
 stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
@@ -634,6 +657,11 @@ stat_t cm_get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 stat_t cm_run_qf(cmdObj_t *cmd);		// run queue flush
 stat_t cm_run_home(cmdObj_t *cmd);		// start homing cycle
 
+stat_t cm_run_jogx(cmdObj_t *cmd);		// start jogging cycle for x
+stat_t cm_run_jogy(cmdObj_t *cmd);		// start jogging cycle for y
+stat_t cm_run_jogz(cmdObj_t *cmd);		// start jogging cycle for z
+stat_t cm_run_joga(cmdObj_t *cmd);		// start jogging cycle for a
+
 stat_t cm_get_am(cmdObj_t *cmd);		// get axis mode
 stat_t cm_set_am(cmdObj_t *cmd);		// set axis mode
 stat_t cm_get_jrk(cmdObj_t *cmd);		// get jerk with 1,000,000 correction
@@ -670,9 +698,11 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	void cm_print_lin(cmdObj_t *cmd);		// generic print for linear values 
 	void cm_print_pos(cmdObj_t *cmd);		// print runtime work position in prevailing units
 	void cm_print_mpo(cmdObj_t *cmd);		// print runtime work position always in MM uints
+	void cm_print_ofs(cmdObj_t *cmd);		// print runtime work offset always in MM uints
 
 	void cm_print_ja(cmdObj_t *cmd);		// global CM settings
 	void cm_print_ct(cmdObj_t *cmd);
+	void cm_print_sl(cmdObj_t *cmd);
 	void cm_print_ml(cmdObj_t *cmd);
 	void cm_print_ma(cmdObj_t *cmd);
 	void cm_print_ms(cmdObj_t *cmd);
@@ -725,9 +755,11 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 	#define cm_print_lin tx_print_stub		// generic print for linear values 
 	#define cm_print_pos tx_print_stub		// print runtime work position in prevailing units
 	#define cm_print_mpo tx_print_stub		// print runtime work position always in MM uints
+	#define cm_print_ofs tx_print_stub		// print runtime work offset always in MM uints
 
 	#define cm_print_ja tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
+	#define cm_print_sl tx_print_stub
 	#define cm_print_ml tx_print_stub
 	#define cm_print_ma tx_print_stub
 	#define cm_print_ms tx_print_stub
@@ -757,4 +789,4 @@ stat_t cm_set_jrk(cmdObj_t *cmd);		// set jerk with 1,000,000 correction
 }
 #endif
 
-#endif // _CANONICAL_MACHINE_H_
+#endif // End of include guard: CANONICAL_MACHINE_H_ONCE
