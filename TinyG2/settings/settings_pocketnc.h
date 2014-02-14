@@ -47,6 +47,7 @@
 
 #ifndef PI
 #define PI 3.14159628
+#endif
 
 // **** settings.h overrides ****
 

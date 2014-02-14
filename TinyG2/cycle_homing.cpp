@@ -55,6 +55,8 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	int8_t limit_switch_axis;		// axis of current limit switch, or -1 if none
 	uint8_t limit_switch_position;	// min/max position of current limit switch
 
+    void (*switch_saved_on_trailing)(struct swSwitch *s);
+
 	uint8_t homing_closed;			// 0=open, 1=closed
 	uint8_t limit_closed;			// 0=open, 1=closed
 	uint8_t set_coordinates;		// G28.4 flag. true = set coords to zero at the end of homing cycle
@@ -202,6 +204,13 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
 	return (STAT_EAGAIN);
 }
 
+/* Switch callback to trigger a feedhold. */
+static void _homing_trigger_feedhold(switch_t *s)
+{
+    cm_request_feedhold();
+}
+
+
 static stat_t _homing_axis_start(int8_t axis)
 {
 	// get the first or next axis
@@ -252,7 +261,7 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.search_travel = -travel_distance;				// search travels in negative direction
 		hm.latch_backoff = cm.a[axis].latch_backoff;		// latch travels in positive direction
 		hm.zero_backoff = cm.a[axis].zero_backoff;
-
+        
 	// setup parameters for positive travel (homing to the maximum switch)
 	} else {
 //		hm.homing_switch = MAX_SWITCH(axis);				// the max is the homing switch
@@ -267,6 +276,11 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.latch_backoff = -cm.a[axis].latch_backoff;		// latch travels in negative direction
 		hm.zero_backoff = -cm.a[axis].zero_backoff;
 	}
+    
+    switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
+    hm.switch_saved_on_trailing = s->on_trailing;
+    s->on_trailing = _homing_trigger_feedhold;
+
     // if homing is disabled for the axis then skip to the next axis
 	uint8_t sw_mode = get_switch_mode(hm.homing_switch_axis, hm.homing_switch_position);
 	if ((sw_mode != SW_MODE_HOMING) && (sw_mode != SW_MODE_HOMING_LIMIT)) {
@@ -286,10 +300,8 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-//	int8_t homing = read_switch(hm.homing_switch_axis, hm.homing_switch_position);
-//	int8_t limit = read_switch(hm.limit_switch_axis, hm.limit_switch_position);
-	int8_t homing = SW_OPEN;	//+++++ TEST AND REMOVE
-	int8_t limit = SW_OPEN;		//+++++ TEST AND REMOVE
+	int8_t homing = read_switch(hm.homing_switch_axis, hm.homing_switch_position);
+	int8_t limit = read_switch(hm.limit_switch_axis, hm.limit_switch_position);
 
 	if ((homing == SW_OPEN) && (limit != SW_CLOSED)) {
  		return (_set_homing_func(_homing_axis_search));		// OK to start the search
@@ -343,6 +355,10 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 		cm_set_axis_origin(axis, cm_get_work_position(RUNTIME, axis));
 	}
 	cm.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
+
+    // restore the proper handling of the limit switch
+    switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
+    s->on_trailing = hm.switch_saved_on_trailing;
 	return (_set_homing_func(_homing_axis_start));
 }
 
