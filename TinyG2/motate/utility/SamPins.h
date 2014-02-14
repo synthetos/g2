@@ -185,7 +185,7 @@ namespace Motate {
 		InputPin() : Pin<pinNum>(kInput) {};
 		InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
 		void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
-		uint8_t get() {
+		uint32_t get() {
 			return Pin<pinNum>::getInputValue();
 		};
 		/*Override these to pick up new methods */
@@ -201,7 +201,7 @@ namespace Motate {
 		OutputPin() : Pin<pinNum>(kOutput) {};
 		OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
 		void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
-		uint8_t get() {
+		uint32_t get() {
 			return Pin<pinNum>::getOutputValue();
 		};
 		void operator=(const bool value) { Pin<pinNum>::write(value); };
@@ -324,13 +324,13 @@ namespace Motate {
 				(*PIO ## registerLetter).PIO_OWER = mask; /*Enable writing thru ODSR*/\
 				(*PIO ## registerLetter).PIO_ODSR ^= mask;\
 			};\
-			uint8_t get() { /* WARNING: This will fail if the peripheral clock is disabled for this pin!!! Use getOutputValue() instead. */\
+			uint32_t get() { /* WARNING: This will fail if the peripheral clock is disabled for this pin!!! Use getOutputValue() instead. */\
 				return (*PIO ## registerLetter).PIO_PDSR & mask;\
 			};\
-			uint8_t getInputValue() {\
+			uint32_t getInputValue() {\
 				return (*PIO ## registerLetter).PIO_PDSR & mask;\
 			};\
-			uint8_t getOutputValue() {\
+			uint32_t getOutputValue() {\
 				return (*PIO ## registerLetter).PIO_OSR & mask;\
 			};\
             void setInterrupts(const uint32_t interrupts) {\

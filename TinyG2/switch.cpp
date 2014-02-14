@@ -42,6 +42,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
+#include "settings.h"
 #include "switch.h"
 #include "hardware.h"
 #include "canonical_machine.h"
@@ -75,7 +76,7 @@ static void _no_action(switch_t *s) { return; }
 
 void switch_init(void)
 {
-//	sw.type = SW_NORMALLY_OPEN;				// set from config
+	sw.type = SWITCH_TYPE;				// set from config
 
 	switch_t *s;	// shorthand
 
@@ -108,23 +109,23 @@ void switch_init(void)
  */
 stat_t poll_switches()
 {
-	poll_switch(&sw.s[AXIS_X][SW_MIN], axis_X_min_pin);
-	poll_switch(&sw.s[AXIS_X][SW_MAX], axis_X_max_pin);
-	poll_switch(&sw.s[AXIS_Y][SW_MIN], axis_Y_min_pin);
-	poll_switch(&sw.s[AXIS_Y][SW_MAX], axis_Y_max_pin);
-	poll_switch(&sw.s[AXIS_Z][SW_MIN], axis_Z_min_pin);
-	poll_switch(&sw.s[AXIS_Z][SW_MAX], axis_Z_max_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MIN], (bool)axis_X_min_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MAX], (bool)axis_X_max_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MIN], (bool)axis_Y_min_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MAX], (bool)axis_Y_max_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MIN], (bool)axis_Z_min_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MAX], (bool)axis_Z_max_pin);
 #if (HOMING_AXES >= 4)
-	poll_switch(&sw.s[AXIS_A][SW_MIN], axis_A_min_pin);
-	poll_switch(&sw.s[AXIS_A][SW_MAX], axis_A_max_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MIN], (bool)axis_A_min_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MAX], (bool)axis_A_max_pin);
 #endif
 #if (HOMING_AXES >= 5)
-	poll_switch(&sw.s[AXIS_B][SW_MIN], axis_B_min_pin);
-	poll_switch(&sw.s[AXIS_B][SW_MAX], axis_B_max_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MIN], (bool)axis_B_min_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MAX], (bool)axis_B_max_pin);
 #endif
 #if (HOMING_AXES >= 6)
-	poll_switch(&sw.s[AXIS_C][SW_MIN], axis_C_min_pin);
-	poll_switch(&sw.s[AXIS_C][SW_MAX], axis_C_max_pin);
+	poll_switch(&sw.s[AXIS_C][SW_MIN], (bool)axis_C_min_pin);
+	poll_switch(&sw.s[AXIS_C][SW_MAX], (bool)axis_C_max_pin);
 #endif
 	return (STAT_OK);
 }
@@ -148,7 +149,7 @@ uint8_t poll_switch(switch_t *s, uint8_t pin_value)
 	}
 	// return if no change in state
 	uint8_t pin_sense_corrected = (pin_value ^ (s->type ^ 1));	// correct for NO or NC mode
-  	if ( s->state == pin_sense_corrected) { 
+  	if ( s->state == pin_sense_corrected ) {
 		s->edge = SW_NO_EDGE;
 		if (s->state == SW_OPEN) { 
 			s->when_open(s);
@@ -159,11 +160,11 @@ uint8_t poll_switch(switch_t *s, uint8_t pin_value)
 	}
 	// the switch legitimately changed state - process edges
 	if ((s->state = pin_sense_corrected) == SW_OPEN) {
-			s->edge = SW_TRAILING;
-			s->on_trailing(s);
-		} else {
-			s->edge = SW_LEADING;
-			s->on_leading(s);
+        s->edge = SW_TRAILING;
+        s->on_trailing(s);
+    } else {
+        s->edge = SW_LEADING;
+        s->on_leading(s);
 	}
 	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
@@ -175,7 +176,7 @@ static void _trigger_feedhold(switch_t *s)
 	cm_request_feedhold();
 /*
 	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
-		cm.request_feedhold = true;
+		cm_request_feedhold();
 	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
 		cm.limit_tripped_flag = true;
 	}

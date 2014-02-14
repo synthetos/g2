@@ -43,7 +43,14 @@
 #define JUNCTION_DEVIATION		0.05		// default value, in mm
 #define JUNCTION_ACCELERATION 	400000		// centripetal acceleration around corners
 
+#ifndef PI
+#define PI 3.14159628
+#endif
+
 // *** settings.h overrides ***
+
+#undef SWITCH_TYPE
+#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
 
 // *** motor settings ***
 
@@ -89,7 +96,7 @@
 #define M6_POLARITY				0
 #define M6_POWER_MODE			1
 
-#define M1_POWER_LEVEL			50
+#define M1_POWER_LEVEL			55
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -99,7 +106,7 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			10000 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			4500 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
@@ -114,7 +121,7 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			10000
+#define Y_VELOCITY_MAX 			4500
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN 			0
 #define Y_TRAVEL_MAX 			190
@@ -128,6 +135,23 @@
 #define Y_ZERO_BACKOFF			3
 #define Y_JERK_HOMING			Y_JERK_MAX
 
+/*
+ [zam] z axis mode                 1 [standard]
+ [zvm] z velocity maximum       1000.000 mm/min
+ [zfr] z feedrate maximum       1000.000 mm/min
+ [ztn] z travel minimum            0.000 mm
+ [ztm] z travel maximum          220.000 mm
+ [zjm] z jerk maximum             50 mm/min^3 * 1 million
+ [zjh] z jerk homing              50 mm/min^3 * 1 million
+ [zjd] z junction deviation        0.0500 mm (larger is faster)
+ [zsn] z switch min                1 [0=off,1=homing,2=limit,3=limit+homing]
+ [zsx] z switch max                0 [0=off,1=homing,2=limit,3=limit+homing]
+ [zsv] z search velocity        1000.000 mm/min
+ [zlv] z latch velocity          200.000 mm/min
+ [zlb] z latch backoff             3.000 mm
+ [zzb] z zero backoff              0.050 mm
+*/
+
 #define Z_AXIS_MODE				AXIS_STANDARD
 #define Z_VELOCITY_MAX			1000
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
@@ -137,24 +161,25 @@
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define Z_SWITCH_MODE_MAX       SW_MODE_DISABLED
-#define Z_SEARCH_VELOCITY		1000
+#define Z_SEARCH_VELOCITY		500
 #define Z_LATCH_VELOCITY		200
-#define Z_LATCH_BACKOFF			5
-#define Z_ZERO_BACKOFF			0.3
+#define Z_LATCH_BACKOFF			3
+#define Z_ZERO_BACKOFF			0.04
 #define Z_JERK_HOMING			Z_JERK_MAX
 
+
 #define A_AXIS_MODE 			AXIS_RADIUS
-#define A_VELOCITY_MAX 			20000 // set to the same speed as X axis
-#define A_FEEDRATE_MAX 			A_VELOCITY_MAX
+#define A_RADIUS 				0.609
+#define A_VELOCITY_MAX          200000.000
+#define A_FEEDRATE_MAX 			50000.000
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				10
+#define A_JERK_MAX 				25000
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_RADIUS 				0.609
 #define A_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define A_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define A_SEARCH_VELOCITY 		600
-#define A_LATCH_VELOCITY 		100
+#define A_SEARCH_VELOCITY 		2000
+#define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HOMING			A_JERK_MAX
