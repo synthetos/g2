@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		029.01	// updated to v9f pinouts
+#define TINYG_FIRMWARE_BUILD   		030.01	// new jerk selection algorithm
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
