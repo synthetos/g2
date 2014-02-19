@@ -73,7 +73,7 @@ static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
 //static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
 //static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF and RTS/CTS flow control
 //static stat_t set_baud(cmdObj_t *cmd);	// set USB baud rate
-//static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
+static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
 //static stat_t run_sx(cmdObj_t *cmd);		// send XOFF, XON
 
 /***********************************************************************************
@@ -174,7 +174,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "qo",  _f00, 0, qr_print_qo,  qo_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - buffers removed from queue
 	{ "", "er",  _f00, 0, tx_print_nul, rpt_er,  set_nul,  (float *)&cs.null, 0 },	// invoke bogus exception report for testing
 	{ "", "qf",  _f00, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
-//	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
+	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
 	{ "", "msg", _f00, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "clc", _f00, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
 	{ "", "clear",_f00,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
@@ -803,14 +803,22 @@ static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF or RTS/CTS flow contro
 	cfg.enable_flow_control = (uint8_t)cmd->value;
 	return(_set_comm_helper(cmd, XIO_XOFF, XIO_NOXOFF));
 }
+*/
 
 static stat_t get_rx(cmdObj_t *cmd)
 {
+	#ifdef __AVR
 	cmd->value = (float)xio_get_usb_rx_free();
 	cmd->objtype = TYPE_INTEGER;
 	return (STAT_OK);
+	#endif
+	#ifdef __ARM
+	cmd->value = (float)254;
+	cmd->objtype = TYPE_INTEGER;
+	return (STAT_OK);
+	#endif
 }
-*/
+
 /* run_sx()	- send XOFF, XON --- test only 
 static stat_t run_sx(cmdObj_t *cmd)
 {
