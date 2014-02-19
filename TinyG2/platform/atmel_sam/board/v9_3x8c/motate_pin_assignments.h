@@ -1,8 +1,8 @@
 /*
  * http://tinkerin.gs/
  *
- * Copyright (c) 2013 Robert Giseburt
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -277,6 +277,7 @@ namespace Motate {
 // since it doesn't understand the special syntax coming up.
 #ifdef XCODE_INDEX
 #include <G2v9d-pinout.h>
+//#include <G2v9f-pinout.h>
 #endif
 
 #ifdef MOTATE_BOARD
