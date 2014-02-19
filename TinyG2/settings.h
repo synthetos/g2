@@ -63,10 +63,7 @@
 #define STATUS_REPORT_MIN_MS		100					// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250					// milliseconds - set $SV=0 to disable
 
-#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
-//#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","_cs5","_es5","_fe5","_xs5","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs2","_es2","_fe2","_xs2","stat"
+#define SR_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF				// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
@@ -82,22 +79,13 @@
 #define COM_ENABLE_ECHO				false
 #define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON	// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
-/*
-#define X_TRAVEL_MIN				0
-#define Y_TRAVEL_MIN				0
-#define Z_TRAVEL_MIN				0
-#define A_TRAVEL_MIN				-1
-#define B_TRAVEL_MIN				-1
-#define C_TRAVEL_MIN				-1
-*/
-
 /**** MACHINE PROFILES ******************************************************/
 
 // machine default profiles - choose only one:
 
 //#include "settings/settings_default.h"				// Default settings for release
-#include "settings/settings_test.h"					// Settings for testing - not for release
-//#include "settings/settings_hammer.h"					// Hammer torque demo
+//#include "settings/settings_test.h"					// Settings for testing - not for release
+#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_lumenlabMicRoV3.h"		// Lumenlabs micRo v3
 //#include "settings/settings_openpnp.h"				// OpenPnP

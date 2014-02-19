@@ -825,13 +825,22 @@
     <Compile Include="settings\settings_default.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_hammer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_lumenlabMicRoV3.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_openpnp.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_othercutter.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_othermill.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_pendulum.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_pocketnc.h">
