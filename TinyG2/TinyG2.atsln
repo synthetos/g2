@@ -6,14 +6,18 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug (Due)|ARM = Debug (Due)|ARM
 		Release (Due)|ARM = Release (Due)|ARM
+		Release (G2v9f)|ARM = Release (G2v9f)|ARM
 		Release (v9_x8c)|ARM = Release (v9_x8c)|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug (Due)|ARM.ActiveCfg = Debug|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.ActiveCfg = Release|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.Build.0 = Release|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.ActiveCfg = Release (v9_x8c)|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.Build.0 = Release (v9_x8c)|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug (Due)|ARM.ActiveCfg = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug (Due)|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.ActiveCfg = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (G2v9f)|ARM.ActiveCfg = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (G2v9f)|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.ActiveCfg = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.Build.0 = gShield|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

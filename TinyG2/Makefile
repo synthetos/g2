@@ -359,9 +359,6 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN)_$(1).elf"
 
-"$(PROJECT)".hex: $(OUTPUT_BIN)_$(1).elf
-	$(QUIET)$(OBJCOPY) -O ihex "$(OUTPUT_BIN)_$(1).elf" "$(PROJECT)".hex
-
 $$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp
 	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
@@ -400,6 +397,9 @@ $(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
 
 $(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
 	$(CP) $< $@
+
+$(PROJECT).hex: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
+	$(QUIET)$(OBJCOPY) -O ihex "$(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf" "$(PROJECT)".hex
 
 clean:
 	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf
