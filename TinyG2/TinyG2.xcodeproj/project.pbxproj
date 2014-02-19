@@ -3203,6 +3203,9 @@
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
 		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
 		D4B6577218A562B300F8616C /* settings_pocketnc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pocketnc.h; sourceTree = "<group>"; };
+		D4B6579018B4674E00F8616C /* gShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gShield-pinout.h"; sourceTree = "<group>"; };
+		D4B6579118B4674E00F8616C /* G2v9d-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "G2v9d-pinout.h"; path = "platform/atmel_sam/board/v9_3x8c/G2v9d-pinout.h"; sourceTree = SOURCE_ROOT; };
+		D4B6579218B467AC00F8616C /* G2v9f-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9f-pinout.h"; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
@@ -7482,6 +7485,7 @@
 			isa = PBXGroup;
 			children = (
 				D4C1281A180F17D3002A898C /* motate_pin_assignments.h */,
+				D4B6579018B4674E00F8616C /* gShield-pinout.h */,
 			);
 			path = due;
 			sourceTree = "<group>";
@@ -7490,6 +7494,8 @@
 			isa = PBXGroup;
 			children = (
 				D4C1281C180F17D3002A898C /* motate_pin_assignments.h */,
+				D4B6579118B4674E00F8616C /* G2v9d-pinout.h */,
+				D4B6579218B467AC00F8616C /* G2v9f-pinout.h */,
 			);
 			path = v9_3x8c;
 			sourceTree = "<group>";
@@ -7499,7 +7505,7 @@
 /* Begin PBXLegacyTarget section */
 		D45710C21705330C00EA19A8 /* TinyG2 Due */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=due";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield";
 			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "TinyG2 Due" */;
 			buildPhases = (
 			);
@@ -7513,7 +7519,7 @@
 		};
 		D4C12814180D9560002A898C /* TinyG2 v9_3x8c */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=v9_3x8c";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9d";
 			buildConfigurationList = D4C12815180D9560002A898C /* Build configuration list for PBXLegacyTarget "TinyG2 v9_3x8c" */;
 			buildPhases = (
 			);
@@ -8007,6 +8013,7 @@
 				OTHER_CFLAGS = (
 					"-D__SAM3X8E__",
 					"-Imotate",
+					"-DXCODE_INDEX",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -8042,6 +8049,7 @@
 				OTHER_CFLAGS = (
 					"-D__SAM3X8E__",
 					"-Imotate",
+					"-DXCODE_INDEX",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

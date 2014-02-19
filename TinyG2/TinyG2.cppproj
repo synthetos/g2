@@ -232,8 +232,8 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=due MKDIR=gmkdir</BuildTarget>
-    <CleanTarget>clean PLATFORM=due MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=gShield MKDIR=gmkdir</BuildTarget>
+    <CleanTarget>clean PLATFORM=gShield MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
   </PropertyGroup>
@@ -312,8 +312,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=v9_3x8c MKDIR=gmkdir</BuildTarget>
-    <CleanTarget>clean PLATFORM=v9_3x8c MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9d MKDIR=gmkdir</BuildTarget>
+    <CleanTarget>clean PLATFORM=G2v9d MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Release (v9_x8c)\</OutputPath>
   </PropertyGroup>
@@ -609,6 +609,21 @@
     <Compile Include="plan_line.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\board\due\gShield-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\due\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9d-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9f-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\v9_3x8c\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\cortex_handlers.c">
       <SubType>compile</SubType>
     </Compile>
@@ -873,15 +888,6 @@
     <Compile Include="util.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="variants\pins_arduino.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="variants\variant.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="variants\variant.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="xio.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -897,6 +903,9 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="platform\atmel_sam\board\" />
+    <Folder Include="platform\atmel_sam\board\due\" />
+    <Folder Include="platform\atmel_sam\board\v9_3x8c\" />
     <Folder Include="settings" />
     <Folder Include="platform\arm" />
     <Folder Include="platform\arm\lib" />
@@ -906,7 +915,6 @@
     <Folder Include="platform\atmel_sam\libsam" />
     <Folder Include="platform\atmel_sam\libsam\include" />
     <Folder Include="platform\atmel_sam\libsam\source" />
-    <Folder Include="variants" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cmsis\linkerScripts\sam3x8e_flash.ld">
@@ -933,7 +941,25 @@
     <None Include="motate\keywords.txt">
       <SubType>compile</SubType>
     </None>
+    <None Include="platform\atmel_sam.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\atmel_sam.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\atmel_sam_series.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\gcc_flash.ld">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\atmel_sam\gcc_sram.ld">
+      <SubType>compile</SubType>
+    </None>
     <None Include="platform\atmel_sam\make_utilities.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="platform\make_utilities.mk">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

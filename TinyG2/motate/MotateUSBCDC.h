@@ -279,48 +279,95 @@ namespace Motate {
 			return usb.readByte(read_endpoint);
 		};
 
-		uint16_t read(const uint8_t *buffer, const uint16_t length) {
+        // BLOCKING!!
+        uint16_t read(uint8_t *buffer, const uint16_t length) {
 			int16_t total_read = 0;
 			int16_t to_read = length;
-			const uint8_t *read_ptr = buffer;
-
+			uint8_t *read_ptr = buffer;
+            
 			// BLOCKING!!
 			while (to_read > 0) {
 				// Oddity of english: "to read" and "amount read" makes the same read.
 				// So, we'll call it "amount_read".
 				int16_t amount_read = usb.read(read_endpoint, read_ptr, length);
-
+                
 				total_read += amount_read;
 				to_read -= amount_read;
 				read_ptr += amount_read;
 			};
-
+            
 			return total_read;
 		};
-
+        
+        // Non-Blocking, returns how much was read, and -1 on error.
+		uint16_t readSome(uint8_t *buffer, const uint16_t length) {
+			int16_t total_read = 0;
+			int16_t to_read = length;
+			uint8_t *read_ptr = buffer;
+            
+			do {
+				// Oddity of english: "to read" and "amount read" makes the same read.
+				// So, we'll call it "amount_read".
+				int16_t amount_read = usb.read(read_endpoint, read_ptr, length);
+                
+                if (amount_read <  1)
+                    break;
+                
+				total_read += amount_read;
+				to_read -= amount_read;
+				read_ptr += amount_read;
+			} while (to_read > 0);
+            
+			return total_read;
+		};
+        
+        // This write blocks (loops until it can write all of the data) and auto-flushes.
 		int32_t write(const uint8_t *data, const uint16_t length) {
 			int16_t total_written = 0;
 			int16_t written = 1; // start with a non-zero value
 			const uint8_t *out_buffer = data;
 			int16_t to_write = length;
-
+            
 			// BLOCKING!!
 			do {
 				written = usb.write(write_endpoint, out_buffer, to_write);
-
+                
 				if (written < 0) // ERROR!
 					break;
-
+                
 				// TODO: Do this better... -Rob
 				total_written += written;
 				to_write -= written;
 				out_buffer += written;
 			} while (to_write > 0);
-
+            
 			// HACK! Autoflush forced...
 			if (total_written > 0)
 				flush();
-
+            
+			return total_written;
+		}
+        
+        // This write will write what it can, return how much it wrote, and will NOT flush.
+        // Call <USBSerial>.flush() to flush.
+        int32_t writeSome(const uint8_t *data, const uint16_t length) {
+			int16_t total_written = 0;
+			int16_t written = 1; // start with a non-zero value
+			const uint8_t *out_buffer = data;
+			int16_t to_write = length;
+            
+			do {
+				written = usb.write(write_endpoint, out_buffer, to_write);
+                
+				if (written < 1) // -1 = ERROR, and 0 means we would block
+					break;
+                
+				// TODO: Do this better... -Rob
+				total_written += written;
+				to_write -= written;
+				out_buffer += written;
+			} while (to_write > 0);
+            
 			return total_written;
 		}
 

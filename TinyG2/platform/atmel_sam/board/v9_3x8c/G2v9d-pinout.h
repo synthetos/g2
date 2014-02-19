@@ -1,0 +1,160 @@
+/*
+ * http://tinkerin.gs/
+ *
+ * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2013 Alden S. Hart Jr.
+ *
+ * This file is part of the Motate Library.
+ *
+ * This file ("the software") is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2 as published by the
+ * Free Software Foundation. You should have received a copy of the GNU General Public
+ * License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a software library without
+ * restriction. Specifically, if other files instantiate templates or use macros or
+ * inline functions from this file, or you compile this file and link it with  other
+ * files to produce an executable, this file does not by itself cause the resulting
+ * executable to be covered by the GNU General Public License. This exception does not
+ * however invalidate any other reasons why the executable file might be covered by the
+ * GNU General Public License.
+ *
+ * THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+#ifndef G2v9d_pinout_h
+#define G2v9d_pinout_h
+
+#include <MotatePins.h>
+
+#warning G2v9d_pinout_h
+
+namespace Motate {
+
+	// NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
+	// Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
+    
+	pin_number kSerial_RX                       =  0;
+	pin_number kSerial_TX                       =  1;
+    
+	pin_number kSerial0_RX                      =  0;
+	pin_number kSerial0_TX                      =  1;
+    
+	pin_number kI2C_SDAPinNumber                =  2;
+	pin_number kI2C_SCLPinNumber                =  3;
+    
+	pin_number kI2C0_SDAPinNumber               =  2;
+	pin_number kI2C0_SCLPinNumber               =  3;
+    
+	pin_number kSPI_SCKPinNumber                =  4;
+	pin_number kSPI_MISOPinNumber               =  5;
+	pin_number kSPI_MOSIPinNumber               =  6;
+    
+	pin_number kSPI0_SCKPinNumber               =  4;
+	pin_number kSPI0_MISOPinNumber              =  5;
+	pin_number kSPI0_MOSIPinNumber              =  6;
+    
+	pin_number kKinen_SyncPinNumber             =  7;
+    
+	pin_number kSocket1_SPISlaveSelectPinNumber = 10;
+	pin_number kSocket1_InterruptPinNumber      = 11;
+	pin_number kSocket1_StepPinNumber           = 12;
+	pin_number kSocket1_DirPinNumber            = 13;
+	pin_number kSocket1_EnablePinNumber         = 14;
+	pin_number kSocket1_Microstep_0PinNumber    = 15;
+	pin_number kSocket1_Microstep_1PinNumber    = 16;
+	pin_number kSocket1_VrefPinNumber           = 17;
+    
+	pin_number kSocket2_SPISlaveSelectPinNumber = 20;
+	pin_number kSocket2_InterruptPinNumber      = 21;
+	pin_number kSocket2_StepPinNumber           = 22;
+	pin_number kSocket2_DirPinNumber            = 23;
+	pin_number kSocket2_EnablePinNumber         = 24;
+	pin_number kSocket2_Microstep_0PinNumber    = 25;
+	pin_number kSocket2_Microstep_1PinNumber    = 26;
+	pin_number kSocket2_VrefPinNumber           = 27;
+    
+	pin_number kSocket3_SPISlaveSelectPinNumber = 30;
+	pin_number kSocket3_InterruptPinNumber      = 31;
+	pin_number kSocket3_StepPinNumber           = 32;
+	pin_number kSocket3_DirPinNumber            = 33;
+	pin_number kSocket3_EnablePinNumber         = 34;
+	pin_number kSocket3_Microstep_0PinNumber    = 35;
+	pin_number kSocket3_Microstep_1PinNumber    = 36;
+	pin_number kSocket3_VrefPinNumber           = 37;
+    
+	pin_number kSocket4_SPISlaveSelectPinNumber = 40;
+	pin_number kSocket4_InterruptPinNumber      = 41;
+	pin_number kSocket4_StepPinNumber           = 42;
+	pin_number kSocket4_DirPinNumber            = 43;
+	pin_number kSocket4_EnablePinNumber         = 44;
+	pin_number kSocket4_Microstep_0PinNumber    = 45;
+	pin_number kSocket4_Microstep_1PinNumber    = 46;
+	pin_number kSocket4_VrefPinNumber           = 47;
+    
+	pin_number kSocket5_SPISlaveSelectPinNumber = 50;
+	pin_number kSocket5_InterruptPinNumber      = 51;
+	pin_number kSocket5_StepPinNumber           = 52;
+	pin_number kSocket5_DirPinNumber            = 53;
+	pin_number kSocket5_EnablePinNumber         = 54;
+	pin_number kSocket5_Microstep_0PinNumber    = 55;
+	pin_number kSocket5_Microstep_1PinNumber    = 56;
+	pin_number kSocket5_VrefPinNumber           = 57;
+    
+	pin_number kSocket6_SPISlaveSelectPinNumber = 60;
+	pin_number kSocket6_InterruptPinNumber      = 61;
+	pin_number kSocket6_StepPinNumber           = 62;
+	pin_number kSocket6_DirPinNumber            = 63;
+	pin_number kSocket6_EnablePinNumber         = 64;
+	pin_number kSocket6_Microstep_0PinNumber    = 65;
+	pin_number kSocket6_Microstep_1PinNumber    = 66;
+	pin_number kSocket6_VrefPinNumber           = 67;
+    
+    
+	pin_number kXAxis_MinPinNumber              = 100;
+	pin_number kXAxis_MaxPinNumber              = 101;
+	pin_number kYAxis_MinPinNumber              = 102;
+	pin_number kYAxis_MaxPinNumber              = 103;
+	pin_number kZAxis_MinPinNumber              = 104;
+	pin_number kZAxis_MaxPinNumber              = 105;
+    
+	pin_number kAAxis_MinPinNumber              = 106;
+	pin_number kAAxis_MaxPinNumber              = 107;
+	pin_number kBAxis_MinPinNumber              = 108;
+	pin_number kBAxis_MaxPinNumber              = 109;
+	pin_number kCAxis_MinPinNumber              = 110;
+	pin_number kCAxis_MaxPinNumber              = 111;
+    
+	pin_number kSpindle_EnablePinNumber         = 112;
+	pin_number kSpindle_DirPinNumber            = 113;
+	pin_number kSpindle_PwmPinNumber            = 114;
+	pin_number kSpindle_Pwm2PinNumber           = 115;
+	pin_number kCoolant_EnablePinNumber         = 116;
+    
+	pin_number kLED_USBRXPinNumber              = 117;
+	pin_number kLED_USBTXPinNumber              = 118;
+    
+    
+	// GRBL / gShield compatibility pins -- Due board ONLY
+    
+	pin_number kGRBL_ResetPinNumber             =  -1;
+	pin_number kGRBL_FeedHoldPinNumber          =  -1;
+	pin_number kGRBL_CycleStartPinNumber        =  -1;
+    
+	pin_number kGRBL_CommonEnablePinNumber      =  -1;
+    
+    
+	/** NOTE: When adding pin definitions here, they must be
+     *        added to ALL board pin assignment files, even if
+     *        they are defined as -1.
+     **/
+	
+} // namespace Motate
+
+#endif
