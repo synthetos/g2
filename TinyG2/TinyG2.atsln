@@ -4,20 +4,17 @@ Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG2", "TinyG2.cppproj", 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug (Due)|ARM = Debug (Due)|ARM
-		Release (Due)|ARM = Release (Due)|ARM
-		Release (G2v9f)|ARM = Release (G2v9f)|ARM
-		Release (v9_x8c)|ARM = Release (v9_x8c)|ARM
+		gShield|ARM = gShield|ARM
+		G2v9f|ARM = G2v9f|ARM
+		G2v9d|ARM = G2v9d|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug (Due)|ARM.ActiveCfg = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug (Due)|ARM.Build.0 = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.ActiveCfg = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (Due)|ARM.Build.0 = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (G2v9f)|ARM.ActiveCfg = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (G2v9f)|ARM.Build.0 = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.ActiveCfg = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release (v9_x8c)|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.ActiveCfg = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9f|ARM.ActiveCfg = G2v9f|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9f|ARM.Build.0 = G2v9f|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9d|ARM.ActiveCfg = G2v9d|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9d|ARM.Build.0 = G2v9d|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

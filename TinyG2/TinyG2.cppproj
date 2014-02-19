@@ -158,7 +158,7 @@
     </PostBuildEvent>
     <OutputDirectory />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'gShield' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="">
         <armgcc.common.general.symbols>__SAM3X8E__</armgcc.common.general.symbols>
@@ -237,7 +237,7 @@
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release (G2v9d)' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'G2v9d' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="">
         <armgcc.common.general.symbols>__SAM3X8E__</armgcc.common.general.symbols>
@@ -315,9 +315,9 @@
     <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9d MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=G2v9d MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
-    <OutputPath>bin\Release (v9_x8c)\</OutputPath>
+    <OutputPath>bin\G2v9d\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release (G2v9f)' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'G2v9f' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="">
         <armgcc.common.general.symbols>__SAM3X8E__</armgcc.common.general.symbols>
@@ -395,7 +395,7 @@
     <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9f MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=G2v9d MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
-    <OutputPath>bin\Release (G2v9f)\</OutputPath>
+    <OutputPath>bin\G2v9f\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
