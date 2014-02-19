@@ -177,8 +177,8 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
 		if (fp_NOT_ZERO(bf->unit[axis])) {
 			axis_length = _get_relative_length( junction_velocity * bf->unit[axis],
-			bf->cruise_vmax* bf->unit[axis],
-			cm.a[axis].jerk_max * JERK_MULTIPLIER);
+												bf->cruise_vmax * bf->unit[axis],
+												cm.a[axis].jerk_max * JERK_MULTIPLIER);
 			if (longest_axis_length < axis_length) {
 				longest_axis_length = axis_length;
 				bf->jerk = cm.a[axis].jerk_max * JERK_MULTIPLIER;
