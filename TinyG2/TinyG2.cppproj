@@ -843,6 +843,9 @@
     <Compile Include="settings\settings_shapeoko375.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_test.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_Ultimaker.h">
       <SubType>compile</SubType>
     </Compile>
