@@ -96,17 +96,12 @@ uint8_t mp_get_runtime_busy()
  *	advanced. So lines that are too short to move will accumulate and get 
  *	executed once the accumulated error exceeds the minimums 
  */
-
+/*
 static float _get_relative_length(const float Vi, const float Vt, const float jerk)
 {
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
-
-static float _get_relative_length2(const float deltaV, const float unit, const float jerk)
-{
-	return (deltaV * unit * sqrt(deltaV * unit / jerk));
-}
-
+*/
 stat_t mp_aline(const GCodeState_t *gm_line)
 {
 	mpBuf_t *bf; 						// current move pointer
@@ -124,85 +119,36 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	bf->bf_func = mp_exec_aline;					// register the callback to the exec function
 	bf->length = length;
 
-/*
-	// compute both the unit vector and the jerk term in the same pass for efficiency
-	float diff = bf->gm.target[AXIS_X] - mm.position[AXIS_X];
-	if (fp_NOT_ZERO(diff)) {
-		bf->unit[AXIS_X] = diff / length;
-		bf->jerk = square(bf->unit[AXIS_X] * cm.a[AXIS_X].jerk_max);
-	}
-	if (fp_NOT_ZERO(diff = bf->gm.target[AXIS_Y] - mm.position[AXIS_Y])) {
-		bf->unit[AXIS_Y] = diff / length;
-		bf->jerk += square(bf->unit[AXIS_Y] * cm.a[AXIS_Y].jerk_max);
-	}
-	if (fp_NOT_ZERO(diff = bf->gm.target[AXIS_Z] - mm.position[AXIS_Z])) {
-		bf->unit[AXIS_Z] = diff / length;
-		bf->jerk += square(bf->unit[AXIS_Z] * cm.a[AXIS_Z].jerk_max);
-	}
-	if (fp_NOT_ZERO(diff = bf->gm.target[AXIS_A] - mm.position[AXIS_A])) {
-		bf->unit[AXIS_A] = diff / length;
-		bf->jerk += square(bf->unit[AXIS_A] * cm.a[AXIS_A].jerk_max);
-	}
-	if (fp_NOT_ZERO(diff = bf->gm.target[AXIS_B] - mm.position[AXIS_B])) {
-		bf->unit[AXIS_B] = diff / length;
-		bf->jerk += square(bf->unit[AXIS_B] * cm.a[AXIS_B].jerk_max);
-	}
-	if (fp_NOT_ZERO(diff = bf->gm.target[AXIS_C] - mm.position[AXIS_C])) {
-		bf->unit[AXIS_C] = diff / length;
-		bf->jerk += square(bf->unit[AXIS_C] * cm.a[AXIS_C].jerk_max);
-	}
-	bf->jerk = sqrt(bf->jerk) * JERK_MULTIPLIER;
-
-	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
-		bf->cbrt_jerk = mm.prev_cbrt_jerk;
-		bf->recip_jerk = mm.prev_recip_jerk;
-	} else {
-		bf->cbrt_jerk = cbrt(bf->jerk);
-		bf->recip_jerk = 1/bf->jerk;
-		mm.prev_jerk = bf->jerk;
-		mm.prev_cbrt_jerk = bf->cbrt_jerk;
-		mm.prev_recip_jerk = bf->recip_jerk;
-	}
-*/
 	// compute unit vector
-	float diff;
+	float distance_in_one_dimension;
 	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
-		if (fp_NOT_ZERO(diff = bf->gm.target[axis] - mm.position[axis])) {
-			bf->unit[axis] = diff / length;
+		if (fp_NOT_ZERO(distance_in_one_dimension = bf->gm.target[axis] - mm.position[axis])) {
+			bf->unit[axis] = distance_in_one_dimension / length;
 		}
 	}
 
 	// find the dominant jerk term
-//	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);	// initial velocity
-//	bf->cruise_vmax = bf->length / bf->gm.move_time;						// target velocity (requested, if not achieved)
-
-/*
-	float axis_length = 0;
-	float longest_axis_length = 0;
-	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
-		if (fp_NOT_ZERO(bf->unit[axis])) {
-			axis_length = _get_relative_length( junction_velocity * bf->unit[axis],
-												bf->cruise_vmax * bf->unit[axis],
-												cm.a[axis].jerk_max * JERK_MULTIPLIER);
-			if (longest_axis_length < axis_length) {
-				longest_axis_length = axis_length;
-				bf->jerk = cm.a[axis].jerk_max * JERK_MULTIPLIER;
-			}
-		}
-	}
-*/
-
 	float axis_relative_length = 0;
 	float longest_relative_length = 0;
 	float longest_axis_unit_vector_term = 0;
+
+//	float Vi = _get_junction_vmax(bf->pv->unit, bf->unit);
+//	float Vt = bf->length / bf->gm.move_time;
+	float deltaV = abs(_get_junction_vmax(bf->pv->unit, bf->unit) - (bf->length / bf->gm.move_time));
+	
 	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
 		if (fp_NOT_ZERO(bf->unit[axis])) {
 
-			// dimensionally accurate length evaluation			
+			// dimensionally accurate length evaluation
 //			axis_relative_length = _get_relative_length(junction_velocity * bf->unit[axis],
 //														bf->cruise_vmax * bf->unit[axis],
 //														cm.a[axis].jerk_max * JERK_MULTIPLIER);
-			// simplified, relative length evaluation	 
+
+//			deltaV =  abs(Vi * bf->unit[axis] - Vt * bf->unit[axis]);
+//			axis_relative_length = fabs(deltaV * bf->unit[axis] * sqrt((deltaV * bf->unit[axis]) / (cm.a[axis].jerk_max * JERK_MULTIPLIER)));
+//			axis_relative_length = fabs(deltaV * bf->unit[axis] * sqrt((deltaV * bf->unit[axis]) / (cm.a[axis].jerk_max)));
+
+			// simplified, relative length evaluation
 			axis_relative_length = fabs(bf->unit[axis] / cm.a[axis].jerk_max);
 			
 			if (longest_relative_length < axis_relative_length) {
@@ -210,10 +156,11 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 				longest_axis_unit_vector_term = bf->unit[axis];
 				bf->jerk = cm.a[axis].jerk_max;
 			}
-//			printf ("axis:%d\n", axis);	
-//			printf ("longest_relative_length:%f\n", longest_relative_length);
-//			printf ("longest_axis_unit_vector_term:%f\n", longest_axis_unit_vector_term);
-//			printf ("jerk:%f\n", bf->jerk);
+			printf ("axis:%d\n", axis);
+			printf ("deltV:%f\n", deltaV);
+			printf ("longest_relative_length:%f\n", longest_relative_length);
+			printf ("longest_axis_unit_vector_term:%f\n", longest_axis_unit_vector_term);
+			printf ("jerk:%f\n", bf->jerk);
 		}
 	}
 	bf->jerk *= JERK_MULTIPLIER / fabs(longest_axis_unit_vector_term);
