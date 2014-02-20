@@ -102,11 +102,15 @@ static float _get_relative_length(const float Vi, const float Vt, const float je
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
 
+static float _get_relative_length2(const float deltaV, const float unit, const float jerk)
+{
+	return (deltaV * unit * sqrt(deltaV * unit / jerk));
+}
+
 stat_t mp_aline(const GCodeState_t *gm_line)
 {
 	mpBuf_t *bf; 						// current move pointer
 	float exact_stop = 0;
-//	float junction_velocity;
 
 	// trap error conditions
 	float length = get_axis_vector_length(gm_line->target, mm.position);
@@ -169,11 +173,12 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	}
 
 	// find the dominant jerk term
+//	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);	// initial velocity
+//	bf->cruise_vmax = bf->length / bf->gm.move_time;						// target velocity (requested, if not achieved)
+
+/*
 	float axis_length = 0;
 	float longest_axis_length = 0;
-	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);	// initial velocity
-	bf->cruise_vmax = bf->length / bf->gm.move_time;						// target velocity (requested, if not achieved)
-
 	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
 		if (fp_NOT_ZERO(bf->unit[axis])) {
 			axis_length = _get_relative_length( junction_velocity * bf->unit[axis],
@@ -185,10 +190,50 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 			}
 		}
 	}
+*/
+
+	float axis_relative_length = 0;
+	float longest_relative_length = 0;
+	float longest_axis_unit_vector_term = 0;
+	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
+		if (fp_NOT_ZERO(bf->unit[axis])) {
+
+			// dimensionally accurate length evaluation			
+//			axis_relative_length = _get_relative_length(junction_velocity * bf->unit[axis],
+//														bf->cruise_vmax * bf->unit[axis],
+//														cm.a[axis].jerk_max * JERK_MULTIPLIER);
+			// simplified, relative length evaluation	 
+			axis_relative_length = fabs(bf->unit[axis] / cm.a[axis].jerk_max);
+			
+			if (longest_relative_length < axis_relative_length) {
+				longest_relative_length = axis_relative_length;
+				longest_axis_unit_vector_term = bf->unit[axis];
+				bf->jerk = cm.a[axis].jerk_max;
+			}
+//			printf ("axis:%d\n", axis);	
+//			printf ("longest_relative_length:%f\n", longest_relative_length);
+//			printf ("longest_axis_unit_vector_term:%f\n", longest_axis_unit_vector_term);
+//			printf ("jerk:%f\n", bf->jerk);
+		}
+	}
+	bf->jerk *= JERK_MULTIPLIER / fabs(longest_axis_unit_vector_term);
+
+#ifdef __DEBUG_STATEMENTS
+	printf ("unit:[%0.4f, %0.4f, %0.4f, %0.4f, %0.4f, %0.4f]\n", 
+		bf->unit[AXIS_X], bf->unit[AXIS_Y], bf->unit[AXIS_Z], 
+		bf->unit[AXIS_A], bf->unit[AXIS_B], bf->unit[AXIS_C]);
+
+	printf ("jerk:[%0.0f, %0.0f, %0.0f, %0.0f, %0.0f, %0.0f]\n",
+		cm.a[AXIS_X].jerk_max, cm.a[AXIS_Y].jerk_max, cm.a[AXIS_Z].jerk_max, 
+		cm.a[AXIS_A].jerk_max, cm.a[AXIS_B].jerk_max, cm.a[AXIS_C].jerk_max);
+
+	printf ("jerk:%0.0f\n", bf->jerk);
+#endif
+
 	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
 		bf->cbrt_jerk = mm.prev_cbrt_jerk;
 		bf->recip_jerk = mm.prev_recip_jerk;
-		} else {
+	} else {
 		bf->cbrt_jerk = cbrt(bf->jerk);
 		bf->recip_jerk = 1/bf->jerk;
 		mm.prev_jerk = bf->jerk;
@@ -199,10 +244,10 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	// finish up the current block variables
 	if (cm_get_path_control(MODEL) != PATH_EXACT_STOP) { 	// exact stop cases already zeroed
 		bf->replannable = true;
-		exact_stop = 8675309;								// an arbitrarily large floating point number (Jenny)
+		exact_stop = 8675309;								// an arbitrarily large floating point number
 	}
 	bf->cruise_vmax = bf->length / bf->gm.move_time;		// target velocity requested
-	junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
+	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
 	bf->entry_vmax = min3(bf->cruise_vmax, junction_velocity, exact_stop);
 	bf->delta_vmax = _get_target_velocity(0, bf->length, bf);
 	bf->exit_vmax = min3(bf->cruise_vmax, (bf->entry_vmax + bf->delta_vmax), exact_stop);

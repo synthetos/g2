@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		030.02	// new jerk selection algorithm - fresh commit to avoid confusion
+#define TINYG_FIRMWARE_BUILD   		030.03	// new jerk selection algorithm - with a lot of development cruft left in - profile set for pocketnc
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -67,6 +67,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
+//#define __DEBUG_STATEMENTS					// used to comment out debugging printf's
 
 #ifdef __SIMULATION
   #define __CANNED_STARTUP					// run any canned startup moves

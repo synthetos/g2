@@ -201,6 +201,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		copy_vector(mr.unit, bf->unit);
 		copy_vector(mr.target, bf->gm.target);			// save the final target of the move
 
+#ifdef __DEBUG_STATEMENTS
+		ik_kinematics(mr.target, mr.target_steps);		// generate the target steps for diagnostic report only
+
+		printf ("steps:[%0.0f, %0.0f, %0.0f, %0.0f, %0.0f, %0.0f]\n",
+			mr.target_steps[MOTOR_1], mr.target_steps[MOTOR_2], mr.target_steps[MOTOR_3],
+			mr.target_steps[MOTOR_4], mr.target_steps[MOTOR_5], mr.target_steps[MOTOR_6]);
+#endif
+
 		// generate the waypoints for position correction at section ends
 		for (uint8_t i=0; i<AXES; i++) {
 			mr.waypoint[SECTION_HEAD][i] = mr.position[i] + mr.unit[i] * mr.head_length;
@@ -208,6 +216,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 			mr.waypoint[SECTION_TAIL][i] = mr.position[i] + mr.unit[i] * (mr.head_length + mr.body_length + mr.tail_length);
 		}
 	}
+
 	// NB: from this point on the contents of the bf buffer do not affect execution
 
 	//**** main dispatcher to process segments ***
