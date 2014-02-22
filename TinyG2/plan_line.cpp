@@ -96,12 +96,12 @@ uint8_t mp_get_runtime_busy()
  *	advanced. So lines that are too short to move will accumulate and get 
  *	executed once the accumulated error exceeds the minimums 
  */
-/*
+
 static float _get_relative_length(const float Vi, const float Vt, const float jerk)
 {
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
-*/
+
 stat_t mp_aline(const GCodeState_t *gm_line)
 {
 	mpBuf_t *bf; 						// current move pointer
@@ -132,6 +132,7 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	float longest_relative_length = 0;
 	float longest_axis_unit_vector_term = 0;
 
+	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
 //	float Vi = _get_junction_vmax(bf->pv->unit, bf->unit);
 //	float Vt = bf->length / bf->gm.move_time;
 	float deltaV = abs(_get_junction_vmax(bf->pv->unit, bf->unit) - (bf->length / bf->gm.move_time));
@@ -144,12 +145,16 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 //														bf->cruise_vmax * bf->unit[axis],
 //														cm.a[axis].jerk_max * JERK_MULTIPLIER);
 
+			axis_relative_length = (fabs(junction_velocity * bf->unit[axis] - bf->cruise_vmax * bf->unit[axis]) * 
+									sqrt(fabs(junction_velocity * bf->unit[axis] - bf->cruise_vmax * bf->unit[axis]) / 
+									cm.a[axis].jerk_max * JERK_MULTIPLIER));
+
 //			deltaV =  abs(Vi * bf->unit[axis] - Vt * bf->unit[axis]);
-//			axis_relative_length = fabs(deltaV * bf->unit[axis] * sqrt((deltaV * bf->unit[axis]) / (cm.a[axis].jerk_max * JERK_MULTIPLIER)));
+//			axis_relative_length = fabs(deltaV * bf->unit[axis] * (sqrt((deltaV * bf->unit[axis]) / (cm.a[axis].jerk_max * JERK_MULTIPLIER))));
 //			axis_relative_length = fabs(deltaV * bf->unit[axis] * sqrt((deltaV * bf->unit[axis]) / (cm.a[axis].jerk_max)));
 
 			// simplified, relative length evaluation
-			axis_relative_length = fabs(bf->unit[axis] / cm.a[axis].jerk_max);
+//			axis_relative_length = fabs(bf->unit[axis] / cm.a[axis].jerk_max);
 			
 			if (longest_relative_length < axis_relative_length) {
 				longest_relative_length = axis_relative_length;
@@ -194,7 +199,7 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 		exact_stop = 8675309;								// an arbitrarily large floating point number
 	}
 	bf->cruise_vmax = bf->length / bf->gm.move_time;		// target velocity requested
-	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
+//	float junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
 	bf->entry_vmax = min3(bf->cruise_vmax, junction_velocity, exact_stop);
 	bf->delta_vmax = _get_target_velocity(0, bf->length, bf);
 	bf->exit_vmax = min3(bf->cruise_vmax, (bf->entry_vmax + bf->delta_vmax), exact_stop);
