@@ -800,9 +800,9 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 {
 	// trap conditions that would prevent queueing the line
 	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
-		} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
-		} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
-		} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
+	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
+//	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
 	}
 
 	// setup segment parameters
@@ -837,8 +837,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// Putting this here computes the correct factor even if the motor was dormant for some
 		// number of previous moves. Correction is computed based on the last segment time actually used.
 		if (fabs(segment_time - st_pre.mot[i].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
-//			if (st_pre.mot[i].prev_segment_time != 0) {							// special case to skip first move
-			if (fp_NOT_ZERO(st_pre.mot[i].prev_segment_time)) {					// special case to skip first move
+//			if (fp_NOT_ZERO(st_pre.mot[i].prev_segment_time)) {					// special case to skip first move
+			if (st_pre.mot[i].prev_segment_time > 0.0000001) {					// special case to skip first move
 				st_pre.mot[i].accumulator_correction_flag = true;
 				st_pre.mot[i].accumulator_correction = segment_time / st_pre.mot[i].prev_segment_time;
 			}
