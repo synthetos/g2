@@ -1,9 +1,9 @@
 /*
  * xio.h - extended IO functions
- * Part of TinyG2 project
+ * Part of TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,6 +25,42 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/* XIO devices are compatible with avr-gcc stdio, so formatted printing 
+ * is supported. To use this sub-system outside of TinyG you may need 
+ * some defines in tinyg.h. See notes at end of this file for more details.
+ */
+/* Note: anything that includes xio.h first needs the following:
+ * 	#include <stdio.h>				// needed for FILE def'n
+ *	#include <stdbool.h>			// needed for true and false 
+ *	#include <avr/pgmspace.h>		// defines prog_char, PSTR
+ */
+/* Note: This file contains load of sub-includes near the middle
+ *	#include "xio_file.h"
+ *	#include "xio_usart.h"
+ *	#include "xio_spi.h"
+ *	#include "xio_signals.h"
+ *	(possibly more)
+ */
+/* 
+ * CAVEAT EMPTOR: File under "watch your ass":
+ *
+ * 	  - Short story: Do not call ANYTHING that can print (i.e. send chars to the TX 
+ *		buffer) from a medium or hi interrupt. This obviously includes any printf() 
+ *		function, but also exception reports, cm_soft_alarm(), cm_hard_alarm() and a 
+ *		few other functions that call stdio print functions.
+ *
+ * 	  - Longer Story: The stdio printf() functions use character drivers provided by 
+ *		tinyg to access the low-level Xmega devices. Specifically xio_putc_usb() in xio_usb.c,
+ *		and xio_putc_rs485() in xio_rs485.c. Since stdio does not understand non-blocking 
+ *		IO these functions must block if there is no space in the TX buffer. Blocking is 
+ *		accomplished using sleep_mode(). The IO system is the only place where sleep_mode()
+ *		is used. Everything else in TinyG is non-blocking. Sleep is woken (exited) whenever
+ *		any interrupt fires. So there must always be a viable interrupt source running when
+ *		you enter a sleep or the system will hang (lock up). In the IO functions this is the
+ *		TX interupts, which fire when space becomes available in the USART for a TX char. This
+ *		Means you cannot call a print function at or above the level of the TX interrupts,
+ *		which are set to medium.
+ */
 #ifndef XIO_H_ONCE
 #define XIO_H_ONCE
 
@@ -33,15 +69,24 @@
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
-//#include "Arduino.h"
+#include "MotateSPI.h"
 
 extern Motate::USBDevice< Motate::USBCDC > usb;
 //extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 extern typeof usb._mixin_0_type::Serial &SerialUSB;
 //extern typeof usb._mixin_1_type::Serial &SerialUSB1;
 
+extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+
+#undef  _FDEV_ERR
 #define _FDEV_ERR -1
+
+#undef  _FDEV_EOF
 #define _FDEV_EOF -2
+
+void xio_init(void);
+void xio_init_assertions(void);
+stat_t xio_test_assertions(void);
 
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);

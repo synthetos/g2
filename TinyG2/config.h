@@ -2,7 +2,7 @@
  * config.h - configuration sub-system generic part (see config_app for application part)
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -188,15 +188,12 @@ typedef uint16_t index_t;			// use this if there are > 255 indexed objects
 
 // Stuff you probably don't want to change 
 
-#define NO_MATCH (index_t)0xFFFF
-#define CMD_GROUP_LEN 3				// max length of group prefix
-#define CMD_TOKEN_LEN 5				// mnemonic token string: group prefix + short token
+#define GROUP_LEN 3					// max length of group prefix
+#define TOKEN_LEN 5					// mnemonic token string: group prefix + short token
 #define CMD_FOOTER_LEN 18			// sufficient space to contain a JSON footer array
 #define CMD_LIST_LEN (CMD_BODY_LEN+2)// +2 allows for a header and a footer
 #define CMD_MAX_OBJECTS (CMD_BODY_LEN-1)// maximum number of objects in a body string
-
-#define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000		// base address of usable NVM
+#define NO_MATCH (index_t)0xFFFF
 
 enum tgCommunicationsMode {
 	TEXT_MODE = 0,					// text command line mode
@@ -229,6 +226,7 @@ enum objType {						// object / value typing for config and JSON
 	TYPE_NULL = 0,					// value is 'null' (meaning the JSON null value)
 	TYPE_BOOL,						// value is "true" (1) or "false"(0)
 	TYPE_INTEGER,					// value is a uint32_t
+	TYPE_DATA,						// value is blind cast to uint32_t
 	TYPE_FLOAT,						// value is a floating point number
 	TYPE_STRING,					// value is in string field
 	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
@@ -268,8 +266,8 @@ typedef struct cmdObject {				// depending on use, not all elements may be popul
 	int8_t objtype;						// see objType enum
 	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
-	char_t token[CMD_TOKEN_LEN+1];		// full mnemonic token for lookup
-	char_t group[CMD_GROUP_LEN+1];		// group prefix or NUL if not in a group
+	char_t group[GROUP_LEN+1];			// group prefix or NUL if not in a group
+	char_t token[TOKEN_LEN+1];			// full mnemonic token for lookup
 	char_t (*stringp)[];				// pointer to array of characters from shared character array
 } cmdObj_t; 							// OK, so it's not REALLY an object
 
@@ -277,11 +275,10 @@ typedef uint8_t (*fptrCmd)(cmdObj_t *cmd);// required for cmd table access
 typedef void (*fptrPrint)(cmdObj_t *cmd);// required for PROGMEM access
 
 typedef struct cfgItem {
-	char_t group[CMD_GROUP_LEN+1];		// group prefix (with NUL termination)
-	char_t token[CMD_TOKEN_LEN+1];		// token - stripped of group prefix (w/NUL termination)
+	char_t group[GROUP_LEN+1];			// group prefix (with NUL termination)
+	char_t token[TOKEN_LEN+1];			// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
 	int8_t precision;					// decimal precision for display (JSON)
-//	const char_t *format;				// pointer to formatted print string in FLASH
 	fptrPrint print;					// print binding: aka void (*print)(cmdObj_t *cmd);
 	fptrCmd get;						// GET binding aka uint8_t (*get)(cmdObj_t *cmd)
 	fptrCmd set;						// SET binding aka uint8_t (*set)(cmdObj_t *cmd)
@@ -329,6 +326,7 @@ stat_t set_01(cmdObj_t *cmd);		// set a 0 or 1 value with validation
 stat_t set_012(cmdObj_t *cmd);		// set a 0, 1 or 2 value with validation
 stat_t set_0123(cmdObj_t *cmd);		// set a 0, 1, 2 or 3 value with validation
 stat_t set_int(cmdObj_t *cmd);		// set uint32_t integer value
+stat_t set_data(cmdObj_t *cmd);		// set uint32_t integer value blind cast
 stat_t set_flt(cmdObj_t *cmd);		// set floating point value
 stat_t set_flu(cmdObj_t *cmd);		// set floating point number with G20/G21 units conversion
 stat_t get_flu(cmdObj_t *cmd);		// get floating point number with G20/G21 units conversion
@@ -336,6 +334,7 @@ stat_t get_flu(cmdObj_t *cmd);		// get floating point number with G20/G21 units 
 stat_t get_nul(cmdObj_t *cmd);		// get null value type
 stat_t get_ui8(cmdObj_t *cmd);		// get uint8_t value
 stat_t get_int(cmdObj_t *cmd);		// get uint32_t integer value
+stat_t get_data(cmdObj_t *cmd);		// get uint32_t integer value blind cast
 stat_t get_flt(cmdObj_t *cmd);		// get floating point value
 
 stat_t set_grp(cmdObj_t *cmd);		// set data for a group
@@ -353,9 +352,6 @@ cmdObj_t *cmd_add_float(const char_t *token, const float value);
 cmdObj_t *cmd_add_string(const char_t *token, const char_t *string);
 cmdObj_t *cmd_add_conditional_message(const char_t *string);
 void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
-
-stat_t cmd_read_NVM_value(cmdObj_t *cmd);
-stat_t cmd_write_NVM_value(cmdObj_t *cmd);
 
 /*********************************************************************************************
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************

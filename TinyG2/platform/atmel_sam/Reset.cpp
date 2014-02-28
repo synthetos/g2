@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
+
 __attribute__ ((long_call, section (".ramfunc")))
 void banzai() {	
 	// Disable all interrupts
@@ -54,7 +54,7 @@ void banzai() {
 
 	while (true);
 }
-*/
+
 static int volatile ticks = -1;
 
 void initiateReset(int _ticks) {
@@ -69,8 +69,8 @@ void tickReset() {
 	if (ticks == -1)
 		return;
 	ticks--;
-//	if (ticks == 0)
-//		banzai();
+	if (ticks == 0)
+		banzai();
 }
 
 #ifdef __cplusplus

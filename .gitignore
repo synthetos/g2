@@ -14,10 +14,11 @@
 \build
 build/
 bin/
-*.xcodeproj/project.xcworkspace/xcuserdata/rob.xcuserdatad/UserInterfaceState.xcuserstate
+*.xcodeproj/project.xcworkspace/xcuserdata
+*/*.xcodeproj/project.xcworkspace/xcuserdata
+*.xcodeproj/xcuserdata
+*/*.xcodeproj/xcuserdata
 .DS_Store
 TcfTransactionLog.csv
-TinyG2/TinyG2.elf
-TinyG2/TinyG2.xcodeproj/project.xcworkspace/xcuserdata/rob.xcuserdatad/UserInterfaceState.xcuserstate
 *.xcbkptlist
 *.xccheckout

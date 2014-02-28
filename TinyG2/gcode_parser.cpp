@@ -2,7 +2,7 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -59,6 +59,9 @@ stat_t gc_gcode_parser(char_t *block)
 	char_t *msg = &none;					// gcode message or NUL string
 	uint8_t block_delete_flag;
 
+	// don't process Gcode blocks if in alarmed state
+	if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+
 	_normalize_gcode_block(cmd, &com, &msg, &block_delete_flag);
 	
 	// Block delete omits the line if a / char is present in the first space
@@ -67,9 +70,12 @@ stat_t gc_gcode_parser(char_t *block)
 	if (block_delete_flag == true) {
 		return (STAT_NOOP);
 	}
-//	if (*msg != NUL) { // +++++ THIS HAS A SERIOUS BUG IN IT SO FOR NOW IT'S DISABLED
-//		(void)cm_message(msg);				// queue the message
-//	}
+
+	// queue a "(MSG" response
+	if (*msg != NUL) {
+		(void)cm_message(msg);				// queue the message
+	}
+
 	return(_parse_gcode_block(block));
 }
 
@@ -453,7 +459,7 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm.gn.target, cm.gf.target); break;}// G28.3
 		case NEXT_ACTION_HOMING_NO_SET: { status = cm_homing_cycle_start_no_set(); break;}						// G28.4
 
-		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_probe_cycle_start(); break;}								// G38.2
+		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}			// G38.2
 
 		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}
@@ -470,7 +476,7 @@ static stat_t _execute_gcode_block()
 				case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
 				// gf.radius sets radius mode if radius was collected in gn
 				{ status = cm_arc_feed(cm.gn.target, cm.gf.target, cm.gn.arc_offset[0], cm.gn.arc_offset[1],
-				cm.gn.arc_offset[2], cm.gn.arc_radius, cm.gn.motion_mode); break;}
+									   cm.gn.arc_offset[2], cm.gn.arc_radius, cm.gn.motion_mode); break;}
 			}
 		}
 	}

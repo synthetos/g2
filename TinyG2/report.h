@@ -2,7 +2,7 @@
  * report.h - TinyG status report and other reporting functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -64,6 +64,7 @@ typedef struct srSingleton {
 	/*** runtime values (PRIVATE) ***/
 	uint8_t status_report_requested;					// flag that SR has been requested
 	uint32_t status_report_systick;						// SysTick value for next status report
+	index_t stat_index;									// table index value for stat - determined during initialization
 	index_t status_report_list[CMD_STATUS_REPORT_LEN];	// status report elements to report
 	float status_report_value[CMD_STATUS_REPORT_LEN];	// previous values for filtered reporting
 
@@ -120,23 +121,23 @@ stat_t qo_get(cmdObj_t *cmd);
 
 #ifdef __TEXT_MODE
 
-void sr_print_sr(cmdObj_t *cmd);
-void sr_print_si(cmdObj_t *cmd);
-void sr_print_sv(cmdObj_t *cmd);
-void qr_print_qv(cmdObj_t *cmd);
-void qr_print_qr(cmdObj_t *cmd);
-void qr_print_qi(cmdObj_t *cmd);
-void qr_print_qo(cmdObj_t *cmd);
+	void sr_print_sr(cmdObj_t *cmd);
+	void sr_print_si(cmdObj_t *cmd);
+	void sr_print_sv(cmdObj_t *cmd);
+	void qr_print_qv(cmdObj_t *cmd);
+	void qr_print_qr(cmdObj_t *cmd);
+	void qr_print_qi(cmdObj_t *cmd);
+	void qr_print_qo(cmdObj_t *cmd);
 
 #else
 
-#define sr_print_sr tx_print_stub
-#define sr_print_si tx_print_stub
-#define sr_print_sv tx_print_stub
-#define qr_print_qv tx_print_stub
-#define qr_print_qr tx_print_stub
-#define qr_print_qi tx_print_stub
-#define qr_print_qo tx_print_stub
+	#define sr_print_sr tx_print_stub
+	#define sr_print_si tx_print_stub
+	#define sr_print_sv tx_print_stub
+	#define qr_print_qv tx_print_stub
+	#define qr_print_qr tx_print_stub
+	#define qr_print_qi tx_print_stub
+	#define qr_print_qo tx_print_stub
 
 #endif // __TEXT_MODE
 

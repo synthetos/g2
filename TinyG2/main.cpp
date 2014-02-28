@@ -2,8 +2,8 @@
  * main.cpp - TinyG - An embedded rs274/ngc CNC controller
  * This file is part of the TinyG project.
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
- * Copyright (c) 2013 Robert Giseburt
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -20,21 +20,30 @@
 /* See github.com/Synthetos/G2 for code and docs on the wiki 
  */
 
-#include "tinyg2.h"				// #1 There are some dependencies
-#include "config.h"				// #2
+#include "tinyg2.h"					// #1 There are some dependencies
+#include "config.h"					// #2
 #include "hardware.h"
+#include "persistence.h"
 #include "controller.h"
 #include "canonical_machine.h"
+#include "json_parser.h"			// required for unit tests only
 #include "report.h"
 #include "planner.h"
 #include "stepper.h"
+#include "encoder.h"
 //#include "network.h"
 #include "switch.h"
-//#include "gpio.h"
 //#include "test.h"
 #include "pwm.h"
 #include "xio.h"
 
+#ifdef __AVR
+#include <avr/interrupt.h>
+#include "xmega/xmega_interrupts.h"
+//#include "xmega/xmega_eeprom.h"	// uncomment for unit tests
+#endif // __AVR
+
+#ifdef __ARM
 #include "MotateTimers.h"
 using Motate::delay;
 
@@ -50,11 +59,13 @@ void __libc_init_array(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+#endif // __ARM
 
-static void _application_init(void);
+static void _unit_tests(void);
 
 /******************** Application Code ************************/
 
+#ifdef __ARM
 const Motate::USBSettings_t Motate::USBSettings = {
 	/*gVendorID         = */ 0x1d50,
 	/*gProductID        = */ 0x606d,
@@ -74,6 +85,13 @@ MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
 
+Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
+#endif
+
+/*
+ * _system_init()
+ */
+
 void _system_init(void)
 {
 #ifdef __ARM
@@ -84,30 +102,15 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
+
+	usb.attach();					// USB setup
+	delay(1000);
 #endif
 }
 
-int main(void)
-{
-	// system initialization
-	_system_init();
-//	delay(1);
-//	usb._init();
-	usb.attach();					// USB setup
-	delay(1000);
-//	usb.detach();					// hack to detach from bootloader USB if it was previously attached.
-//	delay(1000);
-//	usb.attach();
-
-	// TinyG application setup
-	_application_init();
-
-	// main loop
-	for (;;) {
-		controller_run( );			// single pass through the controller
-	}
-	return 0;
-}
+/*
+ * _application_init()
+ */
 
 static void _application_init(void)
 {
@@ -116,30 +119,47 @@ static void _application_init(void)
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	config_init();					// config records from eeprom 		- must be second
-	switch_init();					// switches and other inputs
-	pwm_init();						// pulse width modulation drivers
+	persistence_init();				// set up EEPROM or other NVM		- must be second
+	xio_init();						// xtended io subsystem				- must be third
+	config_init();					// config records from eeprom
 
 	// do these next
-	controller_init( DEV_STDIN, DEV_STDOUT, DEV_STDERR );
+	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
+	encoder_init();					// virtual encoders
+	switch_init();					// switches
+//	gpio_init();					// parallel IO
+	pwm_init();						// pulse width modulation drivers
+
+	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
+//	network_init();					// reset std devices if required	- must follow config_init()
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
 
-	// do these last
-	stepper_init();
-
-	// now get started
-//	rpt_print_system_ready_message();// (LAST) announce system is ready
-//	_unit_tests();					// run any unit tests that are enabled
-//	tg_canned_startup();			// run any pre-loaded commands
-	return;
+	// start the application
+	rpt_print_system_ready_message();// (LAST) announce system is ready
 }
 
-void tg_reset(void)			// software hard reset using the watchdog timer
+/*
+ * main()
+ */
+
+int main(void)
 {
-	//	wdt_enable(WDTO_15MS);
-	//	while (true);			// loops for about 15ms then resets
+	// system initialization
+	_system_init();
+
+	// TinyG application setup
+	_application_init();
+	_unit_tests();					// run any unit tests that are enabled
+//	run_canned_startup();			// run any pre-loaded commands
+
+	// main loop
+	for (;;) {
+		controller_run( );			// single pass through the controller
+	}
+	return 0;
 }
+
 
 /**** Status Messages ***************************************************************
  * get_status_message() - return the status message
@@ -152,7 +172,7 @@ void tg_reset(void)			// software hard reset using the watchdog timer
  */
 
 stat_t status_code;						// allocate a variable for this macro
-char shared_buf[STATUS_MESSAGE_LEN];	// allocate string for global use
+char shared_buf[MESSAGE_LEN];			// allocate string for global use
 
 static const char stat_00[] PROGMEM = "OK";
 static const char stat_01[] PROGMEM = "Error";
@@ -231,17 +251,17 @@ static const char stat_70[] PROGMEM = "Arc specification error";
 static const char stat_71[] PROGMEM = "Soft limit exceeded";
 static const char stat_72[] PROGMEM = "Command not accepted";
 static const char stat_73[] PROGMEM = "Probing cycle failed";
-static const char stat_74[] PROGMEM = "74";
-static const char stat_75[] PROGMEM = "75";
-static const char stat_76[] PROGMEM = "76";
-static const char stat_77[] PROGMEM = "77";
-static const char stat_78[] PROGMEM = "78";
-static const char stat_79[] PROGMEM = "79";
-static const char stat_80[] PROGMEM = "80";
-static const char stat_81[] PROGMEM = "81";
-static const char stat_82[] PROGMEM = "82";
-static const char stat_83[] PROGMEM = "83";
-static const char stat_84[] PROGMEM = "84";
+static const char stat_74[] PROGMEM = "Jogging cycle failed";
+static const char stat_75[] PROGMEM = "Machine is alarmed - Command not processed";	// current longest message 43 chars (including NUL)
+static const char stat_76[] PROGMEM = "Limit switch hit - Shutdown occurred";
+static const char stat_77[] PROGMEM = "Homing Error - Bad or no axis specified";
+static const char stat_78[] PROGMEM = "Homing Error - Search velocity is zero";
+static const char stat_79[] PROGMEM = "Homing Error - Latch velocity is zero";
+static const char stat_80[] PROGMEM = "Homing Error - Travel min/max is zero";
+static const char stat_81[] PROGMEM = "Homing Error - Negative latch backoff";
+static const char stat_82[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_83[] PROGMEM = "st_prep_line() move time is infinite";
+static const char stat_84[] PROGMEM = "st_prep_line() move time is NAN";
 static const char stat_85[] PROGMEM = "85";
 static const char stat_86[] PROGMEM = "86";
 static const char stat_87[] PROGMEM = "87";
@@ -262,11 +282,12 @@ static const char stat_100[] PROGMEM = "Generic assertion failure";
 static const char stat_101[] PROGMEM = "Generic exception report";
 static const char stat_102[] PROGMEM = "Memory fault detected";
 static const char stat_103[] PROGMEM = "Stack overflow detected";
-static const char stat_104[] PROGMEM = "Controller assertion failure";
-static const char stat_105[] PROGMEM = "Canonical machine assertion failure";
-static const char stat_106[] PROGMEM = "Planner assertion failure";
-static const char stat_107[] PROGMEM = "Stepper assertion failure";
-static const char stat_108[] PROGMEM = "Extended IO assertion failure";
+static const char stat_104[] PROGMEM = "Extended IO assertion failure";
+static const char stat_105[] PROGMEM = "Controller assertion failure";
+static const char stat_106[] PROGMEM = "Canonical machine assertion failure";
+static const char stat_107[] PROGMEM = "Planner assertion failure";
+static const char stat_108[] PROGMEM = "Stepper assertion failure";
+static const char stat_109[] PROGMEM = "Encoder assertion failure";
 
 static const char *const stat_msg[] PROGMEM = {
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
@@ -279,7 +300,7 @@ static const char *const stat_msg[] PROGMEM = {
 	stat_70, stat_71, stat_72, stat_73, stat_74, stat_75, stat_76, stat_77, stat_78, stat_79,
 	stat_80, stat_81, stat_82, stat_83, stat_84, stat_85, stat_86, stat_87, stat_88, stat_89,
 	stat_90, stat_91, stat_92, stat_93, stat_94, stat_95, stat_96, stat_97, stat_98, stat_99,
-	stat_100, stat_101, stat_102, stat_103, stat_104, stat_105, stat_106, stat_107, stat_108
+	stat_100, stat_101, stat_102, stat_103, stat_104, stat_105, stat_106, stat_107, stat_108, stat_109
 };
 
 char *get_status_message(stat_t status)
@@ -298,7 +319,7 @@ static void _unit_tests(void)
 //	EEPROM_UNITS;			// if you want this you must include the .h file in this file
 	CONFIG_UNITS;
 	JSON_UNITS;
-	GPIO_UNITS;
+//	GPIO_UNITS;
 	REPORT_UNITS;
 	PLANNER_UNITS;
 	PWM_UNITS;

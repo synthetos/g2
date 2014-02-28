@@ -28,7 +28,7 @@ PROJECT  = TinyG2
 SOURCE_DIRS = . motate
 # arduino arduino/USB variants
 
-FIRST_LINK_SOURCES := 
+FIRST_LINK_SOURCES :=
 
 # List all user directories here
 USER_INCLUDE_DIRS := $(SOURCE_DIRS)
@@ -128,8 +128,8 @@ endif
 # Output directories (must be before platforms section)
 #
 
-BIN = bin/$(CHIP)
-OBJ = build/$(CHIP)
+BIN = bin/$(PLATFORM)
+OBJ = build/$(PLATFORM)
 DEPDIR = $(OBJ)/dep
 
 #
@@ -140,28 +140,60 @@ DEPDIR = $(OBJ)/dep
 # Start of platforms section
 #
 
-PLATFORM ?= due
+PLATFORM ?= gShield
 
-ifeq ("$(PLATFORM)","due")
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+ifeq ("$(PLATFORM)","gShield")
+
+	# This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
+	# for the code to get the pinout right.
+
+	BASE_PLATFORM=due
+	DEVICE_DEFINES += MOTATE_BOARD="gShield"
+
+endif
+
+ifeq ("$(PLATFORM)","G2v9d")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9d"
+
+endif
+
+ifeq ("$(PLATFORM)","G2v9f")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9f"
+
+endif
+
+ifeq ("$(PLATFORM)","G2v9g")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9g"
+
+endif
+
+ifeq ("$(BASE_PLATFORM)","")
+	BASE_PLATFORM = $(PLATFORM)
+endif
+
+ifeq ("$(BASE_PLATFORM)","due")
+	_PLATFORM_FOUND = 1
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
     CMSIS_ROOT = CMSIS
-#    SOURCE_DIRS += $(PLATFORM_BASE)/libsam/source
-#    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/libsam \
-#                           $(PLATFORM_BASE)/libsam/include
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
 	
 
 	include $(PLATFORM_BASE).mk
-	
+endif
 
-else
-
-ifeq ("$(PLATFORM)","v9_3x8c")
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp
+ifeq ("$(BASE_PLATFORM)","v9_3x8c")
+	_PLATFORM_FOUND = 1
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8C
 	PLATFORM_BASE = platform/atmel_sam
@@ -171,13 +203,11 @@ ifeq ("$(PLATFORM)","v9_3x8c")
 
 	include $(PLATFORM_BASE).mk
 
-
-else
-
-$(error Unknown platform "$(PLATFORM)")
-
 endif
 
+ifeq ("$(_PLATFORM_FOUND)", "0")
+# errors cannot be indented
+$(error Unknown platform "$(PLATFORM)")
 endif
 
 #
@@ -190,7 +220,7 @@ endif
 
 
 # Output file basename
-OUTPUT_BIN = $(BIN)/$(PROJECT)_$(CHIP)
+OUTPUT_BIN = $(BIN)/$(PLATFORM)
 
 #-------------------------------------------------------------------------------
 #		Tools
@@ -216,27 +246,25 @@ MKDIR   ?= mkdir
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-CFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99
-
+#CFLAGS +=  $(DEVICE_CFLAGS)
+CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM)
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-CPPFLAGS += --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions
-
+#CPPFLAGS +=  $(DEVICE_CPPFLAGS)
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM)
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
 
-ASFLAGS =
+ASFLAGS = $(DEVICE_ASFLAGS)
 
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS = $(LIBS) $(USER_LIBS) -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols
-LDFLAGS += -nostartfiles -mcpu=cortex-m3
-#LD_OPTIONAL=-Wl,--print-gc-sections -Wl,--stats
+LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
 
 
 #-------------------------------------------------------------------------------
@@ -259,9 +287,9 @@ INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 
-CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES)
-CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES)
-ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__
+CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
 ifeq ($(VERBOSE),2)
 define NEWLINE_ONLY
@@ -334,7 +362,6 @@ $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
 	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
-	$(QUIET)$(OBJCOPY) -O ihex "$(OUTPUT_BIN)_$(1).elf" TinyG2.hex
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN)_$(1).elf"
 
@@ -376,6 +403,9 @@ $(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
 
 $(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
 	$(CP) $< $@
+
+$(PROJECT).hex: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
+	$(QUIET)$(OBJCOPY) -O ihex "$(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf" "$(PROJECT)".hex
 
 clean:
 	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf

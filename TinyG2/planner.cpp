@@ -2,8 +2,8 @@
  * planner.cpp - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2013 Rob Giseburt
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2014 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -55,7 +55,6 @@
 #include "config.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
-#include "plan_line.h"
 #include "planner.h"
 #include "stepper.h"
 #include "report.h"
@@ -96,22 +95,24 @@ void planner_init()
 // If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
 	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
 	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
-
-	mr.magic_start = MAGICNUM;
-	mr.magic_end = MAGICNUM;
-	arc.magic_start = MAGICNUM;
-	arc.magic_end = MAGICNUM;
+	planner_init_assertions();
 	mp_init_buffers();
 }
 
 /*
- * mp_assertions() - test assertions, return error code if violation exists
+ * planner_init_assertions()
+ * planner_test_assertions() - test assertions, return error code if violation exists
  */
-stat_t mp_assertions()
+void planner_init_assertions()
 {
-	if ((mb.magic_start  != MAGICNUM) || (mb.magic_end 	 != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((mr.magic_start  != MAGICNUM) || (mr.magic_end 	 != MAGICNUM)) return (STAT_MEMORY_FAULT);
-	if ((arc.magic_start != MAGICNUM) || (arc.magic_end  != MAGICNUM)) return (STAT_MEMORY_FAULT);
+	mr.magic_start = MAGICNUM;
+	mr.magic_end = MAGICNUM;
+}
+
+stat_t planner_test_assertions()
+{
+	if ((mb.magic_start  != MAGICNUM) || (mb.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
+	if ((mr.magic_start  != MAGICNUM) || (mr.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
 	return (STAT_OK);
 }
 
@@ -155,29 +156,6 @@ void mp_set_planner_position(uint8_t axis, const float position)
 void mp_set_runtime_position(uint8_t axis, const float position)
 {
 	mr.position[axis] = position;
-}
-
-/*************************************************************************
- * mp_exec_move() - execute runtime functions to prep move for steppers
- *
- *	Dequeues the buffer queue and executes the move continuations.
- *	Manages run buffers and other details
- */
-
-stat_t mp_exec_move()
-{
-	mpBuf_t *bf;
-
-	if ((bf = mp_get_run_buffer()) == NULL) return (STAT_NOOP);	// NULL means nothing's running
-
-	// Manage cycle and motion state transitions
-	// Cycle auto-start for lines only
-	if (bf->move_type == MOVE_TYPE_ALINE) {
-		if (cm.cycle_state == CYCLE_OFF) cm_cycle_start();
-		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
-	}
-	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the planner buffer
-	return(cm_alarm(STAT_INTERNAL_ERROR));	// never supposed to get here
 }
 
 /************************************************************************************
@@ -241,7 +219,7 @@ stat_t mp_dwell(float seconds)
 	}
 	bf->bf_func = _exec_dwell;					// register callback to dwell start
 	bf->gm.move_time = seconds;					// in seconds, not minutes
-	bf->move_state = MOVE_STATE_NEW;
+	bf->move_state = MOVE_NEW;
 	mp_queue_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
 }
@@ -352,7 +330,7 @@ void mp_unget_write_buffer()
 void mp_queue_write_buffer(const uint8_t move_type)
 {
 	mb.q->move_type = move_type;
-	mb.q->move_state = MOVE_STATE_NEW;
+	mb.q->move_state = MOVE_NEW;
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	st_request_exec_move();						// request a move exec if not busy
@@ -399,7 +377,7 @@ mpBuf_t * mp_get_last_buffer(void)
 	if (bf == NULL) { return(NULL);}
 
 	do {
-		if ((bp->nx->move_state == MOVE_STATE_OFF) || (bp->nx == bf)) { 
+		if ((bp->nx->move_state == MOVE_OFF) || (bp->nx == bf)) { 
 			return (bp); 
 		}
 	} while ((bp = mp_get_next_buffer(bp)) != bf);
@@ -442,6 +420,20 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
 	return(cm_alarm(PLANNER_BUFFER_POOL_SIZE));	// should never happen
 }
 #endif
+
+/****************************
+ * END OF PLANNER FUNCTIONS *
+ ****************************/
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
 
 //####################################################################################
 //##### UNIT TESTS AND DEBUG CODE ####################################################

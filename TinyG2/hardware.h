@@ -34,8 +34,8 @@
 /////// ARM VERSION ////////
 ////////////////////////////
 
-#include "motatePins.h"
-#include "motateTimers.h" // for timer_number
+#include "MotatePins.h"
+#include "MotateTimers.h" // for timer_number
 
 using namespace Motate;
 
@@ -97,7 +97,7 @@ timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
-pin_number indicator_led_pin_num = kLED_USBRXPinNumber;
+pin_number indicator_led_pin_num = kLED_USBTXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
 // Init these to input to keep them high-z
@@ -107,12 +107,12 @@ static Pin<kSPI0_SCKPinNumber>  spi_sck_pin(kInput);
 
 /**** Motate Global Pin Allocations ****/
 
-static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
-static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
-static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
-static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
-static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
-static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
+//static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
+//static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
+//static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
+//static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
+//static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
+//static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
 static OutputPin<kKinen_SyncPinNumber> kinen_sync_pin;
 
 static OutputPin<kGRBL_ResetPinNumber> grbl_reset_pin;
@@ -126,7 +126,7 @@ static OutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static OutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
 
-static InputPin<kXAxis_MaxPinNumber> axis_X_min_pin(kPullUp);
+static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
