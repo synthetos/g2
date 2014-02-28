@@ -1,8 +1,8 @@
 /*
  * http://tinkerin.gs/
  *
- * Copyright (c) 2013 Robert Giseburt
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -28,8 +28,8 @@
  *
  */
 
-#ifndef G2v9f_pinout_h
-#define G2v9f_pinout_h
+#ifndef G2v9g_pinout_h
+#define G2v9g_pinout_h
 
 #include <MotatePins.h>
 
@@ -135,9 +135,9 @@ namespace Motate {
     _MAKE_MOTATE_PIN(22, A, 'A', 21);	// Socket2_StepPinNumber
     _MAKE_MOTATE_PWM_PIN(22, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
-    _MAKE_MOTATE_PIN(23, B, 'B', 0);	// Socket2_DirPinNumber
+    _MAKE_MOTATE_PIN(23, B, 'B', 1);	// Socket2_DirPinNumber
     
-    _MAKE_MOTATE_PIN(24, B, 'B', 1);	// Socket2_EnablePinNumber
+    _MAKE_MOTATE_PIN(24, B, 'B', 0);	// Socket2_EnablePinNumber
     
     _MAKE_MOTATE_PIN(25, A, 'A', 4);	// Socket2_Microstep_0PinNumber
     
@@ -229,6 +229,12 @@ namespace Motate {
     _MAKE_MOTATE_PIN(105, A, 'A', 0);	// ZAxis_MaxPinNumber
     _MAKE_MOTATE_PWM_PIN(105, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
+    _MAKE_MOTATE_PIN(106, A, 'A', 20);	// AAxis_MinPinNumber
+    _MAKE_MOTATE_PWM_PIN(106, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    
+    _MAKE_MOTATE_PIN(107, B, 'B', 16);	// AAxis_MaxPinNumber
+    _MAKE_MOTATE_PWM_PIN(107, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    
     
     
     _MAKE_MOTATE_PIN(112, A, 'A', 5);	// Spindle_EnablePinNumber
@@ -245,18 +251,13 @@ namespace Motate {
     _MAKE_MOTATE_PIN(118, A, 'A', 19);	// LED_USBTXPinNumber
     _MAKE_MOTATE_PWM_PIN(118, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-    _MAKE_MOTATE_PIN(, B, 'B', 23);	//
-    _MAKE_MOTATE_SPI_CS_PIN(, B, 3);
-
-// Unassigned
-//    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
-//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 20);	// 
-//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 16);	// 
-//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
+    // UNASSIGNED, and disconnected:
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 23);	//
+    //    _MAKE_MOTATE_SPI_CS_PIN(, B, 3);
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
 } // namespace Motate
 
 #endif
