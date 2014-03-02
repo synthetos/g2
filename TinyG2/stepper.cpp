@@ -249,12 +249,13 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
+	float zero[] = {0,0,0,0,0,0};
+	en_set_encoders(zero);
 	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
-	en_reset_encoders();
-	for (uint8_t i=0; i<MOTORS; i++) {
-		st_pre.mot[i].prev_direction = STEP_INITIAL_DIRECTION;
-		st_run.mot[i].substep_accumulator = 0;	// will become max negative during per-motor setup;
-		st_pre.mot[i].corrected_steps = 0;
+	for (uint8_t motor=0; motor<MOTORS; motor++) {
+		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
+		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
+		st_pre.mot[motor].corrected_steps = 0;
 	}
 }
 
@@ -345,7 +346,8 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 void st_energize_motors()
 {
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		_energize_motor(motor);
+		if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED)
+			_energize_motor(motor);
 		st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
 	}
 #ifdef __ARM
@@ -374,22 +376,24 @@ stat_t st_motor_power_callback() 	// called by controller
 	for (uint8_t motor=MOTOR_1; motor<MOTORS; motor++) {
 
 		switch (st_cfg.mot[motor].power_mode) {
-//			case (MOTOR_POWER_REDUCED_WHEN_IDLE): { break;}			// FUTURE
-//			case (MOTOR_ADAPTIVE_POWER): { break;}					// FUTURE
+//			case (MOTOR_DISABLED): { _deenergize_motor(motor); break;}
+			case (MOTOR_ALWAYS_POWERED): { break;}
 			case (MOTOR_POWERED_IN_CYCLE):
-			case (MOTOR_POWERED_WHEN_MOVING): {
+			case (MOTOR_POWERED_ONLY_WHEN_MOVING): {
 				switch (st_run.mot[motor].power_state) {
 					case (MOTOR_POWER_TIMEOUT_START): {
-						st_run.mot[motor].power_systick = SysTickTimer.getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
+						st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
 						st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+//						printf ("%lu ",st_run.mot[motor].power_systick);		//+++++ DIAGNOSTIC
 						break;
 					}
 					case (MOTOR_POWER_TIMEOUT_COUNTDOWN): {
-						if (SysTickTimer.getValue() > st_run.mot[motor].power_systick ) {
+						if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
 							st_run.mot[motor].power_state = MOTOR_IDLE;
 							_deenergize_motor(motor);
 						}
 					}
+					break;
 				}
 			}
 		}
@@ -501,6 +505,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
  * st_request_exec_move()	- SW interrupt to request to execute a move
  * exec_timer interrupt		- interrupt handler for calling exec function
  */
+
 #ifdef __AVR
 void st_request_exec_move()
 {
@@ -633,7 +638,7 @@ static void _load_move()
 		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
 
 			// NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
-			//	   always operate on the last segment actually run by this motor, regardless of how many 
+			//	   always operate on the last segment actually run by this motor, regardless of how many
 			//	   segments it may have been inactive in between.
 
 			// Apply accumulator correction if the time base has changed since previous segment
@@ -643,7 +648,7 @@ static void _load_move()
 			}
 
 			// Detect direction change and if so:
-			//	- Set the direction bit in hardware. 
+			//	- Set the direction bit in hardware.
 			//	- Compensate for direction change by flipping substep accumulator value about its midpoint.
 
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
@@ -658,10 +663,10 @@ static void _load_move()
 			SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
 
 		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
-			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 				motor_1.enable.clear();									// energize motor
 				st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
-			}			
+			}
 		}
 		// accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
 		ACCUMULATE_ENCODER(MOTOR_1);
@@ -679,7 +684,7 @@ static void _load_move()
 			}
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_2, st_pre.mot[MOTOR_2].step_sign);
-		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 			motor_2.enable.clear(); st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_2);
@@ -697,7 +702,7 @@ static void _load_move()
 			}
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
-		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 			motor_3.enable.clear(); st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_3);
@@ -715,7 +720,7 @@ static void _load_move()
 			}
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
-		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 			motor_4.enable.clear(); st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_4);
@@ -733,7 +738,7 @@ static void _load_move()
 			}
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
-		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 			motor_5.enable.clear(); st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_5);
@@ -751,7 +756,7 @@ static void _load_move()
 			}
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
-		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_WHEN_MOVING) {
+		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 			motor_6.enable.clear(); st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_6);
@@ -800,9 +805,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 {
 	// trap conditions that would prevent queueing the line
 	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
-		} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
-		} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
-//		} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE_ERROR);
+	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// ever supposed to happen
+	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));			// ever supposed to happen
 	}
 
 	// setup segment parameters
@@ -816,51 +820,49 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 	// setup motor parameters
 
 	float correction_steps;
-	for (uint8_t i=0; i<MOTORS; i++) {
-
-		st_pre.mot[i].accumulator_correction_flag = false;
+	for (uint8_t motor=0; motor<MOTORS; motor++) {	// I want to remind myself that this is motors, not axes
 
 		// Skip this motor if there are no new steps. Leave all other values intact.
-		if (fp_ZERO(travel_steps[i])) { st_pre.mot[i].substep_increment = 0; continue;}
+		if (fp_ZERO(travel_steps[motor])) { st_pre.mot[motor].substep_increment = 0; continue;}
 
 		// Setup the direction, compensating for polarity.
 		// Set the step_sign which is used by the stepper ISR to accumulate step position
-		if (travel_steps[i] >= 0) {					// positive direction
-			st_pre.mot[i].direction = DIRECTION_CW ^ st_cfg.mot[i].polarity;
-			st_pre.mot[i].step_sign = 1;
+		if (travel_steps[motor] >= 0) {					// positive direction
+			st_pre.mot[motor].direction = DIRECTION_CW ^ st_cfg.mot[motor].polarity;
+			st_pre.mot[motor].step_sign = 1;
 		} else {
-			st_pre.mot[i].direction = DIRECTION_CCW ^ st_cfg.mot[i].polarity;
-			st_pre.mot[i].step_sign = -1;
+			st_pre.mot[motor].direction = DIRECTION_CCW ^ st_cfg.mot[motor].polarity;
+			st_pre.mot[motor].step_sign = -1;
 		}
 
 		// Detect segment time changes and setup the accumulator correction factor and flag.
 		// Putting this here computes the correct factor even if the motor was dormant for some
 		// number of previous moves. Correction is computed based on the last segment time actually used.
-		if (fabs(segment_time - st_pre.mot[i].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
-//			if (st_pre.mot[i].prev_segment_time != 0) {							// special case to skip first move
-			if (fp_NOT_ZERO(st_pre.mot[i].prev_segment_time)) {					// special case to skip first move
-				st_pre.mot[i].accumulator_correction_flag = true;
-				st_pre.mot[i].accumulator_correction = segment_time / st_pre.mot[i].prev_segment_time;
+
+		if (fabs(segment_time - st_pre.mot[motor].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
+			if (fp_NOT_ZERO(st_pre.mot[motor].prev_segment_time)) {					// special case to skip first move
+				st_pre.mot[motor].accumulator_correction_flag = true;
+				st_pre.mot[motor].accumulator_correction = segment_time / st_pre.mot[motor].prev_segment_time;
 			}
-			st_pre.mot[i].prev_segment_time = segment_time;
+			st_pre.mot[motor].prev_segment_time = segment_time;
 		}
 
 #ifdef __STEP_CORRECTION
 		// 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
 
-		if ((--st_pre.mot[i].correction_holdoff < 0) &&
-			(fabs(following_error[i]) > STEP_CORRECTION_THRESHOLD)) {
+		if ((--st_pre.mot[motor].correction_holdoff < 0) &&
+			(fabs(following_error[motor]) > STEP_CORRECTION_THRESHOLD)) {
 
-			st_pre.mot[i].correction_holdoff = STEP_CORRECTION_HOLDOFF;
-			correction_steps = following_error[i] * STEP_CORRECTION_FACTOR;
+			st_pre.mot[motor].correction_holdoff = STEP_CORRECTION_HOLDOFF;
+			correction_steps = following_error[motor] * STEP_CORRECTION_FACTOR;
 
 			if (correction_steps > 0) {
-				correction_steps = min3(correction_steps, fabs(travel_steps[i]), STEP_CORRECTION_MAX);
+				correction_steps = min3(correction_steps, fabs(travel_steps[motor]), STEP_CORRECTION_MAX);
 			} else {
-				correction_steps = max3(correction_steps, -fabs(travel_steps[i]), -STEP_CORRECTION_MAX);
+				correction_steps = max3(correction_steps, -fabs(travel_steps[motor]), -STEP_CORRECTION_MAX);
 			}
-			st_pre.mot[i].corrected_steps += correction_steps;
-			travel_steps[i] -= correction_steps;
+			st_pre.mot[motor].corrected_steps += correction_steps;
+			travel_steps[motor] -= correction_steps;
 		}
 #endif
 		// Compute substeb increment. The accumulator must be *exactly* the incoming
@@ -868,7 +870,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// Rounding is performed to eliminate a negative bias in the int32 conversion
 		// that results in long-term negative drift. (fabs/round order doesn't matter)
 
-		st_pre.mot[i].substep_increment = round(fabs(travel_steps[i] * DDA_SUBSTEPS));
+		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
 	}
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	return (STAT_OK);

@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		033.01	// tracking tinyg 418.04 - first of probably many commits to get to 418.04
+#define TINYG_FIRMWARE_BUILD   		033.02	// tracking tinyg 418.04 - checkpoint - compiles, basically works
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -315,7 +315,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_58 58
 #define	STAT_ERROR_59 59
 
-// Gcode and machining errors
+// Gcode and machining errors and warnings
 #define	STAT_MINIMUM_LENGTH_MOVE 60			// move is less than minimum length
 #define	STAT_MINIMUM_TIME_MOVE 61			// move is less than minimum time
 #define	STAT_GCODE_BLOCK_SKIPPED 62			// block is too short - was skipped
