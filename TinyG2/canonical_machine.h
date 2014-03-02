@@ -79,20 +79,21 @@ extern "C"{
  *	 G92 offsets. cfg has the power-on / reset gcode default values, but gm has
  *	 the operating state for the values (which may have changed).
  */
- typedef struct GCodeState {			// Gcode model state - used by model, planning and runtime
- 	uint32_t linenum;					// Gcode block line number
+typedef struct GCodeState {				// Gcode model state - used by model, planning and runtime
+	uint32_t linenum;					// Gcode block line number
 	uint8_t motion_mode;				// Group1: G0, G1, G2, G3, G38.2, G80, G81,
-										// G82, G83 G84, G85, G86, G87, G88, G89 
+										// G82, G83 G84, G85, G86, G87, G88, G89
 	float target[AXES]; 				// XYZABC where the move should go
 	float work_offset[AXES];			// offset from the work coordinate system (for reporting only)
 
 	float move_time;					// optimal time for move given axis constraints
 	float minimum_time;					// minimum time possible for move given axis constraints
-	float feed_rate; 					// F - normalized to millimeters/minute
+	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
+	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
+
 	float spindle_speed;				// in RPM
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
-	uint8_t inverse_feed_rate_mode;		// G93 TRUE = inverse, FALSE = normal (G94)
 	uint8_t select_plane;				// G17,G18,G19 - values to set plane to
 	uint8_t units_mode;					// G20,G21 - 0=inches (G20), 1 = mm (G21)
 	uint8_t coord_system;				// G54-G59 - select coordinate system 1-9
@@ -117,7 +118,6 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 	float g28_position[AXES];			// XYZABC stored machine position for G28
 	float g30_position[AXES];			// XYZABC stored machine position for G30
 
-	float inverse_feed_rate; 			// ignored if inverse_feed_rate not active
 	float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
 	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
 	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
@@ -141,17 +141,16 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 typedef struct GCodeInput {				// Gcode model inputs - meaning depends on context
 	uint8_t next_action;				// handles G modal group 1 moves & non-modals
 	uint8_t motion_mode;				// Group1: G0, G1, G2, G3, G38.2, G80, G81,
-										// G82, G83 G84, G85, G86, G87, G88, G89 
+										// G82, G83 G84, G85, G86, G87, G88, G89
 	uint8_t program_flow;				// used only by the gcode_parser
 	uint32_t linenum;					// N word or autoincrement in the model
 
 	float target[AXES]; 				// XYZABC where the move should go
 
 	float feed_rate; 					// F - normalized to millimeters/minute
-	float inverse_feed_rate; 			// ignored if inverse_feed_rate not active
 	float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
 	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
-	uint8_t inverse_feed_rate_mode;		// G93 TRUE = inverse, FALSE = normal (G94)
+	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
 	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
 	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
 	uint8_t override_enables;			// enables for feed and spoindle (GN/GF only)
@@ -247,9 +246,11 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
     uint8_t probe_state;            // 1==success, 0==failed
     float   probe_results[AXES];    // probing results
 
+	uint8_t set_origin_state;		// used to control set_origin cycles
+
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
-	uint8_t g10_persist_flag;		//.G10 changed offsets - persist them
+	uint8_t g10_persist_flag;		// G10 changed offsets - persist them
 	uint8_t feedhold_requested;		// feedhold character has been received
 	uint8_t queue_flush_requested;	// queue flush character has been received
 	uint8_t cycle_start_requested;	// cycle start character has been received (flag to end feedhold)
@@ -332,7 +333,8 @@ enum cmCycleState {
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// homing is treated as a specialized cycle
-	CYCLE_JOG						// jogging is treated as a specialized cycle
+	CYCLE_JOG,						// jogging is treated as a specialized cycle
+	CYCLE_SET_ORIGIN				// set origin to new coordinates
 };
 
 enum cmMotionState {
@@ -362,6 +364,12 @@ enum cmProbeState {					// applies to cm.probe_state
 	PROBE_WAITING					// probe is waiting to be started
 };
 
+enum cmSetOriginState {				// applies to cm.set_origin_state
+	SET_ORIGIN_OFF = 0,
+	SET_ORIGIN_SUCCEDED = 1,		// end state
+	SET_ORIGIN_WAITING				// waiting for planner to drain
+};
+
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
  * MotionMode persists across blocks (as G modal group 1)
@@ -370,7 +378,7 @@ enum cmProbeState {					// applies to cm.probe_state
 enum cmNextAction {						// these are in order to optimized CASE statement
 	NEXT_ACTION_DEFAULT = 0,			// Must be zero (invokes motion modes)
 	NEXT_ACTION_SEARCH_HOME,			// G28.2 homing cycle
-	NEXT_ACTION_SET_ABSOLUTE_ORIGIN,	// G28.3 origin set
+	NEXT_ACTION_SET_ORIGIN,				// G28.3 origin set
 	NEXT_ACTION_HOMING_NO_SET,			// G28.4 homing cycle with no coordinate setting
 	NEXT_ACTION_SET_G28_POSITION,		// G28.1 set position in abs coordingates 
 	NEXT_ACTION_GOTO_G28_POSITION,		// G28 go to machine position
@@ -459,6 +467,12 @@ enum cmDistanceMode {
 	INCREMENTAL_MODE				// G91
 };
 
+enum cmFeedRateMode {
+	INVERSE_TIME_MODE = 0,			// G93
+	UNITS_PER_MINUTE_MODE,			// G94
+	UNITS_PER_REVOLUTION_MODE		// G95 (unimplemented)
+};
+
 enum cmOriginOffset {
 	ORIGIN_OFFSET_SET=0,			// G92 - set origin offsets
 	ORIGIN_OFFSET_CANCEL,			// G92.1 - zero out origin offsets
@@ -519,11 +533,13 @@ uint8_t cm_get_units_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_select_plane(GCodeState_t *gcode_state);
 uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
-uint8_t cm_get_inverse_feed_rate_mode(GCodeState_t *gcode_state);
+uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
 uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
+
+float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
 void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode);
@@ -561,10 +577,10 @@ stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_cycle_start_no_set(void);						// G28.4
-stat_t cm_homing_callback(void);								// G28.2 main loop callback
+stat_t cm_homing_callback(void);								// G28.2/.4 main loop callback
 
-stat_t cm_set_absolute_origin(float origin[], float flags[]);	// G28.3  (special function)
-void cm_set_axis_origin(uint8_t axis, const float position);	// set absolute position (used by G28's)
+stat_t cm_set_origin_cycle_start(void);							// G28.3  (special function)
+stat_t cm_set_origin_callback(void);							// G28.3 main loop callback
 
 stat_t cm_jogging_callback(void);								// jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
@@ -578,6 +594,7 @@ stat_t cm_goto_g30_position(float target[], float flags[]);		// G30
 stat_t cm_straight_probe(float target[], float flags[]);		// G38.2
 stat_t cm_probe_callback(void);									// G38.2 main loop callback
 
+void cm_set_axis_position(uint8_t axis, const float position);	// set absolute position
 stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
 stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
@@ -588,7 +605,7 @@ stat_t cm_resume_origin_offsets(void);				 			// G92.3
 
 stat_t cm_straight_traverse(float target[], float flags[]);
 stat_t cm_set_feed_rate(float feed_rate);						// F parameter
-stat_t cm_set_inverse_feed_rate_mode(uint8_t mode);				// True= inv mode
+stat_t cm_set_feed_rate_mode(uint8_t mode);						// G93, G94, (G95 unimplemented)
 stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 stat_t cm_straight_feed(float target[], float flags[]);			// G1
 stat_t cm_dwell(float seconds);									// G4, P parameter

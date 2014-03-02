@@ -493,7 +493,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 		// Rate-limited HT' case (asymmetric) - this is relatively expensive but it's not called very often
 		float computed_velocity = bf->cruise_vmax;
-		uint8_t i=0;
+// unneeded	uint8_t i=0;
 		do {
 			bf->cruise_velocity = computed_velocity;	// initialize from previous iteration 
 			bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
@@ -505,7 +505,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = _get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
 			}
-			if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
+// unneeded	if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
 		} while ((fabs(bf->cruise_velocity - computed_velocity) / computed_velocity) > TRAPEZOID_ITERATION_ERROR_PERCENT);
 
 		// set velocity and clean up any parts that are too short 

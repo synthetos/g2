@@ -57,6 +57,7 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
+#include "encoder.h"
 #include "report.h"
 #include "util.h"
 
@@ -143,6 +144,9 @@ void mp_flush_planner()
  *	 - mr.target	- target position of runtime segment
  *	 - mr.endpoint	- final target position of runtime segment
  *
+ *  In addition to all that you have to make sure the encoder steps agree with the
+ *	runtime position.
+ *
  *	Note that position is set immediately when called and may not be not an accurate 
  *	representation of the tool position. The motors are still processing the 
  *	action and the real tool position is still close to the starting point.
@@ -156,6 +160,12 @@ void mp_set_planner_position(uint8_t axis, const float position)
 void mp_set_runtime_position(uint8_t axis, const float position)
 {
 	mr.position[axis] = position;
+
+	// reset all step counters and encoders - these are in motor space
+	float zero[] = {0,0,0,0,0,0};
+	en_set_encoders(zero);
+//	en_set_encoders(position);
+	mp_reset_step_counts();
 }
 
 /************************************************************************************

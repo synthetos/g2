@@ -210,15 +210,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 #endif
 
 		// generate the waypoints for position correction at section ends
-		for (uint8_t i=0; i<AXES; i++) {
-			mr.waypoint[SECTION_HEAD][i] = mr.position[i] + mr.unit[i] * mr.head_length;
-			mr.waypoint[SECTION_BODY][i] = mr.position[i] + mr.unit[i] * (mr.head_length + mr.body_length);
-			mr.waypoint[SECTION_TAIL][i] = mr.position[i] + mr.unit[i] * (mr.head_length + mr.body_length + mr.tail_length);
+		for (uint8_t axis=0; axis<AXES; axis++) {
+			mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.head_length;
+			mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length);
+			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
+//			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * bf->length;	// tail alternate form
 		}
-
-
 	}
-
 	// NB: from this point on the contents of the bf buffer do not affect execution
 
 	//**** main dispatcher to process segments ***
