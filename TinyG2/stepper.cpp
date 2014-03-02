@@ -827,6 +827,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 		// Setup the direction, compensating for polarity.
 		// Set the step_sign which is used by the stepper ISR to accumulate step position
+
 		if (travel_steps[motor] >= 0) {					// positive direction
 			st_pre.mot[motor].direction = DIRECTION_CW ^ st_cfg.mot[motor].polarity;
 			st_pre.mot[motor].step_sign = 1;
@@ -939,7 +940,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
 
-/*
+/* HELPERS
  * _get_motor() - helper to return motor number as an index or -1 if na
  */
 
@@ -964,8 +965,17 @@ static int8_t _get_motor(const index_t index)
 static void _set_motor_steps_per_unit(cmdObj_t *cmd) 
 {
 	uint8_t m = _get_motor(cmd->index);
-	st_cfg.mot[m].steps_per_unit = (360 / (st_cfg.mot[m].step_angle / st_cfg.mot[m].microsteps) / st_cfg.mot[m].travel_rev);
+	st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / (360 * st_cfg.mot[m].microsteps);
+	st_cfg.mot[m].steps_per_unit = 1 / st_cfg.mot[m].units_per_step;
 }
+
+/* PER-MOTOR FUNCTIONS
+ * st_set_sa() - set motor step angle
+ * st_set_tr() - set travel per motor revolution
+ * st_set_mi() - set motor microsteps
+ * st_set_pm() - set motor power mode
+ * st_set_pl() - set motor power level
+ */
 
 stat_t st_set_sa(cmdObj_t *cmd)			// motor step angle
 { 
@@ -986,15 +996,17 @@ stat_t st_set_mi(cmdObj_t *cmd)			// motor microsteps
 	if (fp_NE(cmd->value,1) && fp_NE(cmd->value,2) && fp_NE(cmd->value,4) && fp_NE(cmd->value,8)) {
 		cmd_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
-	set_ui8(cmd);							// set it anyway, even if it's unsupported
+	set_ui8(cmd);						// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(cmd);
 	_set_hw_microsteps(_get_motor(cmd->index), (uint8_t)cmd->value);
 	return (STAT_OK);
 }
 
 stat_t st_set_pm(cmdObj_t *cmd)			// motor power mode
-{ 
-	ritorno (set_01(cmd));
+{
+	if (cmd->value >= MOTOR_POWER_MODE_MAX_VALUE) return (STAT_INPUT_VALUE_UNSUPPORTED);
+	set_ui8(cmd);
+
 	if (fp_ZERO(cmd->value)) { // people asked this setting take effect immediately, hence:
 		_energize_motor(_get_motor(cmd->index));
 	} else {
@@ -1002,41 +1014,19 @@ stat_t st_set_pm(cmdObj_t *cmd)			// motor power mode
 	}
 	return (STAT_OK);
 }
-
-stat_t st_set_mt(cmdObj_t *cmd)
-{
-	st_cfg.motor_power_timeout = min(POWER_TIMEOUT_SECONDS_MAX, max(cmd->value, POWER_TIMEOUT_SECONDS_MIN));
-	return (STAT_OK);
-}
-
 /*
- * st_set_md() - disable motor power
- * st_set_me() - enable motor power
- *
- * Calling me or md with NULL will enable or disable all motors
- * Setting a value of 0 will enable or disable all motors
- * Setting a value from 1 to MOTORS will enable or disable that motor only
- */ 
-stat_t st_set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
+stat_t st_set_pl(cmdObj_t *cmd)			// motor power level
 {
-	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
-		st_deenergize_motors();
-	} else {
-		_deenergize_motor((uint8_t)cmd->value-1);
-	}
-	return (STAT_OK);
-}
+	if (cmd->value < (float)0) cmd->value = 0.000;
+	if (cmd->value > (float)1) cmd->value = 1.000;
+	set_flt(cmd);						// set the value in the motor config struct (st)
 
-stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
-{
-	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
-		st_energize_motors();
-	} else {
-		_energize_motor((uint8_t)cmd->value-1);
-	}
-	return (STAT_OK);
+	uint8_t motor = _get_motor(cmd->index);
+	st_run.mot[motor].power_level_dynamic = cmd->value;
+	_set_motor_power_level(motor, cmd->value);
+	return(STAT_OK);
 }
-
+*/
 /*
  * st_set_pl() - set motor power level
  *
@@ -1057,6 +1047,43 @@ stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 	return(STAT_OK);
 }
 
+/* GLOBAL FUNCTIONS (SYSTEM LEVEL)
+ *
+ * st_set_mt() - set motor timeout in seconds
+ * st_set_md() - disable motor power
+ * st_set_me() - enable motor power
+ *
+ * Calling me or md with NULL will enable or disable all motors
+ * Setting a value of 0 will enable or disable all motors
+ * Setting a value from 1 to MOTORS will enable or disable that motor only
+ */
+
+stat_t st_set_mt(cmdObj_t *cmd)
+{
+	st_cfg.motor_power_timeout = min(POWER_TIMEOUT_SECONDS_MAX, max(cmd->value, POWER_TIMEOUT_SECONDS_MIN));
+	return (STAT_OK);
+}
+
+stat_t st_set_md(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
+{
+	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
+		st_deenergize_motors();
+	} else {
+		_deenergize_motor((uint8_t)cmd->value-1);
+	}
+	return (STAT_OK);
+}
+
+stat_t st_set_me(cmdObj_t *cmd)	// Make sure this function is not part of initialization --> f00
+{
+	if (((uint8_t)cmd->value == 0) || (cmd->objtype == TYPE_NULL)) {
+		st_energize_motors();
+	} else {
+		_energize_motor((uint8_t)cmd->value-1);
+	}
+	return (STAT_OK);
+}
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -1075,11 +1102,11 @@ static const char fmt_md[] PROGMEM = "motors de-energized\n";
 static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f Sec\n";
 static const char fmt_0ma[] PROGMEM = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
 static const char fmt_0sa[] PROGMEM = "[%s%s] m%s step angle%20.3f%s\n";
-static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%9.3f%s\n";
+static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%10.4f%s\n";
 static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disable,1=power in cycle,2=power when moving]\n";
-static const char fmt_0pl[] PROGMEM = "[%s%s] m%s power level%18.2f [0-100]\n";
+static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
+static const char fmt_0pl[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
 
 void st_print_mt(cmdObj_t *cmd) { text_print_flt(cmd, fmt_mt);}
 void st_print_me(cmdObj_t *cmd) { text_print_nul(cmd, fmt_me);}
