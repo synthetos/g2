@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		031.15	// tracking tinyg 415.15
+#define TINYG_FIRMWARE_BUILD   		033.01	// tracking tinyg 418.04 - first of probably many commits to get to 418.04
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

@@ -97,12 +97,12 @@ uint8_t mp_get_runtime_busy()
  *	advanced. So lines that are too short to move will accumulate and get
  *	executed once the accumulated error exceeds the minimums
  */
-
+/*
 static float _get_relative_length(const float Vi, const float Vt, const float jerk)
 {
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
-
+*/
 stat_t mp_aline(const GCodeState_t *gm_line)
 {
 	mpBuf_t *bf; 						// current move pointer

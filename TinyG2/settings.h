@@ -94,7 +94,7 @@
 //#include "settings/settings_openpnp.h"				// OpenPnP
 //#include "settings/settings_othercutter.h"			// Otherfab OtherCutter
 //#include "settings/settings_othermill.h"				// Otherfab OtherMill
-#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
+//#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
 //#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
