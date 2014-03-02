@@ -215,6 +215,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 			mr.waypoint[SECTION_BODY][i] = mr.position[i] + mr.unit[i] * (mr.head_length + mr.body_length);
 			mr.waypoint[SECTION_TAIL][i] = mr.position[i] + mr.unit[i] * (mr.head_length + mr.body_length + mr.tail_length);
 		}
+
+
 	}
 
 	// NB: from this point on the contents of the bf buffer do not affect execution
