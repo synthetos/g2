@@ -376,6 +376,11 @@
 		D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A817054FDE00F2BF9B /* instance_wdt.h */; };
 		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; };
 		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; };
+		D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */; };
+		D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */; };
+		D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579F18B5C21500F8616C /* cycle_probing.cpp */; };
+		D4B657A418B5C21600F8616C /* encoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A018B5C21500F8616C /* encoder.cpp */; };
+		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 /* End PBXBuildFile section */
@@ -3201,12 +3206,18 @@
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
-		D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */ = {isa = PBXFileReference; lastKnownFileType = file; name = TinyG2_SAM3X8E_flash.elf; path = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf; sourceTree = SOURCE_ROOT; };
 		D4B6577218A562B300F8616C /* settings_pocketnc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pocketnc.h; sourceTree = "<group>"; };
 		D4B6579018B4674E00F8616C /* gShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gShield-pinout.h"; sourceTree = "<group>"; };
 		D4B6579118B4674E00F8616C /* G2v9d-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "G2v9d-pinout.h"; path = "platform/atmel_sam/board/v9_3x8c/G2v9d-pinout.h"; sourceTree = SOURCE_ROOT; };
 		D4B6579218B467AC00F8616C /* G2v9f-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9f-pinout.h"; sourceTree = "<group>"; };
 		D4B6579B18B519E300F8616C /* G2v9g-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9g-pinout.h"; sourceTree = "<group>"; };
+		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_exec.cpp; sourceTree = "<group>"; };
+		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
+		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
+		D4B657A018B5C21500F8616C /* encoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = encoder.cpp; sourceTree = "<group>"; };
+		D4B657A118B5C21500F8616C /* encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = encoder.h; sourceTree = "<group>"; };
+		D4B657A518B5C23C00F8616C /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pwm.cpp; sourceTree = "<group>"; };
+		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
@@ -3266,6 +3277,10 @@
 				D48F5A43172CB1F900D0E055 /* controller.cpp */,
 				D48F5A6F172CB21100D0E055 /* controller.h */,
 				D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */,
+				D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */,
+				D4B6579F18B5C21500F8616C /* cycle_probing.cpp */,
+				D4B657A018B5C21500F8616C /* encoder.cpp */,
+				D4B657A118B5C21500F8616C /* encoder.h */,
 				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
 				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
 				D48F5A47172CB1F900D0E055 /* hardware.cpp */,
@@ -3280,9 +3295,12 @@
 				D48F5A76172CB21100D0E055 /* persistence.h */,
 				D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */,
 				D48F5A77172CB21100D0E055 /* plan_arc.h */,
+				D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */,
 				D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */,
 				D48F5A4F172CB1FA00D0E055 /* planner.cpp */,
 				D48F5A79172CB21100D0E055 /* planner.h */,
+				D4B657A518B5C23C00F8616C /* pwm.cpp */,
+				D4B657A618B5C23C00F8616C /* pwm.h */,
 				D48F5A50172CB1FA00D0E055 /* report.cpp */,
 				D48F5A7A172CB21100D0E055 /* report.h */,
 				D48F5A7B172CB21100D0E055 /* settings.h */,
@@ -3299,10 +3317,9 @@
 				D48F5A80172CB21100D0E055 /* util.h */,
 				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
 				D48F5A81172CB21100D0E055 /* xio.h */,
-				D49EC3FB17054FDF00F2BF9B /* platform */,
-				D45710C61705334000EA19A8 /* motate */,
-				D49EC5D51705FC1100F2BF9B /* bin */,
 				D49EB8A917054FD500F2BF9B /* CMSIS */,
+				D45710C61705334000EA19A8 /* motate */,
+				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D41D13F617374B7D00D522D9 /* settings */,
 			);
 			sourceTree = "<group>";
@@ -7457,22 +7474,6 @@
 			path = atmel_sam;
 			sourceTree = "<group>";
 		};
-		D49EC5D51705FC1100F2BF9B /* bin */ = {
-			isa = PBXGroup;
-			children = (
-				D4B57636170C6DFB0070CCAE /* SAM3X8E */,
-			);
-			path = bin;
-			sourceTree = "<group>";
-		};
-		D4B57636170C6DFB0070CCAE /* SAM3X8E */ = {
-			isa = PBXGroup;
-			children = (
-				D4B57635170C6DE80070CCAE /* TinyG2_SAM3X8E_flash.elf */,
-			);
-			name = SAM3X8E;
-			sourceTree = "<group>";
-		};
 		D4C12818180F17D3002A898C /* board */ = {
 			isa = PBXGroup;
 			children = (
@@ -7535,7 +7536,7 @@
 		};
 		D4B6579718B5198D00F8616C /* TinyG2 G2V9g */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9f";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9g";
 			buildConfigurationList = D4B6579818B5198D00F8616C /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9g" */;
 			buildPhases = (
 			);
@@ -7780,6 +7781,7 @@
 				D49EC4DE17054FDF00F2BF9B /* arm_biquad_cascade_df1_init_q31.c in Sources */,
 				D49EC4DF17054FDF00F2BF9B /* arm_biquad_cascade_df1_q15.c in Sources */,
 				D49EC4E017054FDF00F2BF9B /* arm_biquad_cascade_df1_q31.c in Sources */,
+				D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */,
 				D49EC4E117054FDF00F2BF9B /* arm_biquad_cascade_df2T_f32.c in Sources */,
 				D49EC4E217054FDF00F2BF9B /* arm_biquad_cascade_df2T_init_f32.c in Sources */,
 				D49EC4E317054FDF00F2BF9B /* arm_conv_f32.c in Sources */,
@@ -7806,6 +7808,7 @@
 				D49EC4F817054FDF00F2BF9B /* arm_fir_decimate_init_f32.c in Sources */,
 				D49EC4F917054FDF00F2BF9B /* arm_fir_decimate_init_q15.c in Sources */,
 				D49EC4FA17054FDF00F2BF9B /* arm_fir_decimate_init_q31.c in Sources */,
+				D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */,
 				D49EC4FB17054FDF00F2BF9B /* arm_fir_decimate_q15.c in Sources */,
 				D49EC4FC17054FDF00F2BF9B /* arm_fir_decimate_q31.c in Sources */,
 				D49EC4FD17054FDF00F2BF9B /* arm_fir_f32.c in Sources */,
@@ -7848,6 +7851,7 @@
 				D49EC52217054FDF00F2BF9B /* arm_lms_init_f32.c in Sources */,
 				D49EC52317054FDF00F2BF9B /* arm_lms_init_q15.c in Sources */,
 				D49EC52417054FDF00F2BF9B /* arm_lms_init_q31.c in Sources */,
+				D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */,
 				D49EC52517054FDF00F2BF9B /* arm_lms_norm_f32.c in Sources */,
 				D49EC52617054FDF00F2BF9B /* arm_lms_norm_init_f32.c in Sources */,
 				D49EC52717054FDF00F2BF9B /* arm_lms_norm_init_q15.c in Sources */,
@@ -7886,6 +7890,7 @@
 				D49EC54717054FDF00F2BF9B /* arm_mean_q15.c in Sources */,
 				D49EC54817054FDF00F2BF9B /* arm_mean_q31.c in Sources */,
 				D49EC54917054FDF00F2BF9B /* arm_mean_q7.c in Sources */,
+				D4B657A418B5C21600F8616C /* encoder.cpp in Sources */,
 				D49EC54A17054FDF00F2BF9B /* arm_min_f32.c in Sources */,
 				D49EC54B17054FDF00F2BF9B /* arm_min_q15.c in Sources */,
 				D49EC54C17054FDF00F2BF9B /* arm_min_q31.c in Sources */,
@@ -7917,6 +7922,7 @@
 				D49EC56617054FDF00F2BF9B /* arm_q15_to_float.c in Sources */,
 				D49EC56717054FDF00F2BF9B /* arm_q15_to_q31.c in Sources */,
 				D49EC56817054FDF00F2BF9B /* arm_q15_to_q7.c in Sources */,
+				D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */,
 				D49EC56917054FDF00F2BF9B /* arm_q31_to_float.c in Sources */,
 				D49EC56A17054FDF00F2BF9B /* arm_q31_to_q15.c in Sources */,
 				D49EC56B17054FDF00F2BF9B /* arm_q31_to_q7.c in Sources */,
