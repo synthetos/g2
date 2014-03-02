@@ -84,7 +84,7 @@ enum sectionState {
  *	Should be experimentally adjusted if the MIN_SEGMENT_LENGTH is changed
  */
 #define NOM_SEGMENT_USEC 		((float)5000)		// nominal segment time
-#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time / minimum move time
+#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time
 #define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
@@ -122,7 +122,7 @@ enum sectionState {
  *	Macros and typedefs
  */
 
-typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine execution function
+typedef void (*cm_exec)(float[], float[]);	// callback to canonical_machine execution function
 
 /*
  *	Planner structures
@@ -142,7 +142,7 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *pv;			// static pointer to previous buffer
 	struct mpBuffer *nx;			// static pointer to next buffer
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
-	cm_exec_t cm_func;				// callback to canonical machine execution function
+	cm_exec cm_func;				// callback to canonical machine execution function
 
 	uint8_t buffer_state;			// used to manage queueing/dequeueing
 	uint8_t move_type;				// used to dispatch to run routine

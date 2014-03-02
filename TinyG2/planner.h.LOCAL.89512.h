@@ -122,7 +122,7 @@ enum sectionState {
  *	Macros and typedefs
  */
 
-typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine execution function
+typedef void (*cm_exec)(float[], float[]);	// callback to canonical_machine execution function
 
 /*
  *	Planner structures
@@ -142,7 +142,7 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *pv;			// static pointer to previous buffer
 	struct mpBuffer *nx;			// static pointer to next buffer
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
-	cm_exec_t cm_func;				// callback to canonical machine execution function
+	cm_exec cm_func;				// callback to canonical machine execution function
 
 	uint8_t buffer_state;			// used to manage queueing/dequeueing
 	uint8_t move_type;				// used to dispatch to run routine

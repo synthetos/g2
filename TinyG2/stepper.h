@@ -256,13 +256,23 @@ enum motorPowerState {					// used w/start and stop flags to sequence motor powe
 	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
 	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motors
 };
-
-enum cmStepperPowerMode {
+/*
+enum cmMotorPowerMode {
 	MOTOR_DISABLED = 0,					// motor enable is deactivated
 	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles
 	MOTOR_POWERED_WHEN_MOVING,			// motor only powered while moving - idles shortly after it's stopped - even in cycle
 	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
 	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
+};
+*/
+enum cmMotorPowerMode {
+	MOTOR_DISABLED = 0,					// motor enable is deactivated
+	MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
+	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles, de-powered out of cycle
+	MOTOR_POWERED_ONLY_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
+//	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
+//	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
+	MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
 };
 
 enum prepBufferState {
@@ -297,7 +307,8 @@ enum prepBufferState {
  *	The number is about 8.5 million for the Xmega running a 50 KHz DDA with 5 millisecond segments
  *	The ARM is about 1/2 that (or less) as the DDA clock rate is higher.
  */
-#define DDA_SUBSTEPS ((MAX_LONG * 0.10) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+//#define DDA_SUBSTEPS ((MAX_LONG * 0.97) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+#define DDA_SUBSTEPS ((MAX_LONG * 0.1) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position errors.
@@ -337,7 +348,7 @@ typedef struct cfgMotor {				// per-motor configs
 	uint8_t	motor_map;					// map motor to axis
 	uint8_t microsteps;					// microsteps to apply for each axis (ex: 8)
 	uint8_t polarity;					// 0=normal polarity, 1=reverse motor direction
-	uint8_t power_mode;					// See stepper.h for enum
+	uint8_t power_mode;					// See cmMotorPowerMode for enum
 	float power_level;					// set 0.000 to 1.000 for PMW vref setting
 	float step_angle;					// degrees per whole step (ex: 1.8)
 	float travel_rev;					// mm or deg of travel per motor revolution

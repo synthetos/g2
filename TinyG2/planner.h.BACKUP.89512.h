@@ -34,6 +34,7 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
+<<<<<<< HEAD
 
 enum moveType {				// bf->move_type values 
 	MOVE_TYPE_NULL = 0,		// null move - does a no-op
@@ -122,7 +123,97 @@ enum sectionState {
  *	Macros and typedefs
  */
 
-typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine execution function
+=======
+
+enum moveType {				// bf->move_type values 
+	MOVE_TYPE_NULL = 0,		// null move - does a no-op
+	MOVE_TYPE_ALINE,		// acceleration planned line
+	MOVE_TYPE_DWELL,		// delay with no movement
+	MOVE_TYPE_COMMAND,		// general command
+	MOVE_TYPE_TOOL,			// T command
+	MOVE_TYPE_SPINDLE_SPEED,// S command
+	MOVE_TYPE_STOP,			// program stop
+	MOVE_TYPE_END			// program end
+};
+
+enum moveState {
+	MOVE_OFF = 0,			// move inactive (MUST BE ZERO)
+	MOVE_NEW,				// general value if you need an initialization
+	MOVE_RUN,				// general run state (for non-acceleration moves)
+	MOVE_SKIP				// mark a skipped block
+};
+
+enum moveSection {
+	SECTION_HEAD = 0,		// acceleration
+	SECTION_BODY,			// cruise
+	SECTION_TAIL			// deceleration
+};
+#define SECTIONS 3
+
+enum sectionState {
+	SECTION_OFF = 0,		// section inactive
+	SECTION_NEW,			// uninitialized section
+	SECTION_1st_HALF,		// first half of S curve
+	SECTION_2nd_HALF		// second half of S curve or running a BODY (cruise)
+};
+
+/*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
+
+/* The following must apply:
+ *	  MM_PER_ARC_SEGMENT >= MIN_LINE_LENGTH >= MIN_SEGMENT_LENGTH 
+ */
+#define ARC_SEGMENT_LENGTH 		((float)0.1)		// Arc segment size (mm).(0.03)
+#define MIN_LINE_LENGTH 		((float)0.08)		// Smallest line the system can plan (mm) (0.02)
+#define MIN_SEGMENT_LENGTH 		((float)0.05)		// Smallest accel/decel segment (mm). Set to produce ~10 ms segments (0.01)
+#define MIN_LENGTH_MOVE 		((float)0.001)		// millimeters
+
+#define JERK_MULTIPLIER			((float)1000000)
+#define JERK_MATCH_PRECISION	((float)1000)		// precision to which jerk must match to be considered effectively the same
+
+/* ESTD_SEGMENT_USEC	 Microseconds per planning segment
+ *	Should be experimentally adjusted if the MIN_SEGMENT_LENGTH is changed
+ */
+#define NOM_SEGMENT_USEC 		((float)5000)		// nominal segment time
+#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time
+#define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
+#define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
+
+/* PLANNER_STARTUP_DELAY_SECONDS
+ *	Used to introduce a short dwell before planning an idle machine.
+ *  If you don;t do this the first block will always plan to zero as it will
+ *	start executing before the next block arrives from the serial port.
+ *	This causes the machine to stutter once on startup.
+ */
+#define PLANNER_STARTUP_DELAY_SECONDS ((float)0.05)	// in seconds
+
+/* PLANNER_BUFFER_POOL_SIZE
+ *	Should be at least the number of buffers requires to support optimal 
+ *	planning in the case of very short lines or arc segments. 
+ *	Suggest 12 min. Limit is 255
+ */
+#define PLANNER_BUFFER_POOL_SIZE 28
+#define PLANNER_BUFFER_HEADROOM 4			// buffers to reserve in planner before processing new input line
+
+/* Some parameters for _generate_trapezoid()
+ * TRAPEZOID_ITERATION_MAX	 				Max iterations for convergence in the HT asymmetric case.
+ * TRAPEZOID_ITERATION_ERROR_PERCENT		Error percentage for iteration convergence. As percent - 0.01 = 1%
+ * TRAPEZOID_LENGTH_FIT_TOLERANCE			Tolerance for "exact fit" for H and T cases
+ * TRAPEZOID_VELOCITY_TOLERANCE				Adaptive velocity tolerance term
+ */
+#define TRAPEZOID_ITERATION_MAX				10
+#define TRAPEZOID_ITERATION_ERROR_PERCENT	((float)0.10)
+#define TRAPEZOID_LENGTH_FIT_TOLERANCE		((float)0.0001)	// allowable mm of error in planning phase
+#define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
+
+/*
+ *	Macros and typedefs
+ */
+
+>>>>>>> refs/heads/rob
+typedef void (*cm_exec)(float[], float[]);	// callback to canonical_machine execution function
 
 /*
  *	Planner structures
@@ -142,7 +233,7 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *pv;			// static pointer to previous buffer
 	struct mpBuffer *nx;			// static pointer to next buffer
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
-	cm_exec_t cm_func;				// callback to canonical machine execution function
+	cm_exec cm_func;				// callback to canonical machine execution function
 
 	uint8_t buffer_state;			// used to manage queueing/dequeueing
 	uint8_t move_type;				// used to dispatch to run routine
