@@ -163,6 +163,30 @@ void mp_reset_step_counts()
 	}
 }
 
+/*
+ * mp_set_step_count_and_sync_encoders() - set step counters and encoders to the given position
+ *
+ *	Sets the step counters and encoders to match the position, which is in length units.
+ *	This establishes the "step grid" relative to the current machine position.
+ */
+
+void mp_set_step_count_and_sync_encoders(const float position[])
+{
+	float step_position[MOTORS];
+	ik_kinematics(position, step_position);	// convert axes to steps in floating point
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        mr.target_steps[axis] = step_position[axis];
+        mr.position_steps[axis] = step_position[axis];
+        mr.commanded_steps[axis] = step_position[axis];
+        
+        // These must be zero:
+        mr.following_error[axis] = 0;
+        st_pre.mot[axis].corrected_steps = 0;
+    }
+    
+    en_set_encoders_from_position(step_position);
+}
+
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
 	if (bf->move_state == MOVE_OFF) { return (STAT_NOOP);} 

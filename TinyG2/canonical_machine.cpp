@@ -663,9 +663,9 @@ stat_t cm_hard_alarm(stat_t status)
  * Helper functions 
  */
  /*
- * cm_set_axis_position() - set the position of a single axis in the model, planner and runtime
+ * cm_set_position() - set the position in the model, planner and runtime
  *
- *	This command sets an axis to a position provided as an argument. 
+ *	This command sets the position as provided in an argument.
  *	This is useful for setting origins for homing, probing, G28.3 and other operations.
  *
  *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -679,12 +679,14 @@ stat_t cm_hard_alarm(stat_t status)
  *	cycles (such as homing cycles) when you know there are no more moves in the planner.
  */
 
-void cm_set_axis_position(uint8_t axis, const float position)
+void cm_set_position(const float position[])
 {
-	cm.gmx.position[axis] = position;
-	cm.gm.target[axis] = position;
-	mp_set_planner_position(axis, position);
-	mp_set_runtime_position(axis, position);
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        cm.gmx.position[axis] = position[axis];
+        cm.gm.target[axis] = position[axis];
+        mp_set_planner_position(axis, position[axis]);
+    }
+	mp_set_runtime_position(position);
 }
 
 /*************************************************************

@@ -250,7 +250,7 @@ uint8_t stepper_isbusy()
 void st_reset()
 {
 	float zero[] = {0,0,0,0,0,0};
-	en_set_encoders(zero);
+	en_set_encoders_from_position(zero);
 	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;

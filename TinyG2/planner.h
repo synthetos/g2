@@ -262,7 +262,7 @@ stat_t planner_test_assertions(void);
 
 void mp_flush_planner(void);
 void mp_set_planner_position(uint8_t axis, const float position);
-void mp_set_runtime_position(uint8_t axis, const float position);
+void mp_set_runtime_position(const float position[]);
 
 void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag);
 
@@ -300,6 +300,7 @@ uint8_t mp_get_runtime_busy(void);
 // plan_exec.c functions
 void mp_init_runtime(void);
 void mp_reset_step_counts(void);
+void mp_set_step_count_and_sync_encoders(const float position[]);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 

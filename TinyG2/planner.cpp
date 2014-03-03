@@ -157,15 +157,17 @@ void mp_set_planner_position(uint8_t axis, const float position)
 	mm.position[axis] = position;
 }
 
-void mp_set_runtime_position(uint8_t axis, const float position)
+void mp_set_runtime_position(const float position[])
 {
-	mr.position[axis] = position;
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        mr.position[axis] = position[axis]; // memcpy would work
+    };
 
 	// reset all step counters and encoders - these are in motor space
-	float zero[] = {0,0,0,0,0,0};
-	en_set_encoders(zero);
-//	en_set_encoders(position);
-	mp_reset_step_counts();
+//	float zero[] = {0,0,0,0,0,0};
+//	en_set_encoders(zero);
+//	en_set_encoder(axis, position);
+	mp_set_step_count_and_sync_encoders(position);
 }
 
 /************************************************************************************

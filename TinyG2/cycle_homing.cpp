@@ -349,15 +349,23 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 	return (_set_homing_func(_homing_axis_set_zero));
 }
 
-static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
+static stat_t _homing_axis_set_zero(int8_t axis_to_set)			// set zero and finish up
 {
-	if (hm.set_coordinates != false) {						// do not set axis if in G28.4 cycle
-		cm_set_axis_position(axis, 0);
-		cm.homed[axis] = true;
-	} else {
-		cm_set_axis_position(axis, cm_get_work_position(RUNTIME, axis));
-	}
-	cm.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
+    float new_position[AXES];
+    
+    // Load the new_position, setting the axis we homed to 0 (or not, for G28.4)
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        if (axis == axis_to_set && hm.set_coordinates != false) { // do not set axis if in G28.4 cycle
+            new_position[axis] = 0;
+            cm.homed[axis] = true;
+        } else {
+            new_position[axis] = cm_get_work_position(RUNTIME, axis);
+        }
+    }
+    
+    cm_set_position(new_position);
+    
+	cm.a[axis_to_set].jerk_max = hm.saved_jerk;					// restore the max jerk value
 
     // restore the proper handling of the limit switch
     switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
@@ -628,11 +636,8 @@ stat_t cm_set_origin_callback(void)
 	if (cm.cycle_state != CYCLE_SET_ORIGIN) { return (STAT_NOOP);} 	// exit if not in an origin cycle
 	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}		// wait until planner empties
 
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(cm.gf.target[axis])) {
-			cm_set_axis_position(axis, cm.gm.target[axis]);
-		}
-	}
+    
+    cm_set_position(cm.gm.target);
 	cm.set_origin_state = SET_ORIGIN_SUCCEDED;
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	cm.cycle_state = CYCLE_OFF;										// required

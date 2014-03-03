@@ -589,7 +589,7 @@ stat_t cm_goto_g30_position(float target[], float flags[]);		// G30
 stat_t cm_straight_probe(float target[], float flags[]);		// G38.2
 stat_t cm_probe_callback(void);									// G38.2 main loop callback
 
-void cm_set_axis_position(uint8_t axis, const float position);	// set absolute position
+void cm_set_position(const float position[]);	// set absolute position
 stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
 stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91

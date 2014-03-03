@@ -127,7 +127,7 @@ void encoder_init(void);
 void encoder_init_assertions(void);
 stat_t encoder_test_assertions(void);
 
-void en_set_encoders(float axis_position[]);
+void en_set_encoders_from_position(const float axis_position[]);
 float en_read_encoder(uint8_t motor);
 
 #ifdef __cplusplus

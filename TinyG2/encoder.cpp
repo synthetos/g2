@@ -74,20 +74,18 @@ stat_t encoder_test_assertions()
 }
 
 /*
- * en_set_encoders() - set encoder values to a current position
+ * en_set_encoders() - set encoder values to the given axis_position in steps.
  *
- *	Sets the encoder_position steps to match the axis_position. 
+ *	Sets the encoder_steps to match the axis_position, which is in steps.
  *	This establishes the "step grid" relative to the current machine position. 
  *	Note that encoder_position is in integer steps, so it's not an exact 
  *	representation of machine position except if the machine is at zero. 
  */
 
-void en_set_encoders(float axis_position[])
+void en_set_encoders_from_position(const float axis_position[])
 {
-	float step_position[MOTORS];
-	ik_kinematics(axis_position, step_position);	// convert axes to steps in floating point
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		en.en[motor].encoder_steps = (int32_t)round(step_position[motor]);
+		en.en[motor].encoder_steps = (int32_t)round(axis_position[motor]);
 	}
 }
 
