@@ -31,7 +31,6 @@
 #include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
-#include "kinematics.h"
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
@@ -338,12 +337,6 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								 (bp->entry_velocity + bp->delta_vmax) );
 
 		_calculate_trapezoid(bp);
-
-		// test for optimally planned trapezoids - only need to check various exit conditions
-//		if ((bp->exit_velocity == bp->exit_vmax) || (bp->exit_velocity == bp->nx->entry_vmax) ||
-//		   ((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
-//			bp->replannable = false;
-//		}
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
 		if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||

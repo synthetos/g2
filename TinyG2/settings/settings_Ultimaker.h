@@ -51,7 +51,7 @@
 // *** settings.h overrides ***
 
 #undef SWITCH_TYPE
-#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
+#define SWITCH_TYPE 			SW_TYPE_NORMALLY_CLOSED
 
 // *** motor settings ***
 
@@ -107,7 +107,7 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			4500 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			10000 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
@@ -122,7 +122,7 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			4500
+#define Y_VELOCITY_MAX 			10000
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN 			0
 #define Y_TRAVEL_MAX 			190
@@ -143,8 +143,8 @@
 #define Z_TRAVEL_MAX			220
 #define Z_JERK_MAX				50				// 50,000,000
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define Z_SWITCH_MODE_MIN		SW_MODE_HOMING
-#define Z_SWITCH_MODE_MAX       SW_MODE_DISABLED
+#define Z_SWITCH_MODE_MIN		SW_MODE_DISABLED
+#define Z_SWITCH_MODE_MAX       SW_MODE_HOMING
 #define Z_SEARCH_VELOCITY		500
 #define Z_LATCH_VELOCITY		200
 #define Z_LATCH_BACKOFF			3

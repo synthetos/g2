@@ -150,14 +150,12 @@ void mp_flush_planner()
  *	!!!!! DO NOT CALL THESE FUNCTIONS WHILE IN A MACHINING CYCLE !!!!!
  *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- *	More specifically, do not call these functions if there are any moves in the planner.
- *	The system must be quiescent or you will introduce positional errors. This is true
- *	because the planned moves had a different reference frame than the one you are now
- *	going to set. This should only be called during initialization sequences and during
- *	cycles (such as homing cycles) when you know there are no more moves in the planner.
- *	Note that position is set immediately when called and may not be not an accurate 
- *	representation of the tool position. The motors are still processing the 
- *	action and the real tool position is still close to the starting point.
+ *	More specifically, do not call these functions if there are any moves in the planner
+ *	or if the runtime is moving. The system must be quiescent or you will introduce positional
+ *	errors. This is true because the planned / running moves have a different reference frame
+ *	than the one you are now going to set. These functions should only be called during
+ *	initialization sequences and during cycles (such as homing cycles) when you know there
+ *	are no more moves in the planner and that all motion has stopped. Use cm_get_runtime_busy() if in doubt.
  */
 /*
  * mp_set_step_counts_from_position() - set step counters and encoders to the given position
