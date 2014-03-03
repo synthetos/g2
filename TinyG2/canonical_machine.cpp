@@ -665,10 +665,11 @@ stat_t cm_hard_alarm(stat_t status)
 /*
  * Helper functions 
  */
- /*
- * cm_set_axis_position() - set the position of a single axis in the model, planner and runtime
+/*
+ * cm_set_position_by_axis()   - set the position of a single axis in the model, planner and runtime
+ * cm_set_position_by_vector() - set one or more positions in the model, planner and runtime
  *
- *	This command sets an axis to a position provided as an argument. 
+ *	These commands sets an axis/axes to a position provided as an argument. 
  *	This is useful for setting origins for homing, probing, G28.3 and other operations.
  *
  *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -682,6 +683,25 @@ stat_t cm_hard_alarm(stat_t status)
  *	cycles (such as homing cycles) when you know there are no more moves in the planner.
  */
 
+void cm_set_position_by_axis(uint8_t axis, float position)
+{
+	cm.gmx.position[axis] = position;
+	cm.gm.target[axis] = position;
+	mp_set_planner_position_by_axis(axis, position);
+}
+
+void cm_set_position_by_vector(float position[], float flags[])
+{
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		if (fp_TRUE(flags[axis])) {
+			cm.gmx.position[axis] = position[axis];
+			cm.gm.target[axis] = position[axis];
+		}
+	}
+	mp_set_planner_position_by_vector(position, flags);
+}
+
+/*
 void cm_set_axis_position(uint8_t axis, const float position)
 {
 	cm.gmx.position[axis] = position;
@@ -689,6 +709,7 @@ void cm_set_axis_position(uint8_t axis, const float position)
 	mp_set_planner_position(axis, position);
 	mp_set_runtime_position(axis, position);
 }
+*/
 
 /*************************************************************
  * Representation functions that affect the Gcode model only
@@ -1242,19 +1263,30 @@ stat_t cm_feedhold_sequencing_callback()
 
 stat_t cm_queue_flush()
 {
+	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
+
 #ifdef __AVR
 	xio_reset_usb_rx_buffers();		// flush serial queues
 #endif
+
 	mp_flush_planner();				// flush planner queue
 
 	// Note: The following uses low-level mp calls for absolute position.
 	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
 
+//+++++++++++++++++ testing
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		cm_set_position_by_axis(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
+	}
+
+/* +++++++++++++ original code
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		mp_set_planner_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 		cm.gmx.position[axis] = mp_get_runtime_absolute_position(axis);
 		cm.gm.target[axis] = cm.gmx.position[axis];
 	}
+*/
+
 	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);			// finalize now, not later
 	return (STAT_OK);

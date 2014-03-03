@@ -55,53 +55,53 @@
 
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			AXIS_X		// 1ma
-#define M1_STEP_ANGLE 			1.8			// 1sa
-#define M1_TRAVEL_PER_REV		40.64		// 1tr
-#define M1_MICROSTEPS			8			// 1mi		1,2,4,8
-#define M1_POLARITY				1			// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			1			// 1pm		TRUE=low power idle enabled
+#define M1_MOTOR_MAP 			AXIS_X					// 1ma
+#define M1_STEP_ANGLE 			1.8						// 1sa
+#define M1_TRAVEL_PER_REV		40.64					// 1tr
+#define M1_MICROSTEPS			8						// 1mi		1,2,4,8
+#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
+#define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 1mp
 
-#define M2_MOTOR_MAP	 		AXIS_B
+#define M2_MOTOR_MAP	 		AXIS_Y
 #define M2_STEP_ANGLE			1.8
-#define M2_TRAVEL_PER_REV		360
-#define M2_MICROSTEPS			8
+#define M2_TRAVEL_PER_REV		40.64
+//#define M2_MICROSTEPS			8
+#define M2_MICROSTEPS			4						// correction for v9d boards
 #define M2_POLARITY				0
-#define M2_POWER_MODE			1
+#define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			8
-#define M3_POLARITY				1
-#define M3_POWER_MODE			1
+#define M3_POLARITY				0
+#define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M4_MOTOR_MAP			AXIS_A
 #define M4_STEP_ANGLE			1.8
 #define M4_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M4_MICROSTEPS			8
 #define M4_POLARITY				0
-#define M4_POWER_MODE			1
+#define M4_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M5_MOTOR_MAP			AXIS_Y
+#define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
-#define M5_TRAVEL_PER_REV		40.64			// degrees moved per motor rev
+#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
-#define M5_POWER_MODE			1
+#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
 #define M6_STEP_ANGLE			1.8
 #define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
-#define M6_POWER_MODE			1
-
-#define M1_POWER_LEVEL			55
-#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
-#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
-#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
-#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 // *** axis settings ***
@@ -136,23 +136,6 @@
 #define Y_ZERO_BACKOFF			3
 #define Y_JERK_HOMING			Y_JERK_MAX
 
-/*
- [zam] z axis mode                 1 [standard]
- [zvm] z velocity maximum       1000.000 mm/min
- [zfr] z feedrate maximum       1000.000 mm/min
- [ztn] z travel minimum            0.000 mm
- [ztm] z travel maximum          220.000 mm
- [zjm] z jerk maximum             50 mm/min^3 * 1 million
- [zjh] z jerk homing              50 mm/min^3 * 1 million
- [zjd] z junction deviation        0.0500 mm (larger is faster)
- [zsn] z switch min                1 [0=off,1=homing,2=limit,3=limit+homing]
- [zsx] z switch max                0 [0=off,1=homing,2=limit,3=limit+homing]
- [zsv] z search velocity        1000.000 mm/min
- [zlv] z latch velocity          200.000 mm/min
- [zlb] z latch backoff             3.000 mm
- [zzb] z zero backoff              0.050 mm
-*/
-
 #define Z_AXIS_MODE				AXIS_STANDARD
 #define Z_VELOCITY_MAX			1000
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
@@ -167,7 +150,6 @@
 #define Z_LATCH_BACKOFF			3
 #define Z_ZERO_BACKOFF			0.04
 #define Z_JERK_HOMING			Z_JERK_MAX
-
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				0.609

@@ -352,10 +352,10 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
 	if (hm.set_coordinates != false) {						// do not set axis if in G28.4 cycle
-		cm_set_axis_position(axis, 0);
+		cm_set_position_by_axis(axis, 0);
 		cm.homed[axis] = true;
 	} else {
-		cm_set_axis_position(axis, cm_get_work_position(RUNTIME, axis));
+		cm_set_position_by_axis(axis, cm_get_work_position(RUNTIME, axis));
 	}
 	cm.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
 
@@ -628,11 +628,13 @@ stat_t cm_set_origin_callback(void)
 	if (cm.cycle_state != CYCLE_SET_ORIGIN) { return (STAT_NOOP);} 	// exit if not in an origin cycle
 	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}		// wait until planner empties
 
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(cm.gf.target[axis])) {
-			cm_set_axis_position(axis, cm.gm.target[axis]);
-		}
-	}
+	cm_set_position_by_vector(cm.gm.target, cm.gf.target);
+//	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+//		if (fp_TRUE(cm.gf.target[axis])) {
+//			cm_set_axis_position(axis, cm.gm.target[axis]);
+//		}
+//	}
+
 	cm.set_origin_state = SET_ORIGIN_SUCCEDED;
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	cm.cycle_state = CYCLE_OFF;										// required

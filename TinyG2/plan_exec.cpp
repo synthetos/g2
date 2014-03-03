@@ -151,7 +151,7 @@ void mp_init_runtime()
 	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
 	planner_init_assertions();
 }
-
+/*
 void mp_reset_step_counts()
 {
 	for (uint8_t i=0; i < MOTORS; i++) {
@@ -162,6 +162,7 @@ void mp_reset_step_counts()
 		st_pre.mot[i].corrected_steps = 0;
 	}
 }
+*/
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
