@@ -4,3 +4,6 @@ set height 0
 
 # Connect to the remote device
 target remote localhost:2331
+
+# Turn on history saving
+set history save on
