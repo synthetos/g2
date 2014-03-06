@@ -30,7 +30,6 @@
 #include "config.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "planner.h"
 #include "switch.h"
@@ -69,13 +68,13 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	float latch_velocity;			// latch speed as positive number
 	float latch_backoff;			// max distance to back off switch during latch phase 
 	float zero_backoff;				// distance to back off switch before setting zero
-	float max_clear_backoff;		// maximum distance of switch clearing backoffs before erring out
+//	float max_clear_backoff;		// maximum distance of switch clearing backoffs before erring out
 
 	// state saved from gcode model
-	float saved_feed_rate;			// F setting
 	uint8_t saved_units_mode;		// G20,G21 global setting
 	uint8_t saved_coord_system;		// G54 - G59 setting
 	uint8_t saved_distance_mode;	// G90,G91 global setting
+	float saved_feed_rate;			// F setting
 	float saved_jerk;				// saved and restored for each axis homed
 };
 static struct hmHomingSingleton hm;
@@ -97,6 +96,10 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status);
 static stat_t _homing_finalize_exit(int8_t axis);
 static int8_t _get_next_axis(int8_t axis);
 //static int8_t _get_next_axes(int8_t axis);
+
+/***********************************************************************************
+ **** G28.2 Homing Cycle ***********************************************************
+ ***********************************************************************************/
 
 /*****************************************************************************
  * cm_homing_cycle_start()	- G28.2 homing cycle using limit switches
@@ -156,7 +159,7 @@ stat_t cm_homing_cycle_start(void)
 	hm.saved_units_mode = cm_get_units_mode(ACTIVE_MODEL);			//cm.gm.units_mode;
 	hm.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);		//cm.gm.coord_system;
 	hm.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);	//cm.gm.distance_mode;
-	hm.saved_feed_rate = cm_get_distance_mode(ACTIVE_MODEL);		//cm.gm.feed_rate;
+	hm.saved_feed_rate = cm_get_feed_rate(ACTIVE_MODEL);			//cm.gm.feed_rate;
 
 	// set working values
 	cm_set_units_mode(MILLIMETERS);
@@ -209,7 +212,6 @@ static void _homing_trigger_feedhold(switch_t *s)
 {
     cm_request_feedhold();
 }
-
 
 static stat_t _homing_axis_start(int8_t axis)
 {
@@ -348,11 +350,10 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
 	if (hm.set_coordinates != false) {						// do not set axis if in G28.4 cycle
-		cm_set_axis_origin(axis, 0);
-		mp_set_runtime_position(axis, 0);
+		cm_set_position_by_axis(axis, 0);
 		cm.homed[axis] = true;
 	} else {
-		cm_set_axis_origin(axis, cm_get_work_position(RUNTIME, axis));
+		cm_set_position_by_axis(axis, cm_get_work_position(RUNTIME, axis));
 	}
 	cm.a[axis].jerk_max = hm.saved_jerk;					// restore the max jerk value
 
@@ -400,36 +401,6 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 }
 
 /*
-static stat_t _homing_error_exit(int8_t axis)
-{
-	// Generate the warning message. Since the error exit returns via the homing callback
-	// - and not the main controller - it requires its own display processing
-	cmd_reset_list();
-
-	if (axis == -2) {
-		cmd_add_conditional_message((const char_t *)"*** WARNING *** Homing error: Specified axis(es) cannot be homed");;
-	} else {
-		char message[CMD_MESSAGE_LEN];
-		sprintf_P(message, PSTR("*** WARNING *** Homing error: %c axis settings misconfigured"), cm_get_axis_char(axis));
-		cmd_add_conditional_message((char_t *)message);
-	}
-	cmd_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
-
-	// clean up and exit
-	mp_flush_planner(); 						// should be stopped, but in case of switch closure
-												// don't use cm_request_queue_flush() here
-	cm_set_coord_system(hm.saved_coord_system);	// restore to work coordinate system
-	cm_set_units_mode(hm.saved_units_mode);
-	cm_set_distance_mode(hm.saved_distance_mode);
-	cm_set_feed_rate(hm.saved_feed_rate);
-	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm.cycle_state = CYCLE_OFF;
-	cm_cycle_end();
-	return (STAT_HOMING_CYCLE_FAILED);			// homing state remains HOMING_NOT_HOMED
-}
-*/
-
-/*
  * _homing_finalize_exit() - helper to finalize homing
  */
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
@@ -446,28 +417,6 @@ static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to ho
 	cm_cycle_end();
 	return (STAT_OK);
 }
-
-/*
-static stat_t _homing_finalize_exit(int8_t axis)	// third part of return to home
-{
-	mp_flush_planner(); 							// should be stopped, but in case of switch closure.
-	// don't use cm_request_queue_flush() here
-
-	cm_set_coord_system(hm.saved_coord_system);		// restore to work coordinate system
-	cm_set_units_mode(hm.saved_units_mode);
-	cm_set_distance_mode(hm.saved_distance_mode);
-	cm_set_feed_rate(hm.saved_feed_rate);
-	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm.homing_state = HOMING_HOMED;
-	cm.cycle_state = CYCLE_OFF;						// required
-	cm_cycle_end();
-	//+++++ DIAGNOSTIC +++++
-	//	printf("Homed: posX: %6.3f, posY: %6.3f\n", (double)gm.position[AXIS_X], (double)gm.target[AXIS_Y]);
-	return (STAT_OK);
-}
-*/
-// _run_homing_dual_axis() - kernal routine for running homing on a dual axis
-//static stat_t _run_homing_dual_axis(int8_t axis) { return (STAT_OK);}
 
 /*
  * _get_next_axis() - return next axis in sequence based on axis in arg
@@ -540,6 +489,9 @@ static int8_t _get_next_axis(int8_t axis)
 #endif
 }
 
+// _run_homing_dual_axis() - kernal routine for running homing on a dual axis
+//static stat_t _run_homing_dual_axis(int8_t axis) { return (STAT_OK);}
+
 /*
  * _get_next_axes() - return next axis in sequence based on axis in arg
  *
@@ -593,6 +545,45 @@ int8_t _get_next_axes(int8_t axis)
 	return (STAT_OK);
 }
 */
+
+/***********************************************************************************
+ **** G28.3 Set Origin Cycle *******************************************************
+ ***********************************************************************************/
+
+/*****************************************************************************
+ * cm_set_origin_cycle_start()	- G28.3 - model, planner and queue to runtime
+ * cm_set_origin_callback()		- callback from controller
+ *
+ *	This function is called by the gcode interpreter to execute a G28.3 command.
+ *
+ *	It enters a cycle to allow the planner queue to empty, then once that's happened
+ *	it sets the axis or axes to the values in the G28.3 command.
+ */
+
+stat_t cm_set_origin_cycle_start()
+{
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		if (fp_TRUE(cm.gf.target[axis])) {
+			cm.gm.target[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(cm.gn.target[axis]);
+		}
+	}
+	cm.cycle_state = CYCLE_SET_ORIGIN;
+	cm.set_origin_state = SET_ORIGIN_WAITING;
+	return (STAT_OK);
+}
+
+stat_t cm_set_origin_callback(void)
+{
+	if (cm.cycle_state != CYCLE_SET_ORIGIN) { return (STAT_NOOP);} 	// exit if not in an origin cycle
+	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}		// wait until planner empties
+
+	cm_set_position_by_vector(cm.gm.target, cm.gf.target);
+	cm.set_origin_state = SET_ORIGIN_SUCCEDED;
+	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
+	cm.cycle_state = CYCLE_OFF;										// required
+	cm_cycle_end();
+	return (STAT_OK);
+}
 
 #ifdef __cplusplus
 }

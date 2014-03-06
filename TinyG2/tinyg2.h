@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		031.15	// tracking tinyg 415.15
+#define TINYG_FIRMWARE_BUILD   		033.07	// testing homing and some parameter changes
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -67,7 +67,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
-#define __DEBUG_STATEMENTS					// used to comment out debugging printf's
+//#define __DEBUG_STATEMENTS					// used to comment out debugging printf's
 
 #ifdef __SIMULATION
   #define __CANNED_STARTUP					// run any canned startup moves
@@ -315,7 +315,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_58 58
 #define	STAT_ERROR_59 59
 
-// Gcode and machining errors
+// Gcode and machining errors and warnings
 #define	STAT_MINIMUM_LENGTH_MOVE 60			// move is less than minimum length
 #define	STAT_MINIMUM_TIME_MOVE 61			// move is less than minimum time
 #define	STAT_GCODE_BLOCK_SKIPPED 62			// block is too short - was skipped

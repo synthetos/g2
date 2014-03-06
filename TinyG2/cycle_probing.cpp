@@ -25,18 +25,11 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "tinyg2.h"
-#include "util.h"
 #include "config.h"
-#include "json_parser.h"
-#include "text_parser.h"
-#include "gcode_parser.h"
 #include "canonical_machine.h"
-#include "planner.h"
-#include "stepper.h"
 #include "switch.h"
 #include "spindle.h"
-#include "report.h"
-#include "switch.h"
+#include "util.h"
 
 /**** Probe singleton structure ****/
 
@@ -99,7 +92,7 @@ static stat_t _set_pb_func(uint8_t (*func)());
 uint8_t cm_straight_probe(float target[], float flags[])
 {
 	// trap zero feed rate condition
-	if ((cm.gm.inverse_feed_rate_mode == false) && (fp_ZERO(cm.gm.feed_rate))) {
+	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
 		return (STAT_GCODE_FEEDRATE_ERROR);
 	}
 
@@ -173,8 +166,6 @@ static uint8_t _probing_init()
 
 	pb.saved_switch_type = sw.s[pb.probe_switch_axis][pb.probe_switch_position].type;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = SW_TYPE_NORMALLY_OPEN; // contact probes are NO switches... usually.
-
-
 
 	switch_init();										// re-init to pick up new switch settings
     cm_spindle_control(SPINDLE_OFF);
