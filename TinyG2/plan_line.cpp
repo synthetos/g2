@@ -31,7 +31,6 @@
 #include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
-#include "kinematics.h"
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
@@ -97,30 +96,35 @@ uint8_t mp_get_runtime_busy()
  *	advanced. So lines that are too short to move will accumulate and get
  *	executed once the accumulated error exceeds the minimums
  */
-/*
 static float _get_relative_length(const float Vi, const float Vt, const float jerk)
 {
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
-*/
+
+#define __NEW_JERK
+
 stat_t mp_aline(const GCodeState_t *gm_line)
 {
 	mpBuf_t *bf; 						// current move pointer
-	float exact_stop = 0;
+	float exact_stop = 0;				// preset this value OFF
 	float junction_velocity;
 
-	// trap exceptions (see Note 2 in header comments)
+	// trap error conditions
 	float length = get_axis_vector_length(gm_line->target, mm.position);
 	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
-	if (gm_line->move_time < MIN_TIME_MOVE) { return (STAT_MINIMUM_TIME_MOVE);}
+	if (gm_line->move_time < MIN_TIME_MOVE) {
+		printf("######## line%lu %f\n", gm_line->linenum, (double)gm_line->move_time);
+		return (STAT_MINIMUM_TIME_MOVE);
+	}
 
 	// get a cleared buffer and setup move variables
-	if ((bf = mp_get_write_buffer()) == NULL) { return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL));} // never supposed to fail
+	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
 
 	memcpy(&bf->gm, gm_line, sizeof(GCodeState_t));	// copy model state into planner
 	bf->bf_func = mp_exec_aline;					// register the callback to the exec function
 	bf->length = length;
 
+#ifndef __NEW_JERK
 	// compute both the unit vector and the jerk term in the same pass for efficiency
 	float diff = bf->gm.target[AXIS_X] - mm.position[AXIS_X];
 	if (fp_NOT_ZERO(diff)) {
@@ -149,6 +153,60 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	}
 	bf->jerk = sqrt(bf->jerk) * JERK_MULTIPLIER;
 
+#else	// compute unit vector	
+	float diff;
+ 	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
+		if (fp_NOT_ZERO(diff = bf->gm.target[axis] - mm.position[axis])) {
+			bf->unit[axis] = diff / length;
+		}
+	}
+
+	// find the dominant jerk term
+	float axis_relative_length = 0;
+	float longest_axis_length = 0;
+	junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);			// initial velocity
+	bf->cruise_vmax = bf->length / bf->gm.move_time;						// target velocity (requested, if not achieved)
+
+	// alternate #1 - relative length computed via subroutine
+	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
+		if (fp_NOT_ZERO(bf->unit[axis])) {
+			axis_relative_length = _get_relative_length( junction_velocity * bf->unit[axis],
+														 bf->cruise_vmax* bf->unit[axis], 
+														 cm.a[axis].jerk_max * JERK_MULTIPLIER);
+			if (axis_relative_length > longest_axis_length) {
+				longest_axis_length = axis_relative_length;
+				bf->jerk = cm.a[axis].jerk_max * JERK_MULTIPLIER;
+			}
+		}
+	}
+/*
+	// alternate #2 - relative length computed inline
+	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
+		if (fp_NOT_ZERO(bf->unit[axis])) {
+			axis_relative_length = (fabs(junction_velocity * bf->unit[axis] - bf->cruise_vmax * bf->unit[axis]) *
+									sqrt(fabs(junction_velocity * bf->unit[axis] - bf->cruise_vmax * bf->unit[axis]) /
+									cm.a[axis].jerk_max * JERK_MULTIPLIER));
+			if (axis_relative_length > longest_axis_length) {
+				longest_axis_length = axis_relative_length;
+				bf->jerk = cm.a[axis].jerk_max * JERK_MULTIPLIER;
+			}
+		}
+	}
+
+	// alternate #3 - relative length computed inline as an abbreviated expression
+	for (uint8_t axis=AXIS_X; axis<AXIS_C; axis++) {
+		if (fp_NOT_ZERO(bf->unit[axis])) {
+			axis_relative_length = fabs(bf->unit[axis] * cm.a[axis].jerk_max);
+			if (axis_relative_length > longest_axis_length) {
+				longest_axis_length = axis_relative_length;
+				bf->jerk = cm.a[axis].jerk_max * JERK_MULTIPLIER;
+			}
+		}
+	}
+*/
+#endif // __NEW_JERK
+
+	// see if you can use the previous jerk value
 	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
 		bf->cbrt_jerk = mm.prev_cbrt_jerk;
 		bf->recip_jerk = mm.prev_recip_jerk;
@@ -279,12 +337,6 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								 (bp->entry_velocity + bp->delta_vmax) );
 
 		_calculate_trapezoid(bp);
-
-		// test for optimally planned trapezoids - only need to check various exit conditions
-//		if ((bp->exit_velocity == bp->exit_vmax) || (bp->exit_velocity == bp->nx->entry_vmax) ||
-//		   ((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
-//			bp->replannable = false;
-//		}
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
 		if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||

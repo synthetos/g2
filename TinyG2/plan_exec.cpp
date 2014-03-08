@@ -46,6 +46,15 @@ static stat_t _exec_aline_tail(void);
 static stat_t _exec_aline_segment(void);
 static void _init_forward_diffs(float t0, float t2);
 
+/*************************************************************************
+ * mp_init_runtime()
+ */
+
+void mp_init_runtime()
+{
+	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
+	planner_init_assertions();
+}
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
@@ -146,47 +155,6 @@ stat_t mp_exec_move()
  *		  Builds 358 onward have only forward difference code
  */
 
-void mp_init_runtime()
-{
-	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
-	planner_init_assertions();
-}
-
-void mp_reset_step_counts()
-{
-	for (uint8_t i=0; i < MOTORS; i++) {
-		mr.target_steps[i] = 0;
-		mr.position_steps[i] = 0;
-		mr.commanded_steps[i] = 0;
-		mr.following_error[i] = 0;	
-		st_pre.mot[i].corrected_steps = 0;
-	}
-}
-
-/*
- * mp_set_step_count_and_sync_encoders() - set step counters and encoders to the given position
- *
- *	Sets the step counters and encoders to match the position, which is in length units.
- *	This establishes the "step grid" relative to the current machine position.
- */
-
-void mp_set_step_count_and_sync_encoders(const float position[])
-{
-	float step_position[MOTORS];
-	ik_kinematics(position, step_position);	// convert axes to steps in floating point
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        mr.target_steps[axis] = step_position[axis];
-        mr.position_steps[axis] = step_position[axis];
-        mr.commanded_steps[axis] = step_position[axis];
-        
-        // These must be zero:
-        mr.following_error[axis] = 0;
-        st_pre.mot[axis].corrected_steps = 0;
-    }
-    
-    en_set_encoders_from_position(step_position);
-}
-
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
 	if (bf->move_state == MOVE_OFF) { return (STAT_NOOP);} 
@@ -248,7 +216,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_HEAD) { status = _exec_aline_head();} else 
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else 
-	if (mr.move_state == MOVE_SKIP) { status = STAT_OK;}
+	if (mr.move_state == MOVE_SKIP) {
+        status = STAT_OK;
+    }
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
 
 	// Feedhold processing. Refer to canonical_machine.h for state machine
@@ -342,7 +312,9 @@ static stat_t _exec_aline_head()
 		_init_forward_diffs(mr.entry_velocity, mr.midpoint_velocity);
 
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_GCODE_BLOCK_SKIPPED);} // exit without advancing position
+		if (mr.segment_time < MIN_SEGMENT_TIME) {
+            return(STAT_GCODE_BLOCK_SKIPPED); // exit without advancing position
+        }
 		mr.section = SECTION_HEAD;
 		mr.section_state = SECTION_1st_HALF;
 	}
@@ -404,7 +376,9 @@ static stat_t _exec_aline_body()
 		mr.segment_time = mr.gm.move_time / mr.segments;
 		mr.segment_velocity = mr.cruise_velocity;
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_GCODE_BLOCK_SKIPPED);} // exit without advancing position
+		if (mr.segment_time < MIN_SEGMENT_TIME) {
+            return(STAT_GCODE_BLOCK_SKIPPED); // exit without advancing position
+        }
 		mr.section = SECTION_BODY;
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
 	}
@@ -441,7 +415,9 @@ static stat_t _exec_aline_tail()
 		_init_forward_diffs(mr.cruise_velocity, mr.midpoint_velocity);
 
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_GCODE_BLOCK_SKIPPED);} // exit without advancing position
+		if (mr.segment_time < MIN_SEGMENT_TIME) {
+            return(STAT_GCODE_BLOCK_SKIPPED); // exit without advancing position
+        }
 		mr.section = SECTION_TAIL;
 		mr.section_state = SECTION_1st_HALF;
 	}

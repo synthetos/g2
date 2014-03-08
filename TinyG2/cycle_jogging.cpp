@@ -27,12 +27,8 @@
 #include "tinyg2.h"
 #include "util.h"
 #include "config.h"
-#include "json_parser.h"
-#include "text_parser.h"
-#include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "planner.h"
-#include "switch.h"
 
 #ifdef __cplusplus
 extern "C"{

@@ -257,7 +257,7 @@ namespace Motate {
     //    _MAKE_MOTATE_SPI_CS_PIN(, B, 3);
     //
     //    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
-    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
 } // namespace Motate
 
 #endif
