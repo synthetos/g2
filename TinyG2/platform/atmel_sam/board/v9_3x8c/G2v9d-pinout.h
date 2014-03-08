@@ -260,7 +260,7 @@ namespace Motate {
 	_MAKE_MOTATE_PWM_PIN(113, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
 	_MAKE_MOTATE_PIN(114, B, 'B', 27);	// SPINDLE_PWM
-	_MAKE_MOTATE_PWM_PIN(114, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN(114, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
     
 	_MAKE_MOTATE_PIN(116, A, 'A', 20);	// Coolant_ON
 	_MAKE_MOTATE_PWM_PIN(115, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
