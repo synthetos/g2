@@ -3223,6 +3223,7 @@
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
 		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
+		E2FE0ED318C9035300C0D3C6 /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3254,6 +3255,7 @@
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D41D13F817374B7D00D522D9 /* settings_lumenlabMicRoV3.h */,
 				D41D13F917374B7D00D522D9 /* settings_othercutter.h */,
+				E2FE0ED318C9035300C0D3C6 /* settings_othermill.h */,
 				D4B6577218A562B300F8616C /* settings_pocketnc.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
 				D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */,
@@ -8098,7 +8100,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 G2V9d copy";
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Debug;
 		};
@@ -8106,7 +8108,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 G2V9d copy";
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Release;
 		};
