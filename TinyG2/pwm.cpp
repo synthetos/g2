@@ -169,13 +169,13 @@ stat_t pwm_set_freq(uint8_t chan, float freq)
 		pwm.p[chan].timer->CTRLA = TC_CLKSEL_DIV64_gc;
 	}
 #endif // __AVR
-    
+
 #ifdef __ARM
-    if (chan == PWM_1) {
-        spindle_pwm_pin.setFrequency(freq);
-    } else if (chan == PWM_2) {
-        secondary_pwm_pin.setFrequency(freq);
-    }
+	if (chan == PWM_1) {
+		spindle_pwm_pin.setFrequency(freq);
+	} else if (chan == PWM_2) {
+		secondary_pwm_pin.setFrequency(freq);
+	}
 #endif // __ARM
 
 	return (STAT_OK);
