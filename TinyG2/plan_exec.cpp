@@ -313,7 +313,8 @@ static stat_t _exec_aline_head()
 
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			return(STAT_GCODE_BLOCK_SKIPPED); // exit without advancing position
+			printf("######## MIN TIME HEAD - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
+			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
         }
 		mr.section = SECTION_HEAD;
 		mr.section_state = SECTION_1st_HALF;
@@ -377,7 +378,8 @@ static stat_t _exec_aline_body()
 		mr.segment_velocity = mr.cruise_velocity;
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
-            return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
+			printf("######## min time BODY - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
+			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
         }
 		mr.section = SECTION_BODY;
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
@@ -416,6 +418,7 @@ static stat_t _exec_aline_tail()
 
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
+			printf("######## min time TAIL - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
 			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
         }
 		mr.section = SECTION_TAIL;
