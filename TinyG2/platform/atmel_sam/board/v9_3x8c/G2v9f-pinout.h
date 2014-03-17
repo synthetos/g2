@@ -74,10 +74,11 @@ namespace Motate {
 	 * +4 - Sx_Enable      Sx_D2
 	 * +5 - Sx_MS0         Sx_D3
 	 * +6 - Sx_MS1         Sx_D4
-	 * +7 - Sx_VREF        Sx_A0
-	 
-	 * (8-9 reserved)
-     
+     * +7 - Sx_MS2         Sx_D5
+     * +8 - Sx_VREF        Sx_A0
+
+     * (9 is reserved)
+
 	 ***/
     
     

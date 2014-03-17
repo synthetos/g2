@@ -35,67 +35,67 @@
 
 namespace Motate {
     
-	// v9_3x8c - The SAM3X8C is a 100-pin sister to the SAM3X8E that is on the Due
-	// The SAM3X8C is missing port C and D.
-    
-	_MAKE_MOTATE_PORT32(A, 'A');
-	_MAKE_MOTATE_PORT32(B, 'B');
-    
-	/*** Pins that are signals and are *not* fin-specific:
-     
-	 * 0 - Serial RX0 (not on a fin)
-	 * 1 - Serial TX0 (not on a fin)
-     
-	 * 2 - I2C SDA
-	 * 3 - I2C SCL
-	 
-	 * 4 - SPI SCK
-	 * 5 - SPI MISO
-	 * 6 - SPI MOSI
-     
-	 * 7 - ~Sync
-	 
-	 * (8-9 reserved)
-     
-	 ***/
-    
-    
-	/*** Pins that *are* a kinen fin:
-	 
-	 * (Number ralative to 10*x)
-     
-	 * (smart header)
-	 * +0 - Sx_SS
-	 * +1 - Sx_Interrupt
-	 
-	 * (dumb header)
-	 * +2 - Sx_Step        Sx_D0
-	 * +3 - Sx_Direction   Sx_D1
-	 * +4 - Sx_Enable      Sx_D2
-	 * +5 - Sx_MS0         Sx_D3
-	 * +6 - Sx_MS1         Sx_D4
-     * +7 - Sx_MS2         Sx_D5
-	 * +8 - Sx_VREF        Sx_A0
-	 
-	 * (9 is reserved)
-     
-	 ***/
-    
+    // v9_3x8c - The SAM3X8C is a 100-pin sister to the SAM3X8E that is on the Due
+    // The SAM3X8C is missing port C and D.
+
+    _MAKE_MOTATE_PORT32(A, 'A');
+    _MAKE_MOTATE_PORT32(B, 'B');
+
+    /*** Pins that are signals and are *not* fin-specific:
+
+    * 0 - Serial RX0 (not on a fin)
+    * 1 - Serial TX0 (not on a fin)
+
+    * 2 - I2C SDA
+    * 3 - I2C SCL
+
+    * 4 - SPI SCK
+    * 5 - SPI MISO
+    * 6 - SPI MOSI
+
+    * 7 - ~Sync
+
+    * (8-9 reserved)
+
+    ***/
+
+
+    /*** Pins that *are* a kinen fin:
+
+    * (Number ralative to 10*x)
+
+    * (smart header)
+    * +0 - Sx_SS
+    * +1 - Sx_Interrupt
+
+    * (dumb header)
+    * +2 - Sx_Step        Sx_D0
+    * +3 - Sx_Direction   Sx_D1
+    * +4 - Sx_Enable      Sx_D2
+    * +5 - Sx_MS0         Sx_D3
+    * +6 - Sx_MS1         Sx_D4
+    * +7 - Sx_MS2         Sx_D5
+    * +8 - Sx_VREF        Sx_A0
+
+    * (9 is reserved)
+
+    ***/
+
     
     /*** Pins 100+ are board specific functions.
-     * Second (+) SPI or I2C would be here.
-     * Special non-kinen devices, LEDs, etc.
-     **/
+    * Second (+) SPI or I2C would be here.
+    * Special non-kinen devices, LEDs, etc.
+    **/
     
     
-	// First we define Motate::Pin<> object templates,
-	// then we define the pin_number aliases.
+    // First we define Motate::Pin<> object templates,
+    // then we define the pin_number aliases.
     
     
-	// All-Fin pins
+    // All-Fin pins
     
-	// Pin 0 - Serial RX - missing!
-	// Pin 1 - Serial TX - missing!
+    // Pin 0 - Serial RX - missing!
+    // Pin 1 - Serial TX - missing!
     
     _MAKE_MOTATE_PIN(2, B, 'B', 12);	// I2C0_SDAPinNumber
     _MAKE_MOTATE_PWM_PIN(2, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
@@ -223,36 +223,36 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN(118, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
     
-//    UNASSIGNED, and disconnected:
-//    _MAKE_MOTATE_PIN(, A, 'A', 4);	//
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 3);	//
-//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 17);	//
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 0);	//
-//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 25);	//
-//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 29);	//
-//    _MAKE_MOTATE_SPI_CS_PIN(, A, 1);
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 20);	//
-//    _MAKE_MOTATE_SPI_CS_PIN(, B, 1);
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
-//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
-//    
-//    _MAKE_MOTATE_PIN(, A, 'A', 20);	// 
-//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 24);	// 
-//    
-//    _MAKE_MOTATE_PIN(, B, 'B', 16);	// 
-//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
+    //UNASSIGNED, and disconnected:
+    //    _MAKE_MOTATE_PIN(, A, 'A', 4);	//
+    //
+    //    _MAKE_MOTATE_PIN(, A, 'A', 3);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
+    //
+    //    _MAKE_MOTATE_PIN(, A, 'A', 17);	//
+    //
+    //    _MAKE_MOTATE_PIN(, A, 'A', 0);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 25);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    //
+    //    _MAKE_MOTATE_PIN(, A, 'A', 29);	//
+    //    _MAKE_MOTATE_SPI_CS_PIN(, A, 1);
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 20);	//
+    //    _MAKE_MOTATE_SPI_CS_PIN(, B, 1);
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
+    //
+    //    _MAKE_MOTATE_PIN(, A, 'A', 20);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 24);	//
+    //
+    //    _MAKE_MOTATE_PIN(, B, 'B', 16);	//
+    //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
 
 } // namespace Motate
