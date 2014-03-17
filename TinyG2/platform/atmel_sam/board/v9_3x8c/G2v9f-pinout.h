@@ -127,8 +127,8 @@ namespace Motate {
     
     _MAKE_MOTATE_PIN(16, A, 'A', 24);	// Socket1_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(17, B, 'B', 17);	// Socket1_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(18, B, 'B', 17);	// Socket1_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(18, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
     
@@ -144,8 +144,8 @@ namespace Motate {
     _MAKE_MOTATE_PIN(26, B, 'B', 20);	// Socket2_Microstep_1PinNumber
     _MAKE_MOTATE_SPI_CS_PIN(26, B, 1);
     
-    _MAKE_MOTATE_PIN(27, B, 'B', 18);	// Socket2_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(27, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(28, B, 'B', 18);	// Socket2_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(28, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
     
@@ -159,8 +159,8 @@ namespace Motate {
     
     _MAKE_MOTATE_PIN(36, B, 'B', 3);	// Socket3_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(37, B, 'B', 19);	// Socket3_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(37, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(38, B, 'B', 19);	// Socket3_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(38, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
     
@@ -180,8 +180,8 @@ namespace Motate {
     
     _MAKE_MOTATE_PIN(46, B, 'B', 8);	// Socket4_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(47, A, 'A', 2);	// Socket4_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(47, Motate::Timer<1>, /*Channel:*/ A, /*Peripheral:*/ A, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(48, A, 'A', 2);	// Socket4_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(48, Motate::Timer<1>, /*Channel:*/ A, /*Peripheral:*/ A, /*Inverted:*/ false);
     
     
     
@@ -202,8 +202,8 @@ namespace Motate {
     
     _MAKE_MOTATE_PIN(56, B, 'B', 24);	// Socket5_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(57, A, 'A', 3);	// Socket5_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(57, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(58, A, 'A', 3);	// Socket5_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(58, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
     
     
     

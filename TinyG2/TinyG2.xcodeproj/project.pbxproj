@@ -3228,6 +3228,7 @@
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 		D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pendulum.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
+		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3268,6 +3269,7 @@
 				D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
+				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
 				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
 			);
 			path = settings;

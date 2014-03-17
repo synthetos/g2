@@ -74,9 +74,10 @@ namespace Motate {
 	 * +4 - Sx_Enable      Sx_D2
 	 * +5 - Sx_MS0         Sx_D3
 	 * +6 - Sx_MS1         Sx_D4
-	 * +7 - Sx_VREF        Sx_A0
+     * +7 - Sx_MS2         Sx_D5
+	 * +8 - Sx_VREF        Sx_A0
 	 
-	 * (8-9 reserved)
+	 * (9 is reserved)
      
 	 ***/
     
@@ -111,131 +112,101 @@ namespace Motate {
     _MAKE_MOTATE_PIN(6, A, 'A', 26);	// SPI0_MOSIPinNumber
     _MAKE_MOTATE_SPI_OTHER_PIN(6, A);
     
-    _MAKE_MOTATE_PIN(7, B, 'B', 15);	// Kinen_SyncPinNumber
-    _MAKE_MOTATE_PWM_PIN(7, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    
     
     
     _MAKE_MOTATE_PIN(12, A, 'A', 23);	// Socket1_StepPinNumber
     
-    _MAKE_MOTATE_PIN(13, A, 'A', 22);	// Socket1_DirPinNumber
+    _MAKE_MOTATE_PIN(13, A, 'A', 6);	// Socket1_DirPinNumber
+    _MAKE_MOTATE_PWM_PIN(13, Motate::Timer<2>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
     
-    _MAKE_MOTATE_PIN(14, A, 'A', 6);	// Socket1_EnablePinNumber
-    _MAKE_MOTATE_PWM_PIN(14, Motate::Timer<2>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(14, A, 'A', 22);	// Socket1_EnablePinNumber
     
-    _MAKE_MOTATE_PIN(15, A, 'A', 16);	// Socket1_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(15, A, 'A', 24);	// Socket1_Microstep_0PinNumber
     
-    _MAKE_MOTATE_PIN(16, A, 'A', 24);	// Socket1_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(16, A, 'A', 16);	// Socket1_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(17, B, 'B', 17);	// Socket1_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(17, B, 'B', 15);	// Socket1_Microstep_2PinNumber
+    _MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-    
-    
-    _MAKE_MOTATE_PIN(22, A, 'A', 21);	// Socket2_StepPinNumber
-    _MAKE_MOTATE_PWM_PIN(22, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-    
-    _MAKE_MOTATE_PIN(23, B, 'B', 1);	// Socket2_DirPinNumber
-    
-    _MAKE_MOTATE_PIN(24, B, 'B', 0);	// Socket2_EnablePinNumber
-    
-    _MAKE_MOTATE_PIN(25, A, 'A', 4);	// Socket2_Microstep_0PinNumber
-    
-    _MAKE_MOTATE_PIN(26, B, 'B', 20);	// Socket2_Microstep_1PinNumber
-    _MAKE_MOTATE_SPI_CS_PIN(26, B, 1);
-    
-    _MAKE_MOTATE_PIN(27, B, 'B', 18);	// Socket2_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(27, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(18, B, 'B', 17);	// Socket1_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(18, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
     
-    _MAKE_MOTATE_PIN(32, B, 'B', 4);	// Socket3_StepPinNumber
+    _MAKE_MOTATE_PIN(22, B, 'B', 0);	// Socket2_StepPinNumber
     
-    _MAKE_MOTATE_PIN(33, B, 'B', 5);	// Socket3_DirPinNumber
+    _MAKE_MOTATE_PIN(23, B, 'B', 2);	// Socket2_DirPinNumber
     
-    _MAKE_MOTATE_PIN(34, B, 'B', 6);	// Socket3_EnablePinNumber
+    _MAKE_MOTATE_PIN(24, B, 'B', 1);	// Socket2_EnablePinNumber
     
-    _MAKE_MOTATE_PIN(35, B, 'B', 2);	// Socket3_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(25, A, 'A', 28);	// Socket2_Microstep_0PinNumber
+    _MAKE_MOTATE_SPI_CS_PIN(25, A, 0);
     
-    _MAKE_MOTATE_PIN(36, B, 'B', 3);	// Socket3_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(26, A, 'A', 21);	// Socket2_Microstep_1PinNumber
+    _MAKE_MOTATE_PWM_PIN(26, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
-    _MAKE_MOTATE_PIN(37, B, 'B', 19);	// Socket3_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(37, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(27, B, 'B', 21);	// Socket2_Microstep_2PinNumber
+    _MAKE_MOTATE_SPI_CS_PIN(27, B, 2);
+    
+    _MAKE_MOTATE_PIN(28, B, 'B', 18);	// Socket2_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(28, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
     
-    _MAKE_MOTATE_PIN(40, A, 'A', 28);	// Socket4_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_SPI_CS_PIN(40, A, 0);
+    _MAKE_MOTATE_PIN(32, B, 'B', 6);	// Socket3_StepPinNumber
     
-    _MAKE_MOTATE_PIN(41, B, 'B', 22);	// Socket4_InterruptPinNumber
+    _MAKE_MOTATE_PIN(33, B, 'B', 8);	// Socket3_DirPinNumber
+    
+    _MAKE_MOTATE_PIN(34, B, 'B', 7);	// Socket3_EnablePinNumber
+    
+    _MAKE_MOTATE_PIN(35, B, 'B', 5);	// Socket3_Microstep_0PinNumber
+    
+    _MAKE_MOTATE_PIN(36, B, 'B', 4);	// Socket3_Microstep_1PinNumber
+    
+    _MAKE_MOTATE_PIN(37, B, 'B', 3);	// Socket3_Microstep_2PinNumber
+    
+    _MAKE_MOTATE_PIN(38, B, 'B', 19);	// Socket3_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(38, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    
+    
     
     _MAKE_MOTATE_PIN(42, B, 'B', 14);	// Socket4_StepPinNumber
     _MAKE_MOTATE_PWM_PIN(42, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-    _MAKE_MOTATE_PIN(43, B, 'B', 11);	// Socket4_DirPinNumber
+    _MAKE_MOTATE_PIN(43, B, 'B', 23);	// Socket4_DirPinNumber
+    _MAKE_MOTATE_SPI_CS_PIN(43, B, 3);
     
-    _MAKE_MOTATE_PIN(44, B, 'B', 10);	// Socket4_EnablePinNumber
+    _MAKE_MOTATE_PIN(44, B, 'B', 22);	// Socket4_EnablePinNumber
     
-    _MAKE_MOTATE_PIN(45, B, 'B', 9);	// Socket4_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(45, B, 'B', 11);	// Socket4_Microstep_0PinNumber
     
-    _MAKE_MOTATE_PIN(46, B, 'B', 8);	// Socket4_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(46, B, 'B', 10);	// Socket4_Microstep_1PinNumber
     
-    _MAKE_MOTATE_PIN(47, A, 'A', 2);	// Socket4_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(47, Motate::Timer<1>, /*Channel:*/ A, /*Peripheral:*/ A, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(47, B, 'B', 9);	// Socket4_Microstep_2PinNumber
     
-    
-    
-    _MAKE_MOTATE_PIN(50, A, 'A', 29);	// Socket5_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_SPI_CS_PIN(50, A, 1);
-    
-    _MAKE_MOTATE_PIN(51, A, 'A', 11);	// Socket5_InterruptPinNumber
-    
-    _MAKE_MOTATE_PIN(52, A, 'A', 10);	// Socket5_StepPinNumber
-    
-    _MAKE_MOTATE_PIN(53, A, 'A', 9);	// Socket5_DirPinNumber
-    _MAKE_MOTATE_PWM_PIN(53, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    
-    _MAKE_MOTATE_PIN(54, B, 'B', 26);	// Socket5_EnablePinNumber
-    
-    _MAKE_MOTATE_PIN(55, B, 'B', 25);	// Socket5_Microstep_0PinNumber
-    _MAKE_MOTATE_PWM_PIN(55, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-    
-    _MAKE_MOTATE_PIN(56, B, 'B', 24);	// Socket5_Microstep_1PinNumber
-    
-    _MAKE_MOTATE_PIN(57, A, 'A', 3);	// Socket5_VrefPinNumber
-    _MAKE_MOTATE_PWM_PIN(57, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(48, A, 'A', 2);	// Socket4_VrefPinNumber
+    _MAKE_MOTATE_PWM_PIN(48, Motate::Timer<1>, /*Channel:*/ A, /*Peripheral:*/ A, /*Inverted:*/ false);
     
     
     
-    _MAKE_MOTATE_PIN(60, B, 'B', 21);	// Socket6_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_SPI_CS_PIN(60, B, 2);
+    _MAKE_MOTATE_PIN(100, B, 'B', 26);	// XAxis_MinPinNumber
     
-    _MAKE_MOTATE_PIN(61, B, 'B', 7);	// Socket6_InterruptPinNumber
+    _MAKE_MOTATE_PIN(101, A, 'A', 9);	// XAxis_MaxPinNumber
+    _MAKE_MOTATE_PWM_PIN(101, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
+    _MAKE_MOTATE_PIN(102, A, 'A', 10);	// YAxis_MinPinNumber
     
+    _MAKE_MOTATE_PIN(103, A, 'A', 11);	// YAxis_MaxPinNumber
     
-    _MAKE_MOTATE_PIN(100, A, 'A', 12);	// XAxis_MinPinNumber
-    _MAKE_MOTATE_PWM_PIN(100, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PIN(104, A, 'A', 12);	// ZAxis_MinPinNumber
+    _MAKE_MOTATE_PWM_PIN(104, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
-    _MAKE_MOTATE_PIN(101, A, 'A', 13);	// XAxis_MaxPinNumber
-    _MAKE_MOTATE_PWM_PIN(101, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
+    _MAKE_MOTATE_PIN(105, A, 'A', 13);	// ZAxis_MaxPinNumber
+    _MAKE_MOTATE_PWM_PIN(105, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-    _MAKE_MOTATE_PIN(102, A, 'A', 14);	// YAxis_MinPinNumber
+    _MAKE_MOTATE_PIN(106, A, 'A', 14);	// AAxis_MinPinNumber
     
-    _MAKE_MOTATE_PIN(103, A, 'A', 15);	// YAxis_MaxPinNumber
-    
-    _MAKE_MOTATE_PIN(104, A, 'A', 17);	// ZAxis_MinPinNumber
-    
-    _MAKE_MOTATE_PIN(105, A, 'A', 0);	// ZAxis_MaxPinNumber
-    _MAKE_MOTATE_PWM_PIN(105, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-    
-    _MAKE_MOTATE_PIN(106, A, 'A', 20);	// AAxis_MinPinNumber
-    _MAKE_MOTATE_PWM_PIN(106, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-    
-    _MAKE_MOTATE_PIN(107, B, 'B', 16);	// AAxis_MaxPinNumber
-    _MAKE_MOTATE_PWM_PIN(107, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
-    
-    
+    _MAKE_MOTATE_PIN(107, A, 'A', 15);	// AAxis_MaxPinNumber
     
     _MAKE_MOTATE_PIN(112, A, 'A', 5);	// Spindle_EnablePinNumber
     
@@ -251,13 +222,39 @@ namespace Motate {
     _MAKE_MOTATE_PIN(118, A, 'A', 19);	// LED_USBTXPinNumber
     _MAKE_MOTATE_PWM_PIN(118, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-    // UNASSIGNED, and disconnected:
-    //
-    //    _MAKE_MOTATE_PIN(, B, 'B', 23);	//
-    //    _MAKE_MOTATE_SPI_CS_PIN(, B, 3);
-    //
-    //    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
-    //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
+    
+//    UNASSIGNED, and disconnected:
+//    _MAKE_MOTATE_PIN(, A, 'A', 4);	//
+//    
+//    _MAKE_MOTATE_PIN(, A, 'A', 3);	//
+//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
+//    
+//    _MAKE_MOTATE_PIN(, A, 'A', 17);	//
+//    
+//    _MAKE_MOTATE_PIN(, A, 'A', 0);	//
+//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+//    
+//    _MAKE_MOTATE_PIN(, B, 'B', 25);	//
+//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+//    
+//    _MAKE_MOTATE_PIN(, A, 'A', 29);	//
+//    _MAKE_MOTATE_SPI_CS_PIN(, A, 1);
+//    
+//    _MAKE_MOTATE_PIN(, B, 'B', 20);	//
+//    _MAKE_MOTATE_SPI_CS_PIN(, B, 1);
+//    
+//    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
+//    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
+//    
+//    _MAKE_MOTATE_PIN(, A, 'A', 20);	// 
+//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
+//    
+//    _MAKE_MOTATE_PIN(, B, 'B', 24);	// 
+//    
+//    _MAKE_MOTATE_PIN(, B, 'B', 16);	// 
+//    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false); 
+    
+
 } // namespace Motate
 
 #endif

@@ -136,8 +136,8 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(16, A, 'A',  9);	// S1_MS1, S1_D4, TX0
 	_MAKE_MOTATE_PWM_PIN(16, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-	_MAKE_MOTATE_PIN(17, A, 'A',  8);	// S1_VREF, S1_A0, RX0
-	_MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
+	_MAKE_MOTATE_PIN(18, A, 'A',  8);	// S1_VREF, S1_A0, RX0
+	_MAKE_MOTATE_PWM_PIN(18, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
     
 	// Socket 2
@@ -159,8 +159,8 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(26, B, 'B', 14);	// S2_MS1, S2_D4
 	_MAKE_MOTATE_PWM_PIN(26, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     
-	_MAKE_MOTATE_PIN(27, B, 'B', 17);	// S2_VREF, S2_A0
-	_MAKE_MOTATE_PWM_PIN(27, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+	_MAKE_MOTATE_PIN(28, B, 'B', 17);	// S2_VREF, S2_A0
+	_MAKE_MOTATE_PWM_PIN(28, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
 	// Socket 3
@@ -180,8 +180,8 @@ namespace Motate {
     
 	_MAKE_MOTATE_PIN(36, B, 'B',  7);	// S3_MS1, S3_D4
     
-	_MAKE_MOTATE_PIN(37, B, 'B', 18);	// S3_VREF, S3_A0
-	_MAKE_MOTATE_PWM_PIN(37, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+	_MAKE_MOTATE_PIN(38, B, 'B', 18);	// S3_VREF, S3_A0
+	_MAKE_MOTATE_PWM_PIN(38, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
 	// Socket 4
@@ -203,8 +203,8 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(46, B, 'B', 20);	// S4_MS1, S4_D4
     _MAKE_MOTATE_SPI_CS_PIN(46, B, 1);
     
-	_MAKE_MOTATE_PIN(47, B, 'B', 19);	// S4_VREF, S4_A0
-	_MAKE_MOTATE_PWM_PIN(47, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+	_MAKE_MOTATE_PIN(48, B, 'B', 19);	// S4_VREF, S4_A0
+	_MAKE_MOTATE_PWM_PIN(48, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     
 	// Socket 5
@@ -225,7 +225,7 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(56, A, 'A',  3);	// S5_MS1, S5_D4
 	_MAKE_MOTATE_PWM_PIN(56, Motate::Timer<1>, /*Channel:*/ B, /*Peripheral:*/ A, /*Inverted:*/ false);
     
-	_MAKE_MOTATE_PIN(57, B, 'B',  0);	// S5_VREF, S5_A0
+	_MAKE_MOTATE_PIN(58, B, 'B',  0);	// S5_VREF, S5_A0
     // NO PWM!!
     
     
