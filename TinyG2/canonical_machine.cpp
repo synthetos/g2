@@ -705,33 +705,6 @@ stat_t cm_clear(cmdObj_t *cmd)				// clear soft alarm
 /**************************************************************************
  * Representation functions that affect the Gcode model only (asynchronous)
  *
- *	This command sets the position as provided in an argument.
- *	This is useful for setting origins for homing, probing, G28.3 and other operations.
- *
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *	!!!!! DO NOT CALL THIS FUNCTION WHILE IN A MACHINING CYCLE !!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *
- *	More specifically, do not call this function if there are any moves in the planner.
- *	The system must be quiescent or you will introduce positional errors. This is true
- *	because the planned moves had a different reference frame than the one you are now
- *	going to set. This should only be called during initialization sequences and during
- *	cycles (such as homing cycles) when you know there are no more moves in the planner.
- */
-
-void cm_set_position(const float position[])
-{
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        cm.gmx.position[axis] = position[axis];
-        cm.gm.target[axis] = position[axis];
-        mp_set_planner_position(axis, position[axis]);
-    }
-	mp_set_runtime_position(position);
-}
-
-/*************************************************************
- * Representation functions that affect the Gcode model only
- *
  *	cm_select_plane()			- G17,G18,G19 select axis plane
  *	cm_set_units_mode()			- G20, G21
  *	cm_set_distance_mode()		- G90, G91

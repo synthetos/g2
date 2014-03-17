@@ -138,7 +138,7 @@ size_t write(uint8_t *buffer, size_t size)
 {
 //	SerialUSB.write(buffer, sizeof(buffer));
 	size_t written = SerialUSB.write(buffer, size);
-	spi.write(buffer, size);
+//	spi.write(buffer, size);
 	return (written);
 }
 
