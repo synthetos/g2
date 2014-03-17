@@ -94,47 +94,42 @@
 
 // *** motor settings ***
 
-#define M4_MOTOR_MAP 			AXIS_X				// 1ma
-#define M4_STEP_ANGLE 			1.8					// 1sa
-#define M4_TRAVEL_PER_REV 		5.08				// 1tr
-#define M4_MICROSTEPS 			8					// 1mi		1,2,4,8
-#define M4_POLARITY 			0					// 1po		0=normal, 1=reversed
-//#define M4_POWER_MODE 			0					// 1pm		TRUE=low power idle enabled
-#define M4_POWER_MODE 			MOTOR_POWERED_IN_CYCLE	// 1pm		See enum cmMotorPowerMode in stepper.h
-#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL	// 0=off, 100=max
+#define M1_MOTOR_MAP 			AXIS_X				// 1ma
+#define M1_STEP_ANGLE 			1.8					// 1sa
+#define M1_TRAVEL_PER_REV 		5.08				// 1tr
+#define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
+#define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
+#define M1_POWER_MODE 			MOTOR_POWERED_IN_CYCLE	// 1pm		See enum cmMotorPowerMode in stepper.h
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 0=off, 100=max
 
-#define M3_MOTOR_MAP 			AXIS_Y
-//#define M3_MOTOR_MAP 			AXIS_Z				// DIAGNOSTIC TEST ONLY!!!
-#define M3_STEP_ANGLE 			1.8
-#define M3_TRAVEL_PER_REV 		5.08				// 1tr
-#define M3_MICROSTEPS 			8
-#define M3_POLARITY 			1
-//#define M3_POWER_MODE 			0
-#define M3_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
-
-#define M2_MOTOR_MAP 			AXIS_Z
-#if HAS_CANSTACK_Z_AXIS
-#define M2_STEP_ANGLE 			15
-#define M2_TRAVEL_PER_REV 		1.27254
-#else
+#define M2_MOTOR_MAP 			AXIS_Y
 #define M2_STEP_ANGLE 			1.8
-#define M2_TRAVEL_PER_REV 		5.08
-#endif
+#define M2_TRAVEL_PER_REV 		5.08				// 1tr
 #define M2_MICROSTEPS 			8
-#define M2_POLARITY 			1
-//#define M2_POWER_MODE 			0
+#define M2_POLARITY 			0
 #define M2_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M1_MOTOR_MAP 			AXIS_A
-#define M1_STEP_ANGLE 			1.8
-#define M1_TRAVEL_PER_REV 		360					// degrees moved per motor rev
-#define M1_MICROSTEPS 			8
-#define M1_POLARITY 			1
-//#define M1_POWER_MODE 			0
-#define M1_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M3_MOTOR_MAP 			AXIS_Z
+#if HAS_CANSTACK_Z_AXIS
+#define M3_STEP_ANGLE 			15
+#define M3_TRAVEL_PER_REV 		1.27254
+#else
+#define M3_STEP_ANGLE 			1.8
+#define M3_TRAVEL_PER_REV 		5.08
+#endif
+#define M3_MICROSTEPS 			8
+#define M3_POLARITY 			1
+#define M3_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
+#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
+
+#define M4_MOTOR_MAP 			AXIS_A
+#define M4_STEP_ANGLE 			1.8
+#define M4_TRAVEL_PER_REV 		360					// degrees moved per motor rev
+#define M4_MICROSTEPS 			8
+#define M4_POLARITY 			1
+#define M4_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
+#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
@@ -182,7 +177,7 @@
 #define Y_SEARCH_VELOCITY 		(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 		5
-#define Y_ZERO_BACKOFF 			0
+#define Y_ZERO_BACKOFF 			3
 #define Y_JERK_HOMING			JERK_HOMING
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
@@ -192,7 +187,7 @@
 #define Z_VELOCITY_MAX 			X_VELOCITY_MAX
 #endif
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
-#define Z_TRAVEL_MIN			-75
+#define Z_TRAVEL_MIN			-70
 #define Z_TRAVEL_MAX 			0
 #define Z_JERK_MAX 				JERK_MAX			// 200 million
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION

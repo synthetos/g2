@@ -183,7 +183,7 @@ static void _controller_HSM()
 	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
 	DISPATCH(cm_set_origin_callback());         // G28.3 continuation
-//	DISPATCH(cm_jogging_callback());			// jog function
+	DISPATCH(cm_jogging_callback());			// jog function
 //	DISPATCH(cm_probe_callback());				// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
