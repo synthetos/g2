@@ -1,5 +1,5 @@
 /*
- * settings_default.h - default machine profile
+ * settings_pocketnc.h - machine profile for Pocket NC 5 axis tabletop machining center
  * This file is part of the TinyG2 project
  *
  * Copyright (c) 2012 - 2014 Alden S. Hart, Jr.
@@ -24,43 +24,69 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* Note: The values in this file are the default settings that are loaded
- * 		 into a virgin EEPROM, and can be changed using the config commands.
- *		 After initial load the EEPROM values (or changed values) are used.
- *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
- *		 to be changed are in tinyg.h
+/* Note: The values in this file are the default settings that are loaded on power-up 
+ *		 and can be changed using the config commands.
  */
 /***********************************************************************/
-/**** Default profile for screw driven machines ************************/
+/**** Profile for PocketNC 5 axis machining center *********************/
 /***********************************************************************/
-// NOTE: Non-machine specific systems settings have been moved to settings.h
+// NOTE: Non-machine specific systems settings can be found in settings.h
 // These may be overridden using undefs
 
-// REVISED 2/19/14 - ash
+// REVISED 3/19/14 - ash
+
+/**** PocketNC Axis COnfiguration ****
+
+	X axis is top-side table carrying the Z axis and spindle. Positive direction moves slide to rear of machine
+	Y axis is arbor lifting rotary axes. Positive direction moves rotary assembly downwards
+	Z axis moves spindle. Positive is away from rotary table (away from the work)
+	A axis is rotary table positioning B axis. Positive is counter-clockwise movement. 0 degrees is defined as B table in vertical position
+	B axis is rotary table normal to Z axis. Positive is counter-clockwise movement. 0 degrees is defined relative to work.
+*/
+
+/***** PocketNC Default Coordinate System and Homing ****
+
+	G54 the default coordinate system. G54 is set so that a G0 X0 Y0 Z0 A0 B0 will center the machine from a manually homed position
+
+	To manually home the machine perform the following:
+	 - Move X axis to maximum negative (front of machine)
+	 - Move Y axis to maximum negative (top of arbor travel)
+	 - Move Z axis to maximum positive (furthest away from B table)
+	 - Move A axis to level (flat, facing upwards, parallel to plane of table top)
+	 - Position B axis to correct starting position for the work piece mounted
+	 - Once this is complete hit the reset button or power cycle the controller
+*/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to PocketNC settings"
 
-#define JERK_MAX 				20			// yes, that's "20,000,000" mm/(min^3)
-#define JUNCTION_DEVIATION		0.05		// default value, in mm
-#define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
+#define JERK_MAX 				500					// that's 500 million mm/(min^3)
+#define JUNCTION_DEVIATION		0.05				// default value, in mm
+#define JUNCTION_ACCELERATION	100000				// centripetal acceleration around corners
+
+// **** settings.h overrides ****
+
+#undef	SWITCH_TYPE
+#define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+
+#undef	MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL		25					// default motor power level 0-100 (ARM only)
+
+#undef SR_DEFAULTS
+#define SR_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #ifndef PI
 #define PI 3.14159628
 #endif
-
-// **** settings.h overrides ****
 
 // *** motor settings ***
 
 #define M1_MOTOR_MAP 			AXIS_X					// 1ma
 #define M1_STEP_ANGLE 			1.8						// 1sa
 #define M1_TRAVEL_PER_REV		2.438					// 1tr
-#define M1_MICROSTEPS			2						// 1mi		1,2,4,8
-#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
+#define M1_MICROSTEPS			4						// 1mi		1,2,4,8
+#define M1_POLARITY				1						// 1po		0=normal, 1=reversed
+#define M1_POWER_MODE			MOTOR_ALWAYS_POWERED	// 1pm		standard
 #define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 1mp
 
 #define M2_MOTOR_MAP	 		AXIS_Y
@@ -68,15 +94,15 @@
 #define M2_TRAVEL_PER_REV		2.438
 #define M2_MICROSTEPS			4
 #define M2_POLARITY				0
-#define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M2_POWER_MODE			MOTOR_ALWAYS_POWERED
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		2.54
-#define M3_MICROSTEPS			1
-#define M3_POLARITY				0
-#define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M3_MICROSTEPS			4
+#define M3_POLARITY				1
+#define M3_POWER_MODE			MOTOR_ALWAYS_POWERED
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M4_MOTOR_MAP			AXIS_A
@@ -84,15 +110,15 @@
 #define M4_TRAVEL_PER_REV		45			// degrees moved per motor rev
 #define M4_MICROSTEPS			8
 #define M4_POLARITY				0
-#define M4_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M4_POWER_MODE			MOTOR_ALWAYS_POWERED
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
 #define M5_TRAVEL_PER_REV		45			// degrees moved per motor rev
 #define M5_MICROSTEPS			8
-#define M5_POLARITY				0
-#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M5_POLARITY				1
+#define M5_POWER_MODE			MOTOR_ALWAYS_POWERED
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
@@ -100,7 +126,7 @@
 #define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
-#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M6_POWER_MODE			MOTOR_DISABLED
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 // *** axis settings ***
@@ -110,7 +136,7 @@
 #define X_FEEDRATE_MAX 			1800				// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn
 #define X_TRAVEL_MAX 			150					// xtm		travel between switches or crashes
-#define X_JERK_MAX 				500					// xjm
+#define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
@@ -121,11 +147,11 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			600
-#define Y_FEEDRATE_MAX 			600
+#define Y_VELOCITY_MAX 			1000				// was 600
+#define Y_FEEDRATE_MAX 			1000				// was 600
 #define Y_TRAVEL_MIN			0
 #define Y_TRAVEL_MAX 			40
-#define Y_JERK_MAX 				10
+#define Y_JERK_MAX 				JERK_MAX			// was 10
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX 		SW_MODE_DISABLED
@@ -140,7 +166,7 @@
 #define Z_FEEDRATE_MAX 			1800
 #define Z_TRAVEL_MIN			0
 #define Z_TRAVEL_MAX 			96
-#define Z_JERK_MAX 				500
+#define Z_JERK_MAX 				JERK_MAX
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN 		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX 		SW_MODE_HOMING
@@ -155,7 +181,7 @@
 #define A_FEEDRATE_MAX 			3600
 #define A_TRAVEL_MIN 			-1
 #define A_TRAVEL_MAX 			-1
-#define A_JERK_MAX 				500
+#define A_JERK_MAX 				JERK_MAX
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))	// Radius to make the A/B/C motors react the same as X for testing
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING				// ...need to select Radius Mode for the axis for this to happen
@@ -171,7 +197,7 @@
 #define B_FEEDRATE_MAX 			3600
 #define B_TRAVEL_MIN 			-1
 #define B_TRAVEL_MAX 			-1
-#define B_JERK_MAX 				500
+#define B_JERK_MAX 				JERK_MAX
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))
 #define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
@@ -182,7 +208,8 @@
 #define B_ZERO_BACKOFF 			2
 #define B_JERK_HOMING			B_JERK_MAX
 
-#define C_AXIS_MODE 			AXIS_RADIUS
+#define C_AXIS_MODE 			AXIS_DISABLED
+//#define C_AXIS_MODE 			AXIS_RADIUS
 #define C_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define C_FEEDRATE_MAX 			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			-1
@@ -200,13 +227,23 @@
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
+/* Default position (see homing notes)
+*/
 #define G54_X_OFFSET -58.9		// default position
 #define G54_Y_OFFSET -63.65
 #define G54_Z_OFFSET -73.91
-#define G54_A_OFFSET 96.4
+#define G54_A_OFFSET 90.0			// was 96.4
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
 
+/*
+#define G54_X_OFFSET 0		// default position
+#define G54_Y_OFFSET 0
+#define G54_Z_OFFSET 0
+#define G54_A_OFFSET 0
+#define G54_B_OFFSET 0
+#define G54_C_OFFSET 0
+*/
 #define G55_X_OFFSET (X_TRAVEL_MAX/2)	// set to middle of table
 #define G55_Y_OFFSET (Y_TRAVEL_MAX/2)
 #define G55_Z_OFFSET 0
