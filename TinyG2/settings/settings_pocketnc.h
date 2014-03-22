@@ -44,18 +44,39 @@
 	B axis is rotary table normal to Z axis. Positive is counter-clockwise movement. 0 degrees is defined relative to work.
 */
 
-/***** PocketNC Default Coordinate System and Homing ****
+/***** Manual Homing and Default Coordinate System ****
 
 	G54 the default coordinate system. G54 is set so that a G0 X0 Y0 Z0 A0 B0 will center the machine from a manually homed position
 
-	To manually home the machine perform the following:
-	 - Move X axis to maximum negative (front of machine)
-	 - Move Y axis to maximum negative (top of arbor travel)
+	To manually home the machine perform the following in sequence:
 	 - Move Z axis to maximum positive (furthest away from B table)
-	 - Move A axis to level (flat, facing upwards, parallel to plane of table top)
+	 - Move X axis to maximum positive (rear of machine)
+	 - Move Y axis to maximum positive (bottom of arbor travel)
+	 - Position A axis to facing upwards and level, parallel to plane of table top (this can be moved manually)
 	 - Position B axis to correct starting position for the work piece mounted
-	 - Once this is complete hit the reset button or power cycle the controller
+	 
+	This Gcode sequence will find the positive limits and then home and center the machine.
+		G0 Z250							(retract Z first to avoid tool or machine damage)
+		G0 X180 Y200					(move A out of the way first)
+		G0 A200							(it's OK if the axes run to the limits of their travel and stall)
+		G28.3 X58.9 Y63.65 Z73.91 A90	(align with G54 coordinate offsets)
+		G0 X0 Y0 A0						(center machine, except for Z which depends on tool length and work center)
+
+G0 Z250
+G0 X180 Y200
+G0 A200
+G28.3 X58.9 Y63.65 Z73.91 A90
+G0 X0 Y0 A0
 */
+/* Note to self: Motor plugging is
+
+	Motor1 == 5
+	Motor2 == 2
+	Motor3 == 3
+	Motor4 == 4
+	Motor5 == 1	
+*/
+
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to PocketNC settings"
@@ -232,18 +253,10 @@
 #define G54_X_OFFSET -58.9		// default position
 #define G54_Y_OFFSET -63.65
 #define G54_Z_OFFSET -73.91
-#define G54_A_OFFSET 90.0			// was 96.4
+#define G54_A_OFFSET -90.0		// was 96.4
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
 
-/*
-#define G54_X_OFFSET 0		// default position
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-*/
 #define G55_X_OFFSET (X_TRAVEL_MAX/2)	// set to middle of table
 #define G55_Y_OFFSET (Y_TRAVEL_MAX/2)
 #define G55_Z_OFFSET 0
