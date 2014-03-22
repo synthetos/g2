@@ -256,15 +256,7 @@ enum motorPowerState {					// used w/start and stop flags to sequence motor powe
 	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
 	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motors
 };
-/*
-enum cmMotorPowerMode {
-	MOTOR_DISABLED = 0,					// motor enable is deactivated
-	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles
-	MOTOR_POWERED_WHEN_MOVING,			// motor only powered while moving - idles shortly after it's stopped - even in cycle
-	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
-	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
-};
-*/
+
 enum cmMotorPowerMode {
 	MOTOR_DISABLED = 0,					// motor enable is deactivated
 	MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
@@ -410,7 +402,7 @@ typedef struct stPrepSingleton {
 	uint16_t magic_start;				// magic number to test memory integrity
 	volatile uint8_t exec_state;		// move execution state
 	uint8_t move_type;					// move type
-	uint8_t move_ready;					// flag indicating move is ready for loading
+	uint8_t segment_ready;				// flag indicating the next segment is ready for loading
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move

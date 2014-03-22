@@ -189,7 +189,8 @@ void stepper_init()
 	// setup software interrupt exec timer & initial condition
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
-
+	st_pre.segment_ready = false;						// used for diagnostics only
+	
 	// setup motor power levels and apply power level to stepper drivers
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
@@ -621,10 +622,10 @@ static void _load_move()
 		return;
 	}
 
-	if (st_pre.move_ready != true) {									// trap if prep is not complete
-		printf("######## LOADER - MOVE NOT READY\n");
+	if (st_pre.segment_ready != true) {									// trap if prep is not complete
+		printf("######## LOADER - SEGMENT NOT READY\n");
 	}
-	st_pre.move_ready = false;
+	st_pre.segment_ready = false;
 
 	// handle aline() loads first (most common case)  NB: there are no more lines, only alines()
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
@@ -882,7 +883,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
 	}
 	st_pre.move_type = MOVE_TYPE_ALINE;
-	st_pre.move_ready = true;
+	st_pre.segment_ready = true;
 	return (STAT_OK);
 }
 

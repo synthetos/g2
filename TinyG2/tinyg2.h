@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		036.01	// Changed power level to 0.00 - 1.00 (from percent). Old 0-100 is still accepted (at least for a while)
+#define TINYG_FIRMWARE_BUILD   		036.02	// Initialized segment_ready variable
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
