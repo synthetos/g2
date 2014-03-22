@@ -59,7 +59,7 @@
 #define M1_STEP_ANGLE 			1.8						// 1sa
 #define M1_TRAVEL_PER_REV		40.64					// 1tr
 #define M1_MICROSTEPS			8						// 1mi		1,2,4,8
-#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
+#define M1_POLARITY				1						// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
 #define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 1mp
 
@@ -76,7 +76,7 @@
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			8
-#define M3_POLARITY				0
+#define M3_POLARITY				1
 #define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
@@ -107,7 +107,7 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			10000 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			40000 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
@@ -122,7 +122,7 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			10000
+#define Y_VELOCITY_MAX 			40000
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN 			0
 #define Y_TRAVEL_MAX 			190

@@ -283,7 +283,8 @@ enum prepBufferState {
 // Stepper power management settings (applicable to ARM only)
 #define Vcc	3.3							// volts
 #define MaxVref	2.25					// max vref for driver circuit. Our ckt is 2.25 volts
-#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
+//#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
+#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // value between 0 and <1
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define POWER_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!

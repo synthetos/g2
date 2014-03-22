@@ -1039,10 +1039,26 @@ stat_t st_set_pl(cmdObj_t *cmd)			// motor power level
 /*
  * st_set_pl() - set motor power level
  *
- *	Input value may vary from 0 to 100. The setting is scaled to allowable PWM range.
+ *	Input value may vary from 0.000 to 1.000 The setting is scaled to allowable PWM range.
  *	This function sets both the scaled and dynamic power levels, and applies the 
  *	scaled value to the vref.
  */ 
+stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
+{
+	if (cmd->value < (float)0.0) cmd->value = 0.0;
+	if (cmd->value > (float)1.0) {
+		if (cmd->value > (float)100) cmd->value = 1;
+ 		cmd->value /= 100;		// accommodate old 0-100 inputs
+	}
+	set_flt(cmd);	// set power_setting value in the motor config struct (st)
+	
+	uint8_t motor = _get_motor(cmd->index);
+	st_cfg.mot[motor].power_level_scaled = (cmd->value * POWER_LEVEL_SCALE_FACTOR);
+	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
+	_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
+	return(STAT_OK);
+}
+/*
 stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 {
 	if (cmd->value < (float)0) cmd->value = 0;
@@ -1055,6 +1071,7 @@ stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 	_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
 	return(STAT_OK);
 }
+*/
 
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
