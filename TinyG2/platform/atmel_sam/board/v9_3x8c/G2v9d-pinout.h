@@ -264,7 +264,7 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN(114, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     _MAKE_MOTATE_PIN(116, A, 'A', 20);	// Coolant_ON
-    _MAKE_MOTATE_PWM_PIN(115, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN(116, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
     _MAKE_MOTATE_PIN(117, A, 'A',  5);	// USB_RX_LED
     
