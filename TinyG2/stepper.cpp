@@ -190,7 +190,7 @@ void stepper_init()
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
 	st_pre.segment_ready = false;						// used for diagnostics only
-	
+
 	// setup motor power levels and apply power level to stepper drivers
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);

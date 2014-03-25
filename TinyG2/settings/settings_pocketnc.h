@@ -59,13 +59,13 @@
 		G0 Z250							(retract Z first to avoid tool or machine damage)
 		G0 X180 Y200					(move A out of the way first)
 		G0 A200							(it's OK if the axes run to the limits of their travel and stall)
-		G28.3 X58.9 Y63.65 Z73.91 A90	(align with G54 coordinate offsets)
+		G28.3 X58.9 Y63.65 Z76.2 A90	(align with G54 coordinate offsets)
 		G0 X0 Y0 A0						(center machine, except for Z which depends on tool length and work center)
 
 G0 Z250
 G0 X180 Y200
 G0 A200
-G28.3 X58.9 Y63.65 Z73.91 A90
+G28.3 X58.9 Y63.65 Z76.2 A90
 G0 X0 Y0 A0
 */
 /* Note to self: Motor plugging is
@@ -91,7 +91,7 @@ G0 X0 Y0 A0
 #define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 
 #undef	MOTOR_POWER_LEVEL
-#define MOTOR_POWER_LEVEL		25					// default motor power level 0-100 (ARM only)
+#define MOTOR_POWER_LEVEL		0.25				// default motor power level 0.00 - 1.00 (ARM only)
 
 #undef SR_DEFAULTS
 #define SR_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
@@ -252,7 +252,7 @@ G0 X0 Y0 A0
 */
 #define G54_X_OFFSET -58.9		// default position
 #define G54_Y_OFFSET -63.65
-#define G54_Z_OFFSET -73.91
+#define G54_Z_OFFSET -76.2
 #define G54_A_OFFSET -90.0		// was 96.4
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
