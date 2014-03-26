@@ -104,7 +104,7 @@ namespace Motate {
 	pin_number kSocket3_EnablePinNumber         = 34;
 	pin_number kSocket3_Microstep_0PinNumber    = 35;
 	pin_number kSocket3_Microstep_1PinNumber    = 36;
-	pin_number kSocket3_Microstep_3PinNumber    = 37;
+	pin_number kSocket3_Microstep_2PinNumber    = 37;
 	pin_number kSocket3_VrefPinNumber           = 38;
     
 	pin_number kSocket4_SPISlaveSelectPinNumber = 40;
@@ -161,7 +161,9 @@ namespace Motate {
 	pin_number kLED_USBRXPinNumber              = 117;
 	pin_number kLED_USBTXPinNumber              = 118;
     
-    
+    pin_number kDebug1_PinNumber                =  -1;
+    pin_number kDebug2_PinNumber                =  -1;
+
 	// GRBL / gShield compatibility pins -- Due board ONLY
     
 	pin_number kGRBL_ResetPinNumber             =  -1;

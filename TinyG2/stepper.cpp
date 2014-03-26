@@ -75,6 +75,7 @@ template<pin_number step_num,			// Setup a stepper template to hold our pins
 		 pin_number enable_num, 
 		 pin_number ms0_num, 
 		 pin_number ms1_num, 
+         pin_number ms2_num,
 		 pin_number vref_num>
 
 struct Stepper {
@@ -85,6 +86,7 @@ struct Stepper {
 	OutputPin<enable_num> enable;
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
+	OutputPin<ms2_num> ms2;
 	PWMOutputPin<vref_num> vref;
 
 	/* stepper default values */
@@ -98,10 +100,12 @@ struct Stepper {
 	void setMicrosteps(const uint8_t microsteps)
 	{
 		switch (microsteps) {
-			case (1): { ms1=0; ms0=0; break; }
-			case (2): { ms1=0; ms0=1; break; }
-			case (4): { ms1=1; ms0=0; break; }
-			case (8): { ms1=1; ms0=1; break; }
+			case ( 1): { ms2=0; ms1=0; ms0=0; break; }
+			case ( 2): { ms2=0; ms1=0; ms0=1; break; }
+			case ( 4): { ms2=0; ms1=1; ms0=0; break; }
+			case ( 8): { ms2=0; ms1=1; ms0=1; break; }
+			case (16): { ms2=1; ms1=0; ms0=0; break; }
+			case (32): { ms2=1; ms1=0; ms0=1; break; }
 		}
 	};
 
@@ -119,6 +123,7 @@ Stepper<kSocket1_StepPinNumber,
 		kSocket1_EnablePinNumber,
 		kSocket1_Microstep_0PinNumber,
 		kSocket1_Microstep_1PinNumber,
+        kSocket1_Microstep_2PinNumber,
 		kSocket1_VrefPinNumber> motor_1;
 
 Stepper<kSocket2_StepPinNumber,
@@ -126,6 +131,7 @@ Stepper<kSocket2_StepPinNumber,
 		kSocket2_EnablePinNumber,
 		kSocket2_Microstep_0PinNumber,
 		kSocket2_Microstep_1PinNumber,
+        kSocket2_Microstep_2PinNumber,
 		kSocket2_VrefPinNumber> motor_2;
 
 Stepper<kSocket3_StepPinNumber,
@@ -133,6 +139,7 @@ Stepper<kSocket3_StepPinNumber,
 		kSocket3_EnablePinNumber,
 		kSocket3_Microstep_0PinNumber,
 		kSocket3_Microstep_1PinNumber,
+        kSocket3_Microstep_2PinNumber,
 		kSocket3_VrefPinNumber> motor_3;
 
 Stepper<kSocket4_StepPinNumber,
@@ -140,6 +147,7 @@ Stepper<kSocket4_StepPinNumber,
 		kSocket4_EnablePinNumber,
 		kSocket4_Microstep_0PinNumber,
 		kSocket4_Microstep_1PinNumber,
+        kSocket4_Microstep_2PinNumber,
 		kSocket4_VrefPinNumber> motor_4;
 
 Stepper<kSocket5_StepPinNumber,
@@ -147,6 +155,7 @@ Stepper<kSocket5_StepPinNumber,
 		kSocket5_EnablePinNumber,
 		kSocket5_Microstep_0PinNumber,
 		kSocket5_Microstep_1PinNumber,
+        kSocket5_Microstep_2PinNumber,
 		kSocket5_VrefPinNumber> motor_5;
 		
 Stepper<kSocket6_StepPinNumber,
@@ -154,6 +163,7 @@ Stepper<kSocket6_StepPinNumber,
 		kSocket6_EnablePinNumber,
 		kSocket6_Microstep_0PinNumber,
 		kSocket6_Microstep_1PinNumber,
+        kSocket6_Microstep_2PinNumber,
 		kSocket6_VrefPinNumber> motor_6;
 
 #endif // __ARM
