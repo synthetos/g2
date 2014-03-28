@@ -652,7 +652,9 @@ namespace Motate {
 				test_value = masterClock / divisors[divisor_index];
 			}
 
-			pwmChan()->PWM_CMR = (divisor_index & 0xff) | (mode == kPWMCenterAligned ? PWM_CMR_CALG : 0);
+			pwmChan()->PWM_CMR = (divisor_index & 0xff) | (mode == kPWMCenterAligned ? PWM_CMR_CALG : 0) |
+              /* Preserve inversion: */(pwmChan()->PWM_CMR & PWM_CMR_CPOL);
+
 			// ToDo: Polarity setttings, Dead-Time control, Counter events
 
 			int32_t newTop = test_value / frequency;

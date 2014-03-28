@@ -494,7 +494,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			INCREMENT_ENCODER(MOTOR_6);
 		}
 
-	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
+	} else if (interrupt_cause == kInterruptOnMatchA) {
 //		dda_debug_pin2 = 1;
 		motor_1.step.clear();							// turn step bits off
 		motor_2.step.clear();

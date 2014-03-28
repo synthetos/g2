@@ -106,7 +106,7 @@ namespace Motate {
 	pin_number kSocket3_Microstep_1PinNumber    = 36;
 	pin_number kSocket3_Microstep_2PinNumber    = 37;
 	pin_number kSocket3_VrefPinNumber           = 38;
-    
+
 	pin_number kSocket4_SPISlaveSelectPinNumber = 40;
 	pin_number kSocket4_InterruptPinNumber      = 41;
 	pin_number kSocket4_StepPinNumber           = 42;
