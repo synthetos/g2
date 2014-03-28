@@ -59,8 +59,8 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 using namespace Motate;
 
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
-OutputPin<-1> dda_debug_pin1;
-OutputPin<-1> dda_debug_pin2;
+OutputPin<kDebug1_PinNumber> dda_debug_pin1;
+OutputPin<kDebug2_PinNumber> dda_debug_pin2;
 
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);// stepper pulse generation
@@ -458,10 +458,10 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
+//    dda_debug_pin1 = 1;
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
 
 	if (interrupt_cause == kInterruptOnOverflow) {
-//		dda_debug_pin1 = 1;
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			motor_1.step.set();		// turn step bit on
@@ -493,7 +493,6 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_6);
 		}
-//		dda_debug_pin1 = 0;
 
 	} else if (interrupt_cause == kInterruptOnMatchA) { // dda_timer.getInterruptCause() == kInterruptOnMatchA
 //		dda_debug_pin2 = 1;
@@ -511,6 +510,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		_load_move();									// load the next move at the current interrupt level
 //		dda_debug_pin2 = 0;
 	}
+//    dda_debug_pin1 = 0;
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
 
@@ -621,6 +621,7 @@ namespace Motate {	// Define timer inside Motate namespace
 
 static void _load_move()
 {
+//dda_debug_pin1 = 1;
 	// Be aware that dda_ticks_downcount must equal zero for the loader to run.
 	// So the initial load must also have this set to zero as part of initialization
 	if (st_run.dda_ticks_downcount != 0) return;						// exit if it's still busy
@@ -795,6 +796,7 @@ static void _load_move()
 	st_prep_null();											// needed to shut off timers if no moves left
 	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
 	st_request_exec_move();									// exec and prep next move
+//dda_debug_pin1 = 0;
 }
 
 /***********************************************************************************
@@ -891,6 +893,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// that results in long-term negative drift. (fabs/round order doesn't matter)
 
 		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
+
+
 	}
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	st_pre.segment_ready = true;

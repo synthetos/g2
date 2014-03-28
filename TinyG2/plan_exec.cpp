@@ -46,6 +46,12 @@ static stat_t _exec_aline_tail(void);
 static stat_t _exec_aline_segment(void);
 static void _init_forward_diffs(float t0, float t2);
 
+using namespace Motate;
+
+OutputPin<kDebug1_PinNumber> exec_debug_pin1;
+OutputPin<kDebug2_PinNumber> exec_debug_pin2;
+
+
 /*************************************************************************
  * mp_init_runtime()
  */
@@ -65,16 +71,23 @@ void mp_init_runtime()
 
 stat_t mp_exec_move()
 {
-	mpBuf_t *bf;
+//	exec_debug_pin2 = 1;
+    mpBuf_t *bf;
 
-	if ((bf = mp_get_run_buffer()) == NULL) return (STAT_NOOP);	// NULL means nothing's running
+	if ((bf = mp_get_run_buffer()) == NULL)
+        return (STAT_NOOP);	// NULL means nothing's running
 
 	// Manage cycle and motion state transitions
 	// Cycle auto-start for lines only
 	if (bf->move_type == MOVE_TYPE_ALINE) {
-		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
+		if (cm.motion_state == MOTION_STOP)
+            cm_set_motion_state(MOTION_RUN);
 	}
-	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the planner buffer
+	if (bf->bf_func != NULL) {
+        stat_t s = (bf->bf_func(bf));
+//        exec_debug_pin2 = 0;
+        return s;
+    } 	// run the move callback in the planner buffer
 	return(cm_hard_alarm(STAT_INTERNAL_ERROR));				// never supposed to get here
 }
 
@@ -482,7 +495,8 @@ static stat_t _exec_aline_tail()
 
 static stat_t _exec_aline_segment()
 {
-	uint8_t i;
+//	exec_debug_pin1 = 1;
+    uint8_t i;
 	float travel_steps[MOTORS];
 
 	// Set target position for the segment
@@ -519,10 +533,14 @@ static stat_t _exec_aline_segment()
 
 	// Call the stepper prep function
 
+//	exec_debug_pin1 = 0;
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
+//    exec_debug_pin1 = 1;
 	copy_vector(mr.position, mr.gm.target); 				// update position from target
 	mr.elapsed_accel_time += mr.segment_accel_time;			// this is needed by jerk-based exec (NB: ignored if running the body)
-	if (mr.segment_count == 0) return (STAT_OK);			// this section has run all its segments
+//	exec_debug_pin1 = 0;
+	if (mr.segment_count == 0)
+        return (STAT_OK);			// this section has run all its segments
 	return (STAT_EAGAIN);									// this section still has more segments to run
 }
 
