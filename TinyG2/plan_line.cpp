@@ -111,11 +111,11 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 
 	// trap error conditions
 	float length = get_axis_vector_length(gm_line->target, mm.position);
-	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
-	if (gm_line->move_time < MIN_TIME_MOVE) {
-		printf("######## aline() line%lu %f\n", gm_line->linenum, (double)gm_line->move_time);
-		return (STAT_MINIMUM_TIME_MOVE);
-	}
+//	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
+//	if (gm_line->move_time < MIN_TIME_MOVE) {
+//		printf("######## aline() line%lu %f\n", gm_line->linenum, (double)gm_line->move_time);
+//		return (STAT_MINIMUM_TIME_MOVE);
+//	}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
@@ -231,8 +231,8 @@ stat_t mp_aline(const GCodeState_t *gm_line)
 	bf->braking_velocity = bf->delta_vmax;
 
 	uint8_t mr_flag = false;
-	_plan_block_list(bf, &mr_flag);							// replan block list and commit current block
 	copy_vector(mm.position, bf->gm.target);				// update planning position
+	_plan_block_list(bf, &mr_flag);							// replan block list and commit current block
 	mp_queue_write_buffer(MOVE_TYPE_ALINE);
 	return (STAT_OK);
 }
@@ -445,9 +445,9 @@ static void _reset_replannable_list()
 // The minimum lengths are dynamic and depend on the velocity
 // These expressions evaluate to the minimum lengths for the current velocity settings
 // Note: The head and tail lengths are 2 minimum segments, the body is 1 min segment
-#define MIN_HEAD_LENGTH (MIN_SEGMENT_TIME * (bf->cruise_velocity + bf->entry_velocity))
-#define MIN_TAIL_LENGTH (MIN_SEGMENT_TIME * (bf->cruise_velocity + bf->exit_velocity))
-#define MIN_BODY_LENGTH (MIN_SEGMENT_TIME * bf->cruise_velocity)
+#define MIN_HEAD_LENGTH (MIN_SEGMENT_TIME_PRIMED * (bf->cruise_velocity + bf->entry_velocity))
+#define MIN_TAIL_LENGTH (MIN_SEGMENT_TIME_PRIMED * (bf->cruise_velocity + bf->exit_velocity))
+#define MIN_BODY_LENGTH (MIN_SEGMENT_TIME_PRIMED * bf->cruise_velocity)
 
 static void _calculate_trapezoid(mpBuf_t *bf) 
 {
@@ -477,7 +477,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                     bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
                 } else {
                     // we need to lower the speed to take at least MIN_SEGMENT_TIME as a body move
-                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME;
+                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PRIMED;
                 }
 
                 bf->entry_velocity = bf->cruise_velocity;
@@ -499,7 +499,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                     bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
                 } else {
                     // we need to lower the speed to take at least MIN_SEGMENT_TIME as a body move
-                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME;
+                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PRIMED;
                 }
 
                 bf->entry_velocity = bf->cruise_velocity;
@@ -523,8 +523,17 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->tail_length = bf->head_length;
 			bf->cruise_velocity = min(bf->cruise_vmax, _get_target_velocity(bf->entry_velocity, bf->head_length, bf));
 
-            if (bf->head_length < MIN_HEAD_LENGTH || bf->tail_length < MIN_TAIL_LENGTH) {
-                bf->cruise_velocity = (bf->length / (2*MIN_SEGMENT_TIME)) - bf->entry_velocity;
+            if (bf->head_length < MIN_HEAD_LENGTH) {
+                // Convert this to a body-only move
+                bf->body_length = bf->length;
+                bf->head_length = 0;
+                bf->tail_length = 0;
+
+                // Average the entry speed and computed best cruise-speed
+                bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
+                bf->entry_velocity = bf->cruise_velocity;
+                bf->exit_velocity = bf->cruise_velocity;
+
             }
 			return;
 		}
@@ -543,7 +552,6 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = _get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
 			}
-// unneeded	if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
 		} while ((fabs(bf->cruise_velocity - computed_velocity) / computed_velocity) > TRAPEZOID_ITERATION_ERROR_PERCENT);
 
 		// set velocity and clean up any parts that are too short 
