@@ -61,6 +61,7 @@ using namespace Motate;
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
 OutputPin<kDebug1_PinNumber> dda_debug_pin1;
 OutputPin<kDebug2_PinNumber> dda_debug_pin2;
+OutputPin<kDebug3_PinNumber> dda_debug_pin3;
 
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);// stepper pulse generation
@@ -621,7 +622,6 @@ namespace Motate {	// Define timer inside Motate namespace
 
 static void _load_move()
 {
-//dda_debug_pin1 = 1;
 	// Be aware that dda_ticks_downcount must equal zero for the loader to run.
 	// So the initial load must also have this set to zero as part of initialization
 	if (st_run.dda_ticks_downcount != 0) return;						// exit if it's still busy

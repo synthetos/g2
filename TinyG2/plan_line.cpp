@@ -470,11 +470,18 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->cruise_velocity = bf->entry_velocity;
 			if (bf->length >= MIN_TAIL_LENGTH) {			// run this as a 2+ segment tail
 				bf->tail_length = bf->length;
-			} else if (bf->length > MIN_BODY_LENGTH) {		// run this as a 1 segment body
-				bf->body_length = bf->length;
-			} else {
-				bf->move_state = MOVE_SKIP;					// tell runtime to skip the block
-				printf("######## Trapezoid skip[1] - line %lu\n", bf->gm.linenum);
+			} else {                                        // run this as a 1 segment body
+                bf->body_length = bf->length;
+				if (bf->length > MIN_BODY_LENGTH) {
+                    // Average the speed for this one segment:
+                    bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
+                } else {
+                    // we need to lower the speed to take at least MIN_SEGMENT_TIME as a body move
+                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME;
+                }
+
+                bf->entry_velocity = bf->cruise_velocity;
+                bf->exit_velocity = bf->cruise_velocity;
 			}
 			return;
 		}
@@ -485,11 +492,18 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->cruise_velocity = bf->exit_velocity;
 			if (bf->length >= MIN_HEAD_LENGTH) {			// run this as a 2+ segment head
 				bf->head_length = bf->length;
-			} else if (bf->length > MIN_BODY_LENGTH) {		// run this as a 1 segment body
-				bf->body_length = bf->length;
-			} else {
-				bf->move_state = MOVE_SKIP;					// tell runtime to skip the block
-				printf("######## Trapezoid skip[2] - line %lu\n", bf->gm.linenum);
+			} else {	                                 	// run this as a 1 segment body
+                bf->body_length = bf->length;
+				if (bf->length > MIN_BODY_LENGTH) {
+                    // Average the speed for this one segment:
+                    bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
+                } else {
+                    // we need to lower the speed to take at least MIN_SEGMENT_TIME as a body move
+                    bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME;
+                }
+
+                bf->entry_velocity = bf->cruise_velocity;
+                bf->exit_velocity = bf->cruise_velocity;
 			}
 			return;
 		}
@@ -497,8 +511,8 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// Set head and tail lengths
 	bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 	bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
-	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
-	if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
+//	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
+//	if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
 
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
@@ -508,6 +522,10 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->head_length = bf->length/2;
 			bf->tail_length = bf->head_length;
 			bf->cruise_velocity = min(bf->cruise_vmax, _get_target_velocity(bf->entry_velocity, bf->head_length, bf));
+
+            if (bf->head_length < MIN_HEAD_LENGTH || bf->tail_length < MIN_TAIL_LENGTH) {
+                bf->cruise_velocity = (bf->length / (2*MIN_SEGMENT_TIME)) - bf->entry_velocity;
+            }
 			return;
 		}
 

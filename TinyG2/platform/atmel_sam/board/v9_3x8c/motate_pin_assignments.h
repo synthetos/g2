@@ -163,6 +163,7 @@ namespace Motate {
     
     pin_number kDebug1_PinNumber                =  -1;
     pin_number kDebug2_PinNumber                =  -1;
+    pin_number kDebug3_PinNumber                =  -1;
 
 	// GRBL / gShield compatibility pins -- Due board ONLY
     
