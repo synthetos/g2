@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		036.05	// Re-enabled new jerk vector computation code in aline(); changed motor power to 0.00 - 1.00
+#define TINYG_FIRMWARE_BUILD   		033.01	// Re-sync with Rob branch for trapezoid planner work
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
