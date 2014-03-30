@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		037.01	// Re-sync with Rob branch for trapezoid planner work
+#define TINYG_FIRMWARE_BUILD   		037.02	// Updated trapezoid planner for revised short line handling
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

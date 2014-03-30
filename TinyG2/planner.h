@@ -96,9 +96,10 @@ enum sectionState {
 
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-#define MIN_SEGMENT_TIME_PRIMED ((MIN_SEGMENT_USEC+10) / MICROSECONDS_PER_MINUTE)
 #define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
+
+#define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+10) / MICROSECONDS_PER_MINUTE)
 
 /* PLANNER_STARTUP_DELAY_SECONDS
  *	Used to introduce a short dwell before planning an idle machine.
@@ -279,7 +280,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 
-stat_t mp_aline(const GCodeState_t *gm_line);
+stat_t mp_aline(const GCodeState_t *gm_incoming);
 
 stat_t mp_plan_hold_callback(void);
 stat_t mp_end_hold(void);
