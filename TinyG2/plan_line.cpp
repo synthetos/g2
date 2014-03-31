@@ -486,13 +486,22 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 		return;		
 	}
 
-	// Combined head-only and tail-only cases. 
-	//	- H and T requested-fit cases (exact fit cases, to within TRAPEZOID_LENGTH_FIT_TOLERANCE)
+	// Head-only and tail-only short-line cases 
 	//	- H" and T" degraded-fit cases
 	//	- H' and T' requested-fit cases where the body residual is less than MIN_BODY_LENGTH
 
 	float minimum_length = _get_target_length(bf->entry_velocity, bf->exit_velocity, bf);
 	if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
+
+		// QUESTION: The inequality cases do not trap entry_velocity == exit velocity.
+		//			 What is the correct handling of the equality case?
+/*
+		if (fp_EQ(bf->entry_velocity, bf->exit_velocity)) {	// short body case (aka "Marty Feldman")
+			bf->cruise_velocity = bf->entry_velocity;
+			bf->body_length = bf->length;
+			return;
+		}
+*/
 		if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
 			if (bf->length < minimum_length) { 				// T" (degraded case)
 				bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
