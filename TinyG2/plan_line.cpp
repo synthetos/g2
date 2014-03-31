@@ -446,8 +446,8 @@ static void _reset_replannable_list()
  *		F	<too short>	force fit: This block is slowed down until it can be executed
  *
  *	NOTE: The order of the cases/tests in the code is pretty important. Start with the 
- *	  shortest cases first and work out. Not only does this simplfy the order of the tests,
- *	  but it reduces exceution time when you need it most - when tons of pathologically
+ *	  shortest cases first and work out. Not only does this simplify the order of the tests,
+ *	  but it reduces execution time when you need it most - when tons of pathologically
  *	  short Gcode blocks are being executed.
  */
 
@@ -468,7 +468,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// Force block into a single segment body with limited velocities
 
 	// if length < segment time * average velocity
-	if (bf->length < (MIN_SEGMENT_TIME_PLUS_MARGIN * (bf->entry_velocity + bf->entry_velocity) / 2)) {
+	if (bf->length < (MIN_SEGMENT_TIME_PLUS_MARGIN * (bf->entry_velocity + bf->cruise_velocity) / 2)) {
 		bf->entry_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
 		bf->cruise_velocity = bf->entry_velocity;
 		bf->exit_velocity = bf->entry_velocity;
@@ -478,7 +478,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 	// B case (body only): See if the block fits into a single segment
 
-	if (bf->length < (NOM_SEGMENT_TIME * (bf->cruise_velocity + bf->entry_velocity) / 2)) {
+	if (bf->length < (NOM_SEGMENT_TIME * (bf->entry_velocity + bf->cruise_velocity) / 2)) {
 		bf->entry_velocity = bf->length / NOM_SEGMENT_TIME;
 		bf->cruise_velocity = bf->entry_velocity;
 		bf->exit_velocity = bf->entry_velocity;
@@ -494,7 +494,6 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	float minimum_length = _get_target_length(bf->entry_velocity, bf->exit_velocity, bf);
 	if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
 		if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
-//			if (bf->length < (minimum_length - TRAPEZOID_LENGTH_FIT_TOLERANCE)) { 	// T" (degraded case)
 			if (bf->length < minimum_length) { 				// T" (degraded case)
 				bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
 			}
@@ -502,27 +501,8 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->tail_length = bf->length;
 			return;
 		}
-/*
-			if (bf->length >= MIN_TAIL_LENGTH) {			// run this as a 2+ segment tail
-				bf->tail_length = bf->length;
 
-			} else {                                        // B case: run this as a 1 segment body
-				bf->body_length = bf->length;
-				if (bf->length > MIN_BODY_LENGTH) {
-					// Average the velocity for this one segment:
-					bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
-				} else {									// FF case
-					// Lower the velocity to take at least MIN_SEGMENT_TIME as a body move
-					bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
-				}
-				bf->entry_velocity = bf->cruise_velocity;
-				bf->exit_velocity = bf->cruise_velocity;
-			}
-			return;
-		}
-*/
 		if (bf->entry_velocity < bf->exit_velocity)	{		// head-only cases (short accelerations)
-//			if (bf->length < (minimum_length - TRAPEZOID_LENGTH_FIT_TOLERANCE)) { 	// H" (degraded case)
 			if (bf->length < minimum_length) { 				// H" (degraded case)
 				bf->exit_velocity = _get_target_velocity(bf->entry_velocity, bf->length, bf);
 			}
@@ -530,25 +510,8 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->head_length = bf->length;
 			return;
 		}
-/*			if (bf->length >= MIN_HEAD_LENGTH) {			// run this as a 2+ segment head
-				bf->head_length = bf->length;
-
-			} else {	                                 	// B case: run this as a 1 segment body
-				bf->body_length = bf->length;
-				if (bf->length > MIN_BODY_LENGTH) {
-					// Average the velocity for this one segment:
-					bf->cruise_velocity = (bf->entry_velocity + bf->exit_velocity)/2;
-				} else {									// FF case
-					// Lower the velocity to take at least MIN_SEGMENT_TIME as a body move
-					bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
-				}
-				bf->entry_velocity = bf->cruise_velocity;
-				bf->exit_velocity = bf->cruise_velocity;
-			}
-			return;
-		}
-*/
 	}
+
 	// Set head and tail lengths
 	bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 	bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
@@ -574,14 +537,12 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                 bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
                 bf->entry_velocity = bf->cruise_velocity;
                 bf->exit_velocity = bf->cruise_velocity;
-
             }
 			return;
 		}
 
 		// Rate-limited HT' case (asymmetric) - this is relatively expensive but it's not called very often
 		float computed_velocity = bf->cruise_vmax;
-// unneeded	uint8_t i=0;
 		do {
 			bf->cruise_velocity = computed_velocity;	// initialize from previous iteration 
 			bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
