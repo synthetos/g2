@@ -74,7 +74,7 @@ endif
 GCC_TOOLCHAIN = gcc
 
 # Toolchain prefix when cross-compiling
-CROSS_COMPILE = arm-none-eabi-
+CROSS_COMPILE = arm-none-eabi
 
 # Defines which are the available memory targets for the device.
 MEMORIES = sram flash

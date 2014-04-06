@@ -166,11 +166,12 @@
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				0.609
-#define A_VELOCITY_MAX          200000.000
-#define A_FEEDRATE_MAX 			50000.000
+#define A_VELOCITY_MAX          300000.000 // ~53 mm/s, 3,188 mm/m
+#define A_FEEDRATE_MAX 			300000.000
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				25000
+#define A_JERK_MAX 				112898000.0*1000000.0 // 20,000 million mm/min^3
+                                                  // * a million since it's over a million
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define A_SWITCH_MODE_MAX		SW_MODE_DISABLED
