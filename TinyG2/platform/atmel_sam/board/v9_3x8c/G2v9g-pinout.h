@@ -126,8 +126,8 @@ namespace Motate {
     _MAKE_MOTATE_PIN(16, A, 'A', 16);	// Socket1_Microstep_1PinNumber
     
     _MAKE_MOTATE_PIN(17, B, 'B', 15);	// Socket1_Microstep_2PinNumber
-    _MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    
+//    _MAKE_MOTATE_PWM_PIN(17, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
+
     _MAKE_MOTATE_PIN(18, B, 'B', 17);	// Socket1_VrefPinNumber
     _MAKE_MOTATE_PWM_PIN(18, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
     
@@ -192,8 +192,8 @@ namespace Motate {
     _MAKE_MOTATE_PIN(100, B, 'B', 26);	// XAxis_MinPinNumber
     
     _MAKE_MOTATE_PIN(101, A, 'A', 9);	// XAxis_MaxPinNumber
-    _MAKE_MOTATE_PWM_PIN(101, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    
+//    _MAKE_MOTATE_PWM_PIN(101, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
+
     _MAKE_MOTATE_PIN(102, A, 'A', 10);	// YAxis_MinPinNumber
     
     _MAKE_MOTATE_PIN(103, A, 'A', 11);	// YAxis_MaxPinNumber
