@@ -174,7 +174,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
 
 	// get letter part
-	if(isupper(**pstr) == false) { return (STAT_EXPECTED_COMMAND_LETTER); }
+	if(isupper(**pstr) == false) { return (STAT_MALFORMED_COMMAND_INPUT); }
 	*letter = **pstr;
 	(*pstr)++;
 	
@@ -270,7 +270,7 @@ static stat_t _parse_gcode_block(char_t *buf)
 						case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G28_POSITION);
 						case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G28_POSITION);
 						case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME);
-						case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ORIGIN);
+						case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ABSOLUTE_ORIGIN);
 						case 4: SET_NON_MODAL (next_action, NEXT_ACTION_HOMING_NO_SET);
 						default: status = STAT_UNRECOGNIZED_COMMAND;
 					}
@@ -456,12 +456,13 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}								// G30.1
 		case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(cm.gn.target, cm.gf.target); break;}	// G30
 
-		case NEXT_ACTION_SEARCH_HOME:		{ status = cm_homing_cycle_start(); break;}								// G28.2
-		case NEXT_ACTION_SET_ORIGIN:		{ status = cm_set_origin_cycle_start(); break;}							// G28.3
-		case NEXT_ACTION_HOMING_NO_SET:		{ status = cm_homing_cycle_start_no_set(); break;}						// G28.4
-		case NEXT_ACTION_STRAIGHT_PROBE:	{ status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}		// G38.2
+		case NEXT_ACTION_SEARCH_HOME: { status = cm_homing_cycle_start(); break;}									// G28.2
+		case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm.gn.target, cm.gf.target); break;}// G28.3
+		case NEXT_ACTION_HOMING_NO_SET: { status = cm_homing_cycle_start_no_set(); break;}							// G28.4
 
-		case NEXT_ACTION_SET_COORD_DATA:	{ status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.target, cm.gf.target); break;}
+		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}		// G38.2
+
+		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_RESET_ORIGIN_OFFSETS: { status = cm_reset_origin_offsets(); break;}
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}

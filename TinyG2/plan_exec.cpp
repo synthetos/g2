@@ -229,7 +229,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_HEAD) { status = _exec_aline_head();} else 
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else 
-	if (mr.move_state == MOVE_SKIP) {
+	if (mr.move_state == MOVE_SKIP_BLOCK) {
 		status = STAT_OK;
     }
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
@@ -326,8 +326,8 @@ static stat_t _exec_aline_head()
 
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## MIN TIME HEAD - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
+//			printf("######## MIN TIME HEAD - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
+			return(STAT_MINIMUM_TIME_MOVE);				// exit without advancing position
         }
 		mr.section = SECTION_HEAD;
 		mr.section_state = SECTION_1st_HALF;
@@ -391,8 +391,8 @@ static stat_t _exec_aline_body()
 		mr.segment_velocity = mr.cruise_velocity;
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## min time BODY - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
+//			printf("######## min time BODY - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
+			return(STAT_MINIMUM_TIME_MOVE);					// exit without advancing position
         }
 		mr.section = SECTION_BODY;
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
@@ -431,8 +431,8 @@ static stat_t _exec_aline_tail()
 
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## min time TAIL - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
+//			printf("######## min time TAIL - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
+			return(STAT_MINIMUM_TIME_MOVE);				// exit without advancing position
         }
 		mr.section = SECTION_TAIL;
 		mr.section_state = SECTION_1st_HALF;

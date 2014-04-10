@@ -49,8 +49,8 @@ enum moveType {				// bf->move_type values
 enum moveState {
 	MOVE_OFF = 0,			// move inactive (MUST BE ZERO)
 	MOVE_NEW,				// general value if you need an initialization
-	MOVE_RUN,				// general run state (for non-acceleration moves)
-	MOVE_SKIP				// mark a skipped block
+	MOVE_RUN,			// general run state (for non-acceleration moves)
+	MOVE_SKIP_BLOCK			// mark a skipped block
 };
 
 enum moveSection {
@@ -99,7 +99,7 @@ enum sectionState {
 #define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
 
-#define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+10) / MICROSECONDS_PER_MINUTE)
+#define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
 /* PLANNER_STARTUP_DELAY_SECONDS
  *	Used to introduce a short dwell before planning an idle machine.
@@ -196,6 +196,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 } mpBufferPool_t;
 
 typedef struct mpMoveMasterSingleton { // common variables for planning (move master)
+	magic_t magic_start;			// magic number to test memory integrity
 	float position[AXES];			// final move position for planning purposes
 	float prev_jerk;				// jerk values cached from previous move
 	float prev_recip_jerk;
@@ -206,6 +207,7 @@ typedef struct mpMoveMasterSingleton { // common variables for planning (move ma
 	float a_unit[AXES];
 	float b_unit[AXES];
 #endif
+	magic_t magic_end;
 } mpMoveMasterSingleton_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
@@ -271,16 +273,16 @@ void planner_init_assertions(void);
 stat_t planner_test_assertions(void);
 
 void mp_flush_planner(void);
-void mp_set_planner_position_by_axis(uint8_t axis, float position);
-void mp_set_planner_position_by_vector(float position[], float flags[]);
-void mp_set_step_counts(float position[]);
+void mp_set_planner_position(uint8_t axis, float position);
+void mp_set_runtime_position(uint8_t axis, float position);
+void mp_set_steps_to_runtime_position(void);
 
 void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 
-stat_t mp_aline(const GCodeState_t *gm_incoming);
+stat_t mp_aline(const GCodeState_t *gm_in);
 
 stat_t mp_plan_hold_callback(void);
 stat_t mp_end_hold(void);
@@ -291,8 +293,8 @@ void mp_init_buffers(void);
 uint8_t mp_get_planner_buffers_available(void);
 void mp_clear_buffer(mpBuf_t *bf); 
 void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp);
-void mp_queue_write_buffer(const uint8_t move_type);
-void mp_free_run_buffer(void);
+void mp_commit_write_buffer(const uint8_t move_type);
+uint8_t mp_free_run_buffer(void);
 mpBuf_t * mp_get_write_buffer(void); 
 mpBuf_t * mp_get_run_buffer(void);
 mpBuf_t * mp_get_first_buffer(void);
@@ -310,8 +312,6 @@ uint8_t mp_get_runtime_busy(void);
 
 // plan_exec.c functions
 void mp_init_runtime(void);
-//void mp_reset_step_counts(void);
-//void mp_set_step_counts_from_position(float position[]);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 

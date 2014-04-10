@@ -93,10 +93,12 @@ uint8_t cm_straight_probe(float target[], float flags[])
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-		return (STAT_GCODE_FEEDRATE_ERROR);
+		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 
-	// trap error conditions (1) no axis (axes) specified, (2) no feed rate specified
+	// trap no axes specified
+	if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z])
+		return (STAT_GCODE_AXIS_IS_MISSING);
 
 	// set probe move endpoint
 	copy_vector(pb.target, target);		// set probe move endpoint
@@ -197,13 +199,13 @@ static stat_t _probing_finish()
 //	int8_t probe = read_switch(pb.probe_switch);
 	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
 
-	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEDED : PROBE_FAILED;
+	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
     
 	for( uint8_t axis=0; axis<AXES; axis++ )
 		cm.probe_results[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 
 	// if we got here because of a feed hold we need to keep the model position correct
-	cm_set_model_position_from_runtime(STAT_OK);
+	cm_update_model_position_from_runtime();
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
 

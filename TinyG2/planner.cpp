@@ -94,7 +94,7 @@ static void _dump_plan_buffer(mpBuf_t *bf);
  */
 void planner_init()
 {
-// If you can can assume all memory has been zeroed by a hard reset you don;t need these next 2 lines
+// If you know all memory has been zeroed by a hard reset you don't need these next 2 lines
 	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
 	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
 	planner_init_assertions();
@@ -107,12 +107,15 @@ void planner_init()
  */
 void planner_init_assertions()
 {
+	mm.magic_start = MAGICNUM;
+	mm.magic_end = MAGICNUM;
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
 }
 
 stat_t planner_test_assertions()
 {
+	if ((mm.magic_start  != MAGICNUM) || (mm.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
 	if ((mb.magic_start  != MAGICNUM) || (mb.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
 	if ((mr.magic_start  != MAGICNUM) || (mr.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
 	return (STAT_OK);
@@ -134,7 +137,43 @@ void mp_flush_planner()
 }
 
 /*
- * mp_set_planner_position_by_axis()   - set planner and runtime positions from a single axis
+ * mp_set_planner_position() - set planner position for a single axis
+ * mp_set_runtime_position() - set runtime position for a single axis
+ * mp_set_steps_to_runtime_position() - set encoder counts to the runtime position
+ * 
+ * Since steps are in motor space you have to run the position vector through inverse 
+ * kinematics to get the right numbers. This means that in a non-cartesian robot changing 
+ * any position can result in changes to multiple step values. So this operation is provided 
+ * as a single function and always uses the new position vector as an input.
+ */
+void mp_set_planner_position(uint8_t axis, float position)
+{
+	mm.position[axis] = position;
+}
+
+void mp_set_runtime_position(uint8_t axis, float position)
+{
+	mr.position[axis] = position;
+}
+
+void mp_set_steps_to_runtime_position()
+{
+	float step_position[MOTORS];
+	ik_kinematics(mr.position, step_position);				// convert lengths to steps in floating point
+	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+		mr.target_steps[motor] = step_position[motor];
+		mr.position_steps[motor] = step_position[motor];
+		mr.commanded_steps[motor] = step_position[motor];
+		en_set_encoder_steps(motor, step_position[motor]);	// write steps to encoder register
+
+		// These must be zero:
+		mr.following_error[motor] = 0;
+		st_pre.mot[motor].corrected_steps = 0;
+	}
+}
+
+/*
+ * mp_set_planner_position()   - set planner and runtime positions from a single axis
  * mp_set_planner_position_by_vector() - set runtime and runtime positions from a position vector
  *
  * 	In order to set the planner and runtime positions the following all need to line up:
@@ -163,8 +202,8 @@ void mp_flush_planner()
  *	Sets the step counters and encoders to match the position, which is in mm length units.
  *	This establishes the "step grid" relative to the current machine position.
  */
-
-void mp_set_planner_position_by_axis(uint8_t axis, float position)
+/*
+void mp_set_planner_position(uint8_t axis, float position)
 {
 	mm.position[axis] = position;
 	mr.position[axis] = position;
@@ -182,6 +221,22 @@ void mp_set_planner_position_by_vector(float position[], float flags[])
 	mp_set_step_counts(mr.position);
 }
 
+void mp_set_runtime_position(uint8_t axis, float position)
+{
+	mr.position[axis] = position;
+	mp_set_step_counts(mr.position);
+}
+
+void mp_set_runtime_position_by_vector(float position[], float flags[])
+{
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		if (fp_TRUE(flags[axis])) {
+			mr.position[axis] = position[axis];
+		}
+	}
+	mp_set_step_counts(mr.position);
+}
+
 void mp_set_step_counts(float position[])
 {
 	float step_position[MOTORS];
@@ -190,13 +245,15 @@ void mp_set_step_counts(float position[])
 		mr.target_steps[motor] = step_position[motor];
 		mr.position_steps[motor] = step_position[motor];
 		mr.commanded_steps[motor] = step_position[motor];
-		en_set_encoder_steps(motor, step_position[motor]);
+		en_set_encoder_steps(motor, step_position[motor]);	// write steps to encoder
 
-        // These must be zero:
-        mr.following_error[motor] = 0;
-        st_pre.mot[motor].corrected_steps = 0;
-    }
+		// These must be zero:
+		mr.following_error[motor] = 0;
+		st_pre.mot[motor].corrected_steps = 0;
+	}
 }
+
+*/
 
 /************************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
@@ -231,7 +288,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 		bf->value_vector[axis] = value[axis];
 		bf->flag_vector[axis] = flag[axis];
 	}
-	mp_queue_write_buffer(MOVE_TYPE_COMMAND);
+	mp_commit_write_buffer(MOVE_TYPE_COMMAND);
 }
 
 static stat_t _exec_command(mpBuf_t *bf)
@@ -260,7 +317,7 @@ stat_t mp_dwell(float seconds)
 	bf->bf_func = _exec_dwell;					// register callback to dwell start
 	bf->gm.move_time = seconds;					// in seconds, not minutes
 	bf->move_state = MOVE_NEW;
-	mp_queue_write_buffer(MOVE_TYPE_DWELL);
+	mp_commit_write_buffer(MOVE_TYPE_DWELL);
 	return (STAT_OK);
 }
 
@@ -367,7 +424,7 @@ void mp_unget_write_buffer()
 	mb.buffers_available++;
 }
 */
-void mp_queue_write_buffer(const uint8_t move_type)
+void mp_commit_write_buffer(const uint8_t move_type)
 {
 	mb.q->move_type = move_type;
 	mb.q->move_state = MOVE_NEW;
@@ -391,17 +448,17 @@ mpBuf_t * mp_get_run_buffer()
 	return (NULL);								// CASE: no queued buffers. fail it.
 }
 
-void mp_free_run_buffer()						// EMPTY current run buf & adv to next
+uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 {
 	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
-//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
+	//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	mb.r = mb.r->nx;							// advance to next run buffer
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
 	}
-	if (mb.w == mb.r) cm_cycle_end();			// end the cycle if the queue empties
 	mb.buffers_available++;
-	qr_request_queue_report(-1);				// add to the "removed buffers" count
+	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
+	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
 }
 
 mpBuf_t * mp_get_first_buffer(void)

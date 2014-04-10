@@ -233,9 +233,8 @@ stat_t mp_aline(const GCodeState_t *gm_incoming)
 	uint8_t mr_flag = false;
 	
 	_plan_block_list(bf, &mr_flag);				// replan block list
-	mp_queue_write_buffer(MOVE_TYPE_ALINE); 	// commit current block
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
-	
+	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block
 	return (STAT_OK);
 }
 

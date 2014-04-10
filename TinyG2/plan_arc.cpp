@@ -77,7 +77,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-		return (STAT_GCODE_FEEDRATE_ERROR);
+		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 
 	// Trap conditions where no arc movement will occur, but the system is still in 
@@ -124,7 +124,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 //	ritorno(_test_arc_soft_limits());			// test if arc will trip soft limits
 	cm_cycle_start();							// if not already started
 	arc.run_state = MOVE_RUN;					// enable arc to be run from the callback
-	cm_set_model_position(STAT_OK);				// set endpoint position if the arc was successful
+	cm_update_model_position();					// set endpoint position if the arc was successful
 	return (STAT_OK);
 }
 

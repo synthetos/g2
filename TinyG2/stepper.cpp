@@ -261,17 +261,15 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
-	float zero[] = {0,0,0,0,0,0};
-	mp_set_step_counts(zero);
-
-//	en_set_encoders(zero);
-//	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
+	//	float zero[] = {0,0,0,0,0,0};
+	//	mp_set_step_counts(zero);
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
-		st_pre.mot[motor].corrected_steps = 0;
+		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
 	}
+	mp_set_steps_to_runtime_position();
 }
 
 stat_t st_clc(cmdObj_t *cmd)	// clear diagnostic counters, reset stepper prep
