@@ -97,7 +97,8 @@ uint8_t cm_straight_probe(float target[], float flags[])
 	}
 
 	// trap no axes specified
-	if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z])
+//	if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z])
+	if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z]))
 		return (STAT_GCODE_AXIS_IS_MISSING);
 
 	// set probe move endpoint
