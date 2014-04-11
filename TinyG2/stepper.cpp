@@ -261,8 +261,8 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
-	//	float zero[] = {0,0,0,0,0,0};
-	//	mp_set_step_counts(zero);
+//	float zero[] = {0,0,0,0,0,0};
+//	mp_set_step_counts(zero);
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
@@ -672,7 +672,9 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
 				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
-				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_1.dir.clear() : motor_1.dir.set(); // set the bit for CCW motion
+				if (st_pre.mot[MOTOR_1].direction == DIRECTION_CW) 		// CW motion (bit cleared)
+					PORT_MOTOR_1_VPORT.OUT &= ~DIRECTION_BIT_bm; else
+					PORT_MOTOR_1_VPORT.OUT |= DIRECTION_BIT_bm;			// CCW motion
 			}
 
 			// Enable the stepper and start motor power management

@@ -275,8 +275,7 @@ enum prepBufferState {
 // Stepper power management settings (applicable to ARM only)
 #define Vcc	3.3							// volts
 #define MaxVref	2.25					// max vref for driver circuit. Our ckt is 2.25 volts
-//#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
-#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // value between 0 and <1
+#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)*0.01) // scale % to value between 0 and <1
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define POWER_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
@@ -301,8 +300,8 @@ enum prepBufferState {
  *	The ARM is about 1/2 that (or less) as the DDA clock rate is higher. Decreasing the nominal
  *	segment time increases the number precision.
  */
-#define DDA_SUBSTEPS ((MAX_LONG * 0.5) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
-//#define DDA_SUBSTEPS ((MAX_LONG * 0.1) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+//#define DDA_SUBSTEPS ((MAX_LONG * 0.5) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+#define DDA_SUBSTEPS ((MAX_LONG * 0.1) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position errors.
