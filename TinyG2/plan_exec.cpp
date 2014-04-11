@@ -494,13 +494,13 @@ static stat_t _exec_aline_segment()
 	//	   Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
 
 	for (i=0; i<MOTORS; i++) {
-		mr.commanded_steps[i] = mr.position_steps[i];		// previous segment's position, delayed by 1 segment
-		mr.position_steps[i] = mr.target_steps[i];	 		// previous segment's target becomes position
-		mr.encoder_steps[i] = en_read_encoder(i);			// get current encoder position (time aligns to commanded_steps)
-		mr.following_error[i] = mr.encoder_steps[i] - mr.commanded_steps[i]; 
+		mr.commanded_steps[i] = mr.position_steps[i];	// previous segment's position, delayed by 1 segment
+		mr.position_steps[i] = mr.target_steps[i];	 	// previous segment's target becomes position
+		mr.encoder_steps[i] = en_read_encoder(i);		// get current encoder position (time aligns to commanded_steps)
+		mr.following_error[i] = mr.encoder_steps[i] - mr.commanded_steps[i];
 	}
-	ik_kinematics(mr.gm.target, mr.target_steps);			// now determine the target steps...
-	for (i=0; i<MOTORS; i++) {								// and compute the distances to be traveled
+	ik_kinematics(mr.gm.target, mr.target_steps);		// now determine the target steps...
+	for (i=0; i<MOTORS; i++) {							// and compute the distances to be traveled
 		travel_steps[i] = mr.target_steps[i] - mr.position_steps[i];
 	}
 
@@ -509,12 +509,11 @@ static stat_t _exec_aline_segment()
 //	exec_debug_pin1 = 0;
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
 //    exec_debug_pin1 = 1;
-	copy_vector(mr.position, mr.gm.target); 				// update position from target
-	mr.elapsed_accel_time += mr.segment_accel_time;			// this is needed by jerk-based exec (NB: ignored if running the body)
+	copy_vector(mr.position, mr.gm.target); 			// update position from target
+	mr.elapsed_accel_time += mr.segment_accel_time;		// this is needed by jerk-based exec (NB: ignored if running the body)
 //	exec_debug_pin1 = 0;
-	if (mr.segment_count == 0)
-        return (STAT_OK);			// this section has run all its segments
-	return (STAT_EAGAIN);									// this section still has more segments to run
+	if (mr.segment_count == 0) return (STAT_OK);		// this section has run all its segments
+	return (STAT_EAGAIN);								// this section still has more segments to run
 }
 
 #ifdef __cplusplus
