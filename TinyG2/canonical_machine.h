@@ -360,16 +360,16 @@ enum cmHomingState {				// applies to cm.homing_state
 
 enum cmProbeState {					// applies to cm.probe_state
 	PROBE_FAILED = 0,				// probe reached endpoint without triggering
-	PROBE_SUCCEEDED = 1,				// probe was triggered, cm.probe_results has position
+	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
 };
-
+/*
 enum cmSetOriginState {				// applies to cm.set_origin_state
 	SET_ORIGIN_OFF = 0,
-	SET_ORIGIN_SUCCEDED = 1,		// end state
+	SET_ORIGIN_SUCCEEDED = 1,		// end state
 	SET_ORIGIN_WAITING				// waiting for planner to drain
 };
-
+*/
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
  * MotionMode persists across blocks (as G modal group 1)
