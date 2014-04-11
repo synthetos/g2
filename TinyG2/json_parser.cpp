@@ -452,6 +452,9 @@ static stat_t _get_nv_pair_strict(cmdObj_t *cmd, char_t **pstr, int8_t *depth)
 
 uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 {
+#ifdef __SILENCE_JSON_RESPONSES
+	return (0);
+#else
 	char_t *str = out_buf;
 	char_t *str_max = out_buf + size - BUFFER_MARGIN;
 	int8_t initial_depth = cmd->depth;
@@ -518,6 +521,7 @@ uint16_t json_serialize(cmdObj_t *cmd, char_t *out_buf, uint16_t size)
 	str += sprintf((char *)str, "}\n");	// using sprintf for this last one ensures a NUL termination
 	if (str > out_buf + size) { return (-1);}
 	return (str - out_buf);
+#endif
 }
 
 /*
@@ -594,7 +598,7 @@ void json_print_response(uint8_t status)
 					cmd->objtype = TYPE_EMPTY;
 				}
 
-//+++++		} else if (cmd_type == CMD_TYPE_CONFIG) {		// kill config echo if not enabled
+//++++		} else if (cmd_type == CMD_TYPE_CONFIG) {		// kill config echo if not enabled
 //fix me		if (js.echo_json_configs == false) {
 //					cmd->objtype = TYPE_EMPTY;
 //				}

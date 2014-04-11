@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		039.05	// Merge tinyg code; jogging - mostly back-porting to TinyG
+#define TINYG_FIRMWARE_BUILD   		039.07	// Merge tinyg code; encoders, parsers, kinematics
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
