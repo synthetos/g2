@@ -25,10 +25,12 @@
  */
 
 #include "tinyg2.h"
-#include "util.h"
 #include "config.h"
+#include "json_parser.h"
+#include "text_parser.h"
 #include "canonical_machine.h"
 #include "planner.h"
+#include "util.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -43,7 +45,7 @@ struct jmJoggingSingleton {			// persistent jogging runtime variables
 	float start_pos;
 	float velocity_start;			// initial jog feed
 	float velocity_max;
-    uint8_t step;                   // what step of the ramp the jogging cycle is currently on
+	uint8_t step;					// what step of the ramp the jogging cycle is currently on
 
 	uint8_t (*func)(int8_t axis);	// binding for callback function state machine
 
@@ -82,6 +84,11 @@ static stat_t _jogging_finalize_exit(int8_t axis);
  *	to cm_isbusy() is about.
  */
 
+//static stat_t _set_jogging_func(uint8_t (*func)(int8_t axis));
+//static stat_t _jogging_axis_start(int8_t axis);
+//static stat_t _jogging_axis_jog(int8_t axis);
+//static stat_t _jogging_finalize_exit(int8_t axis);
+
 stat_t cm_jogging_cycle_start(uint8_t axis)
 {
 	// save relevant non-axis parameters from Gcode model
@@ -89,6 +96,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 	jog.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);		//cm.gm.coord_system;
 	jog.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);	//cm.gm.distance_mode;
 	jog.saved_feed_rate = cm_get_distance_mode(ACTIVE_MODEL);		//cm.gm.feed_rate;
+	jog.saved_jerk = cm.a[axis].jerk_max;
 
 	// set working values
 	cm_set_units_mode(MILLIMETERS);
@@ -100,7 +108,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 
 	jog.start_pos = cm_get_absolute_position(RUNTIME, axis);
 	jog.dest_pos = cm_get_jogging_dest();
-    jog.step = 0;
+	jog.step = 0;
 
 	jog.axis = axis;
 	jog.func = _jogging_axis_start; 				// bind initial processing function
