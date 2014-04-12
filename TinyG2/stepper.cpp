@@ -672,7 +672,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
 				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
-				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_2.dir.clear() : motor_2.dir.set(); // set the bit for CCW motion
+				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_1.dir.clear() : motor_1.dir.set(); // set the bit for CCW motion
 			}
 
 			// Enable the stepper and start motor power management
