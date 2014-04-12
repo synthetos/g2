@@ -113,6 +113,13 @@ stat_t mp_aline(const GCodeState_t *gm_in)
 	// exit out if the move has zero movement. At all.
 	if (vector_equal(mm.position, gm_in->target)) return (STAT_OK);
 
+	// trap short lines
+	//	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
+	if (gm_in->move_time < MIN_TIME_MOVE) {
+		printf("ALINE() line%lu %f\n", gm_in->linenum, (double)gm_in->move_time);
+		return (STAT_MINIMUM_TIME_MOVE);
+	}
+
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
 	bf->length = get_axis_vector_length(gm_in->target, mm.position);// compute the length

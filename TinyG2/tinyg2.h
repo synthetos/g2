@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		039.11	// Merge tinyg code; Fixed X direction mistake
+#define TINYG_FIRMWARE_BUILD   		039.12	// Merge tinyg code; Re-instated the skip of the too-short moves.
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
