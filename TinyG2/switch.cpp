@@ -76,16 +76,11 @@ static void _no_action(switch_t *s) { return; }
 
 void switch_init(void)
 {
-	sw.type = SWITCH_TYPE;				// set from config
-
 	switch_t *s;	// shorthand
-
 	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
 		for (uint8_t position=0; position<SW_POSITIONS; position++) {
 			s = &sw.s[axis][position];
 			
-			s->type = sw.type;				// propagate type from global type
-//			s->mode = SW_MODE_DISABLED;		// commented out: mode is set from configs			
 			s->state = false;
 			s->edge = SW_NO_EDGE;
 			s->debounce_ticks = SW_LOCKOUT_TICKS;
@@ -222,7 +217,6 @@ uint8_t read_switch(uint8_t axis, uint8_t position)
 
 stat_t sw_set_st(cmdObj_t *cmd)			// switch type (global)
 {
-//	if (cmd->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_01(cmd);
 	switch_init();
 	return (STAT_OK);

@@ -46,7 +46,7 @@
 
 // switch array configuration / sizing
 #define SW_PAIRS				HOMING_AXES	// number of axes that can have switches				
-#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW)MAX
+#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW_MAX
 
 // switch modes
 #define SW_HOMING_BIT			0x01
@@ -126,7 +126,6 @@ typedef struct swSwitch {			// one struct per switch
 typedef void (*sw_callback)(switch_t *s); // typedef for switch action callback
 
 typedef struct swSwitchArray {		// array of switches
-	uint8_t type;					// switch type for entire array
 	switch_t s[SW_PAIRS][SW_POSITIONS];
 } switches_t;
 extern switches_t sw;
