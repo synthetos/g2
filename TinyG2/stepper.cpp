@@ -632,7 +632,7 @@ static void _load_move()
 	}
 
 	if (st_pre.segment_ready != true) {									// trap if prep is not complete
-		printf("######## LOADER - SEGMENT NOT READY\n");
+//		printf("######## LOADER - SEGMENT NOT READY\n");
 	}
 	st_pre.segment_ready = false;
 
