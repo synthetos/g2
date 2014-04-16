@@ -119,7 +119,7 @@
 #define M3_TRAVEL_PER_REV 		5.08
 #endif
 #define M3_MICROSTEPS 			8
-#define M3_POLARITY 			1
+#define M3_POLARITY 			0
 #define M3_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
@@ -276,7 +276,7 @@
 #define G55_Z_OFFSET 0
 #define G55_A_OFFSET 0
 #define G55_B_OFFSET 0
-#define G55_C_OFFSET -20         // this is where we currently store the tool offset
+#define G55_C_OFFSET 0          // this is where we currently store the tool offset
 
 #define G56_X_OFFSET 0
 #define G56_Y_OFFSET 0
