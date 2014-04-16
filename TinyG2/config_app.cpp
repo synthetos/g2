@@ -158,7 +158,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "hom","homb",_f00, 0, cm_print_pos, get_ui8, set_nul,(float *)&cm.homed[AXIS_B], false },// B homed
 	{ "hom","homc",_f00, 0, cm_print_pos, get_ui8, set_nul,(float *)&cm.homed[AXIS_C], false },// C homed
 
-//	{ "prb","prbe",_f00, 0, cm_print_prbe, cm_get_prbe, set_nul,(float *)&cs.null, 0 },	   // probing state
+	{ "prb","prbe",_f00, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm.probe_state, 0 },	   // probing state
+	{ "prb","prbx",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_X], 0 },
+	{ "prb","prby",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_Y], 0 },
+	{ "prb","prbz",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_Z], 0 },
+	{ "prb","prba",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_A], 0 },
+	{ "prb","prbb",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_B], 0 },
+	{ "prb","prbc",_f00, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_C], 0 },
 
 	{ "jog","jogx",_f00, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
 	{ "jog","jogy",_f00, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
@@ -419,10 +425,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "g30","g30c",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_C], 0 },
 
 	// this is a 128bit UUID for identifying a previously committed job state
-	{ "jid","jida",_f00,  0, tx_print_nul, get_int, set_int, (float *)&cs.job_id[0], 0},
-	{ "jid","jidb",_f00,  0, tx_print_nul, get_int, set_int, (float *)&cs.job_id[1], 0},
-	{ "jid","jidc",_f00,  0, tx_print_nul, get_int, set_int, (float *)&cs.job_id[2], 0},
-	{ "jid","jidd",_f00,  0, tx_print_nul, get_int, set_int, (float *)&cs.job_id[3], 0},
+	{ "jid","jida",_f00,  0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[0], 0},
+	{ "jid","jidb",_f00,  0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[1], 0},
+	{ "jid","jidc",_f00,  0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[2], 0},
+	{ "jid","jidd",_f00,  0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[3], 0},
 
 	// System parameters
 	{ "sys","ja",  _f07, 0, cm_print_ja,  get_flu,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
@@ -447,7 +453,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "sys","ee",  _f07, 0, co_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,			COM_ENABLE_ECHO },
 //	{ "sys","ex",  _f07, 0, co_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,	COM_ENABLE_FLOW_CONTROL },
 //	{ "sys","baud",_fns, 0, co_print_baud,get_ui8,   set_baud,   (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
-//	{ "sys","net", _fip, 0, co_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,			NETWORK_MODE },
+//	{ "sys","net", _f07, 0, co_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,			NETWORK_MODE },
 
 	// switch state readers
 /*
@@ -553,7 +559,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "_fe","_fe5",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.following_error[MOTOR_5], 0 },
 	{ "_fe","_fe6",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.following_error[MOTOR_6], 0 },
 
-//	{ "",   "_dd1",_f00, 0, tx_print_nul, cm_dd1,  cm_dd1, (float *)&cs.null, 0 },	// diagnostic dump
+//	{ "",   "_dam",_f00, 0, tx_print_nul, cm_dam,  cm_dam, (float *)&cs.null, 0 },	// dump active model
 #endif
 
 	// Persistence for status report - must be in sequence
@@ -590,7 +596,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","se29",_fpe, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[29],0 },
 
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
-	// *** Must agree with CMD_COUNT_GROUPS below ****
+	// *** Must agree with CMD_COUNT_GROUPS below ***
+	// *** START COUNTING FROM HERE ***
 	{ "","sys",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// system group
 	{ "","p1", _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PWM 1 group
 
@@ -598,8 +605,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","2",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","3",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","4",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+#if (MOTORS >= 5)
 	{ "","5",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+#endif
+#if (MOTORS >= 6)
 	{ "","6",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+#endif
 
 	{ "","x",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis groups
 	{ "","y",  _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -623,6 +634,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","pos",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work position group
 	{ "","ofs",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work offset group
 	{ "","hom",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis homing state group
+	{ "","prb",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// probing state group
 	{ "","jog",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
 	{ "","jid",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
 
@@ -653,14 +665,26 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 		32		// count of standard groups, excluding diagnostic parameter groups
+
+#if (MOTORS >= 5)
+#define MOTOR_GROUP_5			1
+#else
+#define MOTOR_GROUP_5			0
+#endif
+
+#if (MOTORS >= 6)
+#define MOTOR_GROUP_6			1
+#else
+#define MOTOR_GROUP_6			0
+#endif
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 #define DIAGNOSTIC_GROUPS 		8		// count of diagnostic groups only
 #else
 #define DIAGNOSTIC_GROUPS 		0
 #endif
-#define CMD_COUNT_GROUPS 		(STANDARD_GROUPS + DIAGNOSTIC_GROUPS)
+#define CMD_COUNT_GROUPS 		(STANDARD_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + DIAGNOSTIC_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
 #define CMD_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))

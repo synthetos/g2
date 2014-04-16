@@ -261,17 +261,15 @@ uint8_t stepper_isbusy()
 
 void st_reset()
 {
-	float zero[] = {0,0,0,0,0,0};
-	mp_set_step_counts(zero);
-
-//	en_set_encoders(zero);
-//	mp_reset_step_counts();						// step counters are in motor space: resets all step counters
+//	float zero[] = {0,0,0,0,0,0};
+//	mp_set_step_counts(zero);
 
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
-		st_pre.mot[motor].corrected_steps = 0;
+		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
 	}
+	mp_set_steps_to_runtime_position();
 }
 
 stat_t st_clc(cmdObj_t *cmd)	// clear diagnostic counters, reset stepper prep
@@ -399,7 +397,7 @@ stat_t st_motor_power_callback() 	// called by controller
 					case (MOTOR_POWER_TIMEOUT_START): {
 						st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
 						st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-//						printf ("%lu ",st_run.mot[motor].power_systick);		//+++++ DIAGNOSTIC
+//						printf ("%lu ",st_run.mot[motor].power_systick);		//++++ DIAGNOSTIC
 						break;
 					}
 					case (MOTOR_POWER_TIMEOUT_COUNTDOWN): {
@@ -893,8 +891,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// that results in long-term negative drift. (fabs/round order doesn't matter)
 
 		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
-
-
 	}
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	st_pre.segment_ready = true;
@@ -958,6 +954,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 	}
 #endif // __AVR
 }
+
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
@@ -1038,19 +1035,7 @@ stat_t st_set_pm(cmdObj_t *cmd)			// motor power mode
 	}
 	return (STAT_OK);
 }
-/*
-stat_t st_set_pl(cmdObj_t *cmd)			// motor power level
-{
-	if (cmd->value < (float)0) cmd->value = 0.000;
-	if (cmd->value > (float)1) cmd->value = 1.000;
-	set_flt(cmd);						// set the value in the motor config struct (st)
 
-	uint8_t motor = _get_motor(cmd->index);
-	st_run.mot[motor].power_level_dynamic = cmd->value;
-	_set_motor_power_level(motor, cmd->value);
-	return(STAT_OK);
-}
-*/
 /*
  * st_set_pl() - set motor power level
  *
@@ -1060,6 +1045,7 @@ stat_t st_set_pl(cmdObj_t *cmd)			// motor power level
  */ 
 stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 {
+#ifdef __ARM
 	if (cmd->value < (float)0.0) cmd->value = 0.0;
 	if (cmd->value > (float)1.0) {
 		if (cmd->value > (float)100) cmd->value = 1;
@@ -1071,22 +1057,9 @@ stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
 	st_cfg.mot[motor].power_level_scaled = (cmd->value * POWER_LEVEL_SCALE_FACTOR);
 	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
 	_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
+#endif
 	return(STAT_OK);
 }
-/*
-stat_t st_set_pl(cmdObj_t *cmd)	// motor power level
-{
-	if (cmd->value < (float)0) cmd->value = 0;
-	if (cmd->value > (float)100) cmd->value = 100;
-	set_flt(cmd);	// set power_setting value in the motor config struct (st)
-	
-	uint8_t motor = _get_motor(cmd->index);
-	st_cfg.mot[motor].power_level_scaled = (cmd->value * POWER_LEVEL_SCALE_FACTOR);
-	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
-	_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
-	return(STAT_OK);
-}
-*/
 
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *

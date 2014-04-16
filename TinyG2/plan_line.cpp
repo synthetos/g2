@@ -34,7 +34,6 @@
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
-//#include "xio.h"			// uncomment for debugging
 
 #ifdef __cplusplus
 extern "C"{
@@ -97,32 +96,35 @@ uint8_t mp_get_runtime_busy()
  *	executed once the accumulated error exceeds the minimums
  */
 
+/*
 #define __NEW_JERK
 static float _get_relative_length(const float Vi, const float Vt, const float jerk)
 {
 	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) / jerk));
 }
+*/
 
-
-stat_t mp_aline(const GCodeState_t *gm_incoming)
+stat_t mp_aline(const GCodeState_t *gm_in)
 {
 	mpBuf_t *bf; 						// current move pointer
 	float exact_stop = 0;				// preset this value OFF
 	float junction_velocity;
 
+	// exit out if the move has zero movement. At all.
+	if (vector_equal(mm.position, gm_in->target)) return (STAT_OK);
+
 	// trap short lines
-//	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
-	if (gm_incoming->move_time < MIN_TIME_MOVE) {
-		printf("ALINE() line%lu %f\n", gm_incoming->linenum, (double)gm_incoming->move_time);
+	//	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
+	if (gm_in->move_time < MIN_TIME_MOVE) {
+		printf("ALINE() line%lu %f\n", gm_in->linenum, (double)gm_in->move_time);
 		return (STAT_MINIMUM_TIME_MOVE);
 	}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
-	bf->length = get_axis_vector_length(gm_incoming->target, mm.position);
-	bf->bf_func = mp_exec_aline;					// register the callback to the exec function
-//	bf->length = length;
-	memcpy(&bf->gm, gm_incoming, sizeof(GCodeState_t));	// copy model state into planner
+	bf->length = get_axis_vector_length(gm_in->target, mm.position);// compute the length
+	bf->bf_func = mp_exec_aline;									// register the callback to the exec function
+	memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));					// copy model state into planner buffer
 
 #ifndef __NEW_JERK
 	// compute both the unit vector and the jerk term in the same pass for efficiency
@@ -231,11 +233,11 @@ stat_t mp_aline(const GCodeState_t *gm_incoming)
 	bf->braking_velocity = bf->delta_vmax;
 
 	uint8_t mr_flag = false;
-	
+
+	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
 	_plan_block_list(bf, &mr_flag);				// replan block list
-	mp_queue_write_buffer(MOVE_TYPE_ALINE); 	// commit current block
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
-	
+	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
 	return (STAT_OK);
 }
 
@@ -340,7 +342,6 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								  bp->nx->entry_vmax,
 								  bp->nx->braking_velocity, 
 								 (bp->entry_velocity + bp->delta_vmax) );
-
 		_calculate_trapezoid(bp);
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
@@ -374,14 +375,14 @@ static void _reset_replannable_list()
 /*
  * _calculate_trapezoid() - calculate trapezoid parameters
  *
- *	This rather longish and brute-force function sets section lengths and velocities 
+ *	This rather brute-force and long-ish function sets section lengths and velocities 
  *	based on the line length and velocities requested. It modifies the incoming 
  *	bf buffer and returns accurate head, body and tail lengths, and accurate or 
  *	reasonably approximate velocities. We care about accuracy on lengths, less 
  *	so for velocity (as long as velocity err's on the side of too slow). 
  *
- *	Note: We need the velocities to be set even for zero-length sections so we 
- *	can compute entry and exits for adjacent sections.
+ *	Note: We need the velocities to be set even for zero-length sections 
+ *	(Note: sections, not moves) so we can compute entry and exits for adjacent sections.
  *
  *	Inputs used are:
  *	  bf->length			- actual block length (must remain accurate)
@@ -391,24 +392,26 @@ static void _reset_replannable_list()
  *	  bf->cruise_vmax		- used in some comparisons
  *
  *	Variables that may be set/updated are:
- *	  bf->entry_velocity	- requested Ve
+ *    bf->entry_velocity	- requested Ve
  *	  bf->cruise_velocity	- requested Vt
  *	  bf->exit_velocity		- requested Vx
  *	  bf->head_length		- bf->length allocated to head
  *	  bf->body_length		- bf->length allocated to body
  *	  bf->tail_length		- bf->length allocated to tail
  *
- *	Note: The following condition must be met on entry: Ve <= Vt >= Vx 
+ *	Note: The following conditions must be met on entry: 
+ *		bf->length must be non-zero (filter these out upstream)
+ *		bf->entry_velocity <= bf->cruise_velocity >= bf->exit_velocity
  */
 /*	Classes of moves:
  *
- *	  Requested-Fit - The move has sufficient length to achieve the target cruise
- *		velocity. It will accommodate the acceleration / deceleration profile and 
- *		in the distance given (length)
+ *	  Requested-Fit - The move has sufficient length to achieve the target velocity
+ *		(cruise velocity). I.e: it will accommodate the acceleration / deceleration 
+ *		profile in the given length.
  *
  *	  Rate-Limited-Fit - The move does not have sufficient length to achieve target 
- *		cruise velocity - the target velocity will be lower than the requested 
- *		velocity. The entry and exit velocities are satisfied. 
+ *		velocity. In this case the cruise velocity will be set lower than the requested 
+ *		velocity (incoming bf->cruise_velocity). The entry and exit velocities are satisfied.
  *
  *	  Degraded-Fit - The move does not have sufficient length to transition from
  *		the entry velocity to the exit velocity in the available length. These 
@@ -417,7 +420,7 @@ static void _reset_replannable_list()
  *	  	In worst cases the move cannot be executed as the required execution time is 
  *		less than the minimum segment time. The first degradation is to reduce the 
  *		move to a body-only segment with an average velocity. If that still doesn't 
- *		fir then the move velocity is reduced so it fits into a minimum segment.
+ *		fit then the move velocity is reduced so it fits into a minimum segment.
  *		This will reduce the velocities in that region of the planner buffer as the 
  *		moves are replanned to that worst-case move.
  *
@@ -427,7 +430,7 @@ static void _reset_replannable_list()
  *	  	HBT	Ve<Vt>Vx	sufficient length exists for all parts (corner case: HBT')
  *	  	HB	Ve<Vt=Vx	head accelerates to cruise - exits at full speed (corner case: H')
  *	  	BT	Ve=Vt>Vx	enter at full speed and decelerate (corner case: T')
- *	  	HT	Ve & Vx		perfect fit HT (very rare)
+ *	  	HT	Ve & Vx		perfect fit HT (very rare). May be symmetric or asymmetric
  *	  	H	Ve<Vx		perfect fit H (common, results from planning)
  *	  	T	Ve>Vx		perfect fit T (common, results from planning)
  *	  	B	Ve=Vt=Vx	Velocities are close to each other and within matching tolerance
@@ -436,19 +439,19 @@ static void _reset_replannable_list()
  *	  	HT	(Ve=Vx)<Vt	symmetric case. Split the length and compute Vt.
  *	  	HT'	(Ve!=Vx)<Vt	asymmetric case. Find H and T by successive approximation.
  *		HBT'			body length < min body length - treated as an HT case
- *		H'				body length < min body length - reduce J to fit H to length
- *		T'				body length < min body length - reduce J to fit T to length
+ *		H'				body length < min body length - subsume body into head length
+ *		T'				body length < min body length - subsume body into tail length
  *
  *	  Degraded fit cases - line is too short to satisfy both Ve and Vx
  *	    H"	Ve<Vx		Ve is degraded (velocity step). Vx is met
  *	  	T"	Ve>Vx		Ve is degraded (velocity step). Vx is met
- *	  	B	<short>		line is very short but drawable; is treated as a body only
+ *	  	B"	<short>		line is very short but drawable; is treated as a body only
  *		F	<too short>	force fit: This block is slowed down until it can be executed
- *
- *	NOTE: The order of the cases/tests in the code is pretty important. Start with the 
- *	  shortest cases first and work out. Not only does this simplify the order of the tests,
+ */
+/*	NOTE: The order of the cases/tests in the code is pretty important. Start with the 
+ *	  shortest cases first and work up. Not only does this simplfy the order of the tests,
  *	  but it reduces execution time when you need it most - when tons of pathologically
- *	  short Gcode blocks are being executed.
+ *	  short Gcode blocks are being thrown at you.
  */
 
 // The minimum lengths are dynamic and depend on the velocity
@@ -460,54 +463,59 @@ static void _reset_replannable_list()
 
 static void _calculate_trapezoid(mpBuf_t *bf) 
 {
-	bf->head_length = 0;		// initialize the lengths
-	bf->body_length = 0;
-	bf->tail_length = 0;
-
 	// F case: Block is too short to execute. 
 	// Force block into a single segment body with limited velocities
 
 	// if length < segment time * average velocity
-	if (bf->length < (MIN_SEGMENT_TIME_PLUS_MARGIN * (bf->entry_velocity + bf->cruise_velocity) / 2)) {
+	float average_velocity = (bf->entry_velocity + bf->cruise_velocity) / 2;
+	if (bf->length < (MIN_SEGMENT_TIME_PLUS_MARGIN * average_velocity)) {
 		bf->entry_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
 		bf->cruise_velocity = bf->entry_velocity;
 		bf->exit_velocity = bf->entry_velocity;
 		bf->body_length = bf->length;
-		return;		
+		bf->head_length = 0;
+		bf->tail_length = 0;
+		return;
 	}
 
-	// B case (body only): See if the block fits into a single segment
+	// B" case: Short line, body only. See if the block fits into a single segment
 
-	if (bf->length < (NOM_SEGMENT_TIME * (bf->entry_velocity + bf->cruise_velocity) / 2)) {
+	if (bf->length <= (NOM_SEGMENT_TIME * average_velocity)) {
 		bf->entry_velocity = bf->length / NOM_SEGMENT_TIME;
 		bf->cruise_velocity = bf->entry_velocity;
 		bf->exit_velocity = bf->entry_velocity;
 		bf->body_length = bf->length;
-		return;		
+		bf->head_length = 0;
+		bf->tail_length = 0;
+		return;
 	}
 
-	// Head-only and tail-only short-line cases 
-	//	- H" and T" degraded-fit cases
-	//	- H' and T' requested-fit cases where the body residual is less than MIN_BODY_LENGTH
+	// B case:  Velocities all match (or close enough)
+	//			This occurs frequently in normal gcode files with lots of short lines
 
+	if (((bf->cruise_velocity - bf->entry_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) && 
+		((bf->cruise_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE)) { 
+		bf->body_length = bf->length;
+		bf->head_length = 0;
+		bf->tail_length = 0;
+		return;
+	}
+
+	// Head-only and tail-only short-line cases
+	//	 H" and T" degraded-fit cases
+	//	 H' and T' requested-fit cases where the body residual is less than MIN_BODY_LENGTH
+	
+	bf->body_length = 0;
 	float minimum_length = _get_target_length(bf->entry_velocity, bf->exit_velocity, bf);
 	if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
 
-		// QUESTION: The inequality cases do not trap entry_velocity == exit velocity.
-		//			 What is the correct handling of the equality case?
-/*
-		if (fp_EQ(bf->entry_velocity, bf->exit_velocity)) {	// short body case (aka "Marty Feldman")
-			bf->cruise_velocity = bf->entry_velocity;
-			bf->body_length = bf->length;
-			return;
-		}
-*/
 		if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
 			if (bf->length < minimum_length) { 				// T" (degraded case)
 				bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
 			}
 			bf->cruise_velocity = bf->entry_velocity;
 			bf->tail_length = bf->length;
+			bf->head_length = 0;
 			return;
 		}
 
@@ -517,11 +525,12 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			}
 			bf->cruise_velocity = bf->exit_velocity;
 			bf->head_length = bf->length;
+			bf->tail_length = 0;
 			return;
 		}
 	}
 
-	// Set head and tail lengths
+	// Set head and tail lengths for evaluating the next cases
 	bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 	bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
 	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
@@ -530,27 +539,30 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
 
-		// Rate-limited HT case (symmetric case)
+		// Symmetric rate-limited case (HT)
 		if (fabs(bf->entry_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) {
 			bf->head_length = bf->length/2;
 			bf->tail_length = bf->head_length;
 			bf->cruise_velocity = min(bf->cruise_vmax, _get_target_velocity(bf->entry_velocity, bf->head_length, bf));
 
-            if (bf->head_length < MIN_HEAD_LENGTH) {
-                // Convert this to a body-only move
-                bf->body_length = bf->length;
-                bf->head_length = 0;
-                bf->tail_length = 0;
+			if (bf->head_length < MIN_HEAD_LENGTH) {
+				// Convert this to a body-only move
+				bf->body_length = bf->length;
+				bf->head_length = 0;
+				bf->tail_length = 0;
 
-                // Average the entry speed and computed best cruise-speed
-                bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
-                bf->entry_velocity = bf->cruise_velocity;
-                bf->exit_velocity = bf->cruise_velocity;
+				// Average the entry speed and computed best cruise-speed
+				bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
+				bf->entry_velocity = bf->cruise_velocity;
+				bf->exit_velocity = bf->cruise_velocity;
             }
-			return;
+            return;
 		}
 
-		// Rate-limited HT' case (asymmetric) - this is relatively expensive but it's not called very often
+		// Asymmetric HT' rate-limited case. This is relatively expensive but it's not called very often
+		// iteration trap: uint8_t i=0;
+		// iteration trap: if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
+
 		float computed_velocity = bf->cruise_vmax;
 		do {
 			bf->cruise_velocity = computed_velocity;	// initialize from previous iteration 
@@ -563,9 +575,10 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = _get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
 			}
+			// insert iteration trap here if needed
 		} while ((fabs(bf->cruise_velocity - computed_velocity) / computed_velocity) > TRAPEZOID_ITERATION_ERROR_PERCENT);
 
-		// set velocity and clean up any parts that are too short 
+		// set velocity and clean up any parts that are too short
 		bf->cruise_velocity = computed_velocity;
 		bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 		bf->tail_length = bf->length - bf->head_length;
@@ -994,31 +1007,69 @@ stat_t mp_end_hold()
 }
 
 
-
-/****** UNIT TESTS ******/
+/********************************/
+/********************************/
+/****** PLANNER UNIT TESTS ******/
+/********************************/
+/********************************/
 
 #ifdef __UNIT_TESTS
 #ifdef __UNIT_TEST_PLANNER
 
-//#define JERK_TEST_VALUE (float)50000000	// set this to the value in the profile you are running
-#define JERK_TEST_VALUE (float)100000000	// set this to the value in the profile you are running
+// Comment in and out to enable/disable parts of the unit tests
+//#define __TEST_GET_TARGET_LENGTH
+//#define __TEST_GET_TARGET_VELOCITY
+#define __TEST_CALCULATE_TRAPEZOID
+//#define __TEST_GET_JUNCTION_VMAX
 
-static void _test_calculate_trapezoid(void);
-static void _test_get_junction_vmax(void);
-static void _test_trapezoid(float length, float Ve, float Vt, float Vx, mpBuf_t *bf);
-static void _make_unit_vector(float unit[], float x, float y, float z, float a, float b, float c);
-//static void _set_jerk(const float jerk, mpBuf_t *bf);
+// Prototypes and local defines
+#ifdef __TEST_GET_TARGET_LENGTH
 static void _test_get_target_length(void);
+#endif
+
+#ifdef __TEST_GET_TARGET_VELOCITY
 static void _test_get_target_velocity(void);
+#endif
+
+#ifdef __TEST_CALCULATE_TRAPEZOID
+static void _test_trapezoid(float length, float Ve, float Vt, float Vx, mpBuf_t *bf);
+static void _test_calculate_trapezoid(void);
+#endif
+
+#ifdef __TEST_GET_JUNCTION_VMAX
+static void _make_unit_vector(float unit[], float x, float y, float z, float a, float b, float c);
+static void _test_get_junction_vmax(void);
+#endif
+
+//#define JERK_TEST_VALUE (float)20000000	// set this to the value in the profile you are running
+//#define JERK_TEST_VALUE (float)50000000	// set this to the value in the profile you are running
+//#define JERK_TEST_VALUE (float)100000000	// set this to the value in the profile you are running
+//static void _set_jerk(const float jerk, mpBuf_t *bf);
 
 void mp_unit_tests()
 {
+#ifdef __TEST_GET_TARGET_LENGTH
 	_test_get_target_length();
-//	_test_get_target_velocity();
-//	_test_calculate_trapezoid();
-//	_test_get_junction_vmax();
+#endif
+
+#ifdef __TEST_GET_TARGET_VELOCITY
+	_test_get_target_velocity();
+#endif
+
+#ifdef __TEST_CALCULATE_TRAPEZOID
+	_test_calculate_trapezoid();
+#endif
+
+#ifdef __TEST_GET_JUNCTION_VMAX
+	_test_get_junction_vmax();
+#endif
 }
 
+/************************************/
+/***** __TEST_GET_TARGET_LENGTH *****/
+/************************************/
+
+#ifdef __TEST_GET_TARGET_LENGTH
 static void _test_get_target_length()
 {
 	mpBuf_t *bf = mp_get_write_buffer();
@@ -1053,7 +1104,14 @@ static void _test_get_target_length()
 	L = _get_target_length(Vi, Vt, bf);		// result: L = 5.107690
 	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 347
 }
+#endif	// __TEST_GET_TARGET_LENGTH
 
+
+/**************************************/
+/***** __TEST_GET_TARGET_VELOCITY *****/
+/**************************************/
+
+#ifdef __TEST_GET_TARGET_VELOCITY
 static void _test_get_target_velocity()
 {
 	mpBuf_t *bf = mp_get_write_buffer();
@@ -1065,6 +1123,29 @@ static void _test_get_target_velocity()
 
 	Vt = _get_target_velocity(Vi, L, bf);
 }
+#endif	// __TEST_GET_TARGET_VELOCITY
+
+
+/**************************************/
+/***** __TEST_CALCULATE_TRAPEZOID *****/
+/**************************************/
+
+/* These tests are calibrated for settings_default.h profile values:
+
+#define JERK_MAX 				20			// "20,000,000" mm/(min^3), see #define below
+#define JUNCTION_DEVIATION		0.05		// default value, in mm
+#define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
+
+Other assumptions include:
+
+#define NOM_SEGMENT_USEC 	((float)5000)		// nominal segment time
+#define MIN_SEGMENT_USEC 	((float)2500)		// minimum segment time / minimum move time
+
+*/
+
+#ifdef __TEST_CALCULATE_TRAPEZOID
+
+#define JERK_TEST_VALUE (float)20000000		// set this to the value in the profile you are running
 
 static void _test_trapezoid(float length, float Ve, float Vt, float Vx, mpBuf_t *bf)
 {
@@ -1083,17 +1164,52 @@ static void _test_calculate_trapezoid()
 {
 	mpBuf_t *bf = mp_get_write_buffer();
 
-// these tests are calibrated the following parameters:
-//	jerk_max 				50 000 000		(all axes)
-//	jerk_corner_offset		   		 0.1	(all exes)
-//	jerk_corner_acceleration   200 000		(global)
+//	_test_trapezoid(0.0001,	800,	800, 	800,bf);	// B case
+//	_test_trapezoid(0.001,	800,	800, 	800,bf);	// B case
+//	_test_trapezoid(0.01,	800,	800, 	800,bf);	// B case
+	_test_trapezoid(0.05,	800,	800, 	800,bf);	// B case
+	_test_trapezoid(0.1,	800,	800, 	800,bf);	// B case
+	_test_trapezoid(1.0,	800,	800, 	800,bf);	// B case
+	_test_trapezoid(10.0,	800,	800, 	800,bf);	// B case
 
-/*
+// F cases: line below minimum velocity.
+//				   	L	 	Ve  	Vt		Vx
+//	_test_trapezoid(0.0001, 0,		100,	0,		bf);
+//	_test_trapezoid(0.001, 	0,		100,	0,		bf);
+	_test_trapezoid(0.0001, 1000,	1000,	1000,	bf);	// min length = 0.0833...
+	_test_trapezoid(0.001, 	1000,	1000,	1000,	bf);	// min length = 0.0833..
+	_test_trapezoid(0.01, 	1000,	1000,	1000,	bf);	// min length = 0.0833..
+
+
+// B cases: body-only line above minimum velocity. At std settings nominal length == 0.00833333
+//				   	L	 	Ve  	Vt		Vx
+	_test_trapezoid(0.08, 	1000,	1000,	1000,	bf);	// min length = 0.0833..
+	_test_trapezoid(0.09, 	1000,	1000,	1000,	bf);	// min length = 0.0833..
+	_test_trapezoid(0.009, 	0,		100,	0,		bf);
+
+	_test_trapezoid(0.1, 	0,	100,	0,	bf);
+
 // no-fit cases: line below minimum velocity or length
 //				   	L	 Ve  	Vt		Vx
 	_test_trapezoid(1.0, 0,		0.001,	0,	bf);
 	_test_trapezoid(0.0, 0,		100,	0,	bf);
 	_test_trapezoid(0.01, 0,	100,	0,	bf);
+
+// 1 section cases (H,B and T)
+//				   	L	 Ve  	Vt		Vx
+	_test_trapezoid(1.0, 800,	800, 	800,bf);	// B case
+	_test_trapezoid(0.8, 0,		400, 	0, bf);		// B case
+	_test_trapezoid(0.8, 200,	400, 	0, bf);
+	_test_trapezoid(2.0, 400,	400, 	0, bf);
+	_test_trapezoid(0.8, 0,		400, 	200,bf);
+
+// 2 section cases (HT)
+//				   	L   Ve  	Vt		Vx
+	_test_trapezoid(0.8, 0,		200, 	0, bf);		// requested fit HT case (exact fit)
+	_test_trapezoid(0.8, 0,		400, 	0, bf);		// symmetric rate-limited HT case
+	_test_trapezoid(0.8, 200,	400, 	0, bf);		// asymmetric rate-limited HT case
+	_test_trapezoid(2.0, 400,	400, 	0, bf);
+	_test_trapezoid(0.8, 0,		400, 	200,bf);
 
 // requested-fit cases
 //				   	L  	 Ve  	Vt		Vx
@@ -1107,26 +1223,13 @@ static void _test_calculate_trapezoid()
 	_test_trapezoid(0.8, 0,		190, 	0, bf);
 	_test_trapezoid(2.0, 200,	400, 	0, bf);
 
-// 2 section cases (HT)
-//				   	L   Ve  	Vt		Vx
-	_test_trapezoid(0.8, 0,		200, 	0, bf);		// requested fit HT case (exact fit)
-	_test_trapezoid(0.8, 0,		400, 	0, bf);		// symmetric rate-limited HT case
-	_test_trapezoid(0.8, 200,	400, 	0, bf);		// asymmetric rate-limited HT case
-	_test_trapezoid(2.0, 400,	400, 	0, bf);
-	_test_trapezoid(0.8, 0,		400, 	200,bf);
 
-// 1 section cases (H,B and T)
-//				   	L	 Ve  	Vt		Vx
-	_test_trapezoid(1.0, 800,	800, 	800,bf);	// B case
-	_test_trapezoid(0.8, 0,		400, 	0, bf);		// B case
-	_test_trapezoid(0.8, 200,	400, 	0, bf);
-	_test_trapezoid(2.0, 400,	400, 	0, bf);
-	_test_trapezoid(0.8, 0,		400, 	200,bf);
-*/
+
+/*
 // test cases drawn from Mudflap
 //				   	L		Ve  	  Vt		Vx
-//	_test_trapezoid(0.6604, 000.000,  800.000,  000.000, bf);	// line 50
-//	_test_trapezoid(0.8443, 000.000,  805.855,  000.000, bf);	// line 55
+	_test_trapezoid(0.6604, 000.000,  800.000,  000.000, bf);	// line 50
+	_test_trapezoid(0.8443, 000.000,  805.855,  000.000, bf);	// line 55
 	_test_trapezoid(0.8443, 000.000,  805.855,  393.806, bf);	// line 55'
 	_test_trapezoid(0.7890, 393.805,  955.829,  000.000, bf);	// line 60
 	_test_trapezoid(0.7890, 393.806,  955.829,  390.294, bf);	// line 60'
@@ -1176,12 +1279,9 @@ static void _test_calculate_trapezoid()
 	_test_trapezoid(0.9158, 801.233,  801.233,  617.229, bf);	// line 120"
 	_test_trapezoid(0.3843, 245.375,  807.080,  000.000, bf);	// line 125
 	_test_trapezoid(0.3843, 617.229,  807.080,  371.854, bf);	// line 125'  6,382,804 cycles
+*/
 
-
-
-	_test_trapezoid(0.8, 0,	400, 400, bf);
-
-
+/*
 // test cases drawn from braid_600mm					 		// expected results
 //				   	L   	Ve  		Vt		Vx
 	_test_trapezoid(0.327,	000.000,	600,	000.000, bf); // Ve=0 	   	Vc=110.155
@@ -1189,8 +1289,17 @@ static void _test_calculate_trapezoid()
 	_test_trapezoid(0.327,	174.873,	600,	173.867, bf); // Ve=174.873	Vc=185.356	Vx=173.867
 	_test_trapezoid(0.327,	173.593,	600,	000.000, bf); // Ve=174.873	Vc=185.356	Vx=173.867
 	_test_trapezoid(0.327,	347.082,	600,	173.214, bf); // Ve=174.873	Vc=185.356	Vx=173.867
-
+*/
 }
+
+#endif // __TEST_CALCULATE_TRAPEZOID
+
+
+/************************************/
+/***** __TEST_GET_JUNCTION_VMAX *****/
+/************************************/
+
+#ifdef __TEST_GET_JUNCTION_VMAX
 
 static void _make_unit_vector(float unit[], float x, float y, float z, float a, float b, float c)
 {
@@ -1270,10 +1379,11 @@ static void _test_get_junction_vmax()
 	mm.test_velocity = _get_junction_vmax(mm.a_unit, mm.b_unit);
 */
 }
-
+#endif // __TEST_GET_JUNCTION_VMAX
 #endif // __UNIT_TEST_PLANNER
-#endif
+#endif // __UNIT_TESTS
 
 #ifdef __cplusplus
 }
 #endif
+

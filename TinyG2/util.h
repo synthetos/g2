@@ -123,17 +123,25 @@ uint32_t SysTickTimer_getValue(void);
 #ifndef fp_NE
 #define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
-#ifndef fp_ZERO
-#define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
+#ifndef fp_Z
+#define fp_Z(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
 #endif
-#ifndef fp_NOT_ZERO
-#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
+#ifndef fp_NZ
+#define fp_NZ(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
 #endif
 #ifndef fp_TRUE
 #define fp_TRUE(a) (a > EPSILON)			// float is interpreted as TRUE (not equal to zero)
+#endif
+
+// deprecated
+#ifndef fp_ZERO
+#define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
+#endif
+#ifndef fp_NOT_ZERO
+#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
 #endif
 
 // Constants

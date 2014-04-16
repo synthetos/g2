@@ -121,12 +121,12 @@ ISR(PWM2_ISR_vect)
 /*
 #ifdef __ARM
 MOTATE_TIMER_INTERRUPT
-ISR(PWM1_ISR_vect) 
+ISR(PWM1_ISR_vect)
 {
 	return;
 }
 
-ISR(PWM2_ISR_vect) 
+ISR(PWM2_ISR_vect)
 {
 	return;
 }
@@ -205,12 +205,13 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 	float period_scalar = pwm.p[chan].timer->PER;
 	pwm.p[chan].timer->CCB = (uint16_t)(period_scalar * duty) + 1;
 #endif // __AVR
+
 #ifdef __ARM
-    if (chan == PWM_1) {
-        spindle_pwm_pin = duty;
-    } else if (chan == PWM_2) {
-        secondary_pwm_pin = duty;
-    }
+	if (chan == PWM_1) {
+		spindle_pwm_pin = duty;
+	} else if (chan == PWM_2) {
+		secondary_pwm_pin = duty;
+	}
 #endif // __ARM
 
 	return (STAT_OK);

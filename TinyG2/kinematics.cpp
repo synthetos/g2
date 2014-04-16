@@ -53,7 +53,7 @@ void ik_kinematics(const float travel[], float steps[])
 {
 	float joint[AXES];
 
-//	_inverse_kinematics(travel, joint, microseconds);// you can insert inverse kinematics transformations here
+//	_inverse_kinematics(travel, joint);				// you can insert inverse kinematics transformations here
 	memcpy(joint, travel, sizeof(float)*AXES);		 //...or just do a memcopy for cartesian machines
 
 	// Map motors to axes and convert length units to steps
@@ -104,7 +104,9 @@ static void _inverse_kinematics(float travel[], float joint[])
 }
 */
 
-//############## UNIT TESTS ################
+// *************************************************
+// ***** UNIT TESTS ********************************
+// *************************************************
 
 //#define __UNIT_TEST_KINEMATICS
 #ifdef __UNIT_TESTS

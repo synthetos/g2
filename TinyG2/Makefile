@@ -65,11 +65,16 @@ CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align -Wpacked 
+#CFLAGS += -Wcast-align -Wpacked
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
+
+
+# These are useful, but chatty:
+#CFLAGS += -Winline
+
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CFLAGS += -Wno-format-nonliteral -Wno-format-security
@@ -88,9 +93,14 @@ CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+CPPFLAGS += -Wredundant-decls -Wlong-long
 #CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
+
+
+# These are useful, but chatty:
+#CFLAGS += -Winline
+
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
@@ -227,20 +237,23 @@ OUTPUT_BIN = $(BIN)/$(PLATFORM)
 #-------------------------------------------------------------------------------
 
 # Compilation tools
-CC      = $(CROSS_COMPILE)gcc
-CXX     = $(CROSS_COMPILE)g++
-LD      = $(CROSS_COMPILE)ld
-AR      = $(CROSS_COMPILE)ar
-SIZE    = $(CROSS_COMPILE)size
-STRIP   = $(CROSS_COMPILE)strip
-OBJCOPY = $(CROSS_COMPILE)objcopy
-GDB     = $(CROSS_COMPILE)gdb
-NM      = $(CROSS_COMPILE)nm
+CC      = $(CROSS_COMPILE)-gcc
+CXX     = $(CROSS_COMPILE)-g++
+LD      = $(CROSS_COMPILE)-ld
+AR      = $(CROSS_COMPILE)-ar
+SIZE    = $(CROSS_COMPILE)-size
+STRIP   = $(CROSS_COMPILE)-strip
+OBJCOPY = $(CROSS_COMPILE)-objcopy
+GDB     = $(CROSS_COMPILE)-gdb
+NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
+
+SHELL = bash
+export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 
 
 # ---------------------------------------------------------------------------------------
@@ -315,7 +328,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(DEFAULT_MEMORY)
+all: TOOLS $(DEFAULT_MEMORY)
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -326,6 +339,9 @@ MK_DIRS =   $(shell                              \
               done)
 
 $(eval $(DEVICE_RULES))
+
+TOOLS:
+	if test \! `command -v ${CC}`; then cd ../Tools && make; fi
 
 #-------------------------------------------------------------------------------
 #		Per-Memory Rules Block

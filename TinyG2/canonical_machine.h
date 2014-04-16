@@ -300,8 +300,8 @@ extern cmSingleton_t cm;		// canonical machine controller singleton
  */
 // *** Note: check config printout strings align with all the state variables
 
-// #### LAYER 8 CRITICAL REGION ###
-// #### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT #### 
+// ### LAYER 8 CRITICAL REGION ###
+// ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
 	COMBINED_READY,					// [1] machine is ready for use. Also used to force STOP state for null moves
@@ -316,7 +316,7 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 	COMBINED_JOG,					// [10] jogging is treated as a cycle
 	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown)
 };
-//#### END CRITICAL REGION ####
+//### END CRITICAL REGION ###
 
 enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
@@ -360,16 +360,16 @@ enum cmHomingState {				// applies to cm.homing_state
 
 enum cmProbeState {					// applies to cm.probe_state
 	PROBE_FAILED = 0,				// probe reached endpoint without triggering
-	PROBE_SUCCEDED = 1,				// probe was triggered, cm.probe_results has position
+	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
 };
-
+/*
 enum cmSetOriginState {				// applies to cm.set_origin_state
 	SET_ORIGIN_OFF = 0,
-	SET_ORIGIN_SUCCEDED = 1,		// end state
+	SET_ORIGIN_SUCCEEDED = 1,		// end state
 	SET_ORIGIN_WAITING				// waiting for planner to drain
 };
-
+*/
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
  * MotionMode persists across blocks (as G modal group 1)
@@ -378,9 +378,9 @@ enum cmSetOriginState {				// applies to cm.set_origin_state
 enum cmNextAction {						// these are in order to optimized CASE statement
 	NEXT_ACTION_DEFAULT = 0,			// Must be zero (invokes motion modes)
 	NEXT_ACTION_SEARCH_HOME,			// G28.2 homing cycle
-	NEXT_ACTION_SET_ORIGIN,				// G28.3 origin set
+	NEXT_ACTION_SET_ABSOLUTE_ORIGIN,	// G28.3 origin set
 	NEXT_ACTION_HOMING_NO_SET,			// G28.4 homing cycle with no coordinate setting
-	NEXT_ACTION_SET_G28_POSITION,		// G28.1 set position in abs coordingates 
+	NEXT_ACTION_SET_G28_POSITION,		// G28.1 set position in abs coordinates 
 	NEXT_ACTION_GOTO_G28_POSITION,		// G28 go to machine position
 	NEXT_ACTION_SET_G30_POSITION,		// G30.1
 	NEXT_ACTION_GOTO_G30_POSITION,		// G30
@@ -558,11 +558,9 @@ float cm_get_absolute_position(GCodeState_t *gcode_state, uint8_t axis);
 float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis);
 
 // Critical helpers
-void cm_set_position_by_axis(uint8_t axis, float position);		// set absolute position - single axis
-void cm_set_position_by_vector(float position[], float flags[]);// set absolute position - multiple axes
+void cm_update_model_position(void);
+void cm_update_model_position_from_runtime(void);
 void cm_set_model_target(float target[], float flag[]);
-void cm_set_model_position(stat_t status);
-void cm_set_model_position_from_runtime(stat_t status);
 void cm_set_move_times(GCodeState_t *gcode_state);
 stat_t cm_test_soft_limits(float target[]);
 
@@ -582,6 +580,10 @@ stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
 stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
 stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
+
+void cm_set_position(uint8_t axis, float position);				// set absolute position - single axis
+stat_t cm_set_absolute_origin(float origin[], float flag[]);	// G28.3
+void cm_set_axis_origin(uint8_t axis, const float position);	// G28.3 planner callback
 
 stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
 stat_t cm_set_origin_offsets(float offset[], float flag[]);		// G92
@@ -639,13 +641,11 @@ stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle sta
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
 void cm_cycle_start(void);										// (no Gcode)
-void cm_cycle_end(void); 										// (no Gcode)
+void cm_cycle_end(uint8_t flag); 								// (no Gcode) - set flag to true for cycle end
 void cm_feedhold(void);											// (no Gcode)
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2
-//void cm_exec_program_stop(void);
-//void cm_exec_program_end(void);
 
 /*--- Cycles ---*/
 
@@ -653,10 +653,6 @@ void cm_program_end(void);										// M2
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_cycle_start_no_set(void);						// G28.4
 stat_t cm_homing_callback(void);								// G28.2/.4 main loop callback
-
-// Set origin cycle
-stat_t cm_set_origin_cycle_start(void);							// G28.3  (special function)
-stat_t cm_set_origin_callback(void);							// G28.3 main loop callback
 
 // Probe cycles
 stat_t cm_straight_probe(float target[], float flags[]);		// G38.2
@@ -694,6 +690,8 @@ stat_t cm_get_ofs(cmdObj_t *cmd);		// get runtime work offset...
 
 stat_t cm_run_qf(cmdObj_t *cmd);		// run queue flush
 stat_t cm_run_home(cmdObj_t *cmd);		// start homing cycle
+
+stat_t cm_dam(cmdObj_t *cmd);			// dump active model (debugging command)
 
 stat_t cm_run_jogx(cmdObj_t *cmd);		// start jogging cycle for x
 stat_t cm_run_jogy(cmdObj_t *cmd);		// start jogging cycle for y

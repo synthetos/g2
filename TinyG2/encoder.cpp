@@ -27,11 +27,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
-#include "planner.h"
-#include "stepper.h"
 #include "encoder.h"
-#include "kinematics.h"
-#include "hardware.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -98,9 +94,8 @@ void en_set_encoder_steps(uint8_t motor, float steps)
 
 float en_read_encoder(uint8_t motor)
 {
-	return((float)en.en[motor].encoder_steps + ENCODER_STEP_ROUNDING);
+	return((float)en.en[motor].encoder_steps);
 }
-
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

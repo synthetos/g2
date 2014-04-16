@@ -1,8 +1,8 @@
 /*
- * controller.cpp - tinyg2 controller and top level parser
+ * controller.cpp - tinyg controller and top level parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -182,15 +182,16 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
-	DISPATCH(cm_set_origin_callback());         // G28.3 continuation
 	DISPATCH(cm_jogging_callback());			// jog function
-//	DISPATCH(cm_probe_callback());				// G38.2 continuation
+	DISPATCH(cm_probe_callback());				// G38.2 continuation
 
 //----- command readers and parsers --------------------------------------------------//
 
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
-//	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+#ifdef __AVR
+	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+#endif
 	DISPATCH(_command_dispatch());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }

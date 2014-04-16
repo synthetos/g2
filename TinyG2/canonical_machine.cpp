@@ -3,6 +3,7 @@
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2014 Alden S Hart, Jr.
+ * Copyright (c) 2014 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -121,6 +122,7 @@ static void _exec_change_tool(float *value, float *flag);
 static void _exec_select_tool(float *value, float *flag);
 static void _exec_mist_coolant_control(float *value, float *flag);
 static void _exec_flood_coolant_control(float *value, float *flag);
+static void _exec_absolute_origin(float *value, float *flag);
 static void _exec_program_finalize(float *value, float *flag);
 
 static int8_t _get_axis(const index_t index);
@@ -318,42 +320,20 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
  * Core functions supporting the canonical machining functions
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
-/*
- * cm_set_position_by_axis()   - set the position of a single axis in the model, planner and runtime
- * cm_set_position_by_vector() - set one or more positions in the model, planner and runtime
+/* 
+ * cm_update_model_position() - set endpoint position; uses internal canonical coordinates only
+ * cm_update_model_position_from_runtime() - set endpoint position from final runtime position
  *
- *	These commands sets an axis/axes to a position provided as an argument. 
- *	This is useful for setting origins for homing, probing, G28.3 and other operations.
+ * 	These routines set the point position in the gcode model.
  *
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *	!!!!! DO NOT CALL THESE FUNCTIONS WHILE IN A MACHINING CYCLE !!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *
- *	More specifically, do not call these functions if there are any moves in the planner
- *	or if the runtime is moving. The system must be quiescent or you will introduce positional 
- *	errors. This is true because the planned / running moves have a different reference frame 
- *	than the one you are now going to set. These functions should only be called during 
- *	initialization sequences and during cycles (such as homing cycles) when you know there 
- *	are no more moves in the planner and that all motion has stopped. Use cm_get_runtime_busy() if in doubt.
+ * 	Note: As far as the canonical machine is concerned the final position of a Gcode block (move) 
+ *	is achieved as soon as the move is planned and the move target becomes the new model position.
+ *	In reality the planner will (in all likelihood) have only just queued the move for later 
+ *	execution, and the real tool position is still close to the starting point. 
  */
 
-void cm_set_position_by_axis(uint8_t axis, float position)
-{
-	cm.gmx.position[axis] = position;
-	cm.gm.target[axis] = position;
-	mp_set_planner_position_by_axis(axis, position);
-}
-
-void cm_set_position_by_vector(float position[], float flags[])
-{
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(flags[axis])) {
-			cm.gmx.position[axis] = position[axis];
-			cm.gm.target[axis] = position[axis];
-		}
-	}
-	mp_set_planner_position_by_vector(position, flags);
-}
+void cm_update_model_position() { copy_vector(cm.gmx.position, cm.gm.target); }
+void cm_update_model_position_from_runtime() { copy_vector(cm.gmx.position, mr.gm.target); }
 
 /* 
  * cm_set_model_target() - set target vector in GM model
@@ -417,35 +397,6 @@ void cm_set_model_target(float target[], float flag[])
 			cm.gm.target[axis] += tmp;
 		}
 	}
-}
-
-/* 
- * cm_set_model_position() - set endpoint position; uses internal canonical coordinates only
- * cm_set_model_position_from_runtime() - set endpoint position from final runtime position
- *
- * 	This routine sets the endpoint position in the gcode model if the move was successfully 
- *	completed (no errors). Leaving the endpoint position alone for errors allows 
- *	too-short-lines to accumulate into longer lines (line aggregation).
- *
- * 	Note: As far as the canonical machine is concerned the final position is achieved as soon 
- *	as the move is executed and the position is now the target. In reality the planner and 
- *	steppers will still be processing the action and the real tool position is still close 
- *	to the starting point. 
- */
-void cm_set_model_position(stat_t status)
-{
-	// Even if we are coalescing the move need to keep the gcode model correct
-//	if (status == STAT_OK) {
-		copy_vector(cm.gmx.position, cm.gm.target);
-//	}
-}
-
-void cm_set_model_position_from_runtime(stat_t status)
-{
-	// Even if we are coalescing the move need to keep the gcode model correct
-//	if (status == STAT_OK) {
-		copy_vector(cm.gmx.position, mr.gm.target);
-//	}
 }
 
 /*
@@ -583,7 +534,7 @@ stat_t cm_test_soft_limits(float target[])
  *	Values are passed in pre-unit_converted state (from gn structure)
  *	All operations occur on gm (current model state)
  *
- * These are organized by section number (x.x.x) in the order they are 
+ * These are organized by section number (x.x.x) in the order they are
  * found in NIST RS274 NGCv3
  ************************************************************************/
 
@@ -656,30 +607,10 @@ stat_t canonical_machine_test_assertions(void)
 }
 
 /*
- * cm_hard_alarm() - alarm state; send an exception report and shut down machine
  * cm_soft_alarm() - alarm state; send an exception report and stop processing input
  * cm_clear() 	   - clear soft alarm
- *
- *	Fascinating: http://www.cncalarms.com/
+ * cm_hard_alarm() - alarm state; send an exception report and shut down machine
  */
-
-stat_t cm_hard_alarm(stat_t status)
-{
-	// stop the steppers and the spindle
-	st_deenergize_motors();
-	cm_spindle_control(SPINDLE_OFF);
-
-	// disable all MCode functions
-//	gpio_set_bit_off(SPINDLE_BIT);			//###### this current stuff is temporary
-//	gpio_set_bit_off(SPINDLE_DIR);
-//	gpio_set_bit_off(SPINDLE_PWM);
-//	gpio_set_bit_off(MIST_COOLANT_BIT);		//###### replace with exec function
-//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//###### replace with exec function
-
-	rpt_exception(status);					// send shutdown message
-	cm.machine_state = MACHINE_SHUTDOWN;
-	return (status);
-}
 
 stat_t cm_soft_alarm(stat_t status)
 {
@@ -692,10 +623,28 @@ stat_t cm_clear(cmdObj_t *cmd)				// clear soft alarm
 {
 	if (cm.cycle_state == CYCLE_OFF) {
 		cm.machine_state = MACHINE_PROGRAM_STOP;
-		} else {
+	} else {
 		cm.machine_state = MACHINE_CYCLE;
 	}
 	return (STAT_OK);
+}
+
+stat_t cm_hard_alarm(stat_t status)
+{
+	// stop the steppers and the spindle
+	st_deenergize_motors();
+	cm_spindle_control(SPINDLE_OFF);
+
+	// disable all MCode functions
+//	gpio_set_bit_off(SPINDLE_BIT);			//++++ this current stuff is temporary
+//	gpio_set_bit_off(SPINDLE_DIR);
+//	gpio_set_bit_off(SPINDLE_PWM);
+//	gpio_set_bit_off(MIST_COOLANT_BIT);		//++++ replace with exec function
+//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
+
+	rpt_exception(status);					// send shutdown message
+	cm.machine_state = MACHINE_SHUTDOWN;
+	return (status);
 }
 
 /**************************
@@ -709,6 +658,8 @@ stat_t cm_clear(cmdObj_t *cmd)				// clear soft alarm
  *	cm_set_units_mode()			- G20, G21
  *	cm_set_distance_mode()		- G90, G91
  *	cm_set_coord_offsets()		- G10 (delayed persistence)
+ *
+ *	These functions assume input validation occurred upstream.
  */
 
 stat_t cm_select_plane(uint8_t plane) 
@@ -778,7 +729,76 @@ static void _exec_offset(float *value, float *flag)
 		offsets[axis] = cm.offset[coord_system][axis] + (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
 	}
 	mp_set_runtime_work_offset(offsets);
-//	cm_set_work_offsets(RUNTIME);
+}
+
+/*
+ * cm_set_position() - set the position of a single axis in the model, planner and runtime
+ *
+ *	This command sets an axis/axes to a position provided as an argument. 
+ *	This is useful for setting origins for homing, probing, and other operations.
+ *
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *	!!!!! DO NOT CALL THIS FUNCTION WHILE IN A MACHINING CYCLE !!!!!
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ *	More specifically, do not call this function if there are any moves in the planner or 
+ *	if the runtime is moving. The system must be quiescent or you will introduce positional 
+ *	errors. This is true because the planned / running moves have a different reference frame 
+ *	than the one you are now going to set. These functions should only be called during 
+ *	initialization sequences and during cycles (such as homing cycles) when you know there 
+ *	are no more moves in the planner and that all motion has stopped. 
+ *	Use cm_get_runtime_busy() to be sure the system is quiescent. 
+ */
+
+void cm_set_position(uint8_t axis, float position)
+{
+	// TODO: Interlock involving runtime_busy test
+	cm.gmx.position[axis] = position;
+	cm.gm.target[axis] = position;
+	mp_set_planner_position(axis, position);
+	mp_set_runtime_position(axis, position);
+	mp_set_steps_to_runtime_position();
+}
+
+/*** G28.3 functions and support ***
+ *
+ * cm_set_absolute_origin() - G28.3 - model, planner and queue to runtime
+ * _exec_absolute_origin()  - callback from planner
+ *
+ *	cm_set_absolute_origin() takes a vector of origins (presumably 0's, but not necessarily) 
+ *	and applies them to all axes where the corresponding position in the flag vector is true (1).
+ *
+ *	This is a 2 step process. The model and planner contexts are set immediately, the runtime 
+ *	command is queued and synchronized with the planner queue. This includes the runtime position 
+ *	and the step recording done by the encoders. At that point any axis that is set is also marked 
+ *	as homed.
+ */
+
+stat_t cm_set_absolute_origin(float origin[], float flag[])
+{
+	float value[AXES];
+
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		if (fp_TRUE(flag[axis])) {
+			value[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(origin[axis]);
+			cm.gmx.position[axis] = value[axis];		// set model position
+			cm.gm.target[axis] = value[axis];			// reset model target
+			mp_set_planner_position(axis, value[axis]);	// set mm position
+		}
+	}
+	mp_queue_command(_exec_absolute_origin, value, flag);
+	return (STAT_OK);
+}
+
+static void _exec_absolute_origin(float *value, float *flag)
+{
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		if (fp_TRUE(flag[axis])) {
+			mp_set_runtime_position(axis, value[axis]);
+			cm.homed[axis] = true;	// G28.3 is not considered homed until you get here
+		}
+	}
+	mp_set_steps_to_runtime_position();
 }
 
 /* 
@@ -844,16 +864,19 @@ stat_t cm_straight_traverse(float target[], float flags[])
 {
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target, flags);
-	if (vector_equal(cm.gm.target, cm.gmx.position)) return (STAT_OK);
+//	if (vector_equal(cm.gm.target, cm.gmx.position)) return (STAT_OK);
+
+	// test soft limits
 	stat_t status = cm_test_soft_limits(cm.gm.target);
 	if (status != STAT_OK) return (cm_soft_alarm(status));
 
+	// prep and plan the move
 	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
 	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
-	status = mp_aline(&cm.gm);					// run the move
-	cm_set_model_position(status);				// update position if the move was successful
-	return (status);
+	mp_aline(&cm.gm);							// send the move to the planner
+	cm_update_model_position();
+	return (STAT_OK);
 }
 
 /*
@@ -940,9 +963,8 @@ stat_t cm_set_path_control(uint8_t mode)
  * Machining Functions (4.3.6) *
  *******************************/
 /* 
- * cm_arc_feed()
+ * cm_arc_feed() - SEE plan_arc.c(pp)
  */
-// see plan_arc.cpp
  
 /*
  * cm_dwell() - G4, P parameter (seconds)
@@ -959,30 +981,24 @@ stat_t cm_dwell(float seconds)
  */
 stat_t cm_straight_feed(float target[], float flags[])
 {
-	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
-
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-		return (STAT_GCODE_FEEDRATE_ERROR);
+		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
+
+	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 	cm_set_model_target(target, flags);
-	if (vector_equal(cm.gm.target, cm.gmx.position)) return (STAT_OK);
+
+	// test soft limits
 	stat_t status = cm_test_soft_limits(cm.gm.target);
 	if (status != STAT_OK) return (cm_soft_alarm(status));
 
+	// prep and plan the move
 	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
 	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
-
-	// Gcode hinting. 
-	// If in Continuous mode preserve speed at the expense of path integrity
-	// If in Exact Path or Exact Stop mode slow move down to be able to execute the move
-	if (cm.gm.path_control != PATH_CONTINUOUS) {
-		cm.gm.move_time = max(cm.gm.move_time, MIN_SEGMENT_TIME);
-	}
-
 	cm_cycle_start();							// required for homing & other cycles
-	status = mp_aline(&cm.gm);					// run the move
-	cm_set_model_position(status);				// update position if the move was successful
+	status = mp_aline(&cm.gm);					// send the move to the planner
+	cm_update_model_position();
 	return (status);
 }
 
@@ -1014,6 +1030,7 @@ stat_t cm_select_tool(uint8_t tool_select)
 static void _exec_select_tool(float *value, float *flag)
 {
 	cm.gm.tool_select = (uint8_t)value[0];
+  //printf("{\"tool\":%i}\n", cm.gm.tool_select);
 }
 
 stat_t cm_change_tool(uint8_t tool_change)
@@ -1250,7 +1267,11 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_queue_flush();
 		}
 	}
-	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false)) {
+	bool feedhold_processing =				// added feedhold processing lockout from omco fork
+		cm.hold_state == FEEDHOLD_SYNC ||
+		cm.hold_state == FEEDHOLD_PLAN ||
+		cm.hold_state == FEEDHOLD_DECEL;
+	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false) && !feedhold_processing) {
 		cm.cycle_start_requested = false;
 		cm.hold_state = FEEDHOLD_END_HOLD;
 		cm_cycle_start();
@@ -1271,20 +1292,17 @@ stat_t cm_queue_flush()
 
 	// Note: The following uses low-level mp calls for absolute position.
 	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
-
-//+++++++++++++++++ testing
+//++++ testing
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		cm_set_position_by_axis(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
+		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
-
-/* +++++++++++++ original code
+/* ++++ original code
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		mp_set_planner_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 		cm.gmx.position[axis] = mp_get_runtime_absolute_position(axis);
 		cm.gm.target[axis] = cm.gmx.position[axis];
 	}
 */
-
 	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);			// finalize now, not later
 	return (STAT_OK);
@@ -1328,7 +1346,7 @@ stat_t cm_queue_flush()
 
 static void _exec_program_finalize(float *value, float *flag)
 {
-	cm.machine_state = (uint8_t)value[0];;
+	cm.machine_state = (uint8_t)value[0];
 	cm_set_motion_state(MOTION_STOP);
 	if (cm.cycle_state == CYCLE_MACHINING) {
 		cm.cycle_state = CYCLE_OFF;					// don't end cycle if homing, probing, etc.
@@ -1337,7 +1355,7 @@ static void _exec_program_finalize(float *value, float *flag)
 	cm.cycle_start_requested = false;				// cancel any pending cycle start request
 	mp_zero_segment_velocity();						// for reporting purposes
 
-	// execute program END resets
+	// perform the following resets if it's a program END
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
 		cm_reset_origin_offsets();					// G92.1 - we do G91.1 instead of G92.2
 	//	cm_suspend_origin_offsets();				// G92.2 - as per Kramer
@@ -1364,11 +1382,13 @@ void cm_cycle_start()
 	}
 }
 
-void cm_cycle_end() 
+void cm_cycle_end(uint8_t flag) 					// flag must be true to trigger cycle end
 {
-	if (cm.cycle_state != CYCLE_OFF) {
-		float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-		_exec_program_finalize(value,value);
+	if (flag == true) {
+		if (cm.cycle_state != CYCLE_OFF) {
+			float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+			_exec_program_finalize(value, value);
+		}
 	}
 }
 
@@ -1445,16 +1465,14 @@ static const char msg_macs4[] PROGMEM = "End";
 static const char msg_macs5[] PROGMEM = "Cycle";
 static const char msg_macs6[] PROGMEM = "Shutdown";
 static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-                                                msg_macs4, msg_macs5, msg_macs6 };
+												msg_macs4, msg_macs5, msg_macs6 };
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";
 static const char msg_cycs2[] PROGMEM = "Probe";
 static const char msg_cycs3[] PROGMEM = "Homing";
 static const char msg_cycs4[] PROGMEM = "Jog";
-static const char msg_cycs5[] PROGMEM = "Set Origin";
-static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2,
-                                                msg_cycs3, msg_cycs4, msg_cycs5 };
+static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
 
 static const char msg_mots0[] PROGMEM = "Stop";
 static const char msg_mots1[] PROGMEM = "Run";
@@ -1467,11 +1485,12 @@ static const char msg_hold2[] PROGMEM = "Plan";
 static const char msg_hold3[] PROGMEM = "Decel";
 static const char msg_hold4[] PROGMEM = "Hold";
 static const char msg_hold5[] PROGMEM = "End Hold";
-static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, msg_hold4, msg_hold5 };
+static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
+												msg_hold4,  msg_hold5 };
 
 static const char msg_home0[] PROGMEM = "Not Homed";
 static const char msg_home1[] PROGMEM = "Homed";
-static const char msg_home2[] PROGMEM = "Waiting";
+static const char msg_home2[] PROGMEM = "Homing";
 static const char *const msg_home[] PROGMEM = { msg_home0, msg_home1, msg_home2 };
 
 static const char msg_g53[] PROGMEM = "G53 - machine coordinate system";
@@ -1506,7 +1525,8 @@ static const char *const msg_dist[] PROGMEM = { msg_g90, msg_g91 };
 
 static const char msg_g93[] PROGMEM = "G93 - inverse time mode";
 static const char msg_g94[] PROGMEM = "G94 - units-per-minute mode (i.e. feedrate mode)";
-static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94 };
+static const char msg_g95[] PROGMEM = "G95 - units-per-revolution mode";
+static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 
 #else
 
@@ -1664,7 +1684,6 @@ stat_t cm_get_pos(cmdObj_t *cmd)
 
 stat_t cm_get_mpo(cmdObj_t *cmd) 
 {
-//	cmd->value = cm_get_absolute_position(RUNTIME, _get_axis(cmd->index));
 	cmd->value = cm_get_absolute_position(ACTIVE_MODEL, _get_axis(cmd->index));
 	cmd->precision = GET_TABLE_WORD(precision);
 	cmd->objtype = TYPE_FLOAT;
@@ -1749,7 +1768,6 @@ stat_t cm_run_home(cmdObj_t *cmd)
  * Debugging Commands
  *
  * cm_dam() - dump active model
- * cm_drm() - dump runtime model
  */
 
 stat_t cm_dam(cmdObj_t *cmd)

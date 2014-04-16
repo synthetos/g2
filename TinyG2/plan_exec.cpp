@@ -74,20 +74,14 @@ stat_t mp_exec_move()
 //	exec_debug_pin2 = 1;
     mpBuf_t *bf;
 
-	if ((bf = mp_get_run_buffer()) == NULL)
-        return (STAT_NOOP);	// NULL means nothing's running
+	if ((bf = mp_get_run_buffer()) == NULL) return (STAT_NOOP);	// NULL means nothing's running
 
 	// Manage cycle and motion state transitions
 	// Cycle auto-start for lines only
 	if (bf->move_type == MOVE_TYPE_ALINE) {
-		if (cm.motion_state == MOTION_STOP)
-            cm_set_motion_state(MOTION_RUN);
+		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
 	}
-	if (bf->bf_func != NULL) {
-        stat_t s = (bf->bf_func(bf));
-//        exec_debug_pin2 = 0;
-        return s;
-    } 	// run the move callback in the planner buffer
+	if (bf->bf_func != NULL) { return (bf->bf_func(bf));} 	// run the move callback in the planner buffer
 	return(cm_hard_alarm(STAT_INTERNAL_ERROR));				// never supposed to get here
 }
 
@@ -185,7 +179,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 			mr.section_state = SECTION_OFF;
 			bf->nx->replannable = false;				// prevent overplanning (Note 2)
 			st_prep_null();								// call this to keep the loader happy
-			mp_free_run_buffer();
+			cm_cycle_end(mp_free_run_buffer());			// free buffer & perform cycle_end if empty
 			return (STAT_NOOP);
 		}
 		bf->move_state = MOVE_RUN;
@@ -206,14 +200,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		copy_vector(mr.unit, bf->unit);
 		copy_vector(mr.target, bf->gm.target);			// save the final target of the move
 
-#ifdef __DEBUG_STATEMENTS
-		ik_kinematics(mr.target, mr.target_steps);		// generate the target steps for diagnostic report only
-
-		printf ("steps:[%0.0f, %0.0f, %0.0f, %0.0f, %0.0f, %0.0f]\n",
-			mr.target_steps[MOTOR_1], mr.target_steps[MOTOR_2], mr.target_steps[MOTOR_3],
-			mr.target_steps[MOTOR_4], mr.target_steps[MOTOR_5], mr.target_steps[MOTOR_6]);
-#endif
-
 		// generate the waypoints for position correction at section ends
 		for (uint8_t axis=0; axis<AXES; axis++) {
 			mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.head_length;
@@ -229,9 +215,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_HEAD) { status = _exec_aline_head();} else 
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else 
-	if (mr.move_state == MOVE_SKIP) {
-		status = STAT_OK;
-    }
+	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
 
 	// Feedhold processing. Refer to canonical_machine.h for state machine
@@ -242,8 +226,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
 		cm.hold_state = FEEDHOLD_HOLD;
 		cm_set_motion_state(MOTION_HOLD);
-
-//		mp_free_run_buffer();							// free bf and send a status report
 		sr_request_status_report(SR_IMMEDIATE_REQUEST);
 	}
 
@@ -261,7 +243,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		mr.section_state = SECTION_OFF;
 		bf->nx->replannable = false;					// prevent overplanning (Note 2)
 		if (bf->move_state == MOVE_RUN) {
-			mp_free_run_buffer();						// free bf if it's actually done
+			cm_cycle_end(mp_free_run_buffer());			// free buffer & perform cycle_end if empty
 		}
 	}
 	return (status);
@@ -325,10 +307,7 @@ static stat_t _exec_aline_head()
 		_init_forward_diffs(mr.entry_velocity, mr.midpoint_velocity);
 
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## MIN TIME HEAD - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
-        }
+		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_MINIMUM_TIME_MOVE);} // exit without advancing position
 		mr.section = SECTION_HEAD;
 		mr.section_state = SECTION_1st_HALF;
 	}
@@ -390,10 +369,7 @@ static stat_t _exec_aline_body()
 		mr.segment_time = mr.gm.move_time / mr.segments;
 		mr.segment_velocity = mr.cruise_velocity;
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## min time BODY - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
-        }
+		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_MINIMUM_TIME_MOVE);} // exit without advancing position
 		mr.section = SECTION_BODY;
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
 	}
@@ -430,10 +406,7 @@ static stat_t _exec_aline_tail()
 		_init_forward_diffs(mr.cruise_velocity, mr.midpoint_velocity);
 
 		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) {
-			printf("######## min time TAIL - line %lu %f\n", mr.gm.linenum, (double)mr.segment_time);
-			return(STAT_GCODE_BLOCK_SKIPPED);				// exit without advancing position
-        }
+		if (mr.segment_time < MIN_SEGMENT_TIME) { return(STAT_MINIMUM_TIME_MOVE);} // exit without advancing position
 		mr.section = SECTION_TAIL;
 		mr.section_state = SECTION_1st_HALF;
 	}
@@ -521,13 +494,13 @@ static stat_t _exec_aline_segment()
 	//	   Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
 
 	for (i=0; i<MOTORS; i++) {
-		mr.commanded_steps[i] = mr.position_steps[i];		// previous segment's position, delayed by 1 segment
-		mr.position_steps[i] = mr.target_steps[i];	 		// previous segment's target becomes position
-		mr.encoder_steps[i] = en_read_encoder(i);			// get current encoder position (time aligns to commanded_steps)
-		mr.following_error[i] = mr.encoder_steps[i] - mr.commanded_steps[i]; 
+		mr.commanded_steps[i] = mr.position_steps[i];	// previous segment's position, delayed by 1 segment
+		mr.position_steps[i] = mr.target_steps[i];	 	// previous segment's target becomes position
+		mr.encoder_steps[i] = en_read_encoder(i);		// get current encoder position (time aligns to commanded_steps)
+		mr.following_error[i] = mr.encoder_steps[i] - mr.commanded_steps[i];
 	}
-	ik_kinematics(mr.gm.target, mr.target_steps);			// now determine the target steps...
-	for (i=0; i<MOTORS; i++) {								// and compute the distances to be traveled
+	ik_kinematics(mr.gm.target, mr.target_steps);		// now determine the target steps...
+	for (i=0; i<MOTORS; i++) {							// and compute the distances to be traveled
 		travel_steps[i] = mr.target_steps[i] - mr.position_steps[i];
 	}
 
@@ -536,12 +509,11 @@ static stat_t _exec_aline_segment()
 //	exec_debug_pin1 = 0;
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
 //    exec_debug_pin1 = 1;
-	copy_vector(mr.position, mr.gm.target); 				// update position from target
-	mr.elapsed_accel_time += mr.segment_accel_time;			// this is needed by jerk-based exec (NB: ignored if running the body)
+	copy_vector(mr.position, mr.gm.target); 			// update position from target
+	mr.elapsed_accel_time += mr.segment_accel_time;		// this is needed by jerk-based exec (NB: ignored if running the body)
 //	exec_debug_pin1 = 0;
-	if (mr.segment_count == 0)
-        return (STAT_OK);			// this section has run all its segments
-	return (STAT_EAGAIN);									// this section still has more segments to run
+	if (mr.segment_count == 0) return (STAT_OK);		// this section has run all its segments
+	return (STAT_EAGAIN);								// this section still has more segments to run
 }
 
 #ifdef __cplusplus

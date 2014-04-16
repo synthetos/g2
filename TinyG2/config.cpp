@@ -41,10 +41,6 @@
 #include "util.h"
 #include "xio.h"
 
-#ifdef __AVR
-#include "xmega/xmega_eeprom.h"
-#endif
-
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -115,8 +111,8 @@ void config_init()
 	cfg.magic_start = MAGICNUM;
 	cfg.magic_end = MAGICNUM;
 
-// The following chunk of code is commented out until persistence is implemented 
-// Do this instead:
+// ++++ The following chunk of code is commented out until persistence is implemented 
+// ++++ Do this instead:
 	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
 	cmd->value = true;
 	set_defaults(cmd);
@@ -710,48 +706,6 @@ void cmd_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 	} else {
 		text_print_list(status, text_flags);
 	}
-}
-
-/************************************************************************************
- ***** EEPROM access functions ******************************************************
- ************************************************************************************
- * cmd_read_NVM_value()	 - return value (as float) by index
- * cmd_write_NVM_value() - write to NVM by index, but only if the value has changed
- *
- *	It's the responsibility of the caller to make sure the index does not exceed range
- */
-stat_t cmd_read_NVM_value(cmdObj_t *cmd)
-{
-#ifdef __AVR
-	int8_t nvm_byte_array[NVM_VALUE_LEN];
-	uint16_t nvm_address = hw.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-	(void)EEPROM_ReadBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-	memcpy(&cmd->value, &nvm_byte_array, NVM_VALUE_LEN);
-#endif // __AVR
-#ifdef __ARM
-	//+++++ No ARM persistence yet
-#endif // __ARM
-	return (STAT_OK);
-}
-
-stat_t cmd_write_NVM_value(cmdObj_t *cmd)
-{
-#ifdef __AVR
-	if (cm.cycle_state != CYCLE_OFF) return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving
-	float tmp = cmd->value;
-	ritorno(cmd_read_NVM_value(cmd));
-	if (cmd->value != tmp) {		// catches the isnan() case as well
-		cmd->value = tmp;
-		int8_t nvm_byte_array[NVM_VALUE_LEN];
-		memcpy(&nvm_byte_array, &tmp, NVM_VALUE_LEN);
-		uint16_t nvm_address = hw.nvm_profile_base + (cmd->index * NVM_VALUE_LEN);
-		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
-	}
-#endif // __AVR
-#ifdef __ARM
-	//+++++ No ARM persistence yet
-#endif // __ARM
-	return (STAT_OK);
 }
 
 /****************************************************************************
