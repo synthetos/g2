@@ -107,6 +107,7 @@ void switch_init(void)
 /*
  * poll_switches() - run a polling cycle on all switches
  */
+#ifndef __POCKETNC
 stat_t poll_switches()
 {
 	poll_switch(&sw.s[AXIS_X][SW_MIN], (bool)axis_X_min_pin);
@@ -128,6 +129,23 @@ stat_t poll_switches()
 	poll_switch(&sw.s[AXIS_C][SW_MAX], (bool)axis_C_max_pin);
 #endif
 	return (STAT_OK);
+
+#else	// __POCKETNC
+// Pocket NC remaps Xmin to Amax and Ymin to Bmax
+stat_t poll_switches()
+{
+	poll_switch(&sw.s[AXIS_X][SW_MIN], (bool)axis_X_min_pin);
+	poll_switch(&sw.s[AXIS_X][SW_MAX], (bool)axis_X_max_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MIN], (bool)axis_Y_min_pin);
+	poll_switch(&sw.s[AXIS_Y][SW_MAX], (bool)axis_Y_max_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MIN], (bool)axis_Z_min_pin);
+	poll_switch(&sw.s[AXIS_Z][SW_MAX], (bool)axis_Z_max_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MIN], (bool)axis_A_min_pin);
+	poll_switch(&sw.s[AXIS_A][SW_MAX], (bool)axis_X_min_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MIN], (bool)axis_B_min_pin);
+	poll_switch(&sw.s[AXIS_B][SW_MAX], (bool)axis_Y_min_pin);
+	return (STAT_OK);
+#endif
 }
 
 /*

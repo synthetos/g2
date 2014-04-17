@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		039.12	// Merge tinyg code; Re-instated the skip of the too-short moves.
+#define TINYG_FIRMWARE_BUILD   		040.01	// Homing hacks for PocketNC
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -55,6 +55,7 @@
 
 #define __STEP_CORRECTION
 #define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
+#define __POCKETNC							// enable PocketNC homing hacks
 //#define __SIMULATION						// shorthand to keep from having to comment and uncomment the below:
 
 #ifndef __SIMULATION
@@ -203,6 +204,11 @@ typedef uint16_t magic_t;		// magic number size
 #define MOTORS		6			// number of motors on the board
 #define COORDS		6			// number of supported coordinate systems (1-6)
 #define PWMS		2			// number of supported PWM channels
+
+#ifdef __POCKETNC
+#undef	HOMING_AXES
+#define HOMING_AXES	5
+#endif
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
