@@ -864,6 +864,9 @@
     <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9g-pinout.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9i-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\board\v9_3x8c\motate_pin_assignments.h">
       <SubType>compile</SubType>
     </Compile>
