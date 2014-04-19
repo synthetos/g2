@@ -24,3 +24,4 @@ TcfTransactionLog.csv
 *.xccheckout
 .gdb_history
 JLink.log
+Tools/gcc-arm-none-eabi
