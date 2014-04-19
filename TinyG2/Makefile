@@ -183,6 +183,13 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9g"
 
 endif
 
+ifeq ("$(PLATFORM)","G2v9i")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+
+endif
+
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
 endif
