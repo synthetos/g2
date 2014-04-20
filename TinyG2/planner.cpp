@@ -62,8 +62,6 @@
 #include "report.h"
 #include "util.h"
 
-#ifndef DIGITAL_DRO
-
 // Allocate planner structures
 
 mpBufferPool_t mb;				// move buffer queue
@@ -611,5 +609,3 @@ void mp_dump_runtime_state(void)
 	print_scalar(PSTR("segment_velocity:  "), mr.segment_velocity);
 }
 #endif // __DEBUG
-
-#endif //DIGITAL_DRO

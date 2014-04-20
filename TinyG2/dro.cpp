@@ -158,6 +158,53 @@ void stepper_init()
 
 
 /***********************************************************************************
+ * STUB FUNCTIONS
+ * Functions to make it seem like we have motor, when we're really just reading them
+ * from somewhere else
+ ***********************************************************************************/
+void st_request_exec_move()
+{
+
+}
+
+
+void st_prep_null()
+{
+
+}
+
+void st_prep_dwell(float)
+{
+
+}
+
+void st_deenergize_motors()
+{
+
+}
+
+uint8_t stepper_isbusy()
+{
+    return false;
+}
+
+void st_motor_power_callback()
+{
+
+}
+
+
+stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
+{
+	return (STAT_OK);
+}
+
+stat_t stepper_test_assertions()
+{
+	return (STAT_OK);
+}
+
+/***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
