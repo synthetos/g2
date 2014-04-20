@@ -36,9 +36,6 @@
 #include "controller.h"
 #include "text_parser.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /*
  * hardware_init() - lowest level hardware init
@@ -159,6 +156,3 @@ void hw_print_id(cmdObj_t *cmd) { text_print_str(cmd, fmt_id);}
 
 #endif //__TEXT_MODE 
 
-#ifdef __cplusplus
-}
-#endif

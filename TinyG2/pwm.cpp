@@ -36,9 +36,6 @@
 #include <avr/interrupt.h>
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /***** PWM defines, structures and memory allocation *****/
 
@@ -295,6 +292,3 @@ void pwm_unit_tests()
 #endif // __UNIT_TEST_PWM
 #endif
 
-#ifdef __cplusplus
-}
-#endif

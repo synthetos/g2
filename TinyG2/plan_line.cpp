@@ -35,9 +35,6 @@
 #include "report.h"
 #include "util.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 // aline planner routines / feedhold planning
 
@@ -1383,7 +1380,4 @@ static void _test_get_junction_vmax()
 #endif // __UNIT_TEST_PLANNER
 #endif // __UNIT_TESTS
 
-#ifdef __cplusplus
-}
-#endif
 

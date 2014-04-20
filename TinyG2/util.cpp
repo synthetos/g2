@@ -37,9 +37,6 @@
 #include "xmega/xmega_rtc.h"
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /**** Vector utilities ****
  * copy_vector()			- copy vector of arbitrary length
@@ -256,6 +253,3 @@ uint32_t SysTickTimer_getValue()
 }
 #endif	// __ARM
 
-#ifdef __cplusplus
-}
-#endif

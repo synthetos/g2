@@ -76,6 +76,20 @@
                ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D409C01419035D2600F15547"
+               BuildableName = "DigitalDRO"
+               BlueprintName = "DigitalDRO"
+               ReferencedContainer = "container:TinyG2.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

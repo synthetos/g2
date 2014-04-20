@@ -28,9 +28,6 @@
 #ifndef _JSON_PARSER_H_ONCE
 #define _JSON_PARSER_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /**** Configs, Definitions and Structures ****/
 
@@ -119,8 +116,5 @@ void js_unit_tests(void);
 #define	JSON_UNITS
 #endif // __UNIT_TEST_JSON
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: JSON_PARSER_H_ONCE

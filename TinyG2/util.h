@@ -43,9 +43,6 @@ using Motate::delay;
 using Motate::SysTickTimer;
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /****** Global Scope Variables and Functions ******/
 
@@ -159,8 +156,5 @@ uint32_t SysTickTimer_getValue(void);
 #define M_SQRT3 (1.73205080756888)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: UTIL_H_ONCE

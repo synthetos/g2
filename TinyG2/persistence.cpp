@@ -32,10 +32,6 @@
 #include "xmega/xmega_eeprom.h"
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
@@ -110,7 +106,4 @@ stat_t write_persistent_value(cmdObj_t *cmd)
 }
 #endif // __ARM
 
-#ifdef __cplusplus
-}
-#endif
 

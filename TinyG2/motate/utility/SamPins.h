@@ -630,11 +630,6 @@ namespace Motate {
 } // end namespace Motate
 
 
-#define MOTATE_PIN_INTERRUPT(number) \
-    Pin<number>::interrupt_defined = true;\
-    template<> void Pin<number>::interrupt()
-
-
 // Note: We end the namespace before including in case the included file need to include
 //   another Motate file. If it does include another Motate file, we end up with
 //   Motate::Motate::* definitions and weird compiler errors.

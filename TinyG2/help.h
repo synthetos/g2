@@ -20,10 +20,6 @@
 #ifndef HELP_H_ONCE
 #define HELP_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 #ifdef __HELP_SCREENS
 
 	stat_t help_general(cmdObj_t *cmd);
@@ -43,8 +39,5 @@ extern "C"{
 
 #endif // __HELP_SCREENS
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: HELP_H_ONCE

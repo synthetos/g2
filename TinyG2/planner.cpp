@@ -62,9 +62,7 @@
 #include "report.h"
 #include "util.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef DIGITAL_DRO
 
 // Allocate planner structures
 
@@ -614,6 +612,4 @@ void mp_dump_runtime_state(void)
 }
 #endif // __DEBUG
 
-#ifdef __cplusplus
-}
-#endif
+#endif //DIGITAL_DRO

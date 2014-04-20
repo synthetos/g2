@@ -41,9 +41,6 @@
 #include "util.h"
 #include "xio.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -798,7 +795,3 @@ void cfg_unit_tests()
 
 #endif
 #endif
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus

@@ -13,6 +13,7 @@
 		D4021FA4175E37BF0099576C /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9F175E37BF0099576C /* Reset.cpp */; };
 		D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */; };
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
+		D409C01A1903620C00F15547 /* dro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D409C0181903620C00F15547 /* dro.cpp */; };
 		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
 		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
 		D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43CAF9C187BABDB0042B58F /* SamPins.cpp */; };
@@ -408,6 +409,8 @@
 		D4021FA6175E388B0099576C /* hooks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hooks.c; sourceTree = "<group>"; };
 		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D409C00F1902F70C00F15547 /* G2v9i-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9i-pinout.h"; sourceTree = "<group>"; };
+		D409C0181903620C00F15547 /* dro.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dro.cpp; sourceTree = "<group>"; };
+		D409C0191903620C00F15547 /* dro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dro.h; sourceTree = "<group>"; };
 		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = switch.cpp; sourceTree = "<group>"; };
 		D41D13F417374B4E00D522D9 /* switch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = switch.h; sourceTree = "<group>"; };
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
@@ -3292,6 +3295,8 @@
 				D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */,
 				D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */,
 				D4B6579F18B5C21500F8616C /* cycle_probing.cpp */,
+				D409C0181903620C00F15547 /* dro.cpp */,
+				D409C0191903620C00F15547 /* dro.h */,
 				D4B657A018B5C21500F8616C /* encoder.cpp */,
 				D4B657A118B5C21500F8616C /* encoder.h */,
 				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
@@ -7534,6 +7539,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D409C01419035D2600F15547 /* DigitalDRO */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=DigitalDRO";
+			buildConfigurationList = D409C01519035D2600F15547 /* Build configuration list for PBXLegacyTarget "DigitalDRO" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = DigitalDRO;
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D45710C21705330C00EA19A8 /* TinyG2 gShield */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield";
@@ -7636,6 +7655,7 @@
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
+				D409C01419035D2600F15547 /* DigitalDRO */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -7927,6 +7947,7 @@
 				D49EC54E17054FDF00F2BF9B /* arm_power_f32.c in Sources */,
 				D49EC54F17054FDF00F2BF9B /* arm_power_q15.c in Sources */,
 				D49EC55017054FDF00F2BF9B /* arm_power_q31.c in Sources */,
+				D409C01A1903620C00F15547 /* dro.cpp in Sources */,
 				D49EC55117054FDF00F2BF9B /* arm_power_q7.c in Sources */,
 				D49EC55217054FDF00F2BF9B /* arm_rms_f32.c in Sources */,
 				D49EC55317054FDF00F2BF9B /* arm_rms_q15.c in Sources */,
@@ -8020,7 +8041,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9g copy";
+				PRODUCT_NAME = "TinyG2 G2V9i";
 			};
 			name = Debug;
 		};
@@ -8028,7 +8049,23 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9g copy";
+				PRODUCT_NAME = "TinyG2 G2V9i";
+			};
+			name = Release;
+		};
+		D409C01619035D2600F15547 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = $PATH;
+				PRODUCT_NAME = DigitalDRO;
+			};
+			name = Debug;
+		};
+		D409C01719035D2600F15547 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = $PATH;
+				PRODUCT_NAME = DigitalDRO;
 			};
 			name = Release;
 		};
@@ -8048,7 +8085,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
+				PRODUCT_NAME = gShield;
 			};
 			name = Debug;
 		};
@@ -8056,7 +8093,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
+				PRODUCT_NAME = gShield;
 			};
 			name = Release;
 		};
@@ -8141,7 +8178,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9d copy";
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Debug;
 		};
@@ -8149,7 +8186,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9d copy";
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Release;
 		};
@@ -8157,7 +8194,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9f copy";
+				PRODUCT_NAME = "TinyG2 G2V9g";
 			};
 			name = Debug;
 		};
@@ -8165,7 +8202,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = "TinyG2 G2V9f copy";
+				PRODUCT_NAME = "TinyG2 G2V9g";
 			};
 			name = Release;
 		};
@@ -8173,7 +8210,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Debug;
 		};
@@ -8181,7 +8218,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = $PATH;
-				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
+				PRODUCT_NAME = "TinyG2 G2V9f";
 			};
 			name = Release;
 		};
@@ -8193,6 +8230,15 @@
 			buildConfigurations = (
 				D409C0121902F73000F15547 /* Debug */,
 				D409C0131902F73000F15547 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D409C01519035D2600F15547 /* Build configuration list for PBXLegacyTarget "DigitalDRO" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D409C01619035D2600F15547 /* Debug */,
+				D409C01719035D2600F15547 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -102,9 +102,6 @@
 #include "util.h"
 //#include "xio.h"			// for serial queue flush
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -2017,7 +2014,3 @@ void cm_print_mpo(cmdObj_t *cmd) { _print_pos(cmd, fmt_mpo, MILLIMETERS);}
 void cm_print_ofs(cmdObj_t *cmd) { _print_pos(cmd, fmt_ofs, MILLIMETERS);}
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif

@@ -29,6 +29,8 @@
  *	See stepper.h for a detailed explanation of this module.
  */
 
+#ifndef DIGITAL_DRO
+
 #include "tinyg2.h"
 #include "config.h"
 #include "stepper.h"
@@ -1014,7 +1016,12 @@ stat_t st_set_tr(cmdObj_t *cmd)			// motor travel per revolution
 
 stat_t st_set_mi(cmdObj_t *cmd)			// motor microsteps
 {
-	if (fp_NE(cmd->value,1) && fp_NE(cmd->value,2) && fp_NE(cmd->value,4) && fp_NE(cmd->value,8)) {
+	if (fp_NE(cmd->value,1) &&
+        fp_NE(cmd->value,2) &&
+        fp_NE(cmd->value,4) &&
+        fp_NE(cmd->value,8) &&
+        fp_NE(cmd->value,16) &&
+        fp_NE(cmd->value,32)) {
 		cmd_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(cmd);						// set it anyway, even if it's unsupported
@@ -1150,3 +1157,5 @@ void st_print_pm(cmdObj_t *cmd) { _print_motor_ui8(cmd, fmt_0pm);}
 void st_print_pl(cmdObj_t *cmd) { _print_motor_flt(cmd, fmt_0pl);}
 
 #endif // __TEXT_MODE
+
+#endif // DIGITAL_DRO

@@ -39,9 +39,6 @@
 
 using namespace Motate;
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /**** Global System Defines ****/
 
@@ -172,8 +169,5 @@ stat_t hw_get_id(cmdObj_t *cmd);
 
 #endif // __TEXT_MODE
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// end of include guard: HARDWARE_H_ONCE

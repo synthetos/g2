@@ -162,6 +162,16 @@ ifeq ("$(PLATFORM)","gShield")
 
 endif
 
+ifeq ("$(PLATFORM)","DigitalDRO")
+
+# This is a due acting as a DigitalDRO, with the pinout of the gShield, but inputs for motors.
+# We'll use the Due platform, but set defines for the code to get the pinout right.
+
+BASE_PLATFORM=due
+DEVICE_DEFINES += MOTATE_BOARD="gShield" DIGITAL_DRO=1
+
+endif
+
 ifeq ("$(PLATFORM)","G2v9d")
 
 BASE_PLATFORM=v9_3x8c

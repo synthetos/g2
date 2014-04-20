@@ -28,9 +28,6 @@
 #ifndef REPORT_H_ONCE
 #define REPORT_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /**** Configs, Definitions and Structures ****/
 // Note: If you are looking for the defaults for the status report see settings.h
@@ -154,8 +151,5 @@ void sr_unit_tests(void);
 #define	REPORT_UNITS
 #endif // __UNIT_TEST_REPORT
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: REPORT_H_ONCE

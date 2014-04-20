@@ -31,9 +31,6 @@
 #include "stepper.h"
 #include "kinematics.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 //static void _inverse_kinematics(float travel[], float joint[]);
 
@@ -127,6 +124,3 @@ void _ik_test_inverse_kinematics(void)
 #endif
 #endif
 
-#ifdef __cplusplus
-}
-#endif

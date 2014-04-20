@@ -28,9 +28,6 @@
 #ifndef CONTROLLER_H_ONCE
 #define CONTROLLER_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 #define INPUT_BUFFER_LEN 255			// text buffer size (255 max)
 #define SAVED_BUFFER_LEN 100			// saved buffer size (for reporting only)
@@ -99,9 +96,5 @@ void controller_run(void);
 void tg_reset_source(void);
 void tg_set_primary_source(uint8_t dev);
 void tg_set_secondary_source(uint8_t dev);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: CONTROLLER_H_ONCE

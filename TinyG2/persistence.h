@@ -29,9 +29,6 @@
 
 #include "config.h"					// needed for cmdObj_t definition
 
-#ifdef __cplusplus
-extern "C"{
-#endif 
 
 #define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
 #define NVM_BASE_ADDR 0x0000		// base address of usable NVM
@@ -64,8 +61,5 @@ void cfg_unit_tests(void);
 #define	PERSISTENCE_UNITS
 #endif // __UNIT_TEST_PERSISTENCE
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: PERSISTENCE_H_ONCE

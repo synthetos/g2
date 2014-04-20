@@ -31,9 +31,6 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 enum moveType {				// bf->move_type values 
 	MOVE_TYPE_NULL = 0,		// null move - does a no-op
@@ -332,8 +329,5 @@ void mp_plan_arc_unit_tests(void);
 #define	PLANNER_UNITS
 #endif // end __UNIT_TEST_PLANNER
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include Guard: PLANNER_H_ONCE
