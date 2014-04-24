@@ -616,7 +616,8 @@ namespace Motate {
                     (*PIO ## registerLetter).PIO_IER = mask;\
                 } else {\
                     (*PIO ## registerLetter).PIO_IDR = mask;\
-                    if ((*PIO ## registerLetter).PIO_ISR == 0)\
+                    /* Disable the IRQ if there are no more interrupts on. */\
+                    if ((*PIO ## registerLetter).PIO_IMR == 0)\
                         NVIC_DisableIRQ(PIO ## registerLetter ## _IRQn);\
                 }\
             };\

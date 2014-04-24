@@ -382,6 +382,7 @@
 		D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579F18B5C21500F8616C /* cycle_probing.cpp */; };
 		D4B657A418B5C21600F8616C /* encoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A018B5C21500F8616C /* encoder.cpp */; };
 		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
+		D4B8526119089D3800D571FC /* dro.h in Sources */ = {isa = PBXBuildFile; fileRef = D409C0191903620C00F15547 /* dro.h */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 /* End PBXBuildFile section */
@@ -7672,6 +7673,8 @@
 				D49EC5EE1706789800F2BF9B /* component_dacc.h in Sources */,
 				D49EC5EF1706789800F2BF9B /* component_dmac.h in Sources */,
 				D49EC5F01706789800F2BF9B /* component_efc.h in Sources */,
+				D4B8526119089D3800D571FC /* dro.h in Sources */,
+				D409C01A1903620C00F15547 /* dro.cpp in Sources */,
 				D49EC5F11706789800F2BF9B /* component_emac.h in Sources */,
 				D49EC5F21706789800F2BF9B /* component_gpbr.h in Sources */,
 				D49EC5F31706789800F2BF9B /* component_hsmci.h in Sources */,
@@ -7746,7 +7749,6 @@
 				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
 				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
 				D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */,
-				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
 				D49EC5DF170676AF00F2BF9B /* sam.h in Sources */,
 				D49EC5E0170676B500F2BF9B /* sam3.h in Sources */,
 				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
@@ -7771,6 +7773,7 @@
 				D49EC4A317054FDF00F2BF9B /* arm_negate_q31.c in Sources */,
 				D49EC4A417054FDF00F2BF9B /* arm_negate_q7.c in Sources */,
 				D49EC4A517054FDF00F2BF9B /* arm_offset_f32.c in Sources */,
+				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
 				D49EC4A617054FDF00F2BF9B /* arm_offset_q15.c in Sources */,
 				D49EC4A717054FDF00F2BF9B /* arm_offset_q31.c in Sources */,
 				D49EC4A817054FDF00F2BF9B /* arm_offset_q7.c in Sources */,
@@ -7947,7 +7950,6 @@
 				D49EC54E17054FDF00F2BF9B /* arm_power_f32.c in Sources */,
 				D49EC54F17054FDF00F2BF9B /* arm_power_q15.c in Sources */,
 				D49EC55017054FDF00F2BF9B /* arm_power_q31.c in Sources */,
-				D409C01A1903620C00F15547 /* dro.cpp in Sources */,
 				D49EC55117054FDF00F2BF9B /* arm_power_q7.c in Sources */,
 				D49EC55217054FDF00F2BF9B /* arm_rms_f32.c in Sources */,
 				D49EC55317054FDF00F2BF9B /* arm_rms_q15.c in Sources */,

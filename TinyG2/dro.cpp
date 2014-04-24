@@ -33,8 +33,10 @@
 #include "config.h"
 #include "dro.h"
 #include "encoder.h"
+#include "planner.h"
 #include "canonical_machine.h"
 #include "hardware.h"
+#include "report.h"
 #include "text_parser.h"
 #include "util.h"
 
@@ -60,34 +62,58 @@ template<pin_number step_num,			// Setup a stepper template to hold our pins
 		 pin_number ms0_num, 
 		 pin_number ms1_num, 
          pin_number ms2_num,
-		 pin_number vref_num>
-
+		 pin_number vref_num,
+         uint8_t    stepper_number>
 struct Stepper {
     // DIGITAL_DRO
 
-    InputPin<step_num>   _step_pin;
-	InputPin<dir_num>    _dir_pin;
-	InputPin<enable_num> _enable_pin;
-	InputPin<ms0_num>    _ms0_pin;
-	InputPin<ms1_num>    _ms1_pin;
-	InputPin<ms2_num>    _ms2_pin;
+    Pin<step_num>   _step_pin;
+	Pin<dir_num>    _dir_pin;
+	Pin<enable_num> _enable_pin;
+	Pin<ms0_num>    _ms0_pin;
+	Pin<ms1_num>    _ms1_pin;
+	Pin<ms2_num>    _ms2_pin;
 //	ADCPin<vref_num>     _vref_pin;
 
-    Stepper(const uint32_t frequency = 500000 /* IGNORED */) {
+    volatile int32_t             _position;
+
+    Stepper() : _step_pin(kInput),
+                _dir_pin(kInput),
+                _enable_pin(kInput),
+                _ms0_pin(kInput),
+                _ms1_pin(kInput),
+                _ms2_pin(kInput),
+                _position(0)
+    {
         _enable_pin.setInterrupts(kPinInterruptOnChange);
-        if (isEnabled()) {
-            _step_pin.setInterrupts(kPinInterruptOnChange);
-        }
+        enableChanged();
     };
 
     bool isEnabled() {
         // Enable is active low
-        return (0 == _enable_pin);
-    }
+        return (0 == _enable_pin.getInputValue());
+    };
 
     void enableChanged() {
-        _step_pin.setInterrupts(isEnabled() ? kPinInterruptOnChange : kPinInterruptsOff);
-    }
+        if (isEnabled()) {
+            _step_pin.setInterrupts(kPinInterruptOnFallingEdge);
+        }
+    };
+
+    void stepped() {
+#ifdef READ_MICROSTEPS
+        uint8_t microstep_size = 1 << (_ms0_pin.getInputValue() | (_ms1_pin.getInputValue() << 1) | (_ms2_pin.getInputValue() << 2));
+        _position += (_dir_pin.getInputValue()) ? microstep_size : -microstep_size;
+#else
+//        uint8_t microstep_size = st_cfg.mot[stepper_number].microsteps;
+
+        _position += (_dir_pin.getInputValue()) ? 1 : -1;
+#endif
+
+        mr.position_steps[stepper_number] = _position;
+
+        sr_request_status_report(SR_TIMED_REQUEST);
+    };
 };
 
 Stepper<kSocket1_StepPinNumber,
@@ -96,7 +122,18 @@ Stepper<kSocket1_StepPinNumber,
 		kSocket1_Microstep_0PinNumber,
 		kSocket1_Microstep_1PinNumber,
         kSocket1_Microstep_2PinNumber,
-		kSocket1_VrefPinNumber> motor_1;
+		kSocket1_VrefPinNumber,
+        MOTOR_1> motor_1;
+
+namespace Motate {
+    void Pin<kSocket1_EnablePinNumber>::interrupt() {
+        motor_1.enableChanged();
+    }
+
+    void Pin<kSocket1_StepPinNumber>::interrupt() {
+        motor_1.stepped();
+    }
+}
 
 Stepper<kSocket2_StepPinNumber,
 		kSocket2_DirPinNumber,
@@ -104,7 +141,18 @@ Stepper<kSocket2_StepPinNumber,
 		kSocket2_Microstep_0PinNumber,
 		kSocket2_Microstep_1PinNumber,
         kSocket2_Microstep_2PinNumber,
-		kSocket2_VrefPinNumber> motor_2;
+        kSocket2_VrefPinNumber,
+        MOTOR_2> motor_2;
+
+namespace Motate {
+    void Pin<kSocket2_EnablePinNumber>::interrupt() {
+        motor_2.enableChanged();
+    }
+
+    void Pin<kSocket2_StepPinNumber>::interrupt() {
+        motor_2.stepped();
+    }
+}
 
 Stepper<kSocket3_StepPinNumber,
 		kSocket3_DirPinNumber,
@@ -112,7 +160,19 @@ Stepper<kSocket3_StepPinNumber,
 		kSocket3_Microstep_0PinNumber,
 		kSocket3_Microstep_1PinNumber,
         kSocket3_Microstep_2PinNumber,
-		kSocket3_VrefPinNumber> motor_3;
+        kSocket3_VrefPinNumber,
+        MOTOR_3> motor_3;
+
+
+namespace Motate {
+    void Pin<kSocket3_EnablePinNumber>::interrupt() {
+        motor_3.enableChanged();
+    }
+
+    void Pin<kSocket3_StepPinNumber>::interrupt() {
+        motor_3.stepped();
+    }
+}
 
 Stepper<kSocket4_StepPinNumber,
 		kSocket4_DirPinNumber,
@@ -120,7 +180,19 @@ Stepper<kSocket4_StepPinNumber,
 		kSocket4_Microstep_0PinNumber,
 		kSocket4_Microstep_1PinNumber,
         kSocket4_Microstep_2PinNumber,
-		kSocket4_VrefPinNumber> motor_4;
+        kSocket4_VrefPinNumber,
+        MOTOR_4> motor_4;
+
+
+namespace Motate {
+    void Pin<kSocket4_EnablePinNumber>::interrupt() {
+        motor_4.enableChanged();
+    }
+
+    void Pin<kSocket4_StepPinNumber>::interrupt() {
+        motor_4.stepped();
+    }
+}
 
 Stepper<kSocket5_StepPinNumber,
 		kSocket5_DirPinNumber,
@@ -128,15 +200,40 @@ Stepper<kSocket5_StepPinNumber,
 		kSocket5_Microstep_0PinNumber,
 		kSocket5_Microstep_1PinNumber,
         kSocket5_Microstep_2PinNumber,
-		kSocket5_VrefPinNumber> motor_5;
-		
+        kSocket5_VrefPinNumber,
+        MOTOR_5> motor_5;
+
+
+namespace Motate {
+    void Pin<kSocket5_EnablePinNumber>::interrupt() {
+        motor_5.enableChanged();
+    }
+
+    void Pin<kSocket5_StepPinNumber>::interrupt() {
+        motor_5.stepped();
+    }
+}
+
 Stepper<kSocket6_StepPinNumber,
 		kSocket6_DirPinNumber,
 		kSocket6_EnablePinNumber,
 		kSocket6_Microstep_0PinNumber,
 		kSocket6_Microstep_1PinNumber,
         kSocket6_Microstep_2PinNumber,
-		kSocket6_VrefPinNumber> motor_6;
+        kSocket6_VrefPinNumber,
+        MOTOR_6> motor_6;
+
+
+namespace Motate {
+    void Pin<kSocket6_EnablePinNumber>::interrupt() {
+        motor_6.enableChanged();
+    }
+
+    void Pin<kSocket6_StepPinNumber>::interrupt() {
+        motor_6.stepped();
+    }
+}
+
 
 #endif // __ARM
 

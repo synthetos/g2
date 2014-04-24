@@ -35,7 +35,7 @@
 using namespace Motate;
 
 #define CheckAndCallInterruptForPortPin(portChar, portLetter, portPin) \
-if (ReversePinLookup<portChar, portPin>::interrupt != 0 && isr & 1 << portPin) {\
+if (ReversePinLookup<portChar, portPin>::interrupt != 0 && (isr & (1 << portPin))) {\
     ReversePinLookup<portChar, portPin>::interrupt();\
 }
 
