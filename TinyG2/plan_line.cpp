@@ -490,13 +490,13 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// B case:  Velocities all match (or close enough)
 	//			This occurs frequently in normal gcode files with lots of short lines
 
-	if (((bf->cruise_velocity - bf->entry_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) && 
-		((bf->cruise_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE)) { 
-		bf->body_length = bf->length;
-		bf->head_length = 0;
-		bf->tail_length = 0;
-		return;
-	}
+//	if (((bf->cruise_velocity - bf->entry_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) && 
+//		((bf->cruise_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE)) { 
+//		bf->body_length = bf->length;
+//		bf->head_length = 0;
+//		bf->tail_length = 0;
+//		return;
+//	}
 
 	// Head-only and tail-only short-line cases
 	//	 H" and T" degraded-fit cases

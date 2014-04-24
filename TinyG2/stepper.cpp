@@ -392,8 +392,8 @@ stat_t st_motor_power_callback() 	// called by controller
 
 		switch (st_cfg.mot[motor].power_mode) {
 //			case (MOTOR_DISABLED): { _deenergize_motor(motor); break;}
-			case (MOTOR_ALWAYS_POWERED): { break;}
 			case (MOTOR_POWERED_IN_CYCLE):
+			case (MOTOR_ALWAYS_POWERED): { break;}
 			case (MOTOR_POWERED_ONLY_WHEN_MOVING): {
 				switch (st_run.mot[motor].power_state) {
 					case (MOTOR_POWER_TIMEOUT_START): {
