@@ -22,7 +22,7 @@ UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
 OS = OSX
-DOWNLOAD_TOOL = curl -i -L -O
+DOWNLOAD_TOOL = curl -L -O
 else
 ifeq (Linux,${UNAME})
 OS = LINUX
