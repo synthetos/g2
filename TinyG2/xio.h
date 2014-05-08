@@ -69,14 +69,14 @@
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
-#include "MotateSPI.h"
+//#include "MotateSPI.h"
 
 extern Motate::USBDevice< Motate::USBCDC > usb;
 //extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 extern typeof usb._mixin_0_type::Serial &SerialUSB;
 //extern typeof usb._mixin_1_type::Serial &SerialUSB1;
 
-extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+//extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
 #undef  _FDEV_ERR
 #define _FDEV_ERR -1

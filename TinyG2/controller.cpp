@@ -297,6 +297,7 @@ static stat_t _shutdown_idler()
 
 static stat_t _normal_idler()
 {
+
 #ifdef __ARM
 	/*
 	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
@@ -312,7 +313,7 @@ static stat_t _normal_idler()
 
 
 	if (SysTickTimer.getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER / 100;
+		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER / 500;
 
 		indicator_led_value += indicator_led_forward_diff_1;
 		if (indicator_led_value > 100.0)

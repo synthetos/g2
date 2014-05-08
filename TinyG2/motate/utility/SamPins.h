@@ -418,33 +418,30 @@ namespace Motate {
         
 //        static const uint8_t moduleId = 255;
 //        static const uint8_t csOffset = 0;
-        
-		/*Override these to pick up new methods */
-        
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-//		void init(const PinMode type, const PinOptions options = kNormal);
-        
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
+
+        void setSelected(bool _selected) {};
+        void setAutoselect(bool _auto) {};
 	};
 
     #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
         template<>\
         struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
             SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
+            static const uint8_t moduleId = 0; /* Placeholder, but the SAM3X8s only have SPI0 */\
             static const uint8_t csOffset = csNum;\
-            /*Override these to pick up new methods */\
-        private: /* Make these private to catch them early. */\
-            /* These are intentially not defined. */\
-            /* WARNING: Covariant return types! */\
-            bool get();\
-            operator bool();\
+            void setSelected(bool _selected) {\
+                write(!_selected);\
+            };\
+            void setAutoselect(bool _auto) {\
+                if (_auto) {\
+                    setMode(kPeripheral ## peripheralAorB);\
+                } else {\
+                    setMode(kOutput);\
+                }\
+            }\
         };
 
-    
+
     template<int8_t pinNum>
 	struct SPIOtherPin {
 		SPIOtherPin() : Pin<pinNum>(kOutput) {};

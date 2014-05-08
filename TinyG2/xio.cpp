@@ -155,16 +155,16 @@ stat_t xio_set_spi(cmdObj_t *cmd)
 	xio.spi_state = (uint8_t)cmd->value;
 
 #ifdef __ARM
-	if (fp_EQ(cmd->value, SPI_ENABLE)) {
-		spi_miso_pin.setMode(kOutput);
-		spi_mosi_pin.setMode(kOutput);
-		spi_sck_pin.setMode(kOutput);
-
-	} else if (fp_EQ(cmd->value, SPI_DISABLE)) {
-		spi_miso_pin.setMode(kInput);
-		spi_mosi_pin.setMode(kInput);
-		spi_sck_pin.setMode(kInput);
-	}
+//	if (fp_EQ(cmd->value, SPI_ENABLE)) {
+//		spi_miso_pin.setMode(kOutput);
+//		spi_mosi_pin.setMode(kOutput);
+//		spi_sck_pin.setMode(kOutput);
+//
+//	} else if (fp_EQ(cmd->value, SPI_DISABLE)) {
+//		spi_miso_pin.setMode(kInput);
+//		spi_mosi_pin.setMode(kInput);
+//		spi_sck_pin.setMode(kInput);
+//	}
 #endif
 	return (STAT_OK);
 }

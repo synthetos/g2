@@ -98,9 +98,9 @@ pin_number indicator_led_pin_num = kLED_USBRXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
 // Init these to input to keep them high-z
-static Pin<kSPI0_MISOPinNumber> spi_miso_pin(kInput);
-static Pin<kSPI0_MOSIPinNumber> spi_mosi_pin(kInput);
-static Pin<kSPI0_SCKPinNumber>  spi_sck_pin(kInput);
+//static Pin<kSPI0_MISOPinNumber> spi_miso_pin(kInput);
+//static Pin<kSPI0_MOSIPinNumber> spi_mosi_pin(kInput);
+//static Pin<kSPI0_SCKPinNumber>  spi_sck_pin(kInput);
 
 /**** Motate Global Pin Allocations ****/
 

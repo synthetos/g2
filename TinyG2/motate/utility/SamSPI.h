@@ -96,11 +96,11 @@ namespace Motate {
         /* We have to play some tricks here, because templates and static members are tricky.
          * See https://groups.google.com/forum/#!topic/comp.lang.c++.moderated/yun9X6OMiY4
          *
-         * Basically, we want a guard to make sure we dont itinig the SPI0 IC modules every time
+         * Basically, we want a guard to make sure we aren't init'ing the SPI0 IC module every time
          * we create a new SPI object for the individual chip selects.
          *
          * However, since we don't use the module *directly* in the code, other than to init it,
-         * the optimizer removes that object and it's init in it's entrety.
+         * the optimizer removes that object and it's init in it's entirety.
          *
          * The solution: Make sure each SPI<> object calls hardware.init(), and then use a static guard
          * in init() to prevent re-running it.
@@ -215,6 +215,11 @@ namespace Motate {
             uint16_t outdata = spi()->SPI_RDR;
             return outdata;
         };
+
+        void sync() {
+            while (!(spi()->SPI_SR & SPI_SR_TXEMPTY))
+                ;
+        };
     };
     
 	template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=kSPI_MISOPinNumber, int8_t spiMOSIPinNumber=kSPI_MOSIPinNumber, int8_t spiSCKSPinNumber=kSPI_SCKPinNumber>
@@ -318,7 +323,7 @@ namespace Motate {
 		};
         
         int16_t write(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
+            return hardware.write(data, readValue, lastXfer);
 		};
 
         void flush() {
@@ -356,7 +361,17 @@ namespace Motate {
 //                flush();
             
 			return total_written;
-		}
+		};
+
+        void setSelected(bool _sel) {
+            hardware.sync();
+            csPin.setSelected(_sel);
+        };
+
+        void setAutoselect(bool _auto) {
+            hardware.sync();
+            csPin.setAutoselect(_auto);
+        };
 	};
     
 }

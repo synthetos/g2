@@ -106,9 +106,6 @@ namespace Motate {
     _MAKE_MOTATE_PIN(6, A, 'A', 26);	// SPI0_MOSIPinNumber
     _MAKE_MOTATE_SPI_OTHER_PIN(6, A);
 
-    _MAKE_MOTATE_PIN(10, A, 'A', 28);	// Socket1_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_SPI_CS_PIN(10, A, 0);
-
     _MAKE_MOTATE_PIN(12, A, 'A', 23);	// Socket1_StepPinNumber
 
     _MAKE_MOTATE_PIN(13, A, 'A', 6);	// Socket1_DirPinNumber
@@ -222,7 +219,12 @@ namespace Motate {
     _MAKE_MOTATE_PIN(119, B, 'B', 15);	// SD_CardDetect
     _MAKE_MOTATE_PWM_PIN(119, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 
-    _MAKE_MOTATE_PIN(120, A, 'A', 17);	// Interlock_In
+    _MAKE_MOTATE_PIN(120, A, 'A', 28);	// kSD_ChipSelect
+    _MAKE_MOTATE_SPI_CS_PIN(120, A, 0);
+
+#define BOARD_HAS_SD
+
+    _MAKE_MOTATE_PIN(121, A, 'A', 17);	// Interlock_In
 
     //UNASSIGNED, and disconnected:
 //    _MAKE_MOTATE_PIN(, A, 'A', 0);	//
@@ -252,7 +254,6 @@ namespace Motate {
 //    _MAKE_MOTATE_PIN(, B, 'B', 30);	// 
 //    
 //    _MAKE_MOTATE_PIN(, B, 'B', 31);	// 
-
 
 } // namespace Motate
 

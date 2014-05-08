@@ -44,6 +44,7 @@
 #include "help.h"
 //#include "network.h"
 #include "xio.h"
+#include "sd.h"
 
 /*** structures ***/
 
@@ -557,6 +558,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 //	{ "",   "_dam",_f00, 0, tx_print_nul, cm_dam,  cm_dam, (float *)&cs.null, 0 },	// dump active model
 #endif
+
+	{ "_sd","_sdt",_f00, 0, tx_print_str, get_sd_type, set_nul, (float *)&cs.null, 0 },
 
 	// Persistence for status report - must be in sequence
 	// *** Count must agree with CMD_STATUS_REPORT_LEN in config.h ***
