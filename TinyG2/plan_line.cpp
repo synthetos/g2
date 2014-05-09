@@ -43,6 +43,7 @@ extern "C"{
 
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
 static void _calculate_trapezoid(mpBuf_t *bf);
+static float _get_jerk_value(const float Vi, const float Vt, const float L);
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf);
 static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 //static float _get_intersection_distance(const float Vi_squared, const float Vt_squared, const float L, const mpBuf_t *bf);
@@ -65,7 +66,7 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
 void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset);}
 void mp_zero_segment_velocity() { mr.segment_velocity = 0;}
 
-/* 
+/*
  * mp_get_runtime_busy() - return TRUE if motion control busy (i.e. robot is moving)
  *
  *	Use this function to sync to the queue. If you wait until it returns
@@ -76,6 +77,43 @@ uint8_t mp_get_runtime_busy()
 {
 	if ((stepper_isbusy() == true) || (mr.move_state == MOVE_RUN)) return (true);
 	return (false);
+}
+
+/* 
+ * _calc_jerk_values()
+ *
+ *	This is a utility function to calculate jerk, recip_jerk, and cbrt_jerk,
+ *  if the jerk value has changed.
+ */
+
+void _calc_jerk_values(mpBuf_t *bf)
+{
+    /*  If the jerk value is zero, then that means it was invalidated. This happens when
+     *  the head or tail length changed without changing the speeds to account for it.
+     *
+     *  We only accept three cases:
+     *  head_length  > 0, tail_length == 0 -- we expect a valid entry and cruise velocity
+     *  head_length == 0, tail_length  > 0 -- we expect a valid cruise and exit velocity
+     *  head_length == tail_length         -- we expect a valid cruise and exit velocity
+     */
+    if (fp_ZERO(bf->jerk)) {
+        if (fp_ZERO(bf->tail_length)) {
+            bf->jerk = _get_jerk_value(bf->entry_velocity, bf->cruise_velocity, bf->head_length);
+        } else {
+            bf->jerk = _get_jerk_value(bf->cruise_velocity, bf->exit_velocity, bf->tail_length);
+        }
+    }
+
+	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
+		bf->cbrt_jerk = mm.prev_cbrt_jerk;
+		bf->recip_jerk = mm.prev_recip_jerk;
+	} else {
+		bf->cbrt_jerk = cbrt(bf->jerk);
+		bf->recip_jerk = 1/bf->jerk;
+		mm.prev_jerk = bf->jerk;
+		mm.prev_cbrt_jerk = bf->cbrt_jerk;
+		mm.prev_recip_jerk = bf->recip_jerk;
+	}
 }
 
 /**************************************************************************
@@ -208,17 +246,7 @@ stat_t mp_aline(const GCodeState_t *gm_in)
 */
 #endif // __NEW_JERK
 
-	// see if you can use the previous jerk value
-	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
-		bf->cbrt_jerk = mm.prev_cbrt_jerk;
-		bf->recip_jerk = mm.prev_recip_jerk;
-	} else {
-		bf->cbrt_jerk = cbrt(bf->jerk);
-		bf->recip_jerk = 1/bf->jerk;
-		mm.prev_jerk = bf->jerk;
-		mm.prev_cbrt_jerk = bf->cbrt_jerk;
-		mm.prev_recip_jerk = bf->recip_jerk;
-	}
+    _calc_jerk_values(bf);
 
 	// finish up the current block variables
 	if (cm_get_path_control(MODEL) != PATH_EXACT_STOP) { 	// exact stop cases already zeroed
@@ -343,6 +371,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								  bp->nx->braking_velocity, 
 								 (bp->entry_velocity + bp->delta_vmax) );
 		_calculate_trapezoid(bp);
+        _calc_jerk_values(bp);
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
 		if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
@@ -357,6 +386,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
 	_calculate_trapezoid(bp);
+    _calc_jerk_values(bp);
 }
 
 /*
@@ -453,6 +483,12 @@ static void _reset_replannable_list()
  *	  but it reduces execution time when you need it most - when tons of pathologically
  *	  short Gcode blocks are being thrown at you.
  */
+/*  NOTE 2: We must maintain the relationship of ΔVelicity → Length → Jerk for head and
+ *    tail regions that are non-zero length. (We can safely ignore zero-length ones.)
+ *    So, when we invalidate that trinity, we will set jerk to 0, and expect
+ *    _calc_jerk_values() to recompute the jerk from the other values. Please see the
+ *    notes in _calc_jerk_values for the requirements.
+ */
 
 // The minimum lengths are dynamic and depend on the velocity
 // These expressions evaluate to the minimum lengths for the current velocity settings
@@ -475,6 +511,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 		bf->body_length = bf->length;
 		bf->head_length = 0;
 		bf->tail_length = 0;
+        // We have invalidated jerk, but don't use it...
 		return;
 	}
 
@@ -487,6 +524,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 		bf->body_length = bf->length;
 		bf->head_length = 0;
 		bf->tail_length = 0;
+        // We have invalidated jerk, but don't use it...
 		return;
 	}
 
@@ -522,21 +560,52 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
             if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
                 if (bf->length < minimum_length) { 				// T" (degraded case)
-                    bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
+                    // Lower the velocity to take at least two segments worth of time to decelerate.
+
+                    /* NOTE: If we are assuming we're going to recalculate the jerk, *and* we are going to not
+                     *   change the length, then we actually want to make the two speeds *closer together*.
+                     *   This is because the distance traveled (L) is actually the area of a right triangle formed
+                     *   by the ΔV (velocity change) on one side and T (the time of the move) on the bottom:
+                     *   
+                     *        |\      Area of the triangle = L (distance traveled)
+                     *     ΔV | \                  (V*T)/2 = L  →  VT = 2L  →  V = 2L/T
+                     *         --
+                     *         T
+                     *
+                     *   Normally we are bounded by the jerk value, but as long as we only *lower* ΔV while not
+                     *   changing the distance traveled (area of the triangle), then we are lowering the jerk value,
+                     *   while making the move take more time, which is what we want.
+                     *
+                     *   Additionally, since we want the time to be twice MIN_SEGMENT_TIME_PLUS_MARGIN, we will
+                     *   replace T = (t*2), to get (V*(t*2))/2 = L  →  Vt = L  →  V = L/t
+                     */
+
+                    bf->entry_velocity = min(bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
+                                             _get_target_velocity(bf->exit_velocity, bf->length, bf));
                 }
                 bf->cruise_velocity = bf->entry_velocity;
                 bf->tail_length = bf->length;
                 bf->head_length = 0;
+                // We invalidated the jerk value, mark it for correction:
+                // Double-check: head_length == 0, we need a valid cruise_velocity and exit_velocity
+                bf->jerk = 0;
                 return;
             }
 
             if (bf->entry_velocity < bf->exit_velocity)	{		// head-only cases (short accelerations)
                 if (bf->length < minimum_length) { 				// H" (degraded case)
-                    bf->exit_velocity = _get_target_velocity(bf->entry_velocity, bf->length, bf);
+                    // Lower the velocity to take at least two segments worth of time to decelerate.
+                    // See monstrous note from above.
+
+                    bf->exit_velocity = min(bf->entry_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
+                                             _get_target_velocity(bf->entry_velocity, bf->length, bf));
                 }
                 bf->cruise_velocity = bf->exit_velocity;
                 bf->head_length = bf->length;
                 bf->tail_length = 0;
+                // We invalidated the jerk value, mark it for correction:
+                // Double-check: tail_length == 0, we need a valid entry_velocity and cruise_velocity
+                bf->jerk = 0;
                 return;
             }
         }
@@ -597,10 +666,16 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 		if (bf->head_length < MIN_HEAD_LENGTH) {
 			bf->tail_length = bf->length;			// adjust the move to be all tail...
 			bf->head_length = 0;
+            // We invalidated the jerk value, mark it for correction:
+            // Double-check: head_length == 0, we need a valid cruise_velocity and exit_velocity
+            bf->jerk = 0;
 		}
 		if (bf->tail_length < MIN_TAIL_LENGTH) {
 			bf->head_length = bf->length;			//...or all head
 			bf->tail_length = 0;
+            // We invalidated the jerk value, mark it for correction:
+            // Double-check: tail_length == 0, we need a valid entry_velocity and cruise_velocity
+            bf->jerk = 0;
 		}
 		return;
 	}
@@ -609,8 +684,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	bf->body_length = bf->length - bf->head_length - bf->tail_length;
 
 	// If a non-zero body is < minimum length distribute it to the head and/or tail
-	// This will generate small (acceptable) velocity errors in runtime execution
-	// but preserve correct distance, which is more important.
+	// This will force us to recompute the jerk, but preserve correct distance, which is more important.
 	if ((bf->body_length < MIN_BODY_LENGTH) && (fp_NOT_ZERO(bf->body_length))) {
 		if (fp_NOT_ZERO(bf->head_length)) {
 			if (fp_NOT_ZERO(bf->tail_length)) {			// HBT reduces to HT
@@ -623,8 +697,10 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->tail_length += bf->body_length;
 		}
 		bf->body_length = 0;
+        // We invalidated the jerk value, mark it for correction:
+        bf->jerk = 0;
 
-	// If the body is a standalone make the cruise velocity match the entry velocity 
+	// If the body is a standalone make the cruise velocity match the entry velocity
 	// This removes a potential velocity discontinuity at the expense of top speed
 	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
         // WARNING: Edge case where entry_velocity is zero is a crash-situation.
@@ -685,6 +761,11 @@ static void _calculate_trapezoid(mpBuf_t *bf)
  *  FYI: Here's an expression that returns the jerk for a given deltaV and L:
  * 	return(cube(deltaV / (pow(L, 0.66666666))));
  */
+
+static float _get_jerk_value(const float Vi, const float Vt, const float L)
+{
+    return(pow( fabs(Vi-Vt) / (pow(L, 0.66666666)), 3 ));
+}
 
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
 {
