@@ -507,34 +507,46 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	
 	bf->body_length = 0;
 	float minimum_length = _get_target_length(bf->entry_velocity, bf->exit_velocity, bf);
-	if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
 
-		if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
-			if (bf->length < minimum_length) { 				// T" (degraded case)
-				bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
-			}
-			bf->cruise_velocity = bf->entry_velocity;
-			bf->tail_length = bf->length;
-			bf->head_length = 0;
-			return;
-		}
+    // if bf->entry_velocity == bf->exit_velocity, we'll get a zero minimum_length
+    if (fp_ZERO(minimum_length)) {
+        // head_length == tail_length, only calculate once
+        bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+        // If the speed change is too little, the head and tail will be too short
+        if (bf->head_length < MIN_HEAD_LENGTH) {
+            bf->head_length = 0;
+        }
+        bf->tail_length = bf->head_length;
+    } else {
+        if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
 
-		if (bf->entry_velocity < bf->exit_velocity)	{		// head-only cases (short accelerations)
-			if (bf->length < minimum_length) { 				// H" (degraded case)
-				bf->exit_velocity = _get_target_velocity(bf->entry_velocity, bf->length, bf);
-			}
-			bf->cruise_velocity = bf->exit_velocity;
-			bf->head_length = bf->length;
-			bf->tail_length = 0;
-			return;
-		}
-	}
+            if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
+                if (bf->length < minimum_length) { 				// T" (degraded case)
+                    bf->entry_velocity = _get_target_velocity(bf->exit_velocity, bf->length, bf);
+                }
+                bf->cruise_velocity = bf->entry_velocity;
+                bf->tail_length = bf->length;
+                bf->head_length = 0;
+                return;
+            }
 
-	// Set head and tail lengths for evaluating the next cases
-	bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
-	bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
-	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
-	if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
+            if (bf->entry_velocity < bf->exit_velocity)	{		// head-only cases (short accelerations)
+                if (bf->length < minimum_length) { 				// H" (degraded case)
+                    bf->exit_velocity = _get_target_velocity(bf->entry_velocity, bf->length, bf);
+                }
+                bf->cruise_velocity = bf->exit_velocity;
+                bf->head_length = bf->length;
+                bf->tail_length = 0;
+                return;
+            }
+        }
+
+        // Set head and tail lengths for evaluating the next cases
+        bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+        bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+        if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
+        if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
+    }
 
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
@@ -615,7 +627,16 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// If the body is a standalone make the cruise velocity match the entry velocity 
 	// This removes a potential velocity discontinuity at the expense of top speed
 	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
-		bf->cruise_velocity = bf->entry_velocity;
+        // WARNING: Edge case where entry_velocity is zero is a crash-situation.
+        // Also, we want to have an intelligent speed set here. Let's use the maximum
+        // speed we can attain in half the body length, and average it.
+        // We shpuldn't be here if cruise_velocity == 0.
+        bf->cruise_velocity = min(
+                                  _get_target_velocity(bf->entry_velocity, bf->body_length/2, bf),
+                                  bf->cruise_velocity
+                                  );
+//		float new_cruise = (bf->entry_velocity+bf->cruise_velocity)/2.0;
+        bf->cruise_velocity = (bf->entry_velocity+bf->cruise_velocity)/2.0;
 	}
 }
 
