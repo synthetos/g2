@@ -110,9 +110,9 @@ void _calc_jerk_values(mpBuf_t *bf)
 //	} else {
 //		bf->cbrt_jerk = cbrt(bf->jerk);
 //		bf->recip_jerk = 1/bf->jerk;
-//		mm.prev_jerk = bf->jerk;
-//		mm.prev_cbrt_jerk = bf->cbrt_jerk;
-//		mm.prev_recip_jerk = bf->recip_jerk;
+		mm.prev_jerk = bf->jerk;
+		mm.prev_cbrt_jerk = bf->cbrt_jerk;
+		mm.prev_recip_jerk = bf->recip_jerk;
 //	}
 }
 
@@ -377,11 +377,11 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
         _calc_jerk_values(bp);
 
         // If we changed the entry velocity, we need to account for it...
-        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
-            bp->entry_vmax = bp->entry_velocity;
-            bp = mp_get_prev_buffer(bp);
-            continue;
-        }
+//        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
+//            bp->entry_vmax = bp->entry_velocity;
+//            bp = mp_get_prev_buffer(bp);
+//            continue;
+//        }
 
         // test for optimally planned trapezoids - only need to check various exit conditions
         if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
@@ -811,7 +811,7 @@ static float _get_jerk_value(const float Vi, const float Vt, const float L)
 
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
 {
-	return (2 * sqrt(fabs(Vi-Vt) * bf->recip_jerk));
+	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk));
 }
 
 static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
