@@ -104,16 +104,16 @@ void _calc_jerk_values(mpBuf_t *bf)
         }
     }
 
-	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
+//	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
 		bf->cbrt_jerk = mm.prev_cbrt_jerk;
 		bf->recip_jerk = mm.prev_recip_jerk;
-	} else {
-		bf->cbrt_jerk = cbrt(bf->jerk);
-		bf->recip_jerk = 1/bf->jerk;
-		mm.prev_jerk = bf->jerk;
-		mm.prev_cbrt_jerk = bf->cbrt_jerk;
-		mm.prev_recip_jerk = bf->recip_jerk;
-	}
+//	} else {
+//		bf->cbrt_jerk = cbrt(bf->jerk);
+//		bf->recip_jerk = 1/bf->jerk;
+//		mm.prev_jerk = bf->jerk;
+//		mm.prev_cbrt_jerk = bf->cbrt_jerk;
+//		mm.prev_recip_jerk = bf->recip_jerk;
+//	}
 }
 
 /**************************************************************************
@@ -811,7 +811,7 @@ static float _get_jerk_value(const float Vi, const float Vt, const float L)
 
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
 {
-	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk));
+	return (2 * sqrt(fabs(Vi-Vt) * bf->recip_jerk));
 }
 
 static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
