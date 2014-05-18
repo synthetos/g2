@@ -153,10 +153,10 @@ stat_t mp_aline(const GCodeState_t *gm_in)
 
 	// trap short lines
 	//	if (length < MIN_LENGTH_MOVE) { return (STAT_MINIMUM_LENGTH_MOVE);}
-	if (gm_in->move_time < MIN_TIME_MOVE) {
-		printf("ALINE() line%lu %f\n", gm_in->linenum, (double)gm_in->move_time);
-		return (STAT_MINIMUM_TIME_MOVE);
-	}
+//	if (gm_in->move_time < MIN_TIME_MOVE) {
+//		printf("ALINE() line%lu %f\n", gm_in->linenum, (double)gm_in->move_time);
+//		return (STAT_MINIMUM_TIME_MOVE);
+//	}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
@@ -619,8 +619,10 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                      *   replace T = (t*2), to get (V*(t*2))/2 = L  →  Vt = L  →  V = L/t
                      */
 
-                    bf->entry_velocity = min(bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
-                                             _get_target_velocity(bf->exit_velocity, bf->length, bf));
+//                    bf->entry_velocity = min(bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
+//                                             _get_target_velocity(bf->exit_velocity, bf->length, bf));
+
+                    bf->entry_velocity = bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN);
                 }
                 bf->cruise_velocity = bf->entry_velocity;
                 bf->tail_length = bf->length;
@@ -636,8 +638,9 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                     // Lower the velocity to take at least two segments worth of time to decelerate.
                     // See monstrous note from above.
 
-                    bf->exit_velocity = min(bf->entry_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
-                                             _get_target_velocity(bf->entry_velocity, bf->length, bf));
+//                    bf->exit_velocity = min(bf->entry_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
+//                                            _get_target_velocity(bf->entry_velocity, bf->length, bf));
+                    bf->exit_velocity = bf->entry_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN);
                 }
                 bf->cruise_velocity = bf->exit_velocity;
                 bf->head_length = bf->length;
@@ -803,7 +806,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 static float _get_jerk_value(const float Vi, const float Vt, const float L)
 {
-    return(pow( fabs(Vi-Vt) / (pow(L, 0.66666666)), 3 ));
+    return( fabs( ((Vi-Vt) * pow((Vi+Vt), 2)) / pow(L, 2) ) );
 }
 
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)

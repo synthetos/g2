@@ -69,7 +69,7 @@
 #define M2_MICROSTEPS			32
 #define M2_POLARITY				0
 #define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL			0.45
+#define M2_POWER_LEVEL			0.47
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
