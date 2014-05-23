@@ -251,8 +251,11 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float elapsed_accel_time;		//
 
 									// values used exclusively by forward differencing acceleration
-	float forward_diff_1;			// forward difference level 1 (Acceleration)
-	float forward_diff_2;			// forward difference level 2 (Jerk - constant)
+	float forward_diff_1;			// forward difference level 1
+	float forward_diff_2;			// forward difference level 2
+	float forward_diff_3;			// forward difference level 3
+	float forward_diff_4;			// forward difference level 4
+	float forward_diff_5;			// forward difference level 5
 
 	GCodeState_t gm;				// gcode model state currently executing
 

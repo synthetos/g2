@@ -377,11 +377,11 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
         _calc_jerk_values(bp);
 
         // If we changed the entry velocity, we need to account for it...
-//        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
-//            bp->entry_vmax = bp->entry_velocity;
-//            bp = mp_get_prev_buffer(bp);
-//            continue;
-//        }
+        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
+            bp->entry_vmax = bp->entry_velocity;
+            bp = mp_get_prev_buffer(bp);
+            continue;
+        }
 
         // test for optimally planned trapezoids - only need to check various exit conditions
         if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
@@ -806,17 +806,77 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 static float _get_jerk_value(const float Vi, const float Vt, const float L)
 {
-    return( fabs( ((Vi-Vt) * pow((Vi+Vt), 2)) / pow(L, 2) ) );
+    return fabs( ((Vt-Vi) * pow((Vi+Vt), 2)) / pow(L, 2) ) ;
 }
 
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
 {
-	return (fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk));
+    return sqrt((Vt - Vi) * bf->recip_jerk)*(Vi + Vt);
+//	return fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk);
 }
 
 static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 {
-	return (pow(L, 0.66666666) * bf->cbrt_jerk + Vi);
+    // We start with a reasonable estimate...
+    float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
+
+    /* Now we'll do some Newton-Raphson iterations to narrow it down.
+     * We need a formula that includes know variables except the one we want to find,
+     * and has a root [Z(x) = 0] at the value (x) we are looking for.
+     *
+     *      Z(x) = zero at x -- we calculate the value from the knowns and the estimate
+     *             (see below) and then subtract the known value to get zero (root) if
+     *             x is the correct value.
+     *      x    = estimated final velocity, or Ve
+     *      Vi   = initial velocity (known)
+     *      J    = jerk (known)
+     *      L    = length (know)
+     *
+     * There are (at least) two such functions we can use:
+     *      L from J, Vi, and Ve
+     *      L = sqrt((Ve - Vi) / J) (Vi + Ve)
+     *   Replacing Ve with x, and subtracting the known L:
+     *      0 = sqrt((x - Vi) / J) (Vi + x) - L
+     *      Z(x) = sqrt((x - Vi) / J) (Vi + x) - L
+     *
+     *  OR
+     *
+     *      J from L, Vi, and Ve
+     *      J = ((Ve - Vi) (Vi + Ve)²) / L²
+     *  Replacing Ve with x, and subtracting the known J:
+     *      0 = ((x - Vi) (Vi + x)²) / L² - J
+     *      Z(x) = ((x - Vi) (Vi + x)²) / L² - J
+     *
+     *  L doesn't resolve to the value very quickly (it graphs near-vertical).
+     *  So, we'll use J, which resolves in < 10 iterations, often in only two or three
+     *  with a good estimate.
+     *
+     *  In order to do a Newton-Raphson iteration, we need the derivative. Here they are
+     *  for both the (unused) L and the (used) J formulas above:
+     *
+     *  J > 0, Vi > 0, x > 0
+     *  SqrtDeltaJ = sqrt((x-Vi) * J)
+     *  SqrtDeltaOverJ = sqrt((x-Vi) / J)
+     *  L'(x) = SqrtDeltaOverJ + (Vi + x) / (2*J) + (Vi + x) / (2*SqrtDeltaJ)
+     *
+     *  J'(x) = (2*Vi*x - Vi² + 3*x²) / L²
+     *
+     *
+     */
+
+    float L_squared = pow(L,2);
+    float Vi_squared = pow(Vi,2);
+
+    float previous_estimate = 0;
+    uint8_t i = 10; // Only allow it to iterate 10 times
+    do {
+        previous_estimate = estimate;
+        float J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
+        float J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
+        estimate = estimate - J_z/J_d;
+    } while (i-- != 0 && !fp_EQ(previous_estimate, estimate));
+
+    return estimate;
 }
 
 // NOTE: ALTERNATE FORMULATION OF ABOVE...
