@@ -4,6 +4,7 @@ Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG2", "TinyG2.cppproj", 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DDRO|ARM = DDRO|ARM
 		G2v9d|ARM = G2v9d|ARM
 		G2v9f|ARM = G2v9f|ARM
 		G2v9g|ARM = G2v9g|ARM
@@ -11,6 +12,8 @@ Global
 		gShield|ARM = gShield|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.DDRO|ARM.ActiveCfg = DDRO|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.DDRO|ARM.Build.0 = DDRO|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9d|ARM.ActiveCfg = G2v9d|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9d|ARM.Build.0 = G2v9d|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9f|ARM.ActiveCfg = G2v9f|ARM
