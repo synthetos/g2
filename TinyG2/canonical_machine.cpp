@@ -496,7 +496,7 @@ void cm_set_move_times(GCodeState_t *gcode_state)
 			gcode_state->minimum_time = min(gcode_state->minimum_time, tmp_time);
 		}
 	}
-	gcode_state->move_time = max4(inv_time, max_time, xyz_time, abc_time);
+	gcode_state->move_time = gcode_state->unmoved_move_time + max4(inv_time, max_time, xyz_time, abc_time);
 }
 
 /* 
@@ -998,6 +998,11 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
 	status = mp_aline(&cm.gm);					// send the move to the planner
+    if (status == STAT_OK) {
+        cm.gm.unmoved_move_time = 0;
+    } else {
+        cm.gm.unmoved_move_time = cm.gm.move_time;
+    }
 	cm_update_model_position();
 	return (status);
 }
