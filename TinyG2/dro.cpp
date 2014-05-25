@@ -76,7 +76,7 @@ struct Stepper {
 	Pin<ms2_num>    _ms2_pin;
 //	ADCPin<vref_num>     _vref_pin;
 
-    volatile int32_t             _position;
+    volatile int32_t	_position;
 
     Stepper() : _step_pin(kInput),
                 _dir_pin(kInput),
@@ -106,16 +106,19 @@ struct Stepper {
         uint8_t microstep_size = 1 << (_ms0_pin.getInputValue() | (_ms1_pin.getInputValue() << 1) | (_ms2_pin.getInputValue() << 2));
         _position += (_dir_pin.getInputValue()) ? microstep_size : -microstep_size;
 #else
-//        uint8_t microstep_size = st_cfg.mot[stepper_number].microsteps;
-
-        _position += (_dir_pin.getInputValue()) ? 1 : -1;
+//		uint8_t microstep_size = st_cfg.mot[stepper_number].microsteps;
+		int32_t step = (st_cfg.mot[stepper_number].polarity) ? -1 : +1;
+		_position += (_dir_pin.getInputValue()) ? -step : +step;
 #endif
 
         mr.position_steps[stepper_number] = _position;
 		kin_forward_kinematics(mr.target, mr.position_steps);
-
         sr_request_status_report(SR_TIMED_REQUEST);
     };
+	
+	void clear() {
+		_position = 0;
+	};
 };
 
 Stepper<kSocket1_StepPinNumber,
@@ -253,6 +256,24 @@ namespace Motate {
 
 void stepper_init()
 {
+}
+
+stat_t st_clc(cmdObj_t *cmd)	// clear diagnostic counters, reset stepper prep
+{
+	for (uint8_t i=0; i<AXES; i++) {
+		mr.target[i] = 0;
+	}
+	for (uint8_t i=0; i<MOTORS; i++) {
+		mr.position_steps[i] = 0;
+	}
+	motor_1.clear();
+	motor_2.clear();
+	motor_3.clear();
+	motor_4.clear();
+	motor_5.clear();
+	motor_6.clear();
+
+	return(STAT_OK);
 }
 
 

@@ -179,7 +179,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "qf",  _f00, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
 	{ "", "rx",  _f00, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
 	{ "", "msg", _f00, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
-//	{ "", "clc", _f00, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
+	{ "", "clc", _f00, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
 	{ "", "clear",_f00,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
 //	{ "", "sx",  _f00, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
 
@@ -500,12 +500,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
-	{ "_te","_tex",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },  // X target endpoint
-	{ "_te","_tey",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Y], 0 },
-	{ "_te","_tez",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Z], 0 },
-	{ "_te","_tea",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_A], 0 },
-	{ "_te","_teb",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_B], 0 },
-	{ "_te","_tec",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_C], 0 },
+	{ "_te","_tex",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },  // X target endpoint
+	{ "_te","_tey",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Y], 0 },
+	{ "_te","_tez",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Z], 0 },
+	{ "_te","_tea",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_A], 0 },
+	{ "_te","_teb",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_B], 0 },
+	{ "_te","_tec",_f00, 4, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_C], 0 },
 
 	{ "_tr","_trx",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.gm.target[AXIS_X], 0 },  // X target runtime
 	{ "_tr","_try",_f00, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.gm.target[AXIS_Y], 0 },
