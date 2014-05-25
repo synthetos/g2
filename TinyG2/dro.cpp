@@ -112,7 +112,7 @@ struct Stepper {
 #endif
 
         mr.position_steps[stepper_number] = _position;
-//		kin_forward_kinematics(mr.target, mr.position_steps);
+		kin_forward_kinematics(mr.target, mr.position_steps);
 
         sr_request_status_report(SR_TIMED_REQUEST);
     };

@@ -46,7 +46,7 @@
 
 #undef SR_DEFAULTS
 //#define SR_DEFAULTS "_ps1","_ps2","_ps3","_ps4"
-#define SR_DEFAULTS "_te1","_te2","_te3","_te4","_ps1","_ps2","_ps3","_ps4"
+#define SR_DEFAULTS "_tex","_tey","_tez","_tea","_ps1","_ps2","_ps3","_ps4"
 //#define SR_DEFAULTS "mpox","mpoy","mpoz","mpoa","_ps1","_ps2","_ps3","_ps4"
 
 //#define SR_DEFAULTS "_ps1","_ps2","_ps3","_ps4","feed","vel","unit","coor","dist","frmo","momo","stat"
