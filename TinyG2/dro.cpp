@@ -1,9 +1,9 @@
 /*
- * stepper.cpp - stepper motor controls
+ * dro.cpp - digital measurement and readout functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2014 Robert Giseburt
+ * Copyright (c) 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the

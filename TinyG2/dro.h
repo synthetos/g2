@@ -1,9 +1,9 @@
 /*
- * stepper.h - stepper motor interface
- * This file is part of TinyG project
+ * dro.h - digital measurement and readout functions
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2014 Robert Giseburt
+ * Copyright (c) 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,6 +28,9 @@
 
 #ifndef DRO_H_ONCE
 #define DRO_H_ONCE
+
+//#define DIGITAL_DRO
+//#define READ_MICROSTEPS
 
 // Motor config structure
 

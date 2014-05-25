@@ -815,6 +815,12 @@
     <Compile Include="cycle_probing.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="dro.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="dro.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="encoder.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1149,6 +1155,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_default.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_digital_DRO.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_hammer.h">
