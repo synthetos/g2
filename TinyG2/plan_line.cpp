@@ -65,6 +65,7 @@ float mp_get_runtime_absolute_position(uint8_t axis) { return (mr.position[axis]
 float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - mr.gm.work_offset[axis]);}
 void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset);}
 void mp_zero_segment_velocity() { mr.segment_velocity = 0;}
+float* mp_get_planner_position_vector() { return (mm.position);}
 
 /*
  * mp_get_runtime_busy() - return TRUE if motion control busy (i.e. robot is moving)
@@ -650,7 +651,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 			bf->cruise_velocity = computed_velocity;	// initialize from previous iteration 
 			bf->head_length = _get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 			bf->tail_length = _get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
-#if 1
+#if 0
             float zero_test = (bf->head_length + bf->tail_length) - bf->length;
             if (fp_ZERO(zero_test))
                 break;
@@ -838,7 +839,7 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
      *
      *
      */
-
+#if 0
     float L_squared = pow(L,2);
     float Vi_squared = pow(Vi,2);
 
@@ -850,6 +851,7 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
         float J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
         estimate = estimate - J_z/J_d;
     } while (i-- != 0 && !fp_EQ(previous_estimate, estimate));
+#endif
 
     return estimate;
 }

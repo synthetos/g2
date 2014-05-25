@@ -87,7 +87,6 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	float work_offset[AXES];			// offset from the work coordinate system (for reporting only)
 
 	float move_time;					// optimal time for move given axis constraints
-	float unmoved_move_time;			// optimal time for previous unmoved moves
 	float minimum_time;					// minimum time possible for move given axis constraints
 	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
