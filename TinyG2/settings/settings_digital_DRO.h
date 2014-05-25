@@ -45,8 +45,9 @@
 #define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
 #undef SR_DEFAULTS
-#define SR_DEFAULTS "_ps1","_ps2","_ps3","_ps4","stat"
-//#define SR_DEFAULTS "mpox","mpoy","mpoz","mpoa","_ps1","_ps2","_ps3","_ps4","stat"
+//#define SR_DEFAULTS "_ps1","_ps2","_ps3","_ps4"
+#define SR_DEFAULTS "_te1","_te2","_te3","_te4","_ps1","_ps2","_ps3","_ps4"
+//#define SR_DEFAULTS "mpox","mpoy","mpoz","mpoa","_ps1","_ps2","_ps3","_ps4"
 
 //#define SR_DEFAULTS "_ps1","_ps2","_ps3","_ps4","feed","vel","unit","coor","dist","frmo","momo","stat"
 //#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"

@@ -35,6 +35,7 @@
 #include "encoder.h"
 #include "planner.h"
 #include "canonical_machine.h"
+#include "kinematics.h"
 #include "hardware.h"
 #include "report.h"
 #include "text_parser.h"
@@ -111,6 +112,7 @@ struct Stepper {
 #endif
 
         mr.position_steps[stepper_number] = _position;
+//		kin_forward_kinematics(mr.target, mr.position_steps);
 
         sr_request_status_report(SR_TIMED_REQUEST);
     };

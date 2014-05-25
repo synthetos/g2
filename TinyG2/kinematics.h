@@ -33,7 +33,8 @@
  * Global Scope Functions
  */
 
-void ik_kinematics(const float travel[], float steps[]);
+void kin_inverse_kinematics(const float travel[], float steps[]);
+void kin_forward_kinematics(float position[], const float steps[]);
 
 //#ifdef __UNIT_TESTS
 //void ik_unit_tests(void);

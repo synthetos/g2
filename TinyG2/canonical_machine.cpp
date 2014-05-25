@@ -1609,8 +1609,8 @@ static int8_t _get_axis_type(const index_t index)
  * cm_get_pos()  - get current work position (runtime)
  * cm_get_mpos() - get current machine position (runtime)
  * 
- * cm_print_pos()- print work position (with proper units)
- * cm_print_mpos()- print machine position (always mm units)
+ * cm_print_pos() - print work position (with proper units)
+ * cm_print_mpo() - print machine position (always mm units)
  * cm_print_coor()- print coordinate offsets with linear units
  * cm_print_corr()- print coordinate offsets with rotary units
  */

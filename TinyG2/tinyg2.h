@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		041.01	// Digital DRO work; added profile, some other changes
+#define TINYG_FIRMWARE_BUILD   		041.02	// Digital DRO work; added profile, some other changes
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

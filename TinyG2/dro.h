@@ -29,7 +29,6 @@
 #ifndef DRO_H_ONCE
 #define DRO_H_ONCE
 
-//#define DIGITAL_DRO
 //#define READ_MICROSTEPS
 
 // Motor config structure

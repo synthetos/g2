@@ -31,14 +31,15 @@
 #include "stepper.h"
 #include "kinematics.h"
 
-
-//static void _inverse_kinematics(float travel[], float joint[]);
-
-/*
- * ik_kinematics() - wrapper routine for inverse kinematics
+/********************************************************************************
+ * kin_inverse_kinematics() - transform model position to steps
  *
- *	Calls kinematics function(s). 
- *	Performs axis mapping & conversion of length units to steps (and deals with inhibited axes)
+ *	Input:	position[]
+ *	Output:	steps[]
+ *
+ *	This function is typically called with relative model position indicating the amount of travel
+ *	in work coordinates. Output is steps in floating point. Also performs axis mapping & conversion 
+ *	of length units to steps, and deals with inhibited axes.
  *
  *	The reason steps are returned as floats (as opposed to, say, uint32_t) is to accommodate 
  *	fractional DDA steps. The DDA deals with fractional step values as fixed-point binary in 
@@ -46,12 +47,12 @@
  *	as floats and converted to fixed-point binary during queue loading. See stepper.c for details.
  */
 
-void ik_kinematics(const float travel[], float steps[])
+void kin_inverse_kinematics(const float model[], float steps[])
 {
 	float joint[AXES];
 
-//	_inverse_kinematics(travel, joint);				// you can insert inverse kinematics transformations here
-	memcpy(joint, travel, sizeof(float)*AXES);		 //...or just do a memcopy for cartesian machines
+//	_inverse_transform(joint, model);				// you can insert inverse kinematics transformations here
+	memcpy(joint, model, sizeof(float)*AXES);		 //...or just do a memcopy for Cartesian machines
 
 	// Map motors to axes and convert length units to steps
 	// Most of the conversion math has already been done in during config in steps_per_unit()
@@ -82,24 +83,52 @@ void ik_kinematics(const float travel[], float steps[])
 }
 
 /*
- * _inverse_kinematics() - inverse kinematics - example is for a cartesian machine
+ * _inverse_coord_transform() - coordinate transformation for inverse kinematics
  *
- *	You can glue in inverse kinematics here, but be aware of time budget constrants.
+ *	Accepts absolute or relative model position and returns absolute or relative 
+ *	joint position.
+ *
+ *	Input:	model[]
+ *	Output:	joint[]
+ *
+ *	You can glue in inverse kinematics here, but be aware of time budget constraints.
  *	This function is run during the _exec() portion of the cycle and will therefore
  *	be run once per interpolation segment. The total time for the segment load, 
  *	including the inverse kinematics transformation cannot exceed the segment time, 
  *	and ideally should be no more than 25-50% of the segment time. Currently segments 
- *	run avery 5 ms, but this might be lowered. To profile this time look at the 
+ *	run every 5 ms, but this might be lowered. To profile this time look at the 
  *	time it takes to complete the mp_exec_move() function.
  */
 /*
-static void _inverse_kinematics(float travel[], float joint[])
+static void _inverse_coord_transform(float joint[], const float model[])
 {
-	for (uint8_t i=0; i<AXES; i++) {
-		joint[i] = travel[i];
-	}	
+	for (uint8_t axis=0; axis<AXES; axis++) {
+		joint[axis] = model[axis];
+	}
 }
 */
+
+/********************************************************************************
+ * kin_forward_kinematics() - transform steps into model position
+ *
+ */
+
+void kin_forward_kinematics(float position[], const float steps[])
+{
+//	float model[AXES];			// steps in the model domain
+
+	//	_forward_transform(model, joint);				// you can insert forward kinematics transformations here
+//	memcpy(model, steps, sizeof(float)*AXES);		 //...or just do a memcopy for Cartesian machines
+
+	for (uint8_t motor=0; motor<MOTORS; motor++) {
+		for (uint8_t axis=0; axis<AXES; axis++) {
+			if (st_cfg.mot[motor].motor_map == axis) {
+				position[axis] = steps[motor] * st_cfg.mot[motor].units_per_step;
+			}
+		}
+	}
+}
+
 
 // *************************************************
 // ***** UNIT TESTS ********************************
