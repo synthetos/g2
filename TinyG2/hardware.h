@@ -30,6 +30,33 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
+/*--- Hardware platform enumerations ---*/
+
+enum hwPlatform {
+	HM_PLATFORM_NONE = 0,
+
+	HW_PLATFORM_TINYG_XMEGA,	// TinyG code base on Xmega boards. 
+								//	hwRevision 0 = TinyG v7 and earlier
+								//	hwRevision 1 = TinyG v8
+
+	HW_PLATFORM_G2_DUE,			// G2 code base on native Arduino Due
+
+	HW_PLATFORM_TINYG_V9		// G2 code base on v9 boards
+								// hwRevision 0 = v9c
+								// hwRevision 1 = v9d
+								// hwRevision 2 = v9f
+								// hwRevision 3 = v9h
+								// hwRevision 4 = v9i
+};
+
+#define HW_VERSION_TINYGV7		0
+#define HW_VERSION_TINYGV8		1
+#define HW_VERSION_TINYGV9C		0
+#define HW_VERSION_TINYGV9D		1
+#define HW_VERSION_TINYGV9F		2
+#define HW_VERSION_TINYGV9H		3
+#define HW_VERSION_TINYGV9I		4
+
 ////////////////////////////
 /////// ARM VERSION ////////
 ////////////////////////////
