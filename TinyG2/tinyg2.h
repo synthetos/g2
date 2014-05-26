@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		042.01	// Merge from rob branch - smoke test passed
+#define TINYG_FIRMWARE_BUILD   		043.01	// Merging TinyG build 429.01; canonical_machine.h; reverting cm_cycle_end() semantics
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

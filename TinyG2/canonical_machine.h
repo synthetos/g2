@@ -89,11 +89,11 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	float move_time;					// optimal time for move given axis constraints
 	float minimum_time;					// minimum time possible for move given axis constraints
 	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
-	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
 
 	float spindle_speed;				// in RPM
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
+	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
 	uint8_t select_plane;				// G17,G18,G19 - values to set plane to
 	uint8_t units_mode;					// G20,G21 - 0=inches (G20), 1 = mm (G21)
 	uint8_t coord_system;				// G54-G59 - select coordinate system 1-9
@@ -640,7 +640,7 @@ stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle sta
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
 void cm_cycle_start(void);										// (no Gcode)
-void cm_cycle_end(uint8_t flag); 								// (no Gcode) - set flag to true for cycle end
+void cm_cycle_end(void); 										// (no Gcode)
 void cm_feedhold(void);											// (no Gcode)
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
