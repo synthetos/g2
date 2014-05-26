@@ -54,7 +54,7 @@
 /****** COMPILE-TIME SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
+//#define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
 //#define __POCKETNC							// enable PocketNC homing hacks
 //#define __SIMULATION						// shorthand to keep from having to comment and uncomment the below:
 

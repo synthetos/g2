@@ -245,14 +245,23 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float jerk;						// max linear jerk
 	float jerk_div2;				// cached value for efficiency
 	float midpoint_velocity;		// velocity at accel/decel midpoint
+#ifdef __JERK_EXEC
 	float midpoint_acceleration;	//
 	float accel_time;				//
 	float segment_accel_time;		//
 	float elapsed_accel_time;		//
-
+#endif
 									// values used exclusively by forward differencing acceleration
-	float forward_diff_1;			// forward difference level 1 (Acceleration)
-	float forward_diff_2;			// forward difference level 2 (Jerk - constant)
+	float forward_diff_1;			// forward difference level 1
+	float forward_diff_1_c;			// forward difference level 1 floating-point compensation
+	float forward_diff_2;			// forward difference level 2
+	float forward_diff_2_c;			// forward difference level 2 floating-point compensation
+	float forward_diff_3;			// forward difference level 3
+	float forward_diff_3_c;			// forward difference level 3 floating-point compensation
+	float forward_diff_4;			// forward difference level 4
+	float forward_diff_4_c;			// forward difference level 4 floating-point compensation
+	float forward_diff_5;			// forward difference level 5
+	float forward_diff_5_c;			// forward difference level 5 floating-point compensation
 
 	GCodeState_t gm;				// gcode model state currently executing
 
@@ -309,11 +318,13 @@ float mp_get_runtime_absolute_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 void mp_zero_segment_velocity(void);
 uint8_t mp_get_runtime_busy(void);
+float* mp_get_planner_position_vector();
 
 // plan_exec.c functions
 void mp_init_runtime(void);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
+
 
 #ifdef __DEBUG
 void mp_dump_running_plan_buffer(void);
