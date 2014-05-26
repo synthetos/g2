@@ -61,20 +61,20 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 
 // helpers (most helpers are defined immediately above their usage so they don't need prototypes here)
 
-static stat_t _do_motors(cmdObj_t *cmd);	// print parameters for all motor groups
-static stat_t _do_axes(cmdObj_t *cmd);		// print parameters for all axis groups
-static stat_t _do_offsets(cmdObj_t *cmd);	// print offset parameters for G54-G59,G92, G28, G30
-static stat_t _do_all(cmdObj_t *cmd);		// print all parameters
+static stat_t _do_motors(nvObj_t *nv);	// print parameters for all motor groups
+static stat_t _do_axes(nvObj_t *nv);		// print parameters for all axis groups
+static stat_t _do_offsets(nvObj_t *nv);	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_all(nvObj_t *nv);		// print all parameters
 
 // communications settings and functions
 
-//static stat_t set_ic(cmdObj_t *cmd);		// ignore CR or LF on RX input
-//static stat_t set_ec(cmdObj_t *cmd);		// expand CRLF on TX output
-//static stat_t set_ee(cmdObj_t *cmd);		// enable character echo
-//static stat_t set_ex(cmdObj_t *cmd);		// enable XON/XOFF and RTS/CTS flow control
-//static stat_t set_baud(cmdObj_t *cmd);	// set USB baud rate
-static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
-//static stat_t run_sx(cmdObj_t *cmd);		// send XOFF, XON
+//static stat_t set_ic(nvObj_t *nv);		// ignore CR or LF on RX input
+//static stat_t set_ec(nvObj_t *nv);		// expand CRLF on TX output
+//static stat_t set_ee(nvObj_t *nv);		// enable character echo
+//static stat_t set_ex(nvObj_t *nv);		// enable XON/XOFF and RTS/CTS flow control
+//static stat_t set_baud(nvObj_t *nv);	// set USB baud rate
+static stat_t get_rx(nvObj_t *nv);		// get bytes in RX buffer
+//static stat_t run_sx(nvObj_t *nv);		// send XOFF, XON
 
 /***********************************************************************************
  **** CONFIG TABLE  ****************************************************************
@@ -92,9 +92,9 @@ static stat_t get_rx(cmdObj_t *cmd);		// get bytes in RX buffer
  *	- Groups do not have groups. Neither do uber-groups, e.g.
  *	  'x' is --> { "", "x",  	and 'm' is --> { "", "m",
  *
- *	- Be careful not to define groups longer than CMD_GROUP_LEN (3) and tokens longer
- *	  than CMD_TOKEN_LEN (5). (See config.h for lengths). The combined group + token
- *	  cannot exceed CMD_TOKEN_LEN. String functions working on the table assume these
+ *	- Be careful not to define groups longer than NV_GROUP_LEN (3) and tokens longer
+ *	  than NV_TOKEN_LEN (5). (See config.h for lengths). The combined group + token
+ *	  cannot exceed NV_TOKEN_LEN. String functions working on the table assume these
  *	  rules are followed and do not check lengths or perform other validation.
  *
  *	NOTE: If the count of lines in cfgArray exceeds 255 you need to change index_t
@@ -113,7 +113,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "n",   _fin, 0, cm_print_line, cm_get_mline,set_int,(float *)&cm.gm.linenum,0 },	// Model line number
 	{ "",   "line",_fin, 0, cm_print_line, cm_get_line, set_int,(float *)&cm.gm.linenum,0 },	// Active line number - model or runtime line number
 	{ "",   "vel", _f00, 2, cm_print_vel,  cm_get_vel,  set_nul,(float *)&cs.null, 0 },			// current velocity
-	{ "",   "feed",_f00, 2, cm_print_feed, get_flu,  	set_nul,(float *)&cm.gm.feed_rate,0 },	// feed rate
+	{ "",   "feed",_f00, 2, cm_print_feed, get_flt,  	set_nul,(float *)&cm.gm.feed_rate,0 },	// feed rate
 	{ "",   "stat",_f00, 0, cm_print_stat, cm_get_stat, set_nul,(float *)&cs.null, 0 },	// combined machine state
 	{ "",   "macs",_f00, 0, cm_print_macs, cm_get_macs, set_nul,(float *)&cs.null, 0 },	// raw machine state
 	{ "",   "cycs",_f00, 0, cm_print_cycs, cm_get_cycs, set_nul,(float *)&cs.null, 0 },	// cycle state
@@ -198,7 +198,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	// Motor parameters
 	{ "1","1ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_1].motor_map,	M1_MOTOR_MAP },
 	{ "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_1].step_angle,	M1_STEP_ANGLE },
-	{ "1","1tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_1].travel_rev,	M1_TRAVEL_PER_REV },
+	{ "1","1tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_1].travel_rev,	M1_TRAVEL_PER_REV },
 	{ "1","1mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_1].microsteps,	M1_MICROSTEPS },
 	{ "1","1po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_1].polarity,	M1_POLARITY },
 	{ "1","1pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_1].power_mode,	M1_POWER_MODE },
@@ -206,7 +206,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #if (MOTORS >= 2)
 	{ "2","2ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_2].motor_map,	M2_MOTOR_MAP },
 	{ "2","2sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_2].step_angle,	M2_STEP_ANGLE },
-	{ "2","2tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_2].travel_rev,	M2_TRAVEL_PER_REV },
+	{ "2","2tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_2].travel_rev,	M2_TRAVEL_PER_REV },
 	{ "2","2mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_2].microsteps,	M2_MICROSTEPS },
 	{ "2","2po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_2].polarity,	M2_POLARITY },
 	{ "2","2pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_2].power_mode,	M2_POWER_MODE },
@@ -215,7 +215,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #if (MOTORS >= 3)
 	{ "3","3ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_3].motor_map,	M3_MOTOR_MAP },
 	{ "3","3sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_3].step_angle,	M3_STEP_ANGLE },
-	{ "3","3tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_3].travel_rev,	M3_TRAVEL_PER_REV },
+	{ "3","3tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_3].travel_rev,	M3_TRAVEL_PER_REV },
 	{ "3","3mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_3].microsteps,	M3_MICROSTEPS },
 	{ "3","3po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_3].polarity,	M3_POLARITY },
 	{ "3","3pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_3].power_mode,	M3_POWER_MODE },
@@ -224,7 +224,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #if (MOTORS >= 4)
 	{ "4","4ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_4].motor_map,	M4_MOTOR_MAP },
 	{ "4","4sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_4].step_angle,	M4_STEP_ANGLE },
-	{ "4","4tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_4].travel_rev,	M4_TRAVEL_PER_REV },
+	{ "4","4tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_4].travel_rev,	M4_TRAVEL_PER_REV },
 	{ "4","4mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_4].microsteps,	M4_MICROSTEPS },
 	{ "4","4po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_4].polarity,	M4_POLARITY },
 	{ "4","4pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_4].power_mode,	M4_POWER_MODE },
@@ -233,7 +233,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #if (MOTORS >= 5)
 	{ "5","5ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_5].motor_map,	M5_MOTOR_MAP },
 	{ "5","5sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_5].step_angle,	M5_STEP_ANGLE },
-	{ "5","5tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_5].travel_rev,	M5_TRAVEL_PER_REV },
+	{ "5","5tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_5].travel_rev,	M5_TRAVEL_PER_REV },
 	{ "5","5mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_5].microsteps,	M5_MICROSTEPS },
 	{ "5","5po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_5].polarity,	M5_POLARITY },
 	{ "5","5pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_5].power_mode,	M5_POWER_MODE },
@@ -242,7 +242,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #if (MOTORS >= 6)
 	{ "6","6ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_6].motor_map,	M6_MOTOR_MAP },
 	{ "6","6sa",_fip, 3, st_print_sa, get_flt, st_set_sa, (float *)&st_cfg.mot[MOTOR_6].step_angle,	M6_STEP_ANGLE },
-	{ "6","6tr",_fip, 4, st_print_tr, get_flu, st_set_tr, (float *)&st_cfg.mot[MOTOR_6].travel_rev,	M6_TRAVEL_PER_REV },
+	{ "6","6tr",_fip, 4, st_print_tr, get_flt, st_set_tr, (float *)&st_cfg.mot[MOTOR_6].travel_rev,	M6_TRAVEL_PER_REV },
 	{ "6","6mi",_fip, 0, st_print_mi, get_ui8, st_set_mi, (float *)&st_cfg.mot[MOTOR_6].microsteps,	M6_MICROSTEPS },
 	{ "6","6po",_fip, 0, st_print_po, get_ui8, set_01,    (float *)&st_cfg.mot[MOTOR_6].polarity,	M6_POLARITY },
 	{ "6","6pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_6].power_mode,	M6_POWER_MODE },
@@ -251,57 +251,57 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// Axis parameters
 	{ "x","xam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_X].axis_mode,		X_AXIS_MODE },
-	{ "x","xvm",_fip, 0, cm_print_vm, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].velocity_max,	X_VELOCITY_MAX },
-	{ "x","xfr",_fip, 0, cm_print_fr, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].feedrate_max,	X_FEEDRATE_MAX },
-	{ "x","xtn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].travel_min,		X_TRAVEL_MIN },
-	{ "x","xtm",_fip, 0, cm_print_tm, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
-	{ "x","xjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
-	{ "x","xjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
-	{ "x","xjd",_fip, 4, cm_print_jd, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
+	{ "x","xvm",_fip, 0, cm_print_vm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].velocity_max,	X_VELOCITY_MAX },
+	{ "x","xfr",_fip, 0, cm_print_fr, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].feedrate_max,	X_FEEDRATE_MAX },
+	{ "x","xtn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_min,		X_TRAVEL_MIN },
+	{ "x","xtm",_fip, 0, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
+	{ "x","xjm",_fip, 0, cm_print_jm, get_flt,   cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
+	{ "x","xjh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_X].jerk_homing,		X_JERK_HOMING },
+	{ "x","xjd",_fip, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
 	{ "x","xsn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,	X_SWITCH_MODE_MIN },
 	{ "x","xsx",_fip, 0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,	X_SWITCH_MODE_MAX },
-	{ "x","xsv",_fip, 0, cm_print_sv, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,	X_SEARCH_VELOCITY },
-	{ "x","xlv",_fip, 0, cm_print_lv, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
-	{ "x","xlb",_fip, 3, cm_print_lb, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,	X_LATCH_BACKOFF },
-	{ "x","xzb",_fip, 3, cm_print_zb, get_flu,   set_flu,   (float *)&cm.a[AXIS_X].zero_backoff,	X_ZERO_BACKOFF },
+	{ "x","xsv",_fip, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,	X_SEARCH_VELOCITY },
+	{ "x","xlv",_fip, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
+	{ "x","xlb",_fip, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,	X_LATCH_BACKOFF },
+	{ "x","xzb",_fip, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].zero_backoff,	X_ZERO_BACKOFF },
 
 	{ "y","yam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_Y].axis_mode,		Y_AXIS_MODE },
-	{ "y","yvm",_fip, 0, cm_print_vm, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].velocity_max,	Y_VELOCITY_MAX },
-	{ "y","yfr",_fip, 0, cm_print_fr, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].feedrate_max,	Y_FEEDRATE_MAX },
-	{ "y","ytn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].travel_min,		Y_TRAVEL_MIN },
-	{ "y","ytm",_fip, 0, cm_print_tm, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
-	{ "y","yjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
-	{ "y","yjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_Y].jerk_homing,		Y_JERK_HOMING },
-	{ "y","yjd",_fip, 4, cm_print_jd, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },
+	{ "y","yvm",_fip, 0, cm_print_vm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].velocity_max,	Y_VELOCITY_MAX },
+	{ "y","yfr",_fip, 0, cm_print_fr, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].feedrate_max,	Y_FEEDRATE_MAX },
+	{ "y","ytn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_min,		Y_TRAVEL_MIN },
+	{ "y","ytm",_fip, 0, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
+	{ "y","yjm",_fip, 0, cm_print_jm, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
+	{ "y","yjh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_Y].jerk_homing,		Y_JERK_HOMING },
+	{ "y","yjd",_fip, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },
 	{ "y","ysn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Y][SW_MIN].mode,	Y_SWITCH_MODE_MIN },
 	{ "y","ysx",_fip, 0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Y][SW_MAX].mode,	Y_SWITCH_MODE_MAX },
-	{ "y","ysv",_fip, 0, cm_print_sv, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,	Y_SEARCH_VELOCITY },
-	{ "y","ylv",_fip, 0, cm_print_lv, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
-	{ "y","ylb",_fip, 3, cm_print_lb, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,	Y_LATCH_BACKOFF },
-	{ "y","yzb",_fip, 3, cm_print_zb, get_flu,   set_flu,   (float *)&cm.a[AXIS_Y].zero_backoff,	Y_ZERO_BACKOFF },
+	{ "y","ysv",_fip, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,	Y_SEARCH_VELOCITY },
+	{ "y","ylv",_fip, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
+	{ "y","ylb",_fip, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,	Y_LATCH_BACKOFF },
+	{ "y","yzb",_fip, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].zero_backoff,	Y_ZERO_BACKOFF },
 
 	{ "z","zam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_Z].axis_mode,		Z_AXIS_MODE },
-	{ "z","zvm",_fip, 0, cm_print_vm, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].velocity_max,	Z_VELOCITY_MAX },
-	{ "z","zfr",_fip, 0, cm_print_fr, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].feedrate_max,	Z_FEEDRATE_MAX },
-	{ "z","ztn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].travel_min,		Z_TRAVEL_MIN },
-	{ "z","ztm",_fip, 0, cm_print_tm, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
-	{ "z","zjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
-	{ "z","zjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_Z].jerk_homing, 	Z_JERK_HOMING },
-	{ "z","zjd",_fip, 4, cm_print_jd, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },
+	{ "z","zvm",_fip, 0, cm_print_vm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].velocity_max,	Z_VELOCITY_MAX },
+	{ "z","zfr",_fip, 0, cm_print_fr, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].feedrate_max,	Z_FEEDRATE_MAX },
+	{ "z","ztn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_min,		Z_TRAVEL_MIN },
+	{ "z","ztm",_fip, 0, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
+	{ "z","zjm",_fip, 0, cm_print_jm, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
+	{ "z","zjh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_Z].jerk_homing, 	Z_JERK_HOMING },
+	{ "z","zjd",_fip, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },
 	{ "z","zsn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Z][SW_MIN].mode,	Z_SWITCH_MODE_MIN },
 	{ "z","zsx",_fip, 0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Z][SW_MAX].mode,	Z_SWITCH_MODE_MAX },
-	{ "z","zsv",_fip, 0, cm_print_sv, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,	Z_SEARCH_VELOCITY },
-	{ "z","zlv",_fip, 0, cm_print_lv, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
-	{ "z","zlb",_fip, 3, cm_print_lb, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,	Z_LATCH_BACKOFF },
-	{ "z","zzb",_fip, 3, cm_print_zb, get_flu,   set_flu,   (float *)&cm.a[AXIS_Z].zero_backoff,	Z_ZERO_BACKOFF },
+	{ "z","zsv",_fip, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,	Z_SEARCH_VELOCITY },
+	{ "z","zlv",_fip, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
+	{ "z","zlb",_fip, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,	Z_LATCH_BACKOFF },
+	{ "z","zzb",_fip, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].zero_backoff,	Z_ZERO_BACKOFF },
 
 	{ "a","aam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_A].axis_mode,		A_AXIS_MODE },
 	{ "a","avm",_fip, 0, cm_print_vm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].velocity_max,	A_VELOCITY_MAX },
 	{ "a","afr",_fip, 0, cm_print_fr, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].feedrate_max,	A_FEEDRATE_MAX },
-	{ "a","atn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_A].travel_min,		A_TRAVEL_MIN },
+	{ "a","atn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_A].travel_min,		A_TRAVEL_MIN },
 	{ "a","atm",_fip, 0, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_max,		A_TRAVEL_MAX },
-	{ "a","ajm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_A].jerk_max,		A_JERK_MAX },
-	{ "a","ajh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_A].jerk_homing, 	A_JERK_HOMING },
+	{ "a","ajm",_fip, 0, cm_print_jm, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_A].jerk_max,		A_JERK_MAX },
+	{ "a","ajh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_A].jerk_homing, 	A_JERK_HOMING },
 	{ "a","ajd",_fip, 4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },
 	{ "a","ara",_fip, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","asn",_fip, 0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_A][SW_MIN].mode,	A_SWITCH_MODE_MIN },
@@ -314,9 +314,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","bam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_B].axis_mode,		B_AXIS_MODE },
 	{ "b","bvm",_fip, 0, cm_print_vm, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].velocity_max,	B_VELOCITY_MAX },
 	{ "b","bfr",_fip, 0, cm_print_fr, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].feedrate_max,	B_FEEDRATE_MAX },
-	{ "b","btn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_B].travel_min,		B_TRAVEL_MIN },
+	{ "b","btn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_B].travel_min,		B_TRAVEL_MIN },
 	{ "b","btm",_fip, 0, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].travel_max,		B_TRAVEL_MAX },
-	{ "b","bjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_B].jerk_max,		B_JERK_MAX },
+	{ "b","bjm",_fip, 0, cm_print_jm, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_B].jerk_max,		B_JERK_MAX },
 	{ "b","bjd",_fip, 0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },
 	{ "b","bra",_fip, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,			B_RADIUS },
 #ifdef __ARM	// B axis extended parameters
@@ -326,15 +326,15 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","blv",_fip, 0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
 	{ "b","blb",_fip, 3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,	B_LATCH_BACKOFF },
 	{ "b","bzb",_fip, 3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].zero_backoff,	B_ZERO_BACKOFF },
-	{ "b","bjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_B].jerk_homing,		B_JERK_HOMING },
+	{ "b","bjh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_B].jerk_homing,		B_JERK_HOMING },
 #endif
 
 	{ "c","cam",_fip, 0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_C].axis_mode,		C_AXIS_MODE },
 	{ "c","cvm",_fip, 0, cm_print_vm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].velocity_max,	C_VELOCITY_MAX },
 	{ "c","cfr",_fip, 0, cm_print_fr, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].feedrate_max,	C_FEEDRATE_MAX },
-	{ "c","ctn",_fip, 0, cm_print_tn, get_flu,   set_flu,   (float *)&cm.a[AXIS_C].travel_min,		C_TRAVEL_MIN },
+	{ "c","ctn",_fip, 0, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_C].travel_min,		C_TRAVEL_MIN },
 	{ "c","ctm",_fip, 0, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,		C_TRAVEL_MAX },
-	{ "c","cjm",_fip, 0, cm_print_jm, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
+	{ "c","cjm",_fip, 0, cm_print_jm, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
 	{ "c","cjd",_fip, 0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },
 	{ "c","cra",_fip, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters
@@ -344,7 +344,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","clv",_fip, 0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
 	{ "c","clb",_fip, 3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
 	{ "c","czb",_fip, 3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,	C_ZERO_BACKOFF },
-	{ "c","cjh",_fip, 0, cm_print_jh, cm_get_jrk,cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
+	{ "c","cjh",_fip, 0, cm_print_jh, get_flt,	 cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
 #endif
 
 	// PWM settings
@@ -360,66 +360,66 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, set_flt,(float *)&pwm.c[PWM_1].phase_off,		P1_PWM_PHASE_OFF },
 
 	// Coordinate system offsets (G54-G59 and G92)
-	{ "g54","g54x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },
-	{ "g54","g54y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_Y], G54_Y_OFFSET },
-	{ "g54","g54z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_Z], G54_Z_OFFSET },
-	{ "g54","g54a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_A], G54_A_OFFSET },
-	{ "g54","g54b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_B], G54_B_OFFSET },
-	{ "g54","g54c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G54][AXIS_C], G54_C_OFFSET },
+	{ "g54","g54x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },
+	{ "g54","g54y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_Y], G54_Y_OFFSET },
+	{ "g54","g54z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_Z], G54_Z_OFFSET },
+	{ "g54","g54a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_A], G54_A_OFFSET },
+	{ "g54","g54b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_B], G54_B_OFFSET },
+	{ "g54","g54c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_C], G54_C_OFFSET },
 
-	{ "g55","g55x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_X], G55_X_OFFSET },
-	{ "g55","g55y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_Y], G55_Y_OFFSET },
-	{ "g55","g55z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_Z], G55_Z_OFFSET },
-	{ "g55","g55a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_A], G55_A_OFFSET },
-	{ "g55","g55b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_B], G55_B_OFFSET },
-	{ "g55","g55c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G55][AXIS_C], G55_C_OFFSET },
+	{ "g55","g55x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_X], G55_X_OFFSET },
+	{ "g55","g55y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_Y], G55_Y_OFFSET },
+	{ "g55","g55z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_Z], G55_Z_OFFSET },
+	{ "g55","g55a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_A], G55_A_OFFSET },
+	{ "g55","g55b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_B], G55_B_OFFSET },
+	{ "g55","g55c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_C], G55_C_OFFSET },
 
-	{ "g56","g56x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_X], G56_X_OFFSET },
-	{ "g56","g56y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_Y], G56_Y_OFFSET },
-	{ "g56","g56z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_Z], G56_Z_OFFSET },
-	{ "g56","g56a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_A], G56_A_OFFSET },
-	{ "g56","g56b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_B], G56_B_OFFSET },
-	{ "g56","g56c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G56][AXIS_C], G56_C_OFFSET },
+	{ "g56","g56x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_X], G56_X_OFFSET },
+	{ "g56","g56y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_Y], G56_Y_OFFSET },
+	{ "g56","g56z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_Z], G56_Z_OFFSET },
+	{ "g56","g56a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_A], G56_A_OFFSET },
+	{ "g56","g56b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_B], G56_B_OFFSET },
+	{ "g56","g56c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_C], G56_C_OFFSET },
 
-	{ "g57","g57x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_X], G57_X_OFFSET },
-	{ "g57","g57y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_Y], G57_Y_OFFSET },
-	{ "g57","g57z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_Z], G57_Z_OFFSET },
-	{ "g57","g57a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_A], G57_A_OFFSET },
-	{ "g57","g57b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_B], G57_B_OFFSET },
-	{ "g57","g57c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G57][AXIS_C], G57_C_OFFSET },
+	{ "g57","g57x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_X], G57_X_OFFSET },
+	{ "g57","g57y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_Y], G57_Y_OFFSET },
+	{ "g57","g57z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_Z], G57_Z_OFFSET },
+	{ "g57","g57a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_A], G57_A_OFFSET },
+	{ "g57","g57b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_B], G57_B_OFFSET },
+	{ "g57","g57c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_C], G57_C_OFFSET },
 
-	{ "g58","g58x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_X], G58_X_OFFSET },
-	{ "g58","g58y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_Y], G58_Y_OFFSET },
-	{ "g58","g58z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_Z], G58_Z_OFFSET },
-	{ "g58","g58a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_A], G58_A_OFFSET },
-	{ "g58","g58b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_B], G58_B_OFFSET },
-	{ "g58","g58c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G58][AXIS_C], G58_C_OFFSET },
+	{ "g58","g58x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_X], G58_X_OFFSET },
+	{ "g58","g58y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_Y], G58_Y_OFFSET },
+	{ "g58","g58z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_Z], G58_Z_OFFSET },
+	{ "g58","g58a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_A], G58_A_OFFSET },
+	{ "g58","g58b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_B], G58_B_OFFSET },
+	{ "g58","g58c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_C], G58_C_OFFSET },
 
-	{ "g59","g59x",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_X], G59_X_OFFSET },
-	{ "g59","g59y",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_Y], G59_Y_OFFSET },
-	{ "g59","g59z",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_Z], G59_Z_OFFSET },
-	{ "g59","g59a",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_A], G59_A_OFFSET },
-	{ "g59","g59b",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_B], G59_B_OFFSET },
-	{ "g59","g59c",_fip, 3, cm_print_cofs, get_flu, set_flu,(float *)&cm.offset[G59][AXIS_C], G59_C_OFFSET },
+	{ "g59","g59x",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_X], G59_X_OFFSET },
+	{ "g59","g59y",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_Y], G59_Y_OFFSET },
+	{ "g59","g59z",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_Z], G59_Z_OFFSET },
+	{ "g59","g59a",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_A], G59_A_OFFSET },
+	{ "g59","g59b",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_B], G59_B_OFFSET },
+	{ "g59","g59c",_fip, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_C], G59_C_OFFSET },
 
-	{ "g92","g92x",_fin, 3, cm_print_cofs, get_flu, set_nul,(float *)&cm.gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
-	{ "g92","g92y",_fin, 3, cm_print_cofs, get_flu, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Y], 0 },
-	{ "g92","g92z",_fin, 3, cm_print_cofs, get_flu, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Z], 0 },
+	{ "g92","g92x",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
+	{ "g92","g92y",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Y], 0 },
+	{ "g92","g92z",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Z], 0 },
 	{ "g92","g92a",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_A], 0 },
 	{ "g92","g92b",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_B], 0 },
 	{ "g92","g92c",_fin, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_C], 0 },
 
 	// Coordinate positions (G28, G30)
-	{ "g28","g28x",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g28_position[AXIS_X], 0 },// g28 handled differently
-	{ "g28","g28y",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g28_position[AXIS_Y], 0 },
-	{ "g28","g28z",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g28_position[AXIS_Z], 0 },
+	{ "g28","g28x",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_X], 0 },// g28 handled differently
+	{ "g28","g28y",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Y], 0 },
+	{ "g28","g28z",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Z], 0 },
 	{ "g28","g28a",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_A], 0 },
 	{ "g28","g28b",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_B], 0 },
 	{ "g28","g28c",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_C], 0 },
 
-	{ "g30","g30x",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g30_position[AXIS_X], 0 },// g30 handled differently
-	{ "g30","g30y",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g30_position[AXIS_Y], 0 },
-	{ "g30","g30z",_fin, 3, cm_print_cpos, get_flu, set_nul,(float *)&cm.gmx.g30_position[AXIS_Z], 0 },
+	{ "g30","g30x",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_X], 0 },// g30 handled differently
+	{ "g30","g30y",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Y], 0 },
+	{ "g30","g30z",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Z], 0 },
 	{ "g30","g30a",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_A], 0 },
 	{ "g30","g30b",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_B], 0 },
 	{ "g30","g30c",_fin, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_C], 0 },
@@ -431,8 +431,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidd",_f00,  0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[3], 0},
 
 	// System parameters
-	{ "sys","ja",  _f07, 0, cm_print_ja,  get_flu,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
-	{ "sys","ct",  _f07, 4, cm_print_ct,  get_flu,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
+	{ "sys","ja",  _f07, 0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
+	{ "sys","ct",  _f07, 4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
 	{ "sys","sl",  _f07, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,	SOFT_LIMIT_ENABLE },
 //	{ "sys","st",  _f07, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.switch_type,			SWITCH_TYPE },
 	{ "sys","mt",  _f07, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
@@ -476,8 +476,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// "hidden" parameters (not in system group)
 	{ "",   "ms",  _fip, 0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,	NOM_SEGMENT_USEC },
-	{ "",   "ml",  _fip, 4, cm_print_ml,  get_flu, set_flu, (float *)&cm.min_segment_len,	MIN_LINE_LENGTH },
-	{ "",   "ma",  _fip, 4, cm_print_ma,  get_flu, set_flu, (float *)&cm.arc_segment_len,	ARC_SEGMENT_LENGTH },
+	{ "",   "ml",  _fip, 4, cm_print_ml,  get_flt, set_flu, (float *)&cm.min_segment_len,	MIN_LINE_LENGTH },
+	{ "",   "ma",  _fip, 4, cm_print_ma,  get_flt, set_flu, (float *)&cm.arc_segment_len,	ARC_SEGMENT_LENGTH },
 	{ "",   "fd",  _fip, 0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
 
 	// User defined data groups
@@ -563,7 +563,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Persistence for status report - must be in sequence
-	// *** Count must agree with CMD_STATUS_REPORT_LEN in config.h ***
+	// *** Count must agree with NV_STATUS_REPORT_LEN in config.h ***
 	{ "","se00",_fpe, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[0],0 },
 	{ "","se01",_fpe, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[1],0 },
 	{ "","se02",_fpe, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[2],0 },
@@ -596,7 +596,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","se29",_fpe, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[29],0 },
 
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
-	// *** Must agree with CMD_COUNT_GROUPS below ***
+	// *** Must agree with NV_COUNT_GROUPS below ***
 	// *** START COUNTING FROM HERE ***
 	{ "","sys",_f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// system group
 	{ "","p1", _f00, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PWM 1 group
@@ -655,7 +655,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Uber-group (groups of groups, for text-mode displays only)
-	// *** Must agree with CMD_COUNT_UBER_GROUPS below ****
+	// *** Must agree with NV_COUNT_UBER_GROUPS below ****
 	{ "", "m", _f00, 0, tx_print_nul, _do_motors, set_nul,(float *)&cs.null,0 },
 	{ "", "q", _f00, 0, tx_print_nul, _do_axes,   set_nul,(float *)&cs.null,0 },
 	{ "", "o", _f00, 0, tx_print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
@@ -664,7 +664,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define CMD_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
+#define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
 #define STANDARD_GROUPS 		32		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
@@ -684,19 +684,19 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #else
 #define DIAGNOSTIC_GROUPS 		0
 #endif
-#define CMD_COUNT_GROUPS 		(STANDARD_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + DIAGNOSTIC_GROUPS)
+#define NV_COUNT_GROUPS 		(STANDARD_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + DIAGNOSTIC_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
-#define CMD_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))
-#define CMD_INDEX_END_SINGLES		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS - CMD_STATUS_REPORT_LEN)
-#define CMD_INDEX_START_GROUPS		(CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS - CMD_COUNT_GROUPS)
-#define CMD_INDEX_START_UBER_GROUPS (CMD_INDEX_MAX - CMD_COUNT_UBER_GROUPS)
+#define NV_INDEX_MAX (sizeof cfgArray / sizeof(cfgItem_t))
+#define NV_INDEX_END_SINGLES		(NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS - NV_STATUS_REPORT_LEN)
+#define NV_INDEX_START_GROUPS		(NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS)
+#define NV_INDEX_START_UBER_GROUPS (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS)
 /* </DO NOT MESS WITH THESE DEFINES> */
 
-index_t	cmd_index_max() { return ( CMD_INDEX_MAX );}
-uint8_t cmd_index_is_single(index_t index) { return ((index <= CMD_INDEX_END_SINGLES) ? true : false);}
-uint8_t cmd_index_is_group(index_t index) { return (((index >= CMD_INDEX_START_GROUPS) && (index < CMD_INDEX_START_UBER_GROUPS)) ? true : false);}
-uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_GROUPS) ? true : false);}
+index_t	nv_index_max() { return ( NV_INDEX_MAX );}
+uint8_t nv_index_is_single(index_t index) { return ((index <= NV_INDEX_END_SINGLES) ? true : false);}
+uint8_t nv_index_is_group(index_t index) { return (((index >= NV_INDEX_START_GROUPS) && (index < NV_INDEX_START_UBER_GROUPS)) ? true : false);}
+uint8_t nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS) ? true : false);}
 
 
 /**** UberGroup Operations ****************************************************
@@ -713,54 +713,54 @@ uint8_t cmd_index_lt_groups(index_t index) { return ((index <= CMD_INDEX_START_G
  * _do_all()		- get and print all groups uber group
  */
 
-static stat_t _do_group_list(cmdObj_t *cmd, char list[][TOKEN_LEN+1]) // helper to print multiple groups in a list
+static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to print multiple groups in a list
 {
-	for (uint8_t i=0; i < CMD_MAX_OBJECTS; i++) {
+	for (uint8_t i=0; i < NV_MAX_OBJECTS; i++) {
 		if (list[i][0] == NUL) { return (STAT_COMPLETE);}
-		cmd_reset_list();
-		cmd = cmd_body;
-		strncpy(cmd->token, list[i], TOKEN_LEN);
-		cmd->index = cmd_get_index((const char_t *)"", cmd->token);
-//		cmd->objtype = TYPE_PARENT;
-		cmd_get_cmdObj(cmd);
-		cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
+		nv_reset_nvObj_list();
+		nv = nv_body;
+		strncpy(nv->token, list[i], TOKEN_LEN);
+		nv->index = nv_get_index((const char_t *)"", nv->token);
+//		nv->valuetype = TYPE_PARENT;
+		nv_get_nvObj(nv);
+		nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 	}
 	return (STAT_COMPLETE);
 }
 
-static stat_t _do_motors(cmdObj_t *cmd)	// print parameters for all motor groups
+static stat_t _do_motors(nvObj_t *nv)	// print parameters for all motor groups
 {
 	char list[][TOKEN_LEN+1] = {"1","2","3","4","5","6",""}; // must have a terminating element
 //	char list[][TOKEN_LEN+1] = {"1","2","3","4",""}; // must have a terminating element
-	return (_do_group_list(cmd, list));
+	return (_do_group_list(nv, list));
 }
 
-static stat_t _do_axes(cmdObj_t *cmd)	// print parameters for all axis groups
+static stat_t _do_axes(nvObj_t *nv)	// print parameters for all axis groups
 {
 	char list[][TOKEN_LEN+1] = {"x","y","z","a","b","c",""}; // must have a terminating element
-	return (_do_group_list(cmd, list));
+	return (_do_group_list(nv, list));
 }
 
-static stat_t _do_offsets(cmdObj_t *cmd)	// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_offsets(nvObj_t *nv)	// print offset parameters for G54-G59,G92, G28, G30
 {
 	char list[][TOKEN_LEN+1] = {"g54","g55","g56","g57","g58","g59","g92","g28","g30",""}; // must have a terminating element
-	return (_do_group_list(cmd, list));
+	return (_do_group_list(nv, list));
 }
 
-static stat_t _do_all(cmdObj_t *cmd)	// print all parameters
+static stat_t _do_all(nvObj_t *nv)	// print all parameters
 {
-	strcpy(cmd->token,"sys");			// print system group
-	get_grp(cmd);
-	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
+	strcpy(nv->token,"sys");			// print system group
+	get_grp(nv);
+	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
-	_do_motors(cmd);					// print all motor groups
-	_do_axes(cmd);						// print all axis groups
+	_do_motors(nv);					// print all motor groups
+	_do_axes(nv);						// print all axis groups
 
-	strcpy(cmd->token,"p1");			// print PWM group		
-	get_grp(cmd);
-	cmd_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
+	strcpy(nv->token,"p1");			// print PWM group		
+	get_grp(nv);
+	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
-	return (_do_offsets(cmd));			// print all offsets
+	return (_do_offsets(nv));			// print all offsets
 }
 
 /***********************************************************************************
@@ -780,9 +780,9 @@ static stat_t _do_all(cmdObj_t *cmd)	// print all parameters
  *	The above assume USB is the std device
  */
 /*
-static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
+static stat_t _set_comm_helper(nvObj_t *nv, uint32_t yes, uint32_t no)
 {
-	if (fp_NOT_ZERO(cmd->value)) { 
+	if (fp_NOT_ZERO(nv->value)) { 
 		(void)xio_ctrl(XIO_DEV_USB, yes);
 	} else { 
 		(void)xio_ctrl(XIO_DEV_USB, no);
@@ -791,10 +791,10 @@ static stat_t _set_comm_helper(cmdObj_t *cmd, uint32_t yes, uint32_t no)
 }
 */
 /* REMOVED - too easy to make the board appear to be bricked
-static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
+static stat_t set_ic(nvObj_t *nv) 				// ignore CR or LF on RX
 {
-	if (cmd->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.ignore_crlf = (uint8_t)cmd->value;
+	if (nv->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.ignore_crlf = (uint8_t)nv->value;
 	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORECR);	// clear them both
 	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORELF);
 
@@ -807,44 +807,44 @@ static stat_t set_ic(cmdObj_t *cmd) 				// ignore CR or LF on RX
 }
 */
 /*
-static stat_t set_ec(cmdObj_t *cmd) 				// expand CR to CRLF on TX
+static stat_t set_ec(nvObj_t *nv) 				// expand CR to CRLF on TX
 {
-	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_cr = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_CRLF, XIO_NOCRLF));
+	if (nv->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_cr = (uint8_t)nv->value;
+	return(_set_comm_helper(nv, XIO_CRLF, XIO_NOCRLF));
 }
 
-static stat_t set_ee(cmdObj_t *cmd) 				// enable character echo
+static stat_t set_ee(nvObj_t *nv) 				// enable character echo
 {
-	if (cmd->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_echo = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_ECHO, XIO_NOECHO));
+	if (nv->value > true) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_echo = (uint8_t)nv->value;
+	return(_set_comm_helper(nv, XIO_ECHO, XIO_NOECHO));
 }
 
-static stat_t set_ex(cmdObj_t *cmd)				// enable XON/XOFF or RTS/CTS flow control
+static stat_t set_ex(nvObj_t *nv)				// enable XON/XOFF or RTS/CTS flow control
 {
-	if (cmd->value > FLOW_CONTROL_RTS) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.enable_flow_control = (uint8_t)cmd->value;
-	return(_set_comm_helper(cmd, XIO_XOFF, XIO_NOXOFF));
+	if (nv->value > FLOW_CONTROL_RTS) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	cfg.enable_flow_control = (uint8_t)nv->value;
+	return(_set_comm_helper(nv, XIO_XOFF, XIO_NOXOFF));
 }
 */
 
-static stat_t get_rx(cmdObj_t *cmd)
+static stat_t get_rx(nvObj_t *nv)
 {
 	#ifdef __AVR
-	cmd->value = (float)xio_get_usb_rx_free();
-	cmd->objtype = TYPE_INTEGER;
+	nv->value = (float)xio_get_usb_rx_free();
+	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
 	#endif
 	#ifdef __ARM
-	cmd->value = (float)254;
-	cmd->objtype = TYPE_INTEGER;
+	nv->value = (float)254;
+	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
 	#endif
 }
 
 /* run_sx()	- send XOFF, XON --- test only 
-static stat_t run_sx(cmdObj_t *cmd)
+static stat_t run_sx(nvObj_t *nv)
 {
 	xio_putc(XIO_DEV_USB, XOFF);
 	xio_putc(XIO_DEV_USB, XON);
@@ -871,19 +871,19 @@ static const char msg_baud5[] PROGMEM = "115200";
 static const char msg_baud6[] PROGMEM = "230400";
 static const char *const msg_baud[] PROGMEM = { msg_baud0, msg_baud1, msg_baud2, msg_baud3, msg_baud4, msg_baud5, msg_baud6 };
 
-static stat_t set_baud(cmdObj_t *cmd)
+static stat_t set_baud(nvObj_t *nv)
 {
-	uint8_t baud = (uint8_t)cmd->value;
+	uint8_t baud = (uint8_t)nv->value;
 	if ((baud < 1) || (baud > 6)) {
-		cmd_add_conditional_message((const char_t *)"*** WARNING *** Unsupported baud rate specified");
-//		cmd_add_conditional_message(PSTR("*** WARNING *** Unsupported baud rate specified"));
+		nv_add_conditional_message((const char_t *)"*** WARNING *** Unsupported baud rate specified");
+//		nv_add_conditional_message(PSTR("*** WARNING *** Unsupported baud rate specified"));
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	cfg.usb_baud_rate = baud;
 	cfg.usb_baud_flag = true;
-	char_t message[CMD_MESSAGE_LEN];
+	char_t message[NV_MESSAGE_LEN];
 	sprintf_P(message, PSTR("*** NOTICE *** Resetting baud rate to %s"),GET_TEXT_ITEM(msg_baud, baud));
-	cmd_add_conditional_message(message);
+	nv_add_conditional_message(message);
 	return (STAT_OK);
 }
 
@@ -911,12 +911,12 @@ static const char fmt_baud[] PROGMEM = "[baud] USB baud rate%15d [1=9600,2=19200
 static const char fmt_net[] PROGMEM = "[net]  network mode%16d [0=master]\n";
 static const char fmt_rx[] PROGMEM = "rx:%d\n";
 
-void co_print_ec(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ec);}
-void co_print_ee(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ee);}
-void co_print_ex(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_ex);}
-void co_print_baud(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_baud);}
-void co_print_net(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_net);}
-void co_print_rx(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_rx);}
+void co_print_ec(nvObj_t *nv) { text_print_ui8(nv, fmt_ec);}
+void co_print_ee(nvObj_t *nv) { text_print_ui8(nv, fmt_ee);}
+void co_print_ex(nvObj_t *nv) { text_print_ui8(nv, fmt_ex);}
+void co_print_baud(nvObj_t *nv) { text_print_ui8(nv, fmt_baud);}
+void co_print_net(nvObj_t *nv) { text_print_ui8(nv, fmt_net);}
+void co_print_rx(nvObj_t *nv) { text_print_ui8(nv, fmt_rx);}
 
 #endif // __TEXT_MODE
 

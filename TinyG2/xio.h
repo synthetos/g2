@@ -65,7 +65,7 @@
 #define XIO_H_ONCE
 
 #include "tinyg2.h"
-#include "config.h"				// required for cmdObj typedef
+#include "config.h"				// required for nvObj typedef
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
@@ -91,7 +91,7 @@ stat_t xio_test_assertions(void);
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
-stat_t xio_set_spi(cmdObj_t *cmd);
+stat_t xio_set_spi(nvObj_t *nv);
 stat_t xio_assertions(void);
 
 enum xioSPIMode {
@@ -129,7 +129,7 @@ extern xioSingleton_t xio;
 
 #ifdef __TEXT_MODE
 
-	void xio_print_spi(cmdObj_t *cmd);
+	void xio_print_spi(nvObj_t *nv);
 
 #else
 

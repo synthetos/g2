@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		043.01	// Merging TinyG build 429.01; canonical_machine.h; reverting cm_cycle_end() semantics
+#define TINYG_FIRMWARE_BUILD   		043.02	// Merging TinyG build 429.01; changed 'cmd' to name:value (nv) for better clarity
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
@@ -101,10 +101,10 @@
 
 typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 
-																	// gets rely on cmd->index having been set
-#define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[cmd->index].a)	// get word value from cfgArray
-#define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[cmd->index].a)	// get byte value from cfgArray
-#define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[cmd->index].a)	// get float value from cfgArray
+																	// gets rely on nv->index having been set
+#define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
+#define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
+#define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[nv->index].a)	// get float value from cfgArray
 #define GET_TOKEN_BYTE(a)  (char_t)pgm_read_byte(&cfgArray[i].a)	// get token byte value from cfgArray
 
 // populate the shared buffer with the token string given the index
@@ -138,10 +138,10 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 								// because in C++ uint8_t and char are distinct types and 
 								// we want chars to behave as uint8's
 
-													// gets rely on cmd->index having been set
-#define GET_TABLE_WORD(a)  cfgArray[cmd->index].a	// get word value from cfgArray
-#define GET_TABLE_BYTE(a)  cfgArray[cmd->index].a	// get byte value from cfgArray
-#define GET_TABLE_FLOAT(a) cfgArray[cmd->index].a	// get byte value from cfgArray
+													// gets rely on nv->index having been set
+#define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray
+#define GET_TABLE_BYTE(a)  cfgArray[nv->index].a	// get byte value from cfgArray
+#define GET_TABLE_FLOAT(a) cfgArray[nv->index].a	// get byte value from cfgArray
 #define GET_TOKEN_BYTE(a)  (char_t)cfgArray[i].a	// get token byte value from cfgArray
 
 #define GET_TOKEN_STRING(i,a) strcpy_P(a, (char_t *)&cfgArray[(index_t)i].token); // populate the token string given the index
