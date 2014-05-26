@@ -357,7 +357,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
                                   bp->nx->braking_velocity, 
                                  (bp->entry_velocity + bp->delta_vmax) );
 
-        float old_entry_velocity = bp->entry_velocity;
+//        float old_entry_velocity = bp->entry_velocity;
         _calculate_trapezoid(bp);
 //        _calc_jerk_values(bp);
 
@@ -584,9 +584,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 
 //                    bf->entry_velocity = min(bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
 //                                             _get_target_velocity(bf->exit_velocity, bf->length, bf));
-
-//                    bf->entry_velocity = bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN);
-                    bf->exit_velocity = bf->entry_velocity - (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN);
+                    bf->exit_velocity = max(0.0, bf->entry_velocity - (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN));
                 }
                 bf->cruise_velocity = bf->entry_velocity;
                 bf->tail_length = bf->length;
@@ -621,8 +619,8 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
 
 		// Symmetric rate-limited case (HT)
-//		if (fabs(bf->entry_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) {
-		if (fp_EQ(bf->entry_velocity, bf->exit_velocity)) {
+		if (fabs(bf->entry_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) {
+//		if (fp_EQ(bf->entry_velocity, bf->exit_velocity)) {
 			bf->head_length = bf->length/2;
 			bf->tail_length = bf->head_length;
 			bf->cruise_velocity = min(bf->cruise_vmax, _get_target_velocity(bf->entry_velocity, bf->head_length, bf));
@@ -701,26 +699,9 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	// Requested-fit cases: remaining of: HBT, HB, BT, BT, H, T, B, cases
 	bf->body_length = bf->length - bf->head_length - bf->tail_length;
 
-	// If a non-zero body is < minimum length distribute it to the head and/or tail
-	// This will force us to recompute the jerk, but preserve correct distance, which is more important.
-	if ((bf->body_length < MIN_BODY_LENGTH) && (fp_NOT_ZERO(bf->body_length))) {
-		if (fp_NOT_ZERO(bf->head_length)) {
-			if (fp_NOT_ZERO(bf->tail_length)) {			// HBT reduces to HT
-				bf->head_length = bf->length/2;
-				bf->tail_length = bf->head_length;
-			} else {									// HB reduces to H
-				bf->head_length = bf->length;
-				bf->tail_length = 0;
-			}
-		} else {										// BT reduces to T
-			bf->tail_length = bf->length;
-            bf->head_length = 0;
-		}
-		bf->body_length = 0;
-
 	// If the body is a standalone make the cruise velocity match the entry velocity
 	// This removes a potential velocity discontinuity at the expense of top speed
-	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
+    if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
         // WARNING: Edge case where entry_velocity is zero is a crash-situation.
         // Also, we want to have an intelligent speed set here. Let's use the maximum
         // speed we can attain in half the body length, and average it.
@@ -729,9 +710,25 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                                   _get_target_velocity(bf->entry_velocity, bf->body_length/2, bf),
                                   bf->cruise_velocity
                                   );
-//		float new_cruise = (bf->entry_velocity+bf->cruise_velocity)/2.0;
         bf->cruise_velocity = (bf->entry_velocity+bf->cruise_velocity)/2.0;
+
+
+    // If a non-zero body is < minimum length distribute it to the head and/or tail
+    // This will force us to recompute the jerk, but preserve correct distance, which is more important.
+    } else if ((bf->body_length < MIN_BODY_LENGTH) && (fp_NOT_ZERO(bf->body_length))) {
+		if (fp_NOT_ZERO(bf->head_length)) {
+			if (fp_NOT_ZERO(bf->tail_length)) {			// HBT reduces to HT
+				bf->head_length += bf->body_length/2;
+				bf->tail_length += bf->body_length/2;
+			} else {									// HB reduces to H
+				bf->head_length += bf->body_length;
+			}
+		} else {										// BT reduces to T
+			bf->tail_length += bf->body_length;
+		}
+		bf->body_length = 0;
 	}
+
 }
 
 /*	

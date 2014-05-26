@@ -551,7 +551,7 @@ static stat_t _exec_aline_tail()
 		mr.segment_accel_time = mr.accel_time / (2 * mr.segments);// time to advance for each segment
 		mr.elapsed_accel_time = mr.segment_accel_time / 2; //compute time from midpoint of segment
 #else
-		mr.segments = ceil(uSec(mr.gm.move_time) / NOM_SEGMENT_USEC);// # of segments in *each half*
+		mr.segments = ceil(uSec(mr.gm.move_time) / NOM_SEGMENT_USEC);// # of segments for the section
 		mr.segment_time = mr.gm.move_time / mr.segments;// time to advance for each segment
 
 		// line needed by fwd-diff exec
@@ -574,7 +574,10 @@ static stat_t _exec_aline_tail()
 #else
 		if (_exec_aline_segment() == STAT_OK) {
             // For forward differencing, we should have one segment in SECTION_1st_HALF.
-            // However, if it returnes from that as STAT_OK, then there was only one segment in this section.
+            // However, if it returns from that as STAT_OK, then there was only one segment in this section.
+
+            // Show that we did complete section 2 ... effectively.
+            mr.section_state = SECTION_2nd_HALF;
 			return STAT_OK;
 		} else {
             mr.section_state = SECTION_2nd_HALF;
