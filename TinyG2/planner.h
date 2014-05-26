@@ -49,7 +49,7 @@ enum moveType {				// bf->move_type values
 enum moveState {
 	MOVE_OFF = 0,			// move inactive (MUST BE ZERO)
 	MOVE_NEW,				// general value if you need an initialization
-	MOVE_RUN,			// general run state (for non-acceleration moves)
+	MOVE_RUN,				// general run state (for non-acceleration moves)
 	MOVE_SKIP_BLOCK			// mark a skipped block
 };
 
@@ -304,7 +304,8 @@ void mp_clear_buffer(mpBuf_t *bf);
 void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp);
 void mp_commit_write_buffer(const uint8_t move_type);
 uint8_t mp_free_run_buffer(void);
-mpBuf_t * mp_get_write_buffer(void); 
+mpBuf_t * mp_get_write_buffer(void);
+void mp_unget_write_buffer(void);
 mpBuf_t * mp_get_run_buffer(void);
 mpBuf_t * mp_get_first_buffer(void);
 mpBuf_t * mp_get_last_buffer(void);

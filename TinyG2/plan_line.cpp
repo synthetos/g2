@@ -915,11 +915,11 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
 }
 */
 /*
- * _get_junction_vmax() - Chamnit's algorithm - simple
+ * _get_junction_vmax() - Sonny's algorithm - simple
  *
  *  Computes the maximum allowable junction speed by finding the velocity that will yield 
  *	the centripetal acceleration in the corner_acceleration value. The value of delta sets 
- *	the effective radius of curvature. Here's Chamnit's (Sungeun K. Jeon's) explanation 
+ *	the effective radius of curvature. Here's Sonny's (Sungeun K. Jeon's) explanation 
  *	of what's going on:
  *
  *	"First let's assume that at a junction we only look a centripetal acceleration to simply 
@@ -927,13 +927,16 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
  *	to the circle. The circular segment joining the lines represents the path for constant 
  *	centripetal acceleration. This creates a deviation from the path (let's call this delta), 
  *	which is the distance from the junction to the edge of the circular segment. Delta needs 
- *	to be defined, so let's replace the term max_jerk with max_junction_deviation( or delta). 
- *	This indirectly sets the radius of the circle, and hence limits the velocity by the 
- *	centripetal acceleration. Think of the this as widening the race track. If a race car is 
- *	driving on a track only as wide as a car, it'll have to slow down a lot to turn corners. 
- *	If we widen the track a bit, the car can start to use the track to go into the turn. 
- *	The wider it is, the faster through the corner it can go.
+ *	to be defined, so let's replace the term max_jerk (see note 1) with max_junction_deviation, 
+ *	or "delta". This indirectly sets the radius of the circle, and hence limits the velocity 
+ *	by the centripetal acceleration. Think of the this as widening the race track. If a race 
+ *	car is driving on a track only as wide as a car, it'll have to slow down a lot to turn 
+ *	corners. If we widen the track a bit, the car can start to use the track to go into the 
+ *	turn. The wider it is, the faster through the corner it can go.
  *
+ * (Note 1: "max_jerk" refers to the old grbl/marlin max_jerk" approximation term, not the 
+ *	tinyG jerk terms)
+ * 
  *	If you do the geometry in terms of the known variables, you get:
  *		sin(theta/2) = R/(R+delta)  Re-arranging in terms of circle radius (R)
  *		R = delta*sin(theta/2)/(1-sin(theta/2). 
@@ -953,9 +956,9 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
  *		float theta = acos(costheta);
  *		float radius = delta * sin(theta/2)/(1-sin(theta/2));
  */
-/*  This version function extends Chamnit's algorithm by computing a value for delta that 
- *	takes the contributions of the individual axes in the move into account. This allows 
- *	the control radius to vary by axis. This is necessary to support axes that have 
+/*  This version extends Chamnit's algorithm by computing a value for delta that takes
+ *	the contributions of the individual axes in the move into account. This allows the
+ *	control radius to vary by axis. This is necessary to support axes that have 
  *	different dynamics; such as a Z axis that doesn't move as fast as X and Y (such as a 
  *	screw driven Z axis on machine with a belt driven XY - like a Shapeoko), or rotary 
  *	axes ABC that have completely different dynamics than their linear counterparts.
@@ -968,11 +971,15 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
  *	 	Usum	Length of sums			Ux + Uy
  *	 	d		Delta of sums			(Dx*Ux+DY*UY)/Usum
  */
+
 static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 {
-	float costheta = - (a_unit[AXIS_X] * b_unit[AXIS_X]) - (a_unit[AXIS_Y] * b_unit[AXIS_Y]) 
-					 - (a_unit[AXIS_Z] * b_unit[AXIS_Z]) - (a_unit[AXIS_A] * b_unit[AXIS_A]) 
-					 - (a_unit[AXIS_B] * b_unit[AXIS_B]) - (a_unit[AXIS_C] * b_unit[AXIS_C]);
+	float costheta = - (a_unit[AXIS_X] * b_unit[AXIS_X])
+					 - (a_unit[AXIS_Y] * b_unit[AXIS_Y])
+					 - (a_unit[AXIS_Z] * b_unit[AXIS_Z])
+					 - (a_unit[AXIS_A] * b_unit[AXIS_A])
+					 - (a_unit[AXIS_B] * b_unit[AXIS_B])
+					 - (a_unit[AXIS_C] * b_unit[AXIS_C]);
 
 	if (costheta < -0.99) { return (10000000); } 		// straight line cases
 	if (costheta > 0.99)  { return (0); } 				// reversal cases
