@@ -36,7 +36,7 @@
 #include "MotatePins.h"
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		043.02	// Merging TinyG build 429.01; changed 'cmd' to name:value (nv) for better clarity
+#define TINYG_FIRMWARE_BUILD   		043.03	// Merging TinyG build 429.01; added inch-mode units correction fixes
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
 #define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)

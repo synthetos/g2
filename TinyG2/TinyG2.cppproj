@@ -26,7 +26,7 @@
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolNumber>000028016452</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
         <port>1063</port>
@@ -49,15 +49,15 @@
     </com_atmel_avrdbg_tool_samice>
     <AsfFrameworkConfig>
       <framework-data>
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
@@ -1103,6 +1103,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_Ultimaker.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_Ultimaker_Rob_v9h.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_zen7x12.h">

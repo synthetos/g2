@@ -55,18 +55,18 @@ nvObj_t nv_list[NV_LIST_LEN];	// JSON header element
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
-/* Primary access points to nv functions
+/* Primary access points to functions bound to text mode / JSON functions
  * These gatekeeper functions check index ranges so others don't have to
  *
  * nv_set() 	- Write a value or invoke a function - operates on single valued elements or groups
  * nv_get() 	- Build a nvObj with the values from the target & return the value
  *			   	  Populate nv body with single valued elements or groups (iterates)
  * nv_print()	- Output a formatted string for the value.
- * nv_persist()- persist value to NVM. Takes special cases into account
+ * nv_persist() - persist value to NVM. Takes special cases into account
  */
 stat_t nv_set(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) { return (STAT_INTERNAL_RANGE_ERROR);}
+	if (nv->index >= nv_index_max()) { return(STAT_INTERNAL_RANGE_ERROR);}
 	return (((fptrCmd)GET_TABLE_WORD(set))(nv));
 }
 
@@ -92,7 +92,7 @@ void nv_persist(nvObj_t *nv)
 }
 
 /************************************************************************************
- * config_init()  - called once on hard reset
+ * config_init() - called once on hard reset
  *
  * Performs one of 2 actions:
  *	(1) if NVM is set up or out-of-rev load RAM and NVM with settings.h defaults
@@ -111,13 +111,15 @@ void config_init()
 	cfg.magic_start = MAGICNUM;
 	cfg.magic_end = MAGICNUM;
 
-// ++++ The following chunk of code is commented out until persistence is implemented 
-// ++++ Do this instead:
+#ifdef __ARM
+// ++++ The following code is offered until persistence is implemented.
+// ++++ Then you can use the AVR code (or something like it)
 	cfg.comm_mode = JSON_MODE;				// initial value until EEPROM is read
 	nv->value = true;
 	set_defaults(nv);
-/*	
-	cm_set_units_mode(MILLIMETERS);			// must do inits in MM mode
+#endif
+#ifdef __AVR
+	cm_set_units_mode(MILLIMETERS);			// must do inits in millimeter mode
 	nv->index = 0;							// this will read the first record in NVM
 
 	read_persistent_value(nv);
@@ -135,7 +137,7 @@ void config_init()
 		}
 		sr_init_status_report();
 	}
-*/
+#endif
 }
 
 /*
@@ -248,7 +250,6 @@ stat_t set_0123(nvObj_t *nv)
 
 stat_t set_int(nvObj_t *nv)
 {
-//	*((uint32_t *)GET_TABLE_WORD(target)) = nv->value;
 	*((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;
 	nv->valuetype = TYPE_INTEGER;
 	return(STAT_OK);
@@ -275,16 +276,18 @@ stat_t set_flt(nvObj_t *nv)
 /*
  * set_flu() - set floating point number with G20/G21 units conversion
  *
- * The number "setted" will have been delivered in external units (inches or mm).
- * It is written to the target memory location in internal canonical units (mm),
- * but the original nv->value is not changed so display works correctly.
+ * The number 'setted' will have been delivered in external units (inches or mm).
+ * It is written to the target memory location in internal canonical units (mm).
+ * The original nv->value is also changed so persistence works correctly.
+ * Displays should convert back from internal canonical form to external form.
  */
 
 stat_t set_flu(nvObj_t *nv)
 {
-	float tmp_value = nv->value;
-	if (cm_get_units_mode(MODEL) == INCHES) tmp_value *= MM_PER_INCH; // convert to canonical units
-	*((float *)GET_TABLE_WORD(target)) = tmp_value;
+	if (cm_get_units_mode(MODEL) == INCHES) {		// if in inches...
+		nv->value *= MM_PER_INCH;					// convert to canonical millimeter units
+	}
+	*((float *)GET_TABLE_WORD(target)) = nv->value;// write value as millimeters or degrees
 	nv->precision = GET_TABLE_WORD(precision);
 	nv->valuetype = TYPE_FLOAT;
 	return(STAT_OK);
@@ -462,14 +465,14 @@ stat_t nv_persist_offsets(uint8_t flag)
 
 /******************************************************************************
  * nvObj low-level object and list operations
- * nv_get_nvObj()		- setup a nv object by providing the index
- * nv_reset_nvObj()		- quick clear for a new nv object
- * nv_reset_nvObj_list()		- clear entire header, body and footer for a new use
- * nv_copy_string()	- used to write a string to shared string storage and link it
- * nv_add_object()		- write contents of parameter to  first free object in the body
- * nv_add_integer()	- add an integer value to end of nv body (Note 1)
- * nv_add_float()		- add a floating point value to end of nv body
- * nv_add_string()		- add a string object to end of nv body
+ * nv_get_nvObj()		 - setup a nv object by providing the index
+ * nv_reset_nvObj()		 - quick clear for a new nv object
+ * nv_reset_nvObj_list() - clear entire header, body and footer for a new use
+ * nv_copy_string()		 - used to write a string to shared string storage and link it
+ * nv_add_object()		 - write contents of parameter to  first free object in the body
+ * nv_add_integer()		 - add an integer value to end of nv body (Note 1)
+ * nv_add_float()		 - add a floating point value to end of nv body
+ * nv_add_string()		 - add a string object to end of nv body
  * nv_add_conditional_message() - add a message to nv body if messages are enabled
  *
  *	Note: Functions that return a nv pointer point to the object that was modified or
@@ -692,6 +695,23 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 	} else {
 		text_print_list(status, text_flags);
 	}
+}
+
+/****************************************************************************
+ ***** Diagnostics **********************************************************
+ ****************************************************************************/
+
+void nv_dump_nv(nvObj_t *nv)
+{
+	printf ("i:%d, d:%d, t:%d, p:%d, v:%f, g:%s, t:%s, s:%s\n",
+			 nv->index,
+			 nv->depth,
+			 nv->valuetype,
+			 nv->precision,
+			 (double)nv->value,
+			 nv->group,
+			 nv->token,
+			 (char *)nv->stringp);
 }
 
 /****************************************************************************
