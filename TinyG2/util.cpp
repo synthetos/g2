@@ -216,6 +216,33 @@ char_t *pstr2str(const char *pgm_string)
 #endif
 }
 
+/*
+ * fntoa() - return ASCII string given a float and a decimal precision value
+ *
+ *	Like sprintf, fntoa returns length of string, less the terminating NUL character
+ */
+int fntoa(char_t *str, float n, uint8_t precision)
+{
+    // handle special cases
+	if (isnan(n)) { 
+		strcpy(str, "nan");
+		return (3);
+
+	} else if (isinf(n)) { 
+		strcpy(str, "inf");
+		return (3);
+	
+	} else if (precision == 0 ) { return(sprintf((char *)str, "%0.0f", (double) n));
+	} else if (precision == 1 ) { return(sprintf((char *)str, "%0.1f", (double) n));
+	} else if (precision == 2 ) { return(sprintf((char *)str, "%0.2f", (double) n));
+	} else if (precision == 3 ) { return(sprintf((char *)str, "%0.3f", (double) n));
+	} else if (precision == 4 ) { return(sprintf((char *)str, "%0.4f", (double) n));
+	} else if (precision == 5 ) { return(sprintf((char *)str, "%0.5f", (double) n));
+	} else if (precision == 6 ) { return(sprintf((char *)str, "%0.6f", (double) n));
+	} else if (precision == 7 ) { return(sprintf((char *)str, "%0.7f", (double) n));
+	} else					    { return(sprintf((char *)str, "%f", (double) n)); }
+}
+
 /* 
  * compute_checksum() - calculate the checksum for a string
  * 

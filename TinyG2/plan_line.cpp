@@ -338,46 +338,46 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	bp = mp_get_next_buffer(bp);
-    while (bp != bf) {
-        if ((bp->pv == bf) || (*mr_flag == true))  {
-            bp->entry_velocity = bp->entry_vmax;		// first block in the list
-            *mr_flag = false;
-        } else {
-            bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
-        }
-        bp->cruise_velocity = bp->cruise_vmax;
-        bp->exit_velocity = min4( bp->exit_vmax, 
-                                  bp->nx->entry_vmax,
-                                  bp->nx->braking_velocity, 
-                                 (bp->entry_velocity + bp->delta_vmax) );
+	while (bp != bf) {
+		if ((bp->pv == bf) || (*mr_flag == true))  {
+			bp->entry_velocity = bp->entry_vmax;		// first block in the list
+			*mr_flag = false;
+		} else {
+			bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
+		}
+		bp->cruise_velocity = bp->cruise_vmax;
+		bp->exit_velocity = min4( bp->exit_vmax,
+								  bp->nx->entry_vmax,
+								  bp->nx->braking_velocity,
+								 (bp->entry_velocity + bp->delta_vmax) );
 
 //		float old_entry_velocity = bp->entry_velocity;
 		mp_calculate_trapezoid(bp);
 //		_calc_jerk_values(bp);
 
-        // If we changed the entry velocity, we need to account for it...
-//        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
-//            bp->entry_vmax = bp->entry_velocity;
-//            bp = mp_get_prev_buffer(bp);
-//            continue;
-//        }
+		// If we changed the entry velocity, we need to account for it...
+//		if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
+//			bp->entry_vmax = bp->entry_velocity;
+//			bp = mp_get_prev_buffer(bp);
+//			continue;
+//		}
 
-        // test for optimally planned trapezoids - only need to check various exit conditions
-        if ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
-               (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) )  ||
-             ( (bp->pv->replannable == false) &&
-               (fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) ) ) {
-            bp->replannable = false;
-        }
-        bp = mp_get_next_buffer(bp);
-    }
+		// test for optimally planned trapezoids - only need to check various exit conditions
+		if  ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
+				(fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) )  ||
+			  ( (bp->pv->replannable == false) &&
+				(fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) ) ) {
+			bp->replannable = false;
+		}
+		bp = mp_get_next_buffer(bp);
+	}
 
 	// finish up the last block move
 	bp->entry_velocity = bp->pv->exit_velocity;
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
 	mp_calculate_trapezoid(bp);
-//    _calc_jerk_values(bp);
+//	_calc_jerk_values(bp);
 }
 
 /*

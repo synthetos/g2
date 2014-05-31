@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		044.04	// Added floating point units conversion into JSON and NV pair text outputs
+#define TINYG_FIRMWARE_BUILD   		045.01	// Sync with build 433.04
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -269,7 +269,7 @@ typedef uint8_t stat_t;
 extern stat_t status_code;				// allocated in main.c
 
 #define MESSAGE_LEN 80					// global message string storage allocation
-extern char shared_buf[];				// allocated in main.c
+extern char_t global_string_buf[];		// allocated in main.c
 
 char *get_status_message(stat_t status);
 

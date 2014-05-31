@@ -128,11 +128,11 @@ extern "C"{
 void mp_calculate_trapezoid(mpBuf_t *bf)
 {
 	//********************************************************
-    //********************************************************
-    //**      THE FIRST RULE OF _calculate_trapezoid():     **
-    //**             DON'T CHANGE bf->length                **
-    //********************************************************
-    //********************************************************
+	//********************************************************
+	//**      THE FIRST RULE OF _calculate_trapezoid():     **
+	//**             DON'T CHANGE bf->length                **
+	//********************************************************
+	//********************************************************
 
 	// B" case: Block is short - fits into a single body segment
 	// F case: Block is too short - run time < minimum segment time
@@ -237,7 +237,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 			if (bf->head_length > bf->tail_length) {
 				bf->head_length = (bf->head_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
-				} else {
+			} else {
 				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
 				computed_velocity = mp_get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
 			}
@@ -270,10 +270,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 			if (fp_NOT_ZERO(bf->tail_length)) {			// HBT reduces to HT
 				bf->head_length += bf->body_length/2;
 				bf->tail_length += bf->body_length/2;
-				} else {									// HB reduces to H
+			} else {									// HB reduces to H
 				bf->head_length += bf->body_length;
 			}
-			} else {										// BT reduces to T
+		} else {										// BT reduces to T
 			bf->tail_length += bf->body_length;
 		}
 		bf->body_length = 0;
@@ -293,98 +293,132 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
  *	
  * 	  Jm = the given maximum jerk
  *	  T  = time of the entire move
+ *    Vi = initial velocity
+ *    Vf = final velocity 
  *	  T  = 2*sqrt((Vt-Vi)/Jm)
  *	  As = The acceleration at inflection point between convex and concave portions of the S-curve.
  *	  As = (Jm*T)/2
  *    Ar = ramp acceleration
  *	  Ar = As/2 = (Jm*T)/4
- *	
- *	Assumes Vt, Vi and L are positive or zero
- *	Cannot assume Vt>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
- *	necessitating the introduction of fabs()
-
- *	mp_get_target_length() is a convenient function for determining the 
- *	optimal_length (L) of a line given the inital velocity (Vi), 
- *	target velocity (Vt) and maximum jerk (Jm).
+ *
+ *	mp_get_target_length() is a convenient function for determining the optimal_length (L) 
+ *	of a line given the initial velocity (Vi), final velocity (Vf) and maximum jerk (Jm).
  *
  *	The length (distance) equation is derived from: 
  *
- *	 a)	L = (Vt-Vi) * T - (Ar*T^2)/2	... which becomes b) with substitutions for Ar and T
- *	 b) L = (Vt-Vi) * 2*sqrt((Vt-Vi)/Jm) - (2*sqrt((Vt-Vi)/Jm) * (Vt-Vi))/2
- *	 c)	L = (Vt-Vi)^(3/2) / sqrt(Jm)	...is an alternate form of b) (see Wolfram Alpha)
- *	 c')L = (Vt-Vi) * sqrt((Vt-Vi)/Jm) ... second alternate form; requires Vt >= Vi
+ *	 a)	L = (Vf-Vi) * T - (Ar*T^2)/2	... which becomes b) with substitutions for Ar and T
+ *	 b) L = (Vf-Vi) * 2*sqrt((Vf-Vi)/Jm) - (2*sqrt((Vf-Vi)/Jm) * (Vf-Vi))/2
+ *	 c)	L = (Vf-Vi)^(3/2) / sqrt(Jm)	...is an alternate form of b) (see Wolfram Alpha)
+ *	 c')L = (Vf-Vi) * sqrt((Vf-Vi)/Jm) ... second alternate form; requires Vf >= Vi
  *
  *	 Notes: Ar = (Jm*T)/4					Ar is ramp acceleration
- *			T  = 2*sqrt((Vt-Vi)/Jm)			T is time
- *			Assumes Vt, Vi and L are positive or zero
- *			Cannot assume Vt>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
+ *			T  = 2*sqrt((Vf-Vi)/Jm)			T is time
+ *			Assumes Vi, Vf and L are positive or zero
+ *			Cannot assume Vf>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
  *			  necessitating the introduction of fabs()
  *
- * 	mp_get_target_velocity() is a convenient function for determining Vt target 
- *	velocity for a given the initial velocity (Vi), length (L), and maximum jerk (Jm).
- *	Equation d) is b) solved for Vt. Equation e) is c) solved for Vt. Use e) (obviously)
+ * 	mp_get_target_velocity() is a convenient function for determining Vf target velocity for 
+ *	a given the initial velocity (Vi), length (L), and maximum jerk (Jm). 
+ *	Equation d) is b) solved for Vf. Equation e) is c) solved for Vf. Use e) (obviously)
  *
- *	 d)	Vt = (sqrt(L)*(L/sqrt(1/Jm))^(1/6)+(1/Jm)^(1/4)*Vi)/(1/Jm)^(1/4)
- *	 e)	Vt = L^(2/3) * Jm^(1/3) + Vi
+ *	 d)	Vf = (sqrt(L)*(L/sqrt(1/Jm))^(1/6)+(1/Jm)^(1/4)*Vi)/(1/Jm)^(1/4)
+ *	 e)	Vf = L^(2/3) * Jm^(1/3) + Vi
  *
  *  FYI: Here's an expression that returns the jerk for a given deltaV and L:
  * 	return(cube(deltaV / (pow(L, 0.66666666))));
  */
 
-float mp_get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
+float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
 {
-	return (Vi + Vt) * sqrt(fabs(Vt - Vi) * bf->recip_jerk);
-//	return fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk);
+	return (Vi + Vf) * sqrt(fabs(Vf - Vi) * bf->recip_jerk);
 }
 
+/* Regarding mp_get_target_velocity:
+ * 
+ * We do some Newton-Raphson iterations to narrow it down.
+ * We need a formula that includes known variables except the one we want to find,
+ * and has a root [Z(x) = 0] at the value (x) we are looking for.
+ *
+ *      Z(x) = zero at x -- we calculate the value from the knowns and the estimate
+ *             (see below) and then subtract the known value to get zero (root) if
+ *             x is the correct value.
+ *      Vi   = initial velocity (known)
+ *      Vf   = estimated final velocity
+ *      J    = jerk (known)
+ *      L    = length (know)
+ *
+ * There are (at least) two such functions we can use:
+ *      L from J, Vi, and Vf
+ *      L = sqrt((Vf - Vi) / J) (Vi + Vf)
+ *   Replacing Vf with x, and subtracting the known L:
+ *      0 = sqrt((x - Vi) / J) (Vi + x) - L
+ *      Z(x) = sqrt((x - Vi) / J) (Vi + x) - L
+ *
+ *  OR
+ *
+ *      J from L, Vi, and Vf
+ *      J = ((Vf - Vi) (Vi + Vf)²) / L²
+ *  Replacing Vf with x, and subtracting the known J:
+ *      0 = ((x - Vi) (Vi + x)²) / L² - J
+ *      Z(x) = ((x - Vi) (Vi + x)²) / L² - J
+ *
+ *  L doesn't resolve to the value very quickly (it graphs near-vertical).
+ *  So, we'll use J, which resolves in < 10 iterations, often in only two or three
+ *  with a good estimate.
+ *
+ *  In order to do a Newton-Raphson iteration, we need the derivative. Here they are
+ *  for both the (unused) L and the (used) J formulas above:
+ *
+ *  J > 0, Vi > 0, Vf > 0
+ *  SqrtDeltaJ = sqrt((x-Vi) * J)
+ *  SqrtDeltaOverJ = sqrt((x-Vi) / J)
+ *  L'(x) = SqrtDeltaOverJ + (Vi + x) / (2*J) + (Vi + x) / (2*SqrtDeltaJ)
+ *
+ *  J'(x) = (2*Vi*x - Vi² + 3*x²) / L²
+ */
+
+#define GET_VELOCITY_ITERATIONS 2		// must be 0, 1, or 2
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 {
-    // We start with a reasonable estimate...
+    // 0 iterations (a reasonable estimate)
     float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
 
-    /* Now we'll do some Newton-Raphson iterations to narrow it down.
-     * We need a formula that includes know variables except the one we want to find,
-     * and has a root [Z(x) = 0] at the value (x) we are looking for.
-     *
-     *      Z(x) = zero at x -- we calculate the value from the knowns and the estimate
-     *             (see below) and then subtract the known value to get zero (root) if
-     *             x is the correct value.
-     *      x    = estimated final velocity, or Ve
-     *      Vi   = initial velocity (known)
-     *      J    = jerk (known)
-     *      L    = length (know)
-     *
-     * There are (at least) two such functions we can use:
-     *      L from J, Vi, and Ve
-     *      L = sqrt((Ve - Vi) / J) (Vi + Ve)
-     *   Replacing Ve with x, and subtracting the known L:
-     *      0 = sqrt((x - Vi) / J) (Vi + x) - L
-     *      Z(x) = sqrt((x - Vi) / J) (Vi + x) - L
-     *
-     *  OR
-     *
-     *      J from L, Vi, and Ve
-     *      J = ((Ve - Vi) (Vi + Ve)²) / L²
-     *  Replacing Ve with x, and subtracting the known J:
-     *      0 = ((x - Vi) (Vi + x)²) / L² - J
-     *      Z(x) = ((x - Vi) (Vi + x)²) / L² - J
-     *
-     *  L doesn't resolve to the value very quickly (it graphs near-vertical).
-     *  So, we'll use J, which resolves in < 10 iterations, often in only two or three
-     *  with a good estimate.
-     *
-     *  In order to do a Newton-Raphson iteration, we need the derivative. Here they are
-     *  for both the (unused) L and the (used) J formulas above:
-     *
-     *  J > 0, Vi > 0, x > 0
-     *  SqrtDeltaJ = sqrt((x-Vi) * J)
-     *  SqrtDeltaOverJ = sqrt((x-Vi) / J)
-     *  L'(x) = SqrtDeltaOverJ + (Vi + x) / (2*J) + (Vi + x) / (2*SqrtDeltaJ)
-     *
-     *  J'(x) = (2*Vi*x - Vi² + 3*x²) / L²
-     *
-     *
-     */
+#if (GET_VELOCITY_ITERATIONS >= 1)
+    // 1st iteration
+    float L_squared = L*L;
+    float Vi_squared = Vi*Vi;
+    float J_z = ((estimate - Vi) * (Vi + estimate) * (Vi + estimate)) / L_squared - bf->jerk;
+    float J_d = (2*Vi*estimate - Vi_squared + 3*(estimate*estimate)) / L_squared;
+    estimate = estimate - J_z/J_d;
+#endif
+#if (GET_VELOCITY_ITERATIONS >= 2)
+    // 2nd iteration
+    J_z = ((estimate - Vi) * (Vi + estimate) * (Vi + estimate)) / L_squared - bf->jerk;
+    J_d = (2*Vi*estimate - Vi_squared + 3*(estimate*estimate)) / L_squared;
+    estimate = estimate - J_z/J_d;
+#endif
+    return estimate;
+
+/*
+    // 0 iterations (a reasonable estimate)
+    float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
+
+	// 1st iteration
+    float L_squared = pow(L,2);
+    float Vi_squared = pow(Vi,2);
+    float J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
+    float J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
+    estimate = estimate - J_z/J_d;
+
+	// 2nd iteration
+    J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
+    J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
+    estimate = estimate - J_z/J_d;
+
+    return estimate;
+*/
+
+/*
 #if false
     float L_squared = pow(L,2);
     float Vi_squared = pow(Vi,2);
@@ -400,60 +434,35 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 #endif
 
     return estimate;
+*/
 }
 
 // NOTE: ALTERNATE FORMULATION OF ABOVE...
 
 /*	
- * mp_get_target_length2()   - derive accel/decel length from delta V and jerk
- * mp_get_target_velocity2() - derive velocity achievable from initial V, length and jerk
+ * mp_get_target_velocity() - derive velocity achievable from initial V, length and jerk
  *
  *	This set of functions returns the fourth thing knowing the other three.
  *	
  * 	  Jm = the given maximum jerk
  *	  T  = time of the entire move
- *	  T  = 2*sqrt((Vt-Vi)/Jm)
+ *	  T  = 2*sqrt((Vf-Vi)/Jm)
  *	  As = The acceleration at inflection point between convex and concave portions of the S-curve.
  *	  As = (Jm*T)/2
  *    Ar = ramp acceleration
  *	  Ar = As/2 = (Jm*T)/4
  *	
- *	Assumes Vt, Vi and L are positive or zero
- *	Cannot assume Vt>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
- *	necessitating the introduction of fabs()
- *
- *	mp_get_target_length() is a convenient function for determining the optimal_length (L) 
- *	of a line given the inital velocity (Vi), target velocity (Vt) and maximum jerk (Jm).
- *
- *	The length (distance) equation is derived from: 
- *
- *	 a) L = Vi * Td + (Ar*Td^2)/2		... which becomes b) with substitutions for Ar and T
- *	 b) L = 2 * (Vi*sqrt((Vt-Vi)/Jm) + sqrt((Vt-Vi)/Jm)/2 * (Vt-Vi))
- *	 c) L = (Vt+Vi) * sqrt(abs(Vt-Vi)/Jm) 	... a short alternate form of b) assuming only positive values
- *
- *	 Notes: Ar = (Jm*T)/4					Ar is ramp acceleration
- *			T  = 2*sqrt((Vt-Vi)/Jm)			T is time
- *
- *			Assumes Vt, Vi and L are positive or zero
- *			Cannot assume Vt>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
- *			necessitating the introduction of fabs()
- *
- * 	mp_get_target_velocity() is a convenient function for determining Vt target 
+ * 	mp_get_target_velocity() is a convenient function for determining Vf target 
  *	velocity for a given the initial velocity (Vi), length (L), and maximum jerk (Jm).
- *	Solving equation c) for Vt gives d)
+ *	Solving equation c) for Vf gives d)
  *
  *	 d) 1/3*((3*sqrt(3)*sqrt(27*Jm^2*L^4+32*Jm*L^2*Vi^3)+27*Jm*L^2+16*Vi^3)^(1/3)/2^(1/3) + 
  *      (4*2^(1/3)*Vi^2)/(3*sqrt(3)*sqrt(27*Jm^2*L^4+32*Jm*L^2*Vi^3)+27*Jm*L^2+16*Vi^3)^(1/3) - Vi)
  *
- *  FYI: Here's an expression that returns the jerk for a given deltaV (Vt-Vi) and L:
+ *  FYI: Here's an expression that returns the jerk for a given deltaV (Vf-Vi) and L:
  * 	return(cube(deltaV / (pow(L, 0.66666666))));
  */
  /*
-float mp_get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
-{
-	return ((Vt+Vi) * sqrt(fabs(Vt-Vi) * bf->recip_jerk));
-}
-
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 {
 	float JmL2 = bf->jerk*square(L);
