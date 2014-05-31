@@ -1168,6 +1168,7 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="units" />
     <Folder Include="platform\atmel_sam\board\" />
     <Folder Include="platform\atmel_sam\board\due\" />
     <Folder Include="platform\atmel_sam\board\v9_3x8c\" />

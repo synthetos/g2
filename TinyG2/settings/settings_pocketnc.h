@@ -94,8 +94,8 @@ G0 X0 Y0 A0
 #undef	MOTOR_POWER_LEVEL
 #define MOTOR_POWER_LEVEL		0.25				// default motor power level 0.00 - 1.00 (ARM only)
 
-#undef SR_DEFAULTS
-#define SR_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
+#undef STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #ifndef PI
 #define PI 3.14159628

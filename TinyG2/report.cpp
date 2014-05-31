@@ -172,7 +172,7 @@ void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nvObj_list();	// used for status report persistence locations
 	sr.status_report_requested = false;
-	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { SR_DEFAULTS };	// see settings.h
+	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
 	nv->index = nv_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 

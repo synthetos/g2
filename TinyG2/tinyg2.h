@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		044.01	// Sync with TinyG build 437.07
+#define TINYG_FIRMWARE_BUILD   		044.02	// Cleanup
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)

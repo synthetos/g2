@@ -523,43 +523,33 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 #ifdef __AVR
 void st_request_exec_move()
 {
-//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting ++++
-		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
-		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
-//	}
+	TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
+	TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
 }
 
 ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 	TIMER_EXEC.CTRLA = EXEC_TIMER_DISABLE;				// disable SW interrupt timer
 
 	// exec_move
-//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// ++++
-		if (mp_exec_move() != STAT_NOOP) {
-//			st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back ++++
-			st_request_load_move();
-		}
-//	}
+	if (mp_exec_move() != STAT_NOOP) {
+		st_request_load_move();
+	}
 }
 #endif // __AVR
 
 #ifdef __ARM
 void st_request_exec_move()
 {
-//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting ++++
-		exec_timer.setInterruptPending();
-//	}
+	exec_timer.setInterruptPending();
 }
 
 namespace Motate {	// Define timer inside Motate namespace
 	MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 	{
 		exec_timer.getInterruptCause();				// clears the interrupt condition
-//		if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// ++++
-			if (mp_exec_move() != STAT_NOOP) {
-//				st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back ++++
-				st_request_load_move();
-			}
-//		}
+		if (mp_exec_move() != STAT_NOOP) {
+			st_request_load_move();
+		}
 	}
 } // namespace Motate
 
@@ -810,7 +800,6 @@ static void _load_move()
 
 	// all non-aline, non-dwell cases drop to here (e.g. Null moves after Mcodes skip to here)
 	st_prep_null();											// needed to shut off timers if no moves left
-//	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back ++++
 	st_request_exec_move();									// exec and prep next move
 //dda_debug_pin1 = 0;
 }
@@ -841,11 +830,6 @@ static void _load_move()
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queueing the line
-//	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
-//	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// ever supposed to happen
-//	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));			// ever supposed to happen
-//	}
-
 	if		  (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// never supposed to happen
 	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));			// ever supposed to happen
 	}
