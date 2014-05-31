@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr. 
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2010 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,8 +35,10 @@
 
 #include "MotatePins.h"
 
+/****** REVISIONS ******/
+
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		043.06	// Merging TinyG build 429.01; pass through planner code - editorial changes only
+#define TINYG_FIRMWARE_BUILD   		044.01	// Sync with TinyG build 437.07
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -51,34 +53,35 @@
 #endif
 */
 
-/****** COMPILE-TIME SETTINGS ******/
+/****** RUNTIME SETTINGS ******/
 
-#define __STEP_CORRECTION
+//#define __STEP_CORRECTION
 //#define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
+//#define __BLOCK_ANNEALING
 //#define __POCKETNC							// enable PocketNC homing hacks
+
+/****** DEBUG SETTINGS ******/
+
 //#define __SIMULATION						// shorthand to keep from having to comment and uncomment the below:
 
-#ifndef __SIMULATION
-  #define __TEXT_MODE						// comment out to disable text mode support (saves ~9Kb)
-  #define __HELP_SCREENS					// comment out to disable help screens 		(saves ~3.5Kb)
-  #define __CANNED_TESTS 					// comment out to remove $tests 			(saves ~12Kb)
+#ifndef __SIMULATION						// enable the following if not simulation mode
+	#define __TEXT_MODE						// comment out to disable text mode support (saves ~10Kb)
+	#define __HELP_SCREENS					// comment out to disable help screens 		(saves ~3.5Kb)
+	#define __CANNED_TESTS 					// comment out to remove $tests 			(saves ~12Kb)
+
+#else										// enable the following if in simulation mode
+	#define __CANNED_STARTUP				// run any canned startup moves
+	#define __DISABLE_PERSISTENCE			// disable EEPROM writes for faster simulation
+	#define __SUPPRESS_STARTUP_MESSAGES 	// what it says
+	#define __SUPPRESS_STATUS_REPORTS 		// what it says
+	#define __SUPPRESS_QUEUE_REPORTS 		// what it says
+	#define __SUPPRESS_DIAGNOSTIC_DISPLAYS
+	#define __SILENCE_JSON_RESPONSES
 #endif
-//  #define __TEST_99 						// comment out to remove diagnostic test 99
 
-/****** DEVELOPMENT SETTINGS ******/
-
-#define __DIAGNOSTIC_PARAMETERS				// includes diagnostics in config_app table
-//#define __DEBUG_STATEMENTS					// used to comment out debugging printf's
-
-#ifdef __SIMULATION
-  #define __CANNED_STARTUP					// run any canned startup moves
-  #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
-  #define __SUPPRESS_STARTUP_MESSAGES 		// what it says
-  #define __SUPPRESS_STATUS_REPORTS 		// what it says
-  #define __SUPPRESS_QUEUE_REPORTS 			// what it says
-  #define __SUPRESS_DIAGNOSTIC_DISPLAYS
-  #define __SILENCE_JSON_RESPONSES
-#endif
+#define __TEST_99 							// comment out to remove diagnostic test 99
+#define __DIAGNOSTIC_PARAMETERS				// include diagnostics in config_app table
+//#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
 
 //#ifndef WEAK
 //#define WEAK  __attribute__ ((weak))
@@ -117,7 +120,7 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 #define GET_UNITS(a) 	   strncpy_P(shared_buf,(const char *)pgm_read_word(&msg_units[cm_get_units_mode(a)]), MESSAGE_LEN-1)
 
 // IO settings
-#define STD_IN 	XIO_DEV_USB		// default IO settings (stdio is not yet used in the ARM version)
+#define STD_IN 	XIO_DEV_USB		// default IO settings
 #define STD_OUT	XIO_DEV_USB
 #define STD_ERR	XIO_DEV_USB
 

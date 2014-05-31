@@ -850,6 +850,9 @@
     <Compile Include="plan_line.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="plan_zoid.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\board\due\gShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>

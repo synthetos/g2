@@ -98,7 +98,8 @@ enum sectionState {
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
-#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME*3	// factor for minimum size Gcode block to process
+//#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME*3	// factor for minimum size Gcode block to process
+#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
 
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
@@ -128,6 +129,15 @@ enum sectionState {
 #define TRAPEZOID_ITERATION_ERROR_PERCENT	((float)0.10)
 #define TRAPEZOID_LENGTH_FIT_TOLERANCE		((float)0.0001)	// allowable mm of error in planning phase
 #define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
+
+/* Some parameters for block annealing
+ */
+#define ANNEAL_BLOCK_LINEAR_TOLERANCE		0.01	// mm
+#define ANNEAL_BLOCK_ROTARY_TOLERANCE		0.01	// degrees
+#define ANNEAL_LENGTH_THRESHOLD				2		// millimeters. If greater, do not attempt to anneal
+#define ANNEAL_VELOCITY_THRESHOLD			20		// mm/min. If greater, do not attempt to anneal
+#define ANNEAL_ANGULAR_THRESHOLD			45		// max allowable degrees of direction change
+#define ANNEAL_ANGULAR_COSINE (cos(ANNEAL_ANGULAR_THRESHOLD/RADIAN))
 
 /*
  *	Macros and typedefs
@@ -199,16 +209,21 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 typedef struct mpMoveMasterSingleton { // common variables for planning (move master)
 	magic_t magic_start;			// magic number to test memory integrity
 	float position[AXES];			// final move position for planning purposes
+
+	float anneal_bqti[AXES];		// initial target of first block in an annealed block chain
+	float anneal_length;			// total length of blocks in an annealed block chain
+
 	float prev_jerk;				// jerk values cached from previous move
 	float prev_recip_jerk;
 	float prev_cbrt_jerk;
+
 #ifdef __UNIT_TEST_PLANNER
 	float test_case;
 	float test_velocity;
 	float a_unit[AXES];
 	float b_unit[AXES];
 #endif
-	magic_t magic_end;
+	magic_t magic_end;				// magic number to test memory integrity
 } mpMoveMasterSingleton_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
@@ -322,11 +337,15 @@ void mp_zero_segment_velocity(void);
 uint8_t mp_get_runtime_busy(void);
 float* mp_get_planner_position_vector();
 
+// plan_zoid.c functions
+void mp_calculate_trapezoid(mpBuf_t *bf);
+float mp_get_target_length(const float Vi, const float Vt, const mpBuf_t *bf);
+float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+
 // plan_exec.c functions
 void mp_init_runtime(void);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
-
 
 #ifdef __DEBUG
 void mp_dump_running_plan_buffer(void);

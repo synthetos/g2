@@ -47,7 +47,8 @@ static stRunSingleton_t st_run;
 /**** Setup local functions ****/
 
 static void _load_move(void);
-static void _request_load_move(void);
+static uint8_t _runtime_isbusy(void);
+//static void _request_load_move(void);
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
 
 // handy macro
@@ -199,7 +200,7 @@ void stepper_init()
 
 	// setup software interrupt exec timer & initial condition
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
-	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
+//	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
 	st_pre.segment_ready = false;						// used for diagnostics only
 
 	// setup motor power levels and apply power level to stepper drivers
@@ -390,8 +391,8 @@ stat_t st_motor_power_callback() 	// called by controller
 
 		switch (st_cfg.mot[motor].power_mode) {
 //			case (MOTOR_DISABLED): { _deenergize_motor(motor); break;}
-			case (MOTOR_POWERED_IN_CYCLE):
 			case (MOTOR_ALWAYS_POWERED): { break;}
+			case (MOTOR_POWERED_IN_CYCLE):
 			case (MOTOR_POWERED_ONLY_WHEN_MOVING): {
 				switch (st_run.mot[motor].power_state) {
 					case (MOTOR_POWER_TIMEOUT_START): {
@@ -522,43 +523,43 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 #ifdef __AVR
 void st_request_exec_move()
 {
-	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
+//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting ++++
 		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
 		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
-	}
+//	}
 }
 
 ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 	TIMER_EXEC.CTRLA = EXEC_TIMER_DISABLE;				// disable SW interrupt timer
 
 	// exec_move
-	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// ++++
 		if (mp_exec_move() != STAT_NOOP) {
-			st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-			_request_load_move();
+//			st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back ++++
+			st_request_load_move();
 		}
-	}
+//	}
 }
 #endif // __AVR
 
 #ifdef __ARM
 void st_request_exec_move()
 {
-	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting
+//	if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// bother interrupting ++++
 		exec_timer.setInterruptPending();
-	}
+//	}
 }
 
 namespace Motate {	// Define timer inside Motate namespace
 	MOTATE_TIMER_INTERRUPT(exec_timer_num)			// exec move SW interrupt
 	{
 		exec_timer.getInterruptCause();				// clears the interrupt condition
-		if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {
+//		if (st_pre.exec_state == PREP_BUFFER_OWNED_BY_EXEC) {	// ++++
 			if (mp_exec_move() != STAT_NOOP) {
-				st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-				_request_load_move();
+//				st_pre.exec_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back ++++
+				st_request_load_move();
 			}
-		}
+//		}
 	}
 } // namespace Motate
 
@@ -567,12 +568,13 @@ namespace Motate {	// Define timer inside Motate namespace
 /****************************************************************************************
  * Loader sequencing code
  *
- * _request_load()		- fires a software interrupt (timer) to request to load a move
- *  load_mode interrupt	- interrupt handler for running the loader
+ * st_request_load_move() - fires a software interrupt (timer) to request to load a move
+ * load_move interrupt	  - interrupt handler for running the loader
  */
 
 #ifdef __AVR
-static void _request_load_move()
+//static void _request_load_move()
+void st_request_load_move()
 {
 	if (st_run.dda_ticks_downcount == 0) {				// bother interrupting
 		TIMER_LOAD.PER = LOAD_TIMER_PERIOD;
@@ -588,7 +590,7 @@ ISR(TIMER_LOAD_ISR_vect) {								// load steppers SW interrupt
 #endif // __AVR
 
 #ifdef __ARM
-static void _request_load_move()
+void st_request_load_move()
 {
 	if (st_run.dda_ticks_downcount == 0) {				// bother interrupting
 		load_timer.setInterruptPending();
@@ -604,6 +606,16 @@ namespace Motate {	// Define timer inside Motate namespace
 	}
 } // namespace Motate
 #endif // __ARM
+
+/****************************************************************************************
+ * _runtime_isbusy() - Return state of runtime
+ */
+
+static uint8_t _runtime_isbusy()
+{
+	if (st_run.dda_ticks_downcount != 0) return(true);
+	return(false);
+}
 
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper struct
@@ -622,22 +634,22 @@ static void _load_move()
 {
 	// Be aware that dda_ticks_downcount must equal zero for the loader to run.
 	// So the initial load must also have this set to zero as part of initialization
-	if (st_run.dda_ticks_downcount != 0) return;						// exit if it's still busy
+//	if (st_run.dda_ticks_downcount != 0) return;						// exit if it's still busy
+	if (_runtime_isbusy()) return;
 
-	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_LOADER) {				// if there are no moves to load...
-		for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
-		}
-		return;
-	}
-
-	if (st_pre.segment_ready != true) {									// trap if prep is not complete
-		printf("######## LOADER - SEGMENT NOT READY\n");
-	}
-	st_pre.segment_ready = false;
+//++++
+//	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_LOADER) {				// if there are no moves to load...
+//		for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+//			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
+//		}
+//		return;
+//	}
 
 	// handle aline() loads first (most common case)  NB: there are no more lines, only alines()
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
+
+		// trap if segment prep is not complete
+		if (st_pre.segment_ready != true) printf("#### LOADER - SEGMENT NOT READY\n");
 
 		//**** setup the new segment ****
 
@@ -783,16 +795,22 @@ static void _load_move()
 		//**** do this last ****
 
 		dda_timer.start();									// start the DDA timer if not already running
+		st_pre.segment_ready = false;						// flag prep buffer as stale
+		st_prep_null();										// needed to shut off timers if no moves left
+		st_request_exec_move();								// exec and prep next move
+		return;
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
 		dwell_timer.start();
+		st_prep_null();										// needed to shut off timers if no moves left
+		return;
 	}
 
-	// all cases drop to here - such as Null moves queued by MCodes
+	// all non-aline, non-dwell cases drop to here (e.g. Null moves after Mcodes skip to here)
 	st_prep_null();											// needed to shut off timers if no moves left
-	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back
+//	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;			// flip it back ++++
 	st_request_exec_move();									// exec and prep next move
 //dda_debug_pin1 = 0;
 }
@@ -823,8 +841,12 @@ static void _load_move()
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queueing the line
-	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
-	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// ever supposed to happen
+//	if (st_pre.exec_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR));	// never supposed to happen
+//	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// ever supposed to happen
+//	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));			// ever supposed to happen
+//	}
+
+	if		  (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));		// never supposed to happen
 	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));			// ever supposed to happen
 	}
 
@@ -878,8 +900,10 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 			if (correction_steps > 0) {
 				correction_steps = min3(correction_steps, fabs(travel_steps[motor]), STEP_CORRECTION_MAX);
+				printf("+");	//++++
 			} else {
 				correction_steps = max3(correction_steps, -fabs(travel_steps[motor]), -STEP_CORRECTION_MAX);
+				printf("-");	//++++
 			}
 			st_pre.mot[motor].corrected_steps += correction_steps;
 			travel_steps[motor] -= correction_steps;

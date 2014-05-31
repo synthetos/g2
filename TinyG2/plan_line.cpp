@@ -42,10 +42,10 @@ extern "C"{
 // aline planner routines / feedhold planning
 
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
-static void _calculate_trapezoid(mpBuf_t *bf);
+//static void _calculate_trapezoid(mpBuf_t *bf);
 //static float _get_jerk_value(const float Vi, const float Vt, const float L);
-static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf);
-static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+//static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf);
+//static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 //static float _get_intersection_distance(const float Vi_squared, const float Vt_squared, const float L, const mpBuf_t *bf);
 static float _get_junction_vmax(const float a_unit[], const float b_unit[]);
 static void _reset_replannable_list(void);
@@ -241,7 +241,7 @@ stat_t mp_aline(const GCodeState_t *gm_in)
 	bf->cruise_vmax = bf->length / bf->gm.move_time;		// target velocity requested
 	junction_velocity = _get_junction_vmax(bf->pv->unit, bf->unit);
 	bf->entry_vmax = min3(bf->cruise_vmax, junction_velocity, exact_stop);
-	bf->delta_vmax = _get_target_velocity(0, bf->length, bf);
+	bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
 	bf->exit_vmax = min3(bf->cruise_vmax, (bf->entry_vmax + bf->delta_vmax), exact_stop);
 	bf->braking_velocity = bf->delta_vmax;
 
@@ -357,9 +357,9 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
                                   bp->nx->braking_velocity, 
                                  (bp->entry_velocity + bp->delta_vmax) );
 
-//        float old_entry_velocity = bp->entry_velocity;
-        _calculate_trapezoid(bp);
-//        _calc_jerk_values(bp);
+//		float old_entry_velocity = bp->entry_velocity;
+		mp_calculate_trapezoid(bp);
+//		_calc_jerk_values(bp);
 
         // If we changed the entry velocity, we need to account for it...
 //        if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
@@ -382,7 +382,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 	bp->entry_velocity = bp->pv->exit_velocity;
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
-	_calculate_trapezoid(bp);
+	mp_calculate_trapezoid(bp);
 //    _calc_jerk_values(bp);
 }
 
@@ -480,7 +480,7 @@ static void _reset_replannable_list()
  *	  but it reduces execution time when you need it most - when tons of pathologically
  *	  short Gcode blocks are being thrown at you.
  */
-
+/*
 // The minimum lengths are dynamic and depend on the velocity
 // These expressions evaluate to the minimum lengths for the current velocity settings
 // Note: The head and tail lengths are 2 minimum segments, the body is 1 min segment
@@ -490,16 +490,6 @@ static void _reset_replannable_list()
 
 static void _calculate_trapezoid(mpBuf_t *bf) 
 {
-    /*********************************
-     *********************************
-     **                             **
-     **      THE FIRST RULE OF      **
-     **    _calculate_trapezoid():  **
-     **        DON'T CHANGE         **
-     **         bf->length          **
-     **                             **
-     *********************************
-     *********************************/
 
 	// F case: Block is too short to execute. 
 	// Force block into a single segment body with limited velocities
@@ -564,23 +554,23 @@ static void _calculate_trapezoid(mpBuf_t *bf)
                 if (bf->length < minimum_length) { 				// T" (degraded case)
                     // RAISE the EXIT velocity to take at least two segments worth of time to decelerate.
 
-                    /* NOTE: If we are assuming we're going to recalculate the jerk, *and* we are going to not
-                     *   change the length, then we actually want to make the two speeds *closer together*.
-                     *   This is because the distance traveled (L) is actually the area of a right triangle formed
-                     *   by the ΔV (velocity change) on one side and T (the time of the move) on the bottom:
-                     *   
-                     *        |\      Area of the triangle = L (distance traveled)
-                     *     ΔV | \                  (V*T)/2 = L  →  VT = 2L  →  V = 2L/T
-                     *         --
-                     *         T
-                     *
-                     *   Normally we are bounded by the jerk value, but as long as we only *lower* ΔV while not
-                     *   changing the distance traveled (area of the triangle), then we are lowering the jerk value,
-                     *   while making the move take more time, which is what we want.
-                     *
-                     *   Additionally, since we want the time to be twice MIN_SEGMENT_TIME_PLUS_MARGIN, we will
-                     *   replace T = (t*2), to get (V*(t*2))/2 = L  →  Vt = L  →  V = L/t
-                     */
+                    // NOTE: If we are assuming we're going to recalculate the jerk, *and* we are going to not
+                    //   change the length, then we actually want to make the two speeds *closer together*.
+                    //   This is because the distance traveled (L) is actually the area of a right triangle formed
+                    //   by the ΔV (velocity change) on one side and T (the time of the move) on the bottom:
+                    //   
+                    //        |\      Area of the triangle = L (distance traveled)
+                    //     ΔV | \                  (V*T)/2 = L  →  VT = 2L  →  V = 2L/T
+                    //         --
+                    //         T
+                    //
+                    //   Normally we are bounded by the jerk value, but as long as we only *lower* ΔV while not
+                    //   changing the distance traveled (area of the triangle), then we are lowering the jerk value,
+                    //   while making the move take more time, which is what we want.
+                    //
+                    //   Additionally, since we want the time to be twice MIN_SEGMENT_TIME_PLUS_MARGIN, we will
+                    //   replace T = (t*2), to get (V*(t*2))/2 = L  →  Vt = L  →  V = L/t
+                    //
 
 //                    bf->entry_velocity = min(bf->exit_velocity + (bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN),
 //                                             _get_target_velocity(bf->exit_velocity, bf->length, bf));
@@ -730,7 +720,7 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 	}
 
 }
-
+*/
 /*	
  * _get_target_length()	  - derive accel/decel length from delta V and jerk
  * _get_target_velocity() - derive velocity achievable from delta V and length
@@ -781,17 +771,17 @@ static void _calculate_trapezoid(mpBuf_t *bf)
 //{
 //    return fabs( ((Vt-Vi) * pow((Vi+Vt), 2)) / pow(L, 2) ) ;
 //}
-
+/*
 static float _get_target_length(const float Vi, const float Vt, const mpBuf_t *bf)
 {
 	return (Vi + Vt) * sqrt(fabs(Vt - Vi) * bf->recip_jerk);
 //	return fabs(Vi-Vt) * sqrt(fabs(Vi-Vt) * bf->recip_jerk);
 }
-
-static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
-{
+*/
+//static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
+//{
     // We start with a reasonable estimate...
-    float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
+ //   float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
 
     /* Now we'll do some Newton-Raphson iterations to narrow it down.
      * We need a formula that includes know variables except the one we want to find,
@@ -850,8 +840,8 @@ static float _get_target_velocity(const float Vi, const float L, const mpBuf_t *
     } while (i-- != 0 && !fp_EQ(previous_estimate, estimate));
 #endif
 
-    return estimate;
-}
+//    return estimate;
+//}
 
 // NOTE: ALTERNATE FORMULATION OF ABOVE...
 
@@ -1095,7 +1085,7 @@ stat_t mp_plan_hold_callback()
 //	braking_velocity = mr.segment_velocity;
 //	if (mr.section != SECTION_BODY) { braking_velocity += mr.forward_diff_1;}
 	braking_velocity = _compute_next_segment_velocity();
-	braking_length = _get_target_length(braking_velocity, 0, bp); // bp is OK to use here
+	braking_length = mp_get_target_length(braking_velocity, 0, bp); // bp is OK to use here
 
 	// Hack to prevent Case 2 moves for perfect-fit decels. Happens in homing situations
 	// The real fix: The braking velocity cannot simply be the mr.segment_velocity as this
@@ -1117,7 +1107,7 @@ stat_t mp_plan_hold_callback()
 
 		// re-use bp+0 to be the hold point and to run the remaining block length
 		bp->length = mr_available_length - braking_length;
-		bp->delta_vmax = _get_target_velocity(0, bp->length, bp);
+		bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
 		bp->entry_vmax = 0;						// set bp+0 as hold point
 		bp->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
 
@@ -1134,7 +1124,7 @@ stat_t mp_plan_hold_callback()
 	mr.section_state = SECTION_NEW;
 	mr.tail_length = mr_available_length;
 	mr.cruise_velocity = braking_velocity;
-	mr.exit_velocity = braking_velocity - _get_target_velocity(0, mr_available_length, bp);	
+	mr.exit_velocity = braking_velocity - mp_get_target_velocity(0, mr_available_length, bp);	
 
 	// Find the point where deceleration reaches zero. This could span multiple buffers.
 	braking_velocity = mr.exit_velocity;		// adjust braking velocity downward
@@ -1146,10 +1136,10 @@ stat_t mp_plan_hold_callback()
 			continue;
 		}
 		bp->entry_vmax = braking_velocity;		// velocity we need to shed
-		braking_length = _get_target_length(braking_velocity, 0, bp);
+		braking_length = mp_get_target_length(braking_velocity, 0, bp);
 
 		if (braking_length > bp->length) {		// decel does not fit in bp buffer
-			bp->exit_vmax = braking_velocity - _get_target_velocity(0, bp->length, bp);
+			bp->exit_vmax = braking_velocity - mp_get_target_velocity(0, bp->length, bp);
 			braking_velocity = bp->exit_vmax;	// braking velocity for next buffer
 			bp = mp_get_next_buffer(bp);		// point to next buffer
 			continue;
@@ -1164,7 +1154,7 @@ stat_t mp_plan_hold_callback()
 	bp = mp_get_next_buffer(bp);				// point to the acceleration buffer
 	bp->entry_vmax = 0;
 	bp->length -= braking_length;				// the buffers were identical (and hence their lengths)
-	bp->delta_vmax = _get_target_velocity(0, bp->length, bp);
+	bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
 	bp->exit_vmax = bp->delta_vmax;
 
 	_reset_replannable_list();					// make it replan all the blocks
@@ -1266,28 +1256,28 @@ static void _test_get_target_length()
 
 	Vi = 0;
 	Vt = 300;
-	L = _get_target_length(Vi, Vt, bf);		// result: L = 3.872983
-	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 300
+	L = mp_get_target_length(Vi, Vt, bf);		// result: L = 3.872983
+	Vt = mp_get_target_velocity(Vi, L, bf);	// result: Vt = 300
 
 	Vi = 165;
 	Vt = 300;
-	L = _get_target_length(Vi, Vt, bf);		// result: L = 4.027018
-	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 300
+	L = mp_get_target_length(Vi, Vt, bf);		// result: L = 4.027018
+	Vt = mp_get_target_velocity(Vi, L, bf);	// result: Vt = 300
 
 	Vi = 523;
 	Vt = 600;
-	L = _get_target_length(Vi, Vt, bf);		// result: L = 7.344950
-	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 600
+	L = mp_get_target_length(Vi, Vt, bf);		// result: L = 7.344950
+	Vt = mp_get_target_velocity(Vi, L, bf);	// result: Vt = 600
 
 	Vi = 200;
 	Vt = 400;
-	L = _get_target_length(Vi, Vt, bf);		// result: L = 6.324555
-	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 400
+	L = mp_get_target_length(Vi, Vt, bf);		// result: L = 6.324555
+	Vt = mp_get_target_velocity(Vi, L, bf);	// result: Vt = 400
 
 	Vi = 174;
 	Vt = 347;
-	L = _get_target_length(Vi, Vt, bf);		// result: L = 5.107690
-	Vt = _get_target_velocity(Vi, L, bf);	// result: Vt = 347
+	L = mp_get_target_length(Vi, Vt, bf);		// result: L = 5.107690
+	Vt = mp_get_target_velocity(Vi, L, bf);	// result: Vt = 347
 }
 #endif	// __TEST_GET_TARGET_LENGTH
 
@@ -1306,7 +1296,7 @@ static void _test_get_target_velocity()
 	float Vt; 			// 300
 	bf->jerk = 1800000;
 
-	Vt = _get_target_velocity(Vi, L, bf);
+	Vt = mp_get_target_velocity(Vi, L, bf);
 }
 #endif	// __TEST_GET_TARGET_VELOCITY
 
@@ -1342,7 +1332,7 @@ static void _test_trapezoid(float length, float Ve, float Vt, float Vx, mpBuf_t 
 	bf->jerk = JERK_TEST_VALUE;
 	bf->recip_jerk = 1/bf->jerk;
 	bf->cbrt_jerk = cbrt(bf->jerk);
-	_calculate_trapezoid(bf);
+	mp_calculate_trapezoid(bf);
 }
 
 static void _test_calculate_trapezoid()
