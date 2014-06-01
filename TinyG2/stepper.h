@@ -297,11 +297,12 @@ enum prepBufferState {
  *		0.90 == a safety factor used to reduce the result from theoretical maximum
  *
  *	The number is about 8.5 million for the Xmega running a 50 KHz DDA with 5 millisecond segments
- *	The ARM is about 1/2 that (or less) as the DDA clock rate is higher. Decreasing the nominal
+ *	The ARM is about 1/4 that (or less) as the DDA clock rate is 4x higher. Decreasing the nominal
  *	segment time increases the number precision.
  */
 //#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
-#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60.0)))
+//#define DDA_SUBSTEPS ((MAX_LONG * 0.01) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60.0)))
+#define DDA_SUBSTEPS (float)(1000000)
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position errors.
