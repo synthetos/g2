@@ -201,7 +201,8 @@ void stepper_init()
 	// setup software interrupt exec timer & initial condition
 	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 //	st_pre.exec_state = PREP_BUFFER_OWNED_BY_EXEC;
-	st_pre.segment_ready = false;						// used for diagnostics only
+	st_pre.segment_ready = false;
+	st_pre.dda_ticks_dither = 0;
 
 	// setup motor power levels and apply power level to stepper drivers
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -840,8 +841,30 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
 	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);				// NB: AVR only (non Motate)
 //	st_pre.dda_ticks = (uint32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
-	st_pre.dda_ticks = (int32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
+//	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+/*
+	double overflow;
+	float base_time = (segment_time * 60.0 * FREQUENCY_DDA);			// NB: converts minutes to seconds
+	st_pre.dda_ticks_dither += floor(base_time);
+	printf("%f, ", (double)st_pre.dda_ticks_dither);
+	st_pre.dda_ticks_dither = modf(st_pre.dda_ticks_dither, &overflow);
+	st_pre.dda_ticks = (int32_t)(base_time + overflow);
 	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+	printf("%lu, %f, %f\n", st_pre.dda_ticks, (double)base_time, (double)st_pre.dda_ticks_dither);
+*/
+	double integer_ticks;
+	double overflow;
+	double fractional_ticks = modf((segment_time * FREQUENCY_DDA * 60), &integer_ticks);
+	
+	st_pre.dda_ticks_dither += fractional_ticks;
+	st_pre.dda_ticks = (int32_t)(integer_ticks + st_pre.dda_ticks_dither);
+	st_pre.dda_ticks_dither = modf(st_pre.dda_ticks_dither, &overflow);
+	
+	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+
+//	st_pre.dda_ticks = (uint32_t)((segment_time * 60.0 * FREQUENCY_DDA) + st_pre.dda_ticks_dither);
+//	st_pre.dda_ticks_dither += ((segment_time * 60.0 * FREQUENCY_DDA) + st_pre.dda_ticks_dither) - st_pre.dda_ticks;
+//	printf("%lu, %f\n", st_pre.dda_ticks, (double)st_pre.dda_ticks_dither);
 
 	// setup motor parameters
 
