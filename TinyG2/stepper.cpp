@@ -643,8 +643,7 @@ static void _load_move()
 
 		//**** setup the new segment ****
 
-//		st_run.dda_ticks_downcount = st_pre.dda_ticks;
-		st_run.dda_ticks_downcount = (uint32_t)st_pre.dda_ticks;
+		st_run.dda_ticks_downcount = st_pre.dda_ticks;
 		st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
 #ifdef __AVR
 		TIMER_DDA.PER = st_pre.dda_period;
@@ -793,8 +792,7 @@ static void _load_move()
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
-//		st_run.dda_ticks_downcount = st_pre.dda_ticks;
-		st_run.dda_ticks_downcount = (uint32_t)st_pre.dda_ticks;
+		st_run.dda_ticks_downcount = st_pre.dda_ticks;
 		dwell_timer.start();
 		st_prep_null();										// needed to shut off timers if no moves left
 		return;
@@ -843,9 +841,10 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);				// NB: AVR only (non Motate)
 //	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
 //	st_pre.dda_ticks = (int32_t)(segment_time * 60.0 * (float)FREQUENCY_DDA);// NB: converts minutes to seconds
-	st_pre.dda_ticks = segment_time * 60.0 * (float)FREQUENCY_DDA;// NB: converts minutes to seconds
-//	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * (int32_t)DDA_SUBSTEPS;
-	st_pre.dda_ticks_X_substeps = (uint32_t)(st_pre.dda_ticks * DDA_SUBSTEPS);
+//	st_pre.dda_ticks = segment_time * 60.0 * (float)FREQUENCY_DDA;// NB: converts minutes to seconds
+	st_pre.dda_ticks = (uint32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
+	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * (uint32_t)DDA_SUBSTEPS;
+//	st_pre.dda_ticks_X_substeps = (uint32_t)(st_pre.dda_ticks * DDA_SUBSTEPS);
 
 	// setup motor parameters
 
@@ -929,8 +928,8 @@ void st_prep_null()
 void st_prep_dwell(float microseconds)
 {
 	st_pre.move_type = MOVE_TYPE_DWELL;
-//	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
-	st_pre.dda_ticks = (microseconds/1000000.0) * FREQUENCY_DWELL;
+	st_pre.dda_ticks = (uint32_t)((microseconds/1000000.0) * FREQUENCY_DWELL);
+//	st_pre.dda_ticks = (microseconds/1000000.0) * FREQUENCY_DWELL;
 	st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);	// only needed by AVR
 }
 
