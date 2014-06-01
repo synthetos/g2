@@ -839,8 +839,9 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 	// - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
 	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);				// NB: AVR only (non Motate)
-	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
-	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+//	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
+	st_pre.dda_ticks = (int32_t)(segment_time * 60.0 * (float)FREQUENCY_DDA);// NB: converts minutes to seconds
+	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * (int32_t)DDA_SUBSTEPS;
 
 	// setup motor parameters
 
@@ -898,7 +899,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// Rounding is performed to eliminate a negative bias in the int32 conversion
 		// that results in long-term negative drift. (fabs/round order doesn't matter)
 
-		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
+		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor])) * DDA_SUBSTEPS;
 	}
 	st_pre.move_type = MOVE_TYPE_ALINE;
 	st_pre.segment_ready = true;
