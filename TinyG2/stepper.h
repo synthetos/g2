@@ -361,7 +361,8 @@ typedef struct stConfig {				// stepper configs
 // Motor runtime structure. Used exclusively by step generation ISR (HI)
 
 typedef struct stRunMotor {				// one per controlled motor
-	uint32_t substep_increment;			// total steps in axis times substeps factor
+//	uint32_t substep_increment;			// total steps in axis times substeps factor
+	int32_t substep_increment;			// total steps in axis times substeps factor
 	int32_t substep_accumulator;		// DDA phase angle accumulator
 	uint8_t power_state;				// state machine for managing motor power
 	uint32_t power_systick;				// sys_tick for next motor power state transition
@@ -370,8 +371,10 @@ typedef struct stRunMotor {				// one per controlled motor
 
 typedef struct stRunSingleton {			// Stepper static values and axis parameters
 	uint16_t magic_start;				// magic number to test memory integrity
-	uint32_t dda_ticks_downcount;		// tick down-counter (unscaled)
-	uint32_t dda_ticks_X_substeps;		// ticks multiplied by scaling factor
+//	uint32_t dda_ticks_downcount;		// tick down-counter (unscaled)
+	int32_t dda_ticks_downcount;		// tick down-counter (unscaled)
+//	uint32_t dda_ticks_X_substeps;		// ticks multiplied by scaling factor
+	int32_t dda_ticks_X_substeps;		// ticks multiplied by scaling factor
 	stRunMotor_t mot[MOTORS];			// runtime motor structures
 	uint16_t magic_end;
 } stRunSingleton_t;
@@ -380,7 +383,8 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-	uint32_t substep_increment;			// total steps in axis times substep factor
+//	uint32_t substep_increment;			// total steps in axis times substep factor
+	int32_t substep_increment;			// total steps in axis times substep factor
 
 	// direction and direction change
 	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
@@ -404,8 +408,10 @@ typedef struct stPrepSingleton {
 	volatile uint8_t segment_ready;		// flag indicating the next segment is ready for loading
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
-	uint32_t dda_ticks;					// DDA or dwell ticks for the move
-	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
+//	uint32_t dda_ticks;					// DDA or dwell ticks for the move
+	int32_t dda_ticks;					// DDA or dwell ticks for the move
+//	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
+	int32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
 
 	uint16_t magic_end;

@@ -824,7 +824,7 @@ static void _load_move()
  *
  * NOTE:  Many of the expressions are sensitive to casting and execution order to avoid long-term
  *		  accuracy errors due to floating point round off. One earlier failed attempt was:
- *		    dda_ticks_X_substeps = (uint32_t)((microseconds/1000000) * f_dda * dda_substeps);
+ *		    dda_ticks_X_substeps = (int32_t)((microseconds/1000000) * f_dda * dda_substeps);
  */
 
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
@@ -839,7 +839,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 	// - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
 	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);				// NB: AVR only (non Motate)
-	st_pre.dda_ticks = (uint32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
+//	st_pre.dda_ticks = (uint32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
+	st_pre.dda_ticks = (int32_t)(segment_time * 60.0 * FREQUENCY_DDA);// NB: converts minutes to seconds
 	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
 
 	// setup motor parameters
@@ -898,13 +899,9 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 		// Rounding is performed to eliminate a negative bias in the uint32 conversion
 		// that results in long-term negative drift. (fabs/round order doesn't matter)
 
-//		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
-		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * (float)DDA_SUBSTEPS));
+		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
 //		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor])) * DDA_SUBSTEPS;
 //		st_pre.mot[motor].substep_increment = fabs(travel_steps[motor]) * DDA_SUBSTEPS;
-		st_pre.mot[motor].substep_increment += 100;
-
-//		st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor])) * DDA_SUBSTEPS;
 
 //		printf("%lu, ",st_pre.mot[motor].substep_increment);
 	}
@@ -931,7 +928,8 @@ void st_prep_null()
 void st_prep_dwell(float microseconds)
 {
 	st_pre.move_type = MOVE_TYPE_DWELL;
-	st_pre.dda_ticks = (uint32_t)((microseconds/1000000.0) * FREQUENCY_DWELL);
+//	st_pre.dda_ticks = (uint32_t)((microseconds/1000000.0) * FREQUENCY_DWELL);
+	st_pre.dda_ticks = (int32_t)((microseconds/1000000.0) * FREQUENCY_DWELL);
 	st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);	// only needed by AVR
 }
 

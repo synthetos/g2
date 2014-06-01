@@ -326,7 +326,8 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
+//	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
+	st_prep_dwell((int32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) 
 		cm_cycle_end();				// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);

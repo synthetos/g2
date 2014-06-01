@@ -665,27 +665,10 @@ static stat_t _exec_aline_segment()
 	if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
 	(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_MACHINING)) {
 		copy_vector(mr.gm.target, mr.waypoint[mr.section]);
-		// reset target_c?
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;
-//		printf("L:%d, V:%f, T:%f\n", (double)segment_length, (double)mr.segment_velocity, (double)mr.segment_time);
-//		printf("%f, %f, %f, %f\n", (double)segment_length, (double)mr.segment_velocity, (double)mr.segment_time, (double)mr.segment_time*1000);
 		for (i=0; i<AXES; i++) {
-			float new_offset = (mr.unit[i] * segment_length);
-
-			// Using the Kahan summation algorithm to mitigate floating-point errors
-			// Short form:
-			// mr.gm.target[i] = mr.position[i] + new_offset;
-
-			// Long form:
-			// Compute our offset including the previous roundoff error
-			float new_offset_corrected = new_offset - mr.position_c[i];
-			// Now add in our new_offset (corrected)
-			float new_target = mr.position[i] + new_offset_corrected;
-			// Now find and store our new roundoff error but subtracting all the tings we added up
-			mr.position_c[i] = (new_target - mr.position[i]) - new_offset_corrected;
-			mr.gm.target[i] = new_target;
-
+			 mr.gm.target[i] = mr.position[i] + (mr.unit[i] * segment_length);
 		}
 	}
 
@@ -707,10 +690,10 @@ static stat_t _exec_aline_segment()
 	}
 
 	// Call the stepper prep function
-
-//	exec_debug_pin1 = 0;
+//	exec_debug_pin1 = 0;	// to measure time
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
-//    exec_debug_pin1 = 1;
+//	exec_debug_pin1 = 1;
+
 	copy_vector(mr.position, mr.gm.target); 			// update position from target
 #ifdef __JERK_EXEC
 	mr.elapsed_accel_time += mr.segment_accel_time;		// this is needed by jerk-based exec (NB: ignored if running the body)
