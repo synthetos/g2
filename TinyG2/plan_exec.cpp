@@ -520,7 +520,6 @@ static stat_t _exec_aline_body()
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
 	}
 	if (mr.section_state == SECTION_2nd_HALF) {				// straight part (period 3)
-		mr.segment_time = mr.gm.move_time / mr.segments;	// recompute segment time each time to remove bias errors ++++
 		if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
 			if (fp_ZERO(mr.tail_length)) return(STAT_OK);	// ends the move
 			mr.section = SECTION_TAIL;
