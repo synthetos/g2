@@ -520,6 +520,7 @@ static stat_t _exec_aline_body()
 		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
 	}
 	if (mr.section_state == SECTION_2nd_HALF) {				// straight part (period 3)
+		mr.segment_time = mr.gm.move_time / mr.segments;	// recompute segment time each time to remove bias errors ++++
 		if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
 			if (fp_ZERO(mr.tail_length)) return(STAT_OK);	// ends the move
 			mr.section = SECTION_TAIL;
@@ -668,6 +669,8 @@ static stat_t _exec_aline_segment()
 		// reset target_c?
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;
+//		printf("L:%d, V:%f, T:%f\n", (double)segment_length, (double)mr.segment_velocity, (double)mr.segment_time);
+//		printf("%f, %f, %f, %f\n", (double)segment_length, (double)mr.segment_velocity, (double)mr.segment_time, (double)mr.segment_time*1000);
 		for (i=0; i<AXES; i++) {
 			float new_offset = (mr.unit[i] * segment_length);
 
@@ -706,14 +709,14 @@ static stat_t _exec_aline_segment()
 
 	// Call the stepper prep function
 
-	//	exec_debug_pin1 = 0;
+//	exec_debug_pin1 = 0;
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
-	//    exec_debug_pin1 = 1;
+//    exec_debug_pin1 = 1;
 	copy_vector(mr.position, mr.gm.target); 			// update position from target
 #ifdef __JERK_EXEC
 	mr.elapsed_accel_time += mr.segment_accel_time;		// this is needed by jerk-based exec (NB: ignored if running the body)
 #endif
-	//	exec_debug_pin1 = 0;
+//	exec_debug_pin1 = 0;
 	if (mr.segment_count == 0) return (STAT_OK);		// this section has run all its segments
 	return (STAT_EAGAIN);								// this section still has more segments to run
 }

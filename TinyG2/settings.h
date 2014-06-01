@@ -92,11 +92,11 @@
 //#include "settings/settings_othermill.h"				// Otherfab OtherMill
 //#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
-#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
+//#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
 //#include "settings/settings_Ultimaker.h"
-//#include "settings/settings_Ultimaker_Rob_v9h.h"
+#include "settings/settings_Ultimaker_Rob_v9h.h"
 /*** Handle optional modules that may not be in every machine ***/
 
 // If PWM_1 is not defined fill it with default values
