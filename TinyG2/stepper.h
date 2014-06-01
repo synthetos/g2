@@ -300,7 +300,8 @@ enum prepBufferState {
  *	The ARM is about 1/2 that (or less) as the DDA clock rate is higher. Decreasing the nominal
  *	segment time increases the number precision.
  */
-#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+//#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60.0)))
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position errors.
@@ -403,7 +404,8 @@ typedef struct stPrepSingleton {
 	volatile uint8_t segment_ready;		// flag indicating the next segment is ready for loading
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
-	uint32_t dda_ticks;					// DDA or dwell ticks for the move
+//	uint32_t dda_ticks;					// DDA or dwell ticks for the move
+	float dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
 
