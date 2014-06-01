@@ -108,8 +108,9 @@ extern "C"{
 
 /**** Stepper DDA and dwell timer settings ****/
 
-//#define FREQUENCY_DDA		50000UL
-#define FREQUENCY_DDA		200000UL		// 200,000 Hz step frequency. Interrpts actually fire at 2x (400 KHz)
+//#define FREQUENCY_DDA		50000UL			// Hz step frequency. Interrupts actually fire at 2x (100 KHz)
+#define FREQUENCY_DDA		200000UL		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
+//#define FREQUENCY_DDA		190000UL		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
 #define FREQUENCY_DWELL		1000UL
 #define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
 
