@@ -39,7 +39,7 @@
 #define TINYG_FIRMWARE_BUILD   		041.01	// Testing v9f boards
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8		// firmware major version
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		1		// hardware platform revision number (defaults to)
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
 

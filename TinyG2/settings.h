@@ -50,7 +50,7 @@
 #define MOTOR_POWER_LEVEL			0.25					// default motor power level 0.00 - 1.00 (ARM only)
 
 // Communications and reporting settings
-#define COMM_MODE					JSON_MODE				// one of: TEXT_MODE, JSON_MODE
+#define COMM_MODE					TEXT_MODE				// one of: TEXT_MODE, JSON_MODE
 #define NETWORK_MODE				NETWORK_STANDALONE
 
 #define TEXT_VERBOSITY				TV_VERBOSE				// one of: TV_SILENT, TV_VERBOSE
@@ -80,13 +80,13 @@
 // Comm mode and echo levels
 #define COM_EXPAND_CR				false
 #define COM_ENABLE_ECHO				false
-#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON		// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_OFF		// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 /**** MACHINE PROFILES ******************************************************/
 
 // machine default profiles - choose only one:
 
-//#include "settings/settings_default.h"				// Default settings for release
+#include "settings/settings_default.h"				// Default settings for release
 //#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
@@ -97,7 +97,7 @@
 //#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
 //#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
-#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
+//#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
 //#include "settings/settings_Ultimaker.h"
 //#include "settings/settings_Ultimaker_Rob.h"
