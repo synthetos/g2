@@ -59,6 +59,7 @@ switches_t sw;
 //static void _led_off(switch_t *s);
 static void _trigger_feedhold(switch_t *s);
 static void _trigger_cycle_start(switch_t *s);
+static void _trigger_alarm(switch_t *s);
 
 static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
@@ -89,8 +90,11 @@ void switch_init(void)
 			// functions bound to each switch
 			s->when_open = _no_action;
 			s->when_closed = _no_action;
-			s->on_leading = _trigger_feedhold;
-			s->on_trailing = _trigger_cycle_start;
+            if(s->mode & SW_LIMIT_BIT)
+                s->on_leading = _trigger_alarm;
+            else
+                s->on_leading = _no_action;
+			s->on_trailing = _no_action;
 		}
 	}
 	// bind functions to individual switches
@@ -143,6 +147,8 @@ uint8_t poll_switch(switch_t *s, uint8_t pin_value)
 		return (false);
 	}
 	// return if no change in state
+    // OTHERMILL: switch thrown: pin_value = 1, s->type = 1, pin_sense_corrected = 1 = closed
+    // OTHERMILL: switch unthrown: pin_value = 0, s->type = 1, pin_sense_corrected = 0 = open
 	uint8_t pin_sense_corrected = (pin_value ^ (s->type ^ 1));	// correct for NO or NC mode
   	if ( s->state == pin_sense_corrected ) {
 		s->edge = SW_NO_EDGE;
@@ -182,6 +188,32 @@ static void _trigger_cycle_start(switch_t *s)
 {
 //	IndicatorLed.toggle();
 	cm_request_cycle_start();
+}
+
+static void _trigger_alarm(switch_t *s)
+{
+    s->limit_switch_thrown = true;
+}
+
+uint8_t get_limit_switch_thrown(void)
+{
+    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
+		for (uint8_t position=0; position<SW_POSITIONS; position++) {
+			if(sw.s[axis][position].limit_switch_thrown) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void reset_limit_switches(void)
+{
+    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
+		for (uint8_t position=0; position<SW_POSITIONS; position++) {
+			sw.s[axis][position].limit_switch_thrown = false;
+        }
+    }
 }
 
 /*

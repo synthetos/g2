@@ -127,6 +127,7 @@ static void _application_init(void)
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
 	switch_init();					// switches
+    reset_limit_switches();         // reset limit switch alarm flags
 //	gpio_init();					// parallel IO
 	pwm_init();						// pulse width modulation drivers
 

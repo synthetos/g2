@@ -113,6 +113,7 @@ typedef struct swSwitch {			// one struct per switch
 	uint8_t type;					// swType: 0=NO, 1=NC
 	uint8_t mode;					// 0=disabled, 1=homing, 2=limit, 3=homing+limit
 	uint8_t state;					// set true if switch is closed
+    uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
 
 	// private
 	uint8_t edge;					// keeps a transient record of edges for immediate inquiry
@@ -139,6 +140,8 @@ uint8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);
 uint8_t get_switch_type(uint8_t axis, uint8_t position);
 uint8_t read_switch(uint8_t axis, uint8_t position);
+uint8_t get_limit_switch_thrown(void);
+void reset_limit_switches(void);
 
 /*
  * Switch config accessors and text functions
