@@ -160,7 +160,10 @@ namespace Motate {
     
 	pin_number kLED_USBRXPinNumber              = 117;
 	pin_number kLED_USBTXPinNumber              = 118;
-    
+
+    pin_number kSD_CardDetect                   = 119;
+    pin_number kInterlock_In                    = 120;
+
     pin_number kDebug1_PinNumber                =  -1;
     pin_number kDebug2_PinNumber                =  -1;
     pin_number kDebug3_PinNumber                =  -1;

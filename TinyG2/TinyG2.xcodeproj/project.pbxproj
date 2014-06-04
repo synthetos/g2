@@ -7574,6 +7574,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		E21E39EF193FA91C00D483F8 /* TinyG2 G2V9i */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9i";
+			buildConfigurationList = E21E39F0193FA91C00D483F8 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 G2V9i";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -7620,6 +7634,7 @@
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D457112317053BFB00EA19A8 /* index */,
+				E21E39EF193FA91C00D483F8 /* TinyG2 G2V9i */,
 			);
 		};
 /* End PBXProject section */
@@ -8152,6 +8167,22 @@
 			};
 			name = Release;
 		};
+		E21E39F1193FA91C00D483F8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9i";
+			};
+			name = Debug;
+		};
+		E21E39F2193FA91C00D483F8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9i";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -8205,6 +8236,15 @@
 			buildConfigurations = (
 				D4C12816180D9560002A898C /* Debug */,
 				D4C12817180D9560002A898C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E21E39F0193FA91C00D483F8 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E21E39F1193FA91C00D483F8 /* Debug */,
+				E21E39F2193FA91C00D483F8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
