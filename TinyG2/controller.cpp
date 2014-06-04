@@ -67,6 +67,7 @@ static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
 static stat_t _command_dispatch(void);
+static stat_t _control_character_dispatch(void);
 
 // prep for export to other modules:
 stat_t hardware_hard_reset_handler(void);
@@ -170,8 +171,9 @@ static void _controller_HSM()
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
+    DISPATCH(_control_character_dispatch());    // 6a. check secondary USB port for control characters: !%~^X
+	DISPATCH(cm_feedhold_sequencing_callback());// 6b. feedhold state machine runner
+	DISPATCH(mp_plan_hold_callback());			// 6c. plan a feedhold from line runtime
 	DISPATCH(_system_assertions());				// 7. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
@@ -194,6 +196,32 @@ static void _controller_HSM()
 #endif
 	DISPATCH(_command_dispatch());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
+}
+
+#define CAN (char)0x18		// ^x - Cancel, abort
+#define CHAR_RESET CAN
+#define CHAR_FEEDHOLD (char)'!'
+#define CHAR_CYCLE_START (char)'~'
+#define CHAR_QUEUE_FLUSH (char)'%'
+
+static stat_t _control_character_dispatch()
+{
+    if(SerialUSB1.isConnected() == false)
+        return STAT_OK;
+    
+    int16_t control_char;
+    control_char = SerialUSB1.readByte();
+    if(control_char == -1)
+        return STAT_OK;
+    else if(control_char == CHAR_FEEDHOLD)
+        cm_request_feedhold();
+    else if(control_char == CHAR_CYCLE_START)
+        cm_request_cycle_start();
+    else if(control_char == CHAR_QUEUE_FLUSH)
+        cm_request_queue_flush();
+    else if(control_char == CHAR_RESET)
+        hw_request_hard_reset();
+    return STAT_EAGAIN;
 }
 
 /***************************************************************************** 

@@ -374,6 +374,10 @@ namespace Motate {
 		void flush() {
 			usb.flush(write_endpoint);
 		}
+        
+        void flushRead() {
+            usb.flushRead(read_endpoint);
+        }
 
 		bool isConnected() {
 			return _line_state & (0x01 << 1);

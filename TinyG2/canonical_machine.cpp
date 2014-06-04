@@ -100,7 +100,7 @@
 #include "switch.h"
 #include "hardware.h"
 #include "util.h"
-//#include "xio.h"			// for serial queue flush
+#include "xio.h"			// for serial queue flush
 
 #ifdef __cplusplus
 extern "C"{
@@ -1261,8 +1261,9 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.feedhold_requested = false;
 	}
 	if (cm.queue_flush_requested == true) {
-		if ((cm.motion_state == MOTION_STOP) ||
-			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) {
+		if (((cm.motion_state == MOTION_STOP) ||
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
+            !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
 			cm_queue_flush();
 		}
@@ -1286,6 +1287,9 @@ stat_t cm_queue_flush()
 
 #ifdef __AVR
 	xio_reset_usb_rx_buffers();		// flush serial queues
+#endif
+#ifdef __ARM
+    SerialUSB.flushRead();
 #endif
 
 	mp_flush_planner();				// flush planner queue

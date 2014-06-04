@@ -71,10 +71,10 @@
 
 #include "MotateSPI.h"
 
-extern Motate::USBDevice< Motate::USBCDC > usb;
-//extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+//extern Motate::USBDevice< Motate::USBCDC > usb;
+extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 extern typeof usb._mixin_0_type::Serial &SerialUSB;
-//extern typeof usb._mixin_1_type::Serial &SerialUSB1;
+extern typeof usb._mixin_1_type::Serial &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
