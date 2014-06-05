@@ -4,5 +4,5 @@ Do NOT use it in production.
 
 You have been warned.
 
-THank you,
+Thank you,
   -Rob
