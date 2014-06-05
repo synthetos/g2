@@ -1,3 +1,5 @@
+WARNING: This branch is terribly outdated. For the adventurous, try the Edge branch.
+
 TinyG2 is an ARM Port of the [TinyG Motion control system](https://github.com/synthetos/TinyG) [(wiki)](https://github.com/synthetos/TinyG/wiki)
 
 ![gShield and Arduino Due](http://farm4.staticflickr.com/3734/10385568464_2c147b9806_b_d.jpg)
