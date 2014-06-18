@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		046.01 // feature-tinyg-410-base first commit 
+#define TINYG_FIRMWARE_BUILD   		046.02 // feature-tinyg-410-base - switched to debug settings 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -53,35 +53,39 @@
 #endif
 */
 
-/****** RUNTIME SETTINGS ******/
+/****** COMPILE-TIME SETTINGS ******/
 
-//#define __STEP_CORRECTION
-//#define __JERK_EXEC							// comment to use forward difference based exec vs jerk computed exec
-//#define __BLOCK_ANNEALING
-//#define __POCKETNC							// enable PocketNC homing hacks
+#define __STEP_CORRECTION
+//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
+//#define __KAHAN							// Use Kahan summation in aline exec functions
 
-/****** DEBUG SETTINGS ******/
+#define __TEXT_MODE							// enables text mode support (~10Kb)
+#define __HELP_SCREENS						// enables help screens 	 (~3.5Kb)
+#define __CANNED_TESTS 						// enables $tests 			 (~12Kb)
+#define __TEST_99 							// enables diagnostic test 99
 
-//#define __SIMULATION						// shorthand to keep from having to comment and uncomment the below:
+/****** DEVELOPMENT SETTINGS ******/
 
-#ifndef __SIMULATION						// enable the following if not simulation mode
-	#define __TEXT_MODE						// comment out to disable text mode support (saves ~10Kb)
-	#define __HELP_SCREENS					// comment out to disable help screens 		(saves ~3.5Kb)
-	#define __CANNED_TESTS 					// comment out to remove $tests 			(saves ~12Kb)
-
-#else										// enable the following if in simulation mode
-	#define __CANNED_STARTUP				// run any canned startup moves
-	#define __DISABLE_PERSISTENCE			// disable EEPROM writes for faster simulation
-	#define __SUPPRESS_STARTUP_MESSAGES 	// what it says
-	#define __SUPPRESS_STATUS_REPORTS 		// what it says
-	#define __SUPPRESS_QUEUE_REPORTS 		// what it says
-	#define __SUPPRESS_DIAGNOSTIC_DISPLAYS
-	#define __SILENCE_JSON_RESPONSES
-#endif
-
-#define __TEST_99 							// comment out to remove diagnostic test 99
-#define __DIAGNOSTIC_PARAMETERS				// include diagnostics in config_app table
+#define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
+#define __DEBUG_SETTINGS					// special settings. See settings.h
+//#define __CANNED_STARTUP					// run any canned startup moves
 //#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
+
+//#define __SIMULATION						// for software-only simulations
+#ifdef __SIMULATION
+  #undef  __TEXT_MODE
+  #undef  __HELP_SCREENS
+  #undef  __CANNED_TESTS
+#ifndef __CANNED_STARTUP
+  #define __CANNED_STARTUP					// run any canned startup moves
+#endif
+  #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
+  #define __SUPPRESS_STARTUP_MESSAGES
+  #define __SUPPRESS_STATUS_REPORTS
+  #define __SUPPRESS_QUEUE_REPORTS
+  #define __SUPRESS_DIAGNOSTIC_DISPLAYS
+  #define __SILENCE_JSON_RESPONSES
+#endif
 
 //#ifndef WEAK
 //#define WEAK  __attribute__ ((weak))
