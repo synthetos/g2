@@ -73,7 +73,7 @@ float* mp_get_planner_position_vector() { return (mm.position);}
 
 uint8_t mp_get_runtime_busy()
 {
-	if ((stepper_isbusy() == true) || (mr.move_state == MOVE_RUN)) return (true);
+	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN)) return (true);
 	return (false);
 }
 

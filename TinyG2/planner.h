@@ -35,7 +35,7 @@
 extern "C"{
 #endif
 
-enum moveType {				// bf->move_type values 
+enum moveType {				// bf->move_type values
 	MOVE_TYPE_NULL = 0,		// null move - does a no-op
 	MOVE_TYPE_ALINE,		// acceleration planned line
 	MOVE_TYPE_DWELL,		// delay with no movement
@@ -70,7 +70,7 @@ enum sectionState {
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 /* The following must apply:
- *	  MM_PER_ARC_SEGMENT >= MIN_LINE_LENGTH >= MIN_SEGMENT_LENGTH 
+ *	  MM_PER_ARC_SEGMENT >= MIN_LINE_LENGTH >= MIN_SEGMENT_LENGTH
  */
 #define ARC_SEGMENT_LENGTH 		((float)0.1)		// Arc segment size (mm).(0.03)
 #define MIN_LINE_LENGTH 		((float)0.08)		// Smallest line the system can plan (mm) (0.02)
@@ -98,7 +98,6 @@ enum sectionState {
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
-//#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME*3	// factor for minimum size Gcode block to process
 #define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
 
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
@@ -112,8 +111,8 @@ enum sectionState {
 #define PLANNER_STARTUP_DELAY_SECONDS ((float)0.05)	// in seconds
 
 /* PLANNER_BUFFER_POOL_SIZE
- *	Should be at least the number of buffers requires to support optimal 
- *	planning in the case of very short lines or arc segments. 
+ *	Should be at least the number of buffers requires to support optimal
+ *	planning in the case of very short lines or arc segments.
  *	Suggest 12 min. Limit is 255
  */
 #define PLANNER_BUFFER_POOL_SIZE 28
@@ -151,7 +150,7 @@ typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine ex
 
 // All the enums that equal zero must be zero. Don't change this
 
-enum mpBufferState {				// bf->buffer_state values 
+enum mpBufferState {				// bf->buffer_state values
 	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
 	MP_BUFFER_LOADING,				// being written ("checked out")
 	MP_BUFFER_QUEUED,				// in queue
@@ -164,6 +163,8 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *nx;			// static pointer to next buffer
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
 	cm_exec_t cm_func;				// callback to canonical machine execution function
+
+	float naiive_move_time;
 
 	uint8_t buffer_state;			// used to manage queueing/dequeueing
 	uint8_t move_type;				// used to dispatch to run routine
@@ -217,12 +218,6 @@ typedef struct mpMoveMasterSingleton { // common variables for planning (move ma
 	float prev_recip_jerk;
 	float prev_cbrt_jerk;
 
-#ifdef __UNIT_TEST_PLANNER
-	float test_case;
-	float test_velocity;
-	float a_unit[AXES];
-	float b_unit[AXES];
-#endif
 	magic_t magic_end;				// magic number to test memory integrity
 } mpMoveMasterSingleton_t;
 
@@ -257,28 +252,29 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	uint32_t segment_count;			// count of running segments
 	float segment_velocity;			// computed velocity for aline segment
 	float segment_time;				// actual time increment per aline segment
-
-									// values exclusively used by jerk-based acceleration
 	float jerk;						// max linear jerk
+
+//#ifdef __JERK_EXEC					// values used exclusively by computed jerk acceleration
 	float jerk_div2;				// cached value for efficiency
 	float midpoint_velocity;		// velocity at accel/decel midpoint
-#ifdef __JERK_EXEC
 	float midpoint_acceleration;	//
 	float accel_time;				//
 	float segment_accel_time;		//
 	float elapsed_accel_time;		//
-#endif
-									// values used exclusively by forward differencing acceleration
+//#else								// values used exclusively by forward differencing acceleration
 	float forward_diff_1;			// forward difference level 1
-	float forward_diff_1_c;			// forward difference level 1 floating-point compensation
 	float forward_diff_2;			// forward difference level 2
-	float forward_diff_2_c;			// forward difference level 2 floating-point compensation
 	float forward_diff_3;			// forward difference level 3
-	float forward_diff_3_c;			// forward difference level 3 floating-point compensation
 	float forward_diff_4;			// forward difference level 4
-	float forward_diff_4_c;			// forward difference level 4 floating-point compensation
 	float forward_diff_5;			// forward difference level 5
+//#ifdef __KAHAN
+	float forward_diff_1_c;			// forward difference level 1 floating-point compensation
+	float forward_diff_2_c;			// forward difference level 2 floating-point compensation
+	float forward_diff_3_c;			// forward difference level 3 floating-point compensation
+	float forward_diff_4_c;			// forward difference level 4 floating-point compensation
 	float forward_diff_5_c;			// forward difference level 5 floating-point compensation
+//#endif
+//#endif
 
 	GCodeState_t gm;				// gcode model state currently executing
 
@@ -304,6 +300,7 @@ void mp_set_runtime_position(uint8_t axis, float position);
 void mp_set_steps_to_runtime_position(void);
 
 void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag);
+stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);

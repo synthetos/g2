@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		046.02 // feature-tinyg-410-base - switched to debug settings 
+#define TINYG_FIRMWARE_BUILD   		046.03 // stepper files; doesn't get all the way through tests
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -56,7 +56,7 @@
 /****** COMPILE-TIME SETTINGS ******/
 
 #define __STEP_CORRECTION
-//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
+#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
 //#define __KAHAN							// Use Kahan summation in aline exec functions
 
 #define __TEXT_MODE							// enables text mode support (~10Kb)
