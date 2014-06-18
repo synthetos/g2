@@ -74,44 +74,20 @@ uint8_t mp_get_runtime_busy()
 	return (false);
 }
 
-/* 
- * _calc_jerk_values()
- *
- *	This is a utility function to calculate jerk, recip_jerk, and cbrt_jerk,
- *  if the jerk value has changed.
- */
-/*
-void _calc_jerk_values(mpBuf_t *bf)
-{
-//	if (fabs(bf->jerk - mm.prev_jerk) < JERK_MATCH_PRECISION) {	// can we re-use jerk terms?
-//		bf->cbrt_jerk = mm.prev_cbrt_jerk;
-//		bf->recip_jerk = mm.prev_recip_jerk;
-//	} else {
-		bf->cbrt_jerk = cbrt(bf->jerk);
-		bf->recip_jerk = 1/bf->jerk;
-		mm.prev_jerk = bf->jerk;
-		mm.prev_cbrt_jerk = bf->cbrt_jerk;
-		mm.prev_recip_jerk = bf->recip_jerk;
-//	}
-}
-*/
-
-/**************************************************************************
+/****************************************************************************************
  * mp_aline() - plan a line with acceleration / deceleration
  *
- *	This function uses constant jerk motion equations to plan acceleration 
- *	and deceleration. The jerk is the rate of change of acceleration; it's
- *	the 1st derivative of acceleration, and the 3rd derivative of position. 
- *	Jerk is a measure of impact to the machine. Controlling jerk smooths 
- *	transitions between moves and allows for faster feeds while controlling 
- *	machine oscillations and other undesirable side-effects.
+ *	This function uses constant jerk motion equations to plan acceleration and deceleration
+ *	The jerk is the rate of change of acceleration; it's the 1st derivative of acceleration,
+ *	and the 3rd derivative of position. Jerk is a measure of impact to the machine.
+ *	Controlling jerk smooths transitions between moves and allows for faster feeds while
+ *	controlling machine oscillations and other undesirable side-effects.
  *
- * 	Note 1: All math is done in absolute coordinates using single precision
- *	floating point (float).
+ * 	Note All math is done in absolute coordinates using single precision floating point (float).
  *
- *	Note 2: Returning a status that is not STAT_OK means the endpoint is NOT
- *	advanced. So lines that are too short to move will accumulate and get
- *	executed once the accumulated error exceeds the minimums
+ *	Note: Returning a status that is not STAT_OK means the endpoint is NOT advanced. So lines
+ *	that are too short to move will accumulate and get executed once the accumulated error
+ *	exceeds the minimums.
  */
 
 stat_t mp_aline(GCodeState_t *gm_in)
@@ -123,7 +99,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 //	uint8_t path_control_mode = cm_get_path_control(MODEL);
 
 	if (vector_equal(mm.position, gm_in->target)) 	// exit if the move has zero movement. At all.
-	return (STAT_OK);
+		return (STAT_OK);
 
 	_calc_move_times(gm_in, mm.position);			// set move time and minimum time in the state
 	if (gm_in->move_time < MIN_BLOCK_TIME) {
@@ -303,23 +279,23 @@ static void _calc_move_times(GCodeState_t *gms, const float position[])	// gms =
 
 /* _plan_block_list() - plans the entire block list
  *
- *	The block list is the circular buffer of planner buffers (bf's). The block currently 
- *	being planned is the "bf" block. The "first block" is the next block to execute; 
- *	queued immediately behind the currently executing block, aka the "running" block. 
- *	In some cases there is no first block because the list is empty or there is only 
- *	one block and it is already running. 
+ *	The block list is the circular buffer of planner buffers (bf's). The block currently
+ *	being planned is the "bf" block. The "first block" is the next block to execute;
+ *	queued immediately behind the currently executing block, aka the "running" block.
+ *	In some cases there is no first block because the list is empty or there is only
+ *	one block and it is already running.
  *
  *	If blocks following the first block are already optimally planned (non replannable)
  *	the first block that is not optimally planned becomes the effective first block.
  *
- *	_plan_block_list() plans all blocks between and including the (effective) first block 
- *	and the bf. It sets entry, exit and cruise V's from Vmax's then calls trapezoid generation. 
+ *	_plan_block_list() plans all blocks between and including the (effective) first block
+ *	and the bf. It sets entry, exit and cruise v's from vmax's then calls trapezoid generation.
  *
  *	Variables that must be provided in the mpBuffers that will be processed:
  *
  *	  bf (function arg)		- end of block list (last block in time)
  *	  bf->replannable		- start of block list set by last FALSE value [Note 1]
- *	  bf->move_type			- typically MOVE_TYPE_ALINE. Other move_types should be set to 
+ *	  bf->move_type			- typically MOVE_TYPE_ALINE. Other move_types should be set to
  *							  length=0, entry_vmax=0 and exit_vmax=0 and are treated
  *							  as a momentary stop (plan to zero and from zero).
  *
@@ -381,8 +357,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 	}
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
-	bp = mp_get_next_buffer(bp);
-	while (bp != bf) {
+	while ((bp = mp_get_next_buffer(bp)) != bf) {
 		if ((bp->pv == bf) || (*mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
 			*mr_flag = false;
@@ -395,33 +370,27 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								  bp->nx->braking_velocity,
 								 (bp->entry_velocity + bp->delta_vmax) );
 
-//		float old_entry_velocity = bp->entry_velocity;
 		mp_calculate_trapezoid(bp);
-//		_calc_jerk_values(bp);
-
-		// If we changed the entry velocity, we need to account for it...
-//		if (!fp_EQ(bp->entry_velocity, old_entry_velocity)) {
-//			bp->entry_vmax = bp->entry_velocity;
-//			bp = mp_get_prev_buffer(bp);
-//			continue;
-//		}
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
+/*
+		if ((bp->exit_velocity == bp->exit_vmax) || (bp->exit_velocity == bp->nx->entry_vmax) ||
+		   ((bp->pv->replannable == false) && (bp->exit_velocity == bp->entry_velocity + bp->delta_vmax))) {
+			bp->replannable = false;
+		}
+*/
 		if  ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
-				(fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) )  ||
+				(fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) ) ||
 			  ( (bp->pv->replannable == false) &&
 				(fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) ) ) {
 			bp->replannable = false;
 		}
-		bp = mp_get_next_buffer(bp);
 	}
-
 	// finish up the last block move
 	bp->entry_velocity = bp->pv->exit_velocity;
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
 	mp_calculate_trapezoid(bp);
-//	_calc_jerk_values(bp);
 }
 
 /*
@@ -430,7 +399,7 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 static void _reset_replannable_list()
 {
 	mpBuf_t *bf = mp_get_first_buffer();
-	if (bf == NULL) { return;}
+	if (bf == NULL) return;
 	mpBuf_t *bp = bf;
 	do {
 		bp->replannable = true;
@@ -586,8 +555,12 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 
 static float _compute_next_segment_velocity()
 {
-	if (mr.section == SECTION_BODY) { return (mr.segment_velocity);}
+	if (mr.section == SECTION_BODY) return (mr.segment_velocity);
+#ifdef __JERK_EXEC
+	return (mr.segment_velocity);	// an approximation
+#else
 	return (mr.segment_velocity + mr.forward_diff_5);
+#endif
 }
 
 stat_t mp_plan_hold_callback()
