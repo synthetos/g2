@@ -47,7 +47,6 @@ static stRunSingleton_t st_run;
 /**** Setup local functions ****/
 
 static void _load_move(void);
-//static uint8_t _runtime_isbusy(void);
 static void _request_load_move(void);
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
 
@@ -60,7 +59,7 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 using namespace Motate;
 
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
-OutputPin<kDebug1_PinNumber> dda_debug_pin1;
+OutputPin<kDebug1_PinNumber> dda_debug_pin1;	// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
 OutputPin<kDebug2_PinNumber> dda_debug_pin2;
 OutputPin<kDebug3_PinNumber> dda_debug_pin3;
 
@@ -393,7 +392,7 @@ static void _energize_motor(const uint8_t motor)
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
 #ifdef __ARM
-	// power_level must be scaled properly for the driver's Vref voltage requirements 
+	// power_level must be scaled properly for the driver's Vref voltage requirements
 	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
 	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
 	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
@@ -406,7 +405,6 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 void st_energize_motors()
 {
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-//		if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED)
 		_energize_motor(motor);
 		st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
 	}
@@ -470,18 +468,61 @@ stat_t st_motor_power_callback() 	// called by controller
 
 /***** Stepper Interrupt Service Routine ************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
- *
+ */
+
+#ifdef __AVR
+/*
+ *	Uses direct struct addresses and literal values for hardware devices - it's faster than 
+ *	using indexed timer and port accesses. I checked. Even when -0s or -03 is used.
+ */
+ISR(TIMER_DDA_ISR_vect)
+{
+	if ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
+		PORT_MOTOR_1_VPORT.OUT |= STEP_BIT_bm;		// turn step bit on
+		st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
+		INCREMENT_ENCODER(MOTOR_1);
+	}
+	if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
+		PORT_MOTOR_2_VPORT.OUT |= STEP_BIT_bm;
+		st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
+		INCREMENT_ENCODER(MOTOR_2);
+	}
+	if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
+		PORT_MOTOR_3_VPORT.OUT |= STEP_BIT_bm;
+		st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
+		INCREMENT_ENCODER(MOTOR_3);
+	}
+	if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
+		PORT_MOTOR_4_VPORT.OUT |= STEP_BIT_bm;
+		st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
+		INCREMENT_ENCODER(MOTOR_4);
+	}
+
+	// pulse stretching for using external drivers.- turn step bits off
+	PORT_MOTOR_1_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 5 uSec pulse width
+	PORT_MOTOR_2_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 4 uSec
+	PORT_MOTOR_3_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 3 uSec
+	PORT_MOTOR_4_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 2 uSec
+
+	if (--st_run.dda_ticks_downcount != 0) return;
+
+	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;				// disable DDA timer
+	_load_move();										// load the next move
+}
+#endif // __AVR
+
+#ifdef __ARM
+/*
  *	This interrupt is really 2 interrupts. It fires on timer overflow and also on match.
  *	Overflow interrupts are used to set step pins, match interrupts clear step pins.
  *	This way the duty cycle of the stepper pulse can be controlled by setting the match value.
  *
- *	Note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests. 
+ *	Note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests.
  *	If motor_N is not defined that if{} clause (i.e. that motor) drops out of the complied code.
  */
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
-//    dda_debug_pin1 = 1;
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
 
 	if (interrupt_cause == kInterruptOnOverflow) {
@@ -518,7 +559,6 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		}
 
 	} else if (interrupt_cause == kInterruptOnMatchA) {
-//		dda_debug_pin2 = 1;
 		motor_1.step.clear();							// turn step bits off
 		motor_2.step.clear();
 		motor_3.step.clear();
@@ -531,11 +571,11 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		// process end of segment
 		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
 		_load_move();									// load the next move at the current interrupt level
-//		dda_debug_pin2 = 0;
 	}
-//    dda_debug_pin1 = 0;
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
+
+#endif // __ARM
 
 /***** Dwell Interrupt Service Routine **************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
@@ -673,6 +713,7 @@ namespace Motate {	// Define timer inside Motate namespace
  *	 - If axis has 0 steps the direction setting can be omitted
  *	 - If axis has 0 steps the motor must not be enabled to support power mode = 1
  */
+/****** WARNING - THIS CODE IS SPECIFIC TO ARM. SEE TINYG FOR AVR CODE ******/
 
 static void _load_move()
 {
@@ -850,7 +891,6 @@ static void _load_move()
 	st_pre.move_type = MOVE_TYPE_NULL;
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;	// we are done with the prep buffer - flip the flag back
 	st_request_exec_move();								// exec and prep next move
-//dda_debug_pin1 = 0;
 }
 
 /***********************************************************************************
@@ -977,7 +1017,7 @@ void st_prep_command(void *bf)
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
 }
 
-/* 
+/*
  * st_prep_dwell() 	 - Add a dwell to the move buffer
  */
 
