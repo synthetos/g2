@@ -478,16 +478,17 @@ stat_t cm_test_soft_limits(float target[])
 /*
  * canonical_machine_init() - Config init cfg_init() must have been run beforehand
  */
+
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-//	memset(&cm, 0, sizeof(cm));				// do not reset canonicalMachineSingleton once it's been initialized
-	memset(&cm.gm, 0, sizeof(GCodeState_t));// clear all values, pointers and status
+//	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
+	memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
 	memset(&cm.gn, 0, sizeof(GCodeInput_t));
 	memset(&cm.gf, 0, sizeof(GCodeInput_t));
 
-	canonical_machine_init_assertions();	// establish assertions
-	ACTIVE_MODEL = MODEL;					// setup initial Gcode model pointer
+	canonical_machine_init_assertions();		// establish assertions
+	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
 
 	// set gcode defaults
 	cm_set_units_mode(cm.units_mode);
@@ -495,7 +496,7 @@ void canonical_machine_init()
 	cm_select_plane(cm.select_plane);
 	cm_set_path_control(cm.path_control);
 	cm_set_distance_mode(cm.distance_mode);
-	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// always the default
+	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
 
 	cm.gmx.block_delete_switch = true;
 
@@ -960,7 +961,7 @@ stat_t cm_select_tool(uint8_t tool_select)
 static void _exec_select_tool(float *value, float *flag)
 {
 	cm.gm.tool_select = (uint8_t)value[0];
-  //printf("{\"tool\":%i}\n", cm.gm.tool_select);
+//	printf("{\"tool\":%i}\n", cm.gm.tool_select);
 }
 
 stat_t cm_change_tool(uint8_t tool_change)
@@ -1072,7 +1073,7 @@ stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 {
 	cm.gmx.feed_rate_override_enable = flag;
 	cm.gmx.feed_rate_override_factor = cm.gn.parameter;
-//	mp_feed_rate_override(flag, cm.gn.parameter);		// replan the queue for new feed rate
+//	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
 	return (STAT_OK);
 }
 
@@ -1090,11 +1091,11 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 {
 	cm.gmx.traverse_override_enable = flag;
 	cm.gmx.traverse_override_factor = cm.gn.parameter;
-//	mp_feed_rate_override(flag, cm.gn.parameter);		// replan the queue for new feed rate
+//	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
 	return (STAT_OK);
 }
 
-stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
+stat_t cm_spindle_override_enable(uint8_t flag)		// M51.1
 {
 	if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
 		cm.gmx.spindle_override_enable = false;
@@ -1104,7 +1105,7 @@ stat_t cm_spindle_override_enable(uint8_t flag)	// M51.1
 	return (STAT_OK);
 }
 
-stat_t cm_spindle_override_factor(uint8_t flag)	// M50.1
+stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 {
 	cm.gmx.spindle_override_enable = flag;
 	cm.gmx.spindle_override_factor = cm.gn.parameter;
@@ -1213,32 +1214,21 @@ stat_t cm_feedhold_sequencing_callback()
 stat_t cm_queue_flush()
 {
 // NOTE: Although the following trap is technically correct it breaks OMC-style jogging, which
-//		 issues !%~ in rapid succession. So it's commented out for now. THe correct way to handle this
-//		 is to queue the % queue flush until after the feedhold stops, and queue the ~ cycle start
-//		 until after that.
+//		 issues !%~ in rapid succession. So it's commented out for now. The correct way to handle
+//		 this in the tinyg code is to queue the % queue flush until after the feedhold stops,
+//		 and queue the ~ cycle start until after that.
 //	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
 
 #ifdef __AVR
-	xio_reset_usb_rx_buffers();		// flush serial queues
+	xio_reset_usb_rx_buffers();				// flush serial queues
 #endif
+	mp_flush_planner();						// flush planner queue
 
-	mp_flush_planner();				// flush planner queue
-
-	// Note: The following uses low-level mp calls for absolute position.
-	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
-//++++ testing
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
-/* ++++ original code
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		mp_set_planner_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
-		cm.gmx.position[axis] = mp_get_runtime_absolute_position(axis);
-		cm.gm.target[axis] = cm.gmx.position[axis];
-	}
-*/
 	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);			// finalize now, not later
+	_exec_program_finalize(value, value);	// finalize now, not later
 	return (STAT_OK);
 }
 
@@ -1296,7 +1286,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_set_coord_system(cm.coord_system);		// reset to default coordinate system
 		cm_select_plane(cm.select_plane);			// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
-		cm_set_units_mode(cm.units_mode);			// reset to default units mode
+//++++	cm_set_units_mode(cm.units_mode);			// reset to default units mode +++ REMOVED +++
 		cm_spindle_control(SPINDLE_OFF);			// M5
 		cm_flood_coolant_control(false);			// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// G94
@@ -1324,13 +1314,13 @@ void cm_cycle_end()
 	}
 }
 
-void cm_program_stop() 
+void cm_program_stop()
 { 
 	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 	mp_queue_command(_exec_program_finalize, value, value);
 }
 
-void cm_optional_program_stop()	
+void cm_optional_program_stop()
 { 
 	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 	mp_queue_command(_exec_program_finalize, value, value);
@@ -1481,10 +1471,9 @@ static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 #endif // __TEXT_MODE
 
 /***** AXIS HELPERS *****************************************************************
- *
- * cm_get_axis_char()	- return ASCII char for axis given the axis number
- * _get_axis()		- return axis number or -1 if NA
- * _get_axis_type()	- return 0 -f axis is linear, 1 if rotary, -1 if NA
+ * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * _get_axis()		  - return axis number or -1 if NA
+ * _get_axis_type()	  - return 0 -f axis is linear, 1 if rotary, -1 if NA
  */
 
 char_t cm_get_axis_char(const int8_t axis)

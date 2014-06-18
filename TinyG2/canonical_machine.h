@@ -246,8 +246,6 @@ typedef struct cmSingleton {		// struct to manage cm globals and cycles
     uint8_t probe_state;            // 1==success, 0==failed
     float   probe_results[AXES];    // probing results
 
-	uint8_t set_origin_state;		// used to control set_origin cycles
-
 	uint8_t	g28_flag;				// true = complete a G28 move
 	uint8_t	g30_flag;				// true = complete a G30 move
 	uint8_t g10_persist_flag;		// G10 changed offsets - persist them
@@ -333,8 +331,7 @@ enum cmCycleState {
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// homing is treated as a specialized cycle
-	CYCLE_JOG,						// jogging is treated as a specialized cycle
-	CYCLE_SET_ORIGIN				// set origin to new coordinates
+	CYCLE_JOG						// jogging is treated as a specialized cycle
 };
 
 enum cmMotionState {
@@ -363,13 +360,7 @@ enum cmProbeState {					// applies to cm.probe_state
 	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
 };
-/*
-enum cmSetOriginState {				// applies to cm.set_origin_state
-	SET_ORIGIN_OFF = 0,
-	SET_ORIGIN_SUCCEEDED = 1,		// end state
-	SET_ORIGIN_WAITING				// waiting for planner to drain
-};
-*/
+
 /* The difference between NextAction and MotionMode is that NextAction is 
  * used by the current block, and may carry non-modal commands, whereas 
  * MotionMode persists across blocks (as G modal group 1)
@@ -457,8 +448,8 @@ enum cmCoordSystem {
 #define COORD_SYSTEM_MAX G59		// set this manually to the last one
 
 enum cmPathControlMode {			// G Modal Group 13
-	PATH_EXACT_PATH = 0,			// G61
-	PATH_EXACT_STOP,				// G61.1
+	PATH_EXACT_PATH = 0,			// G61 - hits corners but does not stop if it does not need to.
+	PATH_EXACT_STOP,				// G61.1 - stops at all corners
 	PATH_CONTINUOUS					// G64 and typically the default mode
 };
 
@@ -604,7 +595,7 @@ stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(float target[], float flags[]);			// G1
-stat_t cm_arc_feed(float target[], float flags[], 				// G2, G3
+stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
 					float i, float j, float k,
 					float radius, uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
@@ -661,7 +652,7 @@ stat_t cm_jogging_callback(void);								// jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
 float cm_get_jogging_dest(void);
 
-/*--- nvArray interface functions ---*/
+/*--- cfgArray interface functions ---*/
 
 char_t cm_get_axis_char(const int8_t axis);
 
@@ -681,24 +672,24 @@ stat_t cm_get_path(nvObj_t *nv);		// get patch control mode...
 stat_t cm_get_dist(nvObj_t *nv);		// get distance mode...
 stat_t cm_get_frmo(nvObj_t *nv);		// get feedrate mode...
 stat_t cm_get_toolv(nvObj_t *nv);		// get tool (value)
-stat_t cm_get_vel(nvObj_t *nv);		// get runtime velocity...
-stat_t cm_get_pos(nvObj_t *nv);		// get runtime work position...
-stat_t cm_get_mpo(nvObj_t *nv);		// get runtime machine position...
-stat_t cm_get_ofs(nvObj_t *nv);		// get runtime work offset...
+stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
+stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
+stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
+stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
 
-stat_t cm_run_qf(nvObj_t *nv);		// run queue flush
+stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
 
-stat_t cm_dam(nvObj_t *nv);			// dump active model (debugging command)
+stat_t cm_dam(nvObj_t *nv);				// dump active model (debugging command)
 
 stat_t cm_run_jogx(nvObj_t *nv);		// start jogging cycle for x
 stat_t cm_run_jogy(nvObj_t *nv);		// start jogging cycle for y
 stat_t cm_run_jogz(nvObj_t *nv);		// start jogging cycle for z
 stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
-stat_t cm_get_am(nvObj_t *nv);		// get axis mode
-stat_t cm_set_am(nvObj_t *nv);		// set axis mode
-stat_t cm_set_jrk(nvObj_t *nv);		// set jerk with 1,000,000 correction
+stat_t cm_get_am(nvObj_t *nv);			// get axis mode
+stat_t cm_set_am(nvObj_t *nv);			// set axis mode
+stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 
 /*--- text_mode support functions ---*/
 
