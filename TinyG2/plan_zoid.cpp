@@ -1,4 +1,4 @@
- /*
+/*
  * plan_zoid.c - acceleration managed line planning and motion execution - trapezoid planner
  * This file is part of the TinyG project
  *
@@ -29,6 +29,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "planner.h"
+#include "report.h"
 #include "util.h"
 
 #ifdef __cplusplus
@@ -48,10 +49,10 @@ extern "C"{
  *	(Note: sections, not moves) so we can compute entry and exits for adjacent sections.
  *
  *	Inputs used are:
- *	  bf->length			- actual block length (must remain accurate)
- *	  bf->entry_velocity	- requested Ve
- *	  bf->cruise_velocity	- requested Vt
- *	  bf->exit_velocity		- requested Vx
+ *	  bf->length			- actual block length	(length is never changed)
+ *	  bf->entry_velocity	- requested Ve			(entry velocity is never changed)
+ *	  bf->cruise_velocity	- requested Vt			(is often changed)
+ *	  bf->exit_velocity		- requested Vx			(may be changed for degenerate cases)
  *	  bf->cruise_vmax		- used in some comparisons
  *	  bf->delta_vmax		- used to degrade velocity of pathologically short blocks
  *
@@ -113,7 +114,7 @@ extern "C"{
  *		F	<too short>	force fit: This block is slowed down until it can be executed
  */
 /*	NOTE: The order of the cases/tests in the code is pretty important. Start with the 
- *	  shortest cases first and work up. Not only does this simplfy the order of the tests,
+ *	  shortest cases first and work up. Not only does this simplify the order of the tests,
  *	  but it reduces execution time when you need it most - when tons of pathologically
  *	  short Gcode blocks are being thrown at you.
  */
@@ -127,31 +128,49 @@ extern "C"{
 
 void mp_calculate_trapezoid(mpBuf_t *bf)
 {
-	//********************************************************
-	//********************************************************
-	//**      THE FIRST RULE OF _calculate_trapezoid():     **
-	//**             DON'T CHANGE bf->length                **
-	//********************************************************
-	//********************************************************
+	//********************************************
+	//********************************************
+	//**   RULE #1 of mp_calculate_trapezoid()  **
+	//**        DON'T CHANGE bf->length         **
+	//********************************************
+	//********************************************
 
-	// B" case: Block is short - fits into a single body segment
 	// F case: Block is too short - run time < minimum segment time
-	
 	// Force block into a single segment body with limited velocities
 	// Accept the entry velocity, limit the cruise, and go for the best exit velocity
 	// you can get given the delta_vmax (maximum velocity slew) supportable.
 
-	float naiive_move_time = bf->length / bf->cruise_velocity;
-	if (naiive_move_time <= NOM_SEGMENT_TIME) {					// NOM_SEGMENT_TIME > B" case > MIN_SEGMENT_TIME_PLUS_MARGIN
-		if (naiive_move_time < MIN_SEGMENT_TIME_PLUS_MARGIN) {	// MIN_SEGMENT_TIME_PLUS_MARGIN > F case 
-			naiive_move_time = MIN_SEGMENT_TIME_PLUS_MARGIN;
-		}
-		bf->cruise_velocity = bf->length / naiive_move_time;
+	bf->naiive_move_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); // average
+
+	if (bf->naiive_move_time < MIN_SEGMENT_TIME_PLUS_MARGIN) {
+		bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
 		bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
 		bf->body_length = bf->length;
 		bf->head_length = 0;
 		bf->tail_length = 0;
 		// We are violating the jerk value but since it's a single segment move we don't use it.
+//		printf("F'%1.0f ", (double)(bf->naiive_move_time * 60000000));
+		return;
+	}
+
+	// B" case: Block is short, but fits into a single body segment
+
+	if (bf->naiive_move_time <= NOM_SEGMENT_TIME) {
+		bf->entry_velocity = bf->pv->exit_velocity;
+		if (fp_NOT_ZERO(bf->entry_velocity)) {
+			bf->cruise_velocity = bf->entry_velocity;
+			bf->exit_velocity = bf->entry_velocity;
+		} else {
+			bf->cruise_velocity = bf->delta_vmax / 2;
+			bf->exit_velocity = bf->delta_vmax;
+		}
+		bf->body_length = bf->length;
+		bf->head_length = 0;
+		bf->tail_length = 0;
+		// We are violating the jerk value but since it's a single segment move we don't use it.
+//		printf("B\"%1.0f ", (double)(bf->naiive_move_time * 60000000));
+//		printf("B\"%1.0f e:%1.1f c:%1.1f x:%1.1f\n", (double)(bf->naiive_move_time * 60000000),
+//			(double)bf->entry_velocity, (double)bf->cruise_velocity, (double)bf->exit_velocity);
 		return;
 	}
 
@@ -330,7 +349,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
 {
-	return (Vi + Vf) * sqrt(fabs(Vf - Vi) * bf->recip_jerk);
+//	return (Vi + Vf) * sqrt(fabs(Vf - Vi) * bf->recip_jerk);		// new formula
+	return (fabs(Vi-Vf) * sqrt(fabs(Vi-Vf) * bf->recip_jerk));		// old formula
 }
 
 /* Regarding mp_get_target_velocity:
@@ -377,7 +397,7 @@ float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
  *  J'(x) = (2*Vi*x - Vi² + 3*x²) / L²
  */
 
-#define GET_VELOCITY_ITERATIONS 2		// must be 0, 1, or 2
+#define GET_VELOCITY_ITERATIONS 0		// must be 0, 1, or 2
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 {
     // 0 iterations (a reasonable estimate)
@@ -398,80 +418,7 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
     estimate = estimate - J_z/J_d;
 #endif
     return estimate;
-
-/*
-    // 0 iterations (a reasonable estimate)
-    float estimate = pow(L, 0.66666666) * bf->cbrt_jerk + Vi;
-
-	// 1st iteration
-    float L_squared = pow(L,2);
-    float Vi_squared = pow(Vi,2);
-    float J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
-    float J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
-    estimate = estimate - J_z/J_d;
-
-	// 2nd iteration
-    J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
-    J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
-    estimate = estimate - J_z/J_d;
-
-    return estimate;
-*/
-
-/*
-#if false
-    float L_squared = pow(L,2);
-    float Vi_squared = pow(Vi,2);
-
-    float previous_estimate = 0;
-    int8_t i = 10; // Only allow it to iterate 10 times
-    do {
-        previous_estimate = estimate;
-        float J_z = ((estimate - Vi)*pow((Vi + estimate),2)) / L_squared - bf->jerk;
-        float J_d = (2*Vi*estimate - Vi_squared + 3*pow(estimate,2)) / L_squared;
-        estimate = estimate - J_z/J_d;
-    } while (i-- != 0 && !fp_EQ(previous_estimate, estimate));
-#endif
-
-    return estimate;
-*/
 }
-
-// NOTE: ALTERNATE FORMULATION OF ABOVE...
-
-/*	
- * mp_get_target_velocity() - derive velocity achievable from initial V, length and jerk
- *
- *	This set of functions returns the fourth thing knowing the other three.
- *	
- * 	  Jm = the given maximum jerk
- *	  T  = time of the entire move
- *	  T  = 2*sqrt((Vf-Vi)/Jm)
- *	  As = The acceleration at inflection point between convex and concave portions of the S-curve.
- *	  As = (Jm*T)/2
- *    Ar = ramp acceleration
- *	  Ar = As/2 = (Jm*T)/4
- *	
- * 	mp_get_target_velocity() is a convenient function for determining Vf target 
- *	velocity for a given the initial velocity (Vi), length (L), and maximum jerk (Jm).
- *	Solving equation c) for Vf gives d)
- *
- *	 d) 1/3*((3*sqrt(3)*sqrt(27*Jm^2*L^4+32*Jm*L^2*Vi^3)+27*Jm*L^2+16*Vi^3)^(1/3)/2^(1/3) + 
- *      (4*2^(1/3)*Vi^2)/(3*sqrt(3)*sqrt(27*Jm^2*L^4+32*Jm*L^2*Vi^3)+27*Jm*L^2+16*Vi^3)^(1/3) - Vi)
- *
- *  FYI: Here's an expression that returns the jerk for a given deltaV (Vf-Vi) and L:
- * 	return(cube(deltaV / (pow(L, 0.66666666))));
- */
- /*
-float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
-{
-	float JmL2 = bf->jerk*square(L);
-	float Vi2 = square(Vi);
-	float Vi3x16 = 16*Vi*Vi2;
-	float Ia = cbrt(3*sqrt(3) * sqrt(27*square(JmL2) + (2*JmL2*Vi3x16)) + 27*JmL2 + Vi3x16);
-	return ((Ia/cbrt(2) + 4*cbrt(2)*Vi2/Ia - Vi)/3);
-}
-*/
 
 #ifdef __cplusplus
 }

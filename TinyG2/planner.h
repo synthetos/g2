@@ -305,7 +305,7 @@ stat_t mp_runtime_command(mpBuf_t *bf);
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 
-stat_t mp_aline(const GCodeState_t *gm_in);
+stat_t mp_aline(GCodeState_t *gm_in);
 
 stat_t mp_plan_hold_callback(void);
 stat_t mp_end_hold(void);

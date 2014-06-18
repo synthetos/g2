@@ -346,8 +346,8 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
  * Core functions supporting the canonical machining functions
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
-/* 
- * cm_update_model_position() - set endpoint position; uses internal canonical coordinates only
+/*
+ * cm_finalize_move() - perform final operations for a traverse or feed
  * cm_update_model_position_from_runtime() - set endpoint position from final runtime position
  *
  * 	These routines set the point position in the gcode model.
@@ -358,7 +358,15 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
  *	execution, and the real tool position is still close to the starting point. 
  */
 
-void cm_update_model_position() { copy_vector(cm.gmx.position, cm.gm.target); }
+void cm_finalize_move() {
+	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
+
+	// if in ivnerse time mode reset feed rate so next block requires an explicit feed rate setting
+	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
+		cm.gm.feed_rate = 0;
+	}
+}
+
 void cm_update_model_position_from_runtime() { copy_vector(cm.gmx.position, mr.gm.target); }
 
 /* 
@@ -423,108 +431,6 @@ void cm_set_model_target(float target[], float flag[])
 			cm.gm.target[axis] += tmp;
 		}
 	}
-}
-
-/*
- * cm_set_move_times() - capture optimal and minimum move times into the gcode_state
- *
- *	"Minimum time" is the fastest the move can be performed given the velocity constraints 
- *	on each participating axis - regardless of the feed rate requested. The minimum time is 
- *	the time limited by the rate-limiting axis. The minimum time is needed to compute the 
- *	optimal time and is recorded for possible feed override computation..
- *
- *	"Optimal time" is either the time resulting from the requested feed rate or the minimum 
- *	time if the requested feed rate is not achievable. Optimal times for traverses are always 
- *	the minimum time.
- *
- *	Axis modes are taken into account by having cm_set_target() load the targets before 
- *	calling this function.
- *
- *	The following times are compared and the longest is returned:
- *	  -	G93 inverse time (if G93 is active)
- *	  -	time for coordinated move at requested feed rate
- *	  -	time that the slowest axis would require for the move
- *
- *	Sets the following variables in the gcode_state struct
- *	  - move_time is set to optimal time
- *	  - minimum_time is set to minimum time
- */
-/* --- NIST RS274NGC_v3 Guidance ---
- *
- *	The following is verbatim text from NIST RS274NGC_v3. As I interpret A for moves that 
- *	combine both linear and rotational movement, the feed rate should apply to the XYZ 
- *	movement, with the rotational axis (or axes) timed to start and end at the same time 
- *	the linear move is performed. It is possible under this case for the rotational move 
- *	to rate-limit the linear move.
- *
- * 	2.1.2.5 Feed Rate
- *
- *	The rate at which the controlled point or the axes move is nominally a steady rate 
- *	which may be set by the user. In the Interpreter, the interpretation of the feed 
- *	rate is as follows unless inverse time feed rate mode is being used in the 
- *	RS274/NGC view (see Section 3.5.19). The canonical machining functions view of feed 
- *	rate, as described in Section 4.3.5.1, has conditions under which the set feed rate 
- *	is applied differently, but none of these is used in the Interpreter.
- *
- *	A. 	For motion involving one or more of the X, Y, and Z axes (with or without 
- *		simultaneous rotational axis motion), the feed rate means length units per
- *		minute along the programmed XYZ path, as if the rotational axes were not moving.
- *
- *	B.	For motion of one rotational axis with X, Y, and Z axes not moving, the 
- *		feed rate means degrees per minute rotation of the rotational axis.
- *
- *	C.	For motion of two or three rotational axes with X, Y, and Z axes not moving, 
- *		the rate is applied as follows. Let dA, dB, and dC be the angles in degrees 
- *		through which the A, B, and C axes, respectively, must move. 
- *		Let D = sqrt(dA^2 + dB^2 + dC^2). Conceptually, D is a measure of total 
- *		angular motion, using the usual Euclidean metric. Let T be the amount of 
- *		time required to move through D degrees at the current feed rate in degrees 
- *		per minute. The rotational axes should be moved in coordinated linear motion 
- *		so that the elapsed time from the start to the end of the motion is T plus 
- *		any time required for acceleration or deceleration.
- */
-
-void cm_set_move_times(GCodeState_t *gcode_state)
-{
-	float inv_time=0;					// inverse time if doing a feed in G93 mode
-	float xyz_time=0;					// coordinated move linear part at req feed rate
-	float abc_time=0;					// coordinated move rotary part at req feed rate
-	float max_time=0;					// time required for the rate-limiting axis
-	float tmp_time=0;					// used in computation
-	gcode_state->minimum_time = 8675309;// arbitrarily large number
-
-    float *planner_position = mp_get_planner_position_vector();
-
-	// compute times for feed motion
-	if (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) {
-		if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-			inv_time = cm.gm.feed_rate;	// feed rate has been normalized to minutes
-			cm.gm.feed_rate = 0;		// reset feed rate so next block requires an explicit feed rate setting
-			cm.gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
-		} else {
-			xyz_time = sqrt(square(cm.gm.target[AXIS_X] - planner_position[AXIS_X]) + // in mm
-							square(cm.gm.target[AXIS_Y] - planner_position[AXIS_Y]) +
-							square(cm.gm.target[AXIS_Z] - planner_position[AXIS_Z])) / cm.gm.feed_rate; // in linear units
-			if (fp_ZERO(xyz_time)) {
-				abc_time = sqrt(square(cm.gm.target[AXIS_A] - planner_position[AXIS_A]) + // in deg
-								square(cm.gm.target[AXIS_B] - planner_position[AXIS_B]) +
-								square(cm.gm.target[AXIS_C] - planner_position[AXIS_C])) / cm.gm.feed_rate; // in degree units
-			}
-		}
-	}
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) {
-			tmp_time = fabs(cm.gm.target[axis] - planner_position[axis]) / cm.a[axis].feedrate_max;
-		} else { // cm.gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE
-			tmp_time = fabs(cm.gm.target[axis] - planner_position[axis]) / cm.a[axis].velocity_max;
-		}
-		max_time = max(max_time, tmp_time);
-		// collect minimum time if not zero
-		if (tmp_time > 0) {
-			gcode_state->minimum_time = min(gcode_state->minimum_time, tmp_time);
-		}
-	}
-	gcode_state->move_time = max4(inv_time, max_time, xyz_time, abc_time);
 }
 
 /* 
@@ -892,7 +798,6 @@ stat_t cm_straight_traverse(float target[], float flags[])
 {
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target, flags);
-//	if (vector_equal(cm.gm.target, cm.gmx.position)) return (STAT_OK);
 
 	// test soft limits
 	stat_t status = cm_test_soft_limits(cm.gm.target);
@@ -900,10 +805,9 @@ stat_t cm_straight_traverse(float target[], float flags[])
 
 	// prep and plan the move
 	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
-	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
 	mp_aline(&cm.gm);							// send the move to the planner
-	cm_update_model_position();
+	cm_finalize_move();
 	return (STAT_OK);
 }
 
@@ -1013,7 +917,6 @@ stat_t cm_straight_feed(float target[], float flags[])
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
 		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
-
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 	cm_set_model_target(target, flags);
 
@@ -1023,10 +926,9 @@ stat_t cm_straight_feed(float target[], float flags[])
 
 	// prep and plan the move
 	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
-	cm_set_move_times(&cm.gm);					// set move time and minimum time in the state
 	cm_cycle_start();							// required for homing & other cycles
 	status = mp_aline(&cm.gm);					// send the move to the planner
-	cm_update_model_position();
+	cm_finalize_move();
 	return (status);
 }
 
