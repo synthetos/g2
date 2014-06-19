@@ -14,6 +14,8 @@
 		D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */; };
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
 		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
+		D41EF714194D6B0D001EA37B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D41EF712194D6B0D001EA37B /* startup_sam3xa.c */; };
+		D41EF715194D6B0D001EA37B /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D41EF713194D6B0D001EA37B /* system_sam3xa.c */; };
 		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
 		D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43CAF9C187BABDB0042B58F /* SamPins.cpp */; };
 		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
@@ -418,6 +420,8 @@
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
 		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
+		D41EF712194D6B0D001EA37B /* startup_sam3xa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = startup_sam3xa.c; sourceTree = "<group>"; };
+		D41EF713194D6B0D001EA37B /* system_sam3xa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = system_sam3xa.c; sourceTree = "<group>"; };
 		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
 		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
 		D43CAF9C187BABDB0042B58F /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
@@ -3278,6 +3282,15 @@
 			path = settings;
 			sourceTree = "<group>";
 		};
+		D41EF711194D6B0D001EA37B /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D41EF712194D6B0D001EA37B /* startup_sam3xa.c */,
+				D41EF713194D6B0D001EA37B /* system_sam3xa.c */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
 		D45710B7170532AC00EA19A8 = {
 			isa = PBXGroup;
 			children = (
@@ -3378,6 +3391,7 @@
 		D49EB8A917054FD500F2BF9B /* CMSIS */ = {
 			isa = PBXGroup;
 			children = (
+				D41EF711194D6B0D001EA37B /* src */,
 				D49EB8AA17054FD500F2BF9B /* CMSIS */,
 				D49EBE1F17054FDC00F2BF9B /* Device */,
 			);
@@ -7827,6 +7841,7 @@
 				D49EC4EC17054FDF00F2BF9B /* arm_conv_q15.c in Sources */,
 				D49EC4ED17054FDF00F2BF9B /* arm_conv_q31.c in Sources */,
 				D49EC4EE17054FDF00F2BF9B /* arm_conv_q7.c in Sources */,
+				D41EF715194D6B0D001EA37B /* system_sam3xa.c in Sources */,
 				D49EC4EF17054FDF00F2BF9B /* arm_correlate_f32.c in Sources */,
 				D49EC4F017054FDF00F2BF9B /* arm_correlate_fast_q15.c in Sources */,
 				D49EC4F117054FDF00F2BF9B /* arm_correlate_fast_q31.c in Sources */,
@@ -7835,6 +7850,7 @@
 				D49EC4F417054FDF00F2BF9B /* arm_correlate_q7.c in Sources */,
 				D49EC4F517054FDF00F2BF9B /* arm_fir_decimate_f32.c in Sources */,
 				D49EC4F617054FDF00F2BF9B /* arm_fir_decimate_fast_q15.c in Sources */,
+				D41EF714194D6B0D001EA37B /* startup_sam3xa.c in Sources */,
 				D49EC4F717054FDF00F2BF9B /* arm_fir_decimate_fast_q31.c in Sources */,
 				D49EC4F817054FDF00F2BF9B /* arm_fir_decimate_init_f32.c in Sources */,
 				D49EC4F917054FDF00F2BF9B /* arm_fir_decimate_init_q15.c in Sources */,
