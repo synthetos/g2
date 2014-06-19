@@ -80,7 +80,7 @@ stat_t hardware_hard_reset_handler(void);
  * controller_init() - controller init
  */
 
-void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
+void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
 	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
 	controller_init_assertions();
@@ -207,6 +207,29 @@ static void _controller_HSM()
 
 static stat_t _command_dispatch()
 {
+#ifdef __AVR
+	stat_t status;
+
+	// read input line or return if not a completed line
+	// xio_gets() is a non-blocking workalike of fgets()
+	while (true) {
+		if ((status = xio_gets(cs.primary_src, cs.in_buf, sizeof(cs.in_buf))) == STAT_OK) {
+			cs.bufp = cs.in_buf;
+			break;
+		}
+		// handle end-of-file from file devices
+		if (status == STAT_EOF) {						// EOF can come from file devices only
+			if (cfg.comm_mode == TEXT_MODE) {
+				fprintf_P(stderr, PSTR("End of command file\n"));
+			} else {
+				rpt_exception(STAT_EOF);				// not really an exception
+			}
+			tg_reset_source();							// reset to default source
+		}
+		return (status);								// Note: STAT_EAGAIN, errors, etc. will drop through
+	}
+#endif // __AVR
+#ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
@@ -223,21 +246,19 @@ static stat_t _command_dispatch()
 		cs.state = CONTROLLER_STARTUP;
 
 	} else if (cs.state == CONTROLLER_STARTUP) {		// run startup code
-//		strcpy(cs.in_buf, "$x");
-//		strcpy(cs.in_buf, "g1f400x100");
-//		strcpy(cs.in_buf, "?");
-//		cs.bufp = cs.in_buf;
 		cs.state = CONTROLLER_READY;
 
 	} else {
 		return (STAT_OK);
 	}
-	
-	// dispatch the new text line
+	cs.read_index = 0;
+#endif // __ARM
+
+	// set up the buffers
 	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
-	cs.read_index = 0;
 
+	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char
 
 		case '!': { cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial

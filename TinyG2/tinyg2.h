@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		046.10 // align with feature-410.06-base - config files
+#define TINYG_FIRMWARE_BUILD   		046.11 // align with feature-410.06-base - controller.c(pp)
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
