@@ -346,7 +346,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jrk,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
 #endif
 
-
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, set_flt,(float *)&pwm.c[PWM_1].frequency,		P1_PWM_FREQUENCY },
 	{ "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, set_flt,(float *)&pwm.c[PWM_1].cw_speed_lo,	P1_CW_SPEED_LO },
@@ -470,14 +469,14 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.units_mode,	GCODE_DEFAULT_UNITS },
 	{ "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.coord_system,	GCODE_DEFAULT_COORD_SYSTEM },
 	{ "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm.path_control,	GCODE_DEFAULT_PATH_CONTROL },
-	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.distance_mode,	GCODE_DEFAULT_DISTANCE_MODE },
+	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.distance_mode,GCODE_DEFAULT_DISTANCE_MODE },
 	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc, gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// "hidden" parameters (not in system group)
-//	{ "",   "ms",  _fip,  0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,	NOM_SEGMENT_USEC },
+//	{ "",   "ms",  _fip,  0, cm_print_ms,  get_flt, set_flt, (float *)&cm.estd_segment_usec,NOM_SEGMENT_USEC },
 	{ "",   "ml",  _fipc, 4, cm_print_ml,  get_flt, set_flu, (float *)&cm.min_segment_len,	MIN_LINE_LENGTH },
 	{ "",   "ma",  _fipc, 4, cm_print_ma,  get_flt, set_flu, (float *)&cm.arc_segment_len,	ARC_SEGMENT_LENGTH },
-	{ "",   "fd",  _fip,  0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
+	{ "",   "fd",  _fip,  0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,JSON_FOOTER_DEPTH },
 
 	// User defined data groups
 	{ "uda","uda0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
@@ -712,7 +711,7 @@ uint8_t nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GRO
  *	- all			- group of all groups
  *
  * _do_group_list()	- get and print all groups in the list (iteration)
- * _do_motors()		- get and print motor uber group 1-6
+ * _do_motors()		- get and print motor uber group 1-N
  * _do_axes()		- get and print axis uber group XYZABC
  * _do_offsets()	- get and print offset uber group G54-G59, G28, G30, G92
  * _do_all()		- get and print all groups uber group
@@ -722,7 +721,7 @@ static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to
 {
 	for (uint8_t i=0; i < NV_MAX_OBJECTS; i++) {
 		if (list[i][0] == NUL) { return (STAT_COMPLETE);}
-		nv_reset_nvObj_list();
+		nv_reset_nv_list();
 		nv = nv_body;
 		strncpy(nv->token, list[i], TOKEN_LEN);
 		nv->index = nv_get_index((const char_t *)"", nv->token);
@@ -735,8 +734,21 @@ static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to
 
 static stat_t _do_motors(nvObj_t *nv)	// print parameters for all motor groups
 {
+#if MOTORS == 2
+	char list[][TOKEN_LEN+1] = {"1","2",""}; // must have a terminating element
+#endif
+#if MOTORS == 3
+	char list[][TOKEN_LEN+1] = {"1","2","3",""}; // must have a terminating element
+#endif
+#if MOTORS == 4
+	char list[][TOKEN_LEN+1] = {"1","2","3","4",""}; // must have a terminating element
+#endif
+#if MOTORS == 5
+	char list[][TOKEN_LEN+1] = {"1","2","3","4","5",""}; // must have a terminating element
+#endif
+#if MOTORS == 6
 	char list[][TOKEN_LEN+1] = {"1","2","3","4","5","6",""}; // must have a terminating element
-//	char list[][TOKEN_LEN+1] = {"1","2","3","4",""}; // must have a terminating element
+#endif
 	return (_do_group_list(nv, list));
 }
 

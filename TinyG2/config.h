@@ -115,7 +115,7 @@ extern "C"{
  *	The first element of the list is designated the response header element ("r") but the list 
  *	can also be serialized as a simple object by skipping over the header
  *
- *	To use the nvObj list first reset it by calling nv_reset_nvObj_list(). This initializes the 
+ *	To use the nvObj list first reset it by calling nv_reset_nv_list(). This initializes the 
  *	header, marks the the objects as TYPE_EMPTY (-1), resets the shared string, relinks all objects 
  *	with NX and PV pointers, and makes the last element the terminating element by setting its NX 
  *	pointer to NULL. The terminating element may carry data, and will be processed.
@@ -125,7 +125,7 @@ extern "C"{
  * 
  * 	We don't use recursion so parent/child nesting relationships are captured in a 'depth' variable, 
  *	This must remain consistent if the curlies are to work out. You should not have to track depth 
- *	explicitly if you use nv_reset_nvObj_list() or the accessor functions like nv_add_integer() or 
+ *	explicitly if you use nv_reset_nv_list() or the accessor functions like nv_add_integer() or 
  *	nv_add_message(). If you see problems with curlies check the depth values in the lists.
  *
  *	Use the nv_print_list() dispatcher for all JSON and text output. Do not simply run through printf.
@@ -152,7 +152,7 @@ extern "C"{
  *	malloc. A single string of length NV_SHARED_STRING_LEN is shared by all nvObjs for all strings. 
  *	The observation is that the total rendered output in JSON or text mode cannot exceed the size of 
  *	the output buffer (typ 256 bytes), So some number less than that is sufficient for shared strings. 
- *	This is all mediated through nv_copy_string(), nv_copy_string_P(), and nv_reset_nvObj_list().
+ *	This is all mediated through nv_copy_string(), nv_copy_string_P(), and nv_reset_nv_list().
  */
 /*  --- Setting nvObj indexes ---
  *
@@ -346,8 +346,8 @@ stat_t get_grp(nvObj_t *nv);		// get data for a group
 
 // object and list functions
 void nv_get_nvObj(nvObj_t *nv);
-nvObj_t *nv_reset_nvObj(nvObj_t *nv);
-nvObj_t *nv_reset_nvObj_list(void);
+nvObj_t *nv_reset_nv(nvObj_t *nv);
+nvObj_t *nv_reset_nv_list(void);
 
 stat_t nv_copy_string(nvObj_t *nv, const char_t *src);
 nvObj_t *nv_add_object(const char_t *token);

@@ -99,7 +99,7 @@ static stat_t _json_parser_kernal(char_t *str)
 {
 	stat_t status;
 	int8_t depth;
-	nvObj_t *nv = nv_reset_nvObj_list();			// get a fresh nvObj list
+	nvObj_t *nv = nv_reset_nv_list();			// get a fresh nvObj list
 	char_t group[GROUP_LEN+1] = {""};				// group identifier - starts as NUL
 	int8_t i = NV_BODY_LEN;
 
@@ -206,7 +206,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	char_t terminators[] = {"},\""};			// close curly, comma and quote
 	char_t value[] = {"{\".-+"};				// open curly, quote, period, minus and plus
 
-	nv_reset_nvObj(nv);							// wipes the object and sets the depth
+	nv_reset_nv(nv);							// wipes the object and sets the depth
 
 	// --- Process name part ---
 	// Find, terminate and set pointers for the name. Allow for leading and trailing name quotes.
@@ -252,7 +252,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	// object parent
 	} else if (**pstr == '{') { 
 		nv->valuetype = TYPE_PARENT;
-//		*depth += 1;							// nv_reset_nvObj() sets the next object's level so this is redundant
+//		*depth += 1;							// nv_reset_nv() sets the next object's level so this is redundant
 		(*pstr)++;
 		return(STAT_EAGAIN);					// signal that there is more to parse
 
@@ -332,7 +332,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	char_t *tmp;
 	char_t terminators[] = {"},"};
 
-	nv_reset_nvObj(nv);							// wipes the object and sets the depth
+	nv_reset_nv(nv);							// wipes the object and sets the depth
 
 	// --- Process name part ---
 	// find leading and trailing name quotes and set pointers.
@@ -360,7 +360,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	// object parent
 	} else if (**pstr == '{') { 
 		nv->valuetype = TYPE_PARENT;
-//		*depth += 1;							// nv_reset_nvObj() sets the next object's level so this is redundant
+//		*depth += 1;							// nv_reset_nv() sets the next object's level so this is redundant
 		(*pstr)++;
 		return(STAT_EAGAIN);					// signal that there is more to parse
 
@@ -576,7 +576,7 @@ void json_print_response(uint8_t status)
 	// Body processing
 	nvObj_t *nv = nv_body;
 	if (status == STAT_JSON_SYNTAX_ERROR) {
-		nv_reset_nvObj_list();
+		nv_reset_nv_list();
 		nv_add_string((const char_t *)"err", escape_string(cs.in_buf, cs.saved_buf));
 
 	} else if (cm.machine_state != MACHINE_INITIALIZING) {	// always do full echo during startup
@@ -781,13 +781,13 @@ static void _test_serialize()
 	_printit();
 
 	// response object parent with no children w/footer
-	nv_reset_nvObj_list();											// works with the header/body/footer list
+	nv_reset_nv_list();											// works with the header/body/footer list
 	_add_array(nv, (char_t *)"1,0,12,1234");					// fake out a footer
 	json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf));
 	_printit();
 
 	// response parent with one element w/footer
-	nv_reset_nvObj_list();											// works with the header/body/footer list
+	nv_reset_nv_list();											// works with the header/body/footer list
 	nv_add_string((char_t *)"msg", (char_t *)"test message");
 	_add_array(nv, (char_t *)"1,0,12,1234");					// fake out a footer
 	json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf));
