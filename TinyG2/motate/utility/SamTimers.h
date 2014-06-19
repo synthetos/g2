@@ -864,7 +864,7 @@ namespace Motate {
 		uint32_t doneTime = SysTickTimer.getValue() + microseconds;
 
 		do
-		{} while ( doneTime < SysTickTimer.getValue() );
+		{} while ( SysTickTimer.getValue() < doneTime );
 	}
 
 } // namespace Motate
