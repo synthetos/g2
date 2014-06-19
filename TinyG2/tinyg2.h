@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		046.08 // cleaning up canonical_machine
+#define TINYG_FIRMWARE_BUILD   		046.09
 #endif
 #define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -55,10 +55,6 @@
 
 /****** COMPILE-TIME SETTINGS ******/
 
-#define __STEP_CORRECTION
-#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
-//#define __KAHAN							// Use Kahan summation in aline exec functions
-
 #define __TEXT_MODE							// enables text mode support (~10Kb)
 #define __HELP_SCREENS						// enables help screens 	 (~3.5Kb)
 #define __CANNED_TESTS 						// enables $tests 			 (~12Kb)
@@ -66,6 +62,10 @@
 
 /****** DEVELOPMENT SETTINGS ******/
 
+#define __STEP_CORRECTION
+//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
+//#define __KAHAN							// Use Kahan summation in aline exec functions
+ 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __DEBUG_SETTINGS					// special settings. See settings.h
 //#define __CANNED_STARTUP					// run any canned startup moves
@@ -76,16 +76,16 @@
   #undef  __TEXT_MODE
   #undef  __HELP_SCREENS
   #undef  __CANNED_TESTS
-#ifndef __CANNED_STARTUP
-  #define __CANNED_STARTUP					// run any canned startup moves
-#endif
+  #ifndef __CANNED_STARTUP
+    #define __CANNED_STARTUP
+  #endif
   #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
   #define __SUPPRESS_STARTUP_MESSAGES
   #define __SUPPRESS_STATUS_REPORTS
   #define __SUPPRESS_QUEUE_REPORTS
   #define __SUPRESS_DIAGNOSTIC_DISPLAYS
   #define __SILENCE_JSON_RESPONSES
-#endif
+#endif // __SIMULATION
 
 //#ifndef WEAK
 //#define WEAK  __attribute__ ((weak))

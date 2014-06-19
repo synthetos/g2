@@ -47,7 +47,7 @@
 
 #define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT			2.00					// motor power timeout in seconds
-#define MOTOR_POWER_LEVEL			0.25					// default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL			0.375					// default motor power level 0.00 - 1.00 (ARM only)
 
 // Communications and reporting settings
 #define COMM_MODE					JSON_MODE				// one of: TEXT_MODE, JSON_MODE
