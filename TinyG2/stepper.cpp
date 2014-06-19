@@ -237,7 +237,7 @@ void stepper_init()
 #ifdef __ARM
 	// setup DDA timer (see FOOTNOTE)
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	dda_timer.setDutyCycleA(0.25);
+	dda_timer.setDutyCycleA(1.0 - 0.25);
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -514,8 +514,11 @@ ISR(TIMER_DDA_ISR_vect)
 #ifdef __ARM
 /*
  *	This interrupt is really 2 interrupts. It fires on timer overflow and also on match.
- *	Overflow interrupts are used to set step pins, match interrupts clear step pins.
- *	This way the duty cycle of the stepper pulse can be controlled by setting the match value.
+ *	Match interrupts are used to set step pins, and overflow interrupts clear step pins.
+ *  When the timer starts (at 0), it does *not* fire an interrupt, but it will on match,
+ *  and then again on overflow.
+ *	This way the length of the stepper pulse can be controlled by setting the match value.
+ *  Note that this makes the pulse timing the inverted duty cycle.
  *
  *	Note that the motor_N.step.isNull() tests are compile-time tests, not run-time tests.
  *	If motor_N is not defined that if{} clause (i.e. that motor) drops out of the complied code.
@@ -525,7 +528,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
 
-	if (interrupt_cause == kInterruptOnOverflow) {
+	if (interrupt_cause == kInterruptOnMatchA) {
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			motor_1.step.set();		// turn step bit on
@@ -558,7 +561,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 			INCREMENT_ENCODER(MOTOR_6);
 		}
 
-	} else if (interrupt_cause == kInterruptOnMatchA) {
+	} else if (interrupt_cause == kInterruptOnOverflow) {
 		motor_1.step.clear();							// turn step bits off
 		motor_2.step.clear();
 		motor_3.step.clear();
