@@ -17,7 +17,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* See github.com/Synthetos/G2 for code and docs on the wiki 
+/* See github.com/Synthetos/G2 for code and docs on the wiki
  */
 
 #include "tinyg2.h"					// #1 There are some dependencies
@@ -31,16 +31,15 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
-//#include "network.h"
 #include "switch.h"
-//#include "test.h"
+#include "test.h"
 #include "pwm.h"
 #include "xio.h"
+//#include "network.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
 #include "xmega/xmega_interrupts.h"
-//#include "xmega/xmega_eeprom.h"	// uncomment for unit tests
 #endif // __AVR
 
 #ifdef __ARM
@@ -117,23 +116,36 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
+#ifdef __AVR
+	cli();
+#endif
+
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
+//	rtc_init();						// real time counter
 	xio_init();						// xtended io subsystem				- must be third
-	config_init();					// config records from eeprom
+	config_init();					// apply config from persistence
 
 	// do these next
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
 	switch_init();					// switches
-//	gpio_init();					// parallel IO
 	pwm_init();						// pulse width modulation drivers
 
 	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
 //	network_init();					// reset std devices if required	- must follow config_init()
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
+
+#ifdef __AVR
+	// now bring up the interrupts and get started
+	PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
+	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
+	PMIC_EnableMediumLevel();
+	PMIC_EnableLowLevel();
+	sei();							// enable global interrupts
+#endif
 
 	// start the application
 	rpt_print_system_ready_message();// (LAST) announce system is ready
@@ -151,7 +163,7 @@ int main(void)
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
-//	run_canned_startup();			// run any pre-loaded commands
+	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
 	for (;;) {
@@ -396,37 +408,58 @@ static const char stat_201[] PROGMEM = "Move less than minimum length";
 static const char stat_202[] PROGMEM = "Move less than minimum time";
 static const char stat_203[] PROGMEM = "Machine is alarmed - Command not processed";	// current longest message 43 chars (including NUL)
 static const char stat_204[] PROGMEM = "Limit switch hit - Shutdown occurred";
-static const char stat_205[] PROGMEM = "205";
+static const char stat_205[] PROGMEM = "Trapezoid planner failed to converge";
 static const char stat_206[] PROGMEM = "206";
 static const char stat_207[] PROGMEM = "207";
 static const char stat_208[] PROGMEM = "208";
 static const char stat_209[] PROGMEM = "209";
 
-static const char stat_210[] PROGMEM = "Soft limit exceeded";
-static const char stat_211[] PROGMEM = "Soft limit exceeded - X min";
-static const char stat_212[] PROGMEM = "Soft limit exceeded - X max";
-static const char stat_213[] PROGMEM = "Soft limit exceeded - Y min";
-static const char stat_214[] PROGMEM = "Soft limit exceeded - Y max";
-static const char stat_215[] PROGMEM = "Soft limit exceeded - Z min";
-static const char stat_216[] PROGMEM = "Soft limit exceeded - Z max";
-static const char stat_217[] PROGMEM = "Soft limit exceeded - A min";
-static const char stat_218[] PROGMEM = "Soft limit exceeded - A max";
-static const char stat_219[] PROGMEM = "Soft limit exceeded - B min";
-static const char stat_220[] PROGMEM = "Soft limit exceeded - B max";
-static const char stat_221[] PROGMEM = "Soft limit exceeded - C min";
-static const char stat_222[] PROGMEM = "Soft limit exceeded - C max";
+static const char stat_210[] PROGMEM = "210";
+static const char stat_211[] PROGMEM = "211";
+static const char stat_212[] PROGMEM = "212";
+static const char stat_213[] PROGMEM = "213";
+static const char stat_214[] PROGMEM = "214";
+static const char stat_215[] PROGMEM = "215";
+static const char stat_216[] PROGMEM = "216";
+static const char stat_217[] PROGMEM = "217";
+static const char stat_218[] PROGMEM = "218";
+static const char stat_219[] PROGMEM = "219";
 
-static const char stat_223[] PROGMEM = "Homing cycle failed";
-static const char stat_224[] PROGMEM = "Homing Error - Bad or no axis specified";
-static const char stat_225[] PROGMEM = "Homing Error - Search velocity is zero";
-static const char stat_226[] PROGMEM = "Homing Error - Latch velocity is zero";
-static const char stat_227[] PROGMEM = "Homing Error - Travel min/max is zero";
-static const char stat_228[] PROGMEM = "Homing Error - Negative latch backoff";
-static const char stat_229[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_220[] PROGMEM = "Soft limit exceeded";
+static const char stat_221[] PROGMEM = "Soft limit exceeded - X min";
+static const char stat_222[] PROGMEM = "Soft limit exceeded - X max";
+static const char stat_223[] PROGMEM = "Soft limit exceeded - Y min";
+static const char stat_224[] PROGMEM = "Soft limit exceeded - Y max";
+static const char stat_225[] PROGMEM = "Soft limit exceeded - Z min";
+static const char stat_226[] PROGMEM = "Soft limit exceeded - Z max";
+static const char stat_227[] PROGMEM = "Soft limit exceeded - A min";
+static const char stat_228[] PROGMEM = "Soft limit exceeded - A max";
+static const char stat_229[] PROGMEM = "Soft limit exceeded - B min";
+static const char stat_230[] PROGMEM = "Soft limit exceeded - B max";
+static const char stat_231[] PROGMEM = "Soft limit exceeded - C min";
+static const char stat_232[] PROGMEM = "Soft limit exceeded - C max";
+static const char stat_233[] PROGMEM = "233";
+static const char stat_234[] PROGMEM = "234";
+static const char stat_235[] PROGMEM = "235";
+static const char stat_236[] PROGMEM = "236";
+static const char stat_237[] PROGMEM = "237";
+static const char stat_238[] PROGMEM = "238";
+static const char stat_239[] PROGMEM = "239";
 
-static const char stat_230[] PROGMEM = "Probe cycle failed";
-static const char stat_231[] PROGMEM = "Probe endpoint is starting point";
-static const char stat_232[] PROGMEM = "Jogging cycle failed";
+static const char stat_240[] PROGMEM = "Homing cycle failed";
+static const char stat_241[] PROGMEM = "Homing Error - Bad or no axis specified";
+static const char stat_242[] PROGMEM = "Homing Error - Search velocity is zero";
+static const char stat_243[] PROGMEM = "Homing Error - Latch velocity is zero";
+static const char stat_244[] PROGMEM = "Homing Error - Travel min/max is zero";
+static const char stat_245[] PROGMEM = "Homing Error - Negative latch backoff";
+static const char stat_246[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_247[] PROGMEM = "249";
+static const char stat_248[] PROGMEM = "249";
+static const char stat_249[] PROGMEM = "249";
+
+static const char stat_250[] PROGMEM = "Probe cycle failed";
+static const char stat_251[] PROGMEM = "Probe endpoint is starting point";
+static const char stat_252[] PROGMEM = "Jogging cycle failed";
 
 static const char *const stat_msg[] PROGMEM = {
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
@@ -441,7 +474,7 @@ static const char *const stat_msg[] PROGMEM = {
 	stat_90, stat_91, stat_92, stat_93, stat_94, stat_95, stat_96, stat_97, stat_98, stat_99,
 	stat_100, stat_101, stat_102, stat_103, stat_104, stat_105, stat_106, stat_107, stat_108, stat_109,
 	stat_110, stat_111, stat_112, stat_113, stat_114, stat_115, stat_116, stat_117, stat_118, stat_119,
-	stat_120, stat_121, stat_122, stat_123, stat_124, stat_125, stat_126, stat_127, stat_128, stat_129, 
+	stat_120, stat_121, stat_122, stat_123, stat_124, stat_125, stat_126, stat_127, stat_128, stat_129,
 	stat_130, stat_131, stat_132, stat_133, stat_134, stat_135, stat_136, stat_137, stat_138, stat_139,
 	stat_140, stat_141, stat_142, stat_143, stat_144, stat_145, stat_146, stat_147, stat_148, stat_149,
 	stat_150, stat_151, stat_152, stat_153, stat_154, stat_155, stat_156, stat_157, stat_158, stat_159,
@@ -452,7 +485,9 @@ static const char *const stat_msg[] PROGMEM = {
 	stat_200, stat_201, stat_202, stat_203, stat_204, stat_205, stat_206, stat_207, stat_208, stat_209,
 	stat_210, stat_211, stat_212, stat_213, stat_214, stat_215, stat_216, stat_217, stat_218, stat_219,
 	stat_220, stat_221, stat_222, stat_223, stat_224, stat_225, stat_226, stat_227, stat_228, stat_229,
-	stat_230, stat_231, stat_232
+	stat_230, stat_231, stat_232, stat_233, stat_234, stat_235, stat_236, stat_237, stat_238, stat_239,
+	stat_240, stat_241, stat_242, stat_243, stat_244, stat_245, stat_246, stat_247, stat_248, stat_249,
+	stat_250, stat_251, stat_252
 };
 
 char *get_status_message(stat_t status)
@@ -460,7 +495,7 @@ char *get_status_message(stat_t status)
 	return ((char *)GET_TEXT_ITEM(stat_msg, status));
 }
 /*
-#else 
+#else
 char *get_status_message(stat_t status)
 {
 	return ((char *)NULL);
@@ -472,7 +507,7 @@ char *get_status_message(stat_t status)
  * _unit_tests() - uncomment __UNITS... line in .h files to enable unit tests
  */
 
-static void _unit_tests(void) 
+static void _unit_tests(void)
 {
 #ifdef __UNIT_TESTS
 	XIO_UNITS;				// conditional unit tests for xio sub-system

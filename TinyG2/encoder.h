@@ -55,7 +55,7 @@
  *
  *	Additionally, by this time the target in Gcode model knows about has advanced quite a bit, 
  *	so the moveA target needs to be saved somewhere. Targets are propagated downward to the planner
- *	runtime (the EXEC), but the exec will haved moved on to moveB by the time we need it. So moveA's
+ *	runtime (the EXEC), but the exec will have moved on to moveB by the time we need it. So moveA's
  *	target needs to be saved somewhere.
  */
 /*
@@ -66,11 +66,11 @@
  *	used during move execution (exec) to adjust the move to compensate for accumulated 
  *	positional errors. It's also the basis of closed-loop (servoed) systems.
  *
- *	Positional error occurs due to floating poiunt numerical inaccuracies. TinyG uses 
+ *	Positional error occurs due to floating point numerical inaccuracies. TinyG uses 
  *	32 bit floating point (GCC 32 bit, which is NOT IEEE 32 bit). Errors creep in 
  *	during planning, move execution, and stepper output phases. Care has been taken 
  *	to minimize introducing errors throughout the process, but they still occur. 
- *	In most cases errors are not noticable as they fall below the step resolution 
+ *	In most cases errors are not noticeable as they fall below the step resolution 
  *	for most jobs. For jobs that run > 1 hour the errors can accumulate and send 
  *	results off by as much as a millimeter if not corrected. 
  *
@@ -123,11 +123,12 @@ extern enEncoders_t en;
 void encoder_init(void);
 void encoder_init_assertions(void);
 stat_t encoder_test_assertions(void);
+
 void en_set_encoder_steps(uint8_t motor, float steps);
 float en_read_encoder(uint8_t motor);
+
+#endif	// End of include guard: ENCODER_H_ONCE
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif	// End of include guard: ENCODER_H_ONCE

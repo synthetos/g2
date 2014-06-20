@@ -34,7 +34,7 @@ struct gcodeParserSingleton {	 	  // struct to manage globals
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
-static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8_t *block_delete_flag);
+static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
 static stat_t _validate_gcode_block(void);
@@ -53,7 +53,7 @@ static stat_t _execute_gcode_block(void);		// Execute the gcode block
 
 stat_t gc_gcode_parser(char_t *block)
 {
-	char_t *nv = block;					// gcode command or NUL string
+	char_t *str = block;					// gcode command or NUL string
 	char_t none = NUL;
 	char_t *com = &none;					// gcode comment or NUL string
 	char_t *msg = &none;					// gcode message or NUL string
@@ -62,8 +62,8 @@ stat_t gc_gcode_parser(char_t *block)
 	// don't process Gcode blocks if in alarmed state
 	if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
 
-	_normalize_gcode_block(nv, &com, &msg, &block_delete_flag);
-	
+	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
+
 	// Block delete omits the line if a / char is present in the first space
 	// For now this is unconditional and will always delete
 //	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {
@@ -84,7 +84,7 @@ stat_t gc_gcode_parser(char_t *block)
  *
  *	Normalization functions:
  *   - convert all letters to upper case
- *	 - remove white space, control and other invalid characters 
+ *	 - remove white space, control and other invalid characters
  *	 - remove (erroneous) leading zeros that might be taken to mean Octal
  *	 - identify and return start of comments and messages
  *	 - signal if a block-delete character (/) was encountered in the first space
@@ -92,7 +92,7 @@ stat_t gc_gcode_parser(char_t *block)
  *	So this: "  g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *	Comment and message handling:
- *	 - Comments field start with a '(' char or alternately a semicolon ';' 
+ *	 - Comments field start with a '(' char or alternately a semicolon ';'
  *	 - Comments and messages are not normalized - they are left alone
  *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
  *	 - Normalization returns true if there was a message to display, false otherwise
@@ -115,19 +115,19 @@ stat_t gc_gcode_parser(char_t *block)
  *	 - msg points to message string or to NUL if no comment
  *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
-static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8_t *block_delete_flag)
+static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint8_t *block_delete_flag)
 {
-	char_t *rd = nv;				// read pointer
-	char_t *wr = nv;				// write pointer
+	char_t *rd = str;				// read pointer
+	char_t *wr = str;				// write pointer
 
 	// Preset comments and messages to NUL string
 	// Not required if com and msg already point to NUL on entry
-//	for (rd = nv; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = nv;} }
+//	for (rd = str; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = str;} }
 
 	// mark block deletes
-	if (*rd == '/') { *block_delete_flag = true; } 
+	if (*rd == '/') { *block_delete_flag = true; }
 	else { *block_delete_flag = false; }
-	
+
 	// normalize the command block & find the comment (if any)
 	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
@@ -136,9 +136,9 @@ static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8
 			*(wr++) = (char_t)toupper((char)*(rd));
 		}
 	}
-	
+
 	// Perform Octal stripping - remove invalid leading zeros in number strings
-	rd = nv;
+	rd = str;
 	while (*rd != NUL) {
 		if (*rd == '.') break;							// don't strip past a decimal point
 		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
@@ -148,7 +148,7 @@ static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8
 		}
 		rd++;
 	}
-	
+
 	// process comments and messages
 	if (**com != NUL) {
 		rd = *com;
@@ -156,7 +156,7 @@ static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8
 		if ((tolower(*rd) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
 			*msg = rd+3;
 		}
-		for (; *rd != NUL; rd++) {	
+		for (; *rd != NUL; rd++) {
 			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
 		}
 	}
@@ -169,7 +169,7 @@ static void _normalize_gcode_block(char_t *nv, char_t **com, char_t **msg, uint8
  *	Normalization must remove any leading zeros or they will be converted to Octal
  *	G0X... is not interpreted as hexadecimal. This is trapped.
  */
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value) 
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 {
 	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
 
@@ -177,7 +177,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	if(isupper(**pstr) == false) { return (STAT_MALFORMED_COMMAND_INPUT); }
 	*letter = **pstr;
 	(*pstr)++;
-	
+
 	// X-axis-becomes-a-hexadecimal-number get-value case, e.g. G0X100 --> G255
 	if ((**pstr == '0') && (*(*pstr+1) == 'X')) {
 		*value = 0;
@@ -186,7 +186,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	}
 
 	// get-value general case
-	char *end; 
+	char *end;
 	*value = strtof(*pstr, &end);
 	if(end == *pstr) { return(STAT_BAD_NUMBER_FORMAT); }	// more robust test then checking for value=0;
 	*pstr = end;
@@ -196,7 +196,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 /*
  * _point() - isolate the decimal point value as an integer
  */
-static uint8_t _point(float value) 
+static uint8_t _point(float value)
 {
 	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
 }
@@ -221,22 +221,22 @@ static stat_t _validate_gcode_block()
 	// look for commands that require an axis word to be present
 //	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
 //		if (_axis_changed() == false)
-//		return (STAT_GCODE_AXIS_WORD_MISSING);
+//		return (STAT_GCODE_AXIS_IS_MISSING);
 //	}
 	return (STAT_OK);
 }
 
 /*
- * _parse_gcode_block() - parses one line of NULL terminated G-Code. 
+ * _parse_gcode_block() - parses one line of NULL terminated G-Code.
  *
  *	All the parser does is load the state values in gn (next model state) and set flags
- *	in gf (model state flags). The execute routine applies them. The buffer is assumed to 
+ *	in gf (model state flags). The execute routine applies them. The buffer is assumed to
  *	contain only uppercase characters and signed floats (no whitespace).
  *
  *	A number of implicit things happen when the gn struct is zeroed:
  *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
-static stat_t _parse_gcode_block(char_t *buf) 
+static stat_t _parse_gcode_block(char_t *buf)
 {
 	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
   	char letter;					// parsed letter, eg.g. G or X or Y
@@ -381,8 +381,8 @@ static stat_t _parse_gcode_block(char_t *buf)
 /*
  * _execute_gcode_block() - execute parsed block
  *
- *  Conditionally (based on whether a flag is set in gf) call the canonical 
- *	machining functions in order of execution as per RS274NGC_3 table 8 
+ *  Conditionally (based on whether a flag is set in gf) call the canonical
+ *	machining functions in order of execution as per RS274NGC_3 table 8
  *  (below, with modifications):
  *
  *	    0. record the line number
@@ -413,7 +413,7 @@ static stat_t _parse_gcode_block(char_t *buf)
  *		20. perform motion (G0 to G3, G80-G89) as modified (possibly) by G53
  *		21. stop and end (M0, M1, M2, M30, M60)
  *
- *	Values in gn are in original units and should not be unit converted prior 
+ *	Values in gn are in original units and should not be unit converted prior
  *	to calling the canonical functions (which do the unit conversions)
  */
 

@@ -2,7 +2,7 @@
  * hardware.cpp - general hardware support functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2012 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,6 +35,10 @@
 #include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
+#ifdef __AVR
+#include "xmega/xmega_init.h"
+#include "xmega/xmega_rtc.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"{

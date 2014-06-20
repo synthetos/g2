@@ -70,9 +70,9 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size);
  *	  "value" can be a string, number, true, false, or null (2 types)
  *
  *	Numbers
- *	  - number values are not quoted and can start with a digit or -. 
+ *	  - number values are not quoted and can start with a digit or -.
  *	  - numbers cannot start with + or . (period)
- *	  - exponentiated numbers are handled OK. 
+ *	  - exponentiated numbers are handled OK.
  *	  - hexadecimal or other non-decimal number bases are not supported
  *
  *	The parser:
@@ -85,7 +85,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size);
  *	  json_parser() is the only exposed part. It does parsing, display, and status reports.
  *	  _get_nv_pair() only does parsing and syntax; no semantic validation or group handling
  *	  _json_parser_kernal() does index validation and group handling and executes sets and gets
- *		in an application agnostic way. It should work for other apps than TinyG 
+ *		in an application agnostic way. It should work for other apps than TinyG
  */
 
 void json_parser(char_t *str)
@@ -99,7 +99,7 @@ static stat_t _json_parser_kernal(char_t *str)
 {
 	stat_t status;
 	int8_t depth;
-	nvObj_t *nv = nv_reset_nv_list();			// get a fresh nvObj list
+	nvObj_t *nv = nv_reset_nv_list();				// get a fresh nvObj list
 	char_t group[GROUP_LEN+1] = {""};				// group identifier - starts as NUL
 	int8_t i = NV_BODY_LEN;
 
@@ -128,7 +128,7 @@ static stat_t _json_parser_kernal(char_t *str)
 
 	// execute the command
 	nv = nv_body;
-	if (nv->valuetype == TYPE_NULL){					// means GET the value
+	if (nv->valuetype == TYPE_NULL){				// means GET the value
 		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
 	} else {
 		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
@@ -141,7 +141,7 @@ static stat_t _json_parser_kernal(char_t *str)
 /*
  * _normalize_json_string - normalize a JSON string in place
  *
- *	Validate string size limits, remove all whitespace and convert 
+ *	Validate string size limits, remove all whitespace and convert
  *	to lower case, with the exception of gcode comments
  */
 
@@ -157,7 +157,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size)
 			if (*str == '(') in_comment = true;
 			if ((*str <= ' ') || (*str == DEL)) continue; // toss ctrls, WS & DEL
 			*wr++ = tolower(*str);
-		} else {							// Gcode comment processing	
+		} else {							// Gcode comment processing
 			if (*str == ')') in_comment = false;
 			*wr++ = *str;
 		}
@@ -172,7 +172,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size)
  *	Parse the next statement and populate the command object (nvObj).
  *
  *	Leaves string pointer (str) on the first character following the object.
- *	Which is the character just past the ',' separator if it's a multi-valued 
+ *	Which is the character just past the ',' separator if it's a multi-valued
  *	object or the terminating NUL if single object or the last in a multi.
  *
  *	Keeps track of tree depth and closing braces as much as it has to.
@@ -182,13 +182,13 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size)
  *	ASSUMES INPUT STRING HAS FIRST BEEN NORMALIZED BY _normalize_json_string()
  *
  *	If a group prefix is passed in it will be pre-pended to any name parsed
- *	to form a token string. For example, if "x" is provided as a group and 
- *	"fr" is found in the name string the parser will search for "xfr" in the 
+ *	to form a token string. For example, if "x" is provided as a group and
+ *	"fr" is found in the name string the parser will search for "xfr" in the
  *	cfgArray.
  */
 /*	RELAXED RULES
- * 
- *	Quotes are accepted but not needed on names 
+ *
+ *	Quotes are accepted but not needed on names
  *	Quotes are required for string values
  *
  *	See build 406.xx or earlier for strict JSON parser - deleted in 407.03
@@ -212,7 +212,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	// Find, terminate and set pointers for the name. Allow for leading and trailing name quotes.
 	char_t * name = *pstr;
 	for (i=0; true; i++, (*pstr)++) {
-		if (strchr(leaders, (int)**pstr) == NULL) { 			// find leading character of name
+		if (strchr(leaders, (int)**pstr) == NULL) { 		// find leading character of name
 			name = (*pstr)++;
 			break;
 		}
@@ -242,7 +242,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	if ((**pstr == 'n') || ((**pstr == '\"') && (*(*pstr+1) == '\"'))) { // process null value
 		nv->valuetype = TYPE_NULL;
 		nv->value = TYPE_NULL;
-	
+
 	// numbers
 	} else if (isdigit(**pstr) || (**pstr == '-')) {// value is a number
 		nv->value = (float)strtod(*pstr, &tmp);	// tmp is the end pointer
@@ -250,7 +250,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 		nv->valuetype = TYPE_FLOAT;
 
 	// object parent
-	} else if (**pstr == '{') { 
+	} else if (**pstr == '{') {
 		nv->valuetype = TYPE_PARENT;
 //		*depth += 1;							// nv_reset_nv() sets the next object's level so this is redundant
 		(*pstr)++;
@@ -272,21 +272,20 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 		} else {
 			ritorno(nv_copy_string(nv, *pstr));
 		}
-	
 		*pstr = ++tmp;
 
 	// boolean true/false
-	} else if (**pstr == 't') { 
+	} else if (**pstr == 't') {
 		nv->valuetype = TYPE_BOOL;
 		nv->value = true;
-	} else if (**pstr == 'f') { 
+	} else if (**pstr == 'f') {
 		nv->valuetype = TYPE_BOOL;
 		nv->value = false;
 
 	// arrays
 	} else if (**pstr == '[') {
 		nv->valuetype = TYPE_ARRAY;
-		ritorno(nv_copy_string(nv, *pstr));	// copy array into string for error displays
+		ritorno(nv_copy_string(nv, *pstr));		// copy array into string for error displays
 		return (STAT_INPUT_VALUE_UNSUPPORTED);	// return error as the parser doesn't do input arrays yet
 
 	// general error condition
@@ -296,7 +295,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	if ((*pstr = strpbrk(*pstr, terminators)) == NULL) { // advance to terminator or err out
 		return (STAT_JSON_SYNTAX_ERROR);
 	}
-	if (**pstr == '}') { 
+	if (**pstr == '}') {
 		*depth -= 1;							// pop up a nesting level
 		(*pstr)++;								// advance to comma or whatever follows
 	}
@@ -312,7 +311,7 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
  *	Parse the next statement and populate the command object (nvObj).
  *
  *	Leaves string pointer (str) on the first character following the object.
- *	Which is the character just past the ',' separator if it's a multi-valued 
+ *	Which is the character just past the ',' separator if it's a multi-valued
  *	object or the terminating NUL if single object or the last in a multi.
  *
  *	Keeps track of tree depth and closing braces as much as it has to.
@@ -322,11 +321,11 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
  *	ASSUMES INPUT STRING HAS FIRST BEEN NORMALIZED BY _normalize_json_string()
  *
  *	If a group prefix is passed in it will be pre-pended to any name parsed
- *	to form a token string. For example, if "x" is provided as a group and 
- *	"fr" is found in the name string the parser will search for "xfr" in the 
+ *	to form a token string. For example, if "x" is provided as a group and
+ *	"fr" is found in the name string the parser will search for "xfr" in the
  *	cfgArray.
  */
-/*
+ /*
 static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 {
 	char_t *tmp;
@@ -350,7 +349,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	if ((**pstr == 'n') || ((**pstr == '\"') && (*(*pstr+1) == '\"'))) { // process null value
 		nv->valuetype = TYPE_NULL;
 		nv->value = TYPE_NULL;
-	
+
 	// numbers
 	} else if (isdigit(**pstr) || (**pstr == '-')) {// value is a number
 		nv->value = (float)strtod(*pstr, &tmp);	// tmp is the end pointer
@@ -358,7 +357,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 		nv->valuetype = TYPE_FLOAT;
 
 	// object parent
-	} else if (**pstr == '{') { 
+	} else if (**pstr == '{') {
 		nv->valuetype = TYPE_PARENT;
 //		*depth += 1;							// nv_reset_nv() sets the next object's level so this is redundant
 		(*pstr)++;
@@ -381,14 +380,13 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 		} else {
 			ritorno(nv_copy_string(nv, *pstr));
 		}
-	
 		*pstr = ++tmp;
 
 	// boolean true/false
-	} else if (**pstr == 't') { 
+	} else if (**pstr == 't') {
 		nv->valuetype = TYPE_BOOL;
 		nv->value = true;
-	} else if (**pstr == 'f') { 
+	} else if (**pstr == 'f') {
 		nv->valuetype = TYPE_BOOL;
 		nv->value = false;
 
@@ -405,7 +403,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 	if ((*pstr = strpbrk(*pstr, terminators)) == NULL) { // advance to terminator or err out
 		return (STAT_JSON_SYNTAX_ERROR);
 	}
-	if (**pstr == '}') { 
+	if (**pstr == '}') {
 		*depth -= 1;							// pop up a nesting level
 		(*pstr)++;								// advance to comma or whatever follows
 	}
@@ -431,10 +429,10 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
  *	  - Assume remaining depths have been set correctly; but might not achieve closure;
  *		e.g. list starts on 0, and ends on 3, in which case provide correct closing curlies
  *
- *	  - Assume there can be multiple, independent, non-contiguous JSON objects at a 
+ *	  - Assume there can be multiple, independent, non-contiguous JSON objects at a
  *		given depth value. These are processed correctly - e.g. 0,1,1,0,1,1,0,1,1
  *
- *	  - The list must have a terminating nvObj where nv->nx == NULL. 
+ *	  - The list must have a terminating nvObj where nv->nx == NULL.
  *		The terminating object may or may not have data (empty or not empty).
  *
  *	Returns:
@@ -473,6 +471,11 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 				str += sprintf((char *)str, "\"%s\":", nv->token);
 			}
 
+			// check for illegal float values
+			if (nv->valuetype == TYPE_FLOAT) {
+				if (isnan((double)nv->value) || isinf((double)nv->value)) { nv->value = 0;}
+			}
+
 			// serialize output value
 			if		(nv->valuetype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "null");} // Note that that "" is NOT null.
 			else if (nv->valuetype == TYPE_INTEGER)	{
@@ -484,8 +487,7 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 			}
 			else if (nv->valuetype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
 			else if (nv->valuetype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_FLOAT)   { nv_preprocess_float(nv);
-//													  str += (char_t)fntoa(str, nv->value, nv->precision);
+			else if (nv->valuetype == TYPE_FLOAT)	{ nv_preprocess_float(nv);
 													  str += fntoa(str, nv->value, nv->precision);
 			}
 			else if (nv->valuetype == TYPE_BOOL) {
@@ -539,14 +541,14 @@ void json_print_object(nvObj_t *nv)
 void json_print_list(stat_t status, uint8_t flags)
 {
 	switch (flags) {
-		case JSON_NO_PRINT: { break; } 
+		case JSON_NO_PRINT: break;
 		case JSON_OBJECT_FORMAT: { json_print_object(nv_body); break; }
 		case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
 	}
 }
 
 /*
- * json_print_response() - JSON responses with headers, footers and observing JSON verbosity 
+ * json_print_response() - JSON responses with headers, footers and observing JSON verbosity
  *
  *	A footer is returned for every setting except $jv=0
  *
@@ -557,10 +559,10 @@ void json_print_list(stat_t status, uint8_t flags)
  *	JV_LINENUM,		// echo configs; gcode blocks return messages and line numbers as present
  *	JV_VERBOSE		// echos all configs and gcode blocks, line numbers and messages
  *
- *	This gets a bit complicated. The first nvObj is the header, which must be set by reset_list().
- *	The first object in the body will always have the gcode block or config command in it, 
- *	which you may or may not want to display. This is followed by zero or more displayable objects. 
- *	Then if you want a gcode line number you add that here to the end. Finally, a footer goes 
+ *	This gets a bit complicated. The first nvObj is the header, which must be set by reset_nv_list().
+ *	The first object in the body will always have the gcode block or config command in it,
+ *	which you may or may not want to display. This is followed by zero or more displayable objects.
+ *	Then if you want a gcode line number you add that here to the end. Finally, a footer goes
  *	on all the (non-silent) responses.
  */
 #define MAX_TAIL_LEN 8
@@ -571,7 +573,7 @@ void json_print_response(uint8_t status)
 	return;
 #endif
 
-	if (js.json_verbosity == JV_SILENT) return;			// silent responses
+	if (js.json_verbosity == JV_SILENT) return;				// silent responses
 
 	// Body processing
 	nvObj_t *nv = nv_body;
@@ -627,15 +629,15 @@ void json_print_response(uint8_t status)
 
 	// do all this to avoid having to serialize it twice
 	int16_t strcount = json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf));// make JSON string w/o checksum
-	if (strcount < 0) { return;}						// encountered an overrun during serialization
+	if (strcount < 0) { return;}							// encountered an overrun during serialization
 	if (strcount > OUTPUT_BUFFER_LEN - MAX_TAIL_LEN) { return;}	// would overrun during checksum generation
 	int16_t strcount2 = strcount;
 	char tail[MAX_TAIL_LEN];
 
-	while (cs.out_buf[strcount] != '0') { strcount--; }	// find end of checksum
-	strcpy(tail, cs.out_buf + strcount + 1);			// save the json termination
+	while (cs.out_buf[strcount] != '0') { strcount--; }		// find end of checksum
+	strcpy(tail, cs.out_buf + strcount + 1);				// save the json termination
 
-	while (cs.out_buf[strcount2] != ',') { strcount2--; }// find start of checksum
+	while (cs.out_buf[strcount2] != ',') { strcount2--; }	// find start of checksum
 	sprintf((char *)cs.out_buf + strcount2 + 1, "%d%s", compute_checksum(cs.out_buf, strcount2), tail);
 	fprintf(stderr, "%s", cs.out_buf);
 }
@@ -649,7 +651,7 @@ void json_print_response(uint8_t status)
  * json_set_jv()
  */
 
-stat_t json_set_jv(nvObj_t *nv) 
+stat_t json_set_jv(nvObj_t *nv)
 {
 	if (nv->value > JV_VERBOSE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	js.json_verbosity = nv->value;
@@ -726,7 +728,6 @@ void js_unit_tests()
 static void _test_serialize()
 {
 	nvObj_t *nv = nv_array;
-//	printf("\n\nJSON serialization tests\n");
 
 	// null list
 	_reset_array();
@@ -804,14 +805,14 @@ static char_t * _clr(char_t *buf)
 
 static void _printit(void)
 {
-//	printf("%s", cs.out_buf);	
+//	printf("%s", cs.out_buf);
 }
 
 static nvObj_t * _reset_array()
 {
 	nvObj_t *nv = nv_array;
 	for (uint8_t i=0; i<ARRAY_LEN; i++) {
-		if (i == 0) { nv->pv = NULL; } 
+		if (i == 0) { nv->pv = NULL; }
 		else { nv->pv = (nv-1);}
 		nv->nx = (nv+1);
 		nv->index = 0;
@@ -914,7 +915,7 @@ static void _test_parser()
 */
 // error cases
 
-	json_parser((char_t *)"{\"err_1\":36000x\n}");				// illegal number 
+	json_parser((char_t *)"{\"err_1\":36000x\n}");				// illegal number
 	json_parser((char_t *)"{\"err_2\":\"text\n}");				// no string termination
 	json_parser((char_t *)"{\"err_3\":\"12345\",}\n");			// bad } termination
 	json_parser((char_t *)"{\"err_4\":\"12345\"\n");			// no } termination

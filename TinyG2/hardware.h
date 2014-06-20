@@ -1,6 +1,6 @@
 /*
  * hardware.h - system hardware configuration - this file is platform specific
- *			  - ARM version
+ *				THIS FILE IS HARDWARE PLASTFORM SPECIFIC - ARM version
  *
  * This file is part of the TinyG project
  *
@@ -30,6 +30,10 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
+////////////////////////////
+/////// ARM VERSION ////////
+////////////////////////////
+
 /*--- Hardware platform enumerations ---*/
 
 enum hwPlatform {
@@ -57,9 +61,7 @@ enum hwPlatform {
 #define HW_VERSION_TINYGV9H		3
 #define HW_VERSION_TINYGV9I		4
 
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
+// ARM specific code start here
 
 #include "MotatePins.h"
 #include "MotateTimers.h" // for timer_number
@@ -70,7 +72,9 @@ using namespace Motate;
 extern "C"{
 #endif
 
-/**** Global System Defines ****/
+/*************************
+ * Global System Defines *
+ *************************/
 
 #undef F_CPU							// CPU clock - set for delays
 #define F_CPU 84000000UL
@@ -166,7 +170,10 @@ static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 
-/*** function prototypes ***/
+
+/********************************
+ * Function Prototypes (Common) *
+ ********************************/
 
 void hardware_init(void);			// master hardware init
 void hw_request_hard_reset();

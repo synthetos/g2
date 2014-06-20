@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -65,7 +65,7 @@ static stat_t _text_parser_kernal(char_t *str, nvObj_t *nv);
  */
 stat_t text_parser(char_t *str)
 {
-	nvObj_t *nv = nv_reset_nv_list();	// returns first object in the body
+	nvObj_t *nv = nv_reset_nv_list();		// returns first object in the body
 	stat_t status = STAT_OK;
 
 	// trap special displays
@@ -92,7 +92,9 @@ stat_t text_parser(char_t *str)
 	} else { 								// process SET and RUN commands
 		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
 		status = nv_set(nv);				// set (or run) single value
-		nv_persist(nv);					// conditionally persist depending on flags in array
+		if (status == STAT_OK) {
+			nv_persist(nv);					// conditionally persist depending on flags in array
+		}
 	}
 	nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT); // print the results
 	return (status);
@@ -196,7 +198,7 @@ void text_print_inline_pairs(nvObj_t *nv)
 			case TYPE_FLOAT:	{ nv_preprocess_float(nv);
 								  fntoa(global_string_buf, nv->value, nv->precision);
 								  fprintf_P(stderr,PSTR("%s:%s"), nv->token, global_string_buf) ; break;
-			}
+								}
 			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;}
 			case TYPE_DATA:	    { fprintf_P(stderr,PSTR("%s:%lu"), nv->token, *v); break;}
 			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s:%s"), nv->token, *nv->stringp); break;}
@@ -216,7 +218,7 @@ void text_print_inline_values(nvObj_t *nv)
 			case TYPE_FLOAT:	{ nv_preprocess_float(nv);
 								  fntoa(global_string_buf, nv->value, nv->precision);
 								  fprintf_P(stderr,PSTR("%s"), global_string_buf) ; break;
-			}
+								}
 			case TYPE_INTEGER:	{ fprintf_P(stderr,PSTR("%1.0f"), nv->value); break;}
 			case TYPE_DATA:	    { fprintf_P(stderr,PSTR("%lu"), *v); break;}
 			case TYPE_STRING:	{ fprintf_P(stderr,PSTR("%s"), *nv->stringp); break;}
@@ -230,7 +232,10 @@ void text_print_inline_values(nvObj_t *nv)
 void text_print_multiline_formatted(nvObj_t *nv)
 {
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		if (nv->valuetype != TYPE_PARENT) { nv_print(nv);}
+		if (nv->valuetype != TYPE_PARENT) {
+			nv_preprocess_float(nv);
+			nv_print(nv);
+		}
 		if ((nv = nv->nx) == NULL) return;
 		if (nv->valuetype == TYPE_EMPTY) break;
 	}

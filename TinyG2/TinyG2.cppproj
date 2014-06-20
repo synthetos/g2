@@ -1148,6 +1148,63 @@
     <Compile Include="switch.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="test.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="test.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_001_smoke.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_002_homing.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_003_squares.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_004_arcs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_005_dwell.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_006_feedhold.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_007_Mcodes.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_008_json.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_009_inverse_time.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_010_rotary.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_011_small_moves.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_012_slow_moves.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_013_coordinate_offsets.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_014_microsteps.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_050_mudflap.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_051_braid.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_099.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="text_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1178,7 +1235,7 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
-    <Folder Include="units" />
+    <Folder Include="tests" />
     <Folder Include="platform\atmel_sam\board\" />
     <Folder Include="platform\atmel_sam\board\due\" />
     <Folder Include="platform\atmel_sam\board\v9_3x8c\" />
