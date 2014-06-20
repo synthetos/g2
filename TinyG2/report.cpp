@@ -336,7 +336,7 @@ static uint8_t _populate_filtered_status_report()
 	const char_t sr_str[] = "sr";
 	uint8_t has_data = false;
 	char_t tmp[TOKEN_LEN+1];
-	nvObj_t *nv = nv_reset_nv_list();	// sets nv to the start of the body
+	nvObj_t *nv = nv_reset_nv_list();		// sets nv to the start of the body
 
 	nv->valuetype = TYPE_PARENT; 			// setup the parent object (no need to length check the copy)
 	strcpy(nv->token, sr_str);
@@ -427,7 +427,7 @@ void qr_init_queue_report()
 	qr.queue_report_requested = false;
 	qr.buffers_added = 0;
 	qr.buffers_removed = 0;
-	qr.init_tick = SysTickTimer.getValue();
+	qr.init_tick = SysTickTimer_getValue();		// C mapping of SysTickTimer.getValue();
 }
 
 /*
@@ -438,6 +438,14 @@ void qr_init_queue_report()
  */
 void qr_request_queue_report(int8_t buffers)
 {
+	// get buffer depth and added/removed count
+	qr.buffers_available = mp_get_planner_buffers_available();
+	if (buffers > 0) {
+		qr.buffers_added += buffers;
+	} else {
+		qr.buffers_removed -= buffers;
+	}
+
 	// time-throttle requests while generating arcs
 	qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
 	if ((qr.motion_mode == MOTION_MODE_CW_ARC) || (qr.motion_mode == MOTION_MODE_CCW_ARC)) {
@@ -446,14 +454,6 @@ void qr_request_queue_report(int8_t buffers)
 			qr.queue_report_requested = false;
 			return;
 		}
-	}
-
-	// get buffer depth and added/removed count
-	qr.buffers_available = mp_get_planner_buffers_available();
-	if (buffers > 0) {
-		qr.buffers_added += buffers;
-	} else {
-		qr.buffers_removed -= buffers;
 	}
 
 	// either return or request a report
@@ -517,7 +517,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 */
 
 /* 
- * Wrappers and Setters - for calling from nvArray table
+ * Wrappers and Setters - for calling from cfgArray table
  *
  * qr_get() - run a queue report (as data)
  * qi_get() - run a queue report - buffers in
@@ -574,7 +574,7 @@ stat_t job_populate_job_report()
 		nv->index = job_start + i;
 		nv_get_nvObj(nv);
 
-		strcpy(tmp, nv->group);			// concatenate groups and tokens - do NOT use strncpy()
+		strcpy(tmp, nv->group);				// concatenate groups and tokens - do NOT use strncpy()
 		strcat(tmp, nv->token);
 		strcpy(nv->token, tmp);
 
@@ -591,13 +591,13 @@ stat_t job_set_job_report(nvObj_t *nv)
 		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
 		if (nv->valuetype == TYPE_INTEGER) {
 			cs.job_id[i] = nv->value;
-			nv->index = job_start + i;					// index of the SR persistence location
+			nv->index = job_start + i;		// index of the SR persistence location
 			nv_persist(nv);
 		} else {
 			return (STAT_INPUT_VALUE_UNSUPPORTED);
 		}
 	}
-	job_populate_job_report();			// return current values
+	job_populate_job_report();				// return current values
 	return (STAT_OK);
 }
 
