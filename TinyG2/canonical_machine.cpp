@@ -577,7 +577,7 @@ stat_t cm_soft_alarm(stat_t status)
 {
 	rpt_exception(status);					// send alarm message
 	cm.machine_state = MACHINE_ALARM;
-	return (status);
+	return (status);						// NB: More efficient than inlining rpt_exception() call.
 }
 
 stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
@@ -654,7 +654,7 @@ stat_t cm_set_distance_mode(uint8_t mode)
 
 stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 {
-	if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) { // you can't set G53
+	if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {	// you can't set G53
 		return (STAT_INTERNAL_RANGE_ERROR);
 	}
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
@@ -943,6 +943,7 @@ stat_t cm_straight_feed(float target[], float flags[])
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
+//		return(rpt_exception(STAT_GCODE_FEEDRATE_NOT_SPECIFIED));
 		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
@@ -1902,24 +1903,21 @@ static void _print_axis_ui8(nvObj_t *nv, const char *format)
 	fprintf_P(stderr, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
 }
 
-static void _print_axis_flu(nvObj_t *nv, const char *format)
+static void _print_axis_flt(nvObj_t *nv, const char *format)
 {
 	char *units;
-	if (_get_axis_type(nv->index) == 0) {				// linear axis
-		if (cm_get_units_mode(MODEL) == INCHES) {
-			nv->value *= INCHES_PER_MM;					// convert value to inches for display
-		}
-		units = (char *)GET_UNITS(MODEL);				// ASCII display for units
+	if (_get_axis_type(nv->index) == 0) {	// linear
+		units = (char *)GET_UNITS(MODEL);
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
 	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, units);
 }
 
-static void _print_axis_coord_flu(nvObj_t *nv, const char *format)
+static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 {
 	char *units;
-	if (_get_axis_type(nv->index) == 0) {				// linear axis
+	if (_get_axis_type(nv->index) == 0) {	// linear
 		units = (char *)GET_UNITS(MODEL);
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -1941,23 +1939,23 @@ void cm_print_am(nvObj_t *nv)	// print axis mode with enumeration string
 	GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
 }
 
-void cm_print_fr(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xfr);}
-void cm_print_vm(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xvm);}
-void cm_print_tm(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xtm);}
-void cm_print_tn(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xtn);}
-void cm_print_jm(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xjm);}
-void cm_print_jh(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xjh);}
-void cm_print_jd(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xjd);}
-void cm_print_ra(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xra);}
+void cm_print_fr(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xfr);}
+void cm_print_vm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xvm);}
+void cm_print_tm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtm);}
+void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn);}
+void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
+void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
+void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
+void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 void cm_print_sn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsn);}
 void cm_print_sx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsx);}
-void cm_print_sv(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xsv);}
-void cm_print_lv(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xlv);}
-void cm_print_lb(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xlb);}
-void cm_print_zb(nvObj_t *nv) { _print_axis_flu(nv, fmt_Xzb);}
+void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
+void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
+void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}
+void cm_print_zb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xzb);}
 
-void cm_print_cofs(nvObj_t *nv) { _print_axis_coord_flu(nv, fmt_cofs);}
-void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flu(nv, fmt_cpos);}
+void cm_print_cofs(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cofs);}
+void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos);}
 
 void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS);}
