@@ -2,7 +2,7 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  * Copyright (c) 2010 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* Is this code over documented? Possibly. 
+/* Is this code over documented? Possibly.
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
@@ -38,9 +38,9 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		046.13 // align with feature-410.06-base - straggler files
+#define TINYG_FIRMWARE_BUILD   		047.01 // merged from feature-tinyg-410-base; prep for sync with tinyg build 435.18
 #endif
-#define TINYG_FIRMWARE_VERSION		0.8							// firmware major version
+#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
@@ -65,7 +65,7 @@
 #define __STEP_CORRECTION
 //#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
 //#define __KAHAN							// Use Kahan summation in aline exec functions
- 
+
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves
 //#define __DEBUG_SETTINGS					// special settings. See settings.h
@@ -141,8 +141,8 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 #define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
 
-typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t 
-								// because in C++ uint8_t and char are distinct types and 
+typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t
+								// because in C++ uint8_t and char are distinct types and
 								// we want chars to behave as uint8's
 
 													// gets rely on nv->index having been set
@@ -239,14 +239,14 @@ typedef uint16_t magic_t;		// magic number size
 #define PWM_1		0
 #define PWM_2		1
 
-/************************************************************************************ 
+/************************************************************************************
  * STATUS CODES
  *
  * The first code range (0-19) is aligned with the XIO codes and must be so.
  * Please don't change them without checking the corresponding values in xio.h
  *
  * Status codes are divided into ranges for clarity and extensibility. At some point
- * this may break down and the whole thing will get messy(er), but it's advised not 
+ * this may break down and the whole thing will get messy(er), but it's advised not
  * to change the values of existing status codes once they are in distribution.
  *
  * Ranges are:
@@ -260,11 +260,11 @@ typedef uint16_t magic_t;		// magic number size
  *
  * 130 -		Gcode and TinyG application errors and warnings
  *
- * See main.c for associated message strings. Any changes to the codes may also require 
+ * See main.c for associated message strings. Any changes to the codes may also require
  * changing the message strings and string array in main.c
  *
  * Most of the status codes (except STAT_OK) below are errors which would fail the command,
- * and are returned by the failed command and reported back via JSON or text. 
+ * and are returned by the failed command and reported back via JSON or text.
  * Some status codes are warnings do not fail the command. These can be used to generate
  * an exception report. These are labeled as WARNING
  */
