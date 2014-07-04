@@ -1,5 +1,5 @@
 /*
- * config.cpp - application independent configuration handling 
+ * config.cpp - application independent configuration handling
  * This file is part of the TinyG2 project
  *
  * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
@@ -50,7 +50,7 @@ extern "C"{
  ***********************************************************************************/
 
 nvStr_t nvStr;
-nvObj_t nv_list[NV_LIST_LEN];	// JSON header element
+nvList_t nvl;
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -62,17 +62,19 @@ nvObj_t nv_list[NV_LIST_LEN];	// JSON header element
  * nv_get() 	- Build a nvObj with the values from the target & return the value
  *			   	  Populate nv body with single valued elements or groups (iterates)
  * nv_print()	- Output a formatted string for the value.
- * nv_persist() - persist value to NVM. Takes special cases into account
+ * nv_persist() - persist value to non-volatile storage. Takes special cases into account
+ *
+ *	!!!! NOTE: nv_persist() cannot be called from an interrupt on the AVR due to the AVR1008 EEPROM workaround
  */
 stat_t nv_set(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) { return(STAT_INTERNAL_RANGE_ERROR);}
+	if (nv->index >= nv_index_max()) return(STAT_INTERNAL_RANGE_ERROR);
 	return (((fptrCmd)GET_TABLE_WORD(set))(nv));
 }
 
 stat_t nv_get(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) { return(STAT_INTERNAL_RANGE_ERROR);}
+	if (nv->index >= nv_index_max()) return(STAT_INTERNAL_RANGE_ERROR);
 	return (((fptrCmd)GET_TABLE_WORD(get))(nv));
 }
 
@@ -95,8 +97,8 @@ void nv_persist(nvObj_t *nv)
  * config_init() - called once on hard reset
  *
  * Performs one of 2 actions:
- *	(1) if NVM is set up or out-of-rev load RAM and NVM with settings.h defaults
- *	(2) if NVM is set up and at current config version use NVM data for config
+ *	(1) if persistence is set up or out-of-rev load RAM and NVM with settings.h defaults
+ *	(2) if persistence is set up and at current config version use NVM data for config
  *
  *	You can assume the cfg struct has been zeroed by a hard reset.
  *	Do not clear it as the version and build numbers have already been set by tg_init()
@@ -106,10 +108,7 @@ void nv_persist(nvObj_t *nv)
 void config_init()
 {
 	nvObj_t *nv = nv_reset_nv_list();
-	nvStr.magic_start = MAGICNUM;
-	nvStr.magic_end = MAGICNUM;
-	cfg.magic_start = MAGICNUM;
-	cfg.magic_end = MAGICNUM;
+	config_init_assertions();
 
 #ifdef __ARM
 // ++++ The following code is offered until persistence is implemented.
@@ -161,6 +160,30 @@ stat_t set_defaults(nvObj_t *nv)
 	}
 	rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
 	sr_init_status_report();					// reset status reports
+	return (STAT_OK);
+}
+
+/*
+ * config_init_assertions()
+ * config_test_assertions() - check memory integrity of config sub-system
+ */
+
+void config_init_assertions()
+{
+	cfg.magic_start = MAGICNUM;
+	cfg.magic_end = MAGICNUM;
+	nvl.magic_start = MAGICNUM;
+	nvl.magic_end = MAGICNUM;
+	nvStr.magic_start = MAGICNUM;
+	nvStr.magic_end = MAGICNUM;
+}
+
+stat_t config_test_assertions()
+{
+	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+	if ((nvl.magic_start	!= MAGICNUM) || (nvl.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+	if ((nvStr.magic_start	!= MAGICNUM) || (nvStr.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+	if (global_string_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONFIG_ASSERTION_FAILURE);
 	return (STAT_OK);
 }
 
@@ -335,11 +358,11 @@ stat_t set_flu(nvObj_t *nv)
 
 stat_t get_grp(nvObj_t *nv)
 {
-	char_t *parent_group = nv->token;			// token in the parent nv object is the group
-	char_t group[GROUP_LEN+1];					// group string retrieved from cfgArray child
-	nv->valuetype = TYPE_PARENT;				// make first object the parent
+	char_t *parent_group = nv->token;				// token in the parent nv object is the group
+	char_t group[GROUP_LEN+1];						// group string retrieved from cfgArray child
+	nv->valuetype = TYPE_PARENT;					// make first object the parent
 	for (index_t i=0; nv_index_is_single(i); i++) {
-		strcpy_P(group, cfgArray[i].group);		// don't need strncpy as it's always terminated
+		strcpy_P(group, cfgArray[i].group);			// don't need strncpy as it's always terminated
 		if (strcmp(parent_group, group) != 0) continue;
 		(++nv)->index = i;
 		nv_get_nvObj(nv);
@@ -359,7 +382,7 @@ stat_t get_grp(nvObj_t *nv)
 
 stat_t set_grp(nvObj_t *nv)
 {
-	if (cfg.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_COMMAND);
+	if (cfg.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_NAME);
 	for (uint8_t i=0; i<NV_MAX_OBJECTS; i++) {
 		if ((nv = nv->nx) == NULL) break;
 		if (nv->valuetype == TYPE_EMPTY) break;
@@ -553,7 +576,7 @@ nvObj_t *nv_reset_nv(nvObj_t *nv)			// clear a single nvObj structure
 nvObj_t *nv_reset_nv_list()					// clear the header and response body
 {
 	nvStr.wp = 0;							// reset the shared string
-	nvObj_t *nv = nv_list;					// set up linked list and initialize elements
+	nvObj_t *nv = nvl.list;					// set up linked list and initialize elements
 	for (uint8_t i=0; i<NV_LIST_LEN; i++, nv++) {
 		nv->pv = (nv-1);					// the ends are bogus & corrected later
 		nv->nx = (nv+1);
@@ -564,7 +587,7 @@ nvObj_t *nv_reset_nv_list()					// clear the header and response body
 		nv->token[0] = NUL;
 	}
 	(--nv)->nx = NULL;
-	nv = nv_list;							// setup response header element ('r')
+	nv = nvl.list;							// setup response header element ('r')
 	nv->pv = NULL;
 	nv->depth = 0;
 	nv->valuetype = TYPE_PARENT;

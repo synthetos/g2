@@ -132,7 +132,7 @@ static stat_t _text_parser_kernal(char_t *str, nvObj_t *nv)
 
 	// validate and post-process the token
 	if ((nv->index = nv_get_index((const char_t *)"", nv->token)) == NO_MATCH) { // get index or fail it
-		return (STAT_UNRECOGNIZED_COMMAND);
+		return (STAT_UNRECOGNIZED_NAME);
 	}
 	strcpy_P(nv->group, cfgArray[nv->index].group);// capture the group string if there is one
 
@@ -182,7 +182,7 @@ void text_response(const stat_t status, char_t *buf)
 void text_print_list(stat_t status, uint8_t flags)
 {
 	switch (flags) {
-		case TEXT_NO_PRINT: { break; } 
+		case TEXT_NO_PRINT: { break; }
 		case TEXT_INLINE_PAIRS: { text_print_inline_pairs(nv_body); break; }
 		case TEXT_INLINE_VALUES: { text_print_inline_values(nv_body); break; }
 		case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(nv_body);}
@@ -267,7 +267,7 @@ void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format,
 void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
 void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
 
-void text_print_flt_units(nvObj_t *nv, const char *format, const char *units) 
+void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
 	fprintf_P(stderr, format, nv->value, units);
 }

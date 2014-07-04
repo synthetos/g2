@@ -29,7 +29,7 @@
 #define CONFIG_H_ONCE
 
 /***** PLEASE NOTE *****
-#include "config_app.h"	// is present at the end of this file 
+#include "config_app.h"	// is present at the end of this file
 */
 
 #ifdef __cplusplus
@@ -42,17 +42,17 @@ extern "C"{
  *
  *	The config system provides a structured way to get, set and print configuration variables.
  *	The config system operates as a list of "objects" (OK, so they are not really objects)
- *	that encapsulate each variable. The list may also may have header and footer objects. 
- * 
+ *	that encapsulate each variable. The list may also may have header and footer objects.
+ *
  *	The list is populated by the text_parser or the JSON_parser depending on the mode.
- *	This way the internals don't care about how the variable is represented or communicated 
+ *	This way the internals don't care about how the variable is represented or communicated
  *	externally as all internal operations occur on the nvObjs, not the wire form (text or JSON).
  */
 /*	--- Config variables, tables and strings ---
  *
- *	Each configuration value is identified by a short mnemonic string (token). The token 
- *	is resolved to an index into the cfgArray which is an array of structures with the 
- *	static assignments for each variable. The cfgArray contains typed data in program 
+ *	Each configuration value is identified by a short mnemonic string (token). The token
+ *	is resolved to an index into the cfgArray which is an array of structures with the
+ *	static assignments for each variable. The cfgArray contains typed data in program
  *	memory (PROGMEM, in the AVR).
  *
  *	Each cfgItem has:
@@ -72,7 +72,7 @@ extern "C"{
  *	 - must be unique (non colliding).
  *	 - axis tokens start with the axis letter and are typically 3 characters including the axis letter
  *	 - motor tokens start with the motor digit and are typically 3 characters including the motor digit
- *	 - non-axis or non-motor tokens are 2-5 characters and by convention generally should not start 
+ *	 - non-axis or non-motor tokens are 2-5 characters and by convention generally should not start
  *		with: xyzabcuvw0123456789 (but there can be exceptions)
  *
  *  "Groups" are collections of values that mimic REST resources. Groups include:
@@ -92,13 +92,13 @@ extern "C"{
  *
  *	Adding a new value to config (or changing an existing one) involves touching the following places:
  *
- *	 - Create a new record in cfgArray[]. Use existing ones for examples. 
+ *	 - Create a new record in cfgArray[]. Use existing ones for examples.
  *
  *	 - Create functions for print, get, and set. You can often use existing generic fucntions for
  *	   get and set, and sometimes print. If print requires any custom text it requires it's own function
- *	   Look in the modules for examples - e.g. at the end of canoonical_machine.c 
+ *	   Look in the modules for examples - e.g. at the end of canoonical_machine.c
  *
- *	 - The ordering of group displays is set by the order of items in cfgArray. None of the other 
+ *	 - The ordering of group displays is set by the order of items in cfgArray. None of the other
  *	   orders matter but are generally kept sequenced for easier reading and code maintenance. Also,
  *	   Items earlier in the array will resolve token searches faster than ones later in the array.
  *
@@ -108,30 +108,30 @@ extern "C"{
 
 /**** nvObj lists ****
  *
- * 	Commands and groups of commands are processed internally a doubly linked list of nvObj_t 
+ * 	Commands and groups of commands are processed internally a doubly linked list of nvObj_t
  *	structures. This isolates the command and config internals from the details of communications,
  *	parsing and display in text mode and JSON mode.
  *
- *	The first element of the list is designated the response header element ("r") but the list 
+ *	The first element of the list is designated the response header element ("r") but the list
  *	can also be serialized as a simple object by skipping over the header
  *
- *	To use the nvObj list first reset it by calling nv_reset_nv_list(). This initializes the 
- *	header, marks the the objects as TYPE_EMPTY (-1), resets the shared string, relinks all objects 
- *	with NX and PV pointers, and makes the last element the terminating element by setting its NX 
+ *	To use the nvObj list first reset it by calling nv_reset_nv_list(). This initializes the
+ *	header, marks the the objects as TYPE_EMPTY (-1), resets the shared string, relinks all objects
+ *	with NX and PV pointers, and makes the last element the terminating element by setting its NX
  *	pointer to NULL. The terminating element may carry data, and will be processed.
  *
- *	When you use the list you can terminate your own last element, or just leave the EMPTY elements 
+ *	When you use the list you can terminate your own last element, or just leave the EMPTY elements
  *	to be skipped over during output serialization.
- * 
- * 	We don't use recursion so parent/child nesting relationships are captured in a 'depth' variable, 
- *	This must remain consistent if the curlies are to work out. You should not have to track depth 
- *	explicitly if you use nv_reset_nv_list() or the accessor functions like nv_add_integer() or 
+ *
+ * 	We don't use recursion so parent/child nesting relationships are captured in a 'depth' variable,
+ *	This must remain consistent if the curlies are to work out. You should not have to track depth
+ *	explicitly if you use nv_reset_nv_list() or the accessor functions like nv_add_integer() or
  *	nv_add_message(). If you see problems with curlies check the depth values in the lists.
  *
  *	Use the nv_print_list() dispatcher for all JSON and text output. Do not simply run through printf.
  */
 /*	Token and Group Fields
- * 
+ *
  *	The nvObject struct (nvObj_t) has strict rules on the use of the token and group fields.
  *	The following forms are legal which support the use cases listed:
  *
@@ -148,23 +148,23 @@ extern "C"{
  */
 /*	--- nv object string handling ---
  *
- *	It's very expensive to allocate sufficient string space to each nvObj, so nv uses a cheater's 
- *	malloc. A single string of length NV_SHARED_STRING_LEN is shared by all nvObjs for all strings. 
- *	The observation is that the total rendered output in JSON or text mode cannot exceed the size of 
- *	the output buffer (typ 256 bytes), So some number less than that is sufficient for shared strings. 
+ *	It's very expensive to allocate sufficient string space to each nvObj, so nv uses a cheater's
+ *	malloc. A single string of length NV_SHARED_STRING_LEN is shared by all nvObjs for all strings.
+ *	The observation is that the total rendered output in JSON or text mode cannot exceed the size of
+ *	the output buffer (typ 256 bytes), So some number less than that is sufficient for shared strings.
  *	This is all mediated through nv_copy_string(), nv_copy_string_P(), and nv_reset_nv_list().
  */
 /*  --- Setting nvObj indexes ---
  *
  *	It's the responsibility of the object creator to set the index. Downstream functions
  *	all expect a valid index. Set the index by calling nv_get_index(). This also validates
- *	the token and group if no lookup exists. Setting the index is an expensive operation 
- *	(linear table scan), so there are some exceptions where the index does not need to be set. 
+ *	the token and group if no lookup exists. Setting the index is an expensive operation
+ *	(linear table scan), so there are some exceptions where the index does not need to be set.
  *	These cases are put in the code, commented out, and explained.
  */
 /*	--- Other Notes:---
  *
- *	NV_BODY_LEN needs to allow for one parent JSON object and enough children to complete the 
+ *	NV_BODY_LEN needs to allow for one parent JSON object and enough children to complete the
  *	largest possible operation - usually the status report.
  */
 
@@ -172,64 +172,66 @@ extern "C"{
  **** DEFINITIONS AND SETTINGS *****************************************************
  ***********************************************************************************/
 
-// Sizing and footprints			// chose one based on # of elements in cfgArray
-//typedef uint8_t index_t;			// use this if there are < 256 indexed objects
-typedef uint16_t index_t;			// use this if there are > 255 indexed objects
+// Sizing and footprints				// chose one based on # of elements in cfgArray
+//typedef uint8_t index_t;				// use this if there are < 256 indexed objects
+typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 
-									// defines allocated from stack (not-pre-allocated)
-#define NV_FORMAT_LEN 128			// print formatting string max length
-#define NV_MESSAGE_LEN 128			// sufficient space to contain end-user messages
+										// defines allocated from stack (not-pre-allocated)
+#define NV_FORMAT_LEN 128				// print formatting string max length
+#define NV_MESSAGE_LEN 128				// sufficient space to contain end-user messages
 
-									// pre-allocated defines (take RAM permanently)
-#define NV_SHARED_STRING_LEN 512	// shared string for string values
-#define NV_BODY_LEN 30				// body elements - allow for 1 parent + N children
-									// (each body element takes about 30 bytes of RAM)
+										// pre-allocated defines (take RAM permanently)
+#define NV_SHARED_STRING_LEN 512		// shared string for string values
+#define NV_BODY_LEN 30					// body elements - allow for 1 parent + N children
+										// (each body element takes about 30 bytes of RAM)
 
-// Stuff you probably don't want to change 
+// Stuff you probably don't want to change
 
-#define GROUP_LEN 3					// max length of group prefix
-#define TOKEN_LEN 5					// mnemonic token string: group prefix + short token
-#define NV_FOOTER_LEN 18			// sufficient space to contain a JSON footer array
-#define NV_LIST_LEN (NV_BODY_LEN+2)	// +2 allows for a header and a footer
-#define NV_MAX_OBJECTS (NV_BODY_LEN-1)// maximum number of objects in a body string
+#define GROUP_LEN 3						// max length of group prefix
+#define TOKEN_LEN 5						// mnemonic token string: group prefix + short token
+#define NV_FOOTER_LEN 18				// sufficient space to contain a JSON footer array
+#define NV_LIST_LEN (NV_BODY_LEN+2)		// +2 allows for a header and a footer
+#define NV_MAX_OBJECTS (NV_BODY_LEN-1)	// maximum number of objects in a body string
 #define NO_MATCH (index_t)0xFFFF
+#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS // max number of status report elements - see cfgArray
+											// **** must also line up in cfgArray, se00 - seXX ****
 
 enum tgCommunicationsMode {
-	TEXT_MODE = 0,					// text command line mode
-	JSON_MODE,						// strict JSON construction
-	JSON_MODE_RELAXED				// relaxed JSON construction (future)
+	TEXT_MODE = 0,						// text command line mode
+	JSON_MODE,							// strict JSON construction
+	JSON_MODE_RELAXED					// relaxed JSON construction (future)
 };
 
 enum flowControl {
-	FLOW_CONTROL_OFF = 0,			// flow control disabled
-	FLOW_CONTROL_XON,				// flow control uses XON/XOFF
-	FLOW_CONTROL_RTS				// flow control uses RTS/CTS
+	FLOW_CONTROL_OFF = 0,				// flow control disabled
+	FLOW_CONTROL_XON,					// flow control uses XON/XOFF
+	FLOW_CONTROL_RTS					// flow control uses RTS/CTS
 };
 
 /*
-enum lineTermination {				// REMOVED. Too easy to make the board non-responsive (not a total brick, but close)
-	IGNORE_OFF = 0,					// accept either CR or LF as termination on RX text line
-	IGNORE_CR,						// ignore CR on RX
-	IGNORE_LF						// ignore LF on RX
+enum lineTermination {					// REMOVED. Too easy to make the board non-responsive (not a total brick, but close)
+	IGNORE_OFF = 0,						// accept either CR or LF as termination on RX text line
+	IGNORE_CR,							// ignore CR on RX
+	IGNORE_LF							// ignore LF on RX
 };
 */
 /*
 enum tgCommunicationsSticky {
-	NOT_STICKY = 0,					// communications mode changes automatically
-	STICKY							// communications mode does not change
+	NOT_STICKY = 0,						// communications mode changes automatically
+	STICKY								// communications mode does not change
 };
 */
 
-enum valueType {					// value typing for config and JSON
-	TYPE_EMPTY = -1,				// value struct is empty (which is not the same as "NULL")
-	TYPE_NULL = 0,					// value is 'null' (meaning the JSON null value)
-	TYPE_BOOL,						// value is "true" (1) or "false"(0)
-	TYPE_INTEGER,					// value is a uint32_t
-	TYPE_DATA,						// value is blind cast to uint32_t
-	TYPE_FLOAT,						// value is a floating point number
-	TYPE_STRING,					// value is in string field
-	TYPE_ARRAY,						// value is array element count, values are CSV ASCII in string field
-	TYPE_PARENT						// object is a parent to a sub-object
+enum valueType {						// value typing for config and JSON
+	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
+	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
+	TYPE_BOOL,							// value is "true" (1) or "false"(0)
+	TYPE_INTEGER,						// value is a uint32_t
+	TYPE_DATA,							// value is blind cast to uint32_t
+	TYPE_FLOAT,							// value is a floating point number
+	TYPE_STRING,						// value is in string field
+	TYPE_ARRAY,							// value is array element count, values are CSV ASCII in string field
+	TYPE_PARENT							// object is a parent to a sub-object
 };
 
 /**** operations flags and shorthand ****/
@@ -278,6 +280,12 @@ typedef struct nvObject {				// depending on use, not all elements may be popula
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access
 typedef void (*fptrPrint)(nvObj_t *nv);	// required for PROGMEM access
 
+typedef struct nvList {
+	uint16_t magic_start;
+	nvObj_t list[NV_LIST_LEN];			// list of nv objects, including space for a JSON header element
+	uint16_t magic_end;
+} nvList_t;
+
 typedef struct cfgItem {
 	char_t group[GROUP_LEN+1];			// group prefix (with NUL termination)
 	char_t token[TOKEN_LEN+1];			// token - stripped of group prefix (w/NUL termination)
@@ -293,16 +301,19 @@ typedef struct cfgItem {
 /**** static allocation and definitions ****/
 
 extern nvStr_t nvStr;
-extern nvObj_t nv_list[];
+extern nvList_t nvl;
 extern const cfgItem_t cfgArray[];
 
-#define nv_header nv_list
-#define nv_body  (nv_list+1)
+//#define nv_header nv.list
+#define nv_header (&nvl.list[0])
+#define nv_body   (&nvl.list[1])
 
 /**** Prototypes for generic config functions - see individual modules for application-specific functions  ****/
 
 void config_init(void);
 stat_t set_defaults(nvObj_t *nv);		// reset config to default values
+void config_init_assertions(void);
+stat_t config_test_assertions(void);
 
 // main entry points for core access functions
 stat_t nv_get(nvObj_t *nv);			// main entry point for get value
@@ -363,17 +374,6 @@ void nv_dump_nv(nvObj_t *nv);
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/
 #include "config_app.h"
-
-/*** Unit tests ***/
-
-/* unit test setup */
-//#define __UNIT_TEST_CONFIG		// uncomment to enable config unit tests
-#ifdef __UNIT_TEST_CONFIG
-void cfg_unit_tests(void);
-#define	CONFIG_UNITS cfg_unit_tests();
-#else
-#define	CONFIG_UNITS
-#endif // __UNIT_TEST_CONFIG
 
 #ifdef __cplusplus
 }
