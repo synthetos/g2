@@ -92,7 +92,7 @@ uint8_t job_report_callback();
 	void co_print_net(nvObj_t *nv);
 	void co_print_rx(nvObj_t *nv);
 
-#else 
+#else
 
 	#define co_print_ec tx_print_stub
 	#define co_print_ee tx_print_stub

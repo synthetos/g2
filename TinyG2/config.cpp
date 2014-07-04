@@ -45,6 +45,8 @@
 extern "C"{
 #endif
 
+static void _set_defa(nvObj_t *nv);
+
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
@@ -84,13 +86,13 @@ void nv_print(nvObj_t *nv)
 	((fptrCmd)GET_TABLE_WORD(print))(nv);
 }
 
-void nv_persist(nvObj_t *nv)
+stat_t nv_persist(nvObj_t *nv)	// nv_persist() cannot be called from an interrupt on the AVR due to the AVR1008 EEPROM workaround
 {
-#ifdef __DISABLE_PERSISTENCE	// cutout for faster simulation in test
-	return;
+#ifndef __DISABLE_PERSISTENCE	// cutout for faster simulation in test
+	if (nv_index_lt_groups(nv->index) == false) return(STAT_INTERNAL_RANGE_ERROR);
+	if (GET_TABLE_BYTE(flags) & F_PERSIST) return(write_persistent_value(nv));
 #endif
-	if (nv_index_lt_groups(nv->index) == false) return;
-	if (GET_TABLE_BYTE(flags) & F_PERSIST) write_persistent_value(nv);
+	return (STAT_OK);
 }
 
 /************************************************************************************
@@ -114,17 +116,16 @@ void config_init()
 // ++++ The following code is offered until persistence is implemented.
 // ++++ Then you can use the AVR code (or something like it)
 	cfg.comm_mode = JSON_MODE;					// initial value until EEPROM is read
-	nv->value = true;
-	set_defaults(nv);
+	_set_defa(nv);
 #endif
 #ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
 	nv->index = 0;								// this will read the first record in NVM
 
 	read_persistent_value(nv);
-	if (nv->value != cs.fw_build) {
-		nv->value = true;						// case (1) NVM is not setup or not in revision
-		set_defaults(nv);
+	if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
+//	if (fp_NE(nv->value, cs.fw_build)) {
+		_set_defa(nv);
 	} else {									// case (2) NVM is setup and in revision
 		rpt_print_loading_configs_message();
 		for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
@@ -140,26 +141,36 @@ void config_init()
 }
 
 /*
- * set_defaults() - reset NVM with default values for active profile
+ * set_defaults() - reset persistence with default values for machine profile
+ * _set_defa() - helper function and called directly from config_init()
  */
-stat_t set_defaults(nvObj_t *nv)
-{
-	if (fp_FALSE(nv->value)) {					// failsafe. Must set true or no action occurs
-		help_defa(nv);
-		return (STAT_OK);
-	}
-	cm_set_units_mode(MILLIMETERS);				// must do inits in MM mode
 
+static void _set_defa(nvObj_t *nv)
+{
+	cm_set_units_mode(MILLIMETERS);				// must do inits in MM mode
 	for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
 		if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 			nv->value = GET_TABLE_FLOAT(def_value);
 			strncpy_P(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
 			nv_set(nv);
-			nv_persist(nv);						// persist must occur when no other interrupts are firing
+			nv_persist(nv);
 		}
 	}
-	rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
 	sr_init_status_report();					// reset status reports
+	rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+}
+
+stat_t set_defaults(nvObj_t *nv)
+{
+	// failsafe. nv->value must be true or no action occurs
+	if (fp_FALSE(nv->value)) return(help_defa(nv));
+	_set_defa(nv);
+
+	// The values in nv are now garbage. Mark the nv as $defa so it displays nicely.
+//	strncpy(nv->token, "defa", TOKEN_LEN);		// correct, but not required
+//	nv->index = nv_get_index("", nv->token);	// correct, but not required
+	nv->valuetype = TYPE_INTEGER;
+	nv->value = 1;
 	return (STAT_OK);
 }
 
@@ -294,28 +305,6 @@ stat_t set_flt(nvObj_t *nv)
 	return(STAT_OK);
 }
 
-/***** GCODE SPECIFIC EXTENSIONS TO GENERIC FUNCTIONS *****/
-
-/*
- * set_flu() - set floating point number with G20/G21 units conversion
- *
- * The number 'setted' will have been delivered in external units (inches or mm).
- * It is written to the target memory location in internal canonical units (mm).
- * The original nv->value is also changed so persistence works correctly.
- * Displays should convert back from internal canonical form to external form.
- */
-
-stat_t set_flu(nvObj_t *nv)
-{
-	if (cm_get_units_mode(MODEL) == INCHES) {		// if in inches...
-		nv->value *= MM_PER_INCH;					// convert to canonical millimeter units
-	}
-	*((float *)GET_TABLE_WORD(target)) = nv->value;// write value as millimeters or degrees
-	nv->precision = GET_TABLE_WORD(precision);
-	nv->valuetype = TYPE_FLOAT;
-	return(STAT_OK);
-}
-
 /************************************************************************************
  * Group operations
  *
@@ -386,7 +375,7 @@ stat_t set_grp(nvObj_t *nv)
 	for (uint8_t i=0; i<NV_MAX_OBJECTS; i++) {
 		if ((nv = nv->nx) == NULL) break;
 		if (nv->valuetype == TYPE_EMPTY) break;
-		else if (nv->valuetype == TYPE_NULL)	// NULL means GET the value
+		else if (nv->valuetype == TYPE_NULL)		// NULL means GET the value
 			nv_get(nv);
 		else {
 			nv_set(nv);
@@ -462,42 +451,6 @@ uint8_t nv_get_type(nvObj_t *nv)
 	if (strcmp("err",nv->token) == 0) return (NV_TYPE_MESSAGE); 	// errors are reported as messages
 	if (strcmp("n",  nv->token) == 0) return (NV_TYPE_LINENUM);
 	return (NV_TYPE_CONFIG);
-}
-
-/*
- * nv_persist_offsets() - write any changed G54 (et al) offsets back to NVM
- */
-
-stat_t nv_persist_offsets(uint8_t flag)
-{
-/*++++ Fixme
-	if (flag == true) {
-		nvObj_t nv;
-		for (uint8_t i=1; i<=COORDS; i++) {
-			for (uint8_t j=0; j<AXES; j++) {
-				sprintf(nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
-				nv.index = nv_get_index((const char_t *)"", nv.token);
-				nv.value = cm.offset[i][j];
-				nv_persist(&nv);				// only writes changed values
-			}
-		}
-	}
-*/
-	return (STAT_OK);
-}
-
-/*
- * nv_preprocess_float() - pre-promcess flaoting point number for units display and illegal valaues
- */
-
-void nv_preprocess_float(nvObj_t *nv)
-{
-	if (isnan((double)nv->value) || isinf((double)nv->value)) return;	// illegal float values
-	if (GET_TABLE_BYTE(flags) & F_CONVERT) {							// unit conversion required?
-		if (cm_get_units_mode(MODEL) == INCHES) {
-			nv->value *= INCHES_PER_MM;
-		}
-	}
 }
 
 /******************************************************************************
@@ -750,97 +703,6 @@ void nv_dump_nv(nvObj_t *nv)
 			 nv->token,
 			 (char *)nv->stringp);
 }
-
-/****************************************************************************
- ***** Config Unit Tests ****************************************************
- ****************************************************************************/
-
-#ifdef __UNIT_TESTS
-#ifdef __UNIT_TEST_CONFIG
-
-#define NVMwr(i,v) { nv.index=i; nv.value=v; nv_write_NVM_value(&nv);}
-#define NVMrd(i)   { nv.index=i; nv_read_NVM_value(&nv); printf("%f\n", (char *)nv.value);}
-
-void cfg_unit_tests()
-{
-
-// NVM tests
-/*	nvObj_t nv;
-	NVMwr(0, 329.01)
-	NVMwr(1, 111.01)
-	NVMwr(2, 222.02)
-	NVMwr(3, 333.03)
-	NVMwr(4, 444.04)
-	NVMwr(10, 10.10)
-	NVMwr(100, 100.100)
-	NVMwr(479, 479.479)
-
-	NVMrd(0)
-	NVMrd(1)
-	NVMrd(2)
-	NVMrd(3)
-	NVMrd(4)
-	NVMrd(10)
-	NVMrd(100)
-	NVMrd(479)
-*/
-
-// config table tests
-
-	index_t i;
-//	float val;
-
-//	print_configs("$", NUL);					// no filter (show all)
-//	print_configs("$", 'g');					// filter for general parameters
-//	print_configs("$", '1');					// filter for motor 1
-//	print_configs("$", 'x');					// filter for x axis
-
-	i = nv_get_index((const char_t *)"fb");
-	i = nv_get_index((const char_t *)"xfr");
-	i = nv_get_index((const char_t *)"g54");
-
-//	i = get_pos_axis(55);
-//	i = get_pos_axis(73);
-//	i = get_pos_axis(93);
-//	i = get_pos_axis(113);
-
-/*
-	for (i=0; i<NV_MAX_INDEX; i++) {
-
-		nv_get(&nv);
-
-		nv.value = 42;
-		nv_set(&nv);
-
-		val = get_flt_value(i);
-		nv_get_token(i, nv.token);
-
-//		get_friendly(i, string);
-		get_format(i, nv.vstring);
-		get_axis(i);							// uncomment main function to test
-		get_motor(i);
-		nv_set(i, &nv);
-		nv_print(i);
-	}
-
-	_parse_config_string("$1po 1", &c);			// returns a number
-	_parse_config_string("XFR=1200", &c);		// returns a number
-	_parse_config_string("YFR 1300", &c);		// returns a number
-	_parse_config_string("zfr	1400", &c);		// returns a number
-	_parse_config_string("afr", &c);			// returns a null
-	_parse_config_string("Bfr   ", &c);			// returns a null
-	_parse_config_string("cfr=wordy", &c);		// returns a null
-
-//	i = cfgget_config_index("gc");
-//	i = cfgget_config_index("gcode");
-//	i = cfgget_config_index("c_axis_mode");
-//	i = cfgget_config_index("AINT_NOBODY_HOME");
-	i = cfgget_config_index("firmware_version");
-*/
-}
-
-#endif
-#endif
 
 #ifdef __cplusplus
 }

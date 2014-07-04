@@ -17,7 +17,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* This file contains application specific data for the config system:
- *	- application-specific functions and function prototypes 
+ *	- application-specific functions and function prototypes
  *	- application-specific message and print format strings
  *	- application-specific config array
  *	- any other application-specific data or functions
@@ -56,7 +56,7 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 /***********************************************************************************
  **** application-specific internal functions **************************************
  ***********************************************************************************/
-// See config.cpp/.h for generic variables and functions that are not specific to 
+// See config.cpp/.h for generic variables and functions that are not specific to
 // TinyG or the motion control application domain
 
 // helpers (most helpers are defined immediately above their usage so they don't need prototypes here)
@@ -702,8 +702,43 @@ uint8_t nv_index_is_single(index_t index) { return ((index <= NV_INDEX_END_SINGL
 uint8_t nv_index_is_group(index_t index) { return (((index >= NV_INDEX_START_GROUPS) && (index < NV_INDEX_START_UBER_GROUPS)) ? true : false);}
 uint8_t nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS) ? true : false);}
 
+/***** APPLICATION SPECIFIC CONFIGS AND EXTENSIONS TO GENERIC FUNCTIONS *****/
 
-/**** UberGroup Operations ****************************************************
+/*
+ * set_flu() - set floating point number with G20/G21 units conversion
+ *
+ * The number 'setted' will have been delivered in external units (inches or mm).
+ * It is written to the target memory location in internal canonical units (mm).
+ * The original nv->value is also changed so persistence works correctly.
+ * Displays should convert back from internal canonical form to external form.
+ */
+
+stat_t set_flu(nvObj_t *nv)
+{
+	if (cm_get_units_mode(MODEL) == INCHES) {		// if in inches...
+		nv->value *= MM_PER_INCH;					// convert to canonical millimeter units
+	}
+	*((float *)GET_TABLE_WORD(target)) = nv->value;// write value as millimeters or degrees
+	nv->precision = GET_TABLE_WORD(precision);
+	nv->valuetype = TYPE_FLOAT;
+	return(STAT_OK);
+}
+
+/*
+ * preprocess_float() - pre-process floating point number for units display
+ */
+
+void preprocess_float(nvObj_t *nv)
+{
+	if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
+	if (GET_TABLE_BYTE(flags) & F_CONVERT) {	// unit conversion required?
+		if (cm_get_units_mode(MODEL) == INCHES) {
+			nv->value *= INCHES_PER_MM;
+		}
+	}
+}
+
+/**** TinyG UberGroup Operations ****************************************************
  * Uber groups are groups of groups organized for convenience:
  *	- motors		- group of all motor groups
  *	- axes			- group of all axis groups
@@ -773,7 +808,7 @@ static stat_t _do_all(nvObj_t *nv)	// print all parameters
 	_do_motors(nv);					// print all motor groups
 	_do_axes(nv);						// print all axis groups
 
-	strcpy(nv->token,"p1");			// print PWM group		
+	strcpy(nv->token,"p1");			// print PWM group
 	get_grp(nv);
 	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
@@ -799,9 +834,9 @@ static stat_t _do_all(nvObj_t *nv)	// print all parameters
 /*
 static stat_t _set_comm_helper(nvObj_t *nv, uint32_t yes, uint32_t no)
 {
-	if (fp_NOT_ZERO(nv->value)) { 
+	if (fp_NOT_ZERO(nv->value)) {
 		(void)xio_ctrl(XIO_DEV_USB, yes);
-	} else { 
+	} else {
 		(void)xio_ctrl(XIO_DEV_USB, no);
 	}
 	return (STAT_OK);
@@ -860,7 +895,7 @@ static stat_t get_rx(nvObj_t *nv)
 #endif
 }
 
-/* run_sx()	- send XOFF, XON --- test only 
+/* run_sx()	- send XOFF, XON --- test only
 static stat_t run_sx(nvObj_t *nv)
 {
 	xio_putc(XIO_DEV_USB, XOFF);
