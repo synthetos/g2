@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.04 // sync w/435.18; controller
+#define TINYG_FIRMWARE_BUILD   		047.05 // sync w/435.18; cycle_homing changes
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -560,7 +560,7 @@ char *get_status_message(stat_t status);
 #define	STAT_HOMING_ERROR_BAD_OR_NO_AXIS 241
 #define	STAT_HOMING_ERROR_ZERO_SEARCH_VELOCITY 242
 #define	STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY 243
-#define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IS_ZERO 244
+#define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL 244
 #define	STAT_HOMING_ERROR_NEGATIVE_LATCH_BACKOFF 245
 #define	STAT_HOMING_ERROR_SWITCH_MISCONFIGURATION 246
 #define	STAT_ERROR_247 247
