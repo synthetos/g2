@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.06 // sync w/435.19; jogging cycle
+#define TINYG_FIRMWARE_BUILD   		047.07 // sync w/435.19; probing cycle
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -63,6 +63,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
+#define __NEW_SWITCHES						// Using v9 style switch code
 //#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
 //#define __KAHAN							// Use Kahan summation in aline exec functions
 

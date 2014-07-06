@@ -1,6 +1,6 @@
 /*
- * hardware.h - system hardware configuration - this file is platform specific
- *				THIS FILE IS HARDWARE PLASTFORM SPECIFIC - ARM version
+ * hardware.h - system hardware configuration
+ *				THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the TinyG project
  *
@@ -30,36 +30,38 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
-
 /*--- Hardware platform enumerations ---*/
 
 enum hwPlatform {
 	HM_PLATFORM_NONE = 0,
 
-	HW_PLATFORM_TINYG_XMEGA,	// TinyG code base on Xmega boards. 
-								//	hwRevision 0 = TinyG v7 and earlier
-								//	hwRevision 1 = TinyG v8
+	HW_PLATFORM_TINYG_XMEGA,	// TinyG code base on Xmega boards.
+								//	hwVersion 7 = TinyG v7 and earlier
+								//	hwVersion 8 = TinyG v8
 
 	HW_PLATFORM_G2_DUE,			// G2 code base on native Arduino Due
 
 	HW_PLATFORM_TINYG_V9		// G2 code base on v9 boards
-								// hwRevision 0 = v9c
-								// hwRevision 1 = v9d
-								// hwRevision 2 = v9f
-								// hwRevision 3 = v9h
-								// hwRevision 4 = v9i
+								//  hwVersion 0 = v9c
+								//  hwVersion 1 = v9d
+								//  hwVersion 2 = v9f
+								//  hwVersion 3 = v9h
+								//  hwVersion 4 = v9i
 };
 
-#define HW_VERSION_TINYGV7		0
-#define HW_VERSION_TINYGV8		1
+#define HW_VERSION_TINYGV6		6
+#define HW_VERSION_TINYGV7		7
+#define HW_VERSION_TINYGV8		8
+
 #define HW_VERSION_TINYGV9C		0
 #define HW_VERSION_TINYGV9D		1
 #define HW_VERSION_TINYGV9F		2
 #define HW_VERSION_TINYGV9H		3
 #define HW_VERSION_TINYGV9I		4
+
+////////////////////////////
+/////// ARM VERSION ////////
+////////////////////////////
 
 // ARM specific code start here
 
@@ -88,12 +90,12 @@ extern "C"{
 /**** Resource Assignment via Motate ****
  *
  * This section defines resource usage for pins, timers, PWM channels, communications
- * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and 
+ * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and
  * other files for pinouts and other configuration details.
  *
- * Commenting out or #ifdef'ing out definitions below will cause the compiler to 
- * drop references to these resources from the compiled code. This will reduce 
- * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor, 
+ * Commenting out or #ifdef'ing out definitions below will cause the compiler to
+ * drop references to these resources from the compiled code. This will reduce
+ * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor,
  * XYZ axis config commenting out the higher motors and axes here will remove them
  * from later code (using the motate .isNull() test).
  */
@@ -107,7 +109,7 @@ extern "C"{
  *	 2	LOADER software generated interrupt (STIR / SGI)
  *	 3	Serial read character interrupt
  *	 4	EXEC software generated interrupt (STIR / SGI)
- *	 5	Serial write character interrupt  
+ *	 5	Serial write character interrupt
  */
 
 /**** Stepper DDA and dwell timer settings ****/
