@@ -55,11 +55,11 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t homing_switch_position;	// min/max position of current homing switch
 	int8_t limit_switch_axis;		// axis of current limit switch, or -1 if none
 	uint8_t limit_switch_position;	// min/max position of current limit switch
-	void (*switch_saved_on_trailing)(struct swSwitch *s);
 #else
 	int8_t homing_switch;			// homing switch for current axis (index into switch flag table)
 	int8_t limit_switch;			// limit switch for current axis, or -1 if none
 #endif
+	void (*switch_saved_on_trailing)(struct swSwitch *s);
 
 	uint8_t homing_closed;			// 0=open, 1=closed
 	uint8_t limit_closed;			// 0=open, 1=closed
