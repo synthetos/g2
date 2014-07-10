@@ -24,11 +24,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*	The values in this file are the default settings that are loaded into a virgin EEPROM, 
- *	and can be changed using the config commands. After initial load the EEPROM values 
+/*	The values in this file are the default settings that are loaded into a virgin EEPROM,
+ *	and can be changed using the config commands. After initial load the EEPROM values
  *	(or changed values) are used.
  *
- *	System and hardware settings that you shouldn't need to change are in hardware.h  
+ *	System and hardware settings that you shouldn't need to change are in hardware.h
  *	Application settings that also shouldn't need to be changed are in tinyg.h
  */
 
@@ -38,12 +38,13 @@
 /**** GENERAL SETTINGS ******************************************************/
 
 // **** PLEASE NOTE **** Any of these may be overridden in machine profiles
-// Do not assume these are the effective settings. Check the machine profile 
+// Do not assume these are the effective settings. Check the machine profile
 
 // Machine configuration settings
 #define CHORDAL_TOLERANCE 			0.01					// chord accuracy for arc drawing (in mm)
 #define SOFT_LIMIT_ENABLE			0						// 0 = off, 1 = on
-#define SWITCH_TYPE 				SW_TYPE_NORMALLY_OPEN	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+//#define SWITCH_TYPE 				SW_TYPE_NORMALLY_OPEN	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 
 #define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT			2.00					// motor power timeout in seconds
