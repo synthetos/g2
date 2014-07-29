@@ -16,7 +16,7 @@
     <title>G2 by synthetos</title>
   </head>
 
-  <body>
+  <body ng-app="binaryApp">
     <header>
       <div class="inner">
         <h1>G2</h1>
@@ -38,21 +38,24 @@
 <p>-Rob</p>
 
 
-          <h3>
-<a name="binary-downloads" class="anchor" href="#binary-downloads"><span class="octicon octicon-link"></span></a>G2 Binary Downloads</h3>
+<h3><a name="binary-downloads" class="anchor" href="#binary-downloads"><span class="octicon octicon-link"></span></a>G2 Binary Downloads</h3>
 
 <p>Provided are links to both the *.bin and the *.elf files. They both contain the same compiled code, but different programmers may use different formats.</p>
 
 <p>Most of the time, you will only need the *.elf file.</p>
 
-<ul>
-        <li><B>USB Test for Due - default settings</B> - <a href="binaries/TinyG2_Due_rob_usbtest.bin">.bin</a> <a href="binaries/TinyG2_Due_rob_usbtest.elf">.elf</a></li>
-        <li><B>USB Test for Due - Shapeoko settings</B> - <a href="binaries/TinyG2_Due_rob_usbtest_shapeoko.bin">.bin</a> <a href="binaries/TinyG2_Due_rob_usbtest_shapeoko.elf">.elf</a></li>
-        <li><B>USB Test for v9 - default settings</B> - <a href="binaries/TinyG2_v9_rob_usbtest.bin">.bin</a> <a href="binaries/TinyG2_v9_rob_usbtest.elf">.elf</a></li>
-        <li><B>USB Test for v9 - Shapeoko settings</B> - <a href="binaries/TinyG2_v9_rob_usbtest_shapeoko.bin">.bin</a> <a href="binaries/TinyG2_v9_rob_usbtest_shapeoko.elf">.elf</a></li>
-</ul>
-
-<p>-Rob</p>
+              <table>
+                <tr>
+                  <th>Branch</th>
+                  <th>Version</th>
+                  <th>Download Link</th>
+                </tr>
+                <tr ng-repeat="binary in binaries">
+                  <td>{{binary.branch}}</td>
+                  <td>{{binary.version}}</td>
+                  <td><a href="binaries/{{binary.name}}.hex">{{binary.name}}.hex</a></td>
+                </tr>
+              </table>
 
         </section>
 
@@ -73,6 +76,8 @@
       </div>
     </div>
 
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.11/angular.min.js"></script>
+  <script src="javascripts/app.js"></script>
   
   </body>
 </html>

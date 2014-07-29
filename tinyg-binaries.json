@@ -1,0 +1,16 @@
+{"binaries":
+  [
+    {
+      "name" : "TinyG2_Due-edge-037.03-default",
+      "version" : "037.03",
+      "branch" : "edge",
+      "comment" : "Compiled with default (safe, but rather slow) settings."
+    },
+    {
+      "name" : "TinyG2_Due-edge-037.03-shapeoko",
+      "version" : "037.03",
+      "branch" : "edge",
+      "comment" : "Compiled with conservative shapeoko settings."
+    },
+  ]
+}
