@@ -48,11 +48,13 @@
                 <tr>
                   <th>Branch</th>
                   <th>Version</th>
+                  <th>Comment</th>
                   <th>Download Link</th>
                 </tr>
                 <tr ng-repeat="binary in binaries">
                   <td>{{binary.branch}}</td>
                   <td>{{binary.version}}</td>
+                  <td>{{binary.comment}}</td>
                   <td><a href="binaries/{{binary.name}}.hex">{{binary.name}}.hex</a></td>
                 </tr>
               </table>
