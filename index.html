@@ -45,12 +45,14 @@
 
         <table>
           <tr>
+            <th>Board/Shield</th>
             <th>Branch</th>
             <th>Version</th>
             <th>Comment</th>
             <th colspan=2>Download Links</th>
           </tr>
           <tr ng-repeat="binary in binaries">
+            <td>{{binary.board}}</td>
             <td>{{binary.branch}}</td>
             <td>{{binary.version}}</td>
             <td>{{binary.comment}}</td>
