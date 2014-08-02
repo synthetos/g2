@@ -691,6 +691,11 @@ stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
 stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 
+// Yeah, M_Pi is nonstandard:
+#ifndef M_PI
+    static const float M_PI = 3.14159265358979323846264338327950288;   /* pi             */
+#endif
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE

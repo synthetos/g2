@@ -37,6 +37,10 @@
 #include "text_parser.h"
 #include "xio.h"
 
+/**** Decalare functions ****/
+
+void xio_usb_connection_changed(const uint8_t channel, const bool connected);
+
 /**** Allocate structures ****/
 
 xioSingleton_t xio;
@@ -47,9 +51,19 @@ xioSingleton_t xio;
  * xio_init()
  */
 
+
+
 void xio_init()
 {
-	xio_init_assertions();
+    xio_init_assertions();
+
+    SerialUSB.setConnectionCallback([&](bool connected) {
+        xio_usb_connection_changed(0, connected);
+    });
+
+    SerialUSB1.setConnectionCallback([&](bool connected) {
+        xio_usb_connection_changed(1, connected);
+    });
 }
 
 /* 
@@ -80,8 +94,6 @@ stat_t xio_test_assertions()
 */
 	return (STAT_OK);
 }
-
-
 
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
@@ -140,6 +152,11 @@ size_t write(uint8_t *buffer, size_t size)
 	size_t written = SerialUSB.write(buffer, size);
 //	spi.write(buffer, size);
 	return (written);
+}
+
+void xio_usb_connection_changed(const uint8_t channel, const bool connected)
+{
+    /// ... do something about it
 }
 
 /***********************************************************************************

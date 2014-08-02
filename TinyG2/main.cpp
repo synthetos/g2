@@ -58,6 +58,9 @@ void __libc_init_array(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
+void* __dso_handle = nullptr;
+
 #endif // __ARM
 
 static void _unit_tests(void);
@@ -74,15 +77,15 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 	/*gProductVersion   = */ //0.1,
 
-Motate::USBDevice< Motate::USBCDC > usb;
-//Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+//Motate::USBDevice< Motate::USBCDC > usb;
+Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
-typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
-//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
+decltype(usb._mixin_0_type::Serial) &SerialUSB = usb._mixin_0_type::Serial;
+decltype(usb._mixin_1_type::Serial) &SerialUSB1 = usb._mixin_1_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','2'} )
 
 //Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 #endif

@@ -403,8 +403,8 @@ $$(ALL_ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S
 	@echo $(START_BOLD)"Compiling ($(1)) $$<"; echo "    -> $$@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
 
-debug_$(1): $(1)
-	$(GDB) -x "$(CHIP)_$(1).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
+debug: $(1)
+	$(GDB) -x "$(PLATFORM_BASE).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
 
 # 
 # Include the dependency files, should be the last of the makefile
