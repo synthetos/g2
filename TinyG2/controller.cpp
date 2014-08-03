@@ -99,9 +99,18 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 
 #ifdef __ARM
-	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
+	cs.state_usb0 = CONTROLLER_NOT_CONNECTED;			// find USB next
+        cs.state_usb1 = CONTROLLER_NOT_CONNECTED;			// find USB next
 	IndicatorLed.setFrequency(100000);
 #endif
+
+    SerialUSB.setConnectionCallback([&](bool connected) {
+        cs.state_usb0 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+    });
+
+    SerialUSB1.setConnectionCallback([&](bool connected) {
+        cs.state_usb1 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+    });
 }
 
 /*
@@ -223,22 +232,22 @@ static stat_t _command_dispatch()
 #endif // __AVR
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
-	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
+//	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
 	// read input line and return if not a completed line
-	if (cs.state == CONTROLLER_READY) {
+	if (cs.state_usb0 == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
 			return (STAT_OK);	// This is an exception: returns OK for anything NOT OK, so the idler always runs
 		}
-	} else if (cs.state == CONTROLLER_NOT_CONNECTED) {
+	} else if (cs.state_usb0 == CONTROLLER_NOT_CONNECTED) {
 		if (SerialUSB.isConnected() == false) return (STAT_OK);
 		cm_request_queue_flush();
 		rpt_print_system_ready_message();
-		cs.state = CONTROLLER_STARTUP;
+		cs.state_usb0 = CONTROLLER_STARTUP;
 
-	} else if (cs.state == CONTROLLER_STARTUP) {		// run startup code
-		cs.state = CONTROLLER_READY;
+	} else if (cs.state_usb0 == CONTROLLER_STARTUP) {		// run startup code
+		cs.state_usb0 = CONTROLLER_READY;
 
 	} else {
 		return (STAT_OK);
