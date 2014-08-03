@@ -116,13 +116,11 @@ extern "C" {
 
     extern int _write( int file, char *ptr, int len )
     {
-        if (file == 0) {
-            size_t written = SerialUSB.write((const uint8_t *)ptr, len);
-            //	spi.write((const uint8_t *)ptr, len);
-            return written;
-        } else  if (file == 1) {
+        if (file == 1) {
             size_t written = SerialUSB1.write((const uint8_t *)ptr, len);
-            //	spi.write((const uint8_t *)ptr, len);
+            return written;
+        } else /*if (file == 0)*/ {
+            size_t written = SerialUSB.write((const uint8_t *)ptr, len);
             return written;
         }
         return -1;

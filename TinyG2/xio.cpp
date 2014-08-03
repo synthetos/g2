@@ -28,7 +28,7 @@
 /*
  * XIO acts as an entry point into lower level IO routines - mostly serial IO. It supports
  * the USB, SPI and fiol IO sub-systems, as well as providing low level character functions
- * used by stdio (printf()). 
+ * used by stdio (printf()).
  */
 #include "tinyg2.h"
 #include "config.h"
@@ -54,33 +54,33 @@ void xio_init()
     xio_init_assertions();
 }
 
-/* 
+/*
  * xio_init_assertions()
  * xio_test_assertions() - check memory integrity of xio sub-systems
  */
 
 void xio_init_assertions()
 {
-//	cs.magic_start = MAGICNUM;
-//	cs.magic_end = MAGICNUM;
+    //	cs.magic_start = MAGICNUM;
+    //	cs.magic_end = MAGICNUM;
 }
 
 stat_t xio_test_assertions()
 {
-/*
-	if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
-*/
-	return (STAT_OK);
+    /*
+     if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+     if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
+     */
+    return (STAT_OK);
 }
 
 /*
@@ -88,24 +88,25 @@ stat_t xio_test_assertions()
  */
 int read_char (void)
 {
-	return SerialUSB.readByte();
+    return SerialUSB.readByte();
+//    return SerialUSB1.readByte();
 }
 
-/* 
+/*
  *	read_line() - read a complete line from stdin
  *
  *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
  *
  *	Returns:
  *
- *	  STAT_OK		  Returns a complete null terminated string. 
+ *	  STAT_OK		  Returns a complete null terminated string.
  *					  Index contains total character count (less terminating NUL)
  *					  The terminating LF is not written to the string.
  *
  *	  STAT_EAGAIN	  Line is incomplete because input has no more characters.
  *					  Index is left at the first available space.
  *					  Retry later to read more of the string. Use index from previous call.
- * 
+ *
  *	  STAT_EOF		  Line is incomplete because end of file was reached (file devices)
  *					  Index can be used as a character count.
  *
@@ -118,28 +119,28 @@ int read_char (void)
  */
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
-	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
+    if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 
-	for (int c; *index < size; (*index)++ ) {
-		if ((c = read_char()) != _FDEV_ERR) {
-			buffer[*index] = (uint8_t)c;
-			if ((c == LF) || (c == CR)) {
-				buffer[*index] = NUL;
-				return (STAT_OK);
-			}
-			continue;
-		}
-		return (STAT_EAGAIN);
-	}	
-	return (STAT_BUFFER_FULL);
+    for (int c; *index < size; (*index)++ ) {
+        if ((c = read_char()) != _FDEV_ERR) {
+            buffer[*index] = (uint8_t)c;
+            if ((c == LF) || (c == CR)) {
+                buffer[*index] = NUL;
+                return (STAT_OK);
+            }
+            continue;
+        }
+        return (STAT_EAGAIN);
+    }
+    return (STAT_BUFFER_FULL);
 }
 
 size_t write(uint8_t *buffer, size_t size)
 {
-//	SerialUSB.write(buffer, sizeof(buffer));
-	size_t written = SerialUSB.write(buffer, size);
-//	spi.write(buffer, size);
-	return (written);
+    size_t written = SerialUSB.write(buffer, size);
+//    size_t written = SerialUSB1.write(buffer, size);
+
+    return (written);
 }
 
 /***********************************************************************************
@@ -152,21 +153,21 @@ size_t write(uint8_t *buffer, size_t size)
  */
 stat_t xio_set_spi(nvObj_t *nv)
 {
-	xio.spi_state = (uint8_t)nv->value;
+    xio.spi_state = (uint8_t)nv->value;
 
 #ifdef __ARM
-	if (fp_EQ(nv->value, SPI_ENABLE)) {
-		spi_miso_pin.setMode(kOutput);
-		spi_mosi_pin.setMode(kOutput);
-		spi_sck_pin.setMode(kOutput);
+    if (fp_EQ(nv->value, SPI_ENABLE)) {
+        spi_miso_pin.setMode(kOutput);
+        spi_mosi_pin.setMode(kOutput);
+        spi_sck_pin.setMode(kOutput);
 
-	} else if (fp_EQ(nv->value, SPI_DISABLE)) {
-		spi_miso_pin.setMode(kInput);
-		spi_mosi_pin.setMode(kInput);
-		spi_sck_pin.setMode(kInput);
-	}
+    } else if (fp_EQ(nv->value, SPI_DISABLE)) {
+        spi_miso_pin.setMode(kInput);
+        spi_mosi_pin.setMode(kInput);
+        spi_sck_pin.setMode(kInput);
+    }
 #endif
-	return (STAT_OK);
+    return (STAT_OK);
 }
 
 /***********************************************************************************
