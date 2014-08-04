@@ -119,14 +119,12 @@ QUIET :=
 endif
 
 ifeq ($(COLOR),1)
-START_BOLD="\033[1m"
-END_BOLD="\033[0m"
-NO_COLOR="\033[0m"
-OK_COLOR="\033[32;01m"
-ERROR_COLOR="\033[31;01m"
-WARN_COLOR="\033[33;01m"
-else
-QUIET :=
+START_BOLD=`tput bold`
+END_BOLD=`tput sgr0`
+NO_COLOR=`tput setaf 0`
+OK_COLOR=`tput setaf 2`
+ERROR_COLOR=`tput setaf 1`
+WARN_COLOR=`tput setaf 3`
 endif
 
 
@@ -154,11 +152,11 @@ PLATFORM ?= gShield
 
 ifeq ("$(PLATFORM)","gShield")
 
-	# This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
-	# for the code to get the pinout right.
+    # This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
+    # for the code to get the pinout right.
 
-	BASE_PLATFORM=due
-	DEVICE_DEFINES += MOTATE_BOARD="gShield"
+    BASE_PLATFORM=due
+    DEVICE_DEFINES += MOTATE_BOARD="gShield"
 
 endif
 
@@ -195,31 +193,29 @@ ifeq ("$(BASE_PLATFORM)","")
 endif
 
 ifeq ("$(BASE_PLATFORM)","due")
-	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+    _PLATFORM_FOUND = 1
+    FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
-	CHIP = SAM3X8E
+    CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
     CMSIS_ROOT = CMSIS
 
-	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
-	
+    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
 
-	include $(PLATFORM_BASE).mk
+    include $(PLATFORM_BASE).mk
 endif
 
 ifeq ("$(BASE_PLATFORM)","v9_3x8c")
-	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+    _PLATFORM_FOUND = 1
+    FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
-	CHIP = SAM3X8C
-	PLATFORM_BASE = platform/atmel_sam
-	CMSIS_ROOT = CMSIS
+    CHIP = SAM3X8C
+    PLATFORM_BASE = platform/atmel_sam
+    CMSIS_ROOT = CMSIS
 
-	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/v9_3x8c
+    DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/v9_3x8c
 
-	include $(PLATFORM_BASE).mk
-
+    include $(PLATFORM_BASE).mk
 endif
 
 ifeq ("$(_PLATFORM_FOUND)", "0")

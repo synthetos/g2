@@ -51,137 +51,137 @@
 
 
 namespace Motate {
-    
-	// NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
-	// Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
-    
-	pin_number kSerial_RX                       =  0;
-	pin_number kSerial_TX                       =  1;
-    
-	pin_number kSerial0_RX                      =  0;
-	pin_number kSerial0_TX                      =  1;
-    
-	pin_number kI2C_SDAPinNumber                =  2;
-	pin_number kI2C_SCLPinNumber                =  3;
-    
-	pin_number kI2C0_SDAPinNumber               =  2;
-	pin_number kI2C0_SCLPinNumber               =  3;
-    
-	pin_number kSPI_SCKPinNumber                =  4;
-	pin_number kSPI_MISOPinNumber               =  5;
-	pin_number kSPI_MOSIPinNumber               =  6;
-    
-	pin_number kSPI0_SCKPinNumber               =  4;
-	pin_number kSPI0_MISOPinNumber              =  5;
-	pin_number kSPI0_MOSIPinNumber              =  6;
-    
-	pin_number kKinen_SyncPinNumber             =  7;
-    
-	pin_number kSocket1_SPISlaveSelectPinNumber = 10;
-	pin_number kSocket1_InterruptPinNumber      = 11;
-	pin_number kSocket1_StepPinNumber           = 12;
-	pin_number kSocket1_DirPinNumber            = 13;
-	pin_number kSocket1_EnablePinNumber         = 14;
-	pin_number kSocket1_Microstep_0PinNumber    = 15;
-	pin_number kSocket1_Microstep_1PinNumber    = 16;
-	pin_number kSocket1_Microstep_2PinNumber    = 17;
-	pin_number kSocket1_VrefPinNumber           = 18;
-    
-	pin_number kSocket2_SPISlaveSelectPinNumber = 20;
-	pin_number kSocket2_InterruptPinNumber      = 21;
-	pin_number kSocket2_StepPinNumber           = 22;
-	pin_number kSocket2_DirPinNumber            = 23;
-	pin_number kSocket2_EnablePinNumber         = 24;
-	pin_number kSocket2_Microstep_0PinNumber    = 25;
-	pin_number kSocket2_Microstep_1PinNumber    = 26;
-	pin_number kSocket2_Microstep_2PinNumber    = 27;
-	pin_number kSocket2_VrefPinNumber           = 28;
-    
-	pin_number kSocket3_SPISlaveSelectPinNumber = 30;
-	pin_number kSocket3_InterruptPinNumber      = 31;
-	pin_number kSocket3_StepPinNumber           = 32;
-	pin_number kSocket3_DirPinNumber            = 33;
-	pin_number kSocket3_EnablePinNumber         = 34;
-	pin_number kSocket3_Microstep_0PinNumber    = 35;
-	pin_number kSocket3_Microstep_1PinNumber    = 36;
-	pin_number kSocket3_Microstep_2PinNumber    = 37;
-	pin_number kSocket3_VrefPinNumber           = 38;
 
-	pin_number kSocket4_SPISlaveSelectPinNumber = 40;
-	pin_number kSocket4_InterruptPinNumber      = 41;
-	pin_number kSocket4_StepPinNumber           = 42;
-	pin_number kSocket4_DirPinNumber            = 43;
-	pin_number kSocket4_EnablePinNumber         = 44;
-	pin_number kSocket4_Microstep_0PinNumber    = 45;
-	pin_number kSocket4_Microstep_1PinNumber    = 46;
-	pin_number kSocket4_Microstep_2PinNumber    = 47;
-	pin_number kSocket4_VrefPinNumber           = 48;
-    
-	pin_number kSocket5_SPISlaveSelectPinNumber = 50;
-	pin_number kSocket5_InterruptPinNumber      = 51;
-	pin_number kSocket5_StepPinNumber           = 52;
-	pin_number kSocket5_DirPinNumber            = 53;
-	pin_number kSocket5_EnablePinNumber         = 54;
-	pin_number kSocket5_Microstep_0PinNumber    = 55;
-	pin_number kSocket5_Microstep_1PinNumber    = 56;
-	pin_number kSocket5_Microstep_2PinNumber    = 57;
-	pin_number kSocket5_VrefPinNumber           = 58;
-    
-	pin_number kSocket6_SPISlaveSelectPinNumber = 60;
-	pin_number kSocket6_InterruptPinNumber      = 61;
-	pin_number kSocket6_StepPinNumber           = 62;
-	pin_number kSocket6_DirPinNumber            = 63;
-	pin_number kSocket6_EnablePinNumber         = 64;
-	pin_number kSocket6_Microstep_0PinNumber    = 65;
-	pin_number kSocket6_Microstep_1PinNumber    = 66;
-	pin_number kSocket6_Microstep_2PinNumber    = 67;
-	pin_number kSocket6_VrefPinNumber           = 68;
-    
-    
-	pin_number kXAxis_MinPinNumber              = 100;
-	pin_number kXAxis_MaxPinNumber              = 101;
-	pin_number kYAxis_MinPinNumber              = 102;
-	pin_number kYAxis_MaxPinNumber              = 103;
-	pin_number kZAxis_MinPinNumber              = 104;
-	pin_number kZAxis_MaxPinNumber              = 105;
-    
-	pin_number kAAxis_MinPinNumber              = 106;
-	pin_number kAAxis_MaxPinNumber              = 107;
-	pin_number kBAxis_MinPinNumber              = 108;
-	pin_number kBAxis_MaxPinNumber              = 109;
-	pin_number kCAxis_MinPinNumber              = 110;
-	pin_number kCAxis_MaxPinNumber              = 111;
-    
-	pin_number kSpindle_EnablePinNumber         = 112;
-	pin_number kSpindle_DirPinNumber            = 113;
-	pin_number kSpindle_PwmPinNumber            = 114;
-	pin_number kSpindle_Pwm2PinNumber           = 115;
-	pin_number kCoolant_EnablePinNumber         = 116;
-    
-	pin_number kLED_USBRXPinNumber              = 117;
-	pin_number kLED_USBTXPinNumber              = 118;
+    // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
+    // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
-    pin_number kSD_CardDetect                   = 119;
-    pin_number kInterlock_In                    = 120;
+    pin_number kSerial_RX                       =  0;
+    pin_number kSerial_TX                       =  1;
+
+    pin_number kSerial0_RX                      =  0;
+    pin_number kSerial0_TX                      =  1;
+
+    pin_number kI2C_SDAPinNumber                =  2;
+    pin_number kI2C_SCLPinNumber                =  3;
+
+    pin_number kI2C0_SDAPinNumber               =  2;
+    pin_number kI2C0_SCLPinNumber               =  3;
+
+    pin_number kSPI_SCKPinNumber                =  4;
+    pin_number kSPI_MISOPinNumber               =  5;
+    pin_number kSPI_MOSIPinNumber               =  6;
+
+    pin_number kSPI0_SCKPinNumber               =  4;
+    pin_number kSPI0_MISOPinNumber              =  5;
+    pin_number kSPI0_MOSIPinNumber              =  6;
+
+    pin_number kKinen_SyncPinNumber             =  7;
+
+    pin_number kSocket1_SPISlaveSelectPinNumber = 10;
+    pin_number kSocket1_InterruptPinNumber      = 11;
+    pin_number kSocket1_StepPinNumber           = 12;
+    pin_number kSocket1_DirPinNumber            = 13;
+    pin_number kSocket1_EnablePinNumber         = 14;
+    pin_number kSocket1_Microstep_0PinNumber    = 15;
+    pin_number kSocket1_Microstep_1PinNumber    = 16;
+    pin_number kSocket1_Microstep_2PinNumber    = 17;
+    pin_number kSocket1_VrefPinNumber           = 18;
+
+    pin_number kSocket2_SPISlaveSelectPinNumber = 20;
+    pin_number kSocket2_InterruptPinNumber      = 21;
+    pin_number kSocket2_StepPinNumber           = 22;
+    pin_number kSocket2_DirPinNumber            = 23;
+    pin_number kSocket2_EnablePinNumber         = 24;
+    pin_number kSocket2_Microstep_0PinNumber    = 25;
+    pin_number kSocket2_Microstep_1PinNumber    = 26;
+    pin_number kSocket2_Microstep_2PinNumber    = 27;
+    pin_number kSocket2_VrefPinNumber           = 28;
+
+    pin_number kSocket3_SPISlaveSelectPinNumber = 30;
+    pin_number kSocket3_InterruptPinNumber      = 31;
+    pin_number kSocket3_StepPinNumber           = 32;
+    pin_number kSocket3_DirPinNumber            = 33;
+    pin_number kSocket3_EnablePinNumber         = 34;
+    pin_number kSocket3_Microstep_0PinNumber    = 35;
+    pin_number kSocket3_Microstep_1PinNumber    = 36;
+    pin_number kSocket3_Microstep_2PinNumber    = 37;
+    pin_number kSocket3_VrefPinNumber           = 38;
+
+    pin_number kSocket4_SPISlaveSelectPinNumber = 40;
+    pin_number kSocket4_InterruptPinNumber      = 41;
+    pin_number kSocket4_StepPinNumber           = 42;
+    pin_number kSocket4_DirPinNumber            = 43;
+    pin_number kSocket4_EnablePinNumber         = 44;
+    pin_number kSocket4_Microstep_0PinNumber    = 45;
+    pin_number kSocket4_Microstep_1PinNumber    = 46;
+    pin_number kSocket4_Microstep_2PinNumber    = 47;
+    pin_number kSocket4_VrefPinNumber           = 48;
+
+    pin_number kSocket5_SPISlaveSelectPinNumber = 50;
+    pin_number kSocket5_InterruptPinNumber      = 51;
+    pin_number kSocket5_StepPinNumber           = 52;
+    pin_number kSocket5_DirPinNumber            = 53;
+    pin_number kSocket5_EnablePinNumber         = 54;
+    pin_number kSocket5_Microstep_0PinNumber    = 55;
+    pin_number kSocket5_Microstep_1PinNumber    = 56;
+    pin_number kSocket5_Microstep_2PinNumber    = 57;
+    pin_number kSocket5_VrefPinNumber           = 58;
+
+    pin_number kSocket6_SPISlaveSelectPinNumber = 60;
+    pin_number kSocket6_InterruptPinNumber      = 61;
+    pin_number kSocket6_StepPinNumber           = 62;
+    pin_number kSocket6_DirPinNumber            = 63;
+    pin_number kSocket6_EnablePinNumber         = 64;
+    pin_number kSocket6_Microstep_0PinNumber    = 65;
+    pin_number kSocket6_Microstep_1PinNumber    = 66;
+    pin_number kSocket6_Microstep_2PinNumber    = 67;
+    pin_number kSocket6_VrefPinNumber           = 68;
+
+
+    pin_number kXAxis_MinPinNumber              = 100;
+    pin_number kXAxis_MaxPinNumber              = 101;
+    pin_number kYAxis_MinPinNumber              = 102;
+    pin_number kYAxis_MaxPinNumber              = 103;
+    pin_number kZAxis_MinPinNumber              = 104;
+    pin_number kZAxis_MaxPinNumber              = 105;
+
+    pin_number kAAxis_MinPinNumber              = 106;
+    pin_number kAAxis_MaxPinNumber              = 107;
+    pin_number kBAxis_MinPinNumber              = 108;
+    pin_number kBAxis_MaxPinNumber              = 109;
+    pin_number kCAxis_MinPinNumber              = 110;
+    pin_number kCAxis_MaxPinNumber              = 111;
+
+    pin_number kSpindle_EnablePinNumber         = 112;
+    pin_number kSpindle_DirPinNumber            = 113;
+    pin_number kSpindle_PwmPinNumber            = 114;
+    pin_number kSpindle_Pwm2PinNumber           = 115;
+    pin_number kCoolant_EnablePinNumber         = 116;
+
+    pin_number kLED_USBRXPinNumber              = 117;
+    pin_number kLED_USBTXPinNumber              = 118;
+
+    pin_number kSD_CardDetectPinNumber          = 119;
+    pin_number kInterlock_InPinNumber           = 120;
 
     pin_number kDebug1_PinNumber                =  -1;
     pin_number kDebug2_PinNumber                =  -1;
     pin_number kDebug3_PinNumber                =  -1;
 
-	// GRBL / gShield compatibility pins -- Due board ONLY
+    // GRBL / gShield compatibility pins -- Due board ONLY
+
+    pin_number kGRBL_ResetPinNumber             =  -1;
+    pin_number kGRBL_FeedHoldPinNumber          =  -1;
+    pin_number kGRBL_CycleStartPinNumber        =  -1;
     
-	pin_number kGRBL_ResetPinNumber             =  -1;
-	pin_number kGRBL_FeedHoldPinNumber          =  -1;
-	pin_number kGRBL_CycleStartPinNumber        =  -1;
-    
-	pin_number kGRBL_CommonEnablePinNumber      =  -1;
+    pin_number kGRBL_CommonEnablePinNumber      =  -1;
     
     
-	/** NOTE: When adding pin definitions here, they must be
+    /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if
      *        they are defined as -1.
      **/
-	
+    
 } // namespace Motate
 
 
