@@ -2,7 +2,7 @@
  * encoder.c - encoder interface
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,11 +27,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
-#include "planner.h"
-#include "stepper.h"
 #include "encoder.h"
-#include "kinematics.h"
-#include "hardware.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -98,9 +94,8 @@ void en_set_encoder_steps(uint8_t motor, float steps)
 
 float en_read_encoder(uint8_t motor)
 {
-	return((float)en.en[motor].encoder_steps + ENCODER_STEP_ROUNDING);
+	return((float)en.en[motor].encoder_steps);
 }
-
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

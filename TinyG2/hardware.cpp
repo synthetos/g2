@@ -2,7 +2,7 @@
  * hardware.cpp - general hardware support functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2012 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,6 +35,10 @@
 #include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
+#ifdef __AVR
+#include "xmega/xmega_init.h"
+#include "xmega/xmega_rtc.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"{
@@ -111,19 +115,19 @@ stat_t hw_bootloader_handler(void)
  * hw_get_id() - get device ID (signature)
  */
 
-stat_t hw_get_id(cmdObj_t *cmd) 
+stat_t hw_get_id(nvObj_t *nv) 
 {
 //	char_t tmp[SYS_ID_LEN];
 //	_get_id(tmp);
-//	cmd->objtype = TYPE_STRING;
-//	ritorno(cmd_copy_string(cmd, tmp));
+//	nv->valuetype = TYPE_STRING;
+//	ritorno(nv_copy_string(nv, tmp));
 	return (STAT_OK);
 }
 
 /*
  * hw_run_boot() - invoke boot form the cfgArray
  */
-stat_t hw_run_boot(cmdObj_t *cmd)
+stat_t hw_run_boot(nvObj_t *nv)
 {
 	hw_request_bootloader();
 	return(STAT_OK);
@@ -132,7 +136,7 @@ stat_t hw_run_boot(cmdObj_t *cmd)
 /*
  * hw_set_hv() - set hardware version number
  */
-stat_t hw_set_hv(cmdObj_t *cmd) 
+stat_t hw_set_hv(nvObj_t *nv) 
 {
 	return (STAT_OK);
 }
@@ -151,11 +155,11 @@ static const char fmt_hp[] PROGMEM = "[hp]  hardware platform%15.2f\n";
 static const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
 static const char fmt_id[] PROGMEM = "[id]  TinyG ID%30s\n";
 
-void hw_print_fb(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fb);}
-void hw_print_fv(cmdObj_t *cmd) { text_print_flt(cmd, fmt_fv);}
-void hw_print_hp(cmdObj_t *cmd) { text_print_flt(cmd, fmt_hp);}
-void hw_print_hv(cmdObj_t *cmd) { text_print_flt(cmd, fmt_hv);}
-void hw_print_id(cmdObj_t *cmd) { text_print_str(cmd, fmt_id);}
+void hw_print_fb(nvObj_t *nv) { text_print_flt(nv, fmt_fb);}
+void hw_print_fv(nvObj_t *nv) { text_print_flt(nv, fmt_fv);}
+void hw_print_hp(nvObj_t *nv) { text_print_flt(nv, fmt_hp);}
+void hw_print_hv(nvObj_t *nv) { text_print_flt(nv, fmt_hv);}
+void hw_print_id(nvObj_t *nv) { text_print_str(nv, fmt_id);}
 
 #endif //__TEXT_MODE 
 

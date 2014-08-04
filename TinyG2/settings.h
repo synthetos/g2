@@ -24,11 +24,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*	The values in this file are the default settings that are loaded into a virgin EEPROM, 
- *	and can be changed using the config commands. After initial load the EEPROM values 
+/*	The values in this file are the default settings that are loaded into a virgin EEPROM,
+ *	and can be changed using the config commands. After initial load the EEPROM values
  *	(or changed values) are used.
  *
- *	System and hardware settings that you shouldn't need to change are in hardware.h  
+ *	System and hardware settings that you shouldn't need to change are in hardware.h
  *	Application settings that also shouldn't need to be changed are in tinyg.h
  */
 
@@ -38,54 +38,65 @@
 /**** GENERAL SETTINGS ******************************************************/
 
 // **** PLEASE NOTE **** Any of these may be overridden in machine profiles
-// Do not assume these are the effective settings. Check the machine profile 
+// Do not assume these are the effective settings. Check the machine profile
 
 // Machine configuration settings
-#define CHORDAL_TOLERANCE 			0.01				// chord accuracy for arc drawing (in mm)
-#define SOFT_LIMIT_ENABLE			0					// 0 = off, 1 = on
-#define SWITCH_TYPE 				SW_TYPE_NORMALLY_OPEN// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define CHORDAL_TOLERANCE 			0.01					// chord accuracy for arc drawing (in mm)
+#define SOFT_LIMIT_ENABLE			0						// 0 = off, 1 = on
+//#define SWITCH_TYPE 				SW_TYPE_NORMALLY_OPEN	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 
-#define MOTOR_POWER_TIMEOUT			2.00				// motor power timeout in seconds
-#define MOTOR_POWER_LEVEL			0.25				// default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_TIMEOUT			2.00					// motor power timeout in seconds
+#define MOTOR_POWER_LEVEL			0.375					// default motor power level 0.00 - 1.00 (ARM only)
 
 // Communications and reporting settings
-#define COMM_MODE					JSON_MODE			// one of: TEXT_MODE, JSON_MODE
+#define COMM_MODE					JSON_MODE				// one of: TEXT_MODE, JSON_MODE
+#define TEXT_VERBOSITY				TV_VERBOSE				// one of: TV_SILENT, TV_VERBOSE
 #define NETWORK_MODE				NETWORK_STANDALONE
 
-#define TEXT_VERBOSITY				TV_VERBOSE			// one of: TV_SILENT, TV_VERBOSE
+#define JSON_VERBOSITY				JV_MESSAGES				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_SYNTAX_MODE 			JSON_SYNTAX_STRICT		// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
+#define JSON_FOOTER_DEPTH			0						// 0 = new style, 1 = old style
 
-#define JSON_VERBOSITY				JV_MESSAGES			// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define JSON_SYNTAX_MODE 			JSON_SYNTAX_STRICT	// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_DEPTH			0					// 0 = new style, 1 = old style
+#define STATUS_REPORT_VERBOSITY		SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS		100						// milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS	250						// milliseconds - set $SV=0 to disable
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
-#define STATUS_REPORT_VERBOSITY		SR_FILTERED			// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS		100					// milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS	250					// milliseconds - set $SV=0 to disable
-
-#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","path","frmo","momo","stat"
-//#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","_cs5","_es5","_fe5","_xs5","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs2","_es2","_fe2","_xs2","stat"
-
-#define QUEUE_REPORT_VERBOSITY		QR_OFF				// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define QUEUE_REPORT_VERBOSITY		QR_OFF					// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 // Gcode startup defaults
-#define GCODE_DEFAULT_UNITS			MILLIMETERS			// MILLIMETERS or INCHES
-#define GCODE_DEFAULT_PLANE			CANON_PLANE_XY		// CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
-#define GCODE_DEFAULT_COORD_SYSTEM	G54					// G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_UNITS			MILLIMETERS				// MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE			CANON_PLANE_XY			// CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM	G54						// G54, G55, G56, G57, G58 or G59
 #define GCODE_DEFAULT_PATH_CONTROL 	PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
 // Comm mode and echo levels
 #define COM_EXPAND_CR				false
 #define COM_ENABLE_ECHO				false
-#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON	// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON		// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+
+//**** DEBUG SETTINGS ****
+
+#ifdef __DEBUG_SETTINGS
+#undef JSON_VERBOSITY
+#define JSON_VERBOSITY				JV_SILENT				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+
+#undef STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","_cs1","_es1","_fe1","_xs1","_cs2","_es2","_fe2","_xs2"
+
+#undef STATUS_REPORT_VERBOSITY
+#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#endif
 
 /**** MACHINE PROFILES ******************************************************/
 
 // machine default profiles - choose only one:
 
-//#include "settings/settings_default.h"				// Default settings for release
+#include "settings/settings_default.h"				// Default settings for release
 //#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
@@ -98,8 +109,8 @@
 //#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
-#include "settings/settings_Ultimaker.h"
-//#include "settings/settings_Ultimaker_Rob.h"
+//#include "settings/settings_Ultimaker.h"
+//#include "settings/settings_Ultimaker_Rob_v9h.h"
 /*** Handle optional modules that may not be in every machine ***/
 
 // If PWM_1 is not defined fill it with default values

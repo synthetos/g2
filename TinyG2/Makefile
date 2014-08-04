@@ -65,11 +65,16 @@ CFLAGS += -Wsign-compare -Waggregate-return
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align -Wpacked 
+#CFLAGS += -Wcast-align -Wpacked
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
+
+
+# These are useful, but chatty:
+#CFLAGS += -Winline
+
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CFLAGS += -Wno-format-nonliteral -Wno-format-security
@@ -88,9 +93,14 @@ CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+CPPFLAGS += -Wredundant-decls -Wlong-long
 #CPPFLAGS += -Wmissing-noreturn -Wpacked 
 #CPPFLAGS += -Wconversion
+
+
+# These are useful, but chatty:
+#CFLAGS += -Winline
+
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
@@ -170,6 +180,13 @@ ifeq ("$(PLATFORM)","G2v9g")
 
 BASE_PLATFORM=v9_3x8c
 DEVICE_DEFINES += MOTATE_BOARD="G2v9g"
+
+endif
+
+ifeq ("$(PLATFORM)","G2v9i")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
 
 endif
 

@@ -1,8 +1,8 @@
 /*
- * controller.cpp - tinyg2 controller and top level parser
+ * controller.cpp - tinyg controller and top level parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr. 
+ * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
  * Copyright (c) 2013 - 2014 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -80,7 +80,7 @@ stat_t hardware_hard_reset_handler(void);
  * controller_init() - controller init
  */
 
-void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err) 
+void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
 	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
 	controller_init_assertions();
@@ -104,7 +104,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 }
 
-/* 
+/*
  * controller_init_assertions()
  * controller_test_assertions() - check memory integrity of controller
  */
@@ -113,50 +113,41 @@ void controller_init_assertions()
 {
 	cs.magic_start = MAGICNUM;
 	cs.magic_end = MAGICNUM;
-
-	cfg.magic_start = MAGICNUM;		// assertions for config system are handled from the controller
-	cfg.magic_end = MAGICNUM;
-	cmdStr.magic_start = MAGICNUM;
-	cmdStr.magic_end = MAGICNUM;
 }
 
 stat_t controller_test_assertions()
 {
-	if ((cs.magic_start 	!= MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end 	  != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-	if ((cmdStr.magic_start != MAGICNUM) || (cmdStr.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-	if (shared_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-
+	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
 	return (STAT_OK);
 }
 
-/* 
+/*
  * controller_run() - MAIN LOOP - top-level controller
  *
- * The order of the dispatched tasks is very important. 
+ * The order of the dispatched tasks is very important.
  * Tasks are ordered by increasing dependency (blocking hierarchy).
  * Tasks that are dependent on completion of lower-level tasks must be
- * later in the list than the task(s) they are dependent upon. 
+ * later in the list than the task(s) they are dependent upon.
  *
- * Tasks must be written as continuations as they will be called repeatedly, 
- * and are called even if they are not currently active. 
+ * Tasks must be written as continuations as they will be called repeatedly,
+ * and are called even if they are not currently active.
  *
- * The DISPATCH macro calls the function and returns to the controller parent 
- * if not finished (STAT_EAGAIN), preventing later routines from running 
- * (they remain blocked). Any other condition - OK or ERR - drops through 
+ * The DISPATCH macro calls the function and returns to the controller parent
+ * if not finished (STAT_EAGAIN), preventing later routines from running
+ * (they remain blocked). Any other condition - OK or ERR - drops through
  * and runs the next routine in the list.
  *
  * A routine that had no action (i.e. is OFF or idle) should return STAT_NOOP
  */
 
-void controller_run() 
-{ 
-	while (true) { 
+void controller_run()
+{
+	while (true) {
 		_controller_HSM();
 	}
 }
 
-#define	DISPATCH(func) if (func == STAT_EAGAIN) return; 
+#define	DISPATCH(func) if (func == STAT_EAGAIN) return;
 static void _controller_HSM()
 {
 //----- Interrupt Service Routines are the highest priority controller functions ----//
@@ -182,30 +173,55 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
 	DISPATCH(cm_homing_callback());				// G28.2 continuation
-	DISPATCH(cm_set_origin_callback());         // G28.3 continuation
 	DISPATCH(cm_jogging_callback());			// jog function
-//	DISPATCH(cm_probe_callback());				// G38.2 continuation
+	DISPATCH(cm_probe_callback());				// G38.2 continuation
+	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
 
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
-//	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+#ifdef __AVR
+	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+#endif
 	DISPATCH(_command_dispatch());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
-/***************************************************************************** 
+/*****************************************************************************
  * _command_dispatch() - dispatch line received from active input device
  *
  *	Reads next command line and dispatches to relevant parser or action
  *	Accepts commands if the move queue has room - EAGAINS if it doesn't
  *	Manages cutback to serial input from file devices (EOF)
- *	Also responsible for prompts and for flow control 
+ *	Also responsible for prompts and for flow control
  */
 
 static stat_t _command_dispatch()
 {
+#ifdef __AVR
+	stat_t status;
+
+	// read input line or return if not a completed line
+	// xio_gets() is a non-blocking workalike of fgets()
+	while (true) {
+		if ((status = xio_gets(cs.primary_src, cs.in_buf, sizeof(cs.in_buf))) == STAT_OK) {
+			cs.bufp = cs.in_buf;
+			break;
+		}
+		// handle end-of-file from file devices
+		if (status == STAT_EOF) {						// EOF can come from file devices only
+			if (cfg.comm_mode == TEXT_MODE) {
+				fprintf_P(stderr, PSTR("End of command file\n"));
+			} else {
+				rpt_exception(STAT_EOF);				// not really an exception
+			}
+			tg_reset_source();							// reset to default source
+		}
+		return (status);								// Note: STAT_EAGAIN, errors, etc. will drop through
+	}
+#endif // __AVR
+#ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
@@ -222,21 +238,19 @@ static stat_t _command_dispatch()
 		cs.state = CONTROLLER_STARTUP;
 
 	} else if (cs.state == CONTROLLER_STARTUP) {		// run startup code
-//		strcpy(cs.in_buf, "$x");
-//		strcpy(cs.in_buf, "g1f400x100");
-//		strcpy(cs.in_buf, "?");
-//		cs.bufp = cs.in_buf;
 		cs.state = CONTROLLER_READY;
 
 	} else {
 		return (STAT_OK);
 	}
-	
-	// dispatch the new text line
+	cs.read_index = 0;
+#endif // __ARM
+
+	// set up the buffers
 	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
-	cs.read_index = 0;
 
+	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char
 
 		case '!': { cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial
@@ -277,9 +291,9 @@ static stat_t _command_dispatch()
  * _shutdown_idler() - blink rapidly and prevent further activity from occurring
  * _normal_idler() - blink Indicator LED slowly to show everything is OK
  *
- *	Shutdown idler flashes indicator LED rapidly to show everything is not OK. 
- *	Shutdown idler returns EAGAIN causing the control loop to never advance beyond 
- *	this point. It's important that the reset handler is still called so a SW reset 
+ *	Shutdown idler flashes indicator LED rapidly to show everything is not OK.
+ *	Shutdown idler returns EAGAIN causing the control loop to never advance beyond
+ *	this point. It's important that the reset handler is still called so a SW reset
  *	(ctrl-x) or bootloader request can be processed.
  */
 
@@ -401,25 +415,24 @@ static stat_t _limit_switch_handler(void)
 /*
 	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
 	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
-//	cm_alarm(gpio_get_sw_thrown); 		// unexplained complier warning: passing argument 1 of 'cm_shutdown' makes integer from pointer without a cast
-//	cm_hard_alarm(sw.sw_num_thrown);	// no longer the correct behavior
 	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
 */
 	return (STAT_OK);
 }
 
-/* 
+/*
  * _system_assertions() - check memory integrity and other assertions
  */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) { cm_hard_alarm(status_code); return(status_code); }
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_hard_alarm(status_code));
 
 stat_t _system_assertions()
 {
+	emergency___everybody_to_get_from_street(config_test_assertions());
 	emergency___everybody_to_get_from_street(controller_test_assertions());
 	emergency___everybody_to_get_from_street(canonical_machine_test_assertions());
 	emergency___everybody_to_get_from_street(planner_test_assertions());
 	emergency___everybody_to_get_from_street(stepper_test_assertions());
 	emergency___everybody_to_get_from_street(encoder_test_assertions());
-//	emergency___everybody_to_get_from_street(xio_test_assertions());
+	emergency___everybody_to_get_from_street(xio_test_assertions());
 	return (STAT_OK);
 }

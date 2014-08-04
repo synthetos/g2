@@ -88,13 +88,14 @@ G0 X0 Y0 A0
 // **** settings.h overrides ****
 
 #undef	SWITCH_TYPE
-#define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+//#define SWITCH_TYPE 			SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 
 #undef	MOTOR_POWER_LEVEL
 #define MOTOR_POWER_LEVEL		0.25				// default motor power level 0.00 - 1.00 (ARM only)
 
-#undef SR_DEFAULTS
-#define SR_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
+#undef STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","posb","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #ifndef PI
 #define PI 3.14159628
@@ -159,8 +160,8 @@ G0 X0 Y0 A0
 #define X_TRAVEL_MAX 			150					// xtm		travel between switches or crashes
 #define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
-#define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_MODE_MIN 		SW_MODE_DISABLED	// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_MODE_MAX 		SW_MODE_HOMING		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SEARCH_VELOCITY 		500					// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
 #define X_LATCH_BACKOFF 		2					// xlb		mm
@@ -174,8 +175,8 @@ G0 X0 Y0 A0
 #define Y_TRAVEL_MAX 			40
 #define Y_JERK_MAX 				JERK_MAX			// was 10
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define Y_SWITCH_MODE_MIN 		SW_MODE_DISABLED
+#define Y_SWITCH_MODE_MAX 		SW_MODE_HOMING
 #define Y_SEARCH_VELOCITY 		500
 #define Y_LATCH_VELOCITY 		100
 #define Y_LATCH_BACKOFF 		2
@@ -200,13 +201,13 @@ G0 X0 Y0 A0
 #define A_AXIS_MODE 			AXIS_STANDARD
 #define A_VELOCITY_MAX 			7200 // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			3600
-#define A_TRAVEL_MIN 			-1
-#define A_TRAVEL_MAX 			-1
+#define A_TRAVEL_MIN 			0
+#define A_TRAVEL_MAX 			180
 #define A_JERK_MAX 				JERK_MAX
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))	// Radius to make the A/B/C motors react the same as X for testing
-#define A_SWITCH_MODE_MIN 		SW_MODE_HOMING				// ...need to select Radius Mode for the axis for this to happen
-#define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define A_SWITCH_MODE_MIN 		SW_MODE_DISABLED				// ...need to select Radius Mode for the axis for this to happen
+#define A_SWITCH_MODE_MAX 		SW_MODE_HOMING
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
@@ -216,21 +217,20 @@ G0 X0 Y0 A0
 #define B_AXIS_MODE 			AXIS_STANDARD
 #define B_VELOCITY_MAX 			7200 // set to the same speed as X axis
 #define B_FEEDRATE_MAX 			3600
-#define B_TRAVEL_MIN 			-1
-#define B_TRAVEL_MAX 			-1
+#define B_TRAVEL_MIN 			0
+#define B_TRAVEL_MAX 			1000
 #define B_JERK_MAX 				JERK_MAX
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS 				(M5_TRAVEL_PER_REV/(2*PI))
-#define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define B_SWITCH_MODE_MIN 		SW_MODE_DISABLED
+#define B_SWITCH_MODE_MAX 		SW_MODE_HOMING
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF 		5
 #define B_ZERO_BACKOFF 			2
 #define B_JERK_HOMING			B_JERK_MAX
 
-#define C_AXIS_MODE 			AXIS_DISABLED
-//#define C_AXIS_MODE 			AXIS_RADIUS
+#define C_AXIS_MODE 			AXIS_DISABLED			// AXIS_RADIUS
 #define C_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define C_FEEDRATE_MAX 			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			-1

@@ -197,7 +197,7 @@ char_t *escape_string(char_t *dst, char_t *src)
 /*
  * pstr2str() - return an AVR style progmem string as a RAM string. No effect on ARMs
  *
- *	This function deals with FLASH memory string confusion between the AVR serias and ARMs. 
+ *	This function deals with FLASH memory string confusion between the AVR series and ARMs. 
  *	AVRs typically have xxxxx_P() functions which take strings from FLASH as args. 
  *	On ARMs there is no need for this as strings are handled identically in FLASH and RAM. 
  *
@@ -208,12 +208,39 @@ char_t *escape_string(char_t *dst, char_t *src)
 char_t *pstr2str(const char *pgm_string)
 {
 #ifdef __AVR
-	strncpy_P(shared_buf, pgm_string, MESSAGE_LEN);
-	return (shared_buf);
+	strncpy_P(global_string_buf, pgm_string, MESSAGE_LEN);
+	return (global_string_buf);
 #endif
 #ifdef __ARM
 	return ((char_t *)pgm_string);
 #endif
+}
+
+/*
+ * fntoa() - return ASCII string given a float and a decimal precision value
+ *
+ *	Like sprintf, fntoa returns length of string, less the terminating NUL character
+ */
+char_t fntoa(char_t *str, float n, uint8_t precision)
+{
+    // handle special cases
+	if (isnan(n)) { 
+		strcpy(str, "nan");
+		return (3);
+
+	} else if (isinf(n)) { 
+		strcpy(str, "inf");
+		return (3);
+
+	} else if (precision == 0 ) { return((char_t)sprintf((char *)str, "%0.0f", (double) n));
+	} else if (precision == 1 ) { return((char_t)sprintf((char *)str, "%0.1f", (double) n));
+	} else if (precision == 2 ) { return((char_t)sprintf((char *)str, "%0.2f", (double) n));
+	} else if (precision == 3 ) { return((char_t)sprintf((char *)str, "%0.3f", (double) n));
+	} else if (precision == 4 ) { return((char_t)sprintf((char *)str, "%0.4f", (double) n));
+	} else if (precision == 5 ) { return((char_t)sprintf((char *)str, "%0.5f", (double) n));
+	} else if (precision == 6 ) { return((char_t)sprintf((char *)str, "%0.6f", (double) n));
+	} else if (precision == 7 ) { return((char_t)sprintf((char *)str, "%0.7f", (double) n));
+	} else					    { return((char_t)sprintf((char *)str, "%f", (double) n)); }
 }
 
 /* 
@@ -230,7 +257,6 @@ uint16_t compute_checksum(char_t const *string, const uint16_t length)
 {
 	uint32_t h = 0;
 	uint16_t len = strlen(string);
-
 	if (length != 0) len = min(len, length);
     for (uint16_t i=0; i<len; i++) {
 		h = 31 * h + string[i];
@@ -254,7 +280,7 @@ uint32_t SysTickTimer_getValue()
 {
 	return (SysTickTimer.getValue());
 }
-#endif	// __ARM
+#endif // __ARM
 
 #ifdef __cplusplus
 }

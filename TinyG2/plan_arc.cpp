@@ -77,7 +77,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-		return (STAT_GCODE_FEEDRATE_ERROR);
+		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 
 	// Trap conditions where no arc movement will occur, but the system is still in 
@@ -121,10 +121,10 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// compute arc runtime values and prep for execution by the callback
 	ritorno(_compute_arc());
-//	ritorno(_test_arc_soft_limits());			// test if arc will trip soft limits
-	cm_cycle_start();							// if not already started
-	arc.run_state = MOVE_RUN;					// enable arc to be run from the callback
-	cm_set_model_position(STAT_OK);				// set endpoint position if the arc was successful
+//	ritorno(_test_arc_soft_limits());					// test if arc will trip soft limits
+	cm_cycle_start();									// if not already started
+	arc.run_state = MOVE_RUN;							// enable arc to be run from the callback
+	cm_finalize_move();
 	return (STAT_OK);
 }
 
@@ -328,13 +328,20 @@ static stat_t _compute_arc_offsets_from_radius()
 	float x = cm.gm.target[arc.plane_axis_0] - cm.gmx.position[arc.plane_axis_0];
 	float y = cm.gm.target[arc.plane_axis_1] - cm.gmx.position[arc.plane_axis_1];
 
-	// == -(h * 2 / d)
-	float h_x2_div_d = -sqrt(4 * square(arc.radius) - (square(x) + square(y))) / hypot(x,y);
+	// *** From Forrest Green - Other Machine Co, 3/27/14
+	// If the distance between endpoints is greater than the arc diameter, disc
+	// will be negative indicating that the arc is offset into the complex plane
+	// beyond the reach of any real CNC. However, numerical errors can flip the
+	// sign of disc as it approaches zero (which happens as the arc angle approaches
+	// 180 degrees). To avoid mishandling these arcs we use the closest real
+	// solution (which will be 0 when disc <= 0). This risks obscuring g-code errors
+	// where the radius is actually too small (they will be treated as half circles),
+	// but ensures that all valid arcs end up reasonably close to their intended
+	// paths regardless of any numerical issues.
+	float disc = 4 * square(arc.radius) - (square(x) + square(y));
 
-	// If r is smaller than d the arc is now traversing the complex plane beyond
-	// the reach of any real CNC, and thus - for practical reasons - we will 
-	// terminate promptly
-	if(isnan(h_x2_div_d) == true) { return (STAT_FLOATING_POINT_ERROR);}
+	// h_x2_div_d == -(h * 2 / d)
+	float h_x2_div_d = (disc > 0) ? -sqrt(disc) / hypot(x,y) : 0;
 
 	// Invert the sign of h_x2_div_d if circle is counter clockwise (see header notes)
 	if (cm.gm.motion_mode == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d;}
@@ -483,9 +490,9 @@ static stat_t _test_arc_soft_limits()
 }
 */
 
-//##########################################
-//############## UNIT TESTS ################
-//##########################################
+// *************************************************
+// ***** UNIT TESTS ********************************
+// *************************************************
 
 #ifdef __UNIT_TESTS
 #ifdef __UNIT_TEST_PLANNER

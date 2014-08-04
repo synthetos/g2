@@ -1,7 +1,8 @@
 /*
  * persistence.h - persistence code
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,7 +28,7 @@
 #ifndef PERSISTENCE_H_ONCE
 #define PERSISTENCE_H_ONCE
 
-#include "config.h"					// needed for cmdObj_t definition
+#include "config.h"					// needed for nvObj_t definition
 
 #ifdef __cplusplus
 extern "C"{
@@ -46,8 +47,8 @@ typedef struct nvmSingleton {
 //**** persistence function prototypes ****
 
 void persistence_init(void);
-stat_t read_persistent_value(cmdObj_t *cmd);
-stat_t write_persistent_value(cmdObj_t *cmd);
+stat_t read_persistent_value(nvObj_t *nv);
+stat_t write_persistent_value(nvObj_t *nv);
 
 #ifdef __DEBUG
 void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);

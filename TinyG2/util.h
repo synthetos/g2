@@ -24,10 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are 
+/* util.c/.h contains a dog's breakfast of supporting functions that are
  * not specific to tinyg: including:
  *
- *	  - math and min/max utilities and extensions 
+ *	  - math and min/max utilities and extensions
  *	  - vector manipulation utilities
  *	  - support for debugging routines
  */
@@ -79,6 +79,8 @@ float max4(float x1, float x2, float x3, float x4);
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 char_t *pstr2str(const char *pgm_string);
+//int fntoa(char_t *str, float n, uint8_t precision);
+char_t fntoa(char_t *str, float n, uint8_t precision);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
 
 //*** other utilities ***
@@ -140,7 +142,7 @@ uint32_t SysTickTimer_getValue(void);
 #define MAX_LONG (2147483647)
 #define MAX_ULONG (4294967295)
 #define MM_PER_INCH (25.4)
-#define INCH_PER_MM (1/25.4)
+#define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 
