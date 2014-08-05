@@ -44,6 +44,7 @@
 #endif // __AVR
 
 #ifdef __ARM
+#include "UniqueId.h"
 #include "MotateTimers.h"
 using Motate::delay;
 
@@ -83,7 +84,7 @@ typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 //Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 #endif
@@ -148,6 +149,10 @@ int main(void)
 {
 	// system initialization
 	_system_init();
+
+#ifdef __ARM
+	cacheUniqueId();
+#endif
 
 	// TinyG application setup
 	_application_init();

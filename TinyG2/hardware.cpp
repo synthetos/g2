@@ -35,6 +35,7 @@
 #include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
+#include "UniqueId.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -53,10 +54,18 @@ void hardware_init()
  * _get_id() - get a human readable signature
  *
  *	Produce a unique deviceID based on the factory calibration data.
+ *	Truncate to SYS_ID_LEN bytes
  */
 
 void _get_id(char_t *id)
 {
+	struct uuid *sys_id = readUniqueId();
+	for(int i = 0; i < SYS_ID_LEN-1; ++i) {
+		unsigned long nibble = (((i >= 8) ? sys_id->d1 : sys_id->d0) >> ((i % 8) * 4)) & 0xF;
+		if(nibble < 0xA) id[i] = nibble + '0';
+		else id[i] = (nibble - 0xA) + 'a';
+	}
+	id[SYS_ID_LEN-1] = 0;
 	return;
 }
  
@@ -113,10 +122,10 @@ stat_t hw_bootloader_handler(void)
 
 stat_t hw_get_id(cmdObj_t *cmd) 
 {
-//	char_t tmp[SYS_ID_LEN];
-//	_get_id(tmp);
-//	cmd->objtype = TYPE_STRING;
-//	ritorno(cmd_copy_string(cmd, tmp));
+	char_t tmp[SYS_ID_LEN];
+	_get_id(tmp);
+	cmd->objtype = TYPE_STRING;
+	ritorno(cmd_copy_string(cmd, tmp));
 	return (STAT_OK);
 }
 

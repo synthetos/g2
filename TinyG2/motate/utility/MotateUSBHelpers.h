@@ -142,7 +142,7 @@ namespace Motate {
 		kNoDescriptorId       = 0, /* Indicates a lack of a string to give */
 		kManufacturerStringId = 1, /* Manufacturer string ID */
 		kProductStringId      = 2, /* Product string ID */
-		kSerialNumberId       = 3, /* Serial Number ID -- TODO */
+		kSerialNumberId       = 3, /* Serial Number ID */
 	};
 
 	/* Endpoint Descriptor Attribute Masks */

@@ -383,6 +383,7 @@
 		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
+		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -3229,6 +3230,8 @@
 		D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pendulum.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
+		E29D7210198978BE00F22E5F /* UniqueId.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UniqueId.cpp; sourceTree = "<group>"; };
+		E29D7211198978BE00F22E5F /* UniqueId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniqueId.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7482,6 +7485,8 @@
 				D4021FA0175E37BF0099576C /* Reset.h */,
 				D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */,
 				D4021FA2175E37BF0099576C /* syscalls.h */,
+				E29D7210198978BE00F22E5F /* UniqueId.cpp */,
+				E29D7211198978BE00F22E5F /* UniqueId.h */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
@@ -7662,6 +7667,7 @@
 				D49EC5F91706789800F2BF9B /* component_rstc.h in Sources */,
 				D49EC5FA1706789800F2BF9B /* component_rtc.h in Sources */,
 				D49EC5FB1706789800F2BF9B /* component_rtt.h in Sources */,
+				E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */,
 				D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */,
 				D49EC5FD1706789800F2BF9B /* component_smc.h in Sources */,
 				D49EC5FE1706789800F2BF9B /* component_spi.h in Sources */,
