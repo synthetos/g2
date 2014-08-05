@@ -49,7 +49,28 @@ xioSingleton_t xio;
 
 void xio_init()
 {
+	uint8_t i;
+	
     xio_init_assertions();
+
+	for (i=0; i<DEV_MAX; i++) {
+		memset(&xio.d[i], 0, sizeof(xioDevice_t));	// clear states and all values
+	}
+	for (i=0; i<CHAN_MAX; i++) {
+		memset(&xio.c[i], 0, sizeof(xioChannel_t));	// clear states and all values
+		xio.c[i].type = i;							// set control or device channel by numbering convention
+	}
+
+	// set up USB device state change callbacks
+	// See here for info on lambda functions:
+	// http://www.cprogramming.com/c++11/c++11-lambda-closures.html
+
+	SerialUSB.setConnectionCallback([&](bool connected) {
+		xio.d[DEV_USB0].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+	});
+	SerialUSB1.setConnectionCallback([&](bool connected) {
+		xio.d[DEV_USB1].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+	});
 }
 
 /*
@@ -59,27 +80,39 @@ void xio_init()
 
 void xio_init_assertions()
 {
-//	cs.magic_start = MAGICNUM;
-//	cs.magic_end = MAGICNUM;
+	xio.magic_start = MAGICNUM;
+	xio.magic_end = MAGICNUM;
 }
 
 stat_t xio_test_assertions()
 {
-/*
-	if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-	if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
-*/
-    return (STAT_OK);
+	if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) return (STAT_XIO_ASSERTION_FAILURE);
+	return (STAT_OK);
 }
+
+/*
+ * xio_callback() - callback from main loop for various IO functions
+ *
+ *	The USB channel binding functionality is in here. If this gets too big or there are other
+ *	things to do during the callback it may make sense to break this out into a separate function.
+ *
+ *	Channel binding rules
+ *
+ *	
+ */
+stat_t xio_callback() 
+{
+	if ((xio.d[DEV_USB0].next_state == 0) && (xio.d[DEV_USB1].next_state == 0)) return (STAT_OK);
+	
+	
+	return (STAT_OK);
+}
+
+/*
+ * xio_bind_device() - bind a device to a channel
+ *
+ *	This function is called 
+ */
 
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available

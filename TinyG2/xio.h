@@ -64,12 +64,55 @@
 #ifndef XIO_H_ONCE
 #define XIO_H_ONCE
 
-#include "tinyg2.h"
-#include "config.h"				// required for nvObj typedef
+//#include "tinyg2.h"				// not required if used in tinyg project
+#include "config.h"					// required for nvObj typedef
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
-
 #include "MotateSPI.h"
+
+/**** Defines, Macros, and  Assorted Parameters ****/
+
+#undef  _FDEV_ERR
+#define _FDEV_ERR -1
+
+#undef  _FDEV_EOF
+#define _FDEV_EOF -2
+
+enum xioDeviceEnum {				// for now this is just physical devices 
+	DEV_USB0=0,						// could be expanded to include logical & derived devices
+	DEV_USB1,
+	DEV_SPI0,
+	DEV_MAX
+};
+
+enum xioChannelTypeEnum {
+	CTRL=0,							// do not change these from CTRL=0, DATA=1
+	DATA,
+	CHAN_MAX
+};
+
+enum xioDeviceState {				// manages startup lines
+	DEVICE_INITIALIZING = 0,		// device is initializing - not ready for use
+	DEVICE_NOT_CONNECTED,			// device has not yet detected connection to USB (or other comm channel)
+	DEVICE_CONNECTED,				// device is connected (e.g. USB connection)
+	DEVICE_STARTUP,					// device is running startup messages and lines
+	DEVICE_READY					// device is active and ready for use
+};
+
+enum xioChannelState {				// manages the state of multiple channels and USB bindings
+	CHANNEL_NULL = 0,				// initial state - no action or bindings
+	CHANNEL_USB0_CTRL_NO_DATA,		// USB0 is control, no data channel is configured (degenerate state)
+	CHANNEL_USB1_CTRL_NO_DATA,		// USB1 is control, no data channel is configured (degenerate state)
+	CHANNEL_USB0_CTRL_DATA,			// USB0 is serving both control and data
+	CHANNEL_USB1_CTRL_DATA,			// USB1 is serving both control and data
+	CHANNEL_USB0_CTRL_USB1_DATA,	// USB0 is control, USB1 is data
+	CHANNEL_USB1_CTRL_USB0_DATA,	// USB0 is control, USB1 is data
+};
+
+enum xioSPIMode {
+	SPI_DISABLE=0,					// tri-state SPI lines
+	SPI_ENABLE						// enable SPI lines for output
+};
 
 //extern Motate::USBDevice< Motate::USBCDC > usb;
 extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
@@ -78,33 +121,45 @@ extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
-#undef  _FDEV_ERR
-#define _FDEV_ERR -1
+/**** Structures ****/
 
-#undef  _FDEV_EOF
-#define _FDEV_EOF -2
+typedef struct xioDevice {			// describes a device for reading and writing
+	uint8_t state;					// physical device state
+	uint8_t next_state;				// transitional state
+	uint8_t channel;				// mapping to channel
+	uint16_t linelen;				// length of completed line
+	uint16_t read_index;			// index into line being read
+	
+} xioDevice_t;
+
+typedef struct xioChannel {			// describes a device for reading and writing
+	uint8_t type;					// channel type - control or data
+	uint8_t state;					// channel state
+} xioChannel_t;
+
+typedef struct xioSingleton {
+	uint16_t magic_start;			// magic number to test memory integrity
+	xioDevice_t d[DEV_MAX];			// allocate device structures
+	xioChannel_t c[CHAN_MAX];		// allocate channel structures
+	uint8_t spi_state;				// tick down-counter (unscaled)
+	uint16_t magic_end;
+} xioSingleton_t;
+
+extern xioSingleton_t xio;
+
+/**** function prototypes ****/
 
 void xio_init(void);
 void xio_init_assertions(void);
 stat_t xio_test_assertions(void);
+
+stat_t xio_callback(void);
 
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
 stat_t xio_set_spi(nvObj_t *nv);
 stat_t xio_assertions(void);
-
-enum xioSPIMode {
-	SPI_DISABLE=0,					// tri-state SPI lines
-	SPI_ENABLE						// enable SPI lines for output
-};
-
-typedef struct xioSingleton {
-	uint16_t magic_start;			// magic number to test memory integrity
-	uint8_t spi_state;				// tick down-counter (unscaled)
-} xioSingleton_t;
-
-extern xioSingleton_t xio;
 
 /* Some useful ASCII definitions */
 

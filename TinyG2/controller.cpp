@@ -99,11 +99,11 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 
 #ifdef __ARM
-	cs.state_usb0 = CONTROLLER_NOT_CONNECTED;			// find USB next
-	cs.state_usb1 = CONTROLLER_NOT_CONNECTED;			// find USB next
+//	cs.state_usb0 = CONTROLLER_NOT_CONNECTED;			// find USB next
+//	cs.state_usb1 = CONTROLLER_NOT_CONNECTED;			// find USB next
 	IndicatorLed.setFrequency(100000);
 #endif
-
+/*
 	SerialUSB.setConnectionCallback([&](bool connected) {
 		cs.state_usb0 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
 	});
@@ -111,6 +111,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	SerialUSB1.setConnectionCallback([&](bool connected) {
 		cs.state_usb1 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
 	});
+*/
 }
 
 /*
@@ -188,6 +189,7 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
+	DISPATCH(xio_callback());					// manages state changes in the XIO system
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
