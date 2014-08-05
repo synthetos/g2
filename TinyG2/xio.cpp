@@ -37,11 +37,74 @@
 #include "text_parser.h"
 #include "xio.h"
 
-/**** Allocate structures ****/
+/**** Structures ****
+ *
+ */
+/*
+typedef struct xioFilesys {				// describes a device for reading and writing
+	uint8_t state;						// physical device state
+	uint8_t next_state;					// transitional state
+} xioFilesys_t;
+*/
+struct xioDevice_t {	// describes a device for reading and writing
+	uint8_t state;						// physical device state
+	uint8_t next_state;					// transitional state
+	int16_t readchar() {
+		return _readchar();				// Add buffer logic here. For now, its a passthrough
+	};
+										// Each subclass will override this.
+	virtual int16_t _readchar() = 0;	// Pure virtual.
+	uint16_t linelen;					// length of completed line
+	uint16_t read_index;				// index into line being read
+	uint16_t read_buffer_len;			// static variable set at init time.
+	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
+};
 
+typedef struct xioChannel {				// describes a device for reading and writing
+	uint8_t type;						// channel type - control or data
+	uint8_t state;						// channel state
+	int8_t device;						// device or file handle channel is bound to
+} xioChannel_t;
+
+typedef struct xioSingleton {
+	uint16_t magic_start;				// magic number to test memory integrity
+//	xioDevice_t d[DEV_MAX];				// allocate device structures
+
+
+	xioChannel_t c[CHAN_MAX];			// allocate channel structures
+//	xioFilesys_t f[FS_MAX];				// allocate file handles
+	uint8_t spi_state;					// tick down-counter (unscaled)
+	uint16_t magic_end;
+} xioSingleton_t;
 xioSingleton_t xio;
+//extern xioSingleton_t xio;
+
+// We will use a templated subclass so we don't have to create a new
+// subclass for every type of Device.
+// All this requires is the readByte() function to exist in type Device.
+// Note that we expect Device to be a pointer type!
+template<typename Device>
+struct xioDeviceWrapper : xioDevice_t {	// describes a device for reading and writing
+	Device _dev;
+	xioDeviceWrapper(Device  dev) : _dev{dev} {};
+
+	int16_t _readchar() final {
+		return _dev->readByte();
+	};
+};
+
+xioDevice_t* devices[] = {&serialUSB0Wrapper, &serialUSB1Wrapper};
 
 /**** CODE ****/
+
+/*
+ * read_char() - returns single char or -1 (_FDEV_ERR) is none available
+ */
+int read_char (void)
+{
+    return devices[0]->readchar();
+//    return SerialUSB1.readByte();
+}
 
 /*
  * xio_init()
@@ -50,7 +113,7 @@ xioSingleton_t xio;
 void xio_init()
 {
 	uint8_t i;
-	
+
     xio_init_assertions();
 
 	for (i=0; i<DEV_MAX; i++) {
@@ -104,20 +167,18 @@ stat_t xio_test_assertions()
  *
  *	Channel binding rules
  *
- *	
+ *
  */
-stat_t xio_callback() 
+stat_t xio_callback()
 {
 	if ((xio.d[DEV_USB0].next_state == 0) && (xio.d[DEV_USB1].next_state == 0)) return (STAT_OK);
-	
-	
 	return (STAT_OK);
 }
 
 /*
  * xio_bind_device() - bind a device to a channel
  *
- *	This function is called 
+ *	This function is called
  */
 
 /*
@@ -140,23 +201,23 @@ int read_char (uint8_t dev)
  *	Reads a line of text from the next device that has one ready. With some exceptions.
  *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
  *
- *	This function reads from separate control and data devices, including reading from multiple 
- *	control devices. It will also manage multiple data devices, but only one data device may 
+ *	This function reads from separate control and data devices, including reading from multiple
+ *	control devices. It will also manage multiple data devices, but only one data device may
  *	be open at a time.
  *
  *	ARGS:
  *
  *	 type - Sets channel type to read. If TYPE_NONE will read either control or data.
- *			On return this variable is set to the channel type that was read, or 
+ *			On return this variable is set to the channel type that was read, or
  *			TYPE_NONE if no text was returned.
  *
- *   size - Sets the maximum size of the read buffer. On return is set to the number of 
+ *   size - Sets the maximum size of the read buffer. On return is set to the number of
  *			characters in the buffer, including the NUL termination. Set to zero if no text
  *			was returned. Will truncate a text line with a NUL if size is reached.
  *
  *	 char * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
  */
-char *readline(uint8_t &type, int16_t &size) 
+char *readline(uint8_t &type, int16_t &size)
 {
 	return ((char *)_FDEV_ERR);
 }

@@ -80,7 +80,7 @@
 
 #define READ_BUFFER_LEN 255			// text buffer size (255 max)
 
-enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices 
+enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices
 	DEV_NONE=-1,					// no device is bound
 	DEV_USB0=0,
 	DEV_USB1,
@@ -110,7 +110,7 @@ enum xioChannelTypeEnum {
 };
 
 enum xioDeviceCapabilities {
-	DEVICE_R						// read-	
+	DEVICE_R						// read-
 };
 
 enum xioDeviceState {				// manages startup lines
@@ -136,48 +136,6 @@ extern decltype(usb._mixin_0_type::Serial) &SerialUSB;
 extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
-
-/**** Structures ****
- *
- * The structure of the structures:
- *
- *	Low-level physical devices have just enough info to manage their state. 
- *	They can also point to extended data that's neede for file system or other special cases.
- */
-
-typedef struct xioFilesys {				// describes a device for reading and writing
-	uint8_t state;						// physical device state
-	uint8_t next_state;					// transitional state
-} xioFilesys_t;
-
-typedef struct xioDevice {				// describes a device for reading and writing
-	uint8_t state;						// physical device state
-	uint8_t next_state;					// transitional state
-	xioFilesys_t *fs;					// pointer to file system data if 
-//	char (*readchar)(void);				// binding for character read function
-} xioDevice_t;
-
-
-typedef struct xioChannel {				// describes a device for reading and writing
-	uint8_t type;						// channel type - control or data
-	uint8_t state;						// channel state
-	int8_t device;						// device or file handle channel is bound to
-	uint16_t linelen;					// length of completed line
-	uint16_t read_index;				// index into line being read
-	uint16_t read_buffer_len;			// static variable set at init time.
-	char_t read_buf[INPUT_BUFFER_LEN];	// primary input buffer
-} xioChannel_t;
-
-typedef struct xioSingleton {
-	uint16_t magic_start;				// magic number to test memory integrity
-	xioDevice_t d[DEV_MAX];				// allocate device structures
-	xioChannel_t c[CHAN_MAX];			// allocate channel structures
-	xioFilesys_t f[FS_MAX];				// allocate file handles
-	uint8_t spi_state;					// tick down-counter (unscaled)
-	uint16_t magic_end;
-} xioSingleton_t;
-
-extern xioSingleton_t xio;
 
 /**** function prototypes ****/
 
