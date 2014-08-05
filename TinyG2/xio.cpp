@@ -65,12 +65,18 @@ void xio_init()
 	// See here for info on lambda functions:
 	// http://www.cprogramming.com/c++11/c++11-lambda-closures.html
 
+	// bindings for USBserial0
 	SerialUSB.setConnectionCallback([&](bool connected) {
 		xio.d[DEV_USB0].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
+	xio.d[DEV_USB0].read_buffer_len = READ_BUFFER_LEN;
+//	xio.d[DEV_USB0].readchar = (char_t)&SerialUSB.readByte;
+
+	// bindings for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
 		xio.d[DEV_USB1].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
+	xio.d[DEV_USB1].read_buffer_len = READ_BUFFER_LEN;
 }
 
 /*
@@ -117,14 +123,46 @@ stat_t xio_callback()
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
-int read_char (void)
+int read_char (uint8_t dev)
 {
-	return SerialUSB.readByte();
-//    return SerialUSB1.readByte();
+	if (dev == DEV_USB0) {
+		return SerialUSB.readByte();
+	}
+	if (dev == DEV_USB1) {
+		return SerialUSB1.readByte();
+	}
+	return(_FDEV_ERR);
 }
 
 /*
- *	read_line() - read a complete line from stdin
+ * readline() - read a complete line from stdin (NEW STYLE)
+ *
+ *	Reads a line of text from the next device that has one ready. With some exceptions.
+ *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
+ *
+ *	This function reads from separate control and data devices, including reading from multiple 
+ *	control devices. It will also manage multiple data devices, but only one data device may 
+ *	be open at a time.
+ *
+ *	ARGS:
+ *
+ *	 type - Sets channel type to read. If TYPE_NONE will read either control or data.
+ *			On return this variable is set to the channel type that was read, or 
+ *			TYPE_NONE if no text was returned.
+ *
+ *   size - Sets the maximum size of the read buffer. On return is set to the number of 
+ *			characters in the buffer, including the NUL termination. Set to zero if no text
+ *			was returned. Will truncate a text line with a NUL if size is reached.
+ *
+ *	 char * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
+ */
+char *readline(uint8_t &type, int16_t &size) 
+{
+	return ((char *)_FDEV_ERR);
+}
+
+/*
+ * read_line() - read a complete line from stdin (OLD STYLE)
  *
  *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
  *

@@ -78,17 +78,39 @@
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
 
-enum xioDeviceEnum {				// for now this is just physical devices 
-	DEV_USB0=0,						// could be expanded to include logical & derived devices
+#define READ_BUFFER_LEN 255			// text buffer size (255 max)
+
+enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices 
+	DEV_NONE=-1,					// no device is bound
+	DEV_USB0=0,
 	DEV_USB1,
 	DEV_SPI0,
+	FS_FILE,						// slot for file device
 	DEV_MAX
 };
 
-enum xioChannelTypeEnum {
-	CTRL=0,							// do not change these from CTRL=0, DATA=1
-	DATA,
+enum xioFilesysEnum {				// reconfigure this enum as you add more file handles
+	FS_FILE0=0,						// only one open file is supported for now
+	FS_MAX
+};
+
+enum xioChannelEnum {				// reconfigure this enum as you add more channels
+	CHAN_CTRL0=0,					// this ordering sets the read priority
+//	CHAN_CTRL1,
+	CHAN_DATA0,
+//	CHAN_DATA1,
 	CHAN_MAX
+};
+
+enum xioChannelTypeEnum {
+	TYPE_NONE=0,					// do not change these
+	CTRL,
+	DATA,
+	CTRL_AND_DATA
+};
+
+enum xioDeviceCapabilities {
+	DEVICE_R						// read-	
 };
 
 enum xioDeviceState {				// manages startup lines
@@ -101,12 +123,6 @@ enum xioDeviceState {				// manages startup lines
 
 enum xioChannelState {				// manages the state of multiple channels and USB bindings
 	CHANNEL_NULL = 0,				// initial state - no action or bindings
-	CHANNEL_USB0_CTRL_NO_DATA,		// USB0 is control, no data channel is configured (degenerate state)
-	CHANNEL_USB1_CTRL_NO_DATA,		// USB1 is control, no data channel is configured (degenerate state)
-	CHANNEL_USB0_CTRL_DATA,			// USB0 is serving both control and data
-	CHANNEL_USB1_CTRL_DATA,			// USB1 is serving both control and data
-	CHANNEL_USB0_CTRL_USB1_DATA,	// USB0 is control, USB1 is data
-	CHANNEL_USB1_CTRL_USB0_DATA,	// USB0 is control, USB1 is data
 };
 
 enum xioSPIMode {
@@ -121,27 +137,43 @@ extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
-/**** Structures ****/
+/**** Structures ****
+ *
+ * The structure of the structures:
+ *
+ *	Low-level physical devices have just enough info to manage their state. 
+ *	They can also point to extended data that's neede for file system or other special cases.
+ */
 
-typedef struct xioDevice {			// describes a device for reading and writing
-	uint8_t state;					// physical device state
-	uint8_t next_state;				// transitional state
-	uint8_t channel;				// mapping to channel
-	uint16_t linelen;				// length of completed line
-	uint16_t read_index;			// index into line being read
-	
+typedef struct xioFilesys {				// describes a device for reading and writing
+	uint8_t state;						// physical device state
+	uint8_t next_state;					// transitional state
+} xioFilesys_t;
+
+typedef struct xioDevice {				// describes a device for reading and writing
+	uint8_t state;						// physical device state
+	uint8_t next_state;					// transitional state
+	xioFilesys_t *fs;					// pointer to file system data if 
+//	char (*readchar)(void);				// binding for character read function
 } xioDevice_t;
 
-typedef struct xioChannel {			// describes a device for reading and writing
-	uint8_t type;					// channel type - control or data
-	uint8_t state;					// channel state
+
+typedef struct xioChannel {				// describes a device for reading and writing
+	uint8_t type;						// channel type - control or data
+	uint8_t state;						// channel state
+	int8_t device;						// device or file handle channel is bound to
+	uint16_t linelen;					// length of completed line
+	uint16_t read_index;				// index into line being read
+	uint16_t read_buffer_len;			// static variable set at init time.
+	char_t read_buf[INPUT_BUFFER_LEN];	// primary input buffer
 } xioChannel_t;
 
 typedef struct xioSingleton {
-	uint16_t magic_start;			// magic number to test memory integrity
-	xioDevice_t d[DEV_MAX];			// allocate device structures
-	xioChannel_t c[CHAN_MAX];		// allocate channel structures
-	uint8_t spi_state;				// tick down-counter (unscaled)
+	uint16_t magic_start;				// magic number to test memory integrity
+	xioDevice_t d[DEV_MAX];				// allocate device structures
+	xioChannel_t c[CHAN_MAX];			// allocate channel structures
+	xioFilesys_t f[FS_MAX];				// allocate file handles
+	uint8_t spi_state;					// tick down-counter (unscaled)
 	uint16_t magic_end;
 } xioSingleton_t;
 
@@ -155,6 +187,7 @@ stat_t xio_test_assertions(void);
 
 stat_t xio_callback(void);
 
+char *readline(uint8_t &type, int16_t &size);
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
