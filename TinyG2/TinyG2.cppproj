@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectVersion>6.1</ProjectVersion>
+    <ProjectVersion>6.2</ProjectVersion>
     <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
     <ProjectGuid>{44ea8fec-55d7-4149-8a78-a574fc26bf51}</ProjectGuid>
     <avrdevice>ATSAM3X8C</avrdevice>
@@ -21,12 +21,12 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>JTAG</avrtoolinterface>
-    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
+    <avrtoolinterface>SWD</avrtoolinterface>
+    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028011884</ToolNumber>
+      <ToolNumber>000028016452</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
         <port>1063</port>
@@ -48,13 +48,14 @@
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
     <AsfFrameworkConfig>
-      <framework-data xmlns="">
+      <framework-data>
         <options />
         <configurations />
         <files />
         <documentation help="" />
+        <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.5.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
         </dependencies>
       </framework-data>
     </AsfFrameworkConfig>
@@ -63,6 +64,17 @@
     <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
     <BootSegment>0</BootSegment>
+    <com_atmel_avrdbg_tool_atmelice>
+      <ToolOptions>
+        <InterfaceProperties>
+          <SwdClock>2000000</SwdClock>
+        </InterfaceProperties>
+        <InterfaceName>SWD</InterfaceName>
+      </ToolOptions>
+      <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
+      <ToolNumber>J41800005101</ToolNumber>
+      <ToolName>Atmel-ICE</ToolName>
+    </com_atmel_avrdbg_tool_atmelice>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
@@ -477,6 +489,86 @@
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9g\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'G2v9i' ">
+    <ToolchainSettings>
+      <ArmGccCpp xmlns="">
+        <armgcc.common.general.symbols>__SAM3X8E__</armgcc.common.general.symbols>
+        <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
+        <armgcc.common.outputfiles.lss>True</armgcc.common.outputfiles.lss>
+        <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
+        <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
+        <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
+        <armgcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+          </ListValues>
+        </armgcc.compiler.directories.IncludePaths>
+        <armgcc.compiler.optimization.level>Optimize (-O1)</armgcc.compiler.optimization.level>
+        <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
+        <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
+        <armgcccpp.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+          </ListValues>
+        </armgcccpp.compiler.directories.IncludePaths>
+        <armgcccpp.compiler.optimization.level>Optimize (-O1)</armgcccpp.compiler.optimization.level>
+        <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</armgcccpp.compiler.optimization.DebugLevel>
+        <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
+        <armgcccpp.linker.libraries.Libraries>
+          <ListValues>
+            <Value>libm</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.Libraries>
+        <armgcccpp.linker.libraries.LibrarySearchPaths>
+          <ListValues>
+            <Value>../cmsis/linkerScripts</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.LibrarySearchPaths>
+        <armgcccpp.linker.optimization.GarbageCollectUnusedSections>True</armgcccpp.linker.optimization.GarbageCollectUnusedSections>
+        <armgcccpp.linker.miscellaneous.LinkerFlags>-Tsam3x8e_flash.ld</armgcccpp.linker.miscellaneous.LinkerFlags>
+        <armgcccpp.assembler.general.IncludePaths>
+          <ListValues>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+          </ListValues>
+        </armgcccpp.assembler.general.IncludePaths>
+        <armgcccpp.assembler.debugging.DebugLevel>Default (-g)</armgcccpp.assembler.debugging.DebugLevel>
+        <armgcccpp.preprocessingassembler.general.IncludePaths>
+          <ListValues>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+          </ListValues>
+        </armgcccpp.preprocessingassembler.general.IncludePaths>
+        <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
+      </ArmGccCpp>
+    </ToolchainSettings>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9i MKDIR=gmkdir</BuildTarget>
+    <CleanTarget>clean PLATFORM=G2v9i MKDIR=gmkdir</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputPath>bin\G2v9i\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
       <SubType>compile</SubType>
@@ -769,6 +861,9 @@
     <Compile Include="plan_line.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="plan_zoid.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="platform\atmel_sam\board\due\gShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>
@@ -782,6 +877,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9g-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9i-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\v9_3x8c\motate_pin_assignments.h">
@@ -1021,6 +1119,9 @@
     <Compile Include="settings\settings_Ultimaker.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_Ultimaker_Rob_v9h.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_zen7x12.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1046,6 +1147,63 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="switch.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="test.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="test.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_001_smoke.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_002_homing.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_003_squares.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_004_arcs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_005_dwell.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_006_feedhold.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_007_Mcodes.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_008_json.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_009_inverse_time.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_010_rotary.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_011_small_moves.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_012_slow_moves.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_013_coordinate_offsets.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_014_microsteps.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_050_mudflap.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_051_braid.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_099.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="text_parser.cpp">
@@ -1078,6 +1236,7 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="tests" />
     <Folder Include="platform\atmel_sam\board\" />
     <Folder Include="platform\atmel_sam\board\due\" />
     <Folder Include="platform\atmel_sam\board\v9_3x8c\" />

@@ -150,17 +150,17 @@ size_t write(uint8_t *buffer, size_t size)
 /*
  * xio_set_spi() = 0=disable, 1=enable
  */
-stat_t xio_set_spi(cmdObj_t *cmd)
+stat_t xio_set_spi(nvObj_t *nv)
 {
-	xio.spi_state = (uint8_t)cmd->value;
+	xio.spi_state = (uint8_t)nv->value;
 
 #ifdef __ARM
-	if (fp_EQ(cmd->value, SPI_ENABLE)) {
+	if (fp_EQ(nv->value, SPI_ENABLE)) {
 		spi_miso_pin.setMode(kOutput);
 		spi_mosi_pin.setMode(kOutput);
 		spi_sck_pin.setMode(kOutput);
 
-	} else if (fp_EQ(cmd->value, SPI_DISABLE)) {
+	} else if (fp_EQ(nv->value, SPI_DISABLE)) {
 		spi_miso_pin.setMode(kInput);
 		spi_mosi_pin.setMode(kInput);
 		spi_sck_pin.setMode(kInput);
@@ -177,6 +177,6 @@ stat_t xio_set_spi(cmdObj_t *cmd)
 #ifdef __TEXT_MODE
 
 static const char fmt_spi[] PROGMEM = "[spi] SPI state%20d [0=disabled,1=enabled]\n";
-void xio_print_spi(cmdObj_t *cmd) { text_print_ui8(cmd, fmt_spi);}
+void xio_print_spi(nvObj_t *nv) { text_print_ui8(nv, fmt_spi);}
 
 #endif // __TEXT_MODE

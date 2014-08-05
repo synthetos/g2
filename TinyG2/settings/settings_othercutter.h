@@ -43,8 +43,8 @@
 
 // *** settings.h overrides ***
 
-#undef  SR_DEFAULTS
-#define SR_DEFAULTS "line","mpox","mpoy","mpoz","mpoa","feed","vel","unit","coor","dist","frmo","momo","stat"
+#undef  STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS "line","mpox","mpoy","mpoz","mpoa","feed","vel","unit","coor","dist","frmo","momo","stat"
 
 #undef	COMM_MODE
 #define COMM_MODE				JSON_MODE

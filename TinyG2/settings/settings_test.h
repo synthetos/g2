@@ -50,10 +50,10 @@
 #undef STATUS_REPORT_VERBOSITY
 #define STATUS_REPORT_VERBOSITY		SR_VERBOSE			// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
-#undef SR_DEFAULTS
-#define SR_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","_cs5","_es5","_fe5","_xs5","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"
-//#define SR_DEFAULTS  "line","mpox","mpoy","mpoz","_cs2","_es2","_fe2","_xs2","stat"
+#undef STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","_cs5","_es5","_fe5","_xs5","stat"
+//#define STATUS_REPORT_DEFAULTS  "line","mpox","mpoy","mpoz","_cs5","_es5","_fe5","_xs5","_cs2","_es2","_fe2","_xs2","stat"
+//#define STATUS_REPORT_DEFAULTS  "line","mpox","mpoy","mpoz","_cs2","_es2","_fe2","_xs2","stat"
 
 // *** motor settings ***
 

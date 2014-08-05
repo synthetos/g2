@@ -12,5 +12,8 @@ monitor flash device = ATSAM3X8C
 monitor speed auto
 monitor endian little
 
+# Open and connect to openocd with the ATMEL-ICE
+# target remote | openocd  -c "interface cmsis-dap" -f target/at91sam3ax_xx.cfg -c "gdb_port pipe; log_output openocd.log"
+
 # Turn on history saving
 set history save on

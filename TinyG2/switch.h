@@ -26,7 +26,7 @@
  */
 /* Switch processing functions under Motate
  *
- *	Switch processing turns pin transitions into reliable switch states. 
+ *	Switch processing turns pin transitions into reliable switch states.
  *	There are 2 main operations:
  *
  *	  - read pin		get raw data from a pin
@@ -41,7 +41,7 @@
 #define SWITCH_H_ONCE
 
 /*
- * Generic variables and settings 
+ * Generic variables and settings
  */
 
 // switch array configuration / sizing
@@ -108,25 +108,25 @@ enum swNums {	 					// indexes into switch arrays
 /*
  * Switch control structures
  */
-typedef struct swSwitch {			// one struct per switch
+typedef struct swSwitch {						// one struct per switch
 	// public
-	uint8_t type;					// swType: 0=NO, 1=NC
-	uint8_t mode;					// 0=disabled, 1=homing, 2=limit, 3=homing+limit
-	uint8_t state;					// set true if switch is closed
-    uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
+	uint8_t type;								// swType: 0=NO, 1=NC
+	uint8_t mode;								// 0=disabled, 1=homing, 2=limit, 3=homing+limit
+	uint8_t state;								// set true if switch is closed
+	uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
 
 	// private
-	uint8_t edge;					// keeps a transient record of edges for immediate inquiry
-	uint16_t debounce_ticks;		// number of millisecond ticks for debounce lockout 
-	uint32_t debounce_timeout;		// time to expire current debounce lockout, or 0 if no lockout
+	uint8_t edge;								// keeps a transient record of edges for immediate inquiry
+	uint16_t debounce_ticks;					// number of millisecond ticks for debounce lockout
+	uint32_t debounce_timeout;					// time to expire current debounce lockout, or 0 if no lockout
 	void (*when_open)(struct swSwitch *s);		// callback to action function when sw is open - passes *s, returns void
 	void (*when_closed)(struct swSwitch *s);	// callback to action function when closed
 	void (*on_leading)(struct swSwitch *s);		// callback to action function for leading edge onset
 	void (*on_trailing)(struct swSwitch *s);	// callback to action function for trailing edge
 } switch_t;
-typedef void (*sw_callback)(switch_t *s); // typedef for switch action callback
+typedef void (*sw_callback)(switch_t *s);		// typedef for switch action callback
 
-typedef struct swSwitchArray {		// array of switches
+typedef struct swSwitchArray {					// array of switches
 	switch_t s[SW_PAIRS][SW_POSITIONS];
 } switches_t;
 extern switches_t sw;
@@ -146,11 +146,11 @@ void reset_limit_switches(void);
 /*
  * Switch config accessors and text functions
  */
-stat_t sw_set_st(cmdObj_t *cmd);
-stat_t sw_set_sw(cmdObj_t *cmd);
+stat_t sw_set_st(nvObj_t *nv);
+stat_t sw_set_sw(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
-	void sw_print_st(cmdObj_t *cmd);
+	void sw_print_st(nvObj_t *nv);
 #else
 	#define sw_print_st tx_print_stub
 #endif // __TEXT_MODE

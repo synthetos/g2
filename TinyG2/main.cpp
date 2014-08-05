@@ -17,7 +17,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* See github.com/Synthetos/G2 for code and docs on the wiki 
+/* See github.com/Synthetos/G2 for code and docs on the wiki
  */
 
 #include "tinyg2.h"					// #1 There are some dependencies
@@ -31,16 +31,15 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
-//#include "network.h"
 #include "switch.h"
-//#include "test.h"
+#include "test.h"
 #include "pwm.h"
 #include "xio.h"
+//#include "network.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
 #include "xmega/xmega_interrupts.h"
-//#include "xmega/xmega_eeprom.h"	// uncomment for unit tests
 #endif // __AVR
 
 #ifdef __ARM
@@ -118,17 +117,22 @@ static void _application_init(void)
 	// There are a lot of dependencies in the order of these inits.
 	// Don't change the ordering unless you understand this.
 
+#ifdef __AVR
+	cli();
+#endif
+
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
+//	rtc_init();						// real time counter
 	xio_init();						// xtended io subsystem				- must be third
-	config_init();					// config records from eeprom
+	config_init();					// apply config from persistence
 
 	// do these next
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
 	switch_init();					// switches
-    reset_limit_switches();         // reset limit switch alarm flags
+	reset_limit_switches();         // reset limit switch alarm flags
 //	gpio_init();					// parallel IO
 	pwm_init();						// pulse width modulation drivers
 
@@ -136,6 +140,15 @@ static void _application_init(void)
 //	network_init();					// reset std devices if required	- must follow config_init()
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
+
+#ifdef __AVR
+	// now bring up the interrupts and get started
+	PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
+	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
+	PMIC_EnableMediumLevel();
+	PMIC_EnableLowLevel();
+	sei();							// enable global interrupts
+#endif
 
 	// start the application
 	rpt_print_system_ready_message();// (LAST) announce system is ready
@@ -157,7 +170,7 @@ int main(void)
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
-//	run_canned_startup();			// run any pre-loaded commands
+	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
 	for (;;) {
@@ -177,7 +190,7 @@ int main(void)
  */
 
 stat_t status_code;						// allocate a variable for the ritorno macro
-char shared_buf[MESSAGE_LEN];			// allocate a string for global message use
+char_t global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
 
 //#ifdef __TEXT_MODE
 
@@ -193,6 +206,7 @@ static const char stat_06[] PROGMEM = "Hard reset";
 static const char stat_07[] PROGMEM = "End of line";
 static const char stat_08[] PROGMEM = "End of file";
 static const char stat_09[] PROGMEM = "File not open";
+
 static const char stat_10[] PROGMEM = "Max file size exceeded";
 static const char stat_11[] PROGMEM = "No such device";
 static const char stat_12[] PROGMEM = "Buffer empty";
@@ -214,17 +228,18 @@ static const char stat_26[] PROGMEM = "Initialization failure";
 static const char stat_27[] PROGMEM = "System alarm - shutting down";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
-static const char stat_30[] PROGMEM = "st_prep_line() move time is infinite";
-static const char stat_31[] PROGMEM = "st_prep_line() move time is NAN";
 
-static const char stat_32[] PROGMEM = "32";
-static const char stat_33[] PROGMEM = "33";
-static const char stat_34[] PROGMEM = "34";
-static const char stat_35[] PROGMEM = "35";
+static const char stat_30[] PROGMEM = "Move time is infinite";
+static const char stat_31[] PROGMEM = "Move time is NAN";
+static const char stat_32[] PROGMEM = "Float is infinite";
+static const char stat_33[] PROGMEM = "Float is NAN";
+static const char stat_34[] PROGMEM = "Persistence error";
+static const char stat_35[] PROGMEM = "Bad status report setting";
 static const char stat_36[] PROGMEM = "36";
 static const char stat_37[] PROGMEM = "37";
 static const char stat_38[] PROGMEM = "38";
 static const char stat_39[] PROGMEM = "39";
+
 static const char stat_40[] PROGMEM = "40";
 static const char stat_41[] PROGMEM = "41";
 static const char stat_42[] PROGMEM = "42";
@@ -275,8 +290,8 @@ static const char stat_86[] PROGMEM = "86";
 static const char stat_87[] PROGMEM = "87";
 static const char stat_88[] PROGMEM = "88";
 static const char stat_89[] PROGMEM = "89";
-static const char stat_90[] PROGMEM = "90";
 
+static const char stat_90[] PROGMEM = "Config sub-system assertion failure";
 static const char stat_91[] PROGMEM = "IO sub-system assertion failure";
 static const char stat_92[] PROGMEM = "Encoder assertion failure";
 static const char stat_93[] PROGMEM = "Stepper assertion failure";
@@ -287,7 +302,7 @@ static const char stat_97[] PROGMEM = "Stack overflow detected";
 static const char stat_98[] PROGMEM = "Memory fault detected";
 static const char stat_99[] PROGMEM = "Generic assertion failure";
 
-static const char stat_100[] PROGMEM = "Unrecognized command";
+static const char stat_100[] PROGMEM = "Unrecognized command or config name";
 static const char stat_101[] PROGMEM = "Malformed command";
 static const char stat_102[] PROGMEM = "Bad number format";
 static const char stat_103[] PROGMEM = "Input exceeds max length";
@@ -296,9 +311,10 @@ static const char stat_105[] PROGMEM = "Input value too large";
 static const char stat_106[] PROGMEM = "Input value range error";
 static const char stat_107[] PROGMEM = "Input value unsupported";
 static const char stat_108[] PROGMEM = "JSON syntax error";
-static const char stat_109[] PROGMEM = "JSON input has too many pairs";	// current longest message: 30 chars
+static const char stat_109[] PROGMEM = "JSON input has too many pairs";
+
 static const char stat_110[] PROGMEM = "JSON output too long";
-static const char stat_111[] PROGMEM = "Config not taken during machining cycle";
+static const char stat_111[] PROGMEM = "Config not taken during cycle";
 static const char stat_112[] PROGMEM = "Command cannot be taken at this time";
 static const char stat_113[] PROGMEM = "113";
 static const char stat_114[] PROGMEM = "114";
@@ -307,6 +323,7 @@ static const char stat_116[] PROGMEM = "116";
 static const char stat_117[] PROGMEM = "117";
 static const char stat_118[] PROGMEM = "118";
 static const char stat_119[] PROGMEM = "119";
+
 static const char stat_120[] PROGMEM = "120";
 static const char stat_121[] PROGMEM = "121";
 static const char stat_122[] PROGMEM = "122";
@@ -322,36 +339,33 @@ static const char stat_130[] PROGMEM = "Generic Gcode input error";
 static const char stat_131[] PROGMEM = "Gcode command unsupported";
 static const char stat_132[] PROGMEM = "M code unsupported";
 static const char stat_133[] PROGMEM = "Gcode modal group violation";
-
 static const char stat_134[] PROGMEM = "Axis word missing";
 static const char stat_135[] PROGMEM = "Axis cannot be present";
 static const char stat_136[] PROGMEM = "Axis is invalid for this command";
 static const char stat_137[] PROGMEM = "Axis is disabled";
 static const char stat_138[] PROGMEM = "Axis target position is missing";
 static const char stat_139[] PROGMEM = "Axis target position is invalid";
+
 static const char stat_140[] PROGMEM = "Selected plane is missing";
 static const char stat_141[] PROGMEM = "Selected plane is invalid";
-
 static const char stat_142[] PROGMEM = "Feedrate not specified";
 static const char stat_143[] PROGMEM = "Inverse time mode cannot be used with this command";
 static const char stat_144[] PROGMEM = "Rotary axes cannot be used with this command";
 static const char stat_145[] PROGMEM = "G0 or G1 must be active for G53";
-
 static const char stat_146[] PROGMEM = "Requested velocity exceeds limits";
 static const char stat_147[] PROGMEM = "Cutter compensation cannot be enabled";
 static const char stat_148[] PROGMEM = "Programmed point same as current point";
-
 static const char stat_149[] PROGMEM = "Spindle speed below minimum";
+
 static const char stat_150[] PROGMEM = "Spindle speed exceeded maximum";
 static const char stat_151[] PROGMEM = "Spindle S word is missing";
 static const char stat_152[] PROGMEM = "Spindle S word is invalid";
 static const char stat_153[] PROGMEM = "Spindle must be off for this command";
 static const char stat_154[] PROGMEM = "Spindle must be turning for this command";
-
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
-static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";
+static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";	// current longest message: 56 chard
 static const char stat_159[] PROGMEM = "Arc specification error - endpoint is starting point";
 
 static const char stat_160[] PROGMEM = "P word is missing";
@@ -360,11 +374,11 @@ static const char stat_162[] PROGMEM = "P word is zero";
 static const char stat_163[] PROGMEM = "P word is negative";
 static const char stat_164[] PROGMEM = "P word is not an integer";
 static const char stat_165[] PROGMEM = "P word is not a valid tool number";
-
 static const char stat_166[] PROGMEM = "D word is missing";
 static const char stat_167[] PROGMEM = "D word is invalid";
 static const char stat_168[] PROGMEM = "E word is missing";
 static const char stat_169[] PROGMEM = "E word is invalid";
+
 static const char stat_170[] PROGMEM = "H word is missing";
 static const char stat_171[] PROGMEM = "H word is invalid";
 static const char stat_172[] PROGMEM = "L word is missing";
@@ -386,6 +400,7 @@ static const char stat_186[] PROGMEM = "186";
 static const char stat_187[] PROGMEM = "187";
 static const char stat_188[] PROGMEM = "188";
 static const char stat_189[] PROGMEM = "189";
+
 static const char stat_190[] PROGMEM = "190";
 static const char stat_191[] PROGMEM = "191";
 static const char stat_192[] PROGMEM = "192";
@@ -402,37 +417,58 @@ static const char stat_201[] PROGMEM = "Move less than minimum length";
 static const char stat_202[] PROGMEM = "Move less than minimum time";
 static const char stat_203[] PROGMEM = "Machine is alarmed - Command not processed";	// current longest message 43 chars (including NUL)
 static const char stat_204[] PROGMEM = "Limit switch hit - Shutdown occurred";
-static const char stat_205[] PROGMEM = "205";
+static const char stat_205[] PROGMEM = "Trapezoid planner failed to converge";
 static const char stat_206[] PROGMEM = "206";
 static const char stat_207[] PROGMEM = "207";
 static const char stat_208[] PROGMEM = "208";
 static const char stat_209[] PROGMEM = "209";
 
-static const char stat_210[] PROGMEM = "Soft limit exceeded";
-static const char stat_211[] PROGMEM = "Soft limit exceeded - X min";
-static const char stat_212[] PROGMEM = "Soft limit exceeded - X max";
-static const char stat_213[] PROGMEM = "Soft limit exceeded - Y min";
-static const char stat_214[] PROGMEM = "Soft limit exceeded - Y max";
-static const char stat_215[] PROGMEM = "Soft limit exceeded - Z min";
-static const char stat_216[] PROGMEM = "Soft limit exceeded - Z max";
-static const char stat_217[] PROGMEM = "Soft limit exceeded - A min";
-static const char stat_218[] PROGMEM = "Soft limit exceeded - A max";
-static const char stat_219[] PROGMEM = "Soft limit exceeded - B min";
-static const char stat_220[] PROGMEM = "Soft limit exceeded - B max";
-static const char stat_221[] PROGMEM = "Soft limit exceeded - C min";
-static const char stat_222[] PROGMEM = "Soft limit exceeded - C max";
+static const char stat_210[] PROGMEM = "210";
+static const char stat_211[] PROGMEM = "211";
+static const char stat_212[] PROGMEM = "212";
+static const char stat_213[] PROGMEM = "213";
+static const char stat_214[] PROGMEM = "214";
+static const char stat_215[] PROGMEM = "215";
+static const char stat_216[] PROGMEM = "216";
+static const char stat_217[] PROGMEM = "217";
+static const char stat_218[] PROGMEM = "218";
+static const char stat_219[] PROGMEM = "219";
 
-static const char stat_223[] PROGMEM = "Homing cycle failed";
-static const char stat_224[] PROGMEM = "Homing Error - Bad or no axis specified";
-static const char stat_225[] PROGMEM = "Homing Error - Search velocity is zero";
-static const char stat_226[] PROGMEM = "Homing Error - Latch velocity is zero";
-static const char stat_227[] PROGMEM = "Homing Error - Travel min/max is zero";
-static const char stat_228[] PROGMEM = "Homing Error - Negative latch backoff";
-static const char stat_229[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_220[] PROGMEM = "Soft limit exceeded";
+static const char stat_221[] PROGMEM = "Soft limit exceeded - X min";
+static const char stat_222[] PROGMEM = "Soft limit exceeded - X max";
+static const char stat_223[] PROGMEM = "Soft limit exceeded - Y min";
+static const char stat_224[] PROGMEM = "Soft limit exceeded - Y max";
+static const char stat_225[] PROGMEM = "Soft limit exceeded - Z min";
+static const char stat_226[] PROGMEM = "Soft limit exceeded - Z max";
+static const char stat_227[] PROGMEM = "Soft limit exceeded - A min";
+static const char stat_228[] PROGMEM = "Soft limit exceeded - A max";
+static const char stat_229[] PROGMEM = "Soft limit exceeded - B min";
+static const char stat_230[] PROGMEM = "Soft limit exceeded - B max";
+static const char stat_231[] PROGMEM = "Soft limit exceeded - C min";
+static const char stat_232[] PROGMEM = "Soft limit exceeded - C max";
+static const char stat_233[] PROGMEM = "233";
+static const char stat_234[] PROGMEM = "234";
+static const char stat_235[] PROGMEM = "235";
+static const char stat_236[] PROGMEM = "236";
+static const char stat_237[] PROGMEM = "237";
+static const char stat_238[] PROGMEM = "238";
+static const char stat_239[] PROGMEM = "239";
 
-static const char stat_230[] PROGMEM = "Probe cycle failed";
-static const char stat_231[] PROGMEM = "Probe endpoint is starting point";
-static const char stat_232[] PROGMEM = "Jogging cycle failed";
+static const char stat_240[] PROGMEM = "Homing cycle failed";
+static const char stat_241[] PROGMEM = "Homing Error - Bad or no axis specified";
+static const char stat_242[] PROGMEM = "Homing Error - Search velocity is zero";
+static const char stat_243[] PROGMEM = "Homing Error - Latch velocity is zero";
+static const char stat_244[] PROGMEM = "Homing Error - Travel min & max are the same";
+static const char stat_245[] PROGMEM = "Homing Error - Negative latch backoff";
+static const char stat_246[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_247[] PROGMEM = "247";
+static const char stat_248[] PROGMEM = "248";
+static const char stat_249[] PROGMEM = "249";
+
+static const char stat_250[] PROGMEM = "Probe cycle failed";
+static const char stat_251[] PROGMEM = "Probe endpoint is starting point";
+static const char stat_252[] PROGMEM = "Jogging cycle failed";
 
 static const char *const stat_msg[] PROGMEM = {
 	stat_00, stat_01, stat_02, stat_03, stat_04, stat_05, stat_06, stat_07, stat_08, stat_09,
@@ -447,7 +483,7 @@ static const char *const stat_msg[] PROGMEM = {
 	stat_90, stat_91, stat_92, stat_93, stat_94, stat_95, stat_96, stat_97, stat_98, stat_99,
 	stat_100, stat_101, stat_102, stat_103, stat_104, stat_105, stat_106, stat_107, stat_108, stat_109,
 	stat_110, stat_111, stat_112, stat_113, stat_114, stat_115, stat_116, stat_117, stat_118, stat_119,
-	stat_120, stat_121, stat_122, stat_123, stat_124, stat_125, stat_126, stat_127, stat_128, stat_129, 
+	stat_120, stat_121, stat_122, stat_123, stat_124, stat_125, stat_126, stat_127, stat_128, stat_129,
 	stat_130, stat_131, stat_132, stat_133, stat_134, stat_135, stat_136, stat_137, stat_138, stat_139,
 	stat_140, stat_141, stat_142, stat_143, stat_144, stat_145, stat_146, stat_147, stat_148, stat_149,
 	stat_150, stat_151, stat_152, stat_153, stat_154, stat_155, stat_156, stat_157, stat_158, stat_159,
@@ -458,7 +494,9 @@ static const char *const stat_msg[] PROGMEM = {
 	stat_200, stat_201, stat_202, stat_203, stat_204, stat_205, stat_206, stat_207, stat_208, stat_209,
 	stat_210, stat_211, stat_212, stat_213, stat_214, stat_215, stat_216, stat_217, stat_218, stat_219,
 	stat_220, stat_221, stat_222, stat_223, stat_224, stat_225, stat_226, stat_227, stat_228, stat_229,
-	stat_230, stat_231, stat_232
+	stat_230, stat_231, stat_232, stat_233, stat_234, stat_235, stat_236, stat_237, stat_238, stat_239,
+	stat_240, stat_241, stat_242, stat_243, stat_244, stat_245, stat_246, stat_247, stat_248, stat_249,
+	stat_250, stat_251, stat_252
 };
 
 char *get_status_message(stat_t status)
@@ -466,7 +504,7 @@ char *get_status_message(stat_t status)
 	return ((char *)GET_TEXT_ITEM(stat_msg, status));
 }
 /*
-#else 
+#else
 char *get_status_message(stat_t status)
 {
 	return ((char *)NULL);
@@ -478,7 +516,7 @@ char *get_status_message(stat_t status)
  * _unit_tests() - uncomment __UNITS... line in .h files to enable unit tests
  */
 
-static void _unit_tests(void) 
+static void _unit_tests(void)
 {
 #ifdef __UNIT_TESTS
 	XIO_UNITS;				// conditional unit tests for xio sub-system

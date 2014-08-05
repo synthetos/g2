@@ -1,5 +1,5 @@
 /*
- * planner.cpp - cartesian trajectory planning and motion execution
+ * planner.cpp - Cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
@@ -27,29 +27,27 @@
  */
 /* --- Planner Notes ----
  *
- *	The planner works below the canonical machine and above the motor mapping 
- *	and stepper execution layers. A rudimentary multitasking capability is 
- *	implemented for long-running commands such as lines, arcs, and dwells. 
- *	These functions are coded as non-blocking continuations - which are simple 
- *	state machines that are re-entered multiple times until a particular 
- *	operation is complete. These functions have 2 parts - the initial call, 
- *	which sets up the local context, and callbacks (continuations) that are 
- *	called from the main loop (in controller.c).
+ *	The planner works below the canonical machine and above the motor mapping and stepper
+ *	execution layers. A rudimentary multitasking capability is implemented for long-running
+ *	commands such as lines, arcs, and dwells. These functions are coded as non-blocking
+ *	continuations - which are simple state machines that are re-entered multiple times
+ *	until a particular operation is complete. These functions have 2 parts - the initial call,
+ *	which sets up the local context, and callbacks (continuations) that are called from the
+ *	main loop (in controller.c).
  *
- *	One important concept is isolation of the three layers of the data model - 
- *	the Gcode model (gm), planner model (bf queue & mm), and runtime model (mr).
- *	These are designated as "model", "planner" and "runtime" in function names.
+ *	One important concept is isolation of the three layers of the data model - the Gcode model
+ *	(gm), planner model (bf queue & mm), and runtime model (mr). These are designated as
+ *	"model", "planner" and "runtime" in function names.
  *
- *	The Gcode model is owned by the canonical machine and should only be accessed
- *	by cm_xxxx() functions. Data from the Gcode model is transferred to the planner
- *	by the mp_xxx() functions called by the canonical machine. 
+ *	The Gcode model is owned by the canonical machine and should only be accessed by cm_xxxx()
+ *	functions. Data from the Gcode model is transferred to the planner by the mp_xxx()
+ *	functions called by the canonical machine.
  *
- *	The planner should only use data in the planner model. When a move (block) 
- *	is ready for execution the planner data is transferred to the runtime model, 
- *	which should also be isolated.
+ *	The planner should only use data in the planner model. When a move (block) is ready for
+ *	execution the planner data is transferred to the runtime model, which should also be isolated.
  *
- *	Lower-level models should never use data from upper-level models as the data 
- *	may have changed and lead to unpredictable results.
+ *	Lower-level models should never use data from upper-level models as the data may have
+ *	changed and lead to unpredictable results.
  */
 #include "tinyg2.h"
 #include "config.h"
@@ -85,11 +83,11 @@ static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
 
 #ifdef __DEBUG
-static uint8_t _get_buffer_index(mpBuf_t *bf); 
+static uint8_t _get_buffer_index(mpBuf_t *bf);
 static void _dump_plan_buffer(mpBuf_t *bf);
 #endif
 
-/* 
+/*
  * planner_init()
  */
 void planner_init()
@@ -121,7 +119,7 @@ stat_t planner_test_assertions()
 	return (STAT_OK);
 }
 
-/* 
+/*
  * mp_flush_planner() - flush all moves in the planner and all arcs
  *
  *	Does not affect the move currently running in mr.
@@ -140,21 +138,27 @@ void mp_flush_planner()
  * mp_set_planner_position() - set planner position for a single axis
  * mp_set_runtime_position() - set runtime position for a single axis
  * mp_set_steps_to_runtime_position() - set encoder counts to the runtime position
- * 
- * Since steps are in motor space you have to run the position vector through inverse 
- * kinematics to get the right numbers. This means that in a non-cartesian robot changing 
- * any position can result in changes to multiple step values. So this operation is provided 
- * as a single function and always uses the new position vector as an input.
+ *
+ *	Since steps are in motor space you have to run the position vector through inverse
+ *	kinematics to get the right numbers. This means that in a non-Cartesian robot changing
+ *	any position can result in changes to multiple step values. So this operation is provided
+ *	as a single function and always uses the new position vector as an input.
+ *
+ *	Keeping track of position is complicated by the fact that moves exist in several reference
+ *	frames. The scheme to keep this straight is:
+ *
+ *	 - mm.position	- start and end position for planning
+ *	 - mr.position	- current position of runtime segment
+ *	 - mr.target	- target position of runtime segment
+ *	 - mr.endpoint	- final target position of runtime segment
+ *
+ *	Note that position is set immediately when called and may not be not an accurate representation
+ *	of the tool position. The motors are still processing the action and the real tool position is
+ *	still close to the starting point.
  */
-void mp_set_planner_position(uint8_t axis, float position)
-{
-	mm.position[axis] = position;
-}
 
-void mp_set_runtime_position(uint8_t axis, float position)
-{
-	mr.position[axis] = position;
-}
+void mp_set_planner_position(uint8_t axis, const float position) { mm.position[axis] = position; }
+void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[axis] = position; }
 
 void mp_set_steps_to_runtime_position()
 {
@@ -172,101 +176,21 @@ void mp_set_steps_to_runtime_position()
 	}
 }
 
-/*
- * mp_set_planner_position()   - set planner and runtime positions from a single axis
- * mp_set_planner_position_by_vector() - set runtime and runtime positions from a position vector
- *
- * 	In order to set the planner and runtime positions the following all need to line up:
- *
- *	- mm.position		 - current planner position
- *	- mr.position		 - current runtime position
- *	- mr.target_steps	 - next runtime position as steps
- *	- mr.position_steps  - current runtime position as steps (one segment behind the target)
- *	- mr.commanded_steps - steps 2 segments behind target steps (aligns with encoders)
- *  - encoder steps		 - current encoder position (should agree with commanded steps)
- *
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *	!!!!! DO NOT CALL THESE FUNCTIONS WHILE IN A MACHINING CYCLE !!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *
- *	More specifically, do not call these functions if there are any moves in the planner
- *	or if the runtime is moving. The system must be quiescent or you will introduce positional
- *	errors. This is true because the planned / running moves have a different reference frame
- *	than the one you are now going to set. These functions should only be called during
- *	initialization sequences and during cycles (such as homing cycles) when you know there
- *	are no more moves in the planner and that all motion has stopped. Use cm_get_runtime_busy() if in doubt.
- */
-/*
- * mp_set_step_counts_from_position() - set step counters and encoders to the given position
- *
- *	Sets the step counters and encoders to match the position, which is in mm length units.
- *	This establishes the "step grid" relative to the current machine position.
- */
-/*
-void mp_set_planner_position(uint8_t axis, float position)
-{
-	mm.position[axis] = position;
-	mr.position[axis] = position;
-	mp_set_step_counts(mr.position);
-}
-
-void mp_set_planner_position_by_vector(float position[], float flags[])
-{
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(flags[axis])) {
-			mm.position[axis] = position[axis];
-			mr.position[axis] = position[axis];
-		}
-	}
-	mp_set_step_counts(mr.position);
-}
-
-void mp_set_runtime_position(uint8_t axis, float position)
-{
-	mr.position[axis] = position;
-	mp_set_step_counts(mr.position);
-}
-
-void mp_set_runtime_position_by_vector(float position[], float flags[])
-{
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(flags[axis])) {
-			mr.position[axis] = position[axis];
-		}
-	}
-	mp_set_step_counts(mr.position);
-}
-
-void mp_set_step_counts(float position[])
-{
-	float step_position[MOTORS];
-	ik_kinematics(position, step_position);					// convert lengths to steps in floating point
-	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		mr.target_steps[motor] = step_position[motor];
-		mr.position_steps[motor] = step_position[motor];
-		mr.commanded_steps[motor] = step_position[motor];
-		en_set_encoder_steps(motor, step_position[motor]);	// write steps to encoder
-
-		// These must be zero:
-		mr.following_error[motor] = 0;
-		st_pre.mot[motor].corrected_steps = 0;
-	}
-}
-
-*/
-
 /************************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
  * _exec_command() 	  - callback to execute command
  *
  *	How this works:
  *	  - The command is called by the Gcode interpreter (cm_<command>, e.g. an M code)
- *	  - cm_ function calls mp_queue_command which puts it in the planning queue.
- *		This involves setting some parameters and registering a callback to the 
+ *	  - cm_ function calls mp_queue_command which puts it in the planning queue (bf buffer).
+ *		This involves setting some parameters and registering a callback to the
  *		execution function in the canonical machine
  *	  - the planning queue gets to the function and calls _exec_command()
- *	  - ...which passes the saved parameters to the callback function
- *	  - To finish up _exec_command() needs to run a null pre and free the planner buffer
+ *	  - ...which puts a pointer to the bf buffer in the prep stratuc (st_pre)
+ *	  - When the runtime gets to the end of the current activity (sending steps, counting a dwell)
+ *		if executes mp_runtime_command...
+ *	  - ...which uses the callback function in the bf and the saved parameters in the vectors
+ *	  - To finish up mp_runtime_command() needs to free the bf buffer
  *
  *	Doing it this way instead of synchronizing on queue empty simplifies the
  *	handling of feedholds, feed overrides, buffer flushes, and thread blocking,
@@ -296,18 +220,23 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 static stat_t _exec_command(mpBuf_t *bf)
 {
+	st_prep_command(bf);
+	return (STAT_OK);
+}
+
+stat_t mp_runtime_command(mpBuf_t *bf)
+{
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
-	st_prep_null();										// Must call a null prep to keep the loader happy. 
-	cm_cycle_end(mp_free_run_buffer());					// free buffer & perform cycle_end if empty
+	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);
 }
 
 /*************************************************************************
  * mp_dwell() 	 - queue a dwell
- * _exec_dwell() - dwell execution 
+ * _exec_dwell() - dwell execution
  *
  * Dwells are performed by passing a dwell move to the stepper drivers.
- * When the stepper driver sees a dwell it times the dwell on a separate 
+ * When the stepper driver sees a dwell it times the dwell on a separate
  * timer than the stepper pulse timer.
  */
 stat_t mp_dwell(float seconds)
@@ -326,32 +255,32 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000));// convert seconds to uSec
-	cm_cycle_end(mp_free_run_buffer());					// free buffer & perform cycle_end if empty
+	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
+	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);
 }
 
-/**** PLANNER BUFFERS *****************************************************
+/**** PLANNER BUFFERS *******************************************************************
  *
- * Planner buffers are used to queue and operate on Gcode blocks. Each buffer 
- * contains one Gcode block which may be a move, and M code, or other command 
- * that must be executed synchronously with movement.
+ *	Planner buffers are used to queue and operate on Gcode blocks. Each buffer contains
+ *	one Gcode block which may be a move, and M code, or other command that must be
+ *	executed synchronously with movement.
  *
- * Buffers are in a circularly linked list managed by a WRITE pointer and a RUN pointer.
- * New blocks are populated by (1) getting a write buffer, (2) populating the buffer,
- * then (3) placing it in the queue (queue write buffer). If an exception occurs
- * during population you can unget the write buffer before queuing it, which returns
- * it to the pool of available buffers.
+ *	Buffers are in a circularly linked list managed by a WRITE pointer and a RUN pointer.
+ *	New blocks are populated by (1) getting a write buffer, (2) populating the buffer,
+ *	then (3) placing it in the queue (queue write buffer). If an exception occurs
+ *	during population you can unget the write buffer before queuing it, which returns
+ *	it to the pool of available buffers.
  *
- * The RUN buffer is the buffer currently executing. It may be retrieved once for 
- * simple commands, or multiple times for long-running commands like moves. When 
- * the command is complete the run buffer is returned to the pool by freeing it.
- * 
+ *	The RUN buffer is the buffer currently executing. It may be retrieved once for 
+ *	simple commands, or multiple times for long-running commands like moves. When 
+ *	the command is complete the run buffer is returned to the pool by freeing it.
+ *
  * Notes:
  *	The write buffer pointer only moves forward on _queue_write_buffer, and
  *	the read buffer pointer only moves forward on free_read calls.
  *	(test, get and unget have no effect)
- * 
+ *
  * mp_get_planner_buffers_available()   Returns # of available planner buffers
  *
  * mp_init_buffers()		Initializes or resets buffers
@@ -359,11 +288,11 @@ static stat_t _exec_dwell(mpBuf_t *bf)
  * mp_get_write_buffer()	Get pointer to next available write buffer
  *							Returns pointer or NULL if no buffer available.
  *
- * mp_unget_write_buffer()	Free write buffer if you decide not to queue it.
+ * mp_unget_write_buffer()	Free write buffer if you decide not to commit it.
  *
  * mp_commit_write_buffer()	Commit the next write buffer to the queue
  *							Advances write pointer & changes buffer state
- *							WARNING: The calling routine must not use the write buffer 
+ *							WARNING: The calling routine must not use the write buffer
  *							once it has been queued as it may be processed and freed (wiped)
  *							before mp_queue_write_buffer() returns.
  *
@@ -373,12 +302,12 @@ static stat_t _exec_dwell(mpBuf_t *bf)
  *							Returns NULL if no buffer available
  *							The behavior supports continuations (iteration)
  *
- * mp_free_run_buffer()		Release the run buffer & return to buffer pool. 
+ * mp_free_run_buffer()		Release the run buffer & return to buffer pool.
  *							Returns true if queue is empty, false otherwise.
  *							This is useful for doing queue empty / end move functions.
  *
  * mp_get_prev_buffer(bf)	Returns pointer to prev buffer in linked list
- * mp_get_next_buffer(bf)	Returns pointer to next buffer in linked list 
+ * mp_get_next_buffer(bf)	Returns pointer to next buffer in linked list
  * mp_get_first_buffer(bf)	Returns pointer to first buffer, i.e. the running block
  * mp_get_last_buffer(bf)	Returns pointer to last buffer, i.e. last block (zero)
  * mp_clear_buffer(bf)		Zeroes the contents of the buffer
@@ -412,9 +341,9 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 {
 	if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
 		mpBuf_t *w = mb.w;
-		mpBuf_t *nx = mb.w->nx;					// save pointers
+		mpBuf_t *nx = mb.w->nx;					// save linked list pointers
 		mpBuf_t *pv = mb.w->pv;
-		memset(mb.w, 0, sizeof(mpBuf_t));
+		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
 		w->nx = nx;								// restore pointers
 		w->pv = pv;
 		w->buffer_state = MP_BUFFER_LOADING;
@@ -425,17 +354,17 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER);
 	return (NULL);
 }
-/* NOT USED
+
 void mp_unget_write_buffer()
 {
 	mb.w = mb.w->pv;							// queued --> write
 	mb.w->buffer_state = MP_BUFFER_EMPTY; 		// not loading anymore
 	mb.buffers_available++;
 }
-*/
 
-/*** WARNING: The calling routine must not use the write buffer once it has been queued. 
-			  Action may start on the buffer immediately, invalidating its contents ***/
+/*** WARNING: The routine calling mp_commit_write_buffer() must not use the write buffer
+			  once it has been queued. Action may start on the buffer immediately,
+			  invalidating its contents ***/
 
 void mp_commit_write_buffer(const uint8_t move_type)
 {
@@ -444,15 +373,15 @@ void mp_commit_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-	st_request_exec_move();						// request a move exec if not busy
-												// the exec may result in the buffer being processed
-												// immediately and then freed  - invalidating the contents
+	st_request_exec_move();						// requests an exec if the runtime is not busy
+												// NB: BEWARE! the exec may result in the planner buffer being
+												// processed immediately and then freed - invalidating the contents
 }
 
-mpBuf_t * mp_get_run_buffer() 
+mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
-	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) || 
+	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
 		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
 		 mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
@@ -489,8 +418,8 @@ mpBuf_t * mp_get_last_buffer(void)
 	if (bf == NULL) return(NULL);
 
 	do {
-		if ((bp->nx->move_state == MOVE_OFF) || (bp->nx == bf)) { 
-			return (bp); 
+		if ((bp->nx->move_state == MOVE_OFF) || (bp->nx == bf)) {
+			return (bp);
 		}
 	} while ((bp = mp_get_next_buffer(bp)) != bf);
 	return (bp);
@@ -500,7 +429,7 @@ mpBuf_t * mp_get_last_buffer(void)
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) return (bf->pv);
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) return (bf->nx);
 
-void mp_clear_buffer(mpBuf_t *bf) 
+void mp_clear_buffer(mpBuf_t *bf)
 {
 	mpBuf_t *nx = bf->nx;			// save pointers
 	mpBuf_t *pv = bf->pv;
@@ -523,9 +452,9 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
 {
 	mpBuf_t *b = bf;				// temp buffer pointer
 
-	for (uint8_t index=0; index < PLANNER_BUFFER_POOL_SIZE; index++) {
+	for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
 		if (b->pv > b) {
-			return (index);
+			return (i);
 		}
 		b = b->pv;
 	}
@@ -547,12 +476,9 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
  * Functions to print variables from the cfgArray table
  ***********************************************************************************/
 
-
-// *********************************************************************************
-// *********************************************************************************
-// ***** UNIT TESTS AND DEBUG CODE *************************************************
-// *********************************************************************************
-// *********************************************************************************
+//************************************************************************************
+//***** UNIT TESTS AND DEBUG CODE ****************************************************
+//************************************************************************************
 
 /****** DEBUG Code ******	(see beginning of file for static function prototypes) */
 

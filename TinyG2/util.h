@@ -24,10 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are 
+/* util.c/.h contains a dog's breakfast of supporting functions that are
  * not specific to tinyg: including:
  *
- *	  - math and min/max utilities and extensions 
+ *	  - math and min/max utilities and extensions
  *	  - vector manipulation utilities
  *	  - support for debugging routines
  */
@@ -79,6 +79,8 @@ float max4(float x1, float x2, float x3, float x4);
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 char_t *pstr2str(const char *pgm_string);
+//int fntoa(char_t *str, float n, uint8_t precision);
+char_t fntoa(char_t *str, float n, uint8_t precision);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
 
 //*** other utilities ***
@@ -123,11 +125,11 @@ uint32_t SysTickTimer_getValue(void);
 #ifndef fp_NE
 #define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
 #endif
-#ifndef fp_Z
-#define fp_Z(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
+#ifndef fp_ZERO
+#define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
 #endif
-#ifndef fp_NZ
-#define fp_NZ(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
+#ifndef fp_NOT_ZERO
+#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
@@ -136,19 +138,11 @@ uint32_t SysTickTimer_getValue(void);
 #define fp_TRUE(a) (a > EPSILON)			// float is interpreted as TRUE (not equal to zero)
 #endif
 
-// deprecated
-#ifndef fp_ZERO
-#define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
-#endif
-#ifndef fp_NOT_ZERO
-#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
-#endif
-
 // Constants
 #define MAX_LONG (2147483647)
 #define MAX_ULONG (4294967295)
 #define MM_PER_INCH (25.4)
-#define INCH_PER_MM (1/25.4)
+#define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 

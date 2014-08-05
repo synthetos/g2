@@ -73,21 +73,16 @@ static stat_t _jogging_finalize_exit(int8_t axis);
  */
 /*	--- Some further details ---
  *
- *	Note: When coding a cycle (like this one) you get to perform one queued 
- *	move per entry into the continuation, then you must exit. 
+ *	Note: When coding a cycle (like this one) you get to perform one queued
+ *	move per entry into the continuation, then you must exit.
  *
- *	Another Note: When coding a cycle (like this one) you must wait until 
+ *	Another Note: When coding a cycle (like this one) you must wait until
  *	the last move has actually been queued (or has finished) before declaring
- *	the cycle to be done. Otherwise there is a nasty race condition in the 
- *	tg_controller() that will accept the next command before the position of 
+ *	the cycle to be done. Otherwise there is a nasty race condition in the
+ *	tg_controller() that will accept the next command before the position of
  *	the final move has been recorded in the Gcode model. That's what the call
  *	to cm_isbusy() is about.
  */
-
-//static stat_t _set_jogging_func(uint8_t (*func)(int8_t axis));
-//static stat_t _jogging_axis_start(int8_t axis);
-//static stat_t _jogging_axis_jog(int8_t axis);
-//static stat_t _jogging_finalize_exit(int8_t axis);
 
 stat_t cm_jogging_cycle_start(uint8_t axis)
 {
@@ -130,10 +125,10 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 stat_t cm_jogging_callback(void)
 {
 	if (cm.cycle_state != CYCLE_JOG) { return (STAT_NOOP); } 		// exit if not in a jogging cycle
-    if(jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true)
-    { return (STAT_EAGAIN); }	// sync to planner move ends
-    if(jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM)
-    { return (STAT_EAGAIN); }   // prevent flooding the queue with jog moves
+	if(jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true)
+	{ return (STAT_EAGAIN); }	// sync to planner move ends
+	if(jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM)
+	{ return (STAT_EAGAIN); }   // prevent flooding the queue with jog moves
 	return (jog.func(jog.axis));									// execute the current jogging move
 }
 
@@ -142,51 +137,50 @@ static stat_t _set_jogging_func(stat_t (*func)(int8_t axis))
 	jog.func = func;
 	return (STAT_EAGAIN);
 }
-    
+
 static stat_t _jogging_axis_start(int8_t axis)
 {
-    mp_flush_planner();
-    cm_request_cycle_start();
-    return (_set_jogging_func(_jogging_axis_ramp_jog));
+	mp_flush_planner();
+	cm_request_cycle_start();
+	return (_set_jogging_func(_jogging_axis_ramp_jog));
 }
-    
+
 #define INITIAL_RAMP 0.01
 #define RAMP_DIST 2.0
 #define MAX_STEPS 25
 
 static stat_t _jogging_axis_ramp_jog(int8_t axis)           // run the jog ramp
 {
-    float direction = jog.start_pos <= jog.dest_pos ? 1. : -1.;
-    float delta = fabs(jog.dest_pos - jog.start_pos);
-    uint8_t last = 0;
-    
-    float velocity = jog.velocity_start + (jog.velocity_max - jog.velocity_start) *
-                    pow(10.0, (jog.step/((float)MAX_STEPS)) - 1.0);
-    float offset = INITIAL_RAMP + RAMP_DIST * ((jog.step * (jog.step+1.0))/(2.0 * MAX_STEPS));
-    if(offset >= delta || jog.step >= MAX_STEPS) {
-        offset = delta;
-        last = 1;
-    }
-    float target = jog.start_pos + offset * direction;
-    
-    _jogging_axis_move(axis, target, velocity);
-    jog.step++;
-    
-    if(last)
-        return (_set_jogging_func(_jogging_finalize_exit));
-    else
-        return (_set_jogging_func(_jogging_axis_ramp_jog));
+	float direction = jog.start_pos <= jog.dest_pos ? 1. : -1.;
+	float delta = fabs(jog.dest_pos - jog.start_pos);
+	uint8_t last = 0;
+
+	float velocity = jog.velocity_start + (jog.velocity_max - jog.velocity_start) * pow(10.0, (jog.step/((float)MAX_STEPS)) - 1.0);
+	float offset = INITIAL_RAMP + RAMP_DIST * ((jog.step * (jog.step+1.0))/(2.0 * MAX_STEPS));
+	if(offset >= delta || jog.step >= MAX_STEPS) {
+		offset = delta;
+		last = 1;
+	}
+	float target = jog.start_pos + offset * direction;
+
+	_jogging_axis_move(axis, target, velocity);
+	jog.step++;
+
+	if(last)
+		return (_set_jogging_func(_jogging_finalize_exit));
+	else
+		return (_set_jogging_func(_jogging_axis_ramp_jog));
 }
 
 static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 {
-    float vect[] = {0,0,0,0,0,0};
-    float flags[] = {false, false, false, false, false, false};
-    vect[axis] = target;
-    flags[axis] = true;
-    cm_set_feed_rate(velocity);
-    ritorno(cm_straight_feed(vect, flags));
-    return (STAT_EAGAIN);
+	float vect[] = {0,0,0,0,0,0};
+	float flags[] = {false, false, false, false, false, false};
+	vect[axis] = target;
+	flags[axis] = true;
+	cm_set_feed_rate(velocity);
+	ritorno(cm_straight_feed(vect, flags));
+	return (STAT_EAGAIN);
 }
 
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
@@ -197,20 +191,20 @@ static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 	cm_set_distance_mode(jog.saved_distance_mode);
 	cm_set_feed_rate(jog.saved_feed_rate);
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
+	cm_cycle_end();
 	cm.cycle_state = CYCLE_OFF;						// required
-	cm_cycle_end(true);
-	printf("{\"jog\":0}\n");
+  printf("{\"jog\":0}\n");						// needed by OMC jogging function
 	return (STAT_OK);
 }
 
 /*
 static stat_t _jogging_error_exit(int8_t axis)
 {
-	// Generate the warning message. Since the error exit returns via the jogging callback 
-	// - and not the main controller - it requires its own display processing 
-//	cmd_reset_list();
-	_jogging_finalize_exit(axis);				// clean up
-	return (STAT_JOGGING_CYCLE_FAILED);			// jogging state
+	// Generate the warning message. Since the error exit returns via the jogging callback
+	// - and not the main controller - it requires its own display processing
+//	nv_reset_nv_list();
+	_jogging_finalize_exit(axis);					// clean up
+	return (STAT_JOGGING_CYCLE_FAILED);				// jogging state
 }
 */
 

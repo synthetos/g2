@@ -52,8 +52,8 @@
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
-#undef  SR_DEFAULTS
-#define SR_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan"
+#undef  STATUS_REPORT_DEFAULTS
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE
