@@ -47,8 +47,6 @@ xioSingleton_t xio;
  * xio_init()
  */
 
-
-
 void xio_init()
 {
     xio_init_assertions();
@@ -61,25 +59,25 @@ void xio_init()
 
 void xio_init_assertions()
 {
-    //	cs.magic_start = MAGICNUM;
-    //	cs.magic_end = MAGICNUM;
+//	cs.magic_start = MAGICNUM;
+//	cs.magic_end = MAGICNUM;
 }
 
 stat_t xio_test_assertions()
 {
-    /*
-     if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
-     if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
-     */
+/*
+	if (ds[XIO_DEV_USB].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_USB].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_RS485].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_RS485].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI1].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI1].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI2].magic_start	!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_SPI2].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_PGM].magic_start		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (ds[XIO_DEV_PGM].magic_end		!= MAGICNUM) return (STAT_XIO_ASSERTION_FAILURE);
+	if (stderr != xio.stderr_shadow) 				 return (STAT_XIO_ASSERTION_FAILURE);
+*/
     return (STAT_OK);
 }
 
@@ -88,7 +86,7 @@ stat_t xio_test_assertions()
  */
 int read_char (void)
 {
-    return SerialUSB.readByte();
+	return SerialUSB.readByte();
 //    return SerialUSB1.readByte();
 }
 
@@ -119,28 +117,27 @@ int read_char (void)
  */
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
-    if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
+	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
 
-    for (int c; *index < size; (*index)++ ) {
-        if ((c = read_char()) != _FDEV_ERR) {
-            buffer[*index] = (uint8_t)c;
-            if ((c == LF) || (c == CR)) {
-                buffer[*index] = NUL;
-                return (STAT_OK);
-            }
-            continue;
-        }
-        return (STAT_EAGAIN);
-    }
-    return (STAT_BUFFER_FULL);
+	for (int c; *index < size; (*index)++ ) {
+		if ((c = read_char()) != _FDEV_ERR) {
+			buffer[*index] = (uint8_t)c;
+			if ((c == LF) || (c == CR)) {
+				buffer[*index] = NUL;
+				return (STAT_OK);
+			}
+			continue;
+		}
+		return (STAT_EAGAIN);
+	}
+	return (STAT_BUFFER_FULL);
 }
 
 size_t write(uint8_t *buffer, size_t size)
 {
-    size_t written = SerialUSB.write(buffer, size);
+	size_t written = SerialUSB.write(buffer, size);
 //    size_t written = SerialUSB1.write(buffer, size);
-
-    return (written);
+	return (written);
 }
 
 /***********************************************************************************
@@ -153,21 +150,21 @@ size_t write(uint8_t *buffer, size_t size)
  */
 stat_t xio_set_spi(nvObj_t *nv)
 {
-    xio.spi_state = (uint8_t)nv->value;
+	xio.spi_state = (uint8_t)nv->value;
 
 #ifdef __ARM
-    if (fp_EQ(nv->value, SPI_ENABLE)) {
-        spi_miso_pin.setMode(kOutput);
-        spi_mosi_pin.setMode(kOutput);
-        spi_sck_pin.setMode(kOutput);
+	if (fp_EQ(nv->value, SPI_ENABLE)) {
+		spi_miso_pin.setMode(kOutput);
+		spi_mosi_pin.setMode(kOutput);
+		spi_sck_pin.setMode(kOutput);
 
     } else if (fp_EQ(nv->value, SPI_DISABLE)) {
-        spi_miso_pin.setMode(kInput);
-        spi_mosi_pin.setMode(kInput);
-        spi_sck_pin.setMode(kInput);
-    }
+		spi_miso_pin.setMode(kInput);
+		spi_mosi_pin.setMode(kInput);
+		spi_sck_pin.setMode(kInput);
+	}
 #endif
-    return (STAT_OK);
+	return (STAT_OK);
 }
 
 /***********************************************************************************
