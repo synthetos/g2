@@ -49,31 +49,11 @@ typedef struct xioFilesys {				// describes a device for reading and writing
 struct xioDevice_t {	// describes a device for reading and writing
 	uint8_t state;						// physical device state
 	uint8_t next_state;					// transitional state
-	int16_t readchar() {
-		return _readchar();				// Add buffer logic here. For now, its a passthrough
-	};
-										// Each subclass will override this.
-	virtual int16_t _readchar() = 0;	// Pure virtual.
 	uint16_t linelen;					// length of completed line
 	uint16_t read_index;				// index into line being read
 	uint16_t read_buffer_len;			// static variable set at init time.
 	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 };
-
-// We will use a templated subclass so we don't have to create a new
-// subclass for every type of Device.
-// All this requires is the readByte() function to exist in type Device.
-// Note that we expect Device to be a pointer type!
-template<typename Device>
-struct xioDeviceWrapper : xioDevice_t {	// describes a device for reading and writing
-    Device _dev;
-    xioDeviceWrapper(Device  dev) : _dev{dev} {};
-
-    int16_t _readchar() final {
-        return _dev->readByte();
-    };
-};
-
 
 typedef struct xioChannel {				// describes a device for reading and writing
 	uint8_t type;						// channel type - control or data
@@ -82,13 +62,33 @@ typedef struct xioChannel {				// describes a device for reading and writing
 } xioChannel_t;
 
 
+struct xioDeviceWrapper_t {	// describes a device for reading and writing
+    virtual int16_t readchar() = 0;	// Pure virtual.
+};
+
+// We will use a templated subclass so we don't have to create a new
+// subclass for every type of Device.
+// All this requires is the readByte() function to exist in type Device.
+// Note that we expect Device to be a pointer type!
+template<typename Device>
+struct xioDeviceWrapper : xioDeviceWrapper_t {	// describes a device for reading and writing
+    Device _dev;
+    xioDeviceWrapper(Device  dev) : _dev{dev} {};
+
+    int16_t readchar() final {
+        return _dev->readByte();
+    };
+};
+
 xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {&SerialUSB};
 xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {&SerialUSB1};
+xioDeviceWrapper_t* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
+
 
 struct xioSingleton_t {
     uint16_t magic_start;				// magic number to test memory integrity
-    xioDevice_t* d[DEV_MAX];
 
+    xioDevice_t d[DEV_MAX];				// allocate device structures
 
     xioChannel_t c[CHAN_MAX];			// allocate channel structures
     //	xioFilesys_t f[FS_MAX];				// allocate file handles
@@ -106,7 +106,7 @@ xioSingleton_t xio;
  */
 int read_char (void)
 {
-    return xio.d[DEV_USB0]->readchar();
+    return DeviceWrappers[DEV_USB0]->readchar();
 //    return SerialUSB1.readByte();
 }
 
@@ -116,34 +116,34 @@ int read_char (void)
 
 void xio_init()
 {
-    uint8_t i;
+	uint8_t i;
 
     xio_init_assertions();
 
-    xio.d[DEV_USB0] = &serialUSB0Wrapper;
-    xio.d[DEV_USB1] = &serialUSB1Wrapper;
+	for (i=0; i<DEV_MAX; i++) {
+		memset(&xio.d[i], 0, sizeof(xioDevice_t));	// clear states and all values
+	}
+	for (i=0; i<CHAN_MAX; i++) {
+		memset(&xio.c[i], 0, sizeof(xioChannel_t));	// clear states and all values
+		xio.c[i].type = i;							// set control or device channel by numbering convention
+	}
 
-    for (i=0; i<CHAN_MAX; i++) {
-            memset(&xio.c[i], 0, sizeof(xioChannel_t));	// clear states and all values
-            xio.c[i].type = i;							// set control or device channel by numbering convention
-    }
+	// set up USB device state change callbacks
+	// See here for info on lambda functions:
+	// http://www.cprogramming.com/c++11/c++11-lambda-closures.html
 
-    // set up USB device state change callbacks
-    // See here for info on lambda functions:
-    // http://www.cprogramming.com/c++11/c++11-lambda-closures.html
+	// bindings for USBserial0
+	SerialUSB.setConnectionCallback([&](bool connected) {
+		xio.d[DEV_USB0].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+	});
+	xio.d[DEV_USB0].read_buffer_len = READ_BUFFER_LEN;
+//	xio.d[DEV_USB0].readchar = (char_t)&SerialUSB.readByte;
 
-    // bindings for USBserial0
-    SerialUSB.setConnectionCallback([&](bool connected) {
-            xio.d[DEV_USB0]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
-    });
-    xio.d[DEV_USB0]->read_buffer_len = READ_BUFFER_LEN;
-    //	xio.d[DEV_USB0].readchar = (char_t)&SerialUSB.readByte;
-
-    // bindings for USBserial1
-    SerialUSB1.setConnectionCallback([&](bool connected) {
-            xio.d[DEV_USB1]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
-    });
-    xio.d[DEV_USB1]->read_buffer_len = READ_BUFFER_LEN;
+	// bindings for USBserial1
+	SerialUSB1.setConnectionCallback([&](bool connected) {
+		xio.d[DEV_USB1].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+	});
+	xio.d[DEV_USB1].read_buffer_len = READ_BUFFER_LEN;
 }
 
 /*
@@ -175,7 +175,7 @@ stat_t xio_test_assertions()
  */
 stat_t xio_callback()
 {
-	if ((xio.d[DEV_USB0]->next_state == 0) && (xio.d[DEV_USB1]->next_state == 0)) return (STAT_OK);
+	if ((xio.d[DEV_USB0].next_state == 0) && (xio.d[DEV_USB1].next_state == 0)) return (STAT_OK);
 	return (STAT_OK);
 }
 
