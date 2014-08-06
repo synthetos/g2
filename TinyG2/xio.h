@@ -109,6 +109,12 @@ enum xioDeviceState {
 	DEVICE_READY					// device is active and ready for use
 };
 
+enum xioChannelType {
+	CHANNEL_NONE = 0,				// unassigned or don;t care (read either)
+	CHANNEL_CTRL,
+	CHANNEL_DATA
+};
+
 enum xioSPIMode {
 	SPI_DISABLE=0,					// tri-state SPI lines
 	SPI_ENABLE						// enable SPI lines for output

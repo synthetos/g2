@@ -180,7 +180,6 @@ stat_t xio_test_assertions()
 	return (STAT_OK);
 }
 
-
 /*
  * xio_callback() - callback from main loop for various IO functions
  *
@@ -189,23 +188,20 @@ stat_t xio_test_assertions()
  *
  *	Channel binding state machine (simple - does not do multiple ctrl channels yet)
  *	(0)	No connection
- *	(1)	Single USB (CTRL_AND_DATA)
+ *	(1)	Single USB (CTRL+DATA)
  *	(2) Dual USB (CTRL, DATA)
  *	(3) Force disconnect of DATA channel
  *
  *	Channel binding rules (start state --> end state)
- *	(0-->0) Initially all channels are disconnected. Channel types are TYPE_NONE following initialization
- *	(0-->1) One of the USB serial channels connects. It becomes type CTRL_AND_DATA
- *	(1-->2) The other channel connects (maybe). It becomes type DATA. The first becomes type CTRL
+ *	(0-->0) Initially all channels are disconnected. Channels are neither CTRL or DATA initialization
+ *	(0-->1) One of the USB serial channels connects. It becomes CTRL+DATA
+ *	(1-->2) The other channel connects (maybe). It becomes DATA. The first becomes CTRL
  *
  *	Channel unbinding rules
- *	(1-->0) CTRL_AND_DATA channel disconnects. No connection exists (what about a secondary CTRL channel?)
- *	(2-->1) DATA channel disconnects. The first CTRL channel reverts to being CTRL_AND_DATA
- *	(2-->3-->0) CTRL channel disconnects. If this is the last open CTRL channel all channels are 
- *		disconnected (including DATA). If it is not the last CTRL channel then only it disconnects.
- *
- *		(We might need some way to designate a particular control channel as being the primary, 
- *		 or first, rather than just by position in the list)
+ *	(1-->0) CTRL+DATA channel disconnects. No connection exists (what about a secondary CTRL channel?)
+ *	(2-->1) DATA channel disconnects. The first CTRL channel reverts to being CTRL+DATA
+ *	(2-->3-->0) CTRL channel disconnects. If this is the primary CTRL channel all channels are 
+ *		disconnected (including DATA). If it is not the primary CTRL channel then only it disconnects.
  *
  *	Note: We will not receive a second DEVICE_CONNECTED on a channel that has already received one,
  *		  and similarly for DEVICE_NOT_CONNECTED. IOW we will only get valid state transitions w/no repeats.
@@ -317,9 +313,9 @@ int read_char (uint8_t dev)
  *	Reads a line of text from the next device that has one ready. With some exceptions.
  *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
  *
- *	This function reads from separate control and data devices, including reading from multiple
- *	control devices. It will also manage multiple data devices, but only one data device may
- *	be open at a time.
+ *	This function iterates over all open control and data devices, including reading from 
+ *	multiple control devices. It will also manage multiple data devices, but only one data 
+ *	device may be open at a time.
  *
  *	ARGS:
  *
@@ -335,6 +331,22 @@ int read_char (uint8_t dev)
  */
 char *readline(uint8_t &type, int16_t &size)
 {
+	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
+
+		for (int c; *index < size; (*index)++ ) {
+			if ((c = read_char()) != _FDEV_ERR) {
+				buffer[*index] = (uint8_t)c;
+				if ((c == LF) || (c == CR)) {
+					buffer[*index] = NUL;
+					return (STAT_OK);
+				}
+				continue;
+			}
+			return (STAT_EAGAIN);
+		}
+		return (STAT_BUFFER_FULL);
+	}
+
 	return ((char *)_FDEV_ERR);
 }
 
