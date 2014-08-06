@@ -37,15 +37,14 @@
 #include "text_parser.h"
 #include "xio.h"
 
-/**** Structures ****
- *
- */
-/*
-typedef struct xioFilesys {				// describes a device for reading and writing
-	uint8_t state;						// physical device state
-	uint8_t next_state;					// transitional state
-} xioFilesys_t;
-*/
+/**** Structures ****/
+
+struct xioChannel_t {				// describes a device for reading and writing
+	uint8_t type;						// channel type - control or data
+	uint8_t state;						// channel state
+	int8_t device;						// device or file handle channel is bound to
+};
+
 struct xioDevice_t {	// describes a device for reading and writing
 	uint8_t state;						// physical device state
 	uint8_t next_state;					// transitional state
@@ -55,19 +54,11 @@ struct xioDevice_t {	// describes a device for reading and writing
 	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 };
 
-typedef struct xioChannel {				// describes a device for reading and writing
-	uint8_t type;						// channel type - control or data
-	uint8_t state;						// channel state
-	int8_t device;						// device or file handle channel is bound to
-} xioChannel_t;
-
-
 struct xioDeviceWrapper_t {	// describes a device for reading and writing
     virtual int16_t readchar() = 0;	// Pure virtual.
 };
 
-// We will use a templated subclass so we don't have to create a new
-// subclass for every type of Device.
+// Use a templated subclass so we don't have to create a new subclass for every type of Device.
 // All this requires is the readByte() function to exist in type Device.
 // Note that we expect Device to be a pointer type!
 template<typename Device>
@@ -87,11 +78,8 @@ xioDeviceWrapper_t* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
 
 struct xioSingleton_t {
     uint16_t magic_start;				// magic number to test memory integrity
-
     xioDevice_t d[DEV_MAX];				// allocate device structures
-
     xioChannel_t c[CHAN_MAX];			// allocate channel structures
-    //	xioFilesys_t f[FS_MAX];				// allocate file handles
     uint8_t spi_state;					// tick down-counter (unscaled)
     uint16_t magic_end;
 };
