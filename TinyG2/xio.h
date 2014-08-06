@@ -80,14 +80,17 @@
 
 #define READ_BUFFER_LEN 255			// text buffer size (255 max)
 
-// Device flags
-#define DEVICE_CAN_READ			0x01	// boolean flags
-#define DEVICE_CAN_WRITE		0x02
-#define DEVICE_CAN_BE_CTRL		0x04	// device can be a control channel
-#define DEVICE_CAN_BE_DATA		0x08	// device can be a data channel
-#define DEVICE_IS_CTRL			0x10	// device acts as a control channel
-#define DEVICE_IS_DATA			0x20	// device acts as a data channel
-#define DEVICE_IS_PRIMARY		0x40	// device is the primary control channel
+//*** Device flags ***
+// device capabilities
+#define DEVICE_CAN_READ			0x0001
+#define DEVICE_CAN_WRITE		0x0002
+#define DEVICE_CAN_BE_CTRL		0x0004	// device can be a control channel
+#define DEVICE_CAN_BE_DATA		0x0008	// device can be a data channel
+
+// actual state
+#define DEVICE_IS_CTRL			0x0010	// device is set as a control channel
+#define DEVICE_IS_DATA			0x0020	// device is set as a data channel
+#define DEVICE_IS_PRIMARY		0x0040	// device is the primary control channel
 
 enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices
 	DEV_NONE=-1,					// no device is bound
@@ -106,28 +109,6 @@ enum xioDeviceState {
 	DEVICE_READY					// device is active and ready for use
 };
 
-/*
-enum xioChannelTypeEnum {
-	CHAN_NONE=-1,					// do not change these
-	CHAN_CTRL=0,
-	CHAN_DATA,
-	CHAN_CTRL_AND_DATA
-};
-
-enum xioChannelCapabilities {
-	CHANNEL_CAPS_R,					// read-only channel
-	CHANNEL_CAPS_RW,				// read/write channel
-	CHANNEL_CAPS_I,					// RW channel that can interactively send commands and Gcode
-	CHANNEL_CAPS_IC					// RW channel can interactively send command but not Gcode (e.g. front panel)
-};
-
-enum xioChannelState {				// manages the state of multiple channels and USB bindings
-	CHANNEL_NULL = 0,				// initial state - no action or bindings
-	CHANNEL_SINGLE,					// single channel is connected - CTRL_AND_DATA
-	CHANNEL_DUAL,					// dual connections, CTRL and DATA
-	CHANNEL_DISCONNECT_DATA			// transitional state to disconnect DATA channel
-};
-*/
 enum xioSPIMode {
 	SPI_DISABLE=0,					// tri-state SPI lines
 	SPI_ENABLE						// enable SPI lines for output
