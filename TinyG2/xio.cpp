@@ -38,16 +38,27 @@
 #include "xio.h"
 
 /**** Structures ****/
-
+/*
 struct xioChannel_t {					// description of a channel
 	uint8_t type;						// channel type - control or data
-	uint8_t state;						// channel state
+	uint8_t caps;						// channel capabilities: R, RW, I, IC
+//	uint8_t state;						// channel state
 	int8_t device;						// device or file handle channel is bound to
 };
+*/
 
 struct xioDevice_t {					// description pf a device for reading and writing
-	uint8_t state;						// physical device state
-	uint8_t next_state;					// transitional state
+	// connection management
+	uint8_t device_state;				// physical device state
+	uint8_t device_next_state;			// transitional state
+	uint8_t flags;						// bitfield for device flags (See // Device flags in .h)
+//	uint8_t channel_type;				// channel type - control or data
+//	bool can_read;						// channel is readable
+//	bool can_write;						// channel is writable
+//	bool can_ctrl;						// channel can be used as a control channel
+//	bool can_data;						// channel can be used as a data channel
+
+	// line reader functions
 	uint16_t linelen;					// length of completed line
 	uint16_t read_index;				// index into line being read
 	uint16_t read_buffer_len;			// static variable set at init time.
@@ -82,13 +93,13 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {&SerialUSB1};
 xioDeviceWrapperBase* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
 
 xioDevice_t ds[DEV_MAX];			// allocate device structures
-xioChannel_t chs[CHAN_MAX];			// allocate channel structures
+//xioChannel_t chs[CHAN_MAX];			// allocate channel structures
 
 // Singleton acts and namespace for xio
 struct xioSingleton_t {
 	uint16_t magic_start;							// magic number to test memory integrity
+//	xioChannel_t* c[CHAN_MAX] {&chs[0], &chs[1]};	// initialize pointers to channel structures
 	xioDevice_t* d[DEV_MAX] {&ds[0], &ds[1]};		// initialize pointers to device structures
-	xioChannel_t* c[CHAN_MAX] {&chs[0], &chs[1]};	// initialize pointers to channel structures
 	xioDeviceWrapperBase *DeviceWrappers[];			// access device wrappers from within the singleton
 	uint8_t spi_state;								// tick down-counter (unscaled)
 	uint16_t magic_end;
@@ -96,7 +107,27 @@ struct xioSingleton_t {
 xioSingleton_t xio;
 //extern xioSingleton_t xio; // not needed externally)
 
+// convenience macros
+#define usb0 xio.d[DEV_USB0]		// pointer to device structure for USB0 serial
+#define usb1 xio.d[DEV_USB1]		// pointer to device structure for USB1 serial
+
 /**** CODE ****/
+
+/*
+ * read, set and clear flags
+ */
+inline bool canRead(xioDevice_t *d)	{ return d->flags & DEVICE_CAN_READ; }
+inline bool canWrite(xioDevice_t *d) { return d->flags & DEVICE_CAN_WRITE; }
+inline bool canBeCtrl(xioDevice_t *d) { return d->flags & DEVICE_CAN_BE_CTRL; }
+inline bool canBeData(xioDevice_t *d) { return d->flags & DEVICE_CAN_BE_DATA; }
+inline bool isCtrl(xioDevice_t *d) { return d->flags & DEVICE_IS_CTRL; }
+inline bool isData(xioDevice_t *d) { return d->flags & DEVICE_IS_DATA; }
+inline bool isPrimary(xioDevice_t *d) {return d->flags & DEVICE_IS_PRIMARY; }
+
+inline void setCtrl(xioDevice_t *d) { d->flags |= DEVICE_IS_CTRL; }
+inline void clrCtrl(xioDevice_t *d) { d->flags &= ~DEVICE_IS_CTRL; }
+inline void setData(xioDevice_t *d) { d->flags |= DEVICE_IS_DATA; }
+inline void clrData(xioDevice_t *d) { d->flags &= ~DEVICE_IS_DATA; }
 
 /*
  * xio_init()
@@ -111,26 +142,24 @@ void xio_init()
 	for (i=0; i<DEV_MAX; i++) {
 		memset(&xio.d[i], 0, sizeof(xioDevice_t));	// clear states and all values
 	}
-	for (i=0; i<CHAN_MAX; i++) {
-		memset(&xio.c[i], 0, sizeof(xioChannel_t));	// clear states and all values
-		xio.c[i]->type = i;							// set control or device channel by numbering convention
-	}
 
 	// set up USB device state change callbacks
 	// See here for info on lambda functions:
 	// http://www.cprogramming.com/c++11/c++11-lambda-closures.html
 
-	// bindings for USBserial0
+	// setup for USBserial0
 	SerialUSB.setConnectionCallback([&](bool connected) {
-		xio.d[DEV_USB0]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		xio.d[DEV_USB0]->device_next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
 	xio.d[DEV_USB0]->read_buffer_len = READ_BUFFER_LEN;
+	xio.d[DEV_USB0]->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
 
-	// bindings for USBserial1
+	// setup for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
-		xio.d[DEV_USB1]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		xio.d[DEV_USB1]->device_next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
 	xio.d[DEV_USB1]->read_buffer_len = READ_BUFFER_LEN;
+	xio.d[DEV_USB0]->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
 }
 
 /*
@@ -150,43 +179,106 @@ stat_t xio_test_assertions()
 	return (STAT_OK);
 }
 
+
 /*
  * xio_callback() - callback from main loop for various IO functions
  *
  *	The USB channel binding functionality is in here. If this gets too big or there are other
  *	things to do during the callback it may make sense to break this out into a separate function.
  *
- *	Channel binding rules
+ *	Channel binding state machine (simple - does not do multiple ctrl channels yet)
+ *	(0)	No connection
+ *	(1)	Single USB (CTRL_AND_DATA)
+ *	(2) Dual USB (CTRL, DATA)
+ *	(3) Force disconnect of DATA channel
  *
+ *	Channel binding rules (start state --> end state)
+ *	(0-->0) Initially all channels are disconnected. Channel types are TYPE_NONE following initialization
+ *	(0-->1) One of the USB serial channels connects. It becomes type CTRL_AND_DATA
+ *	(1-->2) The other channel connects (maybe). It becomes type DATA. The first becomes type CTRL
  *
+ *	Channel unbinding rules
+ *	(1-->0) CTRL_AND_DATA channel disconnects. No connection exists (what about a secondary CTRL channel?)
+ *	(2-->1) DATA channel disconnects. The first CTRL channel reverts to being CTRL_AND_DATA
+ *	(2-->3-->0) CTRL channel disconnects. If this is the last open CTRL channel all channels are 
+ *		disconnected (including DATA). If it is not the last CTRL channel then only it disconnects.
+ *
+ *		(We might need some way to designate a particular control channel as being the primary, 
+ *		 or first, rather than just by position in the list)
+ *
+ *	Note: We will not receive a second DEVICE_CONNECTED on a channel that has already received one,
+ *		  and similarly for DEVICE_NOT_CONNECTED. IOW we will only get valid state transitions w/no repeats.
  */
 stat_t xio_callback()
 {
-	if ((xio.d[DEV_USB0]->next_state == 0) && (xio.d[DEV_USB1]->next_state == 0)) return (STAT_OK);
-	return (STAT_OK);
+	// exit the callback if there is no new state information to process
+	if ((usb0->device_next_state == DEVICE_IDLE) && 
+		(xio.d[DEV_USB1]->device_next_state == DEVICE_IDLE)) 
+			return (STAT_OK);
+
+	// USB0 has just connected
+	if (xio.d[DEV_USB0]->device_next_state == DEVICE_CONNECTED) {	
+		xio.d[DEV_USB0]->device_state = DEVICE_CONNECTED;
+		xio.d[DEV_USB0]->device_next_state = DEVICE_IDLE;
+		if (xio.d[DEV_USB1]->device_state == DEVICE_NOT_CONNECTED) {
+			setCtrl(xio.d[DEV_USB0]);	// first to open. Becomes ctrl and data
+			setData(xio.d[DEV_USB0]);
+		} else {
+			clrData(xio.d[DEV_USB1]);	// second to open, move data 
+			setData(xio.d[DEV_USB0]);	// ...to here
+		}
+	}
+
+	// USB1 has just connected
+	if (xio.d[DEV_USB1]->device_next_state == DEVICE_CONNECTED) {
+		xio.d[DEV_USB1]->device_state = DEVICE_CONNECTED;
+		xio.d[DEV_USB1]->device_next_state = DEVICE_IDLE;
+		if (xio.d[DEV_USB0]->device_state == DEVICE_NOT_CONNECTED) {
+			setCtrl(xio.d[DEV_USB1]);	// first to open. Becomes ctrl and data
+			setData(xio.d[DEV_USB1]);
+		} else {
+			clrData(xio.d[DEV_USB0]);	// second to open, move data
+			setData(xio.d[DEV_USB1]);	// ...to here
+		}
+	}
+
+	// USB0 has just disconnected
+	if (xio.d[DEV_USB0]->device_next_state == DEVICE_NOT_CONNECTED) {
+		xio.d[DEV_USB0]->device_state = DEVICE_NOT_CONNECTED;
+		xio.d[DEV_USB0]->device_next_state = DEVICE_IDLE;
+		if (isCtrl(xio.d[DEV_USB0])) {		// if it's a control channel 
+			clrCtrl(xio.d[DEV_USB0]);		// reset the control channel
+			if (isData(xio.d[DEV_USB0])) {	// if it's also a data channel
+				clrData(xio.d[DEV_USB0]);	// reset the data channel
+				return (STAT_OK);			// and exit
+			} else {
+				clrData(xio.d[DEV_USB1]);	// reset the other data channel
+				// +++ need to close USB1 in the USB code
+				return (STAT_OK);			// and exit
+			}
+		} else {							// USB0 is a data channel
+			
+		}
+
+		
+		if (isData(xio.d[DEV_USB0])) {
+			clrData(xio.d[DEV_USB0]);
+			if (isCtrl(xio.d[DEV_USB1]))
+				// revert data channel to second to open, move data
+			setData(xio.d[DEV_USB1]);	// ...to here
+		}
+
+		if (xio.d[DEV_USB1]->device_state == DEVICE_NOT_CONNECTED) {
+			setCtrl(xio.d[DEV_USB0]);	// first to open. Becomes ctrl and data
+			setData(xio.d[DEV_USB0]);
+		} else {
+			clrData(xio.d[DEV_USB1]);	// second to open, move data
+			setData(xio.d[DEV_USB0]);	// ...to here
+		}
+	}
+
 }
 
-/*
- * xio_bind_device() - bind a device to a channel
- *
- *	This function is called
- */
-
-/*
- * read_char() - returns single char or -1 (_FDEV_ERR) is none available
- */
-/*
-int read_char (uint8_t dev)
-{
-	if (dev == DEV_USB0) {
-		return SerialUSB.readByte();
-	}
-	if (dev == DEV_USB1) {
-		return SerialUSB1.readByte();
-	}
-	return(_FDEV_ERR);
-}
-*/
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
@@ -196,8 +288,6 @@ int read_char (uint8_t dev)
 //    return DeviceWrappers[DEV_USB0]->readchar();
 //    return SerialUSB1.readByte();
 }
-
-
 
 /*
  * readline() - read a complete line from stdin (NEW STYLE)

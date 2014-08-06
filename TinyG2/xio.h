@@ -80,51 +80,54 @@
 
 #define READ_BUFFER_LEN 255			// text buffer size (255 max)
 
+// Device flags
+#define DEVICE_CAN_READ			0x01	// boolean flags
+#define DEVICE_CAN_WRITE		0x02
+#define DEVICE_CAN_BE_CTRL		0x04	// device can be a control channel
+#define DEVICE_CAN_BE_DATA		0x08	// device can be a data channel
+#define DEVICE_IS_CTRL			0x10	// device acts as a control channel
+#define DEVICE_IS_DATA			0x20	// device acts as a data channel
+#define DEVICE_IS_PRIMARY		0x40	// device is the primary control channel
+
 enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices
 	DEV_NONE=-1,					// no device is bound
-	DEV_USB0=0,
-	DEV_USB1,
+	DEV_USB0=0,						// must be 0
+	DEV_USB1,						// must be 1
 	DEV_SPI0,
-	FS_FILE,						// slot for file device
+//	FS_FILE,						// slot for file device
 	DEV_MAX
 };
 
-enum xioFilesysEnum {				// reconfigure this enum as you add more file handles
-	FS_FILE0=0,						// only one open file is supported for now
-	FS_MAX
-};
-
-enum xioChannelEnum {				// reconfigure this enum as you add more channels
-	CHAN_CTRL0=0,					// this ordering sets the read priority
-//	CHAN_CTRL1,
-	CHAN_DATA0,
-//	CHAN_DATA1,
-	CHAN_MAX
-};
-
-enum xioChannelTypeEnum {
-	TYPE_NONE=0,					// do not change these
-	CTRL,
-	DATA,
-	CTRL_AND_DATA
-};
-
-enum xioDeviceCapabilities {
-	DEVICE_R						// read-
-};
-
-enum xioDeviceState {				// manages startup lines
-	DEVICE_INITIALIZING = 0,		// device is initializing - not ready for use
+enum xioDeviceState {
+	DEVICE_IDLE = 0,				// device is not ready for use (may be initializing)
 	DEVICE_NOT_CONNECTED,			// device has not yet detected connection to USB (or other comm channel)
 	DEVICE_CONNECTED,				// device is connected (e.g. USB connection)
 	DEVICE_STARTUP,					// device is running startup messages and lines
 	DEVICE_READY					// device is active and ready for use
 };
 
-enum xioChannelState {				// manages the state of multiple channels and USB bindings
-	CHANNEL_NULL = 0,				// initial state - no action or bindings
+/*
+enum xioChannelTypeEnum {
+	CHAN_NONE=-1,					// do not change these
+	CHAN_CTRL=0,
+	CHAN_DATA,
+	CHAN_CTRL_AND_DATA
 };
 
+enum xioChannelCapabilities {
+	CHANNEL_CAPS_R,					// read-only channel
+	CHANNEL_CAPS_RW,				// read/write channel
+	CHANNEL_CAPS_I,					// RW channel that can interactively send commands and Gcode
+	CHANNEL_CAPS_IC					// RW channel can interactively send command but not Gcode (e.g. front panel)
+};
+
+enum xioChannelState {				// manages the state of multiple channels and USB bindings
+	CHANNEL_NULL = 0,				// initial state - no action or bindings
+	CHANNEL_SINGLE,					// single channel is connected - CTRL_AND_DATA
+	CHANNEL_DUAL,					// dual connections, CTRL and DATA
+	CHANNEL_DISCONNECT_DATA			// transitional state to disconnect DATA channel
+};
+*/
 enum xioSPIMode {
 	SPI_DISABLE=0,					// tri-state SPI lines
 	SPI_ENABLE						// enable SPI lines for output
