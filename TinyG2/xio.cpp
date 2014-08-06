@@ -39,13 +39,13 @@
 
 /**** Structures ****/
 
-struct xioChannel_t {				// describes a device for reading and writing
+struct xioChannel_t {					// description of a channel
 	uint8_t type;						// channel type - control or data
 	uint8_t state;						// channel state
 	int8_t device;						// device or file handle channel is bound to
 };
 
-struct xioDevice_t {	// describes a device for reading and writing
+struct xioDevice_t {					// description pf a device for reading and writing
 	uint8_t state;						// physical device state
 	uint8_t next_state;					// transitional state
 	uint16_t linelen;					// length of completed line
@@ -54,49 +54,49 @@ struct xioDevice_t {	// describes a device for reading and writing
 	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 };
 
-struct xioDeviceWrapper_t {	// describes a device for reading and writing
-    virtual int16_t readchar() = 0;	// Pure virtual.
+struct xioDeviceWrapperBase {			// C++ base class for device primitives
+	virtual int16_t readchar() = 0;		// Pure virtual. Will be subclassed for every device
+//	virtual int16_t write() = 0;		// Pure virtual. Will be subclassed for every device
 };
 
 // Use a templated subclass so we don't have to create a new subclass for every type of Device.
 // All this requires is the readByte() function to exist in type Device.
 // Note that we expect Device to be a pointer type!
+// See here for a discussion of what this means if you are not familiar with C++
+// https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
+
 template<typename Device>
-struct xioDeviceWrapper : xioDeviceWrapper_t {	// describes a device for reading and writing
+struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
     xioDeviceWrapper(Device  dev) : _dev{dev} {};
 
     int16_t readchar() final {
-        return _dev->readByte();
+        return _dev->readByte();		// readByte calls the USB endpoint's read function
     };
 };
 
+// ALLOCATIONS
+// Declare a device wrapper class for USB0 and USB1 and put pointer in an array as elements 0 and 1
 xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {&SerialUSB};
 xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {&SerialUSB1};
-xioDeviceWrapper_t* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
+xioDeviceWrapperBase* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
 
+xioDevice_t ds[DEV_MAX];			// allocate device structures
+xioChannel_t chs[CHAN_MAX];			// allocate channel structures
 
+// Singleton acts and namespace for xio
 struct xioSingleton_t {
-    uint16_t magic_start;				// magic number to test memory integrity
-    xioDevice_t d[DEV_MAX];				// allocate device structures
-    xioChannel_t c[CHAN_MAX];			// allocate channel structures
-    uint8_t spi_state;					// tick down-counter (unscaled)
-    uint16_t magic_end;
+	uint16_t magic_start;							// magic number to test memory integrity
+	xioDevice_t* d[DEV_MAX] {&ds[0], &ds[1]};		// initialize pointers to device structures
+	xioChannel_t* c[CHAN_MAX] {&chs[0], &chs[1]};	// initialize pointers to channel structures
+	xioDeviceWrapperBase *DeviceWrappers[];			// access device wrappers from within the singleton
+	uint8_t spi_state;								// tick down-counter (unscaled)
+	uint16_t magic_end;
 };
 xioSingleton_t xio;
-//extern xioSingleton_t xio;
-
+//extern xioSingleton_t xio; // not needed externally)
 
 /**** CODE ****/
-
-/*
- * read_char() - returns single char or -1 (_FDEV_ERR) is none available
- */
-int read_char (void)
-{
-    return DeviceWrappers[DEV_USB0]->readchar();
-//    return SerialUSB1.readByte();
-}
 
 /*
  * xio_init()
@@ -113,7 +113,7 @@ void xio_init()
 	}
 	for (i=0; i<CHAN_MAX; i++) {
 		memset(&xio.c[i], 0, sizeof(xioChannel_t));	// clear states and all values
-		xio.c[i].type = i;							// set control or device channel by numbering convention
+		xio.c[i]->type = i;							// set control or device channel by numbering convention
 	}
 
 	// set up USB device state change callbacks
@@ -122,16 +122,15 @@ void xio_init()
 
 	// bindings for USBserial0
 	SerialUSB.setConnectionCallback([&](bool connected) {
-		xio.d[DEV_USB0].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		xio.d[DEV_USB0]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
-	xio.d[DEV_USB0].read_buffer_len = READ_BUFFER_LEN;
-//	xio.d[DEV_USB0].readchar = (char_t)&SerialUSB.readByte;
+	xio.d[DEV_USB0]->read_buffer_len = READ_BUFFER_LEN;
 
 	// bindings for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
-		xio.d[DEV_USB1].next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		xio.d[DEV_USB1]->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
-	xio.d[DEV_USB1].read_buffer_len = READ_BUFFER_LEN;
+	xio.d[DEV_USB1]->read_buffer_len = READ_BUFFER_LEN;
 }
 
 /*
@@ -163,7 +162,7 @@ stat_t xio_test_assertions()
  */
 stat_t xio_callback()
 {
-	if ((xio.d[DEV_USB0].next_state == 0) && (xio.d[DEV_USB1].next_state == 0)) return (STAT_OK);
+	if ((xio.d[DEV_USB0]->next_state == 0) && (xio.d[DEV_USB1]->next_state == 0)) return (STAT_OK);
 	return (STAT_OK);
 }
 
@@ -176,6 +175,7 @@ stat_t xio_callback()
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
+/*
 int read_char (uint8_t dev)
 {
 	if (dev == DEV_USB0) {
@@ -186,6 +186,18 @@ int read_char (uint8_t dev)
 	}
 	return(_FDEV_ERR);
 }
+*/
+/*
+ * read_char() - returns single char or -1 (_FDEV_ERR) is none available
+ */
+int read_char (uint8_t dev)
+{
+    return DeviceWrappers[dev]->readchar();
+//    return DeviceWrappers[DEV_USB0]->readchar();
+//    return SerialUSB1.readByte();
+}
+
+
 
 /*
  * readline() - read a complete line from stdin (NEW STYLE)
