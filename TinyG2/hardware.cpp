@@ -63,14 +63,10 @@ void hardware_init()
 
 void _get_id(char_t *id)
 {
-	struct uuid *sys_id = readUniqueId();
-	for(int i = 0; i < SYS_ID_LEN-1; ++i) {
-		unsigned long nibble = (((i >= 8) ? sys_id->d1 : sys_id->d0) >> ((i % 8) * 4)) & 0xF;
-		if(nibble < 0xA) id[i] = nibble + '0';
-		else id[i] = (nibble - 0xA) + 'a';
-	}
-	id[SYS_ID_LEN-1] = 0;
-	return;
+    const uint16_t *uuid = readUniqueIdString();
+    for(int i = 0; i < SYS_ID_LEN-1; ++i)
+        id[i] = uuid[i];
+    id[SYS_ID_LEN-1] = 0;
 }
  
  /*

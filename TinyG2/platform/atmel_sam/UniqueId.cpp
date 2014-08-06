@@ -33,13 +33,11 @@
 extern "C" {
 #endif
     static struct uuid stored_uuid = { 0, 0, 0, 0 };
+    static uint16_t uuid_string16[UNIQUE_ID_STRING_LEN] = {0};
     
     __attribute__ ((long_call, section (".ramfunc")))
-    static void _uuid_helper()
+    void cacheUniqueId()
     {
-        // Disable all interrupts
-        __disable_irq();
-        
         // Run EEFC uuid sequence
         const int EEFC_FCMD_STUI = 0x0E;
         const int EEFC_FCMD_SPUI = 0x0F;
@@ -53,18 +51,20 @@ extern "C" {
         stored_uuid.d2 = *(volatile unsigned long*)0x00080008;
         stored_uuid.d3 = *(volatile unsigned long*)0x0008000C;
         EFC0->EEFC_FCR = EEFC_FCR_FCMD(EEFC_FCMD_SPUI) | EEFC_FCR_FKEY(EEFC_KEY);
-        
-        // Re-enable interrupts
-        __enable_irq();
+        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
     }
-    
-    void cacheUniqueId() {
-        _uuid_helper();
-    }
-    
-    struct uuid* readUniqueId()
+
+    const uint16_t* readUniqueIdString()
     {
-        return &stored_uuid;
+        if(uuid_string16[0] == 0) {
+            for(int i = 0; i < UNIQUE_ID_STRING_LEN-1; ++i) {
+                unsigned long nibble = (((i >= 8) ? stored_uuid.d1 : stored_uuid.d0) >> ((i % 8) * 4)) & 0xF;
+                if(nibble < 0xA) uuid_string16[i] = nibble + '0';
+                else uuid_string16[i] = (nibble - 0xA) + 'a';
+            }
+            uuid_string16[UNIQUE_ID_STRING_LEN-1] = 0;
+        }
+        return uuid_string16;
     }
     
 #ifdef __cplusplus

@@ -160,12 +160,12 @@ static void _application_init(void)
 
 int main(void)
 {
-	// system initialization
-	_system_init();
-
 #ifdef __ARM
 	cacheUniqueId();
 #endif
+
+	// system initialization
+	_system_init();
 
 	// TinyG application setup
 	_application_init();
