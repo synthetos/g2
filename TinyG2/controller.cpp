@@ -272,7 +272,9 @@ static stat_t _command_dispatch()
 			if (cfg.comm_mode != JSON_MODE) {
 				text_response(STAT_OK, cs.saved_buf);
 			}
-			break;
+			printf ("%lu\n", SysTickTimer.getValue());	//++++++
+				printf ("%lu\n", SysTickTimer.getValue());	//++++++
+		break;
 		}
 		case '$': case '?': case 'H': { 				// text mode input
 			cfg.comm_mode = TEXT_MODE;

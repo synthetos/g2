@@ -81,7 +81,7 @@ template<pin_number step_num,			// Setup a stepper template to hold our pins
 
 struct Stepper {
 	/* stepper pin assignments */
-	
+
 	OutputPin<step_num> step;
 	OutputPin<dir_num> dir;
 	OutputPin<enable_num> enable;
@@ -235,9 +235,12 @@ void stepper_init()
 #endif // __AVR
 
 #ifdef __ARM
-	// setup DDA timer (see FOOTNOTE)
+	// setup DDA timer
+	// Longer duty cycles stretch ON pulses but 75% is about the upper limit and about
+	// optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
+	// If you need more pulse width you need to drop the DDA clock rate
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	dda_timer.setDutyCycleA(1.0 - 0.25);
+	dda_timer.setDutyCycleA(1.0 - 0.75);		// This is a 75% duty cycle on the ON step part
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -254,7 +257,6 @@ void stepper_init()
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
-//	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 500000 Hz.
 #endif // __ARM
 }
 
@@ -386,7 +388,7 @@ static void _energize_motor(const uint8_t motor)
  * _set_motor_power_level()	- applies the power level to the requested motor.
  *
  *	The power_level must be a compensated PWM value - presumably one of:
- *		st_cfg.mot[motor].power_level_scaled 
+ *		st_cfg.mot[motor].power_level_scaled
  *		st_run.mot[motor].power_level_dynamic
  */
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
@@ -472,7 +474,7 @@ stat_t st_motor_power_callback() 	// called by controller
 
 #ifdef __AVR
 /*
- *	Uses direct struct addresses and literal values for hardware devices - it's faster than 
+ *	Uses direct struct addresses and literal values for hardware devices - it's faster than
  *	using indexed timer and port accesses. I checked. Even when -0s or -03 is used.
  */
 ISR(TIMER_DDA_ISR_vect)
@@ -707,8 +709,8 @@ namespace Motate {	// Define timer inside Motate namespace
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper struct
  *
- *	This routine can only be called be called from an ISR at the same or 
- *	higher level as the DDA or dwell ISR. A software interrupt has been 
+ *	This routine can only be called be called from an ISR at the same or
+ *	higher level as the DDA or dwell ISR. A software interrupt has been
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
  *
  *	In aline() code:
@@ -1153,9 +1155,9 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
  * st_set_pl() - set motor power level
  *
  *	Input value may vary from 0.000 to 1.000 The setting is scaled to allowable PWM range.
- *	This function sets both the scaled and dynamic power levels, and applies the 
+ *	This function sets both the scaled and dynamic power levels, and applies the
  *	scaled value to the vref.
- */ 
+ */
 stat_t st_set_pl(nvObj_t *nv)	// motor power level
 {
 #ifdef __ARM
@@ -1165,7 +1167,7 @@ stat_t st_set_pl(nvObj_t *nv)	// motor power level
  		nv->value /= 100;		// accommodate old 0-100 inputs
 	}
 	set_flt(nv);	// set power_setting value in the motor config struct (st)
-	
+
 	uint8_t motor = _get_motor(nv->index);
 	st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
 	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
