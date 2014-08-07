@@ -100,16 +100,18 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 
 #ifdef __ARM
 	cs.state_usb0 = CONTROLLER_NOT_CONNECTED;			// find USB next
-        cs.state_usb1 = CONTROLLER_NOT_CONNECTED;			// find USB next
+	cs.state_usb1 = CONTROLLER_NOT_CONNECTED;
 	IndicatorLed.setFrequency(100000);
 #endif
 
     SerialUSB.setConnectionCallback([&](bool connected) {
-        cs.state_usb0 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+//        cs.state_usb0 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+        cs.state_usb0 = connected ? CONTROLLER_READY : CONTROLLER_NOT_CONNECTED;
     });
 
     SerialUSB1.setConnectionCallback([&](bool connected) {
-        cs.state_usb1 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+//        cs.state_usb1 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
+        cs.state_usb1 = connected ? CONTROLLER_READY : CONTROLLER_NOT_CONNECTED;
     });
 }
 
