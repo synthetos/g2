@@ -42,11 +42,12 @@ extern "C"{
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
-	uint8_t state_usb0;						// controller state
-	uint8_t state_usb1;						// controller state
+	uint8_t state_usb0;					// controller state
+	uint8_t state_usb1;					// controller state
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
+	float config_version;				// tinyg configuration version for host / UI control
 	float hw_platform;					// tinyg hardware compatibility - platform type
 	float hw_version;					// tinyg hardware compatibility - platform revision
 

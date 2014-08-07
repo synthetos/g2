@@ -73,6 +73,7 @@ static stat_t _do_all(nvObj_t *nv);			// print all parameters
 //static stat_t set_ex(nvObj_t *nv);		// enable XON/XOFF and RTS/CTS flow control
 //static stat_t set_baud(nvObj_t *nv);		// set USB baud rate
 static stat_t get_rx(nvObj_t *nv);			// get bytes in RX buffer
+static stat_t get_tick(nvObj_t *nv);		// get system tick count
 //static stat_t run_sx(nvObj_t *nv);		// send XOFF, XON
 
 /***********************************************************************************
@@ -104,6 +105,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	// group token flags p, print_func,	 get_func,  set_func, target for get/set,   	default value
 	{ "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,   TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
 	{ "sys", "fv", _fipn,3, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version, TINYG_FIRMWARE_VERSION },
+	{ "sys", "cv", _fipn,0, hw_print_fv, get_flt,   set_nul,  (float *)&cs.config_version, TINYG_CONFIG_VERSION },
 	{ "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform,TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version, TINYG_HARDWARE_VERSION },
 	{ "sys", "id", _fn,  0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },  // device ID (ASCII signature)
@@ -184,6 +186,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
 	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
 //	{ "", "sx",  _f0, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
+	{ "", "ti",  _f0, 0, tx_print_int, get_tick,set_nul,  (float *)&cs.null, 0 },	// report system time tick
 
 	{ "", "test",_f0, 0, tx_print_nul, help_test, run_test, (float *)&cs.null,0 },	// run tests, print test help screen
 	{ "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
@@ -834,13 +837,13 @@ static stat_t _do_all(nvObj_t *nv)	// print all parameters
  ***********************************************************************************/
 
 /**** COMMUNICATIONS FUNCTIONS ******************************************************
- * set_ic() - ignore CR or LF on RX
- * set_ec() - enable CRLF on TX
- * set_ee() - enable character echo
- * set_ex() - enable XON/XOFF or RTS/CTS flow control
- * set_baud() - set USB baud rate
- * get_rx()	- get bytes available in RX buffer
- *
+ * set_ic()		- ignore CR or LF on RX
+ * set_ec()		- enable CRLF on TX
+ * set_ee()		- enable character echo
+ * set_ex()		- enable XON/XOFF or RTS/CTS flow control
+ * set_baud()	- set USB baud rate
+ * get_rx()		- get bytes available in RX buffer
+ * get_tick()	- get system tick count
  *	The above assume USB is the std device
  */
 /*
@@ -902,6 +905,20 @@ static stat_t get_rx(nvObj_t *nv)
 #endif
 #ifdef __ARM
 	nv->value = (float)254;				// ARM always says the serial buffer is available (max)
+	nv->valuetype = TYPE_INTEGER;
+	return (STAT_OK);
+#endif
+}
+
+static stat_t get_tick(nvObj_t *nv)
+{
+#ifdef __AVR
+	nv->value = (float)SysTickTimer_getValue();
+	nv->valuetype = TYPE_INTEGER;
+	return (STAT_OK);
+#endif
+#ifdef __ARM
+	nv->value = (float)SysTickTimer.getValue();
 	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
 #endif

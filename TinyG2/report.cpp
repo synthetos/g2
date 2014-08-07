@@ -90,6 +90,7 @@ void _startup_helper(stat_t status, const char *msg)
 	nv_reset_nv_list();
 	nv_add_object((const char_t *)"fv");		// firmware version
 	nv_add_object((const char_t *)"fb");		// firmware build
+	nv_add_object((const char_t *)"cv");		// configuration version
 	nv_add_object((const char_t *)"hp");		// hardware platform
 	nv_add_object((const char_t *)"hv");		// hardware version
 	nv_add_object((const char_t *)"id");		// hardware ID

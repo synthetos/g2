@@ -87,6 +87,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
+	cs.config_version = TINYG_CONFIG_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
 
 #ifdef __AVR
@@ -272,8 +273,6 @@ static stat_t _command_dispatch()
 			if (cfg.comm_mode != JSON_MODE) {
 				text_response(STAT_OK, cs.saved_buf);
 			}
-			printf ("%lu\n", SysTickTimer.getValue());	//++++++
-				printf ("%lu\n", SysTickTimer.getValue());	//++++++
 		break;
 		}
 		case '$': case '?': case 'H': { 				// text mode input

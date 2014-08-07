@@ -38,9 +38,10 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.10 // changed duty cycle in step generation to fix wonky Z axis operation
+#define TINYG_FIRMWARE_BUILD   		047.11 // added $cv configuration version and $ti to report back system ticks
 #endif
-#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
+#define TINYG_FIRMWARE_VERSION		0.98						// firmware major version (updated from 0.8)
+#define TINYG_CONFIG_VERSION		5
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
