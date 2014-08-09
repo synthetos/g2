@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.11 // added $cv configuration version and $ti to report back system ticks
+#define TINYG_FIRMWARE_BUILD   		047.12 // fixed some inches mode display issues that had already been done on G1; added queue flush runtime busy check; added queue report after queue flush
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version (updated from 0.8)
 #define TINYG_CONFIG_VERSION		5

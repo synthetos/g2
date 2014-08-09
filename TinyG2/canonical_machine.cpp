@@ -659,7 +659,7 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 	}
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (fp_TRUE(flag[axis])) {
-			cm.offset[coord_system][axis] = offset[axis];
+			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
 			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
 		}
 	}
@@ -1220,8 +1220,8 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.feedhold_requested = false;
 	}
 	if (cm.queue_flush_requested == true) {
-		if ((cm.motion_state == MOTION_STOP) ||
-			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) {
+		if (((cm.motion_state == MOTION_STOP) ||
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) && !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
 			cm_queue_flush();
 		}
@@ -1251,6 +1251,11 @@ stat_t cm_queue_flush()
 	xio_reset_usb_rx_buffers();				// flush serial queues
 #endif
 	mp_flush_planner();						// flush planner queue
+	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
+//	rx_request_rx_report();
+
+	// Note: The following uses low-level mp calls for absolute position.
+	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
