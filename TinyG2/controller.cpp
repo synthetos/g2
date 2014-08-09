@@ -227,11 +227,10 @@ static stat_t _command_dispatch()
 	// detect USB connection and transition to disconnected state if it disconnected
 //	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
-	devflags_t device_flags = DEVICE_IS_BOTH;
+	devflags_t device_flags = DEV_IS_BOTH;
 
 	// read input line and return if not a completed line
-
-	if ((cs.bufp = readline(device_flags, cs.linelen)) == (char_t *)_FDEV_ERR) {
+	if ((cs.bufp = readline(device_flags, cs.linelen)) == NULL) {
 		return (STAT_OK);									// nothing to process yet
 	}
 /*
