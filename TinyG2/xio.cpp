@@ -84,7 +84,8 @@ static xioDevice_t _ds[DEV_MAX];			// allocate device structures
 // Singleton acts and namespace for xio
 struct xioSingleton_t {
 	uint16_t magic_start;							// magic number to test memory integrity
-	xioDevice_t* d[DEV_MAX] {&_ds[0], &_ds[1]};		// initialize pointers to device structures
+//	xioDevice_t* d[DEV_MAX] {&_ds[0], &_ds[1]};		// initialize pointers to device structures
+	xioDevice_t* d[DEV_MAX];						// pointers to device structures
 	xioDeviceWrapperBase *DeviceWrappers[];			// access device wrappers from within the singleton
 	uint8_t spi_state;								// tick down-counter (unscaled)
 	uint16_t magic_end;
@@ -116,10 +117,6 @@ inline void clrData(xioDevice_t *d) { d->flags &= ~DEVICE_IS_DATA; }
 inline void setPrimary(xioDevice_t *d) { d->flags |= DEVICE_IS_PRIMARY; }
 inline void clrPrimary(xioDevice_t *d) { d->flags &= ~DEVICE_IS_PRIMARY; }
 
-inline bool isSet(devflags_t mask, devflags_t flags) { 
-	return (mask & flags);
-}
-
 // Naiive data channel shutdown function. No allowance for buffered data (buffer clears, etc.)
 void downData(xioDevice_t *d)
 {
@@ -138,6 +135,7 @@ void xio_init()
 
 	for (i=0; i<DEV_MAX; i++) {
 		memset(&xio.d[i], 0, sizeof(xioDevice_t));	// clear states and all values
+		xio.d[i] = &_ds[i];							// initialize pointers to device structures
 	}
 
 	// set up USB device state change callbacks
@@ -146,14 +144,14 @@ void xio_init()
 
 	// setup for USBserial0
 	SerialUSB.setConnectionCallback([&](bool connected) {
-		USB0->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		USB0->next_state = connected ? DEVICE_CONNECTED : DEVICE_DISCONNECTED;
 	});
 	USB0->read_buf_len = READ_BUFFER_LEN;
 	USB0->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
 
 	// setup for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
-		USB1->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		USB1->next_state = connected ? DEVICE_CONNECTED : DEVICE_DISCONNECTED;
 	});
 	USB1->read_buf_len = READ_BUFFER_LEN;
 	USB1->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
@@ -205,7 +203,7 @@ stat_t xio_test_assertions()
 stat_t xio_callback()
 {
 	// exit the callback if there is no new state information to process
-	if ((USB0->next_state == DEVICE_IDLE) && (USB1->next_state == DEVICE_IDLE)) {
+	if ((USB0->next_state == DEVICE_OFF) && (USB1->next_state == DEVICE_OFF)) {
 		return (STAT_OK);
 	}
 
@@ -214,8 +212,8 @@ stat_t xio_callback()
 	// Case 2: USB0 is the 2nd channel to open
 	if (USB0->next_state == DEVICE_CONNECTED) {
 		USB0->device_state = DEVICE_CONNECTED;
-		USB0->next_state = DEVICE_IDLE;						// clear next state
-		if (USB1->device_state == DEVICE_NOT_CONNECTED) {	// Case 1
+		USB0->next_state = DEVICE_OFF;						// clear next state
+		if (USB1->device_state == DEVICE_DISCONNECTED) {	// Case 1
 			setCtrl(USB0);									// becomes ctrl and data
 			setData(USB0);
 			setPrimary(USB0);								//...and gets set as the primary ctrl channel
@@ -231,8 +229,8 @@ stat_t xio_callback()
 	// Case 2: USB1 is the 2nd channel to open
 	if (USB1->next_state == DEVICE_CONNECTED) {
 		USB1->device_state = DEVICE_CONNECTED;
-		USB1->next_state = DEVICE_IDLE;
-		if (USB0->device_state == DEVICE_NOT_CONNECTED) {
+		USB1->next_state = DEVICE_OFF;
+		if (USB0->device_state == DEVICE_DISCONNECTED) {
 			setCtrl(USB1);
 			setData(USB1);
 			setPrimary(USB1);
@@ -248,9 +246,9 @@ stat_t xio_callback()
 	// Case 2: USB0 closed while it was the primary ctrl channel
 	// Case 3: USB0 closed while it was a non-primary ctrl channel
 	// Case 4: USB0 closed while it was a data channel
-	if (USB0->next_state == DEVICE_NOT_CONNECTED) {
-		USB0->device_state = DEVICE_NOT_CONNECTED;
-		USB0->next_state = DEVICE_IDLE;
+	if (USB0->next_state == DEVICE_DISCONNECTED) {
+		USB0->device_state = DEVICE_DISCONNECTED;
+		USB0->next_state = DEVICE_OFF;
 
 		// can be reorganized to be more efficient, but maybe the compiler will do it for us
 		if ((isCtrl(USB0)) && (isData(USB0))) {		// Case 1
@@ -271,9 +269,9 @@ stat_t xio_callback()
 	}
 
 	// USB1 has just disconnected - same cases as USB0
-	if (USB1->next_state == DEVICE_NOT_CONNECTED) {
-		USB1->device_state = DEVICE_NOT_CONNECTED;
-		USB1->next_state = DEVICE_IDLE;
+	if (USB1->next_state == DEVICE_DISCONNECTED) {
+		USB1->device_state = DEVICE_DISCONNECTED;
+		USB1->next_state = DEVICE_OFF;
 
 		if ((isCtrl(USB1)) && (isData(USB1))) {		// Case 1
 			clrCtrl(USB1);
@@ -319,9 +317,10 @@ int read_char (uint8_t dev)
  *			On return this variable is set to the channel type that was read, or
  *			TYPE_NONE if no text was returned.
  *
- *   size - Sets the maximum size of the read buffer. On return is set to the number of
- *			characters in the buffer, including the NUL termination. Set to zero if no text
- *			was returned. Will truncate a text line with a NUL if size is reached.
+ *   size - Returns the size of the completed buffer, including NUL termination character.
+ *			Lines may be returned truncated if the serial input from the physical device
+ *			is longer than the read buffer for the device. The size value provided as a
+ *			calling argument is not used (size doesn't matter).
  *
  *	 char_t * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
  */
@@ -331,17 +330,17 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 	int c;
 
 	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-		if (xio.d[dev]->device_state != DEVICE_READY) continue;	// device needs to be ready
-		if (!(xio.d[dev]->flags & flags)) continue;				// the types need to match
+		if (xio.d[dev]->device_state != DEVICE_ACTIVE) continue;	// device needs to be active
+		if (!(xio.d[dev]->flags & flags)) continue;					// the types need to match
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_len) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
 			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
 			if ((c == LF) || (c == CR)) {
 				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
-				flags = xio.d[dev]->flags;						// what type of device is this?
-				size = xio.d[dev]->read_index;					// how long is the string?
-				xio.d[dev]->read_index = 0;						// reset for next read_line
+				flags = xio.d[dev]->flags;							// what type of device is this?
+				size = xio.d[dev]->read_index;						// how long is the string?
+				xio.d[dev]->read_index = 0;							// reset for next readline
 				return (xio.d[dev]->read_buf);
 			}
 			(xio.d[dev]->read_index)++;

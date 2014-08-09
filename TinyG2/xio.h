@@ -82,43 +82,47 @@
 
 
 //*** Device flags ***
-typedef uint8_t devflags_t;			// could be 8 or 16
+typedef uint16_t devflags_t;		// might need to bump to 32 be 16 or 32
 
 // device capabilities
-#define DEVICE_CAN_READ			0x0001
-#define DEVICE_CAN_WRITE		0x0002
-#define DEVICE_CAN_BE_CTRL		0x0004	// device can be a control channel
-#define DEVICE_CAN_BE_DATA		0x0008	// device can be a data channel
+#define DEVICE_CAN_READ			(0x0001)
+#define DEVICE_CAN_WRITE		(0x0002)
+#define DEVICE_CAN_BE_CTRL		(0x0004)	// device can be a control channel
+#define DEVICE_CAN_BE_DATA		(0x0008)	// device can be a data channel
 
-// actual state
-#define DEVICE_IS_CTRL			0x0010	// device is set as a control channel
-#define DEVICE_IS_DATA			0x0020	// device is set as a data channel
+// device channel state
+#define DEVICE_IS_CTRL			(0x0010)	// device is set as a control channel
+#define DEVICE_IS_DATA			(0x0020)	// device is set as a data channel
 #define DEVICE_IS_BOTH			(DEVICE_IS_CTRL | DEVICE_IS_DATA)
-#define DEVICE_IS_PRIMARY		0x0040	// device is the primary control channel
+#define DEVICE_IS_PRIMARY		(0x0040)	// device is the primary control channel
+
+// device connection state
+#define DEVICE_CONNECTED		(0x0100)	// device is connected (e.g. USB)
+#define DEVICE_READY			(0x0200)	// device is ready for use
+#define DEVICE_ACTIVE			(0x0400)	// device is active
+
+// device exception flags
+#define DEVICE_EXCEPT_EOF		(0x1000)	// end of file encountered
+
+/*
+enum xioDeviceState {
+	DEVICE_OFF = 0,					// device is not available
+	DEVICE_DISCONNECTED,			// device available but has not yet initialized and/or detected connection (eg USB)
+	DEVICE_CONNECTED,				// device is connected (USB)
+	DEVICE_STARTUP,					// device is running startup messages and lines
+	DEVICE_STANDBY,					// device is ready for use but is not currently active
+	DEVICE_ACTIVE					// device is ready for use and active
+};
+*/
 
 enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices
 	DEV_NONE=-1,					// no device is bound
 	DEV_USB0=0,						// must be 0
 	DEV_USB1,						// must be 1
 	DEV_SPI0,
-//	FS_FILE,						// slot for file device
 	DEV_MAX
 };
 
-enum xioDeviceState {
-	DEVICE_IDLE = 0,				// device is not ready for use (may be initializing)
-	DEVICE_NOT_CONNECTED,			// device has not yet detected connection to USB (or other comm channel)
-	DEVICE_CONNECTED,				// device is connected (e.g. USB connection)
-	DEVICE_STARTUP,					// device is running startup messages and lines
-	DEVICE_READY					// device is active and ready for use
-};
-/*
-enum xioDeviceType {				// how you want the
-	DEVICE_NONE = 0,				// unassigned or don;t care (read either)
-	DEVICE_CTRL,
-	DEVICE_DATA
-};
-*/
 enum xioSPIMode {
 	SPI_DISABLE=0,					// tri-state SPI lines
 	SPI_ENABLE						// enable SPI lines for output

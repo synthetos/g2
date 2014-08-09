@@ -42,8 +42,6 @@ extern "C"{
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
-	uint8_t state_usb0;					// controller state
-	uint8_t state_usb1;					// controller state
 	float null;							// dumping ground for items with no target
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
@@ -55,8 +53,9 @@ typedef struct controllerSingleton {	// main TG controller struct
 	uint8_t secondary_src;				// secondary input source device
 	uint8_t default_src;				// default source device
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
-	uint16_t linelen;					// length of currently processing line
-	uint16_t read_index;				// length of line being read
+//	uint16_t read_index;				// length of line being read
+//	uint8_t state_usb0;					// controller state
+//	uint8_t state_usb1;					// controller state
 
 	// system state variables
 	uint8_t led_state;		// LEGACY	// 0=off, 1=on
@@ -72,8 +71,9 @@ typedef struct controllerSingleton {	// main TG controller struct
 	int32_t job_id[4];					// uuid to identify the job
 
 	// controller serial buffers
-	char_t *bufp;						// pointer to primary or secondary in buffer
-	char_t in_buf[INPUT_BUFFER_LEN];	// primary input buffer
+	char_t *bufp;						// pointer to input buffer
+	uint16_t linelen;					// length of current line
+//	char_t in_buf[INPUT_BUFFER_LEN];	// primary input buffer
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
 	magic_t magic_end;
