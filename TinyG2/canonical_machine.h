@@ -197,6 +197,7 @@ typedef struct cmAxis {
 	float travel_min;					// min work envelope for soft limits
 	float jerk_max;						// max jerk (Jm) in mm/min^3 divided by 1 million
 	float jerk_homing;					// homing jerk (Jh) in mm/min^3 divided by 1 million
+	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
 	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
 	float search_velocity;				// homing search velocity
@@ -689,7 +690,8 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
-stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
+stat_t cm_set_xjm(nvObj_t *nv);			// set max jerk with 1,000,000 correction
+stat_t cm_set_xjh(nvObj_t *nv);			// set homing jerk with 1,000,000 correction
 
 // Yeah, M_Pi is nonstandard:
 #ifndef M_PI

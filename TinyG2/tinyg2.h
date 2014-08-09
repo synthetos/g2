@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.12 // fixed some inches mode display issues that had already been done on G1; added queue flush runtime busy check; added queue report after queue flush
+#define TINYG_FIRMWARE_BUILD   		047.13 // updated jerk setting functions to agree with G1 build 438.01; also fixed inches display for $ja and $ct
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version (updated from 0.8)
 #define TINYG_CONFIG_VERSION		5

@@ -1687,10 +1687,54 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
  *	number is > 1,000,000 it is divided by 1,000,000 before storing. Numbers are accepted in
  *	either millimeter or inch mode and converted to millimeter mode.
  */
-
+/*
 stat_t cm_set_jrk(nvObj_t *nv)
 {
 	if (nv->value > 1000000) nv->value /= 1000000;
+	set_flu(nv);
+	return(STAT_OK);
+}
+*/
+
+/**** Jerk functions
+ * cm_get_axis_jerk() - returns jerk for an axis
+ * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
+ *
+ * cm_set_xjm()		  - set jerk max value - called from dispatch table
+ * cm_set_xjh()		  - set jerk homing value - called from dispatch table
+ *
+ *	Jerk values can be rather large, often in the billions. This makes for some pretty big
+ *	numbers for people to deal with. Jerk values are stored in the system in truncated format;
+ *	values are divided by 1,000,000 then reconstituted before use.
+ *
+ *	The set_xjm() nad set_xjh() functions will accept either truncated or untruncated jerk
+ *	numbers as input. If the number is > 1,000,000 it is divided by 1,000,000 before storing.
+ *	Numbers are accepted in either millimeter or inch mode and converted to millimeter mode.
+ *
+ *	The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
+ */
+float cm_get_axis_jerk(uint8_t axis)
+{
+	return (cm.a[axis].jerk_max);
+}
+
+void cm_set_axis_jerk(uint8_t axis, float jerk)
+{
+	cm.a[axis].jerk_max = jerk;
+	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+}
+
+stat_t cm_set_xjm(nvObj_t *nv)
+{
+	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+	set_flu(nv);
+	cm_set_axis_jerk(_get_axis(nv->index), nv->value);
+	return(STAT_OK);
+}
+
+stat_t cm_set_xjh(nvObj_t *nv)
+{
+	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	return(STAT_OK);
 }
@@ -1846,7 +1890,7 @@ void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
 /* system state print functions */
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
-const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%16.3f%s\n";
+const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
