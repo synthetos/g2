@@ -47,7 +47,7 @@ struct xioDevice_t {					// description pf a device for reading and writing
 
 	// line reader functions
 //	uint16_t linelen;					// length of completed line
-	uint16_t read_buf_index;			// index into line being read
+	uint16_t read_index;				// index into line being read
 	uint16_t read_buf_len;				// static variable set at init time
 	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 };
@@ -115,6 +115,10 @@ inline void setData(xioDevice_t *d) { d->flags |= DEVICE_IS_DATA; }
 inline void clrData(xioDevice_t *d) { d->flags &= ~DEVICE_IS_DATA; }
 inline void setPrimary(xioDevice_t *d) { d->flags |= DEVICE_IS_PRIMARY; }
 inline void clrPrimary(xioDevice_t *d) { d->flags &= ~DEVICE_IS_PRIMARY; }
+
+inline bool isSet(devflags_t mask, devflags_t flags) { 
+	return (mask & flags);
+}
 
 // Naiive data channel shutdown function. No allowance for buffered data (buffer clears, etc.)
 void downData(xioDevice_t *d)
@@ -319,32 +323,33 @@ int read_char (uint8_t dev)
  *			characters in the buffer, including the NUL termination. Set to zero if no text
  *			was returned. Will truncate a text line with a NUL if size is reached.
  *
- *	 char * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
+ *	 char_t * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
  */
-//	uint16_t read_buf_index;			// index into line being read
-//	uint16_t read_buf_len;				// static variable set at init time
-//	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 
-char *readline(devflags_t &flags, uint16_t &size)
+char_t *readline(devflags_t &flags, uint16_t &size)
 {
-	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-		if (xio.d[dev]->device_state != DEVICE_READY) continue;
-//		if (xio.d[dev]->read_buf_len < *size) { return ((char *)_FDEV_ERR);}
+	int c;
 
-		for (int c; xio.d[dev]->read_buf_index < size; (xio.d[dev]->read_buf_index)++ ) {
-			if ((c = read_char(dev)) != _FDEV_ERR) {
-				xio.d[dev]->read_buf[xio.d[dev]->read_buf_index] = (uint8_t)c;
-				if ((c == LF) || (c == CR)) {
-					xio.d[dev]->read_buf[xio.d[dev]->read_buf_index] = NUL;
-					return (&STAT_OK);
-				}
-				continue;
+	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
+		if (xio.d[dev]->device_state != DEVICE_READY) continue;	// device needs to be ready
+		if (!(xio.d[dev]->flags & flags)) continue;				// the types need to match
+
+		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_len) {
+			if ((c = read_char(dev)) == _FDEV_ERR) break;
+			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
+			if ((c == LF) || (c == CR)) {
+				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
+				flags = xio.d[dev]->flags;						// what type of device is this?
+				size = xio.d[dev]->read_index;					// how long is the string?
+				xio.d[dev]->read_index = 0;						// reset for next read_line
+				return (xio.d[dev]->read_buf);
 			}
-			return (STAT_EAGAIN);
+			(xio.d[dev]->read_index)++;
 		}
-		return (STAT_BUFFER_FULL);
 	}
-	return ((char *)_FDEV_ERR);
+	size = 0;
+	flags = 0;
+	return ((char_t *)_FDEV_ERR);
 }
 
 /*

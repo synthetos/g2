@@ -139,7 +139,7 @@ stat_t xio_test_assertions(void);
 
 stat_t xio_callback(void);
 
-char *readline(devflags_t &flags, uint16_t &size);
+char_t *readline(devflags_t &flags, uint16_t &size);
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		048.08 // coded realine function
+#define TINYG_FIRMWARE_BUILD   		048.08 // coded readline(). Not tested
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
