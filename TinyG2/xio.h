@@ -78,22 +78,22 @@
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
 
-#define READ_BUFFER_SIZE		255			// text buffer size
+#define USB_LINE_BUFFER_SIZE	255			// text buffer size
 
 //*** Device flags ***
 typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 
 // device capabilities flags
-#define DEV_CAN_READ		(0x0001)
-#define DEV_CAN_WRITE		(0x0002)
-#define DEV_CAN_BE_CTRL		(0x0004)		// device can be a control channel
-#define DEV_CAN_BE_DATA		(0x0008)		// device can be a data channel
+#define DEV_CAN_BE_CTRL		(0x0001)		// device can be a control channel
+#define DEV_CAN_BE_DATA		(0x0002)		// device can be a data channel
+#define DEV_CAN_READ		(0x0010)
+#define DEV_CAN_WRITE		(0x0020)
 
 // Device state flags
 // channel state
-#define DEV_IS_PRIMARY		(0x0001)		// device is the primary control channel
-#define DEV_IS_CTRL			(0x0004)		// device is set as a control channel
-#define DEV_IS_DATA			(0x0008)		// device is set as a data channel
+#define DEV_IS_CTRL			(0x0001)		// device is set as a control channel
+#define DEV_IS_DATA			(0x0002)		// device is set as a data channel
+#define DEV_IS_PRIMARY		(0x0004)		// device is the primary control channel
 
 // device connection state
 #define DEV_IS_CONNECTED	(0x0010)		// device is connected (e.g. USB)

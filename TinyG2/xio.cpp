@@ -39,21 +39,22 @@
 
 /**** Structures ****/
 
-struct xioDevice_t {					// description pf a device for reading and writing
+struct xioDevice_t {						// description pf a device for reading and writing
 	// connection and device management
-	uint8_t caps;						// bitfield for capabilities flags (these are persistent)
-	devflags_t flags;					// bitfield for device state flags (these are not)
-	devflags_t next_flags;				// bitfield for next-state transitions
+	uint8_t caps;							// bitfield for capabilities flags (these are persistent)
+	devflags_t flags;						// bitfield for device state flags (these are not)
+	devflags_t next_flags;					// bitfield for next-state transitions
 
 	// line reader functions
-	uint16_t read_index;				// index into line being read
-	uint16_t read_buf_size;				// static variable set at init time
-	char_t read_buf[READ_BUFFER_SIZE];	// buffer for reading lines
+	uint16_t read_index;					// index into line being read
+	uint16_t read_buf_size;					// static variable set at init time
+	char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 };
 
-struct xioDeviceWrapperBase {			// C++ base class for device primitives
-	virtual int16_t readchar() = 0;		// Pure virtual. Will be subclassed for every device
-//	virtual int16_t write() = 0;		// Pure virtual. Will be subclassed for every device
+struct xioDeviceWrapperBase {				// C++ base class for device primitives
+	virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
+//	virtual int16_t write() = 0;			// Pure virtual. Will be subclassed for every device
+//	bool canRead() { return caps & DEV_CAN_READ; }
 };
 
 // Use a templated subclass so we don't have to create a new subclass for every type of Device.
@@ -68,8 +69,8 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     xioDeviceWrapper(Device  dev) : _dev{dev} {};
 
     int16_t readchar() final {
-        return _dev->readByte();		// readByte calls the USB endpoint's read function
-    };
+		return _dev->readByte();					// readByte calls the USB endpoint's read function
+	};
 };
 
 // ALLOCATIONS
@@ -82,18 +83,19 @@ static xioDevice_t _ds[DEV_MAX];			// allocate device structures
 
 // Singleton acts and namespace for xio
 struct xioSingleton_t {
-	uint16_t magic_start;							// magic number to test memory integrity
-	xioDevice_t* d[DEV_MAX];						// pointers to device structures
-	xioDeviceWrapperBase *DeviceWrappers[];			// access device wrappers from within the singleton
-	uint8_t spi_state;								// tick down-counter (unscaled)
+	uint16_t magic_start;					// magic number to test memory integrity
+	xioDevice_t* d[DEV_MAX];				// pointers to device structures
+	xioDeviceWrapperBase *DeviceWrappers[];	// access device wrappers from within the singleton
+	uint8_t spi_state;						// tick down-counter (unscaled)
+	uint8_t dev;							// hack to make it visible to the debugger in optimized code.
 	uint16_t magic_end;
 };
 xioSingleton_t xio;
 //extern xioSingleton_t xio; // not needed externally)
 
 // convenience macros
-#define USB0 xio.d[DEV_USB0]		// pointer to device structure for USB0 serial
-#define USB1 xio.d[DEV_USB1]		// pointer to device structure for USB1 serial
+#define USB0 xio.d[DEV_USB0]				// pointer to device structure for USB0 serial
+#define USB1 xio.d[DEV_USB1]				// pointer to device structure for USB1 serial
 
 /**** CODE ****/
 /*
@@ -156,14 +158,14 @@ void xio_init()
 	SerialUSB.setConnectionCallback([&](bool connected) {
 		USB0->next_flags = connected ? DEV_IS_CONNECTED : DEV_FLAGS_CLEAR;
 	});
-	USB0->read_buf_size = READ_BUFFER_SIZE;
+	USB0->read_buf_size = USB_LINE_BUFFER_SIZE;
 	USB0->caps = (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA);
 
 	// setup for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
 		USB1->next_flags = connected ? DEV_IS_CONNECTED : DEV_FLAGS_CLEAR;
 	});
-	USB1->read_buf_size = READ_BUFFER_SIZE;
+	USB1->read_buf_size = USB_LINE_BUFFER_SIZE;
 	USB1->caps = (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA);
 }
 
@@ -269,8 +271,8 @@ stat_t xio_callback()
 			downData();
 		} else if (USB1->flags && (DEV_IS_CTRL)) { downCtrl(USB1);
 		} else if (USB1->flags && (DEV_IS_DATA)) { downData(); }
-		return (STAT_OK);
 	}
+	return (STAT_OK);
 }
 
 /*
@@ -311,21 +313,23 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 {
 	int c;
 
-	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-		if (isActive(xio.d[dev])) continue;
-		if (!(xio.d[dev]->flags & flags)) continue;					// the types need to match
+//	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
+	for (xio.dev=0; xio.dev < DEV_MAX; xio.dev++) {
+		if (!isActive(xio.d[xio.dev])) continue;
+//		if (!(xio.d[dev]->flags && flags)) continue;				// the types need to match
+		if ((xio.d[xio.dev]->flags & flags) == false) continue;				// the types need to match
 
-		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
-			if ((c = read_char(dev)) == _FDEV_ERR) break;
-			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
+		while (xio.d[xio.dev]->read_index < xio.d[xio.dev]->read_buf_size) {
+			if ((c = read_char(xio.dev)) == _FDEV_ERR) break;
+			xio.d[xio.dev]->read_buf[xio.d[xio.dev]->read_index] = (char_t)c;
 			if ((c == LF) || (c == CR)) {
-				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
-				flags = xio.d[dev]->flags;							// what type of device is this?
-				size = xio.d[dev]->read_index;						// how long is the string?
-				xio.d[dev]->read_index = 0;							// reset for next readline
-				return (xio.d[dev]->read_buf);
+				xio.d[xio.dev]->read_buf[xio.d[xio.dev]->read_index] = NUL;
+				flags = xio.d[xio.dev]->flags;							// what type of device is this?
+				size = xio.d[xio.dev]->read_index;						// how long is the string?
+				xio.d[xio.dev]->read_index = 0;							// reset for next readline
+				return (xio.d[xio.dev]->read_buf);
 			}
-			(xio.d[dev]->read_index)++;
+			(xio.d[xio.dev]->read_index)++;
 		}
 	}
 	size = 0;
