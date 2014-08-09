@@ -38,25 +38,17 @@
 #include "xio.h"
 
 /**** Structures ****/
-/*
-struct xioChannel_t {					// description of a channel
-	uint8_t type;						// channel type - control or data
-	uint8_t caps;						// channel capabilities: R, RW, I, IC
-//	uint8_t state;						// channel state
-	int8_t device;						// device or file handle channel is bound to
-};
-*/
 
 struct xioDevice_t {					// description pf a device for reading and writing
 	// connection management
 	uint8_t device_state;				// physical device state
 	uint8_t next_state;					// transitional device state
-	uint16_t flags;						// bitfield for device flags (See // Device flags in .h)
+	devflags_t flags;					// bitfield for device flags (See // Device flags in .h)
 
 	// line reader functions
-	uint16_t linelen;					// length of completed line
-	uint16_t read_index;				// index into line being read
-	uint16_t read_buffer_len;			// static variable set at init time.
+//	uint16_t linelen;					// length of completed line
+	uint16_t read_buf_index;			// index into line being read
+	uint16_t read_buf_len;				// static variable set at init time
 	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 };
 
@@ -101,8 +93,8 @@ xioSingleton_t xio;
 //extern xioSingleton_t xio; // not needed externally)
 
 // convenience macros
-#define usb0 xio.d[DEV_USB0]		// pointer to device structure for USB0 serial
-#define usb1 xio.d[DEV_USB1]		// pointer to device structure for USB1 serial
+#define USB0 xio.d[DEV_USB0]		// pointer to device structure for USB0 serial
+#define USB1 xio.d[DEV_USB1]		// pointer to device structure for USB1 serial
 
 /**** CODE ****/
 
@@ -150,17 +142,17 @@ void xio_init()
 
 	// setup for USBserial0
 	SerialUSB.setConnectionCallback([&](bool connected) {
-		usb0->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		USB0->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
-	usb0->read_buffer_len = READ_BUFFER_LEN;
-	usb0->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
+	USB0->read_buf_len = READ_BUFFER_LEN;
+	USB0->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
 
 	// setup for USBserial1
 	SerialUSB1.setConnectionCallback([&](bool connected) {
-		usb1->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
+		USB1->next_state = connected ? DEVICE_CONNECTED : DEVICE_NOT_CONNECTED;
 	});
-	usb1->read_buffer_len = READ_BUFFER_LEN;
-	usb0->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
+	USB1->read_buf_len = READ_BUFFER_LEN;
+	USB1->flags = DEVICE_CAN_READ | DEVICE_CAN_WRITE | DEVICE_CAN_BE_CTRL | DEVICE_CAN_BE_DATA;
 }
 
 /*
@@ -200,7 +192,7 @@ stat_t xio_test_assertions()
  *	Channel unbinding rules
  *	(1-->0) CTRL+DATA channel disconnects. No connection exists (what about a secondary CTRL channel?)
  *	(2-->1) DATA channel disconnects. The first CTRL channel reverts to being CTRL+DATA
- *	(2-->3-->0) CTRL channel disconnects. If this is the primary CTRL channel all channels are 
+ *	(2-->3-->0) CTRL channel disconnects. If this is the primary CTRL channel all channels are
  *		disconnected (including DATA). If it is not the primary CTRL channel then only it disconnects.
  *
  *	Note: We will not receive a second DEVICE_CONNECTED on a channel that has already received one,
@@ -209,23 +201,23 @@ stat_t xio_test_assertions()
 stat_t xio_callback()
 {
 	// exit the callback if there is no new state information to process
-	if ((usb0->next_state == DEVICE_IDLE) && (usb1->next_state == DEVICE_IDLE)) {
+	if ((USB0->next_state == DEVICE_IDLE) && (USB1->next_state == DEVICE_IDLE)) {
 		return (STAT_OK);
 	}
-	
+
 	// USB0 has just connected
 	// Case 1: USB0 is the 1st channel to open
 	// Case 2: USB0 is the 2nd channel to open
-	if (usb0->next_state == DEVICE_CONNECTED) {	
-		usb0->device_state = DEVICE_CONNECTED;
-		usb0->next_state = DEVICE_IDLE;						// clear next state
-		if (usb1->device_state == DEVICE_NOT_CONNECTED) {	// Case 1
-			setCtrl(usb0);									// becomes ctrl and data
-			setData(usb0);
-			setPrimary(usb0);								//...and gets set as the primary ctrl channel
+	if (USB0->next_state == DEVICE_CONNECTED) {
+		USB0->device_state = DEVICE_CONNECTED;
+		USB0->next_state = DEVICE_IDLE;						// clear next state
+		if (USB1->device_state == DEVICE_NOT_CONNECTED) {	// Case 1
+			setCtrl(USB0);									// becomes ctrl and data
+			setData(USB0);
+			setPrimary(USB0);								//...and gets set as the primary ctrl channel
 		} else {											// Case 2
-			downData(usb1);									// shut down current data channel
-			setData(usb0);									// change location
+			downData(USB1);									// shut down current data channel
+			setData(USB0);									// change location
 		}
 		return (STAT_OK);
 	}
@@ -233,16 +225,16 @@ stat_t xio_callback()
 	// USB1 has just connected
 	// Case 1: USB1 is the 1st channel to open
 	// Case 2: USB1 is the 2nd channel to open
-	if (usb1->next_state == DEVICE_CONNECTED) {
-		usb1->device_state = DEVICE_CONNECTED;
-		usb1->next_state = DEVICE_IDLE;
-		if (usb0->device_state == DEVICE_NOT_CONNECTED) {
-			setCtrl(usb1);
-			setData(usb1);
-			setPrimary(usb1);
+	if (USB1->next_state == DEVICE_CONNECTED) {
+		USB1->device_state = DEVICE_CONNECTED;
+		USB1->next_state = DEVICE_IDLE;
+		if (USB0->device_state == DEVICE_NOT_CONNECTED) {
+			setCtrl(USB1);
+			setData(USB1);
+			setPrimary(USB1);
 		} else {
-			downData(usb0);
-			setData(usb1);
+			downData(USB0);
+			setData(USB1);
 		}
 		return (STAT_OK);
 	}
@@ -252,46 +244,46 @@ stat_t xio_callback()
 	// Case 2: USB0 closed while it was the primary ctrl channel
 	// Case 3: USB0 closed while it was a non-primary ctrl channel
 	// Case 4: USB0 closed while it was a data channel
-	if (usb0->next_state == DEVICE_NOT_CONNECTED) {
-		usb0->device_state = DEVICE_NOT_CONNECTED;
-		usb0->next_state = DEVICE_IDLE;
+	if (USB0->next_state == DEVICE_NOT_CONNECTED) {
+		USB0->device_state = DEVICE_NOT_CONNECTED;
+		USB0->next_state = DEVICE_IDLE;
 
 		// can be reorganized to be more efficient, but maybe the compiler will do it for us
-		if ((isCtrl(usb0)) && (isData(usb0))) {		// Case 1
-			clrCtrl(usb0);
-			clrData(usb0);
+		if ((isCtrl(USB0)) && (isData(USB0))) {		// Case 1
+			clrCtrl(USB0);
+			clrData(USB0);
 		}
-		if ((isCtrl(usb0)) && (isPrimary(usb0))) {	// Case 2
-			clrCtrl(usb0);
-			clrData(usb0);
+		if ((isCtrl(USB0)) && (isPrimary(USB0))) {	// Case 2
+			clrCtrl(USB0);
+			clrData(USB0);
 		}
-		if ((isCtrl(usb0)) && (!isPrimary(usb0))) {	// Case 3
-			clrCtrl(usb0);
+		if ((isCtrl(USB0)) && (!isPrimary(USB0))) {	// Case 3
+			clrCtrl(USB0);
 		}
-		if (isData(usb0)) {							// Case 4
-			downData(usb0);
+		if (isData(USB0)) {							// Case 4
+			downData(USB0);
 		}
 		return (STAT_OK);
 	}
 
 	// USB1 has just disconnected - same cases as USB0
-	if (usb1->next_state == DEVICE_NOT_CONNECTED) {
-		usb1->device_state = DEVICE_NOT_CONNECTED;
-		usb1->next_state = DEVICE_IDLE;
-		
-		if ((isCtrl(usb1)) && (isData(usb1))) {		// Case 1
-			clrCtrl(usb1);
-			clrData(usb1);
+	if (USB1->next_state == DEVICE_NOT_CONNECTED) {
+		USB1->device_state = DEVICE_NOT_CONNECTED;
+		USB1->next_state = DEVICE_IDLE;
+
+		if ((isCtrl(USB1)) && (isData(USB1))) {		// Case 1
+			clrCtrl(USB1);
+			clrData(USB1);
 		}
-		if ((isCtrl(usb1)) && (isPrimary(usb1))) {	// Case 2
-			clrCtrl(usb1);
-			clrData(usb1);
+		if ((isCtrl(USB1)) && (isPrimary(USB1))) {	// Case 2
+			clrCtrl(USB1);
+			clrData(USB1);
 		}
-		if ((isCtrl(usb1)) && (!isPrimary(usb1))) {	// Case 3
-			clrCtrl(usb1);
+		if ((isCtrl(USB1)) && (!isPrimary(USB1))) {	// Case 3
+			clrCtrl(USB1);
 		}
-		if (isData(usb1)) {							// Case 4
-			downData(usb1);
+		if (isData(USB1)) {							// Case 4
+			downData(USB1);
 		}
 	}
 	return (STAT_OK);
@@ -313,8 +305,8 @@ int read_char (uint8_t dev)
  *	Reads a line of text from the next device that has one ready. With some exceptions.
  *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
  *
- *	This function iterates over all open control and data devices, including reading from 
- *	multiple control devices. It will also manage multiple data devices, but only one data 
+ *	This function iterates over all open control and data devices, including reading from
+ *	multiple control devices. It will also manage multiple data devices, but only one data
  *	device may be open at a time.
  *
  *	ARGS:
@@ -329,16 +321,22 @@ int read_char (uint8_t dev)
  *
  *	 char * Returns a pointer to the buffer containing the line, or FDEV_ERR (-1) if no text
  */
-char *readline(uint8_t &type, int16_t &size)
-{
-	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
+//	uint16_t read_buf_index;			// index into line being read
+//	uint16_t read_buf_len;				// static variable set at init time
+//	char_t read_buf[READ_BUFFER_LEN];	// primary input buffer
 
-		for (int c; *index < size; (*index)++ ) {
-			if ((c = read_char()) != _FDEV_ERR) {
-				buffer[*index] = (uint8_t)c;
+char *readline(devflags_t &flags, uint16_t &size)
+{
+	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
+		if (xio.d[dev]->device_state != DEVICE_READY) continue;
+//		if (xio.d[dev]->read_buf_len < *size) { return ((char *)_FDEV_ERR);}
+
+		for (int c; xio.d[dev]->read_buf_index < size; (xio.d[dev]->read_buf_index)++ ) {
+			if ((c = read_char(dev)) != _FDEV_ERR) {
+				xio.d[dev]->read_buf[xio.d[dev]->read_buf_index] = (uint8_t)c;
 				if ((c == LF) || (c == CR)) {
-					buffer[*index] = NUL;
-					return (STAT_OK);
+					xio.d[dev]->read_buf[xio.d[dev]->read_buf_index] = NUL;
+					return (&STAT_OK);
 				}
 				continue;
 			}
@@ -346,7 +344,6 @@ char *readline(uint8_t &type, int16_t &size)
 		}
 		return (STAT_BUFFER_FULL);
 	}
-
 	return ((char *)_FDEV_ERR);
 }
 

@@ -80,7 +80,10 @@
 
 #define READ_BUFFER_LEN 255			// text buffer size (255 max)
 
+
 //*** Device flags ***
+typedef uint8_t devflags_t;			// could be 8 or 16
+
 // device capabilities
 #define DEVICE_CAN_READ			0x0001
 #define DEVICE_CAN_WRITE		0x0002
@@ -90,6 +93,7 @@
 // actual state
 #define DEVICE_IS_CTRL			0x0010	// device is set as a control channel
 #define DEVICE_IS_DATA			0x0020	// device is set as a data channel
+#define DEVICE_IS_BOTH			(DEVICE_IS_CTRL | DEVICE_IS_DATA)
 #define DEVICE_IS_PRIMARY		0x0040	// device is the primary control channel
 
 enum xioDeviceEnum {				// reconfigure this enum as you add more physical devices
@@ -108,13 +112,13 @@ enum xioDeviceState {
 	DEVICE_STARTUP,					// device is running startup messages and lines
 	DEVICE_READY					// device is active and ready for use
 };
-
-enum xioChannelType {
-	CHANNEL_NONE = 0,				// unassigned or don;t care (read either)
-	CHANNEL_CTRL,
-	CHANNEL_DATA
+/*
+enum xioDeviceType {				// how you want the
+	DEVICE_NONE = 0,				// unassigned or don;t care (read either)
+	DEVICE_CTRL,
+	DEVICE_DATA
 };
-
+*/
 enum xioSPIMode {
 	SPI_DISABLE=0,					// tri-state SPI lines
 	SPI_ENABLE						// enable SPI lines for output
@@ -135,7 +139,7 @@ stat_t xio_test_assertions(void);
 
 stat_t xio_callback(void);
 
-char *readline(uint8_t &type, int16_t &size);
+char *readline(devflags_t &flags, uint16_t &size);
 int read_char (void);
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
 size_t write(uint8_t *buffer, size_t size);
