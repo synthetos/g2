@@ -100,20 +100,8 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 
 #ifdef __ARM
-	cs.state_usb0 = CONTROLLER_NOT_CONNECTED;			// find USB next
-	cs.state_usb1 = CONTROLLER_NOT_CONNECTED;
 	IndicatorLed.setFrequency(100000);
 #endif
-
-    SerialUSB.setConnectionCallback([&](bool connected) {
-//        cs.state_usb0 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
-        cs.state_usb0 = connected ? CONTROLLER_READY : CONTROLLER_NOT_CONNECTED;
-    });
-
-    SerialUSB1.setConnectionCallback([&](bool connected) {
-//        cs.state_usb1 = connected ? CONTROLLER_CONNECTED : CONTROLLER_NOT_CONNECTED;
-        cs.state_usb1 = connected ? CONTROLLER_READY : CONTROLLER_NOT_CONNECTED;
-    });
 }
 
 /*
@@ -191,6 +179,7 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
+	DISPATCH(xio_callback());					// manages state changes in the XIO system
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
@@ -219,6 +208,7 @@ static stat_t _command_dispatch()
 	while (true) {
 		if ((status = xio_gets(cs.primary_src, cs.in_buf, sizeof(cs.in_buf))) == STAT_OK) {
 			cs.bufp = cs.in_buf;
+			cs.linelen = strlen(cs.in_buf)+1;			// linelen only tracks primary input
 			break;
 		}
 		// handle end-of-file from file devices
@@ -232,12 +222,19 @@ static stat_t _command_dispatch()
 		}
 		return (status);								// Note: STAT_EAGAIN, errors, etc. will drop through
 	}
+
 #endif // __AVR
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 //	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
+	devflags_t device_flags = DEV_IS_BOTH;
+
 	// read input line and return if not a completed line
+	if ((cs.bufp = readline(device_flags, cs.linelen)) == NULL) {
+		return (STAT_OK);									// nothing to process yet
+	}
+/*
 	if (cs.state_usb0 == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
@@ -256,11 +253,12 @@ static stat_t _command_dispatch()
 		return (STAT_OK);
 	}
 	cs.read_index = 0;
+*/
 #endif // __ARM
 
 	// set up the buffers
-	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
-	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+//	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
+	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting purposes
 
 	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char
