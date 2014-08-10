@@ -49,12 +49,32 @@ struct xioDevice_t {						// description pf a device for reading and writing
 	uint16_t read_index;					// index into line being read
 	uint16_t read_buf_size;					// static variable set at init time
 	char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
+
+//    bool canRead() { return caps & DEV_CAN_READ; }
+//    bool canWrite() { return caps & DEV_CAN_WRITE; }
+//    bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
+//    bool canBeData() { return caps & DEV_CAN_BE_DATA; }
+//    bool isCtrl() { return flags & DEV_IS_CTRL; }
+//    bool isData() { return flags & DEV_IS_DATA; }
+//    bool isPrimary() { return flags & DEV_IS_PRIMARY; }
+//    bool isConnected() { return flags & DEV_IS_CONNECTED; }
+//    bool isNotConnected() { return ~(flags & DEV_IS_CONNECTED); }
+//    bool isNextConnected() { return next_flags & DEV_IS_CONNECTED; }
+//    bool isReady() { return flags & DEV_IS_READY; }
+//    bool isActive() { return flags & DEV_IS_ACTIVE; }
+//
+//    void downCtrl()
+//    {
+//      flags &= ~(DEV_IS_CTRL | DEV_IS_CONNECTED | DEV_IS_READY | DEV_IS_ACTIVE);	// take down the channel
+//    }
+//
+//  // Note: With the above, this: isNextConnected(USB0)
+//  // Becomes:                    USB0->isNextConnected()
 };
 
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
 	virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
 //	virtual int16_t write() = 0;			// Pure virtual. Will be subclassed for every device
-//	bool canRead() { return caps & DEV_CAN_READ; }
 };
 
 // Use a templated subclass so we don't have to create a new subclass for every type of Device.
