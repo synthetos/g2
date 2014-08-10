@@ -56,7 +56,7 @@ struct xioDevice_t {						// description pf a device for reading and writing
 //	bool canWrite() { return caps & DEV_CAN_WRITE; }
 //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
 //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
-	bool isCtrl() { return flags & DEV_IS_CTRL; }
+	bool isCtrl() { return flags & DEV_IS_CTRL; }			// called as: USB0->isCtrl()
 	bool isData() { return flags & DEV_IS_DATA; }
 	bool isPrimary() { return flags & DEV_IS_PRIMARY; }
 	bool isConnected() { return flags & DEV_IS_CONNECTED; }
@@ -70,9 +70,6 @@ struct xioDevice_t {						// description pf a device for reading and writing
 	void downCtrl() {
 		flags &= ~(DEV_IS_CTRL | DEV_IS_CONNECTED | DEV_IS_READY | DEV_IS_ACTIVE);	// take down the channel
 	}
-
-//  // Note: With the above, this: isNextConnected(USB0)
-//  // Becomes:                    USB0->isNextConnected()
 };
 
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
@@ -118,38 +115,14 @@ xioSingleton_t xio;
 // convenience macros
 #define USB0 xio.d[DEV_USB0]				// pointer to device structure for USB0 serial
 #define USB1 xio.d[DEV_USB1]				// pointer to device structure for USB1 serial
-#define DEV xio.d[dev]						// pointer to device structure for given 'dev' as the device number
 
 /**** CODE ****/
 /*
  * Device helpers
  *
- *	various flag readers
- *	downCtrl() - shuts down a specified control channel
  *	downData() - shuts down the active data channel
  */
 
-/*
-inline bool canRead(xioDevice_t *d)	{ return d->caps & DEV_CAN_READ; }
-inline bool canWrite(xioDevice_t *d) { return d->caps & DEV_CAN_WRITE; }
-inline bool canBeCtrl(xioDevice_t *d) { return d->caps & DEV_CAN_BE_CTRL; }
-inline bool canBeData(xioDevice_t *d) { return d->caps & DEV_CAN_BE_DATA; }
-inline bool isCtrl(xioDevice_t *d) { return d->flags & DEV_IS_CTRL; }
-inline bool isData(xioDevice_t *d) { return d->flags & DEV_IS_DATA; }
-inline bool isPrimary(xioDevice_t *d) {return d->flags & DEV_IS_PRIMARY; }
-inline bool isConnected(xioDevice_t *d) { return d->flags & DEV_IS_CONNECTED; }
-inline bool isNotConnected(xioDevice_t *d) { return ~(d->flags & DEV_IS_CONNECTED); }
-inline bool isNextConnected(xioDevice_t *d) { return d->next_flags & DEV_IS_CONNECTED; }
-inline bool isNextDisconnected(xioDevice_t *d) { return d->next_flags & DEV_IS_DISCONNECTED; }
-inline bool isNextClear(xioDevice_t *d) { return d->next_flags == DEV_FLAGS_CLEAR; }
-inline bool isReady(xioDevice_t *d) { return d->flags & DEV_IS_READY; }
-inline bool isActive(xioDevice_t *d) { return d->flags & DEV_IS_ACTIVE; }
-
-void downCtrl(xioDevice_t *d)
-{
-	d->flags &= ~(DEV_IS_CTRL | DEV_IS_CONNECTED | DEV_IS_READY | DEV_IS_ACTIVE);	// take down the channel
-}
-*/
 void downData()
 {
 	// This function is currently naiive and does no finalization of the data channel
@@ -157,7 +130,7 @@ void downData()
 	for (uint8_t dev=0; dev<DEV_MAX; dev++) {
 		if (xio.d[dev]->flags && (DEV_IS_DATA | DEV_IS_ACTIVE)) {
 			xio.d[dev]->flags &= ~(DEV_IS_DATA | DEV_IS_ACTIVE | DEV_IS_READY | DEV_IS_CONNECTED);	// take down the channel
-			// Put flush queues here
+			// insert serial queue flush here
 		}
 		return;
 	}
@@ -263,7 +236,6 @@ stat_t xio_callback()
 			downData();											// take down any current data channel (presumably USB1)
 			USB0->flags |= (DEV_IS_DATA | DEV_IS_ACTIVE);		// assign USB0 to be the active data channel
 		}
-//		return (STAT_OK);
 	} else
 
 	// USB1 has just connected
@@ -276,7 +248,6 @@ stat_t xio_callback()
 			downData();
 			USB0->flags |= (DEV_IS_DATA | DEV_IS_ACTIVE);
 		}
-//		return (STAT_OK);
 	} else
 
 	// USB0 has just disconnected
@@ -289,13 +260,8 @@ stat_t xio_callback()
 		if (USB0->flags && (DEV_IS_CTRL | DEV_IS_PRIMARY)) {		// Cases 1 & 2
 			USB0->downCtrl();
 			downData();
-//		} else if (USB0->flags && (DEV_IS_CTRL)) { USB0->downCtrl();// Case 3
-//		} else if (USB0->flags && (DEV_IS_DATA)) { downData(); }	// Case 4
-
 		} else if (USB0->isCtrl()) { USB0->downCtrl();				// Case 3
 		} else if (USB0->isData()) { downData(); }					// Case 4
-
-//		return (STAT_OK);
 	} else
 
 	// USB1 has just disconnected - same cases as USB0
@@ -304,14 +270,15 @@ stat_t xio_callback()
 		if (USB1->flags && (DEV_IS_CTRL | DEV_IS_PRIMARY)) {
 			USB1->downCtrl();
 			downData();
-//		} else if (USB1->flags && (DEV_IS_CTRL)) { USB1->downCtrl();
-//		} else if (USB1->flags && (DEV_IS_DATA)) { downData(); }
 		} else if (USB1->isCtrl()) { USB1->downCtrl();
 		} else if (USB1->isData()) { downData(); }
 	}
 	return (STAT_OK);
 }
 
+/*
+ * writeline() - write a terminate line of text to a device
+ */
 size_t writeline(uint8_t *buffer, size_t size)
 {
 	size_t written = SerialUSB.write(buffer, size);
@@ -356,10 +323,8 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 	int c;
 
 	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-//		if (!isActive(xio.d[dev])) continue;
-		if (!DEV->isActive()) continue;
+		if (!xio.d[dev]->isActive()) continue;
 		if (!(xio.d[dev]->flags && flags)) continue;				// the types need to match
-//		if ((xio.d[dev]->flags & flags) == false) continue;			// the types need to match
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
