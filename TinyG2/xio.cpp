@@ -79,13 +79,12 @@ xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {&SerialUSB};
 xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {&SerialUSB1};
 xioDeviceWrapperBase* DeviceWrappers[] {&serialUSB0Wrapper, &serialUSB1Wrapper};
 
-static xioDevice_t _ds[DEV_MAX];			// allocate device structures
+xioDevice_t _ds[DEV_MAX];			// allocate device structures
 
 // Singleton acts and namespace for xio
 struct xioSingleton_t {
 	uint16_t magic_start;					// magic number to test memory integrity
 	xioDevice_t* d[DEV_MAX];				// pointers to device structures
-	xioDeviceWrapperBase *DeviceWrappers[];	// access device wrappers from within the singleton
 	uint8_t spi_state;						// tick down-counter (unscaled)
 	uint8_t dev;							// hack to make it visible to the debugger in optimized code.
 	uint16_t magic_end;
@@ -146,7 +145,6 @@ void xio_init()
     xio_init_assertions();
 
 	for (uint8_t dev=0; dev<DEV_MAX; dev++) {
-		memset(&xio.d[dev], 0, sizeof(xioDevice_t));	// clear states and all values
 		xio.d[dev] = &_ds[dev];							// initialize pointers to device structures
 	}
 
