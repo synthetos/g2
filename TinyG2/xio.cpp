@@ -278,13 +278,7 @@ stat_t xio_callback()
  */
 int read_char (uint8_t dev)
 {
-//    return DeviceWrappers[dev]->readchar();
-
-	if (dev == 0) {
-		return SerialUSB.readByte();
-	} else {
-	    return SerialUSB1.readByte();
-	}
+    return DeviceWrappers[dev]->readchar();
 }
 
 /*
