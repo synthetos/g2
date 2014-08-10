@@ -96,9 +96,10 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 #define DEV_IS_PRIMARY		(0x0004)		// device is the primary control channel
 
 // device connection state
-#define DEV_IS_CONNECTED	(0x0010)		// device is connected (e.g. USB)
-#define DEV_IS_READY		(0x0020)		// device is ready for use
-#define DEV_IS_ACTIVE		(0x0040)		// device is active
+#define DEV_IS_DISCONNECTED	(0x0010)		// device just disconnected (transient state)
+#define DEV_IS_CONNECTED	(0x0020)		// device is connected (e.g. USB)
+#define DEV_IS_READY		(0x0040)		// device is ready for use
+#define DEV_IS_ACTIVE		(0x0080)		// device is active
 
 // device exception flags
 #define DEV_THROW_EOF		(0x0100)		// end of file encountered
