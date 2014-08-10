@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.14 // fixed display problem with $sys and $cv
+#define TINYG_FIRMWARE_BUILD   		047.15 //
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version (updated from 0.8)
 #define TINYG_CONFIG_VERSION		5
