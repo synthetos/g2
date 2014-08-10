@@ -132,15 +132,13 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 void xio_init(void);
 void xio_init_assertions(void);
 stat_t xio_test_assertions(void);
-
 stat_t xio_callback(void);
 
-char_t *readline(devflags_t &flags, uint16_t &size);
 int read_char (void);
-stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
-size_t write(uint8_t *buffer, size_t size);
+char_t *readline(devflags_t &flags, uint16_t &size);
+size_t writeline(uint8_t *buffer, size_t size);
+
 stat_t xio_set_spi(nvObj_t *nv);
-stat_t xio_assertions(void);
 
 /* Some useful ASCII definitions */
 
@@ -161,7 +159,6 @@ stat_t xio_assertions(void);
 #define ESC (char)0x1B		// ^[ - ESC(ape)
 #define DEL (char)0x7F		//  DEL(ete)
 #define Q_EMPTY (char)0xFF	// signal no character
-
 
 #ifdef __TEXT_MODE
 
