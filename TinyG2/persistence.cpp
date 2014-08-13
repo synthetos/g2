@@ -32,10 +32,6 @@
 #include "xmega/xmega_eeprom.h"
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
@@ -57,7 +53,7 @@ void persistence_init()
 	nvm.nvm_base_addr = NVM_BASE_ADDR;
 	nvm.nvm_profile_base = 0;
 #endif
-	return;	
+	return;
 }
 
 /************************************************************************************
@@ -90,7 +86,7 @@ stat_t read_persistent_value(nvObj_t *nv)
 stat_t write_persistent_value(nvObj_t *nv)
 {
 	if (cm.cycle_state != CYCLE_OFF)
-		return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving 
+		return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving
 
 	float tmp_value = nv->value;
 	ritorno(read_persistent_value(nv));
@@ -111,8 +107,3 @@ stat_t write_persistent_value(nvObj_t *nv)
 	return (STAT_OK);
 }
 #endif // __ARM
-
-#ifdef __cplusplus
-}
-#endif
-

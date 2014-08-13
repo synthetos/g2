@@ -28,10 +28,6 @@
 #ifndef PWM_H_ONCE
 #define PWM_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 typedef struct pwmConfigChannel {
 	float frequency;				// base frequency for PWM driver, in Hz
 	float cw_speed_lo;				// minimum clockwise spindle speed [0..N]
@@ -99,10 +95,6 @@ void pwm_unit_tests(void);
 #define	PWM_UNITS pwm_unit_tests();
 #else
 #define	PWM_UNITS
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif	// End of include guard: PWM_H_ONCE
