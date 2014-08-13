@@ -35,10 +35,6 @@
 #include "switch.h"
 #include "report.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Homing singleton structure ****/
 
 struct hmHomingSingleton {			// persistent homing runtime variables
@@ -624,7 +620,3 @@ int8_t _get_next_axes(int8_t axis)
 	return (STAT_OK);
 }
 */
-
-#ifdef __cplusplus
-}
-#endif
