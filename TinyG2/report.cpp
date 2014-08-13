@@ -178,7 +178,7 @@ uint8_t _is_stat(nvObj_t *nv)
 void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
-	sr.status_report_requested = false;
+	sr.status_report_request = SR_OFF;
 	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
 	nv->index = nv_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
@@ -224,8 +224,7 @@ stat_t sr_set_status_report(nvObj_t *nv)
 }
 
 /*
- * sr_request_status_report()	- request a status report to run after minimum interval
- * sr_status_report_callback()	- main loop callback to send a report if one is ready
+ * sr_request_status_report() - request a status report
  *
  *	Status reports can be request from a number of sources including:
  *	  - direct request from command line in the form of ? or {"sr:""}
@@ -234,37 +233,49 @@ stat_t sr_set_status_report(nvObj_t *nv)
  *
  *	Status reports are generally returned with minimal delay (from the controller callback),
  *	but will not be provided more frequently than the status report interval
+ *
+ *	Requests can specify immediate or timed reports, and can also force a filtered or full report.
+ *	See cmStatusReportRequest enum in report.h for details.
  */
 stat_t sr_request_status_report(uint8_t request_type)
 {
-#ifdef __ARM
-	if (request_type == SR_IMMEDIATE_REQUEST) {
-		sr.status_report_systick = SysTickTimer.getValue();
-	}
-	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-		sr.status_report_systick = SysTickTimer.getValue() + sr.status_report_interval;
-	}
-#endif
+	if (sr.status_report_request != SR_OFF) return (STAT_OK); // ignore multiple requests. First one wins.
+
 #ifdef __AVR
-	if (request_type == SR_IMMEDIATE_REQUEST) {
-		sr.status_report_systick = SysTickTimer_getValue();
-	}
-	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
-	}
+	sr.status_report_systick = SysTickTimer_getValue();
 #endif
-	sr.status_report_requested = true;
+#ifdef __ARM
+	sr.status_report_systick = SysTickTimer.getValue();
+#endif
+
+	if (request_type == SR_REQUEST_IMMEDIATE) {
+		sr.status_report_request = SR_FILTERED;		// will trigger a filtered or verbose report depending on verbosity setting
+
+	} else if (request_type == SR_REQUEST_IMMEDIATE_FULL) {
+		sr.status_report_request = SR_VERBOSE;		// will always trigger verbose report, regardless of verbosity setting
+
+	} else if (request_type == SR_REQUEST_TIMED) {
+		sr.status_report_request = SR_FILTERED;
+		sr.status_report_systick += sr.status_report_interval;
+
+	} else {
+		sr.status_report_request = SR_VERBOSE;
+		sr.status_report_systick += sr.status_report_interval;
+	}
 	return (STAT_OK);
 }
 
+/*
+ * sr_status_report_callback() - main loop callback to send a report if one is ready
+ */
 stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
 #ifdef __SUPPRESS_STATUS_REPORTS
 	return (STAT_NOOP);
 #endif
-
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
-	if (sr.status_report_requested == false) return (STAT_NOOP);
+	if (sr.status_report_request == SR_OFF) return (STAT_NOOP);
+
 #ifdef __ARM
 	if (SysTickTimer.getValue() < sr.status_report_systick) return (STAT_NOOP);
 #endif
@@ -272,15 +283,15 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
 #endif
 
-	sr.status_report_requested = false;		// disable reports until requested again
-
-	if (sr.status_report_verbosity == SR_VERBOSE) {
+	if (sr.status_report_request == SR_VERBOSE) {
 		_populate_unfiltered_status_report();
 	} else {
 		if (_populate_filtered_status_report() == false) {	// no new data
+			sr.status_report_request = SR_OFF;				// disable reports until requested again
 			return (STAT_OK);
 		}
 	}
+	sr.status_report_request = SR_OFF;
 	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	return (STAT_OK);
 }

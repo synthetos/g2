@@ -92,7 +92,7 @@ void json_parser(char_t *str)
 {
 	stat_t status = _json_parser_kernal(str);
 	nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-	sr_request_status_report(SR_IMMEDIATE_REQUEST); // generate incremental status report to show any changes
+	sr_request_status_report(SR_REQUEST_IMMEDIATE); // generate incremental status report to show any changes
 }
 
 static stat_t _json_parser_kernal(char_t *str)
