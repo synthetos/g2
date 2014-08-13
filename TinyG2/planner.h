@@ -180,6 +180,7 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	float delta_vmax;				// max velocity difference for this move
 	float braking_velocity;			// current value for braking velocity
 
+	uint8_t jerk_axis;				// rate limiting axis used to compute jerk for the move
 	float jerk;						// maximum linear jerk term for this move
 	float recip_jerk;				// 1/Jm used for planning (compute-once)
 	float cbrt_jerk;				// cube root of Jm used for planning (compute-once)
