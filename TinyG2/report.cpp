@@ -184,19 +184,27 @@ void sr_init_status_report()
 	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
-		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
-		sr.status_report_value[i] = -1234567;			// pre-load values with an unlikely number
+		if (sr_defaults[i][0] == NUL) break;				// quit on first blank array entry
+		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
+		if (fp_EQ(nv->value, NO_MATCH)) {
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING);	// trap mis-configured profile settings
+			return;
+		}
 		if (_is_stat(nv) == true)
-			sr.stat_index = nv->value;					// identify index for 'stat' if status is in the report
+			sr.stat_index = nv->value;						// identify index for 'stat' if status is in the report
 		nv_set(nv);
-		nv_persist(nv);								// conditionally persist - automatic by nv_persis()
-		nv->index++;									// increment SR NVM index
+		nv_persist(nv);										// conditionally persist - automatic by nv_persist()
+		nv->index++;										// increment SR NVM index
 	}
 }
 
 /*
  * sr_set_status_report() - interpret an SR setup string and return current report
+ *
+ *	Note: By the time this function is called any unrecognized tokens have been detected and
+ *	rejected by the JSON or text parser. In other words, it should never get to here if
+ *	there is an unrecognized token in the SR string.
  */
 stat_t sr_set_status_report(nvObj_t *nv)
 {
@@ -206,11 +214,11 @@ stat_t sr_set_status_report(nvObj_t *nv)
 	index_t sr_start = nv_get_index((const char_t *)"",(const char_t *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
-		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
+		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) break;
 		if ((nv->valuetype == TYPE_BOOL) && (fp_TRUE(nv->value))) {
 			status_report_list[i] = nv->index;
-			nv->value = nv->index;					// persist the index as the value
-			nv->index = sr_start + i;					// index of the SR persistence location
+			nv->value = nv->index;							// persist the index as the value
+			nv->index = sr_start + i;						// index of the SR persistence location
 			nv_persist(nv);
 			elements++;
 		} else {
@@ -219,8 +227,7 @@ stat_t sr_set_status_report(nvObj_t *nv)
 	}
 	if (elements == 0) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	memcpy(sr.status_report_list, status_report_list, sizeof(status_report_list));
-	_populate_unfiltered_status_report();			// return current values
-	return (STAT_OK);
+	return(_populate_unfiltered_status_report());			// return current values
 }
 
 /*
@@ -339,7 +346,7 @@ static stat_t _populate_unfiltered_status_report()
 /*
  * _populate_filtered_status_report() - populate nvObj body with status values
  *
- *	Designed to be displayed as a JSON object; i;e; no footer or header
+ *	Designed to be displayed as a JSON object; i.e. no footer or header
  *	Returns 'true' if the report has new data, 'false' if there is nothing to report.
  *
  *	NOTE: Unlike sr_populate_unfiltered_status_report(), this function does NOT set
@@ -380,7 +387,7 @@ static uint8_t _populate_filtered_status_report()
 			strcat(tmp, nv->token);
 			strcpy(nv->token, tmp);		//...or here.
 			sr.status_report_value[i] = nv->value;
-			if ((nv = nv->nx) == NULL) return (false); // should never be NULL unless SR length exceeds available buffer array
+			if ((nv = nv->nx) == NULL) return (false);	// should never be NULL unless SR length exceeds available buffer array
 			has_data = true;
 		}
 	}
@@ -388,7 +395,7 @@ static uint8_t _populate_filtered_status_report()
 }
 
 /*
- * Wrappers and Setters - for calling from cfgArray table
+ * Wrappers and Setters - for calling from nvArray table
  *
  * sr_get()		- run status report
  * sr_set()		- set status report elements
@@ -652,23 +659,6 @@ void qr_print_qo(nvObj_t *nv) { text_print_int(nv, fmt_qo);}
 void qr_print_qv(nvObj_t *nv) { text_print_ui8(nv, fmt_qv);}
 
 #endif // __TEXT_MODE
-
-
-/****************************************************************************
- ***** Unit Tests ***********************************************************
- ****************************************************************************/
-
-#ifdef __UNIT_TESTS
-#ifdef __UNIT_TEST_REPORT
-
-void sr_unit_tests(void)
-{
-	sr_init();
-	cs.communications_mode = STAT_JSON_MODE;
-	sr_run_status_report();
-}
-#endif	// __UNIT_TESTS
-#endif	// __UNIT_TESTS_REPORT
 
 #ifdef __cplusplus
 }
