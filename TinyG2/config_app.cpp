@@ -45,10 +45,6 @@
 //#include "network.h"
 #include "xio.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /*** structures ***/
 
 cfgParameters_t cfg; 				// application specific configuration parameters
@@ -1009,7 +1005,3 @@ void cfg_print_net(nvObj_t *nv) { text_print_ui8(nv, fmt_net);}
 void cfg_print_rx(nvObj_t *nv) { text_print_ui8(nv, fmt_rx);}
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif

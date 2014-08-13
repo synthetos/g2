@@ -32,10 +32,6 @@
 #include "config_app.h"	// is present at the end of this file
 */
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Config System Overview and Usage ***
  *
  *	--- Config objects and the config list ---
@@ -372,9 +368,5 @@ void nv_dump_nv(nvObj_t *nv);
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/
 #include "config_app.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: CONFIG_H_ONCE
