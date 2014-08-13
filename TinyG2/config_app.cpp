@@ -73,6 +73,7 @@ static stat_t _do_all(nvObj_t *nv);			// print all parameters
 //static stat_t set_ex(nvObj_t *nv);		// enable XON/XOFF and RTS/CTS flow control
 //static stat_t set_baud(nvObj_t *nv);		// set USB baud rate
 static stat_t get_rx(nvObj_t *nv);			// get bytes in RX buffer
+//static stat_t get_wr(nvObj_t *nv);			// get window report (sliding window slots)
 static stat_t get_tick(nvObj_t *nv);		// get system tick count
 //static stat_t run_sx(nvObj_t *nv);		// send XOFF, XON
 
@@ -182,6 +183,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "er",  _f0, 0, tx_print_nul, rpt_er,  set_nul,  (float *)&cs.null, 0 },	// invoke bogus exception report for testing
 	{ "", "qf",  _f0, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
 	{ "", "rx",  _f0, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
+//	{ "", "wr",  _f0, 0, tx_print_int, get_wr,  set_nul,  (float *)&cs.null, 0 },	// slots available in RX window buffer
 	{ "", "msg", _f0, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
 	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
@@ -515,7 +517,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
-	{ "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },			// X target endpoint
+	{ "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },				// X target endpoint
 	{ "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Y], 0 },
 	{ "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Z], 0 },
 	{ "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_A], 0 },
@@ -533,7 +535,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "_ts","_ts1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target_steps[MOTOR_1], 0 },		// Motor 1 target steps
 	{ "_ps","_ps1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.position_steps[MOTOR_1], 0 },	// Motor 1 position steps
 	{ "_cs","_cs1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.commanded_steps[MOTOR_1], 0 },	// Motor 1 commanded steps (delayed steps)
-	{ "_es","_es1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.encoder_steps[MOTOR_1], 0 },	// Motor 1 encoder steps
+	{ "_es","_es1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.encoder_steps[MOTOR_1], 0 },		// Motor 1 encoder steps
 	{ "_xs","_xs1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&st_pre.mot[MOTOR_1].corrected_steps, 0 }, // Motor 1 correction steps applied
 	{ "_fe","_fe1",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.following_error[MOTOR_1], 0 },	// Motor 1 following error in steps
 #endif
@@ -733,7 +735,7 @@ stat_t set_flu(nvObj_t *nv)
 	if (cm_get_units_mode(MODEL) == INCHES) {		// if in inches...
 		nv->value *= MM_PER_INCH;					// convert to canonical millimeter units
 	}
-	*((float *)GET_TABLE_WORD(target)) = nv->value;// write value as millimeters or degrees
+	*((float *)GET_TABLE_WORD(target)) = nv->value;	// write value as millimeters or degrees
 	nv->precision = GET_TABLE_WORD(precision);
 	nv->valuetype = TYPE_FLOAT;
 	return(STAT_OK);
@@ -746,7 +748,7 @@ stat_t set_flu(nvObj_t *nv)
 void preprocess_float(nvObj_t *nv)
 {
 	if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
-	if (GET_TABLE_BYTE(flags) & F_CONVERT) {	// unit conversion required?
+	if (GET_TABLE_BYTE(flags) & F_CONVERT) {		// unit conversion required?
 		if (cm_get_units_mode(MODEL) == INCHES) {
 			nv->value *= INCHES_PER_MM;
 		}
@@ -900,28 +902,34 @@ static stat_t get_rx(nvObj_t *nv)
 {
 #ifdef __AVR
 	nv->value = (float)xio_get_usb_rx_free();
-	nv->valuetype = TYPE_INTEGER;
-	return (STAT_OK);
-#endif
-#ifdef __ARM
+#else
 	nv->value = (float)254;				// ARM always says the serial buffer is available (max)
+#endif
 	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
-#endif
 }
+/*
+static stat_t get_wr(nvObj_t *nv)
+{
+#ifdef __AVR
+	nv->value = (float)xio_get_window_slots();
+#else
+	nv->value = (float)4;				// ARM always says there are 4 slots available
+#endif
+	nv->valuetype = TYPE_INTEGER;
+	return (STAT_OK);
+}
+*/
 
 static stat_t get_tick(nvObj_t *nv)
 {
 #ifdef __AVR
 	nv->value = (float)SysTickTimer_getValue();
-	nv->valuetype = TYPE_INTEGER;
-	return (STAT_OK);
-#endif
-#ifdef __ARM
+#else
 	nv->value = (float)SysTickTimer.getValue();
+#endif
 	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
-#endif
 }
 
 /* run_sx()	- send XOFF, XON --- test only
@@ -989,7 +997,7 @@ static const char fmt_ec[] PROGMEM = "[ec]  expand LF to CRLF on TX%6d [0=off,1=
 static const char fmt_ee[] PROGMEM = "[ee]  enable echo%18d [0=off,1=on]\n";
 static const char fmt_ex[] PROGMEM = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
 static const char fmt_baud[] PROGMEM = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
-static const char fmt_net[] PROGMEM = "[net]  network mode%16d [0=master]\n";
+static const char fmt_net[] PROGMEM = "[net] network mode%17d [0=master]\n";
 static const char fmt_rx[] PROGMEM = "rx:%d\n";
 
 void cfg_print_ec(nvObj_t *nv) { text_print_ui8(nv, fmt_ec);}

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		053.01 // changes in canonical_machine ported from 440.01
+#define TINYG_FIRMWARE_BUILD   		053.01 // config file changes cross-ported with 440.01
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
