@@ -201,6 +201,12 @@ static void _controller_HSM()
 static stat_t _command_dispatch()
 {
 #ifdef __AVR
+	devflags_t flags;
+
+	if ((cs.bufp = readline(&flags, &cs.linelen)) == NULL) {
+		return (STAT_OK);									// nothing to process yet
+	}
+/*
 	stat_t status;
 
 	// read input line or return if not a completed line
@@ -208,7 +214,6 @@ static stat_t _command_dispatch()
 	while (true) {
 		if ((status = xio_gets(cs.primary_src, cs.in_buf, sizeof(cs.in_buf))) == STAT_OK) {
 			cs.bufp = cs.in_buf;
-			cs.linelen = strlen(cs.in_buf)+1;			// linelen only tracks primary input
 			break;
 		}
 		// handle end-of-file from file devices
@@ -222,7 +227,7 @@ static stat_t _command_dispatch()
 		}
 		return (status);								// Note: STAT_EAGAIN, errors, etc. will drop through
 	}
-
+*/
 #endif // __AVR
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
@@ -257,8 +262,9 @@ static stat_t _command_dispatch()
 #endif // __ARM
 
 	// set up the buffers
-//	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
-	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting purposes
+	cs.linelen = strlen(cs.bufp)+1;						// linelen only tracks primary input
+	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+//	strncpy(cs.saved_buf, cs.bufp, INPUT_BUFFER_LEN-1);	// save input buffer for reporting
 
 	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char
@@ -271,7 +277,7 @@ static stat_t _command_dispatch()
 			if (cfg.comm_mode != JSON_MODE) {
 				text_response(STAT_OK, cs.saved_buf);
 			}
-		break;
+			break;
 		}
 		case '$': case '?': case 'H': { 				// text mode input
 			cfg.comm_mode = TEXT_MODE;

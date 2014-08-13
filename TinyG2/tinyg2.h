@@ -38,9 +38,9 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		053.01 // config file changes cross-ported with 440.01
+#define TINYG_FIRMWARE_BUILD   		054.02 // controller changes cross-ported with 440.02
 #endif
-#define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
+#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
