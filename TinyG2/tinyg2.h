@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		054.02 // controller changes cross-ported with 440.02
+#define TINYG_FIRMWARE_BUILD   		054.03 // controller changes cross-ported with 440.02 - testing pass
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
@@ -70,7 +70,7 @@
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves
-//#define __DEBUG_SETTINGS					// special settings. See settings.h
+#define __DEBUG_SETTINGS					// special settings. See settings.h
 //#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
 
 //#define __SIMULATION						// for software-only simulations
