@@ -147,8 +147,15 @@ uint32_t SysTickTimer_getValue(void);
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 
 #define RADIAN (57.2957795)
-//		M_PI is pi as defined in math.h
-//		M_SQRT2 is radical2 as defined in math.h
+
+#ifndef M_PI	// M_PI is pi usually defined in math.h, but not always (C++11)
+#define M_PI (3.14159265358979323846264338327950288)
+#endif
+
+#ifndef M_SQRT2 // M_SQRT2 is radical2 as defined in math.h
+#define M_SQRT2 (1.41421356237310)
+#endif
+
 #ifndef M_SQRT3
 #define M_SQRT3 (1.73205080756888)
 #endif

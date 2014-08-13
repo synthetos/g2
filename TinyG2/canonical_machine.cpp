@@ -361,7 +361,7 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
 void cm_finalize_move() {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 
-	// if in ivnerse time mode reset feed rate so next block requires an explicit feed rate setting
+	// if in inverse time mode reset feed rate so next block requires an explicit feed rate setting
 	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
 		cm.gm.feed_rate = 0;
 	}
@@ -1221,7 +1221,8 @@ stat_t cm_feedhold_sequencing_callback()
 	}
 	if (cm.queue_flush_requested == true) {
 		if (((cm.motion_state == MOTION_STOP) ||
-			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) && !cm_get_runtime_busy()) {
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
+			 !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
 			cm_queue_flush();
 		}
@@ -1675,26 +1676,6 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
 	set_ui8(nv);
 	return(STAT_OK);
 }
-
-/*
- * cm_set_jrk()	- set jerk value
- *
- *	Jerk values can be rather large, often in the billions. This makes for some pretty big
- *	numbers for people to deal with. Jerk values are stored in the system in truncated format;
- *	values are divided by 1,000,000 then reconstituted before use.
- *
- *	cm_set_jrk() will accept either truncated or untrunctated jerk numbers as input. If the
- *	number is > 1,000,000 it is divided by 1,000,000 before storing. Numbers are accepted in
- *	either millimeter or inch mode and converted to millimeter mode.
- */
-/*
-stat_t cm_set_jrk(nvObj_t *nv)
-{
-	if (nv->value > 1000000) nv->value /= 1000000;
-	set_flu(nv);
-	return(STAT_OK);
-}
-*/
 
 /**** Jerk functions
  * cm_get_axis_jerk() - returns jerk for an axis

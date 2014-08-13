@@ -519,6 +519,8 @@ uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(uint8_t motion_state);
+float cm_get_axis_jerk(uint8_t axis);
+void cm_set_axis_jerk(uint8_t axis, float jerk);
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state);
 uint8_t cm_get_motion_mode(GCodeState_t *gcode_state);
@@ -690,13 +692,8 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
-stat_t cm_set_xjm(nvObj_t *nv);			// set max jerk with 1,000,000 correction
-stat_t cm_set_xjh(nvObj_t *nv);			// set homing jerk with 1,000,000 correction
-
-// Yeah, M_Pi is nonstandard:
-#ifndef M_PI
-    static const float M_PI = 3.14159265358979323846264338327950288;   /* pi             */
-#endif
+stat_t cm_set_xjm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
+stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
 /*--- text_mode support functions ---*/
 
