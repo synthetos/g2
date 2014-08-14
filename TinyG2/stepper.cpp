@@ -48,7 +48,9 @@ static stRunSingleton_t st_run;
 
 static void _load_move(void);
 static void _request_load_move(void);
+#ifdef __ARM
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
+#endif
 
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
@@ -1007,7 +1009,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 void st_prep_null()
 {
 	st_pre.move_type = MOVE_TYPE_NULL;
-//	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;	// signal that prep buffer is empty
 }
 

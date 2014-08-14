@@ -278,9 +278,6 @@ enum cmMotorPowerMode {
 #define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // scale power level setting for voltage range
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
-//#define POWER_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
-//#define POWER_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
-// Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
 #define MOTOR_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
 #define MOTOR_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
@@ -383,7 +380,7 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-	int32_t substep_increment;			// total steps in axis times substep factor
+	uint32_t substep_increment;			// total steps in axis times substep factor
 
 	// direction and direction change
 	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
@@ -406,14 +403,11 @@ typedef struct stPrepSingleton {
 	volatile uint8_t buffer_state;		// prep buffer state - owned by exec or loader
 	struct mpBuffer *bf;				// static pointer to relevant buffer
 	uint8_t move_type;					// move type
-//	volatile uint8_t segment_ready;		// flag indicating the next segment is ready for loading
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
-//	float dda_ticks_dither;				// dithering value to correct DDA ticks integer roundoff errors 
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
-
 	uint16_t magic_end;
 } stPrepSingleton_t;
 
@@ -425,12 +419,9 @@ extern stPrepSingleton_t st_pre;		// only used by config_app diagnostics
 void stepper_init(void);
 void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
-//uint8_t stepper_isbusy(void);
 
 uint8_t st_runtime_isbusy(void);
 void st_reset(void);
-//void st_cycle_start(void);
-//void st_cycle_end(void);
 stat_t st_clc(nvObj_t *nv);
 
 void st_energize_motors(void);
@@ -439,7 +430,6 @@ void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
 void st_request_exec_move(void);
-//void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);		// use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
