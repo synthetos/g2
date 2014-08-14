@@ -49,9 +49,8 @@ using Motate::SysTickTimer;
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
 
-#define clear_vector(a) memset(a,0,sizeof(a))
-#define	copy_vector(d,s) memcpy(d,s,sizeof(d))
-//void copy_vector(float dst[], const float src[]);
+#define clear_vector(a) (memset(a,0,sizeof(a)))
+#define	copy_vector(d,s) (memcpy(d,s,sizeof(d)))
 
 float get_axis_vector_length(const float a[], const float b[]);
 uint8_t vector_equal(const float a[], const float b[]);
