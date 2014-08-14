@@ -116,9 +116,9 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// compute arc runtime values and prep for execution by the callback
 	ritorno(_compute_arc());
-//	ritorno(_test_arc_soft_limits());					// test if arc will trip soft limits
-	cm_cycle_start();									// if not already started
-	arc.run_state = MOVE_RUN;							// enable arc to be run from the callback
+//	ritorno(_test_arc_soft_limits());		// test if arc will trip soft limits
+	cm_cycle_start();						// if not already started
+	arc.run_state = MOVE_RUN;				// enable arc to be run from the callback
 	cm_finalize_move();
 	return (STAT_OK);
 }

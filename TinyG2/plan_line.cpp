@@ -35,10 +35,6 @@
 #include "report.h"
 #include "util.h"
 
-//#ifdef __cplusplus
-//extern "C"{
-//#endif
-
 // aline planner routines / feedhold planning
 static void _calc_move_times(GCodeState_t *gms, const float position[]);
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
@@ -747,8 +743,3 @@ stat_t mp_end_hold()
 	}
 	return (STAT_OK);
 }
-/*
-#ifdef __cplusplus
-}
-#endif
-*/

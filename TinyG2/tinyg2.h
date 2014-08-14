@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		057.01 // cross-porting from 442.06; changed systick timer calls for compatibility wityh C code
+#define TINYG_FIRMWARE_BUILD   		058.01 // cross-porting from 442.07; various files and settgings files
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility

@@ -27,6 +27,8 @@
 #include "tinyg2.h"
 #include "persistence.h"
 #include "canonical_machine.h"
+#include "report.h"
+//#include "util.h"
 
 #ifdef __AVR
 #include "xmega/xmega_eeprom.h"
@@ -56,9 +58,8 @@ void persistence_init()
 	return;
 }
 
-/************************************************************************************
+/*
  * read_persistent_value()	- return value (as float) by index
- * write_persistent_value() - write to NVM by index, but only if the value has changed
  *
  *	It's the responsibility of the caller to make sure the index does not exceed range
  */
@@ -82,20 +83,27 @@ stat_t read_persistent_value(nvObj_t *nv)
 }
 #endif // __ARM
 
+/*
+ * write_persistent_value() - write to NVM by index, but only if the value has changed
+ *
+ *	It's the responsibility of the caller to make sure the index does not exceed range
+ *	Note: Removed NAN and INF checks on floats - not needed
+ */
+
 #ifdef __AVR
 stat_t write_persistent_value(nvObj_t *nv)
 {
-	if (cm.cycle_state != CYCLE_OFF)
-		return (STAT_FILE_NOT_OPEN);	// can't write when machine is moving
-
+	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN));	// can't write when machine is moving
 	float tmp_value = nv->value;
 	ritorno(read_persistent_value(nv));
-	if (nv->value != tmp_value) {		// catches the isnan() case as well
+	if (fp_NE(nv->value, tmp_value)) {
 		nv->value = tmp_value;
 		int8_t nvm_byte_array[NVM_VALUE_LEN];
 		memcpy(&nvm_byte_array, &tmp_value, NVM_VALUE_LEN);
 		uint16_t nvm_address = nvm.nvm_profile_base + (nv->index * NVM_VALUE_LEN);
 		(void)EEPROM_WriteBytes(nvm_address, nvm_byte_array, NVM_VALUE_LEN);
+	} else {
+		nv->value = tmp_value;		// restore value in case the NVM was a NAN
 	}
 	return (STAT_OK);
 }
@@ -104,6 +112,7 @@ stat_t write_persistent_value(nvObj_t *nv)
 #ifdef __ARM
 stat_t write_persistent_value(nvObj_t *nv)
 {
+	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN));	// can't write when machine is moving
 	return (STAT_OK);
 }
 #endif // __ARM

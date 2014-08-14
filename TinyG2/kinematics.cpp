@@ -48,6 +48,7 @@ static void _inverse_kinematics(const float travel[], float joint[]);
 void ik_kinematics(const float travel[], float steps[])
 {
 	float joint[AXES];
+
 	_inverse_kinematics(travel, joint);				// insert inverse kinematics transformations here
 
 	// Map motors to axes and convert length units to steps
