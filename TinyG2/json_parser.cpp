@@ -45,6 +45,8 @@ static stat_t _json_parser_kernal(char_t *str);
 //static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth);
 static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth);
 static stat_t _normalize_json_string(char_t *str, uint16_t size);
+//static stat_t _footer_style_1(nvObj_t *nv, stat_t status);
+//static stat_t _footer_style_2(nvObj_t *nv, stat_t status);
 
 /****************************************************************************
  * json_parser() - exposed part of JSON parser
