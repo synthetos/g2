@@ -243,15 +243,10 @@ stat_t sr_set_status_report(nvObj_t *nv)
  */
 stat_t sr_request_status_report(uint8_t request_type)
 {
+	// +++ Might require making the FULL requests be sticky, and override previous non-FULL requests
 	if (sr.status_report_request != SR_OFF) return (STAT_OK); // ignore multiple requests. First one wins.
 
-#ifdef __AVR
 	sr.status_report_systick = SysTickTimer_getValue();
-#endif
-#ifdef __ARM
-	sr.status_report_systick = SysTickTimer.getValue();
-#endif
-
 	if (request_type == SR_REQUEST_IMMEDIATE) {
 		sr.status_report_request = SR_FILTERED;		// will trigger a filtered or verbose report depending on verbosity setting
 
@@ -280,12 +275,7 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
 	if (sr.status_report_request == SR_OFF) return (STAT_NOOP);
 
-#ifdef __ARM
-	if (SysTickTimer.getValue() < sr.status_report_systick) return (STAT_NOOP);
-#endif
-#ifdef __AVR
 	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
-#endif
 
 	if (sr.status_report_request == SR_VERBOSE) {
 		_populate_unfiltered_status_report();
@@ -449,7 +439,7 @@ void qr_init_queue_report()
 	qr.queue_report_requested = false;
 	qr.buffers_added = 0;
 	qr.buffers_removed = 0;
-	qr.init_tick = SysTickTimer_getValue();		// C mapping of SysTickTimer.getValue();
+	qr.init_tick = SysTickTimer_getValue();		// Uses C mapping of SysTickTimer.getValue();
 }
 
 /*

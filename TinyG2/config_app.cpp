@@ -920,11 +920,7 @@ static stat_t get_wr(nvObj_t *nv)
 
 static stat_t get_tick(nvObj_t *nv)
 {
-#ifdef __AVR
 	nv->value = (float)SysTickTimer_getValue();
-#else
-	nv->value = (float)SysTickTimer.getValue();
-#endif
 	nv->valuetype = TYPE_INTEGER;
 	return (STAT_OK);
 }
