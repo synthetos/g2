@@ -415,9 +415,12 @@ namespace Motate {
                     uint8_t _old_line_state = _line_state;
                     _line_state = setup.valueLow();
 
-                    // If the RTS changed, call connectionStateChanged (if it's defined)
-                    if (connection_state_changed_callback && ((_old_line_state & (0x01 << 1)) != (_line_state & (0x01 << 1)))) {
-                        connection_state_changed_callback(_line_state & (0x01 << 1));
+                    // TODO -- make this a global enum type:
+                    static const uint8_t DTR_MASK = (0x01 << 0);
+
+                    // If the DTR changed, call connectionStateChanged (if it's defined)
+                    if (connection_state_changed_callback && ((_old_line_state & DTR_MASK) != (_line_state & DTR_MASK))) {
+                        connection_state_changed_callback(_line_state & DTR_MASK);
                     }
 
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
