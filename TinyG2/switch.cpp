@@ -76,7 +76,7 @@ static void _no_action(switch_t *s) { return; }
 
 void switch_init(void)
 {
-	sw.type = SWITCH_TYPE;				// set from config
+	//sw.type = SWITCH_TYPE;				// set from config
 
 	switch_t *s;	// shorthand
 
