@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		061.01 // Testing
+#define TINYG_FIRMWARE_BUILD   		061.02 // commit for test. Change __DUAL_USB on line 212 of controller.cpp to old and new styles
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility

@@ -139,6 +139,8 @@ int read_char (void);
 char_t *readline(devflags_t &flags, uint16_t &size);
 size_t writeline(uint8_t *buffer, size_t size);
 
+stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
+
 stat_t xio_set_spi(nvObj_t *nv);
 
 /* Some useful ASCII definitions */

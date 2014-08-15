@@ -66,9 +66,14 @@ typedef struct controllerSingleton {	// main TG controller struct
 	int32_t job_id[4];					// uuid to identify the job
 
 	// controller serial buffers
+
+	uint8_t state_usb0;
+	uint8_t state_usb1;
+	uint16_t read_index;
+	char_t in_buf[INPUT_BUFFER_LEN];	// primary input buffer
+
 	char_t *bufp;						// pointer to input buffer
 	uint16_t linelen;					// length of current line
-//	char_t in_buf[INPUT_BUFFER_LEN];	// primary input buffer
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
 	magic_t magic_end;

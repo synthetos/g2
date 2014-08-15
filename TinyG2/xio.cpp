@@ -344,6 +344,25 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 	return (NULL);
 }
 
+
+stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
+{
+	if (*index >= size) { return (STAT_FILE_SIZE_EXCEEDED);}
+
+	for (int c; *index < size; (*index)++ ) {
+		if ((c = read_char(0)) != _FDEV_ERR) {
+			buffer[*index] = (uint8_t)c;
+			if ((c == LF) || (c == CR)) {
+				buffer[*index] = NUL;
+				return (STAT_OK);
+			}
+			continue;
+		}
+		return (STAT_EAGAIN);
+	}
+	return (STAT_BUFFER_FULL);
+}
+
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table
