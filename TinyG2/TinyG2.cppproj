@@ -5,7 +5,7 @@
     <ProjectVersion>6.2</ProjectVersion>
     <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
     <ProjectGuid>{44ea8fec-55d7-4149-8a78-a574fc26bf51}</ProjectGuid>
-    <avrdevice>ATSAM3X8C</avrdevice>
+    <avrdevice>ATSAM3X8E</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
     <Language>CPP</Language>
@@ -22,18 +22,18 @@
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>SWD</avrtoolinterface>
-    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
+    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
-      <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028016452</ToolNumber>
+      <ToolName>J-Link</ToolName>
+      <ToolNumber>58003445</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
         <port>1063</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
-        <InterfaceName>JTAG</InterfaceName>
+        <InterfaceName>SWD</InterfaceName>
         <InterfaceProperties>
           <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
@@ -44,6 +44,7 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
+          <SwdClock>12000000</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -569,6 +570,14 @@
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9i\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'shopbotShield' ">
+    <OutputPath>bin\shopbotShield\</OutputPath>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=shopbotShield MKDIR=gmkdir</BuildTarget>
+    <CleanTarget>clean PLATFORM=shopbotShield MKDIR=gmkdir</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
       <SubType>compile</SubType>
@@ -868,6 +877,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\due\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\due\shopbotShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9d-pinout.h">
@@ -1255,18 +1267,6 @@
       <SubType>compile</SubType>
     </None>
     <None Include="cmsis\linkerScripts\sam3x8e_sram.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="cmsis\linkerScripts\sam3x8_flash.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="cmsis\linkerScripts\sam3x8_sram.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="cmsis\linkerScripts\sam3x_flash.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="cmsis\linkerScripts\sam3x_sram.ld">
       <SubType>compile</SubType>
     </None>
     <None Include="Makefile">
