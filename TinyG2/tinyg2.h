@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		060.01 // cross-porting from 442.09; text parser and finish up
+#define TINYG_FIRMWARE_BUILD   		061.01 // Testing
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
