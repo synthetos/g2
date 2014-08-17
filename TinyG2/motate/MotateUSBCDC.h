@@ -804,7 +804,7 @@ namespace Motate {
         const USBDescriptorEndpoint_t CDC_DataOutEndpoint;
         const USBDescriptorEndpoint_t CDC_DataInEndpoint;
         
-        USBConfigMixinMultiple_t (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _deviceSpeed, const bool _other_speed)
+        USBConfigMixinMultiple_t (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _deviceSpeed, const bool _other_speed, const bool _limited_size = false)
         : CDC_IAD (
                    /* _FirstInterfaceIndex = */ _first_interface_number,
                    /* _TotalInterfaces     = */ 2,
@@ -854,7 +854,8 @@ namespace Motate {
                             /* _input             = */ false,
                             /* _EndpointAddress   = */ _first_endpoint_number+1,
                             /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-                            /* _PollingIntervalMS = */ 0x01
+                            /* _PollingIntervalMS = */ 0x01,
+                            /* _limited_size      = */ _limited_size
                             ),
         CDC_DataInEndpoint(
                            /* _deviceSpeed       = */ _deviceSpeed,
@@ -862,7 +863,8 @@ namespace Motate {
                            /* _input             = */ true,
                            /* _EndpointAddress   = */ _first_endpoint_number+2,
                            /* _Attributes        = */ (kEndpointTypeBulk | kEndpointAttrNoSync | kEndpointUsageData),
-                           /* _PollingIntervalMS = */ 0x01
+                           /* _PollingIntervalMS = */ 0x01,
+                           /* _limited_size      = */ _limited_size
                            )
         {};
         
@@ -894,20 +896,18 @@ namespace Motate {
     };
     
     // CDC is the first and second interface...
-    //	 template < typename usbIFC >
-    //	 struct USBConfigMixin < USBCDC, USBCDC, usbIFC, 0> : USBConfigMixinMultiple_t {
-    //		 USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const bool _other_speed) :
-    //		 USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _other_speed)
-    //		{};
-    //	 };
-    // // CDC is the second and third interface...
-    // template < typename usbIFA >
-    // struct USBConfigMixin < usbIFA, USBCDC, USBCDC > : USBConfigMixinMultiple_t {
-    // 	USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number) :
-    // 	USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number)
-    // 	{};
-    // };
-    
+    template < typename usbIFC >
+    struct USBConfigMixin < USBCDC, USBCDC, usbIFC, 0> : USBConfigMixinMultiple_t {
+        USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _deviceSpeed, const bool _other_speed) :
+        USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _deviceSpeed, _other_speed, /*_limited_size*/ true)
+		{};
+    };
+    template < typename usbIFC >
+    struct USBConfigMixin < USBCDC, USBCDC, usbIFC, 1> : USBConfigMixinMultiple_t {
+        USBConfigMixin(const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _deviceSpeed, const bool _other_speed) :
+        USBConfigMixinMultiple_t(_first_endpoint_number, _first_interface_number, _deviceSpeed, _other_speed, /*_limited_size*/ true)
+		{};
+    };
 }
 
 #endif
