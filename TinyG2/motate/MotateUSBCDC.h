@@ -457,15 +457,15 @@ namespace Motate {
             }
             else if (endpoint == read_endpoint)
             {
-                uint16_t ep_size = Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize ? 128 : 512);
+                uint16_t ep_size = Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize);
                 const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(ep_size);
-                return kEndpointBufferOutputFromHost | _buffer_size | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+                return kEndpointBufferOutputFromHost | _buffer_size | kEndpointBufferBlocks1 | kEndpointBufferTypeBulk;
             }
             else if (endpoint == write_endpoint)
             {
-                uint16_t ep_size = Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize ? 128 : 512);
+                uint16_t ep_size = Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize);
                 const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(ep_size);
-                return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocksUpTo2 | kEndpointBufferTypeBulk;
+                return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocks1 | kEndpointBufferTypeBulk;
             }
             return kEndpointBufferNull;
         };
@@ -473,15 +473,15 @@ namespace Motate {
         uint16_t getEndpointSize(const uint8_t &endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) {
             if (endpoint == control_endpoint)
             {
-                return Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed, limitedSize ? 128 : 512);
+                return Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed, limitedSize);
             }
             else if (endpoint == read_endpoint)
             {
-                return Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize ? 128 : 512);
+                return Motate::getEndpointSize(read_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize);
             }
             else if (endpoint == write_endpoint)
             {
-                return Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize ? 128 : 512);
+                return Motate::getEndpointSize(write_endpoint, kEndpointTypeBulk, deviceSpeed, otherSpeed, limitedSize);
             }
             return 0;
         };

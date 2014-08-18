@@ -614,7 +614,7 @@ namespace Motate {
         if (otherSpeed) {
             suggestedSize = 64;
         } else if (limitedSize) {
-            suggestedSize = 128;
+            suggestedSize = 256;
         }
 
 		if (USBDeviceSpeed == kUSBDeviceHighSpeed) {

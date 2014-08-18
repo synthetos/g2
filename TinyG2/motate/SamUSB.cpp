@@ -398,76 +398,83 @@ namespace Motate {
 		// We use a while in the case where the last read emptied the buffer.
 		// If we get a character we just return right out.
 		while (_isFIFOControlAvailable(endpoint)) {
-			if (!_isReadWriteAllowed(endpoint)) {
-				// We cheat and lazily clear the RXOUT interrupt.
-				// Once we might actually use that interrupt, we might need to be more proactive.
+            // If we have a fresh buffer, RXOUTI will be set
+			if (_isReceiveOUTAvailable(endpoint)) {
+                // CLear it
 				_clearReceiveOUT(endpoint);
 
-				// Clearing FIFOCon will also mark this bank as "read".
-				_clearFIFOControl(endpoint);
-				_resetEndpointBuffer(endpoint);
+                // Reset the buffer pointer
+//				_resetEndpointBuffer(endpoint);
 
-				// FOFCon will either be low now
-				// -OR- will be high again if there's another bank of data available.
-				continue;
-			}
+                // RWALL goes to 0 when we have read all of the data
+			} else if (!_isReadWriteAllowed(endpoint)) {
 
-			return *_endpointBuffer[endpoint]++;
+                // Clearing FIFOCon will mark this bank as "read".
+                _clearFIFOControl(endpoint);
+
+                // We'll restart the loop to test if FIFOCon and RxOUTIC
+                // indicates we switched banks.
+                continue;
+            }
+
+			int16_t ret = *_endpointBuffer[endpoint]++;
+
+            return ret;
 		}
 		return -1;
 	}
 
-	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t length) {
-		//		_resetEndpointBuffer(endpoint);
-		uint8_t *ptr_dest = data;
-		int16_t read = 0;
-
-		// Available = -1 means that FIFOCONtrol might not be high.
-		// It should only be >= 0 once we've proven that it is.
-		int16_t available = -1;
-
-		while (length > 0 && _isFIFOControlAvailable(endpoint)) {
-			available = _getEndpointBufferCount(endpoint);
-
-			if (!available) {
-				// We cheat and lazily clear the RXOUT interrupt.
-				// Once we might actually use that interru;t, we might need to be more proactive.
-				_clearReceiveOUT(endpoint);
-
-				// Clearing FIFOCon will also mark this bank as "read".
-				_clearFIFOControl(endpoint);
-				_resetEndpointBuffer(endpoint);
-
-				// FOFCon will either be low now
-				// -OR- will be high again if there's another bank of data available.
-				// If it stays low, we ned to make sure we don't reset it again when we test available before returning.
-				// BECAUSE we don't have interrupts off, and it could, possibly, go high again before then.
-				// In that case, we would be flushing a full buffer.
-				available = -1;
-				continue;
-			}
-
-			int16_t to_read = available < length ? available : length;
-			int16_t i = to_read;
-
-			while (i--) {
-				*ptr_dest++ = *_endpointBuffer[endpoint]++;
-			}
-			available -= to_read;
-			length -= to_read;
-			read += to_read;
-		}
-
-		// If available is negative, we don't want to flush.
-		if (!available) {
-			// Flush. See notes at the top of the function.
-			_clearReceiveOUT(endpoint);
-			_clearFIFOControl(endpoint);
-			_resetEndpointBuffer(endpoint);
-		}
-
-		return read;
-	}
+//	int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t length) {
+//		//		_resetEndpointBuffer(endpoint);
+//		uint8_t *ptr_dest = data;
+//		int16_t read = 0;
+//
+//		// Available = -1 means that FIFOCONtrol might not be high.
+//		// It should only be >= 0 once we've proven that it is.
+//		int16_t available = -1;
+//
+//		while (length > 0 && _isFIFOControlAvailable(endpoint)) {
+//			available = _getEndpointBufferCount(endpoint);
+//
+//			if (!available) {
+//				// We cheat and lazily clear the RXOUT interrupt.
+//				// Once we might actually use that interru;t, we might need to be more proactive.
+//				_clearReceiveOUT(endpoint);
+//
+//				// Clearing FIFOCon will also mark this bank as "read".
+//				_clearFIFOControl(endpoint);
+//				_resetEndpointBuffer(endpoint);
+//
+//				// FOFCon will either be low now
+//				// -OR- will be high again if there's another bank of data available.
+//				// If it stays low, we ned to make sure we don't reset it again when we test available before returning.
+//				// BECAUSE we don't have interrupts off, and it could, possibly, go high again before then.
+//				// In that case, we would be flushing a full buffer.
+//				available = -1;
+//				continue;
+//			}
+//
+//			int16_t to_read = available < length ? available : length;
+//			int16_t i = to_read;
+//
+//			while (i--) {
+//				*ptr_dest++ = *_endpointBuffer[endpoint]++;
+//			}
+//			available -= to_read;
+//			length -= to_read;
+//			read += to_read;
+//		}
+//
+//		// If available is negative, we don't want to flush.
+//		if (!available) {
+//			// Flush. See notes at the top of the function.
+//			_clearReceiveOUT(endpoint);
+//			_clearFIFOControl(endpoint);
+//			_resetEndpointBuffer(endpoint);
+//		}
+//
+//		return read;
+//	}
 
 	// Flush an endpoint after sending data.
 	void _flushEndpoint(uint8_t endpoint) {
