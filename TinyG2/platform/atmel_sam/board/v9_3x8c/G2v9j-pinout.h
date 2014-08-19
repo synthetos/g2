@@ -234,14 +234,12 @@ namespace Motate {
 //    _MAKE_MOTATE_PIN(, B, 'B', 13);	//
 //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<1>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 //
-//
 //    _MAKE_MOTATE_PIN(, B, 'B', 27);	//
 //    _MAKE_MOTATE_PWM_PIN(, Motate::Timer<0>, /*Channel:*/ B, /*Peripheral:*/ B, /*Inverted:*/ false);
 //
 //    _MAKE_MOTATE_PIN(, A, 'A', 20);	//
 //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<2>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ false);
 //    
-//
 //    _MAKE_MOTATE_PIN(, B, 'B', 12);	// 
 //    _MAKE_MOTATE_PWM_PIN(, Motate::PWMTimer<0>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 //    
