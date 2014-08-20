@@ -63,7 +63,7 @@
 #define M1_STEP_ANGLE 			1.8						// 1sa
 #define M1_TRAVEL_PER_REV		40.64					// 1tr
 #define M1_MICROSTEPS			32						// 1mi		1,2,4,8
-#define M1_POLARITY				1						// 1po		0=normal, 1=reversed
+#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
 #define M1_POWER_LEVEL			0.45		// 1mp
 
@@ -71,7 +71,7 @@
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		40.64
 #define M2_MICROSTEPS			32
-#define M2_POLARITY				0
+#define M2_POLARITY				1
 #define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL			0.47
 
@@ -79,7 +79,7 @@
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			32
-#define M3_POLARITY				1
+#define M3_POLARITY				0
 #define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL			0.25
 
