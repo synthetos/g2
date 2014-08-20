@@ -404,7 +404,7 @@ namespace Motate {
 				_clearReceiveOUT(endpoint);
 
                 // Reset the buffer pointer
-//				_resetEndpointBuffer(endpoint);
+				_resetEndpointBuffer(endpoint);
 
                 // RWALL goes to 0 when we have read all of the data
 			} else if (!_isReadWriteAllowed(endpoint)) {
