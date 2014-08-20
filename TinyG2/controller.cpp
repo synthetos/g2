@@ -214,7 +214,7 @@ static stat_t _command_dispatch()
 	// detect USB connection and transition to disconnected state if it disconnected
 //	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
 
-#define __DUAL_USB 1
+//#define __DUAL_USB 1
 #ifdef __DUAL_USB
 	devflags_t device_flags = DEV_IS_BOTH;
 
