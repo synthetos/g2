@@ -28,8 +28,8 @@
  *
  */
 
-#ifndef G2v9f_pinout_h
-#define G2v9f_pinout_h
+#ifndef G2v9_pinout_h
+#define G2v9_pinout_h
 
 #include <MotatePins.h>
 

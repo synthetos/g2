@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		062.01 // Updated build number for USB changes; moved power management changes from G1 444.01
+#define TINYG_FIRMWARE_BUILD   		063.01 // adding J and K pin assignments - preliminary work
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
