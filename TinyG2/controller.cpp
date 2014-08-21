@@ -211,7 +211,6 @@ static stat_t _command_dispatch()
 
 #ifdef __ARM
 
-#define __DUAL_USB 1
 #ifdef __DUAL_USB
 	devflags_t device_flags = DEV_IS_BOTH;
 
