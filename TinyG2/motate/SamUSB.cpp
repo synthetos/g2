@@ -138,6 +138,8 @@ namespace Motate {
 		UOTGHS->UOTGHS_DEVEPT |= UOTGHS_DEVEPT_EPEN0 << (endpoint);
 	}
 
+	inline void _enableOverflowInterrupt(const uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIER[endpoint] = UOTGHS_DEVEPTIER_OVERFES; }
+
 	void _initEndpoint(uint32_t endpoint, const uint32_t configuration) {
 		endpoint = endpoint & 0xF; // EP range is 0..9, hence mask is 0xF.
 
@@ -147,6 +149,11 @@ namespace Motate {
 		// Configure EP
 		// If we get here, and it's a null endpoint, this will disable it.
 		_setEndpointConfiguration(endpoint, configuration_fixed);
+
+        // Enable overflow interrupt for OUT (Rx) endpoints
+        if (endpoint > 0 && (configuration & UOTGHS_DEVEPTCFG_EPDIR)==0) {
+            _enableOverflowInterrupt(endpoint);
+        }
 		
 		// Enable EP
 		if (configuration_fixed != kEndpointBufferNull) {
@@ -203,6 +210,21 @@ namespace Motate {
 	
 	// Endpoint interrupts, and subinterrupts (!)
 	inline bool _inAnEndpointInterrupt(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_0 << (endpoint)) != 0; }
+	inline bool _inAnEndpointInterruptNotControl() { return (UOTGHS->UOTGHS_DEVISR & (UOTGHS_DEVISR_PEP_1|UOTGHS_DEVISR_PEP_2|UOTGHS_DEVISR_PEP_3|UOTGHS_DEVISR_PEP_4|UOTGHS_DEVISR_PEP_5|UOTGHS_DEVISR_PEP_6|UOTGHS_DEVISR_PEP_7|UOTGHS_DEVISR_PEP_8|UOTGHS_DEVISR_PEP_9)) != 0; }
+    inline const uint8_t _firstEndpointOfInterrupt() {
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_1) { return 1; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_2) { return 2; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_3) { return 3; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_4) { return 4; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_5) { return 5; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_6) { return 6; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_7) { return 7; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_8) { return 8; }
+        if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_9) { return 9; }
+        return 0;
+    }
+
+	inline bool _inAnOverflowInterrupt(const uint8_t endpoint) { return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_OVERFI) != 0; }
 
     inline bool _isAControlEnpointInterrupted(const uint8_t endpoint, bool &keepGoing) {
         if (UOTGHS->UOTGHS_DEVISR & UOTGHS_DEVISR_PEP_0 << endpoint) {
@@ -330,8 +352,8 @@ namespace Motate {
 	// Acknowledges
 	inline void _ackReset() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_EORSTC; }
 	inline void _ackStartOfFrame() { UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_SOFC; }
-	inline void _ackOutRecieved(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_RXOUTIC; }
-	inline void _ackFIFOControl(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_FIFOCONC; }
+//	inline void _ackOutRecieved(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_RXOUTIC; }
+//	inline void _ackFIFOControl(uint8_t endpoint) { UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_FIFOCONC; }
 
 
 
@@ -397,7 +419,11 @@ namespace Motate {
 	int16_t _readByteFromEndpoint(const uint8_t endpoint) {
 		// We use a while in the case where the last read emptied the buffer.
 		// If we get a character we just return right out.
-		while (_isFIFOControlAvailable(endpoint)) {
+		if (_isFIFOControlAvailable(endpoint)) {
+            if (_getEndpointBufferCount(endpoint) == 0) {
+                _clearFIFOControl(endpoint);
+            }
+
             // If we have a fresh buffer, RXOUTI will be set
 			if (_isReceiveOUTAvailable(endpoint)) {
                 // CLear it
@@ -405,19 +431,15 @@ namespace Motate {
 
                 // Reset the buffer pointer
 				_resetEndpointBuffer(endpoint);
-
-                // RWALL goes to 0 when we have read all of the data
-			} else if (!_isReadWriteAllowed(endpoint)) {
-
-                // Clearing FIFOCon will mark this bank as "read".
-                _clearFIFOControl(endpoint);
-
-                // We'll restart the loop to test if FIFOCon and RxOUTIC
-                // indicates we switched banks.
-                continue;
-            }
+			}
 
 			int16_t ret = *_endpointBuffer[endpoint]++;
+
+            // RWALL goes to 0 when we have read all of the data
+            if (!_isReadWriteAllowed(endpoint)) {
+                // Clearing FIFOCon will mark this bank as "read".
+                _clearFIFOControl(endpoint);
+            }
 
             return ret;
 		}
@@ -572,7 +594,6 @@ namespace Motate {
 		}
 
 		// EP 0 Interrupt
-		// FIXME! Needs to handle *any* control endpoint.
 		if ( _inAnEndpointInterrupt(0) )
 		{
 			if ( !_inAReceivedSetupInterrupt(0) )
@@ -777,6 +798,17 @@ namespace Motate {
 			{
 				TRACE_CORE(puts(">>> EP0 Int: Stall\r\n");)
 				_requestStall(0);
+			}
+		}
+		// EP 0 Interrupt
+		// FIXME! Needs to handle *any* control endpoint.
+		else if ( _inAnEndpointInterruptNotControl() )
+		{
+			if ( _inAnOverflowInterrupt(_firstEndpointOfInterrupt()) )
+			{
+				while (1) {
+                    ;// TRAP it!
+                }
 			}
 		}
 	}
