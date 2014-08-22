@@ -135,6 +135,7 @@ extern switches_t sw;
  * Function prototypes
  */
 void switch_init(void);
+void switch_reset(void);
 stat_t poll_switches(void);
 uint8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);

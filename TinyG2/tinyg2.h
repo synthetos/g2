@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		065.01 // G2 Issue #26 - fixed cm_set_absolute_origin() to correct issue with G28.3 settings
+#define TINYG_FIRMWARE_BUILD   		066.01 // Added switch_reset() to switch code to preserve current switch type setting
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
