@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		064.01 // bumped build number for Rob's USB changes
+#define TINYG_FIRMWARE_BUILD   		065.01 // G2 Issue #26 - fixed cm_set_absolute_origin() to correct issue with G28.3 settings
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
