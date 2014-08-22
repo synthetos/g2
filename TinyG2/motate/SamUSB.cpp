@@ -419,30 +419,38 @@ namespace Motate {
 	int16_t _readByteFromEndpoint(const uint8_t endpoint) {
 		// We use a while in the case where the last read emptied the buffer.
 		// If we get a character we just return right out.
-		if (_isFIFOControlAvailable(endpoint)) {
-            if (_getEndpointBufferCount(endpoint) == 0) {
-                _clearFIFOControl(endpoint);
-            }
-
-            // If we have a fresh buffer, RXOUTI will be set
-			if (_isReceiveOUTAvailable(endpoint)) {
-                // CLear it
-				_clearReceiveOUT(endpoint);
-
-                // Reset the buffer pointer
-				_resetEndpointBuffer(endpoint);
-			}
+		if (_getEndpointBufferCount(endpoint) > 0) {
+//            if (_getEndpointBufferCount(endpoint) == 0) {
+//				_clearReceiveOUT(endpoint);
+//                _clearFIFOControl(endpoint);
+//				_resetEndpointBuffer(endpoint);
+//            }
+//
+//            // If we have a fresh buffer, RXOUTI will be set
+//			if (_isReceiveOUTAvailable(endpoint)) {
+//                // Clear it
+//				_clearReceiveOUT(endpoint);
+//
+//                // Reset the buffer pointer
+//				_resetEndpointBuffer(endpoint);
+//			}
 
 			int16_t ret = *_endpointBuffer[endpoint]++;
-
-            // RWALL goes to 0 when we have read all of the data
-            if (!_isReadWriteAllowed(endpoint)) {
-                // Clearing FIFOCon will mark this bank as "read".
-                _clearFIFOControl(endpoint);
-            }
+//
+//            // RWALL goes to 0 when we have read all of the data
+//            if (_getEndpointBufferCount(endpoint) == 0) {
+//				_clearReceiveOUT(endpoint);
+//                // Clearing FIFOCon will mark this bank as "read".
+//                _clearFIFOControl(endpoint);
+//				_resetEndpointBuffer(endpoint);
+//            }
 
             return ret;
-		}
+		} else {
+            _clearReceiveOUT(endpoint);
+            _clearFIFOControl(endpoint);
+            _resetEndpointBuffer(endpoint);
+        }
 		return -1;
 	}
 
