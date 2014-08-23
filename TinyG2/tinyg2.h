@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		067.01 // Ported homing fix from G1 445.01
+#define TINYG_FIRMWARE_BUILD   		068.01 // Added switch reader group - $ss, $ss0 - $ss7; fixed $st display bug
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

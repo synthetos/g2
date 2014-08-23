@@ -442,41 +442,41 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cs.job_id[3], 0},
 
 	// System parameters
-	{ "sys","ja",  _fipnc,0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
-	{ "sys","ct",  _fipnc,4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
-	{ "sys","sl",  _fipn, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,	SOFT_LIMIT_ENABLE },
-	{ "sys","st",  _fipn, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.type,				SWITCH_TYPE },
-	{ "sys","mt",  _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
-	{ "",   "me",  _f0,   0, tx_print_str, st_set_me, st_set_me,  (float *)&cs.null, 0 },
-	{ "",   "md",  _f0,   0, tx_print_str, st_set_md, st_set_md,  (float *)&cs.null, 0 },
+	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
+	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
+	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,	SOFT_LIMIT_ENABLE },
+	{ "sys","st", _fipn, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.type,				SWITCH_TYPE },
+	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
+	{ "",   "me", _f0,   0, tx_print_str, st_set_me, st_set_me,  (float *)&cs.null, 0 },
+	{ "",   "md", _f0,   0, tx_print_str, st_set_md, st_set_md,  (float *)&cs.null, 0 },
 
-	{ "sys","ej",  _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cfg.comm_mode,			COMM_MODE },
-	{ "sys","jv",  _fipn, 0, js_print_jv,  get_ui8,   json_set_jv,(float *)&js.json_verbosity,		JSON_VERBOSITY },
-	{ "sys","js",  _fipn, 0, js_print_js,  get_ui8,   set_01,     (float *)&js.json_syntax, 		JSON_SYNTAX_MODE },
-	{ "sys","jf",  _fipn, 0, js_print_jf,  get_ui8,   set_ui8,    (float *)&js.json_footer_style, 	JSON_FOOTER_STYLE },
-	{ "sys","tv",  _fipn, 0, tx_print_tv,  get_ui8,   set_01,     (float *)&txt.text_verbosity,		TEXT_VERBOSITY },
-	{ "sys","qv",  _fipn, 0, qr_print_qv,  get_ui8,   set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
-	{ "sys","sv",  _fipn, 0, sr_print_sv,  get_ui8,   set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
-	{ "sys","si",  _fipn, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
-//7	{ "sys","spi", _fipn, 0, xio_print_spi,get_ui8,   xio_set_spi,(float *)&xio.spi_state,			0 },
+	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cfg.comm_mode,			COMM_MODE },
+	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8,   json_set_jv,(float *)&js.json_verbosity,		JSON_VERBOSITY },
+	{ "sys","js", _fipn, 0, js_print_js,  get_ui8,   set_01,     (float *)&js.json_syntax, 		JSON_SYNTAX_MODE },
+	{ "sys","jf", _fipn, 0, js_print_jf,  get_ui8,   set_ui8,    (float *)&js.json_footer_style, 	JSON_FOOTER_STYLE },
+	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8,   set_01,     (float *)&txt.text_verbosity,		TEXT_VERBOSITY },
+	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8,   set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
+	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8,   set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
+	{ "sys","si", _fipn, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
+//	{ "sys","spi",_fipn, 0, xio_print_spi,get_ui8,   xio_set_spi,(float *)&xio.spi_state,			0 },
 
-//	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },
-//	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
-//	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
+//	{ "sys","ec", _fipn, 0, cfg_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },
+//	{ "sys","ee", _fipn, 0, cfg_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
+//	{ "sys","ex", _fipn, 0, cfg_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
 //	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,   set_baud,   (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 //	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,		NETWORK_MODE },
 
 	// switch state readers
-/*
-	{ "ss","ss0",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[0], 0 },
-	{ "ss","ss1",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[1], 0 },
-	{ "ss","ss2",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[2], 0 },
-	{ "ss","ss3",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[3], 0 },
-	{ "ss","ss4",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[4], 0 },
-	{ "ss","ss5",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[5], 0 },
-	{ "ss","ss6",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[6], 0 },
-	{ "ss","ss7",  _f0, 0, print_ss, get_ui8, set_nul, (float *)&sw.state[7], 0 },
-*/
+
+	{ "ss","ss0", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss1", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss2", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss3", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss4", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss5", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss6", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+	{ "ss","ss7", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+
 	// NOTE: The ordering within the gcode defaults is important for token resolution
 	{ "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.select_plane,	GCODE_DEFAULT_PLANE },
 	{ "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.units_mode,	GCODE_DEFAULT_UNITS },
@@ -637,7 +637,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","b",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","c",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 
-//	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
+	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
 	{ "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g56",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -683,7 +683,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		32		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
@@ -750,6 +750,19 @@ void preprocess_float(nvObj_t *nv)
 			nv->value *= INCHES_PER_MM;
 		}
 	}
+}
+
+/*
+ * nv_group_is_prefixed() - hack
+ *
+ *	This little function deals with the exception cases that some groups don't use
+ *	the parent token as a prefix to the child elements; SR being a good example.
+ */
+uint8_t nv_group_is_prefixed(char_t *group)
+{
+	if (strcmp("sr",group) == 0) return (false);
+	if (strcmp("sys",group) == 0) return (false);
+	return (true);
 }
 
 /**** TinyG UberGroup Operations ****************************************************

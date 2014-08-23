@@ -112,7 +112,7 @@ typedef struct swSwitch {						// one struct per switch
 	// public
 	uint8_t type;								// swType: 0=NO, 1=NC
 	uint8_t mode;								// 0=disabled, 1=homing, 2=limit, 3=homing+limit
-	uint8_t state;								// set true if switch is closed
+	int8_t state;								// 0=open, 1=closed, -1=disabled
 
 	// private
 	uint8_t edge;								// keeps a transient record of edges for immediate inquiry
@@ -137,16 +137,18 @@ extern switches_t sw;
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);
-uint8_t poll_switch(switch_t *s, uint8_t pin_value);
+int8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);
 uint8_t get_switch_type(uint8_t axis, uint8_t position);
-uint8_t read_switch(uint8_t axis, uint8_t position);
+int8_t read_switch(uint8_t axis, uint8_t position);
 
 /*
  * Switch config accessors and text functions
  */
 stat_t sw_set_st(nvObj_t *nv);
 stat_t sw_set_sw(nvObj_t *nv);
+stat_t sw_get_ss(nvObj_t *nv);
+void sw_print_ss(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 	void sw_print_st(nvObj_t *nv);

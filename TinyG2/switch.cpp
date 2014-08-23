@@ -156,15 +156,21 @@ stat_t poll_switches()
 /*
  * poll_switch() - read switch with NO/NC, debouncing and edge detection
  *
- *	Returns true if switch state changed - e.g. leading or falling edge detected
- *	Assumes pin_value input = 1 means open, 0 is closed. Pin sense is adjusted to mean:
+ *	Returns true if switch state changed - e.g. leading or falling edge detected.
+ *	Assumes pin_value **input** = 1 means open, 0 is closed.
+ *	Pin sense is adjusted to mean:
+ *
  *	  0 = open for both NO and NC switches
  *	  1 = closed for both NO and NC switches
+ *	 -1 = switch disabled
+ *
+ *	Also sets disabled switches to switch state -1;
  */
-uint8_t poll_switch(switch_t *s, uint8_t pin_value)
+int8_t poll_switch(switch_t *s, uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
 	if (s->mode == SW_MODE_DISABLED) {
+		s->state = SW_DISABLED;
 		return (false);
 	}
 	if (s->debounce_timeout > SysTickTimer.getValue()) {
@@ -231,13 +237,12 @@ uint8_t get_switch_type(uint8_t axis, uint8_t position)
  * read_switch() - read switch state from the switch structure
  *				   NOTE: This does NOT read the pin itself. See poll_switch
  */
-uint8_t read_switch(uint8_t axis, uint8_t position)
+int8_t read_switch(uint8_t axis, uint8_t position)
 {
 //	if (axis >= AXES) return (SW_DISABLED);
 //	if (axis > SW_MAX) return (SW_DISABLED);
 	return (sw.s[axis][position].state);
 }
-
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
@@ -247,7 +252,6 @@ uint8_t read_switch(uint8_t axis, uint8_t position)
 
 stat_t sw_set_st(nvObj_t *nv)			// switch type (global)
 {
-//	if (nv->value > SW_MODE_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	set_01(nv);
 	switch_reset();
 	return (STAT_OK);
@@ -261,6 +265,25 @@ stat_t sw_set_sw(nvObj_t *nv)			// switch setting
 	return (STAT_OK);
 }
 
+/*
+ *  sw_get_ss() - get switch state
+ *
+ *	Switches map to:
+ *	  0 = Xmin, 1= Xmax
+ *	  2 = Ymin, 3= Ymax
+ *	  4 = Zmin, 5= Zmax
+ *	  6 = Amin, 7= Amax
+ */
+
+stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
+{
+	if (nv->value >= (SW_PAIRS * SW_POSITIONS)) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	uint8_t number = ((uint8_t)nv->token[0] & 0x0F);	// change from ASCII to a number 0-9 (A-F, too)
+	nv->value = (float) read_switch( number/2, number&0x01 );
+	nv->valuetype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -268,11 +291,11 @@ stat_t sw_set_sw(nvObj_t *nv)			// switch setting
 
 #ifdef __TEXT_MODE
 
-	static const char fmt_st[] PROGMEM = "[st]  switch type%18d [0=NO,1=NC]\n";
+	static const char fmt_st[] PROGMEM = "[st]  switch type%18.0f [0=NO,1=NC]\n";
 	void sw_print_st(nvObj_t *nv) { text_print_flt(nv, fmt_st);}
 
-//	static const char fmt_ss[] PROGMEM = "Switch %s state:     %d\n";
-//	void sw_print_ss(nvObj_t *nv) { fprintf(stderr, fmt_ss, nv->token, (uint8_t)nv->value);}
+	static const char fmt_ss[] PROGMEM = "Switch ss%s state:     %1.0f\n";
+	void sw_print_ss(nvObj_t *nv) { fprintf(stderr, fmt_ss, nv->token, nv->value);}
 
 /*
 	static const char msg_sw0[] PROGMEM = "Disabled";
