@@ -884,7 +884,8 @@ static void _load_move()
 
 	// null
 	} else {
-		printf("prep_null encountered\n");
+// We cannot printf from here!! Causes crashes.
+//		printf("prep_null encountered\n");
 	}
 
 	// all other cases drop to here (e.g. Null moves after Mcodes skip to here)
