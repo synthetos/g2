@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		066.01 // Added switch_reset() to switch code to preserve current switch type setting
+#define TINYG_FIRMWARE_BUILD   		067.01 // Ported homing fix from G1 445.01
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

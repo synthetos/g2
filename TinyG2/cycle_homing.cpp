@@ -382,6 +382,13 @@ static stat_t _homing_axis_search(int8_t axis)				// start the search
 
 static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 {
+/*	// Removed this code section because if a NO homing switch opens before the
+	// search deceleration is complete the switch will (correctly) be open.
+	// Therefore the homing cycle should continue -- ASH (build 445.01)
+	//
+	// Still need to figure out how to tell the difference between a rapid switch opening
+	// condition (above) and a user- initiated feedhold during a homing operation.
+
 	// verify assumption that we arrived here because of homing switch closure
 	// rather than user-initiated feedhold or other disruption
 #ifndef __NEW_SWITCHES
@@ -391,6 +398,7 @@ static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 	if (read_switch(hm.homing_switch_axis, hm.homing_switch_position) != SW_CLOSED)
 		return (_set_homing_func(_homing_abort));
 #endif
+*/
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
 	return (_set_homing_func(_homing_axis_zero_backoff));
 }
