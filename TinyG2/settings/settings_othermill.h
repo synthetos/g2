@@ -55,12 +55,14 @@
 #define INTERLOCK_SWITCH_POSITION       SW_MAX
 #define ESTOP_SWITCH_AXIS               AXIS_Y
 #define ESTOP_SWITCH_POSITION           SW_MAX
+#undef PAUSE_DWELL_TIME
+#define PAUSE_DWELL_TIME				1.5 //after unpausing and turning the spindle on, dwell for 1.5s
 
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan","ilck","estp"
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan","ilck","estp"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE

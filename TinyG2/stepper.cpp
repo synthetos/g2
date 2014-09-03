@@ -47,7 +47,6 @@ static stRunSingleton_t st_run;
 /**** Setup local functions ****/
 
 static void _load_move(void);
-static void _request_load_move(void);
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
 
 // handy macro
@@ -627,7 +626,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
 		if (mp_exec_move() != STAT_NOOP) {
 			st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-			_request_load_move();
+			st_request_load_move();
 		}
 	}
 }
@@ -648,7 +647,7 @@ namespace Motate {	// Define timer inside Motate namespace
 		if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
 			if (mp_exec_move() != STAT_NOOP) {
 				st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-				_request_load_move();
+				st_request_load_move();
 			}
 		}
 	}
@@ -667,7 +666,7 @@ namespace Motate {	// Define timer inside Motate namespace
  */
 
 #ifdef __AVR
-static void _request_load_move()
+void st_request_load_move()
 {
 	if (st_runtime_isbusy()) {
 		return;													// don't request a load if the runtime is busy
@@ -685,7 +684,7 @@ ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
 #endif // __AVR
 
 #ifdef __ARM
-static void _request_load_move()
+void st_request_load_move()
 {
 	if (st_runtime_isbusy()) {
 		return;													// don't request a load if the runtime is busy
@@ -1030,6 +1029,18 @@ void st_prep_dwell(float microseconds)
 	st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);
 	st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
+}
+
+/*
+ * st_request_out_of_band_dwell()
+ * (only usable while exec isn't running, e.g. in feedhold or stopped states...)
+ * add a dwell to the loader without going through the planner buffers
+ */
+void st_request_out_of_band_dwell(float microseconds)
+{
+	st_prep_dwell(microseconds);
+	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
+	st_request_load_move();
 }
 
 /*

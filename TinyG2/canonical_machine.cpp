@@ -533,7 +533,8 @@ void canonical_machine_init()
 	// reset request flags
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
-	cm.cycle_start_requested = false;
+	cm.end_hold_requested = false;
+	cm.paused_spindle_state = SPINDLE_OFF;
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
@@ -1183,7 +1184,7 @@ void cm_message(char_t *message)
 /*
  * cm_request_feedhold()
  * cm_request_queue_flush()
- * cm_request_cycle_start()
+ * cm_request_end_hold()
  * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
  * cm_flush_planner() - Flush planner queue and correct model positions
  *
@@ -1210,16 +1211,15 @@ void cm_message(char_t *message)
 
 void cm_request_feedhold(void) { cm.feedhold_requested = true; }
 void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
-void cm_request_cycle_start(void) { cm.cycle_start_requested = true; }
+void cm_request_end_hold(void) { cm.end_hold_requested = true; }
 
 stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
-		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
-			cm_set_motion_state(MOTION_HOLD);
-			cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
-		}
 		cm.feedhold_requested = false;
+		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
+			cm_start_hold();
+		}
 	}
 	if (cm.queue_flush_requested == true) {
 		if (((cm.motion_state == MOTION_STOP) ||
@@ -1229,18 +1229,39 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_queue_flush();
 		}
 	}
-	bool feedhold_processing =				// added feedhold processing lockout from omco fork
-		cm.hold_state == FEEDHOLD_SYNC ||
-		cm.hold_state == FEEDHOLD_PLAN ||
-		cm.hold_state == FEEDHOLD_DECEL;
-	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false) &&
-			!feedhold_processing && !cm.interlock_state) {
-		cm.cycle_start_requested = false;
-		cm.hold_state = FEEDHOLD_END_HOLD;
-		cm_cycle_start();
-		mp_end_hold();
+	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false) &&
+			!cm.interlock_state) {
+		cm.end_hold_requested = false;
+		if(cm.hold_state == FEEDHOLD_HOLD) {
+			cm_end_hold();
+		}
 	}
 	return (STAT_OK);
+}
+
+stat_t cm_start_hold()
+{
+	cm_set_motion_state(MOTION_HOLD);
+	cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
+	return STAT_OK;
+}
+
+stat_t cm_end_hold()
+{
+	cm.hold_state = FEEDHOLD_END_HOLD;
+	cm_cycle_start();
+	mp_end_hold();
+	if(cm.motion_state == MOTION_RUN) {
+		if(cm.pause_dwell_time > 0 && cm_unpause_spindle()) {
+			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+		} else {
+			st_request_exec_move();
+		}
+	} else {
+		cm.paused_spindle_state = SPINDLE_OFF;
+		st_request_exec_move();
+	}
+	return STAT_OK;
 }
 
 stat_t cm_queue_flush()
@@ -1307,8 +1328,9 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm.cycle_state = CYCLE_OFF;						// don't end cycle if homing, probing, etc.
 	}
 	cm.hold_state = FEEDHOLD_OFF;						// end feedhold (if in feed hold)
-	cm.cycle_start_requested = false;					// cancel any pending cycle start request
+	cm.end_hold_requested = false;					// cancel any pending cycle start request
 	mp_zero_segment_velocity();							// for reporting purposes
+	cm.paused_spindle_state = SPINDLE_OFF;
 
 	// perform the following resets if it's a program END
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
@@ -1482,7 +1504,7 @@ static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 
 static const char msg_ilck0[] PROGMEM = "Interlock Circuit Closed";
 static const char msg_ilck1[] PROGMEM = "Interlock Circuit Broken";
-static const char *const msg_iclk[] PROGMEM = { msg_ilck0, msg_ilck1 };
+static const char *const msg_ilck[] PROGMEM = { msg_ilck0, msg_ilck1 };
 
 static const char msg_estp0[] PROGMEM = "E-Stop Circuit Closed";
 static const char msg_estp1[] PROGMEM = "E-Stop Circuit Broken";
@@ -1866,13 +1888,15 @@ const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
+const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ms(nvObj_t *nv) { text_print_flt_units(nv, fmt_ms, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
+void cm_print_pdt(nvObj_t *nv) { text_print_flt(nv, fmt_pdt);}
 
 /*
  * axis print functions

@@ -141,15 +141,26 @@ stat_t cm_set_spindle_speed(float speed)
 	return (STAT_OK);
 }
 
-void cm_exec_spindle_speed(float speed)
-{
-	cm_set_spindle_speed(speed);
-}
-
 static void _exec_spindle_speed(float *value, float *flag)
 {
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode) ); // update spindle speed if we're running
+}
+
+void cm_pause_spindle()
+{
+	cm.paused_spindle_state = cm.gm.spindle_mode;
+	float arg[] = { SPINDLE_OFF };
+	_exec_spindle_control(arg, NULL);
+}
+
+bool cm_unpause_spindle()
+{
+	bool ret = (cm.paused_spindle_state != SPINDLE_OFF);
+	float arg[] = { (float)cm.paused_spindle_state };
+	_exec_spindle_control(arg, NULL);
+	cm.paused_spindle_state = SPINDLE_OFF;
+	return ret;
 }
 
 #ifdef __cplusplus

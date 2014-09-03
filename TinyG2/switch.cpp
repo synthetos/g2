@@ -205,7 +205,7 @@ static void _trigger_feedhold(switch_t *s)
 static void _trigger_cycle_start(switch_t *s) 
 {
 //	IndicatorLed.toggle();
-	cm_request_cycle_start();
+	cm_request_end_hold();
 }
 
 static void _trigger_alarm(switch_t *s)

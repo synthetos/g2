@@ -251,12 +251,15 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t deferred_write_flag;		// G10 data has changed (e.g. offsets) - flag to persist them
 	uint8_t feedhold_requested;			// feedhold character has been received
 	uint8_t queue_flush_requested;		// queue flush character has been received
-	uint8_t cycle_start_requested;		// cycle start character has been received (flag to end feedhold)
+	uint8_t end_hold_requested;		// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
 
 	uint8_t interlock_state;            // Whether interlock has been triggered
 	uint8_t estop_state;                // Whether estop has been triggered
+
+	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
+	uint8_t paused_spindle_state;		//if we're in a hold, what the spindle state was before pausing
 
 	/**** Model states ****/
 	GCodeState_t  gm;					// core gcode model state
@@ -627,10 +630,14 @@ void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 // Program Functions (4.3.10)
 void cm_request_feedhold(void);
 void cm_request_queue_flush(void);
-void cm_request_cycle_start(void);
+void cm_request_end_hold(void);
 
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
+
+//start or end a feedhold
+stat_t cm_start_hold(void);
+stat_t cm_end_hold(void);
 
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
@@ -757,6 +764,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	void cm_print_cofs(nvObj_t *nv);
 	void cm_print_cpos(nvObj_t *nv);
 
+	void cm_print_pdt(nvObj_t *nv);
+
 #else // __TEXT_MODE
 
 	#define cm_print_vel tx_print_stub		// model state reporting
@@ -815,6 +824,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	#define cm_print_zb tx_print_stub
 	#define cm_print_cofs tx_print_stub
 	#define cm_print_cpos tx_print_stub
+
+	#define cm_print_pdt txt_print_stub
 
 #endif // __TEXT_MODE
 

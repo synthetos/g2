@@ -196,7 +196,7 @@ static void _controller_HSM()
 #define CAN (char)0x18		// ^x - Cancel, abort
 #define CHAR_RESET CAN
 #define CHAR_FEEDHOLD (char)'!'
-#define CHAR_CYCLE_START (char)'~'
+#define CHAR_END_HOLD (char)'~'
 #define CHAR_QUEUE_FLUSH (char)'%'
 
 static stat_t _control_character_dispatch()
@@ -210,8 +210,8 @@ static stat_t _control_character_dispatch()
         return STAT_OK;
     else if(control_char == CHAR_FEEDHOLD)
         cm_request_feedhold();
-    else if(control_char == CHAR_CYCLE_START)
-        cm_request_cycle_start();
+    else if(control_char == CHAR_END_HOLD)
+        cm_request_end_hold();
     else if(control_char == CHAR_QUEUE_FLUSH)
         cm_request_queue_flush();
     else if(control_char == CHAR_RESET)
@@ -286,7 +286,7 @@ static stat_t _command_dispatch()
 
 		case '!': { cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial
 		case '%': { cm_request_queue_flush(); break; }
-		case '~': { cm_request_cycle_start(); break; }
+		case '~': { cm_request_end_hold(); break; }
 
 		case NUL: { 									// blank line (just a CR)
 			if (cfg.comm_mode != JSON_MODE) {

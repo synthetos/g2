@@ -39,10 +39,14 @@ extern "C"{
 void cm_spindle_init();
 
 stat_t cm_set_spindle_speed(float speed);			// S parameter
-void cm_exec_spindle_speed(float speed);			// callback for above
 
 stat_t cm_spindle_control(uint8_t spindle_mode);	// M3, M4, M5 integrated spindle control
-void cm_exec_spindle_control(uint8_t spindle_mode);	// callback for above
+
+//shuts the spindle off and remembers its mode... does not go through planner
+void cm_pause_spindle();
+//returns spindle to remembered state; does not go through planner
+//if this returns true, a dwell is needed before ending feedhold
+bool cm_unpause_spindle();
 
 #ifdef __cplusplus
 }

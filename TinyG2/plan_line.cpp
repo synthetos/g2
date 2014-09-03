@@ -682,7 +682,7 @@ stat_t mp_end_hold()
 			return (STAT_NOOP);
 		}
 		cm.motion_state = MOTION_RUN;
-		st_request_exec_move();					// restart the steppers
+		//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
 	}
 	return (STAT_OK);
 }
