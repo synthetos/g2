@@ -539,6 +539,8 @@ void canonical_machine_init()
 	cm.machine_state = MACHINE_READY;
 	cm.combined_state = COMBINED_READY;
 
+	cm.interlock_state = cm.estop_state = 0;
+
 	// sub-system inits
 	cm_spindle_init();
 	cm_arc_init();
@@ -1231,7 +1233,8 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.hold_state == FEEDHOLD_SYNC ||
 		cm.hold_state == FEEDHOLD_PLAN ||
 		cm.hold_state == FEEDHOLD_DECEL;
-	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false) && !feedhold_processing) {
+	if ((cm.cycle_start_requested == true) && (cm.queue_flush_requested == false) &&
+			!feedhold_processing && !cm.interlock_state) {
 		cm.cycle_start_requested = false;
 		cm.hold_state = FEEDHOLD_END_HOLD;
 		cm_cycle_start();
@@ -1477,6 +1480,14 @@ static const char msg_g94[] PROGMEM = "G94 - units-per-minute mode (i.e. feedrat
 static const char msg_g95[] PROGMEM = "G95 - units-per-revolution mode";
 static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 
+static const char msg_ilck0[] PROGMEM = "Interlock Circuit Closed";
+static const char msg_ilck1[] PROGMEM = "Interlock Circuit Broken";
+static const char *const msg_iclk[] PROGMEM = { msg_ilck0, msg_ilck1 };
+
+static const char msg_estp0[] PROGMEM = "E-Stop Circuit Closed";
+static const char msg_estp1[] PROGMEM = "E-Stop Circuit Broken";
+static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1 };
+
 #else
 
 #define msg_units NULL
@@ -1493,6 +1504,8 @@ static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 #define msg_path NULL
 #define msg_dist NULL
 #define msg_frmo NULL
+#define msg_iclk NULL
+#define msg_estp NULL
 #define msg_am NULL
 
 #endif // __TEXT_MODE
@@ -1587,6 +1600,9 @@ stat_t cm_get_plan(nvObj_t *nv) { return(_get_msg_helper(nv, msg_plan, cm_get_se
 stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
+
+stat_t cm_get_ilck(nvObj_t *nv) { return(_get_msg_helper(nv, msg_ilck, cm.interlock_state)); }
+stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_state)); }
 
 stat_t cm_get_toolv(nvObj_t *nv)
 {
@@ -1802,6 +1818,8 @@ const char fmt_path[] PROGMEM = "Path Mode:           %s\n";
 const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
 const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
 const char fmt_tool[] PROGMEM = "Tool number          %d\n";
+const char fmt_ilck[] PROGMEM = "Safety Interlock:    %s\n";
+const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -1831,6 +1849,8 @@ void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
 void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
+void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
+void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}

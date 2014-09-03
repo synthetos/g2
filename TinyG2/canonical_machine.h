@@ -255,6 +255,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
 
+	uint8_t interlock_state;            // Whether interlock has been triggered
+	uint8_t estop_state;                // Whether estop has been triggered
+
 	/**** Model states ****/
 	GCodeState_t  gm;					// core gcode model state
 	GCodeStateX_t gmx;					// extended gcode model state
@@ -676,6 +679,8 @@ stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
 stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
+stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
+stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
@@ -712,6 +717,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	void cm_print_dist(nvObj_t *nv);
 	void cm_print_frmo(nvObj_t *nv);
 	void cm_print_tool(nvObj_t *nv);
+	void cm_print_ilck(nvObj_t *nv);
+	void cm_print_estp(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -769,6 +776,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	#define cm_print_dist tx_print_stub
 	#define cm_print_frmo tx_print_stub
 	#define cm_print_tool tx_print_stub
+	#define cm_print_ilck tx_print_stub
+	#define cm_print_estp tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub

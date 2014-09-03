@@ -161,6 +161,9 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+	DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
+#endif
 
 	DISPATCH(_control_character_dispatch());    // 6a. check secondary USB port for control characters: !%~^X
 	DISPATCH(cm_feedhold_sequencing_callback());// 6b. feedhold state machine runner
@@ -445,6 +448,35 @@ static stat_t _limit_switch_handler(void)
 	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
 	return (STAT_OK);
 }
+
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static stat_t _interlock_estop_handler()
+{
+	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
+		cm.interlock_state = 1;
+		cm_request_feedhold();
+	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
+		cm.interlock_state = 0;
+	}
+  if(cm.estop_state == 0 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
+		cm.estop_state = 1;
+/*
+		for(int i = 0; i < HOMING_AXES; ++i)
+			cm.homed[i] = false;
+			cm.homing_state = HOMING_NOT_HOMED;
+			cm_queue_flush();
+*/
+	} else if(cm.estop_state == 1 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
+		cm.estop_state = 0;
+/*
+#ifdef __AVR
+		xio_reset_usb_rx_buffers();				// flush serial queues
+#endif
+		mp_flush_planner();
+*/
+	}
+}
+#endif
 
 /*
  * _system_assertions() - check memory integrity and other assertions

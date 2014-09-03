@@ -126,6 +126,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "dist",_f0, 0, cm_print_dist, cm_get_dist, set_nul,(float *)&cs.null, 0 },			// distance mode
 	{ "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },			// feed rate mode
 	{ "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },			// active tool
+	{ "",   "ilck",_f0, 0, cm_print_ilck, cm_get_ilck, set_nul,(float *)&cs.null, 0 },          // interlock status
+	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, set_nul,(float *)&cs.null, 0 },          // E-stop status
 //	{ "",   "tick",_f0, 0, tx_print_int,  get_int,     set_int,(float *)&rtc.sys_ticks, 0 },	// tick count
 
 	{ "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// X machine position

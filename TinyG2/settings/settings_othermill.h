@@ -49,11 +49,18 @@
 #define HAS_CANSTACK_Z_AXIS			0
 //#define HAS_CANSTACK_Z_AXIS		1			// Earlier machines
 
+// Switch definitions for interlock & E-stop
+#define ENABLE_ESTOP_AND_INTERLOCK
+#define INTERLOCK_SWITCH_AXIS           AXIS_X
+#define INTERLOCK_SWITCH_POSITION       SW_MAX
+#define ESTOP_SWITCH_AXIS               AXIS_Y
+#define ESTOP_SWITCH_POSITION           SW_MAX
+
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan"
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan","ilck","estp"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE
