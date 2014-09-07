@@ -41,6 +41,10 @@
 
 /**** Structures ****/
 
+// We need a buffer to hold single character commands, like !~%
+// We also want it to have a NULL charater, so we make it two characters.
+char_t single_char_buffer[2] = " ";
+
 struct xioDevice_t {						// description pf a device for reading and writing
 	// connection and device management
 	uint8_t caps;							// bitfield for capabilities flags (these are persistent)
@@ -329,7 +333,12 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
 			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
-			if ((c == LF) || (c == CR)) {
+			if ((c == '!') || (c == '%') || (c == '~')) {
+                single_char_buffer[0] = c;
+                size = 1;
+				flags = xio.d[dev]->flags;							// what type of device is this?
+                return single_char_buffer;
+            } else if ((c == LF) || (c == CR)) {
 				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
 				flags = xio.d[dev]->flags;							// what type of device is this?
 				size = xio.d[dev]->read_index;						// how long is the string?
