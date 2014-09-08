@@ -44,6 +44,7 @@
 #include "help.h"
 #include "util.h"
 #include "xio.h"
+#include "settings.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -63,6 +64,7 @@ static void _controller_HSM(void);
 static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
+static stat_t _interlock_estop_handler(void);
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -450,16 +452,20 @@ static stat_t _limit_switch_handler(void)
 }
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-static stat_t _interlock_estop_handler()
+static stat_t _interlock_estop_handler(void)
 {
+	bool report = false;
 	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.interlock_state = 1;
 		cm_request_feedhold();
+		report = true;
 	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
 		cm.interlock_state = 0;
+		report = true;
 	}
-  if(cm.estop_state == 0 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
+	if(cm.estop_state == 0 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
 		cm.estop_state = 1;
+		report = true;
 /*
 		for(int i = 0; i < HOMING_AXES; ++i)
 			cm.homed[i] = false;
@@ -468,6 +474,7 @@ static stat_t _interlock_estop_handler()
 */
 	} else if(cm.estop_state == 1 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
 		cm.estop_state = 0;
+		report = true;
 /*
 #ifdef __AVR
 		xio_reset_usb_rx_buffers();				// flush serial queues
@@ -475,6 +482,9 @@ static stat_t _interlock_estop_handler()
 		mp_flush_planner();
 */
 	}
+	if(report)
+		sr_request_status_report(SR_IMMEDIATE_REQUEST);
+	return (STAT_OK);
 }
 #endif
 

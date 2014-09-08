@@ -56,7 +56,8 @@
 #define SW_MODE_HOMING 			SW_HOMING_BIT				 // enable switch for homing only
 #define SW_MODE_LIMIT 			SW_LIMIT_BIT				 // enable switch for limits only
 #define SW_MODE_HOMING_LIMIT   (SW_HOMING_BIT | SW_LIMIT_BIT)// homing and limits
-#define SW_MODE_MAX_VALUE 		SW_MODE_HOMING_LIMIT
+#define SW_MODE_CUSTOM          0x04
+#define SW_MODE_MAX_VALUE 		SW_MODE_CUSTOM
 
 enum swType {
 	SW_TYPE_NORMALLY_OPEN = 0,
