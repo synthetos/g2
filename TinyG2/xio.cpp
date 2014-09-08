@@ -64,7 +64,7 @@ struct xioDevice_t {						// description pf a device for reading and writing
 	bool isData() { return flags & DEV_IS_DATA; }
 	bool isPrimary() { return flags & DEV_IS_PRIMARY; }
 	bool isConnected() { return flags & DEV_IS_CONNECTED; }
-	bool isNotConnected() { return ~(flags & DEV_IS_CONNECTED); }
+	bool isNotConnected() { return !(flags & DEV_IS_CONNECTED); }
 	bool isNextConnected() { return next_flags & DEV_IS_CONNECTED; }
 	bool isNextDisconnected() { return next_flags & DEV_IS_DISCONNECTED; }
 	bool isNextClear() { return next_flags == DEV_FLAGS_CLEAR; }
@@ -132,10 +132,14 @@ void downData()
 	// This function is currently naiive and does no finalization of the data channel
 	// There is no allowance for buffered data (buffer clears, queue flushes, etc.)
 	for (uint8_t dev=0; dev<DEV_MAX; dev++) {
-		if (xio.d[dev]->flags && (DEV_IS_DATA | DEV_IS_ACTIVE)) {
+		if ((xio.d[dev]->flags & (DEV_IS_DATA | DEV_IS_ACTIVE)) == (DEV_IS_DATA | DEV_IS_ACTIVE)) {
 			xio.d[dev]->flags &= ~(DEV_IS_DATA | DEV_IS_ACTIVE | DEV_IS_READY | DEV_IS_CONNECTED);	// take down the channel
-			// insert serial queue flush here
-		}
+
+            // TODO
+            // insert serial queue flush here
+
+
+        }
 		return;
 	}
 }
@@ -237,7 +241,8 @@ stat_t xio_callback()
 		if (USB1->isNotConnected()) {							// Case 1: USB0 is the 1st channel to connect
 			USB0->flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_PRIMARY | DEV_IS_ACTIVE);
 		} else {												// Case 2: USB1 is the 1st channel to connect
-			downData();											// take down any current data channel (presumably USB1)
+//			downData();											// take down any current data channel (presumably USB1)
+			USB1->flags &= ~(DEV_IS_DATA);              		// remove USB1 as a data channel
 			USB0->flags |= (DEV_IS_DATA | DEV_IS_ACTIVE);		// assign USB0 to be the active data channel
 		}
 	} else
@@ -249,8 +254,9 @@ stat_t xio_callback()
 		if (USB0->isNotConnected()) {							// Case 1: USB1 is the 1st channel to connect
 			USB1->flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_PRIMARY | DEV_IS_ACTIVE);
 		} else {												// Case 2: USB1 is the 2nd channel to connect
-			downData();
-			USB0->flags |= (DEV_IS_DATA | DEV_IS_ACTIVE);
+//			downData();
+			USB0->flags &= ~(DEV_IS_DATA);              		// remove USB1 as a data channel
+			USB1->flags |= (DEV_IS_DATA | DEV_IS_ACTIVE);
 		}
 	} else
 
@@ -259,23 +265,29 @@ stat_t xio_callback()
 	// Case 2: USB0 disconnected while it was primary ctrl channel (also takes down active data channel)
 	// Case 3: USB0 disconnected while it was non-primary ctrl channel (does not take down data channel)
 	// Case 4: USB0 disconnected while it was a data channel
-	if (USB0->isNextDisconnected()) {								// signals that USB0 just disconnected
+	if (USB0->isNextDisconnected()) {                           // signals that USB0 just disconnected
 		USB0->next_flags = DEV_FLAGS_CLEAR;
-		if (USB0->flags && (DEV_IS_CTRL | DEV_IS_PRIMARY)) {		// Cases 1 & 2
+		if (USB0->flags & (DEV_IS_CTRL | DEV_IS_PRIMARY)) {		// Cases 1 & 2
 			USB0->downCtrl();
 			downData();
-		} else if (USB0->isCtrl()) { USB0->downCtrl();				// Case 3
-		} else if (USB0->isData()) { downData(); }					// Case 4
+		} else if (USB0->isCtrl()) {
+            USB0->downCtrl();				// Case 3
+		} else if (USB0->isData()) {
+            downData();                     // Case 4
+        }
 	} else
 
 	// USB1 has just disconnected - same cases as USB0
 	if (USB1->isNextDisconnected()) {
 		USB1->next_flags = DEV_FLAGS_CLEAR;
-		if (USB1->flags && (DEV_IS_CTRL | DEV_IS_PRIMARY)) {
+		if (USB1->flags & (DEV_IS_CTRL | DEV_IS_PRIMARY)) {
 			USB1->downCtrl();
 			downData();
-		} else if (USB1->isCtrl()) { USB1->downCtrl();
-		} else if (USB1->isData()) { downData(); }
+		} else if (USB1->isCtrl()) {
+            USB1->downCtrl();
+		} else if (USB1->isData()) {
+            downData();
+        }
 	}
 	return (STAT_OK);
 }
@@ -327,8 +339,12 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 	int c;
 
 	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-		if (!xio.d[dev]->isActive()) continue;
-		if (!(xio.d[dev]->flags && flags)) continue;				// the types need to match
+		if (!xio.d[dev]->isActive())
+            continue;
+
+        // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
+		if (!(xio.d[dev]->flags & flags)) // the types need to match
+            continue;
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
@@ -340,6 +356,18 @@ char_t *readline(devflags_t &flags, uint16_t &size)
                 return single_char_buffer;
             } else if ((c == LF) || (c == CR)) {
 				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
+                if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
+                    // This is a control-only channel.
+                    // We need to ensure that we only get JSON-lines.
+                    if (xio.d[dev]->read_buf[0] != '{') {
+                        xio.d[dev]->read_index = 0; // throw away the line
+                        xio.d[dev]->read_buf[0] = 0;
+                        
+                        size = 0;
+                        flags = 0;
+                        return NULL;
+                    }
+                }
 				flags = xio.d[dev]->flags;							// what type of device is this?
 				size = xio.d[dev]->read_index;						// how long is the string?
 				xio.d[dev]->read_index = 0;							// reset for next readline

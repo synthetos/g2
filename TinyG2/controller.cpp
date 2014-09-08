@@ -66,7 +66,7 @@ static stat_t _limit_switch_handler(void);
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
-static stat_t _command_dispatch(void);
+static stat_t _command_dispatch(bool);
 
 // prep for export to other modules:
 stat_t hardware_hard_reset_handler(void);
@@ -162,11 +162,13 @@ static void _controller_HSM()
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
+    DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(_system_assertions());				// 7. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
+
+    DISPATCH(_command_dispatch(/* Command-only: */ true));				// read and execute next command
 
 	DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
 //	DISPATCH(switch_debounce_callback());		// debounce switches
@@ -186,7 +188,7 @@ static void _controller_HSM()
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_command_dispatch());				// read and execute next command
+	DISPATCH(_command_dispatch(/* Command-only: */ false));				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
@@ -199,7 +201,7 @@ static void _controller_HSM()
  *	Also responsible for prompts and for flow control
  */
 
-static stat_t _command_dispatch()
+static stat_t _command_dispatch(const bool command_only)
 {
 #ifdef __AVR
 	devflags_t flags;
@@ -212,13 +214,17 @@ static stat_t _command_dispatch()
 #ifdef __ARM
 
 #ifdef __DUAL_USB
-	devflags_t device_flags = DEV_IS_BOTH;
+	devflags_t device_flags = command_only ? DEV_IS_CTRL : DEV_IS_BOTH;
 
 	// read input line and return if not a completed line
 	if ((cs.bufp = readline(device_flags, cs.linelen)) == NULL) {
 		return (STAT_OK);									// nothing to process yet
 	}
 #else
+    // With single-endpoint, we cannot read only the command-channel
+    if (command_only)
+        return (STAT_OK);
+
 	if (cs.state_usb0 == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
