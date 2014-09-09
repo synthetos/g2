@@ -1405,12 +1405,10 @@ stat_t cm_end_estop(void)
 
 stat_t cm_ack_estop(nvObj_t *nv)
 {
-    if (fp_TRUE(nv->value)) {
-        cm.estop_state &= ~ESTOP_UNACKED;
-        if(cm.estop_state == 0)
-            cm_end_estop();
-        sr_request_status_report(SR_IMMEDIATE_REQUEST);
-    }
+    cm.estop_state &= ~ESTOP_UNACKED;
+    if(cm.estop_state == 0)
+        cm_end_estop();
+    sr_request_status_report(SR_IMMEDIATE_REQUEST);
     return (STAT_OK);
 }
 
