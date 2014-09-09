@@ -1384,6 +1384,36 @@ void cm_program_end()
 	mp_queue_command(_exec_program_finalize, value, value);
 }
 
+stat_t cm_start_estop(void)
+{
+    for(int i = 0; i < HOMING_AXES; ++i)
+        cm.homed[i] = false;
+    cm.homing_state = HOMING_NOT_HOMED;
+    mp_flush_planner();
+    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+	_exec_program_finalize(value, value);	// finalize now, not later
+    cm_soft_alarm(STAT_ALARMED);
+
+    return STAT_OK;
+}
+
+stat_t cm_end_estop(void)
+{
+    cm_clear(NULL);
+    return STAT_OK;
+}
+
+stat_t cm_ack_estop(nvObj_t *nv)
+{
+    if (fp_TRUE(nv->value)) {
+        cm.estop_state &= ~ESTOP_UNACKED;
+        if(cm.estop_state == 0)
+            cm_end_estop();
+        sr_request_status_report(SR_IMMEDIATE_REQUEST);
+    }
+    return (STAT_OK);
+}
+
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *
  **************************************/

@@ -366,6 +366,16 @@ enum cmProbeState {					// applies to cm.probe_state
 	PROBE_WAITING					// probe is waiting to be started
 };
 
+enum cmEstopState {
+    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state
+    ESTOP_ACKED    = 0,
+    ESTOP_PRESSED  = 0x1,
+    ESTOP_UNACKED  = 0x2,
+
+    ESTOP_ACK_MASK = 0x2,
+    ESTOP_PRESSED_MASK = 0x1,
+};
+
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
@@ -661,6 +671,11 @@ stat_t cm_probe_callback(void);									// G38.2 main loop callback
 stat_t cm_jogging_callback(void);								// jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
 float cm_get_jogging_dest(void);
+
+/*--- E-Stop ---*/
+stat_t cm_start_estop(void);
+stat_t cm_end_estop(void);
+stat_t cm_ack_estop(nvObj_t *nv);
 
 /*--- cfgArray interface functions ---*/
 

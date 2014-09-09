@@ -463,24 +463,15 @@ static stat_t _interlock_estop_handler(void)
 		cm.interlock_state = 0;
 		report = true;
 	}
-	if(cm.estop_state == 0 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
-		cm.estop_state = 1;
+	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
+        cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED;
 		report = true;
-/*
-		for(int i = 0; i < HOMING_AXES; ++i)
-			cm.homed[i] = false;
-			cm.homing_state = HOMING_NOT_HOMED;
-			cm_queue_flush();
-*/
-	} else if(cm.estop_state == 1 && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
-		cm.estop_state = 0;
+        cm_start_estop();
+	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
+		cm.estop_state &= ~ESTOP_PRESSED;
+        if(cm.estop_state == 0)
+            cm_end_estop();
 		report = true;
-/*
-#ifdef __AVR
-		xio_reset_usb_rx_buffers();				// flush serial queues
-#endif
-		mp_flush_planner();
-*/
 	}
 	if(report)
 		sr_request_status_report(SR_IMMEDIATE_REQUEST);
