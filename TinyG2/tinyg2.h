@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		069.03 // Sync G1 build 450.08: Soft limits - still need to put arc limits in
+#define TINYG_FIRMWARE_BUILD   		069.04 // Sync G1 build 450.08: Settings
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

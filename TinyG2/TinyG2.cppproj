@@ -1105,6 +1105,9 @@
     <Compile Include="settings\settings_probotixV90.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_shapeoko2.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_shapeoko375.h">
       <SubType>compile</SubType>
     </Compile>
