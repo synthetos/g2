@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		069.01 // Sync G1 build 450.08: Fixed print hom(e) text mode display
+#define TINYG_FIRMWARE_BUILD   		069.03 // Sync G1 build 450.08: Soft limits - still need to put arc limits in
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
