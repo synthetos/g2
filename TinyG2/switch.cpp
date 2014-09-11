@@ -48,8 +48,12 @@
 #include "canonical_machine.h"
 #include "text_parser.h"
 
+#ifdef __AVR
+#include <avr/interrupt.h>
+#else
 #include "MotateTimers.h"
 using Motate::SysTickTimer;
+#endif
 
 // Allocate switch array structure
 switches_t sw;
@@ -151,7 +155,7 @@ stat_t poll_switches()
 	poll_switch(&sw.s[AXIS_B][SW_MAX], (bool)axis_Y_min_pin);
 	return (STAT_OK);
 #endif
-    }
+}
 
 /*
  * poll_switch() - read switch with NO/NC, debouncing and edge detection

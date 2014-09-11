@@ -82,29 +82,6 @@ enum swEdge {
 
 #define SW_LOCKOUT_TICKS 50			// milliseconds to go dead after switch firing
 
-// DEPRECATED STUFF FROM OLD SWITCH CODE
-//#define SW_DEGLITCH_TICKS 30		// in milliseconds
-
-// macros for finding the index into the switch table give the axis number
-//#define MIN_SWITCH(axis) (axis*2)
-//#define MAX_SWITCH(axis) (axis*2+1)
-
-/*
-enum swNums {	 					// indexes into switch arrays
-	SW_MIN_X = 0,
-	SW_MAX_X,
-	SW_MIN_Y,
-	SW_MAX_Y,
-	SW_MIN_Z,
-	SW_MAX_Z,
-	SW_MIN_A,
-	SW_MAX_A,
-	NUM_SWITCHES 			// must be last one. Used for array sizing and for loops
-};
-#define SW_OFFSET SW_MAX_X	// offset between MIN and MAX switches
-#define NUM_SWITCH_PAIRS (NUM_SWITCHES/2)
-*/
-
 /*
  * Switch control structures
  */

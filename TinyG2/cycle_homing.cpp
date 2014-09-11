@@ -72,6 +72,7 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t saved_units_mode;		// G20,G21 global setting
 	uint8_t saved_coord_system;		// G54 - G59 setting
 	uint8_t saved_distance_mode;	// G90,G91 global setting
+//	uint8_t saved_feed_rate_mode;	// G93,G94 global setting
 	float saved_feed_rate;			// F setting
 	float saved_jerk;				// saved and restored for each axis homed
 	float target_position;          // saved prior to initiating moves, for verifying post-move position
@@ -172,6 +173,7 @@ stat_t cm_homing_cycle_start(void)
 	hm.saved_units_mode = cm_get_units_mode(ACTIVE_MODEL);
 	hm.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
 	hm.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
+//	hm.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
 	hm.saved_feed_rate = cm_get_feed_rate(ACTIVE_MODEL);
 	hm.target_position = 0;
 
@@ -179,6 +181,7 @@ stat_t cm_homing_cycle_start(void)
 	cm_set_units_mode(MILLIMETERS);
 	cm_set_distance_mode(INCREMENTAL_MODE);
 	cm_set_coord_system(ABSOLUTE_COORDS);	// homing is done in machine coordinates
+//	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
 	hm.set_coordinates = true;
 
 	hm.axis = -1;							// set to retrieve initial axis

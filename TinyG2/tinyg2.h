@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		068.01 // Added switch reader group - $ss, $ss0 - $ss7; fixed $st display bug
+#define TINYG_FIRMWARE_BUILD   		068.02 // Minor changes ported in from G1
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
