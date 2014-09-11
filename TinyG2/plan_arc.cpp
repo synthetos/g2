@@ -39,7 +39,7 @@ static stat_t _compute_arc(void);
 static stat_t _compute_arc_offsets_from_radius(void);
 static float _get_arc_time (const float linear_travel, const float angular_travel, const float radius);
 static float _get_theta(const float x, const float y);
-//static stat_t _test_arc_soft_limits(void);
+static stat_t _test_arc_soft_limits(void);
 
 /*****************************************************************************
  * Canonical Machining arc functions (arc prep for planning and runtime)
@@ -116,7 +116,15 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 
 	// compute arc runtime values and prep for execution by the callback
 	ritorno(_compute_arc());
-//	ritorno(_test_arc_soft_limits());		// test if arc will trip soft limits
+
+	// test arc soft limits
+	stat_t status = _test_arc_soft_limits();
+	if (status != STAT_OK) {
+		cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+		copy_vector(cm.gm.target, cm.gmx.position);		// reset model position
+		return (cm_soft_alarm(status));
+	}
+
 	cm_cycle_start();						// if not already started
 	arc.run_state = MOVE_RUN;				// enable arc to be run from the callback
 	cm_finalize_move();
@@ -417,14 +425,13 @@ static float _get_theta(const float x, const float y)
 	}
 }
 
-
 /*
  * _test_arc_soft_limits() - return error code if soft limit is exceeded
  *
  *	Test if arc extends beyond arc plane boundaries set in soft limits.
  *
- *	The arc starting position (S) and target (T) define 2 points that divide the
- *	arc plane into 9 rectangles. The center of the arc is (C). S and T define the
+ *	The arc starting position (P) and target (T) define 2 points that divide the
+ *	arc plane into 9 rectangles. The center of the arc is (C). P and T define the
  *	endpoints of two possible arcs; one that is less than or equal to 180 degrees (acute)
  *	and one that is greater than 180 degrees (obtuse), depending on the location of (C).
  *
@@ -432,7 +439,7 @@ static float _get_theta(const float x, const float y)
  *  |         |         |         |
  *  |    1    |    2    |    3    |
  *  |                   |         |
- *	--------- S -------------------
+ *	--------- P -------------------
  *  |                   |         |
  *  |    4    |    5    |    6    |
  *  |         |                   |
@@ -442,23 +449,23 @@ static float _get_theta(const float x, const float y)
  *  |         |         |         |
  *	-------------------------------
  *
- *	C will fall along a diagnonal bisecting 7, 5 and 3, but there is some tolerance in the
+ *	C will fall along a diagonal bisecting 7, 5 and 3, but there is some tolerance in the
  *	circle algorithm that allows C to deviate from the centerline slightly. As the centerline
  *	approaches the line connecting S and T the acute arcs will be "above" S and T in sections
  *	5 or 3, and the obtuse arcs will be "below" in sections 5 or 7. But it's simpler, because
- *	we know if the arc is greater than 180 degrees if the angular travel value is > pi.
+ *	we know that the arc is > 180 degrees (obtuse) if the angular travel value is > pi.
  *
  *	The example below only tests the X axis (0 axis), but testing the other axis is similar
  *
- *	  - If Cx <= Sx and arc is acute; no test is needed
+ *	  (1) If Cx <= Px and arc is acute; no test is needed
  *
- *	  - If Cx <= Sx and arc is obtuse; test if the radius is greater than
+ *	  (2) If Cx <= Px and arc is obtuse; test if the radius is greater than
  *			the distance from Cx to the negative X boundary
  *
- *	  - If Sx < Cx < Tx and arc is acute; test if the radius is greater than
+ *	  (3) If Px < Cx < Tx and arc is acute; test if the radius is greater than
  *			the distance from Cx to the positive X boundary
  *
- *	  - If Sx < Cx < Tx and arc is obtuse; test if the radius is greater than
+ *	  (4) If Px < Cx < Tx and arc is obtuse; test if the radius is greater than
  *			the distance from Cx to the positive X boundary
  *
  *	The arc plane is defined by 0 and 1 depending on G17/G18/G19 plane selected,
@@ -471,16 +478,32 @@ static float _get_theta(const float x, const float y)
  *	  - arc.radius (arc.radius)
  *	  - arc angular travel in radians (arc.angular_travel)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
- *
  */
-/*
-static stat_t _test_arc_soft_limits()
-{
-	// test is target falls outside boundaries. This is a 3 dimensional test
-	return (cm_test_soft_limits(arc.gm.target));
 
-	// test the 4 arc center point
-//	if (arc.gm.target[arc.plane_axis_0]
+static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
+{
+	if (center <= arc.position[plane_axis]) {
+		if (arc.angular_travel < M_PI) {							// case (1)
+			return (STAT_OK);		
+		}
+		if ((center - arc.radius) < cm.a[plane_axis].travel_min) {	// case (2)
+			return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
+		}
+	}
+	if ((center + arc.radius) > cm.a[plane_axis].travel_max) {		// cases (3) and (4)
+		return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
+	}
 	return(STAT_OK);
 }
-*/
+
+static stat_t _test_arc_soft_limits()
+{
+	// Test if target falls outside boundaries. This is a 3 dimensional test 
+	// so it also checks the linear axis of the arc (helix axis)
+	ritorno(cm_test_soft_limits(arc.gm.target));
+	
+	// test arc excursions
+	ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
+	ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
+	return(STAT_OK);
+}

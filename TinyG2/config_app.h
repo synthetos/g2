@@ -41,15 +41,8 @@ enum nvType {						// classification of commands
 typedef struct cfgParameters {		// mostly communications variables at this point
 	uint16_t magic_start;			// magic number to test memory integrity
 
-	// communications settings
-	uint8_t comm_mode;				// TG_TEXT_MODE or TG_JSON_MODE
-	uint8_t enable_cr;				// enable CR in CRFL expansion on TX
-	uint8_t enable_echo;			// enable text-mode echo
-	uint8_t enable_flow_control;	// enable XON/XOFF or RTS/CTS flow control
-//	uint8_t ignore_crlf;			// ignore CR or LF on RX --- these 4 are shadow settings for XIO cntrl bits
-
-	uint8_t usb_baud_rate;			// see xio_usart.h for XIO_BAUD values
-	uint8_t usb_baud_flag;			// technically this belongs in the controller singleton
+	// Job ID
+	int32_t job_id[4];				// uuid to identify the job
 
 	// user-defined data groups
 	uint32_t user_data_a[4];
