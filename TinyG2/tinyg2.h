@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		068.02 // Minor changes ported in from G1
+#define TINYG_FIRMWARE_BUILD   		070.01 // Inserted single character traps for feedholds, etc.
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

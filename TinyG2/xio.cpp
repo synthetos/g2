@@ -37,12 +37,13 @@
 #include "util.h"
 #include "hardware.h"
 #include "text_parser.h"
+#include "canonical_machine.h"
 #include "xio.h"
 
 /**** Structures ****/
 
 // We need a buffer to hold single character commands, like !~%
-// We also want it to have a NULL charater, so we make it two characters.
+// We also want it to have a NULL character, so we make it two characters.
 char_t single_char_buffer[2] = " ";
 
 struct xioDevice_t {						// description pf a device for reading and writing
@@ -156,6 +157,7 @@ void downData()
  *	See here for some good info on lambda functions in C++
  *	http://www.cprogramming.com/c++11/c++11-lambda-closures.html
  */
+
 void xio_init()
 {
     xio_init_assertions();
@@ -224,6 +226,7 @@ stat_t xio_test_assertions()
  *	Note: We will not receive a second DEV_IS_CONNECTED on a channel that has already received one,
  *		  and similarly for DEV_NOT_CONNECTED. IOW we will only get valid state transitions w/no repeats.
  */
+
 stat_t xio_callback()
 {
 	// exit the callback if there is no new state information to process
@@ -295,6 +298,7 @@ stat_t xio_callback()
 /*
  * writeline() - write a terminate line of text to a device
  */
+
 size_t writeline(uint8_t *buffer, size_t size)
 {
 	size_t written = SerialUSB.write(buffer, size);
@@ -305,9 +309,28 @@ size_t writeline(uint8_t *buffer, size_t size)
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
  */
+
 int read_char (uint8_t dev)
 {
-    return DeviceWrappers[dev]->readchar();
+	int c = DeviceWrappers[dev]->readchar();
+
+	if (c == (int)CHAR_RESET) {	 			// trap kill character
+		hw_request_hard_reset();
+		return (_FDEV_ERR);
+	}
+	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
+		cm_request_feedhold();
+		return (_FDEV_ERR);
+	}
+	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
+		cm_request_queue_flush();
+		return (_FDEV_ERR);
+	}
+	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
+		cm_request_cycle_start();
+		return (_FDEV_ERR);
+	}
+	return (c);
 }
 
 /*

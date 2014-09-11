@@ -43,7 +43,7 @@
 #define _to_millimeters(a) ((cm.gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 
 #define JOGGING_START_VELOCITY ((float)10.0)
-#define DISABLE_SOFT_LIMIT (-1000000)
+#define DISABLE_SOFT_LIMIT (999999)
 
 /*****************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
@@ -640,14 +640,14 @@ void cm_program_end(void);										// M2
 // Homing cycles
 stat_t cm_homing_cycle_start(void);								// G28.2
 stat_t cm_homing_cycle_start_no_set(void);						// G28.4
-stat_t cm_homing_callback(void);								// G28.2/.4 main loop callback
+stat_t cm_homing_cycle_callback(void);							// G28.2/.4 main loop callback
 
 // Probe cycles
 stat_t cm_straight_probe(float target[], float flags[]);		// G38.2
-stat_t cm_probe_callback(void);									// G38.2 main loop callback
+stat_t cm_probing_cycle_callback(void);							// G38.2 main loop callback
 
 // Jogging cycle
-stat_t cm_jogging_callback(void);								// jogging cycle main loop
+stat_t cm_jogging_cycle_callback(void);							// jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
 float cm_get_jogging_dest(void);
 
@@ -704,6 +704,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_mots(nvObj_t *nv);
 	void cm_print_hold(nvObj_t *nv);
 	void cm_print_home(nvObj_t *nv);
+	void cm_print_hom(nvObj_t *nv);
 	void cm_print_unit(nvObj_t *nv);
 	void cm_print_coor(nvObj_t *nv);
 	void cm_print_momo(nvObj_t *nv);
@@ -761,6 +762,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_mots tx_print_stub
 	#define cm_print_hold tx_print_stub
 	#define cm_print_home tx_print_stub
+	#define cm_print_hom tx_print_stub
 	#define cm_print_unit tx_print_stub
 	#define cm_print_coor tx_print_stub
 	#define cm_print_momo tx_print_stub
