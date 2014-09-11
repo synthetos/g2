@@ -109,7 +109,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	_calc_move_times(gm_in, mm.position);									// set move time and minimum time in the state
 	float length = get_axis_vector_length(gm_in->target, mm.position);		// compute the length (needed later)
 	if (gm_in->move_time < MIN_BLOCK_TIME) {
-		float delta_velocity = pow(length, 0.66666666) * mm.prev_cbrt_jerk;	// max velocity change for this move
+		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move
 		float entry_velocity = 0;											// pre-set as if no previous block
 		if ((bf = mp_get_run_buffer()) != NULL) {
 			if (bf->replannable == true) {									// not optimally planned
@@ -210,9 +210,13 @@ stat_t mp_aline(GCodeState_t *gm_in)
 //	bf->jerk = cm.a[bf->jerk_axis].recip_jerk * fabs(bf->unit[bf->jerk_axis]);// scale the jerk
 	bf->jerk = cm.a[bf->jerk_axis].jerk_max * JERK_MULTIPLIER / fabs(bf->unit[bf->jerk_axis]);	// scale the jerk
 
-	bf->recip_jerk = 1/bf->jerk;
-	bf->cbrt_jerk = cbrt(bf->jerk);											// compute cached jerk terms used by planning
-	mm.prev_cbrt_jerk = bf->cbrt_jerk;										// used before this point next time around
+	if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {	// specialized comparison for tolerance of delta
+		mm.jerk = bf->jerk;									// used before this point next time around
+		mm.recip_jerk = 1/bf->jerk;							// compute cached jerk terms used by planning
+		mm.cbrt_jerk = cbrt(bf->jerk);
+	}
+	bf->recip_jerk = mm.recip_jerk;
+	bf->cbrt_jerk = mm.cbrt_jerk;
 
 	// finish up the current block variables
 	if (cm_get_path_control(MODEL) != PATH_EXACT_STOP) { 	// exact stop cases already zeroed

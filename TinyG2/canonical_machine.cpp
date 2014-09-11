@@ -610,7 +610,17 @@ stat_t cm_hard_alarm(stat_t status)
 //	gpio_set_bit_off(SPINDLE_PWM);
 //	gpio_set_bit_off(MIST_COOLANT_BIT);		//++++ replace with exec function
 //	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
-
+/*
+	// build an info string and call the exception report
+	char_t info[64];
+	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+		sprintf_P(info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		} else {
+		//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
+		sprintf_P(info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+	}
+	rpt_exception(status, info);			// send shutdown message
+*/
 	rpt_exception(status);					// send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
 	return (status);
@@ -835,17 +845,12 @@ stat_t cm_straight_traverse(float target[], float flags[])
 {
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target, flags);
-
-	// test soft limits
-	stat_t status = cm_test_soft_limits(cm.gm.target);
-	if (status != STAT_OK) return (cm_soft_alarm(status));
-
-	// prep and plan the move
-	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
-	cm_cycle_start();							// required for homing & other cycles
-	mp_aline(&cm.gm);							// send the move to the planner
+	ritorno (cm_test_soft_limits(cm.gm.target)); 	// test soft limits; exit if thrown
+	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
+	cm_cycle_start();								// required for homing & other cycles
+	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	return (STAT_OK);
+	return (status);
 }
 
 /*
@@ -864,8 +869,8 @@ stat_t cm_set_g28_position(void)
 stat_t cm_goto_g28_position(float target[], float flags[])
 {
 	cm_set_absolute_override(MODEL, true);
-	cm_straight_traverse(target, flags);			 // move through intermediate point, or skip
-	while (mp_get_planner_buffers_available() == 0); // make sure you have an available buffer
+	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
+	while (mp_get_planner_buffers_available() == 0);	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(cm.gmx.g28_position, f));// execute actual stored move
 }
@@ -879,8 +884,8 @@ stat_t cm_set_g30_position(void)
 stat_t cm_goto_g30_position(float target[], float flags[])
 {
 	cm_set_absolute_override(MODEL, true);
-	cm_straight_traverse(target, flags);			 // move through intermediate point, or skip
-	while (mp_get_planner_buffers_available() == 0); // make sure you have an available buffer
+	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
+	while (mp_get_planner_buffers_available() == 0);	// make sure you have an available buffer
 	float f[] = {1,1,1,1,1,1};
 	return(cm_straight_traverse(cm.gmx.g30_position, f));// execute actual stored move
 }
@@ -952,20 +957,14 @@ stat_t cm_straight_feed(float target[], float flags[])
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-//		return(rpt_exception(STAT_GCODE_FEEDRATE_NOT_SPECIFIED));
 		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 	cm_set_model_target(target, flags);
-
-	// test soft limits
-	stat_t status = cm_test_soft_limits(cm.gm.target);
-	if (status != STAT_OK) return (cm_soft_alarm(status));
-
-	// prep and plan the move
-	cm_set_work_offsets(&cm.gm);				// capture the fully resolved offsets to the state
-	cm_cycle_start();							// required for homing & other cycles
-	status = mp_aline(&cm.gm);					// send the move to the planner
+	ritorno (cm_test_soft_limits(cm.gm.target)); 	// test soft limits; exit if thrown
+	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
+	cm_cycle_start();								// required for homing & other cycles
+	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
 	return (status);
 }
@@ -1313,7 +1312,9 @@ stat_t cm_queue_flush()
 
 static void _exec_program_finalize(float *value, float *flag)
 {
-	cm.machine_state = (uint8_t)value[0];
+	if ((cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
+		cm.machine_state = (uint8_t)value[0];
+	}
 	cm_set_motion_state(MOTION_STOP);
 	if (cm.cycle_state == CYCLE_MACHINING) {
 		cm.cycle_state = CYCLE_OFF;						// don't end cycle if homing, probing, etc.
@@ -1324,8 +1325,8 @@ static void _exec_program_finalize(float *value, float *flag)
 
 	// perform the following resets if it's a program END
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
-		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
-	//	cm_suspend_origin_offsets();					// G92.2 - as per Kramer
+//		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
+		cm_suspend_origin_offsets();					// G92.2 - as per Kramer
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);

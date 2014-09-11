@@ -136,9 +136,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	// Accept the entry velocity, limit the cruise, and go for the best exit velocity
 	// you can get given the delta_vmax (maximum velocity slew) supportable.
 
-	bf->naiive_move_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); // average
+	float naiive_move_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); // average
 
-	if (bf->naiive_move_time < MIN_SEGMENT_TIME_PLUS_MARGIN) {
+	if (naiive_move_time < MIN_SEGMENT_TIME_PLUS_MARGIN) {
 		bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
 		bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
 		bf->body_length = bf->length;
@@ -150,7 +150,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 	// B" case: Block is short, but fits into a single body segment
 
-	if (bf->naiive_move_time <= NOM_SEGMENT_TIME) {
+	if (naiive_move_time <= NOM_SEGMENT_TIME) {
 		bf->entry_velocity = bf->pv->exit_velocity;
 		if (fp_NOT_ZERO(bf->entry_velocity)) {
 			bf->cruise_velocity = bf->entry_velocity;
