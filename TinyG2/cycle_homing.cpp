@@ -338,7 +338,7 @@ static stat_t _homing_axis_start(int8_t axis)
 	}
 #endif
 
-	hm.saved_jerk = cm.a[axis].jerk_max;					// save the max jerk value
+	hm.saved_jerk = cm_get_axis_jerk(axis);					// save the max jerk value
 	return (_set_homing_func(_homing_axis_clear));			// start the clear
 }
 

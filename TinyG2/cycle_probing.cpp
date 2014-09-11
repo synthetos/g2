@@ -86,7 +86,7 @@ uint8_t _set_pb_func(uint8_t (*func)())
 
 /****************************************************************************************
  * cm_probing_cycle_start()		- G38.2 homing cycle using limit switches
- * cm_probing_cycle_callback() 	- main loop callback for running the homing cycle
+ * cm_probing_cycle_callback()	- main loop callback for running the homing cycle
  *
  *	--- Some further details ---
  *
@@ -156,8 +156,10 @@ static uint8_t _probing_init()
 
 	// initialize the axes - save the jerk settings & switch to the jerk_homing settings
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
-		pb.saved_jerk[axis] = cm.a[axis].jerk_max;		// save the max jerk value
-		cm.a[axis].jerk_max = cm.a[axis].jerk_homing;	// use the homing jerk for probe
+//		pb.saved_jerk[axis] = cm.a[axis].jerk_max;		// save the max jerk value
+		pb.saved_jerk[axis] = cm_get_axis_jerk(axis);	// save the max jerk value
+//		cm.a[axis].jerk_max = cm.a[axis].jerk_homing;	// use the homing jerk for probe
+		cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);	// use the homing jerk for probe
 		pb.start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 	}
 
@@ -167,7 +169,6 @@ static uint8_t _probing_init()
 
 	// error if the probe target requires a move along the A/B/C axes
 	for ( uint8_t axis=AXIS_A; axis<AXES; axis++ ) {
-//		if (pb.start_position[axis] != pb.target[axis])
 		if (fp_NE(pb.start_position[axis], pb.target[axis]))
 			_probing_error_exit(axis);
 	}

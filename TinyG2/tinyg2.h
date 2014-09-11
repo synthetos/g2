@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.10 // Sync G1 build 450.08: homing cycle (more)
+#define TINYG_FIRMWARE_BUILD   		071.11 // Sync G1 build 450.08: homing and probing
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
