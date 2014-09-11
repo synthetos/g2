@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		069.04 // Sync G1 build 450.08: Settings
+#define TINYG_FIRMWARE_BUILD   		070.01 // Inserted single character traps for feedholds, etc.
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

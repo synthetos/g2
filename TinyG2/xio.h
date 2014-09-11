@@ -160,8 +160,18 @@ stat_t xio_set_spi(nvObj_t *nv);
 #define NAK (char)0x15		// ^u - Negative acknowledgement
 #define CAN (char)0x18		// ^x - Cancel, abort
 #define ESC (char)0x1B		// ^[ - ESC(ape)
+#define SPC (char)0x20		// ' '  Space character
 #define DEL (char)0x7F		//  DEL(ete)
+
 #define Q_EMPTY (char)0xFF	// signal no character
+
+/* Signal character mappings */
+
+#define CHAR_RESET CAN
+#define CHAR_FEEDHOLD (char)'!'
+#define CHAR_CYCLE_START (char)'~'
+#define CHAR_QUEUE_FLUSH (char)'%'
+//#define CHAR_BOOTLOADER ESC
 
 #ifdef __TEXT_MODE
 
