@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.11 // Sync G1 build 450.08: homing and probing
+#define TINYG_FIRMWARE_BUILD   		071.12 // Sync G1 build 450.08: JSON serialization - change the footers - no more checksum
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
