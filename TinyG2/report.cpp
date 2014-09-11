@@ -109,7 +109,7 @@ void rpt_print_loading_configs_message(void)
 void rpt_print_system_ready_message(void)
 {
 	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
-	if (cfg.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
+	if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
 }
 
 /*****************************************************************************
@@ -487,7 +487,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
 	qr.queue_report_requested = false;
 
-	if (cfg.comm_mode == TEXT_MODE) {
+	if (cs.comm_mode == TEXT_MODE) {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "qr:%d\n", qr.buffers_available);
 		} else  {
@@ -602,7 +602,7 @@ stat_t job_set_job_report(nvObj_t *nv)
 	for (uint8_t i=0; i<4; i++) {
 		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
 		if (nv->valuetype == TYPE_INTEGER) {
-			cs.job_id[i] = nv->value;
+			cfg.job_id[i] = nv->value;
 			nv->index = job_start + i;		// index of the SR persistence location
 			nv_persist(nv);
 		} else {
@@ -615,13 +615,13 @@ stat_t job_set_job_report(nvObj_t *nv)
 
 uint8_t job_report_callback()
 {
-	if (cfg.comm_mode == TEXT_MODE) {
+	if (cs.comm_mode == TEXT_MODE) {
 		// no-op, job_ids are client app state
 	} else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
+		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2],cfg.job_id[3] );
 	} else {
-		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
-		//job_clear_report();
+		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+		//job_clear_report(); d
 	}
 	return (STAT_OK);
 }

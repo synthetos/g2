@@ -38,8 +38,9 @@
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
-	uint8_t state;						// controller state
 	float null;							// dumping ground for items with no target
+
+	// system identification values
 	float fw_build;						// tinyg firmware build number
 	float fw_version;					// tinyg firmware version number
 	float config_version;				// tinyg configuration version for host / UI control
@@ -49,6 +50,8 @@ typedef struct controllerSingleton {	// main TG controller struct
 	// communications state variables
 	uint8_t comm_mode;					// 0=text mode, 1=JSON mode
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
+	uint8_t state_usb0;
+	uint8_t state_usb1;
 
 	// system state variables
 	uint8_t controller_state;
@@ -62,14 +65,7 @@ typedef struct controllerSingleton {	// main TG controller struct
 //	uint8_t sync_to_time_state;
 //	uint32_t sync_to_time_time;
 
-	int32_t job_id[4];					// uuid to identify the job
-
 	// controller serial buffers
-
-	uint8_t state_usb0;
-	uint8_t state_usb1;
-	uint16_t read_index;
-
 	char_t *bufp;						// pointer to input buffer
 	uint16_t linelen;					// length of current line
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer

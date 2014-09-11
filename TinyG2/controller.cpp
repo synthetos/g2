@@ -285,6 +285,7 @@ static void _dispatch_kernel()
 
 	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
 		text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
+
 	} else {
 		strncpy(cs.out_buf, cs.bufp, (MAXED_BUFFER_LEN-8));	// use out_buf as temp; '-8' is buffer for JSON chars
 		sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);
