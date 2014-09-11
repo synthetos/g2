@@ -259,7 +259,7 @@ enum motorPowerState {					// used w/start and stop flags to sequence motor powe
 	MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
 	MOTOR_RUNNING,						// motor is running (and fully energized)
 	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
-	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motors
+	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motor
 };
 
 enum cmMotorPowerMode {
@@ -278,20 +278,16 @@ enum cmMotorPowerMode {
 #define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // scale power level setting for voltage range
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
-//#define POWER_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
-//#define POWER_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
-// Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN 	(float)0.1		// seconds !!! SHOULD NEVER BE ZERO !!!
 #define MOTOR_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
-#define MOTOR_TIMEOUT_SECONDS 		(float)0.1		// seconds in DISABLE_AXIS_WHEN_IDLE mode
-#define MOTOR_TIMEOUT_WHEN_MOVING	(float)0.25		// timeout for a motor in _ONLY_WHEN_MOVING mode
+#define MOTOR_TIMEOUT_SECONDS 		(float)0.25		// seconds in DISABLE_AXIS_WHEN_IDLE & _ONLY_WHEN_MOVING modes
 
 /* DDA substepping
  *	DDA Substepping is a fixed.point scheme to increase the resolution of the DDA pulse generation
  *	while still using integer math (as opposed to floating point). Improving the accuracy of the DDA
  *	results in more precise pulse timing and therefore less pulse jitter and smoother motor operation.
  *
- *	The DDA accumulator is an int32_t, so the accumulator has the number range of about 2.1 billion. 
+ *	The DDA accumulator is an int32_t, so the accumulator has the number range of about 2.1 billion.
  *	The DDA_SUBSTEPS is used to multiply the step count for a segment to maximally use this number range.
  *	DDA_SUBSTEPS can be computed for a given DDA clock rate and segment time not to exceed the available
  *	number range. Variables are:
@@ -309,10 +305,10 @@ enum cmMotorPowerMode {
 
 /* Step correction settings
  *	Step correction settings determine how the encoder error is fed back to correct position errors.
- *	Since the following_error is running 2 segments behind the current segment you have to be careful 
+ *	Since the following_error is running 2 segments behind the current segment you have to be careful
  *	not to overcompensate. The threshold determines if a correction should be applied, and the factor
- *	is how much. The holdoff is how many segments to wait before applying another correction. If threshold 
- *	is too small and/or amount too large and/or holdoff is too small you may get a runaway correction 
+ *	is how much. The holdoff is how many segments to wait before applying another correction. If threshold
+ *	is too small and/or amount too large and/or holdoff is too small you may get a runaway correction
  *	and error will grow instead of shrink (or oscillate).
  */
 #define STEP_CORRECTION_THRESHOLD	(float)2.00		// magnitude of forwarding error to apply correction (in steps)
@@ -332,9 +328,9 @@ enum cmMotorPowerMode {
  *	  stConfig (st_cfg)					  stepper.c		  write=bkgd, read=ISRs
  *	  stPrepSingleton (st_pre)			  stepper.c		  MED ISR
  *	  stRunSingleton (st_run)			  stepper.c		  HI ISR
- *  
+ *
  *	Care has been taken to isolate actions on these structures to the execution level
- *	in which they run and to use the minimum number of volatiles in these structures. 
+ *	in which they run and to use the minimum number of volatiles in these structures.
  *	This allows the compiler to optimize the stepper inner-loops better.
  */
 
@@ -383,7 +379,7 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-	int32_t substep_increment;			// total steps in axis times substep factor
+	uint32_t substep_increment;			// total steps in axis times substep factor
 
 	// direction and direction change
 	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
@@ -406,14 +402,11 @@ typedef struct stPrepSingleton {
 	volatile uint8_t buffer_state;		// prep buffer state - owned by exec or loader
 	struct mpBuffer *bf;				// static pointer to relevant buffer
 	uint8_t move_type;					// move type
-//	volatile uint8_t segment_ready;		// flag indicating the next segment is ready for loading
 
 	uint16_t dda_period;				// DDA or dwell clock period setting
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
-//	float dda_ticks_dither;				// dithering value to correct DDA ticks integer roundoff errors 
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
-
 	uint16_t magic_end;
 } stPrepSingleton_t;
 
@@ -425,21 +418,17 @@ extern stPrepSingleton_t st_pre;		// only used by config_app diagnostics
 void stepper_init(void);
 void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
-//uint8_t stepper_isbusy(void);
 
 uint8_t st_runtime_isbusy(void);
 void st_reset(void);
-//void st_cycle_start(void);
-//void st_cycle_end(void);
 stat_t st_clc(nvObj_t *nv);
 
-void st_energize_motors(void);
+void st_energize_motors(float timeout_seconds);
 void st_deenergize_motors(void);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
 void st_request_exec_move(void);
-//void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);		// use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);

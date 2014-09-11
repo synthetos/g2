@@ -48,7 +48,9 @@ static stRunSingleton_t st_run;
 
 static void _load_move(void);
 static void _request_load_move(void);
+#ifdef __ARM
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
+#endif
 
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
@@ -58,8 +60,8 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 #ifdef __ARM
 using namespace Motate;
 
-OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	 // shorter form of the above
-OutputPin<kDebug1_PinNumber> dda_debug_pin1;	// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
+OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	// shorter form of the above
+OutputPin<kDebug1_PinNumber> dda_debug_pin1;			// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
 OutputPin<kDebug2_PinNumber> dda_debug_pin2;
 OutputPin<kDebug3_PinNumber> dda_debug_pin3;
 
@@ -81,7 +83,7 @@ template<pin_number step_num,			// Setup a stepper template to hold our pins
 
 struct Stepper {
 	/* stepper pin assignments */
-	
+
 	OutputPin<step_num> step;
 	OutputPin<dir_num> dir;
 	OutputPin<enable_num> enable;
@@ -235,9 +237,12 @@ void stepper_init()
 #endif // __AVR
 
 #ifdef __ARM
-	// setup DDA timer (see FOOTNOTE)
+	// setup DDA timer
+	// Longer duty cycles stretch ON pulses but 75% is about the upper limit and about
+	// optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
+	// If you need more pulse width you need to drop the DDA clock rate
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	dda_timer.setDutyCycleA(1.0 - 0.25);
+	dda_timer.setDutyCycleA(1.0 - 0.75);		// This is a 75% duty cycle on the ON step part
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -254,7 +259,6 @@ void stepper_init()
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_scaled);
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
-//	motor_1.vref = 0.25; // example of how to set vref duty cycle directly. Freq already set to 500000 Hz.
 #endif // __ARM
 }
 
@@ -324,7 +328,7 @@ stat_t st_clc(nvObj_t *nv)	// clear diagnostic counters, reset stepper prep
  * Motor power management functions
  *
  * _deenergize_motor()		 - remove power from a motor
- * _energize_motor()		 - apply power to a motor
+ * _energize_motor()		 - apply power to a motor and start motor timeout
  * _set_motor_power_level()	 - set the actual Vref to a specified power level
  *
  * st_energize_motors()		 - apply power to all motors
@@ -355,7 +359,7 @@ static void _deenergize_motor(const uint8_t motor)
 #endif
 }
 
-static void _energize_motor(const uint8_t motor)
+static void _energize_motor(const uint8_t motor, float timeout_seconds)
 {
 	if (st_cfg.mot[motor].power_mode == MOTOR_DISABLED) {
 		_deenergize_motor(motor);
@@ -379,14 +383,16 @@ static void _energize_motor(const uint8_t motor)
 	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.energize(MOTOR_5);
 	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.energize(MOTOR_6);
 #endif
-	st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
+
+	st_run.mot[motor].power_systick = SysTickTimer_getValue() + (timeout_seconds * 1000);
+	st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
 }
 
 /*
  * _set_motor_power_level()	- applies the power level to the requested motor.
  *
  *	The power_level must be a compensated PWM value - presumably one of:
- *		st_cfg.mot[motor].power_level_scaled 
+ *		st_cfg.mot[motor].power_level_scaled
  *		st_run.mot[motor].power_level_dynamic
  */
 static void _set_motor_power_level(const uint8_t motor, const float power_level)
@@ -402,11 +408,10 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 #endif
 }
 
-void st_energize_motors()
+void st_energize_motors(float timeout_seconds)
 {
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		_energize_motor(motor);
-		st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
+		_energize_motor(motor, timeout_seconds);
 	}
 #ifdef __ARM
 	common_enable.clear();			// enable gShield common enable
@@ -433,29 +438,21 @@ stat_t st_motor_power_callback() 	// called by controller
 	// manage power for each motor individually
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 
-		if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
-			if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START) {
+		// start timeouts initiated during a load so the loader does not need to burn these cycles
+		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START) {
+			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+			if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
 				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-				st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-			}
-			if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
-				if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
-					st_run.mot[motor].power_state = MOTOR_IDLE;
-					_deenergize_motor(motor);
-				}
+			} else if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
 			}
 		}
 
-		if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START) {
-				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_WHEN_MOVING * 1000);
-				st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-			}
-			if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
-				if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
-					st_run.mot[motor].power_state = MOTOR_IDLE;
-					_deenergize_motor(motor);
-				}
+		// count down and time out the motor
+		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
+			if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
+				st_run.mot[motor].power_state = MOTOR_IDLE;
+				_deenergize_motor(motor);
 			}
 		}
 	}
@@ -472,7 +469,7 @@ stat_t st_motor_power_callback() 	// called by controller
 
 #ifdef __AVR
 /*
- *	Uses direct struct addresses and literal values for hardware devices - it's faster than 
+ *	Uses direct struct addresses and literal values for hardware devices - it's faster than
  *	using indexed timer and port accesses. I checked. Even when -0s or -03 is used.
  */
 ISR(TIMER_DDA_ISR_vect)
@@ -707,8 +704,8 @@ namespace Motate {	// Define timer inside Motate namespace
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper struct
  *
- *	This routine can only be called be called from an ISR at the same or 
- *	higher level as the DDA or dwell ISR. A software interrupt has been 
+ *	This routine can only be called be called from an ISR at the same or
+ *	higher level as the DDA or dwell ISR. A software interrupt has been
  *	provided to allow a non-ISR to request a load (see st_request_load_move())
  *
  *	In aline() code:
@@ -887,7 +884,8 @@ static void _load_move()
 
 	// null
 	} else {
-		printf("prep_null encountered\n");
+// We cannot printf from here!! Causes crashes.
+//		printf("prep_null encountered\n");
 	}
 
 	// all other cases drop to here (e.g. Null moves after Mcodes skip to here)
@@ -1005,7 +1003,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 void st_prep_null()
 {
 	st_pre.move_type = MOVE_TYPE_NULL;
-//	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;	// signal that prep buffer is empty
 }
 
@@ -1142,7 +1139,7 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
 	set_ui8(nv);
 
 	if (fp_ZERO(nv->value)) {			// people asked this setting take effect immediately, hence:
-		_energize_motor(_get_motor(nv->index));
+		_energize_motor(_get_motor(nv->index), st_cfg.motor_power_timeout);
 	} else {
 		_deenergize_motor(_get_motor(nv->index));
 	}
@@ -1153,9 +1150,9 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
  * st_set_pl() - set motor power level
  *
  *	Input value may vary from 0.000 to 1.000 The setting is scaled to allowable PWM range.
- *	This function sets both the scaled and dynamic power levels, and applies the 
+ *	This function sets both the scaled and dynamic power levels, and applies the
  *	scaled value to the vref.
- */ 
+ */
 stat_t st_set_pl(nvObj_t *nv)	// motor power level
 {
 #ifdef __ARM
@@ -1165,7 +1162,7 @@ stat_t st_set_pl(nvObj_t *nv)	// motor power level
  		nv->value /= 100;		// accommodate old 0-100 inputs
 	}
 	set_flt(nv);	// set power_setting value in the motor config struct (st)
-	
+
 	uint8_t motor = _get_motor(nv->index);
 	st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
 	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
@@ -1193,20 +1190,16 @@ stat_t st_set_mt(nvObj_t *nv)
 
 stat_t st_set_md(nvObj_t *nv)	// Make sure this function is not part of initialization --> f00
 {
-	if (((uint8_t)nv->value == 0) || (nv->valuetype == TYPE_NULL)) {
-		st_deenergize_motors();
-	} else {
-		_deenergize_motor((uint8_t)nv->value-1);
-	}
+	st_deenergize_motors();
 	return (STAT_OK);
 }
 
 stat_t st_set_me(nvObj_t *nv)	// Make sure this function is not part of initialization --> f00
 {
 	if (((uint8_t)nv->value == 0) || (nv->valuetype == TYPE_NULL)) {
-		st_energize_motors();
+		st_energize_motors(st_cfg.motor_power_timeout);
 	} else {
-		_energize_motor((uint8_t)nv->value-1);
+		st_energize_motors(nv->value);
 	}
 	return (STAT_OK);
 }

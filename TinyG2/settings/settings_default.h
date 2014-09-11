@@ -1,6 +1,6 @@
 /*
  * settings_default.h - default machine profile
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2012 - 2014 Alden S. Hart, Jr.
  *
@@ -49,18 +49,22 @@
 
 // *** motor settings ***
 
+// G2 NOTES: 
+// - Motor/axis assignments are different in G2 to maintain compatibility fir G1 wiring harnesses 
+// - Default microstepping is 32 to stress test stepping functions. In practice this should be lover
+
 #define M1_MOTOR_MAP 			AXIS_A				// 1ma
 #define M1_STEP_ANGLE 			1.8					// 1sa
-#define M1_TRAVEL_PER_REV		1.25				// 1tr
-#define M1_MICROSTEPS			8					// 1mi		1,2,4,8
+#define M1_TRAVEL_PER_REV		360 				// 1tr		degrees moved per motor rev
+#define M1_MICROSTEPS			32					// 1mi		1,2,4,8,16,32
 #define M1_POLARITY				0					// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			MOTOR_POWER_MODE	// 1pm		standard
 #define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 1mp
 
-#define M2_MOTOR_MAP	 		AXIS_X
+#define M2_MOTOR_MAP	 		AXIS_Z
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		1.25
-#define M2_MICROSTEPS			8
+#define M2_MICROSTEPS			32
 #define M2_POLARITY				0
 #define M2_POWER_MODE			MOTOR_POWER_MODE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -68,31 +72,31 @@
 #define M3_MOTOR_MAP			AXIS_Y
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		1.25
-#define M3_MICROSTEPS			8
+#define M3_MICROSTEPS			32
 #define M3_POLARITY				0
 #define M3_POWER_MODE			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M4_MOTOR_MAP			AXIS_Z
+#define M4_MOTOR_MAP			AXIS_X
 #define M4_STEP_ANGLE			1.8
-#define M4_TRAVEL_PER_REV		1.25			// degrees moved per motor rev
-#define M4_MICROSTEPS			8
+#define M4_TRAVEL_PER_REV		1.25
+#define M4_MICROSTEPS			32
 #define M4_POLARITY				0
 #define M4_POWER_MODE			MOTOR_POWER_MODE
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
-#define M5_TRAVEL_PER_REV		360
-#define M5_MICROSTEPS			8
+#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M5_MICROSTEPS			32
 #define M5_POLARITY				0
 #define M5_POWER_MODE			MOTOR_POWER_MODE
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
 #define M6_STEP_ANGLE			1.8
-#define M6_TRAVEL_PER_REV		360	
-#define M6_MICROSTEPS			8
+#define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev	
+#define M6_MICROSTEPS			32
 #define M6_POLARITY				0
 #define M6_POWER_MODE			MOTOR_POWER_MODE
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -100,7 +104,7 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			800 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			1000 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			150					// xtm		maximum travel - used by soft limits and homing
@@ -115,7 +119,7 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			800
+#define Y_VELOCITY_MAX 			1000
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN			0
 #define Y_TRAVEL_MAX 			150
@@ -130,7 +134,7 @@
 #define Y_JERK_HOMING			Y_JERK_MAX
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
-#define Z_VELOCITY_MAX 			800
+#define Z_VELOCITY_MAX 			1000
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN			0
 #define Z_TRAVEL_MAX 			75
@@ -148,7 +152,7 @@
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			A_VELOCITY_MAX
-#define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
+#define A_TRAVEL_MIN			-1					// min/max the same means infinite, no limit
 #define A_TRAVEL_MAX 			-1
 #define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION

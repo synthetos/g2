@@ -43,19 +43,14 @@ using Motate::delay;
 using Motate::SysTickTimer;
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /****** Global Scope Variables and Functions ******/
 
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
 
-#define clear_vector(a) memset(a,0,sizeof(a))
-#define	copy_vector(d,s) memcpy(d,s,sizeof(d))
-//void copy_vector(float dst[], const float src[]);
+#define clear_vector(a) (memset(a,0,sizeof(a)))
+#define	copy_vector(d,s) (memcpy(d,s,sizeof(d)))
 
 float get_axis_vector_length(const float a[], const float b[]);
 uint8_t vector_equal(const float a[], const float b[]);
@@ -147,14 +142,17 @@ uint32_t SysTickTimer_getValue(void);
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 
 #define RADIAN (57.2957795)
-//		M_PI is pi as defined in math.h
-//		M_SQRT2 is radical2 as defined in math.h
-#ifndef M_SQRT3
-#define M_SQRT3 (1.73205080756888)
+
+#ifndef M_PI	// M_PI is pi usually defined in math.h, but not always (C++11)
+#define M_PI (3.14159265358979323846264338327950288)
 #endif
 
-#ifdef __cplusplus
-}
+#ifndef M_SQRT2 // M_SQRT2 is radical2 as defined in math.h
+#define M_SQRT2 (1.41421356237310)
+#endif
+
+#ifndef M_SQRT3
+#define M_SQRT3 (1.73205080756888)
 #endif
 
 #endif	// End of include guard: UTIL_H_ONCE

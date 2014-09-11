@@ -28,33 +28,31 @@
 #ifndef REPORT_H_ONCE
 #define REPORT_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Configs, Definitions and Structures ****/
 // Note: If you are looking for the defaults for the status report see settings.h
 
 #define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 												// **** must also line up in cfgArray, se00 - seXX ****
 
-#define MIN_ARC_QR_INTERVAL 200					// minimum interval between QRs during arc generation (in system ticks)
+#define MIN_ARC_QR_INTERVAL 200		// minimum interval between QRs during arc generation (in system ticks)
 
-enum srVerbosity {								// status report enable and verbosity
-	SR_OFF = 0,									// no reports
-	SR_FILTERED,								// reports only values that have changed from the last report
-	SR_VERBOSE									// reports all values specified
+enum srVerbosity {					// status report enable, verbosity and request type
+	SR_OFF = 0,						// no reports
+	SR_FILTERED,					// reports only values that have changed from the last report
+	SR_VERBOSE						// reports all values specified
 };
 
 enum cmStatusReportRequest {
-	SR_TIMED_REQUEST = 0,						// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST						// request a status report ASAP
+	SR_REQUEST_IMMEDIATE = 0,		// request a full or filtered status report ASAP (depending on SR_VERBOSITY setting)
+	SR_REQUEST_IMMEDIATE_FULL,		// request a full status report ASAP (regardless of SR_VERBOSITY setting)
+	SR_REQUEST_TIMED,				// request a full or filtered status report at next timer interval (as above)
+	SR_REQUEST_TIMED_FULL			// request a full status report at next timer interval (as above)
 };
 
-enum qrVerbosity {								// planner queue enable and verbosity
-	QR_OFF = 0,									// no response is provided
-	QR_SINGLE,									// queue depth reported
-	QR_TRIPLE									// queue depth reported for buffers, buffers added, buffered removed
+enum qrVerbosity {					// planner queue enable and verbosity
+	QR_OFF = 0,						// no response is provided
+	QR_SINGLE,						// queue depth reported
+	QR_TRIPLE						// queue depth reported for buffers, buffers added, buffered removed
 };
 
 typedef struct srSingleton {
@@ -64,7 +62,7 @@ typedef struct srSingleton {
 	uint32_t status_report_interval;					// in milliseconds
 
 	/*** runtime values (PRIVATE) ***/
-	uint8_t status_report_requested;					// flag that SR has been requested
+	uint8_t status_report_request;						// flag that SR has been requested, and what type
 	uint32_t status_report_systick;						// SysTick value for next status report
 	index_t stat_index;									// table index value for stat - determined during initialization
 	index_t status_report_list[NV_STATUS_REPORT_LEN];	// status report elements to report
@@ -143,19 +141,5 @@ stat_t qo_get(nvObj_t *nv);
 	#define qr_print_qo tx_print_stub
 
 #endif // __TEXT_MODE
-
-
-/* unit test setup */
-//#define __UNIT_TEST_REPORT	// uncomment to enable report unit tests
-#ifdef __UNIT_TEST_REPORT
-void sr_unit_tests(void);
-#define	REPORT_UNITS sr_unit_tests();
-#else
-#define	REPORT_UNITS
-#endif // __UNIT_TEST_REPORT
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: REPORT_H_ONCE

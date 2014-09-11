@@ -193,6 +193,7 @@ stat_t hw_get_id(nvObj_t *nv);
 
 	void hw_print_fb(nvObj_t *nv);
 	void hw_print_fv(nvObj_t *nv);
+	void hw_print_cv(nvObj_t *nv);
 	void hw_print_hp(nvObj_t *nv);
 	void hw_print_hv(nvObj_t *nv);
 	void hw_print_id(nvObj_t *nv);
@@ -201,6 +202,7 @@ stat_t hw_get_id(nvObj_t *nv);
 
 	#define hw_print_fb tx_print_stub
 	#define hw_print_fv tx_print_stub
+	#define hw_print_cv tx_print_stub
 	#define hw_print_hp tx_print_stub
 	#define hw_print_hv tx_print_stub
 	#define hw_print_id tx_print_stub

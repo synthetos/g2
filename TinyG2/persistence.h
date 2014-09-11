@@ -30,10 +30,6 @@
 
 #include "config.h"					// needed for nvObj_t definition
 
-#ifdef __cplusplus
-extern "C"{
-#endif 
-
 #define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
 #define NVM_BASE_ADDR 0x0000		// base address of usable NVM
 
@@ -52,21 +48,6 @@ stat_t write_persistent_value(nvObj_t *nv);
 
 #ifdef __DEBUG
 void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
-#endif
-
-/*** Unit tests ***/
-
-/* unit test setup */
-//#define __UNIT_TEST_PERSISTENCE			// uncomment to enable config unit tests
-#ifdef __UNIT_TEST_PERSISTENCE
-void cfg_unit_tests(void);
-#define	PERSISTENCE_UNITS persist_unit_tests();
-#else
-#define	PERSISTENCE_UNITS
-#endif // __UNIT_TEST_PERSISTENCE
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif // End of include guard: PERSISTENCE_H_ONCE

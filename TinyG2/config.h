@@ -32,10 +32,6 @@
 #include "config_app.h"	// is present at the end of this file
 */
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Config System Overview and Usage ***
  *
  *	--- Config objects and the config list ---
@@ -193,8 +189,8 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 #define NV_LIST_LEN (NV_BODY_LEN+2)		// +2 allows for a header and a footer
 #define NV_MAX_OBJECTS (NV_BODY_LEN-1)	// maximum number of objects in a body string
 #define NO_MATCH (index_t)0xFFFF
-#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS // max number of status report elements - see cfgArray
-											// **** must also line up in cfgArray, se00 - seXX ****
+//#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS // max number of status report elements - see cfgArray
+//											// **** must also line up in cfgArray, se00 - seXX ****
 
 enum tgCommunicationsMode {
 	TEXT_MODE = 0,						// text command line mode
@@ -328,7 +324,6 @@ index_t	nv_index_max(void);					// (see config_app.c)
 uint8_t nv_index_is_single(index_t index);	// (see config_app.c)
 uint8_t nv_index_is_group(index_t index);	// (see config_app.c)
 uint8_t nv_index_lt_groups(index_t index);	// (see config_app.c)
-uint8_t nv_group_is_prefixed(char_t *group);
 
 // generic internal functions and accessors
 stat_t set_nul(nvObj_t *nv);				// set nothing (no operation)
@@ -364,6 +359,7 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);				// set floating point number with G20/G21 units conversion
 void preprocess_float(nvObj_t *nv);			// pre-process float values for units and illegal values
+uint8_t nv_group_is_prefixed(char_t *group);// deals with some application-specific exceptions to prefix rules
 
 // diagnostics
 void nv_dump_nv(nvObj_t *nv);
@@ -372,9 +368,5 @@ void nv_dump_nv(nvObj_t *nv);
  **** PLEASE NOTICE THAT CONFIG_APP.H IS HERE ************************************************
  *********************************************************************************************/
 #include "config_app.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: CONFIG_H_ONCE

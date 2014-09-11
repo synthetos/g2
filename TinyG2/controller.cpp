@@ -66,7 +66,7 @@ static stat_t _limit_switch_handler(void);
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
-static stat_t _command_dispatch(void);
+static stat_t _command_dispatch(bool);
 
 // prep for export to other modules:
 stat_t hardware_hard_reset_handler(void);
@@ -87,10 +87,12 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 
 	cs.fw_build = TINYG_FIRMWARE_BUILD;
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
+	cs.config_version = TINYG_CONFIG_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
 
 #ifdef __AVR
 	cs.state = CONTROLLER_STARTUP;					// ready to run startup lines
+	state_usb0 = CONTROLLER_NOT_CONNECTED
 	xio_set_stdin(std_in);
 	xio_set_stdout(std_out);
 	xio_set_stderr(std_err);
@@ -99,7 +101,6 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 
 #ifdef __ARM
-	cs.state = CONTROLLER_NOT_CONNECTED;			// find USB next
 	IndicatorLed.setFrequency(100000);
 #endif
 }
@@ -161,11 +162,13 @@ static void _controller_HSM()
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
 
-	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
+    DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(_system_assertions());				// 7. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
+
+    DISPATCH(_command_dispatch(/* Command-only: */ true));				// read and execute next command
 
 	DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
 //	DISPATCH(switch_debounce_callback());		// debounce switches
@@ -179,12 +182,13 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
+	DISPATCH(xio_callback());					// manages state changes in the XIO system
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_command_dispatch());				// read and execute next command
+	DISPATCH(_command_dispatch(/* Command-only: */ false));				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
@@ -197,58 +201,55 @@ static void _controller_HSM()
  *	Also responsible for prompts and for flow control
  */
 
-static stat_t _command_dispatch()
+static stat_t _command_dispatch(const bool command_only)
 {
 #ifdef __AVR
-	stat_t status;
+	devflags_t flags;
 
-	// read input line or return if not a completed line
-	// xio_gets() is a non-blocking workalike of fgets()
-	while (true) {
-		if ((status = xio_gets(cs.primary_src, cs.in_buf, sizeof(cs.in_buf))) == STAT_OK) {
-			cs.bufp = cs.in_buf;
-			break;
-		}
-		// handle end-of-file from file devices
-		if (status == STAT_EOF) {						// EOF can come from file devices only
-			if (cfg.comm_mode == TEXT_MODE) {
-				fprintf_P(stderr, PSTR("End of command file\n"));
-			} else {
-				rpt_exception(STAT_EOF);				// not really an exception
-			}
-			tg_reset_source();							// reset to default source
-		}
-		return (status);								// Note: STAT_EAGAIN, errors, etc. will drop through
+	if ((cs.bufp = readline(&flags, &cs.linelen)) == NULL) {
+		return (STAT_OK);									// nothing to process yet
 	}
 #endif // __AVR
+
 #ifdef __ARM
-	// detect USB connection and transition to disconnected state if it disconnected
-	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
+
+#ifdef __DUAL_USB
+	devflags_t device_flags = command_only ? DEV_IS_CTRL : DEV_IS_BOTH;
 
 	// read input line and return if not a completed line
-	if (cs.state == CONTROLLER_READY) {
+	if ((cs.bufp = readline(device_flags, cs.linelen)) == NULL) {
+		return (STAT_OK);									// nothing to process yet
+	}
+#else
+    // With single-endpoint, we cannot read only the command-channel
+    if (command_only)
+        return (STAT_OK);
+
+	if (cs.state_usb0 == CONTROLLER_READY) {
 		if (read_line(cs.in_buf, &cs.read_index, sizeof(cs.in_buf)) != STAT_OK) {
 			cs.bufp = cs.in_buf;
 			return (STAT_OK);	// This is an exception: returns OK for anything NOT OK, so the idler always runs
 		}
-	} else if (cs.state == CONTROLLER_NOT_CONNECTED) {
+	} else if (cs.state_usb0 <= CONTROLLER_NOT_CONNECTED) {
 		if (SerialUSB.isConnected() == false) return (STAT_OK);
 		cm_request_queue_flush();
 		rpt_print_system_ready_message();
-		cs.state = CONTROLLER_STARTUP;
+		cs.state_usb0 = CONTROLLER_STARTUP;
 
-	} else if (cs.state == CONTROLLER_STARTUP) {		// run startup code
-		cs.state = CONTROLLER_READY;
+	} else if (cs.state_usb0 == CONTROLLER_STARTUP) {		// run startup code
+		cs.state_usb0 = CONTROLLER_READY;
 
 	} else {
 		return (STAT_OK);
 	}
 	cs.read_index = 0;
+#endif	// __DUAL_USB
 #endif // __ARM
 
 	// set up the buffers
-	cs.linelen = strlen(cs.in_buf)+1;					// linelen only tracks primary input
+	cs.linelen = strlen(cs.bufp)+1;						// linelen only tracks primary input
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);	// save input buffer for reporting
+//	strncpy(cs.saved_buf, cs.bufp, INPUT_BUFFER_LEN-1);	// save input buffer for reporting
 
 	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char

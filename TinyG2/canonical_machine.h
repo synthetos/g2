@@ -31,10 +31,6 @@
 #ifndef CANONICAL_MACHINE_H_ONCE
 #define CANONICAL_MACHINE_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 #include "config.h"
 
 /* Defines, Macros, and  Assorted Parameters */
@@ -197,6 +193,7 @@ typedef struct cmAxis {
 	float travel_min;					// min work envelope for soft limits
 	float jerk_max;						// max jerk (Jm) in mm/min^3 divided by 1 million
 	float jerk_homing;					// homing jerk (Jh) in mm/min^3 divided by 1 million
+	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
 	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
 	float search_velocity;				// homing search velocity
@@ -518,6 +515,8 @@ uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(uint8_t motion_state);
+float cm_get_axis_jerk(uint8_t axis);
+void cm_set_axis_jerk(uint8_t axis, float jerk);
 
 uint32_t cm_get_linenum(GCodeState_t *gcode_state);
 uint8_t cm_get_motion_mode(GCodeState_t *gcode_state);
@@ -689,7 +688,8 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
-stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
+stat_t cm_set_xjm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
+stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
 /*--- text_mode support functions ---*/
 
@@ -808,9 +808,5 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	#define cm_print_cpos tx_print_stub
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: CANONICAL_MACHINE_H_ONCE

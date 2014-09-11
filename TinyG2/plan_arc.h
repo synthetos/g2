@@ -21,10 +21,6 @@
 #ifndef PLAN_ARC_H_ONCE
 #define PLAN_ARC_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 // See planner.h for MM_PER_ARC_SEGMENT setting
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
@@ -69,9 +65,5 @@ extern arc_t arc;
 void cm_arc_init(void);
 stat_t cm_arc_callback(void);
 void cm_abort_arc(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: PLAN_ARC_H_ONCE

@@ -21,10 +21,6 @@
 #ifndef CONFIG_APP_H_ONCE
 #define CONFIG_APP_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /***********************************************************************************
  **** APPLICATION_SPECIFIC DEFINITIONS AND SETTINGS ********************************
  ***********************************************************************************/
@@ -102,9 +98,5 @@ uint8_t job_report_callback();
 	#define cfg_print_rx tx_print_stub
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 #endif //End of include guard: CONFIG_APP_H_ONCE
