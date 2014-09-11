@@ -28,7 +28,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
-#include "controller.h"
+//#include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
 #include "stepper.h"
@@ -36,7 +36,8 @@
 #include "util.h"
 
 // aline planner routines / feedhold planning
-static void _calc_move_times(GCodeState_t *gms, const float position[]);
+//static void _calc_move_times(GCodeState_t *gms, const float position[]);
+static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
 static float _get_junction_vmax(const float a_unit[], const float b_unit[]);
 static void _reset_replannable_list(void);
@@ -93,21 +94,35 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	float junction_velocity;
 	uint8_t mr_flag = false;
 
-	if (vector_equal(mm.position, gm_in->target)) {	// exit if the move has zero movement. At all.
+	// compute some reused terms
+	float axis_length[AXES];
+	float axis_square[AXES];
+	float length_square = 0;
+
+	for (uint8_t axis=0; axis<AXES; axis++) {
+		axis_length[axis] = gm_in->target[axis] - mm.position[axis];
+		axis_square[axis] = square(axis_length[axis]);
+		length_square += axis_square[axis];
+	}
+	float length = sqrt(length_square);
+
+	// exit if the move has zero movement. At all.
+	if (fp_ZERO(length)) {
+//	if (fp_ZERO(axis_length[AXIS_X]) && fp_ZERO(axis_length[AXIS_Y]) && fp_ZERO(axis_length[AXIS_Z]) &&
+//		fp_ZERO(axis_length[AXIS_A]) && fp_ZERO(axis_length[AXIS_B]) && fp_ZERO(axis_length[AXIS_C])) {
 		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 		return (STAT_OK);
 	}
-	// If _calc_move_times() says the move will take less than the minimum move time
-	// get a more accurate time estimate based on starting velocity and acceleration.
-	// The time of the move is determined by its initial velocity (Vi) and how much
-	// acceleration will be occur. For this we need to look at the exit velocity of
-	// the previous block. There are 3 possible cases:
+
+	// If _calc_move_times() says the move will take less than the minimum move time get a more
+	// accurate time estimate based on starting velocity and acceleration. The time of the move
+	// is determined by its initial velocity (Vi) and how much acceleration will be occur. For
+	// this we need to look at the exit velocity of the previous block. There are 3 possible cases:
 	//	(1) There is no previous block. Vi = 0
 	//	(2) Previous block is optimally planned. Vi = previous block's exit_velocity
 	//	(3) Previous block is not optimally planned. Vi <= previous block's entry_velocity + delta_velocity
 
-	_calc_move_times(gm_in, mm.position);									// set move time and minimum time in the state
-	float length = get_axis_vector_length(gm_in->target, mm.position);		// compute the length (needed later)
+	_calc_move_times(gm_in, axis_length, axis_square);						// set move time and minimum time in the state
 	if (gm_in->move_time < MIN_BLOCK_TIME) {
 		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move
 		float entry_velocity = 0;											// pre-set as if no previous block
@@ -126,7 +141,9 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	}
 
 	// get a cleared buffer and setup move variables
-	if ((bf = mp_get_write_buffer()) == NULL) return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL)); // never supposed to fail
+	if ((bf = mp_get_write_buffer()) == NULL) {							// never supposed to fail
+		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL));
+	}
 	bf->bf_func = mp_exec_aline;										// register the callback to the exec function
 	bf->length = length;
 	memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));						// copy model state into planner buffer
@@ -192,17 +209,15 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	float C;					// contribution term. C = T * a
 	float maxC = 0;
-	float axis_length;
-	float recip_L2 = 1/square(bf->length);
+	float recip_L2 = 1/length_square;
 
 	for (uint8_t axis=0; axis<AXES; axis++) {
-		if (fp_NOT_ZERO(axis_length = bf->gm.target[axis] - mm.position[axis])) {
-			bf->unit[axis] = axis_length / bf->length;						// compute unit vector term (zeros are already zero)
-//			C = square(axis_length) * recip_L2 * (1/cm.a[axis].jerk_max);	// squaring axis_length ensures it's positive
-			C = square(axis_length) * recip_L2 * cm.a[axis].recip_jerk;		// squaring axis_length ensures it's positive
+		if (fp_NOT_ZERO(axis_length[axis])) {
+			bf->unit[axis] = axis_length[axis] / bf->length;			// compute unit vector term (zeros are already zero)
+			C = axis_square[axis] * recip_L2 * cm.a[axis].recip_jerk;	// squaring axis_length ensures it's positive
 			if (C > maxC) {
 				maxC = C;
-				bf->jerk_axis = axis;										// also needed for junction vmax calculation
+				bf->jerk_axis = axis;									// also needed for junction vmax calculation
 			}
 		}
 	}
@@ -301,7 +316,8 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *		so that the elapsed time from the start to the end of the motion is T plus
  *		any time required for acceleration or deceleration.
  */
-static void _calc_move_times(GCodeState_t *gms, const float position[])	// gms = Gcode model state
+static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[])
+										// gms = Gcode model state
 {
 	float inv_time=0;				// inverse time if doing a feed in G93 mode
 	float xyz_time=0;				// coordinated move linear part at requested feed rate
@@ -317,23 +333,19 @@ static void _calc_move_times(GCodeState_t *gms, const float position[])	// gms =
 			gms->feed_rate_mode = UNITS_PER_MINUTE_MODE;
 		} else {
 			// compute length of linear move in millimeters. Feed rate is provided as mm/min
-			xyz_time = sqrt(square(gms->target[AXIS_X] - position[AXIS_X]) +
-							square(gms->target[AXIS_Y] - position[AXIS_Y]) +
-							square(gms->target[AXIS_Z] - position[AXIS_Z])) / gms->feed_rate;
+			xyz_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / gms->feed_rate;
 
 			// if no linear axes, compute length of multi-axis rotary move in degrees. Feed rate is provided as degrees/min
 			if (fp_ZERO(xyz_time)) {
-				abc_time = sqrt(square(gms->target[AXIS_A] - position[AXIS_A]) +
-								square(gms->target[AXIS_B] - position[AXIS_B]) +
-								square(gms->target[AXIS_C] - position[AXIS_C])) / gms->feed_rate;
+				abc_time = sqrt(axis_square[AXIS_A] + axis_square[AXIS_B] + axis_square[AXIS_C]) / gms->feed_rate;
 			}
 		}
 	}
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (gms->motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
-			tmp_time = fabs(gms->target[axis] - position[axis]) / cm.a[axis].velocity_max;
+			tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
 		} else { // MOTION_MODE_STRAIGHT_FEED
-			tmp_time = fabs(gms->target[axis] - position[axis]) / cm.a[axis].feedrate_max;
+			tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
 		}
 		max_time = max(max_time, tmp_time);
 
@@ -539,18 +551,18 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 
 	// Fuse the junction deviations into a vector sum
 	float a_delta = square(a_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
+		 a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
+		 a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
+		 a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
+		 a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
+		 a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
 
 	float b_delta = square(b_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
+		 b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
+		 b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
+		 b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
+		 b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
+		 b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
 
 	float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
 	float sintheta_over2 = sqrt((1 - costheta)/2);
@@ -617,11 +629,7 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 static float _compute_next_segment_velocity()
 {
 	if (mr.section == SECTION_BODY) return (mr.segment_velocity);
-#ifdef __JERK_EXEC
-	return (mr.segment_velocity);	// an approximation
-#else
 	return (mr.segment_velocity + mr.forward_diff_5);
-#endif
 }
 
 stat_t mp_plan_hold_callback()
@@ -638,8 +646,8 @@ stat_t mp_plan_hold_callback()
 
 	// examine and process mr buffer
 	mr_available_length = get_axis_vector_length(mr.target, mr.position);
-
-/*	mr_available_length =
+/*
+	mr_available_length =
 		(sqrt(square(mr.endpoint[AXIS_X] - mr.position[AXIS_X]) +
 			  square(mr.endpoint[AXIS_Y] - mr.position[AXIS_Y]) +
 			  square(mr.endpoint[AXIS_Z] - mr.position[AXIS_Z]) +
