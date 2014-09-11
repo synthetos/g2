@@ -110,7 +110,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 
 
 /* Jogging axis moves - these execute in sequence for each axis
- * cm_jogging_callback() 		- main loop callback for running the jogging cycle
+ * cm_jogging_cycle_callback()	- main loop callback for running the jogging cycle
  *	_set_jogging_func()			- a convenience for setting the next dispatch vector and exiting
  *  _jogging_axis_start()       - setup the jog
  *	_jogging_axis_ramp_jog()	- ramp the jog
@@ -118,7 +118,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
  *	_jogging_finalize_exit()	- clean up
  */
 
-stat_t cm_jogging_callback(void)
+stat_t cm_jogging_cycle_callback(void)
 {
 	if (cm.cycle_state != CYCLE_JOG) { return (STAT_NOOP); } 		// exit if not in a jogging cycle
 	if(jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true)

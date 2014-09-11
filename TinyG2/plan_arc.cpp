@@ -124,7 +124,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 }
 
 /*
- * cm_arc_callback() - generate an arc
+ * cm_arc_cycle_callback() - generate an arc
  *
  *	cm_arc_callback() is called from the controller main loop. Each time it's called it
  *	queues as many arc segments (lines) as it can before it blocks, then returns.
@@ -132,7 +132,7 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
  *  Parts of this routine were originally sourced from the grbl project.
  */
 
-stat_t cm_arc_callback()
+stat_t cm_arc_cycle_callback()
 {
 	if (arc.run_state == MOVE_OFF) { return (STAT_NOOP);}
 	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) { return (STAT_EAGAIN);}

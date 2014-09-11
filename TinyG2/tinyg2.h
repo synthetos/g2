@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		068.02 // Minor changes ported in from G1
+#define TINYG_FIRMWARE_BUILD   		069.01 // Sync G1 build 450.08: Soft limits
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

@@ -168,16 +168,16 @@ static void _controller_HSM()
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-    DISPATCH(_command_dispatch(/* Command-only: */ true));				// read and execute next command
-
 	DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
 //	DISPATCH(switch_debounce_callback());		// debounce switches
 	DISPATCH(sr_status_report_callback());		// conditionally send status report
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
-	DISPATCH(cm_arc_callback());				// arc generation runs behind lines
-	DISPATCH(cm_homing_callback());				// G28.2 continuation
-	DISPATCH(cm_jogging_callback());			// jog function
-	DISPATCH(cm_probe_callback());				// G38.2 continuation
+
+    DISPATCH(_command_dispatch(true));			// read and execute next command - command only
+	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
+	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
+	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
+	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
@@ -188,7 +188,7 @@ static void _controller_HSM()
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_command_dispatch(/* Command-only: */ false));				// read and execute next command
+	DISPATCH(_command_dispatch(false));			// read and execute next command - command and data
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
 
