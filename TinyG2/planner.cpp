@@ -348,7 +348,7 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 		mb.w = w->nx;
 		return (w);
 	}
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER);
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, NULL);
 	return (NULL);
 }
 

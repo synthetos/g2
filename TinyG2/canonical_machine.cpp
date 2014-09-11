@@ -583,7 +583,7 @@ stat_t canonical_machine_test_assertions(void)
 
 stat_t cm_soft_alarm(stat_t status)
 {
-	rpt_exception(status);					// send alarm message
+	rpt_exception(status, NULL);			// send alarm message
 	cm.machine_state = MACHINE_ALARM;
 	return (status);						// NB: More efficient than inlining rpt_exception() call.
 }
@@ -610,18 +610,17 @@ stat_t cm_hard_alarm(stat_t status)
 //	gpio_set_bit_off(SPINDLE_PWM);
 //	gpio_set_bit_off(MIST_COOLANT_BIT);		//++++ replace with exec function
 //	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
-/*
+
 	// build an info string and call the exception report
 	char_t info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P(info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
-		} else {
-		//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P(info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+	} else {
+	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
+		sprintf_P((char *)info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
-*/
-	rpt_exception(status);					// send shutdown message
+
 	cm.machine_state = MACHINE_SHUTDOWN;
 	return (status);
 }
