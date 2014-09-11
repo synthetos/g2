@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.05 // Sync G1 build 450.08: plan_line optimizations
+#define TINYG_FIRMWARE_BUILD   		071.07 // Sync G1 build 450.08: sync config functions
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

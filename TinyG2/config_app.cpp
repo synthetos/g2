@@ -460,11 +460,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","si", _fipn, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
 //	{ "sys","spi",_fipn, 0, xio_print_spi,get_ui8,   xio_set_spi,(float *)&xio.spi_state,			0 },
 
-//	{ "sys","ec", _fipn, 0, cfg_print_ec,  get_ui8,   set_ec,     (float *)&cfg.enable_cr,			COM_EXPAND_CR },
-//	{ "sys","ee", _fipn, 0, cfg_print_ee,  get_ui8,   set_ee,     (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
-//	{ "sys","ex", _fipn, 0, cfg_print_ex,  get_ui8,   set_ex,     (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
-//	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,   set_baud,   (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
-//	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,   set_ui8,    (float *)&cs.network_mode,		NETWORK_MODE },
+//	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,    (float *)&cfg.enable_cr,			COM_EXPAND_CR },
+//	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,    (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
+//	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,    (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
+//	{ "sys","ew",  _fipn, 0, cfg_print_ew,  get_ui8,  set_01,    (float *)&xio.enable_window_mode,COM_ENABLE_WINDOW_MODE },
+//	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,  (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
+//	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,  set_ui8,   (float *)&cs.network_mode,		NETWORK_MODE },
 
 	// switch state readers
 
@@ -849,13 +850,14 @@ static stat_t _do_all(nvObj_t *nv)	// print all parameters
  ***********************************************************************************/
 
 /**** COMMUNICATIONS FUNCTIONS ******************************************************
- * set_ic()		- ignore CR or LF on RX
- * set_ec()		- enable CRLF on TX
- * set_ee()		- enable character echo
- * set_ex()		- enable XON/XOFF or RTS/CTS flow control
- * set_baud()	- set USB baud rate
- * get_rx()		- get bytes available in RX buffer
- * get_tick()	- get system tick count
+ * set_ic() - ignore CR or LF on RX
+ * set_ec() - enable CRLF on TX
+ * set_ee() - enable character echo
+ * set_ex() - enable XON/XOFF or RTS/CTS flow control
+ * set_baud() - set USB baud rate
+ * get_rx() - get bytes available in RX buffer
+ * get_wr() - get slots in sliding window buffer
+ * get_tick() - get system tick count
  *	The above assume USB is the std device
  */
 /*
@@ -971,11 +973,10 @@ static stat_t set_baud(nvObj_t *nv)
 	uint8_t baud = (uint8_t)nv->value;
 	if ((baud < 1) || (baud > 6)) {
 		nv_add_conditional_message((const char_t *)"*** WARNING *** Unsupported baud rate specified");
-//		nv_add_conditional_message(PSTR("*** WARNING *** Unsupported baud rate specified"));
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
-	cfg.usb_baud_rate = baud;
-	cfg.usb_baud_flag = true;
+	xio.usb_baud_rate = baud;
+	xio.usb_baud_flag = true;
 	char_t message[NV_MESSAGE_LEN];
 	sprintf_P(message, PSTR("*** NOTICE *** Resetting baud rate to %s"),GET_TEXT_ITEM(msg_baud, baud));
 	nv_add_conditional_message(message);
@@ -984,9 +985,9 @@ static stat_t set_baud(nvObj_t *nv)
 
 stat_t set_baud_callback(void)
 {
-	if (cfg.usb_baud_flag == false) { return(STAT_NOOP);}
-	cfg.usb_baud_flag = false;
-	xio_set_baud(XIO_DEV_USB, cfg.usb_baud_rate);
+	if (xio.usb_baud_flag == false) { return(STAT_NOOP);}
+	xio.usb_baud_flag = false;
+	xio_set_baud(XIO_DEV_USB, xio.usb_baud_rate);
 	return (STAT_OK);
 }
 */
@@ -1002,6 +1003,7 @@ stat_t set_baud_callback(void)
 static const char fmt_ec[] PROGMEM = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
 static const char fmt_ee[] PROGMEM = "[ee]  enable echo%18d [0=off,1=on]\n";
 static const char fmt_ex[] PROGMEM = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
+static const char fmt_ew[] PROGMEM = "[ew]  enable serial windowing%6d [0=off,1=on]\n";
 static const char fmt_baud[] PROGMEM = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
 static const char fmt_net[] PROGMEM = "[net] network mode%17d [0=master]\n";
 static const char fmt_rx[] PROGMEM = "rx:%d\n";
@@ -1009,6 +1011,7 @@ static const char fmt_rx[] PROGMEM = "rx:%d\n";
 void cfg_print_ec(nvObj_t *nv) { text_print_ui8(nv, fmt_ec);}
 void cfg_print_ee(nvObj_t *nv) { text_print_ui8(nv, fmt_ee);}
 void cfg_print_ex(nvObj_t *nv) { text_print_ui8(nv, fmt_ex);}
+void cfg_print_ew(nvObj_t *nv) { text_print_ui8(nv, fmt_ew);}
 void cfg_print_baud(nvObj_t *nv) { text_print_ui8(nv, fmt_baud);}
 void cfg_print_net(nvObj_t *nv) { text_print_ui8(nv, fmt_net);}
 void cfg_print_rx(nvObj_t *nv) { text_print_ui8(nv, fmt_rx);}

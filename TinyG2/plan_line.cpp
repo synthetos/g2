@@ -28,7 +28,6 @@
 
 #include "tinyg2.h"
 #include "config.h"
-//#include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
 #include "stepper.h"
@@ -36,7 +35,6 @@
 #include "util.h"
 
 // aline planner routines / feedhold planning
-//static void _calc_move_times(GCodeState_t *gms, const float position[]);
 static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
 static float _get_junction_vmax(const float a_unit[], const float b_unit[]);
@@ -124,7 +122,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	_calc_move_times(gm_in, axis_length, axis_square);						// set move time and minimum time in the state
 	if (gm_in->move_time < MIN_BLOCK_TIME) {
-		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move
+		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move - uses jerk from previous move
 		float entry_velocity = 0;											// pre-set as if no previous block
 		if ((bf = mp_get_run_buffer()) != NULL) {
 			if (bf->replannable == true) {									// not optimally planned
@@ -655,7 +653,6 @@ stat_t mp_plan_hold_callback()
 			  square(mr.endpoint[AXIS_B] - mr.position[AXIS_B]) +
 			  square(mr.endpoint[AXIS_C] - mr.position[AXIS_C])));
 */
-
 	// compute next_segment velocity
 //	braking_velocity = mr.segment_velocity;
 //	if (mr.section != SECTION_BODY) { braking_velocity += mr.forward_diff_1;}

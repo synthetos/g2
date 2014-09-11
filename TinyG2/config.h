@@ -324,6 +324,7 @@ index_t	nv_index_max(void);					// (see config_app.c)
 uint8_t nv_index_is_single(index_t index);	// (see config_app.c)
 uint8_t nv_index_is_group(index_t index);	// (see config_app.c)
 uint8_t nv_index_lt_groups(index_t index);	// (see config_app.c)
+uint8_t nv_group_is_prefixed(char_t *group);
 
 // generic internal functions and accessors
 stat_t set_nul(nvObj_t *nv);				// set nothing (no operation)
@@ -359,7 +360,6 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);				// set floating point number with G20/G21 units conversion
 void preprocess_float(nvObj_t *nv);			// pre-process float values for units and illegal values
-uint8_t nv_group_is_prefixed(char_t *group);// deals with some application-specific exceptions to prefix rules
 
 // diagnostics
 void nv_dump_nv(nvObj_t *nv);

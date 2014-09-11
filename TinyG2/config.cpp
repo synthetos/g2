@@ -107,11 +107,11 @@ void config_init()
 {
 	nvObj_t *nv = nv_reset_nv_list();
 	config_init_assertions();
+	cs.comm_mode = JSON_MODE;					// initial value until persistence is read
 
 #ifdef __ARM
 // ++++ The following code is offered until persistence is implemented.
 // ++++ Then you can use the AVR code (or something like it)
-	cs.comm_mode = JSON_MODE;					// initial value until EEPROM is read
 	_set_defa(nv);
 #endif
 #ifdef __AVR
@@ -162,8 +162,10 @@ stat_t set_defaults(nvObj_t *nv)
 	if (fp_FALSE(nv->value)) return(help_defa(nv));
 	_set_defa(nv);
 
-	// The values in nv are now garbage. Mark the nv as $defa so it displays nicely.
-//	strncpy(nv->token, "defa", TOKEN_LEN);		// correct, but not required
+	// The nvlist was used for the initialize message so the values are all garbage
+	// Mark the nv as $defa so it displays nicely in the response
+	nv_reset_nv_list();
+	strncpy(nv->token, "defa", TOKEN_LEN);
 //	nv->index = nv_get_index("", nv->token);	// correct, but not required
 	nv->valuetype = TYPE_INTEGER;
 	nv->value = 1;
