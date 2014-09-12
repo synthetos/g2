@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.14 // Sync G1 build 450.08: 
+#define TINYG_FIRMWARE_BUILD   		072.01 // Testing dual port read
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -67,8 +67,6 @@
 #define __STEP_CORRECTION
 #define __NEW_SWITCHES						// Using v9 style switch code
 #define __DUAL_USB							// use dual endpoint USB
-//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
-//#define __KAHAN							// Use Kahan summation in aline exec functions
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves

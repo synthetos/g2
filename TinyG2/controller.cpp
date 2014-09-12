@@ -76,7 +76,6 @@ static void _dispatch_kernel(void);
 stat_t hardware_hard_reset_handler(void);
 //stat_t hardware_bootloader_handler(void);
 
-
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -178,7 +177,7 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(rx_report_callback());             // conditionally send rx report
 
-//	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -230,39 +229,23 @@ static stat_t _controller_state()
  */
 static stat_t _dispatch_command()
 {
-#ifdef __AVR
 	devflags_t flags = DEV_IS_BOTH;
 	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
 	return (STAT_OK);
-#endif
-
-#ifdef __ARM
-	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL) _dispatch_kernel();
-	return (STAT_OK);
-#endif
 }
 
 static stat_t _dispatch_control()
 {
-#ifdef __AVR
 	devflags_t flags = DEV_IS_CTRL;
 	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
 	return (STAT_OK);
-#endif
-
-#ifdef __ARM
-	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL) _dispatch_kernel();
-	return (STAT_OK);
-#endif
 }
 
 static void _dispatch_kernel()
 {
-	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
-		cs.bufp++;
-	}
+//	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
+//		cs.bufp++;
+//	}
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
