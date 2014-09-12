@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.13 // Sync G1 build 450.08: removing polynomial jerk code and kahan method
+#define TINYG_FIRMWARE_BUILD   		071.14 // Sync G1 build 450.08: 
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
