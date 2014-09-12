@@ -366,7 +366,7 @@ char_t *readline(devflags_t &flags, uint16_t &size)
             continue;
 
         // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
-		if (!(xio.d[dev]->flags & flags)) // the types need to match
+		if (flags == DEV_IS_CTRL && ( (xio.d[dev]->flags & (DEV_IS_CTRL|DEV_IS_DATA)) != DEV_IS_CTRL )) // the types need to match
             continue;
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
