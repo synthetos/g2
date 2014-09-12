@@ -36,8 +36,11 @@
 //**** persistence singleton ****
 
 typedef struct nvmSingleton {
-	uint16_t nvm_base_addr;			// NVM base address
-	uint16_t nvm_profile_base;		// NVM base address of current profile
+	uint16_t base_addr;					// NVM base address
+	uint16_t profile_base;				// NVM base address of current profile]
+	uint16_t address;
+	float tmp_value;
+	int8_t byte_array[NVM_VALUE_LEN];
 } nvmSingleton_t;
 
 //**** persistence function prototypes ****
@@ -45,9 +48,5 @@ typedef struct nvmSingleton {
 void persistence_init(void);
 stat_t read_persistent_value(nvObj_t *nv);
 stat_t write_persistent_value(nvObj_t *nv);
-
-#ifdef __DEBUG
-void cfg_dump_NVM(const uint16_t start_record, const uint16_t end_record, uint8_t *label);
-#endif
 
 #endif // End of include guard: PERSISTENCE_H_ONCE
