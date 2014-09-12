@@ -76,6 +76,28 @@
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>False</UseGdb>
+    <PercepioTrace>
+      <TargetOS />
+      <Frequency>84000000</Frequency>
+      <EnableTraceInterrupts>True</EnableTraceInterrupts>
+      <EnableNonintrusive>True</EnableNonintrusive>
+      <EnableTargetOS>False</EnableTargetOS>
+      <EnableApplicationOutput>True</EnableApplicationOutput>
+      <EnableDataWatchPoints>True</EnableDataWatchPoints>
+      <EnablePC>True</EnablePC>
+      <EnablePCPolled>True</EnablePCPolled>
+      <PolledFrequency>1000</PolledFrequency>
+      <EnableMcu>True</EnableMcu>
+      <EnableOsAwareness>False</EnableOsAwareness>
+      <HWApplicationOutput>True</HWApplicationOutput>
+      <HWInterrupt>True</HWInterrupt>
+      <HWIntrusiveDataWatch>True</HWIntrusiveDataWatch>
+      <HWNonintrusiveDataWatch>True</HWNonintrusiveDataWatch>
+      <HWPolledDataWatch>True</HWPolledDataWatch>
+      <HWPolledProgramCounterSampling>True</HWPolledProgramCounterSampling>
+      <HWProfiling>True</HWProfiling>
+      <HWProgramCounterSampling>True</HWProgramCounterSampling>
+    </PercepioTrace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>

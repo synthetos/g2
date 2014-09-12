@@ -167,7 +167,8 @@ static void _controller_HSM()
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
-	DISPATCH(_system_assertions());				// 7. system integrity assertions
+	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
+	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -177,7 +178,7 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(rx_report_callback());             // conditionally send rx report
 
-	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+//	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -186,7 +187,6 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
-	DISPATCH(xio_callback());					// manages state changes in the XIO system
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
@@ -243,9 +243,9 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
-//	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
-//		cs.bufp++;
-//	}
+	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
+		cs.bufp++;
+	}
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
@@ -253,10 +253,10 @@ static void _dispatch_kernel()
 			text_response(STAT_OK, cs.saved_buf);
 		}
 
-	// included for AVR diagnostics and ARM serial (which does not trap these characters immediately on RX)
-	} else if (*cs.bufp == '!') { cm_request_feedhold();
-	} else if (*cs.bufp == '%') { cm_request_queue_flush();
-	} else if (*cs.bufp == '~') { cm_request_cycle_start();
+	// included for AVR diagnostics
+//	} else if (*cs.bufp == '!') { cm_request_feedhold();
+//	} else if (*cs.bufp == '%') { cm_request_queue_flush();
+//	} else if (*cs.bufp == '~') { cm_request_cycle_start();
 
 	} else if (*cs.bufp == '{') {							// process as JSON mode
 		cs.comm_mode = JSON_MODE;							// switch to JSON mode

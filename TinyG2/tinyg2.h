@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.01 // Testing dual port read
+#define TINYG_FIRMWARE_BUILD   		072.02 // Testing dual port USB
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
