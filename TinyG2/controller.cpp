@@ -178,7 +178,7 @@ static void _controller_HSM()
 	DISPATCH(sr_status_report_callback());		// conditionally send status report
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 
-//	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
