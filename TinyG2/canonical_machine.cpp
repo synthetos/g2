@@ -1219,6 +1219,9 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.feedhold_requested = false;
 		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
 			cm_start_hold();
+		} else if(cm.pause_dwell_time > 0 && cm.gm.spindle_mode != SPINDLE_OFF) {
+			cm_pause_spindle();
+			cm.paused_spindle_state = SPINDLE_OFF;
 		}
 	}
 	if (cm.queue_flush_requested == true) {
@@ -1257,10 +1260,8 @@ stat_t cm_end_hold()
 		} else {
 			st_request_exec_move();
 		}
-	} else {
+	} else
 		cm.paused_spindle_state = SPINDLE_OFF;
-		st_request_exec_move();
-	}
 	return STAT_OK;
 }
 
@@ -1279,7 +1280,7 @@ stat_t cm_queue_flush()
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
-	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
 	return (STAT_OK);
 }
@@ -1330,7 +1331,6 @@ static void _exec_program_finalize(float *value, float *flag)
 	cm.hold_state = FEEDHOLD_OFF;						// end feedhold (if in feed hold)
 	cm.end_hold_requested = false;					// cancel any pending cycle start request
 	mp_zero_segment_velocity();							// for reporting purposes
-	cm.paused_spindle_state = SPINDLE_OFF;
 
 	// perform the following resets if it's a program END
 	if (cm.machine_state == MACHINE_PROGRAM_END) {
@@ -1340,6 +1340,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
 //++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
+		cm.paused_spindle_state = SPINDLE_OFF;
 		cm_spindle_control(SPINDLE_OFF);				// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
@@ -1871,6 +1872,9 @@ const char fmt_tool[] PROGMEM = "Tool number          %d\n";
 const char fmt_ilck[] PROGMEM = "Safety Interlock:    %s\n";
 const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
+const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
 const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
@@ -1901,6 +1905,8 @@ void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
 void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
 void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
+void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
+void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}

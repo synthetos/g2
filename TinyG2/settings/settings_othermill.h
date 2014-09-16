@@ -62,7 +62,7 @@
 // Note: there are some commented test values below
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan","ilck","estp"
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","ilck","estp","spc"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE

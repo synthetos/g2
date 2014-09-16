@@ -741,6 +741,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	void cm_print_tool(nvObj_t *nv);
 	void cm_print_ilck(nvObj_t *nv);
 	void cm_print_estp(nvObj_t *nv);
+	void cm_print_spc(nvObj_t *nv);
+	void cm_print_sps(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -802,6 +804,8 @@ stat_t cm_set_jrk(nvObj_t *nv);			// set jerk with 1,000,000 correction
 	#define cm_print_tool tx_print_stub
 	#define cm_print_ilck tx_print_stub
 	#define cm_print_estp tx_print_stub
+	#define cm_print_spc tx_print_stub
+	#define cm_print_sps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub
