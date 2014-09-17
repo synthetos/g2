@@ -1394,6 +1394,7 @@ stat_t cm_start_estop(void)
     float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
     cm_soft_alarm(STAT_ALARMED);
+    cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
     return STAT_OK;
 }
@@ -1407,9 +1408,8 @@ stat_t cm_end_estop(void)
 stat_t cm_ack_estop(nvObj_t *nv)
 {
     cm.estop_state &= ~ESTOP_UNACKED;
-    if(cm.estop_state == 0)
-        cm_end_estop();
-    sr_request_status_report(SR_IMMEDIATE_REQUEST);
+    nv->value = (float)cm.estop_state;
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
@@ -1536,8 +1536,10 @@ static const char msg_ilck1[] PROGMEM = "Interlock Circuit Broken";
 static const char *const msg_ilck[] PROGMEM = { msg_ilck0, msg_ilck1 };
 
 static const char msg_estp0[] PROGMEM = "E-Stop Circuit Closed";
-static const char msg_estp1[] PROGMEM = "E-Stop Circuit Broken";
-static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1 };
+static const char msg_estp1[] PROGMEM = "E-Stop Circuit Closed but unacked";
+static const char msg_estp2[] PROGMEM = "E-Stop Circuit Broken and acked";
+static const char msg_estp3[] PROGMEM = "E-Stop Circuit Broken and unacked";
+static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
 
 #else
 

@@ -210,13 +210,13 @@ static stat_t _control_character_dispatch()
     control_char = SerialUSB1.readByte();
     if(control_char == -1)
         return STAT_OK;
-    else if(control_char == CHAR_FEEDHOLD)
+    else if(control_char == CHAR_FEEDHOLD && cm.machine_state != MACHINE_ALARM)
         cm_request_feedhold();
-    else if(control_char == CHAR_END_HOLD)
+    else if(control_char == CHAR_END_HOLD && cm.machine_state != MACHINE_ALARM)
         cm_request_end_hold();
-    else if(control_char == CHAR_QUEUE_FLUSH)
+    else if(control_char == CHAR_QUEUE_FLUSH && cm.machine_state != MACHINE_ALARM)
         cm_request_queue_flush();
-    else if(control_char == CHAR_RESET)
+    else if(control_char == CHAR_RESET && cm.machine_state != MACHINE_ALARM)
         hw_request_hard_reset();
     return STAT_EAGAIN;
 }
@@ -286,9 +286,9 @@ static stat_t _command_dispatch()
 	// dispatch the new text line
 	switch (toupper(*cs.bufp)) {						// first char
 
-		case '!': { cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial
-		case '%': { cm_request_queue_flush(); break; }
-		case '~': { cm_request_end_hold(); break; }
+		case '!': { if(cm.machine_state != MACHINE_ALARM) cm_request_feedhold(); break; }		// include for AVR diagnostics and ARM serial
+		case '%': { if(cm.machine_state != MACHINE_ALARM) cm_request_queue_flush(); break; }
+		case '~': { if(cm.machine_state != MACHINE_ALARM) cm_request_end_hold(); break; }
 
 		case NUL: { 									// blank line (just a CR)
 			if (cfg.comm_mode != JSON_MODE) {
@@ -308,8 +308,8 @@ static stat_t _command_dispatch()
 		}
 		default: {										// anything else must be Gcode
 			if (cfg.comm_mode == JSON_MODE) {			// run it as JSON...
-				strncpy(cs.out_buf, cs.bufp, INPUT_BUFFER_LEN -8);					// use out_buf as temp
-				sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);	// '-8' is used for JSON chars
+				strncpy(cs.out_buf, cs.bufp, INPUT_BUFFER_LEN -11);					// use out_buf as temp
+				sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);	// '-11' is used for JSON chars
 				json_parser(cs.bufp);
 			} else {									//...or run it as text
 				text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
@@ -445,10 +445,11 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
-	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
-	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
-	return (STAT_OK);
+	if (get_limit_switch_thrown() == false) {
+        return (STAT_NOOP);
+    } else {
+        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT);
+    }
 }
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
@@ -464,13 +465,15 @@ static stat_t _interlock_estop_handler(void)
 		report = true;
 	}
 	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
-        cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED;
+		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED;
 		report = true;
-        cm_start_estop();
+		cm_start_estop();
 	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
 		cm.estop_state &= ~ESTOP_PRESSED;
-        if(cm.estop_state == 0)
-            cm_end_estop();
+		report = true;
+	}
+	if(cm.estop_state == 0 && cm.machine_state == MACHINE_ALARM) {
+		cm_end_estop();
 		report = true;
 	}
 	if(report)
