@@ -88,10 +88,6 @@
 #ifndef ENCODER_H_ONCE
 #define ENCODER_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Configs and Constants ****/
 
 /**** Macros ****/
@@ -128,7 +124,3 @@ void en_set_encoder_steps(uint8_t motor, float steps);
 float en_read_encoder(uint8_t motor);
 
 #endif	// End of include guard: ENCODER_H_ONCE
-
-#ifdef __cplusplus
-}
-#endif

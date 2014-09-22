@@ -33,14 +33,10 @@
 #include "hardware.h"
 #include "pwm.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
 
-/* 
+/*
  * cm_spindle_init()
  */
 void cm_spindle_init()
@@ -69,7 +65,7 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
 		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
 	}
-		
+
 	if (spindle_mode==SPINDLE_CW || spindle_mode==SPINDLE_CCW ) {
 		// clamp spindle speed to lo/hi range
 		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
@@ -151,7 +147,3 @@ static void _exec_spindle_speed(float *value, float *flag)
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode) ); // update spindle speed if we're running
 }
-
-#ifdef __cplusplus
-}
-#endif

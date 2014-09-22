@@ -31,10 +31,6 @@
 #include "stepper.h"
 #include "kinematics.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 static void _inverse_kinematics(const float travel[], float joint[]);
 
 /*
@@ -52,6 +48,7 @@ static void _inverse_kinematics(const float travel[], float joint[]);
 void ik_kinematics(const float travel[], float steps[])
 {
 	float joint[AXES];
+
 	_inverse_kinematics(travel, joint);				// insert inverse kinematics transformations here
 
 	// Map motors to axes and convert length units to steps
@@ -104,30 +101,3 @@ static void _inverse_kinematics(const float travel[], float joint[])
 //		joint[i] = travel[i];
 //	}
 }
-
-// *************************************************
-// ***** UNIT TESTS ********************************
-// *************************************************
-
-//#define __UNIT_TEST_KINEMATICS
-#ifdef __UNIT_TESTS
-#ifdef __UNIT_TEST_KINEMATICS
-
-void _ik_test_inverse_kinematics(void);
-
-void ik_unit_tests()
-{
-	_ik_test_inverse_kinematics();
-}
-
-void _ik_test_inverse_kinematics(void)
-{
-	return;
-}
-
-#endif
-#endif
-
-#ifdef __cplusplus
-}
-#endif

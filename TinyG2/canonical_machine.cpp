@@ -88,8 +88,11 @@
 
 #include "tinyg2.h"			// #1
 #include "config.h"			// #2
-#include "text_parser.h"
 #include "canonical_machine.h"
+#include "controller.h"
+#include "json_parser.h"
+#include "text_parser.h"
+
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
@@ -101,10 +104,6 @@
 #include "hardware.h"
 #include "util.h"
 //#include "xio.h"			// for serial queue flush
-
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -156,6 +155,7 @@ uint8_t cm_get_combined_state()
 		if (cm.motion_state == MOTION_RUN) cm.combined_state = COMBINED_RUN;
 		if (cm.motion_state == MOTION_HOLD) cm.combined_state = COMBINED_HOLD;
 	}
+	if (cm.machine_state == MACHINE_ALARM) { cm.combined_state = COMBINED_ALARM;}
 	if (cm.machine_state == MACHINE_SHUTDOWN) { cm.combined_state = COMBINED_SHUTDOWN;}
 
 	return cm.combined_state;
@@ -361,7 +361,7 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
 void cm_finalize_move() {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 
-	// if in ivnerse time mode reset feed rate so next block requires an explicit feed rate setting
+	// if in inverse time mode reset feed rate so next block requires an explicit feed rate setting
 	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
 		cm.gm.feed_rate = 0;
 	}
@@ -463,27 +463,35 @@ void cm_set_model_target(float target[], float flag[])
 /*
  * cm_test_soft_limits() - return error code if soft limit is exceeded
  *
- *	Must be called with target properly set in GM struct. Best done after cm_set_model_target().
+ *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to 0,0 to disable soft limits for an axis. Also will not test a min or a max if the
- *	value is < -1000000 (negative one million). This allows a single end to be tested w/the other
- *	disabled, should that requirement ever arise.
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
+
+static stat_t _finalize_soft_limits(stat_t status)
+{
+	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;		// cancel motion
+	copy_vector(cm.gm.target, cm.gmx.position);				// reset model target
+	return (cm_soft_alarm(status));							// throw a soft alarm
+}
+
 stat_t cm_test_soft_limits(float target[])
 {
 	if (cm.soft_limit_enable == true) {
 		for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-			if (cm.homed[axis] != true) continue;		// don't test axes that are not homed
+			if (cm.homed[axis] != true) continue;								// skip axis if not homed
+			if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) continue;	// skip axis if identical
+			if (fabs(cm.a[axis].travel_min) > DISABLE_SOFT_LIMIT) continue;		// skip min test if disabled
+			if (fabs(cm.a[axis].travel_max) > DISABLE_SOFT_LIMIT) continue;		// skip max test if disabled
 
-			if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) continue;
-
-			if ((cm.a[axis].travel_min > DISABLE_SOFT_LIMIT) && (target[axis] < cm.a[axis].travel_min)) {
-				return (STAT_SOFT_LIMIT_EXCEEDED);
+			if (target[axis] < cm.a[axis].travel_min) {
+				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
 			}
-
-			if ((cm.a[axis].travel_max > DISABLE_SOFT_LIMIT) && (target[axis] > cm.a[axis].travel_max)) {
-				return (STAT_SOFT_LIMIT_EXCEEDED);
+			if (target[axis] > cm.a[axis].travel_max) {
+				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
 			}
 		}
 	}
@@ -659,7 +667,7 @@ stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
 	}
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (fp_TRUE(flag[axis])) {
-			cm.offset[coord_system][axis] = offset[axis];
+			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
 			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
 		}
 	}
@@ -742,7 +750,8 @@ stat_t cm_set_absolute_origin(float origin[], float flag[])
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (fp_TRUE(flag[axis])) {
-			value[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(origin[axis]);
+//			value[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(origin[axis]);	// G2 Issue #26
+			value[axis] = _to_millimeters(origin[axis]);
 			cm.gmx.position[axis] = value[axis];		// set model position
 			cm.gm.target[axis] = value[axis];			// reset model target
 			mp_set_planner_position(axis, value[axis]);	// set mm position
@@ -1220,8 +1229,9 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.feedhold_requested = false;
 	}
 	if (cm.queue_flush_requested == true) {
-		if ((cm.motion_state == MOTION_STOP) ||
-			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) {
+		if (((cm.motion_state == MOTION_STOP) ||
+			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
+			 !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
 			cm_queue_flush();
 		}
@@ -1251,6 +1261,11 @@ stat_t cm_queue_flush()
 	xio_reset_usb_rx_buffers();				// flush serial queues
 #endif
 	mp_flush_planner();						// flush planner queue
+	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
+//	rx_request_rx_report();
+
+	// Note: The following uses low-level mp calls for absolute position.
+	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
@@ -1321,7 +1336,7 @@ static void _exec_program_finalize(float *value, float *flag)
 	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	}
-	sr_request_status_report(SR_IMMEDIATE_REQUEST);		// request a final status report (not unfiltered)
+	sr_request_status_report(SR_REQUEST_IMMEDIATE);		// request a final and full status report (not filtered)
 }
 
 void cm_cycle_start()
@@ -1671,21 +1686,45 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
 	return(STAT_OK);
 }
 
-/*
- * cm_set_jrk()	- set jerk value
+/**** Jerk functions
+ * cm_get_axis_jerk() - returns jerk for an axis
+ * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
+ *
+ * cm_set_xjm()		  - set jerk max value - called from dispatch table
+ * cm_set_xjh()		  - set jerk homing value - called from dispatch table
  *
  *	Jerk values can be rather large, often in the billions. This makes for some pretty big
  *	numbers for people to deal with. Jerk values are stored in the system in truncated format;
  *	values are divided by 1,000,000 then reconstituted before use.
  *
- *	cm_set_jrk() will accept either truncated or untrunctated jerk numbers as input. If the
- *	number is > 1,000,000 it is divided by 1,000,000 before storing. Numbers are accepted in
- *	either millimeter or inch mode and converted to millimeter mode.
+ *	The set_xjm() nad set_xjh() functions will accept either truncated or untruncated jerk
+ *	numbers as input. If the number is > 1,000,000 it is divided by 1,000,000 before storing.
+ *	Numbers are accepted in either millimeter or inch mode and converted to millimeter mode.
+ *
+ *	The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
  */
-
-stat_t cm_set_jrk(nvObj_t *nv)
+float cm_get_axis_jerk(uint8_t axis)
 {
-	if (nv->value > 1000000) nv->value /= 1000000;
+	return (cm.a[axis].jerk_max);
+}
+
+void cm_set_axis_jerk(uint8_t axis, float jerk)
+{
+	cm.a[axis].jerk_max = jerk;
+	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+}
+
+stat_t cm_set_xjm(nvObj_t *nv)
+{
+	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+	set_flu(nv);
+	cm_set_axis_jerk(_get_axis(nv->index), nv->value);
+	return(STAT_OK);
+}
+
+stat_t cm_set_xjh(nvObj_t *nv)
+{
+	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	return(STAT_OK);
 }
@@ -1841,7 +1880,7 @@ void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
 /* system state print functions */
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
-const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%16.3f%s\n";
+const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
@@ -1933,6 +1972,13 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
 }
 
+static void _print_hom(nvObj_t *nv, const char *format)
+{
+	char axes[] = {"XYZABC"};
+	uint8_t axis = _get_axis(nv->index);
+	fprintf_P(stderr, format, axes[axis], nv->value);
+}
+
 void cm_print_am(nvObj_t *nv)	// print axis mode with enumeration string
 {
 	fprintf_P(stderr, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
@@ -1960,9 +2006,6 @@ void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos);}
 void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS);}
 void cm_print_ofs(nvObj_t *nv) { _print_pos(nv, fmt_ofs, MILLIMETERS);}
+void cm_print_hom(nvObj_t *nv) { _print_hom(nv, fmt_hom);}
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif

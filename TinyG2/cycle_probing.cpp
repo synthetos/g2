@@ -85,8 +85,8 @@ uint8_t _set_pb_func(uint8_t (*func)())
 }
 
 /****************************************************************************************
- * cm_probing_cycle_start()	- G38.2 homing cycle using limit switches
- * cm_probing_callback() 	- main loop callback for running the homing cycle
+ * cm_probing_cycle_start()		- G38.2 homing cycle using limit switches
+ * cm_probing_cycle_callback() 	- main loop callback for running the homing cycle
  *
  *	--- Some further details ---
  *
@@ -128,7 +128,7 @@ uint8_t cm_straight_probe(float target[], float flags[])
 	return (STAT_OK);
 }
 
-uint8_t cm_probe_callback(void)
+uint8_t cm_probing_cycle_callback(void)
 {
 	if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state != PROBE_WAITING)) {
 		return (STAT_NOOP);				// exit if not in a probe cycle or waiting for one
@@ -186,7 +186,7 @@ static uint8_t _probing_init()
 	sw.mode[pb.probe_switch] = SW_MODE_HOMING;
 	pb.saved_switch_type = sw.switch_type;							// save the switch type for recovery later.
 	sw.switch_type = SW_TYPE_NORMALLY_OPEN;							// contact probes are NO switches... usually
-	switch_init();													// re-init to pick up new switch settings
+	switch_reset();													// reset switches to pick up new switch settings
 #else // new style switch code:
 	pb.probe_switch_axis = AXIS_Z;									// FIXME: hardcoded...
 	pb.probe_switch_position = SW_MIN;								// FIXME: hardcoded...
@@ -196,7 +196,7 @@ static uint8_t _probing_init()
 
 	pb.saved_switch_type = sw.s[pb.probe_switch_axis][pb.probe_switch_position].type;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = SW_TYPE_NORMALLY_OPEN; // contact probes are NO switches... usually.
-	switch_init();													// re-init to pick up new switch settings
+	switch_reset();													// reset switches to pick up new switch settings
 #endif
 
 	// probe in absolute machine coords
@@ -275,11 +275,11 @@ static void _probe_restore_settings()
 	sw.switch_type = pb.saved_switch_type;
 	for( uint8_t i=0; i<NUM_SWITCHES; i++ )
 		sw.mode[i] = pb.saved_switch_mode[i];
-	switch_init();								// re-init to pick up changes
+	switch_reset();								// reset switches to pick up changes
 #else // restore switch settings (new style)
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = pb.saved_switch_mode;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = pb.saved_switch_type;
-	switch_init();								// re-init to pick up changes
+	switch_reset();								// reset switches to pick up changes
 #endif
 
 	// restore axis jerk

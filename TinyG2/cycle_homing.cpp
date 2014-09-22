@@ -35,10 +35,6 @@
 #include "switch.h"
 #include "report.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Homing singleton structure ****/
 
 struct hmHomingSingleton {			// persistent homing runtime variables
@@ -76,6 +72,7 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t saved_units_mode;		// G20,G21 global setting
 	uint8_t saved_coord_system;		// G54 - G59 setting
 	uint8_t saved_distance_mode;	// G90,G91 global setting
+//	uint8_t saved_feed_rate_mode;	// G93,G94 global setting
 	float saved_feed_rate;			// F setting
 	float saved_jerk;				// saved and restored for each axis homed
 	float target_position;          // saved prior to initiating moves, for verifying post-move position
@@ -176,6 +173,7 @@ stat_t cm_homing_cycle_start(void)
 	hm.saved_units_mode = cm_get_units_mode(ACTIVE_MODEL);
 	hm.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
 	hm.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
+//	hm.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
 	hm.saved_feed_rate = cm_get_feed_rate(ACTIVE_MODEL);
 	hm.target_position = 0;
 
@@ -183,6 +181,7 @@ stat_t cm_homing_cycle_start(void)
 	cm_set_units_mode(MILLIMETERS);
 	cm_set_distance_mode(INCREMENTAL_MODE);
 	cm_set_coord_system(ABSOLUTE_COORDS);	// homing is done in machine coordinates
+//	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
 	hm.set_coordinates = true;
 
 	hm.axis = -1;							// set to retrieve initial axis
@@ -200,7 +199,7 @@ stat_t cm_homing_cycle_start_no_set(void)
 }
 
 /* Homing axis moves - these execute in sequence for each axis
- * cm_homing_callback() 		- main loop callback for running the homing cycle
+ * cm_homing_cycle_callback() 	- main loop callback for running the homing cycle
  *	_set_homing_func()			- a convenience for setting the next dispatch vector and exiting
  *  _verify_position()          - checks current position against hm.target_position from last move
  *	_trigger_feedhold()			- callback from switch closure to trigger a feedhold (convenience for casting)
@@ -216,7 +215,7 @@ stat_t cm_homing_cycle_start_no_set(void)
  *	_homing_axis_move()			- helper that actually executes the above moves
  */
 
-stat_t cm_homing_callback(void)
+stat_t cm_homing_cycle_callback(void)
 {
 	if (cm.cycle_state != CYCLE_HOMING) { return (STAT_NOOP);} 	// exit if not in a homing cycle
 	if (cm_get_runtime_busy() == true) { return (STAT_EAGAIN);}	// sync to planner move ends
@@ -386,6 +385,13 @@ static stat_t _homing_axis_search(int8_t axis)				// start the search
 
 static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 {
+/*	// Removed this code section because if a NO homing switch opens before the
+	// search deceleration is complete the switch will (correctly) be open.
+	// Therefore the homing cycle should continue -- ASH (build 445.01)
+	//
+	// Still need to figure out how to tell the difference between a rapid switch opening
+	// condition (above) and a user- initiated feedhold during a homing operation.
+
 	// verify assumption that we arrived here because of homing switch closure
 	// rather than user-initiated feedhold or other disruption
 #ifndef __NEW_SWITCHES
@@ -395,6 +401,7 @@ static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 	if (read_switch(hm.homing_switch_axis, hm.homing_switch_position) != SW_CLOSED)
 		return (_set_homing_func(_homing_abort));
 #endif
+*/
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
 	return (_set_homing_func(_homing_axis_zero_backoff));
 }
@@ -450,7 +457,7 @@ static stat_t _homing_abort(int8_t axis)
 	_restore_switch_settings(&sw.s[hm.homing_switch_axis][hm.homing_switch_position]);
 #endif
 	_homing_finalize_exit(axis);
-	sr_request_status_report(SR_TIMED_REQUEST);
+	sr_request_status_report(SR_REQUEST_TIMED);
 	return (STAT_HOMING_CYCLE_FAILED);						// homing state remains HOMING_NOT_HOMED
 }
 
@@ -624,7 +631,3 @@ int8_t _get_next_axes(int8_t axis)
 	return (STAT_OK);
 }
 */
-
-#ifdef __cplusplus
-}
-#endif

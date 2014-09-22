@@ -25,13 +25,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* XIO devices are compatible with avr-gcc stdio, so formatted printing 
- * is supported. To use this sub-system outside of TinyG you may need 
+/* XIO devices are compatible with avr-gcc stdio, so formatted printing
+ * is supported. To use this sub-system outside of TinyG you may need
  * some defines in tinyg.h. See notes at end of this file for more details.
  */
 /* Note: anything that includes xio.h first needs the following:
  * 	#include <stdio.h>				// needed for FILE def'n
- *	#include <stdbool.h>			// needed for true and false 
+ *	#include <stdbool.h>			// needed for true and false
  *	#include <avr/pgmspace.h>		// defines prog_char, PSTR
  */
 /* Note: This file contains load of sub-includes near the middle
@@ -41,18 +41,18 @@
  *	#include "xio_signals.h"
  *	(possibly more)
  */
-/* 
+/*
  * CAVEAT EMPTOR: File under "watch your ass":
  *
- * 	  - Short story: Do not call ANYTHING that can print (i.e. send chars to the TX 
- *		buffer) from a medium or hi interrupt. This obviously includes any printf() 
- *		function, but also exception reports, cm_soft_alarm(), cm_hard_alarm() and a 
+ * 	  - Short story: Do not call ANYTHING that can print (i.e. send chars to the TX
+ *		buffer) from a medium or hi interrupt. This obviously includes any printf()
+ *		function, but also exception reports, cm_soft_alarm(), cm_hard_alarm() and a
  *		few other functions that call stdio print functions.
  *
- * 	  - Longer Story: The stdio printf() functions use character drivers provided by 
+ * 	  - Longer Story: The stdio printf() functions use character drivers provided by
  *		tinyg to access the low-level Xmega devices. Specifically xio_putc_usb() in xio_usb.c,
- *		and xio_putc_rs485() in xio_rs485.c. Since stdio does not understand non-blocking 
- *		IO these functions must block if there is no space in the TX buffer. Blocking is 
+ *		and xio_putc_rs485() in xio_rs485.c. Since stdio does not understand non-blocking
+ *		IO these functions must block if there is no space in the TX buffer. Blocking is
  *		accomplished using sleep_mode(). The IO system is the only place where sleep_mode()
  *		is used. Everything else in TinyG is non-blocking. Sleep is woken (exited) whenever
  *		any interrupt fires. So there must always be a viable interrupt source running when
@@ -64,19 +64,13 @@
 #ifndef XIO_H_ONCE
 #define XIO_H_ONCE
 
-#include "tinyg2.h"
-#include "config.h"				// required for nvObj typedef
+//#include "tinyg2.h"				// not required if used in tinyg project
+#include "config.h"					// required for nvObj typedef
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
-
 #include "MotateSPI.h"
 
-extern Motate::USBDevice< Motate::USBCDC > usb;
-//extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-extern typeof usb._mixin_0_type::Serial &SerialUSB;
-//extern typeof usb._mixin_1_type::Serial &SerialUSB1;
-
-extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+/**** Defines, Macros, and  Assorted Parameters ****/
 
 #undef  _FDEV_ERR
 #define _FDEV_ERR -1
@@ -84,27 +78,70 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
 
+#define USB_LINE_BUFFER_SIZE	255			// text buffer size
+
+//*** Device flags ***
+typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
+
+// device capabilities flags
+#define DEV_CAN_BE_CTRL		(0x0001)		// device can be a control channel
+#define DEV_CAN_BE_DATA		(0x0002)		// device can be a data channel
+#define DEV_CAN_READ		(0x0010)
+#define DEV_CAN_WRITE		(0x0020)
+
+// Device state flags
+// channel state
+#define DEV_IS_CTRL			(0x0001)		// device is set as a control channel
+#define DEV_IS_DATA			(0x0002)		// device is set as a data channel
+#define DEV_IS_PRIMARY		(0x0004)		// device is the primary control channel
+
+// device connection state
+#define DEV_IS_DISCONNECTED	(0x0010)		// device just disconnected (transient state)
+#define DEV_IS_CONNECTED	(0x0020)		// device is connected (e.g. USB)
+#define DEV_IS_READY		(0x0040)		// device is ready for use
+#define DEV_IS_ACTIVE		(0x0080)		// device is active
+
+// device exception flags
+#define DEV_THROW_EOF		(0x0100)		// end of file encountered
+
+// device specials
+#define DEV_IS_BOTH			(DEV_IS_CTRL | DEV_IS_DATA)
+#define DEV_FLAGS_CLEAR		(0x0000)		// Apply as flags = DEV_FLAGS_CLEAR;
+
+enum xioDeviceEnum {						// reconfigure this enum as you add more physical devices
+	DEV_NONE=-1,							// no device is bound
+	DEV_USB0=0,								// must be 0
+	DEV_USB1,								// must be 1
+	DEV_SPI0,
+	DEV_MAX
+};
+
+enum xioSPIMode {
+	SPI_DISABLE=0,							// tri-state SPI lines
+	SPI_ENABLE								// enable SPI lines for output
+};
+
+//extern Motate::USBDevice< Motate::USBCDC > usb;
+extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+extern decltype(usb._mixin_0_type::Serial) &SerialUSB;
+extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
+
+extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+
+/**** function prototypes ****/
+
 void xio_init(void);
 void xio_init_assertions(void);
 stat_t xio_test_assertions(void);
+stat_t xio_callback(void);
 
 int read_char (void);
+char_t *readline(devflags_t &flags, uint16_t &size);
+size_t writeline(uint8_t *buffer, size_t size);
+
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
-size_t write(uint8_t *buffer, size_t size);
+
 stat_t xio_set_spi(nvObj_t *nv);
-stat_t xio_assertions(void);
-
-enum xioSPIMode {
-	SPI_DISABLE=0,					// tri-state SPI lines
-	SPI_ENABLE						// enable SPI lines for output
-};
-
-typedef struct xioSingleton {		// Stepper static values and axis parameters
-	uint16_t magic_start;			// magic number to test memory integrity
-	uint8_t spi_state;				// tick down-counter (unscaled)
-} xioSingleton_t;
-
-extern xioSingleton_t xio;
 
 /* Some useful ASCII definitions */
 
@@ -113,7 +150,7 @@ extern xioSingleton_t xio;
 #define ETX (char)0x03		// ^c - ETX
 #define ENQ (char)0x05		// ^e - ENQuire
 #define BEL (char)0x07		// ^g - BEL
-#define BS  (char)0x08		// ^h - backspace 
+#define BS  (char)0x08		// ^h - backspace
 #define TAB (char)0x09		// ^i - character
 #define LF	(char)0x0A		// ^j - line feed
 #define VT	(char)0x0B		// ^k - kill stop
@@ -123,9 +160,18 @@ extern xioSingleton_t xio;
 #define NAK (char)0x15		// ^u - Negative acknowledgement
 #define CAN (char)0x18		// ^x - Cancel, abort
 #define ESC (char)0x1B		// ^[ - ESC(ape)
+#define SPC (char)0x20		// ' '  Space character
 #define DEL (char)0x7F		//  DEL(ete)
+
 #define Q_EMPTY (char)0xFF	// signal no character
 
+/* Signal character mappings */
+
+#define CHAR_RESET CAN
+#define CHAR_FEEDHOLD (char)'!'
+#define CHAR_CYCLE_START (char)'~'
+#define CHAR_QUEUE_FLUSH (char)'%'
+//#define CHAR_BOOTLOADER ESC
 
 #ifdef __TEXT_MODE
 

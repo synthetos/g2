@@ -60,10 +60,6 @@
 #include "report.h"
 #include "util.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 // Allocate planner structures
 
 mpBufferPool_t mb;				// move buffer queue
@@ -227,7 +223,8 @@ static stat_t _exec_command(mpBuf_t *bf)
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
-	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
+	if (mp_free_run_buffer())
+		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);
 }
 
@@ -272,8 +269,8 @@ static stat_t _exec_dwell(mpBuf_t *bf)
  *	during population you can unget the write buffer before queuing it, which returns
  *	it to the pool of available buffers.
  *
- *	The RUN buffer is the buffer currently executing. It may be retrieved once for 
- *	simple commands, or multiple times for long-running commands like moves. When 
+ *	The RUN buffer is the buffer currently executing. It may be retrieved once for
+ *	simple commands, or multiple times for long-running commands like moves. When
  *	the command is complete the run buffer is returned to the pool by freeing it.
  *
  * Notes:
@@ -539,7 +536,3 @@ void mp_dump_runtime_state(void)
 	print_scalar(PSTR("segment_velocity:  "), mr.segment_velocity);
 }
 #endif // __DEBUG
-
-#ifdef __cplusplus
-}
-#endif

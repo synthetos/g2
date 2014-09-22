@@ -31,14 +31,11 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "canonical_machine.h"
 #include "planner.h"
 #include "settings.h"
 #include "util.h"
 #include "xio.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /**** Allocation ****/
 
@@ -90,6 +87,7 @@ void _startup_helper(stat_t status, const char *msg)
 	nv_reset_nv_list();
 	nv_add_object((const char_t *)"fv");		// firmware version
 	nv_add_object((const char_t *)"fb");		// firmware build
+	nv_add_object((const char_t *)"cv");		// configuration version
 	nv_add_object((const char_t *)"hp");		// hardware platform
 	nv_add_object((const char_t *)"hv");		// hardware version
 	nv_add_object((const char_t *)"id");		// hardware ID
@@ -111,7 +109,7 @@ void rpt_print_loading_configs_message(void)
 void rpt_print_system_ready_message(void)
 {
 	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
-	if (cfg.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
+	if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
 }
 
 /*****************************************************************************
@@ -177,25 +175,33 @@ uint8_t _is_stat(nvObj_t *nv)
 void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
-	sr.status_report_requested = false;
+	sr.status_report_request = SR_OFF;
 	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
 	nv->index = nv_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
-		if (sr_defaults[i][0] == NUL) break;			// quit on first blank array entry
-		sr.status_report_value[i] = -1234567;			// pre-load values with an unlikely number
+		if (sr_defaults[i][0] == NUL) break;				// quit on first blank array entry
+		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
+		if (fp_EQ(nv->value, NO_MATCH)) {
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING);	// trap mis-configured profile settings
+			return;
+		}
 		if (_is_stat(nv) == true)
-			sr.stat_index = nv->value;					// identify index for 'stat' if status is in the report
+			sr.stat_index = nv->value;						// identify index for 'stat' if status is in the report
 		nv_set(nv);
-		nv_persist(nv);								// conditionally persist - automatic by nv_persis()
-		nv->index++;									// increment SR NVM index
+		nv_persist(nv);										// conditionally persist - automatic by nv_persist()
+		nv->index++;										// increment SR NVM index
 	}
 }
 
 /*
  * sr_set_status_report() - interpret an SR setup string and return current report
+ *
+ *	Note: By the time this function is called any unrecognized tokens have been detected and
+ *	rejected by the JSON or text parser. In other words, it should never get to here if
+ *	there is an unrecognized token in the SR string.
  */
 stat_t sr_set_status_report(nvObj_t *nv)
 {
@@ -205,11 +211,11 @@ stat_t sr_set_status_report(nvObj_t *nv)
 	index_t sr_start = nv_get_index((const char_t *)"",(const char_t *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
-		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
+		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) break;
 		if ((nv->valuetype == TYPE_BOOL) && (fp_TRUE(nv->value))) {
 			status_report_list[i] = nv->index;
-			nv->value = nv->index;					// persist the index as the value
-			nv->index = sr_start + i;					// index of the SR persistence location
+			nv->value = nv->index;							// persist the index as the value
+			nv->index = sr_start + i;						// index of the SR persistence location
 			nv_persist(nv);
 			elements++;
 		} else {
@@ -218,13 +224,11 @@ stat_t sr_set_status_report(nvObj_t *nv)
 	}
 	if (elements == 0) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	memcpy(sr.status_report_list, status_report_list, sizeof(status_report_list));
-	_populate_unfiltered_status_report();			// return current values
-	return (STAT_OK);
+	return(_populate_unfiltered_status_report());			// return current values
 }
 
 /*
- * sr_request_status_report()	- request a status report to run after minimum interval
- * sr_status_report_callback()	- main loop callback to send a report if one is ready
+ * sr_request_status_report() - request a status report
  *
  *	Status reports can be request from a number of sources including:
  *	  - direct request from command line in the form of ? or {"sr:""}
@@ -233,53 +237,55 @@ stat_t sr_set_status_report(nvObj_t *nv)
  *
  *	Status reports are generally returned with minimal delay (from the controller callback),
  *	but will not be provided more frequently than the status report interval
+ *
+ *	Requests can specify immediate or timed reports, and can also force a filtered or full report.
+ *	See cmStatusReportRequest enum in report.h for details.
  */
 stat_t sr_request_status_report(uint8_t request_type)
 {
-#ifdef __ARM
-	if (request_type == SR_IMMEDIATE_REQUEST) {
-		sr.status_report_systick = SysTickTimer.getValue();
+	// +++ Might require making the FULL requests be sticky, and override previous non-FULL requests
+	if (sr.status_report_request != SR_OFF) return (STAT_OK); // ignore multiple requests. First one wins.
+
+	sr.status_report_systick = SysTickTimer_getValue();
+	if (request_type == SR_REQUEST_IMMEDIATE) {
+		sr.status_report_request = SR_FILTERED;		// will trigger a filtered or verbose report depending on verbosity setting
+
+	} else if (request_type == SR_REQUEST_IMMEDIATE_FULL) {
+		sr.status_report_request = SR_VERBOSE;		// will always trigger verbose report, regardless of verbosity setting
+
+	} else if (request_type == SR_REQUEST_TIMED) {
+		sr.status_report_request = SR_FILTERED;
+		sr.status_report_systick += sr.status_report_interval;
+
+	} else {
+		sr.status_report_request = SR_VERBOSE;
+		sr.status_report_systick += sr.status_report_interval;
 	}
-	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-		sr.status_report_systick = SysTickTimer.getValue() + sr.status_report_interval;
-	}
-#endif
-#ifdef __AVR
-	if (request_type == SR_IMMEDIATE_REQUEST) {
-		sr.status_report_systick = SysTickTimer_getValue();
-	}
-	if ((request_type == SR_TIMED_REQUEST) && (sr.status_report_requested == false)) {
-		sr.status_report_systick = SysTickTimer_getValue() + sr.status_report_interval;
-	}
-#endif
-	sr.status_report_requested = true;
 	return (STAT_OK);
 }
 
+/*
+ * sr_status_report_callback() - main loop callback to send a report if one is ready
+ */
 stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
 #ifdef __SUPPRESS_STATUS_REPORTS
 	return (STAT_NOOP);
 #endif
-
 	if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
-	if (sr.status_report_requested == false) return (STAT_NOOP);
-#ifdef __ARM
-	if (SysTickTimer.getValue() < sr.status_report_systick) return (STAT_NOOP);
-#endif
-#ifdef __AVR
+	if (sr.status_report_request == SR_OFF) return (STAT_NOOP);
+
 	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
-#endif
 
-	sr.status_report_requested = false;		// disable reports until requested again
-
-	if (sr.status_report_verbosity == SR_VERBOSE) {
+	if (sr.status_report_request == SR_VERBOSE) {
 		_populate_unfiltered_status_report();
 	} else {
 		if (_populate_filtered_status_report() == false) {	// no new data
+			sr.status_report_request = SR_OFF;				// disable reports until requested again
 			return (STAT_OK);
 		}
 	}
+	sr.status_report_request = SR_OFF;
 	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
 	return (STAT_OK);
 }
@@ -327,7 +333,7 @@ static stat_t _populate_unfiltered_status_report()
 /*
  * _populate_filtered_status_report() - populate nvObj body with status values
  *
- *	Designed to be displayed as a JSON object; i;e; no footer or header
+ *	Designed to be displayed as a JSON object; i.e. no footer or header
  *	Returns 'true' if the report has new data, 'false' if there is nothing to report.
  *
  *	NOTE: Unlike sr_populate_unfiltered_status_report(), this function does NOT set
@@ -368,7 +374,7 @@ static uint8_t _populate_filtered_status_report()
 			strcat(tmp, nv->token);
 			strcpy(nv->token, tmp);		//...or here.
 			sr.status_report_value[i] = nv->value;
-			if ((nv = nv->nx) == NULL) return (false); // should never be NULL unless SR length exceeds available buffer array
+			if ((nv = nv->nx) == NULL) return (false);	// should never be NULL unless SR length exceeds available buffer array
 			has_data = true;
 		}
 	}
@@ -376,7 +382,7 @@ static uint8_t _populate_filtered_status_report()
 }
 
 /*
- * Wrappers and Setters - for calling from cfgArray table
+ * Wrappers and Setters - for calling from nvArray table
  *
  * sr_get()		- run status report
  * sr_set()		- set status report elements
@@ -433,7 +439,7 @@ void qr_init_queue_report()
 	qr.queue_report_requested = false;
 	qr.buffers_added = 0;
 	qr.buffers_removed = 0;
-	qr.init_tick = SysTickTimer_getValue();		// C mapping of SysTickTimer.getValue();
+	qr.init_tick = SysTickTimer_getValue();		// Uses C mapping of SysTickTimer.getValue();
 }
 
 /*
@@ -481,7 +487,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
 	qr.queue_report_requested = false;
 
-	if (cfg.comm_mode == TEXT_MODE) {
+	if (cs.comm_mode == TEXT_MODE) {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
 			fprintf(stderr, "qr:%d\n", qr.buffers_available);
 		} else  {
@@ -596,7 +602,7 @@ stat_t job_set_job_report(nvObj_t *nv)
 	for (uint8_t i=0; i<4; i++) {
 		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
 		if (nv->valuetype == TYPE_INTEGER) {
-			cs.job_id[i] = nv->value;
+			cfg.job_id[i] = nv->value;
 			nv->index = job_start + i;		// index of the SR persistence location
 			nv_persist(nv);
 		} else {
@@ -609,13 +615,13 @@ stat_t job_set_job_report(nvObj_t *nv)
 
 uint8_t job_report_callback()
 {
-	if (cfg.comm_mode == TEXT_MODE) {
+	if (cs.comm_mode == TEXT_MODE) {
 		// no-op, job_ids are client app state
 	} else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
+		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2],cfg.job_id[3] );
 	} else {
-		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cs.job_id[0], cs.job_id[1], cs.job_id[2], cs.job_id[3] );
-		//job_clear_report();
+		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+		//job_clear_report(); d
 	}
 	return (STAT_OK);
 }
@@ -640,24 +646,3 @@ void qr_print_qo(nvObj_t *nv) { text_print_int(nv, fmt_qo);}
 void qr_print_qv(nvObj_t *nv) { text_print_ui8(nv, fmt_qv);}
 
 #endif // __TEXT_MODE
-
-
-/****************************************************************************
- ***** Unit Tests ***********************************************************
- ****************************************************************************/
-
-#ifdef __UNIT_TESTS
-#ifdef __UNIT_TEST_REPORT
-
-void sr_unit_tests(void)
-{
-	sr_init();
-	cs.communications_mode = STAT_JSON_MODE;
-	sr_run_status_report();
-}
-#endif	// __UNIT_TESTS
-#endif	// __UNIT_TESTS_REPORT
-
-#ifdef __cplusplus
-}
-#endif

@@ -28,10 +28,6 @@
 #ifndef PWM_H_ONCE
 #define PWM_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 typedef struct pwmConfigChannel {
 	float frequency;				// base frequency for PWM driver, in Hz
 	float cw_speed_lo;				// minimum clockwise spindle speed [0..N]
@@ -92,17 +88,5 @@ stat_t pwm_set_duty(uint8_t channel, float duty);
 	#define pwm_print_p1pof tx_print_stub
 
 #endif // __TEXT_MODE
-
-//#define __UNIT_TEST_PWM		// uncomment to enable PWM unit tests
-#ifdef __UNIT_TEST_PWM
-void pwm_unit_tests(void);
-#define	PWM_UNITS pwm_unit_tests();
-#else
-#define	PWM_UNITS
-#endif
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: PWM_H_ONCE

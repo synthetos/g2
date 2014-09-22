@@ -51,25 +51,22 @@
 #undef JSON_VERBOSITY
 #define JSON_VERBOSITY 			JV_CONFIGS
 
-#undef SWITCH_TYPE
-#define SWITCH_TYPE 			SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			AXIS_X	// 1ma
-#define M1_STEP_ANGLE			1.8		// 1sa
-#define M1_TRAVEL_PER_REV		5.08	// 1tr
-#define M1_MICROSTEPS			8		// 1mi		1,2,4,8
-#define M1_POLARITY				0		// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			0		// 1pm		TRUE=low power idle enabled 
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M1_MOTOR_MAP 			AXIS_X					// 1ma
+#define M1_STEP_ANGLE			1.8						// 1sa
+#define M1_TRAVEL_PER_REV		5.08					// 1tr
+#define M1_MICROSTEPS			8						// 1mi		1,2,4,8
+#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
+#define M1_POWER_MODE 			MOTOR_POWERED_IN_CYCLE	// 1pm		See enum cmMotorPowerMode in stepper.h
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 0.00=off, 1.00=max
 
 #define M2_MOTOR_MAP			AXIS_Y
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		5.08
 #define M2_MICROSTEPS			8
 #define M2_POLARITY				0
-#define M2_POWER_MODE			0
+#define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP			AXIS_Z
@@ -77,7 +74,7 @@
 #define M3_TRAVEL_PER_REV		1.25
 #define M3_MICROSTEPS			4
 #define M3_POLARITY				1
-#define M3_POWER_MODE			1
+#define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M4_MOTOR_MAP			AXIS_A
@@ -85,7 +82,7 @@
 #define M4_TRAVEL_PER_REV		360		// degrees per motor rev - no gearing
 #define M4_MICROSTEPS			8
 #define M4_POLARITY				0
-#define M4_POWER_MODE			0
+#define M4_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
@@ -93,7 +90,7 @@
 #define M5_TRAVEL_PER_REV		180		// degrees per motor rev - 1:2 gearing
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
-#define M5_POWER_MODE			1
+#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
@@ -101,7 +98,7 @@
 #define M6_TRAVEL_PER_REV		180		// degrees per motor rev - 1:2 gearing
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
-#define M6_POWER_MODE			1
+#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 // *** axis settings ***
@@ -200,15 +197,6 @@
 #define C_ZERO_BACKOFF 			2
 #define C_JERK_HOMING			C_JERK_MAX
 
-#ifdef __PLAN_R2
-#undef  X_JERK_MAX
-#define X_JERK_MAX				6				// xjm
-#undef  Y_JERK_MAX
-#define Y_JERK_MAX				6				// xjm
-#undef  Z_JERK_MAX
-#define Z_JERK_MAX				600000				//
-#endif
-
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 // Our convention is:
 //	- leave G54 in machine coordinates to act as a persistent absolute coordinate system
@@ -229,9 +217,9 @@
 #define G55_B_OFFSET 0
 #define G55_C_OFFSET 0
 
-#define G56_X_OFFSET (X_TRAVEL_MAX/2)	// special settings for running braid tests
-#define G56_Y_OFFSET 20
-#define G56_Z_OFFSET -10
+#define G56_X_OFFSET 0
+#define G56_Y_OFFSET 0
+#define G56_Z_OFFSET 0
 #define G56_A_OFFSET 0
 #define G56_B_OFFSET 0
 #define G56_C_OFFSET 0

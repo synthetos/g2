@@ -58,6 +58,9 @@ void __libc_init_array(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
+void* __dso_handle = nullptr;
+
 #endif // __ARM
 
 static void _unit_tests(void);
@@ -74,15 +77,15 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 	/*gProductVersion   = */ //0.1,
 
-Motate::USBDevice< Motate::USBCDC > usb;
-//Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+//Motate::USBDevice< Motate::USBCDC > usb;
+Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
-typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
-//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
+decltype(usb._mixin_0_type::Serial) &SerialUSB = usb._mixin_0_type::Serial;
+decltype(usb._mixin_1_type::Serial) &SerialUSB1 = usb._mixin_1_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','1'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','2'} )
 
 //Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 #endif
@@ -204,7 +207,7 @@ static const char stat_10[] PROGMEM = "Max file size exceeded";
 static const char stat_11[] PROGMEM = "No such device";
 static const char stat_12[] PROGMEM = "Buffer empty";
 static const char stat_13[] PROGMEM = "Buffer full";
-static const char stat_14[] PROGMEM = "Buffer full - fatal";
+static const char stat_14[] PROGMEM = "Buffer full FATAL";
 static const char stat_15[] PROGMEM = "Initializing";
 static const char stat_16[] PROGMEM = "Entering boot loader";
 static const char stat_17[] PROGMEM = "Function is stubbed";
@@ -218,7 +221,7 @@ static const char stat_23[] PROGMEM = "Divide by zero";
 static const char stat_24[] PROGMEM = "Invalid Address";
 static const char stat_25[] PROGMEM = "Read-only address";
 static const char stat_26[] PROGMEM = "Initialization failure";
-static const char stat_27[] PROGMEM = "System alarm - shutting down";
+static const char stat_27[] PROGMEM = "Hard alarm / shutdown";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
 
@@ -284,8 +287,8 @@ static const char stat_87[] PROGMEM = "87";
 static const char stat_88[] PROGMEM = "88";
 static const char stat_89[] PROGMEM = "89";
 
-static const char stat_90[] PROGMEM = "Config sub-system assertion failure";
-static const char stat_91[] PROGMEM = "IO sub-system assertion failure";
+static const char stat_90[] PROGMEM = "Config assertion failure";
+static const char stat_91[] PROGMEM = "XIO assertion failure";
 static const char stat_92[] PROGMEM = "Encoder assertion failure";
 static const char stat_93[] PROGMEM = "Stepper assertion failure";
 static const char stat_94[] PROGMEM = "Planner assertion failure";
@@ -334,13 +337,13 @@ static const char stat_132[] PROGMEM = "M code unsupported";
 static const char stat_133[] PROGMEM = "Gcode modal group violation";
 static const char stat_134[] PROGMEM = "Axis word missing";
 static const char stat_135[] PROGMEM = "Axis cannot be present";
-static const char stat_136[] PROGMEM = "Axis is invalid for this command";
-static const char stat_137[] PROGMEM = "Axis is disabled";
-static const char stat_138[] PROGMEM = "Axis target position is missing";
-static const char stat_139[] PROGMEM = "Axis target position is invalid";
+static const char stat_136[] PROGMEM = "Axis invalid for this command";
+static const char stat_137[] PROGMEM = "Axis disabled";
+static const char stat_138[] PROGMEM = "Axis target position missing";
+static const char stat_139[] PROGMEM = "Axis target position invalid";
 
-static const char stat_140[] PROGMEM = "Selected plane is missing";
-static const char stat_141[] PROGMEM = "Selected plane is invalid";
+static const char stat_140[] PROGMEM = "Selected plane missing";
+static const char stat_141[] PROGMEM = "Selected plane invalid";
 static const char stat_142[] PROGMEM = "Feedrate not specified";
 static const char stat_143[] PROGMEM = "Inverse time mode cannot be used with this command";
 static const char stat_144[] PROGMEM = "Rotary axes cannot be used with this command";
@@ -358,30 +361,30 @@ static const char stat_154[] PROGMEM = "Spindle must be turning for this command
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
-static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";	// current longest message: 56 chard
+static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";
 static const char stat_159[] PROGMEM = "Arc specification error - endpoint is starting point";
 
-static const char stat_160[] PROGMEM = "P word is missing";
-static const char stat_161[] PROGMEM = "P word is invalid";
-static const char stat_162[] PROGMEM = "P word is zero";
-static const char stat_163[] PROGMEM = "P word is negative";
-static const char stat_164[] PROGMEM = "P word is not an integer";
-static const char stat_165[] PROGMEM = "P word is not a valid tool number";
-static const char stat_166[] PROGMEM = "D word is missing";
-static const char stat_167[] PROGMEM = "D word is invalid";
-static const char stat_168[] PROGMEM = "E word is missing";
-static const char stat_169[] PROGMEM = "E word is invalid";
+static const char stat_160[] PROGMEM = "P word missing";
+static const char stat_161[] PROGMEM = "P word invalid";
+static const char stat_162[] PROGMEM = "P word zero";
+static const char stat_163[] PROGMEM = "P word negative";
+static const char stat_164[] PROGMEM = "P word not an integer";
+static const char stat_165[] PROGMEM = "P word not a valid tool number";
+static const char stat_166[] PROGMEM = "D word missing";
+static const char stat_167[] PROGMEM = "D word invalid";
+static const char stat_168[] PROGMEM = "E word missing";
+static const char stat_169[] PROGMEM = "E word invalid";
 
-static const char stat_170[] PROGMEM = "H word is missing";
-static const char stat_171[] PROGMEM = "H word is invalid";
-static const char stat_172[] PROGMEM = "L word is missing";
-static const char stat_173[] PROGMEM = "L word is invalid";
-static const char stat_174[] PROGMEM = "Q word is missing";
-static const char stat_175[] PROGMEM = "Q word is invalid";
-static const char stat_176[] PROGMEM = "R word is missing";
-static const char stat_177[] PROGMEM = "R word is invalid";
-static const char stat_178[] PROGMEM = "T word is missing";
-static const char stat_179[] PROGMEM = "T word is invalid";
+static const char stat_170[] PROGMEM = "H word missing";
+static const char stat_171[] PROGMEM = "H word invalid";
+static const char stat_172[] PROGMEM = "L word missing";
+static const char stat_173[] PROGMEM = "L word invalid";
+static const char stat_174[] PROGMEM = "Q word missing";
+static const char stat_175[] PROGMEM = "Q word invalid";
+static const char stat_176[] PROGMEM = "R word missing";
+static const char stat_177[] PROGMEM = "R word invalid";
+static const char stat_178[] PROGMEM = "T word missing";
+static const char stat_179[] PROGMEM = "T word invalid";
 
 static const char stat_180[] PROGMEM = "180";
 static const char stat_181[] PROGMEM = "181";
@@ -405,12 +408,12 @@ static const char stat_197[] PROGMEM = "197";
 static const char stat_198[] PROGMEM = "198";
 static const char stat_199[] PROGMEM = "199";
 
-static const char stat_200[] PROGMEM = "Generic TinyG error";
-static const char stat_201[] PROGMEM = "Move less than minimum length";
-static const char stat_202[] PROGMEM = "Move less than minimum time";
-static const char stat_203[] PROGMEM = "Machine is alarmed - Command not processed";	// current longest message 43 chars (including NUL)
-static const char stat_204[] PROGMEM = "Limit switch hit - Shutdown occurred";
-static const char stat_205[] PROGMEM = "Trapezoid planner failed to converge";
+static const char stat_200[] PROGMEM = "Generic error";
+static const char stat_201[] PROGMEM = "Move < min length";
+static const char stat_202[] PROGMEM = "Move < min time";
+static const char stat_203[] PROGMEM = "Alarmed, command rejected [type $clear to clear alarm]"; // current longest message 55 chars (including NUL)
+static const char stat_204[] PROGMEM = "Limit switch - Shutdown occurred";
+static const char stat_205[] PROGMEM = "Planner did not converge";
 static const char stat_206[] PROGMEM = "206";
 static const char stat_207[] PROGMEM = "207";
 static const char stat_208[] PROGMEM = "208";
@@ -427,20 +430,20 @@ static const char stat_217[] PROGMEM = "217";
 static const char stat_218[] PROGMEM = "218";
 static const char stat_219[] PROGMEM = "219";
 
-static const char stat_220[] PROGMEM = "Soft limit exceeded";
-static const char stat_221[] PROGMEM = "Soft limit exceeded - X min";
-static const char stat_222[] PROGMEM = "Soft limit exceeded - X max";
-static const char stat_223[] PROGMEM = "Soft limit exceeded - Y min";
-static const char stat_224[] PROGMEM = "Soft limit exceeded - Y max";
-static const char stat_225[] PROGMEM = "Soft limit exceeded - Z min";
-static const char stat_226[] PROGMEM = "Soft limit exceeded - Z max";
-static const char stat_227[] PROGMEM = "Soft limit exceeded - A min";
-static const char stat_228[] PROGMEM = "Soft limit exceeded - A max";
-static const char stat_229[] PROGMEM = "Soft limit exceeded - B min";
-static const char stat_230[] PROGMEM = "Soft limit exceeded - B max";
-static const char stat_231[] PROGMEM = "Soft limit exceeded - C min";
-static const char stat_232[] PROGMEM = "Soft limit exceeded - C max";
-static const char stat_233[] PROGMEM = "233";
+static const char stat_220[] PROGMEM = "Soft limit";
+static const char stat_221[] PROGMEM = "Soft limit - X min";
+static const char stat_222[] PROGMEM = "Soft limit - X max";
+static const char stat_223[] PROGMEM = "Soft limit - Y min";
+static const char stat_224[] PROGMEM = "Soft limit - Y max";
+static const char stat_225[] PROGMEM = "Soft limit - Z min";
+static const char stat_226[] PROGMEM = "Soft limit - Z max";
+static const char stat_227[] PROGMEM = "Soft limit - A min";
+static const char stat_228[] PROGMEM = "Soft limit - A max";
+static const char stat_229[] PROGMEM = "Soft limit - B min";
+static const char stat_230[] PROGMEM = "Soft limit - B max";
+static const char stat_231[] PROGMEM = "Soft limit - C min";
+static const char stat_232[] PROGMEM = "Soft limit - C max";
+static const char stat_233[] PROGMEM = "Soft limit during arc";
 static const char stat_234[] PROGMEM = "234";
 static const char stat_235[] PROGMEM = "235";
 static const char stat_236[] PROGMEM = "236";
@@ -449,12 +452,12 @@ static const char stat_238[] PROGMEM = "238";
 static const char stat_239[] PROGMEM = "239";
 
 static const char stat_240[] PROGMEM = "Homing cycle failed";
-static const char stat_241[] PROGMEM = "Homing Error - Bad or no axis specified";
-static const char stat_242[] PROGMEM = "Homing Error - Search velocity is zero";
-static const char stat_243[] PROGMEM = "Homing Error - Latch velocity is zero";
-static const char stat_244[] PROGMEM = "Homing Error - Travel min & max are the same";
-static const char stat_245[] PROGMEM = "Homing Error - Negative latch backoff";
-static const char stat_246[] PROGMEM = "Homing Error - Homing switches misconfigured";
+static const char stat_241[] PROGMEM = "Homing Err - Bad or no axis specified";
+static const char stat_242[] PROGMEM = "Homing Err - Search velocity is zero";
+static const char stat_243[] PROGMEM = "Homing Err - Latch velocity is zero";
+static const char stat_244[] PROGMEM = "Homing Err - Travel min & max are the same";
+static const char stat_245[] PROGMEM = "Homing Err - Negative latch backoff";
+static const char stat_246[] PROGMEM = "Homing Err - Homing switches misconfigured";
 static const char stat_247[] PROGMEM = "247";
 static const char stat_248[] PROGMEM = "248";
 static const char stat_249[] PROGMEM = "249";
