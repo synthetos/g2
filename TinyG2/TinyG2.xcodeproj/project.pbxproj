@@ -8227,7 +8227,7 @@
 		E21E39F1193FA91C00D483F8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PATH = "$PATH:/usr/local/bin";
 				PRODUCT_NAME = "TinyG2 G2V9i";
 			};
 			name = Debug;
@@ -8235,7 +8235,7 @@
 		E21E39F2193FA91C00D483F8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PATH = "$PATH:/usr/local/bin";
 				PRODUCT_NAME = "TinyG2 G2V9i";
 			};
 			name = Release;
