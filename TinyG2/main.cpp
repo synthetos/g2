@@ -160,13 +160,13 @@ static void _application_init(void)
 
 int main(void)
 {
-#ifdef __ARM
-	cacheUniqueId();
-#endif
-
 	// system initialization
 	_system_init();
 
+#ifdef __ARM
+	cacheUniqueId();
+#endif
+    
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
