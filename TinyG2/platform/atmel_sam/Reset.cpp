@@ -72,7 +72,7 @@ void tickReset() {
 		return;
 	ticks--;
 	if (ticks == 0)
-		banzai(0);
+		banzai(1);
 }
 
 #ifdef __cplusplus
