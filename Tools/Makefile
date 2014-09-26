@@ -22,7 +22,7 @@ UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
 OS = OSX
-DOWNLOAD_TOOL = curl -i -L -O
+DOWNLOAD_TOOL = curl -OL
 else
 ifeq (Linux,${UNAME})
 OS = LINUX
@@ -44,7 +44,7 @@ ${TOOLS_EXPANDED_DIRNAME}: ${TOOLS_${OS}_TARBALL_FILENAME}
 
 ${TOOLS_${OS}_TARBALL_FILENAME}:
 	${DOWNLOAD_TOOL} "${TOOLS_URL_PREFIX}${TOOLS_${OS}_TARBALL_FILENAME}"
-	
+
 .PHONY: clean
 
 clean:
