@@ -20,6 +20,8 @@ target remote | openocd  -c "interface cmsis-dap" -f target/at91sam3ax_xx.cfg -c
 set history save on
 set history expansion on
 
+set print pretty on
+
 # Halt the device
 monitor reset halt
 
