@@ -164,10 +164,12 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+	DISPATCH(_controller_state());				// controller state management
+
+	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
-	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
@@ -178,7 +180,6 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(rx_report_callback());             // conditionally send rx report
 
-//	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -192,7 +193,6 @@ static void _controller_HSM()
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_controller_state());				// controller state management
 	DISPATCH(_dispatch_command());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
@@ -230,14 +230,16 @@ static stat_t _controller_state()
 static stat_t _dispatch_command()
 {
 	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+        _dispatch_kernel();
 	return (STAT_OK);
 }
 
 static stat_t _dispatch_control()
 {
 	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+        _dispatch_kernel();
 	return (STAT_OK);
 }
 
@@ -254,9 +256,9 @@ static void _dispatch_kernel()
 		}
 
 	// included for AVR diagnostics
-//	} else if (*cs.bufp == '!') { cm_request_feedhold();
-//	} else if (*cs.bufp == '%') { cm_request_queue_flush();
-//	} else if (*cs.bufp == '~') { cm_request_cycle_start();
+	} else if (*cs.bufp == '!') { cm_request_feedhold();
+	} else if (*cs.bufp == '%') { cm_request_queue_flush();
+	} else if (*cs.bufp == '~') { cm_request_cycle_start();
 
 	} else if (*cs.bufp == '{') {							// process as JSON mode
 		cs.comm_mode = JSON_MODE;							// switch to JSON mode

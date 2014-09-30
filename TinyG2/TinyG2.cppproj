@@ -72,10 +72,10 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800005101</ToolNumber>
+      <ToolNumber>J41800001719</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
-    <UseGdb>False</UseGdb>
+    <UseGdb>True</UseGdb>
     <PercepioTrace>
       <TargetOS />
       <Frequency>84000000</Frequency>
@@ -587,7 +587,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9i MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>TinyG2.elf TinyG2.map COLOR=0 VERBOSE=1 OPTIMIZATION=1 PLATFORM=G2v9i MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=G2v9i MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9i\</OutputPath>

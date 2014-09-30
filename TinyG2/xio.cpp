@@ -44,7 +44,7 @@
 
 // We need a buffer to hold single character commands, like !~%
 // We also want it to have a NULL character, so we make it two characters.
-//char_t single_char_buffer[2] = " ";
+char_t single_char_buffer[2] = " ";
 
 struct xioDevice_t {						// description pf a device for reading and writing
 	// connection and device management
@@ -318,18 +318,18 @@ int read_char (uint8_t dev)
 //		hw_request_hard_reset();
 //		return (_FDEV_ERR);
 //	}
-	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
-		cm_request_feedhold();
-		return (_FDEV_ERR);
-	}
-	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
-		cm_request_queue_flush();
-		return (_FDEV_ERR);
-	}
-	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
-		cm_request_cycle_start();
-		return (_FDEV_ERR);
-	}
+//	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
+//		cm_request_feedhold();
+//		return (_FDEV_ERR);
+//	}
+//	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
+//		cm_request_queue_flush();
+//		return (_FDEV_ERR);
+//	}
+//	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
+//		cm_request_cycle_start();
+//		return (_FDEV_ERR);
+//	}
 	return (c);
 }
 
@@ -357,90 +357,40 @@ int read_char (uint8_t dev)
  *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
  */
 
-char_t *readline(devflags_t *flags, uint16_t *size)
-{
-	int c;
-
-	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-		if (!xio.d[dev]->isActive())
-			continue;
-
-		// If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
-		if (!(xio.d[dev]->flags & *flags)) // the types need to match
-			continue;
-
-		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
-			if ((c = read_char(dev)) == _FDEV_ERR) break;
-			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
-//			if ((c == '!') || (c == '%') || (c == '~')) {
-//                single_char_buffer[0] = c;
-//                *size = 1;
-//				*flags = xio.d[dev]->flags;							// what type of device is this?
-//                return single_char_buffer;
-//            } else 
-			if ((c == LF) || (c == CR)) {							// terminate the line and return it
-				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
-/*
-				if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
-					// This is a control-only channel.
-					// We need to ensure that we only get JSON-lines.
-					if (xio.d[dev]->read_buf[0] != '{') {
-						xio.d[dev]->read_index = 0; // throw away the line
-						xio.d[dev]->read_buf[0] = 0;
-
-						*size = 0;
-						*flags = 0;
-						return NULL;
-					}
-				}
-*/
-				*flags = xio.d[dev]->flags;							// what type of device is this?
-				*size = xio.d[dev]->read_index;						// how long is the string?
-				xio.d[dev]->read_index = 0;							// reset for next readline
-				return (xio.d[dev]->read_buf);
-			}
-			(xio.d[dev]->read_index)++;
-		}
-	}
-	*size = 0;
-	*flags = 0;
-	return (NULL);
-}
-/*
 char_t *readline(devflags_t &flags, uint16_t &size)
 {
 	int c;
 
 	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
 		if (!xio.d[dev]->isActive())
-		continue;
+            continue;
 
-		// If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
-		if (!(xio.d[dev]->flags & flags)) // the types need to match
-		continue;
+        // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
+		if (flags == DEV_IS_CTRL && ( (xio.d[dev]->flags & (DEV_IS_CTRL|DEV_IS_DATA)) != DEV_IS_CTRL )) // the types need to match
+            continue;
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
 			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
 			if ((c == '!') || (c == '%') || (c == '~')) {
-				single_char_buffer[0] = c;
-				size = 1;
+                single_char_buffer[0] = c;
+                size = 1;
 				flags = xio.d[dev]->flags;							// what type of device is this?
-				return single_char_buffer;
-				} else if ((c == LF) || (c == CR)) {
+                return single_char_buffer;
+            } else if ((c == LF) || (c == CR)) {
 				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
-				if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
-					// This is a control-only channel.
-					// We need to ensure that we only get JSON-lines.
-					if (xio.d[dev]->read_buf[0] != '{') {
-						xio.d[dev]->read_index = 0; // throw away the line
-						xio.d[dev]->read_buf[0] = 0;
-						
-						size = 0;
-						flags = 0;
-						return NULL;
-					}
-				}
+                if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
+                    // This is a control-only channel.
+                    // We need to ensure that we only get JSON-lines.
+                    if (xio.d[dev]->read_buf[0] != '{') {
+                        xio.d[dev]->read_index = 0; // throw away the line
+                        xio.d[dev]->read_buf[0] = 0;
+                        
+                        size = 0;
+                        flags = 0;
+                        return NULL;
+                    }
+                }
 				flags = xio.d[dev]->flags;							// what type of device is this?
 				size = xio.d[dev]->read_index;						// how long is the string?
 				xio.d[dev]->read_index = 0;							// reset for next readline
@@ -453,7 +403,7 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 	flags = 0;
 	return (NULL);
 }
-*/
+
 
 stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size)
 {
