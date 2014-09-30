@@ -318,18 +318,18 @@ int read_char (uint8_t dev)
 //		hw_request_hard_reset();
 //		return (_FDEV_ERR);
 //	}
-	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
-		cm_request_feedhold();
-		return (_FDEV_ERR);
-	}
-	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
-		cm_request_queue_flush();
-		return (_FDEV_ERR);
-	}
-	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
-		cm_request_cycle_start();
-		return (_FDEV_ERR);
-	}
+//	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
+//		cm_request_feedhold();
+//		return (_FDEV_ERR);
+//	}
+//	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
+//		cm_request_queue_flush();
+//		return (_FDEV_ERR);
+//	}
+//	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
+//		cm_request_cycle_start();
+//		return (_FDEV_ERR);
+//	}
 	return (c);
 }
 

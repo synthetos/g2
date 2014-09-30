@@ -67,7 +67,6 @@ static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
 
-//static stat_t _command_dispatch(bool);
 static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
@@ -76,7 +75,6 @@ static void _dispatch_kernel(void);
 // prep for export to other modules:
 stat_t hardware_hard_reset_handler(void);
 //stat_t hardware_bootloader_handler(void);
-
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -95,14 +93,14 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	cs.config_version = TINYG_CONFIG_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
 
+	cs.controller_state = CONTROLLER_STARTUP;		// ready to run startup lines
+
 #ifdef __AVR
-	cs.state = CONTROLLER_STARTUP;					// ready to run startup lines
-	state_usb0 = CONTROLLER_NOT_CONNECTED
 	xio_set_stdin(std_in);
 	xio_set_stdout(std_out);
 	xio_set_stderr(std_err);
-	cs.default_src = std_in;
-	tg_set_primary_source(cs.default_src);
+	xio.default_src = std_in;
+	controller_set_primary_source(xio.default_src);
 #endif
 
 #ifdef __ARM
@@ -166,10 +164,13 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+	DISPATCH(_controller_state());				// controller state management
 
-    DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
+	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+
+	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
-	DISPATCH(_system_assertions());				// 7. system integrity assertions
+	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -177,8 +178,8 @@ static void _controller_HSM()
 //	DISPATCH(switch_debounce_callback());		// debounce switches
 	DISPATCH(sr_status_report_callback());		// conditionally send status report
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
+//	DISPATCH(rx_report_callback());             // conditionally send rx report
 
-	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -187,13 +188,11 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
-	DISPATCH(xio_callback());					// manages state changes in the XIO system
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_controller_state());				// controller state management
 	DISPATCH(_dispatch_command());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 }
@@ -230,32 +229,18 @@ static stat_t _controller_state()
  */
 static stat_t _dispatch_command()
 {
-#ifdef __AVR
 	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+        _dispatch_kernel();
 	return (STAT_OK);
-#endif
-
-#ifdef __ARM
-	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL) _dispatch_kernel();
-	return (STAT_OK);
-#endif
 }
 
 static stat_t _dispatch_control()
 {
-#ifdef __AVR
 	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+        _dispatch_kernel();
 	return (STAT_OK);
-#endif
-
-#ifdef __ARM
-	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL) _dispatch_kernel();
-	return (STAT_OK);
-#endif
 }
 
 static void _dispatch_kernel()
@@ -270,7 +255,7 @@ static void _dispatch_kernel()
 			text_response(STAT_OK, cs.saved_buf);
 		}
 
-	// included for AVR diagnostics and ARM serial (which does not trap these characters immediately on RX)
+	// included for AVR diagnostics
 	} else if (*cs.bufp == '!') { cm_request_feedhold();
 	} else if (*cs.bufp == '%') { cm_request_queue_flush();
 	} else if (*cs.bufp == '~') { cm_request_cycle_start();
@@ -365,20 +350,19 @@ static stat_t _normal_idler()
 }
 
 /*
- * tg_reset_source() 		 - reset source to default input device (see note)
- * tg_set_primary_source() 	 - set current primary input source
- * tg_set_secondary_source() - set current primary input source
+ * controller_reset_source() 		 - reset source to default input device (see note)
+ * controller_set_primary_source() 	 - set current primary input source
+ * controller_set_secondary_source() - set current primary input source
  *
- * Note: Once multiple serial devices are supported reset_source() should
- * be expanded to also set the stdout/stderr console device so the prompt
- * and other messages are sent to the active device.
+ * Note: Once multiple serial devices are supported reset_source() should be expanded to
+ * also set the stdout/stderr console device so the prompt and other messages are sent
+ * to the active device.
  */
 /*
-void tg_reset_source() { tg_set_primary_source(cs.default_src);}
-void tg_set_primary_source(uint8_t dev) { cs.primary_src = dev;}
-void tg_set_secondary_source(uint8_t dev) { cs.secondary_src = dev;}
+void controller_reset_source() { controller_set_primary_source(xio.default_src);}
+void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
+void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
 */
-
 /*
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
