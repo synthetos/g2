@@ -38,9 +38,11 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		047.08 // testing homing cycle
+#define TINYG_FIRMWARE_BUILD   		073.02 // regression testing run
+
 #endif
-#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version (updated from 0.8)
+#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
+#define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
@@ -64,12 +66,11 @@
 
 #define __STEP_CORRECTION
 #define __NEW_SWITCHES						// Using v9 style switch code
-//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
-//#define __KAHAN							// Use Kahan summation in aline exec functions
+#define __DUAL_USB							// use dual endpoint USB
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves
-//#define __DEBUG_SETTINGS					// special settings. See settings.h
+#define __DEBUG_SETTINGS					// special settings. See settings.h
 //#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
 
 //#define __SIMULATION						// for software-only simulations
@@ -549,7 +550,7 @@ char *get_status_message(stat_t status);
 #define	STAT_SOFT_LIMIT_EXCEEDED_BMAX 220				// soft limit error - B maximum
 #define	STAT_SOFT_LIMIT_EXCEEDED_CMIN 231				// soft limit error - C minimum
 #define	STAT_SOFT_LIMIT_EXCEEDED_CMAX 232				// soft limit error - C maximum
-#define	STAT_ERROR_233 233
+#define	STAT_SOFT_LIMIT_EXCEEDED_ARC 233				// soft limit err on arc
 #define	STAT_ERROR_234 234
 #define	STAT_ERROR_235 235
 #define	STAT_ERROR_236 236

@@ -26,8 +26,8 @@
  * 		 into a virgin EEPROM, and can be changed using the config commands.
  *		 After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
+ *		 System and hardware settings that you shouldn't need to change
+ *		 are in hardware.h  Application settings that also shouldn't need
  *		 to be changed are in tinyg.h
  */
 
@@ -46,8 +46,7 @@
 
 // WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
 // new machines use a stepper which has the same config as the other axis.
-#define HAS_CANSTACK_Z_AXIS			0
-//#define HAS_CANSTACK_Z_AXIS		1			// Earlier machines
+#define HAS_CANSTACK_Z_AXIS 0
 
 // Switch definitions for interlock & E-stop
 #define ENABLE_INTERLOCK_AND_ESTOP
@@ -60,6 +59,9 @@
 
 // *** settings.h overrides ***
 // Note: there are some commented test values below
+
+#undef MOTOR_POWER_MODE
+#define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
 
 #undef  STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","ilck","estp","spc"
@@ -100,20 +102,22 @@
 
 // *** motor settings ***
 
+// NOTE: Motor numnbers are reversed from TInyGv8 in order to maintain compatibility with wiring harnesses
+
 #define M1_MOTOR_MAP 			AXIS_X				// 1ma
 #define M1_STEP_ANGLE 			1.8					// 1sa
 #define M1_TRAVEL_PER_REV 		5.08				// 1tr
 #define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
 #define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE 			MOTOR_POWERED_IN_CYCLE	// 1pm		See enum cmMotorPowerMode in stepper.h
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 0=off, 100=max
+#define M1_POWER_MODE 			MOTOR_POWER_MODE	// 1pm		See enum cmMotorPowerMode in stepper.h
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 0.00=off, 1.00=max
 
 #define M2_MOTOR_MAP 			AXIS_Y
 #define M2_STEP_ANGLE 			1.8
-#define M2_TRAVEL_PER_REV 		5.08				// 1tr
+#define M2_TRAVEL_PER_REV 		5.08
 #define M2_MICROSTEPS 			8
 #define M2_POLARITY 			1
-#define M2_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
+#define M2_POWER_MODE 			MOTOR_POWER_MODE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP 			AXIS_Z
@@ -126,7 +130,7 @@
 #endif
 #define M3_MICROSTEPS 			8
 #define M3_POLARITY 			0
-#define M3_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
+#define M3_POWER_MODE 			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M4_MOTOR_MAP 			AXIS_A
@@ -134,7 +138,7 @@
 #define M4_TRAVEL_PER_REV 		360					// degrees moved per motor rev
 #define M4_MICROSTEPS 			8
 #define M4_POLARITY 			1
-#define M4_POWER_MODE 			MOTOR_POWERED_IN_CYCLE
+#define M4_POWER_MODE 			MOTOR_POWER_MODE
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
@@ -142,7 +146,7 @@
 #define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
-#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M5_POWER_MODE			MOTOR_POWER_MODE
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
@@ -150,7 +154,7 @@
 #define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
-#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M6_POWER_MODE			MOTOR_POWER_MODE
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 
@@ -212,7 +216,7 @@
 #define Z_JERK_HOMING			JERK_HOMING
 
 // Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE 			AXIS_RADIUS
+#define A_AXIS_MODE 			AXIS_DISABLED // DISABLED
 #define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			A_VELOCITY_MAX
 #define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
@@ -230,7 +234,7 @@
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HOMING			A_JERK_MAX
 
-#define B_AXIS_MODE 			AXIS_RADIUS
+#define B_AXIS_MODE 			AXIS_DISABLED	// DISABLED
 #define B_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
 #define B_FEEDRATE_MAX 			B_VELOCITY_MAX
 #define B_TRAVEL_MIN			-1
@@ -248,7 +252,7 @@
 #define B_ZERO_BACKOFF 			2
 #define B_JERK_HOMING			B_JERK_MAX
 
-#define C_AXIS_MODE 			AXIS_RADIUS
+#define C_AXIS_MODE 			AXIS_DISABLED	// DISABLED
 #define C_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
 #define C_FEEDRATE_MAX 			C_VELOCITY_MAX
 #define C_TRAVEL_MIN			-1
@@ -265,7 +269,6 @@
 #define C_LATCH_BACKOFF 		5
 #define C_ZERO_BACKOFF 			2
 #define C_JERK_HOMING			C_JERK_MAX
-
 
 // *** PWM SPINDLE CONTROL ***
 

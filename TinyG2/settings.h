@@ -41,7 +41,7 @@
 // Do not assume these are the effective settings. Check the machine profile
 
 // Machine configuration settings
-#define CHORDAL_TOLERANCE 			0.01					// chord accuracy for arc drawing (in mm)
+#define CHORDAL_TOLERANCE 			0.01					// chordal accuracy for arc drawing (in mm)
 #define SOFT_LIMIT_ENABLE			0						// 0 = off, 1 = on
 
 #define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
@@ -56,13 +56,14 @@
 
 #define JSON_VERBOSITY				JV_MESSAGES				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE 			JSON_SYNTAX_STRICT		// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_DEPTH			0						// 0 = new style, 1 = old style
+#define JSON_FOOTER_STYLE			1						// 1 = footer w/checksum, 2 = footer w/window slots
+#define JSON_FOOTER_DEPTH			0						// 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
 #define STATUS_REPORT_VERBOSITY		SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS		100						// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250						// milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
-#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+//#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF					// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
@@ -81,14 +82,21 @@
 //**** DEBUG SETTINGS ****
 
 #ifdef __DEBUG_SETTINGS
+
+#undef JSON_FOOTER_STYLE
+#define JSON_FOOTER_STYLE			2						// 1 = footer w/checksum, 2 = footer w/window slots
+
 #undef JSON_VERBOSITY
-#define JSON_VERBOSITY				JV_SILENT				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+//#define JSON_VERBOSITY				JV_SILENT			// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY				JV_LINENUM				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 
 #undef STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","_cs1","_es1","_fe1","_xs1","_cs2","_es2","_fe2","_xs2"
+#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","stat"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","_cs1","_es1","_fe1","_xs1","_cs2","_es2","_fe2","_xs2"
 
 #undef STATUS_REPORT_VERBOSITY
-#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY		SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #endif
 
 /**** MACHINE PROFILES ******************************************************/
@@ -99,15 +107,14 @@
 //#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
-//#include "settings/settings_lumenlabMicRoV3.h"		// Lumenlabs micRo v3
-//#include "settings/settings_openpnp.h"				// OpenPnP
-//#include "settings/settings_othercutter.h"			// Otherfab OtherCutter
-#include "settings/settings_othermill.h"				// Otherfab OtherMill
+#include "settings/settings_othermill.h"				// OMC OtherMill
 //#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
-//#include "settings/settings_shapeoko375.h"			// Shapeoko (1) - 375mm rails
+//#include "settings/settings_shapeoko375.h"			// Shapeoko 375mm kit
+//#include "settings/settings_shapeoko2.h"				// Shapeoko2 standard kit
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
+
 //#include "settings/settings_Ultimaker.h"
 //#include "settings/settings_Ultimaker_Rob.h"
 //#include "settings/settings_Ultimaker_Rob_v9h.h"
@@ -127,7 +134,7 @@
 #define P1_CCW_PHASE_LO                 0.125
 #define P1_CCW_PHASE_HI                 0.2
 #define P1_PWM_PHASE_OFF                0.1
-#endif//P1_PWM_FREQUENCY
+#endif //P1_PWM_FREQUENCY
 
 /*** User-Defined Data Defaults ***/
 

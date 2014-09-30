@@ -28,10 +28,6 @@
 #ifndef SPINDLE_H_ONCE
 #define SPINDLE_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /*
  * Global Scope Functions
  */
@@ -47,9 +43,5 @@ void cm_pause_spindle();
 //returns spindle to remembered state; does not go through planner
 //if this returns true, a dwell is needed before ending feedhold
 bool cm_unpause_spindle();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: SPINDLE_H_ONCE

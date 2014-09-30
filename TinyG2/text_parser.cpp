@@ -35,10 +35,6 @@
 #include "util.h"
 #include "xio.h"					// for ASCII char definitions
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 txtSingleton_t txt;					// declare the singleton for either __TEXT_MODE setting
 
 #ifndef __TEXT_MODE
@@ -65,35 +61,35 @@ static stat_t _text_parser_kernal(char_t *str, nvObj_t *nv);
  */
 stat_t text_parser(char_t *str)
 {
-	nvObj_t *nv = nv_reset_nv_list();		// returns first object in the body
+	nvObj_t *nv = nv_reset_nv_list();				// returns first object in the body
 	stat_t status = STAT_OK;
 
 	// trap special displays
-	if (str[0] == '?') {					// handle status report case
+	if (str[0] == '?') {							// handle status report case
 		sr_run_text_status_report();
 		return (STAT_OK);
 	}
-	if (str[0] == 'H') {					// print help screens
+	if (str[0] == 'H') {							// print help screens
 		help_general((nvObj_t *)NULL);
 		return (STAT_OK);
 	}
 
 	// pre-process the command
-	if ((str[0] == '$') && (str[1] == NUL)) { // treat a lone $ as a sys request
+	if ((str[0] == '$') && (str[1] == NUL)) {		// treat a lone $ as a sys request
 		strcat(str,"sys");
 	}
 
 	// parse and execute the command (only processes 1 command per line)
-	ritorno(_text_parser_kernal(str, nv));	// run the parser to decode the command
+	ritorno(_text_parser_kernal(str, nv));			// run the parser to decode the command
 	if ((nv->valuetype == TYPE_NULL) || (nv->valuetype == TYPE_PARENT)) {
-		if (nv_get(nv) == STAT_COMPLETE) {// populate value, group values, or run uber-group displays
-			return (STAT_OK);				// return for uber-group displays so they don't print twice
+		if (nv_get(nv) == STAT_COMPLETE) {			// populate value, group values, or run uber-group displays
+			return (STAT_OK);						// return for uber-group displays so they don't print twice
 		}
-	} else { 								// process SET and RUN commands
+	} else { 										// process SET and RUN commands
 		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
-		status = nv_set(nv);				// set (or run) single value
+		status = nv_set(nv);						// set (or run) single value
 		if (status == STAT_OK) {
-			nv_persist(nv);					// conditionally persist depending on flags in array
+			nv_persist(nv);							// conditionally persist depending on flags in array
 		}
 	}
 	nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT); // print the results
@@ -102,29 +98,29 @@ stat_t text_parser(char_t *str)
 
 static stat_t _text_parser_kernal(char_t *str, nvObj_t *nv)
 {
-	char_t *rd, *wr;						// read and write pointers
-//	char_t separators[] = {"="};			// STRICT: only separator allowed is = sign
-	char_t separators[] = {" =:|\t"};		// RELAXED: any separator someone might use
+	char_t *rd, *wr;								// read and write pointers
+//	char_t separators[] = {"="};					// STRICT: only separator allowed is = sign
+	char_t separators[] = {" =:|\t"};				// RELAXED: any separator someone might use
 
 	// pre-process and normalize the string
-//	nv_reset_nv(nv);						// initialize config object
-	nv_copy_string(nv, str);				// make a copy for eventual reporting
-	if (*str == '$') str++;					// ignore leading $
+//	nv_reset_nv(nv);								// initialize config object
+	nv_copy_string(nv, str);						// make a copy for eventual reporting
+	if (*str == '$') str++;							// ignore leading $
 	for (rd = wr = str; *rd != NUL; rd++, wr++) {
-		*wr = tolower(*rd);					// convert string to lower case
-		if (*rd == ',') { *wr = *(++rd);}	// skip over commas
+		*wr = tolower(*rd);							// convert string to lower case
+		if (*rd == ',') { *wr = *(++rd);}			// skip over commas
 	}
-	*wr = NUL;								// terminate the string
+	*wr = NUL;										// terminate the string
 
 	// parse fields into the nv struct
 	nv->valuetype = TYPE_NULL;
-	if ((rd = strpbrk(str, separators)) == NULL) { // no value part
+	if ((rd = strpbrk(str, separators)) == NULL) {	// no value part
 		strncpy(nv->token, str, TOKEN_LEN);
 	} else {
-		*rd = NUL;							// terminate at end of name
+		*rd = NUL;									// terminate at end of name
 		strncpy(nv->token, str, TOKEN_LEN);
 		str = ++rd;
-		nv->value = strtof(str, &rd);		// rd used as end pointer
+		nv->value = strtof(str, &rd);				// rd used as end pointer
 		if (rd != str) {
 			nv->valuetype = TYPE_FLOAT;
 		}
@@ -134,7 +130,7 @@ static stat_t _text_parser_kernal(char_t *str, nvObj_t *nv)
 	if ((nv->index = nv_get_index((const char_t *)"", nv->token)) == NO_MATCH) { // get index or fail it
 		return (STAT_UNRECOGNIZED_NAME);
 	}
-	strcpy_P(nv->group, cfgArray[nv->index].group);// capture the group string if there is one
+	strcpy_P(nv->group, cfgArray[nv->index].group);	// capture the group string if there is one
 
 	// see if you need to strip the token
 	if (nv->group[0] != NUL) {
@@ -281,7 +277,3 @@ void tx_print_tv(nvObj_t *nv) { text_print_ui8(nv, fmt_tv);}
 
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus

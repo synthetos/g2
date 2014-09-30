@@ -83,29 +83,6 @@ enum swEdge {
 
 #define SW_LOCKOUT_TICKS 50			// milliseconds to go dead after switch firing
 
-// DEPRECATED STUFF FROM OLD SWITCH CODE
-//#define SW_DEGLITCH_TICKS 30		// in milliseconds
-
-// macros for finding the index into the switch table give the axis number
-//#define MIN_SWITCH(axis) (axis*2)
-//#define MAX_SWITCH(axis) (axis*2+1)
-
-/*
-enum swNums {	 					// indexes into switch arrays
-	SW_MIN_X = 0,
-	SW_MAX_X,
-	SW_MIN_Y,
-	SW_MAX_Y,
-	SW_MIN_Z,
-	SW_MAX_Z,
-	SW_MIN_A,
-	SW_MAX_A,
-	NUM_SWITCHES 			// must be last one. Used for array sizing and for loops
-};
-#define SW_OFFSET SW_MAX_X	// offset between MIN and MAX switches
-#define NUM_SWITCH_PAIRS (NUM_SWITCHES/2)
-*/
-
 /*
  * Switch control structures
  */
@@ -113,7 +90,7 @@ typedef struct swSwitch {						// one struct per switch
 	// public
 	uint8_t type;								// swType: 0=NO, 1=NC
 	uint8_t mode;								// 0=disabled, 1=homing, 2=limit, 3=homing+limit
-	uint8_t state;								// set true if switch is closed
+	int8_t state;								// 0=open, 1=closed, -1=disabled
 	uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
 
 	// private
@@ -136,11 +113,12 @@ extern switches_t sw;
  * Function prototypes
  */
 void switch_init(void);
+void switch_reset(void);
 stat_t poll_switches(void);
-uint8_t poll_switch(switch_t *s, uint8_t pin_value);
+int8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);
 uint8_t get_switch_type(uint8_t axis, uint8_t position);
-uint8_t read_switch(uint8_t axis, uint8_t position);
+int8_t read_switch(uint8_t axis, uint8_t position);
 uint8_t get_limit_switch_thrown(void);
 void reset_limit_switches(void);
 
@@ -149,6 +127,8 @@ void reset_limit_switches(void);
  */
 stat_t sw_set_st(nvObj_t *nv);
 stat_t sw_set_sw(nvObj_t *nv);
+stat_t sw_get_ss(nvObj_t *nv);
+void sw_print_ss(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 	void sw_print_st(nvObj_t *nv);

@@ -29,10 +29,6 @@
 #include "config.h"
 #include "encoder.h"
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Allocate Structures ****/
 
 enEncoders_t en;
@@ -42,7 +38,7 @@ enEncoders_t en;
  ************************************************************************************/
 
 /*
- * encoder_init() - initialize encoders 
+ * encoder_init() - initialize encoders
  */
 
 void encoder_init()
@@ -73,8 +69,8 @@ stat_t encoder_test_assertions()
  * en_set_encoder_steps() - set encoder values to a current step count
  *
  *	Sets the encoder_position steps. Takes floating point steps as input,
- *	writes integer steps. So it's not an exact representation of machine 
- *	position except if the machine is at zero. 
+ *	writes integer steps. So it's not an exact representation of machine
+ *	position except if the machine is at zero.
  */
 
 void en_set_encoder_steps(uint8_t motor, float steps)
@@ -82,13 +78,13 @@ void en_set_encoder_steps(uint8_t motor, float steps)
 	en.en[motor].encoder_steps = (int32_t)round(steps);
 }
 
-/* 
+/*
  * en_read_encoder()
  *
- *	The stepper ISR count steps into steps_run(). These values are accumulated to 
- *	encoder_position during LOAD (HI interrupt level). The encoder position is 
+ *	The stepper ISR count steps into steps_run(). These values are accumulated to
+ *	encoder_position during LOAD (HI interrupt level). The encoder position is
  *	therefore always stable. But be advised: the position lags target and position
- *	valaues elsewherein the system becuase the sample is taken when the steps for 
+ *	valaues elsewherein the system becuase the sample is taken when the steps for
  *	that segment are complete.
  */
 
@@ -110,7 +106,3 @@ float en_read_encoder(uint8_t motor)
 #ifdef __TEXT_MODE
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif

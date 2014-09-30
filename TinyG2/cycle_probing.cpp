@@ -89,9 +89,9 @@ uint8_t _set_pb_func(uint8_t (*func)())
 	return (STAT_EAGAIN);
 }
 
-/*****************************************************************************
- * cm_probing_cycle_start()	- G38.2 probing cycle using Z- (hardcoded for now)
- * cm_probing_callback() 	- main loop callback for running the probing cycle
+/****************************************************************************************
+ * cm_probing_cycle_start()		- G38.2 homing cycle using limit switches
+ * cm_probing_cycle_callback()	- main loop callback for running the probing cycle
  *
  *	--- Some further details ---
  *
@@ -140,7 +140,7 @@ uint8_t cm_straight_probe(float target[], float flags[])
 	return (STAT_OK);
 }
 
-uint8_t cm_probe_callback(void)
+uint8_t cm_probing_cycle_callback(void)
 {
 	if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state != PROBE_WAITING)) {
 		return (STAT_NOOP);				// exit if not in a probe cycle or waiting for one
@@ -176,8 +176,10 @@ static uint8_t _probing_init()
 
 	// initialize the axes - save the jerk settings & switch to the jerk_homing settings
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
-		pb.saved_jerk[axis] = cm.a[axis].jerk_max;		// save the max jerk value
-		cm.a[axis].jerk_max = cm.a[axis].jerk_homing;	// use the homing jerk for probe
+//		pb.saved_jerk[axis] = cm.a[axis].jerk_max;		// save the max jerk value
+		pb.saved_jerk[axis] = cm_get_axis_jerk(axis);	// save the max jerk value
+//		cm.a[axis].jerk_max = cm.a[axis].jerk_homing;	// use the homing jerk for probe
+		cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);	// use the homing jerk for probe
 		pb.start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 	}
 
@@ -198,7 +200,7 @@ static uint8_t _probing_init()
 	sw.mode[pb.probe_switch] = SW_MODE_HOMING;
 	pb.saved_switch_type = sw.switch_type;							// save the switch type for recovery later.
 	sw.switch_type = SW_TYPE_NORMALLY_OPEN;							// contact probes are NO switches... usually
-	switch_init();													// re-init to pick up new switch settings
+	switch_reset();													// reset switches to pick up new switch settings
 #else // new style switch code:
 	pb.probe_switch_axis = AXIS_Z;									// FIXME: hardcoded...
 	pb.probe_switch_position = SW_MIN;								// FIXME: hardcoded...
@@ -208,13 +210,12 @@ static uint8_t _probing_init()
 
 	pb.saved_switch_type = sw.s[pb.probe_switch_axis][pb.probe_switch_position].type;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = SW_TYPE_NORMALLY_OPEN; // contact probes are NO switches... usually.
-
 	pb.switch_saved_on_leading = sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading;
 	pb.switch_saved_on_trailing = sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading = _probe_trigger_feedhold;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing = _probe_trigger_feedhold;
 
-	//switch_init();													// re-init to pick up new switch settings
+	//switch_reset();													// re-init to pick up new switch settings
 #endif
 
 	cm_spindle_control(SPINDLE_OFF);
@@ -314,13 +315,13 @@ static void _probe_restore_settings()
 #ifndef __NEW_SWITCHES // restore switch settings (old style)
 	sw.switch_type = pb.saved_switch_type;
 	sw.mode[pb.probe_switch] = pb.saved_switch_mode;
-	switch_init();								// re-init to pick up changes
+	switch_reset();								// re-init to pick up changes
 #else // restore switch settings (new style)
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = pb.saved_switch_mode;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = pb.saved_switch_type;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading = pb.switch_saved_on_leading;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing = pb.switch_saved_on_trailing;
-	//switch_init();								// re-init to pick up changes
+	//switch_reset();								// re-init to pick up changes
 #endif
 
 	// restore axis jerk
