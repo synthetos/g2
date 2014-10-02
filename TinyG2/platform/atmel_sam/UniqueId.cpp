@@ -52,6 +52,11 @@ extern "C" {
         stored_uuid.d3 = *(volatile unsigned long*)0x0008000C;
         EFC0->EEFC_FCR = EEFC_FCR_FCMD(EEFC_FCMD_SPUI) | EEFC_FCR_FKEY(EEFC_KEY);
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        
+        // Memory swap needs some time to stabilize
+        for (uint32_t i=0; i<1000000; i++)
+            // force compiler to not optimize this
+            __asm__ __volatile__("");
     }
 
     const uint16_t* readUniqueIdString()
