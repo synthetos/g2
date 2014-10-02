@@ -70,7 +70,7 @@
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves
-#define __DEBUG_SETTINGS					// special settings. See settings.h
+//#define __DEBUG_SETTINGS					// special settings. See settings.h
 //#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
 
 //#define __SIMULATION						// for software-only simulations
