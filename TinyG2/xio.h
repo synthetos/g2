@@ -134,6 +134,7 @@ void xio_init(void);
 void xio_init_assertions(void);
 stat_t xio_test_assertions(void);
 stat_t xio_callback(void);
+void xio_flush_device(devflags_t flags);
 
 int read_char (void);
 //char_t *readline(devflags_t &flags, uint16_t &size);
