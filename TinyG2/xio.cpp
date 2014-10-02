@@ -397,7 +397,7 @@ char_t *readline(devflags_t *flags, uint16_t *size)
 				}
 */
 				*flags = xio.d[dev]->flags;							// what type of device is this?
-				*size = xio.d[dev]->read_index;						// how long is the string? (include the 0xa, since that's what v8 does)
+				*size = xio.d[dev]->read_index+1;						// how long is the string? (include the 0xa, since that's what v8 does)
 				xio.d[dev]->read_index = 0;							// reset for next readline
 				return (xio.d[dev]->read_buf);
 			}
