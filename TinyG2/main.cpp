@@ -105,6 +105,9 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
+    
+    // Store the flash UUID
+    cacheUniqueId();
 
 	usb.attach();					// USB setup
 	delay(1000);
@@ -165,10 +168,6 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-
-#ifdef __ARM
-	cacheUniqueId();
-#endif
     
 	// TinyG application setup
 	_application_init();
