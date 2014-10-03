@@ -443,6 +443,9 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 debug: $(OUTPUT_BIN).elf
 	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"
 
+flash: $(OUTPUT_BIN).elf
+	"${PLATFORM_BASE}-flash.sh" "$(OUTPUT_BIN).elf"
+
 
 #-------------------------------------------------------------------------------
 #    Default $(PROJECT).elf, and clean
