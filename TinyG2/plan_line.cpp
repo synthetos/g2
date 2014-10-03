@@ -217,7 +217,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 			C = axis_square[axis] * recip_L2 * cm.a[axis].recip_jerk;	// squaring axis_length ensures it's positive
 			if (C > maxC) {
 				maxC = C;
-				bf->jerk_axis = axis;									// also needed for junction vmax calculation
+				bf->jerk_axis = axis;										// also needed for junction vmax calculation
 			}
 		}
 	}
@@ -551,18 +551,18 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 
 	// Fuse the junction deviations into a vector sum
 	float a_delta = square(a_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-		 a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-		 a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-		 a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-		 a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-		 a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
+	a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
+	a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
+	a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
+	a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
+	a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
 
 	float b_delta = square(b_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-		 b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-		 b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-		 b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-		 b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-		 b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
+	b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
+	b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
+	b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
+	b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
+	b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
 
 	float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
 	float sintheta_over2 = sqrt((1 - costheta)/2);
