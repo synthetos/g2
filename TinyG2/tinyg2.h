@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.03 // Fix for single-endpoint configuration crash
+#define TINYG_FIRMWARE_BUILD   		071.04 // Fix for slow-down of really short moves
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
