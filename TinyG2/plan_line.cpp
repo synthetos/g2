@@ -109,20 +109,20 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	_calc_move_times(gm_in, mm.position);									// set move time and minimum time in the state
 	float length = get_axis_vector_length(gm_in->target, mm.position);		// compute the length (needed later)
 	if (gm_in->move_time < MIN_BLOCK_TIME) {
-		float delta_velocity = pow(length, 0.66666666) * mm.prev_cbrt_jerk;	// max velocity change for this move
-		float entry_velocity = 0;											// pre-set as if no previous block
-		if ((bf = mp_get_run_buffer()) != NULL) {
-			if (bf->replannable == true) {									// not optimally planned
-				entry_velocity = bf->entry_velocity + bf->delta_vmax;
-			} else {														// optimally planned
-				entry_velocity = bf->exit_velocity;
-			}
-		}
-		float move_time = (2 * length) / (2*entry_velocity + delta_velocity);// compute execution time for this move
-		if (move_time < MIN_BLOCK_TIME) {
+//		float delta_velocity = pow(length, 0.66666666) * mm.prev_cbrt_jerk;	// max velocity change for this move
+//		float entry_velocity = 0;											// pre-set as if no previous block
+//		if ((bf = mp_get_run_buffer()) != NULL) {
+//			if (bf->replannable == true) {									// not optimally planned
+//				entry_velocity = bf->entry_velocity + bf->delta_vmax;
+//			} else {														// optimally planned
+//				entry_velocity = bf->exit_velocity;
+//			}
+//		}
+//		float move_time = (2 * length) / (2*entry_velocity + delta_velocity);// compute execution time for this move
+//		if (move_time < MIN_BLOCK_TIME) {
 			sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 			return (STAT_MINIMUM_TIME_MOVE);
-		}
+//		}
 	}
 
 	// get a cleared buffer and setup move variables

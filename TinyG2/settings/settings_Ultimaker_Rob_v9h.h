@@ -53,9 +53,35 @@
 #undef SWITCH_TYPE
 #define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
 
+#undef	COMM_MODE
+#define COMM_MODE					JSON_MODE
+
+#undef JSON_VERBOSITY
+//#define JSON_VERBOSITY				JV_SILENT		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+//#define JSON_VERBOSITY				JV_MESSAGES		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY				JV_VERBOSE		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+
+#undef STATUS_REPORT_VERBOSITY
+//#define STATUS_REPORT_VERBOSITY		SR_OFF		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY		SR_FILTERED		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY		SR_VERBOSE		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+
 #undef STATUS_REPORT_DEFAULTS
 //#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
 #define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2"
+
+#undef GCODE_DEFAULT_COORD_SYSTEM
+#undef GCODE_DEFAULT_UNITS
+#undef GCODE_DEFAULT_PLANE
+#undef GCODE_DEFAULT_COORD_SYSTEM
+#undef GCODE_DEFAULT_PATH_CONTROL
+#undef GCODE_DEFAULT_DISTANCE_MODE
+
+#define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE			CANON_PLANE_XY	// CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM	G54				// G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_PATH_CONTROL 	PATH_CONTINUOUS
+#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
 // *** motor settings ***
 
@@ -63,7 +89,7 @@
 #define M1_STEP_ANGLE 			1.8						// 1sa
 #define M1_TRAVEL_PER_REV		40.64					// 1tr
 #define M1_MICROSTEPS			32						// 1mi		1,2,4,8
-#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
+#define M1_POLARITY				1						// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
 #define M1_POWER_LEVEL			0.45		// 1mp
 
@@ -71,7 +97,7 @@
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		40.64
 #define M2_MICROSTEPS			32
-#define M2_POLARITY				1
+#define M2_POLARITY				0
 #define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL			0.47
 
@@ -79,7 +105,7 @@
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		3.00
 #define M3_MICROSTEPS			32
-#define M3_POLARITY				0
+#define M3_POLARITY				1
 #define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL			0.25
 
