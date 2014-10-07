@@ -256,7 +256,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t estop_state;                // Whether estop has been triggered
 
 	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
-	uint8_t paused_spindle_state;		//if we're in a hold, what the spindle state was before pausing
 
 	/**** Model states ****/
 	GCodeState_t  gm;					// core gcode model state

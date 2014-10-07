@@ -87,7 +87,8 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, value);
+    float flag[AXES] = { (float)true, 0,0,0,0,0 };
+	mp_queue_command(_exec_spindle_control, value, flag);
 	return(STAT_OK);
 }
 
@@ -95,7 +96,9 @@ stat_t cm_spindle_control(uint8_t spindle_mode)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
-	cm_set_spindle_mode(MODEL, spindle_mode);
+    
+    if((uint8_t)flag[0])
+        cm_set_spindle_mode(MODEL, spindle_mode);
 
  #ifdef __AVR
 	if (spindle_mode == SPINDLE_CW) {
@@ -145,16 +148,16 @@ static void _exec_spindle_speed(float *value, float *flag)
 
 void cm_pause_spindle()
 {
-	cm.paused_spindle_state = cm.gm.spindle_mode;
-	float arg[] = { SPINDLE_OFF };
-	_exec_spindle_control(arg, NULL);
+	float arg[AXES] = { SPINDLE_OFF, 0,0,0,0,0 };
+    float flag[AXES] = { (float)false, 0,0,0,0,0 };
+	_exec_spindle_control(arg, flag);
 }
 
 bool cm_unpause_spindle()
 {
-	bool ret = (cm.paused_spindle_state != SPINDLE_OFF);
-	float arg[] = { (float)cm.paused_spindle_state };
-	_exec_spindle_control(arg, NULL);
-	cm.paused_spindle_state = SPINDLE_OFF;
+	bool ret = (cm.gm.spindle_mode != SPINDLE_OFF);
+	float arg[] = { (float)cm.gm.spindle_mode, 0,0,0,0,0 };
+    float flag[] = { (float)false, 0,0,0,0,0 };
+	_exec_spindle_control(arg, flag);
 	return ret;
 }

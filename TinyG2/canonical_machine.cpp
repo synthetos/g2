@@ -542,7 +542,6 @@ void canonical_machine_init()
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
-	cm.paused_spindle_state = SPINDLE_OFF;
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
@@ -1224,12 +1223,14 @@ stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
-		if ((cm.motion_state == MOTION_RUN) && (cm.hold_state == FEEDHOLD_OFF)) {
-			cm_start_hold();
-		} else if(cm.pause_dwell_time > 0 && cm.gm.spindle_mode != SPINDLE_OFF) {
-			cm_pause_spindle();
-			cm.paused_spindle_state = SPINDLE_OFF;
-		}
+        if(cm.hold_state == FEEDHOLD_OFF) {
+            if (cm.motion_state == MOTION_RUN) {
+                cm_start_hold();
+            } else if(cm.pause_dwell_time > 0 && cm.gm.spindle_mode != SPINDLE_OFF) {
+                cm_pause_spindle();
+                cm.gm.spindle_mode = SPINDLE_OFF;
+            }
+        }
 	}
 	if (cm.queue_flush_requested == true) {
 		if (((cm.motion_state == MOTION_STOP) ||
@@ -1268,7 +1269,7 @@ stat_t cm_end_hold()
 			st_request_exec_move();
 		}
 	} else
-		cm.paused_spindle_state = SPINDLE_OFF;
+        cm.gm.spindle_mode = SPINDLE_OFF;
 	return STAT_OK;
 }
 
@@ -1354,7 +1355,6 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
 //++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
-		cm.paused_spindle_state = SPINDLE_OFF;
 		cm_spindle_control(SPINDLE_OFF);				// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
