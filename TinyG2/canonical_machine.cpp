@@ -1887,7 +1887,7 @@ void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIV
 void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ms(nvObj_t *nv) { text_print_flt_units(nv, fmt_ms, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
 
 /*
  * axis print functions
