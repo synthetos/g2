@@ -37,6 +37,7 @@
 #include "text_parser.h"
 #ifdef __ARM
 #include "UniqueId.h"
+#include "Reset.h"
 #endif
 #ifdef __AVR
 #include "xmega/xmega_init.h"
@@ -82,8 +83,7 @@ void hw_request_hard_reset() { cs.hard_reset_requested = true; }
 
 void hw_hard_reset(void)			// software hard reset using the watchdog timer
 {
-//	wdt_enable(WDTO_15MS);
-//	while (true);					// loops for about 15ms then resets
+    banzai(0);
 }
 
 stat_t hw_hard_reset_handler(void)
@@ -97,17 +97,22 @@ stat_t hw_hard_reset_handler(void)
  * Bootloader Handlers
  *
  * hw_request_bootloader()
+ * hw_bootloader()
  * hw_request_bootloader_handler() - executes a software reset using CCPWrite
  */
 
 void hw_request_bootloader() { cs.bootloader_requested = true;}
+    
+void hw_bootloader(void)
+{
+    banzai(1);
+}
 
 stat_t hw_bootloader_handler(void)
 {
-//	if (cs.bootloader_requested == false) { return (STAT_NOOP);}
-//	cli();
-//	CCPWrite(&RST.CTRL, RST_SWRST_bm);  // fire a software reset
-	return (STAT_EAGAIN);				// never gets here but keeps the compiler happy
+    if (cs.bootloader_requested == false) { return (STAT_NOOP);}
+    hw_bootloader();
+    return (STAT_EAGAIN);
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/

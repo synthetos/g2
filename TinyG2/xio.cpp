@@ -316,10 +316,10 @@ int read_char (uint8_t dev)
 {
 	int c = DeviceWrappers[dev]->readchar();
 
-//	if (c == (int)CHAR_RESET) {	 			// trap kill character
-//		hw_request_hard_reset();
-//		return (_FDEV_ERR);
-//	}
+	if (c == (int)CHAR_RESET) {	 			// trap kill character
+		hw_request_hard_reset();
+		return (_FDEV_ERR);
+	}
 	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
 		cm_request_feedhold();
 		return (_FDEV_ERR);

@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+void banzai(int samba);
+    
 void initiateReset(int ms);
 void tickReset();
 void cancelReset();
