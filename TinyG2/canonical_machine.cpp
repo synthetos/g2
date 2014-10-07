@@ -1264,7 +1264,7 @@ stat_t cm_queue_flush()
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
-	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
 	return (STAT_OK);
 }
