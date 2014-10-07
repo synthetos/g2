@@ -271,7 +271,7 @@ static void _dispatch_kernel()
 		text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
 
 	} else {
-		strncpy(cs.out_buf, cs.bufp, (MAXED_BUFFER_LEN-8));	// use out_buf as temp; '-8' is buffer for JSON chars
+		strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
 		sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);
 		json_parser(cs.bufp);
 	}
