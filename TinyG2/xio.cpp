@@ -79,6 +79,7 @@ struct xioDevice_t {						// description pf a device for reading and writing
 
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
 	virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
+    virtual void flushRead() = 0;
 //	virtual int16_t write() = 0;			// Pure virtual. Will be subclassed for every device
 };
 
@@ -93,9 +94,13 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     Device _dev;
     xioDeviceWrapper(Device  dev) : _dev{dev} {};
 
-    int16_t readchar() final {
+    virtual int16_t readchar() final {
 		return _dev->readByte();					// readByte calls the USB endpoint's read function
 	};
+    
+    virtual void flushRead() final {
+        return _dev->flushRead();
+    }
 };
 
 // ALLOCATIONS
@@ -135,11 +140,8 @@ void downData()
 	for (uint8_t dev=0; dev<DEV_MAX; dev++) {
 		if ((xio.d[dev]->flags & (DEV_IS_DATA | DEV_IS_ACTIVE)) == (DEV_IS_DATA | DEV_IS_ACTIVE)) {
 			xio.d[dev]->flags &= ~(DEV_IS_DATA | DEV_IS_ACTIVE | DEV_IS_READY | DEV_IS_CONNECTED);	// take down the channel
-
-            // TODO
-            // insert serial queue flush here
-
-
+            DeviceWrappers[dev]->flushRead();
+            return;
         }
 		return;
 	}
@@ -406,6 +408,18 @@ char_t *readline(devflags_t *flags, uint16_t *size)
 	*flags = 0;
 	return (NULL);
 }
+
+void xio_flush_device(devflags_t flags)
+{
+  for( uint8_t dev=0; dev < DEV_MAX; dev++) {
+    if(!xio.d[dev]->isActive())
+      continue;
+    if(!(xio.d[dev]->flags & flags))
+      continue;
+    DeviceWrappers[dev]->flushRead();
+  }
+}
+
 /*
 char_t *readline(devflags_t &flags, uint16_t &size)
 {

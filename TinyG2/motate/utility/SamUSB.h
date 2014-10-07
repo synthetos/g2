@@ -174,6 +174,7 @@ namespace Motate {
 	extern void _resetEndpointBuffer(const uint8_t endpoint);
 	extern void _freezeUSBClock();
 	extern void _flushEndpoint(uint8_t endpoint);
+	extern void _flushReadEndpoint(uint8_t endpoint);
 
 	extern uint32_t _inited;
 	extern uint32_t _configuration;
@@ -363,6 +364,10 @@ namespace Motate {
 
 		static void flush(const uint8_t ependpoint) {
 			_flushEndpoint(ependpoint);
+		};
+
+		static void flushRead(const uint8_t ependpoint) {
+			_flushReadEndpoint(ependpoint);
 		};
 
 		/* Data is const. The pointer to data is not. */
