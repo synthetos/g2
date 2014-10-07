@@ -35,6 +35,9 @@
 #include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
+#ifdef __ARM
+#include "UniqueId.h"
+#endif
 #ifdef __AVR
 #include "xmega/xmega_init.h"
 #include "xmega/xmega_rtc.h"
@@ -57,11 +60,15 @@ void hardware_init()
  * _get_id() - get a human readable signature
  *
  *	Produce a unique deviceID based on the factory calibration data.
+ *	Truncate to SYS_ID_LEN bytes
  */
 
 void _get_id(char_t *id)
 {
-	return;
+    const uint16_t *uuid = readUniqueIdString();
+    for(int i = 0; i < SYS_ID_LEN-1; ++i)
+        id[i] = uuid[i];
+    id[SYS_ID_LEN-1] = 0;
 }
  
  /*
@@ -117,10 +124,10 @@ stat_t hw_bootloader_handler(void)
 
 stat_t hw_get_id(nvObj_t *nv) 
 {
-//	char_t tmp[SYS_ID_LEN];
-//	_get_id(tmp);
-//	nv->valuetype = TYPE_STRING;
-//	ritorno(nv_copy_string(nv, tmp));
+	char_t tmp[SYS_ID_LEN];
+	_get_id(tmp);
+	nv->valuetype = TYPE_STRING;
+	ritorno(nv_copy_string(nv, tmp));
 	return (STAT_OK);
 }
 

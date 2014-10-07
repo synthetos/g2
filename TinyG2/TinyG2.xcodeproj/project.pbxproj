@@ -386,6 +386,7 @@
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
+		E2986EDC19E490B400B73EEA /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2986EDA19E490B400B73EEA /* UniqueId.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -3238,6 +3239,8 @@
 		D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pendulum.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
+		E2986EDA19E490B400B73EEA /* UniqueId.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UniqueId.cpp; sourceTree = "<group>"; };
+		E2986EDB19E490B400B73EEA /* UniqueId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniqueId.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7494,6 +7497,8 @@
 		D49EC3FC17054FDF00F2BF9B /* atmel_sam */ = {
 			isa = PBXGroup;
 			children = (
+				E2986EDA19E490B400B73EEA /* UniqueId.cpp */,
+				E2986EDB19E490B400B73EEA /* UniqueId.h */,
 				D4C12818180F17D3002A898C /* board */,
 				D4B57632170737870070CCAE /* gcc_flash.ld */,
 				D4B57633170737870070CCAE /* gcc_sram.ld */,
@@ -7860,6 +7865,7 @@
 				D49EC4F817054FDF00F2BF9B /* arm_fir_decimate_init_f32.c in Sources */,
 				D49EC4F917054FDF00F2BF9B /* arm_fir_decimate_init_q15.c in Sources */,
 				D49EC4FA17054FDF00F2BF9B /* arm_fir_decimate_init_q31.c in Sources */,
+				E2986EDC19E490B400B73EEA /* UniqueId.cpp in Sources */,
 				D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */,
 				D49EC4FB17054FDF00F2BF9B /* arm_fir_decimate_q15.c in Sources */,
 				D49EC4FC17054FDF00F2BF9B /* arm_fir_decimate_q31.c in Sources */,

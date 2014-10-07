@@ -149,6 +149,13 @@ namespace Motate {
         return MOTATE_USBSerialNumberString;\
     }
 
+#define MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()\
+    const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) {\
+        const uint16_t *uuid = readUniqueIdString();\
+        length = UNIQUE_ID_STRING_LEN * sizeof(uint16_t);\
+        return uuid;\
+    }
+
 	// This needs to be provided in the hardware file
 	const uint16_t *getUSBLanguageString(int16_t &length);
 
