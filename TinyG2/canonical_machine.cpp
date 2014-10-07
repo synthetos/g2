@@ -1838,6 +1838,9 @@ const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
 const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
 const char fmt_tool[] PROGMEM = "Tool number          %d\n";
 
+const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
 const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
@@ -1866,6 +1869,8 @@ void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
 void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
+void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
+void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}
