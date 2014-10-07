@@ -160,7 +160,7 @@ static void _controller_HSM()
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
 												// Order is important:
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
-//	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
+	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
@@ -178,7 +178,7 @@ static void _controller_HSM()
 	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
 	DISPATCH(rx_report_callback());             // conditionally send rx report
 
-//	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -215,7 +215,8 @@ static stat_t _controller_state()
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 	//	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
-	return (xio_callback());					// manages state changes in the XIO system
+	//return (xio_callback());					// manages state changes in the XIO system
+  return (STAT_OK);
 #endif // __ARM
 }
 
