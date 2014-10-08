@@ -62,12 +62,11 @@ extern "C" {
     const uint16_t* readUniqueIdString()
     {
         if(uuid_string16[0] == 0) {
-            for(int i = 0; i < UNIQUE_ID_STRING_LEN-1; ++i) {
+            for(int i = 0; i < UNIQUE_ID_STRING_LEN; ++i) {
                 unsigned long nibble = (((i >= 8) ? stored_uuid.d1 : stored_uuid.d0) >> ((i % 8) * 4)) & 0xF;
                 if(nibble < 0xA) uuid_string16[i] = nibble + '0';
                 else uuid_string16[i] = (nibble - 0xA) + 'a';
             }
-            uuid_string16[UNIQUE_ID_STRING_LEN-1] = 0;
         }
         return uuid_string16;
     }
