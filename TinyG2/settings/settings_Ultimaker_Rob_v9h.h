@@ -103,7 +103,8 @@
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
-#define M3_TRAVEL_PER_REV		3.00
+#define M3_TRAVEL_PER_REV		8.00    // With the HeatBed upgrade
+//#define M3_TRAVEL_PER_REV		3.00    // Without the HeatBed upgrade
 #define M3_MICROSTEPS			32
 #define M3_POLARITY				1
 #define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
@@ -140,7 +141,7 @@
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
-#define X_JERK_MAX 				10000.0				// xjm		yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX 				20000.0				// xjm		yes, that's "100 billion" mm/(min^3)
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
 #define X_SWITCH_MODE_MAX		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
@@ -155,7 +156,7 @@
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN 			0
 #define Y_TRAVEL_MAX 			190
-#define Y_JERK_MAX 				10000.0
+#define Y_JERK_MAX 				20000.0
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX		SW_MODE_LIMIT
@@ -174,10 +175,10 @@
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN       SW_MODE_HOMING
 #define Z_SWITCH_MODE_MAX       SW_MODE_DISABLED
-#define Z_SEARCH_VELOCITY		500
-#define Z_LATCH_VELOCITY		200
-#define Z_LATCH_BACKOFF			3
-#define Z_ZERO_BACKOFF			0.01
+#define Z_SEARCH_VELOCITY		200
+#define Z_LATCH_VELOCITY		100
+#define Z_LATCH_BACKOFF			5
+#define Z_ZERO_BACKOFF			-0.5
 #define Z_JERK_HOMING			Z_JERK_MAX
 
 

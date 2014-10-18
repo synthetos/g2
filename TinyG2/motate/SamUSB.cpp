@@ -120,6 +120,7 @@ namespace Motate {
             }
         }
 
+		config |= UOTGHS_DEVEPTCFG_AUTOSW;
 		config |= UOTGHS_DEVEPTCFG_ALLOC;
 
 		return config;
