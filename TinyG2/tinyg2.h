@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.50 // regression testing run
+#define TINYG_FIRMWARE_BUILD   		072.51 // limit switch backoff during homing fix
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

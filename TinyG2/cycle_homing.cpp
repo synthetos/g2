@@ -341,7 +341,7 @@ static stat_t _homing_axis_start(int8_t axis)
 		return (_set_homing_func(_homing_axis_start));
 	}
 	// disable the limit switch parameter if there is no limit switch
-	if (get_switch_mode(hm.limit_switch_axis, hm.limit_switch_position) == SW_MODE_DISABLED) {
+	if (!(get_switch_mode(hm.limit_switch_axis, hm.limit_switch_position) & SW_LIMIT_BIT)) {
 		hm.limit_switch_axis = -1;
 	}
 #endif
@@ -363,7 +363,8 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 #else
 	if (read_switch(hm.homing_switch_axis, hm.homing_switch_position) == SW_CLOSED) {
 		_homing_axis_move(axis, hm.latch_backoff, hm.search_velocity);
-	} else if (read_switch(hm.limit_switch_axis, hm.limit_switch_position) == SW_CLOSED) {
+	} else if (hm.limit_switch_axis != -1 &&
+               read_switch(hm.limit_switch_axis, hm.limit_switch_position) == SW_CLOSED) {
 		_homing_axis_move(axis, -hm.latch_backoff, hm.search_velocity);
 	}
 #endif
