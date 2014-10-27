@@ -86,21 +86,30 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
+    if(cm.gm.spindle_mode & SPINDLE_PAUSED)
+        spindle_mode |= SPINDLE_PAUSED;
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
-    float flag[AXES] = { (float)true, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, flag);
+	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
+}
+
+stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
+{
+    float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+    _exec_spindle_control(value, value);
+    return (STAT_OK);
 }
 
 //static void _exec_spindle_control(uint8_t spindle_mode, float f, float *vector, float *flag)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
-    
-    if((uint8_t)flag[0])
-        cm_set_spindle_mode(MODEL, spindle_mode);
 
- #ifdef __AVR
+	cm_set_spindle_mode(MODEL, spindle_mode);
+    bool paused = spindle_mode & SPINDLE_PAUSED;
+    spindle_mode = spindle_mode & (~SPINDLE_PAUSED);
+
+#ifdef __AVR
 	if (spindle_mode == SPINDLE_CW) {
 		gpio_set_bit_on(SPINDLE_BIT);
 		gpio_set_bit_off(SPINDLE_DIR);
@@ -124,7 +133,9 @@ static void _exec_spindle_control(float *value, float *flag)
 #endif // __ARM
 
 	// PWM spindle control
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
+    if((spindle_mode != SPINDLE_OFF && !paused && cm.interlock_state == 0 && cm.estop_state == 0) ||
+        spindle_mode == SPINDLE_OFF)
+        pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode));
 }
 
 /*
@@ -143,21 +154,5 @@ stat_t cm_set_spindle_speed(float speed)
 static void _exec_spindle_speed(float *value, float *flag)
 {
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode) ); // update spindle speed if we're running
-}
-
-void cm_pause_spindle()
-{
-	float arg[AXES] = { SPINDLE_OFF, 0,0,0,0,0 };
-    float flag[AXES] = { (float)false, 0,0,0,0,0 };
-	_exec_spindle_control(arg, flag);
-}
-
-bool cm_unpause_spindle()
-{
-	bool ret = (cm.gm.spindle_mode != SPINDLE_OFF);
-	float arg[] = { (float)cm.gm.spindle_mode, 0,0,0,0,0 };
-    float flag[] = { (float)false, 0,0,0,0,0 };
-	_exec_spindle_control(arg, flag);
-	return ret;
+	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode & (~SPINDLE_PAUSED)) ); // update spindle speed if we're running
 }

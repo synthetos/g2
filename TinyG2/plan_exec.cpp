@@ -213,9 +213,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// Look for the end of the decel to go into HOLD state
 	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
-		if(cm.pause_dwell_time > 0) {
-			cm_pause_spindle();
-		}
+		cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
 		cm.hold_state = FEEDHOLD_HOLD;
 		cm_set_motion_state(MOTION_HOLD);
 		sr_request_status_report(SR_REQUEST_IMMEDIATE);

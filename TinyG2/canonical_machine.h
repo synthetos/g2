@@ -490,7 +490,8 @@ enum cmProgramFlow {
 enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
 	SPINDLE_OFF = 0,
 	SPINDLE_CW,
-	SPINDLE_CCW
+	SPINDLE_CCW,
+	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
 };
 
 enum cmCoolantState {				// mist and flood coolant states

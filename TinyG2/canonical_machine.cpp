@@ -1226,9 +1226,8 @@ stat_t cm_feedhold_sequencing_callback()
         if(cm.hold_state == FEEDHOLD_OFF) {
             if (cm.motion_state == MOTION_RUN) {
                 cm_start_hold();
-            } else if(cm.pause_dwell_time > 0 && cm.gm.spindle_mode != SPINDLE_OFF) {
-                cm_pause_spindle();
-                cm.gm.spindle_mode = SPINDLE_OFF;
+            } else if(cm.gm.spindle_mode != SPINDLE_OFF) {
+                cm_spindle_control_immediate(SPINDLE_OFF);
             }
         }
 	}
@@ -1242,8 +1241,10 @@ stat_t cm_feedhold_sequencing_callback()
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false) &&
 			!cm.interlock_state) {
-		cm.end_hold_requested = false;
-		if(cm.hold_state == FEEDHOLD_HOLD) {
+        if(cm.motion_state != MOTION_HOLD)
+            cm.end_hold_requested = false;
+		else if(cm.hold_state == FEEDHOLD_HOLD) {
+            cm.end_hold_requested = false;
 			cm_end_hold();
 		}
 	}
@@ -1263,13 +1264,15 @@ stat_t cm_end_hold()
 	cm_cycle_start();
 	mp_end_hold();
 	if(cm.motion_state == MOTION_RUN) {
-		if(cm.pause_dwell_time > 0 && cm_unpause_spindle()) {
+		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+            cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
 		} else {
+            cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_exec_move();
 		}
 	} else
-        cm.gm.spindle_mode = SPINDLE_OFF;
+        cm_spindle_control_immediate(SPINDLE_OFF);
 	return STAT_OK;
 }
 
@@ -1355,7 +1358,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
 //++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
-		cm_spindle_control(SPINDLE_OFF);				// M5
+		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
