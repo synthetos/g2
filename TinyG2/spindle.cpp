@@ -133,9 +133,9 @@ static void _exec_spindle_control(float *value, float *flag)
 #endif // __ARM
 
 	// PWM spindle control
-    if((spindle_mode != SPINDLE_OFF && !paused && cm.interlock_state == 0 && cm.estop_state == 0) ||
-        spindle_mode == SPINDLE_OFF)
-        pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode));
+	if((spindle_mode != SPINDLE_OFF && !paused && cm.interlock_state == 0 && cm.estop_state == 0) ||
+		spindle_mode == SPINDLE_OFF)
+		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode));
 }
 
 /*
@@ -154,5 +154,9 @@ stat_t cm_set_spindle_speed(float speed)
 static void _exec_spindle_speed(float *value, float *flag)
 {
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode & (~SPINDLE_PAUSED)) ); // update spindle speed if we're running
+	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
+	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
+	if((spindle_mode != SPINDLE_OFF && !paused && cm.interlock_state == 0 && cm.estop_state == 0) ||
+		spindle_mode == SPINDLE_OFF)
+		pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode & (~SPINDLE_PAUSED)) ); // update spindle speed if we're running
 }
