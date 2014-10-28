@@ -232,7 +232,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-	uint8_t combined_state;				// stat: combination of states for display purposes
+//	uint8_t combined_state;				// stat: combination of states for display purposes, now computed in cm_get_combined_state
 	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
@@ -278,42 +278,35 @@ extern cmSingleton_t cm;				// canonical machine controller singleton
  *		- cm.cycle_state	- what cycle the machine is executing (or none)
  *		- cm.motion_state	- state of movement
  */
-/*	Allowed states and combined states
- *
- *	MACHINE STATE		CYCLE STATE		MOTION_STATE		COMBINED_STATE (FYI)
- *	-------------		------------	-------------		--------------------
- *	MACHINE_UNINIT		na				na					(U)
- *	MACHINE_READY		CYCLE_OFF		MOTION_STOP			(ROS) RESET-OFF-STOP
- *	MACHINE_PROG_STOP	CYCLE_OFF		MOTION_STOP			(SOS) STOP-OFF-STOP
- *	MACHINE_PROG_END	CYCLE_OFF		MOTION_STOP			(EOS) END-OFF-STOP
- *
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_STOP			(CSS) CYCLE-START-STOP
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_RUN			(CSR) CYCLE-START-RUN
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_HOLD			(CSH) CYCLE-START-HOLD
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_END_HOLD		(CSE) CYCLE-START-END_HOLD
- *
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_STOP			(CHS) CYCLE-HOMING-STOP
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_RUN			(CHR) CYCLE-HOMING-RUN
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_HOLD			(CHH) CYCLE-HOMING-HOLD
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_END_HOLD		(CHE) CYCLE-HOMING-END_HOLD
- */
 // *** Note: check config printout strings align with all the state variables
 
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
-	COMBINED_READY,					// [1] machine is ready for use. Also used to force STOP state for null moves
+        //iff macs == MACHINE_INITIALIZING
+	COMBINED_READY,					// [1] machine is ready for use
+        //iff macs == MACHINE_READY
 	COMBINED_ALARM,					// [2] machine in soft alarm state
-	COMBINED_PROGRAM_STOP,			// [3] program stop or no more blocks
+        //iff macs == MACHINE_ALARM
+	COMBINED_PROGRAM_STOP,			// [3] program stop/no more blocks
+        //iff macs == MACHINE_PROGRAM_STOP
 	COMBINED_PROGRAM_END,			// [4] program end
+        //iff macs == MACHINE_PROGRAM_END
 	COMBINED_RUN,					// [5] motion is running
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
 	COMBINED_HOLD,					// [6] motion is holding
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
 	COMBINED_PROBE,					// [7] probe cycle active
-	COMBINED_CYCLE,					// [8] machine is running (cycling)
-	COMBINED_HOMING,				// [9] homing is treated as a cycle
-	COMBINED_JOG,					// [10] jogging is treated as a cycle
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_PROBE
+	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
+        //DEPRECATED
+	COMBINED_HOMING,				// [9] homing cycle active
+        //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
+	COMBINED_JOG,					// [10] jogging cycle active
+        //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
 	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown)
+        //iff macs == MACHINE_SHUTDOWN
 };
 //### END CRITICAL REGION ###
 
@@ -321,9 +314,9 @@ enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
 	MACHINE_ALARM,					// machine in soft alarm state
-	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
-	MACHINE_PROGRAM_END,			// program end
-	MACHINE_CYCLE,					// machine is running (cycling)
+	MACHINE_PROGRAM_STOP,			// no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
+	MACHINE_PROGRAM_END,			// program end (same as MACHINE_READY, really...)
+	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
 	MACHINE_SHUTDOWN,				// machine in hard alarm state (shutdown)
 };
 
@@ -331,14 +324,14 @@ enum cmCycleState {
 	CYCLE_OFF = 0,					// machine is idle
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
-	CYCLE_HOMING,					// homing is treated as a specialized cycle
-	CYCLE_JOG						// jogging is treated as a specialized cycle
+	CYCLE_HOMING,					// in homing cycle
+	CYCLE_JOG						// in jogging cycle
 };
 
 enum cmMotionState {
-	MOTION_STOP = 0,				// motion has stopped
-	MOTION_RUN,						// machine is in motion
-	MOTION_HOLD						// feedhold in progress
+	MOTION_STOP = 0,				// motion has stopped: set when the steppers reach the end of the planner queue
+	MOTION_RUN,						// machine is in motion: set when the steppers execute an ALINE segment
+	MOTION_HOLD						// feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 };
 
 enum cmFeedholdState {				// feedhold_state machine

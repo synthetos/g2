@@ -215,7 +215,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
 		cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
 		cm.hold_state = FEEDHOLD_HOLD;
-		cm_set_motion_state(MOTION_HOLD);
 		sr_request_status_report(SR_REQUEST_IMMEDIATE);
 	}
 
@@ -526,7 +525,7 @@ static stat_t _exec_aline_segment()
 	// Don't do waypoint correction if you are going into a hold.
 
 	if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
-		(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_MACHINING)) {
+		(cm.motion_state != MOTION_HOLD)) {
 		copy_vector(mr.gm.target, mr.waypoint[mr.section]);
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;

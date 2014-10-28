@@ -147,18 +147,47 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
-	if (cm.cycle_state == CYCLE_OFF) { cm.combined_state = cm.machine_state;}
-	else if (cm.cycle_state == CYCLE_PROBE) { cm.combined_state = COMBINED_PROBE;}
-	else if (cm.cycle_state == CYCLE_HOMING) { cm.combined_state = COMBINED_HOMING;}
-	else if (cm.cycle_state == CYCLE_JOG) { cm.combined_state = COMBINED_JOG;}
-	else {
-		if (cm.motion_state == MOTION_RUN) cm.combined_state = COMBINED_RUN;
-		if (cm.motion_state == MOTION_HOLD) cm.combined_state = COMBINED_HOLD;
-	}
-	if (cm.machine_state == MACHINE_ALARM) { cm.combined_state = COMBINED_ALARM;}
-	if (cm.machine_state == MACHINE_SHUTDOWN) { cm.combined_state = COMBINED_SHUTDOWN;}
-
-	return cm.combined_state;
+    if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in cycle but macs is not cycle");
+    if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
+    
+    switch(cm.machine_state)
+    {
+        case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
+        case MACHINE_READY: return COMBINED_READY;
+        case MACHINE_ALARM: return COMBINED_ALARM;
+        case MACHINE_SHUTDOWN: return COMBINED_SHUTDOWN;
+        case MACHINE_PROGRAM_STOP: return COMBINED_PROGRAM_STOP;
+        case MACHINE_PROGRAM_END: return COMBINED_PROGRAM_END;
+        case MACHINE_CYCLE: {
+            switch(cm.cycle_state)
+            {
+                case CYCLE_PROBE: return COMBINED_PROBE;
+                case CYCLE_JOG: return COMBINED_JOG;
+                case CYCLE_HOMING: return COMBINED_HOMING;
+                case CYCLE_MACHINING: case CYCLE_OFF: {
+                    switch(cm.motion_state)
+                    {
+                        case MOTION_HOLD: return COMBINED_HOLD;
+                        case MOTION_RUN: return COMBINED_RUN;
+                        case MOTION_STOP:
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "mots is stop but machine is in cycle");
+                            return COMBINED_RUN;
+                        default:
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "mots has impossible value");
+                            return COMBINED_SHUTDOWN;
+                    }
+                }
+                default:
+                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "cycs has impossible value");
+                    return COMBINED_SHUTDOWN;
+            }
+        }
+        default:
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "macs has impossible value");
+            return COMBINED_SHUTDOWN;
+    }
 }
 
 uint8_t cm_get_machine_state() { return cm.machine_state;}
@@ -545,7 +574,6 @@ void canonical_machine_init()
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
-	cm.combined_state = COMBINED_READY;
 
 	cm.interlock_state = cm.estop_state = 0;
 
