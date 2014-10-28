@@ -56,7 +56,7 @@ stat_t gc_gcode_parser(char_t *block)
 	uint8_t block_delete_flag;
 
 	// don't process Gcode blocks if in alarmed state
-	if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
 
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
 

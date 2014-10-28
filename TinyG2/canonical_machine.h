@@ -356,11 +356,14 @@ enum cmProbeState {					// applies to cm.probe_state
 };
 
 enum cmEstopState {
-    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state
+    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
     ESTOP_ACKED    = 0,
+    ESTOP_INACTIVE = 0,
     ESTOP_PRESSED  = 0x1,
     ESTOP_UNACKED  = 0x2,
+    ESTOP_ACTIVE   = 0x4,
 
+    ESTOP_ACTIVE_MASK = 0x4,
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
 };

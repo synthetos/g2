@@ -126,8 +126,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },			// feed rate mode
 	{ "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },			// active tool
 	{ "",   "ilck",_f0, 0, cm_print_ilck, cm_get_ilck, set_nul,(float *)&cs.null, 0 },          // interlock status
-	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, set_nul,(float *)&cs.null, 0 },          // E-stop status
-	{ "",   "estpc",_f0,0, tx_print_nul,  cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },	// GET to ack E-stop status
+	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, cm_ack_estop,(float *)&cs.null, 0 },          // E-stop status (SET to ack)
+	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },          // E-stop status clear (GET to ack)
 //	{ "",   "tick",_f0, 0, tx_print_int,  get_int,     set_int,(float *)&rtc.sys_ticks, 0 },	// tick count
 	{ "",   "spc", _f0, 0, cm_print_spc,  get_ui8,     set_nul,(float *)&cm.gm.spindle_mode, 0 },          // spindle control
 	{ "",   "sps", _f0, 0, cm_print_sps,  get_flt,     set_nul,(float *)&cm.gm.spindle_speed, 0 },         // spindle speed
@@ -187,7 +187,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "", "wr",  _f0, 0, tx_print_int, get_wr,  set_nul,  (float *)&cs.null, 0 },	// slots available in RX window buffer
 	{ "", "msg", _f0, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
-//	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
+	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
 //	{ "", "sx",  _f0, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
 	{ "", "ti",  _f0, 0, tx_print_int, get_tick,set_nul,  (float *)&cs.null, 0 },	// report system time tick
 

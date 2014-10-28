@@ -148,9 +148,9 @@ static int8_t _get_axis_type(const index_t index);
 uint8_t cm_get_combined_state()
 {
     if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in cycle but macs is not cycle");
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
     if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
     
     switch(cm.machine_state)
     {
@@ -172,20 +172,20 @@ uint8_t cm_get_combined_state()
                         case MOTION_HOLD: return COMBINED_HOLD;
                         case MOTION_RUN: return COMBINED_RUN;
                         case MOTION_STOP:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "mots is stop but machine is in cycle");
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return COMBINED_RUN;
                         default:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "mots has impossible value");
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
                             return COMBINED_SHUTDOWN;
                     }
                 }
                 default:
-                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "cycs has impossible value");
+                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"cycs has impossible value"*/);
                     return COMBINED_SHUTDOWN;
             }
         }
         default:
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "macs has impossible value");
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"macs has impossible value"*/);
             return COMBINED_SHUTDOWN;
     }
 }
@@ -1243,9 +1243,9 @@ void cm_message(char_t *message)
  *		should start to run anything in the planner queue
  */
 
-void cm_request_feedhold(void) { cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
-void cm_request_end_hold(void) { cm.end_hold_requested = true; }
+void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
+void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
+void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
 stat_t cm_feedhold_sequencing_callback()
 {
@@ -1435,10 +1435,12 @@ stat_t cm_start_estop(void)
     for(int i = 0; i < HOMING_AXES; ++i)
         cm.homed[i] = false;
     cm.homing_state = HOMING_NOT_HOMED;
+#ifdef __ARM
+    xio_flush_device(DEV_IS_DATA);
+#endif
     mp_flush_planner();
     float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
-    cm_soft_alarm(STAT_ALARMED);
     cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
     return STAT_OK;
@@ -1446,7 +1448,6 @@ stat_t cm_start_estop(void)
 
 stat_t cm_end_estop(void)
 {
-    cm_clear(NULL);
     return STAT_OK;
 }
 

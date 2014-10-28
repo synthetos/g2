@@ -165,9 +165,7 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
 	DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
-#endif
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
@@ -234,8 +232,10 @@ static stat_t _controller_state()
  */
 static stat_t _dispatch_command()
 {
-	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	if(cm.estop_state == 0) {
+		devflags_t flags = DEV_IS_BOTH;
+		if ((cs.bufp = readline(&flags, &cs.linelen)) != NULL) _dispatch_kernel();
+	}
 	return (STAT_OK);
 }
 
@@ -408,9 +408,9 @@ static stat_t _limit_switch_handler(void)
     }
 }
 
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
 static stat_t _interlock_estop_handler(void)
 {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
 	bool report = false;
 	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.interlock_state = 1;
@@ -421,22 +421,25 @@ static stat_t _interlock_estop_handler(void)
 		report = true;
 	}
 	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
-		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED;
+		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
 		report = true;
 		cm_start_estop();
 	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
-	if(cm.estop_state == 0 && cm.machine_state == MACHINE_ALARM) {
+	if(cm.estop_state == ESTOP_ACTIVE) {
+        cm.estop_state = 0;
 		cm_end_estop();
 		report = true;
 	}
 	if(report)
 		sr_request_status_report(SR_REQUEST_IMMEDIATE);
 	return (STAT_OK);
-}
+#else
+	return (STAT_OK);
 #endif
+}
 
 /*
  * _system_assertions() - check memory integrity and other assertions
