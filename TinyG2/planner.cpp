@@ -369,7 +369,8 @@ void mp_commit_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-	st_request_exec_move();						// requests an exec if the runtime is not busy
+	if(cm.hold_state != FEEDHOLD_HOLD)
+		st_request_exec_move();					// requests an exec if the runtime is not busy
 												// NB: BEWARE! the exec may result in the planner buffer being
 												// processed immediately and then freed - invalidating the contents
 }
