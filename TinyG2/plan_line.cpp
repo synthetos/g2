@@ -109,7 +109,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 //	if (fp_ZERO(axis_length[AXIS_X]) && fp_ZERO(axis_length[AXIS_Y]) && fp_ZERO(axis_length[AXIS_Z]) &&
 //		fp_ZERO(axis_length[AXIS_A]) && fp_ZERO(axis_length[AXIS_B]) && fp_ZERO(axis_length[AXIS_C])) {
 		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
-		return (STAT_OK);
+		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
 	// If _calc_move_times() says the move will take less than the minimum move time get a more

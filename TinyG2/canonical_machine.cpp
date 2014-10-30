@@ -172,7 +172,9 @@ uint8_t cm_get_combined_state()
                         case MOTION_HOLD: return COMBINED_HOLD;
                         case MOTION_RUN: return COMBINED_RUN;
                         case MOTION_STOP:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
+                            //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
+                            //    until the command is executed by mp_exec_aline... so this assert isn't valid
+                            //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return COMBINED_RUN;
                         default:
                             rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
@@ -879,7 +881,11 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	return (status);
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+		cm_cycle_end();
+		return (STAT_OK);
+	} else
+		return (status);
 }
 
 /*
@@ -995,7 +1001,11 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	return (status);
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+		cm_cycle_end();
+		return (STAT_OK);
+	} else
+		return (status);
 }
 
 /*****************************
