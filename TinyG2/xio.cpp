@@ -79,7 +79,7 @@ struct xioDevice_t {						// description pf a device for reading and writing
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
 	virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
     virtual void flushRead() = 0;
-//	virtual int16_t write() = 0;			// Pure virtual. Will be subclassed for every device
+	virtual int16_t write(uint8_t *buffer, int16_t len) = 0;			// Pure virtual. Will be subclassed for every device
 };
 
 // Use a templated subclass so we don't have to create a new subclass for every type of Device.
@@ -99,6 +99,10 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     
     virtual void flushRead() final {
         return _dev->flushRead();
+    }
+
+    virtual int16_t write(uint8_t *buffer, int16_t len) final {
+        return _dev->write(buffer, len);
     }
 };
 
@@ -305,9 +309,11 @@ void _xio_callback_helper(devflags_t next_flags, xioDevice_t *device, xioDeviceW
 
 size_t writeline(uint8_t *buffer, size_t size)
 {
-	size_t written = SerialUSB.write(buffer, size);
-//	size_t written = SerialUSB1.write(buffer, size);
-	return (written);
+    size_t written = -1;
+    for(int8_t i = 0; i < DEV_MAX; ++i)
+        if((xio.d[i]->flags & (DEV_IS_CTRL | DEV_IS_ACTIVE)) == (DEV_IS_CTRL | DEV_IS_ACTIVE))
+            written = DeviceWrappers[i]->write(buffer, size);
+    return written;
 }
 
 /*
