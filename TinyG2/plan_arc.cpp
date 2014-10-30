@@ -67,7 +67,7 @@ void cm_arc_init()
  */
 stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 				   float i, float j, float k, 	 // raw arc offsets
-				   float radius, 				 // non-zero radius implies radius mode
+				   float radius, float radius_flag, 				 // non-zero radius implies radius mode
 				   uint8_t motion_mode)			 // defined motion mode
 {
 	// trap zero feed rate condition
