@@ -164,6 +164,7 @@ static uint8_t _probing_init()
 	// NOTE: it is *not* an error condition for the probe not to trigger.
 	// it is an error for the limit or homing switches to fire, or for some other configuration error.
 	cm.probe_state = PROBE_FAILED;
+	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_PROBE;
 
 	// save relevant non-axis parameters from Gcode model
@@ -334,8 +335,7 @@ static void _probe_restore_settings()
 
 	// update the model with actual position
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm_cycle_end();
-	cm.cycle_state = CYCLE_OFF;
+	cm_canned_cycle_end();
 }
 
 static stat_t _probing_finalize_exit()

@@ -646,7 +646,7 @@ stat_t cm_end_hold(void);
 
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
-void cm_feedhold(void);											// (no Gcode)
+void cm_canned_cycle_end(void);                                 // end of canned cycle
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2

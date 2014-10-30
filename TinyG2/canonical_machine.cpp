@@ -1367,19 +1367,18 @@ stat_t cm_queue_flush()
 
 static void _exec_program_finalize(float *value, float *flag)
 {
-	if ((cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
-		cm.machine_state = (uint8_t)value[0];
-	}
 	cm_set_motion_state(MOTION_STOP);
-	if (cm.cycle_state == CYCLE_MACHINING) {
-		cm.cycle_state = CYCLE_OFF;						// don't end cycle if homing, probing, etc.
+	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
+	    (cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
+		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
+		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
 	cm.hold_state = FEEDHOLD_OFF;						// end feedhold (if in feed hold)
 	cm.end_hold_requested = false;					// cancel any pending cycle start request
 	mp_zero_segment_velocity();							// for reporting purposes
 
 	// perform the following resets if it's a program END
-	if (cm.machine_state == MACHINE_PROGRAM_END) {
+	if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
 //		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
 		cm_suspend_origin_offsets();					// G92.2 - as per Kramer
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
@@ -1397,8 +1396,8 @@ static void _exec_program_finalize(float *value, float *flag)
 
 void cm_cycle_start()
 {
-	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {					// don't (re)start homing, probe or other canned cycles
+		cm.machine_state = MACHINE_CYCLE;
 		cm.cycle_state = CYCLE_MACHINING;
 		qr_init_queue_report();							// clear queue reporting buffer counts
 	}
@@ -1406,10 +1405,17 @@ void cm_cycle_start()
 
 void cm_cycle_end()
 {
-	if (cm.cycle_state != CYCLE_OFF) {
+	if(cm.cycle_state == CYCLE_MACHINING) {
 		float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 		_exec_program_finalize(value, value);
 	}
+}
+
+void cm_canned_cycle_end()
+{
+	cm.cycle_state = CYCLE_OFF;
+	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+	_exec_program_finalize(value, value);
 }
 
 void cm_program_stop()
@@ -1432,31 +1438,32 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
-    for(int i = 0; i < HOMING_AXES; ++i)
-        cm.homed[i] = false;
-    cm.homing_state = HOMING_NOT_HOMED;
+	cm.cycle_state = CYCLE_OFF;
+	for(int i = 0; i < HOMING_AXES; ++i)
+		cm.homed[i] = false;
+	cm.homing_state = HOMING_NOT_HOMED;
 #ifdef __ARM
-    xio_flush_device(DEV_IS_DATA);
+	xio_flush_device(DEV_IS_DATA);
 #endif
-    mp_flush_planner();
-    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+	mp_flush_planner();
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
-    cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
+	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
-    return STAT_OK;
+	return STAT_OK;
 }
 
 stat_t cm_end_estop(void)
 {
-    return STAT_OK;
+	return STAT_OK;
 }
 
 stat_t cm_ack_estop(nvObj_t *nv)
 {
-    cm.estop_state &= ~ESTOP_UNACKED;
-    nv->value = (float)cm.estop_state;
-    nv->valuetype = TYPE_INTEGER;
-    return (STAT_OK);
+	cm.estop_state &= ~ESTOP_UNACKED;
+	nv->value = (float)cm.estop_state;
+	nv->valuetype = TYPE_INTEGER;
+	return (STAT_OK);
 }
 
 /**************************************
