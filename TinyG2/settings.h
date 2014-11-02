@@ -103,8 +103,8 @@
 
 // machine default profiles - choose only one:
 
-//#include "settings/settings_default.h"				// Default settings for release
-#include "settings/settings_test.h"					// Settings for testing - not for release
+#include "settings/settings_default.h"				// Default settings for release
+//#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_othermill.h"				// OMC OtherMill

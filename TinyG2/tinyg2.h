@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		073.02 // regression testing run
+#define TINYG_FIRMWARE_BUILD   		074.01 // fixed bug where system dies after multi-line JSON display, e.g. {m:n}
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
