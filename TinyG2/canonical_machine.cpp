@@ -103,7 +103,7 @@
 #include "switch.h"
 #include "hardware.h"
 #include "util.h"
-//#include "xio.h"			// for serial queue flush
+#include "xio.h"			// for serial queue flush
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -1249,14 +1249,13 @@ stat_t cm_feedhold_sequencing_callback()
 
 stat_t cm_queue_flush()
 {
-// NOTE: Although the following trap is technically correct it breaks OMC-style jogging, which
-//		 issues !%~ in rapid succession. So it's commented out for now. The correct way to handle
-//		 this in the tinyg code is to queue the % queue flush until after the feedhold stops,
-//		 and queue the ~ cycle start until after that.
-//	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
+	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
 
 #ifdef __AVR
 	xio_reset_usb_rx_buffers();				// flush serial queues
+#endif
+#ifdef __ARM
+  xio_flush_device(DEV_IS_DATA);
 #endif
 	mp_flush_planner();						// flush planner queue
 	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
@@ -1268,7 +1267,7 @@ stat_t cm_queue_flush()
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
-	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
 	return (STAT_OK);
 }
@@ -1842,6 +1841,9 @@ const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
 const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
 const char fmt_tool[] PROGMEM = "Tool number          %d\n";
 
+const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
 const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
@@ -1870,6 +1872,8 @@ void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
 void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
+void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
+void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}
@@ -1891,7 +1895,7 @@ void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIV
 void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ms(nvObj_t *nv) { text_print_flt_units(nv, fmt_ms, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
 
 /*
  * axis print functions

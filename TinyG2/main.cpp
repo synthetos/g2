@@ -43,6 +43,7 @@
 #endif // __AVR
 
 #ifdef __ARM
+#include "UniqueId.h"
 #include "MotateTimers.h"
 using Motate::delay;
 
@@ -85,7 +86,7 @@ decltype(usb._mixin_1_type::Serial) &SerialUSB1 = usb._mixin_1_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','2'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 //Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 #endif
@@ -104,6 +105,9 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
+
+	// store the flash UUID
+	cacheUniqueId();
 
 	usb.attach();					// USB setup
 	delay(1000);
@@ -134,6 +138,7 @@ static void _application_init(void)
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
 	switch_init();					// switches
+	reset_limit_switches(); //reset limit switch alarm flags
 	pwm_init();						// pulse width modulation drivers
 
 	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()

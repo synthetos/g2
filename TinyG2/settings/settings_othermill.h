@@ -48,6 +48,15 @@
 // new machines use a stepper which has the same config as the other axis.
 #define HAS_CANSTACK_Z_AXIS 0
 
+// Switch definitions for interlock & E-stop
+#define ENABLE_INTERLOCK_AND_ESTOP
+#define INTERLOCK_SWITCH_AXIS           AXIS_Y
+#define INTERLOCK_SWITCH_POSITION       SW_MAX
+#define ESTOP_SWITCH_AXIS               AXIS_X
+#define ESTOP_SWITCH_POSITION           SW_MAX
+#undef PAUSE_DWELL_TIME
+#define PAUSE_DWELL_TIME				1.5 //after unpausing and turning the spindle on, dwell for 1.5s
+
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
@@ -55,10 +64,7 @@
 #define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","mpoa","ofsx","ofsy","ofsz","ofsa","unit","stat","coor","momo","dist","home","hold","macs","cycs","mots","plan","prbe"
-
-#undef	SWITCH_TYPE
-#define SWITCH_TYPE 				SW_TYPE_NORMALLY_CLOSED
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","ilck","estp","spc"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE
@@ -123,7 +129,7 @@
 #define M3_TRAVEL_PER_REV 		5.08
 #endif
 #define M3_MICROSTEPS 			8
-#define M3_POLARITY 			1
+#define M3_POLARITY 			0
 #define M3_POWER_MODE 			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
@@ -162,7 +168,9 @@
 #define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_MODE_MAX 		SW_MODE_CUSTOM	        // xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY 		(X_FEEDRATE_MAX/3)	// xsv
 #define X_LATCH_VELOCITY 		LATCH_VELOCITY		// xlv		mm/min
 #define X_LATCH_BACKOFF 		5					// xlb		mm
@@ -177,7 +185,9 @@
 #define Y_JERK_MAX 				JERK_MAX
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define Y_SWITCH_MODE_MAX		SW_MODE_CUSTOM
+#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
 #define Y_SEARCH_VELOCITY 		(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 		5
@@ -197,6 +207,8 @@
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX		SW_MODE_HOMING
+#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Z_SEARCH_VELOCITY 		(Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 		5
@@ -204,7 +216,7 @@
 #define Z_JERK_HOMING			JERK_HOMING
 
 // Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE 			AXIS_RADIUS
+#define A_AXIS_MODE 			AXIS_DISABLED // DISABLED
 #define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			A_VELOCITY_MAX
 #define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
@@ -214,6 +226,8 @@
 #define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
@@ -230,6 +244,8 @@
 #define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF 		5
@@ -246,6 +262,8 @@
 #define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF 		5
@@ -279,7 +297,7 @@
 #define G55_Z_OFFSET 0
 #define G55_A_OFFSET 0
 #define G55_B_OFFSET 0
-#define G55_C_OFFSET -20         // this is where we currently store the tool offset
+#define G55_C_OFFSET 0          // this is where we currently store the tool offset
 
 #define G56_X_OFFSET 0
 #define G56_Y_OFFSET 0

@@ -160,7 +160,7 @@ static void _controller_HSM()
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
 												// Order is important:
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
-//	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
+	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
@@ -215,7 +215,8 @@ static stat_t _controller_state()
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 	//	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
-	return (xio_callback());					// manages state changes in the XIO system
+	//return (xio_callback());					// manages state changes in the XIO system
+  return (STAT_OK);
 #endif // __ARM
 }
 
@@ -272,7 +273,7 @@ static void _dispatch_kernel()
 		text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
 
 	} else {
-		strncpy(cs.out_buf, cs.bufp, (MAXED_BUFFER_LEN-8));	// use out_buf as temp; '-8' is buffer for JSON chars
+		strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
 		sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);
 		json_parser(cs.bufp);
 	}
@@ -403,12 +404,11 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-/*
-	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
-	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
-	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
-*/
-	return (STAT_OK);
+	if (get_limit_switch_thrown() == false) {
+		return (STAT_NOOP);
+	} else {
+		return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT);
+	}
 }
 
 /*

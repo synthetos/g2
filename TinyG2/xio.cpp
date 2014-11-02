@@ -79,6 +79,7 @@ struct xioDevice_t {						// description pf a device for reading and writing
 
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
 	virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
+    virtual void flushRead() = 0;
 //	virtual int16_t write() = 0;			// Pure virtual. Will be subclassed for every device
 };
 
@@ -93,9 +94,13 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     Device _dev;
     xioDeviceWrapper(Device  dev) : _dev{dev} {};
 
-    int16_t readchar() final {
+    virtual int16_t readchar() final {
 		return _dev->readByte();					// readByte calls the USB endpoint's read function
 	};
+    
+    virtual void flushRead() final {
+        return _dev->flushRead();
+    }
 };
 
 // ALLOCATIONS
@@ -135,11 +140,8 @@ void downData()
 	for (uint8_t dev=0; dev<DEV_MAX; dev++) {
 		if ((xio.d[dev]->flags & (DEV_IS_DATA | DEV_IS_ACTIVE)) == (DEV_IS_DATA | DEV_IS_ACTIVE)) {
 			xio.d[dev]->flags &= ~(DEV_IS_DATA | DEV_IS_ACTIVE | DEV_IS_READY | DEV_IS_CONNECTED);	// take down the channel
-
-            // TODO
-            // insert serial queue flush here
-
-
+            DeviceWrappers[dev]->flushRead();
+            return;
         }
 		return;
 	}
@@ -363,34 +365,34 @@ char_t *readline(devflags_t &flags, uint16_t &size)
 
 	for (uint8_t dev=0; dev < DEV_MAX; dev++) {
 		if (!xio.d[dev]->isActive())
-            continue;
+		continue;
 
-        // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
+		// If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
 		if (flags == DEV_IS_CTRL && ( (xio.d[dev]->flags & (DEV_IS_CTRL|DEV_IS_DATA)) != DEV_IS_CTRL )) // the types need to match
-            continue;
+		continue;
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
 			if ((c = read_char(dev)) == _FDEV_ERR) break;
 			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
 			if ((c == '!') || (c == '%') || (c == '~')) {
-                single_char_buffer[0] = c;
-                size = 1;
+				single_char_buffer[0] = c;
+				size = 1;
 				flags = xio.d[dev]->flags;							// what type of device is this?
-                return single_char_buffer;
-            } else if ((c == LF) || (c == CR)) {
+				return single_char_buffer;
+				} else if ((c == LF) || (c == CR)) {
 				xio.d[dev]->read_buf[xio.d[dev]->read_index] = NUL;
-                if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
-                    // This is a control-only channel.
-                    // We need to ensure that we only get JSON-lines.
-                    if (xio.d[dev]->read_buf[0] != '{') {
-                        xio.d[dev]->read_index = 0; // throw away the line
-                        xio.d[dev]->read_buf[0] = 0;
-                        
-                        size = 0;
-                        flags = 0;
-                        return NULL;
-                    }
-                }
+				if (!(xio.d[dev]->flags & DEV_IS_DATA)) {
+					// This is a control-only channel.
+					// We need to ensure that we only get JSON-lines.
+					if (xio.d[dev]->read_buf[0] != '{') {
+						xio.d[dev]->read_index = 0; // throw away the line
+						xio.d[dev]->read_buf[0] = 0;
+						
+						size = 0;
+						flags = 0;
+						return NULL;
+					}
+				}
 				flags = xio.d[dev]->flags;							// what type of device is this?
 				size = xio.d[dev]->read_index;						// how long is the string?
 				xio.d[dev]->read_index = 0;							// reset for next readline

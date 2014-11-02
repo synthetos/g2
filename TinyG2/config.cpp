@@ -41,7 +41,7 @@
 #include "util.h"
 #include "xio.h"
 
-static void _set_defa(nvObj_t *nv);
+static void _set_defa(nvObj_t *nv, bool print);
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -112,7 +112,7 @@ void config_init()
 #ifdef __ARM
 // ++++ The following code is offered until persistence is implemented.
 // ++++ Then you can use the AVR code (or something like it)
-	_set_defa(nv);
+	_set_defa(nv, false);
 #endif
 #ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
@@ -121,9 +121,9 @@ void config_init()
 	read_persistent_value(nv);
 	if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
 //	if (fp_NE(nv->value, cs.fw_build)) {
-		_set_defa(nv);
+		_set_defa(nv, false);
 	} else {									// case (2) NVM is setup and in revision
-		rpt_print_loading_configs_message();
+//		rpt_print_loading_configs_message();
 		for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
 			if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
 				strncpy_P(nv->token, cfgArray[nv->index].token, TOKEN_LEN);	// read the token from the array
@@ -141,7 +141,7 @@ void config_init()
  * _set_defa() - helper function and called directly from config_init()
  */
 
-static void _set_defa(nvObj_t *nv)
+static void _set_defa(nvObj_t *nv, bool print)
 {
 	cm_set_units_mode(MILLIMETERS);				// must do inits in MM mode
 	for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
@@ -153,14 +153,15 @@ static void _set_defa(nvObj_t *nv)
 		}
 	}
 	sr_init_status_report();					// reset status reports
-	rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+	if(print)
+		rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
 }
 
 stat_t set_defaults(nvObj_t *nv)
 {
 	// failsafe. nv->value must be true or no action occurs
 	if (fp_FALSE(nv->value)) return(help_defa(nv));
-	_set_defa(nv);
+	_set_defa(nv, true);
 
 	// The nvlist was used for the initialize message so the values are all garbage
 	// Mark the nv as $defa so it displays nicely in the response

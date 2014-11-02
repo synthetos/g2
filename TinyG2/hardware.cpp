@@ -35,6 +35,10 @@
 #include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
+#ifdef __ARM
+#include "UniqueId.h"
+#include "Reset.h"
+#endif
 #ifdef __AVR
 #include "xmega/xmega_init.h"
 #include "xmega/xmega_rtc.h"
@@ -57,11 +61,15 @@ void hardware_init()
  * _get_id() - get a human readable signature
  *
  *	Produce a unique deviceID based on the factory calibration data.
+ *	Truncate to SYS_ID_LEN bytes
  */
 
 void _get_id(char_t *id)
 {
-	return;
+    const uint16_t *uuid = readUniqueIdString();
+    for(int i = 0; i < SYS_ID_LEN-1; ++i)
+        id[i] = uuid[i];
+    id[SYS_ID_LEN-1] = 0;
 }
  
  /*
@@ -75,8 +83,7 @@ void hw_request_hard_reset() { cs.hard_reset_requested = true; }
 
 void hw_hard_reset(void)			// software hard reset using the watchdog timer
 {
-//	wdt_enable(WDTO_15MS);
-//	while (true);					// loops for about 15ms then resets
+    banzai(0);
 }
 
 stat_t hw_hard_reset_handler(void)
@@ -90,17 +97,22 @@ stat_t hw_hard_reset_handler(void)
  * Bootloader Handlers
  *
  * hw_request_bootloader()
+ * hw_bootloader()
  * hw_request_bootloader_handler() - executes a software reset using CCPWrite
  */
 
 void hw_request_bootloader() { cs.bootloader_requested = true;}
+    
+void hw_bootloader(void)
+{
+    banzai(1);
+}
 
 stat_t hw_bootloader_handler(void)
 {
-//	if (cs.bootloader_requested == false) { return (STAT_NOOP);}
-//	cli();
-//	CCPWrite(&RST.CTRL, RST_SWRST_bm);  // fire a software reset
-	return (STAT_EAGAIN);				// never gets here but keeps the compiler happy
+    if (cs.bootloader_requested == false) { return (STAT_NOOP);}
+    hw_bootloader();
+    return (STAT_EAGAIN);
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/
@@ -117,10 +129,10 @@ stat_t hw_bootloader_handler(void)
 
 stat_t hw_get_id(nvObj_t *nv) 
 {
-//	char_t tmp[SYS_ID_LEN];
-//	_get_id(tmp);
-//	nv->valuetype = TYPE_STRING;
-//	ritorno(nv_copy_string(nv, tmp));
+	char_t tmp[SYS_ID_LEN];
+	_get_id(tmp);
+	nv->valuetype = TYPE_STRING;
+	ritorno(nv_copy_string(nv, tmp));
 	return (STAT_OK);
 }
 
