@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		074.01 // fixed bug where system dies after multi-line JSON display, e.g. {m:n}
+#define TINYG_FIRMWARE_BUILD   		074.02 // merging in and cleaning up omco pull-request
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
