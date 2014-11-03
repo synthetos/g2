@@ -215,8 +215,7 @@ static stat_t _controller_state()
 #ifdef __ARM
 	// detect USB connection and transition to disconnected state if it disconnected
 	//	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
-	//return (xio_callback());					// manages state changes in the XIO system
-  return (STAT_OK);
+	return (xio_callback());					// manages state changes in the XIO system
 #endif // __ARM
 }
 
@@ -404,11 +403,12 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-	if (get_limit_switch_thrown() == false) {
-		return (STAT_NOOP);
-	} else {
-		return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT);
-	}
+/*
+	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
+	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
+	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
+*/
+	return (STAT_OK);
 }
 
 /*
