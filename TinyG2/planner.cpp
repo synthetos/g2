@@ -215,6 +215,11 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 static stat_t _exec_command(mpBuf_t *bf)
 {
+	if(cm.hold_state == FEEDHOLD_SYNC) {
+		mp_start_hold();
+		return STAT_NOOP;
+	}
+
 	st_prep_command(bf);
 	return (STAT_OK);
 }
@@ -251,6 +256,11 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
+	if(cm.hold_state == FEEDHOLD_SYNC) {
+		mp_start_hold();
+		return STAT_NOOP;
+	}
+
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);

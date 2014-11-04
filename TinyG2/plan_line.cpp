@@ -33,6 +33,7 @@
 #include "stepper.h"
 #include "report.h"
 #include "util.h"
+#include "spindle.h"
 
 // aline planner routines / feedhold planning
 static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
@@ -634,6 +635,13 @@ static float _compute_next_segment_velocity()
 
 stat_t mp_plan_hold_callback()
 {
+	//if we're partway through a hold but the stepper chain has stopped, finish the hold
+	if (cm.hold_state > FEEDHOLD_OFF && cm.hold_state < FEEDHOLD_HOLD && !st_exec_isbusy()) {
+		mp_start_hold();
+		return (STAT_OK);
+	}
+
+	//otherwise, we we wait for FEEDHOLD_PLAN and then plan a DECEL buffer
 	if (cm.hold_state != FEEDHOLD_PLAN) { return (STAT_NOOP);}	// not planning a feedhold
 
 	mpBuf_t *bp; 				// working buffer pointer
@@ -735,6 +743,17 @@ stat_t mp_plan_hold_callback()
 	_plan_block_list(mp_get_last_buffer(), &mr_flag);
 	cm.hold_state = FEEDHOLD_DECEL;				// set state to decelerate and exit
 	return (STAT_OK);
+}
+
+/*
+ * mp_start_hold() - called from the stepper chain when the hold takes effect
+ */
+stat_t mp_start_hold()
+{
+    cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
+    cm.hold_state = FEEDHOLD_HOLD;
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    return (STAT_OK);
 }
 
 /*

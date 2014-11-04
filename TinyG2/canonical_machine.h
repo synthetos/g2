@@ -339,6 +339,7 @@ enum cmFeedholdState {				// feedhold_state machine
 	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
 	FEEDHOLD_PLAN, 					// replan blocks for feedhold
 	FEEDHOLD_DECEL,					// decelerate to hold point
+	FEEDHOLD_READY_TO_HOLD,         // we are done decelerating, go into a hold next time mp_exec_aline runs
 	FEEDHOLD_HOLD,					// holding
 	FEEDHOLD_END_HOLD				// end hold (transient state to OFF)
 };

@@ -300,6 +300,23 @@ uint8_t st_runtime_isbusy()
 }
 
 /*
+ * st_exec_isbusy() - return TRUE if the exec interrupts are busy:
+ *
+ * - the exec or load interrupt is waiting to be serviced
+ * - we are in _load_move or the exec or load interrupt handlers
+ * - we are currently running a segment (motors or dwell), after which we will request an exec interrupt
+ */
+
+uint8_t st_exec_isbusy()
+{
+    return (st_pre.exec_isbusy != 0);
+}
+
+#define EXEC_BUSY_FLAG 0x1
+#define LOAD_BUSY_FLAG 0x2
+#define DDA_DWELL_BUSY_FLAG 0x4
+
+/*
  * st_reset() - reset stepper internals
  */
 
@@ -503,7 +520,10 @@ ISR(TIMER_DDA_ISR_vect)
 	if (--st_run.dda_ticks_downcount != 0) return;
 
 	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;				// disable DDA timer
+	st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+	st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 	_load_move();										// load the next move
+	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -569,7 +589,10 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 
 		// process end of segment
 		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
+		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();									// load the next move at the current interrupt level
+		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
@@ -584,7 +607,10 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 ISR(TIMER_DWELL_ISR_vect) {								// DWELL timer interrupt
 	if (--st_run.dda_ticks_downcount == 0) {
 		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;			// disable DWELL timer
+		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();
+		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 }
 #endif
@@ -595,7 +621,10 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
 	if (--st_run.dda_ticks_downcount == 0) {
 		dwell_timer.stop();
+		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();
+		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 }
 } // namespace Motate
@@ -611,6 +640,7 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
+		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
 		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
 		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
 	}
@@ -626,6 +656,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 			st_request_load_move();
 		}
 	}
+	st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -633,6 +664,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
+		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
 		exec_timer.setInterruptPending();
 	}
 }
@@ -647,6 +679,7 @@ namespace Motate {	// Define timer inside Motate namespace
 				st_request_load_move();
 			}
 		}
+		st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
 	}
 } // namespace Motate
 
@@ -669,6 +702,7 @@ void st_request_load_move()
 		return;													// don't request a load if the runtime is busy
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
+		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
 		TIMER_LOAD.PER = LOAD_TIMER_PERIOD;
 		TIMER_LOAD.CTRLA = LOAD_TIMER_ENABLE;					// trigger a HI interrupt
 	}
@@ -677,6 +711,7 @@ void st_request_load_move()
 ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
 	TIMER_LOAD.CTRLA = LOAD_TIMER_DISABLE;						// disable SW interrupt timer
 	_load_move();
+	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -687,6 +722,7 @@ void st_request_load_move()
 		return;													// don't request a load if the runtime is busy
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
+		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
 		load_timer.setInterruptPending();
 	}
 }
@@ -696,6 +732,7 @@ namespace Motate {	// Define timer inside Motate namespace
 	{
 		load_timer.getInterruptCause();							// read SR to clear interrupt condition
 		_load_move();
+		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 } // namespace Motate
 #endif // __ARM
@@ -880,11 +917,13 @@ static void _load_move()
 
 		//**** do this last ****
 
+        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dda_timer.start();									// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
+        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dwell_timer.start();
 
 	// handle synchronous commands

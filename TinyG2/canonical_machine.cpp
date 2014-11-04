@@ -1261,13 +1261,13 @@ stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
-        if(cm.hold_state == FEEDHOLD_OFF) {
-            if (cm.motion_state == MOTION_RUN) {
-                cm_start_hold();
-            } else if(cm.gm.spindle_mode != SPINDLE_OFF) {
-                cm_spindle_control_immediate(SPINDLE_OFF);
-            }
-        }
+		if(cm.hold_state == FEEDHOLD_OFF) {
+			if (mp_get_run_buffer() != NULL) {
+				cm_start_hold();
+			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
+				cm_spindle_control_immediate(SPINDLE_OFF);
+			}
+		}
 	}
 	if (cm.queue_flush_requested == true) {
 		if (((cm.motion_state == MOTION_STOP) ||
@@ -1279,10 +1279,10 @@ stat_t cm_feedhold_sequencing_callback()
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false) &&
 			!cm.interlock_state) {
-        if(cm.motion_state != MOTION_HOLD)
-            cm.end_hold_requested = false;
+		if(cm.motion_state != MOTION_HOLD)
+			cm.end_hold_requested = false;
 		else if(cm.hold_state == FEEDHOLD_HOLD) {
-            cm.end_hold_requested = false;
+			cm.end_hold_requested = false;
 			cm_end_hold();
 		}
 	}
@@ -1299,18 +1299,20 @@ stat_t cm_start_hold()
 stat_t cm_end_hold()
 {
 	cm.hold_state = FEEDHOLD_END_HOLD;
-	cm_cycle_start();
 	mp_end_hold();
 	if(cm.motion_state == MOTION_RUN) {
+		cm_cycle_start();
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-            cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
 		} else {
-            cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_exec_move();
 		}
-	} else
-        cm_spindle_control_immediate(SPINDLE_OFF);
+	} else {
+		cm_spindle_control_immediate(SPINDLE_OFF);
+		cm_cycle_end();
+	}
 	return STAT_OK;
 }
 
@@ -1325,6 +1327,10 @@ stat_t cm_queue_flush()
   xio_flush_device(DEV_IS_DATA);
 #endif
 	mp_flush_planner();						// flush planner queue
+	if(cm.hold_state == FEEDHOLD_HOLD);     // end feedhold, if we're in one
+		cm_end_hold();
+	cm.end_hold_requested = false;					// cancel any pending cycle start request
+
 	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
 //	rx_request_rx_report();
 
@@ -1383,8 +1389,6 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
-	cm.hold_state = FEEDHOLD_OFF;						// end feedhold (if in feed hold)
-	cm.end_hold_requested = false;					// cancel any pending cycle start request
 	mp_zero_segment_velocity();							// for reporting purposes
 
 	// perform the following resets if it's a program END

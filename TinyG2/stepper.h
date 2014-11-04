@@ -407,6 +407,7 @@ typedef struct stPrepSingleton {
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
+	volatile uint8_t exec_isbusy;       // are the stepper interrupts firing?
 	uint16_t magic_end;
 } stPrepSingleton_t;
 
@@ -420,6 +421,7 @@ void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
 uint8_t st_runtime_isbusy(void);
+uint8_t st_exec_isbusy(void);
 void st_reset(void);
 stat_t st_clc(nvObj_t *nv);
 
