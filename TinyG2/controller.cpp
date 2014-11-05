@@ -414,7 +414,8 @@ static stat_t _interlock_estop_handler(void)
 	bool report = false;
 	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.interlock_state = 1;
-		cm_request_feedhold();
+		if(cm.gm.spindle_mode != SPINDLE_OFF)
+			cm_request_feedhold();
 		report = true;
 	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
 		cm.interlock_state = 0;

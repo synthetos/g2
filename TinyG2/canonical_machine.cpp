@@ -1277,8 +1277,7 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_queue_flush();
 		}
 	}
-	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false) &&
-			!cm.interlock_state) {
+	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD)
 			cm.end_hold_requested = false;
 		else if(cm.hold_state == FEEDHOLD_HOLD) {
@@ -1298,6 +1297,9 @@ stat_t cm_start_hold()
 
 stat_t cm_end_hold()
 {
+	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
+		return STAT_EAGAIN;
+
 	cm.hold_state = FEEDHOLD_END_HOLD;
 	mp_end_hold();
 	if(cm.motion_state == MOTION_RUN) {
