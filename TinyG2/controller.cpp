@@ -209,14 +209,9 @@ static stat_t _controller_state()
 		cm_request_queue_flush();
 		rpt_print_system_ready_message();
 	}
-	return (STAT_OK);
 #endif // __AVR
 
-#ifdef __ARM
-	// detect USB connection and transition to disconnected state if it disconnected
-	//	if (SerialUSB.isConnected() == false) cs.state = CONTROLLER_NOT_CONNECTED;
-	return (xio_callback());					// manages state changes in the XIO system
-#endif // __ARM
+    return (STAT_OK);
 }
 
 /*****************************************************************************
