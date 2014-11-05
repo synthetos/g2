@@ -185,6 +185,7 @@ stat_t cm_homing_cycle_start(void)
 
 	hm.axis = -1;							// set to retrieve initial axis
 	hm.func = _homing_axis_start; 			// bind initial processing function
+	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
 	return (STAT_OK);
@@ -483,8 +484,7 @@ static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to ho
 	cm_set_feed_rate_mode(hm.saved_feed_rate_mode);
 	cm_set_feed_rate(hm.saved_feed_rate);
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm_cycle_end();
-	cm.cycle_state = CYCLE_OFF;								// required
+	cm_canned_cycle_end();
 	return (STAT_OK);
 }
 

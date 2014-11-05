@@ -147,18 +147,49 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
-	if (cm.cycle_state == CYCLE_OFF) { cm.combined_state = cm.machine_state;}
-	else if (cm.cycle_state == CYCLE_PROBE) { cm.combined_state = COMBINED_PROBE;}
-	else if (cm.cycle_state == CYCLE_HOMING) { cm.combined_state = COMBINED_HOMING;}
-	else if (cm.cycle_state == CYCLE_JOG) { cm.combined_state = COMBINED_JOG;}
-	else {
-		if (cm.motion_state == MOTION_RUN) cm.combined_state = COMBINED_RUN;
-		if (cm.motion_state == MOTION_HOLD) cm.combined_state = COMBINED_HOLD;
-	}
-	if (cm.machine_state == MACHINE_ALARM) { cm.combined_state = COMBINED_ALARM;}
-	if (cm.machine_state == MACHINE_SHUTDOWN) { cm.combined_state = COMBINED_SHUTDOWN;}
-
-	return cm.combined_state;
+    if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
+    if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
+    
+    switch(cm.machine_state)
+    {
+        case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
+        case MACHINE_READY: return COMBINED_READY;
+        case MACHINE_ALARM: return COMBINED_ALARM;
+        case MACHINE_SHUTDOWN: return COMBINED_SHUTDOWN;
+        case MACHINE_PROGRAM_STOP: return COMBINED_PROGRAM_STOP;
+        case MACHINE_PROGRAM_END: return COMBINED_PROGRAM_END;
+        case MACHINE_CYCLE: {
+            switch(cm.cycle_state)
+            {
+                case CYCLE_PROBE: return COMBINED_PROBE;
+                case CYCLE_JOG: return COMBINED_JOG;
+                case CYCLE_HOMING: return COMBINED_HOMING;
+                case CYCLE_MACHINING: case CYCLE_OFF: {
+                    switch(cm.motion_state)
+                    {
+                        case MOTION_HOLD: return COMBINED_HOLD;
+                        case MOTION_RUN: return COMBINED_RUN;
+                        case MOTION_STOP:
+                            //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
+                            //    until the command is executed by mp_exec_aline... so this assert isn't valid
+                            //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
+                            return COMBINED_RUN;
+                        default:
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
+                            return COMBINED_SHUTDOWN;
+                    }
+                }
+                default:
+                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"cycs has impossible value"*/);
+                    return COMBINED_SHUTDOWN;
+            }
+        }
+        default:
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"macs has impossible value"*/);
+            return COMBINED_SHUTDOWN;
+    }
 }
 
 uint8_t cm_get_machine_state() { return cm.machine_state;}
@@ -545,7 +576,6 @@ void canonical_machine_init()
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
-	cm.combined_state = COMBINED_READY;
 
 	cm.interlock_state = cm.estop_state = 0;
 
@@ -851,7 +881,11 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	return (status);
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+		cm_cycle_end();
+		return (STAT_OK);
+	} else
+		return (status);
 }
 
 /*
@@ -967,7 +1001,11 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	return (status);
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+		cm_cycle_end();
+		return (STAT_OK);
+	} else
+		return (status);
 }
 
 /*****************************
@@ -1215,22 +1253,21 @@ void cm_message(char_t *message)
  *		should start to run anything in the planner queue
  */
 
-void cm_request_feedhold(void) { cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) { cm.queue_flush_requested = true; }
-void cm_request_end_hold(void) { cm.end_hold_requested = true; }
+void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
+void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
+void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
 stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
-        if(cm.hold_state == FEEDHOLD_OFF) {
-            if (cm.motion_state == MOTION_RUN) {
-                cm_start_hold();
-            } else if(cm.pause_dwell_time > 0 && cm.gm.spindle_mode != SPINDLE_OFF) {
-                cm_pause_spindle();
-                cm.gm.spindle_mode = SPINDLE_OFF;
-            }
-        }
+		if(cm.hold_state == FEEDHOLD_OFF) {
+			if (mp_get_run_buffer() != NULL) {
+				cm_start_hold();
+			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
+				cm_spindle_control_immediate(SPINDLE_OFF);
+			}
+		}
 	}
 	if (cm.queue_flush_requested == true) {
 		if (((cm.motion_state == MOTION_STOP) ||
@@ -1240,10 +1277,11 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_queue_flush();
 		}
 	}
-	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false) &&
-			!cm.interlock_state) {
-		cm.end_hold_requested = false;
-		if(cm.hold_state == FEEDHOLD_HOLD) {
+	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
+		if(cm.motion_state != MOTION_HOLD)
+			cm.end_hold_requested = false;
+		else if(cm.hold_state == FEEDHOLD_HOLD) {
+			cm.end_hold_requested = false;
 			cm_end_hold();
 		}
 	}
@@ -1259,17 +1297,24 @@ stat_t cm_start_hold()
 
 stat_t cm_end_hold()
 {
+	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
+		return STAT_EAGAIN;
+
 	cm.hold_state = FEEDHOLD_END_HOLD;
-	cm_cycle_start();
 	mp_end_hold();
 	if(cm.motion_state == MOTION_RUN) {
-		if(cm.pause_dwell_time > 0 && cm_unpause_spindle()) {
+		cm_cycle_start();
+		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
 		} else {
+			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_exec_move();
 		}
-	} else
-        cm.gm.spindle_mode = SPINDLE_OFF;
+	} else {
+		cm_spindle_control_immediate(SPINDLE_OFF);
+		cm_cycle_end();
+	}
 	return STAT_OK;
 }
 
@@ -1284,6 +1329,10 @@ stat_t cm_queue_flush()
   xio_flush_device(DEV_IS_DATA);
 #endif
 	mp_flush_planner();						// flush planner queue
+	if(cm.hold_state == FEEDHOLD_HOLD);     // end feedhold, if we're in one
+		cm_end_hold();
+	cm.end_hold_requested = false;					// cancel any pending cycle start request
+
 	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
 //	rx_request_rx_report();
 
@@ -1336,26 +1385,23 @@ stat_t cm_queue_flush()
 
 static void _exec_program_finalize(float *value, float *flag)
 {
-	if ((cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
-		cm.machine_state = (uint8_t)value[0];
-	}
 	cm_set_motion_state(MOTION_STOP);
-	if (cm.cycle_state == CYCLE_MACHINING) {
-		cm.cycle_state = CYCLE_OFF;						// don't end cycle if homing, probing, etc.
+	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
+	    (cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
+		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
+		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
-	cm.hold_state = FEEDHOLD_OFF;						// end feedhold (if in feed hold)
-	cm.end_hold_requested = false;					// cancel any pending cycle start request
 	mp_zero_segment_velocity();							// for reporting purposes
 
 	// perform the following resets if it's a program END
-	if (cm.machine_state == MACHINE_PROGRAM_END) {
+	if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
 //		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
 		cm_suspend_origin_offsets();					// G92.2 - as per Kramer
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
 //++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
-		cm_spindle_control(SPINDLE_OFF);				// M5
+		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 	//	cm_set_motion_mode(MOTION_MODE_STRAIGHT_FEED);	// NIST specifies G1, but we cancel motion mode. Safer.
@@ -1366,8 +1412,8 @@ static void _exec_program_finalize(float *value, float *flag)
 
 void cm_cycle_start()
 {
-	cm.machine_state = MACHINE_CYCLE;
 	if (cm.cycle_state == CYCLE_OFF) {					// don't (re)start homing, probe or other canned cycles
+		cm.machine_state = MACHINE_CYCLE;
 		cm.cycle_state = CYCLE_MACHINING;
 		qr_init_queue_report();							// clear queue reporting buffer counts
 	}
@@ -1375,10 +1421,17 @@ void cm_cycle_start()
 
 void cm_cycle_end()
 {
-	if (cm.cycle_state != CYCLE_OFF) {
+	if(cm.cycle_state == CYCLE_MACHINING) {
 		float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
 		_exec_program_finalize(value, value);
 	}
+}
+
+void cm_canned_cycle_end()
+{
+	cm.cycle_state = CYCLE_OFF;
+	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+	_exec_program_finalize(value, value);
 }
 
 void cm_program_stop()
@@ -1401,30 +1454,32 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
-    for(int i = 0; i < HOMING_AXES; ++i)
-        cm.homed[i] = false;
-    cm.homing_state = HOMING_NOT_HOMED;
-    mp_flush_planner();
-    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+	cm.cycle_state = CYCLE_OFF;
+	for(int i = 0; i < HOMING_AXES; ++i)
+		cm.homed[i] = false;
+	cm.homing_state = HOMING_NOT_HOMED;
+#ifdef __ARM
+	xio_flush_device(DEV_IS_DATA);
+#endif
+	mp_flush_planner();
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
-    cm_soft_alarm(STAT_ALARMED);
-    cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
+	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
-    return STAT_OK;
+	return STAT_OK;
 }
 
 stat_t cm_end_estop(void)
 {
-    cm_clear(NULL);
-    return STAT_OK;
+	return STAT_OK;
 }
 
 stat_t cm_ack_estop(nvObj_t *nv)
 {
-    cm.estop_state &= ~ESTOP_UNACKED;
-    nv->value = (float)cm.estop_state;
-    nv->valuetype = TYPE_INTEGER;
-    return (STAT_OK);
+	cm.estop_state &= ~ESTOP_UNACKED;
+	nv->value = (float)cm.estop_state;
+	nv->valuetype = TYPE_INTEGER;
+	return (STAT_OK);
 }
 
 /**************************************

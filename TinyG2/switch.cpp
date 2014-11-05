@@ -27,8 +27,8 @@
  */
 /* Switch Modes
  *
- *	The switches are considered to be homing switches when machine_state is
- *	MACHINE_HOMING. At all other times they are treated as limit switches:
+ *	The switches are considered to be homing switches when cycle_state is
+ *	CYCLE_HOMING. At all other times they are treated as limit switches:
  *	  - Hitting a homing switch puts the current move into feedhold
  *	  - Hitting a limit switch causes the machine to shut down and go into lockdown until reset
  *

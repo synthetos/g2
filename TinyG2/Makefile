@@ -266,6 +266,8 @@ GDB     = $(CROSS_COMPILE)-gdb
 NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
+CKSUM		= cksum
+DD			= dd
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
@@ -405,6 +407,8 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
+	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
+	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 

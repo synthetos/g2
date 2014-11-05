@@ -127,6 +127,8 @@ static void _application_init(void)
 	cli();
 #endif
 
+	cm.machine_state = MACHINE_INITIALIZING;
+
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
