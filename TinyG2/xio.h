@@ -70,6 +70,15 @@
 #include "MotateUSBCDC.h"
 #include "MotateSPI.h"
 
+/*
+ **** HIGH LEVEL EXPLANATION OF XIO ****
+ *
+ * The XIO subsystem serves two purposes.
+
+ ***************************************/
+
+
+
 /**** Defines, Macros, and  Assorted Parameters ****/
 
 #undef  _FDEV_ERR
@@ -135,7 +144,7 @@ stat_t xio_test_assertions(void);
 void xio_flush_device(devflags_t flags);
 
 char_t *readline(devflags_t &flags, uint16_t &size);
-size_t write(uint8_t *buffer, size_t size);
+size_t write(const uint8_t *buffer, size_t size);
 
 stat_t xio_set_spi(nvObj_t *nv);
 
@@ -178,237 +187,6 @@ stat_t xio_set_spi(nvObj_t *nv);
 	#define xio_print_spi tx_print_stub
 
 #endif // __TEXT_MODE
-
-
-/* Externally used xio structure along with everything that came with it: */
-
-extern char_t single_char_buffer[2];
-
-struct xioDeviceWrapperBase {				// C++ base class for device primitives
-    // connection and device management
-    uint8_t caps;							// bitfield for capabilities flags (these are persistent)
-    devflags_t flags;						// bitfield for device state flags (these are not)
-    devflags_t next_flags;					// bitfield for next-state transitions
-
-    // line reader functions
-    uint16_t read_index;					// index into line being read
-    uint16_t read_buf_size;					// static variable set at init time
-    char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
-
-    //	bool canRead() { return caps & DEV_CAN_READ; }
-    //	bool canWrite() { return caps & DEV_CAN_WRITE; }
-    //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
-    //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
-    bool isCtrl() { return flags & DEV_IS_CTRL; }			// called as: USB0->isCtrl()
-    bool isData() { return flags & DEV_IS_DATA; }
-    bool isPrimary() { return flags & DEV_IS_PRIMARY; }
-    bool isConnected() { return flags & DEV_IS_CONNECTED; }
-    bool isNotConnected() { return !(flags & DEV_IS_CONNECTED); }
-    devflags_t getNextFlags() { //since next_flags is set from an interrupt, make this as atomic as possible
-        devflags_t next = next_flags;
-        next_flags = DEV_FLAGS_CLEAR;
-        return next;
-    }
-    bool isReady() { return flags & DEV_IS_READY; }
-    bool isActive() { return flags & DEV_IS_ACTIVE; }
-
-    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps) {
-        read_buf_size = USB_LINE_BUFFER_SIZE;
-        //        caps = (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA);
-    };
-
-    virtual int16_t readchar() = 0;			// Pure virtual. Will be subclassed for every device
-    virtual void flushRead() = 0;
-    virtual int16_t write(const uint8_t *buffer, int16_t len) = 0;			// Pure virtual. Will be subclassed for every device
-
-    char_t *readline(devflags_t limit_flags, uint16_t &size) {
-        if (!(limit_flags & flags))
-            return NULL;
-
-        // IMPORTANT!! _ready_to_send is a **static** so it's actually stored between calls of the function!!
-        // Setting it false here is just to initilize it the first time! It may actually be true after this line in runtime!!
-        // We don't want/need it accesible ouside of this function, so we do this.
-        // Pretend this next line isn't there and it's not confusing.
-        static bool _ready_to_send = false;
-
-
-        // If _ready_to_send is true, we captured a line previously but couldn't return it yet (one of various reasons),
-        // and we don't actually need to read from the channel. We just need to try to return it again.
-        if (!_ready_to_send) {
-            while (read_index < read_buf_size) {
-                int c;
-
-                if ((c = readchar()) == _FDEV_ERR) {
-                    break;
-                }
-
-                read_buf[read_index] = (char_t)c;
-
-                if ((c == '!') || (c == '%') || (c == '~')) {
-                    single_char_buffer[0] = c;
-                    size = 1;
-                    return single_char_buffer;
-                } else if ((c == LF) || (c == CR)) {
-                    _ready_to_send = true;
-                    break;
-                }
-                read_index++;
-            }
-        }
-
-        // Now we have a complete line to send, check it and (maybe) return it.
-        if (_ready_to_send) {
-            if (!(limit_flags & DEV_IS_DATA)) {
-                // This is a control-only read.
-                // We need to ensure that we only get JSON-lines.
-                // CHEAT: We don't properly ignore spaces here!!
-                if (read_buf[0] != '{') {
-                    // we'll just leave _ready_to_send set, and next time it can be read.
-                    size = 0;
-                    return NULL;
-                }
-            }
-
-            // Here is where we would do more checks to make sure we're allowing the correct data through the correct channel.
-            // For now, we only do that one test.
-
-            read_buf[read_index] = NUL;
-            size = read_index;						// how long is the string?
-            read_index = 0;							// reset for next readline
-
-            _ready_to_send = false;
-
-            return (read_buf);
-        }
-
-        return NULL;
-    };
-};
-
-// Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
-struct xio_t {
-    uint16_t magic_start;
-
-    xioDeviceWrapperBase* DeviceWrappers[DEV_MAX];
-    const uint8_t _dev_count;
-
-    template<typename... Ts>
-    xio_t(Ts... args) : magic_start(MAGICNUM), DeviceWrappers {args...}, _dev_count(sizeof...(args)), magic_end(MAGICNUM) {
-
-    };
-
-    // ##### Connection management functions
-
-    bool others_connected(xioDeviceWrapperBase* except) {
-        for (int8_t i = 0; i < DEV_MAX; ++i) {
-            if((DeviceWrappers[i] != except) && (DeviceWrappers[i]->flags & DEV_IS_CONNECTED) == DEV_IS_CONNECTED) {
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    void remove_data_from_primary() {
-        for (int8_t i = 0; i < DEV_MAX; ++i) {
-            if((DeviceWrappers[i]->flags & (DEV_IS_DATA | DEV_IS_ACTIVE)) == (DEV_IS_DATA | DEV_IS_ACTIVE)) {
-                return;
-            }
-        }
-
-        for (int8_t i = 0; i < DEV_MAX; ++i) {
-            if((DeviceWrappers[i]->flags & DEV_IS_PRIMARY) == DEV_IS_PRIMARY) {
-                DeviceWrappers[i]->flags &= ~(DEV_IS_DATA);
-            }
-        }
-
-    };
-
-    void deactivate_all_channels() {
-        for(int8_t i = 0; i < DEV_MAX; ++i) {
-            DeviceWrappers[i]->flags &= ~DEV_IS_ACTIVE;
-        }
-    };
-
-    // ##### Cross-Device read/write/etc. functions
-
-    /*
-     * write() - write a block to a device
-     */
-    size_t write(const uint8_t *buffer, size_t size)
-    {
-        // There are a few issues with this function that I don't know how to resolve right now:
-        // 1) If a device fails to write the data, or all the data, then it's ignored
-        // 2) Only the amount written by the *last* device to match (CTRL|ACTIVE) is returned.
-        //
-        // In the current environment, these are not forssen to cause trouble, since these are blocking writes
-        // and we expect to only really be writing to one device.
-
-        size_t written = -1;
-
-        for (int8_t i = 0; i < DEV_MAX; ++i) {
-            if ((DeviceWrappers[i]->flags & (DEV_IS_CTRL | DEV_IS_ACTIVE)) == (DEV_IS_CTRL | DEV_IS_ACTIVE)) {
-                written = DeviceWrappers[i]->write(buffer, size);
-            }
-        }
-
-        return written;
-    }
-
-    /*
-     * readline() - read a complete line from a device
-     *
-     *	Reads a line of text from the next active device that has one ready. With some exceptions.
-     *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
-     *
-     *	This function iterates over all active control and data devices, including reading from
-     *	multiple control devices. It will also manage multiple data devices, but only one data
-     *	device may be active at a time.
-     *
-     *	ARGS:
-     *
-     *	 flags - Bitfield containing the type of channel(s) to read. Looks at DEV_IS_CTRL and
-     *			 DEV_IS_DATA bits in the device flag field. 'Flags' is loaded with the flags of
-     *			 the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
-     *
-     *   size -  Returns the size of the completed buffer, including the NUL termination character.
-     *			 Lines may be returned truncated the the length of the serial input buffer if the text
-     *			 from the physical device is longer than the read buffer for the device. The size value
-     *			 provided as a calling argument is ignored (size doesn't matter).
-     *
-     *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
-     */
-    char_t *readline(devflags_t &flags, uint16_t &size)
-    {
-        char_t *ret_buffer;
-        devflags_t limit_flags = flags; // Store it so it can't get mangled
-
-        for (uint8_t dev=0; dev < DEV_MAX; dev++) {
-            if (!DeviceWrappers[dev]->isActive())
-                continue;
-
-            // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
-            if (limit_flags == DEV_IS_CTRL && ( (DeviceWrappers[dev]->flags & (DEV_IS_CTRL|DEV_IS_DATA)) != DEV_IS_CTRL )) // the types need to match
-                continue;
-
-            ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
-
-            if (size > 0) {
-                flags = DeviceWrappers[dev]->flags;
-                return ret_buffer;
-            }
-        }
-        size = 0;
-        flags = 0;
-        return (NULL);
-    };
-    
-    uint16_t magic_end;
-};
-
-// Declare (but don't define) the xio singelton object now, define it later
-// Why? xioDeviceWrapper uses it, but we need to define it to contain xioDeviceWrapper objects.
-extern xio_t xio;
 
 
 #endif // XIO_H_ONCE
