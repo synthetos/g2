@@ -70,14 +70,6 @@
 #include "MotateUSBCDC.h"
 #include "MotateSPI.h"
 
-/*
- **** HIGH LEVEL EXPLANATION OF XIO ****
- *
- * The XIO subsystem serves two purposes.
-
- ***************************************/
-
-
 
 /**** Defines, Macros, and  Assorted Parameters ****/
 
