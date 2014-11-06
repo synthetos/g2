@@ -239,7 +239,7 @@ void controller_set_connected(bool is_connected) {
 static stat_t _dispatch_command()
 {
 	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
         _dispatch_kernel();
 	return (STAT_OK);
 }
@@ -247,7 +247,7 @@ static stat_t _dispatch_command()
 static stat_t _dispatch_control()
 {
 	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = readline(flags, cs.linelen)) != NULL)
+	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
         _dispatch_kernel();
 	return (STAT_OK);
 }

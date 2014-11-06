@@ -97,7 +97,6 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 #define DEV_IS_PRIMARY		(0x0004)		// device is the primary control channel
 
 // device connection state
-//#define DEV_IS_DISCONNECTED	(0x0010)		// device just disconnected (transient state)
 #define DEV_IS_CONNECTED	(0x0020)		// device is connected (e.g. USB)
 #define DEV_IS_READY		(0x0040)		// device is ready for use
 #define DEV_IS_ACTIVE		(0x0080)		// device is active
@@ -133,10 +132,10 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
 void xio_init(void);
 stat_t xio_test_assertions(void);
-void xio_flush_device(devflags_t flags);
 
-char_t *readline(devflags_t &flags, uint16_t &size);
-size_t write(const uint8_t *buffer, size_t size);
+char_t *xio_readline(devflags_t &flags, uint16_t &size);
+void xio_flush_read();
+size_t xio_write(const uint8_t *buffer, size_t size);
 
 stat_t xio_set_spi(nvObj_t *nv);
 

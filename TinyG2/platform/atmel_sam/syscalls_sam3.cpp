@@ -116,7 +116,7 @@ extern "C" {
 
     extern int _write( int file, char *ptr, int len )
     {
-        return write((const uint8_t *)ptr, len);
+        return xio_write((const uint8_t *)ptr, len);
     }
     
     extern void _exit( int status )
