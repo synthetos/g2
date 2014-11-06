@@ -198,21 +198,35 @@ static void _controller_HSM()
 }
 
 /*****************************************************************************************
- * _controller_state() - manage conrtroller connection, startup, and other state changes
+ * _controller_state() - manage controller connection, startup, and other state changes
  */
 
 static stat_t _controller_state()
 {
-#ifdef __AVR
-	if (cs.controller_state <= CONTROLLER_STARTUP) {		// first time through after reset
+	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-		cm_request_queue_flush();
+        // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
-#endif // __AVR
 
     return (STAT_OK);
 }
+
+/*****************************************************************************************
+ * controller_set_connected(bool) - hook for the xio system to tell the controller tha we
+ * have/don't have a connection.
+ */
+
+void controller_set_connected(bool is_connected) {
+    if (is_connected) {
+        // we JUST connected
+        cs.controller_state = CONTROLLER_CONNECTED;
+    } else {
+        // we just disconnected from the last device, we'll expext a banner again
+        cs.controller_state = CONTROLLER_NOT_CONNECTED;
+    }
+}
+
 
 /*****************************************************************************
  * command dispatchers
@@ -251,9 +265,12 @@ static void _dispatch_kernel()
 		}
 
 	// included for AVR diagnostics
-	} else if (*cs.bufp == '!') { cm_request_feedhold();
-	} else if (*cs.bufp == '%') { cm_request_queue_flush();
-	} else if (*cs.bufp == '~') { cm_request_cycle_start();
+	} else if (*cs.bufp == '!') {
+        cm_request_feedhold();
+	} else if (*cs.bufp == '%') {
+        cm_request_queue_flush();
+	} else if (*cs.bufp == '~') {
+        cm_request_cycle_start();
 
 	} else if (*cs.bufp == '{') {							// process as JSON mode
 		cs.comm_mode = JSON_MODE;							// switch to JSON mode

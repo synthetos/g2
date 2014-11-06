@@ -92,8 +92,6 @@ stat_t controller_test_assertions(void);
 void controller_run(void);
 //void controller_reset(void);
 
-void controller_reset_source(void);
-void controller_set_primary_source(uint8_t dev);
-void controller_set_secondary_source(uint8_t dev);
+void controller_set_connected(bool is_connected);
 
 #endif // End of include guard: CONTROLLER_H_ONCE

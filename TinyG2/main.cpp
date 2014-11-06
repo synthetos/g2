@@ -156,7 +156,7 @@ static void _application_init(void)
 #endif
 
 	// start the application
-	rpt_print_system_ready_message();// (LAST) announce system is ready
+    // MOVED: report the system is ready is now in xio
 }
 
 /*
