@@ -741,8 +741,6 @@ namespace Motate {
 					{
 						TRACE_CORE(printf(">>> EP0 Int: kSetConfiguration REQUEST_DEVICE %d\r\n", setup.wValueL);)
 
-//						UDD_InitEndpoints(EndPoints, (sizeof(EndPoints) / sizeof(EndPoints[0])));
-
 						// _configuration should be set to 1 for high-speed, and 2 for full-speed
 						_configuration = setup.valueLow();
 
