@@ -247,32 +247,6 @@ void reset_limit_switches(void)
     }
 }
 
-static void _trigger_alarm(switch_t *s)
-{
-    s->limit_switch_thrown = true;
-}
-
-uint8_t get_limit_switch_thrown(void)
-{
-    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
-		for (uint8_t position=0; position<SW_POSITIONS; position++) {
-			if(sw.s[axis][position].limit_switch_thrown) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-void reset_limit_switches(void)
-{
-    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
-		for (uint8_t position=0; position<SW_POSITIONS; position++) {
-			sw.s[axis][position].limit_switch_thrown = false;
-        }
-    }
-}
-
 /*
  * get_switch_mode() - return switch mode setting
  * get_switch_type() - return switch type setting

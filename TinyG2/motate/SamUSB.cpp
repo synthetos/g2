@@ -491,13 +491,6 @@ namespace Motate {
 //             return read;
 //     }
 
-  void _flushReadEndpoint(uint8_t endpoint) {
-      while(_isFIFOControlAvailable(endpoint)) {
-          _clearReceiveOUT(endpoint);
-          _clearFIFOControl(endpoint);
-      }
-      _resetEndpointBuffer(endpoint);
-  }
 
 	void _flushReadEndpoint(uint8_t endpoint) {
 		while(_isFIFOControlAvailable(endpoint)) {

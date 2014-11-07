@@ -1459,7 +1459,7 @@ stat_t cm_start_estop(void)
 		cm.homed[i] = false;
 	cm.homing_state = HOMING_NOT_HOMED;
 #ifdef __ARM
-	xio_flush_device(DEV_IS_DATA);
+    xio_flush_read();
 #endif
 	mp_flush_planner();
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };

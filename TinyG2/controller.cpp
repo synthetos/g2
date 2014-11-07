@@ -165,7 +165,8 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-	DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
+    DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
+    DISPATCH(_controller_state());				// controller state management
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 
@@ -226,7 +227,7 @@ void controller_set_connected(bool is_connected) {
     } else {
         // we just disconnected from the last device, we'll expext a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
-}
+    }
 }
 
 
@@ -274,7 +275,7 @@ static void _dispatch_kernel()
 	} else if (*cs.bufp == '%') {
         cm_request_queue_flush();
 	} else if (*cs.bufp == '~') {
-        cm_request_cycle_start();
+        cm_request_end_hold();
 
 	} else if (*cs.bufp == '{') {							// process as JSON mode
 		cs.comm_mode = JSON_MODE;							// switch to JSON mode
