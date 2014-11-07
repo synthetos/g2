@@ -385,8 +385,8 @@
 		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
-		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
+		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -7620,17 +7620,17 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		E21E39EF193FA91C00D483F8 /* TinyG2 G2V9i */ = {
+		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9i";
-			buildConfigurationList = E21E39F0193FA91C00D483F8 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=UltimakerTests";
+			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = .;
 			dependencies = (
 			);
-			name = "TinyG2 G2V9i";
+			name = "TinyG2 G2Ultimaker";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -7680,8 +7680,8 @@
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
+				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
 				D457112317053BFB00EA19A8 /* index */,
-				E21E39EF193FA91C00D483F8 /* TinyG2 G2V9i */,
 			);
 		};
 /* End PBXProject section */
@@ -7885,7 +7885,6 @@
 				D49EC4F817054FDF00F2BF9B /* arm_fir_decimate_init_f32.c in Sources */,
 				D49EC4F917054FDF00F2BF9B /* arm_fir_decimate_init_q15.c in Sources */,
 				D49EC4FA17054FDF00F2BF9B /* arm_fir_decimate_init_q31.c in Sources */,
-				E2986EDC19E490B400B73EEA /* UniqueId.cpp in Sources */,
 				D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */,
 				D49EC4FB17054FDF00F2BF9B /* arm_fir_decimate_q15.c in Sources */,
 				D49EC4FC17054FDF00F2BF9B /* arm_fir_decimate_q31.c in Sources */,
@@ -8235,19 +8234,19 @@
 			};
 			name = Release;
 		};
-		E21E39F1193FA91C00D483F8 /* Debug */ = {
+		D4CBBAD21A0D51FE00150DE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/bin";
-				PRODUCT_NAME = "TinyG2 G2V9i";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield copy";
 			};
 			name = Debug;
 		};
-		E21E39F2193FA91C00D483F8 /* Release */ = {
+		D4CBBAD31A0D51FE00150DE2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = "$PATH:/usr/local/bin";
-				PRODUCT_NAME = "TinyG2 G2V9i";
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield copy";
 			};
 			name = Release;
 		};
@@ -8317,11 +8316,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E21E39F0193FA91C00D483F8 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */ = {
+		D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E21E39F1193FA91C00D483F8 /* Debug */,
-				E21E39F2193FA91C00D483F8 /* Release */,
+				D4CBBAD21A0D51FE00150DE2 /* Debug */,
+				D4CBBAD31A0D51FE00150DE2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
