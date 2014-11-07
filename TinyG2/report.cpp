@@ -380,15 +380,10 @@ static uint8_t _populate_filtered_status_report()
 
 		nv_get_nvObj(nv);
 		// do not report values that have not changed...
-		// ...except for stat=3 (STOP), which is an exception
 		if (fp_EQ(nv->value, sr.status_report_value[i])) {
-//			if (nv->index != sr.stat_index) {
-//				if (fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) {
-					nv->valuetype = TYPE_EMPTY;
-					continue;
-//				}
-//			}
-			// report anything that has changed
+			nv->valuetype = TYPE_EMPTY;
+			continue;
+		// report anything that has changed
 		} else {
 			strcpy(tmp, nv->group);		// flatten out groups - WARNING - you cannot use strncpy here...
 			strcat(tmp, nv->token);

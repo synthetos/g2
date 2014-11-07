@@ -105,9 +105,9 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
-
-	// store the flash UUID
-	cacheUniqueId();
+    
+    // Store the flash UUID
+    cacheUniqueId();
 
 	usb.attach();					// USB setup
 	delay(1000);
@@ -127,6 +127,8 @@ static void _application_init(void)
 	cli();
 #endif
 
+	cm.machine_state = MACHINE_INITIALIZING;
+
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
@@ -138,7 +140,7 @@ static void _application_init(void)
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
 	switch_init();					// switches
-	reset_limit_switches(); //reset limit switch alarm flags
+	reset_limit_switches();         // reset limit switch alarm flags
 	pwm_init();						// pulse width modulation drivers
 
 	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
@@ -167,7 +169,7 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-
+    
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled

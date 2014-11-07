@@ -407,6 +407,7 @@ typedef struct stPrepSingleton {
 	uint32_t dda_ticks;					// DDA or dwell ticks for the move
 	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
 	stPrepMotor_t mot[MOTORS];			// prep time motor structs
+	volatile uint8_t exec_isbusy;       // are the stepper interrupts firing?
 	uint16_t magic_end;
 } stPrepSingleton_t;
 
@@ -420,6 +421,7 @@ void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
 uint8_t st_runtime_isbusy(void);
+uint8_t st_exec_isbusy(void);
 void st_reset(void);
 stat_t st_clc(nvObj_t *nv);
 
@@ -429,9 +431,11 @@ void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
 void st_request_exec_move(void);
+void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);		// use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
+void st_request_out_of_band_dwell(float microseconds);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
 stat_t st_set_sa(nvObj_t *nv);

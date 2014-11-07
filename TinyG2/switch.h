@@ -45,8 +45,8 @@
  */
 
 // switch array configuration / sizing
-#define SW_PAIRS				HOMING_AXES	// number of axes that can have switches
-#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW)MAX
+#define SW_PAIRS				HOMING_AXES	// number of axes that can have switches				
+#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW_MAX
 
 // switch modes
 #define SW_HOMING_BIT			0x01
@@ -56,7 +56,7 @@
 #define SW_MODE_HOMING 			SW_HOMING_BIT				 // enable switch for homing only
 #define SW_MODE_LIMIT 			SW_LIMIT_BIT				 // enable switch for limits only
 #define SW_MODE_HOMING_LIMIT   (SW_HOMING_BIT | SW_LIMIT_BIT)// homing and limits
-#define SW_MODE_CUSTOM          0x04         // switch is used for some other function like general I/O
+#define SW_MODE_CUSTOM          0x04
 #define SW_MODE_MAX_VALUE 		SW_MODE_CUSTOM
 
 enum swType {

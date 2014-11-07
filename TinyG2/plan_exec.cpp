@@ -34,6 +34,7 @@
 #include "encoder.h"
 #include "report.h"
 #include "util.h"
+#include "spindle.h"
 
 // execute routines (NB: These are all called from the LO interrupt)
 static stat_t _exec_aline_head(void);
@@ -159,7 +160,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
-		if (cm.hold_state == FEEDHOLD_HOLD) return (STAT_NOOP);	// stops here if holding
+		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
+			mp_start_hold();
+			return (STAT_NOOP);	// stops here if holding
+		}
 
 		// initialization to process the new incoming bf buffer (Gcode block)
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
@@ -168,10 +172,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_OFF;					// reset mr buffer
 			mr.section_state = SECTION_OFF;
-			bf->nx->replannable = false;				// prevent overplanning (Note 2)
+			if(bf->nx->move_state == MOVE_NEW)
+				bf->nx->replannable = false;				// prevent overplanning (Note 2)
 			st_prep_null();								// call this to keep the loader happy
-			if (mp_free_run_buffer()) cm_cycle_end();	// free buffer & end cycle if planner is empty
-			return (STAT_NOOP);
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) cm_cycle_end();	// free buffer & end cycle if planner is empty
+			return (STAT_OK);
 		}
 		bf->move_state = MOVE_RUN;
 		mr.move_state = MOVE_RUN;
@@ -211,11 +216,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (cm.hold_state == FEEDHOLD_SYNC) { cm.hold_state = FEEDHOLD_PLAN;}
 
 	// Look for the end of the decel to go into HOLD state
-	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
-		cm.hold_state = FEEDHOLD_HOLD;
-		cm_set_motion_state(MOTION_HOLD);
-		sr_request_status_report(SR_REQUEST_IMMEDIATE);
-	}
+	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity))
+        cm.hold_state = FEEDHOLD_READY_TO_HOLD;
 
 	// There are 3 things that can happen here depending on return conditions:
 	//	  status		bf->move_state		Description
@@ -229,9 +231,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
-		bf->nx->replannable = false;					// prevent overplanning (Note 2)
+		if(bf->nx->move_state == MOVE_NEW)
+			bf->nx->replannable = false;					// prevent overplanning (Note 2)
 		if (bf->move_state == MOVE_RUN) {
-			if (mp_free_run_buffer()) cm_cycle_end();	// free buffer & end cycle if planner is empty
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+				cm_cycle_end();	// free buffer & end cycle if planner is empty
 		}
 	}
 	return (status);
@@ -524,7 +528,7 @@ static stat_t _exec_aline_segment()
 	// Don't do waypoint correction if you are going into a hold.
 
 	if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
-		(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_MACHINING)) {
+		(cm.motion_state != MOTION_HOLD)) {
 		copy_vector(mr.gm.target, mr.waypoint[mr.section]);
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;

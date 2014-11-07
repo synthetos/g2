@@ -153,8 +153,8 @@ static void _set_defa(nvObj_t *nv, bool print)
 		}
 	}
 	sr_init_status_report();					// reset status reports
-	if(print)
-		rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+    if(print)
+        rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
 }
 
 stat_t set_defaults(nvObj_t *nv)

@@ -44,6 +44,7 @@
 #include "help.h"
 #include "util.h"
 #include "xio.h"
+#include "settings.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -63,10 +64,10 @@ static void _controller_HSM(void);
 static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
+static stat_t _interlock_estop_handler(void);
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
-
 static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
@@ -164,7 +165,7 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-	DISPATCH(_controller_state());				// controller state management
+	DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 
@@ -205,11 +206,12 @@ static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
+		cm_request_queue_flush();
         // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
 
-    return (STAT_OK);
+	return (STAT_OK);
 }
 
 /*****************************************************************************************
@@ -224,23 +226,25 @@ void controller_set_connected(bool is_connected) {
     } else {
         // we just disconnected from the last device, we'll expext a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
-    }
+}
 }
 
 
 /*****************************************************************************
  * command dispatchers
  * _dispatch_command - entry point for control and data dispatches
- * _dispatch_control - entry point for control-0nly dispatches
+ * _dispatch_control - entry point for control-only dispatches
  * _dispatch_kernel - core dispatch routines
  *
  *	Reads next command line and dispatches to relevant parser or action
  */
 static stat_t _dispatch_command()
 {
-	devflags_t flags = DEV_IS_BOTH;
-	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
-        _dispatch_kernel();
+	if(cm.estop_state == 0) {
+		devflags_t flags = DEV_IS_BOTH;
+		if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
+        	_dispatch_kernel();
+	}
 	return (STAT_OK);
 }
 
@@ -415,12 +419,45 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-/*
-	if (cm_get_machine_state() == MACHINE_ALARM) { return (STAT_NOOP);}
-	if (get_limit_switch_thrown() == false) return (STAT_NOOP);
-	return(cm_hard_alarm(STAT_LIMIT_SWITCH_HIT));
-*/
+	if (get_limit_switch_thrown() == false) {
+        return (STAT_NOOP);
+    } else {
+        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT);
+    }
+}
+
+static stat_t _interlock_estop_handler(void)
+{
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+	bool report = false;
+	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
+		cm.interlock_state = 1;
+		if(cm.gm.spindle_mode != SPINDLE_OFF)
+			cm_request_feedhold();
+		report = true;
+	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
+		cm.interlock_state = 0;
+		report = true;
+	}
+	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
+		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
+		report = true;
+		cm_start_estop();
+	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
+		cm.estop_state &= ~ESTOP_PRESSED;
+		report = true;
+	}
+	if(cm.estop_state == ESTOP_ACTIVE) {
+        cm.estop_state = 0;
+		cm_end_estop();
+		report = true;
+	}
+	if(report)
+		sr_request_status_report(SR_REQUEST_IMMEDIATE);
 	return (STAT_OK);
+#else
+	return (STAT_OK);
+#endif
 }
 
 /*
