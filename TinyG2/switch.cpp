@@ -99,10 +99,13 @@ void switch_reset(void)
 			// functions bound to each switch
 			s->when_open = _no_action;
 			s->when_closed = _no_action;
-            if(s->mode & SW_LIMIT_BIT)
+            if(s->mode & SW_LIMIT_BIT) {
                 s->on_leading = _trigger_alarm;
+            }
             else
+            {
                 s->on_leading = _no_action;
+            }
 			s->on_trailing = _no_action;
 		}
 	}

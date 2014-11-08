@@ -51,8 +51,8 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t homing_switch_position;	// min/max position of current homing switch
 	int8_t limit_switch_axis;		// axis of current limit switch, or -1 if none
 	uint8_t limit_switch_position;	// min/max position of current limit switch
-  void (*switch_saved_on_leading)(struct swSwitch *s);
-  void (*switch_saved_on_trailing)(struct swSwitch *s);
+    void (*switch_saved_on_leading)(struct swSwitch *s);
+    void (*switch_saved_on_trailing)(struct swSwitch *s);
 #endif
 
 	uint8_t homing_closed;			// 0=open, 1=closed
@@ -317,12 +317,6 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.latch_backoff = -cm.a[axis].latch_backoff;		// latch travels in negative direction
 		hm.zero_backoff = -cm.a[axis].zero_backoff;
 	}
-    
-	switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
-	hm.switch_saved_on_leading = s->on_leading;
-	hm.switch_saved_on_trailing = s->on_trailing;
-	s->on_leading = _homing_trigger_feedhold;
-	s->on_trailing = _homing_trigger_feedhold;
 
 	// if homing is disabled for the axis then skip to the next axis
 #ifndef __NEW_SWITCHES
@@ -333,9 +327,8 @@ static stat_t _homing_axis_start(int8_t axis)
 	// disable the limit switch parameter if there is no limit switch
 	if (get_switch_mode(hm.limit_switch) == SW_MODE_DISABLED) hm.limit_switch = -1;
 #else
-//	switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
-//	_bind_switch_settings(s);
-	_bind_switch_settings(&sw.s[hm.homing_switch_axis][hm.homing_switch_position]);
+	switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
+	_bind_switch_settings(s);
 
 	uint8_t sw_mode = get_switch_mode(hm.homing_switch_axis, hm.homing_switch_position);
 	if ((sw_mode != SW_MODE_HOMING) && (sw_mode != SW_MODE_HOMING_LIMIT)) {
@@ -388,8 +381,8 @@ static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 
 static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
 {
-  // since _homing_axis_latch ends when the switch state changes
-  mp_flush_planner();
+    // since _homing_axis_latch ends when the switch state changes
+    mp_flush_planner();
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_set_zero));
 }
@@ -405,11 +398,9 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 	cm_set_axis_jerk(axis, hm.saved_jerk);					// restore the max jerk value
 
 #ifdef __NEW_SWITCHES
-  // restore the proper handling of the limit switch
-  switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
-  s->on_leading = hm.switch_saved_on_leading;
-  s->on_trailing = hm.switch_saved_on_trailing;
-	_restore_switch_settings(&sw.s[hm.homing_switch_axis][hm.homing_switch_position]);
+    // restore the proper handling of the limit switch
+    switch_t *s = &sw.s[hm.homing_switch_axis][hm.homing_switch_position];
+	_restore_switch_settings(s);
 #endif
 	return (_set_homing_func(_homing_axis_start));
 }
