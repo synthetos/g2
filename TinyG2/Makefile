@@ -47,6 +47,9 @@ USER_LIBS =
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
+# SETTINGS_FILE may get overriden by the PLATFORM setings below
+SETTINGS_FILE ?= settings_default.h
+
 CFLAGS   :=
 CPPFLAGS :=
 
