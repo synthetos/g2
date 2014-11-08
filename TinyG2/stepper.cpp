@@ -72,7 +72,8 @@ Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
 
 // Motor structures
-template<pin_number step_num,			// Setup a stepper template to hold our pins
+template<const uint8_t motor,
+         pin_number step_num,			// Setup a stepper template to hold our pins
 		 pin_number dir_num,
 		 pin_number enable_num,
 		 pin_number ms0_num,
@@ -84,43 +85,75 @@ struct Stepper {
 	/* stepper pin assignments */
 
 	OutputPin<step_num> step;
-	OutputPin<dir_num> dir;
-	OutputPin<enable_num> enable;
+	OutputPin<dir_num> _dir;
+	OutputPin<enable_num> _enable;
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
 	OutputPin<ms2_num> ms2;
-	PWMOutputPin<vref_num> vref;
+	PWMOutputPin<vref_num> _vref;
 
 	/* stepper default values */
 
 	// sets default pwm freq for all motor vrefs (comment line also sets HiZ)
-	Stepper(const uint32_t frequency = 500000) : vref(frequency) {};
+	Stepper(const uint32_t frequency = 500000) : _vref(frequency) {
+        setDirection(STEP_INITIAL_DIRECTION);
+    };
 //	Stepper(const uint32_t frequency = 100000) : vref(kDriveLowOnly, frequency) {};
 
 	/* functions bound to stepper structures */
 
 	void setMicrosteps(const uint8_t microsteps)
 	{
-		switch (microsteps) {
-			case ( 1): { ms2=0; ms1=0; ms0=0; break; }
-			case ( 2): { ms2=0; ms1=0; ms0=1; break; }
-			case ( 4): { ms2=0; ms1=1; ms0=0; break; }
-			case ( 8): { ms2=0; ms1=1; ms0=1; break; }
-			case (16): { ms2=1; ms1=0; ms0=0; break; }
-			case (32): { ms2=1; ms1=0; ms0=1; break; }
-		}
+        if (!_enable.isNull()) {
+            switch (microsteps) {
+                case ( 1): { ms2=0; ms1=0; ms0=0; break; }
+                case ( 2): { ms2=0; ms1=0; ms0=1; break; }
+                case ( 4): { ms2=0; ms1=1; ms0=0; break; }
+                case ( 8): { ms2=0; ms1=1; ms0=1; break; }
+                case (16): { ms2=1; ms1=0; ms0=0; break; }
+                case (32): { ms2=1; ms1=0; ms0=1; break; }
+            }
+        }
 	};
 
-	void energize(const uint8_t motor)
+	void enable()
 	{
-		if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED) {
-			enable.clear();
-			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
-		}
+        if (!_enable.isNull()) {
+            if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED) {
+                _enable.clear();
+                st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
+            }
+        }
 	};
+
+    void disable()
+    {
+        if (!_enable.isNull()) {
+            _enable.set();
+            st_run.mot[motor].power_state = MOTOR_IDLE;
+        }
+    };
+
+    void setDirection(uint8_t new_direction) {
+        if (!_enable.isNull()) {
+            if (new_direction == DIRECTION_CW) {
+                _dir.clear();
+            } else {
+                _dir.set(); // set the bit for CCW motion
+            }
+        }
+    };
+
+    void setVref(float new_vref) {
+        if (!_enable.isNull()) {
+            _vref = new_vref;
+        }
+    };
+
 };
 
-Stepper<kSocket1_StepPinNumber,
+Stepper<MOTOR_1,
+        kSocket1_StepPinNumber,
 		kSocket1_DirPinNumber,
 		kSocket1_EnablePinNumber,
 		kSocket1_Microstep_0PinNumber,
@@ -128,7 +161,8 @@ Stepper<kSocket1_StepPinNumber,
 		kSocket1_Microstep_2PinNumber,
 		kSocket1_VrefPinNumber> motor_1;
 
-Stepper<kSocket2_StepPinNumber,
+Stepper<MOTOR_2,
+        kSocket2_StepPinNumber,
 		kSocket2_DirPinNumber,
 		kSocket2_EnablePinNumber,
 		kSocket2_Microstep_0PinNumber,
@@ -136,7 +170,8 @@ Stepper<kSocket2_StepPinNumber,
 		kSocket2_Microstep_2PinNumber,
 		kSocket2_VrefPinNumber> motor_2;
 
-Stepper<kSocket3_StepPinNumber,
+Stepper<MOTOR_3,
+        kSocket3_StepPinNumber,
 		kSocket3_DirPinNumber,
 		kSocket3_EnablePinNumber,
 		kSocket3_Microstep_0PinNumber,
@@ -144,7 +179,8 @@ Stepper<kSocket3_StepPinNumber,
 		kSocket3_Microstep_2PinNumber,
 		kSocket3_VrefPinNumber> motor_3;
 
-Stepper<kSocket4_StepPinNumber,
+Stepper<MOTOR_4,
+        kSocket4_StepPinNumber,
 		kSocket4_DirPinNumber,
 		kSocket4_EnablePinNumber,
 		kSocket4_Microstep_0PinNumber,
@@ -152,7 +188,8 @@ Stepper<kSocket4_StepPinNumber,
 		kSocket4_Microstep_2PinNumber,
 		kSocket4_VrefPinNumber> motor_4;
 
-Stepper<kSocket5_StepPinNumber,
+Stepper<MOTOR_5,
+        kSocket5_StepPinNumber,
 		kSocket5_DirPinNumber,
 		kSocket5_EnablePinNumber,
 		kSocket5_Microstep_0PinNumber,
@@ -160,7 +197,8 @@ Stepper<kSocket5_StepPinNumber,
 		kSocket5_Microstep_2PinNumber,
 		kSocket5_VrefPinNumber> motor_5;
 
-Stepper<kSocket6_StepPinNumber,
+Stepper<MOTOR_6,
+        kSocket6_StepPinNumber,
 		kSocket6_DirPinNumber,
 		kSocket6_EnablePinNumber,
 		kSocket6_Microstep_0PinNumber,
@@ -324,6 +362,7 @@ void st_reset()
 {
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
+        st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
 		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
 	}
@@ -365,12 +404,12 @@ static void _deenergize_motor(const uint8_t motor)
 #endif
 #ifdef __ARM
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.enable.set();	// set disables the motor
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.enable.set();
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.enable.set();
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.enable.set();
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.enable.set();
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.enable.set();
+    if (motor == MOTOR_1) motor_1.disable();	// set disables the motor
+	if (motor == MOTOR_2) motor_2.disable();
+    if (motor == MOTOR_3) motor_3.disable();
+    if (motor == MOTOR_4) motor_4.disable();
+    if (motor == MOTOR_5) motor_5.disable();
+    if (motor == MOTOR_6) motor_6.disable();
 	st_run.mot[motor].power_state = MOTOR_OFF;
 #endif
 }
@@ -391,13 +430,12 @@ static void _energize_motor(const uint8_t motor, float timeout_seconds)
 #endif
 #ifdef __ARM
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
-	//	case (MOTOR_1): { motor_1.energize(MOTOR_1); break; }
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.energize(MOTOR_1);
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.energize(MOTOR_2);
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.energize(MOTOR_3);
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.energize(MOTOR_4);
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.energize(MOTOR_5);
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.energize(MOTOR_6);
+	if (motor == MOTOR_1) motor_1.enable();
+	if (motor == MOTOR_2) motor_2.enable();
+	if (motor == MOTOR_3) motor_3.enable();
+	if (motor == MOTOR_4) motor_4.enable();
+	if (motor == MOTOR_5) motor_5.enable();
+	if (motor == MOTOR_6) motor_6.enable();
 #endif
 
 	st_run.mot[motor].power_systick = SysTickTimer_getValue() + (timeout_seconds * 1000);
@@ -415,12 +453,12 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 {
 #ifdef __ARM
 	// power_level must be scaled properly for the driver's Vref voltage requirements
-	if (!motor_1.enable.isNull()) if (motor == MOTOR_1) motor_1.vref = power_level;
-	if (!motor_2.enable.isNull()) if (motor == MOTOR_2) motor_2.vref = power_level;
-	if (!motor_3.enable.isNull()) if (motor == MOTOR_3) motor_3.vref = power_level;
-	if (!motor_4.enable.isNull()) if (motor == MOTOR_4) motor_4.vref = power_level;
-	if (!motor_5.enable.isNull()) if (motor == MOTOR_5) motor_5.vref = power_level;
-	if (!motor_6.enable.isNull()) if (motor == MOTOR_6) motor_6.vref = power_level;
+	if (motor == MOTOR_1) motor_1.setVref(power_level);
+	if (motor == MOTOR_2) motor_2.setVref(power_level);
+	if (motor == MOTOR_3) motor_3.setVref(power_level);
+	if (motor == MOTOR_4) motor_4.setVref(power_level);
+	if (motor == MOTOR_5) motor_5.setVref(power_level);
+	if (motor == MOTOR_6) motor_6.setVref(power_level);
 #endif
 }
 
@@ -797,17 +835,17 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
 				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
-				st_pre.mot[MOTOR_1].direction == DIRECTION_CW ? motor_1.dir.clear() : motor_1.dir.set(); // set the bit for CCW motion
+                motor_1.setDirection(st_pre.mot[MOTOR_1].direction);
 			}
 
 			// Enable the stepper and start motor power management
-			motor_1.energize(MOTOR_1);										// enable the motor (clear the ~Enable line)
+			motor_1.enable();								// enable the motor (clear the ~Enable line)
 			st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
 
 		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
 			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-				motor_1.energize(MOTOR_1);									// energize motor
+				motor_1.enable();									// energize motor
 				st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
 			}
 		}
@@ -823,14 +861,13 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
 				st_pre.mot[MOTOR_2].prev_direction = st_pre.mot[MOTOR_2].direction;
 				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
-				st_pre.mot[MOTOR_2].direction == DIRECTION_CW ? motor_2.dir.clear() : motor_2.dir.set(); // set the bit for CCW motion
+                motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
+
 			}
-			motor_2.energize(MOTOR_2);
-			st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
+			motor_2.enable(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_2, st_pre.mot[MOTOR_2].step_sign);
 		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_2.energize(MOTOR_2);
-			st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
+			motor_2.enable(); st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_2);
 #endif
@@ -843,14 +880,13 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
 				st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
 				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
-				st_pre.mot[MOTOR_3].direction == DIRECTION_CW ? motor_3.dir.clear() : motor_3.dir.set(); // set the bit for CCW motion
+                motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
+
 			}
-			motor_3.energize(MOTOR_3);
-			st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
+			motor_3.enable(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
 		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_3.energize(MOTOR_3);
-			st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
+			motor_3.enable(); st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_3);
 #endif
@@ -863,14 +899,13 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
 				st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
 				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
-				st_pre.mot[MOTOR_4].direction == DIRECTION_CW ? motor_4.dir.clear() : motor_4.dir.set(); // set the bit for CCW motion
+                motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
+
 			}
-			motor_4.energize(MOTOR_4);
-			st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
+			motor_4.enable(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
 		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_4.energize(MOTOR_4);
-			st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
+			motor_4.enable(); st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_4);
 #endif
@@ -883,14 +918,13 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
 				st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
 				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
-				st_pre.mot[MOTOR_5].direction == DIRECTION_CW ? motor_5.dir.clear() : motor_5.dir.set(); // set the bit for CCW motion
+                motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
+
 			}
-			motor_5.energize(MOTOR_5);
-			st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
+			motor_5.enable(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
 		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_5.energize(MOTOR_5);
-			st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
+			motor_5.enable(); st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_5);
 #endif
@@ -903,14 +937,13 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
 				st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
 				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
-				st_pre.mot[MOTOR_6].direction == DIRECTION_CW ? motor_6.dir.clear() : motor_6.dir.set(); // set the bit for CCW motion
+                motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
+
 			}
-			motor_6.energize(MOTOR_6);
-			st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
+			motor_6.enable(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
 		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_6.energize(MOTOR_6);
-			st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
+			motor_6.enable(); st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_6);
 #endif
@@ -1088,12 +1121,12 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
 #ifdef __ARM
 	switch (motor) {
-		if (!motor_1.enable.isNull()) case (MOTOR_1): { motor_1.setMicrosteps(microsteps); break; }
-		if (!motor_2.enable.isNull()) case (MOTOR_2): { motor_2.setMicrosteps(microsteps); break; }
-		if (!motor_3.enable.isNull()) case (MOTOR_3): { motor_3.setMicrosteps(microsteps); break; }
-		if (!motor_4.enable.isNull()) case (MOTOR_4): { motor_4.setMicrosteps(microsteps); break; }
-		if (!motor_5.enable.isNull()) case (MOTOR_5): { motor_5.setMicrosteps(microsteps); break; }
-		if (!motor_6.enable.isNull()) case (MOTOR_6): { motor_6.setMicrosteps(microsteps); break; }
+		case (MOTOR_1): { motor_1.setMicrosteps(microsteps); break; }
+		case (MOTOR_2): { motor_2.setMicrosteps(microsteps); break; }
+		case (MOTOR_3): { motor_3.setMicrosteps(microsteps); break; }
+		case (MOTOR_4): { motor_4.setMicrosteps(microsteps); break; }
+		case (MOTOR_5): { motor_5.setMicrosteps(microsteps); break; }
+		case (MOTOR_6): { motor_6.setMicrosteps(microsteps); break; }
 	}
 #endif //__ARM
 #ifdef __AVR
