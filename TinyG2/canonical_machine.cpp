@@ -148,9 +148,9 @@ static int8_t _get_axis_type(const index_t index);
 uint8_t cm_get_combined_state()
 {
     if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in cycle but macs is not cycle");
     if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
     
     switch(cm.machine_state)
     {
@@ -177,17 +177,17 @@ uint8_t cm_get_combined_state()
                             //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return COMBINED_RUN;
                         default:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "mots has impossible value");
                             return COMBINED_SHUTDOWN;
                     }
                 }
                 default:
-                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"cycs has impossible value"*/);
+                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "cycs has impossible value");
                     return COMBINED_SHUTDOWN;
             }
         }
         default:
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"macs has impossible value"*/);
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "macs has impossible value");
             return COMBINED_SHUTDOWN;
     }
 }
@@ -644,12 +644,12 @@ stat_t cm_hard_alarm(stat_t status)
 //	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
 
 	// build an info string and call the exception report
-	char_t info[64];
+	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
 

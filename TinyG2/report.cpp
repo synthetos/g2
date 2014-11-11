@@ -58,7 +58,7 @@ rxSingleton_t rx;
  *			or there is a potential for deadlock in the TX buffer.
  */
 
-stat_t rpt_exception(uint8_t status, char_t *info)
+stat_t rpt_exception(uint8_t status, const char *info)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
 
