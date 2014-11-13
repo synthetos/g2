@@ -1306,7 +1306,7 @@ stat_t cm_end_hold()
 		cm_cycle_start();
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+			mp_request_out_of_band_dwell(cm.pause_dwell_time);
 		} else {
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_exec_move();

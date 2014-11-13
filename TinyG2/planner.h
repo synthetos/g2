@@ -96,6 +96,8 @@ enum sectionState {
 #define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
 #define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
 
+#define NOM_DWELL_SEGMENT_SEC       NOM_SEGMENT_USEC / MICROSECONDS_PER_SECOND
+
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
 /* PLANNER_STARTUP_DELAY_SECONDS
@@ -244,6 +246,8 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float forward_diff_5;			// forward difference level 5
 
 	GCodeState_t gm;				// gcode model state currently executing
+    
+	float out_of_band_dwell_time;   // timer for dwells that preempt execution of planner contents
 
 	magic_t magic_end;
 } mpMoveRuntimeSingleton_t;
@@ -271,6 +275,11 @@ stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
+
+// causes mp_exec_move to run a dwell of the requested length before continuing
+// to execute planner contents
+void mp_request_out_of_band_dwell(float seconds);
+stat_t mp_exec_out_of_band_dwell(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);
 
