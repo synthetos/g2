@@ -56,6 +56,8 @@
 #define ESTOP_SWITCH_POSITION           SW_MAX
 #undef PAUSE_DWELL_TIME
 #define PAUSE_DWELL_TIME				1.5 //after unpausing and turning the spindle on, dwell for 1.5s
+//how long the ESC takes to boot, in milliseconds
+#define ESC_BOOT_TIME                   5000
 
 // *** settings.h overrides ***
 // Note: there are some commented test values below
@@ -64,7 +66,7 @@
 #define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","ilck","estp","spc"
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE

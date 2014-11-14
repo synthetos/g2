@@ -32,6 +32,7 @@
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
+#include "report.h"
 
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
@@ -88,13 +89,8 @@ stat_t cm_spindle_control(uint8_t spindle_mode)
 {
 	if(cm.gm.spindle_mode & SPINDLE_PAUSED)
 		spindle_mode |= SPINDLE_PAUSED;
-
-	// This is kind of tricky...  If we're in interlock but still moving around, and we get an
-	// M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's anything
-	// in the buffer to actually process the feedhold.  Here, we're just about to add something to the buffer,
-	// so we skip the check.
-	if(cm.interlock_state != 0 && !(spindle_mode & SPINDLE_PAUSED) && spindle_mode != SPINDLE_OFF)
-		cm_start_hold();
+	else
+		cm_cycle_start();
 
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
 	mp_queue_command(_exec_spindle_control, value, value);
@@ -118,9 +114,17 @@ static void _exec_spindle_control(float *value, float *flag)
 
 	if(cm.estop_state != 0) // In E-stop, don't process any spindle commands
 		spindle_mode = raw_spindle_mode = SPINDLE_OFF;
-	else if(paused || cm.interlock_state != 0) // If we're paused or in interlock, send the spindle an "OFF" command (invisible to cm.gm)
+	// If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm.gm),
+	// and issue a hold if necessary
+	else if((paused || cm.safety_state != 0) && raw_spindle_mode != SPINDLE_OFF) {
+		if(!paused) {
+			spindle_mode |= SPINDLE_PAUSED;
+			cm_set_motion_state(MOTION_HOLD);
+			cm.hold_state = FEEDHOLD_HOLD;
+			sr_request_status_report(SR_REQUEST_IMMEDIATE);
+		}
 		raw_spindle_mode = SPINDLE_OFF;
-	//FIXME: else if(we just rebooted the ESC)... delay the pwm command...
+	}
 
 	cm_set_spindle_mode(MODEL, spindle_mode);
 
@@ -168,7 +172,7 @@ static void _exec_spindle_speed(float *value, float *flag)
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
 	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
 	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
-	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused)
+	if(cm.estop_state != 0 || cm.safety_state != 0 || paused)
 		spindle_mode = SPINDLE_OFF;
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) ); // update spindle speed if we're running
 }

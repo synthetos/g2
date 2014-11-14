@@ -755,21 +755,3 @@ stat_t mp_start_hold()
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
     return (STAT_OK);
 }
-
-/*
- * mp_end_hold() - end a feedhold
- */
-stat_t mp_end_hold()
-{
-	if (cm.hold_state == FEEDHOLD_END_HOLD) {
-		cm.hold_state = FEEDHOLD_OFF;
-		mpBuf_t *bf;
-		if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
-			cm_set_motion_state(MOTION_STOP);
-			return (STAT_NOOP);
-		}
-		cm_set_motion_state(MOTION_RUN);
-		//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
-	}
-	return (STAT_OK);
-}
