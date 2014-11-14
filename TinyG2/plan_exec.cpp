@@ -61,7 +61,7 @@ stat_t mp_exec_move()
 {
 	mpBuf_t *bf;
 
-	if ((bf = mp_get_run_buffer()) == NULL) {			// NULL means nothing's running
+	if (cm.hold_state == FEEDHOLD_HOLD || (bf = mp_get_run_buffer()) == NULL) {			// NULL bf means nothing's running
 		st_prep_null();
 		return (STAT_NOOP);
 	}

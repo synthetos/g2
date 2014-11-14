@@ -412,6 +412,7 @@ static stat_t _interlock_estop_handler(void)
 {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 	bool report = false;
+	//Process E-Stop and Interlock signals
 	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.interlock_state = 1;
 		if(cm.gm.spindle_mode != SPINDLE_OFF)
@@ -429,6 +430,20 @@ static stat_t _interlock_estop_handler(void)
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
+
+	//If either of ESTOP or ILCK just ended, we need to enter esc_rebooting mode
+	if(report) {
+		if((cm.estop_state & ESTOP_PRESSED) == 0 && cm.interlock_state == 0) {
+			cm.esc_boot_timer = SysTickTimer_getValue();
+			cm.esc_rebooting = 1;
+		} else
+			cm.esc_rebooting = 0;
+	}
+	//If we're in esc_rebooting mode and the timer's run out, end rebooting_mode
+	if(cm.esc_rebooting && (SysTickTimer_getValue() - cm.esc_boot_timer) > ESC_BOOT_TIME)
+		cm.esc_rebooting = 0;
+
+	//If we've successfully ended all the ESTOP conditions, then end ESTOP
 	if(cm.estop_state == ESTOP_ACTIVE) {
         cm.estop_state = 0;
 		cm_end_estop();

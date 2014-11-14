@@ -254,6 +254,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	uint8_t interlock_state;            // Whether interlock has been triggered
 	uint8_t estop_state;                // Whether estop has been triggered
+	uint32_t esc_boot_timer;            // When the ESC last booted up
+	uint8_t esc_rebooting;
 
 	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
 

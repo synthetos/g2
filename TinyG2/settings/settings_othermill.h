@@ -56,6 +56,8 @@
 #define ESTOP_SWITCH_POSITION           SW_MAX
 #undef PAUSE_DWELL_TIME
 #define PAUSE_DWELL_TIME				1.5 //after unpausing and turning the spindle on, dwell for 1.5s
+//how long the ESC takes to boot, in milliseconds
+#define ESC_BOOT_TIME                   5000
 
 // *** settings.h overrides ***
 // Note: there are some commented test values below

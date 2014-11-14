@@ -578,6 +578,8 @@ void canonical_machine_init()
 	cm.machine_state = MACHINE_READY;
 
 	cm.interlock_state = cm.estop_state = 0;
+	cm.esc_boot_timer = SysTickTimer_getValue();
+	cm.esc_rebooting = 1;
 
 	// sub-system inits
 	cm_spindle_init();
@@ -881,10 +883,11 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL && cm.hold_state != FEEDHOLD_HOLD)
 		cm_cycle_end();
+	if(status == STAT_MINIMUM_LENGTH_MOVE)
 		return (STAT_OK);
-	} else
+	else
 		return (status);
 }
 
@@ -1001,10 +1004,11 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL && cm.hold_state != FEEDHOLD_HOLD)
 		cm_cycle_end();
+	if(status == STAT_MINIMUM_LENGTH_MOVE)
 		return (STAT_OK);
-	} else
+	else
 		return (status);
 }
 
@@ -1264,8 +1268,6 @@ stat_t cm_feedhold_sequencing_callback()
 		if(cm.hold_state == FEEDHOLD_OFF) {
 			if (mp_get_run_buffer() != NULL) {
 				cm_start_hold();
-			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
-				cm_spindle_control_immediate(SPINDLE_OFF);
 			}
 		}
 	}
@@ -1297,23 +1299,20 @@ stat_t cm_start_hold()
 
 stat_t cm_end_hold()
 {
-	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
+	if((cm.interlock_state != 0 || cm.esc_rebooting != 0) && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		return STAT_EAGAIN;
 
-	cm.hold_state = FEEDHOLD_END_HOLD;
-	mp_end_hold();
-	if(cm.motion_state == MOTION_RUN) {
-		cm_cycle_start();
-		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-		} else {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_exec_move();
-		}
-	} else {
-		cm_spindle_control_immediate(SPINDLE_OFF);
+	cm.hold_state = FEEDHOLD_OFF;
+	cm_set_motion_state(MOTION_STOP);
+	if (mp_get_run_buffer() == NULL)	// NULL means nothing's running
 		cm_cycle_end();
+
+	if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+	} else {
+		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+		st_request_exec_move();
 	}
 	return STAT_OK;
 }
