@@ -252,10 +252,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
 
-	uint8_t interlock_state;            // Whether interlock has been triggered
+	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
 	uint8_t estop_state;                // Whether estop has been triggered
 	uint32_t esc_boot_timer;            // When the ESC last booted up
-	uint8_t esc_rebooting;
 
 	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
 
@@ -369,6 +368,17 @@ enum cmEstopState {
     ESTOP_ACTIVE_MASK = 0x4,
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
+};
+
+enum cmSafetyState {
+    SAFETY_INTERLOCK_CLOSED = 0,
+    SAFETY_INTERLOCK_OPEN = 0x1,
+
+    SAFETY_ESC_ONLINE = 0,
+    SAFETY_ESC_REBOOTING = 0x2,
+
+    SAFETY_INTERLOCK_MASK = 0x1,
+    SAFETY_ESC_MASK = 0x2,
 };
 
 /* The difference between NextAction and MotionMode is that NextAction is
@@ -699,7 +709,7 @@ stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
 stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
-stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
+stat_t cm_get_safe(nvObj_t *nv);        // get interlock state
 stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
@@ -739,7 +749,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_dist(nvObj_t *nv);
 	void cm_print_frmo(nvObj_t *nv);
 	void cm_print_tool(nvObj_t *nv);
-	void cm_print_ilck(nvObj_t *nv);
+	void cm_print_safe(nvObj_t *nv);
 	void cm_print_estp(nvObj_t *nv);
 	void cm_print_spc(nvObj_t *nv);
 	void cm_print_sps(nvObj_t *nv);
@@ -803,7 +813,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_dist tx_print_stub
 	#define cm_print_frmo tx_print_stub
 	#define cm_print_tool tx_print_stub
-	#define cm_print_ilck tx_print_stub
+	#define cm_print_safe tx_print_stub
 	#define cm_print_estp tx_print_stub
 	#define cm_print_spc tx_print_stub
 	#define cm_print_sps tx_print_stub

@@ -116,7 +116,7 @@ static void _exec_spindle_control(float *value, float *flag)
 		spindle_mode = raw_spindle_mode = SPINDLE_OFF;
 	// If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm.gm),
 	// and issue a hold if necessary
-	else if((paused || cm.interlock_state != 0 || cm.esc_rebooting) && raw_spindle_mode != SPINDLE_OFF) {
+	else if((paused || cm.safety_state != 0) && raw_spindle_mode != SPINDLE_OFF) {
 		if(!paused) {
 			spindle_mode |= SPINDLE_PAUSED;
 			cm_set_motion_state(MOTION_HOLD);
@@ -172,7 +172,7 @@ static void _exec_spindle_speed(float *value, float *flag)
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
 	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
 	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
-	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused || cm.esc_rebooting)
+	if(cm.estop_state != 0 || cm.safety_state != 0 || paused)
 		spindle_mode = SPINDLE_OFF;
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) ); // update spindle speed if we're running
 }
