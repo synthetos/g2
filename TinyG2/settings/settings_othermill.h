@@ -108,7 +108,7 @@
 
 #define M1_MOTOR_MAP 			AXIS_X				// 1ma
 #define M1_STEP_ANGLE 			1.8					// 1sa
-#define M1_TRAVEL_PER_REV 		5.08				// 1tr
+#define M1_TRAVEL_PER_REV 		4.8768				// 1tr
 #define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
 #define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE 			MOTOR_POWER_MODE	// 1pm		See enum cmMotorPowerMode in stepper.h
@@ -116,7 +116,7 @@
 
 #define M2_MOTOR_MAP 			AXIS_Y
 #define M2_STEP_ANGLE 			1.8
-#define M2_TRAVEL_PER_REV 		5.08
+#define M2_TRAVEL_PER_REV 		4.8768
 #define M2_MICROSTEPS 			8
 #define M2_POLARITY 			1
 #define M2_POWER_MODE 			MOTOR_POWER_MODE
@@ -128,7 +128,7 @@
 #define M3_TRAVEL_PER_REV 		1.27254
 #else
 #define M3_STEP_ANGLE 			1.8
-#define M3_TRAVEL_PER_REV 		5.08
+#define M3_TRAVEL_PER_REV 		4.8768
 #endif
 #define M3_MICROSTEPS 			8
 #define M3_POLARITY 			0
@@ -193,7 +193,7 @@
 #define Y_SEARCH_VELOCITY 		(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 		5
-#define Y_ZERO_BACKOFF 			3
+#define Y_ZERO_BACKOFF 			0
 #define Y_JERK_HOMING			JERK_HOMING
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
