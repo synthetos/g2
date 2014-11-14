@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		074.02 // merging in and cleaning up omco pull-request
+#define TINYG_FIRMWARE_BUILD   		074.03 // Debugging
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

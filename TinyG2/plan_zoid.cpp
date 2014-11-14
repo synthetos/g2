@@ -32,6 +32,13 @@
 #include "report.h"
 #include "util.h"
 
+
+template<typename T>
+inline T our_abs(const T number) {
+    return number < 0 ? -number : number;
+}
+
+
 /*
  * mp_calculate_trapezoid() - calculate trapezoid parameters
  *
@@ -134,35 +141,40 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	bf->head_length = 0;
 	bf->tail_length = 0;
 
+    // Quick sanity check: We can't exit at a speed higher than we cruise.
+    if (bf->exit_velocity > bf->cruise_velocity) {
+        bf->exit_velocity = bf->cruise_velocity;
+    }
+
 	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
-//	float naiive_move_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity);	// real equation
-	float naiive_move_time = bf->length / (bf->entry_velocity + bf->exit_velocity);		// reduced equation
+
+    // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length, and the width is the move time.
+    // This formula is to get the move time (width) from the sides and the area (move length).
+    // The actual formula is T=(2L)/(v_0+v_1) == T/2=L/(v_0+v_1)
+    float naiive_move_time = bf->length / (bf->entry_velocity + bf->exit_velocity);		// reduced equation
 
 	// F case: Block is too short - run time < minimum segment time
 	// Force block into a single segment body with limited velocities
 	// Accept the entry velocity, limit the cruise, and go for the best exit velocity
 	// you can get given the delta_vmax (maximum velocity slew) supportable.
 
-	if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) {		// compensating for reduced equation
+    // B" case: Block is short, but fits into a single body segment
+
+	if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
 		bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
-		bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
+        // Why assume we want to decelerate or accelerate?
+        //bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
+		bf->exit_velocity = bf->cruise_velocity;
 		bf->body_length = bf->length;
 		// We are violating the jerk value but since it's a single segment move we don't use it.
 		return;
 	}
 
-	// B" case: Block is short, but fits into a single body segment
 
-	if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) {		// compensating for reduced equation
-		bf->entry_velocity = bf->pv->exit_velocity;
-		if (fp_NOT_ZERO(bf->entry_velocity)) {
-			bf->cruise_velocity = bf->entry_velocity;
-			bf->exit_velocity = bf->entry_velocity;
-		} else {
-			bf->cruise_velocity = bf->delta_vmax / 2;
-			bf->exit_velocity = bf->delta_vmax;
-		}
-		bf->body_length = bf->length;
+	if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) { // compensating for reduced equation
+        bf->cruise_velocity = bf->length / NOM_SEGMENT_TIME;
+        bf->exit_velocity = bf->cruise_velocity;
+        bf->body_length = bf->length;
 		// We are violating the jerk value but since it's a single segment move we don't use it.
 		return;
 	}
@@ -172,30 +184,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	//	 H' and T' requested-fit cases where the body residual is less than MIN_BODY_LENGTH
 
 	bf->body_length = 0;
-	float minimum_length = mp_get_target_length(bf->entry_velocity, bf->exit_velocity, bf);
-	if (bf->length <= (minimum_length + MIN_BODY_LENGTH)) {	// head-only & tail-only cases
 
-		if (bf->entry_velocity > bf->exit_velocity)	{		// tail-only cases (short decelerations)
-			if (bf->length < minimum_length) { 				// T" (degraded case)
-				bf->entry_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
-			}
-			bf->cruise_velocity = bf->entry_velocity;
-			bf->tail_length = bf->length;
-//			printf("2");
-			return;
-		}
-
-		if (bf->entry_velocity < bf->exit_velocity)	{		// head-only cases (short accelerations)
-			if (bf->length < minimum_length) { 				// H" (degraded case)
-				bf->exit_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-			}
-			bf->cruise_velocity = bf->exit_velocity;
-			bf->head_length = bf->length;
-//			printf("3");
-			return;
-		}
-	}
-	
 	// B case:  Velocities all match (or close enough)
 	//			This occurs frequently in normal gcode files with lots of short lines
 	//			This case is not really necessary, but it shortcuts the remaining tests
@@ -218,10 +207,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
 
 		// Symmetric rate-limited case (HT)
-		if (fabs(bf->entry_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) {
+		if (our_abs(bf->entry_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) {
 			bf->head_length = bf->length/2;
 			bf->tail_length = bf->head_length;
-			bf->cruise_velocity = min(bf->cruise_vmax, mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf));
+//			bf->cruise_velocity = min(bf->cruise_vmax, mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf));
+            bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
 
 			if (bf->head_length < MIN_HEAD_LENGTH) {
 				// Convert this to a body-only move
@@ -231,7 +221,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 				// Average the entry speed and computed best cruise-speed
 				bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
-				bf->entry_velocity = bf->cruise_velocity;
+//				bf->entry_velocity = bf->cruise_velocity;
 				bf->exit_velocity = bf->cruise_velocity;
 			}
 			return;
@@ -307,43 +297,121 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
  *	  T  = time of the entire move
  *    Vi = initial velocity
  *    Vf = final velocity
- *	  T  = 2*sqrt((Vt-Vi)/Jm)
- *	  As = The acceleration at inflection point between convex and concave portions of the S-curve.
- *	  As = (Jm*T)/2
- *    Ar = ramp acceleration
- *	  Ar = As/2 = (Jm*T)/4
  *
- *	mp_get_target_length() is a convenient function for determining the optimal_length (L)
- *	of a line given the initial velocity (Vi), final velocity (Vf) and maximum jerk (Jm).
+ *      TODO: fill in this section with Linear-Pop maths.
  *
- *	The length (distance) equation is derived from:
- *
- *	 a)	L = (Vf-Vi) * T - (Ar*T^2)/2	... which becomes b) with substitutions for Ar and T
- *	 b) L = (Vf-Vi) * 2*sqrt((Vf-Vi)/Jm) - (2*sqrt((Vf-Vi)/Jm) * (Vf-Vi))/2
- *	 c)	L = (Vf-Vi)^(3/2) / sqrt(Jm)	...is an alternate form of b) (see Wolfram Alpha)
- *	 c')L = (Vf-Vi) * sqrt((Vf-Vi)/Jm) ... second alternate form; requires Vf >= Vi
- *
- *	 Notes: Ar = (Jm*T)/4					Ar is ramp acceleration
- *			T  = 2*sqrt((Vf-Vi)/Jm)			T is time
- *			Assumes Vi, Vf and L are positive or zero
- *			Cannot assume Vf>=Vi due to rounding errors and use of PLANNER_VELOCITY_TOLERANCE
- *			  necessitating the introduction of fabs()
- *
- * 	mp_get_target_velocity() is a convenient function for determining Vf target velocity for
- *	a given the initial velocity (Vi), length (L), and maximum jerk (Jm).
- *	Equation d) is b) solved for Vf. Equation e) is c) solved for Vf. Use e) (obviously)
- *
- *	 d)	Vf = (sqrt(L)*(L/sqrt(1/Jm))^(1/6)+(1/Jm)^(1/4)*Vi)/(1/Jm)^(1/4)
- *	 e)	Vf = L^(2/3) * Jm^(1/3) + Vi
- *
- *  FYI: Here's an expression that returns the jerk for a given deltaV and L:
- * 	return(cube(deltaV / (pow(L, 0.66666666))));
  */
+
+
+#define LINEAR_SNAP_MATH
+
+#ifdef LINEAR_SNAP_MATH
+
+//Try 1 constants:
+// sqrt(5)
+//static const float sqrt_five = 2.23606797749979;
+
+// pow(3, 1/4) * sqrt(2)
+//static const float sqrt_two_x_fourthroot_three = 1.861209718204198;
+
+
+//Try 2 constants:
+// Just calling this tl_constant. It's full name is:
+// sqrt(5)/( sqrt(2)pow(3,4) )
+static const float tl_constant = 1.201405707067378;
+
+float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
+{
+    const float j = bf->jerk;
+    const float recip_j = bf->recip_jerk;
+
+    //Try 1 math:
+    //return (sqrt_five * (v_0 + v_1) * sqrt(our_abs(v_1 - v_0) * bf->jerk))/(sqrt_two_x_fourthroot_three * bf->jerk);		// newER formula -- linear POP!
+
+    //Try 2 math (same, but rearranged):
+    return tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+}
+
+
+//static const float SQRT_FIVE_SIXTHS = /* sqrt(5/6) = */ 0.9128709291753;
+
+// Here we define some static constants. Not trusting the compiler to precompile them, we precompute.
+// The naming is somewhat symbolic and very verbose, but still easier to understand that "i", "j", and "k".
+
+//sqrt(3) = 1.732050807568877
+static const float sqrt_3 = 5.196152422706631;
+
+//1/3 = 0.333333333333333
+static const float third = 0.333333333333333;
+
+
+//f is added to the beginning when the first char whould be a number:
+//3*sqrt(3) = 5.196152422706631
+static const float f3_sqrt_3 = 5.196152422706631;
+//27*sqrt(3) = 46.765371804359679
+//static const float f27_sqrt_3 = 46.765371804359679;
+//80*sqrt(3) = 138.56406460551016
+//static const float f80_sqrt_3 = 138.56406460551016;
+
+//4/3*5^(1/3) = 2.279967928902263
+static const float f4_thirds_x_cbrt_5 = 2.279967928902263;
+//1/15*5^(2/3) = 0.194934515880858
+static const float f1_15th_x_2_3_rt_5 = 0.194934515880858;
+
+
+float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
+{
+    // Why const? So that the compiler knows it'll never change once it's computed.
+    // Also, we ensure that it doesn't accidentally change once computed.
+
+    const float j = bf->jerk;
+
+    //v_0^2
+    const float v_0_sq = v_0*v_0;
+    //v_0^3
+    const float v_0_cu = v_0_sq*v_0;
+    //v_0^3*40
+    const float v_0_cu_x_40 = v_0_cu*40;
+
+    //L^2
+    const float L_sq = L*L;
+    //L^2*j*sqrt(3)
+    const float L_sq_x_j_x_sqrt_3 = L_sq * j * sqrt_3;
+    //L^4
+    const float L_fourth = L_sq*L_sq;
+
+    //j^2
+    const float j_sq = j*j;
+
+    // v_1 = 4/3*5^(1/3) *  v_0^2 /(27*sqrt(3)*L^2*j + 40*v_0^3 + 3*sqrt(3)*sqrt(80*sqrt(3)*L^2*j*v_0^3 + 81*L^4*j^2))^(1/3)
+    //        + 1/15*5^(2/3)*(27*sqrt(3)*L^2*j + 40*v_0^3 + 3*sqrt(3)*sqrt(80*sqrt(3)*L^2*j*v_0^3 + 81*L^4*j^2))^(1/3)
+    //        - 1/3*v_0
+
+
+    // chunk_1 = pow( (27 * sqrt(3)*L^2*j     + 40 * v_0^3  + 3*sqrt(3) * sqrt(80 * v_0^3  * sqrt(3)*L^2*j     + 81 * L^4      * j^2 ) ), 1/3)
+    //         = pow( (27 * L_sq_x_j_x_sqrt_3 + 40 * v_0_cu + f3_sqrt_3 * sqrt(80 * v_0_cu * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
+
+    //         = pow( (27 * L_sq_x_j_x_sqrt_3 + 40 * v_0_cu + f3_sqrt_3 * sqrt(2 * 40 * v_0_cu * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
+    //         = pow( (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
+
+    const float chunk_1 = pow( (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third);
+
+    // v_1 = 4/3*5^(1/3)        * v_0^2  / chunk_1  +   1/15*5^(2/3)       * chunk_1  -  1/3  *v_0
+    // v_1 = f4_thirds_x_cbrt_5 * v_0_sq / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third*v_0
+
+    float v_1 = (f4_thirds_x_cbrt_5 * v_0_sq) / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third * v_0;
+    return v_1;
+}
+
+#else 
+// Non LINEAR_SNAP_MATH math:
+
 
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
 {
-//	return (Vi + Vf) * sqrt(fabs(Vf - Vi) * bf->recip_jerk);		// new formula
-	return (fabs(Vi-Vf) * sqrt(fabs(Vi-Vf) * bf->recip_jerk));		// old formula
+    //	return (Vi + Vf) * sqrt(fabs(Vf - Vi) * bf->recip_jerk);		// new formula
+    const float delat_v = our_abs(Vi-Vf);
+   	return (delat_v * sqrt(delat_v * bf->recip_jerk));		// old formula
 }
 
 /* Regarding mp_get_target_velocity:
@@ -390,7 +458,7 @@ float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
  *  J'(x) = (2*Vi*x - Vi² + 3*x²) / L²
  */
 
-#define GET_VELOCITY_ITERATIONS 0		// must be 0, 1, or 2
+#define GET_VELOCITY_ITERATIONS 2		// must be 0, 1, or 2
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 {
     // 0 iterations (a reasonable estimate)
@@ -412,3 +480,6 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
 #endif
     return estimate;
 }
+
+#endif
+// end non-LINEAR_SNAP_MATH
