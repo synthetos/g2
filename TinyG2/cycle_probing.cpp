@@ -281,11 +281,13 @@ static stat_t _probing_finish()
 	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
 
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
+		float position = cm_get_absolute_position(RUNTIME, axis);
+        
 		// if we got here because of a feed hold we need to keep the model position correct
-		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
-
+		cm_set_position(axis, position);
+        
 		// store the probe results
-		cm.probe_results[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+		cm.probe_results[axis] = position;
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
