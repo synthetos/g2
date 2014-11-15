@@ -228,26 +228,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		}
 
 		// Asymmetric HT' rate-limited case. This is relatively expensive but it's not called very often
-		// iteration trap: uint8_t i=0;
-		// iteration trap: if (++i > TRAPEZOID_ITERATION_MAX) { fprintf_P(stderr,PSTR("_calculate_trapezoid() failed to converge"));}
-
-		float computed_velocity = bf->cruise_vmax;
-		do {
-			bf->cruise_velocity = computed_velocity;	// initialize from previous iteration
-			bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
-			bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
-			if (bf->head_length > bf->tail_length) {
-				bf->head_length = (bf->head_length / (bf->head_length + bf->tail_length)) * bf->length;
-				computed_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
-			} else {
-				bf->tail_length = (bf->tail_length / (bf->head_length + bf->tail_length)) * bf->length;
-				computed_velocity = mp_get_target_velocity(bf->exit_velocity, bf->tail_length, bf);
-			}
-			// insert iteration trap here if needed
-		} while ((fabs(bf->cruise_velocity - computed_velocity) / computed_velocity) > TRAPEZOID_ITERATION_ERROR_PERCENT);
 
 		// set velocity and clean up any parts that are too short
-		bf->cruise_velocity = computed_velocity;
+        bf->cruise_velocity = mp_get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
+
 		bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 		bf->tail_length = bf->length - bf->head_length;
 		if (bf->head_length < MIN_HEAD_LENGTH) {
@@ -262,7 +246,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	}
 
 	// Requested-fit cases: remaining of: HBT, HB, BT, BT, H, T, B, cases
-	bf->body_length = bf->length - bf->head_length - bf->tail_length;
+	bf->body_length = bf->length - (bf->head_length + bf->tail_length);
 
 	// If a non-zero body is < minimum length distribute it to the head and/or tail
 	// This will generate small (acceptable) velocity errors in runtime execution
@@ -316,6 +300,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 
 //Try 2 constants:
+// L_c(v_0, v_1, j) = (sqrt(5) (v_0 + v_1) sqrt(j abs(v_1 - v_0))) / (sqrt(2) 3^(1 / 4) j)
+//                     sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
+
 // Just calling this tl_constant. It's full name is:
 // sqrt(5)/( sqrt(2)pow(3,4) )
 static const float tl_constant = 1.201405707067378;
@@ -332,6 +319,53 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
     return tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
 }
 
+
+// sqrt(5) / (2 sqrt(2) nroot(3,4)) = 0.60070285354
+const float mv_constant = 0.60070285354;
+
+float mp_get_meet_velocity(const float v_0, const float v_2, const float L, const mpBuf_t *bf) {
+    //L_d(v_0, v_1, j) = (sqrt(5) abs(v_0 - v_1) (v_0 - 3v_1)) / (2sqrt(2) 3^(1 / 4) sqrt(j abs(v_0 - v_1)) (v_0 - v_1))
+    //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) ( v_0 - 3 v_1) / ( sqrt(j abs(v_0 - v_1)))
+    //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) = 0.60070285354
+
+    const float j = bf->jerk;
+    const float recip_j = bf->recip_jerk;
+
+    float l_c_head, l_c_tail, l_c; // calculated L
+    float l_d_head, l_d_tail, l_d; // claculated derivitave of L with respect to v_1
+
+    // chuncks of precomputed values
+    float sqrt_j_delta_v_0, sqrt_j_delta_v_1;
+
+    // v_1 is our estimated return value.
+    // We estimate with the speed obtained by L/2 traveled from the highest speed of v_0 or v_2.
+    float v_1 = mp_get_target_velocity(max(v_0, v_2), L/2, bf);
+    float last_v_1 = 0;
+
+    while (our_abs(last_v_1 - v_1) < 2) {
+        last_v_1 = v_1;
+
+        // Precompute some common chunks
+        sqrt_j_delta_v_0 = sqrt(j * our_abs(v_1-v_0));
+        sqrt_j_delta_v_1 = sqrt(j * our_abs(v_1-v_2));
+
+        l_c_head = tl_constant * sqrt_j_delta_v_0 * (v_0+v_1) * recip_j;
+        l_c_tail = tl_constant * sqrt_j_delta_v_1 * (v_2+v_1) * recip_j;
+
+        // l_c is our total-length calculation wih the curent v_1 estimate, minus the expected length.
+        // This makes l_c == 0 when v_1 is the correct value.
+        l_c = (l_c_head + l_c_tail) - L;
+
+        // l_d is the derivative of l_c, and is used for the Newton-Raphson iteration.
+        l_d_head = (mv_constant * (v_0 - 3*v_1)) / sqrt_j_delta_v_0;
+        l_d_tail = (mv_constant * (v_2 - 3*v_1)) / sqrt_j_delta_v_1;
+        l_d = l_d_head + l_d_tail;
+
+        v_1 = v_1 - (l_c/l_d);
+    }
+
+    return v_1;
+}
 
 //static const float SQRT_FIVE_SIXTHS = /* sqrt(5/6) = */ 0.9128709291753;
 
