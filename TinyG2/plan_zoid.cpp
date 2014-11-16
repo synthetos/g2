@@ -342,7 +342,9 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
     float v_1 = mp_get_target_velocity(max(v_0, v_2), L/2, bf);
     float last_v_1 = 0;
 
-    while (our_abs(last_v_1 - v_1) < 2) {
+    // Per iteration: 2 sqrt, 2 abs, 6 -, 4 +, 12 *, 3 /
+    int i = 0; // limit the iterations
+    while (i++ < 10 && our_abs(last_v_1 - v_1) < 2) {
         last_v_1 = v_1;
 
         // Precompute some common chunks
@@ -355,6 +357,11 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
         // l_c is our total-length calculation wih the curent v_1 estimate, minus the expected length.
         // This makes l_c == 0 when v_1 is the correct value.
         l_c = (l_c_head + l_c_tail) - L;
+
+        // Early escape -- if we're within 2 of "root" then we can call it good.
+        if (our_abs(l_c) < 2) {
+            break;
+        }
 
         // l_d is the derivative of l_c, and is used for the Newton-Raphson iteration.
         l_d_head = (mv_constant * (v_0 - 3*v_1)) / sqrt_j_delta_v_0;
@@ -373,7 +380,7 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
 // The naming is somewhat symbolic and very verbose, but still easier to understand that "i", "j", and "k".
 
 //sqrt(3) = 1.732050807568877
-static const float sqrt_3 = 5.196152422706631;
+static const float sqrt_3 = 1.732050807568877;
 
 //1/3 = 0.333333333333333
 static const float third = 0.333333333333333;

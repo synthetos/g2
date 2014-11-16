@@ -311,6 +311,7 @@ float* mp_get_planner_position_vector(void);
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
+float mp_get_meet_velocity(const float v_0, const float v_2, const float L, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 
 // plan_exec.c functions
