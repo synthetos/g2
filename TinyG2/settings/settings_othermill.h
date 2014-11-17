@@ -166,7 +166,7 @@
 #define X_VELOCITY_MAX 			1500 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel for soft limits
-#define X_TRAVEL_MAX 			138					// xtr		travel between switches or crashes
+#define X_TRAVEL_MAX 			152					// xtr		travel between switches or crashes
 #define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
@@ -183,7 +183,7 @@
 #define Y_VELOCITY_MAX 			X_VELOCITY_MAX
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN			0
-#define Y_TRAVEL_MAX 			115
+#define Y_TRAVEL_MAX 			125
 #define Y_JERK_MAX 				JERK_MAX
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
@@ -193,7 +193,7 @@
 #define Y_SEARCH_VELOCITY 		(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 		5
-#define Y_ZERO_BACKOFF 			3
+#define Y_ZERO_BACKOFF 			0
 #define Y_JERK_HOMING			JERK_HOMING
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
@@ -203,7 +203,7 @@
 #define Z_VELOCITY_MAX 			X_VELOCITY_MAX
 #endif
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
-#define Z_TRAVEL_MIN			-70
+#define Z_TRAVEL_MIN			-63
 #define Z_TRAVEL_MAX 			0
 #define Z_JERK_MAX 				JERK_MAX			// 200 million
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
@@ -275,10 +275,10 @@
 // *** PWM SPINDLE CONTROL ***
 
 #define P1_PWM_FREQUENCY		100					// in Hz
-#define P1_CW_SPEED_LO			7900				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			12800
-#define P1_CW_PHASE_LO			0.13				// phase [0..1]
-#define P1_CW_PHASE_HI			0.17
+#define P1_CW_SPEED_LO			10000				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			16500
+#define P1_CW_PHASE_LO			0.1164				// phase [0..1]
+#define P1_CW_PHASE_HI			0.1438
 #define P1_CCW_SPEED_LO			0
 #define P1_CCW_SPEED_HI			0
 #define P1_CCW_PHASE_LO			0.1
