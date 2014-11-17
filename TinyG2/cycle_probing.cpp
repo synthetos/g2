@@ -60,6 +60,8 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	// state saved from gcode model
 	uint8_t saved_distance_mode;				// G90,G91 global setting
 	uint8_t saved_coord_system;					// G54 - G59 setting
+    uint8_t saved_feed_rate_mode;
+    float saved_feed_rate;
 	float saved_jerk[AXES];						// saved and restored for each axis
 
 	// probe destination
@@ -170,6 +172,8 @@ static uint8_t _probing_init()
 	// save relevant non-axis parameters from Gcode model
 	pb.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
 	pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
+    pb.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
+    pb.saved_feed_rate = (ACTIVE_MODEL)->feed_rate;
     
 	// set working values
 	cm_set_distance_mode(ABSOLUTE_MODE);
@@ -237,8 +241,6 @@ static stat_t _probing_start()
 #endif
 
 	if( probe==SW_OPEN ) {
-        // FIXME: this should be its own parameter
-//        cm_set_feed_rate(cm.a[AXIS_Z].search_velocity);
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
 	} else {
@@ -252,13 +254,19 @@ static stat_t _probing_start()
  */
 static stat_t _probing_backoff()
 {
+    // Since any motion we take can be ended prematurely by a feedhold...
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+		mp_flush_planner();
+		cm_end_hold();
+	}
+
     // If we've contacted, back off & then record position
     int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
     
     if( probe == SW_CLOSED ) {
         cm.probe_state = PROBE_SUCCEEDED;
-        // FIXME: this should be its own parameter
-        //cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
+        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
+        cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
         cm_straight_feed(pb.start_position, pb.flags);
         return (_set_pb_func(_probing_finish));
     } else {
@@ -273,13 +281,12 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
-#ifndef __NEW_SWITCHES
-	int8_t probe = read_switch(pb.probe_switch);
-#else
-	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-#endif
-	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
-
+    // Since any motion we take can be ended prematurely by a feedhold...
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+		mp_flush_planner();
+		cm_end_hold();
+	}
+    
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 		float position = cm_get_absolute_position(RUNTIME, axis);
         
@@ -335,6 +342,8 @@ static void _probe_restore_settings()
 	// restore coordinate system and distance mode
 	cm_set_coord_system(pb.saved_coord_system);
 	cm_set_distance_mode(pb.saved_distance_mode);
+    cm_set_feed_rate_mode(pb.saved_feed_rate_mode);
+    (MODEL)->feed_rate = pb.saved_feed_rate;
 
 	// update the model with actual position
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);

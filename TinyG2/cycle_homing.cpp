@@ -174,7 +174,7 @@ stat_t cm_homing_cycle_start(void)
 	hm.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
 	hm.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
 	hm.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
-	hm.saved_feed_rate = cm_get_feed_rate(ACTIVE_MODEL);
+	hm.saved_feed_rate = (ACTIVE_MODEL)->feed_rate;
 
 	// set working values
 	cm_set_units_mode(MILLIMETERS);
@@ -365,8 +365,18 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
  	return (_set_homing_func(_homing_axis_search));			// start the search
 }
 
+static void _homing_end_hold()
+{
+    // Since any motion we take can be ended prematurely by a feedhold...
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+		mp_flush_planner();
+		cm_end_hold();
+	}
+}
+
 static stat_t _homing_axis_search(int8_t axis)				// start the search
 {
+	_homing_end_hold();
 	cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);			// use the homing jerk for search onward
 	_homing_axis_move(axis, hm.search_travel, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_latch));
@@ -374,27 +384,26 @@ static stat_t _homing_axis_search(int8_t axis)				// start the search
 
 static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
 {
-	// since _homing_axis_search ends when the switch state changes
-	mp_flush_planner();
+	_homing_end_hold();
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
 	return (_set_homing_func(_homing_axis_zero_backoff));
 }
 
 static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
 {
-	// since _homing_axis_latch ends when the switch state changes
-	mp_flush_planner();
+	_homing_end_hold();
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_set_zero));
 }
 
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
+    _homing_end_hold();
 	if (hm.set_coordinates != false) {
 		cm_set_position(axis, 0);
 		cm.homed[axis] = true;
 	} else { // do not set axis if in G28.4 cycle
-		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
+		cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));
 	}
 	cm_set_axis_jerk(axis, hm.saved_jerk);					// restore the max jerk value
 
@@ -414,9 +423,6 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	vect[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
-	mp_flush_planner();										// don't use cm_request_queue_flush() here
-	if(cm.hold_state == FEEDHOLD_HOLD)
-		cm_end_hold();
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
 }
@@ -465,15 +471,11 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
-	mp_flush_planner(); 									// should be stopped, but in case of switch feedhold.
-	if(cm.hold_state == FEEDHOLD_HOLD);
-		cm_end_hold();
-
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
 	cm_set_feed_rate_mode(hm.saved_feed_rate_mode);
-	cm_set_feed_rate(hm.saved_feed_rate);
+	(MODEL)->feed_rate = hm.saved_feed_rate;
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
 	cm_canned_cycle_end();
 	return (STAT_OK);

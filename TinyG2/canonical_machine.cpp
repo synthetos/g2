@@ -1307,13 +1307,10 @@ stat_t cm_end_hold()
 	if (mp_get_run_buffer() == NULL)	// NULL means nothing's running
 		cm_cycle_end();
 
-	if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+	if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		mp_request_out_of_band_dwell(cm.pause_dwell_time);
-	} else {
-		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-		st_request_exec_move();
-	}
+	cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+	st_request_exec_move();
 	return STAT_OK;
 }
 
