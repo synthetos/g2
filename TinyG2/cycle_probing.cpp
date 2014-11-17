@@ -281,21 +281,24 @@ static stat_t _probing_finish()
 	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
 
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
+		float position = cm_get_absolute_position(RUNTIME, axis);
+        
 		// if we got here because of a feed hold we need to keep the model position correct
-		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
-
+		cm_set_position(axis, position);
+        
 		// store the probe results
-		cm.probe_results[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+		cm.probe_results[axis] = position;
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
 	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
-	if (fp_TRUE(pb.flags[AXIS_X])) printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]);
-	if (fp_TRUE(pb.flags[AXIS_Y])) printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]);
-	if (fp_TRUE(pb.flags[AXIS_Z])) printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]);
-	if (fp_TRUE(pb.flags[AXIS_A])) printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]);
-	if (fp_TRUE(pb.flags[AXIS_B])) printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
-	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
+    // Print the full probe end location along all axes (matches AVR tinyg behavior)
+	printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]);
+	printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]);
+	printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]);
+	printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]);
+	printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
+	printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
 	printf_P(PSTR("}}\n"));
 
 	return (_set_pb_func(_probing_finalize_exit));

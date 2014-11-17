@@ -69,6 +69,12 @@ stat_t mp_exec_move()
 	if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
 		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
 	}
+    
+	// if there's an out-of-band dwell in progress, execute it in lieu of the run buffer
+	if (!fp_ZERO(mr.out_of_band_dwell_time)) {
+		return mp_exec_out_of_band_dwell();
+	}
+    
 	if (bf->bf_func == NULL) return(cm_hard_alarm(STAT_INTERNAL_ERROR));// never supposed to get here
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }

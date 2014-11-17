@@ -1078,18 +1078,6 @@ void st_prep_dwell(float microseconds)
 }
 
 /*
- * st_request_out_of_band_dwell()
- * (only usable while exec isn't running, e.g. in feedhold or stopped states...)
- * add a dwell to the loader without going through the planner buffers
- */
-void st_request_out_of_band_dwell(float microseconds)
-{
-	st_prep_dwell(microseconds);
-	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
-	st_request_load_move();
-}
-
-/*
  * _set_hw_microsteps() - set microsteps in hardware
  *
  *	For now the microsteps is the same as the microsteps (1,2,4,8)
