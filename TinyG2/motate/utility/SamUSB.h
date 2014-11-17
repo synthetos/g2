@@ -192,6 +192,9 @@ namespace Motate {
 		static void _init() {
 			uint32_t endpoint;
 
+			// FORCE disable the USB hardware:
+			UOTGHS->UOTGHS_CTRL &= ~(UOTGHS_CTRL_USBE);
+
 			for (endpoint = 0; endpoint < 10; ++endpoint)
 			{
 				_resetEndpointBuffer(endpoint);
