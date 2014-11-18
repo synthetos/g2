@@ -566,9 +566,16 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 	b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
 
 	float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
-	float sintheta_over2 = sqrt((1 - costheta)/2);
-	float radius = delta * sintheta_over2 / (1-sintheta_over2);
-	return(sqrt(radius * cm.junction_acceleration));
+
+#if NEW_JUNCTION
+    float delta_over_costheta = delta / costheta;
+    float radius = sqrt(delta_over_costheta * delta_over_costheta - delta * delta);
+	return((radius * cm.junction_acceleration) / delta);
+#else
+    float sintheta_over2 = sqrt((1 - costheta)/2);
+    float radius = delta * sintheta_over2 / (1-sintheta_over2);
+    return(sqrt(radius * cm.junction_acceleration));
+#endif
 }
 
 /*************************************************************************
