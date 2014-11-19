@@ -417,33 +417,50 @@ static stat_t _interlock_estop_handler(void)
 		cm.safety_state |= SAFETY_INTERLOCK_OPEN;
 		if(cm.gm.spindle_mode != SPINDLE_OFF)
 			cm_request_feedhold();
-		report = true;
+        //If we just entered interlock and we're not off, start the lockout timer
+        if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE || (cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
+            cm.esc_lockout_timer = SysTickTimer_getValue();
+            cm.safety_state |= SAFETY_ESC_LOCKOUT;
+        }
+        report = true;
 	} else if((cm.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
 		cm.safety_state &= ~SAFETY_INTERLOCK_OPEN;
+        //If we just left interlock, stop the lockout timer
+        if((cm.safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT)
+            cm.safety_state &= ~SAFETY_ESC_LOCKOUT;
 		report = true;
 	}
 	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
 		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
-		report = true;
 		cm_start_estop();
+        //E-stop always sets the ESC to off
+        cm.safety_state &= ~SAFETY_ESC_MASK;
+        cm.safety_state |= SAFETY_ESC_OFFLINE;
+        report = true;
 	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
-
-	//If either of ESTOP or ILCK just ended, we need to enter esc_rebooting mode
-	if(report) {
-		if((cm.estop_state & ESTOP_PRESSED) == 0 && (cm.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
-			cm.esc_boot_timer = SysTickTimer_getValue();
-			cm.safety_state |= SAFETY_ESC_REBOOTING;
-		} else
-			cm.safety_state &= ~SAFETY_ESC_REBOOTING;
-	}
-	//If we're in esc_rebooting mode and the timer's run out, end rebooting_mode
-	if((cm.safety_state & SAFETY_ESC_REBOOTING) && (SysTickTimer_getValue() - cm.esc_boot_timer) > ESC_BOOT_TIME) {
-		cm.safety_state &= ~SAFETY_ESC_REBOOTING;
-		report = true;
-	}
+    
+    //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
+    if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm.estop_state & ESTOP_PRESSED) == 0 && (cm.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
+        cm.safety_state &= ~SAFETY_ESC_MASK;
+        cm.safety_state |= SAFETY_ESC_REBOOTING;
+        cm.esc_boot_timer = SysTickTimer_getValue();
+        report = true;
+    }
+    
+    //Check if ESC lockout timer or reboot timer have expired
+    uint32_t now = SysTickTimer_getValue();
+    if((cm.safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm.esc_lockout_timer) > ESC_LOCKOUT_TIME) {
+        cm.safety_state &= ~SAFETY_ESC_MASK;
+        cm.safety_state |= SAFETY_ESC_OFFLINE;
+        report = true;
+    }
+    if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && (now - cm.esc_boot_timer) > ESC_BOOT_TIME) {
+        cm.safety_state &= ~SAFETY_ESC_MASK;
+        report = true;
+    }
 
 	//If we've successfully ended all the ESTOP conditions, then end ESTOP
 	if(cm.estop_state == ESTOP_ACTIVE) {

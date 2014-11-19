@@ -255,6 +255,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
 	uint8_t estop_state;                // Whether estop has been triggered
 	uint32_t esc_boot_timer;            // When the ESC last booted up
+    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
 
 	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
 
@@ -375,10 +376,13 @@ enum cmSafetyState {
     SAFETY_INTERLOCK_OPEN = 0x1,
 
     SAFETY_ESC_ONLINE = 0,
-    SAFETY_ESC_REBOOTING = 0x2,
+    SAFETY_ESC_OFFLINE = 0x2,
+    SAFETY_ESC_LOCKOUT = 0x4,
+    SAFETY_ESC_REBOOTING = 0x8,
+    SAFETY_ESC_LOCKOUT_AND_REBOOTING = 0xC,
 
     SAFETY_INTERLOCK_MASK = 0x1,
-    SAFETY_ESC_MASK = 0x2,
+    SAFETY_ESC_MASK = 0xE,
 };
 
 /* The difference between NextAction and MotionMode is that NextAction is

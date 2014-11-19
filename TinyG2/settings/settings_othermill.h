@@ -58,6 +58,8 @@
 #define PAUSE_DWELL_TIME				1.5 //after unpausing and turning the spindle on, dwell for 1.5s
 //how long the ESC takes to boot, in milliseconds
 #define ESC_BOOT_TIME                   5000
+//how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
+#define ESC_LOCKOUT_TIME                900
 
 // *** settings.h overrides ***
 // Note: there are some commented test values below

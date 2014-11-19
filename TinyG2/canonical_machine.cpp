@@ -1299,7 +1299,7 @@ stat_t cm_start_hold()
 
 stat_t cm_end_hold()
 {
-	if((cm.safety_state & (SAFETY_ESC_REBOOTING | SAFETY_INTERLOCK_OPEN)) != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
+	if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		return STAT_EAGAIN;
 
 	cm.hold_state = FEEDHOLD_OFF;
@@ -1458,6 +1458,7 @@ stat_t cm_start_estop(void)
 	xio_flush_device(DEV_IS_DATA);
 #endif
 	mp_flush_planner();
+    cm.hold_state = FEEDHOLD_OFF;
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
 	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
@@ -1608,7 +1609,7 @@ static const char msg_estp1[] PROGMEM = "E-Stop Circuit Closed but unacked";
 static const char msg_estp2[] PROGMEM = "E-Stop Circuit Broken and acked";
 static const char msg_estp3[] PROGMEM = "E-Stop Circuit Broken and unacked";
 // Don't worry about indicating the "Active" state
-static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2, msg_estp3, msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
+static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
 
 #else
 
@@ -1723,8 +1724,14 @@ stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_pa
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
-stat_t cm_get_safe(nvObj_t *nv) { return(_get_msg_helper(nv, msg_safe, cm.safety_state)); }
-stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_state)); }
+stat_t cm_get_safe(nvObj_t *nv) {
+    uint8_t safe = 0;
+    if((cm.safety_state & SAFETY_INTERLOCK_MASK) != 0)
+        safe |= 0x1;
+    if((cm.safety_state & SAFETY_ESC_MASK) != 0)
+        safe |= 0x2;
+    return(_get_msg_helper(nv, msg_safe, safe)); }
+stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, (cm.estop_state & 0x3))); }
 
 stat_t cm_get_toolv(nvObj_t *nv)
 {
