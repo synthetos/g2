@@ -45,6 +45,7 @@
 #include "util.h"
 #include "xio.h"
 #include "settings.h"
+#include "spindle.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -415,8 +416,14 @@ static stat_t _interlock_estop_handler(void)
 	//Process E-Stop and Interlock signals
 	if((cm.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.safety_state |= SAFETY_INTERLOCK_OPEN;
-		if(cm.gm.spindle_mode != SPINDLE_OFF)
-			cm_request_feedhold();
+		if(cm.gm.spindle_mode != SPINDLE_OFF) {
+            if(mp_get_run_buffer() != NULL)
+                cm_request_feedhold();
+            else {
+                cm_cycle_start();
+                cm_spindle_control_immediate(cm.gm.spindle_mode);
+            }
+        }
         //If we just entered interlock and we're not off, start the lockout timer
         if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE || (cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
             cm.esc_lockout_timer = SysTickTimer_getValue();
