@@ -1462,6 +1462,8 @@ stat_t cm_start_estop(void)
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
 	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
+	switch_reset();
+	planner_init();
 
 	return STAT_OK;
 }
