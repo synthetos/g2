@@ -251,6 +251,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t end_hold_requested;		// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
+    
+	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
+                                        // see explanation in gcode_parser.cpp::wait_for_gcode_resume
 
 	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
 	uint8_t estop_state;                // Whether estop has been triggered

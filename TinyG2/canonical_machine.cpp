@@ -573,6 +573,7 @@ void canonical_machine_init()
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
+	cm.waiting_for_gcode_resume = false;
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
@@ -1258,7 +1259,12 @@ void cm_message(char_t *message)
  */
 
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
+void cm_request_queue_flush(void) {
+	if(cm.estop_state == 0) {
+		cm.queue_flush_requested = true;
+		cm.waiting_for_gcode_resume = true;
+	}
+}
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
 stat_t cm_feedhold_sequencing_callback()
@@ -1450,6 +1456,7 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
+	cm.waiting_for_gcode_resume = true;
 	cm.cycle_state = CYCLE_OFF;
 	for(int i = 0; i < HOMING_AXES; ++i)
 		cm.homed[i] = false;

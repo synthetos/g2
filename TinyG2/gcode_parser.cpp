@@ -36,6 +36,7 @@ static stat_t _point(float value);
 static stat_t _validate_gcode_block(void);
 static stat_t _parse_gcode_block(char_t *line);	// Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(void);		// Execute the gcode block
+stat_t _wait_for_gcode_resume(char_t** line);
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
@@ -70,6 +71,13 @@ stat_t gc_gcode_parser(char_t *block)
 	// queue a "(MSG" response
 	if (*msg != NUL) {
 		(void)cm_message(msg);				// queue the message
+	}
+    
+	// if we're waiting for a gcode resume, return STAT_NOOP until we find
+	// a valid M2 or M30
+	if (cm.waiting_for_gcode_resume) {
+		ritorno(_wait_for_gcode_resume(&block));
+		cm.waiting_for_gcode_resume = false;
 	}
 
 	return(_parse_gcode_block(block));
@@ -192,6 +200,38 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 	*pstr = end;
 	return (STAT_OK);			// pointer points to next character after the word
 }
+
+
+/*
+ * _wait_for_gcode_resume - return STAT_NOOP unless the line contains an
+ * M2 or M30. This is a workaround for a bug in the OSX CDC driver - it doesn't
+ * properly flush its write buffer and sends snippets of old gcode after an
+ * estop or flush. This forces the user to always send an M2/M30 after an estop
+ * or flush, though, which may not be desirable for everyone.
+ */
+stat_t _wait_for_gcode_resume(char_t** line)
+{
+	char *curr_word = (char*)(*line);
+	char *next_word = curr_word;
+	char letter;
+	float value = 0;
+	stat_t status = STAT_OK;
+    
+	// if the block contains an M2 or M30, return STAT_OK
+	while((status = _get_next_gcode_word(&next_word, &letter, &value)) == STAT_OK) {
+		if (letter == 'M' && (fp_EQ(value, 30) || fp_EQ(value, 2))) {
+			// advance the input line pointer to the start of the M*
+			*line = (char_t*)curr_word;
+			return status;
+		}
+		curr_word = next_word;
+	}
+    
+	// otherwise skip processing the block
+	*line = NUL;
+	return STAT_NOOP;
+}
+
 
 /*
  * _point() - isolate the decimal point value as an integer

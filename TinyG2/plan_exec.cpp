@@ -67,7 +67,10 @@ stat_t mp_exec_move()
 	}
 	// Manage cycle and motion state transitions
 	if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
-		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
+		if (cm.motion_state == MOTION_STOP) {
+			cm_cycle_start();
+			cm_set_motion_state(MOTION_RUN);
+		}
 	}
     
 	// if there's an out-of-band dwell in progress, execute it in lieu of the run buffer
