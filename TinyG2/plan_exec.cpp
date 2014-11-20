@@ -34,6 +34,7 @@
 #include "encoder.h"
 #include "report.h"
 #include "util.h"
+#include "spindle.h"
 
 // execute routines (NB: These are all called from the LO interrupt)
 static stat_t _exec_aline_head(void);
@@ -41,9 +42,7 @@ static stat_t _exec_aline_body(void);
 static stat_t _exec_aline_tail(void);
 static stat_t _exec_aline_segment(void);
 
-#ifndef __JERK_EXEC
 static void _init_forward_diffs(float Vi, float Vt);
-#endif
 
 /*
 using namespace Motate;
@@ -150,6 +149,10 @@ stat_t mp_exec_move()
  *	Note: For a direct math implementation see build 357.xx or earlier
  *		  Builds 358 onward have only forward difference code
  */
+/*	For a version of these routines that execute using the original equation-of-motion
+ *	math (as opposed to the forward difference math) please refer to build 444.01 or earlier.
+ *	The Kahan corrections have also been removed in 445.01 as they were not needed.
+ */
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
@@ -157,7 +160,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
-		if (cm.hold_state == FEEDHOLD_HOLD) return (STAT_NOOP);	// stops here if holding
+		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
+			mp_start_hold();
+			return (STAT_NOOP);	// stops here if holding
+		}
 
 		// initialization to process the new incoming bf buffer (Gcode block)
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
@@ -166,19 +172,17 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_OFF;					// reset mr buffer
 			mr.section_state = SECTION_OFF;
-			bf->nx->replannable = false;				// prevent overplanning (Note 2)
+			if(bf->nx->move_state == MOVE_NEW)
+				bf->nx->replannable = false;				// prevent overplanning (Note 2)
 			st_prep_null();								// call this to keep the loader happy
-			if (mp_free_run_buffer()) cm_cycle_end();	// free buffer & end cycle if planner is empty
-			return (STAT_NOOP);
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) cm_cycle_end();	// free buffer & end cycle if planner is empty
+			return (STAT_OK);
 		}
 		bf->move_state = MOVE_RUN;
 		mr.move_state = MOVE_RUN;
 		mr.section = SECTION_HEAD;
 		mr.section_state = SECTION_NEW;
 		mr.jerk = bf->jerk;
-#ifdef __JERK_EXEC
-		mr.jerk_div2 = bf->jerk/2;						// only needed by __JERK_EXEC
-#endif
 		mr.head_length = bf->head_length;
 		mr.body_length = bf->body_length;
 		mr.tail_length = bf->tail_length;
@@ -212,11 +216,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (cm.hold_state == FEEDHOLD_SYNC) { cm.hold_state = FEEDHOLD_PLAN;}
 
 	// Look for the end of the decel to go into HOLD state
-	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK)) {
-		cm.hold_state = FEEDHOLD_HOLD;
-		cm_set_motion_state(MOTION_HOLD);
-		sr_request_status_report(SR_REQUEST_IMMEDIATE);
-	}
+	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity))
+        cm.hold_state = FEEDHOLD_READY_TO_HOLD;
 
 	// There are 3 things that can happen here depending on return conditions:
 	//	  status		bf->move_state		Description
@@ -230,9 +231,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
-		bf->nx->replannable = false;					// prevent overplanning (Note 2)
+		if(bf->nx->move_state == MOVE_NEW)
+			bf->nx->replannable = false;					// prevent overplanning (Note 2)
 		if (bf->move_state == MOVE_RUN) {
-			if (mp_free_run_buffer()) cm_cycle_end();	// free buffer & end cycle if planner is empty
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+				cm_cycle_end();	// free buffer & end cycle if planner is empty
 		}
 	}
 	return (status);
@@ -339,7 +342,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
  *
  *  Note that with our current control points, D and E are actually 0.
  */
-#ifndef __JERK_EXEC
 
 static void _init_forward_diffs(float Vi, float Vt)
 {
@@ -365,14 +367,6 @@ static void _init_forward_diffs(float Vi, float Vt)
 	mr.forward_diff_2 = 300.0*Ah_5 + 24.0*Bh_4;
 	mr.forward_diff_1 = 120.0*Ah_5;
 
-#ifdef __KAHAN
-	mr.forward_diff_5_c = 0;
-	mr.forward_diff_4_c = 0;
-	mr.forward_diff_3_c = 0;
-	mr.forward_diff_2_c = 0;
-	mr.forward_diff_1_c = 0;
-#endif
-
 	// Calculate the initial velocity by calculating V(h/2)
 	float half_h = h/2.0;
 	float half_Ch_3 = C * half_h * half_h * half_h;
@@ -380,55 +374,10 @@ static void _init_forward_diffs(float Vi, float Vt)
 	float half_Ah_5 = C * half_h * half_h * half_h * half_h * half_h;
 	mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + Vi;
 }
-#endif
 
 /*********************************************************************************************
  * _exec_aline_head()
  */
-#ifdef __JERK_EXEC
-
-static stat_t _exec_aline_head()
-{
-	if (mr.section_state == SECTION_NEW) {							// initialize the move singleton (mr)
-		if (fp_ZERO(mr.head_length)) {
-			mr.section = SECTION_BODY;
-			return(_exec_aline_body());								// skip ahead to the body generator
-		}
-		mr.midpoint_velocity = (mr.entry_velocity + mr.cruise_velocity) / 2;
-		mr.gm.move_time = mr.head_length / mr.midpoint_velocity;	// time for entire accel region
-		mr.segments = ceil(uSec(mr.gm.move_time) / (2 * NOM_SEGMENT_USEC)); // # of segments in *each half*
-		mr.segment_time = mr.gm.move_time / (2 * mr.segments);
-		mr.accel_time = 2 * sqrt((mr.cruise_velocity - mr.entry_velocity) / mr.jerk);
-		mr.midpoint_acceleration = 2 * (mr.cruise_velocity - mr.entry_velocity) / mr.accel_time;
-		mr.segment_accel_time = mr.accel_time / (2 * mr.segments);	// time to advance for each segment
-		mr.elapsed_accel_time = mr.segment_accel_time / 2;			// elapsed time starting point (offset)
-		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) return(STAT_MINIMUM_TIME_MOVE); // exit without advancing position
-		mr.section = SECTION_HEAD;
-		mr.section_state = SECTION_1st_HALF;
-	}
-	if (mr.section_state == SECTION_1st_HALF) {						// FIRST HALF (concave part of accel curve)
-		mr.segment_velocity = mr.entry_velocity + (square(mr.elapsed_accel_time) * mr.jerk_div2);
-		if (_exec_aline_segment() == STAT_OK) { 					// set up for second half
-			mr.segment_count = (uint32_t)mr.segments;
-			mr.section_state = SECTION_2nd_HALF;
-			mr.elapsed_accel_time = mr.segment_accel_time / 2;		// start time from midpoint of segment
-		}
-		return(STAT_EAGAIN);
-	}
-	if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HAF (convex part of accel curve)
-		mr.segment_velocity = mr.midpoint_velocity +
-			(mr.elapsed_accel_time * mr.midpoint_acceleration) -
-			(square(mr.elapsed_accel_time) * mr.jerk_div2);
-		if (_exec_aline_segment() == STAT_OK) {						// OK means this section is done
-			if ((fp_ZERO(mr.body_length)) && (fp_ZERO(mr.tail_length))) return(STAT_OK); // ends the move
-			mr.section = SECTION_BODY;
-			mr.section_state = SECTION_NEW;
-		}
-	}
-	return(STAT_EAGAIN);
-}
-#else // __ JERK_EXEC
 
 static stat_t _exec_aline_head()
 {
@@ -458,55 +407,20 @@ static stat_t _exec_aline_head()
 		return(STAT_EAGAIN);
 	}
 	if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF (convex part of accel curve)
-#ifndef __KAHAN
 		mr.segment_velocity += mr.forward_diff_5;
-#else	// Use Kahan summation algorithm to mitigate floating-point errors for the above
-		float y = mr.forward_diff_5 - mr.forward_diff_5_c;
-		float v = mr.segment_velocity + y;
-		mr.forward_diff_5_c = (v - mr.segment_velocity) - y;
-		mr.segment_velocity = v;
-#endif
-
 		if (_exec_aline_segment() == STAT_OK) { 					// set up for body
 			if ((fp_ZERO(mr.body_length)) && (fp_ZERO(mr.tail_length))) return(STAT_OK); // ends the move
 			mr.section = SECTION_BODY;
 			mr.section_state = SECTION_NEW;
 		} else {
-#ifndef __KAHAN
 			mr.forward_diff_5 += mr.forward_diff_4;
 			mr.forward_diff_4 += mr.forward_diff_3;
 			mr.forward_diff_3 += mr.forward_diff_2;
 			mr.forward_diff_2 += mr.forward_diff_1;
-#else
-			//mr.forward_diff_5 += mr.forward_diff_4;
-			y = mr.forward_diff_4 - mr.forward_diff_4_c;
-			v = mr.forward_diff_5 + y;
-			mr.forward_diff_4_c = (v - mr.forward_diff_5) - y;
-			mr.forward_diff_5 = v;
-
-			//mr.forward_diff_4 += mr.forward_diff_3;
-			y = mr.forward_diff_3 - mr.forward_diff_3_c;
-			v = mr.forward_diff_4 + y;
-			mr.forward_diff_3_c = (v - mr.forward_diff_4) - y;
-			mr.forward_diff_4 = v;
-
-			//mr.forward_diff_3 += mr.forward_diff_2;
-			y = mr.forward_diff_2 - mr.forward_diff_2_c;
-			v = mr.forward_diff_3 + y;
-			mr.forward_diff_2_c = (v - mr.forward_diff_3) - y;
-			mr.forward_diff_3 = v;
-
-			//mr.forward_diff_2 += mr.forward_diff_1;
-			y = mr.forward_diff_1 - mr.forward_diff_1_c;
-			v = mr.forward_diff_2 + y;
-			mr.forward_diff_1_c = (v - mr.forward_diff_2) - y;
-			mr.forward_diff_2 = v;
-#endif
 		}
 	}
 	return(STAT_EAGAIN);
 }
-#endif // __ JERK_EXEC
 
 /*********************************************************************************************
  * _exec_aline_body()
@@ -544,45 +458,6 @@ static stat_t _exec_aline_body()
  * _exec_aline_tail()
  */
 
-#ifdef __JERK_EXEC
-
-static stat_t _exec_aline_tail()
-{
-	if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
-		if (fp_ZERO(mr.tail_length)) { return(STAT_OK);}			// end the move
-		mr.midpoint_velocity = (mr.cruise_velocity + mr.exit_velocity) / 2;
-		mr.gm.move_time = mr.tail_length / mr.midpoint_velocity;
-		mr.segments = ceil(uSec(mr.gm.move_time) / (2 * NOM_SEGMENT_USEC));// # of segments in *each half*
-		mr.segment_time = mr.gm.move_time / (2 * mr.segments);		// time to advance for each segment
-		mr.accel_time = 2 * sqrt((mr.cruise_velocity - mr.exit_velocity) / mr.jerk);
-		mr.midpoint_acceleration = 2 * (mr.cruise_velocity - mr.exit_velocity) / mr.accel_time;
-		mr.segment_accel_time = mr.accel_time / (2 * mr.segments);	// time to advance for each segment
-		mr.elapsed_accel_time = mr.segment_accel_time / 2;			//compute time from midpoint of segment
-		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) return(STAT_MINIMUM_TIME_MOVE); // exit without advancing position
-		mr.section = SECTION_TAIL;
-		mr.section_state = SECTION_1st_HALF;
-	}
-	if (mr.section_state == SECTION_1st_HALF) {						// FIRST HALF - convex part (period 4)
-		mr.segment_velocity = mr.cruise_velocity - (square(mr.elapsed_accel_time) * mr.jerk_div2);
-		if (_exec_aline_segment() == STAT_OK) {						// set up for second half
-			mr.segment_count = (uint32_t)mr.segments;
-			mr.section_state = SECTION_2nd_HALF;
-			mr.elapsed_accel_time = mr.segment_accel_time / 2;		// start time from midpoint of segment
-		}
-		return(STAT_EAGAIN);
-	}
-	if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF - concave part (period 5)
-		mr.segment_velocity = mr.midpoint_velocity -
-			(mr.elapsed_accel_time * mr.midpoint_acceleration) +
-			(square(mr.elapsed_accel_time) * mr.jerk_div2);
-		return (_exec_aline_segment()); 							// ends the move or continues EAGAIN
-	}
-	return(STAT_EAGAIN);											// should never get here
-}
-
-#else // __JERK_EXEC -- run forward differencing math
-
 static stat_t _exec_aline_tail()
 {
 	if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
@@ -609,53 +484,18 @@ static stat_t _exec_aline_tail()
 		return(STAT_EAGAIN);
 	}
 	if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF - concave part (period 5)
-#ifndef __KAHAN
 		mr.segment_velocity += mr.forward_diff_5;
-#else	// Use Kahan summation algorithm to mitigate floating-point errors for the above
-		float y = mr.forward_diff_5 - mr.forward_diff_5_c;
-		float v = mr.segment_velocity + y;
-		mr.forward_diff_5_c = (v - mr.segment_velocity) - y;
-		mr.segment_velocity = v;
-#endif
-
 		if (_exec_aline_segment() == STAT_OK) { 					// set up for body
 			return STAT_OK;
 		} else {
-#ifndef __KAHAN
 			mr.forward_diff_5 += mr.forward_diff_4;
 			mr.forward_diff_4 += mr.forward_diff_3;
 			mr.forward_diff_3 += mr.forward_diff_2;
 			mr.forward_diff_2 += mr.forward_diff_1;
-#else
-			//mr.forward_diff_5 += mr.forward_diff_4;
-			y = mr.forward_diff_4 - mr.forward_diff_4_c;
-			v = mr.forward_diff_5 + y;
-			mr.forward_diff_4_c = (v - mr.forward_diff_5) - y;
-			mr.forward_diff_5 = v;
-
-			//mr.forward_diff_4 += mr.forward_diff_3;
-			y = mr.forward_diff_3 - mr.forward_diff_3_c;
-			v = mr.forward_diff_4 + y;
-			mr.forward_diff_3_c = (v - mr.forward_diff_4) - y;
-			mr.forward_diff_4 = v;
-
-			//mr.forward_diff_3 += mr.forward_diff_2;
-			y = mr.forward_diff_2 - mr.forward_diff_2_c;
-			v = mr.forward_diff_3 + y;
-			mr.forward_diff_2_c = (v - mr.forward_diff_3) - y;
-			mr.forward_diff_3 = v;
-
-			//mr.forward_diff_2 += mr.forward_diff_1;
-			y = mr.forward_diff_1 - mr.forward_diff_1_c;
-			v = mr.forward_diff_2 + y;
-			mr.forward_diff_1_c = (v - mr.forward_diff_2) - y;
-			mr.forward_diff_2 = v;
-#endif
 		}
 	}
 	return(STAT_EAGAIN);									// should never get here
 }
-#endif // __JERK_EXEC
 
 /*********************************************************************************************
  * _exec_aline_segment() - segment runner helper
@@ -688,7 +528,7 @@ static stat_t _exec_aline_segment()
 	// Don't do waypoint correction if you are going into a hold.
 
 	if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
-		(cm.motion_state == MOTION_RUN) && (cm.cycle_state == CYCLE_MACHINING)) {
+		(cm.motion_state != MOTION_HOLD)) {
 		copy_vector(mr.gm.target, mr.waypoint[mr.section]);
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;
@@ -718,9 +558,6 @@ static stat_t _exec_aline_segment()
 
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
 	copy_vector(mr.position, mr.gm.target); 				// update position from target
-#ifdef __JERK_EXEC
-	mr.elapsed_accel_time += mr.segment_accel_time;			// this is needed by jerk-based exec (NB: ignored if running the body)
-#endif
 	if (mr.segment_count == 0) return (STAT_OK);			// this section has run all its segments
 	return (STAT_EAGAIN);									// this section still has more segments to run
 }

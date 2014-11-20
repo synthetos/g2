@@ -149,6 +149,13 @@ namespace Motate {
         return MOTATE_USBSerialNumberString;\
     }
 
+#define MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()\
+    const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) {\
+        const uint16_t *uuid = readUniqueIdString();\
+        length = UNIQUE_ID_STRING_LEN * sizeof(uint16_t);\
+        return uuid;\
+    }
+
 	// This needs to be provided in the hardware file
 	const uint16_t *getUSBLanguageString(int16_t &length);
 
@@ -167,6 +174,7 @@ namespace Motate {
 	extern void _resetEndpointBuffer(const uint8_t endpoint);
 	extern void _freezeUSBClock();
 	extern void _flushEndpoint(uint8_t endpoint);
+    extern void _flushReadEndpoint(uint8_t endpoint);
 
 	extern uint32_t _inited;
 	extern uint32_t _configuration;
@@ -183,6 +191,9 @@ namespace Motate {
 
 		static void _init() {
 			uint32_t endpoint;
+
+            // FORCE disable the USB hardware:
+            UOTGHS->UOTGHS_CTRL &= ~(UOTGHS_CTRL_USBE);
 
 			for (endpoint = 0; endpoint < 10; ++endpoint)
 			{
@@ -354,9 +365,13 @@ namespace Motate {
 			return _sendToEndpoint(endpoint, buffer, length);
 		};
 
-		static void flush(const uint8_t ependpoint) {
-			_flushEndpoint(ependpoint);
+		static void flush(const uint8_t endpoint) {
+			_flushEndpoint(endpoint);
 		};
+        
+        static void flushRead(const uint8_t endpoint) {
+            _flushReadEndpoint(endpoint);
+        }
 
 		/* Data is const. The pointer to data is not. */
 		static int16_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {

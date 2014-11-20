@@ -1,8 +1,8 @@
 /*
- * persistence.h - persistence code
+ * UniqueId.h - utility function for getting processor unique id
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+ * Copyright (c) 2014 Tom Cauchois
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,28 +25,24 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PERSISTENCE_H_ONCE
-#define PERSISTENCE_H_ONCE
+#ifndef __TinyG2__UniqueId__
+#define __TinyG2__UniqueId__
 
-#include "config.h"					// needed for nvObj_t definition
+#include <sys/types.h>
 
-#define NVM_VALUE_LEN 4				// NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000		// base address of usable NVM
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+    struct uuid { unsigned long d0, d1, d2, d3; };
+    
+    void cacheUniqueId();
+    struct uuid* readUniqueId();
+    const uint16_t* readUniqueIdString();
+    const int16_t UNIQUE_ID_STRING_LEN = 12;
+    
+#ifdef __cplusplus
+}
+#endif
 
-//**** persistence singleton ****
-
-typedef struct nvmSingleton {
-	uint16_t base_addr;					// NVM base address
-	uint16_t profile_base;				// NVM base address of current profile]
-	uint16_t address;
-	float tmp_value;
-	int8_t byte_array[NVM_VALUE_LEN];
-} nvmSingleton_t;
-
-//**** persistence function prototypes ****
-
-void persistence_init(void);
-stat_t read_persistent_value(nvObj_t *nv);
-stat_t write_persistent_value(nvObj_t *nv);
-
-#endif // End of include guard: PERSISTENCE_H_ONCE
+#endif /* defined(__TinyG2__UniqueId__) */

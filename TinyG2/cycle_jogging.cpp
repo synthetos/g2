@@ -104,6 +104,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 	jog.axis = axis;
 	jog.func = _jogging_axis_start; 				// bind initial processing function
 
+	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_JOG;
 	return (STAT_OK);
 }
@@ -137,7 +138,8 @@ static stat_t _set_jogging_func(stat_t (*func)(int8_t axis))
 static stat_t _jogging_axis_start(int8_t axis)
 {
 	mp_flush_planner();
-	cm_request_cycle_start();
+	if(cm.hold_state == FEEDHOLD_HOLD);
+		cm_end_hold();
 	return (_set_jogging_func(_jogging_axis_ramp_jog));
 }
 
@@ -182,14 +184,16 @@ static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 {
 	mp_flush_planner();
+	if(cm.hold_state == FEEDHOLD_HOLD);
+		cm_end_hold();
+
  	cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system
 	cm_set_units_mode(jog.saved_units_mode);
 	cm_set_distance_mode(jog.saved_distance_mode);
 	cm_set_feed_rate(jog.saved_feed_rate);
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm.cycle_state = CYCLE_OFF;						// required
-	cm_cycle_end();
-    printf("{\"jog\":0}\n");						// needed by OMC jogging function
+	cm_canned_cycle_end();
+	printf("{\"jog\":0}\n");						// needed by OMC jogging function
 	return (STAT_OK);
 }
 

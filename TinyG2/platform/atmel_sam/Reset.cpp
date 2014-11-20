@@ -24,26 +24,28 @@ extern "C" {
 #endif
 
 __attribute__ ((long_call, section (".ramfunc")))
-void banzai() {	
+void banzai(int samba) {
 	// Disable all interrupts
 	__disable_irq();
 
-	// Set bootflag to run SAM-BA bootloader at restart
-	const int EEFC_FCMD_CGPB = 0x0C;
-	const int EEFC_KEY = 0x5A;
-	while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
-	EFC0->EEFC_FCR =
-		EEFC_FCR_FCMD(EEFC_FCMD_CGPB) |
-		EEFC_FCR_FARG(1) |
-		EEFC_FCR_FKEY(EEFC_KEY);
-	while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
+    if(samba) {
+        // Set bootflag to run SAM-BA bootloader at restart
+        const int EEFC_FCMD_CGPB = 0x0C;
+        const int EEFC_KEY = 0x5A;
+        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
+        EFC0->EEFC_FCR =
+            EEFC_FCR_FCMD(EEFC_FCMD_CGPB) |
+            EEFC_FCR_FARG(1) |
+            EEFC_FCR_FKEY(EEFC_KEY);
+        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
 
-	// From here flash memory is no more available.
+        // From here flash memory is no more available.
 
-	// Memory swap needs some time to stabilize
-	for (uint32_t i=0; i<1000000; i++)
-		// force compiler to not optimize this
-		__asm__ __volatile__("");
+        // Memory swap needs some time to stabilize
+        for (uint32_t i=0; i<1000000; i++)
+            // force compiler to not optimize this
+            __asm__ __volatile__("");
+    }
 
 	// BANZAIIIIIII!!!
 	const int RSTC_KEY = 0xA5;
@@ -70,7 +72,7 @@ void tickReset() {
 		return;
 	ticks--;
 	if (ticks == 0)
-		banzai();
+		banzai(1);
 }
 
 #ifdef __cplusplus

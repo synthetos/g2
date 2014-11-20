@@ -86,22 +86,49 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
+	if(cm.gm.spindle_mode & SPINDLE_PAUSED)
+		spindle_mode |= SPINDLE_PAUSED;
+
+	// This is kind of tricky...  If we're in interlock but still moving around, and we get an
+	// M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's anything
+	// in the buffer to actually process the feedhold.  Here, we're just about to add something to the buffer,
+	// so we skip the check.
+	if(cm.interlock_state != 0 && !(spindle_mode & SPINDLE_PAUSED) && spindle_mode != SPINDLE_OFF)
+		cm_start_hold();
+
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
 	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
+}
+
+stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
+{
+	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+	_exec_spindle_control(value, value);
+	return (STAT_OK);
 }
 
 //static void _exec_spindle_control(uint8_t spindle_mode, float f, float *vector, float *flag)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
+
+	bool paused = spindle_mode & SPINDLE_PAUSED;
+	uint8_t raw_spindle_mode = spindle_mode & (~SPINDLE_PAUSED);
+
+	if(cm.estop_state != 0) // In E-stop, don't process any spindle commands
+		spindle_mode = raw_spindle_mode = SPINDLE_OFF;
+	else if(paused || cm.interlock_state != 0) // If we're paused or in interlock, send the spindle an "OFF" command (invisible to cm.gm)
+		raw_spindle_mode = SPINDLE_OFF;
+	//FIXME: else if(we just rebooted the ESC)... delay the pwm command...
+
 	cm_set_spindle_mode(MODEL, spindle_mode);
 
- #ifdef __AVR
-	if (spindle_mode == SPINDLE_CW) {
+#ifdef __AVR
+	if (raw_spindle_mode == SPINDLE_CW) {
 		gpio_set_bit_on(SPINDLE_BIT);
 		gpio_set_bit_off(SPINDLE_DIR);
-	} else if (spindle_mode == SPINDLE_CCW) {
+	} else if (raw_spindle_mode == SPINDLE_CCW) {
 		gpio_set_bit_on(SPINDLE_BIT);
 		gpio_set_bit_on(SPINDLE_DIR);
 	} else {
@@ -109,10 +136,10 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __AVR
 #ifdef __ARM
-	if (spindle_mode == SPINDLE_CW) {
+	if (raw_spindle_mode == SPINDLE_CW) {
 		spindle_enable_pin.set();
 		spindle_dir_pin.clear();
-	} else if (spindle_mode == SPINDLE_CCW) {
+	} else if (raw_spindle_mode == SPINDLE_CCW) {
 		spindle_enable_pin.set();
 		spindle_dir_pin.set();
 	} else {
@@ -120,8 +147,7 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __ARM
 
-	// PWM spindle control
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) );
+	pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_mode));
 }
 
 /*
@@ -137,13 +163,12 @@ stat_t cm_set_spindle_speed(float speed)
 	return (STAT_OK);
 }
 
-void cm_exec_spindle_speed(float speed)
-{
-	cm_set_spindle_speed(speed);
-}
-
 static void _exec_spindle_speed(float *value, float *flag)
 {
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_mode) ); // update spindle speed if we're running
+	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
+	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
+	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused)
+		spindle_mode = SPINDLE_OFF;
+	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) ); // update spindle speed if we're running
 }

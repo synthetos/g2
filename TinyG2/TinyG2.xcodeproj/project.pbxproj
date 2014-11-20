@@ -386,6 +386,7 @@
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
+		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -411,6 +412,7 @@
 		D4021FA6175E388B0099576C /* hooks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hooks.c; sourceTree = "<group>"; };
 		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D409C00F1902F70C00F15547 /* G2v9i-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9i-pinout.h"; sourceTree = "<group>"; };
+		D40A5F921A07E42600F90F4F /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = switch.cpp; sourceTree = "<group>"; };
 		D41D13F417374B4E00D522D9 /* switch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = switch.h; sourceTree = "<group>"; };
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
@@ -3228,6 +3230,7 @@
 		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4CA314D19DEFEFB004B4A02 /* atmel_sam-flash.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "atmel_sam-flash.sh"; sourceTree = "<group>"; };
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
@@ -3238,6 +3241,8 @@
 		D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pendulum.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
+		E29D7210198978BE00F22E5F /* UniqueId.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UniqueId.cpp; sourceTree = "<group>"; };
+		E29D7211198978BE00F22E5F /* UniqueId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniqueId.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -7486,6 +7491,8 @@
 				D49EC3FC17054FDF00F2BF9B /* atmel_sam */,
 				D49EC43517054FDF00F2BF9B /* atmel_sam.mk */,
 				D45E858D19A24FA800300F9F /* atmel_sam.gdb */,
+				D4CA314D19DEFEFB004B4A02 /* atmel_sam-flash.sh */,
+				D40A5F921A07E42600F90F4F /* atmel_sam.cfg */,
 				D4B5763417079D790070CCAE /* make_utilities.mk */,
 			);
 			path = platform;
@@ -7504,6 +7511,8 @@
 				D4021FA0175E37BF0099576C /* Reset.h */,
 				D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */,
 				D4021FA2175E37BF0099576C /* syscalls.h */,
+				E29D7210198978BE00F22E5F /* UniqueId.cpp */,
+				E29D7211198978BE00F22E5F /* UniqueId.h */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
@@ -7611,6 +7620,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=UltimakerTests";
+			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 G2Ultimaker";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -7637,7 +7660,7 @@
 		D45710B8170532AC00EA19A8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "Rob Giseburt";
 			};
 			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG2" */;
@@ -7657,6 +7680,7 @@
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
+				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -7685,6 +7709,7 @@
 				D49EC5F91706789800F2BF9B /* component_rstc.h in Sources */,
 				D49EC5FA1706789800F2BF9B /* component_rtc.h in Sources */,
 				D49EC5FB1706789800F2BF9B /* component_rtt.h in Sources */,
+				E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */,
 				D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */,
 				D49EC5FD1706789800F2BF9B /* component_smc.h in Sources */,
 				D49EC5FE1706789800F2BF9B /* component_spi.h in Sources */,
@@ -8043,7 +8068,7 @@
 		D409C0121902F73000F15547 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9g copy";
 			};
 			name = Debug;
@@ -8051,7 +8076,7 @@
 		D409C0131902F73000F15547 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9g copy";
 			};
 			name = Release;
@@ -8071,7 +8096,7 @@
 		D45710C41705330D00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Debug;
@@ -8079,7 +8104,7 @@
 		D45710C51705330D00EA19A8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
 			};
 			name = Release;
@@ -8164,7 +8189,7 @@
 		D4B6579518B5197600F8616C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9d copy";
 			};
 			name = Debug;
@@ -8172,7 +8197,7 @@
 		D4B6579618B5197600F8616C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9d copy";
 			};
 			name = Release;
@@ -8180,7 +8205,7 @@
 		D4B6579918B5198D00F8616C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9f copy";
 			};
 			name = Debug;
@@ -8188,7 +8213,7 @@
 		D4B6579A18B5198D00F8616C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9f copy";
 			};
 			name = Release;
@@ -8196,7 +8221,7 @@
 		D4C12816180D9560002A898C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
 			};
 			name = Debug;
@@ -8204,8 +8229,24 @@
 		D4C12817180D9560002A898C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PATH = $PATH;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = bin/SAM3X8C/TinyG2_SAM3X8C_flash.elf;
+			};
+			name = Release;
+		};
+		D4CBBAD21A0D51FE00150DE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield copy";
+			};
+			name = Debug;
+		};
+		D4CBBAD31A0D51FE00150DE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield copy";
 			};
 			name = Release;
 		};
@@ -8271,6 +8312,15 @@
 			buildConfigurations = (
 				D4C12816180D9560002A898C /* Debug */,
 				D4C12817180D9560002A898C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4CBBAD21A0D51FE00150DE2 /* Debug */,
+				D4CBBAD31A0D51FE00150DE2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

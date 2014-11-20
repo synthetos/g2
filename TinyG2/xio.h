@@ -70,6 +70,7 @@
 #include "MotateUSBCDC.h"
 #include "MotateSPI.h"
 
+
 /**** Defines, Macros, and  Assorted Parameters ****/
 
 #undef  _FDEV_ERR
@@ -96,7 +97,6 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 #define DEV_IS_PRIMARY		(0x0004)		// device is the primary control channel
 
 // device connection state
-#define DEV_IS_DISCONNECTED	(0x0010)		// device just disconnected (transient state)
 #define DEV_IS_CONNECTED	(0x0020)		// device is connected (e.g. USB)
 #define DEV_IS_READY		(0x0040)		// device is ready for use
 #define DEV_IS_ACTIVE		(0x0080)		// device is active
@@ -112,7 +112,7 @@ enum xioDeviceEnum {						// reconfigure this enum as you add more physical devi
 	DEV_NONE=-1,							// no device is bound
 	DEV_USB0=0,								// must be 0
 	DEV_USB1,								// must be 1
-	DEV_SPI0,
+//	DEV_SPI0,                               // We can't have it here until we actually define it
 	DEV_MAX
 };
 
@@ -131,15 +131,11 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 /**** function prototypes ****/
 
 void xio_init(void);
-void xio_init_assertions(void);
 stat_t xio_test_assertions(void);
-stat_t xio_callback(void);
 
-int read_char (void);
-char_t *readline(devflags_t &flags, uint16_t &size);
-size_t writeline(uint8_t *buffer, size_t size);
-
-stat_t read_line (uint8_t *buffer, uint16_t *index, size_t size);
+char_t *xio_readline(devflags_t &flags, uint16_t &size);
+void xio_flush_read();
+size_t xio_write(const uint8_t *buffer, size_t size);
 
 stat_t xio_set_spi(nvObj_t *nv);
 

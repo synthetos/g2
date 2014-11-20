@@ -45,8 +45,8 @@
  */
 
 // switch array configuration / sizing
-#define SW_PAIRS				HOMING_AXES	// number of axes that can have switches
-#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW)MAX
+#define SW_PAIRS				HOMING_AXES	// number of axes that can have switches				
+#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW_MAX
 
 // switch modes
 #define SW_HOMING_BIT			0x01
@@ -56,7 +56,8 @@
 #define SW_MODE_HOMING 			SW_HOMING_BIT				 // enable switch for homing only
 #define SW_MODE_LIMIT 			SW_LIMIT_BIT				 // enable switch for limits only
 #define SW_MODE_HOMING_LIMIT   (SW_HOMING_BIT | SW_LIMIT_BIT)// homing and limits
-#define SW_MODE_MAX_VALUE 		SW_MODE_HOMING_LIMIT
+#define SW_MODE_CUSTOM          0x04
+#define SW_MODE_MAX_VALUE 		SW_MODE_CUSTOM
 
 enum swType {
 	SW_TYPE_NORMALLY_OPEN = 0,
@@ -90,6 +91,7 @@ typedef struct swSwitch {						// one struct per switch
 	uint8_t type;								// swType: 0=NO, 1=NC
 	uint8_t mode;								// 0=disabled, 1=homing, 2=limit, 3=homing+limit
 	int8_t state;								// 0=open, 1=closed, -1=disabled
+	uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
 
 	// private
 	uint8_t edge;								// keeps a transient record of edges for immediate inquiry
@@ -103,7 +105,6 @@ typedef struct swSwitch {						// one struct per switch
 typedef void (*sw_callback)(switch_t *s);		// typedef for switch action callback
 
 typedef struct swSwitchArray {					// array of switches
-	uint8_t type;								// switch type for entire array (default)
 	switch_t s[SW_PAIRS][SW_POSITIONS];
 } switches_t;
 extern switches_t sw;
@@ -118,6 +119,8 @@ int8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);
 uint8_t get_switch_type(uint8_t axis, uint8_t position);
 int8_t read_switch(uint8_t axis, uint8_t position);
+uint8_t get_limit_switch_thrown(void);
+void reset_limit_switches(void);
 
 /*
  * Switch config accessors and text functions

@@ -31,7 +31,6 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "canonical_machine.h"
 #include "planner.h"
 #include "settings.h"
 #include "util.h"
@@ -41,24 +40,44 @@
 
 srSingleton_t sr;
 qrSingleton_t qr;
+rxSingleton_t rx;
 
 /**** Exception Reports ************************************************************
  * rpt_exception() - generate an exception message - always in JSON format
  *
  * Returns incoming status value
  *
+ * You can use the 'info' string to add additional JSON which will be appended to the 
+ * er: object. Ideally the string should be formatted according to the JSON mode in effect, 
+ * but short of this a properly strict formatted string will suffice. 
+ * Pass info as NULL to skip this feature.
+ * Do not use global_string_buf[] as *info or it will get trampled. 
+ * See cm_hard_alarm() for an example of use.
+ *
  * WARNING: Do not call this function from MED or HI interrupts (LO is OK)
  *			or there is a potential for deadlock in the TX buffer.
  */
-stat_t rpt_exception(uint8_t status)
+
+stat_t rpt_exception(uint8_t status, char_t *info)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
-		if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-			printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\"}}\n"),
-				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+
+		if (info != NULL) {
+			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\",%s}}\n"),
+					TINYG_FIRMWARE_BUILD, status, get_status_message(status), info);
+			} else {
+				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",%s}}\n"),
+					TINYG_FIRMWARE_BUILD, status, get_status_message(status), info);
+			}
 		} else {
-			printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
+			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\"}}\n"),
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+			} else {
+				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
+				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+			}			
 		}
 	}
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
@@ -69,7 +88,7 @@ stat_t rpt_exception(uint8_t status)
  */
 stat_t rpt_er(nvObj_t *nv)
 {
-	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT)); // bogus exception report for testing
+	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, NULL)); // bogus exception report for testing
 }
 
 /**** Application Messages *********************************************************
@@ -185,7 +204,7 @@ void sr_init_status_report()
 		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
 		if (fp_EQ(nv->value, NO_MATCH)) {
-			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING);	// trap mis-configured profile settings
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, NULL); // trap mis-configured profile settings
 			return;
 		}
 		if (_is_stat(nv) == true)
@@ -254,7 +273,8 @@ stat_t sr_request_status_report(uint8_t request_type)
 		sr.status_report_request = SR_VERBOSE;		// will always trigger verbose report, regardless of verbosity setting
 
 	} else if (request_type == SR_REQUEST_TIMED) {
-		sr.status_report_request = SR_FILTERED;
+//		sr.status_report_request = SR_FILTERED;
+		sr.status_report_request = sr.status_report_verbosity;
 		sr.status_report_systick += sr.status_report_interval;
 
 	} else {
@@ -360,15 +380,10 @@ static uint8_t _populate_filtered_status_report()
 
 		nv_get_nvObj(nv);
 		// do not report values that have not changed...
-		// ...except for stat=3 (STOP), which is an exception
 		if (fp_EQ(nv->value, sr.status_report_value[i])) {
-//			if (nv->index != sr.stat_index) {
-//				if (fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) {
-					nv->valuetype = TYPE_EMPTY;
-					continue;
-//				}
-//			}
-			// report anything that has changed
+			nv->valuetype = TYPE_EMPTY;
+			continue;
+		// report anything that has changed
 		} else {
 			strcpy(tmp, nv->group);		// flatten out groups - WARNING - you cannot use strncpy here...
 			strcat(tmp, nv->token);
@@ -512,6 +527,29 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	return (STAT_OK);
 }
 
+/*
+ * rx_request_rx_report() - request an update on usb serial buffer space available
+ */
+void rx_request_rx_report(void) {
+    rx.rx_report_requested = true;
+#ifdef __AVR
+	rx.space_available = xio_get_usb_rx_free();
+#else
+	rx.space_available = 254;	// preserves byte counting behaviors for G2 users
+#endif
+}
+
+/*
+ * rx_report_callback() - send rx report if one has been requested
+ */
+stat_t rx_report_callback(void) {
+    if (!rx.rx_report_requested) { return (STAT_NOOP); }
+    rx.rx_report_requested = false;
+
+    fprintf(stderr, "{\"rx\":%d}\n", rx.space_available);
+    return (STAT_OK);
+}
+
 /* Alternate Formulation for a Single report - using nvObj list
 
 	// get a clean nv object
@@ -618,10 +656,10 @@ uint8_t job_report_callback()
 	if (cs.comm_mode == TEXT_MODE) {
 		// no-op, job_ids are client app state
 	} else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2],cfg.job_id[3] );
+		fprintf(stderr, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
 	} else {
 		fprintf(stderr, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
-		//job_clear_report(); d
+		//job_clear_report();
 	}
 	return (STAT_OK);
 }

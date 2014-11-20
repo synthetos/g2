@@ -55,8 +55,8 @@ typedef struct controllerSingleton {	// main TG controller struct
 
 	// system state variables
 	uint8_t controller_state;
-	uint8_t led_state;		// LEGACY	// 0=off, 1=on
-	int32_t led_counter;	// LEGACY	// a convenience for flashing an LED
+//	uint8_t led_state;					// 0=off, 1=on (LEGACY)
+//	int32_t led_counter;				// a convenience for flashing an LED (LEGACY)
 	uint32_t led_timer;					// used by idlers to flash indicator LED
 	uint8_t hard_reset_requested;		// flag to perform a hard reset
 	uint8_t bootloader_requested;		// flag to enter the bootloader
@@ -66,8 +66,8 @@ typedef struct controllerSingleton {	// main TG controller struct
 //	uint32_t sync_to_time_time;
 
 	// controller serial buffers
-	char_t *bufp;						// pointer to input buffer
-	uint16_t linelen;					// length of current line
+	char_t *bufp;						// pointer to primary or secondary in buffer
+	uint16_t linelen;					// length of currently processing line
 	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer
 	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
 
@@ -92,8 +92,6 @@ stat_t controller_test_assertions(void);
 void controller_run(void);
 //void controller_reset(void);
 
-void tg_reset_source(void);
-void tg_set_primary_source(uint8_t dev);
-void tg_set_secondary_source(uint8_t dev);
+void controller_set_connected(bool is_connected);
 
 #endif // End of include guard: CONTROLLER_H_ONCE

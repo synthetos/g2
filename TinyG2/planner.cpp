@@ -127,7 +127,6 @@ void mp_flush_planner()
 {
 	cm_abort_arc();
 	mp_init_buffers();
-	cm_set_motion_state(MOTION_STOP);
 }
 
 /*
@@ -216,6 +215,11 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 static stat_t _exec_command(mpBuf_t *bf)
 {
+	if(cm.hold_state == FEEDHOLD_SYNC) {
+		mp_start_hold();
+		return STAT_NOOP;
+	}
+
 	st_prep_command(bf);
 	return (STAT_OK);
 }
@@ -252,6 +256,11 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
+	if(cm.hold_state == FEEDHOLD_SYNC) {
+		mp_start_hold();
+		return STAT_NOOP;
+	}
+
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);
@@ -348,7 +357,7 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 		mb.w = w->nx;
 		return (w);
 	}
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER);
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, NULL);
 	return (NULL);
 }
 
@@ -370,7 +379,8 @@ void mp_commit_write_buffer(const uint8_t move_type)
 	mb.q->buffer_state = MP_BUFFER_QUEUED;
 	mb.q = mb.q->nx;							// advance the queued buffer pointer
 	qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-	st_request_exec_move();						// requests an exec if the runtime is not busy
+	if(cm.hold_state != FEEDHOLD_HOLD)
+		st_request_exec_move();					// requests an exec if the runtime is not busy
 												// NB: BEWARE! the exec may result in the planner buffer being
 												// processed immediately and then freed - invalidating the contents
 }

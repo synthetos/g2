@@ -38,9 +38,9 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		071.03 // Fix for single-endpoint configuration crash
-
+#define TINYG_FIRMWARE_BUILD   		074.03 // Debugging
 #endif
+
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
 #define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -67,12 +67,10 @@
 #define __STEP_CORRECTION
 #define __NEW_SWITCHES						// Using v9 style switch code
 #define __DUAL_USB							// use dual endpoint USB
-//#define __JERK_EXEC						// Use computed jerk (versus forward difference based exec)
-//#define __KAHAN							// Use Kahan summation in aline exec functions
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP					// run any canned startup moves
-#define __DEBUG_SETTINGS					// special settings. See settings.h
+//#define __DEBUG_SETTINGS					// special settings. See settings.h
 //#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
 
 //#define __SIMULATION						// for software-only simulations

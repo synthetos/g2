@@ -232,7 +232,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-	uint8_t combined_state;				// stat: combination of states for display purposes
+//	uint8_t combined_state;				// stat: combination of states for display purposes, now computed in cm_get_combined_state
 	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
@@ -248,9 +248,14 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t deferred_write_flag;		// G10 data has changed (e.g. offsets) - flag to persist them
 	uint8_t feedhold_requested;			// feedhold character has been received
 	uint8_t queue_flush_requested;		// queue flush character has been received
-	uint8_t cycle_start_requested;		// cycle start character has been received (flag to end feedhold)
+	uint8_t end_hold_requested;		// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
+
+	uint8_t interlock_state;            // Whether interlock has been triggered
+	uint8_t estop_state;                // Whether estop has been triggered
+
+	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
 
 	/**** Model states ****/
 	GCodeState_t  gm;					// core gcode model state
@@ -273,42 +278,35 @@ extern cmSingleton_t cm;				// canonical machine controller singleton
  *		- cm.cycle_state	- what cycle the machine is executing (or none)
  *		- cm.motion_state	- state of movement
  */
-/*	Allowed states and combined states
- *
- *	MACHINE STATE		CYCLE STATE		MOTION_STATE		COMBINED_STATE (FYI)
- *	-------------		------------	-------------		--------------------
- *	MACHINE_UNINIT		na				na					(U)
- *	MACHINE_READY		CYCLE_OFF		MOTION_STOP			(ROS) RESET-OFF-STOP
- *	MACHINE_PROG_STOP	CYCLE_OFF		MOTION_STOP			(SOS) STOP-OFF-STOP
- *	MACHINE_PROG_END	CYCLE_OFF		MOTION_STOP			(EOS) END-OFF-STOP
- *
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_STOP			(CSS) CYCLE-START-STOP
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_RUN			(CSR) CYCLE-START-RUN
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_HOLD			(CSH) CYCLE-START-HOLD
- *	MACHINE_CYCLE		CYCLE_STARTED	MOTION_END_HOLD		(CSE) CYCLE-START-END_HOLD
- *
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_STOP			(CHS) CYCLE-HOMING-STOP
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_RUN			(CHR) CYCLE-HOMING-RUN
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_HOLD			(CHH) CYCLE-HOMING-HOLD
- *	MACHINE_CYCLE		CYCLE_HOMING	MOTION_END_HOLD		(CHE) CYCLE-HOMING-END_HOLD
- */
 // *** Note: check config printout strings align with all the state variables
 
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
 enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing
-	COMBINED_READY,					// [1] machine is ready for use. Also used to force STOP state for null moves
+        //iff macs == MACHINE_INITIALIZING
+	COMBINED_READY,					// [1] machine is ready for use
+        //iff macs == MACHINE_READY
 	COMBINED_ALARM,					// [2] machine in soft alarm state
-	COMBINED_PROGRAM_STOP,			// [3] program stop or no more blocks
+        //iff macs == MACHINE_ALARM
+	COMBINED_PROGRAM_STOP,			// [3] program stop/no more blocks
+        //iff macs == MACHINE_PROGRAM_STOP
 	COMBINED_PROGRAM_END,			// [4] program end
+        //iff macs == MACHINE_PROGRAM_END
 	COMBINED_RUN,					// [5] motion is running
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
 	COMBINED_HOLD,					// [6] motion is holding
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
 	COMBINED_PROBE,					// [7] probe cycle active
-	COMBINED_CYCLE,					// [8] machine is running (cycling)
-	COMBINED_HOMING,				// [9] homing is treated as a cycle
-	COMBINED_JOG,					// [10] jogging is treated as a cycle
+        //iff macs == MACHINE_CYCLE, cycs == CYCLE_PROBE
+	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
+        //DEPRECATED
+	COMBINED_HOMING,				// [9] homing cycle active
+        //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
+	COMBINED_JOG,					// [10] jogging cycle active
+        //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
 	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown)
+        //iff macs == MACHINE_SHUTDOWN
 };
 //### END CRITICAL REGION ###
 
@@ -316,9 +314,9 @@ enum cmMachineState {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
 	MACHINE_ALARM,					// machine in soft alarm state
-	MACHINE_PROGRAM_STOP,			// program stop or no more blocks
-	MACHINE_PROGRAM_END,			// program end
-	MACHINE_CYCLE,					// machine is running (cycling)
+	MACHINE_PROGRAM_STOP,			// no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
+	MACHINE_PROGRAM_END,			// program end (same as MACHINE_READY, really...)
+	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
 	MACHINE_SHUTDOWN,				// machine in hard alarm state (shutdown)
 };
 
@@ -326,14 +324,14 @@ enum cmCycleState {
 	CYCLE_OFF = 0,					// machine is idle
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
-	CYCLE_HOMING,					// homing is treated as a specialized cycle
-	CYCLE_JOG						// jogging is treated as a specialized cycle
+	CYCLE_HOMING,					// in homing cycle
+	CYCLE_JOG						// in jogging cycle
 };
 
 enum cmMotionState {
-	MOTION_STOP = 0,				// motion has stopped
-	MOTION_RUN,						// machine is in motion
-	MOTION_HOLD						// feedhold in progress
+	MOTION_STOP = 0,				// motion has stopped: set when the steppers reach the end of the planner queue
+	MOTION_RUN,						// machine is in motion: set when the steppers execute an ALINE segment
+	MOTION_HOLD						// feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 };
 
 enum cmFeedholdState {				// feedhold_state machine
@@ -341,6 +339,7 @@ enum cmFeedholdState {				// feedhold_state machine
 	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
 	FEEDHOLD_PLAN, 					// replan blocks for feedhold
 	FEEDHOLD_DECEL,					// decelerate to hold point
+	FEEDHOLD_READY_TO_HOLD,         // we are done decelerating, go into a hold next time mp_exec_aline runs
 	FEEDHOLD_HOLD,					// holding
 	FEEDHOLD_END_HOLD				// end hold (transient state to OFF)
 };
@@ -355,6 +354,19 @@ enum cmProbeState {					// applies to cm.probe_state
 	PROBE_FAILED = 0,				// probe reached endpoint without triggering
 	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
+};
+
+enum cmEstopState {
+    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
+    ESTOP_ACKED    = 0,
+    ESTOP_INACTIVE = 0,
+    ESTOP_PRESSED  = 0x1,
+    ESTOP_UNACKED  = 0x2,
+    ESTOP_ACTIVE   = 0x4,
+
+    ESTOP_ACTIVE_MASK = 0x4,
+    ESTOP_ACK_MASK = 0x2,
+    ESTOP_PRESSED_MASK = 0x1,
 };
 
 /* The difference between NextAction and MotionMode is that NextAction is
@@ -475,7 +487,8 @@ enum cmProgramFlow {
 enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
 	SPINDLE_OFF = 0,
 	SPINDLE_CW,
-	SPINDLE_CCW
+	SPINDLE_CCW,
+	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
 };
 
 enum cmCoolantState {				// mist and flood coolant states
@@ -596,7 +609,7 @@ stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 stat_t cm_straight_feed(float target[], float flags[]);			// G1
 stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
 					float i, float j, float k,
-					float radius, uint8_t motion_mode);
+					float radius, float radius_flag, uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)
@@ -623,14 +636,18 @@ void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 // Program Functions (4.3.10)
 void cm_request_feedhold(void);
 void cm_request_queue_flush(void);
-void cm_request_cycle_start(void);
+void cm_request_end_hold(void);
 
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
+//start or end a feedhold
+stat_t cm_start_hold(void);
+stat_t cm_end_hold(void);
+
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
-void cm_feedhold(void);											// (no Gcode)
+void cm_canned_cycle_end(void);                                 // end of canned cycle
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2
@@ -650,6 +667,11 @@ stat_t cm_probing_cycle_callback(void);							// G38.2 main loop callback
 stat_t cm_jogging_cycle_callback(void);							// jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);					// {"jogx":-100.3}
 float cm_get_jogging_dest(void);
+
+/*--- E-Stop ---*/
+stat_t cm_start_estop(void);
+stat_t cm_end_estop(void);
+stat_t cm_ack_estop(nvObj_t *nv);
 
 /*--- cfgArray interface functions ---*/
 
@@ -675,6 +697,8 @@ stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
 stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
+stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
+stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
@@ -713,6 +737,10 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_dist(nvObj_t *nv);
 	void cm_print_frmo(nvObj_t *nv);
 	void cm_print_tool(nvObj_t *nv);
+	void cm_print_ilck(nvObj_t *nv);
+	void cm_print_estp(nvObj_t *nv);
+	void cm_print_spc(nvObj_t *nv);
+	void cm_print_sps(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -751,6 +779,8 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_cofs(nvObj_t *nv);
 	void cm_print_cpos(nvObj_t *nv);
 
+	void cm_print_pdt(nvObj_t *nv);
+
 #else // __TEXT_MODE
 
 	#define cm_print_vel tx_print_stub		// model state reporting
@@ -771,6 +801,10 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_dist tx_print_stub
 	#define cm_print_frmo tx_print_stub
 	#define cm_print_tool tx_print_stub
+	#define cm_print_ilck tx_print_stub
+	#define cm_print_estp tx_print_stub
+	#define cm_print_spc tx_print_stub
+	#define cm_print_sps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub
@@ -808,6 +842,8 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_zb tx_print_stub
 	#define cm_print_cofs tx_print_stub
 	#define cm_print_cpos tx_print_stub
+
+	#define cm_print_pdt txt_print_stub
 
 #endif // __TEXT_MODE
 

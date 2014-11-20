@@ -27,8 +27,8 @@
  */
 /* Switch Modes
  *
- *	The switches are considered to be homing switches when machine_state is
- *	MACHINE_HOMING. At all other times they are treated as limit switches:
+ *	The switches are considered to be homing switches when cycle_state is
+ *	CYCLE_HOMING. At all other times they are treated as limit switches:
  *	  - Hitting a homing switch puts the current move into feedhold
  *	  - Hitting a limit switch causes the machine to shut down and go into lockdown until reset
  *
@@ -63,6 +63,7 @@ switches_t sw;
 //static void _led_off(switch_t *s);
 static void _trigger_feedhold(switch_t *s);
 static void _trigger_cycle_start(switch_t *s);
+static void _trigger_alarm(switch_t *s);
 
 static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
@@ -81,20 +82,15 @@ static void _no_action(switch_t *s) { return; }
 
 void switch_init(void)
 {
-	sw.type = SWITCH_TYPE;				// set from config
 	return(switch_reset());
 }
 
 void switch_reset(void)
 {
 	switch_t *s;	// shorthand
-
 	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
 		for (uint8_t position=0; position<SW_POSITIONS; position++) {
 			s = &sw.s[axis][position];
-
-			s->type = sw.type;				// propagate type from global type
-//			s->mode = SW_MODE_DISABLED;		// commented out: mode is set from configs
 			s->state = false;
 			s->edge = SW_NO_EDGE;
 			s->debounce_ticks = SW_LOCKOUT_TICKS;
@@ -103,8 +99,14 @@ void switch_reset(void)
 			// functions bound to each switch
 			s->when_open = _no_action;
 			s->when_closed = _no_action;
-			s->on_leading = _trigger_feedhold;
-			s->on_trailing = _trigger_cycle_start;
+            if(s->mode & SW_LIMIT_BIT) {
+                s->on_leading = _trigger_alarm;
+            }
+            else
+            {
+                s->on_leading = _no_action;
+            }
+			s->on_trailing = _no_action;
 		}
 	}
 	// bind functions to individual switches
@@ -219,7 +221,33 @@ static void _trigger_feedhold(switch_t *s)
 static void _trigger_cycle_start(switch_t *s)
 {
 //	IndicatorLed.toggle();
-	cm_request_cycle_start();
+	cm_request_end_hold();
+}
+
+static void _trigger_alarm(switch_t *s)
+{
+    s->limit_switch_thrown = true;
+}
+
+uint8_t get_limit_switch_thrown(void)
+{
+    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
+		for (uint8_t position=0; position<SW_POSITIONS; position++) {
+			if(sw.s[axis][position].limit_switch_thrown) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void reset_limit_switches(void)
+{
+    for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
+		for (uint8_t position=0; position<SW_POSITIONS; position++) {
+			sw.s[axis][position].limit_switch_thrown = false;
+        }
+    }
 }
 
 /*

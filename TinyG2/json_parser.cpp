@@ -45,8 +45,6 @@ static stat_t _json_parser_kernal(char_t *str);
 //static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth);
 static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth);
 static stat_t _normalize_json_string(char_t *str, uint16_t size);
-//static stat_t _footer_style_1(nvObj_t *nv, stat_t status);
-//static stat_t _footer_style_2(nvObj_t *nv, stat_t status);
 
 /****************************************************************************
  * json_parser() - exposed part of JSON parser
@@ -89,6 +87,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size);
 void json_parser(char_t *str)
 {
 	stat_t status = _json_parser_kernal(str);
+	if (status == STAT_COMPLETE) return;	// skip the print if returning from something at already did it.
 	nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
 	sr_request_status_report(SR_REQUEST_IMMEDIATE); // generate incremental status report to show any changes
 }
@@ -435,7 +434,7 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
  *		The terminating object may or may not have data (empty or not empty).
  *
  *	Returns:
- *		Returns length of string
+ *		Returns length of string, or -1 if there's been an error
  *
  *	Desired behaviors:
  *	  - Allow self-referential elements that would otherwise cause a recursive loop
@@ -564,7 +563,6 @@ void json_print_list(stat_t status, uint8_t flags)
  *	Then if you want a gcode line number you add that here to the end. Finally, a footer goes
  *	on all the (non-silent) responses.
  */
-#define MAX_TAIL_LEN 8
 
 void json_print_response(uint8_t status)
 {
@@ -610,35 +608,30 @@ void json_print_response(uint8_t status)
 
 	// Footer processing
 	while(nv->valuetype != TYPE_EMPTY) {					// find a free nvObj at end of the list...
-		if ((nv = nv->nx) == NULL) {						//...or hit the NULL and return w/o a footer
-			json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf));
+		if ((nv = nv->nx) == NULL) {						// oops! No free nvObj!
+			rpt_exception(STAT_JSON_TOO_LONG, NULL);		// report this as an exception
 			return;
 		}
 	}
 	char_t footer_string[NV_FOOTER_LEN];
-	sprintf((char *)footer_string, "%d,%d,%d,0", FOOTER_REVISION, status, cs.linelen);
-	cs.linelen = 0;											// reset linelen so it's only reported once
+
+//	if (xio.enable_window_mode) {							// 2 footer styles are supported...
+//		sprintf((char *)footer_string, "%d,%d,%d", 2, status, xio_get_window_slots());	//...windowing
+//	} else {
+		sprintf((char *)footer_string, "%d,%d,%d", 1, status, cs.linelen);				//...streaming
+		cs.linelen = 0;										// reset linelen so it's only reported once
+//	}
 
 	nv_copy_string(nv, footer_string);						// link string to nv object
-//	nv->depth = 0;											// footer 'f' is a peer to response 'r' (hard wired to 0)
-	nv->depth = js.json_footer_depth;						// 0=footer is peer to response 'r', 1=child of response 'r'
-	nv->valuetype = TYPE_ARRAY;
-	strcpy(nv->token, "f");									// terminate the list
-	nv->nx = NULL;
+	nv->depth = 0;											// footer 'f' is a peer to response 'r' (hard wired to 0)
+	nv->valuetype = TYPE_ARRAY;								// declare it as an array
+	strcpy(nv->token, "f");									// set it to Footer
+	nv->nx = NULL;											// terminate the list
 
-	// do all this to avoid having to serialize it twice
-	int16_t strcount = json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf));// make JSON string w/o checksum
-	if (strcount < 0) { return;}							// encountered an overrun during serialization
-	if (strcount > OUTPUT_BUFFER_LEN - MAX_TAIL_LEN) { return;}	// would overrun during checksum generation
-	int16_t strcount2 = strcount;
-	char tail[MAX_TAIL_LEN];
-
-	while (cs.out_buf[strcount] != '0') { strcount--; }		// find end of checksum
-	strcpy(tail, cs.out_buf + strcount + 1);				// save the json termination
-
-	while (cs.out_buf[strcount2] != ',') { strcount2--; }	// find start of checksum
-	sprintf((char *)cs.out_buf + strcount2 + 1, "%d%s", compute_checksum(cs.out_buf, strcount2), tail);
-	fprintf(stderr, "%s", cs.out_buf);
+	// serialize the JSON response and print it if there were no errors
+	if (json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf)) >= 0) {
+		fprintf(stderr, "%s", cs.out_buf);
+	}
 }
 
 /***********************************************************************************
@@ -669,7 +662,6 @@ stat_t json_set_jv(nvObj_t *nv)
 
 	return(STAT_OK);
 }
-
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

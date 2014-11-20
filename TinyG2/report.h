@@ -79,22 +79,28 @@ typedef struct qrSingleton {		// data for queue reports
 	uint8_t queue_report_requested;	// set to true to request a report
 	uint8_t buffers_available;		// stored buffer depth passed to by callback
 	uint8_t prev_available;			// buffers available at last count
-	uint8_t buffers_added;			// buffers added since last count
-	uint8_t buffers_removed;		// buffers removed since last report
+	uint16_t buffers_added;			// buffers added since last count
+	uint16_t buffers_removed;		// buffers removed since last report
 	uint8_t motion_mode;			// used to detect arc movement
 	uint32_t init_tick;				// time when values were last initialized or cleared
 
 } qrSingleton_t;
 
+typedef struct rxSingleton {
+	uint8_t rx_report_requested;
+	uint16_t space_available;		// space available in usb rx buffer at time of request
+} rxSingleton_t;
+
 /**** Externs - See report.c for allocation ****/
 
 extern srSingleton_t sr;
 extern qrSingleton_t qr;
+extern rxSingleton_t rx;
 
 /**** Function Prototypes ****/
 
 void rpt_print_message(char *msg);
-stat_t rpt_exception(uint8_t status);
+stat_t rpt_exception(uint8_t status, char_t *info);
 
 stat_t rpt_er(nvObj_t *nv);
 void rpt_print_loading_configs_message(void);
@@ -115,6 +121,9 @@ stat_t sr_set_si(nvObj_t *nv);
 void qr_init_queue_report(void);
 void qr_request_queue_report(int8_t buffers);
 stat_t qr_queue_report_callback(void);
+
+void rx_request_rx_report(void);
+stat_t rx_report_callback(void);
 
 stat_t qr_get(nvObj_t *nv);
 stat_t qi_get(nvObj_t *nv);

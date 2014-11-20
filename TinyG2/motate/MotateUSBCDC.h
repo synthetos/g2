@@ -137,6 +137,13 @@ namespace Motate {
         kCDCParityMark  = 3, /* Mark parity bit mode on each frame. */
         kCDCParitySpace = 4, /* Space parity bit mode on each frame. */
     };
+    
+    /** Enum for the parameters of SetControlLineState */
+    enum CDCControlState_t
+    {
+        kCDCControlState_DTR = 0x1, /* Data termianl ready */
+        kCDCControlState_RTS = 0x2, /* Ready to send */
+    };
 
 #pragma mark USBCDCDescriptorFunctionalHeader_t
     /** CDC class-specific Functional Header Descriptor (LUFA naming conventions).
@@ -377,20 +384,26 @@ namespace Motate {
             usb.flush(write_endpoint);
         }
 
+        void flushRead() {
+            usb.flushRead(read_endpoint);
+        }
+
         bool isConnected() {
-            return _line_state & (0x01 << 1);
+            return _line_state & (0x01 << kCDCControlState_DTR);
         }
 
         bool getDTR() {
-            return _line_state & (0x01 << 0);
+            return _line_state & (0x01 << kCDCControlState_DTR);
         }
 
         bool getRTS() {
-            return _line_state & (0x01 << 1);
+            return _line_state & (0x01 << kCDCControlState_RTS);
         }
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
+            if(connection_state_changed_callback && (_line_state & kCDCControlState_DTR))
+                connection_state_changed_callback(_line_state & kCDCControlState_DTR);
         }
 
         bool handleNonstandardRequest(Setup_t &setup) {
@@ -415,12 +428,9 @@ namespace Motate {
                     uint8_t _old_line_state = _line_state;
                     _line_state = setup.valueLow();
 
-                    // TODO -- make this a global enum type:
-                    static const uint8_t DTR_MASK = (0x01 << 0);
-
                     // If the DTR changed, call connectionStateChanged (if it's defined)
-                    if (connection_state_changed_callback && ((_old_line_state & DTR_MASK) != (_line_state & DTR_MASK))) {
-                        connection_state_changed_callback(_line_state & DTR_MASK);
+                    if (connection_state_changed_callback && ((_old_line_state & kCDCControlState_DTR) != (_line_state & kCDCControlState_DTR))) {
+                        connection_state_changed_callback(_line_state & kCDCControlState_DTR);
                     }
 
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.

@@ -74,7 +74,7 @@ enum sectionState {
 #define MIN_LENGTH_MOVE 		((float)0.001)		// millimeters
 
 #define JERK_MULTIPLIER			((float)1000000)
-#define JERK_MATCH_PRECISION	((float)1000)		// precision to which jerk must match to be considered effectively the same
+#define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 
 /* ESTD_SEGMENT_USEC	 Microseconds per planning segment
  *	Should be experimentally adjusted if the MIN_SEGMENT_LENGTH is changed
@@ -151,8 +151,6 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
 	cm_exec_t cm_func;				// callback to canonical machine execution function
 
-	float naiive_move_time;
-
 	uint8_t buffer_state;			// used to manage queuing/dequeuing
 	uint8_t move_type;				// used to dispatch to run routine
 	uint8_t move_code;				// byte that can be used by used exec functions
@@ -199,9 +197,9 @@ typedef struct mpMoveMasterSingleton { // common variables for planning (move ma
 	magic_t magic_start;			// magic number to test memory integrity
 	float position[AXES];			// final move position for planning purposes
 
-//	float prev_jerk;				// jerk values cached from previous move
-//	float prev_recip_jerk;
-	float prev_cbrt_jerk;
+	float jerk;						// jerk values cached from previous block
+	float recip_jerk;
+	float cbrt_jerk;
 
 	magic_t magic_end;
 } mpMoveMasterSingleton_t;
@@ -239,27 +237,11 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float segment_time;				// actual time increment per aline segment
 	float jerk;						// max linear jerk
 
-#ifdef __JERK_EXEC					// values used exclusively by computed jerk acceleration
-	float jerk_div2;				// cached value for efficiency
-	float midpoint_velocity;		// velocity at accel/decel midpoint
-	float midpoint_acceleration;	//
-	float accel_time;				//
-	float segment_accel_time;		//
-	float elapsed_accel_time;		//
-#else								// values used exclusively by forward differencing acceleration
 	float forward_diff_1;			// forward difference level 1
 	float forward_diff_2;			// forward difference level 2
 	float forward_diff_3;			// forward difference level 3
 	float forward_diff_4;			// forward difference level 4
 	float forward_diff_5;			// forward difference level 5
-#ifdef __KAHAN
-	float forward_diff_1_c;			// forward difference level 1 floating-point compensation
-	float forward_diff_2_c;			// forward difference level 2 floating-point compensation
-	float forward_diff_3_c;			// forward difference level 3 floating-point compensation
-	float forward_diff_4_c;			// forward difference level 4 floating-point compensation
-	float forward_diff_5_c;			// forward difference level 5 floating-point compensation
-#endif
-#endif
 
 	GCodeState_t gm;				// gcode model state currently executing
 
@@ -293,6 +275,7 @@ void mp_end_dwell(void);
 stat_t mp_aline(GCodeState_t *gm_in);
 
 stat_t mp_plan_hold_callback(void);
+stat_t mp_start_hold(void);
 stat_t mp_end_hold(void);
 stat_t mp_feed_rate_override(uint8_t flag, float parameter);
 
@@ -328,6 +311,7 @@ float* mp_get_planner_position_vector(void);
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
+float mp_get_meet_velocity(const float v_0, const float v_2, const float L, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 
 // plan_exec.c functions

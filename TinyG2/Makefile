@@ -1,11 +1,11 @@
-# 
+#
 # Makefile
-# 
+#
 # Copyright (c) 2012 - 2013 Robert Giseburt
 # Copyright (c) 2013 Alden S. Hart Jr.
-# 
+#
 # This file is part of the TinyG2 project.
-# 
+#
 # This file ("the software") is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2 as published by the
 # Free Software Foundation. You should have received a copy of the GNU General Public
@@ -17,7 +17,7 @@
 # SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
 # OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 
 ##############################################################################################
 # Start of default section
@@ -25,13 +25,16 @@
 
 PROJECT  = TinyG2
 
-SOURCE_DIRS = . motate
-# arduino arduino/USB variants
 
-FIRST_LINK_SOURCES :=
+# Include all of the *directories* containing files to compile to SOURCE_DIRS.
+# *EXCEPT* motate paths and processor-specific directories!
+SOURCE_DIRS = .
 
-# List all user directories here
-USER_INCLUDE_DIRS := $(SOURCE_DIRS)
+# List *project-specific* files that must be linked to first in FIRST_LINK_SOURCES.
+FIRST_LINK_SOURCES =
+
+# List all user directories here that aren't in SOURCE_DIRS
+USER_INCLUDE_DIRS =
 
 # List the user directory to look for the libraries here
 USER_LIB_DIRS =
@@ -44,13 +47,19 @@ USER_LIBS =
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
+# SETTINGS_FILE may get overriden by the PLATFORM setings below
+SETTINGS_FILE ?= settings_default.h
+
 CFLAGS   :=
 CPPFLAGS :=
 
 # List ASM source files here
 ASRC =
 
-DEFAULT_MEMORY = flash
+MOTATE_PATH := motate
+
+SOURCE_DIRS += $(MOTATE_PATH)
+USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
@@ -94,7 +103,7 @@ CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn -Wpacked 
+#CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
 
 
@@ -119,14 +128,12 @@ QUIET :=
 endif
 
 ifeq ($(COLOR),1)
-START_BOLD="\033[1m"
-END_BOLD="\033[0m"
-NO_COLOR="\033[0m"
-OK_COLOR="\033[32;01m"
-ERROR_COLOR="\033[31;01m"
-WARN_COLOR="\033[33;01m"
-else
-QUIET :=
+START_BOLD=`tput bold`
+END_BOLD=`tput sgr0`
+NO_COLOR=`tput setaf 0`
+OK_COLOR=`tput setaf 2`
+ERROR_COLOR=`tput setaf 1`
+WARN_COLOR=`tput setaf 3`
 endif
 
 
@@ -174,28 +181,36 @@ endif
 ifeq ("$(PLATFORM)","G2v9d")
 
 BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9d"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9d" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9f")
 
 BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9f"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9f" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9g")
 
 BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9g"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9g" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9i")
 
 BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
+ifeq ("$(PLATFORM)","UltimakerTests")
+
+BASE_PLATFORM=v9_3x8c
+SETTINGS_FILE="settings_Ultimaker_Rob_v9h.h"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -215,11 +230,11 @@ ifeq ("$(BASE_PLATFORM)","due")
 	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8E
-    PLATFORM_BASE = platform/atmel_sam
-    CMSIS_ROOT = CMSIS
+		PLATFORM_BASE = platform/atmel_sam
+		CMSIS_ROOT = CMSIS
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
-	
+
 
 	include $(PLATFORM_BASE).mk
 endif
@@ -256,7 +271,7 @@ endif
 OUTPUT_BIN = $(BIN)/$(PLATFORM)
 
 #-------------------------------------------------------------------------------
-#		Tools
+#    Tools
 #-------------------------------------------------------------------------------
 
 # Compilation tools
@@ -271,12 +286,14 @@ GDB     = $(CROSS_COMPILE)-gdb
 NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
+CKSUM		= cksum
+DD			= dd
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
 
 SHELL = bash
-export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 
 
 # ---------------------------------------------------------------------------------------
@@ -304,7 +321,7 @@ LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-section
 
 
 #-------------------------------------------------------------------------------
-#		Files
+#    Files
 #-------------------------------------------------------------------------------
 
 # Directories where source files can be found
@@ -327,6 +344,7 @@ CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES)
 CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
+
 ifeq ($(VERBOSE),2)
 define NEWLINE_ONLY
 
@@ -334,119 +352,149 @@ define NEWLINE_ONLY
 endef
 define NEWLINE_TAB
 
-	
+	${EMPTY}
 endef
 
 $(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
 $(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
 $(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
+$(info $(NEWLINE_ONLY)SAM_SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SAM_SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
 $(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
 endif
 
 
 #-------------------------------------------------------------------------------
-#		Rules
+#    Rules
 #-------------------------------------------------------------------------------
 
 
-all: TOOLS $(DEFAULT_MEMORY)
+all: $(OUTPUT_BIN).elf
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
 MK_DIRS =   $(shell                              \
-              for d in $(REQUIRED_DIRS);         \
-              do                                 \
-                [[ -d $$d ]] || mkdir -p $$d;    \
-              done)
+		for d in $(REQUIRED_DIRS);         \
+		do                                 \
+		[[ -d $$d ]] || mkdir -p $$d;    \
+		done)
 
 $(eval $(DEVICE_RULES))
 
-TOOLS:
-	if test \! `command -v ${CC}`; then cd ../Tools && make; fi
+.PHONY : MKTOOLS
 
-#-------------------------------------------------------------------------------
-#		Per-Memory Rules Block
-#-------------------------------------------------------------------------------
+MKTOOLS:
+	@echo Looking for tools...
+	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
 
-define RULES
-OUTDIR = $(OBJ)/$(1)
+OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)
-C_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(C_OBJECTS))
-CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(CXX_OBJECTS))
-ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(ASM_OBJECTS))
-LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/gcc_$(1).ld
-ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
-FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(FIRST_LINK_OBJECTS))
+
+
+FIRST_LINK_OBJECTS_PATHS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(FIRST_LINK_OBJECTS)))
+
+MOTATE_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(C_OBJECTS))))
+MOTATE_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(CXX_OBJECTS))))
+MOTATE_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(ASM_OBJECTS))))
+
+ALL_OTHER_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(C_OBJECTS)))
+ALL_OTHER_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(CXX_OBJECTS)))
+ALL_OTHER_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(ASM_OBJECTS)))
+
+ALL_C_OBJECTS   := $(MOTATE_C_OBJECTS) $(ALL_OTHER_C_OBJECTS)
+ALL_CXX_OBJECTS := $(MOTATE_CXX_OBJECTS) $(ALL_OTHER_CXX_OBJECTS)
+ALL_ASM_OBJECTS := $(MOTATE_ASM_OBJECTS) $(ALL_OTHER_ASM_OBJECTS)
+
+
+#
+CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+
+LINKER_SCRIPT ?= $(PLATFORM_BASE)/gcc_flash.ld
+#LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
+ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
 
 # Generate dependency information
-DEPFLAGS_$(1) = -MMD -MF $(OBJ)/dep/$$(@F)_$(1).d -MT $(subst $(OUTDIR),$(OBJ)/$(1),$$@)
+DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
-$$(OUTDIR)/core.a: $$(OUTDIR)/core.a( $$(ASM_OBJECTS_$(1)) $$(CXX_OBJECTS_$(1)) $$(C_OBJECTS_$(1)) ) | $(BIN) $(OBJ)
-
-ALL_C_OBJECTS_$(1)   += $$(C_OBJECTS_$(1))
-ALL_CXX_OBJECTS_$(1) += $$(CXX_OBJECTS_$(1))
-ALL_ASM_OBJECTS_$(1) += $$(ASM_OBJECTS_$(1))
-
-.PHONY: $(1)
-
-$(1): $(OUTPUT_BIN)_$(1).elf
-
-$(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
-	@echo $(START_BOLD)"Linking $(OUTPUT_BIN)_$(1).elf" $(END_BOLD)
-	@echo $(START_BOLD)"Using linker script: $$(ABS_LINKER_SCRIPT_$(1))" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$(1).map" -o $$@ $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(FIRST_LINK_OBJECTS_$(1)) $$+ -Wl,--end-group
-	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN)_$(1).elf.txt" $(END_BOLD)
-	$(QUIET)$(NM) "$(OUTPUT_BIN)_$(1).elf" >"$(OUTPUT_BIN)_$(1).elf.txt"
-	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN)_$(1).bin" $(END_BOLD)
-	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN)_$(1).elf" "$(OUTPUT_BIN)_$(1).bin"
+$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
+	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
+	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
+	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
 	@echo "--- SIZE INFO ---"
-	$(QUIET)$(SIZE) "$(OUTPUT_BIN)_$(1).elf"
+	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
-$$(ALL_CXX_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.cpp
-	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
-	@echo $(START_BOLD)"Compiling cpp ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
-	$(QUIET)$(CXX) $(CPPFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -xc++ -c -o $$@ $$<
+## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
-$$(ALL_C_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.c
-	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
-	@echo $(START_BOLD)"Compiling c ($(1)) $$<"; echo "    -> $$@" $(END_BOLD)
-	$(QUIET)$(CC) $(CFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
+$(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$$(ALL_ASM_OBJECTS_$(1)): $$(OUTDIR)/%.o: %.S
-	$(QUIET)$(MKDIR) -p "$$(@D)" "$$(DEPDIR)" "$$(BIN)"
-	@echo $(START_BOLD)"Compiling ($(1)) $$<"; echo "    -> $$@"  $(END_BOLD)
-	$(QUIET)$(CC) $(ASFLAGS) $$(DEPFLAGS_$(1)) -D$(1) -c -o $$@ $$<
+$(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-debug: $(1)
-	$(GDB) -x "$(PLATFORM_BASE).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
+$(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-# 
+$(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.S
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+debug: $(OUTPUT_BIN).elf
+	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+flash: $(OUTPUT_BIN).elf
+	"${PLATFORM_BASE}-flash.sh" "$(OUTPUT_BIN).elf"
+
+
+#-------------------------------------------------------------------------------
+#    Default $(PROJECT).elf, and clean
+#-------------------------------------------------------------------------------
+
+$(PROJECT).elf: $(OUTPUT_BIN).elf
+	$(CP) $< $@
+
+$(PROJECT).map: $(OUTPUT_BIN).map
+	$(CP) $< $@
+
+$(PROJECT).hex: $(OUTPUT_BIN).elf
+	$(QUIET)$(OBJCOPY) -O ihex $< $@
+
+$(PROJECT).bin: $(OUTPUT_BIN).elf
+	$(QUIET)$(OBJCOPY) -O binary $< $@
+
+clean:
+	-$(RM) -fR $(OBJ) $(BIN) $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+
+
+#
 # Include the dependency files, should be the last of the makefile
 #
 -include $(shell mkdir $(OBJ)/dep 2>/dev/null) $(wildcard $(OBJ)/dep/*.d)
 
-endef
-
-#$(foreach MEMORY, $(MEMORIES), $(warning $(call RULES,$(MEMORY))))
-$(foreach MEMORY, $(MEMORIES), $(eval $(call RULES,$(MEMORY))))
-
-
-#-------------------------------------------------------------------------------
-#		Default $(PROJECT).elf, and clean
-#-------------------------------------------------------------------------------
-
-$(PROJECT).elf: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
-	$(CP) $< $@
-
-$(PROJECT).map: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).map
-	$(CP) $< $@
-
-$(PROJECT).hex: $(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf
-	$(QUIET)$(OBJCOPY) -O ihex "$(OUTPUT_BIN)_$(DEFAULT_MEMORY).elf" "$(PROJECT)".hex
-
-clean:
-	-$(RM) -fR $(OBJ) $(BIN) $(PROJECT).elf
 
 # *** EOF ***

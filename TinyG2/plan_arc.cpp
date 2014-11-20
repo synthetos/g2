@@ -44,10 +44,10 @@ static stat_t _test_arc_soft_limits(void);
 /*****************************************************************************
  * Canonical Machining arc functions (arc prep for planning and runtime)
  *
- * cm_arc_init()	 - initialize arcs
- * cm_arc_feed() 	 - canonical machine entry point for arc
- * cm_arc_callback() - mail-loop callback for arc generation
- * cm_abort_arc()	 - stop an arc in process
+ * cm_arc_init()			- initialize arcs
+ * cm_arc_feed()			- canonical machine entry point for arc
+ * cm_abort_arc()			- stop an arc in process
+ * cm_arc_cycle_callback()	- main-loop callback for arc generation
  */
 
 /*
@@ -67,7 +67,7 @@ void cm_arc_init()
  */
 stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 				   float i, float j, float k, 	 // raw arc offsets
-				   float radius, 				 // non-zero radius implies radius mode
+				   float radius, float radius_flag, 				 // non-zero radius implies radius mode
 				   uint8_t motion_mode)			 // defined motion mode
 {
 	// trap zero feed rate condition
@@ -132,10 +132,21 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 }
 
 /*
+ * cm_abort_arc() - stop arc movement without maintaining position
+ *
+ *	OK to call if no arc is running
+ */
+
+void cm_abort_arc()
+{
+	arc.run_state = MOVE_OFF;
+}
+
+/*
  * cm_arc_cycle_callback() - generate an arc
  *
- *	cm_arc_callback() is called from the controller main loop. Each time it's called it
- *	queues as many arc segments (lines) as it can before it blocks, then returns.
+ *	cm_arc_cycle_callback() is called from the controller main loop. Each time it's called
+ *	it queues as many arc segments (lines) as it can before it blocks, then returns.
  *
  *  Parts of this routine were originally sourced from the grbl project.
  */
@@ -155,17 +166,6 @@ stat_t cm_arc_cycle_callback()
 	if (--arc.segment_count > 0) return (STAT_EAGAIN);
 	arc.run_state = MOVE_OFF;
 	return (STAT_OK);
-}
-
-/*
- * cm_abort_arc() - stop arc movement without maintaining position
- *
- *	OK to call if no arc is running
- */
-
-void cm_abort_arc()
-{
-	arc.run_state = MOVE_OFF;
 }
 
 /*

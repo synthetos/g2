@@ -48,6 +48,12 @@ SECTIONS
         . = ALIGN(4);
         _sfixed = .;
         KEEP(*(.vectors .vectors.*))
+        /* "CNCFORALL!!!" is our magic to identify a valid firmware image */
+        BYTE(0x43) BYTE(0x4e) BYTE(0x43) BYTE(0x46) BYTE(0x4f) BYTE(0x52) BYTE(0x41) BYTE(0x4c) BYTE(0x4c) BYTE(0x21) BYTE(0x21) BYTE(0x21)
+        /* CRC32 goes here */
+        LONG(0x54545454)
+        /* Length of binary goes here */
+        LONG(0x47474747)
         *(.text .text.* .gnu.linkonce.t.*)
         *(.glue_7t) *(.glue_7)
         *(.rodata .rodata* .gnu.linkonce.r.*)

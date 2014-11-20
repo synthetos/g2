@@ -22,7 +22,7 @@
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>SWD</avrtoolinterface>
-    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
+    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>J-Link</ToolName>
@@ -44,7 +44,7 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
-          <SwdClock>12000000</SwdClock>
+          <SwdClock>0</SwdClock>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -73,10 +73,32 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800005101</ToolNumber>
+      <ToolNumber>J41800004782</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
-    <UseGdb>False</UseGdb>
+    <UseGdb>True</UseGdb>
+    <PercepioTrace>
+      <TargetOS />
+      <Frequency>84000000</Frequency>
+      <EnableTraceInterrupts>True</EnableTraceInterrupts>
+      <EnableNonintrusive>True</EnableNonintrusive>
+      <EnableTargetOS>False</EnableTargetOS>
+      <EnableApplicationOutput>True</EnableApplicationOutput>
+      <EnableDataWatchPoints>True</EnableDataWatchPoints>
+      <EnablePC>True</EnablePC>
+      <EnablePCPolled>True</EnablePCPolled>
+      <PolledFrequency>1000</PolledFrequency>
+      <EnableMcu>True</EnableMcu>
+      <EnableOsAwareness>False</EnableOsAwareness>
+      <HWApplicationOutput>True</HWApplicationOutput>
+      <HWInterrupt>True</HWInterrupt>
+      <HWIntrusiveDataWatch>True</HWIntrusiveDataWatch>
+      <HWNonintrusiveDataWatch>True</HWNonintrusiveDataWatch>
+      <HWPolledDataWatch>True</HWPolledDataWatch>
+      <HWPolledProgramCounterSampling>True</HWPolledProgramCounterSampling>
+      <HWProfiling>True</HWProfiling>
+      <HWProgramCounterSampling>True</HWProgramCounterSampling>
+    </PercepioTrace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
@@ -566,7 +588,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=G2v9i MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>TinyG2.elf TinyG2.map COLOR=0 VERBOSE=1 OPTIMIZATION=1 PLATFORM=G2v9i MKDIR=gmkdir</BuildTarget>
     <CleanTarget>clean PLATFORM=G2v9i MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9i\</OutputPath>
