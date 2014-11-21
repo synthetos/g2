@@ -277,10 +277,10 @@
 // *** PWM SPINDLE CONTROL ***
 
 #define P1_PWM_FREQUENCY		100					// in Hz
-#define P1_CW_SPEED_LO			10000				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			16500
-#define P1_CW_PHASE_LO			0.1164				// phase [0..1]
-#define P1_CW_PHASE_HI			0.1438
+#define P1_CW_SPEED_LO			7900				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			12800
+#define P1_CW_PHASE_LO			0.13				// phase [0..1]
+#define P1_CW_PHASE_HI			0.17
 #define P1_CCW_SPEED_LO			0
 #define P1_CCW_SPEED_HI			0
 #define P1_CCW_PHASE_LO			0.1
