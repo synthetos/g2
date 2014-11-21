@@ -137,7 +137,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 		if (move_time < MIN_BLOCK_TIME) {
 			sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 */
-			return (STAT_MINIMUM_TIME_MOVE);
+			//return (STAT_MINIMUM_TIME_MOVE);
 //		}
 	}
 
