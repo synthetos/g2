@@ -85,10 +85,21 @@ enum sectionState {
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 #endif
 #ifdef __ARM
-	#define NOM_SEGMENT_USEC 	((float)5000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	((float)2500)		// minimum segment time / minimum move time
+    #define NOM_PLANNER_USEC 	     ((float)50000) // nominal time for the entire planner (estimated)
+    #define PLANNER_CONSTRAINED_USEC ((float)50000) // minimum amount of time in the planner (est) before we can emit SRs
+
+    #define NOM_SEGMENT_USEC 	((float)8000)		// nominal segment time
+	#define MIN_SEGMENT_USEC 	((float)4000)		// minimum segment time / minimum move time
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
+
+//    #define NOM_SEGMENT_USEC 	((float)15000)		// nominal segment time
+//    #define MIN_SEGMENT_USEC 	((float)2500)		// minimum segment time / minimum move time
+//    #define MIN_ARC_SEGMENT_USEC ((float)20000)		// minimum arc segment time
 #endif
+
+#define NOM_PLANNER_TIME 		   (NOM_PLANNER_USEC / MICROSECONDS_PER_MINUTE)
+#define PLANNER_CONSTRAINED_TIME   (PLANNER_CONSTRAINED_USEC / MICROSECONDS_PER_MINUTE)
+
 
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
@@ -178,6 +189,8 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	float jerk;						// maximum linear jerk term for this move
 	float recip_jerk;				// 1/Jm used for planning (computed and cached)
 	float cbrt_jerk;				// cube root of Jm used for planning (computed and cached)
+
+    float real_move_time;          // amount of time it'll take for the move, in us
 
 	GCodeState_t gm;				// Gode model state - passed from model, used by planner and runtime
 
@@ -285,6 +298,8 @@ void mp_init_buffers(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_unget_write_buffer(void);
 void mp_commit_write_buffer(const uint8_t move_type);
+bool mp_is_planner_constrained();
+
 
 mpBuf_t * mp_get_run_buffer(void);
 uint8_t mp_free_run_buffer(void);

@@ -35,6 +35,12 @@
 #include "util.h"
 #include "spindle.h"
 
+using namespace Motate;
+OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+OutputPin<-1> plan_debug_pin2;
+
+
 // aline planner routines / feedhold planning
 static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
 static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
@@ -88,6 +94,7 @@ uint8_t mp_get_runtime_busy()
 
 stat_t mp_aline(GCodeState_t *gm_in)
 {
+    plan_debug_pin1 = 1;
 	mpBuf_t *bf; 						// current move pointer
 	float exact_stop = 0;				// preset this value OFF
 	float junction_velocity;
@@ -110,6 +117,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 //	if (fp_ZERO(axis_length[AXIS_X]) && fp_ZERO(axis_length[AXIS_Y]) && fp_ZERO(axis_length[AXIS_Z]) &&
 //		fp_ZERO(axis_length[AXIS_A]) && fp_ZERO(axis_length[AXIS_B]) && fp_ZERO(axis_length[AXIS_C])) {
 		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
+        plan_debug_pin1 = 0;
 		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
@@ -123,7 +131,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	_calc_move_times(gm_in, axis_length, axis_square);						// set move time and minimum time in the state
 
-	if (gm_in->move_time < MIN_BLOCK_TIME) {
+//	if (gm_in->move_time < MIN_BLOCK_TIME) {
 /*		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move - uses jerk from previous move
 		float entry_velocity = 0;											// pre-set as if no previous block
 		if ((bf = mp_get_run_buffer()) != NULL) {
@@ -137,9 +145,10 @@ stat_t mp_aline(GCodeState_t *gm_in)
 		if (move_time < MIN_BLOCK_TIME) {
 			sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 */
-			return (STAT_MINIMUM_TIME_MOVE);
+//            plan_debug_pin1 = 0;
+//			return (STAT_MINIMUM_TIME_MOVE);
 //		}
-	}
+//	}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) {							// never supposed to fail
@@ -250,6 +259,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	_plan_block_list(bf, &mr_flag);				// replan block list
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
+    plan_debug_pin1 = 0;
 	return (STAT_OK);
 }
 
@@ -429,12 +439,35 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 {
 	mpBuf_t *bp = bf;
 
+    float total_planned_time = 0;
+    uint16_t non_optimal_positions = 1; // this one
+
 	// Backward planning pass. Find first block and update the braking velocities.
 	// At the end *bp points to the buffer before the first block.
 	while ((bp = mp_get_prev_buffer(bp)) != bf) {
-		if (bp->replannable == false) { break; }
+		if (bp->replannable == false) {
+            if (bp->buffer_state == MP_BUFFER_QUEUED) {
+                total_planned_time += bp->real_move_time;
+            }
+            break;
+        }
 		bp->braking_velocity = min(bp->nx->entry_vmax, bp->nx->braking_velocity) + bp->delta_vmax;
+        non_optimal_positions++;
 	}
+
+    // Keep searching backward to get the total planned time
+    mpBuf_t *bp_time_total = bp;
+    while ((bp_time_total = mp_get_prev_buffer(bp_time_total)) != bf) {
+        if ((bp_time_total->replannable == false) &&
+                ((bp_time_total->buffer_state == MP_BUFFER_QUEUED) ||
+                 (bp_time_total->buffer_state == MP_BUFFER_PENDING))
+            ) {
+            total_planned_time += bp_time_total->real_move_time;
+            continue;
+        }
+    }
+
+    float ideal_move_time = 0;
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	while ((bp = mp_get_next_buffer(bp)) != bf) {
@@ -450,7 +483,24 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								  bp->nx->braking_velocity,
 								 (bp->entry_velocity + bp->delta_vmax) );
 
-		mp_calculate_trapezoid(bp);
+        // We set real_move_time to the minimum amount of time this move can take
+        // if every non-optimal move takes it's share of the NOM_PLANNER_TIME
+        if (total_planned_time < NOM_PLANNER_TIME) {
+            ideal_move_time = (NOM_PLANNER_TIME-total_planned_time)/non_optimal_positions;
+        }
+        bp->real_move_time = ideal_move_time;
+
+        plan_debug_pin2 = 1;
+        mp_calculate_trapezoid(bp);
+        plan_debug_pin2 = 0;
+
+        // Force a calculation of this here
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+        if (fp_ZERO(bp->real_move_time))
+            while(1);
+
+        total_planned_time += bp->real_move_time;
+
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
 		if  ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
@@ -460,11 +510,19 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 			bp->replannable = false;
 		}
 	}
+
+    if (total_planned_time < NOM_PLANNER_TIME) {
+        ideal_move_time = (NOM_PLANNER_TIME-total_planned_time)/non_optimal_positions;
+    }
+    bp->real_move_time = ideal_move_time;
+
 	// finish up the last block move
 	bp->entry_velocity = bp->pv->exit_velocity;
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
+    plan_debug_pin2 = 1;
 	mp_calculate_trapezoid(bp);
+    plan_debug_pin2 = 0;
 }
 
 /*

@@ -44,11 +44,11 @@ static stat_t _exec_aline_segment(void);
 
 static void _init_forward_diffs(float Vi, float Vt);
 
-/*
 using namespace Motate;
-OutputPin<kDebug1_PinNumber> exec_debug_pin1;
-OutputPin<kDebug2_PinNumber> exec_debug_pin2;
-*/
+//OutputPin<kDebug1_PinNumber> exec_debug_pin1;
+//OutputPin<kDebug2_PinNumber> exec_debug_pin2;
+//OutputPin<kDebug3_PinNumber> exec_debug_pin3;
+OutputPin<-1> exec_debug_pin3;
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
@@ -156,12 +156,14 @@ stat_t mp_exec_move()
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
-	if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
+    exec_debug_pin3 = 1;
+    if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
 
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
 		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
 			mp_start_hold();
+            exec_debug_pin3 = 0;
 			return (STAT_NOOP);	// stops here if holding
 		}
 
@@ -176,7 +178,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 				bf->nx->replannable = false;				// prevent overplanning (Note 2)
 			st_prep_null();								// call this to keep the loader happy
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) cm_cycle_end();	// free buffer & end cycle if planner is empty
-			return (STAT_OK);
+            exec_debug_pin3 = 0;
+            return (STAT_OK);
 		}
 		bf->move_state = MOVE_RUN;
 		mr.move_state = MOVE_RUN;
@@ -238,7 +241,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 				cm_cycle_end();	// free buffer & end cycle if planner is empty
 		}
 	}
-	return (status);
+	exec_debug_pin3 = 0;
+    return (status);
 }
 
 /* Forward difference math explained:

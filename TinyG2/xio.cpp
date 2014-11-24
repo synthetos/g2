@@ -42,6 +42,11 @@
 #include "report.h"
 #include "controller.h"
 
+using namespace Motate;
+//OutputPin<kDebug1_PinNumber> xio_debug_pin1;
+OutputPin<kDebug2_PinNumber> xio_debug_pin2;
+//OutputPin<kDebug3_PinNumber> xio_debug_pin3;
+
 
 /*
  **** HIGH LEVEL EXPLANATION OF XIO ****
@@ -94,31 +99,31 @@ bool checkForCtrlAndPrimary(devflags_t flags_to_check) { return (flags_to_check 
 
 
 struct xioDeviceWrapperBase {				// C++ base class for device primitives
-	// connection and device management
-	uint8_t caps;							// bitfield for capabilities flags (these are persistent)
-	devflags_t flags;						// bitfield for device state flags (these are not)
-	devflags_t next_flags;					// bitfield for next-state transitions
+    // connection and device management
+    uint8_t caps;							// bitfield for capabilities flags (these are persistent)
+    devflags_t flags;						// bitfield for device state flags (these are not)
+    devflags_t next_flags;					// bitfield for next-state transitions
 
-	// line reader functions
-	uint16_t read_index;					// index into line being read
-	uint16_t read_buf_size;					// static variable set at init time
-	char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
+    // line reader functions
+    uint16_t read_index;					// index into line being read
+    uint16_t read_buf_size;					// static variable set at init time
+    char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 
     // Internal use only:
     bool _ready_to_send;
 
     // Checks against calss flags variable:
-//	bool canRead() { return caps & DEV_CAN_READ; }
-//	bool canWrite() { return caps & DEV_CAN_WRITE; }
-//	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
-//	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
+    //	bool canRead() { return caps & DEV_CAN_READ; }
+    //	bool canWrite() { return caps & DEV_CAN_WRITE; }
+    //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
+    //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
     bool isCtrl() { return flags & DEV_IS_CTRL; }    // called externally:      DeviceWrappers[i]->isCtrl()
     bool isData() { return flags & DEV_IS_DATA; }    // subclasses can call directly (no pointer): isCtrl()
-	bool isPrimary() { return flags & DEV_IS_PRIMARY; }
-	bool isConnected() { return flags & DEV_IS_CONNECTED; }
-	bool isNotConnected() { return !(flags & DEV_IS_CONNECTED); }
-	bool isReady() { return flags & DEV_IS_READY; }
-	bool isActive() { return flags & DEV_IS_ACTIVE; }
+    bool isPrimary() { return flags & DEV_IS_PRIMARY; }
+    bool isConnected() { return flags & DEV_IS_CONNECTED; }
+    bool isNotConnected() { return !(flags & DEV_IS_CONNECTED); }
+    bool isReady() { return flags & DEV_IS_READY; }
+    bool isActive() { return flags & DEV_IS_ACTIVE; }
 
     // Combination checks
     bool isCtrlAndActive() { return (flags & (DEV_IS_CTRL|DEV_IS_ACTIVE)) == (DEV_IS_CTRL|DEV_IS_ACTIVE); }
@@ -144,7 +149,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
     xioDeviceWrapperBase(uint8_t _caps) : caps(_caps), flags(DEV_FLAGS_CLEAR), next_flags(DEV_FLAGS_CLEAR), read_index(0), read_buf_size(USB_LINE_BUFFER_SIZE), _ready_to_send(false) {
 
-};
+    };
 
     // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
     virtual int16_t readchar() = 0;
@@ -204,7 +209,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
             _ready_to_send = false;
 
             return (read_buf);
-}
+        }
 
         return NULL;
     };
@@ -233,7 +238,7 @@ struct xio_t {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if((DeviceWrappers[i] != except) && DeviceWrappers[i]->isConnected()) {
                 return true;
-                    }
+            }
         }
 
         return false;
@@ -243,14 +248,14 @@ struct xio_t {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isDataAndActive()) {
                 return;
-                    }
+            }
         }
 
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isPrimary()) {
                 DeviceWrappers[i]->clearData();
-    }
-}
+            }
+        }
 
     };
 
@@ -262,9 +267,9 @@ struct xio_t {
 
     // ##### Cross-Device read/write/etc. functions
 
-/*
+    /*
      * write() - write a block to a device
- */
+     */
     size_t write(const uint8_t *buffer, size_t size)
     {
         // There are a few issues with this function that I don't know how to resolve right now:
@@ -279,71 +284,77 @@ struct xio_t {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isCtrlAndActive()) {
                 written = DeviceWrappers[i]->write(buffer, size);
-}
+            }
         }
 
         return written;
     }
 
 
-/*
+    /*
      * flushRead() - flush all readable devices' read buffers
- */
+     */
     void flushRead()
-{
+    {
         for (int8_t i = 0; i < _dev_count; ++i) {
             DeviceWrappers[i]->flushRead();
-	}
-	}
+        }
+    }
 
-/*
- * readline() - read a complete line from a device
- *
- *	Reads a line of text from the next active device that has one ready. With some exceptions.
- *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
- *
- *	This function iterates over all active control and data devices, including reading from
- *	multiple control devices. It will also manage multiple data devices, but only one data
- *	device may be active at a time.
- *
- *	ARGS:
- *
- *	 flags - Bitfield containing the type of channel(s) to read. Looks at DEV_IS_CTRL and
- *			 DEV_IS_DATA bits in the device flag field. 'Flags' is loaded with the flags of
- *			 the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
- *
- *   size -  Returns the size of the completed buffer, including the NUL termination character.
- *			 Lines may be returned truncated the the length of the serial input buffer if the text
- *			 from the physical device is longer than the read buffer for the device. The size value
- *			 provided as a calling argument is ignored (size doesn't matter).
- *
- *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
- */
+    /*
+     * readline() - read a complete line from a device
+     *
+     *	Reads a line of text from the next active device that has one ready. With some exceptions.
+     *	Accepts CR or LF as line terminator. Replaces CR or LF with NUL in the returned string.
+     *
+     *	This function iterates over all active control and data devices, including reading from
+     *	multiple control devices. It will also manage multiple data devices, but only one data
+     *	device may be active at a time.
+     *
+     *	ARGS:
+     *
+     *	 flags - Bitfield containing the type of channel(s) to read. Looks at DEV_IS_CTRL and
+     *			 DEV_IS_DATA bits in the device flag field. 'Flags' is loaded with the flags of
+     *			 the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
+     *
+     *   size -  Returns the size of the completed buffer, including the NUL termination character.
+     *			 Lines may be returned truncated the the length of the serial input buffer if the text
+     *			 from the physical device is longer than the read buffer for the device. The size value
+     *			 provided as a calling argument is ignored (size doesn't matter).
+     *
+     *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
+     */
     char_t *readline(devflags_t &flags, uint16_t &size)
-{
+    {
         char_t *ret_buffer;
         devflags_t limit_flags = flags; // Store it so it can't get mangled
 
+        xio_debug_pin2 = 1;
+
         for (uint8_t dev=0; dev < _dev_count; dev++) {
             if (!DeviceWrappers[dev]->isActive())
-			continue;
+                continue;
 
-		// If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
+            // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
             if (checkForCtrlOnly(limit_flags) && DeviceWrappers[dev]->isNotCtrlOnly() ) // the types need to match
-			continue;
+                continue;
 
             ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
 
             if (size > 0) {
                 flags = DeviceWrappers[dev]->flags;
+
+                xio_debug_pin2 = 0;
                 return ret_buffer;
-					}
-				}
+            }
+        }
         size = 0;
         flags = 0;
-	return (NULL);
+
+        xio_debug_pin2 = 0;
+        return (NULL);
     };
-    
+
     uint16_t magic_end;
 };
 
@@ -361,7 +372,7 @@ template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
     xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}
-{
+    {
         _dev->setConnectionCallback([&](bool connected) {	// lambda function
             if (connected) {
                 if (isNotConnected()) {
@@ -388,7 +399,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
 
             } else { // disconnected
                 if (isConnected()) {
-						
+
                     //USB0 has just disconnected
                     //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
                     //  finalize this channel
@@ -412,7 +423,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
                             rpt_exception(STAT_XIO_ASSERTION_FAILURE, NULL); // where is this supposed to go!?
-					}
+                        }
                         controller_set_connected(false);
                     } else if(checkForCtrlAndPrimary(oldflags)) {
                         // Case 2
@@ -422,25 +433,25 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     } else if(checkForData(oldflags)) {
                         // Case 4
                         xio.remove_data_from_primary();
-				}
+                    }
                 } // flags & DEV_IS_CONNECTED
-			}
+            }
         });
     };
 
     virtual int16_t readchar() final {
-		return _dev->readByte();					// readByte calls the USB endpoint's read function
-	};
-    
+        return _dev->readByte();					// readByte calls the USB endpoint's read function
+    };
+
     virtual void flushRead() final {
         // FLush out any partially or wholly read lines being stored:
         _flushLine();
         return _dev->flushRead();
-		}
+    }
 
     virtual int16_t write(const uint8_t *buffer, int16_t len) final {
         return _dev->write(buffer, len);
-	}
+    }
 };
 
 // ALLOCATIONS
@@ -474,7 +485,7 @@ xio_t xio = {
  *
  *	See here for some good info on lambda functions in C++
  *	http://www.cprogramming.com/c++11/c++11-lambda-closures.html
-*/
+ */
 
 void xio_init()
 {
@@ -483,11 +494,11 @@ void xio_init()
 
 stat_t xio_test_assertions()
 {
-	if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
-		return (STAT_XIO_ASSERTION_FAILURE);
-	}
+    if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
+        return (STAT_XIO_ASSERTION_FAILURE);
+    }
 				return (STAT_OK);
-			}
+}
 
 /*
  * write() - write a buffer to a device
@@ -496,7 +507,7 @@ stat_t xio_test_assertions()
 size_t xio_write(const uint8_t *buffer, size_t size)
 {
     return xio.write(buffer, size);
-		}
+}
 
 /*
  * readline() - read a complete line from a device
@@ -507,7 +518,7 @@ size_t xio_write(const uint8_t *buffer, size_t size)
 char_t *xio_readline(devflags_t &flags, uint16_t &size)
 {
     return xio.readline(flags, size);
-	}
+}
 
 void xio_flush_read() {
     return xio.flushRead();

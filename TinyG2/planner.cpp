@@ -385,6 +385,32 @@ void mp_commit_write_buffer(const uint8_t move_type)
 												// processed immediately and then freed - invalidating the contents
 }
 
+bool mp_is_planner_constrained() {
+    float total_planned_time = 0;
+    mpBuf_t *bf = mp_get_run_buffer();
+    mpBuf_t *bp = bf;
+
+    if (bf == NULL)
+        return false;
+
+    do {
+        total_planned_time += bp->real_move_time;
+
+        if (total_planned_time > PLANNER_CONSTRAINED_TIME)
+            return false;
+
+        if ((bp->nx == bf) ||
+            !((bp->nx->buffer_state == MP_BUFFER_QUEUED) ||
+              (bp->nx->buffer_state == MP_BUFFER_PENDING))
+           ) {
+            return true;
+        }
+    } while ((bp = mp_get_next_buffer(bp)) != bf);
+
+    return true;
+}
+
+
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending

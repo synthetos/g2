@@ -60,9 +60,12 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 using namespace Motate;
 
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	// shorter form of the above
-OutputPin<kDebug1_PinNumber> dda_debug_pin1;			// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
-OutputPin<kDebug2_PinNumber> dda_debug_pin2;
-OutputPin<kDebug3_PinNumber> dda_debug_pin3;
+//OutputPin<kDebug1_PinNumber> dda_debug_pin1;			// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
+OutputPin<-1> dda_debug_pin1;			// usage: dda_debug_pin1 = 1, dda_debug_pin1 = 0
+//OutputPin<kDebug2_PinNumber> dda_debug_pin2;
+OutputPin<-1> dda_debug_pin2;
+//OutputPin<kDebug3_PinNumber> dda_debug_pin3;
+OutputPin<-1> dda_debug_pin3;
 
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);// stepper pulse generation
@@ -581,7 +584,7 @@ namespace Motate {			// Must define timer interrupts inside the Motate namespace
 MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
-
+//    dda_debug_pin2=1;
 	if (interrupt_cause == kInterruptOnMatchA) {
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
@@ -632,6 +635,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 		_load_move();									// load the next move at the current interrupt level
 		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
+//    dda_debug_pin2=0;
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
 
@@ -802,6 +806,9 @@ static void _load_move()
 		}
 		return;
 	}
+
+    dda_debug_pin2=1;
+
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
 
@@ -973,6 +980,7 @@ static void _load_move()
 	st_pre.move_type = MOVE_TYPE_NULL;
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;	// we are done with the prep buffer - flip the flag back
 	st_request_exec_move();								// exec and prep next move
+    dda_debug_pin2=0;
 }
 
 /***********************************************************************************
