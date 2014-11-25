@@ -470,7 +470,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
     float ideal_move_time = 0;
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
-	while ((bp = mp_get_next_buffer(bp)) != bf) {
+	while ((bp = mp_get_next_buffer(bp)) != bf && (bp->buffer_state == MP_BUFFER_PLANNING)) {
 		if ((bp->pv == bf) || (mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
             mr_flag = false;
