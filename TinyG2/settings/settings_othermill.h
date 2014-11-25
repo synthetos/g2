@@ -64,8 +64,14 @@
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
+#define MOTOR_POWER_LEVEL_XY		0.25					// default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY_IDLE	0.10
+#define MOTOR_POWER_LEVEL_Z			0.25
+#define MOTOR_POWER_LEVEL_Z_IDLE	0.15
+#define MOTOR_POWER_LEVEL_DISABLED	0.05
+
 #undef MOTOR_POWER_MODE
-#define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
+#define MOTOR_POWER_MODE MOTOR_POWER_REDUCED_WHEN_IDLE
 
 #undef  STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc"
@@ -114,7 +120,8 @@
 #define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
 #define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE 			MOTOR_POWER_MODE	// 1pm		See enum cmMotorPowerMode in stepper.h
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 0.00=off, 1.00=max
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL_XY	// 0.00=off, 1.00=max
+#define M1_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_XY_IDLE
 
 #define M2_MOTOR_MAP 			AXIS_Y
 #define M2_STEP_ANGLE 			1.8
@@ -122,7 +129,8 @@
 #define M2_MICROSTEPS 			8
 #define M2_POLARITY 			1
 #define M2_POWER_MODE 			MOTOR_POWER_MODE
-#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL_XY
+#define M2_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_XY_IDLE
 
 #define M3_MOTOR_MAP 			AXIS_Z
 #if HAS_CANSTACK_Z_AXIS
@@ -135,7 +143,8 @@
 #define M3_MICROSTEPS 			8
 #define M3_POLARITY 			0
 #define M3_POWER_MODE 			MOTOR_POWER_MODE
-#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL_Z
+#define M3_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_Z_IDLE
 
 #define M4_MOTOR_MAP 			AXIS_A
 #define M4_STEP_ANGLE 			1.8
@@ -143,7 +152,8 @@
 #define M4_MICROSTEPS 			8
 #define M4_POLARITY 			1
 #define M4_POWER_MODE 			MOTOR_POWER_MODE
-#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
+#define M4_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
 #define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
@@ -151,7 +161,8 @@
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
 #define M5_POWER_MODE			MOTOR_POWER_MODE
-#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
+#define M5_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
 #define M6_MOTOR_MAP			AXIS_C
 #define M6_STEP_ANGLE			1.8
@@ -159,7 +170,8 @@
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
 #define M6_POWER_MODE			MOTOR_POWER_MODE
-#define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M6_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
+#define M6_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
 
 // *** axis settings ***

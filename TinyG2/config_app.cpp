@@ -209,6 +209,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "1","1pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_1].power_mode,	M1_POWER_MODE },
 #ifdef __ARM
 	{ "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_1].power_level,M1_POWER_LEVEL },
+	{ "1","1pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_1].power_level_idle,M1_POWER_LEVEL_IDLE },
 #endif
 #if (MOTORS >= 2)
 	{ "2","2ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_2].motor_map,	M2_MOTOR_MAP },
@@ -219,6 +220,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "2","2pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_2].power_mode,	M2_POWER_MODE },
 #ifdef __ARM
 	{ "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_2].power_level,M2_POWER_LEVEL},
+	{ "2","2pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_2].power_level_idle,M2_POWER_LEVEL_IDLE },
 #endif
 #endif
 #if (MOTORS >= 3)
@@ -230,6 +232,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "3","3pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_3].power_mode,	M3_POWER_MODE },
 #ifdef __ARM
 	{ "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_3].power_level,M3_POWER_LEVEL },
+	{ "3","3pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_3].power_level_idle,M3_POWER_LEVEL_IDLE },
 #endif
 #endif
 #if (MOTORS >= 4)
@@ -241,6 +244,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "4","4pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_4].power_mode,	M4_POWER_MODE },
 #ifdef __ARM
 	{ "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_4].power_level,M4_POWER_LEVEL },
+	{ "4","4pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_4].power_level_idle,M4_POWER_LEVEL_IDLE },
 #endif
 #endif
 #if (MOTORS >= 5)
@@ -252,6 +256,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "5","5pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_5].power_mode,	M5_POWER_MODE },
 #ifdef __ARM
 	{ "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_5].power_level,M5_POWER_LEVEL },
+	{ "5","5pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_5].power_level_idle,M5_POWER_LEVEL_IDLE },
 #endif
 #endif
 #if (MOTORS >= 6)
@@ -263,6 +268,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "6","6pm",_fip, 0, st_print_pm, get_ui8, st_set_pm, (float *)&st_cfg.mot[MOTOR_6].power_mode,	M6_POWER_MODE },
 #ifdef __ARM
 	{ "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_6].power_level,M6_POWER_LEVEL },
+	{ "6","6pli",_fip, 3, st_print_pli, get_flt, st_set_pl, (float *)&st_cfg.mot[MOTOR_6].power_level_idle,M6_POWER_LEVEL_IDLE },
 #endif
 #endif
 	// Axis parameters

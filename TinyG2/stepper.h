@@ -267,7 +267,7 @@ enum cmMotorPowerMode {
 	MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
 	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles, de-powered out of cycle
 	MOTOR_POWERED_ONLY_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
-//	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
+	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
 //	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
 	MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
 };
@@ -343,13 +343,11 @@ typedef struct cfgMotor {				// per-motor configs
 	uint8_t polarity;					// 0=normal polarity, 1=reverse motor direction
 	uint8_t power_mode;					// See cmMotorPowerMode for enum
 	float power_level;					// set 0.000 to 1.000 for PMW vref setting
+	float power_level_idle;
 	float step_angle;					// degrees per whole step (ex: 1.8)
 	float travel_rev;					// mm or deg of travel per motor revolution
 	float steps_per_unit;				// microsteps per mm (or degree) of travel
 	float units_per_step;				// mm or degrees of travel per microstep
-
-	// private
-	float power_level_scaled;			// scaled to internal range - must be between 0 and 1
 } cfgMotor_t;
 
 typedef struct stConfig {				// stepper configs
@@ -364,7 +362,6 @@ typedef struct stRunMotor {				// one per controlled motor
 	int32_t substep_accumulator;		// DDA phase angle accumulator
 	uint8_t power_state;				// state machine for managing motor power
 	uint32_t power_systick;				// sys_tick for next motor power state transition
-	float power_level_dynamic;			// power level for this segment of idle (ARM only)
 } stRunMotor_t;
 
 typedef struct stRunSingleton {			// Stepper static values and axis parameters
@@ -455,6 +452,7 @@ stat_t st_set_me(nvObj_t *nv);
 	void st_print_po(nvObj_t *nv);
 	void st_print_pm(nvObj_t *nv);
 	void st_print_pl(nvObj_t *nv);
+	void st_print_pli(nvObj_t *nv);
 	void st_print_mt(nvObj_t *nv);
 	void st_print_me(nvObj_t *nv);
 	void st_print_md(nvObj_t *nv);
@@ -468,6 +466,7 @@ stat_t st_set_me(nvObj_t *nv);
 	#define st_print_po tx_print_stub
 	#define st_print_pm tx_print_stub
 	#define st_print_pl tx_print_stub
+	#define st_print_pli tx_print_stub
 	#define st_print_mt tx_print_stub
 	#define st_print_me tx_print_stub
 	#define st_print_md tx_print_stub
