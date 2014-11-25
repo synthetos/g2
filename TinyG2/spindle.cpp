@@ -72,9 +72,20 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
 		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
 
-		// normalize speed to [0..1]
-		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
-		return (speed * (phase_hi - phase_lo)) + phase_lo;
+		// map speed to duty cycle
+#ifdef P1_USE_MAPPING_CUBIC
+        // regressed cubic polynomial mapping
+        float x = cm.gm.spindle_speed;
+        float duty = P1_MAPPING_CUBIC_X0 + x * (P1_MAPPING_CUBIC_X1 + x * (P1_MAPPING_CUBIC_X2 + x * P1_MAPPING_CUBIC_X3));
+#else
+        // simple linear map
+		float lerpfactor = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
+		float duty = (lerpfactor * (phase_hi - phase_lo)) + phase_lo;
+#endif
+        // clamp duty cycle to lo/hi range
+        if( duty < phase_lo ) duty = phase_lo;
+        if( duty > phase_hi ) duty = phase_hi;
+        return duty;
 	} else {
 		return pwm.c[PWM_1].phase_off;
 	}
