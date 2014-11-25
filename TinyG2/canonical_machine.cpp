@@ -988,7 +988,7 @@ stat_t cm_dwell(float seconds)
 /*
  * cm_straight_feed() - G1
  */
-stat_t cm_straight_feed(float target[], float flags[])
+stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = false*/)
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -1000,6 +1000,8 @@ stat_t cm_straight_feed(float target[], float flags[])
 	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
+    if (!defer_planning)
+        mp_plan_buffer();                           // if we aren't deferring planning, plan now
 	cm_finalize_move();
 	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
 		cm_cycle_end();

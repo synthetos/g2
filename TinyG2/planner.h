@@ -85,11 +85,11 @@ enum sectionState {
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 #endif
 #ifdef __ARM
-    #define NOM_PLANNER_USEC 	     ((float)50000) // nominal time for the entire planner (estimated)
-    #define PLANNER_CONSTRAINED_USEC ((float)50000) // minimum amount of time in the planner (est) before we can emit SRs
+    #define NOM_PLANNER_USEC 	     ((float)15000) // nominal time for the entire planner (estimated)
+    #define PLANNER_CONSTRAINED_USEC ((float)25000) // minimum amount of time in the planner (est) before we can emit SRs
 
-    #define NOM_SEGMENT_USEC 	((float)8000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	((float)4000)		// minimum segment time / minimum move time
+    #define NOM_SEGMENT_USEC 	((float)6000)		// nominal segment time
+	#define MIN_SEGMENT_USEC 	((float)3000)		// minimum segment time / minimum move time
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 
 //    #define NOM_SEGMENT_USEC 	((float)15000)		// nominal segment time
@@ -150,7 +150,7 @@ typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine ex
 
 enum mpBufferState {				// bf->buffer_state values
 	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
-	MP_BUFFER_LOADING,				// being written ("checked out")
+    MP_BUFFER_PLANNING,             // being written ("checked out") for planning
 	MP_BUFFER_QUEUED,				// in queue
 	MP_BUFFER_PENDING,				// marked as the next buffer to run
 	MP_BUFFER_RUNNING				// current running buffer
@@ -201,7 +201,9 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	uint8_t buffers_available;		// running count of available buffers
 	mpBuf_t *w;						// get_write_buffer pointer
 	mpBuf_t *q;						// queue_write_buffer pointer
+    mpBuf_t *p;						// preplanner pointer
 	mpBuf_t *r;						// get/end_run_buffer pointer
+    bool    needs_replanned;        // mark to indicate that at least one ALINE was put in the buffer
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
 	magic_t magic_end;
 } mpBufferPool_t;
@@ -298,6 +300,9 @@ void mp_init_buffers(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_unget_write_buffer(void);
 void mp_commit_write_buffer(const uint8_t move_type);
+void mp_plan_buffer();
+void mp_complete_commit_write_buffer();
+void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
 bool mp_is_planner_constrained();
 
 

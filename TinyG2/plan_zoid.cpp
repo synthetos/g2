@@ -33,8 +33,8 @@
 #include "util.h"
 
 using namespace Motate;
-//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
 
 
 template<typename T>
@@ -213,11 +213,33 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	}
 
 	// Set head and tail lengths for evaluating the next cases
-	bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
-	bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+    // Optimization: Find the length that will be the greatest, and test it first. If it's too short so is the other.
+    // Anti-optimization: We have code for each test twice, even though at most only two will ever be used.
+    //                    In this case we "code them all and the the optimizer sort them out."
+    if ((bf->cruise_velocity - bf->entry_velocity) > (bf->cruise_velocity - bf->exit_velocity)) {
+        bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+        if (bf->head_length < MIN_HEAD_LENGTH) {
+            bf->head_length = 0;
+            bf->tail_length = 0;
+        } else {
+            bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+            if (bf->tail_length < MIN_TAIL_LENGTH) {
+                bf->tail_length = 0;
+            }
+        }
+    } else {
+        bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+        if (bf->tail_length < MIN_TAIL_LENGTH) {
+            bf->tail_length = 0;
+            bf->head_length = 0;
+        } else {
+            bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+            if (bf->head_length < MIN_HEAD_LENGTH) {
+                bf->head_length = 0;
+            }
+        }
+    }
 
-	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
-	if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
 
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
@@ -350,6 +372,8 @@ static const float tl_constant = 1.201405707067378;
 
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
 {
+    // Current cost: approx 64us
+
     const float j = bf->jerk;
     const float recip_j = bf->recip_jerk;
 
@@ -357,7 +381,9 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
     //return (sqrt_five * (v_0 + v_1) * sqrt(our_abs(v_1 - v_0) * bf->jerk))/(sqrt_two_x_fourthroot_three * bf->jerk);		// newER formula -- linear POP!
 
     //Try 2 math (same, but rearranged):
-    return tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+    float ret =  tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+
+    return ret;
 }
 
 
@@ -369,7 +395,7 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
     //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) ( v_0 - 3 v_1) / ( sqrt(j abs(v_0 - v_1)))
     //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) = 0.60070285354
 
-//    plan_debug_pin2.toggle();
+    // Average cost: 0.18ms -- 180us
 
     const float j = bf->jerk;
     const float recip_j = bf->recip_jerk;
@@ -403,6 +429,7 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
 
         // Early escape -- if we're within 2 of "root" then we can call it good.
         if (our_abs(l_c) < 2) {
+            plan_debug_pin2 = 1;
             break;
         }
 
@@ -414,7 +441,6 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
         v_1 = v_1 - (l_c/l_d);
     }
 
-//    plan_debug_pin2.toggle();
     return v_1;
 }
 
@@ -449,6 +475,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     // Why const? So that the compiler knows it'll never change once it's computed.
     // Also, we ensure that it doesn't accidentally change once computed.
 
+    // Average cost: 0.14ms -- 140us
     const float j = bf->jerk;
 
     //v_0^2
@@ -488,7 +515,6 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     // v_1 = f4_thirds_x_cbrt_5 * v_0_sq / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third*v_0
 
     float v_1 = (f4_thirds_x_cbrt_5 * v_0_sq) / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third * v_0;
-
     return v_1;
 }
 

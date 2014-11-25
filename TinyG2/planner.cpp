@@ -333,6 +333,7 @@ void mp_init_buffers(void)
 
 	mb.w = &mb.bf[0];				// init write and read buffer pointers
 	mb.q = &mb.bf[0];
+    mb.p = &mb.bf[0];
 	mb.r = &mb.bf[0];
 	pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
 	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) { // setup ring pointers
@@ -352,7 +353,7 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
 		w->nx = nx;								// restore pointers
 		w->pv = pv;
-		w->buffer_state = MP_BUFFER_LOADING;
+		w->buffer_state = MP_BUFFER_PLANNING;
 		mb.buffers_available--;
 		mb.w = w->nx;
 		return (w);
@@ -368,21 +369,51 @@ void mp_unget_write_buffer()
 	mb.buffers_available++;
 }
 
+
 /*** WARNING: The routine calling mp_commit_write_buffer() must not use the write buffer
 			  once it has been queued. Action may start on the buffer immediately,
 			  invalidating its contents ***/
 
 void mp_commit_write_buffer(const uint8_t move_type)
 {
-	mb.q->move_type = move_type;
-	mb.q->move_state = MOVE_NEW;
-	mb.q->buffer_state = MP_BUFFER_QUEUED;
-	mb.q = mb.q->nx;							// advance the queued buffer pointer
-	qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-	if(cm.hold_state != FEEDHOLD_HOLD)
-		st_request_exec_move();					// requests an exec if the runtime is not busy
-												// NB: BEWARE! the exec may result in the planner buffer being
-												// processed immediately and then freed - invalidating the contents
+	mb.p->move_type = move_type;
+	mb.p->move_state = MOVE_NEW;
+    if (MOVE_TYPE_ALINE != move_type) {
+        mb.p->buffer_state = MP_BUFFER_QUEUED;
+        mb.p = mb.p->nx;
+        if (!mb.needs_replanned) {
+            mb.q = mb.p;
+            if(cm.hold_state != FEEDHOLD_HOLD)
+                st_request_exec_move();					// requests an exec if the runtime is not busy
+            // NB: BEWARE! the exec may result in the planner buffer being
+            // processed immediately and then freed - invalidating the contents
+        }
+    } else {
+        mb.needs_replanned = 1;
+        mb.p = mb.p->nx;							// advance the queued buffer pointer
+    }
+
+    qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
+    
+}
+
+void mp_plan_buffer()
+{
+    if (mb.needs_replanned) {
+        mp_plan_block_list(mb.p->pv, false);
+
+        while (mb.q != mb.p) {
+//            mp_plan_block_list(mb.q, false);
+            mb.q->buffer_state = MP_BUFFER_QUEUED;
+            mb.q = mb.q->nx;
+        }
+    }
+    mb.needs_replanned = 0;
+
+    if(cm.hold_state != FEEDHOLD_HOLD)
+        st_request_exec_move();					// requests an exec if the runtime is not busy
+    // NB: BEWARE! the exec may result in the planner buffer being
+    // processed immediately and then freed - invalidating the contents
 }
 
 bool mp_is_planner_constrained() {
