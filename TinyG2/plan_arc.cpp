@@ -480,21 +480,21 @@ static float _get_theta(const float x, const float y)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  */
 
-static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
-{
-	if (center <= arc.position[plane_axis]) {
-		if (arc.angular_travel < M_PI) {							// case (1)
-			return (STAT_OK);		
-		}
-		if ((center - arc.radius) < cm.a[plane_axis].travel_min) {	// case (2)
-			return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
-		}
-	}
-	if ((center + arc.radius) > cm.a[plane_axis].travel_max) {		// cases (3) and (4)
-		return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
-	}
-	return(STAT_OK);
-}
+//static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
+//{
+//	if (center <= arc.position[plane_axis]) {
+//		if (arc.angular_travel < M_PI) {							// case (1)
+//			return (STAT_OK);		
+//		}
+//		if ((center - arc.radius) < cm.a[plane_axis].travel_min) {	// case (2)
+//			return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
+//		}
+//	}
+//	if ((center + arc.radius) > cm.a[plane_axis].travel_max) {		// cases (3) and (4)
+//		return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
+//	}
+//	return(STAT_OK);
+//}
 
 static stat_t _test_arc_soft_limits()
 {
@@ -503,7 +503,8 @@ static stat_t _test_arc_soft_limits()
 	ritorno(cm_test_soft_limits(arc.gm.target));
 	
 	// test arc excursions
-	ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
-	ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
+    // Temporarily commenting this out until we have time to debug it...
+//	ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
+//	ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
 	return(STAT_OK);
 }
