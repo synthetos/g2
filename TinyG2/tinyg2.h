@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.54 // state machine, estop, settings, and unflushed line-dropping
+#define TINYG_FIRMWARE_BUILD   		072.55 // spindle mapping and settings fixes
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
