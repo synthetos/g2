@@ -176,7 +176,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // B" case: Block is short, but fits into a single body segment
 
     // If bf->real_move_time <= MIN_SEGMENT_TIME_PLUS_MARGIN, don't check MIN_SEGMENT_TIME_PLUS_MARGIN
-    if (bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN && naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
+    if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
+        // test to add backj later: bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN &&
         bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
@@ -189,14 +190,31 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
 
+        // LOCK IT
+        bf->replannable = false;
+
 //        bf->real_move_time = bf->length/bf->cruise_velocity;
         // We are violating the jerk value but since it's a single segment move we don't use it.
         return;
     }
 
+// Replace this with NOM_SEGMENT TIME for now
+//    if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
+//        bf->cruise_velocity = bf->length / bf->real_move_time;
+//        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+//
+//        if (fp_ZERO(bf->cruise_velocity)) {
+//            while (1);
+//        }
+//
+//        bf->exit_velocity = bf->cruise_velocity;
+//        bf->body_length = bf->length;
+//        // We are violating the jerk value but since it's a single segment move we don't use it.
+//        return;
+//    }
 
-    if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
-        bf->cruise_velocity = bf->length / bf->real_move_time;
+    if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) { // compensating for reduced equation
+        bf->cruise_velocity = bf->length / NOM_SEGMENT_TIME;
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
         if (fp_ZERO(bf->cruise_velocity)) {
@@ -205,6 +223,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
+
+        // LOCK IT
+        bf->replannable = false;
+
         // We are violating the jerk value but since it's a single segment move we don't use it.
         return;
     }

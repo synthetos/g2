@@ -399,7 +399,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
 
 void mp_plan_buffer()
 {
-    if (mb.needs_replanned && mb.p->pv->buffer_state == MP_BUFFER_PLANNING) {
+    if (mb.needs_replanned) {
         mp_plan_block_list(mb.p->pv, false);
 
         while (mb.q != mb.p) {
@@ -407,13 +407,13 @@ void mp_plan_buffer()
             mb.q->buffer_state = MP_BUFFER_QUEUED;
             mb.q = mb.q->nx;
         }
+
+        if(cm.hold_state != FEEDHOLD_HOLD)
+            st_request_exec_move();					// requests an exec if the runtime is not busy
+        // NB: BEWARE! the exec may result in the planner buffer being
+        // processed immediately and then freed - invalidating the contents
     }
     mb.needs_replanned = 0;
-
-    if(cm.hold_state != FEEDHOLD_HOLD)
-        st_request_exec_move();					// requests an exec if the runtime is not busy
-    // NB: BEWARE! the exec may result in the planner buffer being
-    // processed immediately and then freed - invalidating the contents
 }
 
 bool mp_is_planner_constrained() {
@@ -424,7 +424,7 @@ bool mp_is_planner_constrained() {
     if (bf == NULL)
         return false;
 
-    do {
+    while (((bp = mp_get_next_buffer(bp)) != bf) && (bp->replannable == false)) {
         total_planned_time += bp->real_move_time;
 
         if (total_planned_time > PLANNER_CONSTRAINED_TIME)
@@ -436,7 +436,7 @@ bool mp_is_planner_constrained() {
            ) {
             return true;
         }
-    } while ((bp = mp_get_next_buffer(bp)) != bf);
+    };
 
     return true;
 }
@@ -448,11 +448,6 @@ mpBuf_t * mp_get_run_buffer()
 	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
 		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
 		 mb.r->buffer_state = MP_BUFFER_RUNNING;
-
-        if (mp_get_next_buffer(mb.r)->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-            mp_get_next_buffer(mb.r)->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
-        }
-
 	}
 	// CASE: asking for the same run buffer for the Nth time
 	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer
@@ -466,6 +461,9 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	mb.r = mb.r->nx;							// advance to next run buffer
+	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
+		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
+	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
 	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
