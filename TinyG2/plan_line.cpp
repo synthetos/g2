@@ -445,10 +445,11 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 	// Backward planning pass. Find first block and update the braking velocities.
 	// At the end *bp points to the buffer before the first block.
 	while ((bp = mp_get_prev_buffer(bp)) != bf) {
-		if (bp->replannable == false) {
-            if (bp->buffer_state == MP_BUFFER_QUEUED) {
-                total_planned_time += bp->real_move_time;
-            }
+		if (bp->replannable == false ||
+            !(bp->buffer_state == MP_BUFFER_QUEUED)
+            ) {
+
+            total_planned_time += bp->real_move_time;
             break;
         }
 		bp->braking_velocity = min(bp->nx->entry_vmax, bp->nx->braking_velocity) + bp->delta_vmax;
@@ -463,14 +464,15 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
                  (bp_time_total->buffer_state == MP_BUFFER_PENDING))
             ) {
             total_planned_time += bp_time_total->real_move_time;
-            continue;
+        } else {
+            break;
         }
     }
 
     float ideal_move_time = 0;
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
-	while ((bp = mp_get_next_buffer(bp)) != bf && (bp->buffer_state == MP_BUFFER_PLANNING)) {
+	while ((bp = mp_get_next_buffer(bp)) != bf) {
 		if ((bp->pv == bf) || (mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
             mr_flag = false;
@@ -494,10 +496,11 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         mp_calculate_trapezoid(bp);
 //        plan_debug_pin2 = 0;
 
+        if (fp_ZERO(bp->cruise_velocity))
+            while(1);
+
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
-        if (fp_ZERO(bp->real_move_time))
-            while(1);
 
         total_planned_time += bp->real_move_time;
 
@@ -519,12 +522,18 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
     bp->real_move_time = ideal_move_time;
 
 	// finish up the last block move
-	bp->entry_velocity = bp->pv->exit_velocity;
+	bp->entry_velocity = bp->pv->exit_velocity; // WARNING: bp->pv might not be initied
 	bp->cruise_velocity = bp->cruise_vmax;
 	bp->exit_velocity = 0;
 //    plan_debug_pin2 = 1;
 	mp_calculate_trapezoid(bp);
 //    plan_debug_pin2 = 0;
+
+    if (fp_ZERO(bp->cruise_velocity))
+        while(1);
+
+    // Force a calculation of this here
+    bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
 //    bp->buffer_state = MP_BUFFER_QUEUED;
     plan_debug_pin2 = 0;
@@ -716,6 +725,12 @@ stat_t mp_plan_hold_callback()
 
 	mpBuf_t *bp; 				// working buffer pointer
 	if ((bp = mp_get_run_buffer()) == NULL) { return (STAT_NOOP);}	// Oops! nothing's running
+
+    if (mp_is_planner_constrained()) {
+        // We will already only take a few microseconds to finish the buffer, just let it play out
+        cm.hold_state = FEEDHOLD_DECEL;			// set state to decelerate and exit
+        return (STAT_OK);
+    }
 
 	float mr_available_length;	// available length left in mr buffer for deceleration
 	float braking_velocity;		// velocity left to shed to brake to zero

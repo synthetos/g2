@@ -86,10 +86,10 @@ enum sectionState {
 #endif
 #ifdef __ARM
     #define NOM_PLANNER_USEC 	     ((float)15000) // nominal time for the entire planner (estimated)
-    #define PLANNER_CONSTRAINED_USEC ((float)25000) // minimum amount of time in the planner (est) before we can emit SRs
+    #define PLANNER_CONSTRAINED_USEC ((float)15000) // minimum amount of time in the planner (est) before we can emit SRs
 
-    #define NOM_SEGMENT_USEC 	((float)6000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	((float)3000)		// minimum segment time / minimum move time
+    #define NOM_SEGMENT_USEC 	((float)12000)		// nominal segment time
+	#define MIN_SEGMENT_USEC 	((float)6000)		// minimum segment time / minimum move time
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 
 //    #define NOM_SEGMENT_USEC 	((float)15000)		// nominal segment time

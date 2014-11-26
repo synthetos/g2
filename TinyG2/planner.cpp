@@ -399,7 +399,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
 
 void mp_plan_buffer()
 {
-    if (mb.needs_replanned) {
+    if (mb.needs_replanned && mb.p->pv->buffer_state == MP_BUFFER_PLANNING) {
         mp_plan_block_list(mb.p->pv, false);
 
         while (mb.q != mb.p) {
@@ -448,6 +448,11 @@ mpBuf_t * mp_get_run_buffer()
 	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
 		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
 		 mb.r->buffer_state = MP_BUFFER_RUNNING;
+
+        if (mp_get_next_buffer(mb.r)->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
+            mp_get_next_buffer(mb.r)->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
+        }
+
 	}
 	// CASE: asking for the same run buffer for the Nth time
 	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer
@@ -461,9 +466,6 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	mb.r = mb.r->nx;							// advance to next run buffer
-	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
-	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
 	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied

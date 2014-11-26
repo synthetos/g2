@@ -145,6 +145,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	bf->head_length = 0;
 	bf->tail_length = 0;
 
+    if (fp_ZERO(bf->length)) {
+        while (1);
+    }
+
     // Quick sanity check: We can't exit at a speed higher than we cruise.
     if (bf->exit_velocity > bf->cruise_velocity) {
         bf->exit_velocity = bf->cruise_velocity;
@@ -174,6 +178,12 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // If bf->real_move_time <= MIN_SEGMENT_TIME_PLUS_MARGIN, don't check MIN_SEGMENT_TIME_PLUS_MARGIN
     if (bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN && naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
         bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
+        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
         // Why assume we want to decelerate or accelerate?
         //bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
         bf->exit_velocity = bf->cruise_velocity;
@@ -187,6 +197,12 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
         bf->cruise_velocity = bf->length / bf->real_move_time;
+        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
         // We are violating the jerk value but since it's a single segment move we don't use it.
@@ -251,6 +267,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //			bf->cruise_velocity = min(bf->cruise_vmax, mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf));
             bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
 
+            if (fp_ZERO(bf->cruise_velocity)) {
+                while (1);
+            }
+
 			if (bf->head_length < MIN_HEAD_LENGTH) {
 				// Convert this to a body-only move
 				bf->body_length = bf->length;
@@ -274,6 +294,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 		// set velocity and clean up any parts that are too short
         bf->cruise_velocity = mp_get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
 
 		bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 		bf->tail_length = bf->length - bf->head_length;
@@ -319,17 +343,29 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 //        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
 
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
         return;
 
 	// If the body is a standalone make the cruise velocity match the entry velocity
 	// This removes a potential velocity discontinuity at the expense of top speed
 	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
-		bf->cruise_velocity = bf->entry_velocity;
+		bf->cruise_velocity = min(bf->entry_vmax, bf->cruise_vmax);
 
 //        bf->real_move_time = (bf->body_length/bf->cruise_velocity);
 
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
         return;
 	}
+
+    if (fp_ZERO(bf->cruise_velocity)) {
+        while (1);
+    }
 
 //    bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
 }
