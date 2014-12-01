@@ -147,10 +147,13 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
-    if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in cycle but macs is not cycle");
-    if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
+    // cm_cycle_end doesn't reset cycle state on alarm or shutdown
+    if ((cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
+        if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in cycle but macs is not cycle");
+        if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
+    }
     
     switch(cm.machine_state)
     {
