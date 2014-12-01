@@ -64,14 +64,14 @@
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
-#define MOTOR_POWER_LEVEL_XY		0.25					// default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_XY_IDLE	0.10
-#define MOTOR_POWER_LEVEL_Z			0.25
-#define MOTOR_POWER_LEVEL_Z_IDLE	0.15
+#define MOTOR_POWER_LEVEL_XY		MOTOR_POWER_LEVEL					// default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY_IDLE	MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL_Z			MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL_Z_IDLE	MOTOR_POWER_LEVEL
 #define MOTOR_POWER_LEVEL_DISABLED	0.05
 
 #undef MOTOR_POWER_MODE
-#define MOTOR_POWER_MODE MOTOR_POWER_REDUCED_WHEN_IDLE
+#define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
 
 #undef  STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc"
