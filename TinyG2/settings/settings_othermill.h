@@ -74,7 +74,7 @@
 #define MOTOR_POWER_MODE MOTOR_POWER_REDUCED_WHEN_IDLE
 
 #undef  STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc"
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc","hold","macs","cycs"
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE
