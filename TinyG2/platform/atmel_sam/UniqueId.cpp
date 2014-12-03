@@ -58,15 +58,24 @@ extern "C" {
             // force compiler to not optimize this
             __asm__ __volatile__("");
     }
-
+    
+    //AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD
+#define charfromnibble(src, offset) ((((src) >> ((offset)*4)) & 0xF) + (((((src) >> ((offset)*4)) & 0xF) >= 0xA) ? ('a' - 0xA) : '0'))
     const uint16_t* readUniqueIdString()
     {
         if(uuid_string16[0] == 0) {
-            for(int i = 0; i < UNIQUE_ID_STRING_LEN; ++i) {
-                unsigned long nibble = (((i >= 8) ? stored_uuid.d1 : stored_uuid.d0) >> ((i % 8) * 4)) & 0xF;
-                if(nibble < 0xA) uuid_string16[i] = nibble + '0';
-                else uuid_string16[i] = (nibble - 0xA) + 'a';
-            }
+            int i;
+            for(i=0;i<8;++i)
+                uuid_string16[i] = charfromnibble(stored_uuid.d0, i);
+            uuid_string16[8] = '-';
+            for(i=9;i<17;++i)
+                uuid_string16[i] = charfromnibble(stored_uuid.d1, (i-9));
+            uuid_string16[17] = '-';
+            for(i=18;i<26;++i)
+                uuid_string16[i] = charfromnibble(stored_uuid.d2, (i-18));
+            uuid_string16[26] = '-';
+            for(i=27;i<35;++i)
+                uuid_string16[i] = charfromnibble(stored_uuid.d3, (i-27));
         }
         return uuid_string16;
     }

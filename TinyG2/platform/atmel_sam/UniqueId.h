@@ -39,7 +39,7 @@ extern "C" {
     void cacheUniqueId();
     struct uuid* readUniqueId();
     const uint16_t* readUniqueIdString();
-    const int16_t UNIQUE_ID_STRING_LEN = 12;
+    const int16_t UNIQUE_ID_STRING_LEN = 35;
     
 #ifdef __cplusplus
 }

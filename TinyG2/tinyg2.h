@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.56 // settings fixes
+#define TINYG_FIRMWARE_BUILD   		072.57 // fix unique_id
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

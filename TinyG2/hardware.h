@@ -81,8 +81,12 @@ extern "C"{
 #undef F_CPU							// CPU clock - set for delays
 #define F_CPU 84000000UL
 #define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
-#define SYS_ID_LEN 12					// length of system ID string from sys_get_id()
-
+#ifdef __ARM
+#define SYS_ID_LEN 36					// length of system ID string from sys_get_id()
+#else
+#define SYS_ID_LEN 12
+#endif
+    
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
  ************************************************************************************/
