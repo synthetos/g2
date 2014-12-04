@@ -282,6 +282,8 @@ enum cmMotorPowerMode {
 #define MOTOR_TIMEOUT_SECONDS_MAX	(float)4294967	// (4294967295/1000) -- for conversion to uint32_t
 #define MOTOR_TIMEOUT_SECONDS 		(float)0.25		// seconds in DISABLE_AXIS_WHEN_IDLE & _ONLY_WHEN_MOVING modes
 
+#define MOTOR_VREF_RC_TIMEOUT_SEC	(float)0.005   // how long it takes vref to stabilize after changing it
+
 /* DDA substepping
  *	DDA Substepping is a fixed.point scheme to increase the resolution of the DDA pulse generation
  *	while still using integer math (as opposed to floating point). Improving the accuracy of the DDA

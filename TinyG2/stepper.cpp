@@ -458,6 +458,18 @@ static void _set_motor_power_level(const uint8_t motor, float power_level)
 #endif
 }
 
+static void _set_motor_direction(const uint8_t motor, uint8_t direction)
+{
+#ifdef __ARM
+    if (motor == MOTOR_1) motor_1.setDirection(direction);
+	if (motor == MOTOR_2) motor_2.setDirection(direction);
+	if (motor == MOTOR_3) motor_3.setDirection(direction);
+	if (motor == MOTOR_4) motor_4.setDirection(direction);
+	if (motor == MOTOR_5) motor_5.setDirection(direction);
+	if (motor == MOTOR_6) motor_6.setDirection(direction);
+#endif
+}
+
 void st_energize_motors(float timeout_seconds)
 {
     uint32_t now = SysTickTimer_getValue();
@@ -819,205 +831,76 @@ static void _load_move()
 	// handle aline loads first (most common case)  NB: there are no more lines, only alines
 	if (st_pre.move_type == MOVE_TYPE_ALINE) {
 
+		//**** power management ****
+
+		bool waitForVref = false;
+		for(int mot = MOTOR_1; mot < MOTORS; ++mot) {
+			if(st_pre.mot[mot].substep_increment != 0 || st_cfg.mot[mot].power_mode != MOTOR_POWERED_ONLY_WHEN_MOVING) { // We have steps to run, or need to power on for the sake of holding torque
+				// Enable the stepper and start motor power management
+				if(st_cfg.mot[mot].power_mode != MOTOR_DISABLED) {
+					if(st_run.mot[mot].power_state == MOTOR_OFF || st_run.mot[mot].power_state == MOTOR_IDLE) {
+						_energize_motor(mot);								// enable the motor (clear the ~Enable line)
+						if(st_cfg.mot[mot].power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+							_set_motor_power_level(mot, st_cfg.mot[mot].power_level);
+							waitForVref = true;
+						}
+					}
+					st_run.mot[mot].power_state = MOTOR_RUNNING;
+				}
+			} else { // No steps to run and st_cfg.mot[mot].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING
+				if(st_run.mot[mot].power_state == MOTOR_RUNNING)
+					st_run.mot[mot].power_state = MOTOR_POWER_TIMEOUT_START;
+			}
+		}
+
+		/* If we just changed VRef before a move, wait for it to stabilize by inserting a dwell...
+		 * Since we don't actually process the exec buffer, we can just return here without calling request exec again
+		 */
+		if(waitForVref) {
+			st_run.dda_ticks_downcount = (uint32_t)(MOTOR_VREF_RC_TIMEOUT_SEC * FREQUENCY_DWELL);
+			st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+			dwell_timer.start();
+			return;
+		}
+
 		//**** setup the new segment ****
 
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
 		st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
 
-		//**** MOTOR_1 LOAD ****
+		//**** MOTOR LOAD ****
 
 		// These sections are somewhat optimized for execution speed. The whole load operation
 		// is supposed to take < 10 uSec (Xmega). Be careful if you mess with this.
 
-		// the following if() statement sets the runtime substep increment value or zeroes it
-		if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
+		for(int mot = MOTOR_1; mot < MOTORS; ++mot) {
+			// the following if() statement sets the runtime substep increment value or zeroes it
+			if ((st_run.mot[mot].substep_increment = st_pre.mot[mot].substep_increment) != 0) {
 
-			// NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
-			//	   always operate on the last segment actually run by this motor, regardless of how many
-			//	   segments it may have been inactive in between.
+				// NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
+				//	   always operate on the last segment actually run by this motor, regardless of how many
+				//	   segments it may have been inactive in between.
 
-			// Apply accumulator correction if the time base has changed since previous segment
-			if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_1].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_1].substep_accumulator *= st_pre.mot[MOTOR_1].accumulator_correction;
+				// Apply accumulator correction if the time base has changed since previous segment
+				if (st_pre.mot[mot].accumulator_correction_flag == true) {
+					st_pre.mot[mot].accumulator_correction_flag = false;
+					st_run.mot[mot].substep_accumulator *= st_pre.mot[mot].accumulator_correction;
+				}
+
+				// Detect direction change and if so:
+				//	- Set the direction bit in hardware.
+				//	- Compensate for direction change by flipping substep accumulator value about its midpoint.
+
+				if (st_pre.mot[mot].direction != st_pre.mot[mot].prev_direction) {
+					st_pre.mot[mot].prev_direction = st_pre.mot[mot].direction;
+					st_run.mot[mot].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[mot].substep_accumulator);
+					_set_motor_direction(mot, st_pre.mot[mot].direction);
+				}
+				SET_ENCODER_STEP_SIGN(mot, st_pre.mot[mot].step_sign);
 			}
-
-			// Detect direction change and if so:
-			//	- Set the direction bit in hardware.
-			//	- Compensate for direction change by flipping substep accumulator value about its midpoint.
-
-			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
-				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
-				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
-                motor_1.setDirection(st_pre.mot[MOTOR_1].direction);
-			}
-
-			// Enable the stepper and start motor power management
-            if(st_cfg.mot[MOTOR_1].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_1, st_cfg.mot[MOTOR_1].power_level);
-                motor_1.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
-
-		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
-            if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_1].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_1].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_1, st_cfg.mot[MOTOR_1].power_level);
-                motor_1.enable();
-                st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
-            }
+			// accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
+			ACCUMULATE_ENCODER(mot);
 		}
-		// accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
-		ACCUMULATE_ENCODER(MOTOR_1);
-
-#if (MOTORS >= 2)
-		if ((st_run.mot[MOTOR_2].substep_increment = st_pre.mot[MOTOR_2].substep_increment) != 0) {
-			if (st_pre.mot[MOTOR_2].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_2].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_2].substep_accumulator *= st_pre.mot[MOTOR_2].accumulator_correction;
-			}
-			if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
-				st_pre.mot[MOTOR_2].prev_direction = st_pre.mot[MOTOR_2].direction;
-				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
-                motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
-			}
-            if(st_cfg.mot[MOTOR_2].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_2, st_cfg.mot[MOTOR_2].power_level);
-                motor_2.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_2, st_pre.mot[MOTOR_2].step_sign);
-		} else {
-            if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_2].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_2].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_2, st_cfg.mot[MOTOR_2].power_level);
-                motor_2.enable();
-                st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
-            }
-		}
-		ACCUMULATE_ENCODER(MOTOR_2);
-#endif
-#if (MOTORS >= 3)
-		if ((st_run.mot[MOTOR_3].substep_increment = st_pre.mot[MOTOR_3].substep_increment) != 0) {
-			if (st_pre.mot[MOTOR_3].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_3].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_3].substep_accumulator *= st_pre.mot[MOTOR_3].accumulator_correction;
-			}
-			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
-				st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
-				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
-                motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
-			}
-            if(st_cfg.mot[MOTOR_3].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_3, st_cfg.mot[MOTOR_3].power_level);
-                motor_3.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
-		} else {
-            if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_3].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_3].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_3, st_cfg.mot[MOTOR_3].power_level);
-                motor_3.enable();
-                st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
-            }
-        }
-		ACCUMULATE_ENCODER(MOTOR_3);
-#endif
-#if (MOTORS >= 4)
-		if ((st_run.mot[MOTOR_4].substep_increment = st_pre.mot[MOTOR_4].substep_increment) != 0) {
-			if (st_pre.mot[MOTOR_4].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_4].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_4].substep_accumulator *= st_pre.mot[MOTOR_4].accumulator_correction;
-			}
-			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
-				st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
-				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
-                motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
-			}
-            if(st_cfg.mot[MOTOR_4].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_4, st_cfg.mot[MOTOR_4].power_level);
-                motor_4.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
-		} else {
-            if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_4].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_4].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_4, st_cfg.mot[MOTOR_4].power_level);
-                motor_4.enable();
-                st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
-            }
-		}
-		ACCUMULATE_ENCODER(MOTOR_4);
-#endif
-#if (MOTORS >= 5)
-		if ((st_run.mot[MOTOR_5].substep_increment = st_pre.mot[MOTOR_5].substep_increment) != 0) {
-			if (st_pre.mot[MOTOR_5].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_5].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_5].substep_accumulator *= st_pre.mot[MOTOR_5].accumulator_correction;
-			}
-			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
-				st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
-				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
-                motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
-			}
-            if(st_cfg.mot[MOTOR_5].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_5, st_cfg.mot[MOTOR_5].power_level);
-                motor_5.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
-		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-            if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_5].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_5].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_5, st_cfg.mot[MOTOR_5].power_level);
-                motor_5.enable();
-                st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
-            }
-		}
-		ACCUMULATE_ENCODER(MOTOR_5);
-#endif
-#if (MOTORS >= 6)
-		if ((st_run.mot[MOTOR_6].substep_increment = st_pre.mot[MOTOR_6].substep_increment) != 0) {
-			if (st_pre.mot[MOTOR_6].accumulator_correction_flag == true) {
-				st_pre.mot[MOTOR_6].accumulator_correction_flag = false;
-				st_run.mot[MOTOR_6].substep_accumulator *= st_pre.mot[MOTOR_6].accumulator_correction;
-			}
-			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
-				st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
-				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
-                motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
-			}
-            if(st_cfg.mot[MOTOR_6].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_6, st_cfg.mot[MOTOR_6].power_level);
-                motor_6.enable();								// enable the motor (clear the ~Enable line)
-                st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
-            }
-			SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
-		} else {
-            if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                if(st_run.mot[MOTOR_6].power_state == MOTOR_RUNNING)
-                    st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
-            } else if(st_cfg.mot[MOTOR_6].power_mode != MOTOR_DISABLED) {
-                _set_motor_power_level(MOTOR_6, st_cfg.mot[MOTOR_6].power_level);
-                motor_6.enable();
-                st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
-            }
-		}
-		ACCUMULATE_ENCODER(MOTOR_6);
-#endif
 
 		//**** do this last ****
 
