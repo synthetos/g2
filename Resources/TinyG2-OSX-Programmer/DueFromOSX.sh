@@ -1,6 +1,6 @@
 #!/bin/bash
 arduinoAppDir=/Applications
-PATH=$PATH:$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/g++_arm_none_eabi/bin/:$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/
+PATH=$PATH:$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/g++_arm_none_eabi/bin/:$arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/
 
 function show_usage() {
 	cat <<END
@@ -70,7 +70,19 @@ sleep 0.5
 # stty -f "${port}" 115200
 
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
-$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/bossac -e -w -v -b "${file/.elf/.bin}"
+
+if [ ! -f $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac ]; then
+    echo $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac
+    echo ""
+    echo "##########################################################################################"
+    echo "Arduino version is too old and does not include support for the due.  Get a newer version!"
+    echo "Download a newer ARM version here: http://arduino.cc/en/main/software"
+    echo "Exiting......"
+    echo "##########################################################################################"
+    exit 1;
+fi
+
+$arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac -e -w -v -b "${file/.elf/.bin}"
 
 echo
 echo "WARNING: You may need to hit the RESET button on the device at this point."
