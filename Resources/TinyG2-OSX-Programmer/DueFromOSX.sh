@@ -72,7 +72,7 @@ sleep 0.5
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
 
 if [ ! -f $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac ]; then
-    echo $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac
+    #echo $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac
     echo ""
     echo "##########################################################################################"
     echo "Arduino version is too old and does not include support for the due.  Get a newer version!"
