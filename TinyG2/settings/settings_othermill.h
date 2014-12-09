@@ -65,13 +65,13 @@
 // Note: there are some commented test values below
 
 #define MOTOR_POWER_LEVEL_XY		MOTOR_POWER_LEVEL					// default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_XY_IDLE	MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL_XY_IDLE	0.15
 #define MOTOR_POWER_LEVEL_Z			MOTOR_POWER_LEVEL
-#define MOTOR_POWER_LEVEL_Z_IDLE	MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL_Z_IDLE	0.15
 #define MOTOR_POWER_LEVEL_DISABLED	0.05
 
 #undef MOTOR_POWER_MODE
-#define MOTOR_POWER_MODE MOTOR_POWERED_IN_CYCLE
+#define MOTOR_POWER_MODE MOTOR_POWER_REDUCED_WHEN_IDLE
 
 #undef  STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spc","hold","macs","cycs","sps"
@@ -151,7 +151,7 @@
 #define M4_TRAVEL_PER_REV 		360					// degrees moved per motor rev
 #define M4_MICROSTEPS 			8
 #define M4_POLARITY 			1
-#define M4_POWER_MODE 			MOTOR_POWER_MODE
+#define M4_POWER_MODE 			MOTOR_DISABLED
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
 #define M4_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
@@ -160,7 +160,7 @@
 #define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M5_MICROSTEPS			8
 #define M5_POLARITY				0
-#define M5_POWER_MODE			MOTOR_POWER_MODE
+#define M5_POWER_MODE			MOTOR_DISABLED
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
 #define M5_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
@@ -169,7 +169,7 @@
 #define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev
 #define M6_MICROSTEPS			8
 #define M6_POLARITY				0
-#define M6_POWER_MODE			MOTOR_POWER_MODE
+#define M6_POWER_MODE			MOTOR_DISABLED
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL_DISABLED
 #define M6_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_DISABLED
 
