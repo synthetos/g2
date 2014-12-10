@@ -115,10 +115,10 @@ uint32_t SysTickTimer_getValue(void);
 #endif
 
 #ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
+#define fp_EQ(a,b) (fabs((a)-(b)) < EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
+#define fp_NE(a,b) (fabs((a)-(b)) > EPSILON)	// requires math.h to be included in each file used
 #endif
 #ifndef fp_ZERO
 #define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
