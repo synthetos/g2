@@ -60,6 +60,16 @@
 #include "report.h"
 #include "util.h"
 
+using namespace Motate;
+//extern OutputPin<-1> plan_debug_pin1;
+extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<-1> plan_debug_pin2;
+extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
+extern OutputPin<-1> plan_debug_pin4;
+//extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+
 // Allocate planner structures
 
 mpBufferPool_t mb;				// move buffer queue
@@ -333,7 +343,6 @@ void mp_init_buffers(void)
 
 	mb.w = &mb.bf[0];				// init write and read buffer pointers
 	mb.q = &mb.bf[0];
-    mb.p = &mb.bf[0];
 	mb.r = &mb.bf[0];
 	pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
 	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) { // setup ring pointers
@@ -376,13 +385,12 @@ void mp_unget_write_buffer()
 
 void mp_commit_write_buffer(const uint8_t move_type)
 {
-	mb.p->move_type = move_type;
-	mb.p->move_state = MOVE_NEW;
+	mb.q->move_type = move_type;
+	mb.q->move_state = MOVE_NEW;
     if (MOVE_TYPE_ALINE != move_type) {
-        mb.p->buffer_state = MP_BUFFER_QUEUED;
-        mb.p = mb.p->nx;
+        mb.q->buffer_state = MP_BUFFER_QUEUED;
+        mb.q = mb.q->nx;
         if (!mb.needs_replanned) {
-            mb.q = mb.p;
             if(cm.hold_state != FEEDHOLD_HOLD)
                 st_request_exec_move();					// requests an exec if the runtime is not busy
             // NB: BEWARE! the exec may result in the planner buffer being
@@ -390,55 +398,100 @@ void mp_commit_write_buffer(const uint8_t move_type)
         }
     } else {
         mb.needs_replanned = 1;
-        mb.p = mb.p->nx;							// advance the queued buffer pointer
+        mb.q = mb.q->nx;							// advance the queued buffer pointer
+        if (mb.planner_timer == 0) {
+            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT;
+        }
     }
 
     qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
     
 }
 
-void mp_plan_buffer()
+stat_t mp_plan_buffer()
 {
-    if (mb.needs_replanned) {
-        mp_plan_block_list(mb.p->pv, false);
+    plan_debug_pin1 = 1;
 
-        while (mb.q != mb.p) {
-//            mp_plan_block_list(mb.q, false);
-            mb.q->buffer_state = MP_BUFFER_QUEUED;
-            mb.q = mb.q->nx;
-        }
+    // Criteria to replan:
+    // 0) There are items in the buffer that need replanned.
+    // 1) Planner timer has "timed out"
+    // 2) Less than MIN_PLANNED_TIME in the planner
 
-        if(cm.hold_state != FEEDHOLD_HOLD)
-            st_request_exec_move();					// requests an exec if the runtime is not busy
-        // NB: BEWARE! the exec may result in the planner buffer being
-        // processed immediately and then freed - invalidating the contents
+    if (!mb.needs_replanned) {
+        plan_debug_pin1 = 0;
+        return STAT_OK;
     }
+
+    bool do_continue = false;
+
+    if (mb.planner_timer < SysTickTimer.getValue()) {
+        do_continue = true;
+    }
+
+    float total_buffer_time = mb.time_in_run + mb.time_in_planner;
+
+    if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
+        do_continue = true;
+        plan_debug_pin4 = 1;
+    }
+
+    if (!do_continue) {
+        plan_debug_pin4 = 0;
+        plan_debug_pin1 = 0;
+        return STAT_OK;
+    }
+
+    mp_plan_block_list(mb.q->pv, false);
+
+    if(cm.hold_state != FEEDHOLD_HOLD)
+        st_request_exec_move();					// requests an exec if the runtime is not busy
+    // NB: BEWARE! the exec may result in the planner buffer being
+    // processed immediately and then freed - invalidating the contents
+
+    mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = 0;
+
+    plan_debug_pin4 = 0;
+    plan_debug_pin1 = 0;
+    return STAT_OK;
 }
 
-bool mp_is_planner_constrained() {
-    float total_planned_time = 0;
+bool mp_is_it_phat_city_time() {
+    float time_in_planner = mb.time_in_run + mb.time_in_planner;
+    return (fp_ZERO(time_in_planner) || PHAT_CITY_TIME < time_in_planner);
+}
+
+void mp_planner_time_accounting() {
+    if (mb.planning || !mb.needs_time_accounting)
+        return;
+
     mpBuf_t *bf = mp_get_run_buffer();
     mpBuf_t *bp = bf;
 
     if (bf == NULL)
-        return false;
+        return;
 
-    while (((bp = mp_get_next_buffer(bp)) != bf) && (bp->replannable == false)) {
-        total_planned_time += bp->real_move_time;
+    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
 
-        if (total_planned_time > PLANNER_CONSTRAINED_TIME)
-            return false;
+    while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
+        if ((bp->buffer_state == MP_BUFFER_QUEUED) ||
+            (bp->buffer_state == MP_BUFFER_PENDING))
+        {
+            if (!bp->locked) {
+                if (time_in_planner < MIN_PLANNED_TIME) {
+                    bp->locked = true;;
+                }
+            } // !locked
 
-        if ((bp->nx == bf) ||
-            !((bp->nx->buffer_state == MP_BUFFER_QUEUED) ||
-              (bp->nx->buffer_state == MP_BUFFER_PENDING))
-           ) {
-            return true;
+            // move on, it's already locked
+            time_in_planner += bp->real_move_time;
+
+        } else {
+            break;
         }
     };
 
-    return true;
+    mb.time_in_planner = time_in_planner;
 }
 
 
@@ -446,8 +499,10 @@ mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
 	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
-		 mb.r->buffer_state = MP_BUFFER_RUNNING;
+		(mb.r->buffer_state == MP_BUFFER_PENDING)
+        )
+    {
+        mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
 	// CASE: asking for the same run buffer for the Nth time
 	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer

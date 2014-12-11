@@ -33,8 +33,14 @@
 #include "util.h"
 
 using namespace Motate;
+//extern OutputPin<-1> plan_debug_pin1;
 extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<-1> plan_debug_pin2;
 extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
+//extern OutputPin<-1> plan_debug_pin4;
+extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 
 template<typename T>
@@ -154,19 +160,22 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->exit_velocity = bf->cruise_velocity;
     }
 
+
+
+    // Test entry == cruise
+    // Test exit == cruise
+
+
+    // Try to optimize out the assymetric last move
+
+
 	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
     float naiive_move_time = 0;
+    // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length, and the width is the move time.
+    // This formula is to get the move time (width) from the sides and the area (move length).
+    // The actual formula is T=(2L)/(v_0+v_1) == T/2=L/(v_0+v_1)
 
-//    if (fp_NE(bf->entry_velocity, bf->exit_velocity)) {
-//
-//        // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length, and the width is the move time.
-//        // This formula is to get the move time (width) from the sides and the area (move length).
-//        // The actual formula is T=(2L)/(v_0+v_1) == T/2=L/(v_0+v_1)
-//        naiive_move_time = bf->length / (bf->entry_velocity + bf->exit_velocity);		// reduced equation
-//
-//    } else {
-        naiive_move_time = bf->length / (bf->entry_velocity + max(bf->cruise_velocity,bf->exit_velocity));		// reduced equation
-//    }
+    naiive_move_time = bf->length / (bf->entry_velocity + max(bf->cruise_velocity,bf->exit_velocity));		// reduced equation
 
     // F case: Block is too short - run time < minimum segment time
     // Force block into a single segment body with limited velocities
@@ -191,7 +200,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_length = bf->length;
 
         // LOCK IT
-        bf->replannable = false;
+//        bf->replannable = false;
 
 //        bf->real_move_time = bf->length/bf->cruise_velocity;
         // We are violating the jerk value but since it's a single segment move we don't use it.
@@ -225,7 +234,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_length = bf->length;
 
         // LOCK IT
-        bf->replannable = false;
+//        bf->replannable = false;
 
         // We are violating the jerk value but since it's a single segment move we don't use it.
         return;
@@ -413,6 +422,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 #ifdef LINEAR_SNAP_MATH
 
 //Try 1 constants:
+// L_c(v_0, v_1, j) = sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
 // sqrt(5)
 //static const float sqrt_five = 2.23606797749979;
 
@@ -422,7 +432,6 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 //Try 2 constants:
 // L_c(v_0, v_1, j) = (sqrt(5) (v_0 + v_1) sqrt(j abs(v_1 - v_0))) / (sqrt(2) 3^(1 / 4) j)
-//                     sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
 
 // Just calling this tl_constant. It's full name is:
 // sqrt(5)/( sqrt(2)pow(3,4) )
@@ -487,7 +496,6 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
 
         // Early escape -- if we're within 2 of "root" then we can call it good.
         if (our_abs(l_c) < 2) {
-            plan_debug_pin2 = 1;
             break;
         }
 

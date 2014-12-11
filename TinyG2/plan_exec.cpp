@@ -47,8 +47,8 @@ static void _init_forward_diffs(float Vi, float Vt);
 using namespace Motate;
 //OutputPin<kDebug1_PinNumber> exec_debug_pin1;
 //OutputPin<kDebug2_PinNumber> exec_debug_pin2;
-//OutputPin<kDebug3_PinNumber> exec_debug_pin3;
-OutputPin<-1> exec_debug_pin3;
+OutputPin<kDebug3_PinNumber> exec_debug_pin3;
+//OutputPin<-1> exec_debug_pin3;
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
@@ -159,6 +159,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     exec_debug_pin3 = 1;
     if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
 
+    // NOTES:
+    // Step 1) Feed hold to change each segment to maximum decelerations
+    // Step 2) Never start a feed hold in a head segment
+
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
 		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
@@ -169,16 +173,24 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 		// initialization to process the new incoming bf buffer (Gcode block)
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
-		bf->replannable = false;
+
+        // Update the mb times -- we can "guess" quite accurately but we still need a full reaccounting
+        // to handle the locking.
+        mb.needs_time_accounting = true;
+        mb.time_in_planner -= bf->real_move_time; // Note that this is an overloaded -= operator!!
+        mb.time_in_run = bf->real_move_time;
 														// too short lines have already been removed
 		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_OFF;					// reset mr buffer
 			mr.section_state = SECTION_OFF;
-			if(bf->nx->move_state == MOVE_NEW)
-				bf->nx->replannable = false;				// prevent overplanning (Note 2)
-			st_prep_null();								// call this to keep the loader happy
-			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) cm_cycle_end();	// free buffer & end cycle if planner is empty
+
+            mp_planner_time_accounting();
+
+            st_prep_null();								// call this to keep the loader happy
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+                cm_cycle_end();	// free buffer & end cycle if planner is empty
             exec_debug_pin3 = 0;
+            mb.time_in_run = 0;
             return (STAT_OK);
 		}
 		bf->move_state = MOVE_RUN;
@@ -234,9 +246,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
-		if(bf->nx->move_state == MOVE_NEW)
-			bf->nx->replannable = false;					// prevent overplanning (Note 2)
-		if (bf->move_state == MOVE_RUN) {
+
+        mp_planner_time_accounting();
+
+        if (bf->move_state == MOVE_RUN) {
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
 				cm_cycle_end();	// free buffer & end cycle if planner is empty
 		}
@@ -557,6 +570,9 @@ static stat_t _exec_aline_segment()
 	for (i=0; i<MOTORS; i++) {								// and compute the distances to be traveled
 		travel_steps[i] = mr.target_steps[i] - mr.position_steps[i];
 	}
+
+    // Update the mb->time_in_run -- we know it's missing the current segment's time before it's loaded, that's ok.
+    mb.time_in_run -= mr.segment_time;
 
 	// Call the stepper prep function
 

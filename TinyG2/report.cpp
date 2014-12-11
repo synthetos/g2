@@ -39,7 +39,8 @@
 using namespace Motate;
 //OutputPin<kDebug1_PinNumber> sr_debug_pin1;
 //OutputPin<kDebug2_PinNumber> sr_debug_pin2;
-OutputPin<kDebug3_PinNumber> sr_debug_pin3;
+//OutputPin<kDebug3_PinNumber> sr_debug_pin3;
+OutputPin<-1> sr_debug_pin3;
 
 /**** Allocation ****/
 
@@ -304,10 +305,10 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
 
     sr_debug_pin3 = 1;
-    if (mp_is_planner_constrained()) {
-        sr_debug_pin3 = 0;
-        return (STAT_NOOP);
-    }
+//    if (!mp_is_it_phat_city_time()) {
+//        sr_debug_pin3 = 0;
+//        return (STAT_NOOP);
+//    }
 
 
 	if (sr.status_report_request == SR_VERBOSE) {
@@ -521,7 +522,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
 	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
 
-    if (mp_is_planner_constrained()) { return (STAT_NOOP);}
+//    if (!mp_is_it_phat_city_time()) { return (STAT_NOOP);}
 
     qr.queue_report_requested = false;
 
