@@ -172,7 +172,6 @@ static void _controller_HSM()
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//

@@ -159,10 +159,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     exec_debug_pin3 = 1;
     if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
 
-    // NOTES:
-    // Step 1) Feed hold to change each segment to maximum decelerations
-    // Step 2) Never start a feed hold in a head segment
-
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
 		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
@@ -173,17 +169,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 		// initialization to process the new incoming bf buffer (Gcode block)
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
-
-        // Update the mb times -- we can "guess" quite accurately but we still need a full reaccounting
-        // to handle the locking.
-        mb.needs_time_accounting = true;
-        mb.time_in_planner -= bf->real_move_time; // Note that this is an overloaded -= operator!!
-        mb.time_in_run = bf->real_move_time;
 														// too short lines have already been removed
 		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_OFF;					// reset mr buffer
 			mr.section_state = SECTION_OFF;
 
+            mb.needs_time_accounting = true;
             mp_planner_time_accounting();
 
             st_prep_null();								// call this to keep the loader happy
@@ -193,18 +184,53 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mb.time_in_run = 0;
             return (STAT_OK);
 		}
-		bf->move_state = MOVE_RUN;
-		mr.move_state = MOVE_RUN;
-		mr.section = SECTION_HEAD;
-		mr.section_state = SECTION_NEW;
-		mr.jerk = bf->jerk;
-		mr.head_length = bf->head_length;
-		mr.body_length = bf->body_length;
-		mr.tail_length = bf->tail_length;
 
-		mr.entry_velocity = bf->entry_velocity;
-		mr.cruise_velocity = bf->cruise_velocity;
-		mr.exit_velocity = bf->exit_velocity;
+        // Feedhold processing. Refer to canonical_machine.h for state machine
+        // Catch the feedhold request begin deceleration immediately.
+        if (cm.hold_state == FEEDHOLD_SYNC) {
+            cm.hold_state = FEEDHOLD_DECEL;
+        }
+
+        bf->move_state = MOVE_RUN;
+        mr.move_state = MOVE_RUN;
+
+        // We are ina feedhold, so we are going to modify this block to decel to a stop as fast as possible
+        if (cm.hold_state == FEEDHOLD_DECEL) {
+
+            mr.section = SECTION_TAIL;
+            mr.section_state = SECTION_NEW;
+            mr.jerk = bf->jerk;
+
+            mr.entry_velocity = mr.segment_velocity;
+            mr.cruise_velocity = mr.segment_velocity;
+//            mr.exit_velocity = bf->entry_velocity - bf->delta_vmax;
+
+            float mr_available_length = bf->length;
+            float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
+            mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, braking_length, bf));
+
+            mr.head_length = 0;
+            mr.body_length = 0;
+            mr.tail_length = braking_length;
+        } else {
+
+            // Update the mb times -- we can "guess" quite accurately but we still need a full reaccounting
+            // to handle the locking.
+            mb.needs_time_accounting = true;
+            mb.time_in_planner -= bf->real_move_time; // Note that this is an overloaded -= operator!!
+            mb.time_in_run = bf->real_move_time;
+
+            mr.section = SECTION_HEAD;
+            mr.section_state = SECTION_NEW;
+            mr.jerk = bf->jerk;
+            mr.head_length = bf->head_length;
+            mr.body_length = bf->body_length;
+            mr.tail_length = bf->tail_length;
+
+            mr.entry_velocity = bf->entry_velocity;
+            mr.cruise_velocity = bf->cruise_velocity;
+            mr.exit_velocity = bf->exit_velocity;
+        }
 
 		copy_vector(mr.unit, bf->unit);
 		copy_vector(mr.target, bf->gm.target);			// save the final target of the move
@@ -216,7 +242,40 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
 		}
 	}
-	// NB: from this point on the contents of the bf buffer do not affect execution
+
+    // Feedhold processing. Refer to canonical_machine.h for state machine
+    // Catch the feedhold request begin deceleration immediately.
+    // If we cath it here, we're in the middle of a section -- plan accordingly.
+    if (cm.hold_state == FEEDHOLD_SYNC) {
+        cm.hold_state = FEEDHOLD_DECEL;
+
+        // We're going to fabricate starting a tail-only move from here.
+        // We'll decelrate as fast as we can in the space we have.
+
+        mr.section = SECTION_TAIL;
+        mr.section_state = SECTION_NEW;
+        mr.jerk = bf->jerk;
+
+        if (mr.section == SECTION_BODY) {
+            mr.entry_velocity = mr.segment_velocity;
+        } else {
+            mr.entry_velocity = mr.segment_velocity + mr.forward_diff_5;
+        }
+        mr.cruise_velocity = bf->entry_velocity;
+
+        float mr_available_length = get_axis_vector_length(mr.target, mr.position);
+        float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
+
+        mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, braking_length, bf));
+
+        mr.head_length = 0;
+        mr.body_length = 0;
+        mr.tail_length = braking_length;
+    }
+
+    // NB: from this point on the contents of the bf buffer do not affect execution
+
+
 
 	//**** main dispatcher to process segments ***
 	stat_t status = STAT_OK;
@@ -226,13 +285,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
 
-	// Feedhold processing. Refer to canonical_machine.h for state machine
-	// Catch the feedhold request and start the planning the hold
-	if (cm.hold_state == FEEDHOLD_SYNC) { cm.hold_state = FEEDHOLD_PLAN;}
 
 	// Look for the end of the decel to go into HOLD state
-	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity))
+    if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity)) {
         cm.hold_state = FEEDHOLD_READY_TO_HOLD;
+        bf->move_state = MOVE_NEW;
+    }
 
 	// There are 3 things that can happen here depending on return conditions:
 	//	  status		bf->move_state		Description

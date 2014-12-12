@@ -424,7 +424,12 @@ stat_t mp_plan_buffer()
 
     bool do_continue = false;
 
-    if (mb.planner_timer < SysTickTimer.getValue()) {
+    if (mb.force_replan) {
+        do_continue = true;
+        mb.force_replan = false;
+    }
+
+    if (!do_continue && (mb.planner_timer < SysTickTimer.getValue()) ) {
         do_continue = true;
     }
 

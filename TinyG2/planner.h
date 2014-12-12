@@ -214,6 +214,8 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     bool    needs_time_accounting;  // mark to indicate that the buffer has changed and the times (below) may be wrong
     bool    planning;               // the planner smarks this to indicate it's (re)planning the block list
 
+    bool    force_replan;           // true to inidicate that we must plan, ignoring the normal timing tests
+
     volatile float time_in_run;         // time left in the buffer executed by the runtime
     volatile float time_in_planner;     // total time of the buffer
 
