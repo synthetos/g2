@@ -504,20 +504,22 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         bp->buffer_state = MP_BUFFER_QUEUED;
 	}
 
-	// finish up the last block move
-	bp->entry_velocity = bp->pv->exit_velocity; // WARNING: bp->pv might not be initied
-	bp->cruise_velocity = bp->cruise_vmax;
-	bp->exit_velocity = 0;
+    if (bp->move_type == MOVE_TYPE_ALINE) {
+        // finish up the last block move
+        bp->entry_velocity = bp->pv->exit_velocity; // WARNING: bp->pv might not be initied
+        bp->cruise_velocity = bp->cruise_vmax;
+        bp->exit_velocity = 0;
 
-    plan_debug_pin3 = 1;
-	mp_calculate_trapezoid(bp);
-    plan_debug_pin3 = 0;
+        plan_debug_pin3 = 1;
+        mp_calculate_trapezoid(bp);
+        plan_debug_pin3 = 0;
 
-    if (fp_ZERO(bp->cruise_velocity))
-        while(1);
+        if (fp_ZERO(bp->cruise_velocity))
+            while(1);
 
-    // Force a calculation of this here
-    bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+        // Force a calculation of this here
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+    }
 
     // since it was locked before, this will incorporate any changes when we were calculating
     bp->buffer_state = MP_BUFFER_QUEUED;
