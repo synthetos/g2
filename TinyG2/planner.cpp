@@ -213,8 +213,9 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 	}
 
 	bf->move_type = MOVE_TYPE_COMMAND;
-	bf->bf_func = _exec_command;						// callback to planner queue exec function
-	bf->cm_func = cm_exec;								// callback to canonical machine exec function
+	bf->bf_func = _exec_command;      // callback to planner queue exec function
+	bf->cm_func = cm_exec;            // callback to canonical machine exec function
+    bf->replannable = true;           // allow the normal planning to go backward past this zero-speed and zero-length "move"
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		bf->value_vector[axis] = value[axis];

@@ -459,6 +459,15 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	while ((bp = mp_get_next_buffer(bp)) != bf) {
+        if (bp->move_type == MOVE_TYPE_COMMAND) {
+            bp->replannable = false;
+            bp->buffer_state = MP_BUFFER_QUEUED;
+
+            // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
+
+            continue;
+        }
+
 		if ((bp->pv == bf) || (mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
             mr_flag = false;

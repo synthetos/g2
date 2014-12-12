@@ -176,15 +176,15 @@ static void _controller_HSM()
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
+    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
+
+    DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
-
-    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
 
     DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
