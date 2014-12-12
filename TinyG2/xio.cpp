@@ -126,10 +126,10 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     bool isActive() { return flags & DEV_IS_ACTIVE; }
 
     // Combination checks
-    bool isCtrlAndActive() { return (flags & (DEV_IS_CTRL|DEV_IS_ACTIVE)) == (DEV_IS_CTRL|DEV_IS_ACTIVE); }
-    bool isDataAndActive() { return (flags & (DEV_IS_DATA|DEV_IS_ACTIVE)) == (DEV_IS_DATA|DEV_IS_ACTIVE); }
+    bool isCtrlAndActive() { return ((flags & (DEV_IS_CTRL|DEV_IS_ACTIVE)) == (DEV_IS_CTRL|DEV_IS_ACTIVE)); }
+    bool isDataAndActive() { return ((flags & (DEV_IS_DATA|DEV_IS_ACTIVE)) == (DEV_IS_DATA|DEV_IS_ACTIVE)); }
 
-    bool isNotCtrlOnly() { return (flags & (DEV_IS_CTRL|DEV_IS_DATA)) != (DEV_IS_CTRL); }
+    bool isNotCtrlOnly() { return ((flags & (DEV_IS_CTRL|DEV_IS_DATA)) != (DEV_IS_CTRL)); }
 
 
     // Manipulation functions
@@ -335,8 +335,8 @@ struct xio_t {
             if (!DeviceWrappers[dev]->isActive())
                 continue;
 
-            // If this channel is a DATA & CONTROL, and flags ask for control-only, we skip it
-            if (checkForCtrlOnly(limit_flags) && DeviceWrappers[dev]->isNotCtrlOnly() ) // the types need to match
+            // If this channel is a DATA only, and flags ask for control-only, we skip it
+            if (checkForCtrlOnly(limit_flags) && !DeviceWrappers[dev]->isCtrl() ) // the types need to match
                 continue;
 
             ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
