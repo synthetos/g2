@@ -76,7 +76,7 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
 
 uint8_t mp_get_runtime_busy()
 {
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN)) return (true);
+	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
 	return (false);
 }
 
@@ -746,7 +746,7 @@ stat_t mp_start_hold()
     _reset_replannable_list();				// make it replan all the blocks
 
     // We have a moment, go ahead and replan:
-    mp_plan_buffer();
+//    mp_plan_buffer();
 
     return (STAT_OK);
 }
