@@ -261,7 +261,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         } else {
             mr.entry_velocity = mr.segment_velocity + mr.forward_diff_5;
         }
-        mr.cruise_velocity = bf->entry_velocity;
+        mr.cruise_velocity = mr.entry_velocity;
 
         float mr_available_length = get_axis_vector_length(mr.target, mr.position);
         float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);

@@ -44,7 +44,8 @@
 
 using namespace Motate;
 //OutputPin<kDebug1_PinNumber> xio_debug_pin1;
-OutputPin<kDebug2_PinNumber> xio_debug_pin2;
+//OutputPin<kDebug2_PinNumber> xio_debug_pin2;
+//OutputPin<-1> xio_debug_pin2;
 //OutputPin<kDebug3_PinNumber> xio_debug_pin3;
 
 
@@ -192,7 +193,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 // This is a control-only read.
                 // We need to ensure that we only get JSON-lines.
                 // CHEAT: We don't properly ignore spaces here!!
-                if (read_buf[0] != '{') {
+                if ((read_buf[0] != '{') && (read_buf[0] != CR) && (read_buf[0] != LF)) {
                     // we'll just leave _ready_to_send set, and next time it can be read.
                     size = 0;
                     return NULL;
@@ -329,29 +330,43 @@ struct xio_t {
         char_t *ret_buffer;
         devflags_t limit_flags = flags; // Store it so it can't get mangled
 
-        xio_debug_pin2 = 1;
-
+        // Always check control-capable devices FIRST
         for (uint8_t dev=0; dev < _dev_count; dev++) {
             if (!DeviceWrappers[dev]->isActive())
                 continue;
 
-            // If this channel is a DATA only, and flags ask for control-only, we skip it
-            if (checkForCtrlOnly(limit_flags) && !DeviceWrappers[dev]->isCtrl() ) // the types need to match
+            // If this channel is a DATA only, skip it this pass
+            if (!DeviceWrappers[dev]->isCtrl())
                 continue;
 
-            ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
+            ret_buffer = DeviceWrappers[dev]->readline(DEV_IS_CTRL, size);
 
             if (size > 0) {
                 flags = DeviceWrappers[dev]->flags;
 
-                xio_debug_pin2 = 0;
                 return ret_buffer;
             }
         }
+
+        // We only do this second pass if this is not a CTRL-only read
+        if (!checkForCtrlOnly(limit_flags)) {
+            for (uint8_t dev=0; dev < _dev_count; dev++) {
+                if (!DeviceWrappers[dev]->isActive())
+                    continue;
+
+                ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
+
+                if (size > 0) {
+                    flags = DeviceWrappers[dev]->flags;
+
+                    return ret_buffer;
+                }
+            }
+        }
+
         size = 0;
         flags = 0;
 
-        xio_debug_pin2 = 0;
         return (NULL);
     };
 
