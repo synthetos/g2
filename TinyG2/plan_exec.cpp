@@ -225,7 +225,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (cm.hold_state == FEEDHOLD_SYNC) { cm.hold_state = FEEDHOLD_PLAN;}
 
 	// Look for the end of the decel to go into HOLD state
-	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity))
+	if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK))
         cm.hold_state = FEEDHOLD_READY_TO_HOLD;
 
 	// There are 3 things that can happen here depending on return conditions:
