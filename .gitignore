@@ -25,3 +25,5 @@ TcfTransactionLog.csv
 .gdb_history
 JLink.log
 Tools/gcc-arm-none-eabi
+openocd.cfg
+openocd.log

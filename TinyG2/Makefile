@@ -455,12 +455,14 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-debug: $(OUTPUT_BIN).elf
+debug: $(OUTPUT_BIN).elf openocd.cfg
 	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"
 
 flash: $(OUTPUT_BIN).elf
 	"${PLATFORM_BASE}-flash.sh" "$(OUTPUT_BIN).elf"
 
+openocd.cfg:
+	$(error Please copy openocd.cfg.example to openocd.cfg and modify it as necessary for your configuration.)
 
 #-------------------------------------------------------------------------------
 #    Default $(PROJECT).elf, and clean
