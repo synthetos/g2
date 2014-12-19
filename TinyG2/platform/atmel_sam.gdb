@@ -14,7 +14,7 @@ set height 0
 # monitor endian little
 
 # Open and connect to openocd with the ATMEL-ICE
-target remote | openocd  -c "interface cmsis-dap" -f platform/atmel_sam.cfg -c "gdb_port pipe; log_output openocd.log"
+target remote | openocd -f openocd.cfg -f platform/atmel_sam.cfg -c "gdb_port pipe; log_output openocd.log"
 
 # Turn on history saving
 set history save on
