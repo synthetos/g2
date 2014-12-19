@@ -1,0 +1,7 @@
+# Uncomment the correct interface for your adapter.
+
+# For an Atmel ICE:
+#source [find interface/cmsis-dap.cfg]
+
+# For a JLink (or compatoble) device:
+source [find interface/jlink.cfg]
