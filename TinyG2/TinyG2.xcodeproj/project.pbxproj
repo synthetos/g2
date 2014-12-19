@@ -3227,6 +3227,7 @@
 		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
 		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
+		D4C10A511A43D3A600B3F2EA /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4CA314D19DEFEFB004B4A02 /* atmel_sam-flash.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "atmel_sam-flash.sh"; sourceTree = "<group>"; };
@@ -7488,6 +7489,7 @@
 				D49EB85417054C4000F2BF9B /* index */,
 				D49EC3FC17054FDF00F2BF9B /* atmel_sam */,
 				D49EC43517054FDF00F2BF9B /* atmel_sam.mk */,
+				D4C10A511A43D3A600B3F2EA /* atmel_sam.cfg */,
 				D45E858D19A24FA800300F9F /* atmel_sam.gdb */,
 				D4CA314D19DEFEFB004B4A02 /* atmel_sam-flash.sh */,
 				D4B5763417079D790070CCAE /* make_utilities.mk */,
