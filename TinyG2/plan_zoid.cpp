@@ -32,6 +32,16 @@
 #include "report.h"
 #include "util.h"
 
+using namespace Motate;
+//extern OutputPin<-1> plan_debug_pin1;
+extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<-1> plan_debug_pin2;
+extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
+//extern OutputPin<-1> plan_debug_pin4;
+extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+
 
 template<typename T>
 inline T our_abs(const T number) {
@@ -141,43 +151,94 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	bf->head_length = 0;
 	bf->tail_length = 0;
 
+    if (fp_ZERO(bf->length)) {
+        while (1);
+    }
+
     // Quick sanity check: We can't exit at a speed higher than we cruise.
     if (bf->exit_velocity > bf->cruise_velocity) {
         bf->exit_velocity = bf->cruise_velocity;
     }
 
-	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
 
+
+    // Test entry == cruise
+    // Test exit == cruise
+
+
+    // Try to optimize out the assymetric last move
+
+
+	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
+    float naiive_move_time = 0;
     // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length, and the width is the move time.
     // This formula is to get the move time (width) from the sides and the area (move length).
     // The actual formula is T=(2L)/(v_0+v_1) == T/2=L/(v_0+v_1)
-    float naiive_move_time = bf->length / (bf->entry_velocity + bf->exit_velocity);		// reduced equation
 
-	// F case: Block is too short - run time < minimum segment time
-	// Force block into a single segment body with limited velocities
-	// Accept the entry velocity, limit the cruise, and go for the best exit velocity
-	// you can get given the delta_vmax (maximum velocity slew) supportable.
+    naiive_move_time = bf->length / (bf->entry_velocity + max(bf->cruise_velocity,bf->exit_velocity));		// reduced equation
+
+    // F case: Block is too short - run time < minimum segment time
+    // Force block into a single segment body with limited velocities
+    // Accept the entry velocity, limit the cruise, and go for the best exit velocity
+    // you can get given the delta_vmax (maximum velocity slew) supportable.
 
     // B" case: Block is short, but fits into a single body segment
 
-	if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
-		bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
+    // If bf->real_move_time <= MIN_SEGMENT_TIME_PLUS_MARGIN, don't check MIN_SEGMENT_TIME_PLUS_MARGIN
+    if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
+        // test to add backj later: bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN &&
+        bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
+        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
         // Why assume we want to decelerate or accelerate?
         //bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
-		bf->exit_velocity = bf->cruise_velocity;
-		bf->body_length = bf->length;
-		// We are violating the jerk value but since it's a single segment move we don't use it.
-		return;
-	}
-
-
-	if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) { // compensating for reduced equation
-        bf->cruise_velocity = bf->length / NOM_SEGMENT_TIME;
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
-		// We are violating the jerk value but since it's a single segment move we don't use it.
-		return;
-	}
+
+        // LOCK IT
+//        bf->replannable = false;
+
+//        bf->real_move_time = bf->length/bf->cruise_velocity;
+        // We are violating the jerk value but since it's a single segment move we don't use it.
+        return;
+    }
+
+// Replace this with NOM_SEGMENT TIME for now
+//    if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
+//        bf->cruise_velocity = bf->length / bf->real_move_time;
+//        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+//
+//        if (fp_ZERO(bf->cruise_velocity)) {
+//            while (1);
+//        }
+//
+//        bf->exit_velocity = bf->cruise_velocity;
+//        bf->body_length = bf->length;
+//        // We are violating the jerk value but since it's a single segment move we don't use it.
+//        return;
+//    }
+
+    if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) { // compensating for reduced equation
+        bf->cruise_velocity = bf->length / NOM_SEGMENT_TIME;
+        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
+        bf->exit_velocity = bf->cruise_velocity;
+        bf->body_length = bf->length;
+
+        // LOCK IT
+//        bf->replannable = false;
+
+        // We are violating the jerk value but since it's a single segment move we don't use it.
+        return;
+    }
 
 	// Head-only and tail-only short-line cases
 	//	 H" and T" degraded-fit cases
@@ -192,16 +253,40 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	if (((bf->cruise_velocity - bf->entry_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) &&
 		((bf->cruise_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE)) {
 		bf->body_length = bf->length;
+
+//        bf->real_move_time = bf->length/bf->cruise_velocity;
 //		printf("4");
 		return;
 	}
 
 	// Set head and tail lengths for evaluating the next cases
-	bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
-	bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+    // Optimization: Find the length that will be the greatest, and test it first. If it's too short so is the other.
+    // Anti-optimization: We have code for each test twice, even though at most only two will ever be used.
+    //                    In this case we "code them all and the the optimizer sort them out."
+    if ((bf->cruise_velocity - bf->entry_velocity) > (bf->cruise_velocity - bf->exit_velocity)) {
+        bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+        if (bf->head_length < MIN_HEAD_LENGTH) {
+            bf->head_length = 0;
+            bf->tail_length = 0;
+        } else {
+            bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+            if (bf->tail_length < MIN_TAIL_LENGTH) {
+                bf->tail_length = 0;
+            }
+        }
+    } else {
+        bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
+        if (bf->tail_length < MIN_TAIL_LENGTH) {
+            bf->tail_length = 0;
+            bf->head_length = 0;
+        } else {
+            bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
+            if (bf->head_length < MIN_HEAD_LENGTH) {
+                bf->head_length = 0;
+            }
+        }
+    }
 
-	if (bf->head_length < MIN_HEAD_LENGTH) { bf->head_length = 0;}
-	if (bf->tail_length < MIN_TAIL_LENGTH) { bf->tail_length = 0;}
 
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
@@ -213,6 +298,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //			bf->cruise_velocity = min(bf->cruise_vmax, mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf));
             bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
 
+            if (fp_ZERO(bf->cruise_velocity)) {
+                while (1);
+            }
+
 			if (bf->head_length < MIN_HEAD_LENGTH) {
 				// Convert this to a body-only move
 				bf->body_length = bf->length;
@@ -223,7 +312,12 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 				bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
 //				bf->entry_velocity = bf->cruise_velocity;
 				bf->exit_velocity = bf->cruise_velocity;
-			}
+
+//                bf->real_move_time = bf->length/bf->cruise_velocity;
+            } else {
+                // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
+//                bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
+            }
 			return;
 		}
 
@@ -232,17 +326,31 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		// set velocity and clean up any parts that are too short
         bf->cruise_velocity = mp_get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
 
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
 		bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
 		bf->tail_length = bf->length - bf->head_length;
 		if (bf->head_length < MIN_HEAD_LENGTH) {
 			bf->tail_length = bf->length;			// adjust the move to be all tail...
 			bf->head_length = 0;
+
+//            bf->real_move_time = ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
+
+            return;
 		}
-		if (bf->tail_length < MIN_TAIL_LENGTH) {
+		else if (bf->tail_length < MIN_TAIL_LENGTH) {
 			bf->head_length = bf->length;			//...or all head
 			bf->tail_length = 0;
+
+//            bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity));
+
+            return;
 		}
-		return;
+
+//        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
+        return;
 	}
 
 	// Requested-fit cases: remaining of: HBT, HB, BT, BT, H, T, B, cases
@@ -264,11 +372,33 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		}
 		bf->body_length = 0;
 
+//        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
+        return;
+
 	// If the body is a standalone make the cruise velocity match the entry velocity
 	// This removes a potential velocity discontinuity at the expense of top speed
 	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
-		bf->cruise_velocity = bf->entry_velocity;
+		bf->cruise_velocity = min(bf->entry_vmax, bf->cruise_vmax);
+
+//        bf->real_move_time = (bf->body_length/bf->cruise_velocity);
+
+        if (fp_ZERO(bf->cruise_velocity)) {
+            while (1);
+        }
+
+        return;
 	}
+
+    if (fp_ZERO(bf->cruise_velocity)) {
+        while (1);
+    }
+
+//    bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
 }
 
 /*
@@ -292,6 +422,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 #ifdef LINEAR_SNAP_MATH
 
 //Try 1 constants:
+// L_c(v_0, v_1, j) = sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
 // sqrt(5)
 //static const float sqrt_five = 2.23606797749979;
 
@@ -301,7 +432,6 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
 //Try 2 constants:
 // L_c(v_0, v_1, j) = (sqrt(5) (v_0 + v_1) sqrt(j abs(v_1 - v_0))) / (sqrt(2) 3^(1 / 4) j)
-//                     sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
 
 // Just calling this tl_constant. It's full name is:
 // sqrt(5)/( sqrt(2)pow(3,4) )
@@ -309,6 +439,8 @@ static const float tl_constant = 1.201405707067378;
 
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
 {
+    // Current cost: approx 64us
+
     const float j = bf->jerk;
     const float recip_j = bf->recip_jerk;
 
@@ -316,7 +448,9 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
     //return (sqrt_five * (v_0 + v_1) * sqrt(our_abs(v_1 - v_0) * bf->jerk))/(sqrt_two_x_fourthroot_three * bf->jerk);		// newER formula -- linear POP!
 
     //Try 2 math (same, but rearranged):
-    return tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+    float ret =  tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+
+    return ret;
 }
 
 
@@ -327,6 +461,8 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
     //L_d(v_0, v_1, j) = (sqrt(5) abs(v_0 - v_1) (v_0 - 3v_1)) / (2sqrt(2) 3^(1 / 4) sqrt(j abs(v_0 - v_1)) (v_0 - v_1))
     //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) ( v_0 - 3 v_1) / ( sqrt(j abs(v_0 - v_1)))
     //                    sqrt(5) / (2 sqrt(2) nroot(3,4)) = 0.60070285354
+
+    // Average cost: 0.18ms -- 180us
 
     const float j = bf->jerk;
     const float recip_j = bf->recip_jerk;
@@ -405,6 +541,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     // Why const? So that the compiler knows it'll never change once it's computed.
     // Also, we ensure that it doesn't accidentally change once computed.
 
+    // Average cost: 0.14ms -- 140us
     const float j = bf->jerk;
 
     //v_0^2
@@ -435,7 +572,10 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     //         = pow( (27 * L_sq_x_j_x_sqrt_3 + 40 * v_0_cu + f3_sqrt_3 * sqrt(2 * 40 * v_0_cu * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
     //         = pow( (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
 
-    const float chunk_1 = pow( (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third);
+    const float chunk_1_cubed = (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) );
+//    plan_debug_pin1.toggle();
+    const float chunk_1 = cbrtf(chunk_1_cubed);
+//    plan_debug_pin1.toggle();
 
     // v_1 = 4/3*5^(1/3)        * v_0^2  / chunk_1  +   1/15*5^(2/3)       * chunk_1  -  1/3  *v_0
     // v_1 = f4_thirds_x_cbrt_5 * v_0_sq / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third*v_0

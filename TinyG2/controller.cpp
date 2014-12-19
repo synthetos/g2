@@ -71,6 +71,7 @@ static stat_t _sync_to_tx_buffer(void);
 static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
+static stat_t _check_for_phat_city_time(void);
 static void _dispatch_kernel(void);
 
 // prep for export to other modules:
@@ -171,18 +172,13 @@ static void _controller_HSM()
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-	DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
-//	DISPATCH(switch_debounce_callback());		// debounce switches
-	DISPATCH(sr_status_report_callback());		// conditionally send status report
-	DISPATCH(qr_queue_report_callback());		// conditionally send queue report
-	DISPATCH(rx_report_callback());             // conditionally send rx report
+    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
 
-	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
+    DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
@@ -190,13 +186,24 @@ static void _controller_HSM()
 
 //----- command readers and parsers --------------------------------------------------//
 
-	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
+    DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
 	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
 	DISPATCH(_dispatch_command());				// read and execute next command
 	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
+
+//---- phat city idle tasks ---------------------------------------------------------//
+
+    DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
+
+    DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
+    //	DISPATCH(switch_debounce_callback());		// debounce switches
+    DISPATCH(sr_status_report_callback());		// conditionally send status report
+    DISPATCH(qr_queue_report_callback());		// conditionally send queue report
+    DISPATCH(rx_report_callback());             // conditionally send rx report
+
 }
 
 /*****************************************************************************************
@@ -243,8 +250,12 @@ static stat_t _dispatch_command()
 {
 	if(cm.estop_state == 0) {
 		devflags_t flags = DEV_IS_BOTH;
-		if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
+        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
+               (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
         	_dispatch_kernel();
+
+            mp_plan_buffer();
+        }
 	}
 	return (STAT_OK);
 }
@@ -293,6 +304,14 @@ static void _dispatch_kernel()
 		sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);
 		json_parser(cs.bufp);
 	}
+}
+
+static stat_t _check_for_phat_city_time(void) {
+    if (mp_is_it_phat_city_time()) {
+        return STAT_OK;
+    }
+    
+    return STAT_EAGAIN;
 }
 
 /**** Local Utilities ********************************************************/

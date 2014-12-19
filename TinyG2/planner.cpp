@@ -60,6 +60,16 @@
 #include "report.h"
 #include "util.h"
 
+using namespace Motate;
+//extern OutputPin<-1> plan_debug_pin1;
+extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<-1> plan_debug_pin2;
+extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
+extern OutputPin<-1> plan_debug_pin4;
+//extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+
 // Allocate planner structures
 
 mpBufferPool_t mb;				// move buffer queue
@@ -203,8 +213,9 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 	}
 
 	bf->move_type = MOVE_TYPE_COMMAND;
-	bf->bf_func = _exec_command;						// callback to planner queue exec function
-	bf->cm_func = cm_exec;								// callback to canonical machine exec function
+	bf->bf_func = _exec_command;      // callback to planner queue exec function
+	bf->cm_func = cm_exec;            // callback to canonical machine exec function
+    bf->replannable = true;           // allow the normal planning to go backward past this zero-speed and zero-length "move"
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		bf->value_vector[axis] = value[axis];
@@ -352,7 +363,7 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
 		w->nx = nx;								// restore pointers
 		w->pv = pv;
-		w->buffer_state = MP_BUFFER_LOADING;
+		w->buffer_state = MP_BUFFER_PLANNING;
 		mb.buffers_available--;
 		mb.w = w->nx;
 		return (w);
@@ -368,6 +379,7 @@ void mp_unget_write_buffer()
 	mb.buffers_available++;
 }
 
+
 /*** WARNING: The routine calling mp_commit_write_buffer() must not use the write buffer
 			  once it has been queued. Action may start on the buffer immediately,
 			  invalidating its contents ***/
@@ -376,21 +388,127 @@ void mp_commit_write_buffer(const uint8_t move_type)
 {
 	mb.q->move_type = move_type;
 	mb.q->move_state = MOVE_NEW;
-	mb.q->buffer_state = MP_BUFFER_QUEUED;
-	mb.q = mb.q->nx;							// advance the queued buffer pointer
-	qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-	if(cm.hold_state != FEEDHOLD_HOLD)
-		st_request_exec_move();					// requests an exec if the runtime is not busy
-												// NB: BEWARE! the exec may result in the planner buffer being
-												// processed immediately and then freed - invalidating the contents
+    if (MOVE_TYPE_ALINE != move_type) {
+        mb.q->buffer_state = MP_BUFFER_QUEUED;
+        mb.q = mb.q->nx;
+        if (!mb.needs_replanned) {
+            if(cm.hold_state != FEEDHOLD_HOLD)
+                st_request_exec_move();					// requests an exec if the runtime is not busy
+            // NB: BEWARE! the exec may result in the planner buffer being
+            // processed immediately and then freed - invalidating the contents
+        }
+    } else {
+        mb.needs_replanned = 1;
+        mb.q = mb.q->nx;							// advance the queued buffer pointer
+        if (mb.planner_timer == 0) {
+            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT;
+        }
+    }
+
+    qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
+    
 }
+
+stat_t mp_plan_buffer()
+{
+    plan_debug_pin1 = 1;
+
+    // Criteria to replan:
+    // 0) There are items in the buffer that need replanned.
+    // 1) Planner timer has "timed out"
+    // 2) Less than MIN_PLANNED_TIME in the planner
+
+    if (!mb.needs_replanned) {
+        plan_debug_pin1 = 0;
+        return STAT_OK;
+    }
+
+    bool do_continue = false;
+
+    if (mb.force_replan) {
+        do_continue = true;
+        mb.force_replan = false;
+    }
+
+    if (!do_continue && (mb.planner_timer < SysTickTimer.getValue()) ) {
+        do_continue = true;
+    }
+
+    float total_buffer_time = mb.time_in_run + mb.time_in_planner;
+
+    if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
+        do_continue = true;
+        plan_debug_pin4 = 1;
+    }
+
+    if (!do_continue) {
+        plan_debug_pin4 = 0;
+        plan_debug_pin1 = 0;
+        return STAT_OK;
+    }
+
+    mp_plan_block_list(mb.q->pv, false);
+
+    if(cm.hold_state != FEEDHOLD_HOLD)
+        st_request_exec_move();					// requests an exec if the runtime is not busy
+    // NB: BEWARE! the exec may result in the planner buffer being
+    // processed immediately and then freed - invalidating the contents
+
+    mb.planner_timer = 0; // clear the planner timer
+    mb.needs_replanned = 0;
+
+    plan_debug_pin4 = 0;
+    plan_debug_pin1 = 0;
+    return STAT_OK;
+}
+
+bool mp_is_it_phat_city_time() {
+    float time_in_planner = mb.time_in_run + mb.time_in_planner;
+    return (fp_ZERO(time_in_planner) || PHAT_CITY_TIME < time_in_planner);
+}
+
+void mp_planner_time_accounting() {
+    if (mb.planning || !mb.needs_time_accounting)
+        return;
+
+    mpBuf_t *bf = mp_get_run_buffer();
+    mpBuf_t *bp = bf;
+
+    if (bf == NULL)
+        return;
+
+    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
+
+    while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
+        if ((bp->buffer_state == MP_BUFFER_QUEUED) ||
+            (bp->buffer_state == MP_BUFFER_PENDING))
+        {
+            if (!bp->locked) {
+                if (time_in_planner < MIN_PLANNED_TIME) {
+                    bp->locked = true;;
+                }
+            } // !locked
+
+            // move on, it's already locked
+            time_in_planner += bp->real_move_time;
+
+        } else {
+            break;
+        }
+    };
+
+    mb.time_in_planner = time_in_planner;
+}
+
 
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
 	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
-		 mb.r->buffer_state = MP_BUFFER_RUNNING;
+		(mb.r->buffer_state == MP_BUFFER_PENDING)
+        )
+    {
+        mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
 	// CASE: asking for the same run buffer for the Nth time
 	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer

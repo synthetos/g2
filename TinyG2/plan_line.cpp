@@ -35,9 +35,19 @@
 #include "util.h"
 #include "spindle.h"
 
+using namespace Motate;
+OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//OutputPin<-1> plan_debug_pin1;
+OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//OutputPin<-1> plan_debug_pin2;
+//OutputPin<kDebug3_PinNumber> plan_debug_pin3;
+OutputPin<-1> plan_debug_pin3;
+OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+//OutputPin<-1> plan_debug_pin4;
+
+
 // aline planner routines / feedhold planning
 static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
-static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag);
 static float _get_junction_vmax(const float a_unit[], const float b_unit[]);
 static void _reset_replannable_list(void);
 
@@ -66,7 +76,7 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
 
 uint8_t mp_get_runtime_busy()
 {
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN)) return (true);
+	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
 	return (false);
 }
 
@@ -88,10 +98,10 @@ uint8_t mp_get_runtime_busy()
 
 stat_t mp_aline(GCodeState_t *gm_in)
 {
+    plan_debug_pin1 = 1;
 	mpBuf_t *bf; 						// current move pointer
 	float exact_stop = 0;				// preset this value OFF
 	float junction_velocity;
-	uint8_t mr_flag = false;
 
 	// compute some reused terms
 	float axis_length[AXES];
@@ -110,6 +120,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 //	if (fp_ZERO(axis_length[AXIS_X]) && fp_ZERO(axis_length[AXIS_Y]) && fp_ZERO(axis_length[AXIS_Z]) &&
 //		fp_ZERO(axis_length[AXIS_A]) && fp_ZERO(axis_length[AXIS_B]) && fp_ZERO(axis_length[AXIS_C])) {
 		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
+        plan_debug_pin1 = 0;
 		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
@@ -123,7 +134,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	_calc_move_times(gm_in, axis_length, axis_square);						// set move time and minimum time in the state
 
-	if (gm_in->move_time < MIN_BLOCK_TIME) {
+//	if (gm_in->move_time < MIN_BLOCK_TIME) {
 /*		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move - uses jerk from previous move
 		float entry_velocity = 0;											// pre-set as if no previous block
 		if ((bf = mp_get_run_buffer()) != NULL) {
@@ -137,9 +148,10 @@ stat_t mp_aline(GCodeState_t *gm_in)
 		if (move_time < MIN_BLOCK_TIME) {
 			sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 */
-			//return (STAT_MINIMUM_TIME_MOVE);
+//            plan_debug_pin1 = 0;
+//			return (STAT_MINIMUM_TIME_MOVE);
 //		}
-	}
+//	}
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) {							// never supposed to fail
@@ -245,11 +257,13 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
 	bf->exit_vmax = min3(bf->cruise_vmax, (bf->entry_vmax + bf->delta_vmax), exact_stop);
 	bf->braking_velocity = bf->delta_vmax;
+    bf->real_move_time = 0;
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
-	_plan_block_list(bf, &mr_flag);				// replan block list
+//    mp_plan_block_list(bf, false);				// replan block list
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
+    plan_debug_pin1 = 0;
 	return (STAT_OK);
 }
 
@@ -425,22 +439,38 @@ static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const
  *	[2] The mr_flag is used to tell replan to account for mr buffer's exit velocity (Vx)
  *		mr's Vx is always found in the provided bf buffer. Used to replan feedholds
  */
-static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
+void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 {
-	mpBuf_t *bp = bf;
+    plan_debug_pin2 = 1;
+
+    // the the exec not to change the moves out from under us
+    mb.planning = true;
+
+    mpBuf_t *bp = bf;
 
 	// Backward planning pass. Find first block and update the braking velocities.
 	// At the end *bp points to the buffer before the first block.
 	while ((bp = mp_get_prev_buffer(bp)) != bf) {
-		if (bp->replannable == false) { break; }
+		if (bp->replannable == false || bp->locked == true) {
+            break;
+        }
 		bp->braking_velocity = min(bp->nx->entry_vmax, bp->nx->braking_velocity) + bp->delta_vmax;
 	}
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	while ((bp = mp_get_next_buffer(bp)) != bf) {
-		if ((bp->pv == bf) || (*mr_flag == true))  {
+        if (bp->move_type == MOVE_TYPE_COMMAND) {
+            bp->replannable = false;
+            bp->buffer_state = MP_BUFFER_QUEUED;
+
+            // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
+
+            continue;
+        }
+
+		if ((bp->pv == bf) || (mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
-			*mr_flag = false;
+            mr_flag = false;
 		} else {
 			bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
 		}
@@ -450,21 +480,55 @@ static void _plan_block_list(mpBuf_t *bf, uint8_t *mr_flag)
 								  bp->nx->braking_velocity,
 								 (bp->entry_velocity + bp->delta_vmax) );
 
-		mp_calculate_trapezoid(bp);
+        plan_debug_pin3 = 1;
+        mp_calculate_trapezoid(bp);
+        plan_debug_pin3 = 0;
+
+        if (fp_ZERO(bp->cruise_velocity))
+            while(1);
+
+        // Force a calculation of this here
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
 		// test for optimally planned trapezoids - only need to check various exit conditions
-		if  ( ( (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
-				(fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) ) ||
-			  ( (bp->pv->replannable == false) &&
-				(fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) ) ) {
-			bp->replannable = false;
-		}
+        // We also lock if the planner doesn't have more than MIN_PLANNED_TIME worth of moves in it that are locked.
+        if  ((
+              (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
+              (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax))
+             ) ||
+             ((bp->pv->replannable == false) && fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax)))
+            )
+        {
+            bp->replannable = false;
+        }
+        bp->buffer_state = MP_BUFFER_QUEUED;
 	}
-	// finish up the last block move
-	bp->entry_velocity = bp->pv->exit_velocity;
-	bp->cruise_velocity = bp->cruise_vmax;
-	bp->exit_velocity = 0;
-	mp_calculate_trapezoid(bp);
+
+    if (bp->move_type == MOVE_TYPE_ALINE) {
+        // finish up the last block move
+        bp->entry_velocity = bp->pv->exit_velocity; // WARNING: bp->pv might not be initied
+        bp->cruise_velocity = bp->cruise_vmax;
+        bp->exit_velocity = 0;
+
+        plan_debug_pin3 = 1;
+        mp_calculate_trapezoid(bp);
+        plan_debug_pin3 = 0;
+
+        if (fp_ZERO(bp->cruise_velocity))
+            while(1);
+
+        // Force a calculation of this here
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+    }
+
+    // since it was locked before, this will incorporate any changes when we were calculating
+    bp->buffer_state = MP_BUFFER_QUEUED;
+
+    // let the exec know we're done planning, and that the times are likely wrong
+    mb.planning = false;
+    mb.needs_time_accounting = true;
+
+    plan_debug_pin2 = 0;
 }
 
 /*
@@ -477,7 +541,12 @@ static void _reset_replannable_list()
 	mpBuf_t *bp = bf;
 	do {
 		bp->replannable = true;
+        bp->locked = false;
+        bp->buffer_state = MP_BUFFER_PLANNING;
 	} while (((bp = mp_get_next_buffer(bp)) != bf) && (bp->move_state != MOVE_OFF));
+
+    mb.needs_replanned = true;
+    mb.needs_time_accounting = true;
 }
 
 /*
@@ -651,105 +720,8 @@ stat_t mp_plan_hold_callback()
 	//otherwise, we we wait for FEEDHOLD_PLAN and then plan a DECEL buffer
 	if (cm.hold_state != FEEDHOLD_PLAN) { return (STAT_NOOP);}	// not planning a feedhold
 
-	mpBuf_t *bp; 				// working buffer pointer
-	if ((bp = mp_get_run_buffer()) == NULL) { return (STAT_NOOP);}	// Oops! nothing's running
-
-	uint8_t mr_flag = true;		// used to tell replan to account for mr buffer Vx
-	float mr_available_length;	// available length left in mr buffer for deceleration
-	float braking_velocity;		// velocity left to shed to brake to zero
-	float braking_length;		// distance required to brake to zero from braking_velocity
-
-	// examine and process mr buffer
-	mr_available_length = get_axis_vector_length(mr.target, mr.position);
-/*
-	mr_available_length =
-		(sqrt(square(mr.endpoint[AXIS_X] - mr.position[AXIS_X]) +
-			  square(mr.endpoint[AXIS_Y] - mr.position[AXIS_Y]) +
-			  square(mr.endpoint[AXIS_Z] - mr.position[AXIS_Z]) +
-			  square(mr.endpoint[AXIS_A] - mr.position[AXIS_A]) +
-			  square(mr.endpoint[AXIS_B] - mr.position[AXIS_B]) +
-			  square(mr.endpoint[AXIS_C] - mr.position[AXIS_C])));
-*/
-	// compute next_segment velocity
-//	braking_velocity = mr.segment_velocity;
-//	if (mr.section != SECTION_BODY) { braking_velocity += mr.forward_diff_1;}
-	braking_velocity = _compute_next_segment_velocity();
-	braking_length = mp_get_target_length(braking_velocity, 0, bp); // bp is OK to use here
-
-	// Hack to prevent Case 2 moves for perfect-fit decels. Happens in homing situations
-	// The real fix: The braking velocity cannot simply be the mr.segment_velocity as this
-	// is the velocity of the last segment, not the one that's going to be executed next.
-	// The braking_velocity needs to be the velocity of the next segment that has not yet
-	// been computed. In the mean time, this hack will work.
-	if ((braking_length > mr_available_length) && (fp_ZERO(bp->exit_velocity))) {
-		braking_length = mr_available_length;
-	}
-
-	// Case 1: deceleration fits entirely into the length remaining in mr buffer
-	if (braking_length <= mr_available_length) {
-		// set mr to a tail to perform the deceleration
-		mr.exit_velocity = 0;
-		mr.tail_length = braking_length;
-		mr.cruise_velocity = braking_velocity;
-		mr.section = SECTION_TAIL;
-		mr.section_state = SECTION_NEW;
-
-		// re-use bp+0 to be the hold point and to run the remaining block length
-		bp->length = mr_available_length - braking_length;
-		bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
-		bp->entry_vmax = 0;						// set bp+0 as hold point
-		bp->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
-
-		_reset_replannable_list();				// make it replan all the blocks
-		_plan_block_list(mp_get_last_buffer(), &mr_flag);
-		cm.hold_state = FEEDHOLD_DECEL;			// set state to decelerate and exit
-		return (STAT_OK);
-	}
-
-	// Case 2: deceleration exceeds length remaining in mr buffer
-	// First, replan mr to minimum (but non-zero) exit velocity
-
-	mr.section = SECTION_TAIL;
-	mr.section_state = SECTION_NEW;
-	mr.tail_length = mr_available_length;
-	mr.cruise_velocity = braking_velocity;
-	mr.exit_velocity = braking_velocity - mp_get_target_velocity(0, mr_available_length, bp);
-
-	// Find the point where deceleration reaches zero. This could span multiple buffers.
-	braking_velocity = mr.exit_velocity;		// adjust braking velocity downward
-	bp->move_state = MOVE_NEW;					// tell _exec to re-use buffer
-	for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {// a safety to avoid wraparound
-		mp_copy_buffer(bp, bp->nx);				// copy bp+1 into bp+0 (and onward...)
-		if (bp->move_type != MOVE_TYPE_ALINE) {	// skip any non-move buffers
-			bp = mp_get_next_buffer(bp);		// point to next buffer
-			continue;
-		}
-		bp->entry_vmax = braking_velocity;		// velocity we need to shed
-		braking_length = mp_get_target_length(braking_velocity, 0, bp);
-
-		if (braking_length > bp->length) {		// decel does not fit in bp buffer
-			bp->exit_vmax = braking_velocity - mp_get_target_velocity(0, bp->length, bp);
-			braking_velocity = bp->exit_vmax;	// braking velocity for next buffer
-			bp = mp_get_next_buffer(bp);		// point to next buffer
-			continue;
-		}
-		break;
-	}
-	// Deceleration now fits in the current bp buffer
-	// Plan the first buffer of the pair as the decel, the second as the accel
-	bp->length = braking_length;
-	bp->exit_vmax = 0;
-
-	bp = mp_get_next_buffer(bp);				// point to the acceleration buffer
-	bp->entry_vmax = 0;
-	bp->length -= braking_length;				// the buffers were identical (and hence their lengths)
-	bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
-	bp->exit_vmax = bp->delta_vmax;
-
-	_reset_replannable_list();					// make it replan all the blocks
-	_plan_block_list(mp_get_last_buffer(), &mr_flag);
-	cm.hold_state = FEEDHOLD_DECEL;				// set state to decelerate and exit
-	return (STAT_OK);
+    // Preparing to REMOVE this function!
+    return (STAT_NOOP);
 }
 
 /*
@@ -760,6 +732,22 @@ stat_t mp_start_hold()
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
+
+    mpBuf_t *bp = mp_get_run_buffer(); // Force it to use the run buffer
+
+    // NOW, we have to look at the run buffer and see if there's anything left,
+    // Update the buffer if we need to, then force a replan of the whole buffer.
+
+    bp->length = get_axis_vector_length(mr.target, mr.position);
+    bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
+    bp->entry_vmax = 0;						// set bp+0 as hold point
+    bp->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
+
+    _reset_replannable_list();				// make it replan all the blocks
+
+    // We have a moment, go ahead and replan:
+//    mp_plan_buffer();
+
     return (STAT_OK);
 }
 

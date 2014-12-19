@@ -485,7 +485,9 @@ static stat_t _execute_gcode_block()
                 case MOTION_MODE_STRAIGHT_TRAVERSE:
                     if(lineCoords) { status = cm_straight_traverse(cm.gn.target, cm.gf.target); } break;
                 case MOTION_MODE_STRAIGHT_FEED:
-                    if(lineCoords) { status = cm_straight_feed(cm.gn.target, cm.gf.target); } break;
+                    if(lineCoords) {
+                        status = cm_straight_feed(cm.gn.target, cm.gf.target, true); // true to defer planning
+                    } break;
                 case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
                     //      -for IJK, it's an error to specify an irrelevant axis (e.g. K while you're on the XZ plane)
                     //      -it's an error to specify both IJK and R

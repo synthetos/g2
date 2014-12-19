@@ -80,15 +80,27 @@ enum sectionState {
  *	Should be experimentally adjusted if the MIN_SEGMENT_LENGTH is changed
  */
 #ifdef __AVR
-	#define NOM_SEGMENT_USEC 	((float)5000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	((float)2500)		// minimum segment time / minimum move time
+	#define NOM_SEGMENT_USEC 	 ((float)5000)		// nominal segment time
+	#define MIN_SEGMENT_USEC 	 ((float)2500)		// minimum segment time / minimum move time
 	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 #endif
 #ifdef __ARM
-	#define NOM_SEGMENT_USEC 	((float)15000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	((float)2500)		// minimum segment time / minimum move time
-	#define MIN_ARC_SEGMENT_USEC ((float)20000)		// minimum arc segment time
+    #define MIN_PLANNED_USEC     ((float)20000)     // minimum time in the planner below which we must replan immediately
+
+    #define PHAT_CITY_USEC       ((float)20000)     // if you have at least this much time in the planner,
+                                                    // you can do whatever you want! (Including send SRs.)
+
+    #define NOM_SEGMENT_USEC 	 ((float)5000)		// nominal segment time
+	#define MIN_SEGMENT_USEC 	 ((float)2500)		// minimum segment time / minimum move time
+	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
+
+    // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
+    // PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
+    #define PLANNER_TIMEOUT      (50)               // Max amount of time to wait between replans
 #endif
+
+#define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
+#define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
@@ -114,6 +126,9 @@ enum sectionState {
 #define PLANNER_BUFFER_POOL_SIZE 28
 #define PLANNER_BUFFER_HEADROOM 4			// buffers to reserve in planner before processing new input line
 
+# if 0
+// THESE ARE NO LONGER USED -- but the code that uses them is still conditional in plan_zoid.cpp
+
 /* Some parameters for _generate_trapezoid()
  * TRAPEZOID_ITERATION_MAX	 				Max iterations for convergence in the HT asymmetric case.
  * TRAPEZOID_ITERATION_ERROR_PERCENT		Error percentage for iteration convergence. As percent - 0.01 = 1%
@@ -123,6 +138,8 @@ enum sectionState {
 #define TRAPEZOID_ITERATION_MAX				10
 #define TRAPEZOID_ITERATION_ERROR_PERCENT	((float)0.10)
 #define TRAPEZOID_LENGTH_FIT_TOLERANCE		((float)0.0001)	// allowable mm of error in planning phase
+#endif //0
+
 #define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
 
 /*
@@ -139,7 +156,7 @@ typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine ex
 
 enum mpBufferState {				// bf->buffer_state values
 	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
-	MP_BUFFER_LOADING,				// being written ("checked out")
+    MP_BUFFER_PLANNING,             // being written ("checked out") for planning
 	MP_BUFFER_QUEUED,				// in queue
 	MP_BUFFER_PENDING,				// marked as the next buffer to run
 	MP_BUFFER_RUNNING				// current running buffer
@@ -155,7 +172,8 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	uint8_t move_type;				// used to dispatch to run routine
 	uint8_t move_code;				// byte that can be used by used exec functions
 	uint8_t move_state;				// move state machine sequence
-	uint8_t replannable;			// TRUE if move can be re-planned
+	bool    replannable;			// TRUE if move can be re-planned
+    bool    locked;	        		// TRUE if the move is locked from replanning
 
 	float unit[AXES];				// unit vector for axis scaling & planning
 
@@ -179,9 +197,12 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	float recip_jerk;				// 1/Jm used for planning (computed and cached)
 	float cbrt_jerk;				// cube root of Jm used for planning (computed and cached)
 
+    float real_move_time;          // amount of time it'll take for the move, in us
+
 	GCodeState_t gm;				// Gode model state - passed from model, used by planner and runtime
 
 } mpBuf_t;
+
 
 typedef struct mpBufferPool {		// ring buffer for sub-moves
 	magic_t magic_start;			// magic number to test memory integrity
@@ -189,6 +210,17 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// get_write_buffer pointer
 	mpBuf_t *q;						// queue_write_buffer pointer
 	mpBuf_t *r;						// get/end_run_buffer pointer
+    bool    needs_replanned;        // mark to indicate that at least one ALINE was put in the buffer
+    bool    needs_time_accounting;  // mark to indicate that the buffer has changed and the times (below) may be wrong
+    bool    planning;               // the planner smarks this to indicate it's (re)planning the block list
+
+    bool    force_replan;           // true to inidicate that we must plan, ignoring the normal timing tests
+
+    volatile float time_in_run;         // time left in the buffer executed by the runtime
+    volatile float time_in_planner;     // total time of the buffer
+
+    uint32_t planner_timer;         // timout to compare against SysTickTimer.getValue() to know when to force planning
+
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
 	magic_t magic_end;
 } mpBufferPool_t;
@@ -285,6 +317,12 @@ void mp_init_buffers(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_unget_write_buffer(void);
 void mp_commit_write_buffer(const uint8_t move_type);
+stat_t mp_plan_buffer();
+void mp_complete_commit_write_buffer();
+void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
+bool mp_is_it_phat_city_time();
+void mp_planner_time_accounting();
+
 
 mpBuf_t * mp_get_run_buffer(void);
 uint8_t mp_free_run_buffer(void);
