@@ -165,43 +165,43 @@ ifeq ("$(PLATFORM)","gShield")
 	# for the code to get the pinout right.
 
 	BASE_PLATFORM=due
-	DEVICE_DEFINES += MOTATE_BOARD="gShield"
+	DEVICE_DEFINES += MOTATE_BOARD="gShield" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9d")
 
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9d" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9d" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9f")
 
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9f" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9f" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9g")
 
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9g" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9g" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","G2v9i")
 
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
 ifeq ("$(PLATFORM)","UltimakerTests")
 
-BASE_PLATFORM=v9_3x8c
-SETTINGS_FILE="settings_Ultimaker_Rob_v9h.h"
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	SETTINGS_FILE="settings_Ultimaker_Rob_v9h.h"
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -220,9 +220,10 @@ ifeq ("$(BASE_PLATFORM)","due")
 	_PLATFORM_FOUND = 1
 	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
-	CHIP = SAM3X8E
-		PLATFORM_BASE = platform/atmel_sam
-		CMSIS_ROOT = CMSIS
+# Set CHIP and export it for GDB to see
+	export CHIP = SAM3X8E
+	PLATFORM_BASE = platform/atmel_sam
+	CMSIS_ROOT = CMSIS
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
 
@@ -234,7 +235,8 @@ ifeq ("$(BASE_PLATFORM)","v9_3x8c")
 	_PLATFORM_FOUND = 1
 	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
-	CHIP = SAM3X8C
+# Set CHIP and export it for GDB to see
+	export CHIP = SAM3X8C
 	PLATFORM_BASE = platform/atmel_sam
 	CMSIS_ROOT = CMSIS
 
@@ -277,8 +279,8 @@ GDB     = $(CROSS_COMPILE)-gdb
 NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
-CKSUM		= cksum
-DD			= dd
+CKSUM	= cksum
+DD		= dd
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
