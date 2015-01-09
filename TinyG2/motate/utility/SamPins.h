@@ -413,11 +413,11 @@ namespace Motate {
 
 
     template<int8_t pinNum>
-	struct SPIChipSelectPin {
-		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
+	struct SPIChipSelectPin : Pin<pinNum> {
+		SPIChipSelectPin() : Pin<pinNum>(kPeripheralA) {};
         
-//        static const uint8_t moduleId = 255;
-//        static const uint8_t csOffset = 0;
+        static const uint8_t moduleId = 0;
+        static const uint8_t csOffset = 0;
         
 		/*Override these to pick up new methods */
         

@@ -28,7 +28,7 @@ PROJECT  = TinyG2
 
 # Include all of the *directories* containing files to compile to SOURCE_DIRS.
 # *EXCEPT* motate paths and processor-specific directories!
-SOURCE_DIRS = .
+SOURCE_DIRS = . fatfs
 
 # List *project-specific* files that must be linked to first in FIRST_LINK_SOURCES.
 FIRST_LINK_SOURCES =
@@ -65,9 +65,10 @@ USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
 CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
 CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
+CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wundef
 CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
 CFLAGS += -Wsign-compare -Waggregate-return
+#CFLAGS += -Wfloat-equal
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
@@ -95,8 +96,9 @@ CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
 CPPFLAGS += -Wmain -Wparentheses -Wunreachable-code
 #CPPFLAGS += -Wcast-align
 CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
+CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
+#CPPFLAGS += -Wfloat-equal
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Wlong-long

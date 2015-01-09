@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		26B1C80D1A5F783B00BAF0A1 /* diskio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C7FF1A5F783B00BAF0A1 /* diskio.cpp */; };
+		26B1C80E1A5F783B00BAF0A1 /* ff.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C8011A5F783B00BAF0A1 /* ff.c */; };
+		26B1C80F1A5F783B00BAF0A1 /* cc932.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C8061A5F783B00BAF0A1 /* cc932.c */; };
+		26B1C8101A5F783B00BAF0A1 /* cc936.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C8071A5F783B00BAF0A1 /* cc936.c */; };
+		26B1C8111A5F783B00BAF0A1 /* cc949.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C8081A5F783B00BAF0A1 /* cc949.c */; };
+		26B1C8121A5F783B00BAF0A1 /* cc950.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C8091A5F783B00BAF0A1 /* cc950.c */; };
+		26B1C8131A5F783B00BAF0A1 /* ccsbcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C80A1A5F783B00BAF0A1 /* ccsbcs.c */; };
+		26B1C8141A5F783B00BAF0A1 /* syscall.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C80B1A5F783B00BAF0A1 /* syscall.c */; };
+		26B1C8151A5F783B00BAF0A1 /* unicode.c in Sources */ = {isa = PBXBuildFile; fileRef = 26B1C80C1A5F783B00BAF0A1 /* unicode.c */; };
 		D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9A175DA4610099576C /* SamUSB.cpp */; };
 		D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9C175DA4690099576C /* AvrUSB.cpp */; };
 		D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9E175E37BF0099576C /* cortex_handlers.c */; };
@@ -385,8 +394,8 @@
 		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
-		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
+		E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29D7210198978BE00F22E5F /* UniqueId.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -402,6 +411,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		26B1C7FE1A5F783B00BAF0A1 /* 00readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = 00readme.txt; sourceTree = "<group>"; };
+		26B1C7FF1A5F783B00BAF0A1 /* diskio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskio.cpp; sourceTree = "<group>"; };
+		26B1C8001A5F783B00BAF0A1 /* diskio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskio.h; sourceTree = "<group>"; };
+		26B1C8011A5F783B00BAF0A1 /* ff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ff.c; sourceTree = "<group>"; };
+		26B1C8021A5F783B00BAF0A1 /* ff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ff.h; sourceTree = "<group>"; };
+		26B1C8031A5F783B00BAF0A1 /* ffconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffconf.h; sourceTree = "<group>"; };
+		26B1C8041A5F783B00BAF0A1 /* integer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = integer.h; sourceTree = "<group>"; };
+		26B1C8061A5F783B00BAF0A1 /* cc932.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cc932.c; sourceTree = "<group>"; };
+		26B1C8071A5F783B00BAF0A1 /* cc936.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cc936.c; sourceTree = "<group>"; };
+		26B1C8081A5F783B00BAF0A1 /* cc949.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cc949.c; sourceTree = "<group>"; };
+		26B1C8091A5F783B00BAF0A1 /* cc950.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cc950.c; sourceTree = "<group>"; };
+		26B1C80A1A5F783B00BAF0A1 /* ccsbcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ccsbcs.c; sourceTree = "<group>"; };
+		26B1C80B1A5F783B00BAF0A1 /* syscall.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = syscall.c; sourceTree = "<group>"; };
+		26B1C80C1A5F783B00BAF0A1 /* unicode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unicode.c; sourceTree = "<group>"; };
 		D4021F9A175DA4610099576C /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
 		D4021F9C175DA4690099576C /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
 		D4021F9E175E37BF0099576C /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
@@ -3266,6 +3289,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		26B1C7FD1A5F783B00BAF0A1 /* fatfs */ = {
+			isa = PBXGroup;
+			children = (
+				26B1C7FE1A5F783B00BAF0A1 /* 00readme.txt */,
+				26B1C7FF1A5F783B00BAF0A1 /* diskio.cpp */,
+				26B1C8001A5F783B00BAF0A1 /* diskio.h */,
+				26B1C8011A5F783B00BAF0A1 /* ff.c */,
+				26B1C8021A5F783B00BAF0A1 /* ff.h */,
+				26B1C8031A5F783B00BAF0A1 /* ffconf.h */,
+				26B1C8041A5F783B00BAF0A1 /* integer.h */,
+				26B1C8051A5F783B00BAF0A1 /* option */,
+			);
+			path = fatfs;
+			sourceTree = "<group>";
+		};
+		26B1C8051A5F783B00BAF0A1 /* option */ = {
+			isa = PBXGroup;
+			children = (
+				26B1C8061A5F783B00BAF0A1 /* cc932.c */,
+				26B1C8071A5F783B00BAF0A1 /* cc936.c */,
+				26B1C8081A5F783B00BAF0A1 /* cc949.c */,
+				26B1C8091A5F783B00BAF0A1 /* cc950.c */,
+				26B1C80A1A5F783B00BAF0A1 /* ccsbcs.c */,
+				26B1C80B1A5F783B00BAF0A1 /* syscall.c */,
+				26B1C80C1A5F783B00BAF0A1 /* unicode.c */,
+			);
+			path = option;
+			sourceTree = "<group>";
+		};
 		D41D13F617374B7D00D522D9 /* settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -3352,6 +3404,7 @@
 				D48F5A80172CB21100D0E055 /* util.h */,
 				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
 				D48F5A81172CB21100D0E055 /* xio.h */,
+				26B1C7FD1A5F783B00BAF0A1 /* fatfs */,
 				D49EB8A917054FD500F2BF9B /* CMSIS */,
 				D45710C61705334000EA19A8 /* motate */,
 				D49EC3FB17054FDF00F2BF9B /* platform */,
@@ -7704,6 +7757,7 @@
 				D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */,
 				D49EC5F91706789800F2BF9B /* component_rstc.h in Sources */,
 				D49EC5FA1706789800F2BF9B /* component_rtc.h in Sources */,
+				26B1C80F1A5F783B00BAF0A1 /* cc932.c in Sources */,
 				D49EC5FB1706789800F2BF9B /* component_rtt.h in Sources */,
 				E29D7212198978BF00F22E5F /* UniqueId.cpp in Sources */,
 				D49EC5FC1706789800F2BF9B /* component_sdramc.h in Sources */,
@@ -7772,6 +7826,7 @@
 				D49EC5DF170676AF00F2BF9B /* sam.h in Sources */,
 				D49EC5E0170676B500F2BF9B /* sam3.h in Sources */,
 				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
+				26B1C80E1A5F783B00BAF0A1 /* ff.c in Sources */,
 				D49EC49117054FDF00F2BF9B /* arm_abs_f32.c in Sources */,
 				D49EC49217054FDF00F2BF9B /* arm_abs_q15.c in Sources */,
 				D49EC49317054FDF00F2BF9B /* arm_abs_q31.c in Sources */,
@@ -7779,6 +7834,7 @@
 				D49EC49517054FDF00F2BF9B /* arm_add_f32.c in Sources */,
 				D49EC49617054FDF00F2BF9B /* arm_add_q15.c in Sources */,
 				D49EC49717054FDF00F2BF9B /* arm_add_q31.c in Sources */,
+				26B1C8131A5F783B00BAF0A1 /* ccsbcs.c in Sources */,
 				D49EC49817054FDF00F2BF9B /* arm_add_q7.c in Sources */,
 				D49EC49917054FDF00F2BF9B /* arm_dot_prod_f32.c in Sources */,
 				D49EC49A17054FDF00F2BF9B /* arm_dot_prod_q15.c in Sources */,
@@ -7804,6 +7860,7 @@
 				D49EC4AE17054FDF00F2BF9B /* arm_shift_q31.c in Sources */,
 				D49EC4AF17054FDF00F2BF9B /* arm_shift_q7.c in Sources */,
 				D49EC4B017054FDF00F2BF9B /* arm_sub_f32.c in Sources */,
+				26B1C80D1A5F783B00BAF0A1 /* diskio.cpp in Sources */,
 				D49EC4B117054FDF00F2BF9B /* arm_sub_q15.c in Sources */,
 				D49EC4B217054FDF00F2BF9B /* arm_sub_q31.c in Sources */,
 				D49EC4B317054FDF00F2BF9B /* arm_sub_q7.c in Sources */,
@@ -7907,11 +7964,13 @@
 				D49EC51017054FDF00F2BF9B /* arm_fir_q15.c in Sources */,
 				D49EC51117054FDF00F2BF9B /* arm_fir_q31.c in Sources */,
 				D49EC51217054FDF00F2BF9B /* arm_fir_q7.c in Sources */,
+				26B1C8151A5F783B00BAF0A1 /* unicode.c in Sources */,
 				D49EC51317054FDF00F2BF9B /* arm_fir_sparse_f32.c in Sources */,
 				D49EC51417054FDF00F2BF9B /* arm_fir_sparse_init_f32.c in Sources */,
 				D49EC51517054FDF00F2BF9B /* arm_fir_sparse_init_q15.c in Sources */,
 				D49EC51617054FDF00F2BF9B /* arm_fir_sparse_init_q31.c in Sources */,
 				D49EC51717054FDF00F2BF9B /* arm_fir_sparse_init_q7.c in Sources */,
+				26B1C8141A5F783B00BAF0A1 /* syscall.c in Sources */,
 				D49EC51817054FDF00F2BF9B /* arm_fir_sparse_q15.c in Sources */,
 				D49EC51917054FDF00F2BF9B /* arm_fir_sparse_q31.c in Sources */,
 				D49EC51A17054FDF00F2BF9B /* arm_fir_sparse_q7.c in Sources */,
@@ -7984,6 +8043,7 @@
 				D49EC55A17054FDF00F2BF9B /* arm_var_q31.c in Sources */,
 				D49EC55B17054FDF00F2BF9B /* arm_copy_f32.c in Sources */,
 				D49EC55C17054FDF00F2BF9B /* arm_copy_q15.c in Sources */,
+				26B1C8101A5F783B00BAF0A1 /* cc936.c in Sources */,
 				D49EC55D17054FDF00F2BF9B /* arm_copy_q31.c in Sources */,
 				D49EC55E17054FDF00F2BF9B /* arm_copy_q7.c in Sources */,
 				D49EC55F17054FDF00F2BF9B /* arm_fill_f32.c in Sources */,
@@ -8054,6 +8114,8 @@
 				D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */,
 				D4021FA4175E37BF0099576C /* Reset.cpp in Sources */,
 				D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */,
+				26B1C8111A5F783B00BAF0A1 /* cc949.c in Sources */,
+				26B1C8121A5F783B00BAF0A1 /* cc950.c in Sources */,
 				D4021FA7175E388B0099576C /* hooks.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.61 // fix unique_id
+#define TINYG_FIRMWARE_BUILD   		072.62 // SD card support
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

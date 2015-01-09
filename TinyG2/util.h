@@ -77,6 +77,7 @@ char_t *pstr2str(const char *pgm_string);
 //int fntoa(char_t *str, float n, uint8_t precision);
 char_t fntoa(char_t *str, float n, uint8_t precision);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
+uint32_t crc32(uint32_t crc, const void *buf, size_t size);
 
 //*** other utilities ***
 

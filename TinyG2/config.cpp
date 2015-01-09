@@ -109,18 +109,12 @@ void config_init()
 	config_init_assertions();
 	cs.comm_mode = JSON_MODE;					// initial value until persistence is read
 
-#ifdef __ARM
-// ++++ The following code is offered until persistence is implemented.
-// ++++ Then you can use the AVR code (or something like it)
-	_set_defa(nv, false);
-#endif
-#ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
 	nv->index = 0;								// this will read the first record in NVM
 
 	read_persistent_value(nv);
-	if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
-//	if (fp_NE(nv->value, cs.fw_build)) {
+//	if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
+	if (fp_NE(nv->value, TINYG_FIRMWARE_BUILD)) {
 		_set_defa(nv, false);
 	} else {									// case (2) NVM is setup and in revision
 //		rpt_print_loading_configs_message();
@@ -133,7 +127,6 @@ void config_init()
 		}
 		sr_init_status_report();
 	}
-#endif
 }
 
 /*
@@ -153,8 +146,8 @@ static void _set_defa(nvObj_t *nv, bool print)
 		}
 	}
 	sr_init_status_report();					// reset status reports
-    if(print)
-        rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+	if(print)
+		rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
 }
 
 stat_t set_defaults(nvObj_t *nv)

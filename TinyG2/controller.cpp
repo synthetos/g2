@@ -46,6 +46,7 @@
 #include "xio.h"
 #include "settings.h"
 #include "spindle.h"
+#include "persistence.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -187,6 +188,8 @@ static void _controller_HSM()
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
+    
+    DISPATCH(write_persistent_values_callback());
 
 //----- command readers and parsers --------------------------------------------------//
 
