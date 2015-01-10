@@ -160,7 +160,10 @@ stat_t set_defaults(nvObj_t *nv)
 	// Mark the nv as $defa so it displays nicely in the response
 	nv_reset_nv_list();
 	strncpy(nv->token, "defa", TOKEN_LEN);
-//	nv->index = nv_get_index("", nv->token);	// correct, but not required
+    // the index-setting call used to be marked as "correct but not required" -
+    // however, on ARM, this value was being wrongly persisted in index 0 when
+    // set_defaults was called immediately after a firmware update.
+	nv->index = nv_get_index((const char_t*)"", nv->token);
 	nv->valuetype = TYPE_INTEGER;
 	nv->value = 1;
 	return (STAT_OK);

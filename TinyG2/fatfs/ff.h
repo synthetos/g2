@@ -278,8 +278,6 @@ FRESULT f_polldisk();                   /* calls disk_status() to catch changes 
 FRESULT validate (void* obj);           /* FR_OK(0): The object is valid, !=0: Invalid */
                                         /* (was private, made public) */
 #define f_is_open(fp) ((fp)->fs)
-#define f_remain(fp) f_is_open((fp)) ? ((int)((fp)->fsize - (fp)->fptr)) : 0
-
 
 
 /*--------------------------------------------------------------*/

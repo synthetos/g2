@@ -47,7 +47,7 @@ nvmSingleton_t nvm;
 
 stat_t prepare_persistence_file();
 stat_t write_persistent_values();
-stat_t check_persistence_file_crc();
+stat_t validate_persistence_file();
 uint8_t active_file_index();
 
 // Leaving this in for now in case bugs come up; we can remove it when we're confident
@@ -168,7 +168,7 @@ stat_t write_persistent_value(nvObj_t *nv)
 		(isinf((double)nv->value)) ||
 		(nv->value != nvm.tmp_value)) { // use a bitwise equality check rather than fp_EQ
 										// since underlying value might not really be a float
-			nvm.write_cache.insert(std::pair<index_t, float>(nv->index, nvm.tmp_value));
+		nvm.write_cache[nv->index] = nvm.tmp_value;
 	}
 	nv->value =nvm.tmp_value;		// always restore value
 	return (STAT_OK);
@@ -257,7 +257,7 @@ stat_t prepare_persistence_file()
 	nvm.file_index = index;
 	
 	// if CRC doesn't match, delete file and return error
-	if (check_persistence_file_crc() != STAT_OK) {
+	if (validate_persistence_file() != STAT_OK) {
 		f_close(&nvm.file);
 		f_unlink(filenames[nvm.file_index]);
 		nvm.file_index = 0;
@@ -269,25 +269,33 @@ stat_t prepare_persistence_file()
 }
 
 /*
- * check_persistence_file_crc()
+ * validate_persistence_file()
  *
- *	ARM only. Helper function that checks the CRC of the persistence file. Assumes
- *   the file is already open.
+ *	ARM only. Helper function that checks the CRC and byte count of the 
+ *  persistence file. Assumes the file is already open.
  */
-stat_t check_persistence_file_crc()
+stat_t validate_persistence_file()
 {
 	uint32_t crc = 0;
 	uint32_t filecrc = NAN;
-	UINT br;
+	UINT br, br_sum = 0;
 	fs_ritorno(f_lseek(&nvm.file, 0), "crc check seek");
 	while (!f_eof(&nvm.file)) {
 		fs_ritorno(f_read(&nvm.file, &nvm.io_buffer, IO_BUFFER_SIZE, &br), "file read during CRC check");
+		
 		if (f_eof(&nvm.file)) {
-			br -= CRC_LEN; // don't include old CRC in current CRC calculation
+			br -= std::min((UINT)CRC_LEN, br); // don't include old CRC in current CRC calculation
 			memcpy(&filecrc, nvm.io_buffer+br, CRC_LEN); // copy old CRC out of read buffer
 		}
 		// update calculated CRC
 		crc = crc32(crc, nvm.io_buffer, br);
+		br_sum += br;
+	}
+	
+	// how did we do?
+	if (br_sum != nv_index_max() * NVM_VALUE_LEN) {
+		DEBUG_PRINT("bad byte count in file: %i\n", br_sum);
+		return STAT_PERSISTENCE_ERROR;
 	}
 	DEBUG_PRINT("crc: %lu from file, %lu calculated\n", filecrc, crc);
 	return crc == filecrc ? STAT_OK : STAT_PERSISTENCE_ERROR;
@@ -320,21 +328,27 @@ stat_t write_persistent_values()
 	DEBUG_PRINT("opened %s for writing\n", filenames[NEXT_FILE_INDEX]);
 	
 	uint32_t crc = 0;
-	index_t step = IO_BUFFER_SIZE/NVM_VALUE_LEN;
-	auto temp_write_cache = nvm.write_cache;	// don't modify the write cache until after success/failure
-	for (index_t cnt = 0; (temp_write_cache.size()) || (f_remain(&nvm.file) > CRC_LEN); cnt += step) {
+	uint16_t step = IO_BUFFER_SIZE/NVM_VALUE_LEN;
+	for (index_t cnt = 0; cnt < nv_index_max(); cnt += step) {
+		// try to read old values from existing file
+		uint16_t io_byte_count = std::min(IO_BUFFER_SIZE, (nv_index_max()-cnt) * NVM_VALUE_LEN);
+		UINT br = 0;
+		f_read(&nvm.file, &nvm.io_buffer, io_byte_count, &br);
+		DEBUG_PRINT("read %i bytes from old file\n", br);
 		
-		// attempt to read the last persisted values from the older file into the buffer, padding with 0s
-		// if no old values can be read
-		index_t io_byte_count = f_is_open(&nvm.file) ? std::min(IO_BUFFER_SIZE, f_remain(&nvm.file)-CRC_LEN) : IO_BUFFER_SIZE;
-		f_read(&nvm.file, &nvm.io_buffer, io_byte_count, &bw);
-		memset(nvm.io_buffer+bw, 0, io_byte_count-bw);
+		// if we didn't get enough bytes from the old file, pad the buffer with defaults
+		// to keep the length correct
+		// FIXME: integrate this with default-setting code in config.cpp
+		for (; br<io_byte_count; br += NVM_VALUE_LEN) {
+			index_t index = cnt + br/NVM_VALUE_LEN;
+			memcpy(nvm.io_buffer+br, &cfgArray[index].def_value, NVM_VALUE_LEN);
+		}
+		DEBUG_PRINT("io_buffer populated with %i bytes total\n", br);
 		
 		// update the values in the buffer from the write cache
-		DEBUG_PRINT("read old block (cnt: %i, bytes_to_read: %i)\n", cnt, io_byte_count);
-		for (auto i = temp_write_cache.lower_bound(cnt);
-			 i != temp_write_cache.lower_bound(cnt+step);
-			 i = temp_write_cache.erase(i)) { // map::erase returns an incremented iterator in C++11
+		for (auto i = nvm.write_cache.lower_bound(cnt);
+			i != nvm.write_cache.lower_bound(cnt+step);
+			 ++i) {
 			index_t index = (i->first - cnt) * NVM_VALUE_LEN;
 			memcpy(nvm.io_buffer+index, &i->second, NVM_VALUE_LEN);
 			DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %f\n", i->first, index, cnt, i->second);
