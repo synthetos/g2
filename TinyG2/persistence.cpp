@@ -184,11 +184,15 @@ stat_t write_persistent_value(nvObj_t *nv)
 stat_t write_persistent_values_callback()
 {
 #ifdef __ARM
+	
 	// Check the disk status to ensure we catch CS pin changes.
 	// FIXME: it would be much better to do this with an interrupt!
 	f_polldisk();
 	if (nvm.write_cache.size()) {
 		if (SysTickTimer_getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
+		// this check may not be necessary on ARM, but just in case...
+		if (cm.cycle_state != CYCLE_OFF) return(STAT_NOOP);	   // can't write when machine is moving
+		
 		if(write_persistent_values() == STAT_OK) {
 			nvm.write_cache.clear();
 			nvm.write_failures = 0;
@@ -198,6 +202,7 @@ stat_t write_persistent_values_callback()
 			if (++nvm.write_failures >= MAX_WRITE_FAILURES) {
 				nvm.write_cache.clear(); // give up on these values
 				nvm.write_failures = 0;  // but try again if we get more values later
+				return(rpt_exception(STAT_PERSISTENCE_ERROR, NULL));
 			}
 		}
 		nvm.last_write_systick = SysTickTimer_getValue();
@@ -314,8 +319,6 @@ stat_t write_persistent_values()
 	
 	FIL f_out;
 	UINT bw;
-	
-	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, NULL));	   // can't write when machine is moving
 	
 	// attempt to open file with previously persisted values
 	if (prepare_persistence_file() == STAT_OK) {
