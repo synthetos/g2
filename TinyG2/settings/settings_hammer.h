@@ -33,19 +33,19 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to HAMMER settings"
 
-#define VELOCITY_MAX			1000					// mm/min (converts to degrees / min)
-#define JERK_MAX 				40						// 40 million mm/(min^3)
+#define VELOCITY_MAX			1000			// mm/min (converts to degrees / min)
+#define JERK_MAX 				40				// 40 million mm/(min^3)
 
 #define ROTARY_VELOCITY_MAX		28800
-#define ROTARY_JERK_MAX			1400					// set for 1.2b hammer
+#define ROTARY_JERK_MAX			1400			// set for 1.2 lb hammer
 
-#define JUNCTION_DEVIATION		0.05					// default value, in mm
-#define JUNCTION_ACCELERATION	100000					// centripetal acceleration around corners
+#define JUNCTION_DEVIATION		0.05		// default value, in mm
+#define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
 
 // **** settings.h overrides ****
 
-#undef MOTOR_IDLE_TIMEOUT
-#define MOTOR_IDLE_TIMEOUT		4						// seconds to maintain motor at full power before idling
+#undef MOTOR_POWER_TIMEOUT
+#define MOTOR_POWER_TIMEOUT		4						// seconds to maintain motor at full power before idling
 
 // *** motor settings ***
 
@@ -108,6 +108,8 @@
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY 		500					// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
 #define X_LATCH_BACKOFF 		2					// xlb		mm
@@ -123,6 +125,8 @@
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Y_SEARCH_VELOCITY 		500
 #define Y_LATCH_VELOCITY 		100
 #define Y_LATCH_BACKOFF 		2
@@ -138,60 +142,55 @@
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN 		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX 		SW_MODE_HOMING
+#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Z_SEARCH_VELOCITY 		400
 #define Z_LATCH_VELOCITY 		100
 #define Z_LATCH_BACKOFF 		2
 #define Z_ZERO_BACKOFF 			0.25
 #define Z_JERK_HOMING			Z_JERK_MAX
 
-// Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE 			AXIS_RADIUS
-#define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
-#define A_FEEDRATE_MAX 			A_VELOCITY_MAX
-#define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
-#define A_TRAVEL_MAX 			-1
-#define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
+#define A_AXIS_MODE 			AXIS_STANDARD
+#define A_VELOCITY_MAX 			ROTARY_VELOCITY_MAX
+#define A_FEEDRATE_MAX 			ROTARY_VELOCITY_MAX
+#define A_TRAVEL_MIN 			-1
+#define A_TRAVEL_MAX 			-1										// -1 means infinite, no limit
+#define A_JERK_MAX 				ROTARY_JERK_MAX
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
+#define A_RADIUS 				(M4_TRAVEL_PER_REV/(2*3.14159628))
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
-#define A_LATCH_BACKOFF 		5
+#define A_LATCH_BACKOFF 		5		// degrees
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HOMING			A_JERK_MAX
 
-#define B_AXIS_MODE 			AXIS_RADIUS
-#define B_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define B_FEEDRATE_MAX 			B_VELOCITY_MAX
-#define B_TRAVEL_MIN			-1
-#define B_TRAVEL_MAX 			-1
-#define B_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define B_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
-#define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define B_SEARCH_VELOCITY 		600
-#define B_LATCH_VELOCITY 		100
-#define B_LATCH_BACKOFF 		5
-#define B_ZERO_BACKOFF 			2
-#define B_JERK_HOMING			B_JERK_MAX
+//#define A_VELOCITY_MAX 		((VELOCITY_MAX/M4_TRAVEL_PER_REV)*360) // set to the same speed as X axis
+//#define A_VELOCITY_MAX 		172800
+//#define A_JERK_MAX 			(JERK_MAX*(360/M4_TRAVEL_PER_REV))
+//#define A_JERK_MAX 			5760
+//#define A_RADIUS 				0.19894368
 
-#define C_AXIS_MODE 			AXIS_RADIUS
-#define C_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define C_FEEDRATE_MAX 			C_VELOCITY_MAX
-#define C_TRAVEL_MIN			-1
+#define B_AXIS_MODE 			AXIS_STANDARD
+#define B_VELOCITY_MAX 			ROTARY_VELOCITY_MAX
+#define B_FEEDRATE_MAX 			ROTARY_VELOCITY_MAX
+#define B_TRAVEL_MAX 			-1
+#define B_TRAVEL_MIN			-1
+#define B_JERK_MAX 				ROTARY_JERK_MAX
+#define B_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
+#define B_RADIUS 				1
+
+#define C_AXIS_MODE 			AXIS_STANDARD
+#define C_VELOCITY_MAX 			ROTARY_VELOCITY_MAX
+#define C_FEEDRATE_MAX 			ROTARY_VELOCITY_MAX
 #define C_TRAVEL_MAX 			-1
-#define C_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
+#define C_TRAVEL_MIN			-1
+#define C_JERK_MAX 				ROTARY_JERK_MAX
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define C_SEARCH_VELOCITY 		600
-#define C_LATCH_VELOCITY 		100
-#define C_LATCH_BACKOFF 		5
-#define C_ZERO_BACKOFF 			2
-#define C_JERK_HOMING			C_JERK_MAX
+#define C_RADIUS				1
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

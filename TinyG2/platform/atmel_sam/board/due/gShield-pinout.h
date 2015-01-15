@@ -73,6 +73,7 @@ namespace Motate {
     pin_number kDebug1_PinNumber                =  49;
     pin_number kDebug2_PinNumber                =  47;
     pin_number kDebug3_PinNumber                =  45;
+    pin_number kDebug4_PinNumber                =  -1;
 
     pin_number kKinen_SyncPinNumber             =  53;
 
@@ -156,6 +157,9 @@ namespace Motate {
     pin_number kSpindle_PwmPinNumber            =  11;
     pin_number kSpindle_Pwm2PinNumber           =   9;
     pin_number kCoolant_EnablePinNumber         =  57;
+
+    pin_number kSD_CardDetectPinNumber          =  -1;
+    pin_number kInterlock_InPinNumber           =  -1;
 
     pin_number kLED_USBRXPinNumber              =  72;
     pin_number kLED_USBTXPinNumber              =  73;

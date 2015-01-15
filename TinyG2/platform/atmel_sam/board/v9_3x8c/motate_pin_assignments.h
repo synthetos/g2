@@ -160,10 +160,16 @@ namespace Motate {
     
 	pin_number kLED_USBRXPinNumber              = 117;
 	pin_number kLED_USBTXPinNumber              = 118;
-    
+
+    pin_number kSD_CardDetectPinNumber          = 119;
+    pin_number kInterlock_InPinNumber           = 120;
+//    pin_number kLEDPWM_PinNumber                = 121;
+//    pin_number kNeopixel_DataPinNumber		= 121;
+
     pin_number kDebug1_PinNumber                =  -1;
     pin_number kDebug2_PinNumber                =  -1;
     pin_number kDebug3_PinNumber                =  -1;
+    pin_number kDebug4_PinNumber                =  -1;
 
 	// GRBL / gShield compatibility pins -- Due board ONLY
     

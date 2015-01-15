@@ -28,31 +28,31 @@
 #ifndef REPORT_H_ONCE
 #define REPORT_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /**** Configs, Definitions and Structures ****/
 // Note: If you are looking for the defaults for the status report see settings.h
 
-#define CMD_STATUS_REPORT_LEN CMD_MAX_OBJECTS 	// max number of status report elements - see cfgArray
+#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 												// **** must also line up in cfgArray, se00 - seXX ****
 
-enum srVerbosity {								// status report enable and verbosity
-	SR_OFF = 0,									// no reports
-	SR_FILTERED,								// reports only values that have changed from the last report
-	SR_VERBOSE									// reports all values specified
+#define MIN_ARC_QR_INTERVAL 200		// minimum interval between QRs during arc generation (in system ticks)
+
+enum srVerbosity {					// status report enable, verbosity and request type
+	SR_OFF = 0,						// no reports
+	SR_FILTERED,					// reports only values that have changed from the last report
+	SR_VERBOSE						// reports all values specified
 };
 
 enum cmStatusReportRequest {
-	SR_TIMED_REQUEST = 0,						// request a status report at next timer interval
-	SR_IMMEDIATE_REQUEST						// request a status report ASAP
+	SR_REQUEST_IMMEDIATE = 0,		// request a full or filtered status report ASAP (depending on SR_VERBOSITY setting)
+	SR_REQUEST_IMMEDIATE_FULL,		// request a full status report ASAP (regardless of SR_VERBOSITY setting)
+	SR_REQUEST_TIMED,				// request a full or filtered status report at next timer interval (as above)
+	SR_REQUEST_TIMED_FULL			// request a full status report at next timer interval (as above)
 };
 
-enum qrVerbosity {								// planner queue enable and verbosity
-	QR_OFF = 0,									// no response is provided
-	QR_SINGLE,									// queue depth reported
-	QR_TRIPLE									// queue depth reported for buffers, buffers added, buffered removed
+enum qrVerbosity {					// planner queue enable and verbosity
+	QR_OFF = 0,						// no response is provided
+	QR_SINGLE,						// queue depth reported
+	QR_TRIPLE						// queue depth reported for buffers, buffers added, buffered removed
 };
 
 typedef struct srSingleton {
@@ -62,11 +62,11 @@ typedef struct srSingleton {
 	uint32_t status_report_interval;					// in milliseconds
 
 	/*** runtime values (PRIVATE) ***/
-	uint8_t status_report_requested;					// flag that SR has been requested
+	uint8_t status_report_request;						// flag that SR has been requested, and what type
 	uint32_t status_report_systick;						// SysTick value for next status report
 	index_t stat_index;									// table index value for stat - determined during initialization
-	index_t status_report_list[CMD_STATUS_REPORT_LEN];	// status report elements to report
-	float status_report_value[CMD_STATUS_REPORT_LEN];	// previous values for filtered reporting
+	index_t status_report_list[NV_STATUS_REPORT_LEN];	// status report elements to report
+	float status_report_value[NV_STATUS_REPORT_LEN];	// previous values for filtered reporting
 
 } srSingleton_t;
 
@@ -79,55 +79,65 @@ typedef struct qrSingleton {		// data for queue reports
 	uint8_t queue_report_requested;	// set to true to request a report
 	uint8_t buffers_available;		// stored buffer depth passed to by callback
 	uint8_t prev_available;			// buffers available at last count
-	uint8_t buffers_added;			// buffers added since last count
-	uint8_t buffers_removed;		// buffers removed since last report
-	uint8_t motion_mode;			//+++++ diagnostic
+	uint16_t buffers_added;			// buffers added since last count
+	uint16_t buffers_removed;		// buffers removed since last report
+	uint8_t motion_mode;			// used to detect arc movement
+	uint32_t init_tick;				// time when values were last initialized or cleared
 
 } qrSingleton_t;
+
+typedef struct rxSingleton {
+	uint8_t rx_report_requested;
+	uint16_t space_available;		// space available in usb rx buffer at time of request
+} rxSingleton_t;
 
 /**** Externs - See report.c for allocation ****/
 
 extern srSingleton_t sr;
 extern qrSingleton_t qr;
+extern rxSingleton_t rx;
 
 /**** Function Prototypes ****/
 
 void rpt_print_message(char *msg);
-void rpt_exception(uint8_t status);
+stat_t rpt_exception(uint8_t status, char_t *info);
 
-stat_t rpt_er(cmdObj_t *cmd);
+stat_t rpt_er(nvObj_t *nv);
 void rpt_print_loading_configs_message(void);
 void rpt_print_initializing_message(void);
 void rpt_print_system_ready_message(void);
 
 void sr_init_status_report(void);
-stat_t sr_set_status_report(cmdObj_t *cmd);
+stat_t sr_set_status_report(nvObj_t *nv);
 stat_t sr_request_status_report(uint8_t request_type);
 stat_t sr_status_report_callback(void);
 stat_t sr_run_text_status_report(void);
 
-stat_t sr_get(cmdObj_t *cmd);
-stat_t sr_set(cmdObj_t *cmd);
-stat_t sr_set_si(cmdObj_t *cmd);
-//void sr_print_sr(cmdObj_t *cmd);
+stat_t sr_get(nvObj_t *nv);
+stat_t sr_set(nvObj_t *nv);
+stat_t sr_set_si(nvObj_t *nv);
+//void sr_print_sr(nvObj_t *nv);
 
 void qr_init_queue_report(void);
 void qr_request_queue_report(int8_t buffers);
 stat_t qr_queue_report_callback(void);
 
-stat_t qr_get(cmdObj_t *cmd);
-stat_t qi_get(cmdObj_t *cmd);
-stat_t qo_get(cmdObj_t *cmd);
+void rx_request_rx_report(void);
+stat_t rx_report_callback(void);
+
+stat_t qr_get(nvObj_t *nv);
+stat_t qi_get(nvObj_t *nv);
+stat_t qo_get(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
-	void sr_print_sr(cmdObj_t *cmd);
-	void sr_print_si(cmdObj_t *cmd);
-	void sr_print_sv(cmdObj_t *cmd);
-	void qr_print_qv(cmdObj_t *cmd);
-	void qr_print_qr(cmdObj_t *cmd);
-	void qr_print_qi(cmdObj_t *cmd);
-	void qr_print_qo(cmdObj_t *cmd);
+	void sr_print_sr(nvObj_t *nv);
+	void sr_print_si(nvObj_t *nv);
+	void sr_print_sv(nvObj_t *nv);
+	void qr_print_qv(nvObj_t *nv);
+	void qr_print_qr(nvObj_t *nv);
+	void qr_print_qi(nvObj_t *nv);
+	void qr_print_qo(nvObj_t *nv);
 
 #else
 
@@ -140,19 +150,5 @@ stat_t qo_get(cmdObj_t *cmd);
 	#define qr_print_qo tx_print_stub
 
 #endif // __TEXT_MODE
-
-
-/* unit test setup */
-//#define __UNIT_TEST_REPORT	// uncomment to enable report unit tests
-#ifdef __UNIT_TEST_REPORT
-void sr_unit_tests(void);
-#define	REPORT_UNITS sr_unit_tests();
-#else
-#define	REPORT_UNITS
-#endif // __UNIT_TEST_REPORT
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: REPORT_H_ONCE

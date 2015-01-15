@@ -2,7 +2,7 @@
  * settings_zen7x12.h - Zen Toolworks 7x12 machine profile
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2014 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -48,9 +48,6 @@
 
 #undef JSON_VERBOSITY
 #define JSON_VERBOSITY 			JV_VERBOSE
-
-#undef SWITCH_TYPE
-#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
 
 // *** motor settings ***
 
@@ -114,6 +111,8 @@
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 //#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY 		500					// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
 #define X_LATCH_BACKOFF 		2					// xlb		mm
@@ -130,6 +129,8 @@
 #define Y_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX 		SW_MODE_LIMIT
 //#define Y_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Y_SEARCH_VELOCITY 		500
 #define Y_LATCH_VELOCITY 		100
 #define Y_LATCH_BACKOFF 		2
@@ -145,6 +146,8 @@
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN 		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX 		SW_MODE_HOMING
+#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Z_SEARCH_VELOCITY 		400
 #define Z_LATCH_VELOCITY 		100
 #define Z_LATCH_BACKOFF 		2
@@ -162,6 +165,8 @@
 #define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
@@ -178,6 +183,8 @@
 #define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF 		5
@@ -194,6 +201,8 @@
 #define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF 		5

@@ -2,11 +2,9 @@
 language: c
 
 before_install:
-  - sudo apt-get update -qq
+  - sudo apt-get update -q
 
 install:
   - sudo apt-get install -qq lib32z1
 
-script: "cd TinyG2 && make"
-
-
+script: "cd Tools && make && cd ../TinyG2 && make"

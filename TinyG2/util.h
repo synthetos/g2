@@ -24,10 +24,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are 
+/* util.c/.h contains a dog's breakfast of supporting functions that are
  * not specific to tinyg: including:
  *
- *	  - math and min/max utilities and extensions 
+ *	  - math and min/max utilities and extensions
  *	  - vector manipulation utilities
  *	  - support for debugging routines
  */
@@ -43,19 +43,14 @@ using Motate::delay;
 using Motate::SysTickTimer;
 #endif
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 /****** Global Scope Variables and Functions ******/
 
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
 
-#define clear_vector(a) memset(a,0,sizeof(a))
-#define	copy_vector(d,s) memcpy(d,s,sizeof(d))
-//void copy_vector(float dst[], const float src[]);
+#define clear_vector(a) (memset(a,0,sizeof(a)))
+#define	copy_vector(d,s) (memcpy(d,s,sizeof(d)))
 
 float get_axis_vector_length(const float a[], const float b[]);
 uint8_t vector_equal(const float a[], const float b[]);
@@ -79,6 +74,8 @@ float max4(float x1, float x2, float x3, float x4);
 uint8_t isnumber(char_t c);
 char_t *escape_string(char_t *dst, char_t *src);
 char_t *pstr2str(const char *pgm_string);
+//int fntoa(char_t *str, float n, uint8_t precision);
+char_t fntoa(char_t *str, float n, uint8_t precision);
 uint16_t compute_checksum(char_t const *string, const uint16_t length);
 
 //*** other utilities ***
@@ -140,19 +137,22 @@ uint32_t SysTickTimer_getValue(void);
 #define MAX_LONG (2147483647)
 #define MAX_ULONG (4294967295)
 #define MM_PER_INCH (25.4)
-#define INCH_PER_MM (1/25.4)
+#define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 
 #define RADIAN (57.2957795)
-//		M_PI is pi as defined in math.h
-//		M_SQRT2 is radical2 as defined in math.h
-#ifndef M_SQRT3
-#define M_SQRT3 (1.73205080756888)
+
+#ifndef M_PI	// M_PI is pi usually defined in math.h, but not always (C++11)
+#define M_PI (3.14159265358979323846264338327950288)
 #endif
 
-#ifdef __cplusplus
-}
+#ifndef M_SQRT2 // M_SQRT2 is radical2 as defined in math.h
+#define M_SQRT2 (1.41421356237310)
+#endif
+
+#ifndef M_SQRT3
+#define M_SQRT3 (1.73205080756888)
 #endif
 
 #endif	// End of include guard: UTIL_H_ONCE

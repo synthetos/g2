@@ -20,21 +20,17 @@
 #ifndef HELP_H_ONCE
 #define HELP_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 #ifdef __HELP_SCREENS
 
-	stat_t help_general(cmdObj_t *cmd);
-	stat_t help_config(cmdObj_t *cmd);
-	stat_t help_test(cmdObj_t *cmd);
-	stat_t help_defa(cmdObj_t *cmd);
-	stat_t help_boot_loader(cmdObj_t *cmd);
+	stat_t help_general(nvObj_t *nv);
+	stat_t help_config(nvObj_t *nv);
+	stat_t help_test(nvObj_t *nv);
+	stat_t help_defa(nvObj_t *nv);
+	stat_t help_boot_loader(nvObj_t *nv);
 
 #else
 
-	stat_t help_stub(cmdObj_t *cmd);
+	stat_t help_stub(nvObj_t *nv);
 	#define help_general help_stub
 	#define help_config help_stub
 	#define help_test help_stub
@@ -42,9 +38,5 @@ extern "C"{
 	#define help_boot_loader help_stub
 
 #endif // __HELP_SCREENS
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // End of include guard: HELP_H_ONCE

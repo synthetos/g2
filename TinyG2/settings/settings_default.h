@@ -1,6 +1,6 @@
 /*
  * settings_default.h - default machine profile
- * This file is part of the TinyG2 project
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2012 - 2014 Alden S. Hart, Jr.
  *
@@ -41,67 +41,70 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to default settings"
 
-#define JERK_MAX 				20						// yes, that's "20,000,000" mm/(min^3)
-#define JUNCTION_DEVIATION		0.05					// default value, in mm
-#define JUNCTION_ACCELERATION	100000					// centripetal acceleration around corners
+#define JERK_MAX 				20			// yes, that's "20,000,000" mm/(min^3)
+#define JUNCTION_DEVIATION		0.05		// default value, in mm
+#define JUNCTION_ACCELERATION	100000		// centripetal acceleration around corners
 
 // **** settings.h overrides ****
 
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			AXIS_X					// 1ma
-#define M1_STEP_ANGLE 			1.8						// 1sa
-#define M1_TRAVEL_PER_REV		1.25					// 1tr
-#define M1_MICROSTEPS			8						// 1mi		1,2,4,8
-#define M1_POLARITY				0						// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 1mp
+// G2 NOTES: 
+// - Motor/axis assignments are different in G2 to maintain compatibility fir G1 wiring harnesses 
+// - Default microstepping is 32 to stress test stepping functions. In practice this should be lover
 
-#define M2_MOTOR_MAP	 		AXIS_Y
+#define M1_MOTOR_MAP 			AXIS_A				// 1ma
+#define M1_STEP_ANGLE 			1.8					// 1sa
+#define M1_TRAVEL_PER_REV		360 				// 1tr		degrees moved per motor rev
+#define M1_MICROSTEPS			32					// 1mi		1,2,4,8,16,32
+#define M1_POLARITY				0					// 1po		0=normal, 1=reversed
+#define M1_POWER_MODE			MOTOR_POWER_MODE	// 1pm		standard
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL	// 1mp
+
+#define M2_MOTOR_MAP	 		AXIS_Z
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		1.25
-//#define M2_MICROSTEPS			8
-#define M2_MICROSTEPS			4
+#define M2_MICROSTEPS			32
 #define M2_POLARITY				0
-#define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M2_POWER_MODE			MOTOR_POWER_MODE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M3_MOTOR_MAP			AXIS_Z
+#define M3_MOTOR_MAP			AXIS_Y
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		1.25
-#define M3_MICROSTEPS			8
+#define M3_MICROSTEPS			32
 #define M3_POLARITY				0
-#define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M3_POWER_MODE			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M4_MOTOR_MAP			AXIS_A
+#define M4_MOTOR_MAP			AXIS_X
 #define M4_STEP_ANGLE			1.8
-#define M4_TRAVEL_PER_REV		360			// degrees moved per motor rev
-#define M4_MICROSTEPS			8
+#define M4_TRAVEL_PER_REV		1.25
+#define M4_MICROSTEPS			32
 #define M4_POLARITY				0
-#define M4_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M4_POWER_MODE			MOTOR_POWER_MODE
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M5_MOTOR_MAP			AXIS_B
 #define M5_STEP_ANGLE			1.8
-#define M5_TRAVEL_PER_REV		360
-#define M5_MICROSTEPS			8
+#define M5_TRAVEL_PER_REV		360			// degrees moved per motor rev
+#define M5_MICROSTEPS			32
 #define M5_POLARITY				0
-#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M5_POWER_MODE			MOTOR_POWER_MODE
 #define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M6_MOTOR_MAP			AXIS_C
 #define M6_STEP_ANGLE			1.8
-#define M6_TRAVEL_PER_REV		360	
-#define M6_MICROSTEPS			8
+#define M6_TRAVEL_PER_REV		360			// degrees moved per motor rev	
+#define M6_MICROSTEPS			32
 #define M6_POLARITY				0
-#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
+#define M6_POWER_MODE			MOTOR_POWER_MODE
 #define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			600 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			1000 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			150					// xtm		maximum travel - used by soft limits and homing
@@ -109,29 +112,33 @@
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY 		500					// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		100					// xlv		mm/min
-#define X_LATCH_BACKOFF 		2					// xlb		mm
+#define X_LATCH_BACKOFF 		5					// xlb		mm
 #define X_ZERO_BACKOFF 			1					// xzb		mm
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
+#define Y_VELOCITY_MAX 			1000
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
-#define Y_VELOCITY_MAX 			600
 #define Y_TRAVEL_MIN			0
 #define Y_TRAVEL_MAX 			150
 #define Y_JERK_MAX 				JERK_MAX
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Y_SEARCH_VELOCITY 		500
 #define Y_LATCH_VELOCITY 		100
-#define Y_LATCH_BACKOFF 		2
+#define Y_LATCH_BACKOFF 		5
 #define Y_ZERO_BACKOFF 			1
 #define Y_JERK_HOMING			Y_JERK_MAX
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
-#define Z_VELOCITY_MAX 			600
+#define Z_VELOCITY_MAX 			1000
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN			0
 #define Z_TRAVEL_MAX 			75
@@ -139,9 +146,11 @@
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN 		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX 		SW_MODE_HOMING
+#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Z_SEARCH_VELOCITY 		400
 #define Z_LATCH_VELOCITY 		100
-#define Z_LATCH_BACKOFF 		2
+#define Z_LATCH_BACKOFF 		5
 #define Z_ZERO_BACKOFF 			1
 #define Z_JERK_HOMING			Z_JERK_MAX
 
@@ -149,13 +158,15 @@
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX 			A_VELOCITY_MAX
-#define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
+#define A_TRAVEL_MIN			-1					// min/max the same means infinite, no limit
 #define A_TRAVEL_MAX 			-1
 #define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
@@ -172,6 +183,8 @@
 #define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF 		5
@@ -188,6 +201,8 @@
 #define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
 #define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
+#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF 		5

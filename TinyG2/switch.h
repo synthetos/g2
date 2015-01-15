@@ -26,7 +26,7 @@
  */
 /* Switch processing functions under Motate
  *
- *	Switch processing turns pin transitions into reliable switch states. 
+ *	Switch processing turns pin transitions into reliable switch states.
  *	There are 2 main operations:
  *
  *	  - read pin		get raw data from a pin
@@ -41,12 +41,12 @@
 #define SWITCH_H_ONCE
 
 /*
- * Generic variables and settings 
+ * Generic variables and settings
  */
 
 // switch array configuration / sizing
 #define SW_PAIRS				HOMING_AXES	// number of axes that can have switches				
-#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW)MAX
+#define SW_POSITIONS			2			// swPosition is either SW_MIN or SW_MAX
 
 // switch modes
 #define SW_HOMING_BIT			0x01
@@ -56,7 +56,8 @@
 #define SW_MODE_HOMING 			SW_HOMING_BIT				 // enable switch for homing only
 #define SW_MODE_LIMIT 			SW_LIMIT_BIT				 // enable switch for limits only
 #define SW_MODE_HOMING_LIMIT   (SW_HOMING_BIT | SW_LIMIT_BIT)// homing and limits
-#define SW_MODE_MAX_VALUE 		SW_MODE_HOMING_LIMIT
+#define SW_MODE_CUSTOM          0x04
+#define SW_MODE_MAX_VALUE 		SW_MODE_CUSTOM
 
 enum swType {
 	SW_TYPE_NORMALLY_OPEN = 0,
@@ -82,51 +83,28 @@ enum swEdge {
 
 #define SW_LOCKOUT_TICKS 50			// milliseconds to go dead after switch firing
 
-// DEPRECATED STUFF FROM OLD SWITCH CODE
-//#define SW_DEGLITCH_TICKS 30		// in milliseconds
-
-// macros for finding the index into the switch table give the axis number
-//#define MIN_SWITCH(axis) (axis*2)
-//#define MAX_SWITCH(axis) (axis*2+1)
-
-/*
-enum swNums {	 					// indexes into switch arrays
-	SW_MIN_X = 0,
-	SW_MAX_X,
-	SW_MIN_Y,
-	SW_MAX_Y,
-	SW_MIN_Z,
-	SW_MAX_Z,
-	SW_MIN_A,
-	SW_MAX_A,
-	NUM_SWITCHES 			// must be last one. Used for array sizing and for loops
-};
-#define SW_OFFSET SW_MAX_X	// offset between MIN and MAX switches
-#define NUM_SWITCH_PAIRS (NUM_SWITCHES/2)
-*/
-
 /*
  * Switch control structures
  */
-typedef struct swSwitch {			// one struct per switch
+typedef struct swSwitch {						// one struct per switch
 	// public
-	uint8_t type;					// swType: 0=NO, 1=NC
-	uint8_t mode;					// 0=disabled, 1=homing, 2=limit, 3=homing+limit
-	uint8_t state;					// set true if switch is closed
+	uint8_t type;								// swType: 0=NO, 1=NC
+	uint8_t mode;								// 0=disabled, 1=homing, 2=limit, 3=homing+limit
+	int8_t state;								// 0=open, 1=closed, -1=disabled
+	uint8_t limit_switch_thrown;    // if this is configured as a limit switch, 1 = limit switch has been triggered
 
 	// private
-	uint8_t edge;					// keeps a transient record of edges for immediate inquiry
-	uint16_t debounce_ticks;		// number of millisecond ticks for debounce lockout 
-	uint32_t debounce_timeout;		// time to expire current debounce lockout, or 0 if no lockout
+	uint8_t edge;								// keeps a transient record of edges for immediate inquiry
+	uint16_t debounce_ticks;					// number of millisecond ticks for debounce lockout
+	uint32_t debounce_timeout;					// time to expire current debounce lockout, or 0 if no lockout
 	void (*when_open)(struct swSwitch *s);		// callback to action function when sw is open - passes *s, returns void
 	void (*when_closed)(struct swSwitch *s);	// callback to action function when closed
 	void (*on_leading)(struct swSwitch *s);		// callback to action function for leading edge onset
 	void (*on_trailing)(struct swSwitch *s);	// callback to action function for trailing edge
 } switch_t;
-typedef void (*sw_callback)(switch_t *s); // typedef for switch action callback
+typedef void (*sw_callback)(switch_t *s);		// typedef for switch action callback
 
-typedef struct swSwitchArray {		// array of switches
-	uint8_t type;					// switch type for entire array
+typedef struct swSwitchArray {					// array of switches
 	switch_t s[SW_PAIRS][SW_POSITIONS];
 } switches_t;
 extern switches_t sw;
@@ -135,20 +113,25 @@ extern switches_t sw;
  * Function prototypes
  */
 void switch_init(void);
+void switch_reset(void);
 stat_t poll_switches(void);
-uint8_t poll_switch(switch_t *s, uint8_t pin_value);
+int8_t poll_switch(switch_t *s, uint8_t pin_value);
 uint8_t get_switch_mode(uint8_t axis, uint8_t position);
 uint8_t get_switch_type(uint8_t axis, uint8_t position);
-uint8_t read_switch(uint8_t axis, uint8_t position);
+int8_t read_switch(uint8_t axis, uint8_t position);
+uint8_t get_limit_switch_thrown(void);
+void reset_limit_switches(void);
 
 /*
  * Switch config accessors and text functions
  */
-stat_t sw_set_st(cmdObj_t *cmd);
-stat_t sw_set_sw(cmdObj_t *cmd);
+stat_t sw_set_st(nvObj_t *nv);
+stat_t sw_set_sw(nvObj_t *nv);
+stat_t sw_get_ss(nvObj_t *nv);
+void sw_print_ss(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
-	void sw_print_st(cmdObj_t *cmd);
+	void sw_print_st(nvObj_t *nv);
 #else
 	#define sw_print_st tx_print_stub
 #endif // __TEXT_MODE

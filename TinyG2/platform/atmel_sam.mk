@@ -77,7 +77,8 @@ GCC_TOOLCHAIN = gcc
 CROSS_COMPILE = arm-none-eabi
 
 # Defines which are the available memory targets for the device.
-MEMORIES = sram flash
+//MEMORIES = sram flash
+MEMORIES = flash
 
 CMSIS_PATH  = $(CMSIS_ROOT)/CMSIS/Include
 SAM_PATH    = $(CMSIS_ROOT)/Device/ATMEL
@@ -94,7 +95,7 @@ DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 DEVICE_INCLUDE_DIRS += "$(CMSIS_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)"
 DEVICE_INCLUDE_DIRS += "$(SAM_PATH)/$(SERIES)/include"
-DEVICE_INCLUDE_DIRS += platform/atmel_sam
+DEVICE_INCLUDE_DIRS += ./platform/atmel_sam
 
 DEVICE_LIBS          = gcc c
 
@@ -107,7 +108,7 @@ DEVICE_CFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -u _printf_float
+DEVICE_CPPFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -std=c++11 -fno-exceptions -u _printf_float
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags

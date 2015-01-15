@@ -21,10 +21,6 @@
 #ifndef PLAN_ARC_H_ONCE
 #define PLAN_ARC_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 // See planner.h for MM_PER_ARC_SEGMENT setting
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
@@ -33,7 +29,6 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 
 	float position[AXES];		// accumulating runtime position
 	float offset[3]; 	 		// IJK offsets
-//	float endpoint[AXES];
 
 	float length;				// length of line or helix in mm
 	float time;					// total running time for arc (derived)
@@ -53,7 +48,8 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 	float center_0;				// center of circle at plane axis 0 (e.g. X for G17)
 	float center_1;				// center of circle at plane axis 1 (e.g. Y for G17)
 
-	GCodeState_t gm;			// Gcode state struct is passed for each arc segment. Usage:
+	GCodeState_t gm;			// Gcode state struct is passed for each arc segment. 
+//	Usage:
 //	uint32_t linenum;			// line number of the arc feed move - same for each segment
 //	float target[AXES];			// arc segment target
 //	float work_offset[AXES];	// offset from machine coord system for reporting (same for each segment)
@@ -63,15 +59,10 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 } arc_t;
 extern arc_t arc;
 
-
 /* arc function prototypes */	// NOTE: See canonical_machine.h for cm_arc_feed() prototype
 
 void cm_arc_init(void);
-stat_t cm_arc_callback(void);
+stat_t cm_arc_cycle_callback(void);
 void cm_abort_arc(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: PLAN_ARC_H_ONCE

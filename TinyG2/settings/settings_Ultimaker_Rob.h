@@ -41,7 +41,7 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs 
 #define INIT_MESSAGE "Initializing configs to Ultimaker profile"
 
-#define JUNCTION_DEVIATION		0.05		// default value, in mm
+#define JUNCTION_DEVIATION		0.01		// default value, in mm
 #define JUNCTION_ACCELERATION 	400000		// centripetal acceleration around corners
 
 #ifndef PI
@@ -49,9 +49,6 @@
 #endif
 
 // *** settings.h overrides ***
-
-#undef SWITCH_TYPE
-#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
 
 // *** motor settings ***
 
@@ -120,14 +117,16 @@
 // *** axis settings ***
 
 #define X_AXIS_MODE 			AXIS_STANDARD		// xam		see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 			4500 				// xvm		G0 max velocity in mm/min
+#define X_VELOCITY_MAX 			18000.0 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
-#define X_JERK_MAX 				40000				// xjm		yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX 				20000.0				// xjm		yes, that's "100 billion" mm/(min^3)
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
 #define X_SWITCH_MODE_MAX		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
+#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY 		3000				// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		200					// xlv		mm/min
 #define X_LATCH_BACKOFF 		10					// xlb		mm
@@ -135,14 +134,16 @@
 #define X_JERK_HOMING			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
-#define Y_VELOCITY_MAX 			4500
+#define Y_VELOCITY_MAX 			18000.0
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN 			0
 #define Y_TRAVEL_MAX 			190
-#define Y_JERK_MAX 				40000
+#define Y_JERK_MAX 				20000.0
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX		SW_MODE_LIMIT
+#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Y_SEARCH_VELOCITY 		3000
 #define Y_LATCH_VELOCITY		200
 #define Y_LATCH_BACKOFF			10
@@ -150,7 +151,7 @@
 #define Y_JERK_HOMING			Y_JERK_MAX
 
 #define Z_AXIS_MODE				AXIS_STANDARD
-#define Z_VELOCITY_MAX			1000
+#define Z_VELOCITY_MAX			800
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN 			0
 #define Z_TRAVEL_MAX			220
@@ -158,23 +159,46 @@
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN       SW_MODE_HOMING
 #define Z_SWITCH_MODE_MAX       SW_MODE_DISABLED
+#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define Z_SEARCH_VELOCITY		500
 #define Z_LATCH_VELOCITY		200
 #define Z_LATCH_BACKOFF			3
-#define Z_ZERO_BACKOFF			0.04
+#define Z_ZERO_BACKOFF			0.01
 #define Z_JERK_HOMING			Z_JERK_MAX
+
+
+/******************************************************
+ * To calulate the speeds here, in Wolfram Alpha-speak:
+ * c=2*pi*r, r=0.609, d=c/360, s=((S*60)/d), S=40 for s
+ * Change r to A_RADIUS, and S to the desired speed,
+ * in mm/s or mm/s/s/s.
+ *
+ * It will return s= as the value you want to enter.
+ *
+ * If the value is over 1 million, the code will divide
+ * it by 1 million, so you have to pre-multiply it by
+ * 1000000.0. (The value is in millions, btw.)
+ *
+ * Note that you need these to be floating point values,
+ * so always have a .0 at the end!
+ *
+ ******************************************************/
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				0.609
-#define A_VELOCITY_MAX          300000.000 // ~53 mm/s, 3,188 mm/m
-#define A_FEEDRATE_MAX 			300000.000
+#define A_VELOCITY_MAX          225769.0 // ~40 mm/s, 2,400 mm/min
+#define A_FEEDRATE_MAX 			112898.0 // ~20 mm/s, 1,200 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				112898000.0*1000000.0 // 20,000 million mm/min^3
+#define A_JERK_MAX 				1128980.0*1000000.0 // 2,000 million mm/min^3
                                                   // * a million since it's over a million
+// c=2*pi*r, r=0.609, d=c/360, s=((2000*60)/d)
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define A_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define A_SEARCH_VELOCITY 		2000
 #define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
@@ -192,6 +216,8 @@
 #define B_RADIUS				1
 #define B_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define B_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF			10
@@ -209,6 +235,8 @@
 #define C_RADIUS				1
 #define C_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define C_SWITCH_MODE_MAX		SW_MODE_DISABLED
+#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
+#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF			10

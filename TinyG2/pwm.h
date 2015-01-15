@@ -28,10 +28,6 @@
 #ifndef PWM_H_ONCE
 #define PWM_H_ONCE
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 typedef struct pwmConfigChannel {
 	float frequency;				// base frequency for PWM driver, in Hz
 	float cw_speed_lo;				// minimum clockwise spindle speed [0..N]
@@ -47,7 +43,9 @@ typedef struct pwmConfigChannel {
 
 typedef struct pwmChannel {
 	uint8_t ctrla;					// byte needed to active CTRLA (it's dynamic - rest are static)
-//++++	TC1_t *timer;				// assumes TC1 flavor timers used for PWM channels
+#ifdef __AVR
+	TC1_t *timer;					// assumes TC1 flavor timers used for PWM channels
+#endif
 } pwmChannel_t;
 
 typedef struct pwmSingleton {
@@ -65,16 +63,16 @@ stat_t pwm_set_duty(uint8_t channel, float duty);
 
 #ifdef __TEXT_MODE
 
-	void pwm_print_p1frq(cmdObj_t *cmd);
-	void pwm_print_p1csl(cmdObj_t *cmd);
-	void pwm_print_p1csh(cmdObj_t *cmd);
-	void pwm_print_p1cpl(cmdObj_t *cmd);
-	void pwm_print_p1cph(cmdObj_t *cmd);
-	void pwm_print_p1wsl(cmdObj_t *cmd);
-	void pwm_print_p1wsh(cmdObj_t *cmd);
-	void pwm_print_p1wpl(cmdObj_t *cmd);
-	void pwm_print_p1wph(cmdObj_t *cmd);
-	void pwm_print_p1pof(cmdObj_t *cmd);
+	void pwm_print_p1frq(nvObj_t *nv);
+	void pwm_print_p1csl(nvObj_t *nv);
+	void pwm_print_p1csh(nvObj_t *nv);
+	void pwm_print_p1cpl(nvObj_t *nv);
+	void pwm_print_p1cph(nvObj_t *nv);
+	void pwm_print_p1wsl(nvObj_t *nv);
+	void pwm_print_p1wsh(nvObj_t *nv);
+	void pwm_print_p1wpl(nvObj_t *nv);
+	void pwm_print_p1wph(nvObj_t *nv);
+	void pwm_print_p1pof(nvObj_t *nv);
 
 #else
 
@@ -90,17 +88,5 @@ stat_t pwm_set_duty(uint8_t channel, float duty);
 	#define pwm_print_p1pof tx_print_stub
 
 #endif // __TEXT_MODE
-
-//#define __UNIT_TEST_PWM		// uncomment to enable PWM unit tests
-#ifdef __UNIT_TEST_PWM
-void pwm_unit_tests(void);
-#define	PWM_UNITS pwm_unit_tests();
-#else
-#define	PWM_UNITS
-#endif
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// End of include guard: PWM_H_ONCE

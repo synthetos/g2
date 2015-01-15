@@ -1,6 +1,6 @@
 /*
- * hardware.h - system hardware configuration - this file is platform specific
- *			  - ARM version
+ * hardware.h - system hardware configuration
+ *				THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the TinyG project
  *
@@ -30,9 +30,40 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
+/*--- Hardware platform enumerations ---*/
+
+enum hwPlatform {
+	HM_PLATFORM_NONE = 0,
+
+	HW_PLATFORM_TINYG_XMEGA,	// TinyG code base on Xmega boards.
+								//	hwVersion 7 = TinyG v7 and earlier
+								//	hwVersion 8 = TinyG v8
+
+	HW_PLATFORM_G2_DUE,			// G2 code base on native Arduino Due
+
+	HW_PLATFORM_TINYG_V9		// G2 code base on v9 boards
+								//  hwVersion 0 = v9c
+								//  hwVersion 1 = v9d
+								//  hwVersion 2 = v9f
+								//  hwVersion 3 = v9h
+								//  hwVersion 4 = v9i
+};
+
+#define HW_VERSION_TINYGV6		6
+#define HW_VERSION_TINYGV7		7
+#define HW_VERSION_TINYGV8		8
+
+#define HW_VERSION_TINYGV9C		0
+#define HW_VERSION_TINYGV9D		1
+#define HW_VERSION_TINYGV9F		2
+#define HW_VERSION_TINYGV9H		3
+#define HW_VERSION_TINYGV9I		4
+
 ////////////////////////////
 /////// ARM VERSION ////////
 ////////////////////////////
+
+// ARM specific code start here
 
 #include "MotatePins.h"
 #include "MotateTimers.h" // for timer_number
@@ -43,7 +74,9 @@ using namespace Motate;
 extern "C"{
 #endif
 
-/**** Global System Defines ****/
+/*************************
+ * Global System Defines *
+ *************************/
 
 #undef F_CPU							// CPU clock - set for delays
 #define F_CPU 84000000UL
@@ -57,12 +90,12 @@ extern "C"{
 /**** Resource Assignment via Motate ****
  *
  * This section defines resource usage for pins, timers, PWM channels, communications
- * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and 
+ * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and
  * other files for pinouts and other configuration details.
  *
- * Commenting out or #ifdef'ing out definitions below will cause the compiler to 
- * drop references to these resources from the compiled code. This will reduce 
- * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor, 
+ * Commenting out or #ifdef'ing out definitions below will cause the compiler to
+ * drop references to these resources from the compiled code. This will reduce
+ * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor,
  * XYZ axis config commenting out the higher motors and axes here will remove them
  * from later code (using the motate .isNull() test).
  */
@@ -76,13 +109,12 @@ extern "C"{
  *	 2	LOADER software generated interrupt (STIR / SGI)
  *	 3	Serial read character interrupt
  *	 4	EXEC software generated interrupt (STIR / SGI)
- *	 5	Serial write character interrupt  
+ *	 5	Serial write character interrupt
  */
 
 /**** Stepper DDA and dwell timer settings ****/
 
-//#define FREQUENCY_DDA		50000UL
-#define FREQUENCY_DDA		200000UL
+#define FREQUENCY_DDA		200000.0		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
 #define FREQUENCY_DWELL		1000UL
 #define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
 
@@ -140,7 +172,10 @@ static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 
-/*** function prototypes ***/
+
+/********************************
+ * Function Prototypes (Common) *
+ ********************************/
 
 void hardware_init(void);			// master hardware init
 void hw_request_hard_reset();
@@ -149,23 +184,25 @@ stat_t hw_hard_reset_handler(void);
 
 void hw_request_bootloader(void);
 stat_t hw_bootloader_handler(void);
-stat_t hw_run_boot(cmdObj_t *cmd);
+stat_t hw_run_boot(nvObj_t *nv);
 
-stat_t hw_set_hv(cmdObj_t *cmd);
-stat_t hw_get_id(cmdObj_t *cmd);
+stat_t hw_set_hv(nvObj_t *nv);
+stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
-	void hw_print_fb(cmdObj_t *cmd);
-	void hw_print_fv(cmdObj_t *cmd);
-	void hw_print_hp(cmdObj_t *cmd);
-	void hw_print_hv(cmdObj_t *cmd);
-	void hw_print_id(cmdObj_t *cmd);
+	void hw_print_fb(nvObj_t *nv);
+	void hw_print_fv(nvObj_t *nv);
+	void hw_print_cv(nvObj_t *nv);
+	void hw_print_hp(nvObj_t *nv);
+	void hw_print_hv(nvObj_t *nv);
+	void hw_print_id(nvObj_t *nv);
 
 #else
 
 	#define hw_print_fb tx_print_stub
 	#define hw_print_fv tx_print_stub
+	#define hw_print_cv tx_print_stub
 	#define hw_print_hp tx_print_stub
 	#define hw_print_hv tx_print_stub
 	#define hw_print_id tx_print_stub
