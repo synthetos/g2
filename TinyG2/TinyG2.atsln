@@ -9,6 +9,7 @@ Global
 		G2v9g|ARM = G2v9g|ARM
 		G2v9i|ARM = G2v9i|ARM
 		gShield|ARM = gShield|ARM
+		shopbotShield|ARM = shopbotShield|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9d|ARM.ActiveCfg = G2v9d|ARM
@@ -21,6 +22,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9i|ARM.Build.0 = G2v9i|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.ActiveCfg = gShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

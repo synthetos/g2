@@ -169,6 +169,15 @@ ifeq ("$(PLATFORM)","gShield")
 
 endif
 
+ifeq ("$(PLATFORM)","shopbotShield")
+
+	# This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
+	# for the code to get the pinout right.
+
+	BASE_PLATFORM=due
+	DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
+
+endif
 ifeq ("$(PLATFORM)","G2v9d")
 
 	BASE_PLATFORM=v9_3x8c
