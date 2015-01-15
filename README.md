@@ -1,6 +1,12 @@
 # TinyG 2
 
-This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. It's not guaranteed AT ALL.
+Welcome to TinyG2, the next-generation of [Synthetos TinyG](https://github.com/synthetos/tinyg/) running on ARM processors.
+
+# Usage
+
+The use of the TinyG2 repo is mostly the same as that of [TinyG](https://github.com/synthetos/tinyg/wiki). This version is still in pre-release, however, and the documentation is still being written.
+
+For more information, please see the [G2 Wiki](https://github.com/synthetos/G2/wiki).
 
 # Build Instructions
 
@@ -17,7 +23,7 @@ This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. 
 
 First we need to decide what values we need for the following variables:
 
-* `PLATFORM` - To build TinyG2 to run on a Due and using the gSHield pinout, you want the `PLATFORM` to be `gShield`. Luckily, that's the default. For other boards (most likely experimental or custom) please consult the `Makefile` for available options.
+* `PLATFORM` - To build TinyG2 to run on a Due and using the gShield pinout, you want the `PLATFORM` to be `gShield`. Luckily, that's the default. For other boards (most likely experimental or custom) please consult the `Makefile` for available options.
 * `SETTINGS_FILE` - You can use the default settings found in `settings/settings_default.h`, or you can create a new file in the settings directory (preferrably by copying one of the existing settings files) and then specify the name of the file (**not** including `settings/`) in the `SETTINGS_FILE` variable. The contents of this file effects the default parameters when the hardware is powered up or rest, since there isn't an EEPROM on some of these boards to store settings to. Almost all of these values can all be overriden from the serial interface, however.
 
 To specify one of the above variables, either set that vriable name in the environmetn, or pass in the make command line:
