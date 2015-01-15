@@ -1,15 +1,6 @@
 # TinyG 2
 
-This branch is for feature development.
-
-Do NOT use it in production.
-
-You have been warned.
-
-Thank you,
-  -Rob
-
----
+This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. It's not guaranteed AT ALL.
 
 # Build Instructions
 
