@@ -2,8 +2,8 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -79,12 +79,12 @@ enum sectionState {
 /* ESTD_SEGMENT_USEC	 Microseconds per planning segment
  *	Should be experimentally adjusted if the MIN_SEGMENT_LENGTH is changed
  */
-#ifdef __AVR
-	#define NOM_SEGMENT_USEC 	 ((float)5000)		// nominal segment time
-	#define MIN_SEGMENT_USEC 	 ((float)2500)		// minimum segment time / minimum move time
-	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
-#endif
-#ifdef __ARM
+//#ifdef __AVR
+//	#define NOM_SEGMENT_USEC 	 ((float)5000)		// nominal segment time
+//	#define MIN_SEGMENT_USEC 	 ((float)2500)		// minimum segment time / minimum move time
+//	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
+//#endif
+//#ifdef __ARM
     #define MIN_PLANNED_USEC     ((float)20000)     // minimum time in the planner below which we must replan immediately
 
     #define PHAT_CITY_USEC       ((float)20000)     // if you have at least this much time in the planner,
@@ -96,8 +96,8 @@ enum sectionState {
 
     // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
     // PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
-    #define PLANNER_TIMEOUT      (50)               // Max amount of time to wait between replans
-#endif
+    #define PLANNER_TIMEOUT_MS    (50)               // Max amount of time to wait between replans
+//#endif
 
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
@@ -116,7 +116,7 @@ enum sectionState {
  *	start executing before the next block arrives from the serial port.
  *	This causes the machine to stutter once on startup.
  */
-#define PLANNER_STARTUP_DELAY_SECONDS ((float)0.05)	// in seconds
+//#define PLANNER_STARTUP_DELAY_SECONDS ((float)0.05)	// in seconds
 
 /* PLANNER_BUFFER_POOL_SIZE
  *	Should be at least the number of buffers requires to support optimal
@@ -199,10 +199,9 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 
     float real_move_time;          // amount of time it'll take for the move, in us
 
-	GCodeState_t gm;				// Gode model state - passed from model, used by planner and runtime
+	GCodeState_t gm;				// Gcode model state - passed from model, used by planner and runtime
 
 } mpBuf_t;
-
 
 typedef struct mpBufferPool {		// ring buffer for sub-moves
 	magic_t magic_start;			// magic number to test memory integrity
@@ -212,12 +211,11 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *r;						// get/end_run_buffer pointer
     bool    needs_replanned;        // mark to indicate that at least one ALINE was put in the buffer
     bool    needs_time_accounting;  // mark to indicate that the buffer has changed and the times (below) may be wrong
-    bool    planning;               // the planner smarks this to indicate it's (re)planning the block list
+    bool    planning;               // the planner marks this to indicate it's (re)planning the block list
+    bool    force_replan;           // true to indicate that we must plan, ignoring the normal timing tests
 
-    bool    force_replan;           // true to inidicate that we must plan, ignoring the normal timing tests
-
-    volatile float time_in_run;         // time left in the buffer executed by the runtime
-    volatile float time_in_planner;     // total time of the buffer
+    volatile float time_in_run;		// time left in the buffer executed by the runtime
+    volatile float time_in_planner;	// total time of the buffer
 
     uint32_t planner_timer;         // timout to compare against SysTickTimer.getValue() to know when to force planning
 

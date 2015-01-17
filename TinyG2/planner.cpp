@@ -401,7 +401,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
         mb.needs_replanned = 1;
         mb.q = mb.q->nx;							// advance the queued buffer pointer
         if (mb.planner_timer == 0) {
-            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT;
+            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT_MS;
         }
     }
 
