@@ -631,6 +631,9 @@ static stat_t _exec_aline_segment()
 
     // Update the mb->time_in_run -- we know it's missing the current segment's time before it's loaded, that's ok.
     mb.time_in_run -= mr.segment_time;
+    if (mb.time_in_run < 0) {
+        mb.time_in_run = 0.0;
+    }
 
 	// Call the stepper prep function
 

@@ -469,7 +469,7 @@ bool mp_is_it_phat_city_time() {
 	
     mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
-    return (fp_ZERO(time_in_planner) || PHAT_CITY_TIME < time_in_planner);
+    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
 void mp_planner_time_accounting() {
@@ -479,8 +479,9 @@ void mp_planner_time_accounting() {
     mpBuf_t *bf = mp_get_run_buffer();
     mpBuf_t *bp = bf;
 
-    if (bf == NULL)
+    if (bf == NULL) {
         return;
+    }
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
 
