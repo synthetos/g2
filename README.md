@@ -10,17 +10,17 @@ This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. 
 	* On OS X this easily achieved by installing the XCode Command-Line Tools. The easiest method of installing the command-line tools is to run `xcode-select --install` from the Terminal. Full official instructions for installing them are [here](https://developer.apple.com/library/ios/technotes/tn2339/_index.html).
 	* On Linux you need to ensure that you have `make` installed, or use the package manager for you're flaovr of linux to obtain it. Something like this should work:
 	`sudo apt-get install git-core make`
-	* Command-line compiling on Windows is not currently supported. It's probably not difficult, we just don't have the instructions in place yet. (We're more than happy to accept pull requests! Thank you!) Please see [this wiki page](https://github.com/synthetos/g2/wiki/Compiling-G2-on-Windows-(Atmel-Studio-6.2%29) for instructions on building using Atmel Studio 6.2.
+	* Command-line compiling on Windows is not currently supported. It's probably not difficult, we just don't have the instructions in place yet. (We're more than happy to accept pull requests! Thank you!) Please see [this wiki page](https://github.com/synthetos/g2/wiki/Compiling-G2-on-Windows-(Atmel-Studio-6.2)) for instructions on building using Atmel Studio 6.2.
 * You need to have this repo cloned via git or downloaded from GitHub as a zip.
 
 ## Compiling
 
 First we need to decide what values we need for the following variables:
 
-* `PLATFORM` - To build TinyG2 to run on a Due and using the gSHield pinout, you want the `PLATFORM` to be `gShield`. Luckily, that's the default. For other boards (most likely experimental or custom) please consult the `Makefile` for available options.
-* `SETTINGS_FILE` - You can use the default settings found in `settings/settings_default.h`, or you can create a new file in the settings directory (preferrably by copying one of the existing settings files) and then specify the name of the file (**not** including `settings/`) in the `SETTINGS_FILE` variable. The contents of this file effects the default parameters when the hardware is powered up or rest, since there isn't an EEPROM on some of these boards to store settings to. Almost all of these values can all be overriden from the serial interface, however.
+* `PLATFORM` - To build TinyG2 to run on a Due and using the gShield pinout, you want the `PLATFORM` to be `gShield`. Luckily, that's the default. For other boards (most likely experimental or custom) please consult the `Makefile` for available options.
+* `SETTINGS_FILE` - You can use the default settings found in `settings/settings_default.h`, or you can create a new file in the settings directory, preferrably by copying one of the existing settings files, and then specify the name of the file (**not** including `settings/`) in the `SETTINGS_FILE` variable. The contents of this file effects the default parameters when the hardware is powered up or rest, since there isn't an EEPROM on some of these boards to store settings to. Almost all of these values can all be overriden from the serial interface, however.
 
-To specify one of the above variables, either set that vriable name in the environmetn, or pass in the make command line:
+To specify one of the above variables, either set that variable name in the environment, or pass in the make command line:
 
 ```bash
 # In the environment:
@@ -36,15 +36,15 @@ export PLATFORM=gShield
 make SETTINGS_FILE=settings_default.h
 ```
 
-The first time you call make, it will attempt to download and decompress the correct build tools (currently we only use the ARM gcc found [here](https://launchpad.net/gcc-arm-embedded)) into the Tools subdirectory, which may take a few minuted depending on your connection speed. (Note: This is the part we haven't complete for Windows currently.) Once that has been completed, it won't need to happen again.
+The first time you call make, it will attempt to download and decompress the correct build tools (currently we only use the ARM gcc found [here](https://launchpad.net/gcc-arm-embedded)) into the Tools subdirectory, which may take a few minutes depending on your connection speed. (Note: This is the part we haven't complete for Windows currently.) Once that has been completed, it won't need to happen again.
 
 Each platform has it's own build subdirectory, and the resulting files can be found in `bin/${PLATFORM}`.
 
 ## Debugging and loading
 
-In order to debug you need a debugger capable of debuggingthe chip you use. Gor the Due and V9 we use either a Atmel SAM-ICE (which is a OEM Segger J-Link locked to Atmel ARMs) or the cheaper and more recently released Atmel ICE.
+In order to debug you need a debugger capable of debugging the chip you use. For the Due and V9 we use either a Atmel SAM-ICE (which is a OEM Segger J-Link locked to Atmel ARMs) or the cheaper and more recently released Atmel ICE. Either can be found at Mouser.com.
 
-You choose which debug adapter you wish to use by *copying* the `openocd.cfg.example` file to `openocd.cfg` and then editing the `openocd.cfg` file. Simply follow the instructions in that file. (Hint: It's just uncommenting the correct lines.)
+You choose which debug adapter you wish to use by *copying* the `openocd.cfg.example` file to `openocd.cfg` and then editing the `openocd.cfg` file. Simply follow the instructions in that file. Hint: It's just uncommenting the correct lines.
 
 Once that is configured, you'll need to make sure the debugger is correctly connected to the hardware and plugged into the computer, and all of the hardware is powered properly.
 
@@ -62,9 +62,9 @@ This will build the code (if it needs it) and then open `gdb` connected to the h
 
 ### A very brief Embedded GDB primer
 
-Even if you are familiar with GDB, you may find a few important differences when using it with an embedded project. This will not be a thorough how-to on this topic, but will hopefully server enough to get you started.
+Even if you are familiar with GDB, you may find a few important differences when using it with an embedded project. This will not be a thorough how-to on this topic, but will hopefully serve enough to get you started.
 
-Using `make debug` will call `gdb` (technically it's `arm-none-eabi-gdb` or whatever variant is specified int he makefile for your board, but we'll just call it `gdb` from now on) with parameters and configuration to:
+Using `make debug` will call `gdb` (technically it's `arm-none-eabi-gdb` or whatever variant is specified in the makefile for your board, but we'll just call it `gdb` from now on) with parameters and configuration to:
 * Know which binary/elf file to use for this debug session.
 * Connect to the board using `openocd`.
 * And halt the board, and leave you at a command line prompt.
@@ -86,7 +86,7 @@ Transfer rate: 14 KB/sec, 13524 bytes/write.
 
 #### Resetting the processor
 
-`monitor reset halt` - Once we flash new code, or if we just want to "program" to start over, we call `monitor reset halt` to reset and halt the processor. This will freeze the processor at the reset state, before any code has executed.
+`monitor reset halt` - Once we flash new code, or if we just want the "program" to start over, we call `monitor reset halt` to reset and halt the processor. This will freeze the processor at the reset state, before any code has executed.
 
 You *must* call `monitor reset halt` after (or *immediately* before) a `load` command so that the processor starts from the new code. Otherwise, the processor will likely crash, sometimes after appearing to work for some time. **To avoid nightmare debug sessions, be sure you always follow `load` with `monitor reset halt`!**
 

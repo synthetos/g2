@@ -403,7 +403,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
             cm_set_motion_state(MOTION_PLANNING);
         mb.q = mb.q->nx;							// advance the queued buffer pointer
         if (mb.planner_timer == 0) {
-            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT;
+            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT_MS;
         }
     }
 

@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		074.03 // Debugging
+#define TINYG_FIRMWARE_BUILD   		075.01 // Some preliminary prep for v8 back port
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
