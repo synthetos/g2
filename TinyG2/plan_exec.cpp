@@ -67,9 +67,13 @@ stat_t mp_exec_move()
 	}
 	// Manage cycle and motion state transitions
 	if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
-		if (cm.motion_state == MOTION_STOP) cm_set_motion_state(MOTION_RUN);
+        if (cm.motion_state == MOTION_STOP) {
+            cm_set_motion_state(MOTION_RUN);
+        }
 	}
-	if (bf->bf_func == NULL) return(cm_hard_alarm(STAT_INTERNAL_ERROR));// never supposed to get here
+    if (bf->bf_func == NULL) {
+        return(cm_hard_alarm(STAT_INTERNAL_ERROR));     // never supposed to get here
+    }
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }
 
@@ -252,16 +256,16 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // We're going to fabricate starting a tail-only move from here.
         // We'll decelrate as fast as we can in the space we have.
 
-        mr.section = SECTION_TAIL;
-        mr.section_state = SECTION_NEW;
-        mr.jerk = bf->jerk;
-
         if (mr.section == SECTION_BODY) {
             mr.entry_velocity = mr.segment_velocity;
         } else {
             mr.entry_velocity = mr.segment_velocity + mr.forward_diff_5;
         }
         mr.cruise_velocity = mr.entry_velocity;
+
+        mr.section = SECTION_TAIL;
+        mr.section_state = SECTION_NEW;
+        mr.jerk = bf->jerk;
 
         float mr_available_length = get_axis_vector_length(mr.target, mr.position);
         float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
@@ -305,6 +309,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
 
+        mb.time_in_run = 0.0;
         mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {

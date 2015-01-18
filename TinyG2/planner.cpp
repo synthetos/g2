@@ -399,6 +399,8 @@ void mp_commit_write_buffer(const uint8_t move_type)
         }
     } else {
         mb.needs_replanned = 1;
+        if(cm.hold_state == FEEDHOLD_OFF || cm.hold_state == FEEDHOLD_END_HOLD)
+            cm_set_motion_state(MOTION_PLANNING);
         mb.q = mb.q->nx;							// advance the queued buffer pointer
         if (mb.planner_timer == 0) {
             mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT;
@@ -479,11 +481,12 @@ void mp_planner_time_accounting() {
     mpBuf_t *bf = mp_get_run_buffer();
     mpBuf_t *bp = bf;
 
+    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
+
     if (bf == NULL) {
+        mb.time_in_planner = time_in_planner;
         return;
     }
-
-    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
 
     while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
         if ((bp->buffer_state == MP_BUFFER_QUEUED) ||

@@ -330,6 +330,7 @@ enum cmCycleState {
 
 enum cmMotionState {
 	MOTION_STOP = 0,				// motion has stopped: set when the steppers reach the end of the planner queue
+    MOTION_PLANNING,				// machine has planned an ALINE segment, but not yes started to execute them
 	MOTION_RUN,						// machine is in motion: set when the steppers execute an ALINE segment
 	MOTION_HOLD						// feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 };

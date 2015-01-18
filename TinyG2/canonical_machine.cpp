@@ -147,9 +147,9 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
-    if(cm.cycle_state != CYCLE_OFF && cm.machine_state != MACHINE_CYCLE)
+    if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
-    if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
+    if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
     
     switch(cm.machine_state)
@@ -170,6 +170,7 @@ uint8_t cm_get_combined_state()
                     switch(cm.motion_state)
                     {
                         case MOTION_HOLD: return COMBINED_HOLD;
+                        case MOTION_PLANNING: return COMBINED_RUN;
                         case MOTION_RUN: return COMBINED_RUN;
                         case MOTION_STOP:
                             //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
@@ -203,9 +204,10 @@ void cm_set_motion_state(uint8_t motion_state)
 	cm.motion_state = motion_state;
 
 	switch (motion_state) {
-		case (MOTION_STOP): { ACTIVE_MODEL = MODEL; break; }
-		case (MOTION_RUN):  { ACTIVE_MODEL = RUNTIME; break; }
-		case (MOTION_HOLD): { ACTIVE_MODEL = RUNTIME; break; }
+		case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
+        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
+		case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
+		case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
 	}
 }
 
@@ -1306,7 +1308,7 @@ stat_t cm_end_hold()
 
 	cm.hold_state = FEEDHOLD_END_HOLD;
 	mp_end_hold();
-	if(cm.motion_state == MOTION_RUN) {
+	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
 		cm_cycle_start();
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
