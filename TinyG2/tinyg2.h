@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		075.01 // Some preliminary prep for v8 back port
+#define TINYG_FIRMWARE_BUILD   		075.02 // Many fixes to SRs and feed holds
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
