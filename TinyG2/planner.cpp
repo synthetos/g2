@@ -467,6 +467,7 @@ bool mp_is_it_phat_city_time() {
 		return true;
 	}
 	
+    mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
     return (fp_ZERO(time_in_planner) || PHAT_CITY_TIME < time_in_planner);
 }
