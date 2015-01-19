@@ -1280,7 +1280,9 @@ stat_t cm_feedhold_sequencing_callback()
 			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
 			 !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
+			cm_soft_alarm(STAT_MACHINE_ALARMED);
 			cm_queue_flush();
+			return STAT_MACHINE_ALARMED;
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
@@ -1327,18 +1329,19 @@ stat_t cm_end_hold()
 stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
-
+/*
 #ifdef __AVR
 	xio_reset_usb_rx_buffers();				// flush serial queues
 #endif
 #ifdef __ARM
     xio_flush_read();
 #endif
+*/
 	mp_flush_planner();						// flush planner queue
-	if(cm.hold_state == FEEDHOLD_HOLD);     // end feedhold, if we're in one
+	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
 		cm_end_hold();
 	cm.end_hold_requested = false;					// cancel any pending cycle start request
-
+	cm.cycle_state = CYCLE_OFF;
 	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
 //	rx_request_rx_report();
 

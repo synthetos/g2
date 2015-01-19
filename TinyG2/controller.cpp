@@ -50,6 +50,9 @@
 #include "Reset.h"
 #endif
 
+
+uint32_t ignored_count = 0;
+
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
@@ -270,6 +273,7 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
+
 	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
 		cs.bufp++;
 	}
@@ -284,7 +288,7 @@ static void _dispatch_kernel()
 	} else if (*cs.bufp == '!') {
         cm_request_feedhold();
 	} else if (*cs.bufp == '%') {
-        cm_request_queue_flush();
+		cm_request_queue_flush();
 	} else if (*cs.bufp == '~') {
         cm_request_end_hold();
 
@@ -297,12 +301,15 @@ static void _dispatch_kernel()
 		text_response(text_parser(cs.bufp), cs.saved_buf);
 
 	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
-		text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
-
+		if(cm.machine_state != MACHINE_ALARM) {
+			text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
+		}
 	} else {
-		strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
-		sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);
-		json_parser(cs.bufp);
+		if(cm.machine_state != MACHINE_ALARM) {
+			strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
+			sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
+			json_parser(cs.bufp);
+		}
 	}
 }
 

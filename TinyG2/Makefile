@@ -175,7 +175,7 @@ ifeq ("$(PLATFORM)","shopbotShield")
 	# for the code to get the pinout right.
 
 	BASE_PLATFORM=due
-	DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
+	DEVICE_DEFINES += MOTATE_BOARD="shopbotShield" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 ifeq ("$(PLATFORM)","G2v9d")
