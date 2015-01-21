@@ -185,7 +185,7 @@ stat_t write_persistent_values_callback()
 {
 #ifdef __ARM
 	
-	// Check the disk status to ensure we catch CS pin changes.
+	// Check the disk status to ensure we catch card-detect pin changes.
 	// FIXME: it would be much better to do this with an interrupt!
 	f_polldisk();
 	if (nvm.write_cache.size()) {

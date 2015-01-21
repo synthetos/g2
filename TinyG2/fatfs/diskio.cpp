@@ -191,11 +191,7 @@ uint8_t send_cmd_until_specific_response(uint8_t command, uint32_t args, uint8_t
         resp = send_cmd(command, args, ocr);
     } while (resp != response && attempts--);
     
-    if (resp != response) {
-        printf("command %i got response %i (should be %i)", command, resp, response);
-        return 0;
-    }
-    return 1;
+    return (resp == response);
 }
 
 
