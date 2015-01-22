@@ -160,8 +160,10 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
     // Readline and line flushing functions
     char_t *readline(devflags_t limit_flags, uint16_t &size) {
-        if (!(limit_flags & flags))
-            return NULL;
+        if (!(limit_flags & flags)) {
+        	size = 0;
+        	return NULL;
+        }
 
         // If _ready_to_send is true, we captured a line previously but couldn't return it yet (one of various reasons),
         // and we don't actually need to read from the channel. We just need to try to return it again.
@@ -211,7 +213,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
             return (read_buf);
         }
-
+        size = 0;
         return NULL;
     };
 
@@ -495,7 +497,7 @@ xio_t xio = {
  *	A lambda function closure is provided for trapping connection state changes from USB devices.
  *	The function is installed as a callback from the lower USB layers. It is called only on edges
  *	(connect/disconnect transitions). 'Connected' is true if the USB channel has just connected,
- *	false if it has just disconnected. It is only called on an edge — when it changes - so you
+ *	false if it has just disconnected. It is only called on an edge ï¿½ when it changes - so you
  *	shouldn't see two back-to-back connected=true calls with the same callback.
  *
  *	See here for some good info on lambda functions in C++
