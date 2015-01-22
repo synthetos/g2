@@ -1332,13 +1332,14 @@ stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
 
+	/*
 	#ifdef __AVR
 		xio_reset_usb_rx_buffers();				// flush serial queues
 	#endif
 	#ifdef __ARM
 		xio_flush_read();
 	#endif
-
+	 ng*/
 	mp_flush_planner();						// flush planner queue
 	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
 		cm_end_hold();
