@@ -1278,13 +1278,12 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 	}
 	if (cm.queue_flush_requested == true) {
-		if (((cm.motion_state == MOTION_STOP) ||
-			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
+        cm.queue_flush_requested = false;
+
+        if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
 			 !cm_get_runtime_busy()) {
-			cm.queue_flush_requested = false;
 			cm_queue_flush();
-			cm_soft_alarm(STAT_MACHINE_ALARMED);
-			//return STAT_MACHINE_ALARMED;
+            cm_soft_alarm(STAT_MACHINE_ALARMED);
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
