@@ -85,6 +85,10 @@ stat_t rpt_exception(uint8_t status, char_t *info)
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 			}			
 		}
+		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
+			// Fancy place for a breakpoint, if your code asplodes.
+			asm("nop;");
+		}
 	}
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }

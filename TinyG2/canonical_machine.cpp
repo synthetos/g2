@@ -581,6 +581,8 @@ void canonical_machine_init()
 
 	cm.interlock_state = cm.estop_state = 0;
 
+	cm.ignored_gcodes = 0;
+
 	// sub-system inits
 	cm_spindle_init();
 	cm_arc_init();
@@ -1280,9 +1282,9 @@ stat_t cm_feedhold_sequencing_callback()
 			((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD))) &&
 			 !cm_get_runtime_busy()) {
 			cm.queue_flush_requested = false;
-			cm_soft_alarm(STAT_MACHINE_ALARMED);
 			cm_queue_flush();
-			return STAT_MACHINE_ALARMED;
+			cm_soft_alarm(STAT_MACHINE_ALARMED);
+			//return STAT_MACHINE_ALARMED;
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
@@ -1329,21 +1331,20 @@ stat_t cm_end_hold()
 stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
-/*
-#ifdef __AVR
-	xio_reset_usb_rx_buffers();				// flush serial queues
-#endif
-#ifdef __ARM
-    xio_flush_read();
-#endif
-*/
+
+	#ifdef __AVR
+		xio_reset_usb_rx_buffers();				// flush serial queues
+	#endif
+	#ifdef __ARM
+		xio_flush_read();
+	#endif
+
 	mp_flush_planner();						// flush planner queue
 	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
 		cm_end_hold();
 	cm.end_hold_requested = false;					// cancel any pending cycle start request
-	cm.cycle_state = CYCLE_OFF;
+
 	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
-//	rx_request_rx_report();
 
 	// Note: The following uses low-level mp calls for absolute position.
 	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
@@ -1351,8 +1352,10 @@ stat_t cm_queue_flush()
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
 	}
+
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	_exec_program_finalize(value, value);	// finalize now, not later
+
 	return (STAT_OK);
 }
 
@@ -1395,8 +1398,10 @@ stat_t cm_queue_flush()
 static void _exec_program_finalize(float *value, float *flag)
 {
 	cm_set_motion_state(MOTION_STOP);
-	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
-	    (cm.machine_state != MACHINE_ALARM) && (cm.machine_state != MACHINE_SHUTDOWN)) {
+
+	// Allow update in the alarm state, to accommodate queue flush (RAS)
+	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) /*&&
+	    (cm.machine_state != MACHINE_ALARM)*/ && (cm.machine_state != MACHINE_SHUTDOWN)) {
 		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}

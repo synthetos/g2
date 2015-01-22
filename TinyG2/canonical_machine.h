@@ -263,6 +263,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	GCodeInput_t  gn;					// gcode input values - transient
 	GCodeInput_t  gf;					// gcode input flags - transient
 
+	uint32_t ignored_gcodes;
+
 	magic_t magic_end;
 } cmSingleton_t;
 
