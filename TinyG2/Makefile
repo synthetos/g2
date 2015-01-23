@@ -171,7 +171,7 @@ endif
 
 ifeq ("$(PLATFORM)","shopbotShield")
 
-	# This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
+	# This is a due with a shopbot shield. We'll use the Due platform, but set defines
 	# for the code to get the pinout right.
 
 	BASE_PLATFORM=due
@@ -254,6 +254,30 @@ ifeq ("$(BASE_PLATFORM)","v9_3x8c")
 	include $(PLATFORM_BASE).mk
 
 endif
+
+ifeq ("$(PLATFORM)","sbv300")
+
+	# This is the Shopbot SBV300 board
+	# for the code to get the pinout right.
+
+	BASE_PLATFORM=sbv300
+	DEVICE_DEFINES += MOTATE_BOARD="sbv300"
+
+endif
+
+ifeq ("$(BASE_PLATFORM)","sbv300")
+	_PLATFORM_FOUND = 1
+	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+
+	CHIP = SAM3X8E
+    PLATFORM_BASE = platform/atmel_sam
+    CMSIS_ROOT = CMSIS
+
+	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/sbv300
+	
+	include $(PLATFORM_BASE).mk
+endif
+
 
 ifeq ("$(_PLATFORM_FOUND)", "0")
 # errors cannot be indented
