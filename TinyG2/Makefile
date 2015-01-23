@@ -178,6 +178,17 @@ ifeq ("$(PLATFORM)","shopbotShield")
 	DEVICE_DEFINES += MOTATE_BOARD="shopbotShield" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
+
+ifeq ("$(PLATFORM)","sbv300")
+
+	# This is the Shopbot SBV300 board
+	# for the code to get the pinout right.
+
+	BASE_PLATFORM=sbv300
+	DEVICE_DEFINES += MOTATE_BOARD="sbv300" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
 ifeq ("$(PLATFORM)","G2v9d")
 
 	BASE_PLATFORM=v9_3x8c
@@ -252,16 +263,6 @@ ifeq ("$(BASE_PLATFORM)","v9_3x8c")
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/v9_3x8c
 
 	include $(PLATFORM_BASE).mk
-
-endif
-
-ifeq ("$(PLATFORM)","sbv300")
-
-	# This is the Shopbot SBV300 board
-	# for the code to get the pinout right.
-
-	BASE_PLATFORM=sbv300
-	DEVICE_DEFINES += MOTATE_BOARD="sbv300"
 
 endif
 

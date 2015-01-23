@@ -61,6 +61,7 @@ namespace Motate {
     pin_number kDebug1_PinNumber                =  -1;
     pin_number kDebug2_PinNumber                =  49;
     pin_number kDebug3_PinNumber                =  50;
+    pin_number kDebug4_PinNumber                =  -1;
 
     pin_number kKinen_SyncPinNumber             =  -1;
 
