@@ -125,11 +125,15 @@ namespace Motate {
     pin_number kSocket6_Microstep_2PinNumber    =  -1;
     pin_number kSocket6_VrefPinNumber           =  -1;
 
+    // SPINDLE ON 1 = B 15
+    // PERMISSIVE 4 = D 7
     pin_number kSpindle_EnablePinNumber         =  14;  // TODO enable spindle
     pin_number kSpindle_DirPinNumber            =  15;
+
+    pin_number kCoolant_EnablePinNumber         =  -1;
+
     pin_number kSpindle_PwmPinNumber            =  -1;
     pin_number kSpindle_Pwm2PinNumber           =  -1;
-    pin_number kCoolant_EnablePinNumber         =  -1;
 
 	pin_number kXAxis_MinPinNumber              =  18;
 	pin_number kXAxis_MaxPinNumber              =  -1;
