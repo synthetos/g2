@@ -78,6 +78,10 @@
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
 
+//out of band character processed
+#undef  _FDEV_OOB
+#define _FDEV_OOB -3
+
 #define USB_LINE_BUFFER_SIZE	255			// text buffer size
 
 //*** Device flags ***

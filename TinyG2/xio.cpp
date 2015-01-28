@@ -318,6 +318,7 @@ size_t writeline(uint8_t *buffer, size_t size)
 
 /*
  * read_char() - returns single char or -1 (_FDEV_ERR) is none available
+ *               or _FDEV_OOB if it's a special char
  */
 
 int read_char (uint8_t dev)
@@ -326,19 +327,19 @@ int read_char (uint8_t dev)
 
 	if (c == (int)CHAR_RESET) {	 			// trap kill character
 		hw_request_hard_reset();
-		return (_FDEV_ERR);
+		return (_FDEV_OOB);
 	}
 	if (c == (int)CHAR_FEEDHOLD) {			// trap feedhold character
 		cm_request_feedhold();
-		return (_FDEV_ERR);
+		return (_FDEV_OOB);
 	}
 	if (c == (int)CHAR_QUEUE_FLUSH) {		// trap queue flush character
 		cm_request_queue_flush();
-		return (_FDEV_ERR);
+		return (_FDEV_OOB);
 	}
 	if (c == (int)CHAR_CYCLE_START) {		// trap cycle start character
 		cm_request_end_hold();
-		return (_FDEV_ERR);
+		return (_FDEV_OOB);
 	}
 	return (c);
 }
@@ -380,7 +381,14 @@ char_t *readline(devflags_t *flags, uint16_t *size)
 			continue;
 
 		while (xio.d[dev]->read_index < xio.d[dev]->read_buf_size) {
-			if ((c = read_char(dev)) == _FDEV_ERR) break;
+            c = read_char(dev);
+            if(c == _FDEV_ERR) break;
+            else if(c == _FDEV_OOB) {
+                do {
+                    c = read_char(dev);
+                } while(c == _FDEV_OOB);
+                break;
+            }
 			xio.d[dev]->read_buf[xio.d[dev]->read_index] = (char_t)c;
 //			if ((c == '!') || (c == '%') || (c == '~')) {
 //                single_char_buffer[0] = c;
