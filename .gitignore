@@ -10,6 +10,11 @@
 *.aws
 *.atsuo
 *.cproj
+*.log
+.project
+.cproject
+*.launch
+.settings
 \bin
 \build
 build/
