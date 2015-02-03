@@ -138,10 +138,10 @@ namespace Motate {
     pin_number kSocket6_VrefPinNumber           =  -1;//67; //PWMTimer<0>
 
     pin_number kSpindle_EnablePinNumber         =  52;
-    pin_number kSpindle_DirPinNumber            =  -1;//13;
+    pin_number kSpindle_DirPinNumber            =  51;//13;
     pin_number kSpindle_PwmPinNumber            =  11;
     pin_number kSpindle_Pwm2PinNumber           =   9;
-    pin_number kCoolant_EnablePinNumber         =  51;
+    pin_number kCoolant_EnablePinNumber         =  -1;
 
 	pin_number kXAxis_MinPinNumber              =  25;
 	pin_number kXAxis_MaxPinNumber              =  -1;
