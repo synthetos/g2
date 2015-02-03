@@ -463,6 +463,17 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidb",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[1], 0},
 	{ "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
+    
+	// fixturing information
+	{ "fxa","fxast",_fipc, 0, tx_print_nul, get_ui8, set_ui8,(float *)&cfg.fx_state_a, 0 },
+	{ "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[0][0], 0 },
+	{ "fxa","fxa1y",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[0][1], 0 },
+	{ "fxa","fxa2x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[1][0], 0 },
+	{ "fxa","fxa2y",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[1][1], 0 },
+	{ "fxa","fxa3x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[2][0], 0 },
+	{ "fxa","fxa3y",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[2][1], 0 },
+	{ "fxa","fxa4x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[3][0], 0 },
+	{ "fxa","fxa4y",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[3][1], 0 },
 
 	// System parameters
 	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
@@ -681,6 +692,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","prb",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// probing state group
 	{ "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
 	{ "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
+	{ "","fxa",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// fixturing group a
 
 	{ "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udb", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
