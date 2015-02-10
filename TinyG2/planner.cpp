@@ -358,27 +358,27 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 {
 	if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
 		mpBuf_t *w = mb.w;
+        mb.w = mb.w->nx;
 //		mpBuf_t *nx = mb.w->nx;					// save linked list pointers
 //		mpBuf_t *pv = mb.w->pv;
 //		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
 //		w->nx = nx;								// restore pointers
 //		w->pv = pv;
-        mp_clear_buffer(mb.w);
+        mp_clear_buffer(w);
 		w->buffer_state = MP_BUFFER_PLANNING;
 		mb.buffers_available--;
-		mb.w = w->nx;
 		return (w);
 	}
 	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, NULL);
 	return (NULL);
 }
 
-void mp_unget_write_buffer()
-{
-	mb.w = mb.w->pv;							// queued --> write
-	mb.w->buffer_state = MP_BUFFER_EMPTY; 		// not loading anymore
-	mb.buffers_available++;
-}
+//void mp_unget_write_buffer()
+//{
+//	mb.w = mb.w->pv;							// queued --> write
+//	mb.w->buffer_state = MP_BUFFER_EMPTY; 		// not loading anymore
+//	mb.buffers_available++;
+//}
 
 
 /*** WARNING: The routine calling mp_commit_write_buffer() must not use the write buffer
@@ -615,9 +615,10 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 {
     _audit_buffers();
 
-	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
+    mpBuf_t *r = mb.r;
 	mb.r = mb.r->nx;							// advance to next run buffer
+    mp_clear_buffer(r);						// clear it out (& reset replannable)
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
     } else {
