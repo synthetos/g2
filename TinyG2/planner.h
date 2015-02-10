@@ -85,7 +85,7 @@ enum sectionState {
 //	#define MIN_ARC_SEGMENT_USEC ((float)10000)		// minimum arc segment time
 //#endif
 //#ifdef __ARM
-    #define MIN_PLANNED_USEC     ((float)20000)     // minimum time in the planner below which we must replan immediately
+    #define MIN_PLANNED_USEC     ((float)30000)     // minimum time in the planner below which we must replan immediately
 
     #define PHAT_CITY_USEC       ((float)20000)     // if you have at least this much time in the planner,
                                                     // you can do whatever you want! (Including send SRs.)
@@ -165,10 +165,12 @@ enum mpBufferState {				// bf->buffer_state values
 typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *pv;			// static pointer to previous buffer
 	struct mpBuffer *nx;			// static pointer to next buffer
+
+    // If you rearrange this structure, you *MUST* change mp_clear_buffer!!
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
 	cm_exec_t cm_func;				// callback to canonical machine execution function
 
-	uint8_t buffer_state;			// used to manage queuing/dequeuing
+	mpBufferState buffer_state;			// used to manage queuing/dequeuing
 	uint8_t move_type;				// used to dispatch to run routine
 	uint8_t move_code;				// byte that can be used by used exec functions
 	uint8_t move_state;				// move state machine sequence

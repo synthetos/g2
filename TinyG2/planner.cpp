@@ -358,11 +358,12 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 {
 	if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
 		mpBuf_t *w = mb.w;
-		mpBuf_t *nx = mb.w->nx;					// save linked list pointers
-		mpBuf_t *pv = mb.w->pv;
-		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
-		w->nx = nx;								// restore pointers
-		w->pv = pv;
+//		mpBuf_t *nx = mb.w->nx;					// save linked list pointers
+//		mpBuf_t *pv = mb.w->pv;
+//		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
+//		w->nx = nx;								// restore pointers
+//		w->pv = pv;
+        mp_clear_buffer(mb.w);
 		w->buffer_state = MP_BUFFER_PLANNING;
 		mb.buffers_available--;
 		mb.w = w->nx;
@@ -510,6 +511,90 @@ void mp_planner_time_accounting() {
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+void _audit_buffers() {
+    __disable_irq();
+
+    // Current buffer should be in the running state.
+    if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
+        while (1) {
+            __NOP();
+        }
+    }
+
+    // Check that the next from the previous is correct.
+    if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
+        while (1) {
+            __NOP();
+        }
+    }
+
+    // Now check every buffer, in order we would execute them.
+    mpBuf_t *bf = mb.r->nx;
+    while (bf != mb.r) {
+        // Check that the next from the previous is correct.
+        if (bf->pv->nx != bf || bf->nx->pv != bf){
+            while (1) {
+                __NOP();
+            }
+        }
+
+        // We SHOUDN'T see and PENDING buffers -- we haven't marked one as PENDING yet
+        if (bf->buffer_state == MP_BUFFER_PENDING) {
+            while (1) {
+                __NOP();
+            }
+        }
+
+        // Order should be:
+        //  - MP_BUFFER_RUNNING
+        //  - MP_BUFFER_QUEUED (zero or more)
+        //  - MP_BUFFER_PLANNING (zero or more)
+        //  - MP_BUFFER_EMPTY (zero or more up until mb.r)
+        //  - no more
+
+        // After RUNNING, we can see anything but PENDING, but prefer not to find PLANNING
+        if (bf->pv->buffer_state == MP_BUFFER_RUNNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+            // Exception: PLANNING is allowed, but we may want to watch for it:
+            if (bf->buffer_state == MP_BUFFER_PLANNING) {
+                __NOP();
+            } else {
+                while (1) {
+                    __NOP();
+                }
+            }
+        }
+
+        // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
+        if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+            while (1) {
+                __NOP();
+            }
+        }
+
+        // After PLANNING, we can see PLANNING, or EMPTY
+        if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+            while (1) {
+                __NOP();
+            }
+        }
+
+        // After EMPTY, we should only see EMPTY
+        if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
+            while (1) {
+                __NOP();
+            }
+        }
+
+        // Now look at the next one.
+        bf = bf->nx;
+    }
+
+    __enable_irq();
+}
+#pragma GCC pop_options
+
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
@@ -528,12 +613,16 @@ mpBuf_t * mp_get_run_buffer()
 
 uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 {
+    _audit_buffers();
+
 	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	mb.r = mb.r->nx;							// advance to next run buffer
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
-	}
+    } else {
+//        __NOP(); // something to get ahold of in debugging
+    }
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
 	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
@@ -565,21 +654,18 @@ mpBuf_t * mp_get_last_buffer(void)
 
 void mp_clear_buffer(mpBuf_t *bf)
 {
-	mpBuf_t *nx = bf->nx;			// save pointers
-	mpBuf_t *pv = bf->pv;
-	memset(bf, 0, sizeof(mpBuf_t));
-	bf->nx = nx;					// restore pointers
-	bf->pv = pv;
+    // bf->bf_func is the first address we wish to clear
+	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2));
 }
 
-void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
-{
-	mpBuf_t *nx = bf->nx;			// save pointers
-	mpBuf_t *pv = bf->pv;
- 	memcpy(bf, bp, sizeof(mpBuf_t));
-	bf->nx = nx;					// restore pointers
-	bf->pv = pv;
-}
+//void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
+//{
+//	mpBuf_t *nx = bf->nx;			// save pointers
+//	mpBuf_t *pv = bf->pv;
+// 	memcpy(bf, bp, sizeof(mpBuf_t));
+//	bf->nx = nx;					// restore pointers
+//	bf->pv = pv;
+//}
 
 #ifdef __DEBUG	// currently this routine is only used by debug routines
 uint8_t mp_get_buffer_index(mpBuf_t *bf)
