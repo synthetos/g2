@@ -117,8 +117,6 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	// exit if the move has zero movement. At all.
 	if (fp_ZERO(length)) {
-//	if (fp_ZERO(axis_length[AXIS_X]) && fp_ZERO(axis_length[AXIS_Y]) && fp_ZERO(axis_length[AXIS_Z]) &&
-//		fp_ZERO(axis_length[AXIS_A]) && fp_ZERO(axis_length[AXIS_B]) && fp_ZERO(axis_length[AXIS_C])) {
 		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
         plan_debug_pin1 = 0;
 		return (STAT_MINIMUM_LENGTH_MOVE);
@@ -132,26 +130,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	//	(2) Previous block is optimally planned. Vi = previous block's exit_velocity
 	//	(3) Previous block is not optimally planned. Vi <= previous block's entry_velocity + delta_velocity
 
-	_calc_move_times(gm_in, axis_length, axis_square);						// set move time and minimum time in the state
-
-//	if (gm_in->move_time < MIN_BLOCK_TIME) {
-/*		float delta_velocity = pow(length, 0.66666666) * mm.cbrt_jerk;		// max velocity change for this move - uses jerk from previous move
-		float entry_velocity = 0;											// pre-set as if no previous block
-		if ((bf = mp_get_run_buffer()) != NULL) {
-			if (bf->replannable == true) {									// not optimally planned
-				entry_velocity = bf->entry_velocity + bf->delta_vmax;
-			} else {														// optimally planned
-				entry_velocity = bf->exit_velocity;
-			}
-		}
-		float move_time = (2 * length) / (2*entry_velocity + delta_velocity);// compute execution time for this move
-		if (move_time < MIN_BLOCK_TIME) {
-			sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
-*/
-//            plan_debug_pin1 = 0;
-//			return (STAT_MINIMUM_TIME_MOVE);
-//		}
-//	}
+	_calc_move_times(gm_in, axis_length, axis_square);					// set move time and minimum time in the state
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) {							// never supposed to fail
