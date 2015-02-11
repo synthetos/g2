@@ -121,7 +121,6 @@
 //#include "settings/settings_shapeoko2.h"				// Shapeoko2 standard kit
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
-
 //#include "settings/settings_Ultimaker.h"
 //#include "settings/settings_Ultimaker_Rob_v9h.h"
 

@@ -409,7 +409,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
     }
 
     qr_request_queue_report(+1);				// request a QR and add to the "added buffers" count
-    
+
 }
 
 stat_t mp_plan_buffer()
@@ -469,7 +469,7 @@ bool mp_is_it_phat_city_time() {
 	if(cm.hold_state == FEEDHOLD_HOLD) {
 		return true;
 	}
-	
+
     mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
     return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
@@ -615,10 +615,10 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 {
     _audit_buffers();
 
-//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
     mpBuf_t *r = mb.r;
 	mb.r = mb.r->nx;							// advance to next run buffer
-    mp_clear_buffer(r);						// clear it out (& reset replannable)
+    mp_clear_buffer(r);							// clear it out (& reset replannable)
+//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
     } else {
