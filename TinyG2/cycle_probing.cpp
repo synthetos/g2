@@ -115,8 +115,25 @@ uint8_t _set_pb_func(uint8_t (*func)())
  *	to cm_get_runtime_busy() is about.
  */
 
+int8_t _read_switch()
+{
+#ifndef __NEW_SWITCHES
+    return read_switch(pb.probe_switch);
+#else
+    return read_switch(pb.probe_switch_axis, pb.probe_switch_position);
+#endif
+}
+
 static void _probe_trigger_feedhold(switch_t *s)
 {
+    // if this feedhold is terminating a probe in progress, set the probe state here,
+    // to ensure it's recorded correctly even if the switch state changes again before
+    // the next call to _probing_backoff
+    if (pb.func == _probing_backoff) {
+        if (cm.probe_state == PROBE_WAITING) {
+            cm.probe_state = _read_switch() == SW_CLOSED ? PROBE_SUCCEEDED : PROBE_FAILED;
+        }
+    }
 	cm_request_feedhold();
 }
 
@@ -162,10 +179,8 @@ uint8_t cm_probing_cycle_callback(void)
 
 static uint8_t _probing_init()
 {
-	// so optimistic... ;)
 	// NOTE: it is *not* an error condition for the probe not to trigger.
 	// it is an error for the limit or homing switches to fire, or for some other configuration error.
-	cm.probe_state = PROBE_FAILED;
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_PROBE;
 
@@ -233,17 +248,10 @@ static uint8_t _probing_init()
 
 static stat_t _probing_start()
 {
-	// initial probe state, don't probe if we're already contacted!
-#ifndef __NEW_SWITCHES
-	int8_t probe = read_switch(pb.probe_switch);
-#else
-	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-#endif
-
-	if( probe==SW_OPEN ) {
-		cm_straight_feed(pb.target, pb.flags);
-        return (_set_pb_func(_probing_backoff));
-	} else {
+    if( _read_switch() == SW_OPEN ) {
+       cm_straight_feed(pb.target, pb.flags);
+       return (_set_pb_func(_probing_backoff));
+    } else {
         cm.probe_state = PROBE_SUCCEEDED;
         return (_set_pb_func(_probing_finish));
     }
@@ -260,19 +268,20 @@ static stat_t _probing_backoff()
 		cm_end_hold();
 	}
 
-    // If we've contacted, back off & then record position
-    int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
+    // if we didn't already set the probe state in the switch callback, set it now
+    if (cm.probe_state == PROBE_WAITING) {
+        cm.probe_state = (_read_switch() == SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
+    }
     
-    if( probe == SW_CLOSED ) {
-        cm.probe_state = PROBE_SUCCEEDED;
+    // if the switch is still closed, back off until it opens again.
+    // if the switch has reopened (e.g. if the probe connection was flaky or the object
+    // being probed has moved), we don't back off - treat current position as final.
+    if( cm.probe_state == PROBE_SUCCEEDED && _read_switch() == SW_CLOSED) {
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
         cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
         cm_straight_feed(pb.start_position, pb.flags);
-        return (_set_pb_func(_probing_finish));
-    } else {
-        cm.probe_state = PROBE_FAILED;
-        return (_set_pb_func(_probing_finish));
     }
+    return (_set_pb_func(_probing_finish));
 }
 
 /*
@@ -281,12 +290,6 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
-    // Since any motion we take can be ended prematurely by a feedhold...
-	if(cm.hold_state == FEEDHOLD_HOLD) {
-		mp_flush_planner();
-		cm_end_hold();
-	}
-    
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 		float position = cm_get_absolute_position(RUNTIME, axis);
         
@@ -319,9 +322,11 @@ static stat_t _probing_finish()
 
 static void _probe_restore_settings()
 {
-	mp_flush_planner();
-	if(cm.hold_state == FEEDHOLD_HOLD);
+    // Since any motion we take can be ended prematurely by a feedhold...
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+		mp_flush_planner();
 		cm_end_hold();
+	}
 
 #ifndef __NEW_SWITCHES // restore switch settings (old style)
 	sw.switch_type = pb.saved_switch_type;
