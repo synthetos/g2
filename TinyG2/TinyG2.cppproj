@@ -681,6 +681,14 @@
       </ArmGccCpp>
     </ToolchainSettings>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'sbv300' ">
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s PLATFORM=sbv300 MKDIR=gmkdir</BuildTarget>
+    <CleanTarget>clean PLATFORM=sbv300 MKDIR=gmkdir</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputPath>bin\sbv300\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
       <SubType>compile</SubType>
@@ -983,6 +991,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\due\shopbotShield-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\sbv300\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\board\sbv300\sbv300-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9d-pinout.h">
@@ -1351,6 +1365,7 @@
     <Folder Include="arduino" />
     <Folder Include="motate" />
     <Folder Include="motate\utility" />
+    <Folder Include="platform\atmel_sam\board\sbv300" />
     <Folder Include="tests" />
     <Folder Include="platform\atmel_sam\board\" />
     <Folder Include="platform\atmel_sam\board\due\" />
