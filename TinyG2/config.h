@@ -100,6 +100,8 @@
  *
  *	   Note that matching will occur from the most specific to the least specific, meaning that
  *	   if tokens overlap the longer one should be earlier in the array: "gco" should precede "gc".
+ *
+ *	 - Update TINYG_CONFIG_VERSION after making changes to the config interface
  */
 
 /**** nvObj lists ****

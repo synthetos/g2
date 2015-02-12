@@ -38,11 +38,11 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.64 // add storage for fixturing information
+#define TINYG_FIRMWARE_BUILD   		072.65 // probe cycle improvements
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
-#define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
+#define TINYG_CONFIG_VERSION		6							// add fxa slot for fixturing information
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
