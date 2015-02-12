@@ -373,11 +373,6 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 	if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
 		mpBuf_t *w = mb.w;
         mb.w = mb.w->nx;
-//		mpBuf_t *nx = mb.w->nx;					// save linked list pointers
-//		mpBuf_t *pv = mb.w->pv;
-//		memset(mb.w, 0, sizeof(mpBuf_t));		// clear all values
-//		w->nx = nx;								// restore pointers
-//		w->pv = pv;
         _clear_buffer(w);
 		w->buffer_state = MP_BUFFER_PLANNING;
 		mb.buffers_available--;
@@ -411,7 +406,7 @@ void mp_commit_write_buffer(const uint8_t move_type)
             if(cm.hold_state != FEEDHOLD_HOLD)
                 st_request_exec_move();					// requests an exec if the runtime is not busy
             // NB: BEWARE! the exec may result in the planner buffer being
-            // processed immediately and then freed - invalidating the contents
+            // processed IMMEDIATELY and then freed - invalidating the contents
         }
     } else {
         mb.needs_replanned = 1;
@@ -428,8 +423,6 @@ void mp_commit_write_buffer(const uint8_t move_type)
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
-//	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-//		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
 		mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
@@ -446,14 +439,11 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 
 	mpBuf_t *r = mb.r;
 	mb.r = mb.r->nx;							// advance to next run buffer
-	_clear_buffer(r);							// clear it out (& reset replannable)
-	//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
-//	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-//		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
+	_clear_buffer(r);							// clear it out (& reset replannable and set MP_BUFFER_EMPTY)
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_RUNNING;	 // run next buffer
 	} else {
-		//        __NOP(); // something to get ahold of in debugging
+		// __NOP(); // something to get ahold of in debugging
 	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
@@ -599,8 +589,6 @@ void mp_planner_time_accounting() {
     }
 
     while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
-//        if ((bp->buffer_state == MP_BUFFER_QUEUED) ||
- //           (bp->buffer_state == MP_BUFFER_PENDING)) {
         if (bp->buffer_state == MP_BUFFER_QUEUED) {
             if (!bp->locked) {
                 if (time_in_planner < MIN_PLANNED_TIME) {
@@ -618,7 +606,6 @@ void mp_planner_time_accounting() {
 
     mb.time_in_planner = time_in_planner;
 }
-
 
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
@@ -649,13 +636,6 @@ static void _audit_buffers()
                 __NOP();
             }
         }
-
-        // We SHOUDN'T see and PENDING buffers -- we haven't marked one as PENDING yet
-//++++        if (bf->buffer_state == MP_BUFFER_PENDING) {
-//           while (1) {
-//                __NOP();
-//            }
-//        }
 
         // Order should be:
         //  - MP_BUFFER_RUNNING
@@ -700,101 +680,9 @@ static void _audit_buffers()
         // Now look at the next one.
         bf = bf->nx;
     }
-
     __enable_irq();
 }
 #pragma GCC pop_options
-
-/*
-<<<<<<< HEAD
-mpBuf_t * mp_get_run_buffer()
-{
-	// CASE: fresh buffer; becomes running if queued or pending
-//	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-//		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
-	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
-        mb.r->buffer_state = MP_BUFFER_RUNNING;
-	}
-	// CASE: asking for the same run buffer for the Nth time
-	if (mb.r->buffer_state == MP_BUFFER_RUNNING) {	// return same buffer
-		return (mb.r);
-	}
-	return (NULL);								// CASE: no queued buffers. fail it.
-}
-
-uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
-{
-    _audit_buffers();
-
-    mpBuf_t *r = mb.r;
-	mb.r = mb.r->nx;							// advance to next run buffer
-    mp_clear_buffer(r);							// clear it out (& reset replannable)
-//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
-	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-//		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffe
-		mb.r->buffer_state = MP_BUFFER_RUNNING;	// pend next buffer
-    } else {
-//        __NOP(); // something to get ahold of in debugging
-    }
-	mb.buffers_available++;
-	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
-	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
-}
-
-mpBuf_t * mp_get_first_buffer(void)
-{
-	return(mp_get_run_buffer());	// returns buffer or NULL if nothing's running
-}
-
-mpBuf_t * mp_get_last_buffer(void)
-{
-	mpBuf_t *bf = mp_get_run_buffer();
-	mpBuf_t *bp = bf;
-
-	if (bf == NULL) return(NULL);
-
-	do {
-		if ((bp->nx->move_state == MOVE_OFF) || (bp->nx == bf)) {
-			return (bp);
-		}
-	} while ((bp = mp_get_next_buffer(bp)) != bf);
-	return (bp);
-}
-
-// Use the macro instead
-//mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) return (bf->pv);
-//mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) return (bf->nx);
-
-void mp_clear_buffer(mpBuf_t *bf)
-{
-    // bf->bf_func is the first address we wish to clear
-	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2));
-}
-
-//void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
-//{
-//	mpBuf_t *nx = bf->nx;			// save pointers
-//	mpBuf_t *pv = bf->pv;
-// 	memcpy(bf, bp, sizeof(mpBuf_t));
-//	bf->nx = nx;					// restore pointers
-//	bf->pv = pv;
-//}
-
-#ifdef __DEBUG	// currently this routine is only used by debug routines
-uint8_t mp_get_buffer_index(mpBuf_t *bf)
-{
-	mpBuf_t *b = bf;				// temp buffer pointer
-
-	for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-		if (b->pv > b) {
-			return (i);
-		}
-		b = b->pv;
-	}
-	return(cm_hard_alarm(PLANNER_BUFFER_POOL_SIZE));	// should never happen
-}
-#endif
-*/
 
 /****************************
  * END OF PLANNER FUNCTIONS *
