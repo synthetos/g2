@@ -185,6 +185,7 @@ ifeq ("$(PLATFORM)","sbv300")
 	# for the code to get the pinout right.
 
 	BASE_PLATFORM=sbv300
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
 	DEVICE_DEFINES += MOTATE_BOARD="sbv300" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
@@ -213,7 +214,8 @@ endif
 ifeq ("$(PLATFORM)","G2v9i")
 
 	BASE_PLATFORM=v9_3x8c
-	SETTINGS_FILE="settings_shapeoko2.h"
+	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_shapeoko2.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
@@ -232,6 +234,10 @@ endif
 #DEVICE_DEFINES += MOTATE_BOARD="G2v9j"
 #
 #endif
+
+# Make sure we pass these into subprocesses (such as gdb)
+export PLATFORM
+export SETTINGS_FILE
 
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
@@ -491,6 +497,7 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
 
 debug: $(OUTPUT_BIN).elf openocd.cfg
 	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"

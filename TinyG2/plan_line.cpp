@@ -239,7 +239,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     bf->real_move_time = 0;
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
-//    mp_plan_block_list(bf, false);				// replan block list
+//	mp_plan_block_list(bf, false);				// replan block list
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
     plan_debug_pin1 = 0;
