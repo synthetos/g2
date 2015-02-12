@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.05 // added profile for Shopbot sbv300 board and makefile mod
+#define TINYG_FIRMWARE_BUILD   		076.06 // comments corrected for M2, M30 behavior
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

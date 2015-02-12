@@ -1384,15 +1384,14 @@ stat_t cm_queue_flush()
  * cm_program_end() implments things slightly differently:
  *	1. Axis offsets are set to G92.1 CANCEL offsets (instead of using G92.2 SUSPEND Offsets)
  *	   Set default coordinate system (uses $gco, not G54)
- *	2. Selected plane is set to default plane ($gpl) (instead of setting it to G54)
+ *	2. Selected plane is set to default plane ($gpl)
  *	3. Distance mode is set to MODE_ABSOLUTE (like G90)
  *	4. Feed rate mode is set to UNITS_PER_MINUTE (like G94)
  * 	5. Not implemented
  *	6. Not implemented
  *	7. The spindle is stopped (like M5)
- *	8. Motion mode is canceled like G80 (not set to G1)
+ *	8. Motion mode is CANCELED like G80 (not set to G1 as per NIST)
  *	9. Coolant is turned off (like M9)
- *	+  Default INCHES or MM units mode is restored ($gun)
  */
 
 static void _exec_program_finalize(float *value, float *flag)
@@ -1414,7 +1413,6 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
-//++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
 		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
