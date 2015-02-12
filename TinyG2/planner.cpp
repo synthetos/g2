@@ -428,8 +428,9 @@ void mp_commit_write_buffer(const uint8_t move_type)
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
-	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-	(mb.r->buffer_state == MP_BUFFER_PENDING)) {
+//	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
+//		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
+	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
 		mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
 	// CASE: asking for the same run buffer for the Nth time
@@ -447,9 +448,11 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 	mb.r = mb.r->nx;							// advance to next run buffer
 	_clear_buffer(r);							// clear it out (& reset replannable)
 	//	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
+//	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
+//		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
-		} else {
+		mb.r->buffer_state = MP_BUFFER_RUNNING;	 // run next buffer
+	} else {
 		//        __NOP(); // something to get ahold of in debugging
 	}
 	mb.buffers_available++;
@@ -619,7 +622,7 @@ void mp_planner_time_accounting() {
 
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
-static void _audit_buffers() 
+static void _audit_buffers()
 {
     __disable_irq();
 
@@ -702,6 +705,7 @@ static void _audit_buffers()
 }
 #pragma GCC pop_options
 
+/*
 <<<<<<< HEAD
 mpBuf_t * mp_get_run_buffer()
 {
@@ -790,9 +794,8 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
 	return(cm_hard_alarm(PLANNER_BUFFER_POOL_SIZE));	// should never happen
 }
 #endif
+*/
 
-=======
->>>>>>> 276c38bd0a54e013988169ae4de37fcd53a7710e
 /****************************
  * END OF PLANNER FUNCTIONS *
  ****************************/
