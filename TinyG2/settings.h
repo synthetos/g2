@@ -87,23 +87,24 @@
 #define JSON_FOOTER_STYLE			2						// 1 = footer w/checksum, 2 = footer w/window slots
 
 #undef JSON_VERBOSITY
-//#define JSON_VERBOSITY				JV_SILENT			// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define JSON_VERBOSITY				JV_LINENUM				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY				JV_VERBOSE				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+
+#undef STATUS_REPORT_VERBOSITY
+#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
 #undef STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","stat"
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","_cs1","_es1","_fe1","_xs1","_cs2","_es2","_fe2","_xs2"
 
-#undef STATUS_REPORT_VERBOSITY
-//#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_VERBOSITY		SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#endif
+#endif // __DEBUG_SETTINGS
 
-/**** MACHINE PROFILES ******************************************************/
-
-// machine default profiles - choose only one:
-
-
+/**** MACHINE PROFILES ******************************************************
+ *
+ * Provide a SETTINGS_FILE in the makefile or compiler command line, e.g:
+ *	SETTINGS_FILE="settings_shopbot_test.h"
+ *
+ * If no file is specified the default settings file will be used
+ */
 #ifdef SETTINGS_FILE
 #define SETTINGS_FILE_PATH <settings/SETTINGS_FILE>
 #include SETTINGS_FILE_PATH
@@ -111,14 +112,12 @@
 #include "settings/settings_default.h"				// Default settings for release
 #endif
 
+// Alternate settings files
 //#include "settings/settings_test.h"					// Settings for testing - not for release
-//#include "settings/settings_hammer.h"					// Hammer torque demo
-//#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_othermill.h"				// OMC OtherMill
-//#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
-//#include "settings/settings_shapeoko375.h"			// Shapeoko 375mm kit
 //#include "settings/settings_shapeoko2.h"				// Shapeoko2 standard kit
+//#include "settings/settings_shopbot_test.h"			// Shopbot test for v9 boards
 //#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
 //#include "settings/settings_Ultimaker.h"
