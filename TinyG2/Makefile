@@ -185,6 +185,7 @@ ifeq ("$(PLATFORM)","sbv300")
 	# for the code to get the pinout right.
 
 	BASE_PLATFORM=sbv300
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
 	DEVICE_DEFINES += MOTATE_BOARD="sbv300" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
