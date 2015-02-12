@@ -43,7 +43,9 @@ enum jsonVerbosity {
 	JV_MESSAGES,					// returns footer, messages (exception and gcode messages)
 	JV_CONFIGS,						// returns footer, messages, config commands
 	JV_LINENUM,						// returns footer, messages, config commands, gcode line numbers if present
-	JV_VERBOSE						// returns footer, messages, config commands, gcode blocks
+	JV_VERBOSE,						// returns footer, messages, config commands, gcode blocks
+	JV_EXCEPTIONS,					// returns only on messages, configs, and non-zero status
+	JV_MAX_VALUE
 };
 
 enum jsonFormats {					// json output print modes

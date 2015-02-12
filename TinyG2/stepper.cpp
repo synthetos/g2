@@ -2,8 +2,8 @@
  * stepper.cpp - stepper motor controls
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -1141,11 +1141,7 @@ void st_request_out_of_band_dwell(float microseconds)
 
 /*
  * _set_hw_microsteps() - set microsteps in hardware
- *
- *	For now the microsteps is the same as the microsteps (1,2,4,8)
- *	This may change if microstep morphing is implemented.
  */
-
 static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
 #ifdef __ARM
@@ -1234,9 +1230,19 @@ stat_t st_set_tr(nvObj_t *nv)			// motor travel per revolution
 
 stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 {
-	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {
+	uint8_t mi = (uint8_t)nv->value;
+	
+#ifdef __AVR
+	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
+//	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {
 		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
 	}
+#endif
+#ifdef __ARM
+	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
+		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
+	}
+#endif
 	set_ui8(nv);						// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(nv);
 	_set_hw_microsteps(_get_motor(nv->index), (uint8_t)nv->value);
@@ -1352,12 +1358,6 @@ static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t unit
 	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
 }
 
-static void _print_motor_flu_units(nvObj_t *nv, const char *format, uint8_t units)
-{
-	if (units == INCHES) nv->value *= INCHES_PER_MM;	// convert value to inches for display
-	_print_motor_flt_units(nv, format, units);
-}
-
 static void _print_motor_flt(nvObj_t *nv, const char *format)
 {
 	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value);
@@ -1365,7 +1365,7 @@ static void _print_motor_flt(nvObj_t *nv, const char *format)
 
 void st_print_ma(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0ma);}
 void st_print_sa(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0sa, DEGREE_INDEX);}
-void st_print_tr(nvObj_t *nv) { _print_motor_flu_units(nv, fmt_0tr, cm_get_units_mode(MODEL));}
+void st_print_tr(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0tr, cm_get_units_mode(MODEL));}
 void st_print_mi(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0mi);}
 void st_print_po(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0po);}
 void st_print_pm(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0pm);}

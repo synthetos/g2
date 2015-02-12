@@ -2,8 +2,8 @@
  * switch.cpp - switch handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -322,20 +322,16 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
  ***********************************************************************************/
 
 #ifdef __TEXT_MODE
-
 	static const char fmt_st[] PROGMEM = "[st]  switch type%18.0f [0=NO,1=NC]\n";
-	void sw_print_st(nvObj_t *nv) { text_print_flt(nv, fmt_st);}
+	static const char fmt_ss[] PROGMEM = "Switch ss%s state: %5.0f\n";
 
-	static const char fmt_ss[] PROGMEM = "Switch ss%s state:     %1.0f\n";
-	void sw_print_ss(nvObj_t *nv) { fprintf(stderr, fmt_ss, nv->token, nv->value);}
+	void sw_print_st(nvObj_t *nv) 
+	{
+		text_print_flt(nv, fmt_st);
+	}
 
-/*
-	static const char msg_sw0[] PROGMEM = "Disabled";
-	static const char msg_sw1[] PROGMEM = "NO homing";
-	static const char msg_sw2[] PROGMEM = "NO homing & limit";
-	static const char msg_sw3[] PROGMEM = "NC homing";
-	static const char msg_sw4[] PROGMEM = "NC homing & limit";
-	static const char *const msg_sw[] PROGMEM = { msg_sw0, msg_sw1, msg_sw2, msg_sw3, msg_sw4 };
-*/
-
+	void sw_print_ss(nvObj_t *nv)
+	{
+		fprintf(stderr, fmt_ss, nv->token, nv->value);
+	}
 #endif
