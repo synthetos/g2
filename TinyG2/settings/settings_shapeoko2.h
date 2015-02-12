@@ -46,7 +46,8 @@
 // *** settings.h overrides ***
 
 #undef MOTOR_POWER_LEVEL
-#define MOTOR_POWER_LEVEL		0.625				// motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL		0.375				// motor power level 0.00 - 1.00 (ARM only)
+//#define MOTOR_POWER_LEVEL		0.625				// motor power level 0.00 - 1.00 (ARM only)
 
 #undef SOFT_LIMIT_ENABLE
 #define SOFT_LIMIT_ENABLE		1					// 0 = off, 1 = on
