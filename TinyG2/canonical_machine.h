@@ -2,7 +2,7 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart Jr.
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
@@ -696,10 +696,14 @@ stat_t cm_get_path(nvObj_t *nv);		// get patch control mode...
 stat_t cm_get_dist(nvObj_t *nv);		// get distance mode...
 stat_t cm_get_frmo(nvObj_t *nv);		// get feedrate mode...
 stat_t cm_get_toolv(nvObj_t *nv);		// get tool (value)
+//stat_t cm_get_pwr(nvObj_t *nv);			// get motor power enable state
+
 stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
+stat_t cm_get_feed(nvObj_t *nv);		// get feed rate, converted to units
 stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
+
 stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
 stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
@@ -775,6 +779,9 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_ra(nvObj_t *nv);
 	void cm_print_sn(nvObj_t *nv);
 	void cm_print_sx(nvObj_t *nv);
+	void cm_print_rn(nvObj_t *nv);
+	void cm_print_rx(nvObj_t *nv);
+
 	void cm_print_sv(nvObj_t *nv);
 	void cm_print_lv(nvObj_t *nv);
 	void cm_print_lb(nvObj_t *nv);
@@ -839,6 +846,9 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_ra tx_print_stub
 	#define cm_print_sn tx_print_stub
 	#define cm_print_sx tx_print_stub
+	#define cm_print_rn tx_print_stub
+	#define cm_print_rx tx_print_stub
+
 	#define cm_print_sv tx_print_stub
 	#define cm_print_lv tx_print_stub
 	#define cm_print_lb tx_print_stub

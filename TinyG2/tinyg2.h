@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.06 // comments corrected for M2, M30 behavior
+#define TINYG_FIRMWARE_BUILD   		076.07 // fixed display bugs - text mode travel-per-rev, microstep warnings, feed rate inches mode, text mode min/max switch type
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

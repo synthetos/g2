@@ -2,8 +2,8 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S Hart, Jr.
- * Copyright (c) 2014 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S Hart, Jr.
+ * Copyright (c) 2014 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -1371,27 +1371,28 @@ stat_t cm_queue_flush()
  *
  * cm_program_end() implements M2 and M30
  * The END behaviors are defined by NIST 3.6.1 are:
- *	1. Axis offsets are set to zero (like G92.2) and origin offsets are set to the default (like G54)
- *	2. Selected plane is set to CANON_PLANE_XY (like G17)
- *	3. Distance mode is set to MODE_ABSOLUTE (like G90)
- *	4. Feed rate mode is set to UNITS_PER_MINUTE (like G94)
- *	5. Feed and speed overrides are set to ON (like M48)
- *	6. Cutter compensation is turned off (like G40)
- *	7. The spindle is stopped (like M5)
- *	8. The current motion mode is set to G_1 (like G1)
- *	9. Coolant is turned off (like M9)
+ *	1a.	Origin offsets are set to the default (like G54)
+ *	1b. Axis offsets are set to zero (like G92.2) 
+ *	2.  Selected plane is set to CANON_PLANE_XY (like G17)
+ *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
+ *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)
+ *	5.  Feed and speed overrides are set to ON (like M48)
+ *	6.  Cutter compensation is turned off (like G40)
+ *	7.  The spindle is stopped (like M5)
+ *	8.  The current motion mode is set to G_1 (like G1)
+ *	9.  Coolant is turned off (like M9)
  *
- * cm_program_end() implments things slightly differently:
- *	1. Axis offsets are set to G92.1 CANCEL offsets (instead of using G92.2 SUSPEND Offsets)
- *	   Set default coordinate system (uses $gco, not G54)
- *	2. Selected plane is set to default plane ($gpl)
- *	3. Distance mode is set to MODE_ABSOLUTE (like G90)
- *	4. Feed rate mode is set to UNITS_PER_MINUTE (like G94)
- * 	5. Not implemented
- *	6. Not implemented
- *	7. The spindle is stopped (like M5)
- *	8. Motion mode is CANCELED like G80 (not set to G1 as per NIST)
- *	9. Coolant is turned off (like M9)
+ * cm_program_end() implments things slightly differently (1a, 8):
+ *	1a. Set default coordinate system (uses $gco, not G54)
+ *	1b. Axis offsets are SUSPENDED (G92.2)
+ *	2.  Selected plane is set to default plane ($gpl)
+ *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
+ *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)
+ * 	5.  Not implemented
+ *	6.  Not implemented
+ *	7.  The spindle is stopped (like M5)
+ *	8.  Motion mode is CANCELED like G80 (not set to G1 as per NIST)
+ *	9.  Coolant is turned off (like M9)
  */
 
 static void _exec_program_finalize(float *value, float *flag)
@@ -1408,8 +1409,8 @@ static void _exec_program_finalize(float *value, float *flag)
 
 	// perform the following resets if it's a program END
 	if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
-//		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
-		cm_suspend_origin_offsets();					// G92.2 - as per Kramer
+		cm_suspend_origin_offsets();					// G92.2 - as per NIST
+//		cm_reset_origin_offsets();						// G92.1 - alternative to above
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
@@ -1772,6 +1773,15 @@ stat_t cm_get_vel(nvObj_t *nv)
 	return (STAT_OK);
 }
 
+stat_t cm_get_feed(nvObj_t *nv)
+{
+	nv->value = cm_get_feed_rate(ACTIVE_MODEL);
+	if (cm_get_units_mode(ACTIVE_MODEL) == INCHES) nv->value *= INCHES_PER_MM;
+	nv->precision = GET_TABLE_WORD(precision);
+	nv->valuetype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
 stat_t cm_get_pos(nvObj_t *nv)
 {
 	nv->value = cm_get_work_position(ACTIVE_MODEL, _get_axis(nv->index));
@@ -2074,8 +2084,10 @@ const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million
 const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
-const char fmt_Xsn[] PROGMEM = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-const char fmt_Xsx[] PROGMEM = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xsn[] PROGMEM = "[%s%s] %s minimum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xsx[] PROGMEM = "[%s%s] %s maximum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xrn[] PROGMEM = "[%s%s] %s minimum switch type%8.0f [0=NO, 1=NC]\n";
+const char fmt_Xrx[] PROGMEM = "[%s%s] %s maximum switch type%8.0f [0=NO, 1=NC]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
 const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";
 const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
@@ -2141,6 +2153,8 @@ void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 void cm_print_sn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsn);}
 void cm_print_sx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsx);}
+void cm_print_rn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrn);}
+void cm_print_rx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrx);}
 void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
 void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
 void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}
