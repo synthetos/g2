@@ -323,8 +323,6 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 
 #ifdef __TEXT_MODE
 	static const char fmt_st[] PROGMEM = "[st]  switch type%18.0f [0=NO,1=NC]\n";
-//	static const char fmt_rn[] PROGMEM = "[%srn] %s minimum switch type: %6.0f [0=NO, 1=NC]\n";
-//	static const char fmt_rx[] PROGMEM = "[%srx] %s maximum switch type: %6.0f [0=NO, 1=NC]\n";
 	static const char fmt_ss[] PROGMEM = "Switch ss%s state: %5.0f\n";
 
 	void sw_print_st(nvObj_t *nv) 
@@ -336,15 +334,4 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	{
 		fprintf(stderr, fmt_ss, nv->token, nv->value);
 	}
-/*
-	void sw_print_rn(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_rn, nv->group, nv->group, nv->value);
-	}
-
-	void sw_print_rx(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_rx, nv->group, nv->group, nv->value);
-	}
-*/
 #endif
