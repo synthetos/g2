@@ -232,6 +232,10 @@ endif
 #
 #endif
 
+# Make sure we pass these into subprocesses (such as gdb)
+export PLATFORM
+export SETTINGS_FILE
+
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
 endif
@@ -490,6 +494,7 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
 
 debug: $(OUTPUT_BIN).elf openocd.cfg
 	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"
