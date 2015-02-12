@@ -53,11 +53,11 @@ rxSingleton_t rx;
  *
  * Returns incoming status value
  *
- * You can use the 'info' string to add additional JSON which will be appended to the 
- * er: object. Ideally the string should be formatted according to the JSON mode in effect, 
- * but short of this a properly strict formatted string will suffice. 
+ * You can use the 'info' string to add additional JSON which will be appended to the
+ * er: object. Ideally the string should be formatted according to the JSON mode in effect,
+ * but short of this a properly strict formatted string will suffice.
  * Pass info as NULL to skip this feature.
- * Do not use global_string_buf[] as *info or it will get trampled. 
+ * Do not use global_string_buf[] as *info or it will get trampled.
  * See cm_hard_alarm() for an example of use.
  *
  * WARNING: Do not call this function from MED or HI interrupts (LO is OK)
@@ -83,7 +83,7 @@ stat_t rpt_exception(uint8_t status, char_t *info)
 			} else {
 				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			}			
+			}
 		}
 		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
 			// Fancy place for a breakpoint, if your code asplodes.
@@ -313,7 +313,6 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
         sr_debug_pin3 = 0;
         return (STAT_NOOP);
     }
-
 
 	if (sr.status_report_request == SR_VERBOSE) {
 		_populate_unfiltered_status_report();
