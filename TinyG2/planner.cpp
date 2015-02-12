@@ -490,9 +490,9 @@ void mp_planner_time_accounting() {
     }
 
     while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
-        if ((bp->buffer_state == MP_BUFFER_QUEUED) ||
-            (bp->buffer_state == MP_BUFFER_PENDING))
-        {
+//        if ((bp->buffer_state == MP_BUFFER_QUEUED) ||
+ //           (bp->buffer_state == MP_BUFFER_PENDING)) {
+        if (bp->buffer_state == MP_BUFFER_QUEUED) {
             if (!bp->locked) {
                 if (time_in_planner < MIN_PLANNED_TIME) {
                     bp->locked = true;;
@@ -541,11 +541,11 @@ void _audit_buffers() {
         }
 
         // We SHOUDN'T see and PENDING buffers -- we haven't marked one as PENDING yet
-        if (bf->buffer_state == MP_BUFFER_PENDING) {
-            while (1) {
-                __NOP();
-            }
-        }
+//++++        if (bf->buffer_state == MP_BUFFER_PENDING) {
+//           while (1) {
+//                __NOP();
+//            }
+//        }
 
         // Order should be:
         //  - MP_BUFFER_RUNNING
@@ -598,10 +598,9 @@ void _audit_buffers() {
 mpBuf_t * mp_get_run_buffer()
 {
 	// CASE: fresh buffer; becomes running if queued or pending
-	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
-		(mb.r->buffer_state == MP_BUFFER_PENDING)
-        )
-    {
+//	if ((mb.r->buffer_state == MP_BUFFER_QUEUED) ||
+//		(mb.r->buffer_state == MP_BUFFER_PENDING)) {
+	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
 	}
 	// CASE: asking for the same run buffer for the Nth time
@@ -620,7 +619,8 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
     mp_clear_buffer(r);							// clear it out (& reset replannable)
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffer
+//		mb.r->buffer_state = MP_BUFFER_PENDING;	// pend next buffe
+		mb.r->buffer_state = MP_BUFFER_RUNNING;	// pend next buffer
     } else {
 //        __NOP(); // something to get ahold of in debugging
     }

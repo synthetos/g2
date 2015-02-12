@@ -158,7 +158,7 @@ enum mpBufferState {				// bf->buffer_state values
 	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
     MP_BUFFER_PLANNING,             // being written ("checked out") for planning
 	MP_BUFFER_QUEUED,				// in queue
-	MP_BUFFER_PENDING,				// marked as the next buffer to run
+//	MP_BUFFER_PENDING,				// marked as the next buffer to run
 	MP_BUFFER_RUNNING				// current running buffer
 };
 

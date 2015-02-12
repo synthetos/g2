@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.01 // reserve 076.xx for shopbot-edge branch
+#define TINYG_FIRMWARE_BUILD   		076.01 // removed PENDING state
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
