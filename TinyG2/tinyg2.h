@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.02 // cleaned up planner.cpp expunging old code; added shopbot_test profile
+#define TINYG_FIRMWARE_BUILD   		076.03 // re-activated phat_city tests in report.cpp
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
