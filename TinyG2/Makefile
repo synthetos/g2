@@ -214,8 +214,8 @@ endif
 ifeq ("$(PLATFORM)","G2v9i")
 
 	BASE_PLATFORM=v9_3x8c
-	SETTINGS_FILE="settings_shopbot_test.h"
-#	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shopbot_test.h"
+	SETTINGS_FILE="settings_shapeoko2.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
@@ -282,7 +282,7 @@ ifeq ("$(BASE_PLATFORM)","sbv300")
     CMSIS_ROOT = CMSIS
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/sbv300
-	
+
 	include $(PLATFORM_BASE).mk
 endif
 

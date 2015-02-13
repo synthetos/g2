@@ -63,6 +63,7 @@
 #define STATUS_REPORT_MIN_MS		100						// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250						// milliseconds - set $SV=0 to disable
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+// ALternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF					// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -112,16 +113,15 @@
 #include "settings/settings_default.h"				// Default settings for release
 #endif
 
-// Alternate settings files
-//#include "settings/settings_test.h"					// Settings for testing - not for release
+// Alternate settings files that may be available in the project:
 //#include "settings/settings_othermill.h"				// OMC OtherMill
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
 //#include "settings/settings_shapeoko2.h"				// Shapeoko2 standard kit
 //#include "settings/settings_shopbot_test.h"			// Shopbot test for v9 boards
-//#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
-//#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
-//#include "settings/settings_Ultimaker.h"
+//#include "settings/settings_shopbot_sbv300.h"			// Shopbot sbv300 board profile
+//#include "settings/settings_Ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_Ultimaker_Rob_v9h.h"
+//#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
 
 /*** Handle optional modules that may not be in every machine ***/
 
