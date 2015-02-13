@@ -89,7 +89,6 @@ void json_parser(char_t *str)
 	stat_t status = _json_parser_kernal(str);
 	if (status == STAT_COMPLETE) return;	// skip the print if returning from something at already did it.
 	nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-//	sr_request_status_report(SR_REQUEST_IMMEDIATE); // generate incremental status report to show any changes
 	sr_request_status_report(SR_REQUEST_TIMED); // generate incremental status report to show any changes
 }
 
