@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shapeoko2 500mm table
+ * settings_shapeoko2.h - Shapeoko2 500mm table
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -58,8 +58,8 @@
 #undef COMM_MODE
 #define COMM_MODE				JSON_MODE
 
-#undef JSON_VERBOSITY
-#define JSON_VERBOSITY			JV_EXCEPTIONS		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE, JV_EXCEPTIONS
+//#undef JSON_VERBOSITY
+//#define JSON_VERBOSITY			JV_EXCEPTIONS		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE, JV_EXCEPTIONS
 
 #undef STATUS_REPORT_VERBOSITY
 #define STATUS_REPORT_VERBOSITY		SR_FILTERED		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE

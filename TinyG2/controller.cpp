@@ -2,8 +2,8 @@
  * controller.cpp - tinyg controller and top level parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -319,7 +319,7 @@ static stat_t _check_for_phat_city_time(void) {
     if (mp_is_it_phat_city_time()) {
         return STAT_OK;
     }
-    
+
     return STAT_EAGAIN;
 }
 

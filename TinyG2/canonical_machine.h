@@ -237,6 +237,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
 	uint8_t hold_state;					// hold: feedhold sub-state machine
+	uint8_t interlock_state;			// true if interlock has been triggered
+	uint8_t estop_state;				// true if estop has been triggered
 	uint8_t homing_state;				// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
 
@@ -248,12 +250,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t deferred_write_flag;		// G10 data has changed (e.g. offsets) - flag to persist them
 	uint8_t feedhold_requested;			// feedhold character has been received
 	uint8_t queue_flush_requested;		// queue flush character has been received
-	uint8_t end_hold_requested;		// cycle start character has been received (flag to end feedhold)
+	uint8_t end_hold_requested;			// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
-
-	uint8_t interlock_state;            // Whether interlock has been triggered
-	uint8_t estop_state;                // Whether estop has been triggered
 
 	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
 

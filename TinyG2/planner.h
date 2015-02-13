@@ -97,14 +97,6 @@ enum sectionState {
 
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
-/* PLANNER_STARTUP_DELAY_SECONDS
- *	Used to introduce a short dwell before planning an idle machine.
- *  If you don;t do this the first block will always plan to zero as it will
- *	start executing before the next block arrives from the serial port.
- *	This causes the machine to stutter once on startup.
- */
-//#define PLANNER_STARTUP_DELAY_SECONDS ((float)0.05)	// in seconds
-
 /* PLANNER_BUFFER_POOL_SIZE
  *	Should be at least the number of buffers requires to support optimal
  *	planning in the case of very short lines or arc segments.
@@ -145,7 +137,6 @@ enum mpBufferState {				// bf->buffer_state values
 	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
     MP_BUFFER_PLANNING,             // being written ("checked out") for planning
 	MP_BUFFER_QUEUED,				// in queue
-//	MP_BUFFER_PENDING,				// marked as the next buffer to run
 	MP_BUFFER_RUNNING				// current running buffer
 };
 

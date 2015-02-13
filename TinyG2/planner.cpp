@@ -2,8 +2,8 @@
  * planner.cpp - Cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2014 Rob Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2015 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -454,12 +454,12 @@ uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) return (bf->pv);
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) return (bf->nx);
 
-/* UNUSED
 mpBuf_t * mp_get_first_buffer(void)
 {
 	return(mp_get_run_buffer());	// returns buffer or NULL if nothing's running
 }
 
+/* UNUSED
 mpBuf_t * mp_get_last_buffer(void)
 {
 	mpBuf_t *bf = mp_get_run_buffer();

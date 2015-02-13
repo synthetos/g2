@@ -2,7 +2,7 @@
  * json_parser.cpp - JSON parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -570,9 +570,12 @@ void json_print_response(uint8_t status)
 	return;
 #endif
 
-	if (js.json_verbosity == JV_SILENT) return;				// no responses
+	if (js.json_verbosity == JV_SILENT) return;				// silent means no responses
 
-	if ((js.json_verbosity == JV_EXCEPTIONS) && (status == STAT_OK)) return; // exceptions only
+	if (js.json_verbosity == JV_EXCEPTIONS)					// cutout for JV_EXCEPTIONS mode
+		if (status == STAT_OK)
+			if (cm.machine_state != MACHINE_INITIALIZING)	// always do full echo during startup
+				return;
 
 	// Body processing
 	nvObj_t *nv = nv_body;

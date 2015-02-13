@@ -61,8 +61,9 @@ switches_t sw;
 //static void _no_action(switch_t *s);
 //static void _led_on(switch_t *s);
 //static void _led_off(switch_t *s);
-static void _trigger_feedhold(switch_t *s);
-static void _trigger_cycle_start(switch_t *s);
+
+//static void _trigger_feedhold(switch_t *s);
+//static void _trigger_cycle_start(switch_t *s);
 static void _trigger_alarm(switch_t *s);
 
 static void _no_action(switch_t *s) { return; }
@@ -204,25 +205,27 @@ int8_t poll_switch(switch_t *s, uint8_t pin_value)
 	s->debounce_timeout = (SysTickTimer.getValue() + s->debounce_ticks);
 	return (true);
 }
-
+/* UNUSED
 static void _trigger_feedhold(switch_t *s)
 {
-    //	IndicatorLed.toggle();
+ //	IndicatorLed.toggle();
 	cm_request_feedhold();
-/*
-	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
-		cm_request_feedhold();
-	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
-		cm.limit_tripped_flag = true;
-	}
-*/
-}
 
+//	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
+//		cm_request_feedhold();
+//	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
+//		cm.limit_tripped_flag = true;
+//	}
+}
+*/
+
+/* UNUSED
 static void _trigger_cycle_start(switch_t *s)
 {
 //	IndicatorLed.toggle();
 	cm_request_end_hold();
 }
+*/
 
 static void _trigger_alarm(switch_t *s)
 {
@@ -325,7 +328,7 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	static const char fmt_st[] PROGMEM = "[st]  switch type%18.0f [0=NO,1=NC]\n";
 	static const char fmt_ss[] PROGMEM = "Switch ss%s state: %5.0f\n";
 
-	void sw_print_st(nvObj_t *nv) 
+	void sw_print_st(nvObj_t *nv)
 	{
 		text_print_flt(nv, fmt_st);
 	}

@@ -615,7 +615,7 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 
 	float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
 
-#if NEW_JUNCTION
+#ifdef __NEW_JUNCTION
     float delta_over_costheta = delta / costheta;
     float radius = sqrt(delta_over_costheta * delta_over_costheta - delta * delta);
 	return((radius * cm.junction_acceleration) / delta);
@@ -681,12 +681,13 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
  *		  code in this module, but the code is so complicated I just left it
  *		  organized for clarity and hoped for the best from compiler optimization.
  */
-
+/* UNUSED
 static float _compute_next_segment_velocity()
 {
 	if (mr.section == SECTION_BODY) return (mr.segment_velocity);
 	return (mr.segment_velocity + mr.forward_diff_5);
 }
+*/
 
 stat_t mp_plan_hold_callback()
 {
@@ -710,7 +711,7 @@ stat_t mp_start_hold()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_IMMEDIATE);
 
     mpBuf_t *bp = mp_get_run_buffer(); // Force it to use the run buffer
 
