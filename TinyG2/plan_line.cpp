@@ -688,7 +688,7 @@ static float _compute_next_segment_velocity()
 	return (mr.segment_velocity + mr.forward_diff_5);
 }
 */
-
+/*
 stat_t mp_plan_hold_callback()
 {
 	//if we're partway through a hold but the stepper chain has stopped, finish the hold
@@ -703,7 +703,7 @@ stat_t mp_plan_hold_callback()
     // Preparing to REMOVE this function!
     return (STAT_NOOP);
 }
-
+*/
 /*
  * mp_start_hold() - called from the stepper chain when the hold takes effect
  */

@@ -165,7 +165,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// start a new move by setting up local context (singleton)
 	if (mr.move_state == MOVE_OFF) {
-		if (cm.hold_state == FEEDHOLD_READY_TO_HOLD) {
+		if (cm.hold_state == FEEDHOLD_END_DECEL) {
 			mp_start_hold();
             exec_debug_pin3 = 0;
 			return (STAT_NOOP);	// stops here if holding
@@ -192,7 +192,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Feedhold processing. Refer to canonical_machine.h for state machine
         // Catch the feedhold request begin deceleration immediately.
         if (cm.hold_state == FEEDHOLD_SYNC) {
-            cm.hold_state = FEEDHOLD_DECEL;
+            cm.hold_state = FEEDHOLD_START_DECEL;
         }
 
         bf->move_state = MOVE_RUN;
@@ -200,21 +200,27 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // If we are in a feedhold and this is a new gcode block we are going
         // to modify the block to decel to a stop as fast as possible
-        if (cm.hold_state == FEEDHOLD_DECEL) {
+        if (cm.hold_state == FEEDHOLD_START_DECEL) {
+            cm.hold_state = FEEDHOLD_END_DECEL;
             mr.section = SECTION_TAIL;
             mr.section_state = SECTION_NEW;
             mr.jerk = bf->jerk;
 
-            mr.entry_velocity = mr.segment_velocity;
-            mr.cruise_velocity = mr.segment_velocity;
-
-            float mr_available_length = bf->length;
-            float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
-            mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, braking_length, bf));
-
             mr.head_length = 0;
             mr.body_length = 0;
-            mr.tail_length = braking_length;
+            mr.tail_length = bf->length;
+
+            mr.entry_velocity = mr.segment_velocity;
+            mr.cruise_velocity = mr.segment_velocity;
+            mr.exit_velocity = 0;
+
+//            float mr_available_length = bf->length;
+//            float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
+//            mr.available_length = bf->length;
+//            mr.braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr.available_length);
+//            mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, mr.braking_length, bf));
+
+//            mr.tail_length = mr.braking_length;
 
         } else {    // it's a regular block - no feedhold
             // Update the mb times -- we can "guess" quite accurately but we still need a full
@@ -248,10 +254,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold processing. Refer to canonical_machine.h for state machine
     // Catch the feedhold request begin deceleration immediately.
     // If we catch it here, we're in the middle of a section (block) -- plan accordingly.
-    if (cm.hold_state == FEEDHOLD_SYNC) {
-        cm.hold_state = FEEDHOLD_DECEL;
+    if ((cm.hold_state == FEEDHOLD_SYNC) || (cm.hold_state == FEEDHOLD_START_DECEL)) {
 
-        // We're going to fabricate starting a tail-only move from here.
+        // We're going to try to fabricate starting a tail-only move from here.
         // We'll decelerate as fast as we can in the space we have.
 
         if (mr.section == SECTION_BODY) {
@@ -264,14 +269,24 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section = SECTION_TAIL;
         mr.section_state = SECTION_NEW;
         mr.jerk = bf->jerk;
-
-        float mr_available_length = get_axis_vector_length(mr.target, mr.position);
-        float braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr_available_length);
-        mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, braking_length, bf));
-
         mr.head_length = 0;
         mr.body_length = 0;
-        mr.tail_length = braking_length;
+
+//        float mr_available_length = get_axis_vector_length(mr.target, mr.position);
+        mr.available_length = get_axis_vector_length(mr.target, mr.position);
+        mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
+
+        if (mr.available_length < mr.tail_length) { // meaning the deceleration must span multiple moves
+            cm.hold_state = FEEDHOLD_START_DECEL;
+            mr.tail_length = mr.available_length;
+            mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
+        } else { // meaning the deceleration will fit onto the current move
+            cm.hold_state = FEEDHOLD_END_DECEL;
+            mr.exit_velocity = 0;
+        }
+//        mr.braking_length = min(mp_get_target_length(mr.cruise_velocity, 0, bf), mr.available_length);
+//        mr.exit_velocity = max(0, mr.cruise_velocity - mp_get_target_velocity(0, mr.braking_length, bf));
+//        mr.tail_length = mr.braking_length;
     }
 
     // NB: from this point on the contents of the bf buffer do not affect execution
@@ -285,8 +300,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
 
 	// Look for the end of the decel to go into HOLD state
-    if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity)) {
-        cm.hold_state = FEEDHOLD_READY_TO_HOLD;
+//    if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity)) {
+    if ((cm.hold_state == FEEDHOLD_END_DECEL) && (status == STAT_OK)) {
+//        cm.hold_state = FEEDHOLD_READY_TO_HOLD;
+        cm.hold_state = FEEDHOLD_HOLD;
         bf->move_state = MOVE_NEW;
     }
 
@@ -551,7 +568,7 @@ static stat_t _exec_aline_tail()
 			// However, if it returns from that as STAT_OK, then there was only one segment in this section.
 			// Show that we did complete section 2 ... effectively.
 			mr.section_state = SECTION_2nd_HALF;
-			return STAT_OK;
+			return(STAT_OK);                                        // STAT_OK completes the move
 		} else {
 			mr.section_state = SECTION_2nd_HALF;
 		}
@@ -559,8 +576,8 @@ static stat_t _exec_aline_tail()
 	}
 	if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF - concave part (period 5)
 		mr.segment_velocity += mr.forward_diff_5;
-		if (_exec_aline_segment() == STAT_OK) { 					// set up for body
-			return STAT_OK;
+		if (_exec_aline_segment() == STAT_OK) {
+			return(STAT_OK);                                        // STAT_OK completes the move
 		} else {
 			mr.forward_diff_5 += mr.forward_diff_4;
 			mr.forward_diff_4 += mr.forward_diff_3;
@@ -568,7 +585,7 @@ static stat_t _exec_aline_tail()
 			mr.forward_diff_2 += mr.forward_diff_1;
 		}
 	}
-	return(STAT_EAGAIN);									// should never get here
+	return(STAT_EAGAIN);
 }
 
 /*********************************************************************************************
@@ -638,6 +655,7 @@ static stat_t _exec_aline_segment()
 
 	ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
 	copy_vector(mr.position, mr.gm.target); 				// update position from target
-	if (mr.segment_count == 0) return (STAT_OK);			// this section has run all its segments
+	if (mr.segment_count == 0)
+        return (STAT_OK);			                        // this section has run all its segments
 	return (STAT_EAGAIN);									// this section still has more segments to run
 }

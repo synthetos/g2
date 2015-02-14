@@ -237,6 +237,9 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float body_length;
 	float tail_length;
 
+    float available_length;         // +++ diagnostic
+    float braking_length;           // +++ diagnostic
+
 	float entry_velocity;
 	float cruise_velocity;
 	float exit_velocity;
@@ -284,7 +287,7 @@ void mp_end_dwell(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);
 
-stat_t mp_plan_hold_callback(void);
+//stat_t mp_plan_hold_callback(void);
 stat_t mp_start_hold(void);
 stat_t mp_end_hold(void);
 stat_t mp_feed_rate_override(uint8_t flag, float parameter);

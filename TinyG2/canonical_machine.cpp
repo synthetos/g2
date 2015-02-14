@@ -151,7 +151,7 @@ uint8_t cm_get_combined_state()
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
-    
+
     switch(cm.machine_state)
     {
         case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
@@ -499,8 +499,8 @@ void cm_set_model_target(float target[], float flag[])
  *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
- *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
@@ -1372,7 +1372,7 @@ stat_t cm_queue_flush()
  * cm_program_end() implements M2 and M30
  * The END behaviors are defined by NIST 3.6.1 are:
  *	1a.	Origin offsets are set to the default (like G54)
- *	1b. Axis offsets are set to zero (like G92.2) 
+ *	1b. Axis offsets are set to zero (like G92.2)
  *	2.  Selected plane is set to CANON_PLANE_XY (like G17)
  *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
  *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)
