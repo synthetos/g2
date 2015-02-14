@@ -579,10 +579,10 @@ void mp_planner_time_accounting() {
         return;
 
     mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
-    if (bf == NULL) {
-		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp3");  // never supposed to fail
-        return;
-    }
+//    if (bf == NULL) {
+//       cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp3");  // never supposed to fail
+//       return;
+//    }
     mpBuf_t *bp = bf;
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime

@@ -478,7 +478,7 @@ static float _get_theta(const float x, const float y)
  *	  - arc angular travel in radians (arc.angular_travel)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  */
-
+/*
 static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 {
 	if (center <= arc.position[plane_axis]) {
@@ -494,7 +494,7 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 	}
 	return(STAT_OK);
 }
-
+*/
 static stat_t _test_arc_soft_limits()
 {
 /*
