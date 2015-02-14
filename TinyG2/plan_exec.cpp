@@ -72,7 +72,7 @@ stat_t mp_exec_move()
         }
 	}
     if (bf->bf_func == NULL) {
-        return(cm_hard_alarm(STAT_INTERNAL_ERROR, "pe1")); // never supposed to get here
+        return(cm_hard_alarm(STAT_INTERNAL_ERROR, "exec_move")); // never supposed to get here
     }
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }
@@ -168,7 +168,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // too short lines have already been removed...
         // +++ so is the following code ever executed? ++++ ash
         if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
-            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, (char_t *)"pe0");   /// +++ diagnostic
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, (char_t *)"exec_aline");   /// +++ diagnostic
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;
@@ -274,7 +274,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else
 	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
-	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR, "pe2"));}	// never supposed to get here
+	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {

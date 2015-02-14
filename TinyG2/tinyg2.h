@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.14 // testing feedhold changes; removed FEEDHOLD_END_HOLD state. Not needed.
+#define TINYG_FIRMWARE_BUILD   		076.15 // put messages on all hard alarms, soft alarms and exception reports
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

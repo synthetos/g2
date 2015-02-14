@@ -688,8 +688,6 @@ void mp_transition_hold_to_stop()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
-//    sr_request_status_report(SR_REQUEST_IMMEDIATE);
-//    sr_request_status_report(SR_REQUEST_TIMED);
 
     mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
 
@@ -707,6 +705,8 @@ void mp_transition_hold_to_stop()
     // We have a moment, go ahead and replan:
 //    mp_plan_buffer();
 
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_TIMED);
     return;
 }
 
@@ -723,5 +723,8 @@ void mp_restart_from_hold()
 	}
 	cm_set_motion_state(MOTION_RUN);
 	//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
+
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_TIMED);
 	return;
 }

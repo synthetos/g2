@@ -148,9 +148,9 @@ static int8_t _get_axis_type(const index_t index);
 uint8_t cm_get_combined_state()
 {
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
+        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
 
     switch(cm.machine_state)
     {
@@ -178,17 +178,17 @@ uint8_t cm_get_combined_state()
                             //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return COMBINED_RUN;
                         default:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
+                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
                             return COMBINED_SHUTDOWN;
                     }
                 }
                 default:
-                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"cycs has impossible value"*/);
+                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
                     return COMBINED_SHUTDOWN;
             }
         }
         default:
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"macs has impossible value"*/);
+            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
             return COMBINED_SHUTDOWN;
     }
 }
@@ -506,9 +506,9 @@ void cm_set_model_target(float target[], float flag[])
 
 static stat_t _finalize_soft_limits(stat_t status)
 {
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;		// cancel motion
-	copy_vector(cm.gm.target, cm.gmx.position);				// reset model target
-	return (cm_soft_alarm(status));							// throw a soft alarm
+	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
+	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
+	return (cm_soft_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -617,9 +617,9 @@ stat_t canonical_machine_test_assertions(void)
  * cm_hard_alarm() - alarm state; send an exception report and shut down machine
  */
 
-stat_t cm_soft_alarm(stat_t status)
+stat_t cm_soft_alarm(stat_t status, const char *msg)
 {
-	rpt_exception(status, NULL);			// send alarm message
+	rpt_exception(status, (char_t *)"msg");	// send alarm message
 	cm.machine_state = MACHINE_ALARM;
 	return (status);						// NB: More efficient than inlining rpt_exception() call.
 }
@@ -1283,7 +1283,7 @@ stat_t cm_feedhold_sequencing_callback()
         if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
 			 !cm_get_runtime_busy()) {
 			cm_queue_flush();
-            cm_soft_alarm(STAT_MACHINE_ALARMED);
+            cm_soft_alarm(STAT_MACHINE_ALARMED, NULL);
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {

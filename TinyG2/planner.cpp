@@ -210,7 +210,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp1");
+		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "queue_command");
 		return;
 	}
 
@@ -259,7 +259,7 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp2")); // not ever supposed to fail
+		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
 	bf->gm.move_time = seconds;							// in seconds, not minutes
@@ -380,7 +380,7 @@ mpBuf_t * mp_get_write_buffer() 				// get & clear a buffer
 		mb.buffers_available--;
 		return (w);
 	}
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, NULL);
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, (char_t *)"gwb");
 	return (NULL);
 }
 
@@ -500,7 +500,7 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
 		}
 		b = b->pv;
 	}
-	return(cm_hard_alarm(PLANNER_BUFFER_POOL_SIZE));	// should never happen
+	return(cm_hard_alarm(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
 }
 #endif
 
@@ -567,13 +567,17 @@ stat_t mp_plan_buffer()
 }
 
 bool mp_is_it_phat_city_time() {
-	if(cm.hold_state == FEEDHOLD_HOLD) {
-		return true;
-	}
 
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+//        printf("T");
+    	return true;
+	}
     mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
-    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
+//    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
+    bool phat_city = ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
+//    printf("%s", ((phat_city) ? "T" : "f"));
+    return phat_city;
 }
 
 void mp_planner_time_accounting() {
@@ -582,7 +586,7 @@ void mp_planner_time_accounting() {
 
     mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
 //    if (bf == NULL) {
-//       cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp3");  // never supposed to fail
+//       cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "time_accounting");  // never supposed to fail
 //       return;
 //    }
     mpBuf_t *bp = bf;

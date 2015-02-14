@@ -614,7 +614,7 @@ void json_print_response(uint8_t status)
 	// Footer processing
 	while(nv->valuetype != TYPE_EMPTY) {					// find a free nvObj at end of the list...
 		if ((nv = nv->nx) == NULL) {						// oops! No free nvObj!
-			rpt_exception(STAT_JSON_TOO_LONG, NULL);		// report this as an exception
+			rpt_exception(STAT_JSON_TOO_LONG, (char_t *)"json_print"); // report this as an exception
 			return;
 		}
 	}
