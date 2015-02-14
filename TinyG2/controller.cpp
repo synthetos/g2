@@ -451,7 +451,7 @@ static stat_t _limit_switch_handler(void)
 	if (get_limit_switch_thrown() == false) {
         return (STAT_NOOP);
     } else {
-        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT);
+        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
     }
 }
 
@@ -492,7 +492,7 @@ static stat_t _interlock_estop_handler(void)
 /*
  * _system_assertions() - check memory integrity and other assertions
  */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_hard_alarm(status_code));
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_hard_alarm(status_code, "cs2"));
 
 stat_t _system_assertions()
 {

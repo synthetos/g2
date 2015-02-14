@@ -1018,11 +1018,10 @@ static void _load_move()
 
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
-	// trap conditions that would prevent queueing the line
-	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) {
-		return (cm_hard_alarm(STAT_INTERNAL_ERROR));
-	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE));	// never supposed to happen
-	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN));		// never supposed to happen
+	// trap conditions that would prevent queuing the line
+	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
+	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
+	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
 	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters
@@ -1231,7 +1230,7 @@ stat_t st_set_tr(nvObj_t *nv)			// motor travel per revolution
 stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 {
 	uint8_t mi = (uint8_t)nv->value;
-	
+
 #ifdef __AVR
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
 //	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {

@@ -72,7 +72,7 @@ stat_t mp_exec_move()
         }
 	}
     if (bf->bf_func == NULL) {
-        return(cm_hard_alarm(STAT_INTERNAL_ERROR));     // never supposed to get here
+        return(cm_hard_alarm(STAT_INTERNAL_ERROR, "pe1")); // never supposed to get here
     }
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }
@@ -297,7 +297,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else
 	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
-	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR));}	// never supposed to get here
+	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR, "pe2"));}	// never supposed to get here
 
 	// Look for the end of the decel to go into HOLD state
 //    if ((cm.hold_state == FEEDHOLD_DECEL) && (status == STAT_OK) && fp_ZERO(mr.exit_velocity)) {

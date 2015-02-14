@@ -47,10 +47,10 @@
 // *** settings.h overrides ***
 
 #undef MOTOR_POWER_LEVEL
-#define MOTOR_POWER_LEVEL		0.375				// motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL		0.375				    // motor power level 0.00 - 1.00 (ARM only)
 
 #undef SOFT_LIMIT_ENABLE
-#define SOFT_LIMIT_ENABLE		1					// 0 = off, 1 = on
+#define SOFT_LIMIT_ENABLE		0					    // 0 = off, 1 = on
 
 #undef SWITCH_TYPE
 #define SWITCH_TYPE 			SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
@@ -62,20 +62,20 @@
 //#define JSON_VERBOSITY			JV_EXCEPTIONS		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE, JV_EXCEPTIONS
 
 #undef STATUS_REPORT_VERBOSITY
-#define STATUS_REPORT_VERBOSITY		SR_FILTERED		// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY		SR_FILTERED		    // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
 #undef STATUS_REPORT_INTERVAL_MS
-#define STATUS_REPORT_INTERVAL_MS	250				// milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_INTERVAL_MS	250				    // milliseconds - set $SV=0 to disable
 
 #undef STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
 
 /*
 #undef GCODE_DEFAULT_UNITS
-#define GCODE_DEFAULT_UNITS			INCHES			// MILLIMETERS or INCHES
+#define GCODE_DEFAULT_UNITS			INCHES			    // MILLIMETERS or INCHES
 
 #undef GCODE_DEFAULT_COORD_SYSTEM
-#define GCODE_DEFAULT_COORD_SYSTEM	G55				// G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_COORD_SYSTEM	G55			    	// G54, G55, G56, G57, G58 or G59
 */
 
 // *** motor settings ***

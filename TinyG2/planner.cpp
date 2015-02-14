@@ -210,7 +210,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_hard_alarm(STAT_BUFFER_FULL_FATAL);
+		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp1");
 		return;
 	}
 
@@ -258,7 +258,7 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL));	// (not ever supposed to fail)
+		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp2")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
 	bf->gm.move_time = seconds;							// in seconds, not minutes
@@ -578,7 +578,11 @@ void mp_planner_time_accounting() {
     if (mb.planning || !mb.needs_time_accounting)
         return;
 
-    mpBuf_t *bf = mp_get_run_buffer();
+    mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
+    if (bf = NULL) {
+		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp3");  // never supposed to fail
+        return;
+    }
     mpBuf_t *bp = bf;
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime

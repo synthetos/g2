@@ -634,7 +634,7 @@ stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
 	return (STAT_OK);
 }
 
-stat_t cm_hard_alarm(stat_t status)
+stat_t cm_hard_alarm(stat_t status, const char *msg)
 {
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
@@ -650,10 +650,10 @@ stat_t cm_hard_alarm(stat_t status)
 	// build an info string and call the exception report
 	char_t info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
 
