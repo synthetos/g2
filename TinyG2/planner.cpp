@@ -579,7 +579,7 @@ void mp_planner_time_accounting() {
         return;
 
     mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
-    if (bf = NULL) {
+    if (bf == NULL) {
 		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp3");  // never supposed to fail
         return;
     }

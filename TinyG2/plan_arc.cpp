@@ -124,7 +124,6 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 		copy_vector(cm.gm.target, cm.gmx.position);		// reset model position
 		return (cm_soft_alarm(status));
 	}
-
 	cm_cycle_start();						// if not already started
 	arc.run_state = MOVE_RUN;				// enable arc to be run from the callback
 	cm_finalize_move();
@@ -498,6 +497,7 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 
 static stat_t _test_arc_soft_limits()
 {
+/*
 	// Test if target falls outside boundaries. This is a 3 dimensional test
 	// so it also checks the linear axis of the arc (helix axis)
 	ritorno(cm_test_soft_limits(arc.gm.target));
@@ -505,5 +505,6 @@ static stat_t _test_arc_soft_limits()
 	// test arc excursions
 	ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
 	ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
+*/
 	return(STAT_OK);
 }

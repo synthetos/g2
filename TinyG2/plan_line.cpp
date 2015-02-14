@@ -712,16 +712,17 @@ stat_t mp_start_hold()
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
 //    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_TIMED);
 
-    mpBuf_t *bp = mp_get_run_buffer(); // Force it to use the run buffer
+    mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
 
     // NOW, we have to look at the run buffer and see if there's anything left,
     // Update the buffer if we need to, then force a replan of the whole buffer.
 
-    bp->length = get_axis_vector_length(mr.target, mr.position);
-    bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
-    bp->entry_vmax = 0;						// set bp+0 as hold point
-    bp->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
+    bf->length = get_axis_vector_length(mr.target, mr.position);
+    bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
+    bf->entry_vmax = 0;						// set bp+0 as hold point
+    bf->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
 
     _reset_replannable_list();				// make it replan all the blocks
 

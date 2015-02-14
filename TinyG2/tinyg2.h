@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.11 // added short message to hard alarms
+#define TINYG_FIRMWARE_BUILD   		076.12 //
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
