@@ -229,7 +229,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 static stat_t _exec_command(mpBuf_t *bf)
 {
 	if(cm.hold_state == FEEDHOLD_SYNC) {
-		mp_start_hold();
+		mp_transition_hold_to_stop();
 		return STAT_NOOP;
 	}
 
@@ -270,7 +270,7 @@ stat_t mp_dwell(float seconds)
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
 	if(cm.hold_state == FEEDHOLD_SYNC) {
-		mp_start_hold();
+		mp_transition_hold_to_stop();
 		return STAT_NOOP;
 	}
 
@@ -410,7 +410,8 @@ void mp_commit_write_buffer(const moveType move_type)
         }
     } else {
         mb.needs_replanned = 1;
-        if(cm.hold_state == FEEDHOLD_OFF || cm.hold_state == FEEDHOLD_END_HOLD)
+//        if(cm.hold_state == FEEDHOLD_OFF || cm.hold_state == FEEDHOLD_END_HOLD)
+        if(cm.hold_state == FEEDHOLD_OFF)
             cm_set_motion_state(MOTION_PLANNING);
         mb.q = mb.q->nx;							// advance the queued buffer pointer
         if (mb.planner_timer == 0) {

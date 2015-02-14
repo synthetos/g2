@@ -681,33 +681,10 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
  *		  code in this module, but the code is so complicated I just left it
  *		  organized for clarity and hoped for the best from compiler optimization.
  */
-/* UNUSED
-static float _compute_next_segment_velocity()
-{
-	if (mr.section == SECTION_BODY) return (mr.segment_velocity);
-	return (mr.segment_velocity + mr.forward_diff_5);
-}
-*/
 /*
-stat_t mp_plan_hold_callback()
-{
-	//if we're partway through a hold but the stepper chain has stopped, finish the hold
-	if (cm.hold_state > FEEDHOLD_OFF && cm.hold_state < FEEDHOLD_HOLD && !st_exec_isbusy()) {
-		mp_start_hold();
-		return (STAT_OK);
-	}
-
-	//otherwise, we we wait for FEEDHOLD_PLAN and then plan a DECEL buffer
-	if (cm.hold_state != FEEDHOLD_PLAN) { return (STAT_NOOP);}	// not planning a feedhold
-
-    // Preparing to REMOVE this function!
-    return (STAT_NOOP);
-}
-*/
-/*
- * mp_start_hold() - called from the stepper chain when the hold takes effect
+ * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
  */
-stat_t mp_start_hold()
+stat_t mp_transition_hold_to_stop()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
@@ -723,6 +700,7 @@ stat_t mp_start_hold()
     bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
     bf->entry_vmax = 0;						// set bp+0 as hold point
     bf->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
+	mr.move_state = MOVE_OFF;		        // invalidate mr buffer to reset the new move
 
     _reset_replannable_list();				// make it replan all the blocks
 
@@ -733,11 +711,11 @@ stat_t mp_start_hold()
 }
 
 /*
- * mp_end_hold() - end a feedhold
+ * mp_restart_from_hold() - end a feedhold
  */
-stat_t mp_end_hold()
+stat_t mp_restart_from_hold()
 {
-	if (cm.hold_state == FEEDHOLD_END_HOLD) {
+//	if (cm.hold_state == FEEDHOLD_END_HOLD) {
 		cm.hold_state = FEEDHOLD_OFF;
 		mpBuf_t *bf;
 		if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
@@ -746,6 +724,6 @@ stat_t mp_end_hold()
 		}
 		cm_set_motion_state(MOTION_RUN);
 		//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
-	}
+//	}
 	return (STAT_OK);
 }

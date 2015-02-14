@@ -233,8 +233,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (6) - Transition to the hold state
         if (cm.hold_state == FEEDHOLD_DECEL_DONE) {
-            mp_start_hold();                // performs all functions needed prior to stop
-		    mr.move_state = MOVE_OFF;		// invalidate mr buffer to reset the new move
+            mp_transition_hold_to_stop();   // performs all functions needed to get to stop
             exec_debug_pin3 = 0;
             return (STAT_NOOP);	            // stops here if holding
         }

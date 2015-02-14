@@ -291,8 +291,8 @@ void mp_end_dwell(void);
 stat_t mp_aline(GCodeState_t *gm_in);
 
 //stat_t mp_plan_hold_callback(void);
-stat_t mp_start_hold(void);
-stat_t mp_end_hold(void);
+stat_t mp_transition_hold_to_stop(void);
+stat_t mp_restart_from_hold(void);
 stat_t mp_feed_rate_override(uint8_t flag, float parameter);
 
 // planner buffer handlers
