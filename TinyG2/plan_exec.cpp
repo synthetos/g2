@@ -168,7 +168,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // too short lines have already been removed...
         // +++ so is the following code ever executed? ++++ ash
         if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"pe0");   /// +++ diagnostic
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, (char_t *)"pe0");   /// +++ diagnostic
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;
@@ -221,8 +221,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //   (1b) - The deceleration will not fit in the running block
     //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
     //  (3) - We are in the middle of a block that is currently decelerating
-    //  (4) - We have decelerated a block to zero velocity
-    //  (5) - We have decelerated a block that has not decelerated to zero (needs continuation)
+    //  (4) - We have decelerated a block that has not decelerated to zero (needs continuation)
+    //  (5) - We have decelerated a block to zero velocity
     //  (6) - We are in a hold state (after deceleration) i.e. no motion should occur
     //  (7) - We are removing the hold state and there is queued motion (handled by normal operations)
     //  (8) - We are removing the hold state and there is no queued motion (also handled by normal operations)
@@ -232,25 +232,25 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (3) is a no-op. It just runs.
 
         // Case (6) - Transition to the hold state
-		if (cm.hold_state == FEEDHOLD_DECEL_DONE) {
-    		mp_start_hold();        // performs all functions needed prior to stop
-    		exec_debug_pin3 = 0;
-    		return (STAT_NOOP);	    // stops here if holding
-		}
+        if (cm.hold_state == FEEDHOLD_DECEL_DONE) {
+            mp_start_hold();                // performs all functions needed prior to stop
+		    mr.move_state = MOVE_OFF;		// invalidate mr buffer to reset the new move
+            exec_debug_pin3 = 0;
+            return (STAT_NOOP);	            // stops here if holding
+        }
 
-        // Case (1), Case (2), Case (5)
+        // Case (1), Case (2), Case (4)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm.hold_state == FEEDHOLD_SYNC) || (cm.hold_state == FEEDHOLD_DECEL_CONTINUE)) {
-            mr.section = SECTION_TAIL;
-            mr.section_state = SECTION_NEW;
-            mr.jerk = bf->jerk;
-
             mr.entry_velocity = mr.segment_velocity;
             if (mr.section != SECTION_BODY) {
                 mr.entry_velocity += mr.forward_diff_5;
             }
             mr.cruise_velocity = mr.entry_velocity;
 
+            mr.section = SECTION_TAIL;
+            mr.section_state = SECTION_NEW;
+            mr.jerk = bf->jerk;
             mr.head_length = 0;
             mr.body_length = 0;
             mr.available_length = get_axis_vector_length(mr.target, mr.position);
@@ -277,10 +277,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
 	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR, "pe2"));}	// never supposed to get here
 
-	// Feedhold Case (4): Look for the end of the deceleration to go into HOLD state
+	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {
         cm.hold_state = FEEDHOLD_DECEL_DONE;
-        bf->move_state = MOVE_NEW;              // reset bf so it can restart the rest of the move
+        bf->move_state = MOVE_NEW;                      // reset bf so it can restart the rest of the move
     }
 
 	// There are 4 things that can happen here depending on return conditions:
@@ -294,7 +294,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (status == STAT_EAGAIN) {
 		sr_request_status_report(SR_REQUEST_TIMED);		// continue reporting mr buffer
 	} else {
-		mr.move_state = MOVE_OFF;						// reset mr buffer
+		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;
 
         mb.time_in_run = 0.0;
