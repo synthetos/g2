@@ -124,7 +124,6 @@ stat_t cm_arc_feed(float target[], float flags[],// arc endpoints
 		copy_vector(cm.gm.target, cm.gmx.position);		// reset model position
 		return (cm_soft_alarm(status));
 	}
-
 	cm_cycle_start();						// if not already started
 	arc.run_state = MOVE_RUN;				// enable arc to be run from the callback
 	cm_finalize_move();
@@ -227,13 +226,13 @@ static stat_t _compute_arc()
 
 	// length is the total mm of travel of the helix (or just a planar arc)
 	arc.length = hypot(arc.angular_travel * arc.radius, fabs(arc.linear_travel));
-	if (arc.length < cm.arc_segment_len) return (STAT_MINIMUM_LENGTH_MOVE); // arc is too short to draw
+	if (arc.length < arc.min_arc_segment_len) return (STAT_MINIMUM_LENGTH_MOVE); // arc is too short to draw
 
 	arc.time = _get_arc_time(arc.linear_travel, arc.angular_travel, arc.radius);
 
 	// Find the minimum number of segments that meets these constraints...
 	float segments_required_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * arc.radius - cm.chordal_tolerance));
-	float segments_required_for_minimum_distance = arc.length / cm.arc_segment_len;
+	float segments_required_for_minimum_distance = arc.length / arc.min_arc_segment_len;
 	float segments_required_for_minimum_time = arc.time * MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC;
 	arc.segments = floor(min3(segments_required_for_chordal_accuracy,
 							   segments_required_for_minimum_distance,
@@ -479,12 +478,12 @@ static float _get_theta(const float x, const float y)
  *	  - arc angular travel in radians (arc.angular_travel)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  */
-
+/*
 static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 {
 	if (center <= arc.position[plane_axis]) {
 		if (arc.angular_travel < M_PI) {							// case (1)
-			return (STAT_OK);		
+			return (STAT_OK);
 		}
 		if ((center - arc.radius) < cm.a[plane_axis].travel_min) {	// case (2)
 			return (STAT_SOFT_LIMIT_EXCEEDED_ARC);
@@ -495,15 +494,17 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 	}
 	return(STAT_OK);
 }
-
+*/
 static stat_t _test_arc_soft_limits()
 {
-	// Test if target falls outside boundaries. This is a 3 dimensional test 
+/*
+	// Test if target falls outside boundaries. This is a 3 dimensional test
 	// so it also checks the linear axis of the arc (helix axis)
 	ritorno(cm_test_soft_limits(arc.gm.target));
-	
+
 	// test arc excursions
 	ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
 	ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
+*/
 	return(STAT_OK);
 }

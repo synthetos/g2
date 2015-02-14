@@ -151,7 +151,7 @@ uint8_t cm_get_combined_state()
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
-    
+
     switch(cm.machine_state)
     {
         case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
@@ -499,8 +499,8 @@ void cm_set_model_target(float target[], float flag[])
  *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
- *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
@@ -634,7 +634,7 @@ stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
 	return (STAT_OK);
 }
 
-stat_t cm_hard_alarm(stat_t status)
+stat_t cm_hard_alarm(stat_t status, const char *msg)
 {
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
@@ -650,10 +650,10 @@ stat_t cm_hard_alarm(stat_t status)
 	// build an info string and call the exception report
 	char_t info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
 
@@ -1309,8 +1309,7 @@ stat_t cm_end_hold()
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		return STAT_EAGAIN;
 
-	cm.hold_state = FEEDHOLD_END_HOLD;
-	mp_end_hold();
+	mp_restart_from_hold();
 	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
 		cm_cycle_start();
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
@@ -1372,7 +1371,7 @@ stat_t cm_queue_flush()
  * cm_program_end() implements M2 and M30
  * The END behaviors are defined by NIST 3.6.1 are:
  *	1a.	Origin offsets are set to the default (like G54)
- *	1b. Axis offsets are set to zero (like G92.2) 
+ *	1b. Axis offsets are set to zero (like G92.2)
  *	2.  Selected plane is set to CANON_PLANE_XY (like G17)
  *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
  *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)

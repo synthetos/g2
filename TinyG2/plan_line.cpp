@@ -134,7 +134,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	// get a cleared buffer and setup move variables
 	if ((bf = mp_get_write_buffer()) == NULL) {							// never supposed to fail
-		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL));
+		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "pl1"));
 	}
 	bf->bf_func = mp_exec_aline;										// register the callback to the exec function
 	bf->length = length;
@@ -681,70 +681,47 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
  *		  code in this module, but the code is so complicated I just left it
  *		  organized for clarity and hoped for the best from compiler optimization.
  */
-/* UNUSED
-static float _compute_next_segment_velocity()
-{
-	if (mr.section == SECTION_BODY) return (mr.segment_velocity);
-	return (mr.segment_velocity + mr.forward_diff_5);
-}
-*/
-
-stat_t mp_plan_hold_callback()
-{
-	//if we're partway through a hold but the stepper chain has stopped, finish the hold
-	if (cm.hold_state > FEEDHOLD_OFF && cm.hold_state < FEEDHOLD_HOLD && !st_exec_isbusy()) {
-		mp_start_hold();
-		return (STAT_OK);
-	}
-
-	//otherwise, we we wait for FEEDHOLD_PLAN and then plan a DECEL buffer
-	if (cm.hold_state != FEEDHOLD_PLAN) { return (STAT_NOOP);}	// not planning a feedhold
-
-    // Preparing to REMOVE this function!
-    return (STAT_NOOP);
-}
-
 /*
- * mp_start_hold() - called from the stepper chain when the hold takes effect
+ * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
  */
-stat_t mp_start_hold()
+void mp_transition_hold_to_stop()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
 //    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_TIMED);
 
-    mpBuf_t *bp = mp_get_run_buffer(); // Force it to use the run buffer
+    mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
 
     // NOW, we have to look at the run buffer and see if there's anything left,
     // Update the buffer if we need to, then force a replan of the whole buffer.
 
-    bp->length = get_axis_vector_length(mr.target, mr.position);
-    bp->delta_vmax = mp_get_target_velocity(0, bp->length, bp);
-    bp->entry_vmax = 0;						// set bp+0 as hold point
-    bp->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
+    bf->length = get_axis_vector_length(mr.target, mr.position);
+    bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
+    bf->entry_vmax = 0;						// set bp+0 as hold point
+    bf->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
+	mr.move_state = MOVE_OFF;		        // invalidate mr buffer to reset the new move
 
     _reset_replannable_list();				// make it replan all the blocks
 
     // We have a moment, go ahead and replan:
 //    mp_plan_buffer();
 
-    return (STAT_OK);
+    return;
 }
 
 /*
- * mp_end_hold() - end a feedhold
+ * mp_restart_from_hold() - end a feedhold
  */
-stat_t mp_end_hold()
+void mp_restart_from_hold()
 {
-	if (cm.hold_state == FEEDHOLD_END_HOLD) {
-		cm.hold_state = FEEDHOLD_OFF;
-		mpBuf_t *bf;
-		if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
-			cm_set_motion_state(MOTION_STOP);
-			return (STAT_NOOP);
-		}
-		cm_set_motion_state(MOTION_RUN);
-		//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
+	cm.hold_state = FEEDHOLD_OFF;
+	mpBuf_t *bf;
+	if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
+		cm_set_motion_state(MOTION_STOP);
+		return;
 	}
-	return (STAT_OK);
+	cm_set_motion_state(MOTION_RUN);
+	//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
+	return;
 }

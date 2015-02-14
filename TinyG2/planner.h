@@ -31,51 +31,65 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
-enum moveType {				// bf->move_type values
-	MOVE_TYPE_NULL = 0,		// null move - does a no-op
-	MOVE_TYPE_ALINE,		// acceleration planned line
-	MOVE_TYPE_DWELL,		// delay with no movement
-	MOVE_TYPE_COMMAND,		// general command
-	MOVE_TYPE_TOOL,			// T command
-	MOVE_TYPE_SPINDLE_SPEED,// S command
-	MOVE_TYPE_STOP,			// program stop
-	MOVE_TYPE_END			// program end
+/*
+ * Enums and other type definitions
+ */
+
+typedef void (*cm_exec_t)(float[], float[]); // callback to canonical_machine execution function
+
+enum mpBufferState {				// bf->buffer_state values
+    MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
+    MP_BUFFER_PLANNING,             // being written ("checked out") for planning
+    MP_BUFFER_QUEUED,				// in queue
+    MP_BUFFER_RUNNING				// current running buffer
+};
+
+enum moveType {				        // bf->move_type values
+	MOVE_TYPE_NULL = 0,		        // null move - does a no-op
+	MOVE_TYPE_ALINE,		        // acceleration planned line
+	MOVE_TYPE_DWELL,        		// delay with no movement
+	MOVE_TYPE_COMMAND,	        	// general command
+	MOVE_TYPE_TOOL,		        	// T command
+	MOVE_TYPE_SPINDLE_SPEED,        // S command
+	MOVE_TYPE_STOP,	        		// program stop
+	MOVE_TYPE_END	        		// program end
 };
 
 enum moveState {
-	MOVE_OFF = 0,			// move inactive (MUST BE ZERO)
-	MOVE_NEW,				// general value if you need an initialization
-	MOVE_RUN,				// general run state (for non-acceleration moves)
-	MOVE_SKIP_BLOCK			// mark a skipped block
+	MOVE_OFF = 0,	        		// move inactive (MUST BE ZERO)
+	MOVE_NEW,		        		// general value if you need an initialization
+	MOVE_RUN,		        		// general run state (for non-acceleration moves)
+	MOVE_SKIP_BLOCK		        	// mark a skipped block
 };
 
 enum moveSection {
-	SECTION_HEAD = 0,		// acceleration
-	SECTION_BODY,			// cruise
-	SECTION_TAIL			// deceleration
+	SECTION_HEAD = 0,       		// acceleration
+	SECTION_BODY,	        		// cruise
+	SECTION_TAIL	        		// deceleration
 };
 #define SECTIONS 3
 
 enum sectionState {
-	SECTION_OFF = 0,		// section inactive
-	SECTION_NEW,			// uninitialized section
-	SECTION_1st_HALF,		// first half of S curve
-	SECTION_2nd_HALF		// second half of S curve or running a BODY (cruise)
+	SECTION_OFF = 0,        		// section inactive
+	SECTION_NEW,	        		// uninitialized section
+	SECTION_1st_HALF,       		// first half of S curve
+	SECTION_2nd_HALF	        	// second half of S curve or running a BODY (cruise)
 };
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
+// UNUSED - CAN DELETE
 // The following must apply: MM_PER_ARC_SEGMENT >= MIN_LINE_LENGTH
-#define ARC_SEGMENT_LENGTH 		((float)0.1)		// Arc segment size (mm).(0.03)
-#define MIN_LINE_LENGTH 		((float)0.08)		// Smallest line the system can plan (mm) (0.02)
-#define MIN_SEGMENT_LENGTH 		((float)0.05)		// Smallest accel/decel segment (mm). Set to produce ~10 ms segments (0.01)
-#define MIN_LENGTH_MOVE 		((float)0.001)		// millimeters
+//#define ARC_SEGMENT_LENGTH 	((float)0.1)		// Arc segment size (mm) MOVED TO PLAN_ARC
+//#define MIN_LINE_LENGTH 		((float)0.08)		// Smallest line the system can plan (mm)
+//#define MIN_SEGMENT_LENGTH 	((float)0.05)		// Smallest accel/decel segment (mm). Set to produce ~10 ms segments (0.01)
+//#define MIN_LENGTH_MOVE 		((float)0.001)		// millimeters
 
 #define JERK_MULTIPLIER			((float)1000000)	// must alway be 1 million - do not change
 #define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 
+#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time (also minimum move time)
 #define NOM_SEGMENT_USEC 		((float)5000)		// nominal segment time
-#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time / minimum move time
 #define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
 
 #define MIN_PLANNED_USEC		((float)30000)		// minimum time in the planner below which we must replan immediately
@@ -83,17 +97,20 @@ enum sectionState {
                                                     // you can do whatever you want! (Including send SRs.)
 
 // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
-// PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
 #define PLANNER_TIMEOUT_MS		(50)				// Max amount of time to wait between replans
+// PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
+// ++++++++ NOT SURE THIS IS STILL OPERATIVE ++++++++ ash)
 
+// derived definitions - do not change
+#define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 
-#define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-#define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-#define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-#define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
-#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
+// UNUSED - CAN BE DELETED
+//#define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+//#define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
+//#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
 
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
@@ -107,7 +124,6 @@ enum sectionState {
 
 # if 0
 // THESE ARE NO LONGER USED -- but the code that uses them is still conditional in plan_zoid.cpp
-
 /* Some parameters for _generate_trapezoid()
  * TRAPEZOID_ITERATION_MAX	 				Max iterations for convergence in the HT asymmetric case.
  * TRAPEZOID_ITERATION_ERROR_PERCENT		Error percentage for iteration convergence. As percent - 0.01 = 1%
@@ -122,23 +138,10 @@ enum sectionState {
 #define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
 
 /*
- *	Macros and typedefs
- */
-
-typedef void (*cm_exec_t)(float[], float[]);	// callback to canonical_machine execution function
-
-/*
  *	Planner structures
  */
 
 // All the enums that equal zero must be zero. Don't change this
-
-enum mpBufferState {				// bf->buffer_state values
-	MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
-    MP_BUFFER_PLANNING,             // being written ("checked out") for planning
-	MP_BUFFER_QUEUED,				// in queue
-	MP_BUFFER_RUNNING				// current running buffer
-};
 
 typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	struct mpBuffer *pv;			// static pointer to previous buffer
@@ -148,10 +151,10 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
 	cm_exec_t cm_func;				// callback to canonical machine execution function
 
-	mpBufferState buffer_state;			// used to manage queuing/dequeuing
-	uint8_t move_type;				// used to dispatch to run routine
+	mpBufferState buffer_state;		// used to manage queuing/dequeuing
+	moveType move_type;				// used to dispatch to run routine
+	moveState move_state;			// move state machine sequence
 	uint8_t move_code;				// byte that can be used by used exec functions
-	uint8_t move_state;				// move state machine sequence
 	bool    replannable;			// TRUE if move can be re-planned
     bool    locked;	        		// TRUE if the move is locked from replanning
 
@@ -217,9 +220,9 @@ typedef struct mpMoveMasterSingleton { // common variables for planning (move ma
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	magic_t magic_start;			// magic number to test memory integrity
-	uint8_t move_state;				// state of the overall move
-	uint8_t section;				// what section is the move in?
-	uint8_t section_state;			// state within a move section
+	moveState move_state;			// state of the overall move
+	moveSection section;			// what section is the move in?
+	sectionState section_state;		// state within a move section
 
 	float unit[AXES];				// unit vector for axis scaling & planning
 	float target[AXES];				// final target for bf (used to correct rounding errors)
@@ -236,6 +239,9 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float head_length;				// copies of bf variables of same name
 	float body_length;
 	float tail_length;
+
+    float available_length;         // +++ diagnostic
+    float braking_length;           // +++ diagnostic
 
 	float entry_velocity;
 	float cruise_velocity;
@@ -284,9 +290,9 @@ void mp_end_dwell(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);
 
-stat_t mp_plan_hold_callback(void);
-stat_t mp_start_hold(void);
-stat_t mp_end_hold(void);
+//stat_t mp_plan_hold_callback(void);
+void mp_transition_hold_to_stop(void);
+void mp_restart_from_hold(void);
 stat_t mp_feed_rate_override(uint8_t flag, float parameter);
 
 // planner buffer handlers
@@ -294,7 +300,7 @@ uint8_t mp_get_planner_buffers_available(void);
 void mp_init_buffers(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_unget_write_buffer(void);
-void mp_commit_write_buffer(const uint8_t move_type);
+void mp_commit_write_buffer(const moveType move_type);
 stat_t mp_plan_buffer();
 void mp_complete_commit_write_buffer();
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
