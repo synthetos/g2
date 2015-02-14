@@ -395,7 +395,7 @@ void mp_unget_write_buffer()
 			  once it has been queued. Action may start on the buffer immediately,
 			  invalidating its contents ***/
 
-void mp_commit_write_buffer(const uint8_t move_type)
+void mp_commit_write_buffer(const moveType move_type)
 {
 	mb.q->move_type = move_type;
 	mb.q->move_state = MOVE_NEW;

@@ -42,6 +42,8 @@
 
 // Machine configuration settings
 #define CHORDAL_TOLERANCE 			0.01					// chordal accuracy for arc drawing (in mm)
+#define MIN_ARC_SEGMENT_LEN		    ((float)0.1)	        // default minimum arc segment length in mm
+
 #define SOFT_LIMIT_ENABLE			0						// 0 = off, 1 = on
 
 #define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)

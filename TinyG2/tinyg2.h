@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.10 // testing feedholds on shopbot-edge-exp
+#define TINYG_FIRMWARE_BUILD   		076.10 // changed some structure element defs to enums; removed unused #defines
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

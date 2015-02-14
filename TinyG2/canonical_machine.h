@@ -101,7 +101,7 @@ enum cmMotionState {
 enum cmFeedholdState {				// feedhold_state machine
 	FEEDHOLD_OFF = 0,				// no feedhold in effect
 	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
-	FEEDHOLD_PLAN, 					// replan blocks for feedhold
+//	FEEDHOLD_PLAN, 					// replan blocks for feedhold
 	FEEDHOLD_START_DECEL,			// decelerate to hold point
 	FEEDHOLD_END_DECEL,             // last decel segment is running, when done decelerating go into a hold next time mp_exec_aline runs
 	FEEDHOLD_HOLD,					// holding
@@ -463,9 +463,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t soft_limit_enable;
 
 	// hidden system settings
-	float min_segment_len;				// line drawing resolution in mm
-	float arc_segment_len;				// arc drawing resolution in mm
-	float estd_segment_usec;			// approximate segment time in microseconds
+//	float min_segment_len;				// NOT USED - line drawing resolution in mm
+//	float arc_segment_len;				// MOVED TO ARC - arc drawing resolution in mm
+//	float estd_segment_usec;			// NOT USED - approximate segment time in microseconds
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -486,12 +486,12 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
-	uint8_t hold_state;					// hold: feedhold sub-state machine
+//	uint8_t hold_state;					// hold: feedhold sub-state machine
 
 //    cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
 //    cmCycleState cycle_state;			// cycs
 //    cmMotionState motion_state;			// momo
-//	cmFeedholdState hold_state;			// hold: feedhold sub-state machine
+	cmFeedholdState hold_state;			// hold: feedhold sub-state machine
 
 	uint8_t interlock_state;			// true if interlock has been triggered
 	uint8_t estop_state;				// true if estop has been triggered
