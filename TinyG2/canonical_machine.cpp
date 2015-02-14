@@ -1309,7 +1309,6 @@ stat_t cm_end_hold()
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		return STAT_EAGAIN;
 
-//	cm.hold_state = FEEDHOLD_END_HOLD;
 	mp_restart_from_hold();
 	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
 		cm_cycle_start();

@@ -684,7 +684,7 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 /*
  * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
  */
-stat_t mp_transition_hold_to_stop()
+void mp_transition_hold_to_stop()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
@@ -707,23 +707,21 @@ stat_t mp_transition_hold_to_stop()
     // We have a moment, go ahead and replan:
 //    mp_plan_buffer();
 
-    return (STAT_OK);
+    return;
 }
 
 /*
  * mp_restart_from_hold() - end a feedhold
  */
-stat_t mp_restart_from_hold()
+void mp_restart_from_hold()
 {
-//	if (cm.hold_state == FEEDHOLD_END_HOLD) {
-		cm.hold_state = FEEDHOLD_OFF;
-		mpBuf_t *bf;
-		if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
-			cm_set_motion_state(MOTION_STOP);
-			return (STAT_NOOP);
-		}
-		cm_set_motion_state(MOTION_RUN);
-		//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
-//	}
-	return (STAT_OK);
+	cm.hold_state = FEEDHOLD_OFF;
+	mpBuf_t *bf;
+	if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
+		cm_set_motion_state(MOTION_STOP);
+		return;
+	}
+	cm_set_motion_state(MOTION_RUN);
+	//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
+	return;
 }
