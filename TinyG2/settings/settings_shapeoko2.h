@@ -67,23 +67,22 @@
 #undef STATUS_REPORT_INTERVAL_MS
 #define STATUS_REPORT_INTERVAL_MS	250				    // milliseconds - set $SV=0 to disable
 
-#undef STATUS_REPORT_DEFAULTS
-#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
+//#undef STATUS_REPORT_DEFAULTS
+//#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
 
-/*
-#undef GCODE_DEFAULT_UNITS
-#define GCODE_DEFAULT_UNITS			INCHES			    // MILLIMETERS or INCHES
+//#undef GCODE_DEFAULT_UNITS
+//#define GCODE_DEFAULT_UNITS			INCHES          // MILLIMETERS or INCHES
 
-#undef GCODE_DEFAULT_COORD_SYSTEM
-#define GCODE_DEFAULT_COORD_SYSTEM	G55			    	// G54, G55, G56, G57, G58 or G59
-*/
+//#undef GCODE_DEFAULT_COORD_SYSTEM
+//#define GCODE_DEFAULT_COORD_SYSTEM	G55             // G54, G55, G56, G57, G58 or G59
+
 
 // *** motor settings ***
 
 #define M4_MOTOR_MAP 			AXIS_X				// 1ma
 #define M4_STEP_ANGLE			1.8					// 1sa
 #define M4_TRAVEL_PER_REV		40.00				// 1tr
-#define M4_MICROSTEPS			8					// 1mi		1,2,4,8
+#define M4_MICROSTEPS			32					// 1mi		1,2,4,8
 #define M4_POLARITY				0					// 1po		0=normal, 1=reversed
 #define M4_POWER_MODE			MOTOR_POWER_MODE	// 1pm		TRUE=low power idle enabled
 #define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -91,7 +90,7 @@
 #define M3_MOTOR_MAP			AXIS_Y
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		40.00
-#define M3_MICROSTEPS			8
+#define M3_MICROSTEPS			32
 #define M3_POLARITY				0
 #define M3_POWER_MODE			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -99,7 +98,7 @@
 #define M2_MOTOR_MAP			AXIS_Y
 #define M2_STEP_ANGLE			1.8
 #define M2_TRAVEL_PER_REV		40.00
-#define M2_MICROSTEPS			8
+#define M2_MICROSTEPS			32
 #define M2_POLARITY				1
 #define M2_POWER_MODE			MOTOR_POWER_MODE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
@@ -167,7 +166,7 @@
 #define Y_ZERO_BACKOFF			3
 
 #define Z_AXIS_MODE				AXIS_STANDARD
-#define Z_VELOCITY_MAX			1600
+#define Z_VELOCITY_MAX			1200
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX			0
 #define Z_TRAVEL_MIN			-95

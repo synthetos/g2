@@ -148,48 +148,48 @@ static int8_t _get_axis_type(const index_t index);
 uint8_t cm_get_combined_state()
 {
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
 
     switch(cm.machine_state)
     {
-        case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
-        case MACHINE_READY: return COMBINED_READY;
-        case MACHINE_ALARM: return COMBINED_ALARM;
-        case MACHINE_SHUTDOWN: return COMBINED_SHUTDOWN;
-        case MACHINE_PROGRAM_STOP: return COMBINED_PROGRAM_STOP;
-        case MACHINE_PROGRAM_END: return COMBINED_PROGRAM_END;
+        case MACHINE_INITIALIZING: return (COMBINED_INITIALIZING);
+        case MACHINE_READY: return (COMBINED_READY);
+        case MACHINE_ALARM: return (COMBINED_ALARM);
+        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
+        case MACHINE_PROGRAM_STOP: return (COMBINED_PROGRAM_STOP);
+        case MACHINE_PROGRAM_END: return (COMBINED_PROGRAM_END);
         case MACHINE_CYCLE: {
             switch(cm.cycle_state)
             {
-                case CYCLE_PROBE: return COMBINED_PROBE;
-                case CYCLE_JOG: return COMBINED_JOG;
-                case CYCLE_HOMING: return COMBINED_HOMING;
+                case CYCLE_PROBE: return (COMBINED_PROBE);
+                case CYCLE_JOG: return (COMBINED_JOG);
+                case CYCLE_HOMING: return (COMBINED_HOMING);
                 case CYCLE_MACHINING: case CYCLE_OFF: {
                     switch(cm.motion_state)
                     {
-                        case MOTION_HOLD: return COMBINED_HOLD;
-                        case MOTION_PLANNING: return COMBINED_RUN;
-                        case MOTION_RUN: return COMBINED_RUN;
+                        case MOTION_HOLD: return (COMBINED_HOLD);
+                        case MOTION_PLANNING: return (COMBINED_RUN);
+                        case MOTION_RUN: return (COMBINED_RUN);
                         case MOTION_STOP:
                             //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
                             //    until the command is executed by mp_exec_aline... so this assert isn't valid
-                            //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
-                            return COMBINED_RUN;
+                            //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
+                            return (COMBINED_RUN);
                         default:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
-                            return COMBINED_SHUTDOWN;
+                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
+                            return (COMBINED_SHUTDOWN);
                     }
                 }
                 default:
-                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
-                    return COMBINED_SHUTDOWN;
+                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
+                    return (COMBINED_SHUTDOWN);
             }
         }
         default:
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
-            return COMBINED_SHUTDOWN;
+            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
+            return (COMBINED_SHUTDOWN);
     }
 }
 
@@ -1207,32 +1207,9 @@ void cm_message(char_t *message)
 	nv_add_string((const char_t *)"msg", message);	// add message to the response object
 }
 
-/******************************
- * Program Functions (4.3.10) *
- ******************************/
-/*
- * This group implements stop, start, end, and hold.
- * It is extended beyond the NIST spec to handle various situations.
- *
- *	_exec_program_finalize()
- *	cm_cycle_start()			(no Gcode)  Do a cycle start right now
- *	cm_cycle_end()				(no Gcode)	Do a cycle end right now
- *	cm_feedhold()				(no Gcode)	Initiate a feedhold right now
- *	cm_program_stop()			(M0, M60)	Queue a program stop
- *	cm_optional_program_stop()	(M1)
- *	cm_program_end()			(M2, M30)
- *	cm_machine_ready()			puts machine into a READY state
- *
- * cm_program_stop and cm_optional_program_stop are synchronous Gcode
- * commands that are received through the interpreter. They cause all motion
- * to stop at the end of the current command, including spindle motion.
- *
- * Note that the stop occurs at the end of the immediately preceding command
- * (i.e. the stop is queued behind the last command).
- *
- * cm_program_end is a stop that also resets the machine to initial state
- */
-
+/************************************************
+ * Feedhold and Related Functions (no NIST ref) *
+ ************************************************/
 /*
  * cm_request_feedhold()
  * cm_request_queue_flush()
@@ -1260,7 +1237,51 @@ void cm_message(char_t *message)
  *	A cycle start request received during a motion stop should be honored and
  *		should start to run anything in the planner queue
  */
-
+/*	Holds work like this:
+ *
+ *  - Hold is asserted by calling cm_request_hold() or cm_start_hold() directly.
+ *    (usually invoked via a ! char). If cm.hold_state == FEEDHOLD_OFF and motion_state is RUNning it sets
+ *		hold_state to SYNC and motion_state to HOLD.
+ *
+ *	  - Hold state == SYNC tells the aline exec routine to execute the next aline
+ *		segment then set hold_state to PLAN. This gives the planner sufficient
+ *		time to replan the block list for the hold before the next aline segment
+ *		needs to be processed.
+ *
+ *	  - Hold state == PLAN tells the planner to replan the mr buffer, the current
+ *		run buffer (bf), and any subsequent bf buffers as necessary to execute a
+ *		hold. Hold planning replans the planner buffer queue down to zero and then
+ *		back up from zero. Hold state is set to DECEL when planning is complete.
+ *
+ *	  - Hold state == DECEL persists until the aline execution runs to zero
+ *		velocity, at which point hold state transitions to HOLD.
+ *
+ *	  - Hold state == HOLD persists until the cycle is restarted. A cycle start
+ *		is an asynchronous event that sets the cycle_start_flag TRUE. It can
+ *		occur any time after the hold is requested - either before or after
+ *		motion stops.
+ *
+ *	  - mp_end_hold() is executed from cm_feedhold_sequencing_callback() once the
+ *		hold state == HOLD and a cycle_start has been requested.This sets the hold
+ *		state to OFF which enables _exec_aline() to continue processing. Move
+ *		execution begins with the first buffer after the hold.
+ *
+ *	Terms used:
+ *	 - mr is the runtime buffer. It was initially loaded from the bf buffer
+ *	 - bp+0 is the "companion" bf buffer to the mr buffer.
+ *	 - bp+1 is the bf buffer following bp+0. This runs through bp+N
+ *	 - bp (by itself) just refers to the current buffer being adjusted / replanned
+ *
+ *	Details: Planning re-uses bp+0 as an "extra" buffer. Normally bp+0 is returned
+ *		to the buffer pool as it is redundant once mr is loaded. Use the extra
+ *		buffer to split the move in two where the hold decelerates to zero. Use
+ *		one buffer to go to zero, the other to replan up from zero. All buffers past
+ *		that point are unaffected other than that they need to be replanned for velocity.
+ *
+ *	Note: There are multiple opportunities for more efficient organization of
+ *		  code in this module, but the code is so complicated I just left it
+ *		  organized for clarity and hoped for the best from compiler optimization.
+ */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
 void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
@@ -1358,15 +1379,30 @@ stat_t cm_queue_flush()
 	return (STAT_OK);
 }
 
+/******************************
+ * Program Functions (4.3.10) *
+ ******************************/
+/* This group implements stop, start, and end functions.
+ * It is extended beyond the NIST spec to handle various situations.
+ *
+ * _exec_program_finalize()     - helper
+ * cm_cycle_start()
+ * cm_cycle_end()
+ * cm_program_stop()            - M0
+ * cm_optional_program_stop()   - M1
+ * cm_program_end()             - M2, M30
+ */
 /*
  * Program and cycle state functions
  *
- * _exec_program_finalize() 	- helper
- * cm_cycle_start()
- * cm_cycle_end()
- * cm_program_stop()			- M0
- * cm_optional_program_stop()	- M1
- * cm_program_end()				- M2, M30
+ * cm_program_stop and cm_optional_program_stop are synchronous Gcode commands
+ * that are received through the interpreter. They cause all motion to stop
+ * at the end of the current command, including spindle motion.
+ *
+ * Note that the stop occurs at the end of the immediately preceding command
+ * (i.e. the stop is queued behind the last command).
+ *
+ * cm_program_end is a stop that also resets the machine to initial state
  *
  * cm_program_end() implements M2 and M30
  * The END behaviors are defined by NIST 3.6.1 are:
@@ -1478,12 +1514,12 @@ stat_t cm_start_estop(void)
 	_exec_program_finalize(value, value);	// finalize now, not later
 	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
-	return STAT_OK;
+    return (STAT_OK);
 }
 
 stat_t cm_end_estop(void)
 {
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_ack_estop(nvObj_t *nv)

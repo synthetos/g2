@@ -37,12 +37,13 @@
 
 using namespace Motate;
 OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-//OutputPin<-1> plan_debug_pin1;
 OutputPin<kDebug2_PinNumber> plan_debug_pin2;
-//OutputPin<-1> plan_debug_pin2;
 //OutputPin<kDebug3_PinNumber> plan_debug_pin3;
-OutputPin<-1> plan_debug_pin3;
 OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+
+//OutputPin<-1> plan_debug_pin1;
+//OutputPin<-1> plan_debug_pin2;
+OutputPin<-1> plan_debug_pin3;
 //OutputPin<-1> plan_debug_pin4;
 
 
@@ -350,7 +351,7 @@ static void _calc_move_times(GCodeState_t *gms, const float axis_length[], const
 	gms->move_time = max4(inv_time, max_time, xyz_time, abc_time);
 }
 
-/* _plan_block_list() - plans the entire block list
+/* mp_plan_block_list() - plans the entire block list
  *
  *	The block list is the circular buffer of planner buffers (bf's). The block currently
  *	being planned is the "bf" block. The "first block" is the next block to execute;
@@ -627,62 +628,15 @@ static float _get_junction_vmax(const float a_unit[], const float b_unit[])
 }
 
 /*************************************************************************
- * feedholds - functions for performing holds
+ * Feedhold support - supporting functions for performing holds
  *
- * mp_plan_hold_callback() - replan block list to execute hold
- * mp_end_hold() 		   - release the hold and restart block list
- *
- *	Feedhold is executed as cm.hold_state transitions executed inside
- *	_exec_aline() and main loop callbacks to these functions:
- *	mp_plan_hold_callback() and mp_end_hold().
- */
-/*	Holds work like this:
- *
- * 	  - Hold is asserted by calling cm_feedhold() (usually invoked via a ! char)
- *		If hold_state is OFF and motion_state is RUNning it sets
- *		hold_state to SYNC and motion_state to HOLD.
- *
- *	  - Hold state == SYNC tells the aline exec routine to execute the next aline
- *		segment then set hold_state to PLAN. This gives the planner sufficient
- *		time to replan the block list for the hold before the next aline segment
- *		needs to be processed.
- *
- *	  - Hold state == PLAN tells the planner to replan the mr buffer, the current
- *		run buffer (bf), and any subsequent bf buffers as necessary to execute a
- *		hold. Hold planning replans the planner buffer queue down to zero and then
- *		back up from zero. Hold state is set to DECEL when planning is complete.
- *
- *	  - Hold state == DECEL persists until the aline execution runs to zero
- *		velocity, at which point hold state transitions to HOLD.
- *
- *	  - Hold state == HOLD persists until the cycle is restarted. A cycle start
- *		is an asynchronous event that sets the cycle_start_flag TRUE. It can
- *		occur any time after the hold is requested - either before or after
- *		motion stops.
- *
- *	  - mp_end_hold() is executed from cm_feedhold_sequencing_callback() once the
- *		hold state == HOLD and a cycle_start has been requested.This sets the hold
- *		state to OFF which enables _exec_aline() to continue processing. Move
- *		execution begins with the first buffer after the hold.
- *
- *	Terms used:
- *	 - mr is the runtime buffer. It was initially loaded from the bf buffer
- *	 - bp+0 is the "companion" bf buffer to the mr buffer.
- *	 - bp+1 is the bf buffer following bp+0. This runs through bp+N
- *	 - bp (by itself) just refers to the current buffer being adjusted / replanned
- *
- *	Details: Planning re-uses bp+0 as an "extra" buffer. Normally bp+0 is returned
- *		to the buffer pool as it is redundant once mr is loaded. Use the extra
- *		buffer to split the move in two where the hold decelerates to zero. Use
- *		one buffer to go to zero, the other to replan up from zero. All buffers past
- *		that point are unaffected other than that they need to be replanned for velocity.
- *
- *	Note: There are multiple opportunities for more efficient organization of
- *		  code in this module, but the code is so complicated I just left it
- *		  organized for clarity and hoped for the best from compiler optimization.
- */
-/*
  * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
+ * mp_restart_from_hold() - end a feedhold
+ *
+ *	Feedhold is executed as cm.hold_state transitions executed inside _exec_aline()
+ *  Invoke a feedhold by calling cm_request_hold() or cm_start_hold() directly
+ *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
+ *  See canonical_macine.c for a more detailed exp;lanation of feedhold operation.
  */
 void mp_transition_hold_to_stop()
 {
@@ -710,9 +664,6 @@ void mp_transition_hold_to_stop()
     return;
 }
 
-/*
- * mp_restart_from_hold() - end a feedhold
- */
 void mp_restart_from_hold()
 {
 	cm.hold_state = FEEDHOLD_OFF;

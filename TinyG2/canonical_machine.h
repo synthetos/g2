@@ -442,11 +442,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	uint8_t soft_limit_enable;
 
-	// hidden system settings
-//	float min_segment_len;				// NOT USED - line drawing resolution in mm
-//	float arc_segment_len;				// MOVED TO ARC - arc drawing resolution in mm
-//	float estd_segment_usec;			// NOT USED - approximate segment time in microseconds
-
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
 	uint8_t select_plane;				// G17,G18,G19 reset default
@@ -466,7 +461,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
-//	uint8_t hold_state;					// hold: feedhold sub-state machine
 
 //    cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
 //    cmCycleState cycle_state;			// cycs

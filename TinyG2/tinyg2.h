@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.15 // put messages on all hard alarms, soft alarms and exception reports
+#define TINYG_FIRMWARE_BUILD   		076.16 // documentation and cleanup pass before moving on
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -380,11 +380,11 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_85 85
 #define	STAT_ERROR_86 86
 #define	STAT_ERROR_87 87
-#define	STAT_ERROR_88 88
-#define	STAT_ERROR_89 89
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
+#define	STAT_BUFFER_FREE_ASSERTION_FAILURE 88
+#define	STAT_STATE_MANAGEMENT_ASSERTION_FAILURE 89
 #define	STAT_CONFIG_ASSERTION_FAILURE 90
 #define	STAT_XIO_ASSERTION_FAILURE 91
 #define	STAT_ENCODER_ASSERTION_FAILURE 92

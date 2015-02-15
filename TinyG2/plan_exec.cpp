@@ -252,12 +252,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mr.jerk = bf->jerk;
             mr.head_length = 0;
             mr.body_length = 0;
-            mr.available_length = get_axis_vector_length(mr.target, mr.position);
+
+            float available_length = get_axis_vector_length(mr.target, mr.position);
             mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
 
-            if (mr.available_length < mr.tail_length) { // (1b) the deceleration has to span multiple moves
+            if (available_length < mr.tail_length) {    // (1b) the deceleration has to span multiple moves
                 cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
-                mr.tail_length = mr.available_length;
+                mr.tail_length = available_length;
                 mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
             } else {                                    // (1a) the deceleration will fit onto the current move
                 cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
@@ -635,3 +636,4 @@ static stat_t _exec_aline_segment()
         return (STAT_OK);			                        // this section has run all its segments
 	return (STAT_EAGAIN);									// this section still has more segments to run
 }
+
