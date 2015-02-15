@@ -1215,72 +1215,55 @@ void cm_message(char_t *message)
  * cm_request_queue_flush()
  * cm_request_end_hold()
  * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
+ * cm_start_hold()
+ * cm_end_hold()
  * cm_flush_planner() - Flush planner queue and correct model positions
- *
- * Feedholds, queue flushes and cycles starts are all related. The request functions set
- *	flags for these. The sequencing callback interprets the flags according to the
- *	following rules:
- *
- *	A feedhold request received during motion should be honored
- *	A feedhold request received during a feedhold should be ignored and reset
- *	A feedhold request received during a motion stop should be ignored and reset
- *
- *	A queue flush request received during motion should be ignored but not reset
- *	A queue flush request received during a feedhold should be deferred until
- *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
- *	A queue flush request received during a motion stop should be honored
- *
- *	A cycle start request received during motion should be ignored and reset
- *	A cycle start request received during a feedhold should be deferred until
- *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
- *		If a queue flush request is also present the queue flush should be done first
- *	A cycle start request received during a motion stop should be honored and
- *		should start to run anything in the planner queue
  */
-/*	Holds work like this:
+/*
+ * Feedhold requests and sequencing:
  *
- *  - Hold is asserted by calling cm_request_hold() or cm_start_hold() directly.
- *    (usually invoked via a ! char). If cm.hold_state == FEEDHOLD_OFF and motion_state is RUNning it sets
- *		hold_state to SYNC and motion_state to HOLD.
+ * Feedholds, queue flushes and cycle starts are all related. The request functions set flags.
+ * The sequencing callback interprets the flags according to the following rules:
  *
- *	  - Hold state == SYNC tells the aline exec routine to execute the next aline
- *		segment then set hold_state to PLAN. This gives the planner sufficient
- *		time to replan the block list for the hold before the next aline segment
- *		needs to be processed.
+ *    - A feedhold request received during motion should be honored
+ *    - A feedhold request received during a feedhold should be ignored and reset the flag
+ *    - A feedhold request received during a motion stop should be ignored and reset flag
  *
- *	  - Hold state == PLAN tells the planner to replan the mr buffer, the current
- *		run buffer (bf), and any subsequent bf buffers as necessary to execute a
- *		hold. Hold planning replans the planner buffer queue down to zero and then
- *		back up from zero. Hold state is set to DECEL when planning is complete.
+ *    - A queue flush request received during motion should be ignored but not reset
+ *    - A queue flush request received during a feedhold should be deferred until
+ *      the feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *    - A queue flush request received during a motion stop should be honored
  *
- *	  - Hold state == DECEL persists until the aline execution runs to zero
- *		velocity, at which point hold state transitions to HOLD.
+ *    - A cycle start request received during motion should be ignored and reset the flag
+ *    - A cycle start request received during a feedhold should be deferred until the
+ *      feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *      If a queue flush request is also present the queue flush should be done first
+ *    - A cycle start request received during a motion stop should be honored and
+ *      should start to run anything in the planner queue
  *
- *	  - Hold state == HOLD persists until the cycle is restarted. A cycle start
- *		is an asynchronous event that sets the cycle_start_flag TRUE. It can
- *		occur any time after the hold is requested - either before or after
- *		motion stops.
+ *	Below the request level, feedholds work like this:
  *
- *	  - mp_end_hold() is executed from cm_feedhold_sequencing_callback() once the
- *		hold state == HOLD and a cycle_start has been requested.This sets the hold
- *		state to OFF which enables _exec_aline() to continue processing. Move
- *		execution begins with the first buffer after the hold.
+ *    - The hold is initiated by calling cm_start_hold(). If cm.hold_state == FEEDHOLD_OFF
+ *      and motion_state is MOTION_RUN it sets hold_state = FEEDHOLD_SYNC and motion_state
+ *      = MOTION_HOLD. The spindle is turned off if it it on. The remainder of feedhold
+ *      processing occurs in plan_exec.c in the mp_exec_aline() function.
  *
- *	Terms used:
- *	 - mr is the runtime buffer. It was initially loaded from the bf buffer
- *	 - bp+0 is the "companion" bf buffer to the mr buffer.
- *	 - bp+1 is the bf buffer following bp+0. This runs through bp+N
- *	 - bp (by itself) just refers to the current buffer being adjusted / replanned
+ *	  - MOTION_HOLD and FEEDHOLD_SYNC tells mp_exec_aline() to begin feedhold processing
+ *      after the current move segment is finished (< 5 ms later). (Cases handled by
+ *      feedhold processing are listed in plan_exec.c).
  *
- *	Details: Planning re-uses bp+0 as an "extra" buffer. Normally bp+0 is returned
- *		to the buffer pool as it is redundant once mr is loaded. Use the extra
- *		buffer to split the move in two where the hold decelerates to zero. Use
- *		one buffer to go to zero, the other to replan up from zero. All buffers past
- *		that point are unaffected other than that they need to be replanned for velocity.
+ *    - FEEDHOLD_SYNC causes the current move in mr to be replanned into a deceleration.
+ *      If the distance remaining in the executing move is sufficient for a full deceleration
+ *      then motion will stop in the current block. Otherwise the deceleration phase
+ *      will extend across as many blocks necessary until one will stop.
  *
- *	Note: There are multiple opportunities for more efficient organization of
- *		  code in this module, but the code is so complicated I just left it
- *		  organized for clarity and hoped for the best from compiler optimization.
+ *    - Once deceleration is complete hold state transitions to FEEDHOLD_HOLD and the
+ *      distance remaining in the bf last block is replanned up from zero velocity.
+ *      The move in the bf block is NOT released (unlike normal operation), as it
+ *      will be used again to restart from hold.
+ *
+ *    - When cm_end_hold() is called it releases the hold, restarts the move and restarts
+ *      the spindle if the spindle is active.
  */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
 void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
@@ -1291,7 +1274,7 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
 		if(cm.hold_state == FEEDHOLD_OFF) {
-			if (mp_get_run_buffer() != NULL) {
+			if (mp_get_run_buffer() != NULL) {  // meaning there is something running
 				cm_start_hold();
 			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
 				cm_spindle_control_immediate(SPINDLE_OFF);
@@ -1320,15 +1303,18 @@ stat_t cm_feedhold_sequencing_callback()
 
 stat_t cm_start_hold()
 {
+//    if(cm.gm.spindle_mode != SPINDLE_OFF) {
+//        cm_spindle_control_immediate(SPINDLE_OFF);
+//    }
 	cm_set_motion_state(MOTION_HOLD);
 	cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_end_hold()
 {
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
-		return STAT_EAGAIN;
+		return (STAT_EAGAIN);
 
 	mp_restart_from_hold();
 	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
@@ -1344,7 +1330,7 @@ stat_t cm_end_hold()
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
 	}
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_queue_flush()

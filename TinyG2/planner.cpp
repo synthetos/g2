@@ -444,9 +444,8 @@ uint8_t mp_free_run_buffer()    // EMPTY current run buffer & advance to the nex
 	_clear_buffer(r);                           // clear it out (& reset replannable and set MP_BUFFER_EMPTY)
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_RUNNING; // run next buffer
-    } else {
-        __NOP(); // something to get ahold of in debugging
-        rpt_exception(STAT_BUFFER_FREE_ASSERTION_FAILURE, (char_t *)"free_run_buffer");
+//    } else {
+//        __NOP(); // something to get ahold of in debugging - gets here when queue empties
 	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count

@@ -188,16 +188,19 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t)); // copy in the gcode model state
         bf->move_state = MOVE_RUN;                       // signal the planner that this buffer is running
-        mr.move_state = MOVE_RUN;
+        mr.move_state = MOVE_NEW;
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
         mr.jerk = bf->jerk;
+
         mr.head_length = bf->head_length;
         mr.body_length = bf->body_length;
         mr.tail_length = bf->tail_length;
+
         mr.entry_velocity = bf->entry_velocity;
         mr.cruise_velocity = bf->cruise_velocity;
         mr.exit_velocity = bf->exit_velocity;
+
         copy_vector(mr.unit, bf->unit);
         copy_vector(mr.target, bf->gm.target);			// save the final target of the move
 
@@ -240,7 +243,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (1), Case (2), Case (4)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
-        if ((cm.hold_state == FEEDHOLD_SYNC) || (cm.hold_state == FEEDHOLD_DECEL_CONTINUE)) {
+        if ((cm.hold_state == FEEDHOLD_SYNC) ||
+            ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
             mr.entry_velocity = mr.segment_velocity;
             if (mr.section != SECTION_BODY) {
                 mr.entry_velocity += mr.forward_diff_5;
@@ -266,6 +270,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             }
         }
     }
+    mr.move_state = MOVE_RUN;
 
     // NB: from this point on the contents of the bf buffer do not affect execution
 
