@@ -439,15 +439,17 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	while ((bp = mp_get_next_buffer(bp)) != bf) {
-        if (bp->move_type == MOVE_TYPE_COMMAND) {
+
+        // plan dwells, commands and other move types
+//      if ((bp->move_type == MOVE_TYPE_COMMAND) ||  (bp->move_type == MOVE_TYPE_DWELL)) {
+        if (bp->move_type != MOVE_TYPE_ALINE) {
             bp->replannable = false;
             bp->buffer_state = MP_BUFFER_QUEUED;
-
             // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
-
             continue;
         }
 
+        // plan lines
 		if ((bp->pv == bf) || (mr_flag == true))  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
             mr_flag = false;
@@ -455,30 +457,27 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 			bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
 		}
 		bp->cruise_velocity = bp->cruise_vmax;
-		bp->exit_velocity = min4( bp->exit_vmax,
-								  bp->nx->entry_vmax,
-								  bp->nx->braking_velocity,
+		bp->exit_velocity = min4( bp->exit_vmax, bp->nx->entry_vmax, bp->nx->braking_velocity,
 								 (bp->entry_velocity + bp->delta_vmax) );
 
         plan_debug_pin3 = 1;
         mp_calculate_trapezoid(bp);
         plan_debug_pin3 = 0;
 
-        if (fp_ZERO(bp->cruise_velocity))
+        if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
             while(1);
+        }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
-		// test for optimally planned trapezoids - only need to check various exit conditions
+		// Test for optimally planned trapezoids - only need to check various exit conditions
         // We also lock if the planner doesn't have more than MIN_PLANNED_TIME worth of moves in it that are locked.
-        if  ((
-              (fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
-              (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax))
-             ) ||
-             ((bp->pv->replannable == false) && fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax)))
-            )
-        {
+        if  ( ((fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
+               (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) ) ||
+               ((bp->pv->replannable == false) && fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) )
+            {
             bp->replannable = false;
         }
         bp->buffer_state = MP_BUFFER_QUEUED;
@@ -494,8 +493,10 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         mp_calculate_trapezoid(bp);
         plan_debug_pin3 = 0;
 
-        if (fp_ZERO(bp->cruise_velocity))
+        if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
             while(1);
+        }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));

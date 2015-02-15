@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		076.16 // documentation and cleanup pass before moving on
+#define TINYG_FIRMWARE_BUILD   		077.01 // work on dwells
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

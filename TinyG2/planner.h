@@ -78,13 +78,6 @@ enum sectionState {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-// UNUSED - CAN DELETE
-// The following must apply: MM_PER_ARC_SEGMENT >= MIN_LINE_LENGTH
-//#define ARC_SEGMENT_LENGTH 	((float)0.1)		// Arc segment size (mm) MOVED TO PLAN_ARC
-//#define MIN_LINE_LENGTH 		((float)0.08)		// Smallest line the system can plan (mm)
-//#define MIN_SEGMENT_LENGTH 	((float)0.05)		// Smallest accel/decel segment (mm). Set to produce ~10 ms segments (0.01)
-//#define MIN_LENGTH_MOVE 		((float)0.001)		// millimeters
-
 #define JERK_MULTIPLIER			((float)1000000)	// must alway be 1 million - do not change
 #define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 
@@ -106,12 +99,6 @@ enum sectionState {
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
-
-// UNUSED - CAN BE DELETED
-//#define MIN_ARC_SEGMENT_TIME 	(MIN_ARC_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-//#define MIN_TIME_MOVE  			MIN_SEGMENT_TIME 	// minimum time a move can be is one segment
-//#define MIN_BLOCK_TIME			MIN_SEGMENT_TIME	// factor for minimum size Gcode block to process
-
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
 /* PLANNER_BUFFER_POOL_SIZE
