@@ -402,7 +402,7 @@ void mp_commit_write_buffer(const moveType move_type)
 {
     mb.q->move_type = move_type;
     mb.q->move_state = MOVE_NEW;
-//    mb.q->replannable = true;     // ++++ TEST
+//    mb.q->replannable = true;                   // ++++ TEST
     if (MOVE_TYPE_ALINE != move_type) {
         mb.q->buffer_state = MP_BUFFER_QUEUED;
         mb.q = mb.q->nx;

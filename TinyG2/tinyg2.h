@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		077.01 // work on dwells
+#define TINYG_FIRMWARE_BUILD   		078.01 // re-arranged mp_aline()
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

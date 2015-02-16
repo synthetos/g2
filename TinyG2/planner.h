@@ -146,6 +146,7 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
     bool    locked;	        		// TRUE if the move is locked from replanning
 
 	float unit[AXES];				// unit vector for axis scaling & planning
+    bool unit_flags[AXES];          // set true for axes participating in the move
 
 	float length;					// total length of line or helix in mm
 	float head_length;
