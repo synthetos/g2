@@ -71,7 +71,7 @@ sleep 0.5
 
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
 
-if [ ! -f $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac ]; then
+if [ ! -f $arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/bossac ]; then
     #echo $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac
     echo ""
     echo "##########################################################################################"
@@ -82,7 +82,7 @@ if [ ! -f $arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac ]; then
     exit 1;
 fi
 
-$arduinoAppDir/Arduino.app/Contents/Java/hardware/tools/bossac -e -w -v -b "${file/.elf/.bin}"
+$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/bossac -e -w -v -b "${file/.elf/.bin}"
 
 echo
 echo "WARNING: You may need to hit the RESET button on the device at this point."
