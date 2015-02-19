@@ -306,34 +306,26 @@ enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
  *	 the operating state for the values (which may have changed).
  */
 typedef struct GCodeState {				// Gcode model state - used by model, planning and runtime
-	uint32_t linenum;					// Gcode block line number
-	uint8_t motion_mode;				// Group1: G0, G1, G2, G3, G38.2, G80, G81,
-//	cmMotionMode motion_mode;			// G82, G83 G84, G85, G86, G87, G88, G89
+    uint32_t linenum;					// Gcode block line number
+    uint8_t motion_mode;				// Group1: G0, G1, G2, G3, G38.2, G80, G81,
+                                        // G82, G83 G84, G85, G86, G87, G88, G89
 
-	float target[AXES]; 				// XYZABC where the move should go
-	float work_offset[AXES];			// offset from the work coordinate system (for reporting only)
+    float target[AXES]; 				// XYZABC where the move should go
+    float work_offset[AXES];			// offset from the work coordinate system (for reporting only)
 
-	float move_time;					// optimal time for move given axis constraints
-	float minimum_time;					// minimum time possible for move given axis constraints
-	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
+    float move_time;					// optimal time for move given axis constraints
+    float minimum_time;					// minimum time possible for move given axis constraints
+    float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
-	float spindle_speed;				// in RPM
-	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
+    float spindle_speed;				// in RPM
+    float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
-	uint8_t feed_rate_mode;		// See cmFeedRateMode for settings
-	uint8_t select_plane;		// G17,G18,G19 - values to set plane to
-	uint8_t units_mode;				// G20,G21 - 0=inches (G20), 1 = mm (G21)
-	uint8_t coord_system;			// G54-G59 - select coordinate system 1-9
-	uint8_t path_control;			// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
-	uint8_t distance_mode;		// G91   0=use absolute coords(G90), 1=incremental movement
-
-//	cmFeedRateMode feed_rate_mode;		// See cmFeedRateMode for settings
-//	cmCanonicalPlane select_plane;		// G17,G18,G19 - values to set plane to
-//	cmUnitsMode units_mode;				// G20,G21 - 0=inches (G20), 1 = mm (G21)
-//	cmCoordSystem coord_system;			// G54-G59 - select coordinate system 1-9
-//	cmPathControl path_control;			// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
-//	cmDistanceMode distance_mode;		// G91   0=use absolute coords(G90), 1=incremental movement
-
+    uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
+    uint8_t select_plane;               // G17,G18,G19 - values to set plane to
+    uint8_t units_mode;                 // G20,G21 - 0=inches (G20), 1 = mm (G21)
+    uint8_t coord_system;               // G54-G59 - select coordinate system 1-9
+    uint8_t path_control;               // G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
+    uint8_t distance_mode;              // G91   0=use absolute coords(G90), 1=incremental movement
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
 	uint8_t tool;						// M6 tool change - moves "tool_select" to "tool"
 	uint8_t tool_select;				// T value - T sets this value
@@ -397,17 +389,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t path_control;	    		// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
 	uint8_t distance_mode;	        	// G91   0=use absolute coords(G90), 1=incremental movement
 	uint8_t origin_offset_mode;     	// G92...TRUE=in origin offset mode
-
-//	cmFeedRateMode feed_rate_mode;		// See cmFeedRateMode for settings
-//	cmCanonicalPlane select_plane;		// G17,G18,G19 - values to set plane to
-//	cmUnitsMode units_mode;				// G20,G21 - 0=inches (G20), 1 = mm (G21)
-//	cmCoordSystem coord_system;			// G54-G59 - select coordinate system 1-9
-//	cmPathControl path_control;			// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
-//	cmDistanceMode distance_mode;		// G91   0=use absolute coords(G90), 1=incremental movement
-//	cmOriginOffset origin_offset_mode;	// G92...TRUE=in origin offset mode
-
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
-
 	uint8_t tool;						// Tool after T and M6 (tool_select and tool_change)
 	uint8_t tool_select;				// T value - T sets this value
 	uint8_t tool_change;				// M6 tool change flag - moves "tool_select" to "tool"
@@ -415,7 +397,6 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
 
 	uint8_t spindle_mode;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-//	cmSpindleState spindle_mode;		// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
@@ -461,11 +442,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	uint8_t soft_limit_enable;
 
-	// hidden system settings
-//	float min_segment_len;				// NOT USED - line drawing resolution in mm
-//	float arc_segment_len;				// MOVED TO ARC - arc drawing resolution in mm
-//	float estd_segment_usec;			// NOT USED - approximate segment time in microseconds
-
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
 	uint8_t select_plane;				// G17,G18,G19 reset default
@@ -485,7 +461,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
 	uint8_t cycle_state;				// cycs
 	uint8_t motion_state;				// momo
-//	uint8_t hold_state;					// hold: feedhold sub-state machine
 
 //    cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
 //    cmCycleState cycle_state;			// cycs
@@ -590,8 +565,8 @@ void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
 stat_t cm_hard_alarm(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
-stat_t cm_soft_alarm(stat_t status);							// enter soft alarm state. returns same status code
-//stat_t cm_soft_alarm(stat_t status, const char *msg);         // enter soft alarm state. returns same status code
+stat_t cm_soft_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
+//stat_t cm_soft_alarm(stat_t status);							// enter soft alarm state. returns same status code
 stat_t cm_clear(nvObj_t *nv);
 
 // Representation (4.3.3)

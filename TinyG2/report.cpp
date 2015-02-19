@@ -98,7 +98,7 @@ stat_t rpt_exception(uint8_t status, char_t *info)
  */
 stat_t rpt_er(nvObj_t *nv)
 {
-	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, NULL)); // bogus exception report for testing
+	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, (char_t *)"bogus")); // bogus exception report for testing
 }
 
 /**** Application Messages *********************************************************
@@ -206,7 +206,7 @@ void sr_init_status_report()
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
 	sr.status_report_request = SR_OFF;
 	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
-	nv->index = nv_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
+	nv->index = nv_get_index((const char_t *)"", (char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
@@ -214,7 +214,7 @@ void sr_init_status_report()
 		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
 		if (fp_EQ(nv->value, NO_MATCH)) {
-			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, NULL); // trap mis-configured profile settings
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, (char_t *)"sr_init"); // trap mis-configured profile settings
 			return;
 		}
 		if (_is_stat(nv) == true)
