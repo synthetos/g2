@@ -143,7 +143,7 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 #define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
 
-typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t
+typedef char char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t
 								// because in C++ uint8_t and char are distinct types and
 								// we want chars to behave as uint8's
 
@@ -163,38 +163,32 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 #define STD_OUT 0
 #define STD_ERR 0
 
+
+// defines are BAD, M'kay? 'specially when you redfine a global function.
+
 /* String compatibility
- *
- * The ARM stdio functions we are using still use char as input and output. The macros
- * below do the casts for most cases, but not all. Vararg functions like the printf()
- * family need special handling. These like char * as input and require casts as per:
- *
- *   printf((const char *)"Good Morning Hoboken!\n");
  *
  * The AVR also has "_P" variants that take PROGMEM strings as args.
  * On the ARM/GCC++ the _P functions are just aliases of the non-P variants.
+ *
+ * Note that we have to be sure to cast non char variables to char types when used
+ * with standard functions. We must maintain const when it's required as well.
+ *
+ * The compiler will be your guide when you get it wrong. :)
+ *
+ * Example: char *ret = strcpy((char *)d, (const char *)s);
+ *
  */
-#define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
-#define strncat(d,s,l) (char_t *)strncat((char *)d, (char *)s, l)
-#define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
-#define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
-#define strcat(d,s) (char_t *)strcat((char *)d, (char *)s)
-#define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
-#define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
-#define strcmp(d,s) strcmp((char *)d, (char *)s)
-#define strtod(d,p) strtod((char *)d, (char **)p)
-#define strtof(d,p) strtof((char *)d, (char **)p)
-#define strlen(s) strlen((char *)s)
-#define isdigit(c) isdigit((char)c)
-#define isalnum(c) isalnum((char)c)
-#define tolower(c) (char_t)tolower((char)c)
-#define toupper(c) (char_t)toupper((char)c)
 
+
+// These we'll allow for the sake of not having to pass the variadic variables...
 #define printf_P printf		// these functions want char * as inputs, not char_t *
 #define fprintf_P fprintf	// just sayin'
 #define sprintf_P sprintf
-#define strcpy_P strcpy
-#define strncpy_P strncpy
+
+// These are better -- inline jump functions.
+inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
+inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 #endif // __ARM
 
