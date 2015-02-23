@@ -439,7 +439,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, NULL); // where is this supposed to go!?
+                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, (char_t *)"xio_dev"); // where is this supposed to go!?
                         }
                         controller_set_connected(false);
                     } else if(checkForCtrlAndPrimary(oldflags)) {

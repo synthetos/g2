@@ -42,6 +42,8 @@
 
 // Machine configuration settings
 #define CHORDAL_TOLERANCE 			0.01					// chordal accuracy for arc drawing (in mm)
+#define MIN_ARC_SEGMENT_LEN		    ((float)0.1)	        // default minimum arc segment length in mm
+
 #define SOFT_LIMIT_ENABLE			0						// 0 = off, 1 = on
 
 #define MOTOR_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
@@ -63,6 +65,7 @@
 #define STATUS_REPORT_MIN_MS		100						// milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS	250						// milliseconds - set $SV=0 to disable
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+// ALternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF					// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -87,23 +90,24 @@
 #define JSON_FOOTER_STYLE			2						// 1 = footer w/checksum, 2 = footer w/window slots
 
 #undef JSON_VERBOSITY
-//#define JSON_VERBOSITY				JV_SILENT			// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define JSON_VERBOSITY				JV_LINENUM				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY				JV_VERBOSE				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+
+#undef STATUS_REPORT_VERBOSITY
+#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
 #undef STATUS_REPORT_DEFAULTS
 #define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","stat"
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","_cs1","_es1","_fe1","_xs1","_cs2","_es2","_fe2","_xs2"
 
-#undef STATUS_REPORT_VERBOSITY
-//#define STATUS_REPORT_VERBOSITY		SR_VERBOSE				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_VERBOSITY		SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#endif
+#endif // __DEBUG_SETTINGS
 
-/**** MACHINE PROFILES ******************************************************/
-
-// machine default profiles - choose only one:
-
-
+/**** MACHINE PROFILES ******************************************************
+ *
+ * Provide a SETTINGS_FILE in the makefile or compiler command line, e.g:
+ *	SETTINGS_FILE="settings_shopbot_test.h"
+ *
+ * If no file is specified the default settings file will be used
+ */
 #ifdef SETTINGS_FILE
 #define SETTINGS_FILE_PATH <settings/SETTINGS_FILE>
 #include SETTINGS_FILE_PATH
@@ -111,19 +115,15 @@
 #include "settings/settings_default.h"				// Default settings for release
 #endif
 
-//#include "settings/settings_test.h"					// Settings for testing - not for release
-//#include "settings/settings_hammer.h"					// Hammer torque demo
-//#include "settings/settings_pendulum.h"				// Pendulum motion demo
+// Alternate settings files that may be available in the project:
 //#include "settings/settings_othermill.h"				// OMC OtherMill
-//#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
-//#include "settings/settings_shapeoko375.h"			// Shapeoko 375mm kit
 //#include "settings/settings_shapeoko2.h"				// Shapeoko2 standard kit
-//#include "settings/settings_ultimaker.h"				// Ultimaker 3D printer
-//#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
-
-//#include "settings/settings_Ultimaker.h"
+//#include "settings/settings_shopbot_test.h"			// Shopbot test for v9 boards
+//#include "settings/settings_shopbot_sbv300.h"			// Shopbot sbv300 board profile
+//#include "settings/settings_Ultimaker.h"				// Ultimaker 3D printer
 //#include "settings/settings_Ultimaker_Rob_v9h.h"
+//#include "settings/settings_zen7x12.h"				// Zen Toolworks 7x12
 
 /*** Handle optional modules that may not be in every machine ***/
 

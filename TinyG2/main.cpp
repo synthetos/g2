@@ -2,8 +2,8 @@
  * main.cpp - TinyG - An embedded rs274/ngc CNC controller
  * This file is part of the TinyG project.
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -105,7 +105,7 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
-    
+
     // Store the flash UUID
     cacheUniqueId();
 
@@ -169,7 +169,7 @@ int main(void)
  {
 	// system initialization
 	_system_init();
-    
+
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
@@ -291,9 +291,9 @@ static const char stat_84[] PROGMEM = "84";
 static const char stat_85[] PROGMEM = "85";
 static const char stat_86[] PROGMEM = "86";
 static const char stat_87[] PROGMEM = "87";
-static const char stat_88[] PROGMEM = "88";
-static const char stat_89[] PROGMEM = "89";
 
+static const char stat_88[] PROGMEM = "Buffer free assertion failure";
+static const char stat_89[] PROGMEM = "State management assertion failure";
 static const char stat_90[] PROGMEM = "Config assertion failure";
 static const char stat_91[] PROGMEM = "XIO assertion failure";
 static const char stat_92[] PROGMEM = "Encoder assertion failure";

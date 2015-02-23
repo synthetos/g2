@@ -2,8 +2,8 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S Hart, Jr.
- * Copyright (c) 2014 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S Hart, Jr.
+ * Copyright (c) 2014 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -148,48 +148,48 @@ static int8_t _get_axis_type(const index_t index);
 uint8_t cm_get_combined_state()
 {
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in cycle but macs is not cycle"*/);
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"machine is in motion but macs is not cycle"*/);
-    
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
+
     switch(cm.machine_state)
     {
-        case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
-        case MACHINE_READY: return COMBINED_READY;
-        case MACHINE_ALARM: return COMBINED_ALARM;
-        case MACHINE_SHUTDOWN: return COMBINED_SHUTDOWN;
-        case MACHINE_PROGRAM_STOP: return COMBINED_PROGRAM_STOP;
-        case MACHINE_PROGRAM_END: return COMBINED_PROGRAM_END;
+        case MACHINE_INITIALIZING: return (COMBINED_INITIALIZING);
+        case MACHINE_READY: return (COMBINED_READY);
+        case MACHINE_ALARM: return (COMBINED_ALARM);
+        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
+        case MACHINE_PROGRAM_STOP: return (COMBINED_PROGRAM_STOP);
+        case MACHINE_PROGRAM_END: return (COMBINED_PROGRAM_END);
         case MACHINE_CYCLE: {
             switch(cm.cycle_state)
             {
-                case CYCLE_PROBE: return COMBINED_PROBE;
-                case CYCLE_JOG: return COMBINED_JOG;
-                case CYCLE_HOMING: return COMBINED_HOMING;
+                case CYCLE_PROBE: return (COMBINED_PROBE);
+                case CYCLE_JOG: return (COMBINED_JOG);
+                case CYCLE_HOMING: return (COMBINED_HOMING);
                 case CYCLE_MACHINING: case CYCLE_OFF: {
                     switch(cm.motion_state)
                     {
-                        case MOTION_HOLD: return COMBINED_HOLD;
-                        case MOTION_PLANNING: return COMBINED_RUN;
-                        case MOTION_RUN: return COMBINED_RUN;
+                        case MOTION_HOLD: return (COMBINED_HOLD);
+                        case MOTION_PLANNING: return (COMBINED_RUN);
+                        case MOTION_RUN: return (COMBINED_RUN);
                         case MOTION_STOP:
                             //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
                             //    until the command is executed by mp_exec_aline... so this assert isn't valid
-                            //rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
-                            return COMBINED_RUN;
+                            //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
+                            return (COMBINED_RUN);
                         default:
-                            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"mots has impossible value"*/);
-                            return COMBINED_SHUTDOWN;
+                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
+                            return (COMBINED_SHUTDOWN);
                     }
                 }
                 default:
-                    rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"cycs has impossible value"*/);
-                    return COMBINED_SHUTDOWN;
+                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
+                    return (COMBINED_SHUTDOWN);
             }
         }
         default:
-            rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, NULL/*"macs has impossible value"*/);
-            return COMBINED_SHUTDOWN;
+            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
+            return (COMBINED_SHUTDOWN);
     }
 }
 
@@ -499,16 +499,16 @@ void cm_set_model_target(float target[], float flag[])
  *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
- *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
 static stat_t _finalize_soft_limits(stat_t status)
 {
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;		// cancel motion
-	copy_vector(cm.gm.target, cm.gmx.position);				// reset model target
-	return (cm_soft_alarm(status));							// throw a soft alarm
+	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
+	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
+	return (cm_soft_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -617,9 +617,9 @@ stat_t canonical_machine_test_assertions(void)
  * cm_hard_alarm() - alarm state; send an exception report and shut down machine
  */
 
-stat_t cm_soft_alarm(stat_t status)
+stat_t cm_soft_alarm(stat_t status, const char *msg)
 {
-	rpt_exception(status, NULL);			// send alarm message
+	rpt_exception(status, (char_t *)"msg");	// send alarm message
 	cm.machine_state = MACHINE_ALARM;
 	return (status);						// NB: More efficient than inlining rpt_exception() call.
 }
@@ -634,7 +634,7 @@ stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
 	return (STAT_OK);
 }
 
-stat_t cm_hard_alarm(stat_t status)
+stat_t cm_hard_alarm(stat_t status, const char *msg)
 {
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
@@ -650,10 +650,10 @@ stat_t cm_hard_alarm(stat_t status)
 	// build an info string and call the exception report
 	char_t info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("n:%d,gc:\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"n\":%d,\"gc\":\"%s\""), (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
 
@@ -1207,60 +1207,64 @@ void cm_message(char_t *message)
 	nv_add_string((const char_t *)"msg", message);	// add message to the response object
 }
 
-/******************************
- * Program Functions (4.3.10) *
- ******************************/
-/*
- * This group implements stop, start, end, and hold.
- * It is extended beyond the NIST spec to handle various situations.
- *
- *	_exec_program_finalize()
- *	cm_cycle_start()			(no Gcode)  Do a cycle start right now
- *	cm_cycle_end()				(no Gcode)	Do a cycle end right now
- *	cm_feedhold()				(no Gcode)	Initiate a feedhold right now
- *	cm_program_stop()			(M0, M60)	Queue a program stop
- *	cm_optional_program_stop()	(M1)
- *	cm_program_end()			(M2, M30)
- *	cm_machine_ready()			puts machine into a READY state
- *
- * cm_program_stop and cm_optional_program_stop are synchronous Gcode
- * commands that are received through the interpreter. They cause all motion
- * to stop at the end of the current command, including spindle motion.
- *
- * Note that the stop occurs at the end of the immediately preceding command
- * (i.e. the stop is queued behind the last command).
- *
- * cm_program_end is a stop that also resets the machine to initial state
- */
-
+/************************************************
+ * Feedhold and Related Functions (no NIST ref) *
+ ************************************************/
 /*
  * cm_request_feedhold()
  * cm_request_queue_flush()
  * cm_request_end_hold()
  * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
+ * cm_start_hold()
+ * cm_end_hold()
  * cm_flush_planner() - Flush planner queue and correct model positions
- *
- * Feedholds, queue flushes and cycles starts are all related. The request functions set
- *	flags for these. The sequencing callback interprets the flags according to the
- *	following rules:
- *
- *	A feedhold request received during motion should be honored
- *	A feedhold request received during a feedhold should be ignored and reset
- *	A feedhold request received during a motion stop should be ignored and reset
- *
- *	A queue flush request received during motion should be ignored but not reset
- *	A queue flush request received during a feedhold should be deferred until
- *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
- *	A queue flush request received during a motion stop should be honored
- *
- *	A cycle start request received during motion should be ignored and reset
- *	A cycle start request received during a feedhold should be deferred until
- *		the feedhold enters a HOLD state (i.e. until deceleration is complete)
- *		If a queue flush request is also present the queue flush should be done first
- *	A cycle start request received during a motion stop should be honored and
- *		should start to run anything in the planner queue
  */
-
+/*
+ * Feedhold requests and sequencing:
+ *
+ * Feedholds, queue flushes and cycle starts are all related. The request functions set flags.
+ * The sequencing callback interprets the flags according to the following rules:
+ *
+ *    - A feedhold request received during motion should be honored
+ *    - A feedhold request received during a feedhold should be ignored and reset the flag
+ *    - A feedhold request received during a motion stop should be ignored and reset flag
+ *
+ *    - A queue flush request received during motion should be ignored but not reset
+ *    - A queue flush request received during a feedhold should be deferred until
+ *      the feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *    - A queue flush request received during a motion stop should be honored
+ *
+ *    - A cycle start request received during motion should be ignored and reset the flag
+ *    - A cycle start request received during a feedhold should be deferred until the
+ *      feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *      If a queue flush request is also present the queue flush should be done first
+ *    - A cycle start request received during a motion stop should be honored and
+ *      should start to run anything in the planner queue
+ *
+ *	Below the request level, feedholds work like this:
+ *
+ *    - The hold is initiated by calling cm_start_hold(). If cm.hold_state == FEEDHOLD_OFF
+ *      and motion_state is MOTION_RUN it sets hold_state = FEEDHOLD_SYNC and motion_state
+ *      = MOTION_HOLD. The spindle is turned off if it it on. The remainder of feedhold
+ *      processing occurs in plan_exec.c in the mp_exec_aline() function.
+ *
+ *	  - MOTION_HOLD and FEEDHOLD_SYNC tells mp_exec_aline() to begin feedhold processing
+ *      after the current move segment is finished (< 5 ms later). (Cases handled by
+ *      feedhold processing are listed in plan_exec.c).
+ *
+ *    - FEEDHOLD_SYNC causes the current move in mr to be replanned into a deceleration.
+ *      If the distance remaining in the executing move is sufficient for a full deceleration
+ *      then motion will stop in the current block. Otherwise the deceleration phase
+ *      will extend across as many blocks necessary until one will stop.
+ *
+ *    - Once deceleration is complete hold state transitions to FEEDHOLD_HOLD and the
+ *      distance remaining in the bf last block is replanned up from zero velocity.
+ *      The move in the bf block is NOT released (unlike normal operation), as it
+ *      will be used again to restart from hold.
+ *
+ *    - When cm_end_hold() is called it releases the hold, restarts the move and restarts
+ *      the spindle if the spindle is active.
+ */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
 void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
@@ -1270,7 +1274,7 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
 		if(cm.hold_state == FEEDHOLD_OFF) {
-			if (mp_get_run_buffer() != NULL) {
+			if (mp_get_run_buffer() != NULL) {  // meaning there is something running
 				cm_start_hold();
 			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
 				cm_spindle_control_immediate(SPINDLE_OFF);
@@ -1283,7 +1287,7 @@ stat_t cm_feedhold_sequencing_callback()
         if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
 			 !cm_get_runtime_busy()) {
 			cm_queue_flush();
-            cm_soft_alarm(STAT_MACHINE_ALARMED);
+            cm_soft_alarm(STAT_MACHINE_ALARMED, NULL);
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
@@ -1299,18 +1303,20 @@ stat_t cm_feedhold_sequencing_callback()
 
 stat_t cm_start_hold()
 {
+//    if(cm.gm.spindle_mode != SPINDLE_OFF) {
+//        cm_spindle_control_immediate(SPINDLE_OFF);
+//    }
 	cm_set_motion_state(MOTION_HOLD);
 	cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_end_hold()
 {
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
-		return STAT_EAGAIN;
+		return (STAT_EAGAIN);
 
-	cm.hold_state = FEEDHOLD_END_HOLD;
-	mp_end_hold();
+	mp_restart_from_hold();
 	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
 		cm_cycle_start();
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
@@ -1324,7 +1330,7 @@ stat_t cm_end_hold()
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
 	}
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_queue_flush()
@@ -1359,40 +1365,55 @@ stat_t cm_queue_flush()
 	return (STAT_OK);
 }
 
+/******************************
+ * Program Functions (4.3.10) *
+ ******************************/
+/* This group implements stop, start, and end functions.
+ * It is extended beyond the NIST spec to handle various situations.
+ *
+ * _exec_program_finalize()     - helper
+ * cm_cycle_start()
+ * cm_cycle_end()
+ * cm_program_stop()            - M0
+ * cm_optional_program_stop()   - M1
+ * cm_program_end()             - M2, M30
+ */
 /*
  * Program and cycle state functions
  *
- * _exec_program_finalize() 	- helper
- * cm_cycle_start()
- * cm_cycle_end()
- * cm_program_stop()			- M0
- * cm_optional_program_stop()	- M1
- * cm_program_end()				- M2, M30
+ * cm_program_stop and cm_optional_program_stop are synchronous Gcode commands
+ * that are received through the interpreter. They cause all motion to stop
+ * at the end of the current command, including spindle motion.
+ *
+ * Note that the stop occurs at the end of the immediately preceding command
+ * (i.e. the stop is queued behind the last command).
+ *
+ * cm_program_end is a stop that also resets the machine to initial state
  *
  * cm_program_end() implements M2 and M30
  * The END behaviors are defined by NIST 3.6.1 are:
- *	1. Axis offsets are set to zero (like G92.2) and origin offsets are set to the default (like G54)
- *	2. Selected plane is set to CANON_PLANE_XY (like G17)
- *	3. Distance mode is set to MODE_ABSOLUTE (like G90)
- *	4. Feed rate mode is set to UNITS_PER_MINUTE (like G94)
- *	5. Feed and speed overrides are set to ON (like M48)
- *	6. Cutter compensation is turned off (like G40)
- *	7. The spindle is stopped (like M5)
- *	8. The current motion mode is set to G_1 (like G1)
- *	9. Coolant is turned off (like M9)
+ *	1a.	Origin offsets are set to the default (like G54)
+ *	1b. Axis offsets are set to zero (like G92.2)
+ *	2.  Selected plane is set to CANON_PLANE_XY (like G17)
+ *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
+ *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)
+ *	5.  Feed and speed overrides are set to ON (like M48)
+ *	6.  Cutter compensation is turned off (like G40)
+ *	7.  The spindle is stopped (like M5)
+ *	8.  The current motion mode is set to G_1 (like G1)
+ *	9.  Coolant is turned off (like M9)
  *
- * cm_program_end() implments things slightly differently:
- *	1. Axis offsets are set to G92.1 CANCEL offsets (instead of using G92.2 SUSPEND Offsets)
- *	   Set default coordinate system (uses $gco, not G54)
- *	2. Selected plane is set to default plane ($gpl) (instead of setting it to G54)
- *	3. Distance mode is set to MODE_ABSOLUTE (like G90)
- *	4. Feed rate mode is set to UNITS_PER_MINUTE (like G94)
- * 	5. Not implemented
- *	6. Not implemented
- *	7. The spindle is stopped (like M5)
- *	8. Motion mode is canceled like G80 (not set to G1)
- *	9. Coolant is turned off (like M9)
- *	+  Default INCHES or MM units mode is restored ($gun)
+ * cm_program_end() implments things slightly differently (1a, 8):
+ *	1a. Set default coordinate system (uses $gco, not G54)
+ *	1b. Axis offsets are SUSPENDED (G92.2)
+ *	2.  Selected plane is set to default plane ($gpl)
+ *	3.  Distance mode is set to MODE_ABSOLUTE (like G90)
+ *	4.  Feed rate mode is set to UNITS_PER_MINUTE (like G94)
+ * 	5.  Not implemented
+ *	6.  Not implemented
+ *	7.  The spindle is stopped (like M5)
+ *	8.  Motion mode is CANCELED like G80 (not set to G1 as per NIST)
+ *	9.  Coolant is turned off (like M9)
  */
 
 static void _exec_program_finalize(float *value, float *flag)
@@ -1409,12 +1430,11 @@ static void _exec_program_finalize(float *value, float *flag)
 
 	// perform the following resets if it's a program END
 	if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
-//		cm_reset_origin_offsets();						// G92.1 - we do G91.1 instead of G92.2
-		cm_suspend_origin_offsets();					// G92.2 - as per Kramer
+		cm_suspend_origin_offsets();					// G92.2 - as per NIST
+//		cm_reset_origin_offsets();						// G92.1 - alternative to above
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
-//++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
 		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
 		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
@@ -1480,12 +1500,12 @@ stat_t cm_start_estop(void)
 	_exec_program_finalize(value, value);	// finalize now, not later
 	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
 
-	return STAT_OK;
+    return (STAT_OK);
 }
 
 stat_t cm_end_estop(void)
 {
-	return STAT_OK;
+	return (STAT_OK);
 }
 
 stat_t cm_ack_estop(nvObj_t *nv)
@@ -1769,6 +1789,15 @@ stat_t cm_get_vel(nvObj_t *nv)
 		nv->value = mp_get_runtime_velocity();
 		if (cm_get_units_mode(RUNTIME) == INCHES) nv->value *= INCHES_PER_MM;
 	}
+	nv->precision = GET_TABLE_WORD(precision);
+	nv->valuetype = TYPE_FLOAT;
+	return (STAT_OK);
+}
+
+stat_t cm_get_feed(nvObj_t *nv)
+{
+	nv->value = cm_get_feed_rate(ACTIVE_MODEL);
+	if (cm_get_units_mode(ACTIVE_MODEL) == INCHES) nv->value *= INCHES_PER_MM;
 	nv->precision = GET_TABLE_WORD(precision);
 	nv->valuetype = TYPE_FLOAT;
 	return (STAT_OK);
@@ -2076,8 +2105,10 @@ const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million
 const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
-const char fmt_Xsn[] PROGMEM = "[%s%s] %s switch min%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
-const char fmt_Xsx[] PROGMEM = "[%s%s] %s switch max%17d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xsn[] PROGMEM = "[%s%s] %s minimum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xsx[] PROGMEM = "[%s%s] %s maximum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
+const char fmt_Xrn[] PROGMEM = "[%s%s] %s minimum switch type%8.0f [0=NO, 1=NC]\n";
+const char fmt_Xrx[] PROGMEM = "[%s%s] %s maximum switch type%8.0f [0=NO, 1=NC]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
 const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";
 const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
@@ -2143,6 +2174,8 @@ void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 void cm_print_sn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsn);}
 void cm_print_sx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsx);}
+void cm_print_rn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrn);}
+void cm_print_rx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrx);}
 void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
 void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
 void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}

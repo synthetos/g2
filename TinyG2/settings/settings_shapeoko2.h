@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shapeoko2 500mm table
+ * settings_shapeoko2.h - Shapeoko2 500mm table
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -40,13 +40,17 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to Shapeoko2 500mm profile"
 
-#define JUNCTION_DEVIATION		0.10	// default value, in mm - larger is faster
-#define JUNCTION_ACCELERATION	1000000	// centripetal acceleration around corners
+#define JUNCTION_DEVIATION		0.10					// default value, in mm - larger is faster
+#define JUNCTION_ACCELERATION	1000000					// centripetal acceleration around corners
+#define SWITCH_TYPE				SW_TYPE_NORMALLY_CLOSED	// SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 
 // *** settings.h overrides ***
 
+#undef MOTOR_POWER_LEVEL
+#define MOTOR_POWER_LEVEL		0.375				    // motor power level 0.00 - 1.00 (ARM only)
+
 #undef SOFT_LIMIT_ENABLE
-#define SOFT_LIMIT_ENABLE		1					// 0 = off, 1 = on
+#define SOFT_LIMIT_ENABLE		0					    // 0 = off, 1 = on
 
 #undef SWITCH_TYPE
 #define SWITCH_TYPE 			SW_TYPE_NORMALLY_CLOSED	// one of: SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
@@ -54,39 +58,58 @@
 #undef COMM_MODE
 #define COMM_MODE				JSON_MODE
 
+//#undef JSON_VERBOSITY
+//#define JSON_VERBOSITY			JV_EXCEPTIONS		// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE, JV_EXCEPTIONS
+
+#undef STATUS_REPORT_VERBOSITY
+#define STATUS_REPORT_VERBOSITY		SR_FILTERED		    // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+
+#undef STATUS_REPORT_INTERVAL_MS
+#define STATUS_REPORT_INTERVAL_MS	250				    // milliseconds - set $SV=0 to disable
+
+//#undef STATUS_REPORT_DEFAULTS
+//#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
+
+//#undef GCODE_DEFAULT_UNITS
+//#define GCODE_DEFAULT_UNITS			INCHES          // MILLIMETERS or INCHES
+
+//#undef GCODE_DEFAULT_COORD_SYSTEM
+//#define GCODE_DEFAULT_COORD_SYSTEM	G55             // G54, G55, G56, G57, G58 or G59
+
+
 // *** motor settings ***
 
-#define M1_MOTOR_MAP 			AXIS_X				// 1ma
-#define M1_STEP_ANGLE			1.8					// 1sa
-#define M1_TRAVEL_PER_REV		40.00				// 1tr
-#define M1_MICROSTEPS			8					// 1mi		1,2,4,8
-#define M1_POLARITY				0					// 1po		0=normal, 1=reversed
-#define M1_POWER_MODE			MOTOR_POWER_MODE	// 1pm		TRUE=low power idle enabled
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL
-
-#define M2_MOTOR_MAP			AXIS_Y
-#define M2_STEP_ANGLE			1.8
-#define M2_TRAVEL_PER_REV		40.00
-#define M2_MICROSTEPS			8
-#define M2_POLARITY				0
-#define M2_POWER_MODE			MOTOR_POWER_MODE
-#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M4_MOTOR_MAP 			AXIS_X				// 1ma
+#define M4_STEP_ANGLE			1.8					// 1sa
+#define M4_TRAVEL_PER_REV		40.00				// 1tr
+#define M4_MICROSTEPS			32					// 1mi		1,2,4,8
+#define M4_POLARITY				0					// 1po		0=normal, 1=reversed
+#define M4_POWER_MODE			MOTOR_POWER_MODE	// 1pm		TRUE=low power idle enabled
+#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP			AXIS_Y
 #define M3_STEP_ANGLE			1.8
 #define M3_TRAVEL_PER_REV		40.00
-#define M3_MICROSTEPS			8
-#define M3_POLARITY				1
+#define M3_MICROSTEPS			32
+#define M3_POLARITY				0
 #define M3_POWER_MODE			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
 
-#define M4_MOTOR_MAP			AXIS_Z
-#define M4_STEP_ANGLE			1.8
-#define M4_TRAVEL_PER_REV		1.25
-#define M4_MICROSTEPS			4
-#define M4_POLARITY				0
-#define M4_POWER_MODE			MOTOR_POWER_MODE
-#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M2_MOTOR_MAP			AXIS_Y
+#define M2_STEP_ANGLE			1.8
+#define M2_TRAVEL_PER_REV		40.00
+#define M2_MICROSTEPS			32
+#define M2_POLARITY				1
+#define M2_POWER_MODE			MOTOR_POWER_MODE
+#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
+
+#define M1_MOTOR_MAP			AXIS_Z
+#define M1_STEP_ANGLE			1.8
+#define M1_TRAVEL_PER_REV		1.25
+#define M1_MICROSTEPS			8
+#define M1_POLARITY				0
+#define M1_POWER_MODE			MOTOR_POWER_MODE
+#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL
 
 #if (MOTORS >= 5)
 #define M5_MOTOR_MAP			AXIS_B
@@ -118,8 +141,8 @@
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN		SW_MODE_HOMING_LIMIT// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MIN       SWITCH_TYPE			// rsn		SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_SWITCH_TYPE_MAX       SWITCH_TYPE			// rsx		SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
 #define X_SEARCH_VELOCITY		3000				// xsv		minus means move to minimum switch
 #define X_LATCH_VELOCITY		100					// xlv		mm/min
 #define X_LATCH_BACKOFF			20					// xlb		mm
@@ -135,25 +158,25 @@
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING_LIMIT
 #define Y_SWITCH_MODE_MAX		SW_MODE_LIMIT
-#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
+#define Y_SWITCH_TYPE_MIN       SWITCH_TYPE
+#define Y_SWITCH_TYPE_MAX       SWITCH_TYPE
 #define Y_SEARCH_VELOCITY		3000
 #define Y_LATCH_VELOCITY		100
 #define Y_LATCH_BACKOFF			20
 #define Y_ZERO_BACKOFF			3
 
 #define Z_AXIS_MODE				AXIS_STANDARD
-#define Z_VELOCITY_MAX			1600
+#define Z_VELOCITY_MAX			1200
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX			0
 #define Z_TRAVEL_MIN			-95
-#define Z_JERK_MAX				500
+#define Z_JERK_MAX				200
 #define Z_JERK_HOMING			1000
 #define Z_JUNCTION_DEVIATION	0.05
 #define Z_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX		SW_MODE_HOMING_LIMIT
-#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
+#define Z_SWITCH_TYPE_MIN       SWITCH_TYPE
+#define Z_SWITCH_TYPE_MAX       SWITCH_TYPE
 #define Z_SEARCH_VELOCITY		Z_VELOCITY_MAX
 #define Z_LATCH_VELOCITY		100
 #define Z_LATCH_BACKOFF			10
@@ -170,8 +193,8 @@
 #define A_RADIUS				1.0
 #define A_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define A_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
+#define A_SWITCH_TYPE_MIN       SWITCH_TYPE
+#define A_SWITCH_TYPE_MAX       SWITCH_TYPE
 #define A_SEARCH_VELOCITY		6000
 #define A_LATCH_VELOCITY		1000
 #define A_LATCH_BACKOFF			5
@@ -188,8 +211,8 @@
 #define B_RADIUS				1
 #define B_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define B_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
+#define B_SWITCH_TYPE_MIN       SWITCH_TYPE
+#define B_SWITCH_TYPE_MAX       SWITCH_TYPE
 #define B_SEARCH_VELOCITY		6000
 #define B_LATCH_VELOCITY		1000
 #define B_LATCH_BACKOFF			5
@@ -206,8 +229,8 @@
 #define C_RADIUS				1
 #define C_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define C_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
+#define C_SWITCH_TYPE_MIN       SWITCH_TYPE
+#define C_SWITCH_TYPE_MAX       SWITCH_TYPE
 #define C_SEARCH_VELOCITY		6000
 #define C_LATCH_VELOCITY		1000
 #define C_LATCH_BACKOFF			5

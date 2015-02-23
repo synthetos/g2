@@ -2,7 +2,7 @@
  * spindle.cpp - canonical machine spindle driver
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -80,9 +80,17 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 }
 
 /*
- * cm_spindle_control() -  queue the spindle command to the planner buffer
- * cm_exec_spindle_control() - execute the spindle command (called from planner)
+ * cm_spindle_control_immediate()   - turn off spindle w/o planning
+ * cm_spindle_control()             - queue the spindle command to the planner buffer
+ * cm_exec_spindle_control()        - execute the spindle command (called from planner)
  */
+
+stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
+{
+    float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+    _exec_spindle_control(value, value);
+    return (STAT_OK);
+}
 
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
@@ -99,13 +107,6 @@ stat_t cm_spindle_control(uint8_t spindle_mode)
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
 	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
-}
-
-stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
-{
-	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
-	_exec_spindle_control(value, value);
-	return (STAT_OK);
 }
 
 //static void _exec_spindle_control(uint8_t spindle_mode, float f, float *vector, float *flag)

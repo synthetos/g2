@@ -2,7 +2,7 @@
  * json_parser.cpp - JSON parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -89,7 +89,7 @@ void json_parser(char_t *str)
 	stat_t status = _json_parser_kernal(str);
 	if (status == STAT_COMPLETE) return;	// skip the print if returning from something at already did it.
 	nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-	sr_request_status_report(SR_REQUEST_IMMEDIATE); // generate incremental status report to show any changes
+	sr_request_status_report(SR_REQUEST_TIMED); // generate incremental status report to show any changes
 }
 
 static stat_t _json_parser_kernal(char_t *str)
@@ -570,7 +570,12 @@ void json_print_response(uint8_t status)
 	return;
 #endif
 
-	if (js.json_verbosity == JV_SILENT) return;				// silent responses
+	if (js.json_verbosity == JV_SILENT) return;				// silent means no responses
+
+	if (js.json_verbosity == JV_EXCEPTIONS)					// cutout for JV_EXCEPTIONS mode
+		if (status == STAT_OK)
+			if (cm.machine_state != MACHINE_INITIALIZING)	// always do full echo during startup
+				return;
 
 	// Body processing
 	nvObj_t *nv = nv_body;
@@ -609,7 +614,7 @@ void json_print_response(uint8_t status)
 	// Footer processing
 	while(nv->valuetype != TYPE_EMPTY) {					// find a free nvObj at end of the list...
 		if ((nv = nv->nx) == NULL) {						// oops! No free nvObj!
-			rpt_exception(STAT_JSON_TOO_LONG, NULL);		// report this as an exception
+			rpt_exception(STAT_JSON_TOO_LONG, (char_t *)"json_print"); // report this as an exception
 			return;
 		}
 	}
@@ -645,7 +650,7 @@ void json_print_response(uint8_t status)
 
 stat_t json_set_jv(nvObj_t *nv)
 {
-	if (nv->value > JV_VERBOSE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
 	js.json_verbosity = nv->value;
 
 	js.echo_json_footer = false;
@@ -654,12 +659,17 @@ stat_t json_set_jv(nvObj_t *nv)
 	js.echo_json_linenum = false;
 	js.echo_json_gcode_block = false;
 
-	if (nv->value >= JV_FOOTER) 	{ js.echo_json_footer = true;}
-	if (nv->value >= JV_MESSAGES)	{ js.echo_json_messages = true;}
-	if (nv->value >= JV_CONFIGS)	{ js.echo_json_configs = true;}
-	if (nv->value >= JV_LINENUM)	{ js.echo_json_linenum = true;}
-	if (nv->value >= JV_VERBOSE)	{ js.echo_json_gcode_block = true;}
-
+	if (js.json_verbosity == JV_EXCEPTIONS) {
+		js.echo_json_footer = true;
+		js.echo_json_messages = true;
+		js.echo_json_configs = true;
+	} else {
+		if (nv->value >= JV_FOOTER)		js.echo_json_footer = true;
+		if (nv->value >= JV_MESSAGES)	js.echo_json_messages = true;
+		if (nv->value >= JV_CONFIGS)	js.echo_json_configs = true;
+		if (nv->value >= JV_LINENUM)	js.echo_json_linenum = true;
+		if (nv->value >= JV_VERBOSE)	js.echo_json_gcode_block = true;
+	}
 	return(STAT_OK);
 }
 

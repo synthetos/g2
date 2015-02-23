@@ -2,8 +2,7 @@
  * plan_arc.h - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Portions copyright (c) 2009 Simen Svale Skogsrud
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -21,7 +20,7 @@
 #ifndef PLAN_ARC_H_ONCE
 #define PLAN_ARC_H_ONCE
 
-// See planner.h for MM_PER_ARC_SEGMENT setting
+// See settings.h for MIN_ARC_SEGMENT_LEN setting
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
 	magic_t magic_start;
@@ -48,12 +47,16 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 	float center_0;				// center of circle at plane axis 0 (e.g. X for G17)
 	float center_1;				// center of circle at plane axis 1 (e.g. Y for G17)
 
-	GCodeState_t gm;			// Gcode state struct is passed for each arc segment. 
+	GCodeState_t gm;			// Gcode state struct is passed for each arc segment.
 //	Usage:
 //	uint32_t linenum;			// line number of the arc feed move - same for each segment
 //	float target[AXES];			// arc segment target
 //	float work_offset[AXES];	// offset from machine coord system for reporting (same for each segment)
 //	float move_time;			// segment_time: constant time per aline segment
+
+    // Static arc settings
+
+	float min_arc_segment_len;	// arc drawing resolution in mm
 
 	magic_t magic_end;
 } arc_t;

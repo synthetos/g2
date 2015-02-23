@@ -2,7 +2,7 @@
  * report.cpp - TinyG status report and other reporting functions.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -53,11 +53,11 @@ rxSingleton_t rx;
  *
  * Returns incoming status value
  *
- * You can use the 'info' string to add additional JSON which will be appended to the 
- * er: object. Ideally the string should be formatted according to the JSON mode in effect, 
- * but short of this a properly strict formatted string will suffice. 
+ * You can use the 'info' string to add additional JSON which will be appended to the
+ * er: object. Ideally the string should be formatted according to the JSON mode in effect,
+ * but short of this a properly strict formatted string will suffice.
  * Pass info as NULL to skip this feature.
- * Do not use global_string_buf[] as *info or it will get trampled. 
+ * Do not use global_string_buf[] as *info or it will get trampled.
  * See cm_hard_alarm() for an example of use.
  *
  * WARNING: Do not call this function from MED or HI interrupts (LO is OK)
@@ -83,7 +83,7 @@ stat_t rpt_exception(uint8_t status, char_t *info)
 			} else {
 				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			}			
+			}
 		}
 		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
 			// Fancy place for a breakpoint, if your code asplodes.
@@ -98,7 +98,7 @@ stat_t rpt_exception(uint8_t status, char_t *info)
  */
 stat_t rpt_er(nvObj_t *nv)
 {
-	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, NULL)); // bogus exception report for testing
+	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, (char_t *)"bogus")); // bogus exception report for testing
 }
 
 /**** Application Messages *********************************************************
@@ -206,7 +206,7 @@ void sr_init_status_report()
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
 	sr.status_report_request = SR_OFF;
 	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
-	nv->index = nv_get_index((const char_t *)"", (const char_t *)"se00");	// set first SR persistence index
+	nv->index = nv_get_index((const char_t *)"", (char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
@@ -214,7 +214,7 @@ void sr_init_status_report()
 		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
 		if (fp_EQ(nv->value, NO_MATCH)) {
-			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, NULL); // trap mis-configured profile settings
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, (char_t *)"sr_init"); // trap mis-configured profile settings
 			return;
 		}
 		if (_is_stat(nv) == true)
@@ -309,11 +309,10 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
 
     sr_debug_pin3 = 1;
-//    if (!mp_is_it_phat_city_time()) {
-//        sr_debug_pin3 = 0;
-//        return (STAT_NOOP);
-//    }
-
+    if (!mp_is_it_phat_city_time()) {
+        sr_debug_pin3 = 0;
+        return (STAT_NOOP);
+    }
 
 	if (sr.status_report_request == SR_VERBOSE) {
 		_populate_unfiltered_status_report();
@@ -370,7 +369,7 @@ static stat_t _populate_unfiltered_status_report()
 		strcpy(nv->token, tmp);			//...or here.
 
 		if ((nv = nv->nx) == NULL)
-			return (cm_hard_alarm(STAT_BUFFER_FULL_FATAL));	// should never be NULL unless SR length exceeds available buffer array
+			return (cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "sr1"));	// should never be NULL unless SR length exceeds available buffer array
 	}
 	return (STAT_OK);
 }
@@ -526,7 +525,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
 	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
 
-//    if (!mp_is_it_phat_city_time()) { return (STAT_NOOP);}
+    if (!mp_is_it_phat_city_time()) { return (STAT_NOOP);}
 
     qr.queue_report_requested = false;
 
