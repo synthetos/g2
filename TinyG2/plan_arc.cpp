@@ -237,7 +237,7 @@ static stat_t _compute_arc()
 							   segments_required_for_minimum_distance,
 							   segments_required_for_minimum_time));
 
-	arc.segments = max(arc.segments, 1);		//...but is at least 1 segment
+	arc.segments = max(arc.segments, 1.0f);		//...but is at least 1 segment
 	arc.gm.move_time = arc.time / arc.segments;	// gcode state struct gets segment_time, not arc time
 	arc.segment_count = (int32_t)arc.segments;
 	arc.segment_theta = arc.angular_travel / arc.segments;

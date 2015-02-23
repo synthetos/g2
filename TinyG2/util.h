@@ -36,11 +36,16 @@
 #define UTIL_H_ONCE
 
 #ifdef __ARM
-//#include <stdint.h>
+#include <stdint.h>
 //#include "sam.h"
 #include "MotateTimers.h"
 using Motate::delay;
 using Motate::SysTickTimer;
+
+#include <type_traits>
+#include <algorithm> // min, max
+#include <cmath> // isnan, isinf
+
 #endif
 
 /****** Global Scope Variables and Functions ******/
@@ -86,27 +91,19 @@ uint32_t SysTickTimer_getValue(void);
 
 //**** Math Support *****
 
-#ifndef square
-#define square(x) ((x)*(x))		/* UNSAFE */
-#endif
+// See http://www.cplusplus.com/doc/tutorial/namespaces/#using
+using std::isnan;
+using std::isinf;
 
-// side-effect safe forms of min and max
-#ifndef max
-#define max(a,b) \
-   ({ __typeof__ (a) termA = (a); \
-      __typeof__ (b) termB = (b); \
-	  termA>termB ? termA:termB; })
-#endif
+using std::min;
+using std::max;
 
-#ifndef min
-#define min(a,b) \
-	({ __typeof__ (a) term1 = (a); \
-	   __typeof__ (b) term2 = (b); \
-	   term1<term2 ? term1:term2; })
-#endif
+template <typename T>
+inline T square(const T x) { return (x)*(x); }		/* UNSAFE */
 
 #ifndef avg
-#define avg(a,b) ((a+b)/2)
+template <typename T>
+inline T avg(const T a,const T b) {return (a+b)/2; }
 #endif
 
 #ifndef EPSILON

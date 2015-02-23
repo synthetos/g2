@@ -698,7 +698,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
     float sintheta_over2 = sqrt((1 - costheta)/2);
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
-    return(min(vmax, sqrt(radius * cm.junction_acceleration)));
+    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
 //    return(sqrt(radius * cm.junction_acceleration));
 
 // New junction code - untested

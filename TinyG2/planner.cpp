@@ -668,6 +668,7 @@ static void _audit_buffers()
     __enable_irq();
 }
 #pragma GCC pop_options
+// About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
 
 /****************************
  * END OF PLANNER FUNCTIONS *

@@ -122,7 +122,7 @@ enum sectionState {
 #define TRAPEZOID_LENGTH_FIT_TOLERANCE		((float)0.0001)	// allowable mm of error in planning phase
 #endif //0
 
-#define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
+#define TRAPEZOID_VELOCITY_TOLERANCE		(max(2.0,bf->entry_velocity/100.0))
 
 /*
  *	Planner structures
