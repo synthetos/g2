@@ -158,20 +158,7 @@ static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
 
-static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
-static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
-static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
-static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
-static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
-static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
-
-static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
-static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
-static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
-static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
-static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
-static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
-
+// Input pins are defined in switch.cpp
 
 /********************************
  * Function Prototypes (Common) *

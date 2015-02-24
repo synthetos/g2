@@ -70,6 +70,69 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
+void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value);
+
+
+static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) {
+    _handle_pin_changed(1, (bool)axis_X_min_pin);
+}
+
+static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) {
+    _handle_pin_changed(2, (bool)axis_X_max_pin);
+}
+
+static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) {
+    _handle_pin_changed(3, (bool)axis_Y_min_pin);
+}
+
+static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) {
+    _handle_pin_changed(4, (bool)axis_Y_max_pin);
+}
+
+static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) {
+    _handle_pin_changed(5, (bool)axis_Z_min_pin);
+}
+
+static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) {
+    _handle_pin_changed(6, (bool)axis_Z_max_pin);
+}
+
+
+static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) {
+    _handle_pin_changed(7, (bool)axis_A_min_pin);
+}
+
+static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
+MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) {
+    _handle_pin_changed(8, (bool)axis_A_max_pin);
+}
+
+static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
+//MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) {
+//    _handle_pin_changed(9, (bool)axis_B_min_pin);
+//}
+
+static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
+//MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) {
+//    _handle_pin_changed(9, (bool)axis_B_max_pin);
+//}
+
+static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
+//MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) {
+//    _handle_pin_changed(10, (bool)axis_C_min_pin);
+//}
+
+static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
+//MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) {
+//    _handle_pin_changed(11, (bool)axis_C_max_pin);
+//}
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -160,6 +223,10 @@ stat_t poll_switches()
 #endif
 }
 
+void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value) {
+    // Do something here.
+}
+
 /*
  * poll_switch() - read switch with NO/NC, debouncing and edge detection
  *
@@ -173,7 +240,7 @@ stat_t poll_switches()
  *
  *	Also sets disabled switches to switch state -1;
  */
-int8_t poll_switch(switch_t *s, uint8_t pin_value)
+int8_t poll_switch(switch_t *s, const uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
 	if (s->mode == SW_MODE_DISABLED) {
