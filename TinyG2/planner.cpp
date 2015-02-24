@@ -268,6 +268,7 @@ stat_t mp_dwell(float seconds)
 		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
+    bf->replannable = true;           // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
 	bf->gm.move_time = seconds;							// in seconds, not minutes
 	bf->move_state = MOVE_NEW;
 	mp_commit_write_buffer(MOVE_TYPE_DWELL);			// must be final operation before exit
@@ -401,6 +402,7 @@ void mp_commit_write_buffer(const moveType move_type)
 {
     mb.q->move_type = move_type;
     mb.q->move_state = MOVE_NEW;
+//    mb.q->replannable = true;                   // ++++ TEST
     if (MOVE_TYPE_ALINE != move_type) {
         mb.q->buffer_state = MP_BUFFER_QUEUED;
         mb.q = mb.q->nx;
@@ -444,9 +446,8 @@ uint8_t mp_free_run_buffer()    // EMPTY current run buffer & advance to the nex
 	_clear_buffer(r);                           // clear it out (& reset replannable and set MP_BUFFER_EMPTY)
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
 		mb.r->buffer_state = MP_BUFFER_RUNNING; // run next buffer
-    } else {
-        __NOP(); // something to get ahold of in debugging
-        rpt_exception(STAT_BUFFER_FREE_ASSERTION_FAILURE, (char_t *)"free_run_buffer");
+//    } else {
+//        __NOP(); // something to get ahold of in debugging - gets here when queue empties
 	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
@@ -503,15 +504,14 @@ stat_t mp_plan_buffer()
     plan_debug_pin1 = 1;
 
     // Criteria to replan:
-    // 0) There are items in the buffer that need replanned.
+    // 0) There are items in the buffer that need replanning.
     // 1) Planner timer has "timed out"
     // 2) Less than MIN_PLANNED_TIME in the planner
 
     if (!mb.needs_replanned) {
         plan_debug_pin1 = 0;
-        return STAT_OK;
+        return (STAT_OK);
     }
-
     bool do_continue = false;
 
     if (mb.force_replan) {
@@ -522,7 +522,6 @@ stat_t mp_plan_buffer()
     if (!do_continue && (mb.planner_timer < SysTickTimer.getValue()) ) {
         do_continue = true;
     }
-
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
 
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
@@ -533,7 +532,7 @@ stat_t mp_plan_buffer()
     if (!do_continue) {
         plan_debug_pin4 = 0;
         plan_debug_pin1 = 0;
-        return STAT_OK;
+        return (STAT_OK);
     }
 
     mp_plan_block_list(mb.q->pv, false);
@@ -544,25 +543,21 @@ stat_t mp_plan_buffer()
     // processed immediately and then freed - invalidating the contents
 
     mb.planner_timer = 0; // clear the planner timer
-    mb.needs_replanned = 0;
+    mb.needs_replanned = false;
 
     plan_debug_pin4 = 0;
     plan_debug_pin1 = 0;
-    return STAT_OK;
+    return (STAT_OK);
 }
 
 bool mp_is_it_phat_city_time() {
 
 	if(cm.hold_state == FEEDHOLD_HOLD) {
-//        printf("T");
     	return true;
 	}
     mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
-//    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
-    bool phat_city = ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
-//    printf("%s", ((phat_city) ? "T" : "f"));
-    return phat_city;
+    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
 void mp_planner_time_accounting() {
@@ -570,10 +565,6 @@ void mp_planner_time_accounting() {
         return;
 
     mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
-//    if (bf == NULL) {
-//       cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "time_accounting");  // never supposed to fail
-//       return;
-//    }
     mpBuf_t *bp = bf;
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
@@ -598,7 +589,6 @@ void mp_planner_time_accounting() {
             break;
         }
     };
-
     mb.time_in_planner = time_in_planner;
 }
 
