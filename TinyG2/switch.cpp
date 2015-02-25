@@ -180,6 +180,20 @@ void switch_init(void)
 
 void switch_reset(void)
 {
+    axis_X_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_X_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_Y_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_Y_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_Z_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_Z_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+
+    axis_A_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_A_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    axis_B_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    axis_B_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    axis_C_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    axis_C_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+
 	switch_t *s;	// shorthand
 	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
 		for (uint8_t position=0; position<SW_POSITIONS; position++) {
