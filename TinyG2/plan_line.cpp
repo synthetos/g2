@@ -769,8 +769,7 @@ void mp_transition_hold_to_stop()
 void mp_restart_from_hold()
 {
 	cm.hold_state = FEEDHOLD_OFF;
-	mpBuf_t *bf;
-	if ((bf = mp_get_run_buffer()) == NULL) {	// NULL means nothing's running
+	if (mp_has_runnable_buffer()) {
 		cm_set_motion_state(MOTION_STOP);
 		return;
 	}

@@ -278,6 +278,7 @@ void mp_init_buffers(void);                             // planner buffer handle
 uint8_t mp_get_planner_buffers_available(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_commit_write_buffer(const moveType move_type);
+bool mp_has_runnable_buffer();
 mpBuf_t * mp_get_run_buffer(void);
 uint8_t mp_free_run_buffer(void);
 
