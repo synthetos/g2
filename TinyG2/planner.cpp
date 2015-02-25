@@ -327,6 +327,9 @@ static stat_t _exec_dwell(mpBuf_t *bf)
  *                          buffer once it has been committed as it may be processed
  *                          and freed (cleared) before the commit function returns.
  *
+ * mp_has_runnable_buffer() Check to see if the next buffer is runnable, indicating that
+ *                          we have not stopped.
+ *
  * mp_get_run_buffer()      Get pointer to the next or current run buffer.
  *                          Return a new run buffer if prev buf was ENDed.
  *                          Return same buf if called again before ENDing.
@@ -424,11 +427,21 @@ void mp_commit_write_buffer(const moveType move_type)
     qr_request_queue_report(+1);                // request a QR and add to the "added buffers" count
 }
 
+bool mp_has_runnable_buffer()
+{
+    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_QUEUED) {
+        return true;
+    }
+    return false;
+}
+
 mpBuf_t * mp_get_run_buffer()
 {
     // CASE: fresh buffer; becomes running if queued or pending
     if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
+        mb.needs_time_accounting = true;
+        mp_planner_time_accounting();
     }
     // CASE: asking for the same run buffer for the Nth time
     if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
@@ -564,12 +577,12 @@ void mp_planner_time_accounting() {
     if (mb.planning || !mb.needs_time_accounting)
         return;
 
-    mpBuf_t *bf = mp_get_run_buffer();  // potential to return a NULL buffer
+    mpBuf_t *bf = mb.r;  // potential to return a NULL buffer
     mpBuf_t *bp = bf;
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
 
-    if (bf == NULL) {
+    if (mb.r->buffer_state == MP_BUFFER_PLANNING) {
         mb.time_in_planner = time_in_planner;
         return;
     }
