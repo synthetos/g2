@@ -278,19 +278,19 @@ void mp_init_buffers(void);                             // planner buffer handle
 uint8_t mp_get_planner_buffers_available(void);
 mpBuf_t * mp_get_write_buffer(void);
 void mp_commit_write_buffer(const moveType move_type);
+bool mp_has_runnable_buffer();
 mpBuf_t * mp_get_run_buffer(void);
-uint8_t mp_free_run_buffer(void);
+bool mp_free_run_buffer(void);
 
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf);      // Use macro below instead
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf);      // Use macro below instead
-//mpBuf_t * mp_get_first_buffer(void);                  // Use macro below instead
+mpBuf_t * mp_get_first_buffer(void);
 //void mp_unget_write_buffer(void);                     // UNUSED
 //mpBuf_t * mp_get_last_buffer(void);                   // UNUSED
 //void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp);  // UNUSED
 
 #define mp_get_prev_buffer(b) ((mpBuf_t *)(b->pv))
 #define mp_get_next_buffer(b) ((mpBuf_t *)(b->nx))
-#define mp_get_first_buffer mp_get_run_buffer
 
 stat_t mp_plan_buffer();                                // planner functions and helpers...
 bool mp_is_it_phat_city_time();

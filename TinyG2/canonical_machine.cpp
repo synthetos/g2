@@ -885,7 +885,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
 	cm_finalize_move();
-	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+	if(status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
 		return (STAT_OK);
 	} else
@@ -1009,7 +1009,7 @@ stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = f
         mp_plan_buffer();                           // if we aren't deferring planning, plan now
     }
 	cm_finalize_move();
-	if(status == STAT_MINIMUM_LENGTH_MOVE && mp_get_run_buffer() == NULL) {
+	if(status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
 		return (STAT_OK);
 	} else
@@ -1274,7 +1274,7 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.feedhold_requested == true) {
 		cm.feedhold_requested = false;
 		if(cm.hold_state == FEEDHOLD_OFF) {
-			if (mp_get_run_buffer() != NULL) {  // meaning there is something running
+			if (mp_has_runnable_buffer()) {  // meaning there is something running
 				cm_start_hold();
 			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
 				cm_spindle_control_immediate(SPINDLE_OFF);
