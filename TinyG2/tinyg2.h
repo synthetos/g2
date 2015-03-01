@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.01 // new feature branch for work on input / output
+#define TINYG_FIRMWARE_BUILD   		079.02 // increased size of group prefix and token string to accommodate new IO groups
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

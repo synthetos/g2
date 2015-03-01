@@ -183,8 +183,8 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 
 // Stuff you probably don't want to change
 
-#define GROUP_LEN 3						// max length of group prefix
-#define TOKEN_LEN 5						// mnemonic token string: group prefix + short token
+#define GROUP_LEN 4						// max length of group prefix
+#define TOKEN_LEN 6						// mnemonic token string: group prefix + short token
 #define NV_FOOTER_LEN 18				// sufficient space to contain a JSON footer array
 #define NV_LIST_LEN (NV_BODY_LEN+2)		// +2 allows for a header and a footer
 #define NV_MAX_OBJECTS (NV_BODY_LEN-1)	// maximum number of objects in a body string
