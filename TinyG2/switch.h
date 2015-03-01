@@ -41,6 +41,82 @@
 #define SWITCH_H_ONCE
 
 /*
+ * new GPIO
+ */
+
+#define DI_CHANNELS	        9       // number of digital inputs supported
+#define DO_CHANNELS	        4       // number of digital outputs supported
+#define AI_CHANNELS	        0       // number of analog inputs supported
+#define AO_CHANNELS	        0       // number of analog outputs supported
+
+#define DI_LOCKOUT_MS       50      // milliseconds to go dead after input firing
+
+enum gpioType {
+    NORMALLY_OPEN = 0,                  // normally open / active low
+    NORMALLY_CLOSED                     // normally closed / active hi
+};
+#define ACTIVE_LOW  NORMALLY_OPEN       // equivalent and more general
+#define ACTIVE_HIGH  NORMALLY_CLOSED    // equivalent and more general
+
+enum diAction {
+    DI_ACTION_NONE = 0,
+    DI_ACTION_STOP,
+    DI_ACTION_HALT,
+    DI_ACTION_STOP_STEPS,
+    DI_ACTION_RESET
+};
+
+enum diFunc {
+    DI_FUNCTION_NONE = 0,
+    DI_FUNCTION_LIMIT,
+    DI_FUNCTION_INTERLOCK,
+    DI_FUNCTION_SHUTDOWN,
+    DI_FUNCTION_SPINDLE_READY
+};
+
+enum diState {
+    DI_DISABLED = -1,
+    DI_INACTIVE = 0,				// aka switch open, also read as 'false'
+    DI_ACTIVE = 1					// aka switch closed, also read as 'true'
+};
+
+/*
+ * GPIO structures
+ */
+typedef struct gpioDigitalInput {   // one struct per digital input
+	// public
+	gpioType type;                  // 0=NO, 1=NC
+	diAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
+	diFunc function;
+
+	// private
+    bool homing_mode;               // set true when input is in homing mode.
+	uint8_t edge;                   // keeps a transient record of edges for immediate inquiry
+	uint16_t lockout_ms;            // number of millisecond ticks for debounce lockout
+	uint32_t lockout_timeout;       // time to expire current debounce lockout, or 0 if no lockout
+} gpio_di_t;
+
+typedef struct gpioDigitalOutput {  // one struct per digital output
+    gpioType sense;
+} gpio_do_t;
+
+typedef struct gpioAnalogInput {    // one struct per analog input
+    gpioType sense;
+} gpio_ai_t;
+
+typedef struct gpioAnalogOutput {   // one struct per analog output
+    gpioType sense;
+} gpio_ao_t;
+
+typedef struct gpioSingleton {      // collected gpio
+	gpio_di_t in[DI_CHANNELS];
+    gpio_do_t out[DO_CHANNELS];     // Note: 'do' is a reserved word
+    gpio_ai_t an_in[AI_CHANNELS];
+    gpio_ao_t an_out[AO_CHANNELS];
+} gpio_t;
+extern gpio_t gpio;
+
+/*********************************************************
  * Generic variables and settings
  */
 
@@ -112,6 +188,12 @@ extern switches_t sw;
 /*
  * Function prototypes
  */
+
+void gpio_print_ty(nvObj_t *nv);
+void gpio_print_ac(nvObj_t *nv);
+void gpio_print_fn(nvObj_t *nv);
+
+
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);

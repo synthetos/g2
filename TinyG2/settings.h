@@ -82,6 +82,27 @@
 #define COM_ENABLE_ECHO				false
 #define COM_ENABLE_FLOW_CONTROL		FLOW_CONTROL_XON		// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
+// Input / output settings
+
+#define DEFAULT_TYPE                NORMALLY_CLOSED
+#define DEFAULT_ACTION              DI_ACTION_NONE
+#define DEFAULT_FUNCTION            DI_FUNCTION_NONE
+
+#define DI1_TYPE                    DEFAULT_TYPE
+#define DI1_ACTION                  DEFAULT_ACTION
+#define DI1_FUNCTION                DEFAULT_FUNCTION
+
+/*
+#define DI2_TYPE DEFAULT_TYPE
+#define DI3_TYPE DEFAULT_TYPE
+#define DI4_TYPE DEFAULT_TYPE
+#define DI5_TYPE DEFAULT_TYPE
+#define DI6_TYPE DEFAULT_TYPE
+#define DI7_TYPE DEFAULT_TYPE
+#define DI8_TYPE DEFAULT_TYPE
+#define DI9_TYPE DEFAULT_TYPE
+*/
+
 //**** DEBUG SETTINGS ****
 
 #ifdef __DEBUG_SETTINGS

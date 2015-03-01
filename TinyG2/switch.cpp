@@ -55,8 +55,9 @@
 using Motate::SysTickTimer;
 #endif
 
-// Allocate switch array structure
+// Allocate IO array structures
 switches_t sw;
+gpio_t gpio;
 
 //static void _no_action(switch_t *s);
 //static void _led_on(switch_t *s);
@@ -403,5 +404,26 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	void sw_print_ss(nvObj_t *nv)
 	{
 		fprintf(stderr, fmt_ss, nv->token, nv->value);
+	}
+
+//****** New GPIO *****
+
+	static const char fmt_gpio_ty[] PROGMEM = "[st]  input type%18.0f [0=NO,1=NC]\n";
+	static const char fmt_gpio_ac[] PROGMEM = "[st]  input action%18.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
+	static const char fmt_gpio_fn[] PROGMEM = "[st]  input function%18.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
+
+	void gpio_print_ty(nvObj_t *nv)
+	{
+    	text_print_flt(nv, fmt_gpio_ty);
+	}
+
+	void gpio_print_ac(nvObj_t *nv)
+	{
+    	text_print_flt(nv, fmt_gpio_ac);
+	}
+
+	void gpio_print_fn(nvObj_t *nv)
+	{
+    	text_print_flt(nv, fmt_gpio_fn);
 	}
 #endif

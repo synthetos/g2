@@ -376,6 +376,11 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
 #endif
 
+	// Digital inputs and outputs
+	{ "di1","di1ty",_fip, 0, gpio_print_ty, get_ui8, set_ui8, (float *)&gpio.in[0].type,     DI1_TYPE },
+	{ "di1","di1ac",_fip, 0, gpio_print_ac, get_ui8, set_ui8, (float *)&gpio.in[0].action,   DI1_ACTION },
+	{ "di1","di1fn",_fip, 0, gpio_print_fn, get_ui8, set_ui8, (float *)&gpio.in[0].function, DI1_FUNCTION },
+
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, set_flt,(float *)&pwm.c[PWM_1].frequency,		P1_PWM_FREQUENCY },
 	{ "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, set_flt,(float *)&pwm.c[PWM_1].cw_speed_lo,	P1_CW_SPEED_LO },
@@ -656,6 +661,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","b",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","c",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 
+	{ "","di1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+
 	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
 	{ "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -702,7 +709,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
+//#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 		34		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
