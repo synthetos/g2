@@ -461,8 +461,8 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
-	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
-	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
+	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=256 conv=notrunc
+	$(QUIET)printf "%08x" `du -b "$(OUTPUT_BIN).bin" | cut -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=260 conv=notrunc
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
