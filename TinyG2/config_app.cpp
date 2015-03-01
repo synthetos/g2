@@ -381,6 +381,19 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "di1","di1ac",_fip, 0, gpio_print_ac, get_ui8, set_ui8, (float *)&gpio.in[0].action,   DI1_ACTION },
 	{ "di1","di1fn",_fip, 0, gpio_print_fn, get_ui8, set_ui8, (float *)&gpio.in[0].function, DI1_FUNCTION },
 
+    // IO state readers
+	{ "in","in1", _f0, 0, gpio_print_in, gpio_get_in, set_nul, (float *)&cs.null, 0 },
+/*
+    	{ "ss","ss0", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss1", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss2", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss3", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss4", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss5", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss6", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+    	{ "ss","ss7", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
+*/
+
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, set_flt,(float *)&pwm.c[PWM_1].frequency,		P1_PWM_FREQUENCY },
 	{ "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, set_flt,(float *)&pwm.c[PWM_1].cw_speed_lo,	P1_CW_SPEED_LO },
@@ -491,17 +504,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "sys","ew",  _fipn, 0, cfg_print_ew,  get_ui8,  set_01,    (float *)&xio.enable_window_mode,COM_ENABLE_WINDOW_MODE },
 //	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,  (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 //	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,  set_ui8,   (float *)&cs.network_mode,		NETWORK_MODE },
-
-	// switch state readers
-
-	{ "ss","ss0", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss1", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss2", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss3", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss4", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss5", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss6", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-	{ "ss","ss7", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
 
 	// NOTE: The ordering within the gcode defaults is important for token resolution
 	{ "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.select_plane,	GCODE_DEFAULT_PLANE },

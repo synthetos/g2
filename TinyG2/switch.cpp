@@ -387,6 +387,15 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	return (STAT_OK);
 }
 
+stat_t gpio_get_in(nvObj_t *nv)
+{
+    if (nv->value >= (SW_PAIRS * SW_POSITIONS)) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+    uint8_t number = ((uint8_t)nv->token[0] & 0x0F);	// change from ASCII to a number 0-9 (A-F, too)
+    nv->value = (float) read_switch( number/2, number&0x01 );
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -408,22 +417,28 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 
 //****** New GPIO *****
 
-	static const char fmt_gpio_ty[] PROGMEM = "[st]  input type%18.0f [0=NO,1=NC]\n";
-	static const char fmt_gpio_ac[] PROGMEM = "[st]  input action%18.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
-	static const char fmt_gpio_fn[] PROGMEM = "[st]  input function%18.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
+	static const char fmt_gpio_ty[] PROGMEM = "[%sty] input type%15.0f [0=NO,1=NC]\n";
+	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
+	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
+	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5.0f\n";
 
 	void gpio_print_ty(nvObj_t *nv)
 	{
-    	text_print_flt(nv, fmt_gpio_ty);
+		fprintf(stderr, fmt_gpio_ty, nv->group, nv->value);
 	}
 
 	void gpio_print_ac(nvObj_t *nv)
 	{
-    	text_print_flt(nv, fmt_gpio_ac);
+		fprintf(stderr, fmt_gpio_ac, nv->group, nv->value);
 	}
 
 	void gpio_print_fn(nvObj_t *nv)
 	{
-    	text_print_flt(nv, fmt_gpio_fn);
+		fprintf(stderr, fmt_gpio_fn, nv->group, nv->value);
+	}
+
+	void gpio_print_in(nvObj_t *nv)
+	{
+    	fprintf(stderr, fmt_gpio_in, nv->token, nv->value);
 	}
 #endif

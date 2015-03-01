@@ -204,20 +204,6 @@ enum flowControl {
 	FLOW_CONTROL_RTS					// flow control uses RTS/CTS
 };
 
-/*
-enum lineTermination {					// REMOVED. Too easy to make the board non-responsive (not a total brick, but close)
-	IGNORE_OFF = 0,						// accept either CR or LF as termination on RX text line
-	IGNORE_CR,							// ignore CR on RX
-	IGNORE_LF							// ignore LF on RX
-};
-*/
-/*
-enum tgCommunicationsSticky {
-	NOT_STICKY = 0,						// communications mode changes automatically
-	STICKY								// communications mode does not change
-};
-*/
-
 enum valueType {						// value typing for config and JSON
 	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)

@@ -88,6 +88,7 @@ typedef struct gpioDigitalInput {   // one struct per digital input
 	gpioType type;                  // 0=NO, 1=NC
 	diAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
 	diFunc function;
+    diState state;                  // input state 0=inactive, 1=active, -1=disabled
 
 	// private
     bool homing_mode;               // set true when input is in homing mode.
@@ -192,8 +193,12 @@ extern switches_t sw;
 void gpio_print_ty(nvObj_t *nv);
 void gpio_print_ac(nvObj_t *nv);
 void gpio_print_fn(nvObj_t *nv);
+void gpio_print_in(nvObj_t *nv);
+
+stat_t gpio_get_in(nvObj_t *nv);
 
 
+//***** old switch functions *****
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);
