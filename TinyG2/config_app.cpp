@@ -377,7 +377,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Digital inputs and outputs
-	{ "di1","di1ty",_fip, 0, gpio_print_ty, get_ui8, set_ui8, (float *)&gpio.in[0].type,     DI1_TYPE },
+	{ "di1","di1mo",_fip, 0, gpio_print_mo, get_ui8, set_ui8, (float *)&gpio.in[0].mode,     DI1_TYPE },
 	{ "di1","di1ac",_fip, 0, gpio_print_ac, get_ui8, set_ui8, (float *)&gpio.in[0].action,   DI1_ACTION },
 	{ "di1","di1fn",_fip, 0, gpio_print_fn, get_ui8, set_ui8, (float *)&gpio.in[0].function, DI1_FUNCTION },
 

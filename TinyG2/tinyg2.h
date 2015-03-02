@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.04 // more adding gpio to config_app table
+#define TINYG_FIRMWARE_BUILD   		079.05 // input transition ISR - first attempt
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

@@ -51,12 +51,13 @@
 
 #define DI_LOCKOUT_MS       50      // milliseconds to go dead after input firing
 
-enum gpioType {
-    NORMALLY_OPEN = 0,                  // normally open / active low
-    NORMALLY_CLOSED                     // normally closed / active hi
+enum gpioMode {
+    GPIO_DISABLED = -1,             // gpio is disabled
+    GPIO_ACTIVE_LOW = 0,            // gpio is active low (normally open)
+    GPIO_ACTIVE_HIGH = 1            // gpio is active high (normally closed)
 };
-#define ACTIVE_LOW  NORMALLY_OPEN       // equivalent and more general
-#define ACTIVE_HIGH  NORMALLY_CLOSED    // equivalent and more general
+#define NORMALLY_OPEN GPIO_ACTIVE_LOW    // equivalent
+#define NORMALLY_CLOSED GPIO_ACTIVE_HIGH // equivalent
 
 enum diAction {
     DI_ACTION_NONE = 0,
@@ -75,38 +76,43 @@ enum diFunc {
 };
 
 enum diState {
-    DI_DISABLED = -1,
+    DI_DISABLED = -1,               // value returned if input is disabled
     DI_INACTIVE = 0,				// aka switch open, also read as 'false'
     DI_ACTIVE = 1					// aka switch closed, also read as 'true'
+};
+
+enum diEdgeFlag {
+    DI_EDGE_NONE = 0,               // no edge detected or edge flag reset
+    DI_EDGE_LEADING,				// flag is set when leading edge is detected
+    DI_EDGE_TRAILING				// flag is set when trailing edge is detected
 };
 
 /*
  * GPIO structures
  */
 typedef struct gpioDigitalInput {   // one struct per digital input
-	// public
-	gpioType type;                  // 0=NO, 1=NC
+	gpioMode mode;                  // -1=disabled, 0=active low (NO), 1= active high (NC)
 	diAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-	diFunc function;
-    diState state;                  // input state 0=inactive, 1=active, -1=disabled
+	diFunc function;                // function to perform when activated / deactivated
 
-	// private
+    int8_t state;                   // input state 0=inactive, 1=active, -1=disabled
+    diEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
     bool homing_mode;               // set true when input is in homing mode.
-	uint8_t edge;                   // keeps a transient record of edges for immediate inquiry
-	uint16_t lockout_ms;            // number of millisecond ticks for debounce lockout
-	uint32_t lockout_timeout;       // time to expire current debounce lockout, or 0 if no lockout
+
+	uint16_t lockout_ms;            // number of milliseconds for debounce lockout
+	uint32_t lockout_timer;         // time to expire current debounce lockout, or 0 if no lockout
 } gpio_di_t;
 
 typedef struct gpioDigitalOutput {  // one struct per digital output
-    gpioType sense;
+    gpioMode mode;
 } gpio_do_t;
 
 typedef struct gpioAnalogInput {    // one struct per analog input
-    gpioType sense;
+    gpioMode mode;
 } gpio_ai_t;
 
 typedef struct gpioAnalogOutput {   // one struct per analog output
-    gpioType sense;
+    gpioMode mode;
 } gpio_ao_t;
 
 typedef struct gpioSingleton {      // collected gpio
@@ -190,7 +196,7 @@ extern switches_t sw;
  * Function prototypes
  */
 
-void gpio_print_ty(nvObj_t *nv);
+void gpio_print_mo(nvObj_t *nv);
 void gpio_print_ac(nvObj_t *nv);
 void gpio_print_fn(nvObj_t *nv);
 void gpio_print_in(nvObj_t *nv);

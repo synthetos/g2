@@ -71,68 +71,96 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
-void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value);
+void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
+{
+    gpio_di_t *in = &gpio.in[input_num];
 
+    // return if input is disabled (not supposed to happen)
+	if (in->mode == GPIO_DISABLED) {
+    	in->state = DI_DISABLED;
+        return;
+    }
+
+    // return if the switch is in lockout period (take no action)
+    if (SysTickTimer.getValue() < in->lockout_timer) {
+        return;
+    }
+
+	// return if no change in state
+	int8_t pin_value_corrected = (pin_value ^ (in->mode ^ 1));	// correct for NO or NC mode
+	if ( in->state == pin_value_corrected ) {
+//    	in->edge = DI_EDGE_NONE;        // edge should only be reset by function or opposite edge
+    	return;
+	}
+
+	// the switch legitimately changed state - record the change
+    in->state = pin_value_corrected;
+	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
+    if (pin_sense_corrected == DI_ACTIVE) {
+        in->edge = DI_EDGE_LEADING;
+    } else {
+        in->edge = DI_EDGE_TRAILING;
+    }
+}
 
 static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) {
-    _handle_pin_changed(1, (bool)axis_X_min_pin);
+    _handle_pin_changed(1, (int8_t)axis_X_min_pin);
 }
 
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) {
-    _handle_pin_changed(2, (bool)axis_X_max_pin);
+    _handle_pin_changed(2, (int8_t)axis_X_max_pin);
 }
 
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) {
-    _handle_pin_changed(3, (bool)axis_Y_min_pin);
+    _handle_pin_changed(3, (int8_t)axis_Y_min_pin);
 }
 
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) {
-    _handle_pin_changed(4, (bool)axis_Y_max_pin);
+    _handle_pin_changed(4, (int8_t)axis_Y_max_pin);
 }
 
 static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) {
-    _handle_pin_changed(5, (bool)axis_Z_min_pin);
+    _handle_pin_changed(5, (int8_t)axis_Z_min_pin);
 }
 
 static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) {
-    _handle_pin_changed(6, (bool)axis_Z_max_pin);
+    _handle_pin_changed(6, (int8_t)axis_Z_max_pin);
 }
-
 
 static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) {
-    _handle_pin_changed(7, (bool)axis_A_min_pin);
+    _handle_pin_changed(7, (int8_t)axis_A_min_pin);
 }
 
 static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) {
-    _handle_pin_changed(8, (bool)axis_A_max_pin);
+    _handle_pin_changed(8, (int8_t)axis_A_max_pin);
 }
 
 static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) {
-//    _handle_pin_changed(9, (bool)axis_B_min_pin);
+//    _handle_pin_changed(9, (int8_t)axis_B_min_pin);
 //}
 
 static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) {
-//    _handle_pin_changed(9, (bool)axis_B_max_pin);
+//    _handle_pin_changed(9, (int8_t)axis_B_max_pin);
 //}
 
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) {
-//    _handle_pin_changed(10, (bool)axis_C_min_pin);
+//    _handle_pin_changed(10, (int8_t)axis_C_min_pin);
 //}
 
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) {
-//    _handle_pin_changed(11, (bool)axis_C_max_pin);
+//    _handle_pin_changed(11, (int8_t)axis_C_max_pin);
 //}
 
 /*
@@ -224,9 +252,9 @@ stat_t poll_switches()
 #endif
 }
 
-void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value) {
-    // Do something here.
-}
+//void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value) {
+//    // Do something here.
+//}
 
 /*
  * poll_switch() - read switch with NO/NC, debouncing and edge detection
@@ -417,14 +445,14 @@ stat_t gpio_get_in(nvObj_t *nv)
 
 //****** New GPIO *****
 
-	static const char fmt_gpio_ty[] PROGMEM = "[%sty] input type%15.0f [0=NO,1=NC]\n";
+	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15.0f [-1=disabled, 0=NO,1=NC]\n";
 	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
 	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
 	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5.0f\n";
 
-	void gpio_print_ty(nvObj_t *nv)
+	void gpio_print_mo(nvObj_t *nv)
 	{
-		fprintf(stderr, fmt_gpio_ty, nv->group, nv->value);
+		fprintf(stderr, fmt_gpio_mo, nv->group, nv->value);
 	}
 
 	void gpio_print_ac(nvObj_t *nv)
