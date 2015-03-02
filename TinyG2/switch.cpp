@@ -71,6 +71,12 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
+// Since we set the interrput to kPinInterruptOnChange, _handle_pin_changed
+// should only be called when the pin *changes* values, se we can assume that
+// the current value is not the same as the previous value.
+// NOTE: The value may have changed rapidly, and may even have changed again
+// since the interrupt was triggered. In this case a second interrupt will
+// likely follow this one immediately after exiting.
 void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
     gpio_di_t *in = &gpio.in[input_num];
@@ -96,71 +102,74 @@ void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 	// the switch legitimately changed state - record the change
     in->state = pin_value_corrected;
 	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
-    if (pin_sense_corrected == DI_ACTIVE) {
+    if (pin_value_corrected == DI_ACTIVE) {
         in->edge = DI_EDGE_LEADING;
     } else {
         in->edge = DI_EDGE_TRAILING;
     }
 }
 
+// NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
+// The actual values will be the pin's port mask or 0, so you must check for non-zero.
+
 static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) {
-    _handle_pin_changed(1, (int8_t)axis_X_min_pin);
+    _handle_pin_changed(1, (axis_X_min_pin.get() != 0));
 }
 
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) {
-    _handle_pin_changed(2, (int8_t)axis_X_max_pin);
+    _handle_pin_changed(2, (axis_X_max_pin.get() != 0));
 }
 
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) {
-    _handle_pin_changed(3, (int8_t)axis_Y_min_pin);
+    _handle_pin_changed(3, (axis_Y_min_pin.get() != 0));
 }
 
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) {
-    _handle_pin_changed(4, (int8_t)axis_Y_max_pin);
+    _handle_pin_changed(4, (axis_Y_max_pin.get() != 0));
 }
 
 static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) {
-    _handle_pin_changed(5, (int8_t)axis_Z_min_pin);
+    _handle_pin_changed(5, (axis_Z_min_pin.get() != 0));
 }
 
 static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) {
-    _handle_pin_changed(6, (int8_t)axis_Z_max_pin);
+    _handle_pin_changed(6, (axis_Z_max_pin.get() != 0));
 }
 
 static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) {
-    _handle_pin_changed(7, (int8_t)axis_A_min_pin);
+    _handle_pin_changed(7, (axis_A_min_pin.get() != 0));
 }
 
 static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
 MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) {
-    _handle_pin_changed(8, (int8_t)axis_A_max_pin);
+    _handle_pin_changed(8, (axis_A_max_pin.get() != 0));
 }
 
 static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) {
-//    _handle_pin_changed(9, (int8_t)axis_B_min_pin);
+//    _handle_pin_changed(9, (axis_B_min_pin.get() != 0));
 //}
 
 static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) {
-//    _handle_pin_changed(9, (int8_t)axis_B_max_pin);
+//    _handle_pin_changed(9, (axis_B_max_pin.get() != 0));
 //}
 
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) {
-//    _handle_pin_changed(10, (int8_t)axis_C_min_pin);
+//    _handle_pin_changed(10, (axis_C_min_pin.get() != 0));
 //}
 
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 //MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) {
-//    _handle_pin_changed(11, (int8_t)axis_C_max_pin);
+//    _handle_pin_changed(11, (axis_C_max_pin.get() != 0));
 //}
 
 /*
