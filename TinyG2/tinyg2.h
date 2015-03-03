@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.05 // input transition ISR - first attempt
+#define TINYG_FIRMWARE_BUILD   		079.06 // added Rob's changes, more work on pin change ISR
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

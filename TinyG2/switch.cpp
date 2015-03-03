@@ -71,12 +71,18 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
-// Since we set the interrput to kPinInterruptOnChange, _handle_pin_changed
-// should only be called when the pin *changes* values, se we can assume that
-// the current value is not the same as the previous value.
-// NOTE: The value may have changed rapidly, and may even have changed again
-// since the interrupt was triggered. In this case a second interrupt will
-// likely follow this one immediately after exiting.
+/*
+ * _handle_pin_changed() - ISR helper
+ *
+ * Since we set the interrupt to kPinInterruptOnChange _handle_pin_changed() should
+ * only be called when the pin *changes* values, so we can assume that the current
+ * pin value is not the same as the previous value. Note that The value may have
+ * changed rapidly, and may even have changed again since the interrupt was triggered.
+ * In this case a second interrupt will likely follow this one immediately after exiting.
+ *
+ *  input_num is the input channel, 1 - N
+ *  pin_value = 1 if pin is set, 0 otherwise
+ */
 void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
     gpio_di_t *in = &gpio.in[input_num];
@@ -107,6 +113,23 @@ void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
     } else {
         in->edge = DI_EDGE_TRAILING;
     }
+
+    // trigger the action on leading edges
+    if ((in->edge == DI_EDGE_LEADING) && (!in->homing_mode)) {
+        if (in->action == DI_ACTION_STOP) {
+            cm_request_feedhold();
+        }
+        if (in->action == DI_ACTION_HALT) {
+            cm_request_feedhold();
+        }
+        if (in->action == DI_ACTION_STOP_STEPS) {
+            cm_request_feedhold();
+        }
+        if (in->action == DI_ACTION_RESET) {
+            cm_request_feedhold();
+        }
+    }
+
 }
 
 // NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
