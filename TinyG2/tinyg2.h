@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.06 // added Rob's changes, more work on pin change ISR; tested that ISR works.
+#define TINYG_FIRMWARE_BUILD   		079.07 // created gpio.cpp/.h files separate from switch.cpp/.h which will ultimately be removed
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

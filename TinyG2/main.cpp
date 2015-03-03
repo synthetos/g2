@@ -31,6 +31,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
+#include "gpio.h"
 #include "switch.h"
 #include "test.h"
 #include "pwm.h"
@@ -139,6 +140,7 @@ static void _application_init(void)
 	// do these next
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
 	encoder_init();					// virtual encoders
+	gpio_init();					// inputs and outputs
 	switch_init();					// switches
 	reset_limit_switches();         // reset limit switch alarm flags
 	pwm_init();						// pulse width modulation drivers

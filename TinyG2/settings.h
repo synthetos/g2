@@ -85,8 +85,8 @@
 // Input / output settings
 
 #define DEFAULT_TYPE                NORMALLY_CLOSED
-#define DEFAULT_ACTION              DI_ACTION_NONE
-#define DEFAULT_FUNCTION            DI_FUNCTION_NONE
+#define DEFAULT_ACTION              IO_ACTION_NONE
+#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
 
 #define DI1_TYPE                    DEFAULT_TYPE
 #define DI1_ACTION                  DEFAULT_ACTION

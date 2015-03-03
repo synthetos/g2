@@ -41,89 +41,6 @@
 #define SWITCH_H_ONCE
 
 /*
- * new GPIO
- */
-
-#define DI_CHANNELS	        9       // number of digital inputs supported
-#define DO_CHANNELS	        4       // number of digital outputs supported
-#define AI_CHANNELS	        0       // number of analog inputs supported
-#define AO_CHANNELS	        0       // number of analog outputs supported
-
-#define DI_LOCKOUT_MS       50      // milliseconds to go dead after input firing
-
-enum gpioMode {
-    GPIO_DISABLED = -1,             // gpio is disabled
-    GPIO_ACTIVE_LOW = 0,            // gpio is active low (normally open)
-    GPIO_ACTIVE_HIGH = 1            // gpio is active high (normally closed)
-};
-#define NORMALLY_OPEN GPIO_ACTIVE_LOW    // equivalent
-#define NORMALLY_CLOSED GPIO_ACTIVE_HIGH // equivalent
-
-enum diAction {                     // actions are initiated from within the input's ISR
-    DI_ACTION_NONE = 0,
-    DI_ACTION_STOP,                 // stop at normal jerk - preserves positional accuracy
-    DI_ACTION_FAST_STOP,            // stop at high jerk - preserves positional accuracy
-    DI_ACTION_HALT,                 // stop immediately - not guaranteed to preserve position
-    DI_ACTION_RESET                 // reset system immediately
-};
-
-enum diFunc {                       // functions are requested from the ISR, run from the main loop
-    DI_FUNCTION_NONE = 0,
-    DI_FUNCTION_LIMIT,              // limit switch processing
-    DI_FUNCTION_INTERLOCK,          // interlock processing
-    DI_FUNCTION_SHUTDOWN,           // shutdown in support of external emergency stop
-    DI_FUNCTION_SPINDLE_READY       // signal that spindle is ready (up to speed)
-};
-
-enum diState {
-    DI_DISABLED = -1,               // value returned if input is disabled
-    DI_INACTIVE = 0,				// aka switch open, also read as 'false'
-    DI_ACTIVE = 1					// aka switch closed, also read as 'true'
-};
-
-enum diEdgeFlag {
-    DI_EDGE_NONE = 0,               // no edge detected or edge flag reset
-    DI_EDGE_LEADING,				// flag is set when leading edge is detected
-    DI_EDGE_TRAILING				// flag is set when trailing edge is detected
-};
-
-/*
- * GPIO structures
- */
-typedef struct gpioDigitalInput {   // one struct per digital input
-	gpioMode mode;                  // -1=disabled, 0=active low (NO), 1= active high (NC)
-	diAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-	diFunc function;                // function to perform when activated / deactivated
-
-    int8_t state;                   // input state 0=inactive, 1=active, -1=disabled
-    diEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
-    bool homing_mode;               // set true when input is in homing mode.
-
-	uint16_t lockout_ms;            // number of milliseconds for debounce lockout
-	uint32_t lockout_timer;         // time to expire current debounce lockout, or 0 if no lockout
-} gpio_di_t;
-
-typedef struct gpioDigitalOutput {  // one struct per digital output
-    gpioMode mode;
-} gpio_do_t;
-
-typedef struct gpioAnalogInput {    // one struct per analog input
-    gpioMode mode;
-} gpio_ai_t;
-
-typedef struct gpioAnalogOutput {   // one struct per analog output
-    gpioMode mode;
-} gpio_ao_t;
-
-typedef struct gpioSingleton {      // collected gpio
-	gpio_di_t in[DI_CHANNELS];
-    gpio_do_t out[DO_CHANNELS];     // Note: 'do' is a reserved word
-    gpio_ai_t an_in[AI_CHANNELS];
-    gpio_ao_t an_out[AO_CHANNELS];
-} gpio_t;
-extern gpio_t gpio;
-
-/*********************************************************
  * Generic variables and settings
  */
 
@@ -196,15 +113,6 @@ extern switches_t sw;
  * Function prototypes
  */
 
-void gpio_print_mo(nvObj_t *nv);
-void gpio_print_ac(nvObj_t *nv);
-void gpio_print_fn(nvObj_t *nv);
-void gpio_print_in(nvObj_t *nv);
-
-stat_t gpio_get_in(nvObj_t *nv);
-
-
-//***** old switch functions *****
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);

@@ -57,7 +57,6 @@ using Motate::SysTickTimer;
 
 // Allocate IO array structures
 switches_t sw;
-gpio_t gpio;
 
 //static void _no_action(switch_t *s);
 //static void _led_on(switch_t *s);
@@ -71,138 +70,18 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
-/*
- * _handle_pin_changed() - ISR helper
- *
- * Since we set the interrupt to kPinInterruptOnChange _handle_pin_changed() should
- * only be called when the pin *changes* values, so we can assume that the current
- * pin value is not the same as the previous value. Note that The value may have
- * changed rapidly, and may even have changed again since the interrupt was triggered.
- * In this case a second interrupt will likely follow this one immediately after exiting.
- *
- *  input_num is the input channel, 1 - N
- *  pin_value = 1 if pin is set, 0 otherwise
- */
-void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
-{
-    gpio_di_t *in = &gpio.in[input_num];
-
-    printf("%d is %d\n", input_num, pin_value);
-
-    // return if input is disabled (not supposed to happen)
-	if (in->mode == GPIO_DISABLED) {
-    	in->state = DI_DISABLED;
-        return;
-    }
-
-    // return if the switch is in lockout period (take no action)
-    if (SysTickTimer.getValue() < in->lockout_timer) {
-        return;
-    }
-
-	// return if no change in state
-	int8_t pin_value_corrected = (pin_value ^ (in->mode ^ 1));	// correct for NO or NC mode
-	if ( in->state == pin_value_corrected ) {
-//    	in->edge = DI_EDGE_NONE;        // edge should only be reset by function or opposite edge
-    	return;
-	}
-
-	// the switch legitimately changed state - record the change
-    in->state = pin_value_corrected;
-	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
-    if (pin_value_corrected == DI_ACTIVE) {
-        in->edge = DI_EDGE_LEADING;
-    } else {
-        in->edge = DI_EDGE_TRAILING;
-    }
-
-    // perform homing operations if in homing mode
-    if ((in->edge == DI_EDGE_LEADING) && (in->homing_mode)) {
-        cm_request_feedhold();
-        return;
-    }
-
-    // trigger the action on leading edges
-    // *** for now all the function do the same thing ***
-    if ((in->edge == DI_EDGE_LEADING) && (!in->homing_mode)) {
-        if (in->action == DI_ACTION_STOP) {
-            cm_request_feedhold();
-        }
-        if (in->action == DI_ACTION_FAST_STOP) {
-            cm_request_feedhold();
-        }
-        if (in->action == DI_ACTION_HALT) {
-            cm_request_feedhold();
-        }
-        if (in->action == DI_ACTION_RESET) {
-            cm_request_feedhold();
-        }
-    }
-
-}
-
-// NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
-// The actual values will be the pin's port mask or 0, so you must check for non-zero.
-
 static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) {
-    _handle_pin_changed(1, (axis_X_min_pin.get() != 0));
-}
-
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) {
-    _handle_pin_changed(2, (axis_X_max_pin.get() != 0));
-}
-
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) {
-    _handle_pin_changed(3, (axis_Y_min_pin.get() != 0));
-}
-
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) {
-    _handle_pin_changed(4, (axis_Y_max_pin.get() != 0));
-}
-
 static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) {
-    _handle_pin_changed(5, (axis_Z_min_pin.get() != 0));
-}
-
 static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) {
-    _handle_pin_changed(6, (axis_Z_max_pin.get() != 0));
-}
-
 static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) {
-    _handle_pin_changed(7, (axis_A_min_pin.get() != 0));
-}
-
 static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
-MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) {
-    _handle_pin_changed(8, (axis_A_max_pin.get() != 0));
-}
-
 static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
-//MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) {
-//    _handle_pin_changed(9, (axis_B_min_pin.get() != 0));
-//}
-
 static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
-//MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) {
-//    _handle_pin_changed(9, (axis_B_max_pin.get() != 0));
-//}
-
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
-//MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) {
-//    _handle_pin_changed(10, (axis_C_min_pin.get() != 0));
-//}
-
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
-//MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) {
-//    _handle_pin_changed(11, (axis_C_max_pin.get() != 0));
-//}
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -221,20 +100,6 @@ void switch_init(void)
 
 void switch_reset(void)
 {
-    axis_X_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_X_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Y_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Y_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Z_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Z_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-
-    axis_A_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_A_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    axis_B_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    axis_B_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    axis_C_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    axis_C_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-
 	switch_t *s;	// shorthand
 	for (uint8_t axis=0; axis<SW_PAIRS; axis++) {
 		for (uint8_t position=0; position<SW_POSITIONS; position++) {
@@ -306,10 +171,6 @@ stat_t poll_switches()
 	return (STAT_OK);
 #endif
 }
-
-//void _handle_pin_changed(const uint8_t input_num, const uint8_t pin_value) {
-//    // Do something here.
-//}
 
 /*
  * poll_switch() - read switch with NO/NC, debouncing and edge detection
@@ -470,15 +331,6 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	return (STAT_OK);
 }
 
-stat_t gpio_get_in(nvObj_t *nv)
-{
-    if (nv->value >= (SW_PAIRS * SW_POSITIONS)) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-    uint8_t number = ((uint8_t)nv->token[0] & 0x0F);	// change from ASCII to a number 0-9 (A-F, too)
-    nv->value = (float) read_switch( number/2, number&0x01 );
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -496,32 +348,5 @@ stat_t gpio_get_in(nvObj_t *nv)
 	void sw_print_ss(nvObj_t *nv)
 	{
 		fprintf(stderr, fmt_ss, nv->token, nv->value);
-	}
-
-//****** New GPIO *****
-
-	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15.0f [-1=disabled, 0=NO,1=NC]\n";
-	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
-	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
-	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5.0f\n";
-
-	void gpio_print_mo(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_mo, nv->group, nv->value);
-	}
-
-	void gpio_print_ac(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_ac, nv->group, nv->value);
-	}
-
-	void gpio_print_fn(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_fn, nv->group, nv->value);
-	}
-
-	void gpio_print_in(nvObj_t *nv)
-	{
-    	fprintf(stderr, fmt_gpio_in, nv->token, nv->value);
 	}
 #endif

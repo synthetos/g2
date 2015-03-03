@@ -36,7 +36,8 @@
 #include "planner.h"
 #include "plan_arc.h"
 #include "stepper.h"
-#include "switch.h"
+#include "gpio.h"
+#include "switch.h"		// ++++ vestigial
 #include "pwm.h"
 #include "report.h"
 #include "hardware.h"
@@ -377,12 +378,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Digital inputs and outputs
-	{ "di1","di1mo",_fip, 0, gpio_print_mo, get_ui8, set_ui8, (float *)&gpio.in[0].mode,     DI1_TYPE },
-	{ "di1","di1ac",_fip, 0, gpio_print_ac, get_ui8, set_ui8, (float *)&gpio.in[0].action,   DI1_ACTION },
-	{ "di1","di1fn",_fip, 0, gpio_print_fn, get_ui8, set_ui8, (float *)&gpio.in[0].function, DI1_FUNCTION },
+	{ "di1","di1mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[0].mode,     DI1_TYPE },
+	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[0].action,   DI1_ACTION },
+	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[0].function, DI1_FUNCTION },
 
     // IO state readers
-	{ "in","in1", _f0, 0, gpio_print_in, gpio_get_in, set_nul, (float *)&cs.null, 0 },
+	{ "in","in1", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 /*
     	{ "ss","ss0", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
     	{ "ss","ss1", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
