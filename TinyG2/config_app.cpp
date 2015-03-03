@@ -274,7 +274,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_min,		X_TRAVEL_MIN },
 	{ "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
 	{ "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_xjm,(float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
-	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_X].jerk_homing,	X_JERK_HOMING },
+	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_X].jerk_homing,	X_JERK_HIGH_SPEED },
 	{ "x","xjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
 	{ "x","xsn",_fip,  0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MIN].mode,	X_SWITCH_MODE_MIN },	// new style
 	{ "x","xsx",_fip,  0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_X][SW_MAX].mode,	X_SWITCH_MODE_MAX },	// new style
@@ -291,7 +291,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "y","ytn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_min,		Y_TRAVEL_MIN },
 	{ "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
 	{ "y","yjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_xjm,(float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
-	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_Y].jerk_homing,	Y_JERK_HOMING },
+	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_Y].jerk_homing,	Y_JERK_HIGH_SPEED },
 	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },
 	{ "y","ysn",_fip,  0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Y][SW_MIN].mode,	Y_SWITCH_MODE_MIN },	// new style
 	{ "y","ysx",_fip,  0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Y][SW_MAX].mode,	Y_SWITCH_MODE_MAX },	// new style
@@ -308,7 +308,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "z","ztn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_min,		Z_TRAVEL_MIN },
 	{ "z","ztm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
 	{ "z","zjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_xjm,(float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
-	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_Z].jerk_homing, 	Z_JERK_HOMING },
+	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_Z].jerk_homing, 	Z_JERK_HIGH_SPEED },
 	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },
 	{ "z","zsn",_fip,  0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Z][SW_MIN].mode,	Z_SWITCH_MODE_MIN },	// new style
 	{ "z","zsx",_fip,  0, cm_print_sx, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_Z][SW_MAX].mode,	Z_SWITCH_MODE_MAX },	// new style
@@ -325,7 +325,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "a","atn",_fip,  3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_A].travel_min,		A_TRAVEL_MIN },
 	{ "a","atm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_max,		A_TRAVEL_MAX },
 	{ "a","ajm",_fip,  0, cm_print_jm, get_flt,	  cm_set_xjm,(float *)&cm.a[AXIS_A].jerk_max,		A_JERK_MAX },
-	{ "a","ajh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_A].jerk_homing, 	A_JERK_HOMING },
+	{ "a","ajh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_A].jerk_homing, 	A_JERK_HIGH_SPEED },
 	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },
 	{ "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","asn",_fip,  0, cm_print_sn, get_ui8,   sw_set_sw, (float *)&sw.s[AXIS_A][SW_MIN].mode,	A_SWITCH_MODE_MIN },	// new style
@@ -354,7 +354,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","blv",_fip,  0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
 	{ "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,	B_LATCH_BACKOFF },
 	{ "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].zero_backoff,	B_ZERO_BACKOFF },
-	{ "b","bjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_B].jerk_homing,	B_JERK_HOMING },
+	{ "b","bjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_B].jerk_homing,	B_JERK_HIGH_SPEED },
 #endif
 
 	{ "c","cam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_C].axis_mode,		C_AXIS_MODE },
@@ -374,43 +374,43 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","clv",_fip,  0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
 	{ "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
 	{ "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,	C_ZERO_BACKOFF },
-	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
+	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HIGH_SPEED },
 #endif
 
 	// Digital input configs
-	{ "di1","di1mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[0].mode,     DI1_TYPE },
+	{ "di1","di1mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[0].mode,     DI1_MODE },
 	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[0].action,   DI1_ACTION },
 	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[0].function, DI1_FUNCTION },
 
-	{ "di2","di2mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[1].mode,     DI2_TYPE },
+	{ "di2","di2mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[1].mode,     DI2_MODE },
 	{ "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[1].action,   DI2_ACTION },
 	{ "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[1].function, DI2_FUNCTION },
 
-	{ "di3","di3mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[2].mode,     DI3_TYPE },
+	{ "di3","di3mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[2].mode,     DI3_MODE },
 	{ "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[2].action,   DI3_ACTION },
 	{ "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[2].function, DI3_FUNCTION },
 
-	{ "di4","di4mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[3].mode,     DI4_TYPE },
+	{ "di4","di4mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[3].mode,     DI4_MODE },
 	{ "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[3].action,   DI4_ACTION },
 	{ "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[3].function, DI4_FUNCTION },
 
-	{ "di5","di5mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[4].mode,     DI5_TYPE },
+	{ "di5","di5mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[4].mode,     DI5_MODE },
 	{ "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[4].action,   DI5_ACTION },
 	{ "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[4].function, DI5_FUNCTION },
 
-	{ "di6","di6mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[5].mode,     DI6_TYPE },
+	{ "di6","di6mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[5].mode,     DI6_MODE },
 	{ "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[5].action,   DI6_ACTION },
 	{ "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[5].function, DI6_FUNCTION },
 
-	{ "di7","di7mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[6].mode,     DI7_TYPE },
+	{ "di7","di7mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[6].mode,     DI7_MODE },
 	{ "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[6].action,   DI7_ACTION },
 	{ "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[6].function, DI7_FUNCTION },
 
-	{ "di8","di8mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[7].mode,     DI8_TYPE },
+	{ "di8","di8mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[7].mode,     DI8_MODE },
 	{ "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[7].action,   DI8_ACTION },
 	{ "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[7].function, DI8_FUNCTION },
 
-	{ "di9","di9mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[8].mode,     DI9_TYPE },
+	{ "di9","di9mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[8].mode,     DI9_MODE },
 	{ "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[8].action,   DI9_ACTION },
 	{ "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[8].function, DI9_FUNCTION },
 
