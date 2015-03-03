@@ -62,16 +62,16 @@ cfgParameters_t cfg; 				// application specific configuration parameters
 static stat_t _do_motors(nvObj_t *nv);		// print parameters for all motor groups
 static stat_t _do_axes(nvObj_t *nv);		// print parameters for all axis groups
 static stat_t _do_offsets(nvObj_t *nv);		// print offset parameters for G54-G59,G92, G28, G30
+static stat_t _do_inputs(nvObj_t *nv);	    // print parameters for all input groups
 static stat_t _do_all(nvObj_t *nv);			// print all parameters
 
 // communications settings and functions
 
-//static stat_t set_ec(nvObj_t *nv);		// expand CRLF on TX output
 //static stat_t set_ee(nvObj_t *nv);		// enable character echo
 //static stat_t set_ex(nvObj_t *nv);		// enable XON/XOFF and RTS/CTS flow control
 //static stat_t set_baud(nvObj_t *nv);		// set USB baud rate
 static stat_t get_rx(nvObj_t *nv);			// get bytes in RX buffer
-//static stat_t get_wr(nvObj_t *nv);			// get window report (sliding window slots)
+//static stat_t get_wr(nvObj_t *nv);		// get window report (sliding window slots)
 static stat_t get_tick(nvObj_t *nv);		// get system tick count
 //static stat_t run_sx(nvObj_t *nv);		// send XOFF, XON
 
@@ -702,9 +702,18 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","b",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","c",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 
-	{ "","di1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","in",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // input state
+	{ "","di1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // input configs
+	{ "","di2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di4", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di5", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di6", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di7", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di8", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","di9", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 
-	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
+//	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
 	{ "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g56",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -744,13 +753,15 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "m", _f0, 0, tx_print_nul, _do_motors, set_nul,(float *)&cs.null,0 },
 	{ "", "q", _f0, 0, tx_print_nul, _do_axes,   set_nul,(float *)&cs.null,0 },
 	{ "", "o", _f0, 0, tx_print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
+	{ "", "di", _f0, 0, tx_print_nul,_do_inputs, set_nul,(float *)&cs.null,0 },
 	{ "", "$", _f0, 0, tx_print_nul, _do_all,    set_nul,(float *)&cs.null,0 }
+        
 };
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
-#define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		34		// count of standard groups, excluding diagnostic parameter groups
+#define NV_COUNT_UBER_GROUPS 	5 		// count of uber-groups, above
+#define STANDARD_GROUPS 		42		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
@@ -843,6 +854,7 @@ uint8_t nv_group_is_prefixed(char_t *group)
  * _do_motors()		- get and print motor uber group 1-N
  * _do_axes()		- get and print axis uber group XYZABC
  * _do_offsets()	- get and print offset uber group G54-G59, G28, G30, G92
+ * _do_inputs()	    - get and print inputs uber group di1 - diN
  * _do_all()		- get and print all groups uber group
  */
 
@@ -891,6 +903,13 @@ static stat_t _do_offsets(nvObj_t *nv)	// print offset parameters for G54-G59,G9
 {
 	char list[][TOKEN_LEN+1] = {"g54","g55","g56","g57","g58","g59","g92","g28","g30",""}; // must have a terminating element
 	return (_do_group_list(nv, list));
+}
+
+static stat_t _do_inputs(nvObj_t *nv)	// print parameters for all input groups
+{
+	char list[][TOKEN_LEN+1] = {"di1","di2","di3","di4","di5","di6","di7","di8","di9",""}; // must have a terminating element
+	return (_do_group_list(nv, list));
+    return (STAT_OK);
 }
 
 static stat_t _do_all(nvObj_t *nv)	// print all parameters

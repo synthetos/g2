@@ -39,7 +39,7 @@
 #include "encoder.h"
 #include "hardware.h"
 #include "switch.h"
-//#include "gpio.h"
+#include "gpio.h"
 #include "report.h"
 #include "help.h"
 #include "util.h"
@@ -63,8 +63,10 @@ controller_t cs;		// controller state structure
 static void _controller_HSM(void);
 static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
-static stat_t _limit_switch_handler(void);
-static stat_t _interlock_estop_handler(void);
+static stat_t _limit_switch_handler(void);      // revised for new GPIO code
+static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
+static stat_t _interlock_estop_handler(void);   // old
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -166,6 +168,8 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+    DISPATCH(_shutdown_handler());
+    DISPATCH(_interlock_handler());
     DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
     DISPATCH(_controller_state());				// controller state management
 
@@ -448,11 +452,30 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
+/*
 	if (get_limit_switch_thrown() == false) {
-        return (STAT_NOOP);
+    	return (STAT_NOOP);
     } else {
-        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
-    }
+    	return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
+	}
+*/
+
+    if (cm.limit_requested == 0) {
+        return (STAT_NOOP);
+    }    
+	char_t message[32];
+	sprintf_P((char *)message, PSTR("input %d limit fired"), (int)cm.limit_requested);
+    return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, message);        
+}
+
+static stat_t _interlock_handler(void)
+{
+    return(STAT_OK);
+}
+
+static stat_t _shutdown_handler(void)
+{
+    return(STAT_OK);
 }
 
 static stat_t _interlock_estop_handler(void)
