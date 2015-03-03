@@ -86,17 +86,18 @@ void gpio_init(void)
     axis_Z_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     axis_A_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     axis_A_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    //    axis_B_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    //    axis_B_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    //    axis_C_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    //    axis_C_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-
+/*
+    axis_B_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_B_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_C_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    axis_C_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+*/
 	return(gpio_reset());
 }
 
 void gpio_reset(void)
 {
-//    io_di_t *in = &io.in[input_num];
+//  io_di_t *in = &io.in[input_num];
 //	for (uint8_t i=0; i<DI_CHANNELS; i++) {
 //		io.in[i].state = 
 //	}
@@ -141,8 +142,6 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
     io_di_t *in = &io.in[input_num];
 
-    printf("%d is %d\n", input_num, pin_value);
-
     // return if input is disabled (not supposed to happen)
 	if (in->mode == IO_MODE_DISABLED) {
     	in->state = IO_DISABLED;
@@ -154,14 +153,17 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
         return;
     }
 
+    printf("%d is %d\n", input_num, pin_value);
+
 	// return if no change in state
 	int8_t pin_value_corrected = (pin_value ^ (in->mode ^ 1));	// correct for NO or NC mode
 	if ( in->state == pin_value_corrected ) {
 //    	in->edge = IO_EDGE_NONE;        // edge should only be reset by function or opposite edge
+        printf("NO CHANGE: %d is %d\n", input_num, pin_value);
     	return;
 	}
 
-	// the input legitimately changed state - record the change
+	// record the changed state
     in->state = pin_value_corrected;
 	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
     if (pin_value_corrected == IO_ACTIVE) {

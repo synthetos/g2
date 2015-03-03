@@ -371,7 +371,7 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 
 static stat_t _homing_axis_search(int8_t axis)				// start the search
 {
-	cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);			// use the homing jerk for search onward
+	cm_set_axis_jerk(axis, cm.a[axis].jerk_high);			// use the high-speed jerk for search onward
 	_homing_axis_move(axis, hm.search_travel, hm.search_velocity);
 //	printf("started homing axis search\n");	//++++
 	return (_set_homing_func(_homing_axis_latch));

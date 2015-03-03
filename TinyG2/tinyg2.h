@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.11 // re-arranged shapeoko2 profile with new GPIO settings; removed some old profiles
+#define TINYG_FIRMWARE_BUILD   		079.12 // added homing parameters into the axis setups
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

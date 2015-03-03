@@ -422,10 +422,13 @@ typedef struct cmAxis {
 	float travel_max;					// max work envelope for soft limits
 	float travel_min;					// min work envelope for soft limits
 	float jerk_max;						// max jerk (Jm) in mm/min^3 divided by 1 million
-	float jerk_homing;					// homing jerk (Jh) in mm/min^3 divided by 1 million
+	float jerk_high;				    // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
 	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
 	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
+
+    uint8_t homing_input;               // set 1-N for homing input. 0 will disable homing
+    uint8_t homing_dir;                 // 0=search to negative, 1=search to positive
 	float search_velocity;				// homing search velocity
 	float latch_velocity;				// homing latch velocity
 	float latch_backoff;				// backoff from switches prior to homing latch movement
@@ -712,8 +715,9 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
-stat_t cm_set_xjm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
-stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
+stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
+stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
+stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 
 /*--- text_mode support functions ---*/
 
@@ -770,10 +774,13 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_jh(nvObj_t *nv);
 	void cm_print_jd(nvObj_t *nv);
 	void cm_print_ra(nvObj_t *nv);
+
 	void cm_print_sn(nvObj_t *nv);
 	void cm_print_sx(nvObj_t *nv);
 	void cm_print_rn(nvObj_t *nv);
 	void cm_print_rx(nvObj_t *nv);
+	void cm_print_hi(nvObj_t *nv);
+	void cm_print_hd(nvObj_t *nv);
 
 	void cm_print_sv(nvObj_t *nv);
 	void cm_print_lv(nvObj_t *nv);
@@ -837,10 +844,13 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_jh tx_print_stub
 	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
+    
 	#define cm_print_sn tx_print_stub
 	#define cm_print_sx tx_print_stub
 	#define cm_print_rn tx_print_stub
 	#define cm_print_rx tx_print_stub
+	#define cm_print_hi tx_print_stub
+	#define cm_print_hd tx_print_stub
 
 	#define cm_print_sv tx_print_stub
 	#define cm_print_lv tx_print_stub
