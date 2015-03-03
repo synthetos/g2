@@ -92,6 +92,38 @@
 #define DI1_ACTION                  DEFAULT_ACTION
 #define DI1_FUNCTION                DEFAULT_FUNCTION
 
+#define DI2_TYPE                    DEFAULT_TYPE
+#define DI2_ACTION                  DEFAULT_ACTION
+#define DI2_FUNCTION                DEFAULT_FUNCTION
+
+#define DI3_TYPE                    DEFAULT_TYPE
+#define DI3_ACTION                  DEFAULT_ACTION
+#define DI3_FUNCTION                DEFAULT_FUNCTION
+
+#define DI4_TYPE                    DEFAULT_TYPE
+#define DI4_ACTION                  DEFAULT_ACTION
+#define DI4_FUNCTION                DEFAULT_FUNCTION
+
+#define DI5_TYPE                    DEFAULT_TYPE
+#define DI5_ACTION                  DEFAULT_ACTION
+#define DI5_FUNCTION                DEFAULT_FUNCTION
+
+#define DI6_TYPE                    DEFAULT_TYPE
+#define DI6_ACTION                  DEFAULT_ACTION
+#define DI6_FUNCTION                DEFAULT_FUNCTION
+
+#define DI7_TYPE                    DEFAULT_TYPE
+#define DI7_ACTION                  DEFAULT_ACTION
+#define DI7_FUNCTION                DEFAULT_FUNCTION
+
+#define DI8_TYPE                    DEFAULT_TYPE
+#define DI8_ACTION                  DEFAULT_ACTION
+#define DI8_FUNCTION                DEFAULT_FUNCTION
+
+#define DI9_TYPE                    DEFAULT_TYPE
+#define DI9_ACTION                  DEFAULT_ACTION
+#define DI9_FUNCTION                DEFAULT_FUNCTION
+
 /*
 #define DI2_TYPE DEFAULT_TYPE
 #define DI3_TYPE DEFAULT_TYPE

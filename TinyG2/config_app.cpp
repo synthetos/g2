@@ -377,23 +377,53 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_xjh,(float *)&cm.a[AXIS_C].jerk_homing, 	C_JERK_HOMING },
 #endif
 
-	// Digital inputs and outputs
+	// Digital input configs
 	{ "di1","di1mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[0].mode,     DI1_TYPE },
 	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[0].action,   DI1_ACTION },
 	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[0].function, DI1_FUNCTION },
 
-    // IO state readers
+	{ "di2","di2mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[1].mode,     DI2_TYPE },
+	{ "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[1].action,   DI2_ACTION },
+	{ "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[1].function, DI2_FUNCTION },
+
+	{ "di3","di3mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[2].mode,     DI3_TYPE },
+	{ "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[2].action,   DI3_ACTION },
+	{ "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[2].function, DI3_FUNCTION },
+
+	{ "di4","di4mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[3].mode,     DI4_TYPE },
+	{ "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[3].action,   DI4_ACTION },
+	{ "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[3].function, DI4_FUNCTION },
+
+	{ "di5","di5mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[4].mode,     DI5_TYPE },
+	{ "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[4].action,   DI5_ACTION },
+	{ "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[4].function, DI5_FUNCTION },
+
+	{ "di6","di6mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[5].mode,     DI6_TYPE },
+	{ "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[5].action,   DI6_ACTION },
+	{ "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[5].function, DI6_FUNCTION },
+
+	{ "di7","di7mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[6].mode,     DI7_TYPE },
+	{ "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[6].action,   DI7_ACTION },
+	{ "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[6].function, DI7_FUNCTION },
+
+	{ "di8","di8mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[7].mode,     DI8_TYPE },
+	{ "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[7].action,   DI8_ACTION },
+	{ "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[7].function, DI8_FUNCTION },
+
+	{ "di9","di9mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[8].mode,     DI9_TYPE },
+	{ "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[8].action,   DI9_ACTION },
+	{ "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[8].function, DI9_FUNCTION },
+
+    // Digital input state readers
 	{ "in","in1", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
-/*
-    	{ "ss","ss0", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss1", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss2", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss3", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss4", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss5", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss6", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-    	{ "ss","ss7", _f0, 0, sw_print_ss, sw_get_ss, set_nul, (float *)&cs.null, 0 },
-*/
+	{ "in","in2", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in3", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in4", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in5", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in6", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in7", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in8", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
+	{ "in","in9", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, set_flt,(float *)&pwm.c[PWM_1].frequency,		P1_PWM_FREQUENCY },
@@ -712,7 +742,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-//#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
 #define STANDARD_GROUPS 		34		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
