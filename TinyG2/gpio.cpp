@@ -71,58 +71,6 @@ static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
 static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
 static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 
-// NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
-// The actual values will be the pin's port mask or 0, so you must check for non-zero.
-MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) {
-    _handle_pin_changed(1, (axis_X_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) {
-    _handle_pin_changed(2, (axis_X_max_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) {
-    _handle_pin_changed(3, (axis_Y_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) {
-    _handle_pin_changed(4, (axis_Y_max_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) {
-    _handle_pin_changed(5, (axis_Z_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) {
-    _handle_pin_changed(6, (axis_Z_max_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) {
-    _handle_pin_changed(7, (axis_A_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) {
-    _handle_pin_changed(8, (axis_A_max_pin.get() != 0));
-}
-
-/*
-MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) {
-    _handle_pin_changed(9, (axis_B_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) {
-    _handle_pin_changed(9, (axis_B_max_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) {
-    _handle_pin_changed(10, (axis_C_min_pin.get() != 0));
-}
-
-MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) {
-    _handle_pin_changed(11, (axis_C_max_pin.get() != 0));
-}
-*/
-
 /*
  * gpio_init() - initialize inputs and outputs
  * gpio_reset() - reset inputs and outputs (no initialization)
@@ -153,6 +101,28 @@ void gpio_reset(void)
 //		io.in[i].state = 
 //	}
 }
+
+/*
+ * pin change ISRs - ISR entry point for input pin changes
+ *
+ * NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
+ * The actual values will be the pin's port mask or 0, so you must check for non-zero.
+ */
+
+MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) { _handle_pin_changed(1, (axis_X_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) { _handle_pin_changed(2, (axis_X_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) { _handle_pin_changed(3, (axis_Y_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) { _handle_pin_changed(4, (axis_Y_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) { _handle_pin_changed(5, (axis_Z_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) { _handle_pin_changed(6, (axis_Z_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) { _handle_pin_changed(7, (axis_A_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) { _handle_pin_changed(8, (axis_A_max_pin.get() != 0)); }
+/*
+MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) { _handle_pin_changed(9, (axis_B_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) { _handle_pin_changed(9, (axis_B_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) { _handle_pin_changed(10, (axis_C_min_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) { _handle_pin_changed(11, (axis_C_max_pin.get() != 0)); }
+*/
 
 /*
  * _handle_pin_changed() - ISR helper
@@ -201,26 +171,51 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
     }
 
     // perform homing operations if in homing mode
-    if ((in->edge == IO_EDGE_LEADING) && (in->homing_mode)) {
-        cm_request_feedhold();
+    if (in->homing_mode) {
+		if (in->edge == IO_EDGE_LEADING) {
+		//  cm_request_feedhold();
+			cm_start_hold();
+		}
         return;
     }
 
+	// NOTE: From this point on all conditionals assume we are NOT in homing mode
+
     // trigger the action on leading edges
-    // *** for now all the function do the same thing ***
-    if ((in->edge == IO_EDGE_LEADING) && (!in->homing_mode)) {
+    // *** for now all the actions do the same thing ***
+    if (in->edge == IO_EDGE_LEADING) {
         if (in->action == IO_ACTION_STOP) {
-            cm_request_feedhold();
+		//	cm_request_feedhold();
+			cm_start_hold();
         }
         if (in->action == IO_ACTION_FAST_STOP) {
-            cm_request_feedhold();
+		//	cm_request_feedhold();
+			cm_start_hold();
         }
         if (in->action == IO_ACTION_HALT) {
-            cm_request_feedhold();
+		//	cm_request_feedhold();
+			cm_start_hold();
         }
         if (in->action == IO_ACTION_RESET) {
-            cm_request_feedhold();
+		//	cm_request_feedhold();
+			cm_start_hold();
         }
+    }
+
+    // trigger interlock function on either leading and trailing edge
+	if (in->function == IO_FUNCTION_INTERLOCK) {
+		cm.interlock_requested = in->edge;
+		return;
+	}
+
+	// the remainder of the functions only trigger on the leading edge
+    if (in->edge == IO_EDGE_LEADING) {
+		if (in->function == IO_FUNCTION_LIMIT) {
+			cm.limit_requested = input_num;
+
+		} else if (in->function == IO_FUNCTION_SHUTDOWN) {
+			cm.shutdown_requested = input_num;			
+		}
     }
 }
 
