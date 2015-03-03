@@ -59,20 +59,20 @@ enum gpioMode {
 #define NORMALLY_OPEN GPIO_ACTIVE_LOW    // equivalent
 #define NORMALLY_CLOSED GPIO_ACTIVE_HIGH // equivalent
 
-enum diAction {
+enum diAction {                     // actions are initiated from within the input's ISR
     DI_ACTION_NONE = 0,
-    DI_ACTION_STOP,
-    DI_ACTION_HALT,
-    DI_ACTION_STOP_STEPS,
-    DI_ACTION_RESET
+    DI_ACTION_STOP,                 // stop at normal jerk - preserves positional accuracy
+    DI_ACTION_FAST_STOP,            // stop at high jerk - preserves positional accuracy
+    DI_ACTION_HALT,                 // stop immediately - not guaranteed to preserve position
+    DI_ACTION_RESET                 // reset system immediately
 };
 
-enum diFunc {
+enum diFunc {                       // functions are requested from the ISR, run from the main loop
     DI_FUNCTION_NONE = 0,
-    DI_FUNCTION_LIMIT,
-    DI_FUNCTION_INTERLOCK,
-    DI_FUNCTION_SHUTDOWN,
-    DI_FUNCTION_SPINDLE_READY
+    DI_FUNCTION_LIMIT,              // limit switch processing
+    DI_FUNCTION_INTERLOCK,          // interlock processing
+    DI_FUNCTION_SHUTDOWN,           // shutdown in support of external emergency stop
+    DI_FUNCTION_SPINDLE_READY       // signal that spindle is ready (up to speed)
 };
 
 enum diState {

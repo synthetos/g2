@@ -483,6 +483,10 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t feedhold_requested;			// feedhold character has been received
 	uint8_t queue_flush_requested;		// queue flush character has been received
 	uint8_t end_hold_requested;			// cycle start character has been received (flag to end feedhold)
+    uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
+    uint8_t interlock_requested;        // set non-zero to request interlock processing (value is input number)
+    uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
+
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
 

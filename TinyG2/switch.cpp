@@ -87,6 +87,8 @@ void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
     gpio_di_t *in = &gpio.in[input_num];
 
+    printf("%d is %d\n", input_num, pin_value);
+
     // return if input is disabled (not supposed to happen)
 	if (in->mode == GPIO_DISABLED) {
     	in->state = DI_DISABLED;
@@ -114,15 +116,22 @@ void _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
         in->edge = DI_EDGE_TRAILING;
     }
 
+    // perform homing operations if in homing mode
+    if ((in->edge == DI_EDGE_LEADING) && (in->homing_mode)) {
+        cm_request_feedhold();
+        return;
+    }
+
     // trigger the action on leading edges
+    // *** for now all the function do the same thing ***
     if ((in->edge == DI_EDGE_LEADING) && (!in->homing_mode)) {
         if (in->action == DI_ACTION_STOP) {
             cm_request_feedhold();
         }
-        if (in->action == DI_ACTION_HALT) {
+        if (in->action == DI_ACTION_FAST_STOP) {
             cm_request_feedhold();
         }
-        if (in->action == DI_ACTION_STOP_STEPS) {
+        if (in->action == DI_ACTION_HALT) {
             cm_request_feedhold();
         }
         if (in->action == DI_ACTION_RESET) {
