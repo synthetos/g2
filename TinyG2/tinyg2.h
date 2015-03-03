@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.09 // fleshed out config table and defaults for all inputs
+#define TINYG_FIRMWARE_BUILD   		079.10 // re-arranged profiles with new GPIO settings
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
