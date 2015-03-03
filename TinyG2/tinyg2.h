@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.10 // re-arranged default profile with new GPIO settings
+#define TINYG_FIRMWARE_BUILD   		079.11 // re-arranged shapeoko2 profile with new GPIO settings; removed some old profiles
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

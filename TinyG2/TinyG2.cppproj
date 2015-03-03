@@ -1225,25 +1225,13 @@
     <Compile Include="settings\settings_default.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="settings\settings_hammer.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="settings\settings_othermill.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pendulum.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketnc.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_probotixV90.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_shapeoko2.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_shapeoko375.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_shopbot_sbv300.h">

@@ -2,7 +2,7 @@
  * settings_default.h - default machine profile
  * This file is part of the TinyG project
  *
- * Copyright (c) 2012 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -43,58 +43,59 @@
 
 // Machine configuration settings (See motors and axes for globals related to those objects)
 
+#define JUNCTION_DEVIATION          0.05                    // default value, in mm
+#define JUNCTION_ACCELERATION       100000                  // centripetal acceleration around corners
+#define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
+#define SOFT_LIMIT_ENABLE           0                       // 0 = off, 1 = on
 #define PAUSE_DWELL_TIME            0.0
-#define JUNCTION_DEVIATION          0.05					// default value, in mm
-#define JUNCTION_ACCELERATION       100000					// centripetal acceleration around corners
-#define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
+
 #define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
-#define SOFT_LIMIT_ENABLE           0						// 0 = off, 1 = on
 
 // Communications and reporting settings
 
-#define COMM_MODE                   JSON_MODE				// one of: TEXT_MODE, JSON_MODE
-#define TEXT_VERBOSITY              TV_VERBOSE				// one of: TV_SILENT, TV_VERBOSE
+#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+#define COM_EXPAND_CR               false
+#define COM_ENABLE_ECHO             false
+#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 #define NETWORK_MODE                NETWORK_STANDALONE
 
-#define JSON_VERBOSITY              JV_MESSAGES				// one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT		// one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_STYLE           1						// 1 = footer w/checksum, 2 = footer w/window slots
-#define JSON_FOOTER_DEPTH           0						// 0 = footer is child of R, 1 = footer is child of response object (deprecated)
+#define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
 
-#define QUEUE_REPORT_VERBOSITY      QR_OFF					// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
+#define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
+#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
-#define STATUS_REPORT_VERBOSITY     SR_FILTERED				// one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS        100						// milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS   250						// milliseconds - set $SV=0 to disable
+#define QUEUE_REPORT_VERBOSITY      QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
 // Alternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
 // Gcode startup defaults
-#define GCODE_DEFAULT_UNITS         MILLIMETERS				// MILLIMETERS or INCHES
-#define GCODE_DEFAULT_PLANE         CANON_PLANE_XY			// CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
-#define GCODE_DEFAULT_COORD_SYSTEM  G54						// G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM  G54                     // G54, G55, G56, G57, G58 or G59
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
-// Comm mode and echo levels
-#define COM_EXPAND_CR               false
-#define COM_ENABLE_ECHO             false
-#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON		// FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 // *** motor settings ************************************************************************************
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE	// default motor power mode (see cmMotorPowerMode in stepper.h)
-#define MOTOR_POWER_TIMEOUT         2.00					// motor power timeout in seconds
-#define MOTOR_POWER_LEVEL           0.375					// default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
+#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
-#define M1_MOTOR_MAP                AXIS_X              // 1ma
-#define M1_STEP_ANGLE               1.8                 // 1sa
-#define M1_TRAVEL_PER_REV           1.25                // 1tr
-#define M1_MICROSTEPS               8                   // 1mi  1,2,4,8,16,32
-#define M1_POLARITY                 0                   // 1po  0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWER_MODE    // 1pm
-#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL   // 1pl
+#define M1_MOTOR_MAP                AXIS_X                  // 1ma
+#define M1_STEP_ANGLE               1.8                     // 1sa
+#define M1_TRAVEL_PER_REV           1.25                    // 1tr
+#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
+#define M1_POLARITY                 0                       // 1po  0=normal, 1=reversed
+#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm
+#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL       // 1pl
 
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
@@ -288,16 +289,33 @@
 #define DI9_ACTION                  DEFAULT_ACTION
 #define DI9_FUNCTION                DEFAULT_FUNCTION
 
+/*** Handle optional modules that may not be in every machine ***/
+
+// If PWM_1 is not defined fill it with default values
+#ifndef	P1_PWM_FREQUENCY
+
+#define P1_PWM_FREQUENCY            100                     // in Hz
+#define P1_CW_SPEED_LO              1000                    // in RPM (arbitrary units)
+#define P1_CW_SPEED_HI              2000
+#define P1_CW_PHASE_LO              0.125                   // phase [0..1]
+#define P1_CW_PHASE_HI              0.2
+#define P1_CCW_SPEED_LO             1000
+#define P1_CCW_SPEED_HI             2000
+#define P1_CCW_PHASE_LO             0.125
+#define P1_CCW_PHASE_HI             0.2
+#define P1_PWM_PHASE_OFF            0.1
+#endif //P1_PWM_FREQUENCY
+
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
+#define G54_X_OFFSET 0	// G54 is often set to all zeros
 #define G54_Y_OFFSET 0
 #define G54_Z_OFFSET 0
 #define G54_A_OFFSET 0
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
 
-#define G55_X_OFFSET (X_TRAVEL_MAX/2)	// set to middle of table
+#define G55_X_OFFSET (X_TRAVEL_MAX/2)	// set to g55 middle of table
 #define G55_Y_OFFSET (Y_TRAVEL_MAX/2)
 #define G55_Z_OFFSET 0
 #define G55_A_OFFSET 0
@@ -331,3 +349,22 @@
 #define G59_A_OFFSET 0
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
+
+/*** User-Defined Data Defaults ***/
+
+#define USER_DATA_A0 0
+#define USER_DATA_A1 0
+#define USER_DATA_A2 0
+#define USER_DATA_A3 0
+#define USER_DATA_B0 0
+#define USER_DATA_B1 0
+#define USER_DATA_B2 0
+#define USER_DATA_B3 0
+#define USER_DATA_C0 0
+#define USER_DATA_C1 0
+#define USER_DATA_C2 0
+#define USER_DATA_C3 0
+#define USER_DATA_D0 0
+#define USER_DATA_D1 0
+#define USER_DATA_D2 0
+#define USER_DATA_D3 0
