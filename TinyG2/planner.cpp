@@ -429,7 +429,7 @@ void mp_commit_write_buffer(const moveType move_type)
 
 bool mp_has_runnable_buffer()
 {
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_QUEUED) {
+    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
         return true;
     }
     return false;
@@ -450,18 +450,18 @@ mpBuf_t * mp_get_run_buffer()
     return (NULL);								// CASE: no queued buffers. fail it.
 }
 
-uint8_t mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
+bool mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
 {
     _audit_buffers();           // diagnostic audit for buffer chain integrity
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                            // advance to next run buffer
 	_clear_buffer(r);                           // clear it out (& reset replannable and set MP_BUFFER_EMPTY)
-	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-		mb.r->buffer_state = MP_BUFFER_RUNNING; // run next buffer
-//    } else {
-//        __NOP(); // something to get ahold of in debugging - gets here when queue empties
-	}
+//	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
+//		mb.r->buffer_state = MP_BUFFER_RUNNING; // run next buffer
+////    } else {
+////        __NOP(); // something to get ahold of in debugging - gets here when queue empties
+//	}
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
 	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
@@ -470,8 +470,15 @@ uint8_t mp_free_run_buffer()    // EMPTY current run buffer & advance to the nex
 /* These functions are defined here, but use the macros in planner.h instead.
 mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) return (bf->pv);
 mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) return (bf->nx);
-mpBuf_t * mp_get_first_buffer(void) return(mp_get_run_buffer()); // returns buffer or NULL if nothing's running
 */
+
+mpBuf_t * mp_get_first_buffer(void) {
+    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
+        return mb.r;
+    }
+    return NULL;
+}
+
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
 void mp_unget_write_buffer()
@@ -577,12 +584,12 @@ void mp_planner_time_accounting() {
     if (mb.planning || !mb.needs_time_accounting)
         return;
 
-    mpBuf_t *bf = mb.r;  // potential to return a NULL buffer
+    mpBuf_t *bf = mp_get_first_buffer();  // potential to return a NULL buffer
     mpBuf_t *bp = bf;
 
     float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
 
-    if (mb.r->buffer_state == MP_BUFFER_PLANNING) {
+    if (bf == NULL) {
         mb.time_in_planner = time_in_planner;
         return;
     }

@@ -467,8 +467,8 @@ $(OUTPUT_BIN).bin: $(OUTPUT_BIN).elf
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).tmp.bin"
 	$(QUIET)if `command -v xxd >/dev/null 2>&1`; then\
-		printf '%08x' `cksum "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f1` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=0x100 conv=notrunc;\
-		printf '%08x' `ls -nl "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f8` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=0x104 conv=notrunc;\
+		printf '%08x' `cksum "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f1` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=256 conv=notrunc;\
+		printf '%08x' `ls -nl "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f8` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=260 conv=notrunc;\
 		mv "$(OUTPUT_BIN).tmp.bin" "$(OUTPUT_BIN).bin";\
 	else\
 		echo "Unable to add checksum to '$(OUTPUT_BIN).bin' due to missing 'xcd' utility. Continuing anyway.";\
