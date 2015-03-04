@@ -125,6 +125,9 @@ struct Stepper {
             if (st_cfg.mot[motor].power_mode != MOTOR_DISABLED) {
                 _enable.clear();
                 st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;
+
+                // if we have a common enable, this is the time to use it...
+                common_enable.clear();
             }
         }
 	};
@@ -413,7 +416,21 @@ static void _deenergize_motor(const uint8_t motor)
     if (motor == MOTOR_4) motor_4.disable();
     if (motor == MOTOR_5) motor_5.disable();
     if (motor == MOTOR_6) motor_6.disable();
-	st_run.mot[motor].power_state = MOTOR_OFF;
+
+    st_run.mot[motor].power_state = MOTOR_OFF;
+
+    if (!common_enable.isNull()) {
+        bool do_disable = true;
+        for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+            if (st_run.mot[motor].power_state != MOTOR_OFF) {
+                do_disable = false;
+                break;
+            }
+        }
+        if (do_disable) {
+            common_enable.set(); // enables are inverted
+        }
+    }
 #endif
 }
 
@@ -439,6 +456,8 @@ static void _energize_motor(const uint8_t motor, float timeout_seconds)
 	if (motor == MOTOR_4) motor_4.enable();
 	if (motor == MOTOR_5) motor_5.enable();
 	if (motor == MOTOR_6) motor_6.enable();
+
+    common_enable.clear(); // enables are inverted
 #endif
 
 	st_run.mot[motor].power_systick = SysTickTimer_getValue() + (timeout_seconds * 1000);
