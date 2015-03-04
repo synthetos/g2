@@ -360,8 +360,14 @@ LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-section
 
 # Directories where source files can be found
 
-C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(sort $(wildcard $(dir)/*.c)))
+
+# C++ file scoped objects are initialized in the order that the objects are
+# presented to the linker. Use a sorted list to make things deterministic
+# and files that need to be done early in CXX_ORDERED_SOURCES
+CXX_ALL_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(sort $(wildcard $(dir)/*.cpp)))
+CXX_ORDERED_SOURCES = ./main.cpp
+CXX_SOURCES = $(CXX_ORDERED_SOURCES) $(filter-out $(CXX_ORDERED_SOURCES), $(CXX_ALL_SOURCES))
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
