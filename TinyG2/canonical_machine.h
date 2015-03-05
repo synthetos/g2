@@ -480,15 +480,18 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 //	cmProbeState probe_state;			// 1==success, 0==failed
 	float probe_results[AXES];			// probing results
 
-	uint8_t	g28_flag;					// true = complete a G28 move
-	uint8_t	g30_flag;					// true = complete a G30 move
-	uint8_t deferred_write_flag;		// G10 data has changed (e.g. offsets) - flag to persist them
-	uint8_t feedhold_requested;			// feedhold character has been received
-	uint8_t queue_flush_requested;		// queue flush character has been received
-	uint8_t end_hold_requested;			// cycle start character has been received (flag to end feedhold)
-    uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
-    uint8_t interlock_requested;        // set non-zero to request interlock processing (value is input number)
-    uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
+    bool limit_enable;                  // 0=disable limit switches, 1=enable
+    bool interlock_enable;              // 0=disable interlock
+
+	bool g28_flag;					    // true = complete a G28 move
+	bool g30_flag;					    // true = complete a G30 move
+	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
+	bool feedhold_requested;			// feedhold character has been received
+	bool queue_flush_requested;		    // queue flush character has been received
+	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
+    bool limit_requested;               // set non-zero to request limit switch processing (value is input number)
+    bool interlock_requested;           // set non-zero to request interlock processing (value is input number)
+    bool shutdown_requested;            // set non-zero to request shutdown in support of external estop (value is input number)
 
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
@@ -758,6 +761,7 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 	void cm_print_ja(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
+	void cm_print_lim(nvObj_t *nv);
 	void cm_print_ml(nvObj_t *nv);
 	void cm_print_ma(nvObj_t *nv);
 	void cm_print_ms(nvObj_t *nv);
@@ -828,6 +832,7 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 	#define cm_print_ja tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
+	#define cm_print_lim tx_print_stub
 	#define cm_print_ml tx_print_stub
 	#define cm_print_ma tx_print_stub
 	#define cm_print_ms tx_print_stub

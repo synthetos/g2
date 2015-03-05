@@ -579,9 +579,9 @@ void canonical_machine_init()
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
-    cm.limit_requested = false;
-    cm.interlock_requested = false;
-    cm.shutdown_requested = false;
+    cm.limit_requested = false;         // resets switch closures that occurred during initialization
+    cm.interlock_requested = false;     // ditto
+    cm.shutdown_requested = false;      // ditto
 	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 
 	// signal that the machine is ready for action
@@ -2066,6 +2066,7 @@ void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
+const char fmt_lim[] PROGMEM = "[lim] limit switch enable%10d\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
@@ -2074,6 +2075,7 @@ const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
+void cm_print_lim(nvObj_t *nv) { text_print_ui8(nv, fmt_lim);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}

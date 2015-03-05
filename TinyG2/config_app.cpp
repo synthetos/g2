@@ -189,7 +189,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "", "wr",  _f0, 0, tx_print_int, get_wr,  set_nul,  (float *)&cs.null, 0 },	// slots available in RX window buffer
 	{ "", "msg", _f0, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
-	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear soft alarm
+	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear alarm state
 //	{ "", "sx",  _f0, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
 	{ "", "ti",  _f0, 0, tx_print_int, get_tick,set_nul,  (float *)&cs.null, 0 },	// report system time tick
 
@@ -518,20 +518,21 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// System parameters
 	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
-	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,	CHORDAL_TOLERANCE },
-	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,	SOFT_LIMIT_ENABLE },
-//	{ "sys","st", _fipn, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.type,				SWITCH_TYPE },
+	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,    CHORDAL_TOLERANCE },
+	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,    SOFT_LIMIT_ENABLE },
+	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8,   set_ui8,    (float *)&cm.limit_enable,	        HARD_LIMIT_ENABLE },
+//	{ "sys","st", _fipn, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.type,				    SWITCH_TYPE },
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
 	{ "",   "me", _f0,   0, tx_print_str, st_set_me, st_set_me,  (float *)&cs.null, 0 },
 	{ "",   "md", _f0,   0, tx_print_str, st_set_md, st_set_md,  (float *)&cs.null, 0 },
 
 	{ "sys","pdt", _fipn, 0, cm_print_pdt, get_flt,   set_flu,    (float *)&cm.pause_dwell_time, PAUSE_DWELL_TIME },
 
-	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cs.comm_mode,			COMM_MODE },
-	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8,   json_set_jv,(float *)&js.json_verbosity,		JSON_VERBOSITY },
-	{ "sys","js", _fipn, 0, js_print_js,  get_ui8,   set_01,     (float *)&js.json_syntax, 		JSON_SYNTAX_MODE },
+	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cs.comm_mode,            COMM_MODE },
+	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8,   json_set_jv,(float *)&js.json_verbosity,       JSON_VERBOSITY },
+	{ "sys","js", _fipn, 0, js_print_js,  get_ui8,   set_01,     (float *)&js.json_syntax,          JSON_SYNTAX_MODE },
 //	{ "sys","jf", _fipn, 0, js_print_jf,  get_ui8,   set_ui8,    (float *)&js.json_footer_style, 	JSON_FOOTER_STYLE },
-	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8,   set_01,     (float *)&txt.text_verbosity,		TEXT_VERBOSITY },
+	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8,   set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
 	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8,   set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8,   set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
 	{ "sys","si", _fipn, 0, sr_print_si,  get_int,   sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },

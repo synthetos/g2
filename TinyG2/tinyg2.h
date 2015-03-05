@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.16 // hooked new inputs (switches) to limit function - before refactoring limit processing
+#define TINYG_FIRMWARE_BUILD   		079.17 // added {lim:n} to enable / disable hard limits
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

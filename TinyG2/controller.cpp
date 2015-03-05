@@ -447,15 +447,7 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-/*
-	if (get_limit_switch_thrown() == false) {
-    	return (STAT_NOOP);
-    } else {
-    	return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
-	}
-*/
-
-    if (cm.limit_requested == 0) {
+    if ((cm.limit_enable == false) || (cm.limit_requested == false)) {
         return (STAT_NOOP);
     }
 	char_t message[32];
