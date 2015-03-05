@@ -208,7 +208,7 @@ enum valueType {						// value typing for config and JSON
 	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
 	TYPE_BOOL,							// value is "true" (1) or "false"(0)
-	TYPE_INTEGER,						// value is a uint32_t
+	TYPE_UINT,						    // value is an unsigned integer - uint8_t, uint32_t
 	TYPE_DATA,							// value is blind cast to uint32_t
 	TYPE_FLOAT,							// value is a floating point number
 	TYPE_STRING,						// value is in string field
@@ -315,6 +315,7 @@ uint8_t nv_group_is_prefixed(char_t *group);
 // generic internal functions and accessors
 stat_t set_nul(nvObj_t *nv);				// set nothing (no operation)
 stat_t set_ui8(nvObj_t *nv);				// set uint8_t value
+stat_t set_int8(nvObj_t *nv);               // set signed 8 bit integer
 stat_t set_01(nvObj_t *nv);					// set a 0 or 1 value with validation
 stat_t set_012(nvObj_t *nv);				// set a 0, 1 or 2 value with validation
 stat_t set_0123(nvObj_t *nv);				// set a 0, 1, 2 or 3 value with validation

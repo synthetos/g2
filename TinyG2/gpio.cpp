@@ -99,7 +99,7 @@ void gpio_reset(void)
 {
 //  io_di_t *in = &io.in[input_num];
 //	for (uint8_t i=0; i<DI_CHANNELS; i++) {
-//		io.in[i].state = 
+//		io.in[i].state =
 //	}
 }
 
@@ -216,7 +216,7 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 			cm.limit_requested = input_num;
 
 		} else if (in->function == IO_FUNCTION_SHUTDOWN) {
-			cm.shutdown_requested = input_num;			
+			cm.shutdown_requested = input_num;
 		}
     }
 }
@@ -227,58 +227,47 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
 
-stat_t _set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
+static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
 {
 	if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);		// will this work in -1 is a valid value?
 	gpio_reset();
-	return (STAT_OK);	
+	return (STAT_OK);
 }
 
 stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 {
-	return (_set_helper(nv, IO_DISABLED, IO_MODE_MAX));
-//	if ((nv->value < IO_DISABLED) || (nv->value >= IO_MODE_MAX)) {
-//		return (STAT_INPUT_VALUE_UNSUPPORTED);
-//	}
-//	set_ui8(nv);		// will this work in -1 is a valid value?
-//	gpio_reset();
-//	return (STAT_OK);
+//	return (_io_set_helper(nv, IO_DISABLED, IO_MODE_MAX));
+	if ((nv->value < IO_DISABLED) || (nv->value >= IO_MODE_MAX)) {
+		return (STAT_INPUT_VALUE_UNSUPPORTED);
+	}
+	set_int8(nv);
+	gpio_reset();
+	return (STAT_OK);
 }
 
 stat_t io_set_ac(nvObj_t *nv)			// input action
 {
-	return (_set_helper(nv, IO_ACTION_NONE, IO_ACTION_MAX));
+	return (_io_set_helper(nv, IO_ACTION_NONE, IO_ACTION_MAX));
 //	if ((nv->value < IO_ACTION_NONE) || (nv->value >= IO_ACTION_MAX)) {
-//		return (STAT_INPUT_VALUE_UNSUPPORTED);
-//	}
-//	set_ui8(nv);
-//	gpio_reset();
-//	return (STAT_OK);
 }
 
 stat_t io_set_fn(nvObj_t *nv)			// input function
 {
-	return (_set_helper(nv, IO_FUNCTION_NONE, IO_FUNCTION_MAX));
+	return (_io_set_helper(nv, IO_FUNCTION_NONE, IO_FUNCTION_MAX));
 //	if ((nv->value < IO_FUNCTION_NONE) || (nv->value >= IO_FUNCTION_MAX)) {
-//		return (STAT_INPUT_VALUE_UNSUPPORTED);
-//	}
-//	set_ui8(nv);
-//	gpio_reset();
-//	return (STAT_OK);
 }
 
 /*
- *  io_get_input() - return input state
+ *  io_get_input() - return input state given an nv object
  */
 stat_t io_get_input(nvObj_t *nv)
 {
-//    if (nv->value >= (SW_PAIRS * SW_POSITIONS)) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-//    uint8_t number = ((uint8_t)nv->token[0] & 0x0F);	// change from ASCII to a number 0-9 (A-F, too)
-//    nv->value = (float) read_switch( number/2, number&0x01 );
-//    nv->valuetype = TYPE_FLOAT;
+    // the token has been stripped down to an ASCII digit string - use it as an index
+    nv->value = io.in[strtol(nv->token, NULL, 10)-1].state;
+    nv->valuetype = TYPE_UINT;
     return (STAT_OK);
 }
 

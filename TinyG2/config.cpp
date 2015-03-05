@@ -168,7 +168,7 @@ stat_t set_defaults(nvObj_t *nv)
 	nv_reset_nv_list();
 	strncpy(nv->token, "defa", TOKEN_LEN);
 //	nv->index = nv_get_index("", nv->token);	// correct, but not required
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	nv->value = 1;
 	return (STAT_OK);
 }
@@ -216,7 +216,7 @@ stat_t get_nul(nvObj_t *nv)
 stat_t get_ui8(nvObj_t *nv)
 {
 	nv->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return (STAT_OK);
 }
 
@@ -224,7 +224,7 @@ stat_t get_int(nvObj_t *nv)
 {
 //	nv->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
 	nv->value = *((uint32_t *)GET_TABLE_WORD(target));
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return (STAT_OK);
 }
 
@@ -250,7 +250,7 @@ stat_t get_flt(nvObj_t *nv)
  *	set_01()   - set a 0 or 1 uint8_t value with validation
  *	set_012()  - set a 0, 1 or 2 uint8_t value with validation
  *	set_0123() - set a 0, 1, 2 or 3 uint8_t value with validation
- *	set_int()  - set value as 32 bit integer
+ *	set_uint()  - set value as 32 bit insigned integer
  *	set_data() - set value as 32 bit integer blind cast
  *	set_flt()  - set value as float
  */
@@ -259,8 +259,15 @@ stat_t set_nul(nvObj_t *nv) { return (STAT_NOOP);}
 stat_t set_ui8(nvObj_t *nv)
 {
 	*((uint8_t *)GET_TABLE_WORD(target)) = nv->value;
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return(STAT_OK);
+}
+
+stat_t set_int8(nvObj_t *nv)
+{
+    *((int8_t *)GET_TABLE_WORD(target)) = nv->value;
+    nv->valuetype = TYPE_UINT;
+    return(STAT_OK);
 }
 
 stat_t set_01(nvObj_t *nv)
@@ -284,7 +291,7 @@ stat_t set_0123(nvObj_t *nv)
 stat_t set_int(nvObj_t *nv)
 {
 	*((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return(STAT_OK);
 }
 
@@ -470,7 +477,7 @@ uint8_t nv_get_type(nvObj_t *nv)
 
 void nv_get_nvObj(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) { return; }	// sanity
+	if (nv->index >= nv_index_max()) return;    // sanity
 
 	index_t tmp = nv->index;
 	nv_reset_nv(nv);
@@ -580,7 +587,7 @@ nvObj_t *nv_add_integer(const char_t *token, const uint32_t value)// add an inte
 		}
 		strncpy(nv->token, token, TOKEN_LEN);
 		nv->value = (float) value;
-		nv->valuetype = TYPE_INTEGER;
+		nv->valuetype = TYPE_UINT;
 		return (nv);
 	}
 	return (NULL);

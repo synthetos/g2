@@ -1002,7 +1002,7 @@ static stat_t get_rx(nvObj_t *nv)
 #else
 	nv->value = (float)254;				// ARM always says the serial buffer is available (max)
 #endif
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return (STAT_OK);
 }
 /*
@@ -1013,7 +1013,7 @@ static stat_t get_wr(nvObj_t *nv)
 #else
 	nv->value = (float)4;				// ARM always says there are 4 slots available
 #endif
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return (STAT_OK);
 }
 */
@@ -1021,7 +1021,7 @@ static stat_t get_wr(nvObj_t *nv)
 static stat_t get_tick(nvObj_t *nv)
 {
 	nv->value = (float)SysTickTimer_getValue();
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_UINT;
 	return (STAT_OK);
 }
 

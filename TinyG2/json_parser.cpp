@@ -463,7 +463,7 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 		if (nv->valuetype != TYPE_EMPTY) {
 			if (need_a_comma) { *str++ = ',';}
 			need_a_comma = true;
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {		// write name
+			if (js.json_syntax == JSON_SYNTAX_RELAXED) {    // write name
 				str += sprintf((char *)str, "%s:", nv->token);
 			} else {
 				str += sprintf((char *)str, "\"%s\":", nv->token);
@@ -474,20 +474,17 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 				if (isnan((double)nv->value) || isinf((double)nv->value)) { nv->value = 0;}
 			}
 
-			// serialize output value
-			if		(nv->valuetype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "null");} // Note that that "" is NOT null.
-			else if (nv->valuetype == TYPE_INTEGER)	{
-				str += (char_t)sprintf((char *)str, "%1.0f", (double)nv->value);
-			}
-			else if (nv->valuetype == TYPE_DATA)	{
+			// serialize output value (arranged in likely order of occurrence)
+			if      (nv->valuetype == TYPE_FLOAT)   { preprocess_float(nv);
+			                                          str += fntoa(str, nv->value, nv->precision);}
+			else if (nv->valuetype == TYPE_UINT)    { str += (char_t)sprintf((char *)str, "%1.0f", (double)nv->value);}
+			else if (nv->valuetype == TYPE_STRING)  { str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_ARRAY)   { str += (char_t)sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_NULL)    { str += (char_t)sprintf((char *)str, "null");} // Note that that "" is NOT null.
+            else if (nv->valuetype == TYPE_DATA)    {
 				uint32_t *v = (uint32_t*)&nv->value;
-				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);
-			}
-			else if (nv->valuetype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_FLOAT)	{ preprocess_float(nv);
-													  str += fntoa(str, nv->value, nv->precision);
-			}
+				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);}
+
 			else if (nv->valuetype == TYPE_BOOL) {
 				if (fp_FALSE(nv->value)) { str += sprintf((char *)str, "false");}
 				else { str += (char_t)sprintf((char *)str, "true"); }

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.12 // added homing parameters into the axis setups
+#define TINYG_FIRMWARE_BUILD   		079.13 // added function to return input state; testing config functions
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
