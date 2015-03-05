@@ -69,7 +69,8 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
 	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown) //iff macs == MACHINE_SHUTDOWN
+	COMBINED_SHUTDOWN,				// [11] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
+    COMBINED_INTERLOCK              // [12] machine in interlock state
 };
 //### END CRITICAL REGION ###
 
@@ -81,6 +82,7 @@ enum cmMachineState {
 	MACHINE_PROGRAM_END,			// program end (same as MACHINE_READY, really...)
 	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
 	MACHINE_SHUTDOWN,				// machine in hard alarm state (shutdown)
+    MACHINE_INTERLOCK               // machine in interlock state
 };
 
 enum cmCycleState {
@@ -572,10 +574,9 @@ void canonical_machine_init(void);
 void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
-stat_t cm_hard_alarm(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
-stat_t cm_soft_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
-//stat_t cm_soft_alarm(stat_t status);							// enter soft alarm state. returns same status code
+stat_t cm_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
 stat_t cm_clear(nvObj_t *nv);
+stat_t cm_shutdown(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
 
 // Representation (4.3.3)
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19

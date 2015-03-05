@@ -72,7 +72,7 @@ stat_t mp_exec_move()
         }
 	}
     if (bf->bf_func == NULL) {
-        return(cm_hard_alarm(STAT_INTERNAL_ERROR, "exec_move")); // never supposed to get here
+        return(cm_shutdown(STAT_INTERNAL_ERROR, "exec_move")); // never supposed to get here
     }
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }
@@ -283,7 +283,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else
 	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
-	else { return(cm_hard_alarm(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
+	else { return(cm_shutdown(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {

@@ -508,7 +508,7 @@ static stat_t _finalize_soft_limits(stat_t status)
 {
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
 	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_soft_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
+	return (cm_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -612,12 +612,12 @@ stat_t canonical_machine_test_assertions(void)
 }
 
 /*
- * cm_soft_alarm() - alarm state; send an exception report and stop processing input
- * cm_clear() 	   - clear soft alarm
- * cm_hard_alarm() - alarm state; send an exception report and shut down machine
+ * cm_alarm()    - alarm state; send an exception report and stop processing input
+ * cm_clear()    - clear alarm state
+ * cm_shutdown() - shutdown state; send an exception report and shut down machine
  */
 
-stat_t cm_soft_alarm(stat_t status, const char *msg)
+stat_t cm_alarm(stat_t status, const char *msg)
 {
 	rpt_exception(status, (char_t *)"msg");	// send alarm message
 	cm.machine_state = MACHINE_ALARM;
@@ -634,7 +634,7 @@ stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
 	return (STAT_OK);
 }
 
-stat_t cm_hard_alarm(stat_t status, const char *msg)
+stat_t cm_shutdown(stat_t status, const char *msg)
 {
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
@@ -1287,7 +1287,7 @@ stat_t cm_feedhold_sequencing_callback()
         if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
 			 !cm_get_runtime_busy()) {
 			cm_queue_flush();
-            cm_soft_alarm(STAT_MACHINE_ALARMED, NULL);
+            cm_alarm(STAT_MACHINE_ALARMED, NULL);
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {

@@ -43,6 +43,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "gpio.h"
+#include "stepper.h"
 #include "hardware.h"
 #include "canonical_machine.h"
 
@@ -196,11 +197,13 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
         }
         if (in->action == IO_ACTION_HALT) {
 		//	cm_request_feedhold();
-			cm_start_hold();
+//			cm_start_hold();
+	        stepper_init();					// hard stop
         }
         if (in->action == IO_ACTION_RESET) {
 		//	cm_request_feedhold();
-			cm_start_hold();
+		//	cm_start_hold();
+            hw_hard_reset();
         }
     }
 
