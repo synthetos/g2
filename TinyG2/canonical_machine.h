@@ -501,8 +501,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	GCodeInput_t  gn;					// gcode input values - transient
 	GCodeInput_t  gf;					// gcode input flags - transient
 
-	uint32_t ignored_gcodes;
-
 	magic_t magic_end;
 } cmSingleton_t;
 
@@ -844,7 +842,7 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 	#define cm_print_jh tx_print_stub
 	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
-    
+
 	#define cm_print_sn tx_print_stub
 	#define cm_print_sx tx_print_stub
 	#define cm_print_rn tx_print_stub

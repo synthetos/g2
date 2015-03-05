@@ -571,21 +571,21 @@ void canonical_machine_init()
 	// never start a machine in a motion mode
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
 
+	// sub-system inits
+	cm_spindle_init();
+	cm_arc_init();
+
 	// reset request flags
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
+    cm.limit_requested = false;
+    cm.interlock_requested = false;
+    cm.shutdown_requested = false;
+	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 
 	// signal that the machine is ready for action
 	cm.machine_state = MACHINE_READY;
-
-	cm.interlock_state = cm.estop_state = 0;
-
-	cm.ignored_gcodes = 0;
-
-	// sub-system inits
-	cm_spindle_init();
-	cm_arc_init();
 }
 
 /*

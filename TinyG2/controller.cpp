@@ -304,17 +304,12 @@ static void _dispatch_kernel()
 	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
 		if(cm.machine_state != MACHINE_ALARM) {
 			text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
-		} else {
-			cm.ignored_gcodes += 1;
 		}
 	} else {
 		if(cm.machine_state != MACHINE_ALARM) {
 			strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
 			sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
 			json_parser(cs.bufp);
-		} else {
-			asm("nop;");
-			cm.ignored_gcodes += 1;
 		}
 	}
 }
@@ -462,10 +457,10 @@ static stat_t _limit_switch_handler(void)
 
     if (cm.limit_requested == 0) {
         return (STAT_NOOP);
-    }    
+    }
 	char_t message[32];
 	sprintf_P((char *)message, PSTR("input %d limit fired"), (int)cm.limit_requested);
-    return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, message);        
+    return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, message);
 }
 
 static stat_t _interlock_handler(void)
