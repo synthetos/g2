@@ -207,13 +207,14 @@ enum flowControl {
 enum valueType {						// value typing for config and JSON
 	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
-	TYPE_BOOL,							// value is "true" (1) or "false"(0)
-	TYPE_UINT,						    // value is an unsigned integer - uint8_t, uint32_t
-	TYPE_DATA,							// value is blind cast to uint32_t
+	TYPE_PARENT,						// object is a parent to a sub-object
 	TYPE_FLOAT,							// value is a floating point number
+	TYPE_INT,						    // value is a signed or unsigned integer or any size
+//	TYPE_INT8,						    // value is a signed integer - int8_t, int32_t
 	TYPE_STRING,						// value is in string field
-	TYPE_ARRAY,							// value is array element count, values are CSV ASCII in string field
-	TYPE_PARENT							// object is a parent to a sub-object
+	TYPE_BOOL,							// value is "true" (1) or "false"(0)
+	TYPE_DATA,							// value is blind cast to uint32_t
+	TYPE_ARRAY							// value is array element count, values are CSV ASCII in string field
 };
 
 /**** operations flags and shorthand ****/
@@ -325,6 +326,7 @@ stat_t set_flt(nvObj_t *nv);				// set floating point value
 
 stat_t get_nul(nvObj_t *nv);				// get null value type
 stat_t get_ui8(nvObj_t *nv);				// get uint8_t value
+stat_t get_int8(nvObj_t *nv);               // get signed 8 bit integer
 stat_t get_int(nvObj_t *nv);				// get uint32_t integer value
 stat_t get_data(nvObj_t *nv);				// get uint32_t integer value blind cast
 stat_t get_flt(nvObj_t *nv);				// get floating point value

@@ -386,39 +386,39 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Digital input configs
-	{ "di1","di1mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[0].mode,     DI1_MODE },
+	{ "di1","di1mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[0].mode,     DI1_MODE },
 	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[0].action,   DI1_ACTION },
 	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[0].function, DI1_FUNCTION },
 
-	{ "di2","di2mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[1].mode,     DI2_MODE },
+	{ "di2","di2mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[1].mode,     DI2_MODE },
 	{ "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[1].action,   DI2_ACTION },
 	{ "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[1].function, DI2_FUNCTION },
 
-	{ "di3","di3mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[2].mode,     DI3_MODE },
+	{ "di3","di3mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[2].mode,     DI3_MODE },
 	{ "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[2].action,   DI3_ACTION },
 	{ "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[2].function, DI3_FUNCTION },
 
-	{ "di4","di4mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[3].mode,     DI4_MODE },
+	{ "di4","di4mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[3].mode,     DI4_MODE },
 	{ "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[3].action,   DI4_ACTION },
 	{ "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[3].function, DI4_FUNCTION },
 
-	{ "di5","di5mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[4].mode,     DI5_MODE },
+	{ "di5","di5mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[4].mode,     DI5_MODE },
 	{ "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[4].action,   DI5_ACTION },
 	{ "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[4].function, DI5_FUNCTION },
 
-	{ "di6","di6mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[5].mode,     DI6_MODE },
+	{ "di6","di6mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[5].mode,     DI6_MODE },
 	{ "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[5].action,   DI6_ACTION },
 	{ "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[5].function, DI6_FUNCTION },
 
-	{ "di7","di7mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[6].mode,     DI7_MODE },
+	{ "di7","di7mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[6].mode,     DI7_MODE },
 	{ "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[6].action,   DI7_ACTION },
 	{ "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[6].function, DI7_FUNCTION },
 
-	{ "di8","di8mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[7].mode,     DI8_MODE },
+	{ "di8","di8mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[7].mode,     DI8_MODE },
 	{ "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[7].action,   DI8_ACTION },
 	{ "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[7].function, DI8_FUNCTION },
 
-	{ "di9","di9mo",_fip, 0, io_print_mo, get_ui8, io_set_mo, (float *)&io.in[8].mode,     DI9_MODE },
+	{ "di9","di9mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[8].mode,     DI9_MODE },
 	{ "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[8].action,   DI9_ACTION },
 	{ "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[8].function, DI9_FUNCTION },
 
@@ -755,7 +755,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "o", _f0, 0, tx_print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
 	{ "", "di", _f0, 0, tx_print_nul,_do_inputs, set_nul,(float *)&cs.null,0 },
 	{ "", "$", _f0, 0, tx_print_nul, _do_all,    set_nul,(float *)&cs.null,0 }
-        
+
 };
 
 /***** Make sure these defines line up with any changes in the above table *****/
@@ -1002,7 +1002,7 @@ static stat_t get_rx(nvObj_t *nv)
 #else
 	nv->value = (float)254;				// ARM always says the serial buffer is available (max)
 #endif
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 /*
@@ -1013,7 +1013,7 @@ static stat_t get_wr(nvObj_t *nv)
 #else
 	nv->value = (float)4;				// ARM always says there are 4 slots available
 #endif
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 */
@@ -1021,7 +1021,7 @@ static stat_t get_wr(nvObj_t *nv)
 static stat_t get_tick(nvObj_t *nv)
 {
 	nv->value = (float)SysTickTimer_getValue();
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 

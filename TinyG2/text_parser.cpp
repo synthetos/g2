@@ -189,16 +189,18 @@ void text_print_inline_pairs(nvObj_t *nv)
 {
 	uint32_t *v = (uint32_t*)&nv->value;
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch (nv->valuetype) {
+		switch (nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
+			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
 			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
 			case TYPE_FLOAT:    { preprocess_float(nv);
 								  fntoa(global_string_buf, nv->value, nv->precision);
 								  fprintf_P(stderr,PSTR("%s:%s"), nv->token, global_string_buf) ; break;
 								}
-			case TYPE_UINT:     { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;}
-			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%s:%lu"), nv->token, *v); break;}
+			case TYPE_INT:      { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;}
 			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s:%s"), nv->token, *nv->stringp); break;}
-			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
+			case TYPE_BOOL:     { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;} // print as 0 or 1, do t & f later
+			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%s:%lu"), nv->token, *v); break;}
+//			case TYPE_ARRAY:    { <not implemented> ; break;}
 		}
 		if ((nv = nv->nx) == NULL) return;
 		if (nv->valuetype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
@@ -215,7 +217,7 @@ void text_print_inline_values(nvObj_t *nv)
 								  fntoa(global_string_buf, nv->value, nv->precision);
 								  fprintf_P(stderr,PSTR("%s"), global_string_buf) ; break;
 								}
-			case TYPE_UINT:     { fprintf_P(stderr,PSTR("%1.0f"), nv->value); break;}
+			case TYPE_INT:     { fprintf_P(stderr,PSTR("%1.0f"), nv->value); break;}
 			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%lu"), *v); break;}
 			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s"), *nv->stringp); break;}
 			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }

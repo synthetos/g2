@@ -267,7 +267,7 @@ stat_t io_get_input(nvObj_t *nv)
 {
     // the token has been stripped down to an ASCII digit string - use it as an index
     nv->value = io.in[strtol(nv->token, NULL, 10)-1].state;
-    nv->valuetype = TYPE_UINT;
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 

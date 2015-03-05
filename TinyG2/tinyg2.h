@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.13 // added function to return input state; testing config functions
+#define TINYG_FIRMWARE_BUILD   		079.14 // added signed int8 to nv data types to accommodate -1 input types
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -142,10 +142,7 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 								// Use macros to fake out AVR's PROGMEM and other AVRisms.
 #define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
-
-typedef char char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t
-								// because in C++ uint8_t and char are distinct types and
-								// we want chars to behave as uint8's
+typedef char char_t;			// Vestigal. Will be removed at some point
 
 													// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray

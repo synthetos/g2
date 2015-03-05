@@ -446,13 +446,13 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 
 #define BUFFER_MARGIN 8			// safety margin to avoid buffer overruns during footer checksum generation
 
-uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
+uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
 {
 #ifdef __SILENCE_JSON_RESPONSES
 	return (0);
 #else
-	char_t *str = out_buf;
-	char_t *str_max = out_buf + size - BUFFER_MARGIN;
+	char *str = out_buf;
+	char *str_max = out_buf + size - BUFFER_MARGIN;
 	int8_t initial_depth = nv->depth;
 	int8_t prev_depth = 0;
 	uint8_t need_a_comma = false;
@@ -474,22 +474,25 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 				if (isnan((double)nv->value) || isinf((double)nv->value)) { nv->value = 0;}
 			}
 
-			// serialize output value (arranged in likely order of occurrence)
+			// serialize output value (arranged in rough order of likely occurrence)
 			if      (nv->valuetype == TYPE_FLOAT)   { preprocess_float(nv);
 			                                          str += fntoa(str, nv->value, nv->precision);}
-			else if (nv->valuetype == TYPE_UINT)    { str += (char_t)sprintf((char *)str, "%1.0f", (double)nv->value);}
-			else if (nv->valuetype == TYPE_STRING)  { str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_ARRAY)   { str += (char_t)sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_NULL)    { str += (char_t)sprintf((char *)str, "null");} // Note that that "" is NOT null.
+			else if (nv->valuetype == TYPE_INT)     { str += sprintf((char *)str, "%1.0f", (double)nv->value);}
+			else if (nv->valuetype == TYPE_STRING)  { str += sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_ARRAY)   { str += sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_NULL)    { str += sprintf((char *)str, "null");} // Note that that "" is NOT null.
             else if (nv->valuetype == TYPE_DATA)    {
 				uint32_t *v = (uint32_t*)&nv->value;
-				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);}
-
+				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);
+            }
 			else if (nv->valuetype == TYPE_BOOL) {
-				if (fp_FALSE(nv->value)) { str += sprintf((char *)str, "false");}
-				else { str += (char_t)sprintf((char *)str, "true"); }
+				if (fp_FALSE(nv->value)) {
+                    str += sprintf((char *)str, "false");
+                } else {
+                    str += (char_t)sprintf((char *)str, "true");
+                }
 			}
-			if (nv->valuetype == TYPE_PARENT) {
+			else if (nv->valuetype == TYPE_PARENT) {
 				*str++ = '{';
 				need_a_comma = false;
 			}

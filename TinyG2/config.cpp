@@ -168,7 +168,7 @@ stat_t set_defaults(nvObj_t *nv)
 	nv_reset_nv_list();
 	strncpy(nv->token, "defa", TOKEN_LEN);
 //	nv->index = nv_get_index("", nv->token);	// correct, but not required
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	nv->value = 1;
 	return (STAT_OK);
 }
@@ -216,15 +216,22 @@ stat_t get_nul(nvObj_t *nv)
 stat_t get_ui8(nvObj_t *nv)
 {
 	nv->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
+}
+
+stat_t get_int8(nvObj_t *nv)
+{
+    nv->value = (float)*((int8_t *)GET_TABLE_WORD(target));
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
 }
 
 stat_t get_int(nvObj_t *nv)
 {
 //	nv->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
 	nv->value = *((uint32_t *)GET_TABLE_WORD(target));
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 
@@ -259,14 +266,14 @@ stat_t set_nul(nvObj_t *nv) { return (STAT_NOOP);}
 stat_t set_ui8(nvObj_t *nv)
 {
 	*((uint8_t *)GET_TABLE_WORD(target)) = nv->value;
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return(STAT_OK);
 }
 
 stat_t set_int8(nvObj_t *nv)
 {
-    *((int8_t *)GET_TABLE_WORD(target)) = nv->value;
-    nv->valuetype = TYPE_UINT;
+    *((int8_t *)GET_TABLE_WORD(target)) = (int8_t)nv->value;
+    nv->valuetype = TYPE_INT;
     return(STAT_OK);
 }
 
@@ -291,7 +298,7 @@ stat_t set_0123(nvObj_t *nv)
 stat_t set_int(nvObj_t *nv)
 {
 	*((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;
-	nv->valuetype = TYPE_UINT;
+	nv->valuetype = TYPE_INT;
 	return(STAT_OK);
 }
 
@@ -587,7 +594,7 @@ nvObj_t *nv_add_integer(const char_t *token, const uint32_t value)// add an inte
 		}
 		strncpy(nv->token, token, TOKEN_LEN);
 		nv->value = (float) value;
-		nv->valuetype = TYPE_UINT;
+		nv->valuetype = TYPE_INT;
 		return (nv);
 	}
 	return (NULL);
