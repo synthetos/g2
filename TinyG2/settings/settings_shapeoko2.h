@@ -251,12 +251,12 @@
 // IO_FUNCTION_NONE, IO_FUNCTION_LIMIT, IO_FUNCTION_INTERLOCK, IO_FUNCTION_SHUTDOWN
 
 #define DEFAULT_MODE                NORMALLY_CLOSED
-#define DEFAULT_ACTION              IO_ACTION_HALT
-#define DEFAULT_FUNCTION            IO_FUNCTION_LIMIT
+#define DEFAULT_ACTION              IO_ACTION_NONE
+#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
 
 #define DI1_MODE                    DEFAULT_MODE
-#define DI1_ACTION                  DEFAULT_ACTION
-#define DI1_FUNCTION                DEFAULT_FUNCTION
+#define DI1_ACTION                  IO_ACTION_STOP
+#define DI1_FUNCTION                IO_FUNCTION_LIMIT
 
 #define DI2_MODE                    DEFAULT_MODE
 #define DI2_ACTION                  DEFAULT_ACTION

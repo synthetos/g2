@@ -579,9 +579,9 @@ void canonical_machine_init()
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
-    cm.limit_requested = false;         // resets switch closures that occurred during initialization
-    cm.interlock_requested = false;     // ditto
-    cm.shutdown_requested = false;      // ditto
+    cm.limit_requested = false;                 // resets switch closures that occurred during initialization
+    cm.interlock_requested = false;             // ditto
+    cm.shutdown_requested = false;              // ditto
 	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 
 	// signal that the machine is ready for action
@@ -621,7 +621,9 @@ stat_t cm_alarm(stat_t status, const char *msg)
 {
 	rpt_exception(status, (char_t *)"msg");	// send alarm message
 	cm.machine_state = MACHINE_ALARM;
-	return (status);						// NB: More efficient than inlining rpt_exception() call.
+	cm_spindle_control(SPINDLE_OFF);
+    cm_request_queue_flush();               // do a queue flush once runtime is not busy
+    return (status);
 }
 
 stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
@@ -639,13 +641,6 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
 	cm_spindle_control(SPINDLE_OFF);
-
-	// disable all MCode functions
-//	gpio_set_bit_off(SPINDLE_BIT);			//++++ this current stuff is temporary
-//	gpio_set_bit_off(SPINDLE_DIR);
-//	gpio_set_bit_off(SPINDLE_PWM);
-//	gpio_set_bit_off(MIST_COOLANT_BIT);		//++++ replace with exec function
-//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
 
 	// build an info string and call the exception report
 	char_t info[64];
@@ -1287,7 +1282,7 @@ stat_t cm_feedhold_sequencing_callback()
         if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
 			 !cm_get_runtime_busy()) {
 			cm_queue_flush();
-            cm_alarm(STAT_MACHINE_ALARMED, NULL);
+//            cm_alarm(STAT_MACHINE_ALARMED, NULL);
 		}
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
@@ -1338,13 +1333,13 @@ stat_t cm_queue_flush()
 	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
 
 	/*
-	#ifdef __AVR
-		xio_reset_usb_rx_buffers();				// flush serial queues
-	#endif
-	#ifdef __ARM
-		xio_flush_read();
-	#endif
-	 ng*/
+#ifdef __AVR
+	xio_reset_usb_rx_buffers();				// flush serial queues
+#endif
+#ifdef __ARM
+	xio_flush_read();
+#endif
+	 */
 	mp_flush_planner();						// flush planner queue
 	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
 		cm_end_hold();

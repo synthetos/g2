@@ -98,10 +98,11 @@ void gpio_init(void)
 
 void gpio_reset(void)
 {
-//  io_di_t *in = &io.in[input_num];
-//	for (uint8_t i=0; i<DI_CHANNELS; i++) {
-//		io.in[i].state =
-//	}
+	for (uint8_t i=0; i<DI_CHANNELS; i++) {
+		io.in[i].state = IO_INACTIVE;
+        io.in[i].lockout_ms = IO_LOCKOUT_MS;
+		io.in[i].lockout_timer = SysTickTimer.getValue();
+	}
 }
 
 /*
@@ -141,7 +142,7 @@ MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) { _handle_pin_changed(11, (axis_C_max_
 
 void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
-    io_di_t *in = &io.in[input_num];
+    io_di_t *in = &io.in[input_num-1];
 
     // return if input is disabled (not supposed to happen)
 	if (in->mode == IO_MODE_DISABLED) {
@@ -154,13 +155,10 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
         return;
     }
 
-    printf("%d is %d\n", input_num, pin_value);
-
 	// return if no change in state
 	int8_t pin_value_corrected = (pin_value ^ (in->mode ^ 1));	// correct for NO or NC mode
 	if ( in->state == pin_value_corrected ) {
 //    	in->edge = IO_EDGE_NONE;        // edge should only be reset by function or opposite edge
-        printf("NO CHANGE: %d is %d\n", input_num, pin_value);
     	return;
 	}
 
@@ -188,7 +186,7 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
     // *** for now all the actions do the same thing ***
     if (in->edge == IO_EDGE_LEADING) {
         if (in->action == IO_ACTION_STOP) {
-		//	cm_request_feedhold();
+//			cm_request_feedhold();
 			cm_start_hold();
         }
         if (in->action == IO_ACTION_FAST_STOP) {
