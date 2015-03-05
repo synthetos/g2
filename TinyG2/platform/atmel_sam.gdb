@@ -14,7 +14,7 @@ set height 0
 # monitor endian little
 
 # Open and connect to openocd with the ATMEL-ICE
-target remote | /usr/local/bin/openocd -c "set CHIPNAME SAM3X8E" -f openocd.cfg -f platform/atmel_sam.cfg -c "gdb_port pipe; log_output openocd.log"
+target remote | /usr/local/bin/openocd -c "set CHIPNAME ${CHIP}" -f openocd.cfg -f platform/atmel_sam.cfg -c "gdb_port pipe; log_output openocd.log"
 
 # Turn on history saving
 set history save on
