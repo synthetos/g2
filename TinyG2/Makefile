@@ -31,7 +31,12 @@ PROJECT  = TinyG2
 SOURCE_DIRS = .
 
 # List *project-specific* files that must be linked to first in FIRST_LINK_SOURCES.
-FIRST_LINK_SOURCES =
+# For device-specific FIRST_LINK_SOURCES, use DEVICE_FIRST_LINK_SOURCES (in the
+# device-specific section, below.)
+#
+# Do not include a ./ at the beginning of paths, or they won't match the glob
+# results and will cause linkers errors.
+FIRST_LINK_SOURCES = main.cpp
 
 # List all user directories here that aren't in SOURCE_DIRS
 USER_INCLUDE_DIRS =
@@ -245,7 +250,7 @@ endif
 
 ifeq ("$(BASE_PLATFORM)","due")
 	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+	DEVICE_FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 # Set CHIP and export it for GDB to see
 	export CHIP = SAM3X8E
@@ -260,7 +265,7 @@ endif
 
 ifeq ("$(BASE_PLATFORM)","v9_3x8c")
 	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+	DEVICE_FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 # Set CHIP and export it for GDB to see
 	export CHIP = SAM3X8C
@@ -275,7 +280,7 @@ endif
 
 ifeq ("$(BASE_PLATFORM)","sbv300")
 	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+	DEVICE_FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
 	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
@@ -360,12 +365,12 @@ LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-section
 
 # Directories where source files can be found
 
-C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(patsubst ./%,%,$(wildcard $(dir)/*.c)) )
+CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(patsubst ./%,%,$(wildcard $(dir)/*.cpp)) )
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
-FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
+FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(DEVICE_FIRST_LINK_SOURCES) $(FIRST_LINK_SOURCES)))
 
 # Append OBJ and BIN directories to output filename
 OUTPUT := $(BIN)/$(OUTPUT_BIN)
@@ -395,7 +400,7 @@ $(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
 $(info $(NEWLINE_ONLY)SAM_SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SAM_SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
-$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_FIRST_LINK_SOURCES) $(FIRST_LINK_SOURCES)))
 endif
 
 
