@@ -29,8 +29,8 @@
  * 		 into a virgin EEPROM, and can be changed using the config commands.
  *		 After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
+ *		 System and hardware settings that you shouldn't need to change
+ *		 are in hardware.h  Application settings that also shouldn't need
  *		 to be changed are in tinyg.h
  */
 
@@ -38,7 +38,7 @@
 /**** Ultimaker profile ************************************************/
 /***********************************************************************/
 
-// ***> NOTE: The init message must be a single line with no CRs or LFs 
+// ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to Ultimaker profile"
 
 #define JUNCTION_DEVIATION		0.5		// default value, in mm
@@ -149,7 +149,7 @@
 #define X_LATCH_VELOCITY 		200					// xlv		mm/min
 #define X_LATCH_BACKOFF 		10					// xlb		mm
 #define X_ZERO_BACKOFF 			3					// xzb		mm
-#define X_JERK_HOMING			X_JERK_MAX			// xjh
+#define X_JERK_HIGH_SPEED			X_JERK_MAX			// xjh
 #define X_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define X_SWITCH_TYPE_MAX       SWITCH_TYPE
 
@@ -166,7 +166,7 @@
 #define Y_LATCH_VELOCITY		200
 #define Y_LATCH_BACKOFF			10
 #define Y_ZERO_BACKOFF			3
-#define Y_JERK_HOMING			Y_JERK_MAX
+#define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 #define Y_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define Y_SWITCH_TYPE_MAX       SWITCH_TYPE
 
@@ -183,7 +183,7 @@
 #define Z_LATCH_VELOCITY		100
 #define Z_LATCH_BACKOFF			5
 #define Z_ZERO_BACKOFF			-0.5
-#define Z_JERK_HOMING			Z_JERK_MAX
+#define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define Z_SWITCH_TYPE_MAX       SWITCH_TYPE
 
@@ -221,7 +221,7 @@
 #define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
 #define A_ZERO_BACKOFF 			2
-#define A_JERK_HOMING			A_JERK_MAX
+#define A_JERK_HIGH_SPEED			A_JERK_MAX
 #define A_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define A_SWITCH_TYPE_MAX       SWITCH_TYPE
 
@@ -230,7 +230,7 @@
 #define B_FEEDRATE_MAX			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			0
 #define B_TRAVEL_MAX			-1
-//#define B_JERK_MAX				20000000
+//#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS				1
@@ -240,7 +240,7 @@
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF			10
 #define B_ZERO_BACKOFF			2
-#define B_JERK_HOMING			A_JERK_MAX
+#define B_JERK_HIGH_SPEED		A_JERK_MAX
 #define B_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define B_SWITCH_TYPE_MAX       SWITCH_TYPE
 
@@ -249,7 +249,7 @@
 #define C_FEEDRATE_MAX			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			0
 #define C_TRAVEL_MAX			-1
-//#define C_JERK_MAX				20000000
+//#define C_JERK_MAX			20000000
 #define C_JERK_MAX				20
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_RADIUS				1
@@ -259,7 +259,7 @@
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF			10
 #define C_ZERO_BACKOFF			2
-#define C_JERK_HOMING			A_JERK_MAX
+#define C_JERK_HIGH_SPEED		A_JERK_MAX
 #define C_SWITCH_TYPE_MIN       SWITCH_TYPE
 #define C_SWITCH_TYPE_MAX       SWITCH_TYPE
 

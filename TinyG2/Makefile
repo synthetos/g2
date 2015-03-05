@@ -215,7 +215,10 @@ ifeq ("$(PLATFORM)","G2v9i")
 
 	BASE_PLATFORM=v9_3x8c
 #	SETTINGS_FILE="settings_default.h"
+#	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_probotixV90.h"
 	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif

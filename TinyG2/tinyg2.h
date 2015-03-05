@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.14 // added signed int8 to nv data types to accommodate -1 input types
+#define TINYG_FIRMWARE_BUILD   		079.15 // updated some profiles to the new format
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

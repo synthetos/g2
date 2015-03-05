@@ -145,7 +145,7 @@
 #define X_TRAVEL_MIN			0						// xtn	minimum travel for soft limits
 #define X_TRAVEL_MAX			(25 * 25.4)				// xtm	travel between switches or crashes
 #define X_JERK_MAX				(2 * 25.4)				// xjm	jerk is multipled by 1,000,000 internally
-#define X_JERK_HOMING			10000					// xjh
+#define X_JERK_HIGH_SPEED			10000					// xjh
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION		// xjd
 #define X_SWITCH_MODE_MIN		SW_MODE_HOMING			// xsn	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED		// xsx	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
@@ -162,7 +162,7 @@
 #define Y_TRAVEL_MIN			0
 #define Y_TRAVEL_MAX			(19 * 25.4)
 #define Y_JERK_MAX				(2 * 25.4)
-#define Y_JERK_HOMING			10000
+#define Y_JERK_HIGH_SPEED			10000
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX		SW_MODE_DISABLED
@@ -179,7 +179,7 @@
 #define Z_TRAVEL_MAX			(6.5 * 25.4)
 #define Z_TRAVEL_MIN			0
 #define Z_JERK_MAX				(2 * 25.4)
-#define Z_JERK_HOMING			1000
+#define Z_JERK_HIGH_SPEED			1000
 #define Z_JUNCTION_DEVIATION	0.05
 #define Z_SWITCH_MODE_MIN		SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX		SW_MODE_HOMING
@@ -196,7 +196,7 @@
 #define A_TRAVEL_MIN			-1					// degrees
 #define A_TRAVEL_MAX 			-1					// same value means infinite, no limit
 #define A_JERK_MAX				(2 * 25.4)
-#define A_JERK_HOMING			A_JERK_MAX
+#define A_JERK_HIGH_SPEED			A_JERK_MAX
 #define A_JUNCTION_DEVIATION	0.1
 #define A_RADIUS				1.0
 #define A_SWITCH_MODE_MIN		SW_MODE_DISABLED
@@ -214,7 +214,7 @@
 #define B_TRAVEL_MAX			-1
 #define B_TRAVEL_MIN			-1
 #define B_JERK_MAX				(2 * 25.4)
-#define B_JERK_HOMING			B_JERK_MAX
+#define B_JERK_HIGH_SPEED			B_JERK_MAX
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS				1
 #define B_SWITCH_MODE_MIN		SW_MODE_DISABLED
@@ -232,7 +232,7 @@
 #define C_TRAVEL_MAX			-1
 #define C_TRAVEL_MIN			-1
 #define C_JERK_MAX				(2 * 25.4)
-#define C_JERK_HOMING			C_JERK_MAX
+#define C_JERK_HIGH_SPEED			C_JERK_MAX
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_RADIUS				1
 #define C_SWITCH_MODE_MIN		SW_MODE_DISABLED

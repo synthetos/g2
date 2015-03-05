@@ -89,7 +89,6 @@
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 #define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
-
 #define M1_MOTOR_MAP                AXIS_X				    // 1ma
 #define M1_STEP_ANGLE               1.8					    // 1sa
 #define M1_TRAVEL_PER_REV           40.00                   // 1tr
@@ -138,7 +137,7 @@
 #define M6_POWER_MODE               MOTOR_POWER_MODE
 #define M6_POWER_LEVEL              MOTOR_POWER_LEVEL
 
-// *** axis settings ***
+// *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              50000                   // xvm  G0 max velocity in mm/min
@@ -244,7 +243,6 @@
 #define C_LATCH_VELOCITY            1000
 #define C_LATCH_BACKOFF             5
 #define C_ZERO_BACKOFF              2
-
 
 //*** Input / output settings ***
 
