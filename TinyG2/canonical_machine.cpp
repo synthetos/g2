@@ -1324,7 +1324,7 @@ stat_t cm_end_hold()
 			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
 		} else {
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_exec_move();
+//			st_request_exec_move();
 		}
 	} else if (cm.machine_state != MACHINE_ALARM) { // do not end the cycle if in ALARM state
 		cm_spindle_control_immediate(SPINDLE_OFF);

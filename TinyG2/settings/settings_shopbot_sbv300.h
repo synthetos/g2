@@ -51,8 +51,9 @@
 
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
-#define PAUSE_DWELL_TIME            0.0
+#define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
 
+#define PAUSE_DWELL_TIME            0.0
 #define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 
 #define SWITCH_TYPE                 SW_TYPE_NORMALLY_CLOSED // SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
@@ -142,7 +143,7 @@
 #define M6_POWER_LEVEL		    	MOTOR_POWER_LEVEL
 #endif
 
-// *** axis settings ***
+// *** axis settings *********************************************************************************
 
 #define X_AXIS_MODE		    		AXIS_STANDARD			// xam	see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX			    (360 * 25.4) 			// xvm	G0 max velocity in mm/min
@@ -219,7 +220,7 @@
 #define B_TRAVEL_MAX		    	-1
 #define B_TRAVEL_MIN		    	-1
 #define B_JERK_MAX			    	(2 * 25.4)
-#define B_JERK_HIGH_SPEED		    	B_JERK_MAX
+#define B_JERK_HIGH_SPEED		    B_JERK_MAX
 #define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
 #define B_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
@@ -237,7 +238,7 @@
 #define C_TRAVEL_MAX		    	-1
 #define C_TRAVEL_MIN		    	-1
 #define C_JERK_MAX			    	(2 * 25.4)
-#define C_JERK_HIGH_SPEED		    	C_JERK_MAX
+#define C_JERK_HIGH_SPEED		    C_JERK_MAX
 #define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
 #define C_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
@@ -374,5 +375,3 @@
 #define USER_DATA_D1 0
 #define USER_DATA_D2 0
 #define USER_DATA_D3 0
-
-
