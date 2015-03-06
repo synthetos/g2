@@ -773,10 +773,7 @@ void mp_restart_from_hold()
 		cm_set_motion_state(MOTION_STOP);
 		return;
 	}
-	cm_set_motion_state(MOTION_RUN);
-	//st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
-
+	cm_set_motion_state(MOTION_RUN);            // NB: restarting the steppers occurs in cm_feedhold_sequencing_callback
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
-//    sr_request_status_report(SR_REQUEST_TIMED);
 	return;
 }

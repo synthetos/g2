@@ -445,7 +445,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	// system group settings
 	float junction_acceleration;		// centripetal acceleration max for cornering
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
-	uint8_t soft_limit_enable;
+	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
+    bool limit_enable;                  // true to enable limit switches (disabled is same as override)
+    bool interlock_enable;              // true to enable interlock system
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -485,9 +487,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
 	float jogging_dest;					// jogging direction as a relative move from current position
-
-    bool limit_enable;                  // true to enable limit switches (disabled is same as override)
-    bool interlock_enable;              // true to enable interlock
 
 	bool g28_flag;					    // true = complete a G28 move
 	bool g30_flag;					    // true = complete a G30 move

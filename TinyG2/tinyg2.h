@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.20 //
+#define TINYG_FIRMWARE_BUILD   		079.21 // messing with the !%~ state machine; preserve JSON mode at startup
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

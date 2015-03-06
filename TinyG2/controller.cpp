@@ -89,15 +89,21 @@ stat_t hardware_hard_reset_handler(void);
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
-	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
+    // preserve settable parameters that may have already been set up
+    uint8_t comm_mode = cs.comm_mode;
+    uint8_t network_mode = cs.network_mode;
+
+	memset(&cs, 0, sizeof(controller_t));           // clear all values, job_id's, pointers and status
 	controller_init_assertions();
 
-	cs.fw_build = TINYG_FIRMWARE_BUILD;
+    cs.comm_mode = comm_mode;                       // restore parameters
+    cs.network_mode = network_mode;
+
+	cs.fw_build = TINYG_FIRMWARE_BUILD;             // set up identification
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.config_version = TINYG_CONFIG_VERSION;
-	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
-
-	cs.controller_state = CONTROLLER_STARTUP;		// ready to run startup lines
+	cs.hw_platform = TINYG_HARDWARE_PLATFORM;       // NB: HW version is set from EEPROM
+	cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
 
 #ifdef __AVR
 	xio_set_stdin(std_in);
@@ -218,7 +224,7 @@ static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-		cm_request_queue_flush();
+//		cm_request_queue_flush();   // Is this necessary?
         // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}

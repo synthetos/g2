@@ -142,7 +142,7 @@ static void _application_init(void)
 	encoder_init();					// virtual encoders
 	gpio_init();					// inputs and outputs
 	switch_init();					// switches
-	reset_limit_switches();         // reset limit switch alarm flags
+//	reset_limit_switches();         // reset limit switch alarm flags
 	pwm_init();						// pulse width modulation drivers
 
 	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
