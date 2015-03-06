@@ -258,8 +258,8 @@
 #define DEFAULT_FUNCTION            IO_FUNCTION_NONE
 
 #define DI1_MODE                    DEFAULT_MODE
-#define DI1_ACTION                  DEFAULT_ACTION
-#define DI1_FUNCTION                DEFAULT_FUNCTION
+#define DI1_ACTION                  IO_ACTION_STOP
+#define DI1_FUNCTION                IO_FUNCTION_LIMIT
 
 #define DI2_MODE                    DEFAULT_MODE
 #define DI2_ACTION                  DEFAULT_ACTION

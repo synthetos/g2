@@ -766,9 +766,16 @@ void mp_transition_hold_to_stop()
     return;
 }
 
-void mp_restart_from_hold()
+void mp_end_hold()
 {
 	cm.hold_state = FEEDHOLD_OFF;
+/*
+    if ((cm.machine_state == MACHINE_ALARM) ||
+        (cm.machine_state == MACHINE_SHUTDOWN) ||
+        (cm.machine_state == MACHINE_INTERLOCK)) {
+
+    }
+*/
 	if (mp_has_runnable_buffer()) {
 	    cm_set_motion_state(MOTION_RUN);
         st_request_exec_move();

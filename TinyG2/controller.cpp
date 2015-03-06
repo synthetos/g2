@@ -209,7 +209,7 @@ static void _controller_HSM()
     DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
 
     DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
-    //	DISPATCH(switch_debounce_callback());		// debounce switches
+//	DISPATCH(switch_debounce_callback());		// debounce switches
     DISPATCH(sr_status_report_callback());		// conditionally send status report
     DISPATCH(qr_queue_report_callback());		// conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
@@ -225,10 +225,9 @@ static stat_t _controller_state()
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
 //		cm_request_queue_flush();   // Is this necessary?
-        // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
+        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
-
 	return (STAT_OK);
 }
 
@@ -242,11 +241,10 @@ void controller_set_connected(bool is_connected) {
         // we JUST connected
         cs.controller_state = CONTROLLER_CONNECTED;
     } else {
-        // we just disconnected from the last device, we'll expext a banner again
+        // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
-
 
 /*****************************************************************************
  * command dispatchers
@@ -299,24 +297,20 @@ static void _dispatch_kernel()
 	} else if (*cs.bufp == '~') {
         cm_request_end_hold();
 
-	} else if (*cs.bufp == '{') {							// process as JSON mode
-		cs.comm_mode = JSON_MODE;							// switch to JSON mode
+	} else if (*cs.bufp == '{') {                           // process as JSON mode
+		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
 
-	} else if (strchr("$?Hh", *cs.bufp) != NULL) {			// process as text mode
-		cs.comm_mode = TEXT_MODE;							// switch to text mode
+	} else if (strchr("$?Hh", *cs.bufp) != NULL) {          // process as text mode
+		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
 
-	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
-		if(cm.machine_state != MACHINE_ALARM) {
-			text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
-		}
+	} else if (cs.comm_mode == TEXT_MODE) {                 // anything else must be Gcode
+        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
 	} else {
-		if(cm.machine_state != MACHINE_ALARM) {
-			strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
-			sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
-			json_parser(cs.bufp);
-		}
+        strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
+        sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
+        json_parser(cs.bufp);
 	}
 }
 

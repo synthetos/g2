@@ -309,7 +309,7 @@ stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
 
 void mp_transition_hold_to_stop(void);                  // feedholds...
-void mp_restart_from_hold(void);
+void mp_end_hold(void);
 
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);

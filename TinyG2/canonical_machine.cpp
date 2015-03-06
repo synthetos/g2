@@ -617,11 +617,13 @@ stat_t canonical_machine_test_assertions(void)
  * cm_alarm()    - alarm state; send an exception report and stop processing input
  * cm_clear()    - clear alarm state
  * cm_shutdown() - shutdown state; send an exception report and shut down machine
+ *
+ * Note: An alarm state can be exited by a clear.
+ *       A shutdown state can only be recovered by a system reset.
  */
-
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_ALARM) { // don't alarm if you are already in an alarm state
+    if (cm.machine_state == MACHINE_ALARM) { // don't alarm if already in an alarm state
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
@@ -631,13 +633,11 @@ stat_t cm_alarm(stat_t status, const char *msg)
     return (status);
 }
 
-stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
+stat_t cm_clear(nvObj_t *nv)                // clear alarm condition
 {
-	if (cm.cycle_state == CYCLE_OFF) {
-		cm.machine_state = MACHINE_PROGRAM_STOP;
-	} else {
-		cm.machine_state = MACHINE_CYCLE;
-	}
+    if (cm.machine_state == MACHINE_ALARM) {
+	    cm.machine_state = MACHINE_PROGRAM_STOP;
+    }
 	return (STAT_OK);
 }
 
@@ -647,8 +647,8 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	stepper_init();							// hard stop
 	cm_spindle_control(SPINDLE_OFF);
 
-	// build an info string and call the exception report
-	char_t info[64];
+	// build a secondary message string (info) and call the exception report
+	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
 		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
@@ -656,7 +656,6 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
-
 	cm.machine_state = MACHINE_SHUTDOWN;
 	return (status);
 }
@@ -1313,20 +1312,26 @@ stat_t cm_end_hold()
 		return (STAT_EAGAIN);
 
     cm.end_hold_requested = false;
-	mp_restart_from_hold();
-	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
-		cm_cycle_start();
-		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-		} else {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-		}
-//		st_request_exec_move();
-	} else if (cm.machine_state != MACHINE_ALARM) { // do not end the cycle if in ALARM state
+	mp_end_hold();
+
+    // State machine cases:
+    if (cm.machine_state == MACHINE_ALARM) {
+		cm_spindle_control_immediate(SPINDLE_OFF);
+
+    } else if (cm.motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
-	}
+
+    } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
+		cm_cycle_start();
+		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+    		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+    		} else {
+    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+		}
+        st_request_exec_move();
+    }
 	return (STAT_OK);
 }
 
@@ -1354,7 +1359,7 @@ stat_t cm_queue_flush()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
     }
-    if (!cm.machine_state != MACHINE_ALARM) {
+    if (cm.machine_state != MACHINE_ALARM) {
     	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
     	_exec_program_finalize(value, value);   // finalize now, not later
     }
