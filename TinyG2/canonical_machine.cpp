@@ -1279,11 +1279,8 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 	}
 	if (cm.queue_flush_requested == true) {
-//      if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) && !cm_get_runtime_busy()) {
-//        if (!cm_get_runtime_busy()) {
-			cm_queue_flush();               // Note: this won't run if the runtime is still busy
-//		}
-	}  // Note: in some cases queue flush will drop through and immediately end_hold
+        cm_queue_flush();                   // Note: this won't run if the runtime is still busy
+	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD) {
 			cm.end_hold_requested = false;
@@ -1324,8 +1321,8 @@ stat_t cm_end_hold()
 			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
 		} else {
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-//			st_request_exec_move();
 		}
+//		st_request_exec_move();
 	} else if (cm.machine_state != MACHINE_ALARM) { // do not end the cycle if in ALARM state
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
@@ -1346,26 +1343,22 @@ stat_t cm_end_hold()
 stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) {
-        return (STAT_COMMAND_NOT_ACCEPTED); // can't flush during movement
+        return (STAT_COMMAND_NOT_ACCEPTED);     // can't flush during movement
     }
     cm.queue_flush_requested = false;
     mp_flush_planner();
 
-	if(cm.hold_state == FEEDHOLD_HOLD) {    // end feedhold, if we're in one
-	    cm.end_hold_requested = true;       // invoke end_hold once cm_queue_flush() exits
-//		cm_end_hold();
+	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
+		cm_end_hold();
     }
-//	cm.end_hold_requested = false;          // cancel any pending cycle start request
-	qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
-
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//      cm_set_position(axis, mp_get_runtime_absolute_position(axis));  // set mm from mr
         cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
     }
     if (!cm.machine_state != MACHINE_ALARM) {
     	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
     	_exec_program_finalize(value, value);   // finalize now, not later
     }
+	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     return (STAT_OK);
 }
 
