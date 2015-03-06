@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.21 // refactored feedhold and resume requests
+#define TINYG_FIRMWARE_BUILD   		079.22 // added dashes to the unique ID
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
