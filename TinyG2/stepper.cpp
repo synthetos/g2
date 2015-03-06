@@ -421,8 +421,8 @@ static void _deenergize_motor(const uint8_t motor)
 
     if (!common_enable.isNull()) {
         bool do_disable = true;
-        for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-            if (st_run.mot[motor].power_state != MOTOR_OFF) {
+        for (uint8_t i = MOTOR_1; i < MOTORS; i++) {
+            if (st_run.mot[i].power_state != MOTOR_OFF) {
                 do_disable = false;
                 break;
             }
