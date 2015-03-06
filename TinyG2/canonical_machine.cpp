@@ -619,7 +619,7 @@ stat_t canonical_machine_test_assertions(void)
 
 stat_t cm_soft_alarm(stat_t status, const char *msg)
 {
-	rpt_exception(status, (char_t *)"msg");	// send alarm message
+	rpt_exception(status, (char_t *)msg);	// send alarm message
 	cm.machine_state = MACHINE_ALARM;
 	return (status);						// NB: More efficient than inlining rpt_exception() call.
 }

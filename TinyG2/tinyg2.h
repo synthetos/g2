@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		078.05 // testing feedhold resume correction
+#define TINYG_FIRMWARE_BUILD   		078.06 // fixed alarm exception report
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
