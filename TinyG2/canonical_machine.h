@@ -474,16 +474,20 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	uint8_t interlock_state;			// true if interlock has been triggered
 	uint8_t estop_state;				// true if estop has been triggered
-//	cmHomingState homing_state;			// home: homing cycle sub-state machine
-	uint8_t homing_state;			    // home: homing cycle sub-state machine
+
+	cmHomingState homing_state;			// home: homing cycle sub-state machine
+//	uint8_t homing_state;			    // home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
 
-	uint8_t probe_state;			    // 1==success, 0==failed
-//	cmProbeState probe_state;			// 1==success, 0==failed
+//	uint8_t probe_state;			    //
+	cmProbeState probe_state;			// probing state machine (simple)
 	float probe_results[AXES];			// probing results
 
-    bool limit_enable;                  // 0=disable limit switches, 1=enable
-    bool interlock_enable;              // 0=disable interlock
+	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
+	float jogging_dest;					// jogging direction as a relative move from current position
+
+    bool limit_enable;                  // true to enable limit switches (disabled is same as override)
+    bool interlock_enable;              // true to enable interlock
 
 	bool g28_flag;					    // true = complete a G28 move
 	bool g30_flag;					    // true = complete a G30 move
@@ -491,16 +495,12 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool feedhold_requested;			// feedhold character has been received
 	bool queue_flush_requested;		    // queue flush character has been received
 	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
-    bool limit_requested;               // set non-zero to request limit switch processing (value is input number)
-    bool interlock_requested;           // set non-zero to request interlock processing (value is input number)
-    bool shutdown_requested;            // set non-zero to request shutdown in support of external estop (value is input number)
-
-	float jogging_dest;					// jogging direction as a relative move from current position
-	struct GCodeState *am;				// active Gcode model is maintained by state management
-
-	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
+    uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
+    uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
+    uint8_t interlock_requested;        // set non-zero to request interlock processing (value is leading or trailing edge)
 
 	/**** Model states ****/
+	GCodeState_t *am;                   // active Gcode model is maintained by state management
 	GCodeState_t  gm;					// core gcode model state
 	GCodeStateX_t gmx;					// extended gcode model state
 	GCodeInput_t  gn;					// gcode input values - transient

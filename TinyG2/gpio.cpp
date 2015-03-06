@@ -142,7 +142,9 @@ MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) { _handle_pin_changed(11, (axis_C_max_
 
 void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 {
-    io_di_t *in = &io.in[input_num-1];
+    io_di_t *in = &io.in[input_num-1];  // array index is one less than input number
+
+    printf("input num %d\n", input_num);
 
     // return if input is disabled (not supposed to happen)
 	if (in->mode == IO_MODE_DISABLED) {

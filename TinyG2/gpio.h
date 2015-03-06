@@ -41,8 +41,8 @@
 
 enum ioMode {
     IO_MODE_DISABLED = -1,			// pin is disabled
-    IO_MODE_ACTIVE_LOW = 0,			// pin is active low (normally open)
-    IO_MODE_ACTIVE_HIGH = 1,		// pin is active high (normally closed)
+    IO_MODE_ACTIVE_LOW = 0,			// pin is active low (aka normally open)
+    IO_MODE_ACTIVE_HIGH = 1,		// pin is active high (aka normally closed)
 	IO_MODE_MAX						// unused. Just for range checking
 };
 #define NORMALLY_OPEN IO_MODE_ACTIVE_LOW    // equivalent
@@ -73,7 +73,7 @@ enum ioState {
 };
 
 enum ioEdgeFlag {
-    IO_EDGE_NONE = 0,               // no edge detected or edge flag reset
+    IO_EDGE_NONE = 0,               // no edge detected or edge flag reset (must be zero)
     IO_EDGE_LEADING,				// flag is set when leading edge is detected
     IO_EDGE_TRAILING				// flag is set when trailing edge is detected
 };

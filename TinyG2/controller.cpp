@@ -450,11 +450,10 @@ static stat_t _limit_switch_handler(void)
     if ((cm.limit_enable == false) || (cm.limit_requested == false)) {
         return (STAT_NOOP);
     }
+	char message[20];
+	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
     cm.limit_requested = false;         // clear the limit request
-	char_t message[32];
-	sprintf_P((char *)message, PSTR("input %d limit fired"), (int)cm.limit_requested);
     return cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
-
 }
 
 static stat_t _interlock_handler(void)

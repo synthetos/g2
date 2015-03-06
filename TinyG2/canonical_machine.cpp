@@ -149,26 +149,24 @@ uint8_t cm_get_combined_state()
 {
 /*
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2");  // "machine is in motion but macs is not cycle"
 */
-    switch(cm.machine_state)
-    {
+    switch(cm.machine_state) {
         case MACHINE_INITIALIZING: return (COMBINED_INITIALIZING);
         case MACHINE_READY: return (COMBINED_READY);
         case MACHINE_ALARM: return (COMBINED_ALARM);
         case MACHINE_PROGRAM_STOP: return (COMBINED_PROGRAM_STOP);
         case MACHINE_PROGRAM_END: return (COMBINED_PROGRAM_END);
+        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
         case MACHINE_CYCLE: {
-            switch(cm.cycle_state)
-            {
+            switch(cm.cycle_state) {
                 case CYCLE_PROBE: return (COMBINED_PROBE);
                 case CYCLE_JOG: return (COMBINED_JOG);
                 case CYCLE_HOMING: return (COMBINED_HOMING);
                 case CYCLE_MACHINING: case CYCLE_OFF: {
-                    switch(cm.motion_state)
-                    {
+                    switch(cm.motion_state) {
                         case MOTION_HOLD: return (COMBINED_HOLD);
                         case MOTION_PLANNING: return (COMBINED_RUN);
                         case MOTION_RUN: return (COMBINED_RUN);
@@ -178,22 +176,21 @@ uint8_t cm_get_combined_state()
                             //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return (COMBINED_RUN);
                         default: {
-                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
+                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs3");  // "mots has impossible value"
                             return (COMBINED_SHUTDOWN);
                         }
                     }
                 }
                 default: {
-                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
+                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs4");  // "cycs has impossible value"
                     return (COMBINED_SHUTDOWN);
                 }
             }
         }
         default: {
-            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
+            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs5"); // "macs has impossible value"
             return (COMBINED_SHUTDOWN);
         }
-        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
     }
 }
 
@@ -1337,7 +1334,9 @@ stat_t cm_end_hold()
 
 stat_t cm_queue_flush()
 {
-	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
+	if (cm_get_runtime_busy() == true) {
+        return (STAT_COMMAND_NOT_ACCEPTED); // can't flush during movement
+    }
 
 	/*
 #ifdef __AVR
@@ -1348,8 +1347,9 @@ stat_t cm_queue_flush()
 #endif
 	 */
 	mp_flush_planner();                     // flush planner queue
-	if(cm.hold_state == FEEDHOLD_HOLD)      // end feedhold, if we're in one
+	if(cm.hold_state == FEEDHOLD_HOLD) {    // end feedhold, if we're in one
 		cm_end_hold();
+    }
 	cm.end_hold_requested = false;          // cancel any pending cycle start request
 
 	qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
@@ -1358,12 +1358,11 @@ stat_t cm_queue_flush()
 	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
+		cm_set_position(axis, mp_get_runtime_absolute_position(axis));  // set mm from mr
 	}
 
-	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);   // finalize now, not later
-
+//	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+//	_exec_program_finalize(value, value);   // finalize now, not later
 	return (STAT_OK);
 }
 
