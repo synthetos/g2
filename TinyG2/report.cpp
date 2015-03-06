@@ -64,17 +64,17 @@ rxSingleton_t rx;
  *			or there is a potential for deadlock in the TX buffer.
  */
 
-stat_t rpt_exception(uint8_t status, char_t *info)
+stat_t rpt_exception(uint8_t status, const char *msg)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
 
-		if (info != NULL) {
+		if (msg != NULL) {
 			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\",%s}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), info);
+				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\", %s}}\n"),
+					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
 			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\",%s}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), info);
+				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\", %s}}\n"),
+					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
 			}
 		} else {
 			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
@@ -85,10 +85,11 @@ stat_t rpt_exception(uint8_t status, char_t *info)
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 			}
 		}
-		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
-			// Fancy place for a breakpoint, if your code asplodes.
-			asm("nop;");
-		}
+
+//		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
+//			// Fancy place for a breakpoint, if your code asplodes.
+//			asm("nop;");
+//		}
 	}
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }

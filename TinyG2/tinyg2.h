@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.18 // checkpoint - change limit behavior to agree with new alarm processing specs
+#define TINYG_FIRMWARE_BUILD   		079.19 // testing state management through alarm cases
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

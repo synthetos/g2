@@ -147,17 +147,17 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
+/*
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
-
+*/
     switch(cm.machine_state)
     {
         case MACHINE_INITIALIZING: return (COMBINED_INITIALIZING);
         case MACHINE_READY: return (COMBINED_READY);
         case MACHINE_ALARM: return (COMBINED_ALARM);
-        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
         case MACHINE_PROGRAM_STOP: return (COMBINED_PROGRAM_STOP);
         case MACHINE_PROGRAM_END: return (COMBINED_PROGRAM_END);
         case MACHINE_CYCLE: {
@@ -177,19 +177,23 @@ uint8_t cm_get_combined_state()
                             //    until the command is executed by mp_exec_aline... so this assert isn't valid
                             //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return (COMBINED_RUN);
-                        default:
+                        default: {
                             rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
                             return (COMBINED_SHUTDOWN);
+                        }
                     }
                 }
-                default:
+                default: {
                     rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
                     return (COMBINED_SHUTDOWN);
+                }
             }
         }
-        default:
+        default: {
             rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
             return (COMBINED_SHUTDOWN);
+        }
+        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
     }
 }
 
@@ -199,7 +203,8 @@ uint8_t cm_get_motion_state() { return cm.motion_state;}
 uint8_t cm_get_hold_state() { return cm.hold_state;}
 uint8_t cm_get_homing_state() { return cm.homing_state;}
 
-void cm_set_motion_state(uint8_t motion_state)
+//void cm_set_motion_state(uint8_t motion_state)
+void cm_set_motion_state(cmMotionState motion_state)
 {
 	cm.motion_state = motion_state;
 
@@ -619,7 +624,7 @@ stat_t canonical_machine_test_assertions(void)
 
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-	rpt_exception(status, (char_t *)"msg");	// send alarm message
+	rpt_exception(status, msg);	            // send alarm message
 	cm.machine_state = MACHINE_ALARM;
 	cm_spindle_control(SPINDLE_OFF);
     cm_request_queue_flush();               // do a queue flush once runtime is not busy
@@ -1277,10 +1282,12 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 	}
 	if (cm.queue_flush_requested == true) {
-        cm.queue_flush_requested = false;
+//        cm.queue_flush_requested = false;
 
-        if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
-			 !cm_get_runtime_busy()) {
+//        if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
+//			 !cm_get_runtime_busy()) {
+        if (!cm_get_runtime_busy()) {
+            cm.queue_flush_requested = false;
 			cm_queue_flush();
 //            cm_alarm(STAT_MACHINE_ALARMED, NULL);
 		}
@@ -1334,18 +1341,18 @@ stat_t cm_queue_flush()
 
 	/*
 #ifdef __AVR
-	xio_reset_usb_rx_buffers();				// flush serial queues
+	xio_reset_usb_rx_buffers();	            // flush serial queues
 #endif
 #ifdef __ARM
 	xio_flush_read();
 #endif
 	 */
-	mp_flush_planner();						// flush planner queue
-	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
+	mp_flush_planner();                     // flush planner queue
+	if(cm.hold_state == FEEDHOLD_HOLD)      // end feedhold, if we're in one
 		cm_end_hold();
-	cm.end_hold_requested = false;					// cancel any pending cycle start request
+	cm.end_hold_requested = false;          // cancel any pending cycle start request
 
-	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
+	qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
 
 	// Note: The following uses low-level mp calls for absolute position.
 	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
@@ -1355,7 +1362,7 @@ stat_t cm_queue_flush()
 	}
 
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	// finalize now, not later
+	_exec_program_finalize(value, value);   // finalize now, not later
 
 	return (STAT_OK);
 }
@@ -1418,7 +1425,8 @@ static void _exec_program_finalize(float *value, float *flag)
 	// Allow update in the alarm state, to accommodate queue flush (RAS)
 	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) /*&&
 	    (cm.machine_state != MACHINE_ALARM)*/ && (cm.machine_state != MACHINE_SHUTDOWN)) {
-		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
+//		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
+		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
 	mp_zero_segment_velocity();							// for reporting purposes
