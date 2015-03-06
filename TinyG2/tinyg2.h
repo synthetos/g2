@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.22 // added dashes to the unique ID
+#define TINYG_FIRMWARE_BUILD   		079.23 // updated text reporting strings for changes to machine states
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

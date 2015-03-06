@@ -1349,6 +1349,8 @@ stat_t cm_queue_flush()
         return (STAT_COMMAND_NOT_ACCEPTED); // can't flush during movement
     }
     cm.queue_flush_requested = false;
+    mp_flush_planner();
+
 	if(cm.hold_state == FEEDHOLD_HOLD) {    // end feedhold, if we're in one
 	    cm.end_hold_requested = true;       // invoke end_hold once cm_queue_flush() exits
 //		cm_end_hold();
@@ -1360,7 +1362,7 @@ stat_t cm_queue_flush()
 //      cm_set_position(axis, mp_get_runtime_absolute_position(axis));  // set mm from mr
         cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
     }
-    if (!cm.machine_state == MACHINE_ALARM) {
+    if (!cm.machine_state != MACHINE_ALARM) {
     	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
     	_exec_program_finalize(value, value);   // finalize now, not later
     }
@@ -1561,9 +1563,11 @@ static const char msg_stat8[] PROGMEM = "Cycle";
 static const char msg_stat9[] PROGMEM = "Homing";
 static const char msg_stat10[] PROGMEM = "Jog";
 static const char msg_stat11[] PROGMEM = "Shutdown";
+static const char msg_stat12[] PROGMEM = "Interlock";
 static const char *const msg_stat[] PROGMEM = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
 												msg_stat4, msg_stat5, msg_stat6, msg_stat7,
-												msg_stat8, msg_stat9, msg_stat10, msg_stat11 };
+												msg_stat8, msg_stat9, msg_stat10, msg_stat11,
+                                                msg_stat12 };
 
 static const char msg_macs0[] PROGMEM = "Initializing";
 static const char msg_macs1[] PROGMEM = "Ready";
@@ -1572,8 +1576,9 @@ static const char msg_macs3[] PROGMEM = "Stop";
 static const char msg_macs4[] PROGMEM = "End";
 static const char msg_macs5[] PROGMEM = "Cycle";
 static const char msg_macs6[] PROGMEM = "Shutdown";
+static const char msg_macs7[] PROGMEM = "Interlock";
 static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-												msg_macs4, msg_macs5, msg_macs6 };
+												msg_macs4, msg_macs5, msg_macs6, msg_macs7 };
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";
@@ -1583,16 +1588,17 @@ static const char msg_cycs4[] PROGMEM = "Jog";
 static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
 
 static const char msg_mots0[] PROGMEM = "Stop";
-static const char msg_mots1[] PROGMEM = "Run";
-static const char msg_mots2[] PROGMEM = "Hold";
-static const char *const msg_mots[] PROGMEM = { msg_mots0, msg_mots1, msg_mots2 };
+static const char msg_mots1[] PROGMEM = "Planning";
+static const char msg_mots2[] PROGMEM = "Run";
+static const char msg_mots3[] PROGMEM = "Hold";
+static const char *const msg_mots[] PROGMEM = { msg_mots0, msg_mots1, msg_mots2, msg_mots3 };
 
 static const char msg_hold0[] PROGMEM = "Off";
 static const char msg_hold1[] PROGMEM = "Sync";
-static const char msg_hold2[] PROGMEM = "Plan";
-static const char msg_hold3[] PROGMEM = "Decel";
-static const char msg_hold4[] PROGMEM = "Hold";
-static const char msg_hold5[] PROGMEM = "End Hold";
+static const char msg_hold2[] PROGMEM = "Decel Continue";
+static const char msg_hold3[] PROGMEM = "Decel to Zero";
+static const char msg_hold4[] PROGMEM = "Decel Done";
+static const char msg_hold5[] PROGMEM = "Hold";
 static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
 												msg_hold4,  msg_hold5 };
 
@@ -1668,6 +1674,7 @@ static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2,
 
 #endif // __TEXT_MODE
 
+
 /***** AXIS HELPERS *****************************************************************
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  * _get_axis()		  - return axis number or -1 if NA
@@ -1703,7 +1710,6 @@ static int8_t _get_axis_type(const index_t index)
 	if (axis == -1) return (-1);
 	return (0);
 }
-
 
 /**** Functions called directly from cfgArray table - mostly wrappers ****
  * _get_msg_helper() - helper to get string values
