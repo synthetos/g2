@@ -1263,9 +1263,7 @@ void cm_message(char_t *message)
  *      the spindle if the spindle is active.
  */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) {
-    if(cm.estop_state == 0) cm.queue_flush_requested = true;
-}
+void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
 stat_t cm_feedhold_sequencing_callback()
@@ -1281,22 +1279,16 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 	}
 	if (cm.queue_flush_requested == true) {
-//        cm.queue_flush_requested = false;
-
-//        if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
-//			 !cm_get_runtime_busy()) {
-        if (!cm_get_runtime_busy()) {
-			cm_queue_flush();
-            cm.queue_flush_requested = false;
-//            cm_alarm(STAT_MACHINE_ALARMED, NULL);
-		}
-	}  // Note - in some cases queue flush will drop through and immediately end_hold
+//      if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) && !cm_get_runtime_busy()) {
+//        if (!cm_get_runtime_busy()) {
+			cm_queue_flush();               // Note: this won't run if the runtime is still busy
+//		}
+	}  // Note: in some cases queue flush will drop through and immediately end_hold
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD) {
 			cm.end_hold_requested = false;
         } else if(cm.hold_state == FEEDHOLD_HOLD) {
 			cm_end_hold();
-			cm.end_hold_requested = false;
 		}
 	}
 	return (STAT_OK);
@@ -1323,6 +1315,7 @@ stat_t cm_end_hold()
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
 		return (STAT_EAGAIN);
 
+    cm.end_hold_requested = false;
 	mp_restart_from_hold();
 	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
 		cm_cycle_start();
@@ -1333,7 +1326,7 @@ stat_t cm_end_hold()
 			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 			st_request_exec_move();
 		}
-	} else {
+	} else if (cm.machine_state != MACHINE_ALARM) { // do not end the cycle if in ALARM state
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
 	}
@@ -1347,24 +1340,15 @@ stat_t cm_end_hold()
  *  - (1) Homing / probing / jogging: a single move has been stopped (feedhold) and the remaining move abandoned
  *  - (2) Alarm: one or more moves are invalidated due to an alarm condition. CLear everything
  *
- *  In either case return machine state to PROGRAM_STOP by ending the feedhold. In the alarm case the caller
- *  is responsible for setting the machine to ALARM state after this function returns.
+ *  In case (1) return machine state to PROGRAM_STOP by ending the feedhold.
+ *  In the alarm case (2) the caller preserve the alarm and do not finalize the state
  */
 stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) {
         return (STAT_COMMAND_NOT_ACCEPTED); // can't flush during movement
     }
-
-	/*
-#ifdef __AVR
-	xio_reset_usb_rx_buffers();	            // flush serial queues
-#endif
-#ifdef __ARM
-	xio_flush_read();
-#endif
-	 */
-	mp_flush_planner();                     // flush planner queue
+    cm.queue_flush_requested = false;
 	if(cm.hold_state == FEEDHOLD_HOLD) {    // end feedhold, if we're in one
 	    cm.end_hold_requested = true;       // invoke end_hold once cm_queue_flush() exits
 //		cm_end_hold();
@@ -1372,18 +1356,15 @@ stat_t cm_queue_flush()
 //	cm.end_hold_requested = false;          // cancel any pending cycle start request
 	qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
 
-	// Note: The following uses the low-level mp function for absolute position.
-	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		cm_set_position(axis, mp_get_runtime_absolute_position(axis));  // set mm from mr
-	}
-
-	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);   // finalize now, not later
-
-//	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-//	_exec_program_finalize(value, value);   // finalize now, not later
-	return (STAT_OK);
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+//      cm_set_position(axis, mp_get_runtime_absolute_position(axis));  // set mm from mr
+        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
+    }
+    if (!cm.machine_state == MACHINE_ALARM) {
+    	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
+    	_exec_program_finalize(value, value);   // finalize now, not later
+    }
+    return (STAT_OK);
 }
 
 /******************************
