@@ -829,9 +829,6 @@
     <Compile Include="arduino\WString.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="canonical_machine.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="canonical_machine.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1226,6 +1223,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\canonical_machine.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_default.h">

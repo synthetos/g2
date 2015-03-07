@@ -154,10 +154,12 @@
 #define X_JERK_MAX			    	(2 * 25.4)				// xjm	jerk is multipled by 1,000,000 internally
 #define X_JERK_HIGH_SPEED		    10000					// xjh
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
-#define X_SWITCH_MODE_MIN	    	SW_MODE_HOMING			// xsn	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX 	    	SW_MODE_DISABLED		// xsx	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED	// rsn	SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-#define X_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED	// rsx  SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+//#define X_SWITCH_MODE_MIN	    	SW_MODE_HOMING			// xsn	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+//#define X_SWITCH_MODE_MAX 	    	SW_MODE_DISABLED		// xsx	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
+//#define X_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED	// rsn	SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+//#define X_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED	// rsx  SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
+#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY	    	(60 * 25.4)				// xsv	minus means move to minimum switch
 #define X_LATCH_VELOCITY	    	(30 * 25.4)				// xlv	mm/min
 #define X_LATCH_BACKOFF		    	(0.125 * 25.4)			// xlb	mm
@@ -171,10 +173,12 @@
 #define Y_JERK_MAX			    	(2 * 25.4)
 #define Y_JERK_HIGH_SPEED		    10000
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN	    	SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX		    SW_MODE_DISABLED
-#define Y_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define Y_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+//#define Y_SWITCH_MODE_MIN	    	SW_MODE_HOMING
+//#define Y_SWITCH_MODE_MAX		    SW_MODE_DISABLED
+//#define Y_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
+//#define Y_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define Y_HOMING_INPUT              3
+#define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Y_LATCH_VELOCITY	    	(30 * 25.4)
 #define Y_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -188,10 +192,12 @@
 #define Z_JERK_MAX			    	(2 * 25.4)
 #define Z_JERK_HIGH_SPEED		    1000
 #define Z_JUNCTION_DEVIATION    	0.05
-#define Z_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define Z_SWITCH_MODE_MAX	    	SW_MODE_HOMING
-#define Z_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define Z_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+//#define Z_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
+//#define Z_SWITCH_MODE_MAX	    	SW_MODE_HOMING
+//#define Z_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
+//#define Z_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define Z_HOMING_INPUT              6
+#define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Z_LATCH_VELOCITY	    	(30 * 25.4)
 #define Z_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -206,10 +212,12 @@
 #define A_JERK_HIGH_SPEED		    A_JERK_MAX
 #define A_JUNCTION_DEVIATION    	0.1
 #define A_RADIUS			    	1.0
-#define A_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define A_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define A_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+//#define A_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
+//#define A_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
+//#define A_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
+//#define A_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define A_HOMING_INPUT              0
+#define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY	    	(60 * 25.4)
 #define A_LATCH_VELOCITY	    	(30 * 25.4)
 #define A_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -224,10 +232,12 @@
 #define B_JERK_HIGH_SPEED		    B_JERK_MAX
 #define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
-#define B_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define B_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define B_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+//#define B_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
+//#define B_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
+//#define B_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
+//#define B_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define B_HOMING_INPUT              0
+#define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY	    	(60 * 25.4)
 #define B_LATCH_VELOCITY	    	(30 * 25.4)
 #define B_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -242,10 +252,12 @@
 #define C_JERK_HIGH_SPEED		    C_JERK_MAX
 #define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
-#define C_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define C_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define C_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+//#define C_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
+//#define C_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
+//#define C_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
+//#define C_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define C_HOMING_INPUT              0
+#define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY	    	(60 * 25.4)
 #define C_LATCH_VELOCITY	    	(30 * 25.4)
 #define C_LATCH_BACKOFF		    	(0.125 * 25.4)
