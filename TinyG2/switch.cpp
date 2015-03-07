@@ -70,18 +70,18 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
-static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
-static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
-static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
-static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
-static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
-static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
-static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
-static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
-static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
-static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
-static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
-static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
+//static InputPin<kInput1_PinNumber> axis_X_min_pin(kPullUp);
+//static InputPin<kInput2_PinNumber> axis_X_max_pin(kPullUp);
+//static InputPin<kInput3_PinNumber> axis_Y_min_pin(kPullUp);
+//static InputPin<kInput4_PinNumber> axis_Y_max_pin(kPullUp);
+//static InputPin<kInput5_PinNumber> axis_Z_min_pin(kPullUp);
+//static InputPin<kInput6_PinNumber> axis_Z_max_pin(kPullUp);
+//static InputPin<kInput7_PinNumber> axis_A_min_pin(kPullUp);
+//static InputPin<kInput8_PinNumber> axis_A_max_pin(kPullUp);
+//static InputPin<kInput9_PinNumber> axis_B_min_pin(kPullUp);
+//static InputPin<kInput10_PinNumber> axis_B_max_pin(kPullUp);
+//static InputPin<kInput11_PinNumber> axis_C_min_pin(kPullUp);
+//static InputPin<kInput12_PinNumber> axis_C_max_pin(kPullUp);
 
 /*
  * switch_init() - initialize homing/limit switches

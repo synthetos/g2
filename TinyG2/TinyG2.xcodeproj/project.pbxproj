@@ -383,6 +383,7 @@
 		D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579F18B5C21500F8616C /* cycle_probing.cpp */; };
 		D4B657A418B5C21600F8616C /* encoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A018B5C21500F8616C /* encoder.cpp */; };
 		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
+		D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
 		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
@@ -413,13 +414,10 @@
 		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D409C00F1902F70C00F15547 /* G2v9i-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9i-pinout.h"; sourceTree = "<group>"; };
 		D40A5F921A07E42600F90F4F /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
-		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = switch.cpp; sourceTree = "<group>"; };
+		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = switch.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D41D13F417374B4E00D522D9 /* switch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = switch.h; sourceTree = "<group>"; };
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
-		D41D13F817374B7D00D522D9 /* settings_lumenlabMicRoV3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_lumenlabMicRoV3.h; sourceTree = "<group>"; };
-		D41D13F917374B7D00D522D9 /* settings_othercutter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othercutter.h; sourceTree = "<group>"; };
 		D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_probotixV90.h; sourceTree = "<group>"; };
-		D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375.h; sourceTree = "<group>"; };
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
 		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
@@ -3215,8 +3213,7 @@
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4B5763417079D790070CCAE /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
-		D4B6577218A562B300F8616C /* settings_pocketnc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pocketnc.h; sourceTree = "<group>"; };
-		D4B6579018B4674E00F8616C /* gShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gShield-pinout.h"; sourceTree = "<group>"; };
+		D4B6579018B4674E00F8616C /* gShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = "gShield-pinout.h"; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4B6579118B4674E00F8616C /* G2v9d-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "G2v9d-pinout.h"; path = "platform/atmel_sam/board/v9_3x8c/G2v9d-pinout.h"; sourceTree = SOURCE_ROOT; };
 		D4B6579218B467AC00F8616C /* G2v9f-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9f-pinout.h"; sourceTree = "<group>"; };
 		D4B6579B18B519E300F8616C /* G2v9g-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9g-pinout.h"; sourceTree = "<group>"; };
@@ -3228,18 +3225,17 @@
 		D4B657A518B5C23C00F8616C /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pwm.cpp; sourceTree = "<group>"; };
 		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
 		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
+		D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gpio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
-		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = motate_pin_assignments.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4CA314D19DEFEFB004B4A02 /* atmel_sam-flash.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "atmel_sam-flash.sh"; sourceTree = "<group>"; };
 		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
 		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
-		D4EC69F718CA2C1900DF8E4F /* settings_hammer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_hammer.h; sourceTree = "<group>"; };
-		D4EC69F818CA2C1900DF8E4F /* settings_openpnp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_openpnp.h; sourceTree = "<group>"; };
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
-		D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_pendulum.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
 		E29D7210198978BE00F22E5F /* UniqueId.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UniqueId.cpp; sourceTree = "<group>"; };
@@ -3273,15 +3269,8 @@
 			isa = PBXGroup;
 			children = (
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
-				D4EC69F718CA2C1900DF8E4F /* settings_hammer.h */,
-				D41D13F817374B7D00D522D9 /* settings_lumenlabMicRoV3.h */,
-				D4EC69F818CA2C1900DF8E4F /* settings_openpnp.h */,
-				D41D13F917374B7D00D522D9 /* settings_othercutter.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
-				D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */,
-				D4B6577218A562B300F8616C /* settings_pocketnc.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
-				D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
 				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
@@ -3321,6 +3310,8 @@
 				D4B657A118B5C21500F8616C /* encoder.h */,
 				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
 				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
+				D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */,
+				D4B93DF01AAA9DFE00632FAB /* gpio.h */,
 				D48F5A47172CB1F900D0E055 /* hardware.cpp */,
 				D48F5A72172CB21100D0E055 /* hardware.h */,
 				D48F5A48172CB1FA00D0E055 /* help.cpp */,
@@ -7956,6 +7947,7 @@
 				D49EC53917054FDF00F2BF9B /* arm_mat_scale_f32.c in Sources */,
 				D49EC53A17054FDF00F2BF9B /* arm_mat_scale_q15.c in Sources */,
 				D49EC53B17054FDF00F2BF9B /* arm_mat_scale_q31.c in Sources */,
+				D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */,
 				D49EC53C17054FDF00F2BF9B /* arm_mat_sub_f32.c in Sources */,
 				D49EC53D17054FDF00F2BF9B /* arm_mat_sub_q15.c in Sources */,
 				D49EC53E17054FDF00F2BF9B /* arm_mat_sub_q31.c in Sources */,

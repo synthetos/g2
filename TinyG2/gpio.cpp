@@ -59,18 +59,18 @@ io_t io;
 
 void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value);
 
-static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
-static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
-static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
-static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
-static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
-static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
-static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
-static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
-static InputPin<kBAxis_MinPinNumber> axis_B_min_pin(kPullUp);
-static InputPin<kBAxis_MaxPinNumber> axis_B_max_pin(kPullUp);
-static InputPin<kCAxis_MinPinNumber> axis_C_min_pin(kPullUp);
-static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
+static InputPin<kInput1_PinNumber> input_1_pin(kPullUp);
+static InputPin<kInput2_PinNumber> input_2_pin(kPullUp);
+static InputPin<kInput3_PinNumber> input_3_pin(kPullUp);
+static InputPin<kInput4_PinNumber> input_4_pin(kPullUp);
+static InputPin<kInput5_PinNumber> input_5_pin(kPullUp);
+static InputPin<kInput6_PinNumber> input_6_pin(kPullUp);
+static InputPin<kInput7_PinNumber> input_7_pin(kPullUp);
+static InputPin<kInput8_PinNumber> input_8_pin(kPullUp);
+static InputPin<kInput9_PinNumber> input_9_pin(kPullUp);
+static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
+static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
+static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
 
 /*
  * gpio_init() - initialize inputs and outputs
@@ -79,19 +79,30 @@ static InputPin<kCAxis_MaxPinNumber> axis_C_max_pin(kPullUp);
 
 void gpio_init(void)
 {
-    axis_X_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_X_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Y_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Y_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Z_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_Z_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_A_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_A_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    /* Priority only needs set once in the system during startup.
+     * However, if we wish to switch the interrupt trigger, here are other options:
+     *  kPinInterruptOnRisingEdge
+     *  kPinInterruptOnFallingEdge
+     *
+     * To change the trigger, just call pin.setInterrupts(value) at any point.
+     *
+     * Note that it may cause an interrupt to fire *immediately*!
+     *
+     */
+
+    input_1_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_2_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_3_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_4_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_5_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_6_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_7_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_8_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
 /*
-    axis_B_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_B_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_C_min_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    axis_C_max_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_9_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
 */
 	return(gpio_reset());
 }
@@ -112,19 +123,19 @@ void gpio_reset(void)
  * The actual values will be the pin's port mask or 0, so you must check for non-zero.
  */
 
-MOTATE_PIN_INTERRUPT(kXAxis_MinPinNumber) { _handle_pin_changed(1, (axis_X_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kXAxis_MaxPinNumber) { _handle_pin_changed(2, (axis_X_max_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kYAxis_MinPinNumber) { _handle_pin_changed(3, (axis_Y_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kYAxis_MaxPinNumber) { _handle_pin_changed(4, (axis_Y_max_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kZAxis_MinPinNumber) { _handle_pin_changed(5, (axis_Z_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kZAxis_MaxPinNumber) { _handle_pin_changed(6, (axis_Z_max_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kAAxis_MinPinNumber) { _handle_pin_changed(7, (axis_A_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kAAxis_MaxPinNumber) { _handle_pin_changed(8, (axis_A_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput1_PinNumber) { _handle_pin_changed(1, (input_1_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput2_PinNumber) { _handle_pin_changed(2, (input_2_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput3_PinNumber) { _handle_pin_changed(3, (input_3_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput4_PinNumber) { _handle_pin_changed(4, (input_4_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput5_PinNumber) { _handle_pin_changed(5, (input_5_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput6_PinNumber) { _handle_pin_changed(6, (input_6_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput7_PinNumber) { _handle_pin_changed(7, (input_7_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput8_PinNumber) { _handle_pin_changed(8, (input_8_pin.get() != 0)); }
 /*
-MOTATE_PIN_INTERRUPT(kBAxis_MinPinNumber) { _handle_pin_changed(9, (axis_B_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kBAxis_MaxPinNumber) { _handle_pin_changed(9, (axis_B_max_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kCAxis_MinPinNumber) { _handle_pin_changed(10, (axis_C_min_pin.get() != 0)); }
-MOTATE_PIN_INTERRUPT(kCAxis_MaxPinNumber) { _handle_pin_changed(11, (axis_C_max_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput9_PinNumber) { _handle_pin_changed(9, (input_9_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput10_PinNumber) { _handle_pin_changed(9, (input_10_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput11_PinNumber) { _handle_pin_changed(10, (input_11_pin.get() != 0)); }
+MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _handle_pin_changed(11, (input_12_pin.get() != 0)); }
 */
 
 /*
