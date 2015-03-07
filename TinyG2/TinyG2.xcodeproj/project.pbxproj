@@ -3229,6 +3229,8 @@
 		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
 		D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gpio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
+		D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375_dual.h; sourceTree = "<group>"; };
+		D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
 		D4C1281A180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4C1281C180F17D3002A898C /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = motate_pin_assignments.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -3273,7 +3275,9 @@
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
-				D4B485B11AB1EC5500C6614F /* settings_shapeoko375_Dual.h */,
+				D41D13FE17374B7D00D522D9 /* settings_shapeoko375.h */,
+				D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */,
+				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
 				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
