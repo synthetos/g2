@@ -348,8 +348,8 @@ stat_t set_flt(nvObj_t *nv)
  *	get_grp() is a group expansion function that expands the parent group and returns
  *	the values of all the children in that group. It expects the first nvObj in the
  *	nvBody to have a valid group name in the token field. This first object will be set
- *	to a TYPE_PARENT. The group field is left nul - as the group field refers to a parent
- *	group, which this group has none.
+ *	to a TYPE_PARENT. The group field of the first nvOBJ is left nul - as the group 
+ *  field refers to a parent group, which this group has none.
  *
  *	All subsequent nvObjs in the body will be populated with their values.
  *	The token field will be populated as will the parent name in the group field.

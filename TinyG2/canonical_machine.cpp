@@ -628,7 +628,7 @@ stat_t cm_alarm(stat_t status, const char *msg)
     }
 	cm.machine_state = MACHINE_ALARM;
 	cm_spindle_control(SPINDLE_OFF);
-    cm_request_queue_flush();               // do a queue flush once runtime is not busy
+    cm_request_queue_flush(true);           // do a queue flush once runtime is not busy
 	rpt_exception(status, msg);	            // send alarm message
     return (status);
 }
@@ -1211,8 +1211,8 @@ void cm_message(char_t *message)
  ************************************************/
 /*
  * cm_request_feedhold()
- * cm_request_queue_flush()
  * cm_request_end_hold()
+ * cm_request_queue_flush()
  * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
  */
 /*
@@ -1262,9 +1262,26 @@ void cm_message(char_t *message)
  *      the spindle if the spindle is active.
  */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
+/*
+ * cm_request_queue_flush()
+ *
+ * Only honor the request if we are in a feedhold or have requested one.
+ * Reject % it if we are not in a feedhold - allows % symbol to be used
+ * as file start/end markers (a common Gcode practice) and as a comment char (Inkscape)
+ */
+void cm_request_queue_flush(bool force) {
+    if(cm.estop_state) return;
+
+    if (force || cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF)) {
+        cm.queue_flush_requested = true;
+    }
+}
+
+/*
+ * cm_feedhold_sequencing_callback()
+ */
 stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
@@ -1919,7 +1936,7 @@ stat_t cm_set_hi(nvObj_t *nv)
 
 stat_t cm_run_qf(nvObj_t *nv)
 {
-	cm_request_queue_flush();
+	cm_request_queue_flush(false);
 	return (STAT_OK);
 }
 
@@ -2126,7 +2143,7 @@ const char fmt_Xsn[] PROGMEM = "[%s%s] %s minimum switch config%6d [0=off,1=homi
 const char fmt_Xsx[] PROGMEM = "[%s%s] %s maximum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
 const char fmt_Xrn[] PROGMEM = "[%s%s] %s minimum switch type%8.0f [0=NO, 1=NC]\n";
 const char fmt_Xrx[] PROGMEM = "[%s%s] %s maximum switch type%8.0f [0=NO, 1=NC]\n";
-const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15.0f [input 1 - N]\n";
+const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15.0f [input 1-N or 0 to disable homing this axis]\n";
 const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11.0f [0=search-to-negative, 1=search-to-positive]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
 const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";

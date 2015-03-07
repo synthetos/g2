@@ -224,7 +224,6 @@ static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-//		cm_request_queue_flush();   // Is this necessary?
         // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
@@ -288,26 +287,26 @@ static void _dispatch_kernel()
 		if (cs.comm_mode == TEXT_MODE) {
 			text_response(STAT_OK, cs.saved_buf);
 		}
+    }
 
-	// included for AVR diagnostics
-	} else if (*cs.bufp == '!') {
-        cm_request_feedhold();
-	} else if (*cs.bufp == '%') {
-		cm_request_queue_flush();
-	} else if (*cs.bufp == '~') {
-        cm_request_end_hold();
+	// trap single character commands
+    else if (*cs.bufp == '!') { cm_request_feedhold();}
+	else if (*cs.bufp == '~') { cm_request_end_hold();}
+    else if (*cs.bufp == CAN) { hw_request_hard_reset();}
+	else if (*cs.bufp == '%') { cm_request_queue_flush(false);}
 
-	} else if (*cs.bufp == '{') {                           // process as JSON mode
+	else if (*cs.bufp == '{') {                           // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
-
-	} else if (strchr("$?Hh", *cs.bufp) != NULL) {          // process as text mode
+    }
+    else if (strchr("$?Hh", *cs.bufp) != NULL) {          // process as text mode
 		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
-
-	} else if (cs.comm_mode == TEXT_MODE) {                 // anything else must be Gcode
+    }
+	else if (cs.comm_mode == TEXT_MODE) {                 // anything else must be Gcode
         text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
-	} else {
+    }
+	else {
         strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
         sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
         json_parser(cs.bufp);
