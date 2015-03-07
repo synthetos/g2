@@ -199,7 +199,6 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
     // *** for now all the actions do the same thing ***
     if (in->edge == IO_EDGE_LEADING) {
         if (in->action == IO_ACTION_STOP) {
-//			cm_request_feedhold();
 			cm_start_hold();
         }
         if (in->action == IO_ACTION_FAST_STOP) {
@@ -208,12 +207,9 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
         }
         if (in->action == IO_ACTION_HALT) {
 		//	cm_request_feedhold();
-//			cm_start_hold();
 	        stepper_init();					// hard stop
         }
         if (in->action == IO_ACTION_RESET) {
-		//	cm_request_feedhold();
-		//	cm_start_hold();
             hw_hard_reset();
         }
     }
@@ -253,7 +249,6 @@ static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t
 
 stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 {
-//	return (_io_set_helper(nv, IO_DISABLED, IO_MODE_MAX));
 	if ((nv->value < IO_DISABLED) || (nv->value >= IO_MODE_MAX)) {
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
@@ -265,13 +260,11 @@ stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 stat_t io_set_ac(nvObj_t *nv)			// input action
 {
 	return (_io_set_helper(nv, IO_ACTION_NONE, IO_ACTION_MAX));
-//	if ((nv->value < IO_ACTION_NONE) || (nv->value >= IO_ACTION_MAX)) {
 }
 
 stat_t io_set_fn(nvObj_t *nv)			// input function
 {
 	return (_io_set_helper(nv, IO_FUNCTION_NONE, IO_FUNCTION_MAX));
-//	if ((nv->value < IO_FUNCTION_NONE) || (nv->value >= IO_FUNCTION_MAX)) {
 }
 
 /*

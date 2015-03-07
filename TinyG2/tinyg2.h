@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.26 // working on % command handling and queue flush; added ^x hard reset
+#define TINYG_FIRMWARE_BUILD   		079.27 // checkpoint
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

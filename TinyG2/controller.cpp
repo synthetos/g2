@@ -292,8 +292,9 @@ static void _dispatch_kernel()
 	// trap single character commands
     else if (*cs.bufp == '!') { cm_request_feedhold();}
 	else if (*cs.bufp == '~') { cm_request_end_hold();}
+    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, "Keyboard alarm");}
     else if (*cs.bufp == CAN) { hw_request_hard_reset();}
-	else if (*cs.bufp == '%') { cm_request_queue_flush(false);}
+    else if (*cs.bufp == '%') { cm_request_queue_flush(false);}
 
 	else if (*cs.bufp == '{') {                           // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode

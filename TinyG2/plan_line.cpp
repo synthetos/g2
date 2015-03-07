@@ -278,7 +278,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
             while(1);
         }
 
@@ -307,7 +307,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
             while(1);
         }
 

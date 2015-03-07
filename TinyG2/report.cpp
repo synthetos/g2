@@ -68,12 +68,25 @@ stat_t rpt_exception(uint8_t status, const char *msg)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
 
+        if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+            printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s"),
+                TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+        } else {
+            printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s"),
+                TINYG_FIRMWARE_BUILD, status, get_status_message(status));
+        }
+		if (msg != NULL) {
+            printf_P(PSTR(" - %s"), msg);
+        }
+        printf_P(PSTR("\"}}\n"));
+     }
+/*
 		if (msg != NULL) {
 			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\", %s}}\n"),
+				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s, %s\"}}\n"),
 					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
 			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\", %s}}\n"),
+				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s, %s\"}}\n"),
 					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
 			}
 		} else {
@@ -85,12 +98,8 @@ stat_t rpt_exception(uint8_t status, const char *msg)
 				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
 			}
 		}
-
-//		if(status == STAT_GENERIC_ASSERTION_FAILURE) {
-//			// Fancy place for a breakpoint, if your code asplodes.
-//			asm("nop;");
-//		}
-	}
+    }
+*/
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }
 
@@ -99,7 +108,7 @@ stat_t rpt_exception(uint8_t status, const char *msg)
  */
 stat_t rpt_er(nvObj_t *nv)
 {
-	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, (char_t *)"bogus")); // bogus exception report for testing
+	return(rpt_exception(STAT_GENERIC_EXCEPTION_REPORT, "bogus")); // bogus exception report for testing
 }
 
 /**** Application Messages *********************************************************
@@ -215,7 +224,7 @@ void sr_init_status_report()
 		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
 		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
 		if (fp_EQ(nv->value, NO_MATCH)) {
-			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, (char_t *)"sr_init"); // trap mis-configured profile settings
+			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init"); // trap mis-configured profile settings
 			return;
 		}
 		if (_is_stat(nv) == true)

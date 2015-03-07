@@ -57,7 +57,7 @@
 
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
-enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
+typedef enum {				        // check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing          //iff macs == MACHINE_INITIALIZING
 	COMBINED_READY,					// [1] machine is ready for use         //iff macs == MACHINE_READY
 	COMBINED_ALARM,					// [2] machine in alarm state           //iff macs == MACHINE_ALARM
@@ -71,10 +71,10 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
 	COMBINED_SHUTDOWN,				// [11] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
     COMBINED_INTERLOCK              // [12] machine in interlock state
-};
+} cmCombinedState   ;
 //### END CRITICAL REGION ###
 
-enum cmMachineState {
+typedef enum {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
 	MACHINE_ALARM,					// machine in alarm state
@@ -83,45 +83,45 @@ enum cmMachineState {
 	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
 	MACHINE_SHUTDOWN,				// machine in shutdown state
     MACHINE_INTERLOCK               // machine in interlock state
-};
+} cmMachineState;
 
-enum cmCycleState {
+typedef enum {
 	CYCLE_OFF = 0,					// machine is idle
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// in homing cycle
 	CYCLE_JOG						// in jogging cycle
-};
+} cmCycleState;
 
-enum cmMotionState {
+typedef enum {
 	MOTION_STOP = 0,				// motion has stopped: set when the steppers reach the end of the planner queue
     MOTION_PLANNING,				// machine has planned an ALINE segment, but not yet started to execute them
 	MOTION_RUN,						// machine is in motion: set when the steppers execute an ALINE segment
 	MOTION_HOLD						// feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
-};
+} cmMotionState;
 
-enum cmFeedholdState {				// feedhold_state machine
+typedef enum {				        // feedhold_state machine
 	FEEDHOLD_OFF = 0,				// no feedhold in effect
 	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
 	FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
 	FEEDHOLD_DECEL_DONE,            // deceleration is complete
 	FEEDHOLD_HOLD					// holding
-};
+} cmFeedholdState;
 
-enum cmHomingState {				// applies to cm.homing_state
+typedef enum {				        // applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
 	HOMING_HOMED = 1,				// machine is homed (1=true)
 	HOMING_WAITING					// machine waiting to be homed
-};
+} cmHomingState;
 
-enum cmProbeState {					// applies to cm.probe_state
+typedef enum  {					    // applies to cm.probe_state
 	PROBE_FAILED = 0,				// probe reached endpoint without triggering
 	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
-};
+} cmProbeState;
 
-enum cmEstopState {
+typedef enum {
     ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
     ESTOP_ACKED    = 0,
     ESTOP_INACTIVE = 0,
@@ -132,14 +132,14 @@ enum cmEstopState {
     ESTOP_ACTIVE_MASK = 0x4,
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
-};
+} cmEstopState;
 
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
  */
 
-enum cmNextAction {						// these are in order to optimized CASE statement
+typedef enum {						    // these are in order to optimized CASE statement
 	NEXT_ACTION_DEFAULT = 0,			// Must be zero (invokes motion modes)
 	NEXT_ACTION_SEARCH_HOME,			// G28.2 homing cycle
 	NEXT_ACTION_SET_ABSOLUTE_ORIGIN,	// G28.3 origin set
@@ -155,9 +155,9 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 	NEXT_ACTION_RESUME_ORIGIN_OFFSETS,	// G92.3
 	NEXT_ACTION_DWELL,					// G4
 	NEXT_ACTION_STRAIGHT_PROBE			// G38.2
-};
+} cmNextAction;
 
-enum cmMotionMode {						// G Modal Group 1
+typedef enum {						    // G Modal Group 1
 	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - straight traverse
 	MOTION_MODE_STRAIGHT_FEED,			// G1 - straight feed
 	MOTION_MODE_CW_ARC,					// G2 - clockwise arc feed
@@ -173,9 +173,9 @@ enum cmMotionMode {						// G Modal Group 1
 	MOTION_MODE_CANNED_CYCLE_87,		// G87 - back boring
 	MOTION_MODE_CANNED_CYCLE_88,		// G88 - boring, spindle stop, manual out
 	MOTION_MODE_CANNED_CYCLE_89			// G89 - boring, dwell, feed out
-};
+} cmMotionMode;
 
-enum cmModalGroup {						// Used for detecting gcode errors. See NIST section 3.4
+typedef enum {						    // Used for detecting gcode errors. See NIST section 3.4
 	MODAL_GROUP_G0 = 0, 				// {G10,G28,G28.1,G92} 	non-modal axis commands (note 1)
 	MODAL_GROUP_G1,						// {G0,G1,G2,G3,G80}	motion
 	MODAL_GROUP_G2,						// {G17,G18,G19}		plane selection
@@ -192,24 +192,24 @@ enum cmModalGroup {						// Used for detecting gcode errors. See NIST section 3.
 	MODAL_GROUP_M7,						// {M3,M4,M5}			spindle turning
 	MODAL_GROUP_M8,						// {M7,M8,M9}			coolant (M7 & M8 may be active together)
 	MODAL_GROUP_M9						// {M48,M49}			speed/feed override switches
-};
+} cmModalGroup;
 #define MODAL_GROUP_COUNT (MODAL_GROUP_M9+1)
 // Note 1: Our G0 omits G4,G30,G53,G92.1,G92.2,G92.3 as these have no axis components to error check
 
-enum cmCanonicalPlane {				// canonical plane - translates to:
+typedef enum {				        // canonical plane - translates to:
 									// 		axis_0	axis_1	axis_2
 	CANON_PLANE_XY = 0,				// G17    X		  Y		  Z
 	CANON_PLANE_XZ,					// G18    X		  Z		  Y
 	CANON_PLANE_YZ					// G19	  Y		  Z		  X
-};
+} cmCanonicalPlane;
 
-enum cmUnitsMode {
+typedef enum {
 	INCHES = 0,						// G20
 	MILLIMETERS,					// G21
 	DEGREES							// ABC axes (this value used for displays only)
-};
+} cmUnitsMode;
 
-enum cmCoordSystem {
+typedef enum {
 	ABSOLUTE_COORDS = 0,			// machine coordinate system
 	G54,							// G54 coordinate system
 	G55,							// G55 coordinate system
@@ -217,63 +217,63 @@ enum cmCoordSystem {
 	G57,							// G57 coordinate system
 	G58,							// G58 coordinate system
 	G59								// G59 coordinate system
-};
+} cmCoordSystem;
 #define COORD_SYSTEM_MAX G59		// set this manually to the last one
 
-enum cmPathControl {			    // G Modal Group 13
+typedef enum {			        // G Modal Group 13
 	PATH_EXACT_PATH = 0,			// G61 - hits corners but does not stop if it does not need to.
 	PATH_EXACT_STOP,				// G61.1 - stops at all corners
 	PATH_CONTINUOUS					// G64 and typically the default mode
-};
+} cmPathControl;
 
-enum cmDistanceMode {
+typedef enum {
 	ABSOLUTE_MODE = 0,				// G90
 	INCREMENTAL_MODE				// G91
-};
+} cmDistanceMode;
 
-enum cmFeedRateMode {
+typedef enum {
 	INVERSE_TIME_MODE = 0,			// G93
 	UNITS_PER_MINUTE_MODE,			// G94
 	UNITS_PER_REVOLUTION_MODE		// G95 (unimplemented)
-};
+} cmFeedRateMode;
 
-enum cmOriginOffset {
+typedef enum {
 	ORIGIN_OFFSET_SET=0,			// G92 - set origin offsets
 	ORIGIN_OFFSET_CANCEL,			// G92.1 - zero out origin offsets
 	ORIGIN_OFFSET_SUSPEND,			// G92.2 - do not apply offsets, but preserve the values
 	ORIGIN_OFFSET_RESUME			// G92.3 - resume application of the suspended offsets
-};
+} cmOriginOffset;
 
-enum cmProgramFlow {
+typedef enum {
 	PROGRAM_STOP = 0,
 	PROGRAM_END
-};
+} cmProgramFlow;
 
-enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
+typedef enum {				        // spindle state settings (See hardware.h for bit settings)
 	SPINDLE_OFF = 0,
 	SPINDLE_CW,
 	SPINDLE_CCW,
 	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
-};
+} cmSpindleState;
 
-enum cmCoolantState {				// mist and flood coolant states
+typedef enum {				// mist and flood coolant states
 	COOLANT_OFF = 0,				// all coolant off
 	COOLANT_ON,						// request coolant on or indicates both coolants are on
 	COOLANT_MIST,					// indicates mist coolant on
 	COOLANT_FLOOD					// indicates flood coolant on
-};
+} cmCoolantState;
 
-enum cmDirection {					// used for spindle and arc dir
+typedef enum {					    // used for spindle and arc dir
 	DIRECTION_CW = 0,
 	DIRECTION_CCW
-};
+} cmDirection;
 
-enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
+typedef enum {					    // axis modes (ordered: see _cm_get_feed_time())
 	AXIS_DISABLED = 0,				// kill axis
 	AXIS_STANDARD,					// axis in coordinated motion w/standard behaviors
 	AXIS_INHIBITED,					// axis is computed but not activated
 	AXIS_RADIUS						// rotary axis calibrated to circumference
-};	// ordering must be preserved. See cm_set_move_times()
+} cmAxisMode;                       // ordering must be preserved. See cm_set_move_times()
 #define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
 #define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
 

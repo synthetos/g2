@@ -393,7 +393,7 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         mb.buffers_available--;
         return (w);
     }
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, (char_t *)"mp_get_write_buffer");
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer");
 	return (NULL);
 }
 

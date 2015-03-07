@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -439,7 +439,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, (char_t *)"xio_dev"); // where is this supposed to go!?
+                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev"); // where is this supposed to go!?
                         }
                         controller_set_connected(false);
                     } else if(checkForCtrlAndPrimary(oldflags)) {
@@ -514,7 +514,7 @@ stat_t xio_test_assertions()
     if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
         return (STAT_XIO_ASSERTION_FAILURE);
     }
-				return (STAT_OK);
+    return (STAT_OK);
 }
 
 /*
@@ -537,7 +537,8 @@ char_t *xio_readline(devflags_t &flags, uint16_t &size)
     return xio.readline(flags, size);
 }
 
-void xio_flush_read() {
+void xio_flush_read()
+{
     return xio.flushRead();
 }
 

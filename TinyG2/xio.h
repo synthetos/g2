@@ -142,8 +142,9 @@ stat_t xio_set_spi(nvObj_t *nv);
 /* Some useful ASCII definitions */
 
 #define NUL (char)0x00		//  ASCII NUL char (0) (not "NULL" which is a pointer)
-#define STX (char)0x02		// ^b - STX
-#define ETX (char)0x03		// ^c - ETX
+#define STX (char)0x02		// ^b - STX (strat test)
+#define ETX (char)0x03		// ^c - ETX (end test)
+#define EOT (char)0x04		// ^d - EOT (end of transmission)
 #define ENQ (char)0x05		// ^e - ENQuire
 #define BEL (char)0x07		// ^g - BEL
 #define BS  (char)0x08		// ^h - backspace
@@ -153,7 +154,7 @@ stat_t xio_set_spi(nvObj_t *nv);
 #define CR	(char)0x0D		// ^m - carriage return
 #define XON (char)0x11		// ^q - DC1, XON, resume
 #define XOFF (char)0x13		// ^s - DC3, XOFF, pause
-#define NAK (char)0x15		// ^u - Negative acknowledgement
+#define NAK (char)0x15		// ^u - Negative acknowledgment
 #define CAN (char)0x18		// ^x - Cancel, abort
 #define ESC (char)0x1B		// ^[ - ESC(ape)
 #define SPC (char)0x20		// ' '  Space character
@@ -164,6 +165,7 @@ stat_t xio_set_spi(nvObj_t *nv);
 /* Signal character mappings */
 
 #define CHAR_RESET CAN
+#define CHAR_ALARM EOT
 #define CHAR_FEEDHOLD (char)'!'
 #define CHAR_CYCLE_START (char)'~'
 #define CHAR_QUEUE_FLUSH (char)'%'

@@ -168,7 +168,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // too short lines have already been removed...
         // +++ so is the following code ever executed? ++++ ash
         if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
-            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, (char_t *)"exec_aline");   /// +++ diagnostic
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "exec_aline");   /// +++ diagnostic
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;

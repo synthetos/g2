@@ -627,8 +627,9 @@ stat_t cm_alarm(stat_t status, const char *msg)
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
-	cm_spindle_control(SPINDLE_OFF);
+    cm_request_feedhold();                  // ++++ experimental
     cm_request_queue_flush(true);           // do a queue flush once runtime is not busy
+	cm_spindle_control(SPINDLE_OFF);
 	rpt_exception(status, msg);	            // send alarm message
     return (status);
 }
@@ -650,10 +651,12 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	// build a secondary message string (info) and call the exception report
 	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+//		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+//		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
@@ -1285,7 +1288,6 @@ void cm_request_queue_flush(bool force) {
 stat_t cm_feedhold_sequencing_callback()
 {
 	if (cm.feedhold_requested == true) {
-		cm.feedhold_requested = false;
 		if(cm.hold_state == FEEDHOLD_OFF) {
 			if (mp_has_runnable_buffer()) {  // meaning there is something running
 				cm_start_hold();
@@ -1293,6 +1295,7 @@ stat_t cm_feedhold_sequencing_callback()
 				cm_spindle_control_immediate(SPINDLE_OFF);
 			}
 		}
+		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
 	}
 	if (cm.queue_flush_requested == true) {
         cm_queue_flush();                   // Note: this won't run if the runtime is still busy

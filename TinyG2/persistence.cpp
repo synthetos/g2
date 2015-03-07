@@ -2,7 +2,7 @@
  * persistence.cpp - persistence functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -93,7 +93,7 @@ stat_t read_persistent_value(nvObj_t *nv)
 #ifdef __AVR
 stat_t write_persistent_value(nvObj_t *nv)
 {
-	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, (char_t *)"write_persistent")); // can't write when machine is moving
+	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent")); // can't write when machine is moving
 	nvm.tmp_value = nv->value;
 	ritorno(read_persistent_value(nv));
 	if ((isnan((double)nv->value)) || (isinf((double)nv->value)) || (fp_NE(nv->value, nvm.tmp_value))) {
@@ -109,7 +109,7 @@ stat_t write_persistent_value(nvObj_t *nv)
 #ifdef __ARM
 stat_t write_persistent_value(nvObj_t *nv)
 {
-	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, (char_t *)"write_persistent")); // can't write when machine is moving
+	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent")); // can't write when machine is moving
 	return (STAT_OK);
 }
 #endif // __ARM
