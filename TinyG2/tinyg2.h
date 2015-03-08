@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.30 // checkpoint - feedhold endpoint
+#define TINYG_FIRMWARE_BUILD   		079.31 // checkpoint - feedholds
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

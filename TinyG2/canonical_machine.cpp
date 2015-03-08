@@ -1315,7 +1315,7 @@ void cm_request_queue_flush()
  */
 stat_t cm_feedhold_sequencing_callback()
 {
-    mp_enter_hold_state();      // finalize a hold once the last segment has stopped moving
+//    mp_enter_hold_state();      // finalize a hold once the last segment has stopped moving
 
     // sequence feedhold, queue_flush, and end_hold requests
 	if (cm.feedhold_requested == true) {
@@ -1372,9 +1372,9 @@ stat_t cm_end_hold()
 
     cm.end_hold_requested = false;
 	mp_exit_hold_state();
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
-    }
+//    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+//        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
+//    }
 
     // State machine cases:
     if (cm.machine_state == MACHINE_ALARM) {
@@ -1419,8 +1419,6 @@ void cm_end_queue_flush()
 	}
 	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
 }
-
-
 
 /******************************
  * Program Functions (4.3.10) *

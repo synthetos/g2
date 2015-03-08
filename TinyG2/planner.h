@@ -308,6 +308,7 @@ bool mp_runtime_is_idle(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
+void mp_reset_replannable_list(void);
 
 void mp_enter_pending_hold_state(void);                 // feedholds...
 void mp_enter_hold_state(void);

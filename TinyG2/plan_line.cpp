@@ -53,7 +53,7 @@ static void _calculate_jerk(mpBuf_t *bf);
 //static float _calculate_junction_vmax(const float a_unit[], const float b_unit[]);
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[]);
 
-static void _reset_replannable_list(void);
+//static void _reset_replannable_list(void);
 
 /* Runtime-specific setters and getters
  *
@@ -338,7 +338,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
  * _calc_move_times()
  * _calculate_jerk()
  * _calculate_junction_vmax()
- * _reset_replannable_list()
+ * mp_reset_replannable_list()
  */
 
 /*
@@ -718,9 +718,9 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 }
 
 /*
- *	_reset_replannable_list() - resets all blocks in the planning list to be replannable
+ *	mp_reset_replannable_list() - resets all blocks in the planning list to be replannable
  */
-static void _reset_replannable_list()
+void mp_reset_replannable_list()
 {
 	mpBuf_t *bf = mp_get_first_buffer();
 	if (bf == NULL) return;
@@ -750,6 +750,7 @@ static void _reset_replannable_list()
  *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
  *  See canonical_macine.c for a more detailed explanation of feedhold operation.
  */
+/*
 void mp_enter_pending_hold_state()
 {
     // We have to look at the run buffer and see if there's anything left,
@@ -760,7 +761,7 @@ void mp_enter_pending_hold_state()
     bf->length = get_axis_vector_length(mr.target, mr.position);    // reset length
     bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);     // reset cruise velocity
     bf->entry_vmax = 0;                                             // set bp+0 as hold point
-    _reset_replannable_list();                                      // make it replan all the blocks
+    mp_reset_replannable_list();                                    // make it replan all the blocks
     mb.force_replan = true;
     mp_plan_buffer();                                               // must replan now
 
@@ -770,7 +771,8 @@ void mp_enter_pending_hold_state()
 
     cm.hold_state = FEEDHOLD_PENDING_HOLD;
 }
-
+*/
+/*
 void mp_enter_hold_state()
 {
     if (cm.hold_state == FEEDHOLD_PENDING_HOLD) {
@@ -780,7 +782,7 @@ void mp_enter_hold_state()
         }
     }
 }
-
+*/
 void mp_exit_hold_state()
 {
 	cm.hold_state = FEEDHOLD_OFF;

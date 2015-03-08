@@ -769,8 +769,8 @@ ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
 #ifdef __ARM
 void st_request_load_move()
 {
-	if (st_runtime_isbusy()) {
-		return;													// don't request a load if the runtime is busy
+	if (st_runtime_isbusy()) {                                  // don't request a load if the runtime is busy
+		return;
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
 		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;

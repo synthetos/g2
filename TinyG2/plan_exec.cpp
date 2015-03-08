@@ -29,6 +29,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "planner.h"
+#include "controller.h" //++++
 #include "kinematics.h"
 #include "stepper.h"
 #include "encoder.h"
@@ -229,17 +230,51 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (3) - We are in the middle of a block that is currently decelerating
     //  (4) - We have decelerated a block that has not decelerated to zero (needs continuation)
     //  (5) - We have decelerated a block to zero velocity
-    //  (6) - We are in a pending or hold state (after deceleration) i.e. no motion should occur
-    //  (7) - We are removing the hold state and there is queued motion (handled by normal operations)
-    //  (8) - We are removing the hold state and there is no queued motion (also handled by normal operations)
+    //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
+    //  (7) - The steppers have stopped. No motion should occur
+    //  (8) - We are removing the hold state and there is queued motion (handled by normal operations)
+    //  (9) - We are removing the hold state and there is no queued motion (also handled by normal operations)
 
     if (cm.motion_state == MOTION_HOLD) {
 
-        // Case (3) is a no-op. It just runs.
+        // Case (7) - all motion has ceased
+        if (cm.hold_state == FEEDHOLD_HOLD) {
+            return (STAT_OK);                           // hold here. No more movement
+        }
 
-        // Case (6)
-        if ((cm.hold_state == FEEDHOLD_HOLD) || (cm.hold_state == FEEDHOLD_PENDING_HOLD)) {
-            return (STAT_OK);               // hold here. No more movement
+        // Case (6) - wait for the steppers to stop
+        if (cm.hold_state == FEEDHOLD_PENDING_HOLD) {
+            if (!mp_runtime_is_idle()) {                                // wait for the steppers to actually clear out
+                return (STAT_NOOP);
+            }
+            mp_zero_segment_velocity();                                 // for reporting purposes
+            for (uint8_t axis = AXIS_X; axis < AXES; axis++) {          // set all positions
+                cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+            }
+            cm.hold_state = FEEDHOLD_HOLD;
+            cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
+
+            sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
+            return (STAT_OK);                                           // hold here. No more movement
+        }
+
+        // Case (5) - decelerated to zero
+        if (cm.hold_state == FEEDHOLD_DECEL_END) {
+            // update the run buffer then force a replan of the whole buffer.
+
+//            mpBuf_t *bp = mp_get_run_buffer();                        // get the current run buffer  +++ test if same as run buffer
+            mr.move_state = MOVE_OFF;	                                // invalidate mr buffer to reset the new move
+            bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
+            bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
+            bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf); // reset cruise velocity
+            bf->entry_vmax = 0;                                         // set bp+0 as hold point
+            mp_reset_replannable_list();                                // make it replan all the blocks
+            mb.force_replan = true;
+            mp_plan_buffer();                                           // must replan now
+
+            cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
+            cm.hold_state = FEEDHOLD_PENDING_HOLD;
+            return (STAT_OK);
         }
 
         // Case (1), Case (2), Case (4)
@@ -269,6 +304,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 mr.exit_velocity = 0;
             }
+            // Case (3) is a no-op. It just runs.
+
         }
     }
     mr.move_state = MOVE_RUN;
@@ -285,7 +322,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {
-        mp_enter_pending_hold_state();                  // perform functions needed to effect the hold
+        cm.hold_state = FEEDHOLD_DECEL_END;
+        bf->move_state = MOVE_NEW;                      // reset bf so it can restart the rest of the move
     }
 
 	// There are 4 things that can happen here depending on return conditions:
