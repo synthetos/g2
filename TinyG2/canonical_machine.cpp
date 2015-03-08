@@ -1409,6 +1409,11 @@ stat_t cm_queue_flush()
     mp_flush_planner();
     cm.queue_flush_requested = false;
     cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
+
+//  for (uint8_t axis = AXIS_X; axis < AXES; axis++) {          // set all positions
+//      cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+//  }
+
     return (STAT_OK);
 }
 

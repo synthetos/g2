@@ -239,21 +239,17 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (7) - all motion has ceased
         if (cm.hold_state == FEEDHOLD_HOLD) {
-            return (STAT_OK);                           // hold here. No more movement
+            return (STAT_NOOP);                           // hold here. No more movement
         }
 
         // Case (6) - wait for the steppers to stop
         if (cm.hold_state == FEEDHOLD_PENDING_HOLD) {
             if (!mp_runtime_is_idle()) {                                // wait for the steppers to actually clear out
-                return (STAT_NOOP);
-            }
-            mp_zero_segment_velocity();                                 // for reporting purposes
-            for (uint8_t axis = AXIS_X; axis < AXES; axis++) {          // set all positions
-                cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+                return (STAT_OK);
             }
             cm.hold_state = FEEDHOLD_HOLD;
             cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
-
+//            mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
             return (STAT_OK);                                           // hold here. No more movement
         }
