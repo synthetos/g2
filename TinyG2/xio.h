@@ -142,10 +142,11 @@ stat_t xio_set_spi(nvObj_t *nv);
 /* Some useful ASCII definitions */
 
 #define NUL (char)0x00		//  ASCII NUL char (0) (not "NULL" which is a pointer)
-#define STX (char)0x02		// ^b - STX (strat test)
-#define ETX (char)0x03		// ^c - ETX (end test)
+#define STX (char)0x02		// ^b - STX (start text)
+#define ETX (char)0x03		// ^c - ETX (end of text) (queue flush marker)
 #define EOT (char)0x04		// ^d - EOT (end of transmission)
 #define ENQ (char)0x05		// ^e - ENQuire
+#define ACK (char)0x06      // ^f - ACKnowledge
 #define BEL (char)0x07		// ^g - BEL
 #define BS  (char)0x08		// ^h - backspace
 #define TAB (char)0x09		// ^i - character

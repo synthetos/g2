@@ -637,10 +637,12 @@ void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 void cm_request_feedhold(void);
 void cm_request_end_hold(void);
 void cm_request_queue_flush(bool force);
+void cm_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
-//start or end a feedhold
+// feedholds
+bool cm_is_hold(void);
 stat_t cm_start_hold(void);
 stat_t cm_end_hold(void);
 

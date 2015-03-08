@@ -627,7 +627,7 @@ stat_t cm_alarm(stat_t status, const char *msg)
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();                  // ++++ experimental
+    cm_request_feedhold();                  // experimental
     cm_request_queue_flush(true);           // do a queue flush once runtime is not busy
 	cm_spindle_control(SPINDLE_OFF);
 	rpt_exception(status, msg);	            // send alarm message
@@ -1264,17 +1264,43 @@ void cm_message(char_t *message)
  *    - When cm_end_hold() is called it releases the hold, restarts the move and restarts
  *      the spindle if the spindle is active.
  */
+/* Queue Flush operation
+ *
+ * This one's complicated. See here first:
+ * https://github.com/synthetos/g2/wiki/Job-Exception-Handling
+ *
+ * We want to use queue flush for a few different use cases, as per the above wiki page.
+ * The % behavior implements case 1 and 2 - Stop a Single Move and Stop Multiple Moves.
+ * This is complicated further by the processing in single USB and dual USB being different.
+ * Also, the state handling is located in xio.cpp / readline(), controller.cpp _dispatch_kernel()
+ * and cm_request_queue_flush(), below. So it's documented here.
+ *
+ * Single or Dual USB Channels:
+ *  - If a % is received outside of a feed hold or ALARM state, ignore it.
+ *      Change the % to a ; comment symbol
+ *
+ * Single USB Channel Operation:
+ *  - Enter a feedhold (!)
+ *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input buffer in place of the the %
+ *  - Execute the feedhold to a hold condition
+ *  - Execute the dispatched % to flush queues
+ *    Reject any commands up to the % in the input queue (silently)
+ *  - When % is encountered transition to STOP state
+ *
+ * Dual USB Channel Operation:
+ code path:
+1-3 are the same
+4) We read and dump until a clear. % is replaced as ;
+Make sense? Sound like it'll work?
+ */
 void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
 void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
 
 /*
  * cm_request_queue_flush()
- *
- * Only honor the request if we are in a feedhold or have requested one.
- * Reject % it if we are not in a feedhold - allows % symbol to be used
- * as file start/end markers (a common Gcode practice) and as a comment char (Inkscape)
  */
-void cm_request_queue_flush(bool force) {
+void cm_request_queue_flush(bool force)
+{
     if(cm.estop_state) return;
 
     if (force || cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF)) {
@@ -1298,7 +1324,7 @@ stat_t cm_feedhold_sequencing_callback()
 		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
 	}
 	if (cm.queue_flush_requested == true) {
-        cm_queue_flush();                   // Note: this won't run if the runtime is still busy
+        cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD) {
@@ -1308,6 +1334,14 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 	}
 	return (STAT_OK);
+}
+
+/*
+ * cm_is_hold() - return true if a hold condition exists (or pre-hold)
+ */
+bool cm_is_hold()
+{
+    return (cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF));
 }
 
 /*
@@ -1333,6 +1367,9 @@ stat_t cm_end_hold()
 
     cm.end_hold_requested = false;
 	mp_end_hold();
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
+    }
 
     // State machine cases:
     if (cm.machine_state == MACHINE_ALARM) {
@@ -1347,7 +1384,7 @@ stat_t cm_end_hold()
 		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
     		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
     		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-    		} else {
+    	} else {
     		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
 		}
         st_request_exec_move();
@@ -1357,35 +1394,27 @@ stat_t cm_end_hold()
 
 /*
  * cm_queue_flush() - Flush planner queue and correct model positions
- *
- * This function supports multiple use cases:
- *  - (1) Homing / probing / jogging: a single move has been stopped (feedhold) and the remaining move abandoned
- *  - (2) Alarm: one or more moves are invalidated due to an alarm condition. CLear everything
- *
- *  In case (1) return machine state to PROGRAM_STOP by ending the feedhold.
- *  In the alarm case (2) the caller preserve the alarm and do not finalize the state
+ * cm_end_queue_flush() - end flush when marker is hit
  */
 stat_t cm_queue_flush()
 {
 	if (cm_get_runtime_busy() == true) {
         return (STAT_COMMAND_NOT_ACCEPTED);     // can't flush during movement
     }
-    cm.queue_flush_requested = false;
     mp_flush_planner();
-
-	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
-		cm_end_hold();
-    }
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
-    }
-    if (cm.machine_state != MACHINE_ALARM) {
-    	float value[AXES] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-    	_exec_program_finalize(value, value);   // finalize now, not later
-    }
-	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
+    cm.queue_flush_requested = false;
     return (STAT_OK);
 }
+
+void cm_end_queue_flush()
+{
+	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
+    	cm_end_hold();
+	}
+	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
+}
+
+
 
 /******************************
  * Program Functions (4.3.10) *

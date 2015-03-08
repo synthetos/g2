@@ -758,9 +758,6 @@ void mp_transition_hold_to_stop()
 
     _reset_replannable_list();				// make it replan all the blocks
 
-    // We have a moment, go ahead and replan:
-//    mp_plan_buffer();
-
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 //    sr_request_status_report(SR_REQUEST_TIMED);
     return;
@@ -769,13 +766,6 @@ void mp_transition_hold_to_stop()
 void mp_end_hold()
 {
 	cm.hold_state = FEEDHOLD_OFF;
-/*
-    if ((cm.machine_state == MACHINE_ALARM) ||
-        (cm.machine_state == MACHINE_SHUTDOWN) ||
-        (cm.machine_state == MACHINE_INTERLOCK)) {
-
-    }
-*/
 	if (mp_has_runnable_buffer()) {
 	    cm_set_motion_state(MOTION_RUN);
         st_request_exec_move();

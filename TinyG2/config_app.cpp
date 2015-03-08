@@ -190,6 +190,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "msg", _f0, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
 //	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
 	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear alarm state
+	{ "", "clr",  _f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// Synonym for clear
 //	{ "", "sx",  _f0, 0, tx_print_nul, run_sx,  run_sx ,  (float *)&cs.null, 0 },	// send XOFF, XON test
 	{ "", "ti",  _f0, 0, tx_print_int, get_tick,set_nul,  (float *)&cs.null, 0 },	// report system time tick
 

@@ -37,13 +37,14 @@
 #define LED_ALARM_TIMER 1000            // blink rate for alarm state (in ms)
 #define LED_SHUTDOWN_TIMER 100          // blink rate for shutdown state (in ms)
 
-enum cmControllerState {				// manages startup lines
-    CONTROLLER_INITIALIZING = 0,		// controller is initializing - not ready for use
-    CONTROLLER_NOT_CONNECTED,			// controller has not yet detected connection to USB (or other comm channel)
-    CONTROLLER_CONNECTED,				// controller has connected to USB (or other comm channel)
-    CONTROLLER_STARTUP,					// controller is running startup messages and lines
-    CONTROLLER_READY					// controller is active and ready for use
-};
+typedef enum {                          // manages startup lines
+    CONTROLLER_INITIALIZING = 0,        // controller is initializing - not ready for use
+    CONTROLLER_NOT_CONNECTED,           // controller has not yet detected connection to USB (or other comm channel)
+    CONTROLLER_CONNECTED,               // controller has connected to USB (or other comm channel)
+    CONTROLLER_STARTUP,                 // controller is running startup messages and lines
+    CONTROLLER_READY,                   // controller is active and ready for use
+    CONTROLLER_FLUSHING                 // controller is flushing commands
+} csControllerState;
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
@@ -61,7 +62,7 @@ typedef struct controllerSingleton {	// main TG controller struct
 	float hw_version;                   // tinyg hardware compatibility - platform revision
 
 	// system state variables
-	cmControllerState controller_state;
+	csControllerState controller_state;
 	uint8_t state_usb0;
 	uint8_t state_usb1;
 	uint32_t led_timer;                 // used by idlers to flash indicator LED

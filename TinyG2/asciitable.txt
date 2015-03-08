@@ -21,7 +21,7 @@ Decimal   Octal   Hex    Binary     Value
   018      022    012   00010010      DC2       (Device Control 2)
   019      023    013   00010011      DC3 (XOFF)(Device Control 3)
   020      024    014   00010100      DC4       (Device Control 4)
-  021      025    015   00010101      NAK (Negativ Acknowledgemnt)
+  021      025    015   00010101      NAK	(Negative Acknowledgemnt)
   022      026    016   00010110      SYN    (Synchronous Idle)
   023      027    017   00010111      ETB    (End of Trans. Block)
   024      030    018   00011000      CAN    (Cancel)

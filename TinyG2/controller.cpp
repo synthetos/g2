@@ -286,26 +286,39 @@ static void _dispatch_kernel()
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
 		if (cs.comm_mode == TEXT_MODE) {
 			text_response(STAT_OK, cs.saved_buf);
+            return;
 		}
     }
 
-	// trap single character commands
-    else if (*cs.bufp == '!') { cm_request_feedhold();}
-	else if (*cs.bufp == '~') { cm_request_end_hold();}
-    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, "Keyboard alarm");}
-    else if (*cs.bufp == CAN) { hw_request_hard_reset();}
-    else if (*cs.bufp == '%') { cm_request_queue_flush(false);}
+    if (cs.controller_state == CONTROLLER_FLUSHING) {
+        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
+            cm_end_queue_flush();
+            cs.controller_state = CONTROLLER_READY;         // restore the controller
+        }
+        return;                                             // dump the command - silently
+    }
 
-	else if (*cs.bufp == '{') {                           // process as JSON mode
+	// trap single character commands
+    if      (*cs.bufp == '!') { cm_request_feedhold(); }
+	else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    else if (*cs.bufp == '%') {
+        cs.controller_state = CONTROLLER_FLUSHING;          // the controller should start flushing immediately...
+        cm_request_queue_flush(false);                      // ...even if the queue flush has to wait for the feedhold
+    }
+//    else if (*cs.bufp == ETX) { cm_end_queue_flush(); }
+    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
+    else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
+
+	else if (*cs.bufp == '{') {                             // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
     }
-    else if (strchr("$?Hh", *cs.bufp) != NULL) {          // process as text mode
+    else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
 		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
     }
-	else if (cs.comm_mode == TEXT_MODE) {                 // anything else must be Gcode
-        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
+	else if (cs.comm_mode == TEXT_MODE) {                   // anything else must be Gcode
+        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
     }
 	else {
         strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
