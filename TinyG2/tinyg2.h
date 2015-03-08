@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.29 // checkpoint - work on queue flush
+#define TINYG_FIRMWARE_BUILD   		079.30 // checkpoint - feedhold endpoint
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

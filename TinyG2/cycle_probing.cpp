@@ -310,7 +310,7 @@ static stat_t _probing_finish()
 static void _probe_restore_settings()
 {
 	mp_flush_planner();
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
 #ifndef __NEW_SWITCHES // restore switch settings (old style)

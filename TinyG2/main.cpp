@@ -168,7 +168,7 @@ static void _application_init(void)
  */
 
 int main(void)
- {
+{
 	// system initialization
 	_system_init();
 

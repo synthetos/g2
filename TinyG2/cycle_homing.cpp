@@ -421,7 +421,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
 	mp_flush_planner();										// don't use cm_request_queue_flush() here
-	if(cm.hold_state == FEEDHOLD_HOLD)
+	if (cm.hold_state == FEEDHOLD_HOLD)
 		cm_end_hold();
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
@@ -472,7 +472,7 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
 	mp_flush_planner(); 									// should be stopped, but in case of switch feedhold.
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system

@@ -229,7 +229,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (3) - We are in the middle of a block that is currently decelerating
     //  (4) - We have decelerated a block that has not decelerated to zero (needs continuation)
     //  (5) - We have decelerated a block to zero velocity
-    //  (6) - We are in a hold state (after deceleration) i.e. no motion should occur
+    //  (6) - We are in a pending or hold state (after deceleration) i.e. no motion should occur
     //  (7) - We are removing the hold state and there is queued motion (handled by normal operations)
     //  (8) - We are removing the hold state and there is no queued motion (also handled by normal operations)
 
@@ -237,11 +237,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (3) is a no-op. It just runs.
 
-        // Case (6) - Transition to the hold state
-        if (cm.hold_state == FEEDHOLD_DECEL_DONE) {
-            mp_enter_hold_state();  // performs all functions needed to effect the hold
-            exec_debug_pin3 = 0;
-            return (STAT_NOOP);	            // stops here if holding
+        // Case (6)
+        if ((cm.hold_state == FEEDHOLD_HOLD) || (cm.hold_state == FEEDHOLD_PENDING_HOLD)) {
+            return (STAT_OK);               // hold here. No more movement
         }
 
         // Case (1), Case (2), Case (4)
@@ -267,7 +265,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                 mr.tail_length = available_length;
                 mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
-            } else {                                    // (1a) the deceleration will fit onto the current move
+            } else {                                    // (1a) the deceleration will fit into the current move
                 cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 mr.exit_velocity = 0;
             }
@@ -287,8 +285,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {
-        cm.hold_state = FEEDHOLD_DECEL_DONE;
-        bf->move_state = MOVE_NEW;                      // reset bf so it can restart the rest of the move
+        mp_enter_pending_hold_state();                  // perform functions needed to effect the hold
     }
 
 	// There are 4 things that can happen here depending on return conditions:

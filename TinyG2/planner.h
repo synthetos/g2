@@ -304,11 +304,13 @@ float mp_get_runtime_absolute_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 float mp_get_runtime_work_position(uint8_t axis);
 uint8_t mp_get_runtime_busy(void);
+bool mp_runtime_is_idle(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
 
-void mp_enter_hold_state(void);                         // feedholds...
+void mp_enter_pending_hold_state(void);                 // feedholds...
+void mp_enter_hold_state(void);
 void mp_exit_hold_state(void);
 
 // plan_zoid.c functions

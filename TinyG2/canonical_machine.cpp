@@ -1315,6 +1315,9 @@ void cm_request_queue_flush()
  */
 stat_t cm_feedhold_sequencing_callback()
 {
+    mp_enter_hold_state();      // finalize a hold once the last segment has stopped moving
+
+    // sequence feedhold, queue_flush, and end_hold requests
 	if (cm.feedhold_requested == true) {
 		if(cm.hold_state == FEEDHOLD_OFF) {
 			if (mp_has_runnable_buffer()) {  // meaning there is something running

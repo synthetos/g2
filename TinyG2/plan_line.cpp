@@ -78,10 +78,16 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
  *	FALSE you know the queue is empty and the motors have stopped.
  */
 
+bool mp_runtime_is_idle()
+{
+	return (!st_runtime_isbusy());
+}
+
+//bool mp_planner_is_empty()
+
 uint8_t mp_get_runtime_busy()
 {
-//	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN))
+	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned);
         return (true);
 	return (false);
 }
@@ -735,36 +741,44 @@ static void _reset_replannable_list()
  *************************************************************************
  *************************************************************************
  *
- * mp_enter_hold_state() - called from the stepper chain when the hold takes effect
- * mp_exit_hold_state()  - end a feedhold
+ * mp_enter_pending_hold_state() - prep the hold for final transition
+ * mp_enter_hold_state()         - sets hold condition once stepper movement has ceased
+ * mp_exit_hold_state()          - end a feedhold
  *
  *	Feedhold is executed as cm.hold_state transitions executed inside _exec_aline()
  *  Invoke a feedhold by calling cm_request_hold() or cm_start_hold() directly
  *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
- *  See canonical_macine.c for a more detailed exp;lanation of feedhold operation.
+ *  See canonical_macine.c for a more detailed explanation of feedhold operation.
  */
+void mp_enter_pending_hold_state()
+{
+    // We have to look at the run buffer and see if there's anything left,
+    // Update the buffer if we need to, then force a replan of the whole buffer.
+    mpBuf_t *bf = mp_get_run_buffer();                              // get the current run buffer
+    bf->move_state = MOVE_NEW;                                      // tell _exec to re-use the bf buffer
+	mr.move_state = MOVE_OFF;	                                    // invalidate mr buffer to reset the new move
+    bf->length = get_axis_vector_length(mr.target, mr.position);    // reset length
+    bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);     // reset cruise velocity
+    bf->entry_vmax = 0;                                             // set bp+0 as hold point
+    _reset_replannable_list();                                      // make it replan all the blocks
+    mb.force_replan = true;
+    mp_plan_buffer();                                               // must replan now
+
+    cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//    sr_request_status_report(SR_REQUEST_TIMED)
+
+    cm.hold_state = FEEDHOLD_PENDING_HOLD;
+}
+
 void mp_enter_hold_state()
 {
-    cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
-    cm.hold_state = FEEDHOLD_HOLD;
-    cs.controller_state = CONTROLLER_READY; // remove controller readline pause
-
-    mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
-
-    // NOW, we have to look at the run buffer and see if there's anything left,
-    // Update the buffer if we need to, then force a replan of the whole buffer.
-
-    bf->length = get_axis_vector_length(mr.target, mr.position);
-    bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
-    bf->entry_vmax = 0;						// set bp+0 as hold point
-    bf->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
-	mr.move_state = MOVE_OFF;		        // invalidate mr buffer to reset the new move
-
-    _reset_replannable_list();				// make it replan all the blocks
-
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);
-//    sr_request_status_report(SR_REQUEST_TIMED);
-    return;
+    if (cm.hold_state == FEEDHOLD_PENDING_HOLD) {
+        if (mp_runtime_is_idle()) {                 // wait for the steppers to actually clear out
+            cm.hold_state = FEEDHOLD_HOLD;
+            cs.controller_state = CONTROLLER_READY; // remove controller readline pause
+        }
+    }
 }
 
 void mp_exit_hold_state()

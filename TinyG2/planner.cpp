@@ -398,7 +398,8 @@ void mp_commit_write_buffer(const moveType move_type)
         mb.q->buffer_state = MP_BUFFER_QUEUED;
         mb.q = mb.q->nx;
         if (!mb.needs_replanned) {
-            if(cm.hold_state != FEEDHOLD_HOLD)
+            if (cm.hold_state != FEEDHOLD_HOLD)
+//            if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
                 st_request_exec_move();	        // requests an exec if the runtime is not busy
                 // NB: BEWARE! the exec may result in the planner buffer being
                 // processed IMMEDIATELY and then freed - invalidating the contents
@@ -417,7 +418,10 @@ void mp_commit_write_buffer(const moveType move_type)
 
 bool mp_has_runnable_buffer()
 {
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
+//    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
+    if (mb.r->buffer_state == MP_BUFFER_QUEUED ||
+        mb.r->buffer_state == MP_BUFFER_RUNNING ||
+        mb.r->buffer_state == MP_BUFFER_PLANNING) {
         return true;
     }
     return false;
@@ -546,6 +550,7 @@ stat_t mp_plan_buffer()
     mp_plan_block_list(mb.q->pv, false);
 
     if(cm.hold_state != FEEDHOLD_HOLD)
+//    if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
         st_request_exec_move();					// requests an exec if the runtime is not busy
     // NB: BEWARE! the exec may result in the planner buffer being
     // processed immediately and then freed - invalidating the contents
