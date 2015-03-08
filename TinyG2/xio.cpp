@@ -340,7 +340,7 @@ struct xio_t {
      *			 the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
      *
      *   size -  Returns the size of the completed buffer, including the NUL termination character.
-     *			 Lines may be returned truncated the the length of the serial input buffer if the text
+     *			 Lines may be returned truncated to the length of the serial input buffer if the text
      *			 from the physical device is longer than the read buffer for the device. The size value
      *			 provided as a calling argument is ignored (size doesn't matter).
      *

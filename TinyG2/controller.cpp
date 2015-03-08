@@ -256,11 +256,13 @@ void controller_set_connected(bool is_connected) {
 static stat_t _dispatch_command()
 {
 	if(cm.estop_state == 0) {
+        if (cs.controller_state == CONTROLLER_PAUSED) {
+	        return (STAT_NOOP);
+        }
 		devflags_t flags = DEV_IS_BOTH;
         while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
                (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
         	_dispatch_kernel();
-
             mp_plan_buffer();
         }
 	}
@@ -269,6 +271,9 @@ static stat_t _dispatch_command()
 
 static stat_t _dispatch_control()
 {
+    if (cs.controller_state == CONTROLLER_PAUSED) {
+        return (STAT_NOOP);
+    }
 	devflags_t flags = DEV_IS_CTRL;
 	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
         _dispatch_kernel();
@@ -277,6 +282,13 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
+    if (cs.controller_state == CONTROLLER_FLUSHING) {
+        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
+            cm_end_queue_flush();
+            cs.controller_state = CONTROLLER_READY;         // restore the controller
+        }
+        return;                                             // silently dump the command
+    }
 
 	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
 		cs.bufp++;
@@ -290,21 +302,13 @@ static void _dispatch_kernel()
 		}
     }
 
-    if (cs.controller_state == CONTROLLER_FLUSHING) {
-        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
-            cm_end_queue_flush();
-            cs.controller_state = CONTROLLER_READY;         // restore the controller
-        }
-        return;                                             // dump the command - silently
-    }
-
 	// trap single character commands
-    if      (*cs.bufp == '!') { cm_request_feedhold(); }
-	else if (*cs.bufp == '~') { cm_request_end_hold(); }
-    else if (*cs.bufp == '%') {
-        cs.controller_state = CONTROLLER_FLUSHING;          // the controller should start flushing immediately...
-        cm_request_queue_flush(false);                      // ...even if the queue flush has to wait for the feedhold
+    if (*cs.bufp == '!') {
+        cs.controller_state = CONTROLLER_PAUSED;            // do not process new commands until feedhold has stopped
+        cm_request_feedhold();
     }
+	else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 //    else if (*cs.bufp == ETX) { cm_end_queue_flush(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
     else if (*cs.bufp == CAN) { hw_request_hard_reset(); }

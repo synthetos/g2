@@ -28,6 +28,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
+#include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
 #include "stepper.h"
@@ -79,7 +80,9 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
 
 uint8_t mp_get_runtime_busy()
 {
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
+//	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
+	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN))
+        return (true);
 	return (false);
 }
 
@@ -732,18 +735,19 @@ static void _reset_replannable_list()
  *************************************************************************
  *************************************************************************
  *
- * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
- * mp_restart_from_hold() - end a feedhold
+ * mp_enter_hold_state() - called from the stepper chain when the hold takes effect
+ * mp_exit_hold_state()  - end a feedhold
  *
  *	Feedhold is executed as cm.hold_state transitions executed inside _exec_aline()
  *  Invoke a feedhold by calling cm_request_hold() or cm_start_hold() directly
  *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
  *  See canonical_macine.c for a more detailed exp;lanation of feedhold operation.
  */
-void mp_transition_hold_to_stop()
+void mp_enter_hold_state()
 {
     cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
     cm.hold_state = FEEDHOLD_HOLD;
+    cs.controller_state = CONTROLLER_READY; // remove controller readline pause
 
     mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
 
@@ -763,7 +767,7 @@ void mp_transition_hold_to_stop()
     return;
 }
 
-void mp_end_hold()
+void mp_exit_hold_state()
 {
 	cm.hold_state = FEEDHOLD_OFF;
 	if (mp_has_runnable_buffer()) {

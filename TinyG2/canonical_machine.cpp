@@ -627,8 +627,8 @@ stat_t cm_alarm(stat_t status, const char *msg)
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();                  // experimental
-    cm_request_queue_flush(true);           // do a queue flush once runtime is not busy
+    cm_request_feedhold();                  // ++++ experimental
+    cm_request_queue_flush();               // do a queue flush once runtime is not busy
 	cm_spindle_control(SPINDLE_OFF);
 	rpt_exception(status, msg);	            // send alarm message
     return (status);
@@ -1299,12 +1299,14 @@ void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested =
 /*
  * cm_request_queue_flush()
  */
-void cm_request_queue_flush(bool force)
+void cm_request_queue_flush()
 {
     if(cm.estop_state) return;
 
-    if (force || cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF)) {
+    // don't honor the request unless you are in a feedhold
+    if (cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF)) {
         cm.queue_flush_requested = true;
+        cm_queue_flush();                   // attempt to run this right now
     }
 }
 
@@ -1366,7 +1368,7 @@ stat_t cm_end_hold()
 		return (STAT_EAGAIN);
 
     cm.end_hold_requested = false;
-	mp_end_hold();
+	mp_exit_hold_state();
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
     }
@@ -1403,6 +1405,7 @@ stat_t cm_queue_flush()
     }
     mp_flush_planner();
     cm.queue_flush_requested = false;
+    cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
     return (STAT_OK);
 }
 
@@ -1968,7 +1971,7 @@ stat_t cm_set_hi(nvObj_t *nv)
 
 stat_t cm_run_qf(nvObj_t *nv)
 {
-	cm_request_queue_flush(false);
+	cm_request_queue_flush();
 	return (STAT_OK);
 }
 

@@ -39,11 +39,12 @@
 
 typedef enum {                          // manages startup lines
     CONTROLLER_INITIALIZING = 0,        // controller is initializing - not ready for use
-    CONTROLLER_NOT_CONNECTED,           // controller has not yet detected connection to USB (or other comm channel)
-    CONTROLLER_CONNECTED,               // controller has connected to USB (or other comm channel)
-    CONTROLLER_STARTUP,                 // controller is running startup messages and lines
-    CONTROLLER_READY,                   // controller is active and ready for use
-    CONTROLLER_FLUSHING                 // controller is flushing commands
+    CONTROLLER_NOT_CONNECTED,           // has not yet detected connection to USB (or other comm channel)
+    CONTROLLER_CONNECTED,               // has connected to USB (or other comm channel)
+    CONTROLLER_STARTUP,                 // is running startup messages and lines
+    CONTROLLER_READY,                   // is active and ready for use
+    CONTROLLER_PAUSED,                  // is paused - presumably in preparation for queue flush
+    CONTROLLER_FLUSHING                 // is flushing commands silently to ETX marker
 } csControllerState;
 
 typedef struct controllerSingleton {	// main TG controller struct
