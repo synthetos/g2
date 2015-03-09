@@ -133,22 +133,18 @@ static void _application_init(void)
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
-//	rtc_init();						// real time counter
 	xio_init();						// xtended io subsystem				- must be third
-	config_init();					// apply config from persistence
+//	rtc_init();						// real time counter
 
 	// do these next
-	stepper_init(); 				// stepper subsystem 				- must precede gpio_init()
+	stepper_init(); 				// stepper subsystem 				- must precede gpio_init() on AVR
 	encoder_init();					// virtual encoders
 	gpio_init();					// inputs and outputs
 	switch_init();					// switches
-//	reset_limit_switches();         // reset limit switch alarm flags
 	pwm_init();						// pulse width modulation drivers
-
 	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
-//	network_init();					// reset std devices if required	- must follow config_init()
 	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine				- must follow config_init()
+	canonical_machine_init();		// canonical machine
 
 #ifdef __AVR
 	// now bring up the interrupts and get started
@@ -160,6 +156,8 @@ static void _application_init(void)
 #endif
 
 	// start the application
+	config_init();					// apply the config settings from persistence
+    canonical_machine_reset();
     // MOVED: report the system is ready is now in xio
 }
 

@@ -546,13 +546,14 @@ stat_t cm_test_soft_limits(float target[])
  * Initialization and Termination (4.3.2) *
  ******************************************/
 /*
- * canonical_machine_init() - Config init cfg_init() must have been run beforehand
+ * canonical_machine_init() - initialize CM
+ * canonical_machine_reset() - apply startup settings or reset to startup
  */
 
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-//	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
+	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
 	memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
 	memset(&cm.gn, 0, sizeof(GCodeInput_t));
 	memset(&cm.gf, 0, sizeof(GCodeInput_t));
@@ -560,6 +561,13 @@ void canonical_machine_init()
 	canonical_machine_init_assertions();		// establish assertions
 	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
 
+	// sub-system inits
+	cm_spindle_init();
+	cm_arc_init();
+}
+
+void canonical_machine_reset()
+{
 	// set gcode defaults
 	cm_set_units_mode(cm.units_mode);
 	cm_set_coord_system(cm.coord_system);
@@ -568,15 +576,7 @@ void canonical_machine_init()
 	cm_set_distance_mode(cm.distance_mode);
 	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
 
-	cm.gmx.block_delete_switch = true;
-
-	// never start a machine in a motion mode
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-
-	// sub-system inits
-	cm_spindle_init();
-	cm_arc_init();
-
+/*
 	// reset request flags
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
@@ -584,9 +584,15 @@ void canonical_machine_init()
     cm.limit_requested = false;                 // resets switch closures that occurred during initialization
     cm.interlock_requested = false;             // ditto
     cm.shutdown_requested = false;              // ditto
-	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 
-	// signal that the machine is ready for action
+	// set initial state and signal that the machine is ready for action
+    cm.cycle_state = CYCLE_OFF;
+    cm.motion_state = MOTION_STOP;
+    cm.hold_state = FEEDHOLD_OFF;
+	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
+*/
+	cm.gmx.block_delete_switch = true;
+	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
 	cm.machine_state = MACHINE_READY;
 }
 
