@@ -29,7 +29,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "planner.h"
-#include "controller.h" //++++
+//#include "controller.h" //++++
 #include "kinematics.h"
 #include "stepper.h"
 #include "encoder.h"
@@ -248,7 +248,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 return (STAT_OK);
             }
             cm.hold_state = FEEDHOLD_HOLD;
-            cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
+//            cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
 //          mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
             return (STAT_OK);                                           // hold here. No more movement

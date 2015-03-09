@@ -1313,7 +1313,7 @@ void cm_request_feedhold(void) {
     if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
         cm.feedhold_requested = true;
         cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
-    }   
+    }
 }
 
 void cm_request_end_hold(void) 
@@ -1362,6 +1362,12 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_end_hold();
 		}
 	}
+    // safety dance. This is supposed to happen in the plan_exec feedhold processing
+    if (cm.hold_state == FEEDHOLD_HOLD) {
+        if ( cs.controller_state == CONTROLLER_PAUSED) {
+            cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
+        }
+    }
 	return (STAT_OK);
 }
 
