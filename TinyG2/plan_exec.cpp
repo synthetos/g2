@@ -277,31 +277,39 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
-            mr.entry_velocity = mr.segment_velocity;
-            if (mr.section != SECTION_BODY) {
-                mr.entry_velocity += mr.forward_diff_5;
-            }
-            mr.cruise_velocity = mr.entry_velocity;
+            if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
+                if (mr.exit_velocity == 0) {
+                    cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                } else {
+                    cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
+                }
+            } else {
+                mr.entry_velocity = mr.segment_velocity;
+//                if (mr.section != SECTION_BODY) {
+                if (mr.section == SECTION_HEAD) {
+                    mr.entry_velocity += mr.forward_diff_5; // compute velocity for next segment (this new one)
+                }
+                mr.cruise_velocity = mr.entry_velocity;
 
-            mr.section = SECTION_TAIL;
-            mr.section_state = SECTION_NEW;
-            mr.jerk = bf->jerk;
-            mr.head_length = 0;
-            mr.body_length = 0;
+                mr.section = SECTION_TAIL;
+                mr.section_state = SECTION_NEW;
+                mr.jerk = bf->jerk;
+                mr.head_length = 0;
+                mr.body_length = 0;
 
-            float available_length = get_axis_vector_length(mr.target, mr.position);
-            mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
+                float available_length = get_axis_vector_length(mr.target, mr.position);
+                mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
 
-            if (available_length < mr.tail_length) {    // (1b) the deceleration has to span multiple moves
-                cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
-                mr.tail_length = available_length;
-                mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
-            } else {                                    // (1a) the deceleration will fit into the current move
-                cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                mr.exit_velocity = 0;
+                if (available_length < mr.tail_length) {    // (1b) the deceleration has to span multiple moves
+                    cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
+                    mr.tail_length = available_length;
+                    mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
+                } else {                                    // (1a) the deceleration will fit into the current move
+                    cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                    mr.exit_velocity = 0;
+                }
             }
             // Case (3) is a no-op. It just runs.
-
         }
     }
     mr.move_state = MOVE_RUN;
