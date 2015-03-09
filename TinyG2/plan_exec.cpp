@@ -243,7 +243,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
 
         // Case (6) - wait for the steppers to stop
-        if (cm.hold_state == FEEDHOLD_PENDING_HOLD) {
+        if (cm.hold_state == FEEDHOLD_PENDING) {
             if (!mp_runtime_is_idle()) {                                // wait for the steppers to actually clear out
                 return (STAT_OK);
             }
@@ -269,7 +269,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mp_plan_buffer();                                           // must replan now
 
             cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
-            cm.hold_state = FEEDHOLD_PENDING_HOLD;
+            cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }
 
@@ -369,7 +369,7 @@ void mp_exit_hold_state()
 	}
 }
 
-/* 
+/*
  * Forward difference math explained:
  *
  *	We are using a quintic (fifth-degree) Bezier polynomial for the velocity curve.

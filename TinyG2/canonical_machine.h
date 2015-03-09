@@ -106,7 +106,7 @@ typedef enum {				        // feedhold_state machine
     FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
 	FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
 	FEEDHOLD_DECEL_END,             // end the deceleration
-    FEEDHOLD_PENDING_HOLD,          // waiting to finalize the deceleration once motion stops
+    FEEDHOLD_PENDING,               // waiting to finalize the deceleration once motion stops
 	FEEDHOLD_HOLD					// holding
 } cmFeedholdState;
 
@@ -644,7 +644,7 @@ stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle sta
 stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
 // feedholds
-bool cm_is_hold(void);
+bool cm_is_holding(void);
 stat_t cm_start_hold(void);
 stat_t cm_end_hold(void);
 

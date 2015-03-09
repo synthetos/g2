@@ -1278,10 +1278,10 @@ void cm_message(char_t *message)
  * https://github.com/synthetos/g2/wiki/Job-Exception-Handling
  *
  * We want to use queue flush for a few different use cases, as per the above wiki pages.
- * The % behavior implements Exception Handling cases 1 and 2 - Stop a Single Move and 
- * Stop Multiple Moves. This is complicated further by the processing in single USB and 
- * dual USB being different. Also, the state handling is located in xio.cpp / readline(), 
- * controller.cpp _dispatch_kernel() and cm_request_queue_flush(), below. 
+ * The % behavior implements Exception Handling cases 1 and 2 - Stop a Single Move and
+ * Stop Multiple Moves. This is complicated further by the processing in single USB and
+ * dual USB being different. Also, the state handling is located in xio.cpp / readline(),
+ * controller.cpp _dispatch_kernel() and cm_request_queue_flush(), below.
  * So it's documented here.
  *
  * Single or Dual USB Channels:
@@ -1290,7 +1290,7 @@ void cm_message(char_t *message)
  *
  * Single USB Channel Operation:
  *  - Enter a feedhold (!)
- *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input 
+ *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input
  *      buffer in place of the the % (xio)
  *  - Execute the feedhold to a hold condition (plan_exec)
  *  - Execute the dispatched % to flush queues (canonical_machine)
@@ -1300,14 +1300,14 @@ void cm_message(char_t *message)
  * Dual USB Channel Operation:
  *  - Same as above except that we expect the % to arrive on the control channel
  *  - The system will read and dump all commands in the data channel until either a
- *    clear is encountered ({clear:n} or $clear), or an ETX is encountered on either 
+ *    clear is encountered ({clear:n} or $clear), or an ETX is encountered on either
  *    channel, but it really should be on the data channel to ensure all queued commands
- *    are dumped. It is the host's responsibility to both write the clear (or ETX), and 
- *    to ensure that it either arrives on the data channel or that the data channel is 
+ *    are dumped. It is the host's responsibility to both write the clear (or ETX), and
+ *    to ensure that it either arrives on the data channel or that the data channel is
  *    empty before writing it to the control channel.
  */
-void cm_request_feedhold(void) { 
-    if(cm.estop_state) return; 
+void cm_request_feedhold(void) {
+    if(cm.estop_state) return;
 
     // only accept a request if you are not already in a feedhold
     if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
@@ -1316,10 +1316,10 @@ void cm_request_feedhold(void) {
     }
 }
 
-void cm_request_end_hold(void) 
-{ 
-    if(cm.estop_state) return; 
-    cm.end_hold_requested = true; 
+void cm_request_end_hold(void)
+{
+    if(cm.estop_state) return;
+    cm.end_hold_requested = true;
 }
 
 /*
@@ -1372,16 +1372,15 @@ stat_t cm_feedhold_sequencing_callback()
 }
 
 /*
- * cm_is_hold() - return true if a hold condition exists (or pre-hold)
+ * cm_start_hold() - start a feedhhold by signalling the exec
+ * cm_end_hold()   - end a feedhold by returning the system to normal operation
+ * cm_is_holding() - return true if a hold condition exists (or a pending hold request)
  */
-bool cm_is_hold()
+bool cm_is_holding()
 {
     return (cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF));
 }
 
-/*
- * cm_start_hold()
- */
 stat_t cm_start_hold()
 {
 //    if(cm.gm.spindle_mode != SPINDLE_OFF) {
@@ -1392,9 +1391,6 @@ stat_t cm_start_hold()
 	return (STAT_OK);
 }
 
-/*
- * cm_end_hold()
- */
 stat_t cm_end_hold()
 {
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
@@ -1440,10 +1436,9 @@ stat_t cm_queue_flush()
     cm.queue_flush_requested = false;
     cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
 
-//  for (uint8_t axis = AXIS_X; axis < AXES; axis++) {          // set all positions
-//      cm_set_position(axis, mp_get_runtime_absolute_position(axis));
-//  }
-
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
+        cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+    }
     return (STAT_OK);
 }
 
@@ -1684,9 +1679,10 @@ static const char msg_hold1[] PROGMEM = "Sync";
 static const char msg_hold2[] PROGMEM = "Decel Continue";
 static const char msg_hold3[] PROGMEM = "Decel to Zero";
 static const char msg_hold4[] PROGMEM = "Decel Done";
-static const char msg_hold5[] PROGMEM = "Hold";
+static const char msg_hold5[] PROGMEM = "Pending";
+static const char msg_hold6[] PROGMEM = "Hold";
 static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
-												msg_hold4,  msg_hold5 };
+												msg_hold4, msg_hold5, msg_hold6 };
 
 static const char msg_home0[] PROGMEM = "Not Homed";
 static const char msg_home1[] PROGMEM = "Homed";
