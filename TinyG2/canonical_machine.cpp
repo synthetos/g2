@@ -546,8 +546,9 @@ stat_t cm_test_soft_limits(float target[])
  * Initialization and Termination (4.3.2) *
  ******************************************/
 /*
- * canonical_machine_init() - initialize CM
+ * canonical_machine_init()  - initialize cm struct
  * canonical_machine_reset() - apply startup settings or reset to startup
+ *                             run profile initialization beforehand
  */
 
 void canonical_machine_init()
@@ -1273,34 +1274,53 @@ void cm_message(char_t *message)
 /* Queue Flush operation
  *
  * This one's complicated. See here first:
+ * https://github.com/synthetos/g2/wiki/Alarm-Processing
  * https://github.com/synthetos/g2/wiki/Job-Exception-Handling
  *
- * We want to use queue flush for a few different use cases, as per the above wiki page.
- * The % behavior implements case 1 and 2 - Stop a Single Move and Stop Multiple Moves.
- * This is complicated further by the processing in single USB and dual USB being different.
- * Also, the state handling is located in xio.cpp / readline(), controller.cpp _dispatch_kernel()
- * and cm_request_queue_flush(), below. So it's documented here.
+ * We want to use queue flush for a few different use cases, as per the above wiki pages.
+ * The % behavior implements Exception Handling cases 1 and 2 - Stop a Single Move and 
+ * Stop Multiple Moves. This is complicated further by the processing in single USB and 
+ * dual USB being different. Also, the state handling is located in xio.cpp / readline(), 
+ * controller.cpp _dispatch_kernel() and cm_request_queue_flush(), below. 
+ * So it's documented here.
  *
  * Single or Dual USB Channels:
  *  - If a % is received outside of a feed hold or ALARM state, ignore it.
- *      Change the % to a ; comment symbol
+ *      Change the % to a ; comment symbol (xio)
  *
  * Single USB Channel Operation:
  *  - Enter a feedhold (!)
- *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input buffer in place of the the %
- *  - Execute the feedhold to a hold condition
- *  - Execute the dispatched % to flush queues
- *    Reject any commands up to the % in the input queue (silently)
- *  - When % is encountered transition to STOP state
+ *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input 
+ *      buffer in place of the the % (xio)
+ *  - Execute the feedhold to a hold condition (plan_exec)
+ *  - Execute the dispatched % to flush queues (canonical_machine)
+ *  - Silently reject any commands up to the % in the input queue (controller)
+ *  - When ETX is encountered transition to STOP state (controller/canonical_machine)
  *
  * Dual USB Channel Operation:
- code path:
-1-3 are the same
-4) We read and dump until a clear. % is replaced as ;
-Make sense? Sound like it'll work?
+ *  - Same as above except that we expect the % to arrive on the control channel
+ *  - The system will read and dump all commands in the data channel until either a
+ *    clear is encountered ({clear:n} or $clear), or an ETX is encountered on either 
+ *    channel, but it really should be on the data channel to ensure all queued commands
+ *    are dumped. It is the host's responsibility to both write the clear (or ETX), and 
+ *    to ensure that it either arrives on the data channel or that the data channel is 
+ *    empty before writing it to the control channel.
  */
-void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
-void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
+void cm_request_feedhold(void) { 
+    if(cm.estop_state) return; 
+
+    // only accept a request if you are not already in a feedhold
+    if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
+        cm.feedhold_requested = true;
+        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
+    }   
+}
+
+void cm_request_end_hold(void) 
+{ 
+    if(cm.estop_state) return; 
+    cm.end_hold_requested = true; 
+}
 
 /*
  * cm_request_queue_flush()
@@ -1321,8 +1341,6 @@ void cm_request_queue_flush()
  */
 stat_t cm_feedhold_sequencing_callback()
 {
-//    mp_enter_hold_state();      // finalize a hold once the last segment has stopped moving
-
     // sequence feedhold, queue_flush, and end_hold requests
 	if (cm.feedhold_requested == true) {
 		if(cm.hold_state == FEEDHOLD_OFF) {

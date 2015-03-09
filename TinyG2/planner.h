@@ -310,10 +310,6 @@ stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
 void mp_reset_replannable_list(void);
 
-void mp_enter_pending_hold_state(void);                 // feedholds...
-void mp_enter_hold_state(void);
-void mp_exit_hold_state(void);
-
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
@@ -323,5 +319,6 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 // plan_exec.c functions
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
+void mp_exit_hold_state(void);
 
 #endif	// End of include Guard: PLANNER_H_ONCE

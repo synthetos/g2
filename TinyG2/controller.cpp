@@ -304,7 +304,6 @@ static void _dispatch_kernel()
 
 	// trap single character commands
     if (*cs.bufp == '!') {
-        cs.controller_state = CONTROLLER_PAUSED;            // do not process new commands until feedhold has stopped
         cm_request_feedhold();
     }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }

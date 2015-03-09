@@ -239,7 +239,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (7) - all motion has ceased
         if (cm.hold_state == FEEDHOLD_HOLD) {
-            return (STAT_NOOP);                           // hold here. No more movement
+            return (STAT_NOOP);                 // very important to exit as a NOOP. No more movement
         }
 
         // Case (6) - wait for the steppers to stop
@@ -249,7 +249,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             }
             cm.hold_state = FEEDHOLD_HOLD;
             cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
-//            mp_zero_segment_velocity();                                 // for reporting purposes
+//          mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
             return (STAT_OK);                                           // hold here. No more movement
         }
@@ -348,7 +348,29 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     return (status);
 }
 
-/* Forward difference math explained:
+/*
+ * mp_exit_hold_state() - end a feedhold
+ *
+ *	Feedhold is executed as cm.hold_state transitions executed inside _exec_aline()
+ *  Invoke a feedhold by calling cm_request_hold() or cm_start_hold() directly
+ *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
+ *  See canonical_macine.c for a more detailed explanation of feedhold operation.
+ */
+
+void mp_exit_hold_state()
+{
+	cm.hold_state = FEEDHOLD_OFF;
+	if (mp_has_runnable_buffer()) {
+	    cm_set_motion_state(MOTION_RUN);
+        st_request_exec_move();
+	    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    } else {
+		cm_set_motion_state(MOTION_STOP);
+	}
+}
+
+/* 
+ * Forward difference math explained:
  *
  *	We are using a quintic (fifth-degree) Bezier polynomial for the velocity curve.
  *	This gives us a "linear pop" velocity curve; with pop being the sixth derivative of position:
