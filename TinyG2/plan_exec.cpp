@@ -248,17 +248,16 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 return (STAT_OK);
             }
             cm.hold_state = FEEDHOLD_HOLD;
-//            cs.controller_state = CONTROLLER_READY;                     // remove controller readline pause
-//          mp_zero_segment_velocity();                                 // for reporting purposes
+	        mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
             return (STAT_OK);                                           // hold here. No more movement
         }
 
         // Case (5) - decelerated to zero
         if (cm.hold_state == FEEDHOLD_DECEL_END) {
-            // update the run buffer then force a replan of the whole buffer.
+            // update the run buffer then force a replan of the whole planner queue
 
-//            mpBuf_t *bp = mp_get_run_buffer();                        // get the current run buffer  +++ test if same as run buffer
+//          mpBuf_t *bp = mp_get_run_buffer();  // get the current run buffer  +++ test if same as run buffer
             mr.move_state = MOVE_OFF;	                                // invalidate mr buffer to reset the new move
             bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length

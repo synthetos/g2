@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.36 // correction for feedholds starting in a tail section
+#define TINYG_FIRMWARE_BUILD   		079.37 // testing feedholds
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

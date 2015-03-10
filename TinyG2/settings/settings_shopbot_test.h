@@ -80,7 +80,7 @@
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
-#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","macs","hold","cycs","line","coor"
+#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","macs","cycs","mots","hold","line","coor"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         INCHES                  // MILLIMETERS or INCHES

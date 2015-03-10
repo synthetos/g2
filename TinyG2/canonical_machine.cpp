@@ -1511,6 +1511,10 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
+    
+    // reset the rest of the states
+    cm.cycle_state = CYCLE_OFF;
+    cm.hold_state = FEEDHOLD_OFF;
 	mp_zero_segment_velocity();							// for reporting purposes
 
 	// perform the following resets if it's a program END
