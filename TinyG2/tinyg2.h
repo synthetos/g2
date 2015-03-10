@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.37 // testing feedholds
+#define TINYG_FIRMWARE_BUILD   		079.38 // added feedhold requests in to feedhold state machine
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

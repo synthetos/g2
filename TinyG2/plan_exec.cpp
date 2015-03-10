@@ -277,7 +277,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (mr.exit_velocity == 0) {
+                if (fp_ZERO(mr.exit_velocity)) {
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;

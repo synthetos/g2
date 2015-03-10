@@ -101,14 +101,20 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {				        // feedhold_state machine
-	FEEDHOLD_OFF = 0,				// no feedhold in effect
-	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
+    FEEDHOLD_OFF = 0,				// no feedhold in effect
+    FEEDHOLD_REQUESTED,             // feedhold has been requested but not started yet
+    FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
-	FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
-	FEEDHOLD_DECEL_END,             // end the deceleration
+    FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
+    FEEDHOLD_DECEL_END,             // end the deceleration
     FEEDHOLD_PENDING,               // waiting to finalize the deceleration once motion stops
-	FEEDHOLD_HOLD					// holding
+    FEEDHOLD_HOLD					// holding
 } cmFeedholdState;
+
+typedef enum {				        // queue flush_state machine
+    FLUSH_OFF = 0,				    // no queue flush in effect
+    FLUSH_REQUESTED,                // queue flush has been requested but not started yet
+} cmQueueFlushState;
 
 typedef enum {				        // applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
@@ -465,15 +471,11 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-//	uint8_t combined_state;				// stat: combination of states for display purposes, now computed in cm_get_combined_state
-//	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
-//	uint8_t cycle_state;				// cycs
-//	uint8_t motion_state;				// momo
-
     cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
-    cmCycleState cycle_state;			// cycs
-    cmMotionState motion_state;			// momo
-	cmFeedholdState hold_state;			// hold: feedhold sub-state machine
+    cmCycleState cycle_state;           // cycs
+    cmMotionState motion_state;         // momo
+	cmFeedholdState hold_state;         // hold: feedhold state machine
+	cmQueueFlushState flush_state;      // hold: queue flush state machine
 
 	uint8_t interlock_state;			// true if interlock has been triggered
 	uint8_t estop_state;				// true if estop has been triggered
@@ -492,7 +494,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool g28_flag;					    // true = complete a G28 move
 	bool g30_flag;					    // true = complete a G30 move
 	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
-	bool feedhold_requested;			// feedhold character has been received
+//	bool feedhold_requested;			// feedhold character has been received
 	bool queue_flush_requested;		    // queue flush character has been received
 	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)

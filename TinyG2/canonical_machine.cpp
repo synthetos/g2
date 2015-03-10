@@ -1310,10 +1310,14 @@ void cm_request_feedhold(void) {
     if(cm.estop_state) return;
 
     // only accept a request if you are not already in a feedhold
-    if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
-        cm.feedhold_requested = true;
+    if (cm.hold_state == FEEDHOLD_OFF) {
+        cm.hold_state = FEEDHOLD_REQUESTED;
         cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
     }
+//    if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
+//        cm.feedhold_requested = true;
+//        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
+//    }
 }
 
 void cm_request_end_hold(void)
@@ -1330,7 +1334,7 @@ void cm_request_queue_flush()
     if(cm.estop_state) return;
 
     // don't honor the request unless you are in a feedhold
-    if (cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF)) {
+    if (cm.hold_state != FEEDHOLD_OFF) {
         cm.queue_flush_requested = true;
         cm_queue_flush();                   // attempt to run this right now
     }
@@ -1342,15 +1346,13 @@ void cm_request_queue_flush()
 stat_t cm_feedhold_sequencing_callback()
 {
     // sequence feedhold, queue_flush, and end_hold requests
-	if (cm.feedhold_requested == true) {
-		if(cm.hold_state == FEEDHOLD_OFF) {
-			if (mp_has_runnable_buffer()) {  // meaning there is something running
-				cm_start_hold();
-			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
-				cm_spindle_control_immediate(SPINDLE_OFF);
-			}
+	if (cm.hold_state == FEEDHOLD_REQUESTED) {
+		if (mp_has_runnable_buffer()) {     // meaning there is something running
+			cm_start_hold();
+		} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
+			cm_spindle_control_immediate(SPINDLE_OFF);
 		}
-		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
+//		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
 	}
 	if (cm.queue_flush_requested == true) {
         cm_queue_flush();                   // queue flush won't run until runtime is idle
@@ -1378,7 +1380,7 @@ stat_t cm_feedhold_sequencing_callback()
  */
 bool cm_is_holding()
 {
-    return (cm.feedhold_requested || (cm.hold_state != FEEDHOLD_OFF));
+    return (cm.hold_state != FEEDHOLD_OFF);
 }
 
 stat_t cm_start_hold()
@@ -1577,18 +1579,18 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
-	cm.cycle_state = CYCLE_OFF;
-	for(int i = 0; i < HOMING_AXES; ++i)
-		cm.homed[i] = false;
-	cm.homing_state = HOMING_NOT_HOMED;
+    cm.cycle_state = CYCLE_OFF;
+    for(int i = 0; i < HOMING_AXES; ++i)
+        cm.homed[i] = false;
+    cm.homing_state = HOMING_NOT_HOMED;
 #ifdef __ARM
     xio_flush_read();
 #endif
-	mp_flush_planner();
-	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	// finalize now, not later
-	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
-
+    mp_flush_planner();
+    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+    _exec_program_finalize(value, value);	// finalize now, not later
+    cm.queue_flush_requested = cm.end_hold_requested = false;
+    cm.hold_state = FEEDHOLD_OFF;
     return (STAT_OK);
 }
 
@@ -1679,14 +1681,15 @@ static const char msg_mots3[] PROGMEM = "Hold";
 static const char *const msg_mots[] PROGMEM = { msg_mots0, msg_mots1, msg_mots2, msg_mots3 };
 
 static const char msg_hold0[] PROGMEM = "Off";
-static const char msg_hold1[] PROGMEM = "Sync";
-static const char msg_hold2[] PROGMEM = "Decel Continue";
-static const char msg_hold3[] PROGMEM = "Decel to Zero";
-static const char msg_hold4[] PROGMEM = "Decel Done";
-static const char msg_hold5[] PROGMEM = "Pending";
-static const char msg_hold6[] PROGMEM = "Hold";
+static const char msg_hold1[] PROGMEM = "Requested";
+static const char msg_hold2[] PROGMEM = "Sync";
+static const char msg_hold3[] PROGMEM = "Decel Continue";
+static const char msg_hold4[] PROGMEM = "Decel to Zero";
+static const char msg_hold5[] PROGMEM = "Decel Done";
+static const char msg_hold6[] PROGMEM = "Pending";
+static const char msg_hold7[] PROGMEM = "Hold";
 static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
-												msg_hold4, msg_hold5, msg_hold6 };
+												msg_hold4, msg_hold5, msg_hold6, msg_hold7 };
 
 static const char msg_home0[] PROGMEM = "Not Homed";
 static const char msg_home1[] PROGMEM = "Homed";
