@@ -245,6 +245,27 @@ void controller_set_connected(bool is_connected) {
     }
 }
 
+static bool _parse_clear(char *str) // return true if it's a clear command
+{
+    char *p = str;
+    if ((*p != '$') && (*p != '{')) return (false);
+    p++;
+    if (*p == '"') p++;
+    if (strcmp("clear", p) == 0) return (true);
+    if (strcmp("clr", p) == 0) return (true);
+    return (false);
+    
+/* the above abbreviation is worth 88 bytes and faster execution
+    if (strcmp("{clear:n}", str) == 0) return (true);
+    if (strcmp("{\"clear\":n}", str) == 0) return (true);
+    if (strcmp("{clr:n}", str) == 0) return (true);
+    if (strcmp("{\"clr\":n}", str) == 0) return (true);
+    if (strcmp("$clear", str) == 0) return (true);
+    if (strcmp("$clr", str) == 0) return (true);
+    return (false);
+*/
+}
+
 /*****************************************************************************
  * command dispatchers
  * _dispatch_command - entry point for control and data dispatches
@@ -282,18 +303,19 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
+    while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
+        cs.bufp++;
+    }
+
 //    if (cs.controller_state == CONTROLLER_FLUSHING) {
     if (cm.flush_state == FLUSH_COMMANDS) {
-        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
+        if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
+//        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
             cm_end_queue_flush();
 //            cs.controller_state = CONTROLLER_READY;         // restore the controller
         }
         return;                                             // silently dump the command
     }
-
-	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
-		cs.bufp++;
-	}
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF

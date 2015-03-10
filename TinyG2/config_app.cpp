@@ -844,8 +844,8 @@ void preprocess_float(nvObj_t *nv)
  */
 uint8_t nv_group_is_prefixed(char_t *group)
 {
-	if (strcmp("sr",group) == 0) return (false);
-	if (strcmp("sys",group) == 0) return (false);
+	if (strcmp("sr", group) == 0) return (false);
+	if (strcmp("sys", group) == 0) return (false);
 	return (true);
 }
 
