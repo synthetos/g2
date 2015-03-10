@@ -114,6 +114,8 @@ typedef enum {				        // feedhold_state machine
 typedef enum {				        // queue flush_state machine
     FLUSH_OFF = 0,				    // no queue flush in effect
     FLUSH_REQUESTED,                // queue flush has been requested but not started yet
+    FLUSH_PLANNER,                  // queue flush can flush the planner queue
+    FLUSH_COMMANDS                  // queue flush can flush the serial command queues
 } cmQueueFlushState;
 
 typedef enum {				        // applies to cm.homing_state
@@ -495,7 +497,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool g30_flag;					    // true = complete a G30 move
 	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
 //	bool feedhold_requested;			// feedhold character has been received
-	bool queue_flush_requested;		    // queue flush character has been received
+//	bool queue_flush_requested;		    // queue flush character has been received
 	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)

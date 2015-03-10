@@ -43,8 +43,8 @@ typedef enum {                          // manages startup lines
     CONTROLLER_CONNECTED,               // has connected to USB (or other comm channel)
     CONTROLLER_STARTUP,                 // is running startup messages and lines
     CONTROLLER_READY,                   // is active and ready for use
-    CONTROLLER_PAUSED,                  // is paused - presumably in preparation for queue flush
-    CONTROLLER_FLUSHING                 // is flushing commands silently to ETX marker
+    CONTROLLER_PAUSED                   // is paused - presumably in preparation for queue flush
+//    CONTROLLER_FLUSHING                 // is flushing commands silently to ETX marker
 } csControllerState;
 
 typedef struct controllerSingleton {	// main TG controller struct

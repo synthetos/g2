@@ -1335,7 +1335,8 @@ void cm_request_queue_flush()
 
     // don't honor the request unless you are in a feedhold
     if (cm.hold_state != FEEDHOLD_OFF) {
-        cm.queue_flush_requested = true;
+        cm.flush_state = FLUSH_REQUESTED;
+//        cm.queue_flush_requested = true;
         cm_queue_flush();                   // attempt to run this right now
     }
 }
@@ -1354,10 +1355,12 @@ stat_t cm_feedhold_sequencing_callback()
 		}
 //		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
 	}
-	if (cm.queue_flush_requested == true) {
+//	if (cm.queue_flush_requested == true) {
+	if (cm.flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
-	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
+	if ((cm.end_hold_requested == true) && (cm.flush_state == FLUSH_OFF)) {
+//	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD) {
 			cm.end_hold_requested = false;
         } else if(cm.hold_state == FEEDHOLD_HOLD) {
@@ -1366,7 +1369,7 @@ stat_t cm_feedhold_sequencing_callback()
 	}
     // safety dance. This is supposed to happen in the plan_exec feedhold processing
     if (cm.hold_state == FEEDHOLD_HOLD) {
-        if ( cs.controller_state == CONTROLLER_PAUSED) {
+        if (cs.controller_state == CONTROLLER_PAUSED) {
             cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
         }
     }
@@ -1435,8 +1438,10 @@ stat_t cm_queue_flush()
         return (STAT_COMMAND_NOT_ACCEPTED);     // can't flush during movement
     }
     mp_flush_planner();
-    cm.queue_flush_requested = false;
-    cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
+    cm.flush_state = FLUSH_COMMANDS;
+//    cm.queue_flush_requested = false;
+//    cs.controller_state = CONTROLLER_READY;     // restart the controller
+//    cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
         cm_set_position(axis, mp_get_runtime_absolute_position(axis));
@@ -1449,6 +1454,7 @@ void cm_end_queue_flush()
 	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
     	cm_end_hold();
 	}
+    cm.flush_state = FLUSH_OFF;
 	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
 }
 
@@ -1589,8 +1595,9 @@ stat_t cm_start_estop(void)
     mp_flush_planner();
     float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
     _exec_program_finalize(value, value);	// finalize now, not later
-    cm.queue_flush_requested = cm.end_hold_requested = false;
     cm.hold_state = FEEDHOLD_OFF;
+    cm.flush_state = FLUSH_OFF;
+    cm.end_hold_requested = false;
     return (STAT_OK);
 }
 

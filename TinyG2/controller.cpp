@@ -282,10 +282,11 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
-    if (cs.controller_state == CONTROLLER_FLUSHING) {
+//    if (cs.controller_state == CONTROLLER_FLUSHING) {
+    if (cm.flush_state == FLUSH_COMMANDS) {
         if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
             cm_end_queue_flush();
-            cs.controller_state = CONTROLLER_READY;         // restore the controller
+//            cs.controller_state = CONTROLLER_READY;         // restore the controller
         }
         return;                                             // silently dump the command
     }
