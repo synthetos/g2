@@ -1220,38 +1220,30 @@ void cm_message(char_t *message)
  * Feedhold and Related Functions (no NIST ref) *
  ************************************************/
 /*
- * cm_request_feedhold()
- * cm_request_end_hold()
- * cm_request_queue_flush()
- * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
- */
-/*
- * Feedhold requests and sequencing:
- *
- * Feedholds, queue flushes and cycle starts are all related. The request functions set flags.
- * The sequencing callback interprets the flags according to the following rules:
+ * Feedholds, queue flushes and end_holds are all related. The request functions set flags
+ * or change state to "REQUESTED". The sequencing callback interprets the flags as so:
  *
  *    - A feedhold request received during motion should be honored
- *    - A feedhold request received during a feedhold should be ignored and reset the flag
- *    - A feedhold request received during a motion stop should be ignored and reset flag
+ *    - A feedhold request received during a feedhold should be ignored
+ *    - A feedhold request received during a motion stop should be ignored
  *
- *    - A queue flush request received during motion should be ignored but not reset
+ *    - A queue flush request should only be honored while in a feedhold
  *    - A queue flush request received during a feedhold should be deferred until
- *      the feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *      the feedhold enters a HOLD state (i.e. until deceleration is complete and motors stop).
  *    - A queue flush request received during a motion stop should be honored
  *
- *    - A cycle start request received during motion should be ignored and reset the flag
- *    - A cycle start request received during a feedhold should be deferred until the
+ *    - An end_hold (cycle start) request received during motion should be ignored
+ *    - An end_hold request received during a feedhold should be deferred until the
  *      feedhold enters a HOLD state (i.e. until deceleration is complete).
  *      If a queue flush request is also present the queue flush should be done first
- *    - A cycle start request received during a motion stop should be honored and
+ *    - An end_hold request received during a motion stop should be honored and
  *      should start to run anything in the planner queue
  *
  *	Below the request level, feedholds work like this:
  *
- *    - The hold is initiated by calling cm_start_hold(). If cm.hold_state == FEEDHOLD_OFF
- *      and motion_state is MOTION_RUN it sets hold_state = FEEDHOLD_SYNC and motion_state
- *      = MOTION_HOLD. The spindle is turned off if it it on. The remainder of feedhold
+ *    - The hold is initiated by calling cm_start_hold(). cm.hold_state is set to
+ *      FEEDHOLD_SYNC, motion_state is set to MOTION_HOLD, and the spindle is turned off 
+ *      (if it it on). The remainder of feedhold
  *      processing occurs in plan_exec.c in the mp_exec_aline() function.
  *
  *	  - MOTION_HOLD and FEEDHOLD_SYNC tells mp_exec_aline() to begin feedhold processing
@@ -1306,18 +1298,18 @@ void cm_message(char_t *message)
  *    to ensure that it either arrives on the data channel or that the data channel is
  *    empty before writing it to the control channel.
  */
+/*
+ * cm_request_feedhold()
+ * cm_request_end_hold() - cycle restart
+ * cm_request_queue_flush()
+ */
 void cm_request_feedhold(void) {
     if(cm.estop_state) return;
 
-    // only accept a request if you are not already in a feedhold
-    if (cm.hold_state == FEEDHOLD_OFF) {
+    if (cm.hold_state == FEEDHOLD_OFF) {    // only honor request if not already in a feedhold
         cm.hold_state = FEEDHOLD_REQUESTED;
         cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
     }
-//    if (!cm.feedhold_requested && (cm.hold_state == FEEDHOLD_OFF)) {
-//        cm.feedhold_requested = true;
-//        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
-//    }
 }
 
 void cm_request_end_hold(void)
@@ -1333,10 +1325,8 @@ void cm_request_queue_flush()
 {
     if(cm.estop_state) return;
 
-    // don't honor the request unless you are in a feedhold
-    if (cm.hold_state != FEEDHOLD_OFF) {
+    if (cm.hold_state != FEEDHOLD_OFF) {    // don't honor request unless you are in a feedhold
         cm.flush_state = FLUSH_REQUESTED;
-//        cm.queue_flush_requested = true;
         cm_queue_flush();                   // attempt to run this right now
     }
 }
@@ -1350,17 +1340,15 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.hold_state == FEEDHOLD_REQUESTED) {
 		if (mp_has_runnable_buffer()) {     // meaning there is something running
 			cm_start_hold();
-		} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
+		} else {
+//        if(cm.gm.spindle_mode != SPINDLE_OFF) {
 			cm_spindle_control_immediate(SPINDLE_OFF);
 		}
-//		cm.feedhold_requested = false;      // this should follow setting FEEDHOLD state so as to overlap to avoid race conditions
 	}
-//	if (cm.queue_flush_requested == true) {
 	if (cm.flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
 	if ((cm.end_hold_requested == true) && (cm.flush_state == FLUSH_OFF)) {
-//	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD) {
 			cm.end_hold_requested = false;
         } else if(cm.hold_state == FEEDHOLD_HOLD) {
@@ -1386,26 +1374,22 @@ bool cm_is_holding()
     return (cm.hold_state != FEEDHOLD_OFF);
 }
 
-stat_t cm_start_hold()
+void cm_start_hold()
 {
 //    if(cm.gm.spindle_mode != SPINDLE_OFF) {
-//        cm_spindle_control_immediate(SPINDLE_OFF);
+    cm_spindle_control_immediate(SPINDLE_OFF);
 //    }
 	cm_set_motion_state(MOTION_HOLD);
-	cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
-	return (STAT_OK);
+	cm.hold_state = FEEDHOLD_SYNC;	    // invokes hold from aline execution
 }
 
-stat_t cm_end_hold()
+void cm_end_hold()
 {
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
-		return (STAT_EAGAIN);
+		return;
 
     cm.end_hold_requested = false;
 	mp_exit_hold_state();
-//    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//        cm_set_position(axis, cm_get_absolute_position(RUNTIME, axis));  // set mm from mr
-//    }
 
     // State machine cases:
     if (cm.machine_state == MACHINE_ALARM) {
@@ -1425,28 +1409,22 @@ stat_t cm_end_hold()
 		}
         st_request_exec_move();
     }
-	return (STAT_OK);
 }
 
 /*
  * cm_queue_flush() - Flush planner queue and correct model positions
  * cm_end_queue_flush() - end flush when marker is hit
  */
-stat_t cm_queue_flush()
+void cm_queue_flush()
 {
-	if (cm_get_runtime_busy() == true) {
-        return (STAT_COMMAND_NOT_ACCEPTED);     // can't flush during movement
-    }
-    mp_flush_planner();
-    cm.flush_state = FLUSH_COMMANDS;
-//    cm.queue_flush_requested = false;
-//    cs.controller_state = CONTROLLER_READY;     // restart the controller
-//    cs.controller_state = CONTROLLER_FLUSHING;  // allow the controller to now flush serial buffers
+	if (mp_runtime_is_idle()) {                 // can't flush during movement
+        mp_flush_planner();
+        cm.flush_state = FLUSH_COMMANDS;        // initiate command flush
 
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
-        cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
+            cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+        }
     }
-    return (STAT_OK);
 }
 
 void cm_end_queue_flush()

@@ -265,7 +265,7 @@ typedef enum {				        // spindle state settings (See hardware.h for bit sett
 	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
 } cmSpindleState;
 
-typedef enum {				// mist and flood coolant states
+typedef enum {                      // mist and flood coolant states
 	COOLANT_OFF = 0,				// all coolant off
 	COOLANT_ON,						// request coolant on or indicates both coolants are on
 	COOLANT_MIST,					// indicates mist coolant on
@@ -343,6 +343,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+    bool spindle_paused;                // true if spindle is paused
 
 } GCodeState_t;
 
@@ -643,14 +644,14 @@ void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 void cm_request_feedhold(void);
 void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
-void cm_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
-stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
-// feedholds
 bool cm_is_holding(void);
-stat_t cm_start_hold(void);
-stat_t cm_end_hold(void);
+void cm_start_hold(void);
+void cm_end_hold(void);
+
+void cm_queue_flush(void);									    // flush serial and planner queues with coordinate resets
+void cm_end_queue_flush(void);
 
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
