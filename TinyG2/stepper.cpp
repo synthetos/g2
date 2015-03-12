@@ -332,12 +332,13 @@ stat_t stepper_test_assertions()
  *	- dwell is running
  */
 
-uint8_t st_runtime_isbusy()
+bool st_runtime_isbusy()
 {
-	if (st_run.dda_ticks_downcount == 0) {
-		return (false);
-	}
-	return (true);
+    return (st_run.dda_ticks_downcount);    // returns false if downcount is zero
+//	if (st_run.dda_ticks_downcount == 0) {
+//		return (false);
+//	}
+//	return (true);
 }
 
 /*
@@ -348,7 +349,7 @@ uint8_t st_runtime_isbusy()
  * - we are currently running a segment (motors or dwell), after which we will request an exec interrupt
  */
 
-uint8_t st_exec_isbusy()
+bool st_exec_isbusy()
 {
     return (st_pre.exec_isbusy != 0);
 }

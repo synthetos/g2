@@ -307,12 +307,10 @@ static void _dispatch_kernel()
         cs.bufp++;
     }
 
-//    if (cs.controller_state == CONTROLLER_FLUSHING) {
     if (cm.flush_state == FLUSH_COMMANDS) {
-        if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
-//        if (*cs.bufp == ETX) {  // +++ will also need a condition to parse the line for a clear, e.g. cs_is_clear()
+//        if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
+        if (*cs.bufp == ETX) {
             cm_end_queue_flush();
-//            cs.controller_state = CONTROLLER_READY;         // restore the controller
         }
         return;                                             // silently dump the command
     }
@@ -331,7 +329,6 @@ static void _dispatch_kernel()
     }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
-//    else if (*cs.bufp == ETX) { cm_end_queue_flush(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
     else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
 

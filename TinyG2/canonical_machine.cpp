@@ -1242,7 +1242,7 @@ void cm_message(char_t *message)
  *	Below the request level, feedholds work like this:
  *
  *    - The hold is initiated by calling cm_start_hold(). cm.hold_state is set to
- *      FEEDHOLD_SYNC, motion_state is set to MOTION_HOLD, and the spindle is turned off 
+ *      FEEDHOLD_SYNC, motion_state is set to MOTION_HOLD, and the spindle is turned off
  *      (if it it on). The remainder of feedhold
  *      processing occurs in plan_exec.c in the mp_exec_aline() function.
  *
@@ -1340,8 +1340,7 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.hold_state == FEEDHOLD_REQUESTED) {
 		if (mp_has_runnable_buffer()) {     // meaning there is something running
 			cm_start_hold();
-		} else {
-//        if(cm.gm.spindle_mode != SPINDLE_OFF) {
+		} else if (cm.gm.spindle_mode != SPINDLE_OFF) {
 			cm_spindle_control_immediate(SPINDLE_OFF);
 		}
 	}
@@ -1376,9 +1375,9 @@ bool cm_is_holding()
 
 void cm_start_hold()
 {
-//    if(cm.gm.spindle_mode != SPINDLE_OFF) {
-    cm_spindle_control_immediate(SPINDLE_OFF);
-//    }
+    if(cm.gm.spindle_mode != SPINDLE_OFF) {
+        cm_spindle_control_immediate(SPINDLE_OFF);
+    }
 	cm_set_motion_state(MOTION_HOLD);
 	cm.hold_state = FEEDHOLD_SYNC;	    // invokes hold from aline execution
 }
@@ -1497,7 +1496,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
-    
+
     // reset the rest of the states
     cm.cycle_state = CYCLE_OFF;
     cm.hold_state = FEEDHOLD_OFF;

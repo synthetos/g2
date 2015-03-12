@@ -2,8 +2,8 @@
  * stepper.h - stepper motor interface
  * This file is part of TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -420,8 +420,8 @@ void stepper_init(void);
 void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
-uint8_t st_runtime_isbusy(void);
-uint8_t st_exec_isbusy(void);
+bool st_runtime_isbusy(void);
+bool st_exec_isbusy(void);
 void st_reset(void);
 stat_t st_clc(nvObj_t *nv);
 
