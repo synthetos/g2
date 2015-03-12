@@ -29,7 +29,6 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "planner.h"
-//#include "controller.h" //++++
 #include "kinematics.h"
 #include "stepper.h"
 #include "encoder.h"
@@ -173,10 +172,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;
-
             mb.needs_time_accounting = true;
             mp_planner_time_accounting();
-
             st_prep_null();								// call this to keep the loader happy
 
 	        // free buffer & end cycle if planner is empty

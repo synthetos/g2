@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.41 // testing queue flush state machine
+#define TINYG_FIRMWARE_BUILD   		079.42 // fixed queue flush MR restart under certain conditions
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

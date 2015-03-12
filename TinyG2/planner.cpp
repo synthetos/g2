@@ -143,6 +143,7 @@ void mp_flush_planner()
 {
 	cm_abort_arc();
 	mp_init_buffers();
+    mr.move_state = MOVE_OFF;   // invalidate mr buffer to prevent subsequenc motion
 }
 
 /*
