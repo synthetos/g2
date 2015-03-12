@@ -1228,16 +1228,14 @@ void cm_message(char_t *message)
  *    - A feedhold request received during a motion stop should be ignored
  *
  *    - A queue flush request should only be honored while in a feedhold
- *    - A queue flush request received during a feedhold should be deferred until
+ *    - Said queue flush request received during a feedhold should be deferred until
  *      the feedhold enters a HOLD state (i.e. until deceleration is complete and motors stop).
  *    - A queue flush request received during a motion stop should be honored
  *
- *    - An end_hold (cycle start) request received during motion should be ignored
- *    - An end_hold request received during a feedhold should be deferred until the
+ *    - An end_hold (cycle start) request should only be honored while in a feedhold
+ *    - Said end_hold request received during a feedhold should be deferred until the
  *      feedhold enters a HOLD state (i.e. until deceleration is complete).
  *      If a queue flush request is also present the queue flush should be done first
- *    - An end_hold request received during a motion stop should be honored and
- *      should start to run anything in the planner queue
  *
  *	Below the request level, feedholds work like this:
  *
@@ -1315,7 +1313,10 @@ void cm_request_feedhold(void) {
 void cm_request_end_hold(void)
 {
     if(cm.estop_state) return;
-    cm.end_hold_requested = true;
+
+//    if (cm.hold_state != FEEDHOLD_OFF) {
+        cm.end_hold_requested = true;
+//    }
 }
 
 /*

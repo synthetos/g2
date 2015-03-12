@@ -195,7 +195,10 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 }
 
                 // trap other special characters
-                if ((c == '!') || (c == '~') || (c == EOT) || (c == CAN)) {
+                if ((c == '!') ||                       // request feedhold
+                    (c == '~') ||                       // request end feedhold
+                    (c == EOT) ||                       // request job kill (end of transmission)
+                    (c == CAN)) {                       // reset (aka cancel, terminate)
                     single_char_buffer[0] = c;
                     size = 1;
                     return single_char_buffer;
