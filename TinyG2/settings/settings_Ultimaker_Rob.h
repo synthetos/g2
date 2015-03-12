@@ -43,6 +43,16 @@
 
 #define JUNCTION_DEVIATION		0.01		// default value, in mm
 #define JUNCTION_ACCELERATION 	400000		// centripetal acceleration around corners
+#define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
+#define SOFT_LIMIT_ENABLE           0                       // 0 = off, 1 = on
+#define HARD_LIMIT_ENABLE           1                       // 0 = off, 1 = on
+#define PAUSE_DWELL_TIME            0.0
+
+#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+
+#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
+#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
 #ifndef PI
 #define PI 3.14159628

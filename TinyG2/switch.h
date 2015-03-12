@@ -112,6 +112,7 @@ extern switches_t sw;
 /*
  * Function prototypes
  */
+
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);

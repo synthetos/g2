@@ -371,7 +371,7 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 
 static stat_t _homing_axis_search(int8_t axis)				// start the search
 {
-	cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);			// use the homing jerk for search onward
+	cm_set_axis_jerk(axis, cm.a[axis].jerk_high);			// use the high-speed jerk for search onward
 	_homing_axis_move(axis, hm.search_travel, hm.search_velocity);
 //	printf("started homing axis search\n");	//++++
 	return (_set_homing_func(_homing_axis_latch));
@@ -421,7 +421,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
 	mp_flush_planner();										// don't use cm_request_queue_flush() here
-	if(cm.hold_state == FEEDHOLD_HOLD)
+	if (cm.hold_state == FEEDHOLD_HOLD)
 		cm_end_hold();
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
@@ -472,7 +472,7 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
 	mp_flush_planner(); 									// should be stopped, but in case of switch feedhold.
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system

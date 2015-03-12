@@ -80,17 +80,24 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 }
 
 /*
- * cm_spindle_control_immediate()   - turn off spindle w/o planning
- * cm_spindle_control()             - queue the spindle command to the planner buffer
- * cm_exec_spindle_control()        - execute the spindle command (called from planner)
+ * cm_spindle_control_immediate() - turn on/off spindle w/o planning
+ * Turns spindle OFF, CW or CCW without planning. Ignores PAUSED bit
  */
 
 stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
 {
-    float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
-    _exec_spindle_control(value, value);
+//    spindle_mode &= ~SPINDLE_PAUSED;            // remove the pause bit
+//    if (spindle_mode != cm.gm.spindle_mode) {   // if it's already there, skip it
+        float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+        _exec_spindle_control(value, value);
+ //   }
     return (STAT_OK);
 }
+
+/*
+ * cm_spindle_control() - queue the spindle command to the planner buffer. Observe PAUSE
+ * cm_exec_spindle_control() - execute the spindle command (called from planner)
+ */
 
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
@@ -98,9 +105,9 @@ stat_t cm_spindle_control(uint8_t spindle_mode)
 		spindle_mode |= SPINDLE_PAUSED;
 
 	// This is kind of tricky...  If we're in interlock but still moving around, and we get an
-	// M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's anything
-	// in the buffer to actually process the feedhold.  Here, we're just about to add something to the buffer,
-	// so we skip the check.
+	// M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's
+    // anything in the buffer to actually process the feedhold.  Here, we're just about to add
+    // something to the buffer, so we skip the check.
 	if(cm.interlock_state != 0 && !(spindle_mode & SPINDLE_PAUSED) && spindle_mode != SPINDLE_OFF)
 		cm_start_hold();
 

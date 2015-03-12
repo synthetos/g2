@@ -138,7 +138,7 @@ static stat_t _set_jogging_func(stat_t (*func)(int8_t axis))
 static stat_t _jogging_axis_start(int8_t axis)
 {
 	mp_flush_planner();
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 	return (_set_jogging_func(_jogging_axis_ramp_jog));
 }
@@ -184,7 +184,7 @@ static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 {
 	mp_flush_planner();
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
  	cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system

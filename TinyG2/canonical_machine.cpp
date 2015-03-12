@@ -99,7 +99,7 @@
 #include "encoder.h"
 #include "spindle.h"
 #include "report.h"
-//#include "gpio.h"
+#include "gpio.h"
 #include "switch.h"
 #include "hardware.h"
 #include "util.h"
@@ -147,28 +147,26 @@ static int8_t _get_axis_type(const index_t index);
  */
 uint8_t cm_get_combined_state()
 {
+/*
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs1");  // "machine is in cycle but macs is not cycle"
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs1");  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs2");  // "machine is in motion but macs is not cycle"
-
-    switch(cm.machine_state)
-    {
+        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2");  // "machine is in motion but macs is not cycle"
+*/
+    switch(cm.machine_state) {
         case MACHINE_INITIALIZING: return (COMBINED_INITIALIZING);
         case MACHINE_READY: return (COMBINED_READY);
         case MACHINE_ALARM: return (COMBINED_ALARM);
-        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
         case MACHINE_PROGRAM_STOP: return (COMBINED_PROGRAM_STOP);
         case MACHINE_PROGRAM_END: return (COMBINED_PROGRAM_END);
+        case MACHINE_SHUTDOWN: return (COMBINED_SHUTDOWN);
         case MACHINE_CYCLE: {
-            switch(cm.cycle_state)
-            {
+            switch(cm.cycle_state) {
                 case CYCLE_PROBE: return (COMBINED_PROBE);
                 case CYCLE_JOG: return (COMBINED_JOG);
                 case CYCLE_HOMING: return (COMBINED_HOMING);
                 case CYCLE_MACHINING: case CYCLE_OFF: {
-                    switch(cm.motion_state)
-                    {
+                    switch(cm.motion_state) {
                         case MOTION_HOLD: return (COMBINED_HOLD);
                         case MOTION_PLANNING: return (COMBINED_RUN);
                         case MOTION_RUN: return (COMBINED_RUN);
@@ -177,19 +175,22 @@ uint8_t cm_get_combined_state()
                             //    until the command is executed by mp_exec_aline... so this assert isn't valid
                             //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
                             return (COMBINED_RUN);
-                        default:
-                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs3");  // "mots has impossible value"
+                        default: {
+                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs3");  // "mots has impossible value"
                             return (COMBINED_SHUTDOWN);
+                        }
                     }
                 }
-                default:
-                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs4");  // "cycs has impossible value"
+                default: {
+                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs4");  // "cycs has impossible value"
                     return (COMBINED_SHUTDOWN);
+                }
             }
         }
-        default:
-            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, (char_t *)"gcs5"); // "macs has impossible value"
+        default: {
+            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs5"); // "macs has impossible value"
             return (COMBINED_SHUTDOWN);
+        }
     }
 }
 
@@ -199,7 +200,8 @@ uint8_t cm_get_motion_state() { return cm.motion_state;}
 uint8_t cm_get_hold_state() { return cm.hold_state;}
 uint8_t cm_get_homing_state() { return cm.homing_state;}
 
-void cm_set_motion_state(uint8_t motion_state)
+//void cm_set_motion_state(uint8_t motion_state)
+void cm_set_motion_state(cmMotionState motion_state)
 {
 	cm.motion_state = motion_state;
 
@@ -508,7 +510,7 @@ static stat_t _finalize_soft_limits(stat_t status)
 {
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
 	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_soft_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
+	return (cm_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -544,13 +546,15 @@ stat_t cm_test_soft_limits(float target[])
  * Initialization and Termination (4.3.2) *
  ******************************************/
 /*
- * canonical_machine_init() - Config init cfg_init() must have been run beforehand
+ * canonical_machine_init()  - initialize cm struct
+ * canonical_machine_reset() - apply startup settings or reset to startup
+ *                             run profile initialization beforehand
  */
 
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-//	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
+	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
 	memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
 	memset(&cm.gn, 0, sizeof(GCodeInput_t));
 	memset(&cm.gf, 0, sizeof(GCodeInput_t));
@@ -558,6 +562,13 @@ void canonical_machine_init()
 	canonical_machine_init_assertions();		// establish assertions
 	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
 
+	// sub-system inits
+	cm_spindle_init();
+	cm_arc_init();
+}
+
+void canonical_machine_reset()
+{
 	// set gcode defaults
 	cm_set_units_mode(cm.units_mode);
 	cm_set_coord_system(cm.coord_system);
@@ -566,26 +577,24 @@ void canonical_machine_init()
 	cm_set_distance_mode(cm.distance_mode);
 	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
 
-	cm.gmx.block_delete_switch = true;
-
-	// never start a machine in a motion mode
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-
+/*
 	// reset request flags
 	cm.feedhold_requested = false;
 	cm.queue_flush_requested = false;
 	cm.end_hold_requested = false;
+    cm.limit_requested = false;                 // resets switch closures that occurred during initialization
+    cm.interlock_requested = false;             // ditto
+    cm.shutdown_requested = false;              // ditto
 
-	// signal that the machine is ready for action
+	// set initial state and signal that the machine is ready for action
+    cm.cycle_state = CYCLE_OFF;
+    cm.motion_state = MOTION_STOP;
+    cm.hold_state = FEEDHOLD_OFF;
+	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
+*/
+	cm.gmx.block_delete_switch = true;
+	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
 	cm.machine_state = MACHINE_READY;
-
-	cm.interlock_state = cm.estop_state = 0;
-
-	cm.ignored_gcodes = 0;
-
-	// sub-system inits
-	cm_spindle_init();
-	cm_arc_init();
 }
 
 /*
@@ -612,51 +621,51 @@ stat_t canonical_machine_test_assertions(void)
 }
 
 /*
- * cm_soft_alarm() - alarm state; send an exception report and stop processing input
- * cm_clear() 	   - clear soft alarm
- * cm_hard_alarm() - alarm state; send an exception report and shut down machine
+ * cm_alarm()    - alarm state; send an exception report and stop processing input
+ * cm_clear()    - clear alarm state
+ * cm_shutdown() - shutdown state; send an exception report and shut down machine
+ *
+ * Note: An alarm state can be exited by a clear.
+ *       A shutdown state can only be recovered by a system reset.
  */
-
-stat_t cm_soft_alarm(stat_t status, const char *msg)
+stat_t cm_alarm(stat_t status, const char *msg)
 {
-	rpt_exception(status, (char_t *)"msg");	// send alarm message
+    if (cm.machine_state == MACHINE_ALARM) { // don't alarm if already in an alarm state
+        return (STAT_NOOP);
+    }
 	cm.machine_state = MACHINE_ALARM;
-	return (status);						// NB: More efficient than inlining rpt_exception() call.
+    cm_request_feedhold();                  // ++++ experimental
+    cm_request_queue_flush();               // do a queue flush once runtime is not busy
+	cm_spindle_control(SPINDLE_OFF);
+	rpt_exception(status, msg);	            // send alarm message
+    return (status);
 }
 
-stat_t cm_clear(nvObj_t *nv)				// clear soft alarm
+stat_t cm_clear(nvObj_t *nv)                // clear alarm condition
 {
-	if (cm.cycle_state == CYCLE_OFF) {
-		cm.machine_state = MACHINE_PROGRAM_STOP;
-	} else {
-		cm.machine_state = MACHINE_CYCLE;
-	}
+    if (cm.machine_state == MACHINE_ALARM) {
+	    cm.machine_state = MACHINE_PROGRAM_STOP;
+    }
 	return (STAT_OK);
 }
 
-stat_t cm_hard_alarm(stat_t status, const char *msg)
+stat_t cm_shutdown(stat_t status, const char *msg)
 {
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
 	cm_spindle_control(SPINDLE_OFF);
 
-	// disable all MCode functions
-//	gpio_set_bit_off(SPINDLE_BIT);			//++++ this current stuff is temporary
-//	gpio_set_bit_off(SPINDLE_DIR);
-//	gpio_set_bit_off(SPINDLE_PWM);
-//	gpio_set_bit_off(MIST_COOLANT_BIT);		//++++ replace with exec function
-//	gpio_set_bit_off(FLOOD_COOLANT_BIT);	//++++ replace with exec function
-
-	// build an info string and call the exception report
-	char_t info[64];
+	// build a secondary message string (info) and call the exception report
+	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+//		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+//		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
-
 	cm.machine_state = MACHINE_SHUTDOWN;
 	return (status);
 }
@@ -1211,41 +1220,30 @@ void cm_message(char_t *message)
  * Feedhold and Related Functions (no NIST ref) *
  ************************************************/
 /*
- * cm_request_feedhold()
- * cm_request_queue_flush()
- * cm_request_end_hold()
- * cm_feedhold_sequencing_callback() - process feedholds, cycle starts & queue flushes
- * cm_start_hold()
- * cm_end_hold()
- * cm_flush_planner() - Flush planner queue and correct model positions
- */
-/*
- * Feedhold requests and sequencing:
- *
- * Feedholds, queue flushes and cycle starts are all related. The request functions set flags.
- * The sequencing callback interprets the flags according to the following rules:
+ * Feedholds, queue flushes and end_holds are all related. The request functions set flags
+ * or change state to "REQUESTED". The sequencing callback interprets the flags as so:
  *
  *    - A feedhold request received during motion should be honored
- *    - A feedhold request received during a feedhold should be ignored and reset the flag
- *    - A feedhold request received during a motion stop should be ignored and reset flag
+ *    - A feedhold request received during a feedhold should be ignored
+ *    - A feedhold request received during a motion stop should be ignored
  *
- *    - A queue flush request received during motion should be ignored but not reset
+ *    - A queue flush request should only be honored while in a feedhold
  *    - A queue flush request received during a feedhold should be deferred until
- *      the feedhold enters a HOLD state (i.e. until deceleration is complete).
+ *      the feedhold enters a HOLD state (i.e. until deceleration is complete and motors stop).
  *    - A queue flush request received during a motion stop should be honored
  *
- *    - A cycle start request received during motion should be ignored and reset the flag
- *    - A cycle start request received during a feedhold should be deferred until the
+ *    - An end_hold (cycle start) request received during motion should be ignored
+ *    - An end_hold request received during a feedhold should be deferred until the
  *      feedhold enters a HOLD state (i.e. until deceleration is complete).
  *      If a queue flush request is also present the queue flush should be done first
- *    - A cycle start request received during a motion stop should be honored and
+ *    - An end_hold request received during a motion stop should be honored and
  *      should start to run anything in the planner queue
  *
  *	Below the request level, feedholds work like this:
  *
- *    - The hold is initiated by calling cm_start_hold(). If cm.hold_state == FEEDHOLD_OFF
- *      and motion_state is MOTION_RUN it sets hold_state = FEEDHOLD_SYNC and motion_state
- *      = MOTION_HOLD. The spindle is turned off if it it on. The remainder of feedhold
+ *    - The hold is initiated by calling cm_start_hold(). cm.hold_state is set to
+ *      FEEDHOLD_SYNC, motion_state is set to MOTION_HOLD, and the spindle is turned off
+ *      (if it it on). The remainder of feedhold
  *      processing occurs in plan_exec.c in the mp_exec_aline() function.
  *
  *	  - MOTION_HOLD and FEEDHOLD_SYNC tells mp_exec_aline() to begin feedhold processing
@@ -1265,104 +1263,176 @@ void cm_message(char_t *message)
  *    - When cm_end_hold() is called it releases the hold, restarts the move and restarts
  *      the spindle if the spindle is active.
  */
-void cm_request_feedhold(void) { if(cm.estop_state == 0) cm.feedhold_requested = true; }
-void cm_request_queue_flush(void) { if(cm.estop_state == 0) cm.queue_flush_requested = true; }
-void cm_request_end_hold(void) { if(cm.estop_state == 0) cm.end_hold_requested = true; }
+/* Queue Flush operation
+ *
+ * This one's complicated. See here first:
+ * https://github.com/synthetos/g2/wiki/Alarm-Processing
+ * https://github.com/synthetos/g2/wiki/Job-Exception-Handling
+ *
+ * We want to use queue flush for a few different use cases, as per the above wiki pages.
+ * The % behavior implements Exception Handling cases 1 and 2 - Stop a Single Move and
+ * Stop Multiple Moves. This is complicated further by the processing in single USB and
+ * dual USB being different. Also, the state handling is located in xio.cpp / readline(),
+ * controller.cpp _dispatch_kernel() and cm_request_queue_flush(), below.
+ * So it's documented here.
+ *
+ * Single or Dual USB Channels:
+ *  - If a % is received outside of a feed hold or ALARM state, ignore it.
+ *      Change the % to a ; comment symbol (xio)
+ *
+ * Single USB Channel Operation:
+ *  - Enter a feedhold (!)
+ *  - Receive a queue flush (%) Both dispatch it and store a marker (ACK) in the input
+ *      buffer in place of the the % (xio)
+ *  - Execute the feedhold to a hold condition (plan_exec)
+ *  - Execute the dispatched % to flush queues (canonical_machine)
+ *  - Silently reject any commands up to the % in the input queue (controller)
+ *  - When ETX is encountered transition to STOP state (controller/canonical_machine)
+ *
+ * Dual USB Channel Operation:
+ *  - Same as above except that we expect the % to arrive on the control channel
+ *  - The system will read and dump all commands in the data channel until either a
+ *    clear is encountered ({clear:n} or $clear), or an ETX is encountered on either
+ *    channel, but it really should be on the data channel to ensure all queued commands
+ *    are dumped. It is the host's responsibility to both write the clear (or ETX), and
+ *    to ensure that it either arrives on the data channel or that the data channel is
+ *    empty before writing it to the control channel.
+ */
+/*
+ * cm_request_feedhold()
+ * cm_request_end_hold() - cycle restart
+ * cm_request_queue_flush()
+ */
+void cm_request_feedhold(void) {
+    if(cm.estop_state) return;
 
+    if (cm.hold_state == FEEDHOLD_OFF) {    // only honor request if not already in a feedhold
+        cm.hold_state = FEEDHOLD_REQUESTED;
+        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
+    }
+}
+
+void cm_request_end_hold(void)
+{
+    if(cm.estop_state) return;
+    cm.end_hold_requested = true;
+}
+
+/*
+ * cm_request_queue_flush()
+ */
+void cm_request_queue_flush()
+{
+    if(cm.estop_state) return;
+
+    if (cm.hold_state != FEEDHOLD_OFF) {    // don't honor request unless you are in a feedhold
+        cm.flush_state = FLUSH_REQUESTED;
+        cm_queue_flush();                   // attempt to run this right now
+    }
+}
+
+/*
+ * cm_feedhold_sequencing_callback()
+ */
 stat_t cm_feedhold_sequencing_callback()
 {
-	if (cm.feedhold_requested == true) {
-		cm.feedhold_requested = false;
-		if(cm.hold_state == FEEDHOLD_OFF) {
-			if (mp_has_runnable_buffer()) {  // meaning there is something running
-				cm_start_hold();
-			} else if(cm.gm.spindle_mode != SPINDLE_OFF) {
-				cm_spindle_control_immediate(SPINDLE_OFF);
-			}
+    // sequence feedhold, queue_flush, and end_hold requests
+	if (cm.hold_state == FEEDHOLD_REQUESTED) {
+		if (mp_has_runnable_buffer()) {     // meaning there is something running
+			cm_start_hold();
+		} else if (cm.gm.spindle_mode != SPINDLE_OFF) {
+			cm_spindle_control_immediate(SPINDLE_OFF);
 		}
 	}
-	if (cm.queue_flush_requested == true) {
-        cm.queue_flush_requested = false;
-
-        if (((cm.motion_state == MOTION_HOLD) && (cm.hold_state == FEEDHOLD_HOLD)) &&
-			 !cm_get_runtime_busy()) {
-			cm_queue_flush();
-            cm_soft_alarm(STAT_MACHINE_ALARMED, NULL);
-		}
+	if (cm.flush_state == FLUSH_REQUESTED) {
+        cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
-	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
-		if(cm.motion_state != MOTION_HOLD)
+	if ((cm.end_hold_requested == true) && (cm.flush_state == FLUSH_OFF)) {
+		if(cm.motion_state != MOTION_HOLD) {
 			cm.end_hold_requested = false;
-		else if(cm.hold_state == FEEDHOLD_HOLD) {
-			cm.end_hold_requested = false;
+        } else if(cm.hold_state == FEEDHOLD_HOLD) {
 			cm_end_hold();
 		}
 	}
+    // safety dance. This is supposed to happen in the plan_exec feedhold processing
+    if (cm.hold_state == FEEDHOLD_HOLD) {
+        if (cs.controller_state == CONTROLLER_PAUSED) {
+            cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
+        }
+    }
 	return (STAT_OK);
 }
 
-stat_t cm_start_hold()
+/*
+ * cm_start_hold() - start a feedhhold by signalling the exec
+ * cm_end_hold()   - end a feedhold by returning the system to normal operation
+ * cm_is_holding() - return true if a hold condition exists (or a pending hold request)
+ */
+bool cm_is_holding()
 {
-//    if(cm.gm.spindle_mode != SPINDLE_OFF) {
-//        cm_spindle_control_immediate(SPINDLE_OFF);
-//    }
-	cm_set_motion_state(MOTION_HOLD);
-	cm.hold_state = FEEDHOLD_SYNC;	// invokes hold from aline execution
-	return (STAT_OK);
+    return (cm.hold_state != FEEDHOLD_OFF);
 }
 
-stat_t cm_end_hold()
+void cm_start_hold()
+{
+    if(cm.gm.spindle_mode != SPINDLE_OFF) {
+        cm_spindle_control_immediate(SPINDLE_OFF);
+    }
+	cm_set_motion_state(MOTION_HOLD);
+	cm.hold_state = FEEDHOLD_SYNC;	    // invokes hold from aline execution
+}
+
+void cm_end_hold()
 {
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
-		return (STAT_EAGAIN);
+		return;
 
-	mp_restart_from_hold();
-	if (cm.motion_state == MOTION_RUN || cm.motion_state == MOTION_PLANNING) {
-		cm_cycle_start();
-		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-		} else {
-			cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-			st_request_exec_move();
-		}
-	} else {
+    cm.end_hold_requested = false;
+	mp_exit_hold_state();
+
+    // State machine cases:
+    if (cm.machine_state == MACHINE_ALARM) {
+		cm_spindle_control_immediate(SPINDLE_OFF);
+
+    } else if (cm.motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
 		cm_spindle_control_immediate(SPINDLE_OFF);
 		cm_cycle_end();
-	}
-	return (STAT_OK);
+
+    } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
+		cm_cycle_start();
+		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+    		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+    	} else {
+    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+		}
+        st_request_exec_move();
+    }
 }
 
-stat_t cm_queue_flush()
+/*
+ * cm_queue_flush() - Flush planner queue and correct model positions
+ * cm_end_queue_flush() - end flush when marker is hit
+ */
+void cm_queue_flush()
 {
-	if (cm_get_runtime_busy() == true) { return (STAT_COMMAND_NOT_ACCEPTED);}	// can't flush during movement
+	if (mp_runtime_is_idle()) {                 // can't flush during movement
+        mp_flush_planner();
+        cm.flush_state = FLUSH_COMMANDS;        // initiate command flush
 
-	/*
-	#ifdef __AVR
-		xio_reset_usb_rx_buffers();				// flush serial queues
-	#endif
-	#ifdef __ARM
-		xio_flush_read();
-	#endif
-	 ng*/
-	mp_flush_planner();						// flush planner queue
-	if(cm.hold_state == FEEDHOLD_HOLD)     // end feedhold, if we're in one
-		cm_end_hold();
-	cm.end_hold_requested = false;					// cancel any pending cycle start request
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
+            cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+        }
+    }
+}
 
-	qr_request_queue_report(0);				// request a queue report, since we've changed the number of buffers available
-
-	// Note: The following uses low-level mp calls for absolute position.
-	//		 It could also use cm_get_absolute_position(RUNTIME, axis);
-
-	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		cm_set_position(axis, mp_get_runtime_absolute_position(axis)); // set mm from mr
+void cm_end_queue_flush()
+{
+	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
+    	cm_end_hold();
 	}
-
-	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	// finalize now, not later
-
-	return (STAT_OK);
+    cm.flush_state = FLUSH_OFF;
+	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
 }
 
 /******************************
@@ -1423,9 +1493,13 @@ static void _exec_program_finalize(float *value, float *flag)
 	// Allow update in the alarm state, to accommodate queue flush (RAS)
 	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) /*&&
 	    (cm.machine_state != MACHINE_ALARM)*/ && (cm.machine_state != MACHINE_SHUTDOWN)) {
-		cm.machine_state = (uint8_t)value[0];           // don't update macs/cycs if we're in the middle of a canned cycle,
+		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
+
+    // reset the rest of the states
+    cm.cycle_state = CYCLE_OFF;
+    cm.hold_state = FEEDHOLD_OFF;
 	mp_zero_segment_velocity();							// for reporting purposes
 
 	// perform the following resets if it's a program END
@@ -1488,18 +1562,19 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
-	cm.cycle_state = CYCLE_OFF;
-	for(int i = 0; i < HOMING_AXES; ++i)
-		cm.homed[i] = false;
-	cm.homing_state = HOMING_NOT_HOMED;
+    cm.cycle_state = CYCLE_OFF;
+    for(int i = 0; i < HOMING_AXES; ++i)
+        cm.homed[i] = false;
+    cm.homing_state = HOMING_NOT_HOMED;
 #ifdef __ARM
     xio_flush_read();
 #endif
-	mp_flush_planner();
-	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	// finalize now, not later
-	cm.feedhold_requested = cm.queue_flush_requested = cm.end_hold_requested = false;
-
+    mp_flush_planner();
+    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+    _exec_program_finalize(value, value);	// finalize now, not later
+    cm.hold_state = FEEDHOLD_OFF;
+    cm.flush_state = FLUSH_OFF;
+    cm.end_hold_requested = false;
     return (STAT_OK);
 }
 
@@ -1512,7 +1587,7 @@ stat_t cm_ack_estop(nvObj_t *nv)
 {
 	cm.estop_state &= ~ESTOP_UNACKED;
 	nv->value = (float)cm.estop_state;
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 
@@ -1559,9 +1634,11 @@ static const char msg_stat8[] PROGMEM = "Cycle";
 static const char msg_stat9[] PROGMEM = "Homing";
 static const char msg_stat10[] PROGMEM = "Jog";
 static const char msg_stat11[] PROGMEM = "Shutdown";
+static const char msg_stat12[] PROGMEM = "Interlock";
 static const char *const msg_stat[] PROGMEM = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
 												msg_stat4, msg_stat5, msg_stat6, msg_stat7,
-												msg_stat8, msg_stat9, msg_stat10, msg_stat11 };
+												msg_stat8, msg_stat9, msg_stat10, msg_stat11,
+                                                msg_stat12 };
 
 static const char msg_macs0[] PROGMEM = "Initializing";
 static const char msg_macs1[] PROGMEM = "Ready";
@@ -1570,8 +1647,9 @@ static const char msg_macs3[] PROGMEM = "Stop";
 static const char msg_macs4[] PROGMEM = "End";
 static const char msg_macs5[] PROGMEM = "Cycle";
 static const char msg_macs6[] PROGMEM = "Shutdown";
+static const char msg_macs7[] PROGMEM = "Interlock";
 static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-												msg_macs4, msg_macs5, msg_macs6 };
+												msg_macs4, msg_macs5, msg_macs6, msg_macs7 };
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";
@@ -1581,18 +1659,21 @@ static const char msg_cycs4[] PROGMEM = "Jog";
 static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
 
 static const char msg_mots0[] PROGMEM = "Stop";
-static const char msg_mots1[] PROGMEM = "Run";
-static const char msg_mots2[] PROGMEM = "Hold";
-static const char *const msg_mots[] PROGMEM = { msg_mots0, msg_mots1, msg_mots2 };
+static const char msg_mots1[] PROGMEM = "Planning";
+static const char msg_mots2[] PROGMEM = "Run";
+static const char msg_mots3[] PROGMEM = "Hold";
+static const char *const msg_mots[] PROGMEM = { msg_mots0, msg_mots1, msg_mots2, msg_mots3 };
 
 static const char msg_hold0[] PROGMEM = "Off";
-static const char msg_hold1[] PROGMEM = "Sync";
-static const char msg_hold2[] PROGMEM = "Plan";
-static const char msg_hold3[] PROGMEM = "Decel";
-static const char msg_hold4[] PROGMEM = "Hold";
-static const char msg_hold5[] PROGMEM = "End Hold";
+static const char msg_hold1[] PROGMEM = "Requested";
+static const char msg_hold2[] PROGMEM = "Sync";
+static const char msg_hold3[] PROGMEM = "Decel Continue";
+static const char msg_hold4[] PROGMEM = "Decel to Zero";
+static const char msg_hold5[] PROGMEM = "Decel Done";
+static const char msg_hold6[] PROGMEM = "Pending";
+static const char msg_hold7[] PROGMEM = "Hold";
 static const char *const msg_hold[] PROGMEM = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
-												msg_hold4,  msg_hold5 };
+												msg_hold4, msg_hold5, msg_hold6, msg_hold7 };
 
 static const char msg_home0[] PROGMEM = "Not Homed";
 static const char msg_home1[] PROGMEM = "Homed";
@@ -1666,6 +1747,7 @@ static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2,
 
 #endif // __TEXT_MODE
 
+
 /***** AXIS HELPERS *****************************************************************
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  * _get_axis()		  - return axis number or -1 if NA
@@ -1702,7 +1784,6 @@ static int8_t _get_axis_type(const index_t index)
 	return (0);
 }
 
-
 /**** Functions called directly from cfgArray table - mostly wrappers ****
  * _get_msg_helper() - helper to get string values
  *
@@ -1738,7 +1819,7 @@ static int8_t _get_axis_type(const index_t index)
 stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value)
 {
 	nv->value = (float)value;
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_INT;
 	return(nv_copy_string(nv, (const char_t *)GET_TEXT_ITEM(msg_array, value)));
 }
 
@@ -1763,21 +1844,21 @@ stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_
 stat_t cm_get_toolv(nvObj_t *nv)
 {
 	nv->value = (float)cm_get_tool(ACTIVE_MODEL);
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 
 stat_t cm_get_mline(nvObj_t *nv)
 {
 	nv->value = (float)cm_get_linenum(MODEL);
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 
 stat_t cm_get_line(nvObj_t *nv)
 {
 	nv->value = (float)cm_get_linenum(ACTIVE_MODEL);
-	nv->valuetype = TYPE_INTEGER;
+	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
 
@@ -1880,7 +1961,7 @@ void cm_set_axis_jerk(uint8_t axis, float jerk)
 	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
 }
 
-stat_t cm_set_xjm(nvObj_t *nv)
+stat_t cm_set_jm(nvObj_t *nv)
 {
 	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
@@ -1888,11 +1969,20 @@ stat_t cm_set_xjm(nvObj_t *nv)
 	return(STAT_OK);
 }
 
-stat_t cm_set_xjh(nvObj_t *nv)
+stat_t cm_set_jh(nvObj_t *nv)
 {
 	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	return(STAT_OK);
+}
+
+stat_t cm_set_hi(nvObj_t *nv)
+{
+	if ((nv->value <= 0) || (nv->value > DI_CHANNELS)) {
+    	return (STAT_INPUT_VALUE_UNSUPPORTED);
+	}
+	set_ui8(nv);
+	return (STAT_OK);
 }
 
 /*
@@ -2057,6 +2147,7 @@ void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
+const char fmt_lim[] PROGMEM = "[lim] limit switch enable%10d\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
@@ -2065,6 +2156,7 @@ const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
+void cm_print_lim(nvObj_t *nv) { text_print_ui8(nv, fmt_lim);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
@@ -2109,6 +2201,8 @@ const char fmt_Xsn[] PROGMEM = "[%s%s] %s minimum switch config%6d [0=off,1=homi
 const char fmt_Xsx[] PROGMEM = "[%s%s] %s maximum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
 const char fmt_Xrn[] PROGMEM = "[%s%s] %s minimum switch type%8.0f [0=NO, 1=NC]\n";
 const char fmt_Xrx[] PROGMEM = "[%s%s] %s maximum switch type%8.0f [0=NO, 1=NC]\n";
+const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15.0f [input 1-N or 0 to disable homing this axis]\n";
+const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11.0f [0=search-to-negative, 1=search-to-positive]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
 const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";
 const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
@@ -2172,10 +2266,14 @@ void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
 void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
 void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
+
 void cm_print_sn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsn);}
 void cm_print_sx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsx);}
 void cm_print_rn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrn);}
 void cm_print_rx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrx);}
+void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}
+void cm_print_hd(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhd);}
+
 void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
 void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
 void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}

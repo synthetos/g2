@@ -179,8 +179,8 @@ static uint8_t _probing_init()
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 //		pb.saved_jerk[axis] = cm.a[axis].jerk_max;		// save the max jerk value
 		pb.saved_jerk[axis] = cm_get_axis_jerk(axis);	// save the max jerk value
-//		cm.a[axis].jerk_max = cm.a[axis].jerk_homing;	// use the homing jerk for probe
-		cm_set_axis_jerk(axis, cm.a[axis].jerk_homing);	// use the homing jerk for probe
+//		cm.a[axis].jerk_max = cm.a[axis].jerk_high;	    // use the high-speed jerk for probe
+		cm_set_axis_jerk(axis, cm.a[axis].jerk_high);	// use the high-speed jerk for probe
 		pb.start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 	}
 
@@ -310,7 +310,7 @@ static stat_t _probing_finish()
 static void _probe_restore_settings()
 {
 	mp_flush_planner();
-	if(cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
 #ifndef __NEW_SWITCHES // restore switch settings (old style)

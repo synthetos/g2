@@ -29,8 +29,8 @@
  * 		 into a virgin EEPROM, and can be changed using the config commands.
  *		 After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
+ *		 System and hardware settings that you shouldn't need to change
+ *		 are in hardware.h  Application settings that also shouldn't need
  *		 to be changed are in tinyg.h
  */
 
@@ -38,11 +38,21 @@
 /**** Ultimaker profile ************************************************/
 /***********************************************************************/
 
-// ***> NOTE: The init message must be a single line with no CRs or LFs 
+// ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to Ultimaker profile"
 
 #define JUNCTION_DEVIATION		0.5		// default value, in mm
 #define JUNCTION_ACCELERATION 	400000		// centripetal acceleration around corners
+#define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
+#define SOFT_LIMIT_ENABLE           0                       // 0 = off, 1 = on
+#define HARD_LIMIT_ENABLE           1                       // 0 = off, 1 = on
+#define PAUSE_DWELL_TIME            0.0
+
+#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+
+#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
+#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
 #ifndef PI
 #define PI 3.14159628
@@ -50,8 +60,6 @@
 
 // *** settings.h overrides ***
 
-#undef SWITCH_TYPE
-#define SWITCH_TYPE 			SW_TYPE_NORMALLY_OPEN
 
 #undef	COMM_MODE
 #define COMM_MODE					JSON_MODE
@@ -124,7 +132,7 @@
 #define M5_MICROSTEPS			32
 #define M5_POLARITY				0
 #define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M5_POWER_LEVEL			0.35
 
 #define M6_MOTOR_MAP			AXIS_C
 #define M6_STEP_ANGLE			1.8
@@ -132,7 +140,7 @@
 #define M6_MICROSTEPS			32
 #define M6_POLARITY				0
 #define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M6_POWER_LEVEL			0.35
 
 // *** axis settings ***
 
@@ -143,15 +151,11 @@
 #define X_TRAVEL_MAX 			212					// xtm		travel between switches or crashes
 #define X_JERK_MAX 				40000.0				// xjm		yes, that's "100 billion" mm/(min^3)
 #define X_JUNCTION_DEVIATION 	JUNCTION_DEVIATION	// xjd
-#define X_SWITCH_MODE_MIN		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
-#define X_SWITCH_MODE_MAX		SW_MODE_LIMIT		// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_HOMING_LIMIT, SW_MODE_LIMIT
 #define X_SEARCH_VELOCITY 		3000				// xsv		move in negative direction
 #define X_LATCH_VELOCITY 		200					// xlv		mm/min
 #define X_LATCH_BACKOFF 		10					// xlb		mm
 #define X_ZERO_BACKOFF 			3					// xzb		mm
-#define X_JERK_HOMING			X_JERK_MAX			// xjh
-#define X_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define X_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define X_JERK_HIGH_SPEED			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
 #define Y_VELOCITY_MAX 			18000.0
@@ -160,15 +164,11 @@
 #define Y_TRAVEL_MAX 			190
 #define Y_JERK_MAX 				40000.0
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX		SW_MODE_LIMIT
 #define Y_SEARCH_VELOCITY 		3000
 #define Y_LATCH_VELOCITY		200
 #define Y_LATCH_BACKOFF			10
 #define Y_ZERO_BACKOFF			3
-#define Y_JERK_HOMING			Y_JERK_MAX
-#define Y_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define Y_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 
 #define Z_AXIS_MODE				AXIS_STANDARD
 #define Z_VELOCITY_MAX			800
@@ -177,15 +177,11 @@
 #define Z_TRAVEL_MAX			220
 #define Z_JERK_MAX				50				// 50,000,000
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define Z_SWITCH_MODE_MIN       SW_MODE_HOMING
-#define Z_SWITCH_MODE_MAX       SW_MODE_DISABLED
 #define Z_SEARCH_VELOCITY		200
 #define Z_LATCH_VELOCITY		100
 #define Z_LATCH_BACKOFF			5
 #define Z_ZERO_BACKOFF			-0.5
-#define Z_JERK_HOMING			Z_JERK_MAX
-#define Z_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define Z_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 
 
 /******************************************************
@@ -215,53 +211,41 @@
                                                   // * a million since it's over a million
 // c=2*pi*r, r=0.609, d=c/360, s=((2000*60)/d)
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_SWITCH_MODE_MIN		SW_MODE_DISABLED
-#define A_SWITCH_MODE_MAX		SW_MODE_DISABLED
 #define A_SEARCH_VELOCITY 		2000
 #define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
 #define A_ZERO_BACKOFF 			2
-#define A_JERK_HOMING			A_JERK_MAX
-#define A_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define A_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define A_JERK_HIGH_SPEED			A_JERK_MAX
 
 #define B_AXIS_MODE				AXIS_DISABLED
 #define B_VELOCITY_MAX			3600
 #define B_FEEDRATE_MAX			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			0
 #define B_TRAVEL_MAX			-1
-//#define B_JERK_MAX				20000000
+//#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_RADIUS				1
-#define B_SWITCH_MODE_MIN		SW_MODE_DISABLED
-#define B_SWITCH_MODE_MAX		SW_MODE_DISABLED
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF			10
 #define B_ZERO_BACKOFF			2
-#define B_JERK_HOMING			A_JERK_MAX
-#define B_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define B_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define B_JERK_HIGH_SPEED		A_JERK_MAX
 
 #define C_AXIS_MODE				AXIS_DISABLED
 #define C_VELOCITY_MAX			3600
 #define C_FEEDRATE_MAX			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			0
 #define C_TRAVEL_MAX			-1
-//#define C_JERK_MAX				20000000
+//#define C_JERK_MAX			20000000
 #define C_JERK_MAX				20
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_RADIUS				1
-#define C_SWITCH_MODE_MIN		SW_MODE_DISABLED
-#define C_SWITCH_MODE_MAX		SW_MODE_DISABLED
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF			10
 #define C_ZERO_BACKOFF			2
-#define C_JERK_HOMING			A_JERK_MAX
-#define C_SWITCH_TYPE_MIN       SWITCH_TYPE
-#define C_SWITCH_TYPE_MAX       SWITCH_TYPE
+#define C_JERK_HIGH_SPEED		A_JERK_MAX
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

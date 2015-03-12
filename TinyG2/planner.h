@@ -37,44 +37,44 @@
 
 typedef void (*cm_exec_t)(float[], float[]); // callback to canonical_machine execution function
 
-enum mpBufferState {				// bf->buffer_state values
-    MP_BUFFER_EMPTY = 0,			// struct is available for use (MUST BE 0)
+typedef enum {                      // bf->buffer_state values
+    MP_BUFFER_EMPTY = 0,            // struct is available for use (MUST BE 0)
     MP_BUFFER_PLANNING,             // being written ("checked out") for planning
-    MP_BUFFER_QUEUED,				// in queue
-    MP_BUFFER_RUNNING				// current running buffer
-};
+    MP_BUFFER_QUEUED,               // in queue
+    MP_BUFFER_RUNNING               // current running buffer
+} mpBufferState;
 
-enum moveType {				        // bf->move_type values
+typedef enum {				        // bf->move_type values
 	MOVE_TYPE_NULL = 0,		        // null move - does a no-op
 	MOVE_TYPE_ALINE,		        // acceleration planned line
-	MOVE_TYPE_DWELL,        		// delay with no movement
-	MOVE_TYPE_COMMAND,	        	// general command
-	MOVE_TYPE_TOOL,		        	// T command
+	MOVE_TYPE_DWELL,                // delay with no movement
+	MOVE_TYPE_COMMAND,              // general command
+	MOVE_TYPE_TOOL,                 // T command
 	MOVE_TYPE_SPINDLE_SPEED,        // S command
-	MOVE_TYPE_STOP,	        		// program stop
-	MOVE_TYPE_END	        		// program end
-};
+	MOVE_TYPE_STOP,                 // program stop
+	MOVE_TYPE_END                   // program end
+} moveType;
 
-enum moveState {
-	MOVE_OFF = 0,	        		// move inactive (MUST BE ZERO)
-	MOVE_NEW,		        		// general value if you need an initialization
-	MOVE_RUN,		        		// general run state (for non-acceleration moves)
-	MOVE_SKIP_BLOCK		        	// mark a skipped block
-};
+typedef enum {
+	MOVE_OFF = 0,                   // move inactive (MUST BE ZERO)
+	MOVE_NEW,                       // general value if you need an initialization
+	MOVE_RUN,                       // general run state (for non-acceleration moves)
+	MOVE_SKIP_BLOCK                 // mark a skipped block
+} moveState;
 
-enum moveSection {
-	SECTION_HEAD = 0,       		// acceleration
-	SECTION_BODY,	        		// cruise
-	SECTION_TAIL	        		// deceleration
-};
+typedef enum {
+	SECTION_HEAD = 0,               // acceleration
+	SECTION_BODY,                   // cruise
+	SECTION_TAIL                    // deceleration
+} moveSection;
 #define SECTIONS 3
 
-enum sectionState {
-	SECTION_OFF = 0,        		// section inactive
-	SECTION_NEW,	        		// uninitialized section
-	SECTION_1st_HALF,       		// first half of S curve
-	SECTION_2nd_HALF	        	// second half of S curve or running a BODY (cruise)
-};
+typedef enum {
+	SECTION_OFF = 0,                // section inactive
+	SECTION_NEW,                    // uninitialized section
+	SECTION_1st_HALF,               // first half of S curve
+	SECTION_2nd_HALF                // second half of S curve or running a BODY (cruise)
+} sectionState;
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
@@ -122,7 +122,7 @@ enum sectionState {
 #define TRAPEZOID_LENGTH_FIT_TOLERANCE		((float)0.0001)	// allowable mm of error in planning phase
 #endif //0
 
-#define TRAPEZOID_VELOCITY_TOLERANCE		(max(2,bf->entry_velocity/100))
+#define TRAPEZOID_VELOCITY_TOLERANCE		(max(2.0,bf->entry_velocity/100.0))
 
 /*
  *	Planner structures
@@ -130,20 +130,20 @@ enum sectionState {
 
 // All the enums that equal zero must be zero. Don't change this
 
-typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
-	struct mpBuffer *pv;			// static pointer to previous buffer
-	struct mpBuffer *nx;			// static pointer to next buffer
+typedef struct mpBuffer {           // See Planning Velocity Notes for variable usage
+	struct mpBuffer *pv;            // static pointer to previous buffer
+	struct mpBuffer *nx;            // static pointer to next buffer
 
     // If you rearrange this structure, you *MUST* change mp_clear_buffer!!
 	stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
-	cm_exec_t cm_func;				// callback to canonical machine execution function
+	cm_exec_t cm_func;              // callback to canonical machine execution function
 
-	mpBufferState buffer_state;		// used to manage queuing/dequeuing
-	moveType move_type;				// used to dispatch to run routine
-	moveState move_state;			// move state machine sequence
-	uint8_t move_code;				// byte that can be used by used exec functions
-	bool    replannable;			// TRUE if move can be re-planned
-    bool    locked;	        		// TRUE if the move is locked from replanning
+	mpBufferState buffer_state;     // used to manage queuing/dequeuing
+	moveType move_type;             // used to dispatch to run routine
+	moveState move_state;           // move state machine sequence
+	uint8_t move_code;              // byte that can be used by used exec functions
+	bool replannable;               // TRUE if move can be re-planned
+    bool locked;                    // TRUE if the move is locked from replanning
 
 	float unit[AXES];				// unit vector for axis scaling & planning
     bool unit_flags[AXES];          // set true for axes participating in the move
@@ -304,12 +304,11 @@ float mp_get_runtime_absolute_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 float mp_get_runtime_work_position(uint8_t axis);
 uint8_t mp_get_runtime_busy(void);
+bool mp_runtime_is_idle(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
-
-void mp_transition_hold_to_stop(void);                  // feedholds...
-void mp_restart_from_hold(void);
+void mp_reset_replannable_list(void);
 
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
@@ -320,5 +319,6 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 // plan_exec.c functions
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
+void mp_exit_hold_state(void);
 
 #endif	// End of include Guard: PLANNER_H_ONCE

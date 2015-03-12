@@ -2,8 +2,8 @@
  * controller.h - tinyg controller and main dispatch loop
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,40 +28,51 @@
 #ifndef CONTROLLER_H_ONCE
 #define CONTROLLER_H_ONCE
 
+// see also: tinyg.h MESSAGE_LEN and config.h NV_ lengths
 #define SAVED_BUFFER_LEN 80				// saved buffer size (for reporting only)
 #define MAXED_BUFFER_LEN 255			// same as streaming RX buffer size as a worst case
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
-// see also: tinyg.h MESSAGE_LEN and config.h NV_ lengths
 
-#define LED_NORMAL_TIMER 1000			// blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 100				// blink rate for alarm state (in ms)
+#define LED_NORMAL_TIMER 3000           // blink rate for normal operation (in ms)
+#define LED_ALARM_TIMER 1000            // blink rate for alarm state (in ms)
+#define LED_SHUTDOWN_TIMER 100          // blink rate for shutdown state (in ms)
+
+typedef enum {                          // manages startup lines
+    CONTROLLER_INITIALIZING = 0,        // controller is initializing - not ready for use
+    CONTROLLER_NOT_CONNECTED,           // has not yet detected connection to USB (or other comm channel)
+    CONTROLLER_CONNECTED,               // has connected to USB (or other comm channel)
+    CONTROLLER_STARTUP,                 // is running startup messages and lines
+    CONTROLLER_READY,                   // is active and ready for use
+    CONTROLLER_PAUSED                   // is paused - presumably in preparation for queue flush
+//    CONTROLLER_FLUSHING                 // is flushing commands silently to ETX marker
+} csControllerState;
 
 typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
 	float null;							// dumping ground for items with no target
 
-	// system identification values
-	float fw_build;						// tinyg firmware build number
-	float fw_version;					// tinyg firmware version number
-	float config_version;				// tinyg configuration version for host / UI control
-	float hw_platform;					// tinyg hardware compatibility - platform type
-	float hw_version;					// tinyg hardware compatibility - platform revision
-
-	// communications state variables
+    // settable parameters (from config)
 	uint8_t comm_mode;					// 0=text mode, 1=JSON mode
 	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
-	uint8_t state_usb0;
-	uint8_t state_usb1;
+
+	// system identification values
+	float fw_build;                     // tinyg firmware build number
+	float fw_version;                   // tinyg firmware version number
+	float config_version;               // tinyg configuration version for host / UI control
+	float hw_platform;                  // tinyg hardware compatibility - platform type
+	float hw_version;                   // tinyg hardware compatibility - platform revision
 
 	// system state variables
-	uint8_t controller_state;
+	csControllerState controller_state;
+	uint8_t state_usb0;
+	uint8_t state_usb1;
+	uint32_t led_timer;                 // used by idlers to flash indicator LED
+	bool hard_reset_requested;          // flag to perform a hard reset
+	bool bootloader_requested;          // flag to enter the bootloader
+	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
+
 //	uint8_t led_state;					// 0=off, 1=on (LEGACY)
 //	int32_t led_counter;				// a convenience for flashing an LED (LEGACY)
-	uint32_t led_timer;					// used by idlers to flash indicator LED
-	uint8_t hard_reset_requested;		// flag to perform a hard reset
-	uint8_t bootloader_requested;		// flag to enter the bootloader
-	uint8_t shared_buf_overrun;			// flag for shared string buffer overrun condition
-
 //	uint8_t sync_to_time_state;
 //	uint32_t sync_to_time_time;
 
@@ -75,14 +86,6 @@ typedef struct controllerSingleton {	// main TG controller struct
 } controller_t;
 
 extern controller_t cs;					// controller state structure
-
-enum cmControllerState {				// manages startup lines
-	CONTROLLER_INITIALIZING = 0,		// controller is initializing - not ready for use
-	CONTROLLER_NOT_CONNECTED,			// controller has not yet detected connection to USB (or other comm channel)
-	CONTROLLER_CONNECTED,				// controller has connected to USB (or other comm channel)
-	CONTROLLER_STARTUP,					// controller is running startup messages and lines
-	CONTROLLER_READY					// controller is active and ready for use
-};
 
 /**** function prototypes ****/
 

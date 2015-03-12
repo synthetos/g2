@@ -138,19 +138,19 @@ namespace Motate {
 	pin_number kSocket6_VrefPinNumber           = 68;
     
     
-	pin_number kXAxis_MinPinNumber              = 100;
-	pin_number kXAxis_MaxPinNumber              = 101;
-	pin_number kYAxis_MinPinNumber              = 102;
-	pin_number kYAxis_MaxPinNumber              = 103;
-	pin_number kZAxis_MinPinNumber              = 104;
-	pin_number kZAxis_MaxPinNumber              = 105;
+	pin_number kInput1_PinNumber              = 100;
+	pin_number kInput2_PinNumber              = 101;
+	pin_number kInput3_PinNumber              = 102;
+	pin_number kInput4_PinNumber              = 103;
+	pin_number kInput5_PinNumber              = 104;
+	pin_number kInput6_PinNumber              = 105;
     
-	pin_number kAAxis_MinPinNumber              = 106;
-	pin_number kAAxis_MaxPinNumber              = 107;
-	pin_number kBAxis_MinPinNumber              = 108;
-	pin_number kBAxis_MaxPinNumber              = 109;
-	pin_number kCAxis_MinPinNumber              = 110;
-	pin_number kCAxis_MaxPinNumber              = 111;
+	pin_number kInput7_PinNumber              = 106;
+	pin_number kInput8_PinNumber              = 107;
+	pin_number kInput9_PinNumber              = 108;
+	pin_number kInput10_PinNumber              = 109;
+	pin_number kInput11_PinNumber              = 110;
+	pin_number kInput12_PinNumber              = 111;
     
 	pin_number kSpindle_EnablePinNumber         = 112;
 	pin_number kSpindle_DirPinNumber            = 113;

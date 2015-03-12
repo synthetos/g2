@@ -214,8 +214,12 @@ endif
 ifeq ("$(PLATFORM)","G2v9i")
 
 	BASE_PLATFORM=v9_3x8c
-#	SETTINGS_FILE="settings_shopbot_test.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_default.h"
+#	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_probotixV90.h"
+#	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
+	SETTINGS_FILE="settings_shopbot_test.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
@@ -404,7 +408,7 @@ endif
 #-------------------------------------------------------------------------------
 
 
-all: $(OUTPUT_BIN).elf
+all: $(OUTPUT_BIN).elf $(OUTPUT_BIN).bin
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -459,12 +463,21 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_
 	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
-	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
-	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
-	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
-	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+$(OUTPUT_BIN).bin: $(OUTPUT_BIN).elf
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).tmp.bin"
+	$(QUIET)if `command -v xxd >/dev/null 2>&1`; then\
+		printf '%08x' `cksum "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f1` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=256 conv=notrunc;\
+		printf '%08x' `ls -nl "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f8` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=260 conv=notrunc;\
+		mv "$(OUTPUT_BIN).tmp.bin" "$(OUTPUT_BIN).bin";\
+	else\
+		echo "Unable to add checksum to '$(OUTPUT_BIN).bin' due to missing 'xcd' utility. Continuing anyway.";\
+		mv "$(OUTPUT_BIN).tmp.bin" "$(OUTPUT_BIN).bin";\
+	fi
+
 
 ## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 

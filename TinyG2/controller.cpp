@@ -39,7 +39,7 @@
 #include "encoder.h"
 #include "hardware.h"
 #include "switch.h"
-//#include "gpio.h"
+#include "gpio.h"
 #include "report.h"
 #include "help.h"
 #include "util.h"
@@ -63,8 +63,10 @@ controller_t cs;		// controller state structure
 static void _controller_HSM(void);
 static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
-static stat_t _limit_switch_handler(void);
-static stat_t _interlock_estop_handler(void);
+static stat_t _limit_switch_handler(void);      // revised for new GPIO code
+static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
+static stat_t _interlock_estop_handler(void);   // old
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -87,15 +89,21 @@ stat_t hardware_hard_reset_handler(void);
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
-	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
+    // preserve settable parameters that may have already been set up
+    uint8_t comm_mode = cs.comm_mode;
+    uint8_t network_mode = cs.network_mode;
+
+	memset(&cs, 0, sizeof(controller_t));           // clear all values, job_id's, pointers and status
 	controller_init_assertions();
 
-	cs.fw_build = TINYG_FIRMWARE_BUILD;
+    cs.comm_mode = comm_mode;                       // restore parameters
+    cs.network_mode = network_mode;
+
+	cs.fw_build = TINYG_FIRMWARE_BUILD;             // set up identification
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.config_version = TINYG_CONFIG_VERSION;
-	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
-
-	cs.controller_state = CONTROLLER_STARTUP;		// ready to run startup lines
+	cs.hw_platform = TINYG_HARDWARE_PLATFORM;       // NB: HW version is set from EEPROM
+	cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
 
 #ifdef __AVR
 	xio_set_stdin(std_in);
@@ -166,6 +174,8 @@ static void _controller_HSM()
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
 	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
+    DISPATCH(_shutdown_handler());
+    DISPATCH(_interlock_handler());
     DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
     DISPATCH(_controller_state());				// controller state management
 
@@ -199,7 +209,7 @@ static void _controller_HSM()
     DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
 
     DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
-    //	DISPATCH(switch_debounce_callback());		// debounce switches
+//	DISPATCH(switch_debounce_callback());		// debounce switches
     DISPATCH(sr_status_report_callback());		// conditionally send status report
     DISPATCH(qr_queue_report_callback());		// conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
@@ -214,11 +224,9 @@ static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-		cm_request_queue_flush();
-        // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
+        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
-
 	return (STAT_OK);
 }
 
@@ -232,11 +240,31 @@ void controller_set_connected(bool is_connected) {
         // we JUST connected
         cs.controller_state = CONTROLLER_CONNECTED;
     } else {
-        // we just disconnected from the last device, we'll expext a banner again
+        // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
 
+static bool _parse_clear(char *str) // return true if it's a clear command
+{
+    char *p = str;
+    if ((*p != '$') && (*p != '{')) return (false);
+    p++;
+    if (*p == '"') p++;
+    if (strcmp("clear", p) == 0) return (true);
+    if (strcmp("clr", p) == 0) return (true);
+    return (false);
+    
+/* the above abbreviation is worth 88 bytes and faster execution
+    if (strcmp("{clear:n}", str) == 0) return (true);
+    if (strcmp("{\"clear\":n}", str) == 0) return (true);
+    if (strcmp("{clr:n}", str) == 0) return (true);
+    if (strcmp("{\"clr\":n}", str) == 0) return (true);
+    if (strcmp("$clear", str) == 0) return (true);
+    if (strcmp("$clr", str) == 0) return (true);
+    return (false);
+*/
+}
 
 /*****************************************************************************
  * command dispatchers
@@ -249,11 +277,13 @@ void controller_set_connected(bool is_connected) {
 static stat_t _dispatch_command()
 {
 	if(cm.estop_state == 0) {
+        if (cs.controller_state == CONTROLLER_PAUSED) {
+	        return (STAT_NOOP);
+        }
 		devflags_t flags = DEV_IS_BOTH;
         while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
                (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
         	_dispatch_kernel();
-
             mp_plan_buffer();
         }
 	}
@@ -262,6 +292,9 @@ static stat_t _dispatch_command()
 
 static stat_t _dispatch_control()
 {
+    if (cs.controller_state == CONTROLLER_PAUSED) {
+        return (STAT_NOOP);
+    }
 	devflags_t flags = DEV_IS_CTRL;
 	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
         _dispatch_kernel();
@@ -270,48 +303,50 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
+    while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
+        cs.bufp++;
+    }
 
-	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
-		cs.bufp++;
-	}
+    if (cm.flush_state == FLUSH_COMMANDS) {
+//        if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
+        if (*cs.bufp == ETX) {
+            cm_end_queue_flush();
+        }
+        return;                                             // silently dump the command
+    }
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
 		if (cs.comm_mode == TEXT_MODE) {
 			text_response(STAT_OK, cs.saved_buf);
+            return;
 		}
+    }
 
-	// included for AVR diagnostics
-	} else if (*cs.bufp == '!') {
+	// trap single character commands
+    if (*cs.bufp == '!') {
         cm_request_feedhold();
-	} else if (*cs.bufp == '%') {
-		cm_request_queue_flush();
-	} else if (*cs.bufp == '~') {
-        cm_request_end_hold();
+    }
+	else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    else if (*cs.bufp == '%') { cm_request_queue_flush(); }
+    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
+    else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
 
-	} else if (*cs.bufp == '{') {							// process as JSON mode
-		cs.comm_mode = JSON_MODE;							// switch to JSON mode
+	else if (*cs.bufp == '{') {                             // process as JSON mode
+		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
-
-	} else if (strchr("$?Hh", *cs.bufp) != NULL) {			// process as text mode
-		cs.comm_mode = TEXT_MODE;							// switch to text mode
+    }
+    else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
+		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
-
-	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
-		if(cm.machine_state != MACHINE_ALARM) {
-			text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
-		} else {
-			cm.ignored_gcodes += 1;
-		}
-	} else {
-		if(cm.machine_state != MACHINE_ALARM) {
-			strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
-			sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
-			json_parser(cs.bufp);
-		} else {
-			asm("nop;");
-			cm.ignored_gcodes += 1;
-		}
+    }
+	else if (cs.comm_mode == TEXT_MODE) {                   // anything else must be Gcode
+        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
+    }
+	else {
+        strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
+        sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
+        json_parser(cs.bufp);
 	}
 }
 
@@ -448,11 +483,23 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-	if (get_limit_switch_thrown() == false) {
+    if ((cm.limit_enable == false) || (cm.limit_requested == false)) {
         return (STAT_NOOP);
-    } else {
-        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
     }
+	char message[20];
+	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
+    cm.limit_requested = false;         // clear the limit request
+    return cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+}
+
+static stat_t _interlock_handler(void)
+{
+    return(STAT_OK);
+}
+
+static stat_t _shutdown_handler(void)
+{
+    return(STAT_OK);
 }
 
 static stat_t _interlock_estop_handler(void)
@@ -492,7 +539,7 @@ static stat_t _interlock_estop_handler(void)
 /*
  * _system_assertions() - check memory integrity and other assertions
  */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_hard_alarm(status_code, "cs2"));
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_shutdown(status_code, "cs2"));
 
 stat_t _system_assertions()
 {

@@ -125,9 +125,10 @@ static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint
 	else { *block_delete_flag = false; }
 
 	// normalize the command block & find the comment (if any)
+    // Gcode comments start with '(', Inkscape with '%', and random comments with ';'
 	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
-		else if ((*rd == '(') || (*rd == ';')) { *wr = NUL; *com = rd+1; }
+		else if ((*rd == '(') || (*rd == ';')  || (*rd == '%')) { *wr = NUL; *com = rd+1; }
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
 			*(wr++) = (char_t)toupper((char)*(rd));
 		}

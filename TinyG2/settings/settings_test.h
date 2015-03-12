@@ -28,8 +28,8 @@
  * 		 into a virgin EEPROM, and can be changed using the config commands.
  *		 After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
+ *		 System and hardware settings that you shouldn't need to change
+ *		 are in hardware.h  Application settings that also shouldn't need
  *		 to be changed are in tinyg.h
  */
 
@@ -37,7 +37,7 @@
 #define INIT_MESSAGE "Initializing configs to TEST settings"
 
 #define JERK_MAX					500			// 500 million mm/(min^3)
-#define JERK_HOMING					1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JERK_HIGH_SPEED					1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
 #define JUNCTION_DEVIATION			0.01		// default value, in mm
 #define JUNCTION_ACCELERATION		100000		// centripetal acceleration around corners
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
@@ -225,7 +225,7 @@
 #define X_LATCH_VELOCITY 		200					// xlv		mm/min
 #define X_LATCH_BACKOFF 		10					// xlb		mm
 #define X_ZERO_BACKOFF 			3					// xzb		mm
-#define X_JERK_HOMING			X_JERK_MAX			// xjh
+#define X_JERK_HIGH_SPEED			X_JERK_MAX			// xjh
 
 #define Y_AXIS_MODE 			AXIS_STANDARD
 #define Y_VELOCITY_MAX 			18000.0
@@ -242,7 +242,7 @@
 #define Y_LATCH_VELOCITY		200
 #define Y_LATCH_BACKOFF			10
 #define Y_ZERO_BACKOFF			3
-#define Y_JERK_HOMING			Y_JERK_MAX
+#define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 
 #define Z_AXIS_MODE				AXIS_STANDARD
 #define Z_VELOCITY_MAX			800
@@ -259,7 +259,7 @@
 #define Z_LATCH_VELOCITY		200
 #define Z_LATCH_BACKOFF			3
 #define Z_ZERO_BACKOFF			0.01
-#define Z_JERK_HOMING			Z_JERK_MAX
+#define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 
 
 /******************************************************
@@ -297,7 +297,7 @@
 #define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
 #define A_ZERO_BACKOFF 			2
-#define A_JERK_HOMING			A_JERK_MAX
+#define A_JERK_HIGH_SPEED			A_JERK_MAX
 
 #define B_AXIS_MODE				AXIS_DISABLED
 #define B_VELOCITY_MAX			3600
@@ -316,7 +316,7 @@
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF			10
 #define B_ZERO_BACKOFF			2
-#define B_JERK_HOMING			A_JERK_MAX
+#define B_JERK_HIGH_SPEED			A_JERK_MAX
 
 #define C_AXIS_MODE				AXIS_DISABLED
 #define C_VELOCITY_MAX			3600
@@ -335,7 +335,7 @@
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF			10
 #define C_ZERO_BACKOFF			2
-#define C_JERK_HOMING			A_JERK_MAX
+#define C_JERK_HIGH_SPEED			A_JERK_MAX
 
 /*
 //#define X_AXIS_MODE 			AXIS_DISABLED		// DIAGNOSTIC TEST ONLY!!!
@@ -354,7 +354,7 @@
 #define X_LATCH_VELOCITY 		LATCH_VELOCITY		// xlv		mm/min
 #define X_LATCH_BACKOFF 		5					// xlb		mm
 #define X_ZERO_BACKOFF 			0					// xzb		mm
-#define X_JERK_HOMING			JERK_HOMING			// xjh
+#define X_JERK_HIGH_SPEED			JERK_HIGH_SPEED			// xjh
 
 //#define Y_AXIS_MODE 			AXIS_DISABLED		// DIAGNOSTIC TEST ONLY!!!
 #define Y_AXIS_MODE 			AXIS_STANDARD
@@ -372,7 +372,7 @@
 #define Y_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 		5
 #define Y_ZERO_BACKOFF 			0
-#define Y_JERK_HOMING			JERK_HOMING
+#define Y_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 
 #define Z_AXIS_MODE 			AXIS_STANDARD
 #if HAS_CANSTACK_Z_AXIS
@@ -393,7 +393,7 @@
 #define Z_LATCH_VELOCITY 		LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 		5
 #define Z_ZERO_BACKOFF 			0
-#define Z_JERK_HOMING			JERK_HOMING
+#define Z_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 
 // A values are chosen to make the A motor react the same as X for testing
 #define A_AXIS_MODE 			AXIS_RADIUS
@@ -412,7 +412,7 @@
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
 #define A_ZERO_BACKOFF 			2
-#define A_JERK_HOMING			A_JERK_MAX
+#define A_JERK_HIGH_SPEED			A_JERK_MAX
 
 #define B_AXIS_MODE 			AXIS_DISABLED
 #define B_VELOCITY_MAX 			3600
