@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.43 // testing !%~ sequences; removed print statement from gpio.cpp
+#define TINYG_FIRMWARE_BUILD   		079.44 // checkpoint
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

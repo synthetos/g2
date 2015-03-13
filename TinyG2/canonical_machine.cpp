@@ -1348,19 +1348,20 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
-	if ((cm.end_hold_requested == true) && (cm.flush_state == FLUSH_OFF)) {
-		if(cm.motion_state != MOTION_HOLD) {
-			cm.end_hold_requested = false;
-        } else if(cm.hold_state == FEEDHOLD_HOLD) {
+	if ((cm.end_hold_requested == true) && (cm.hold_state == FEEDHOLD_HOLD)) {
+        if (cm.flush_state == FLUSH_OFF) {  // either no flush or wait until it's done flushing
 			cm_end_hold();
+            cm.end_hold_requested = false;
 		}
 	}
-    // safety dance. This is supposed to happen in the plan_exec feedhold processing
+/*
+    // safety dance. Release the controller if paused
     if (cm.hold_state == FEEDHOLD_HOLD) {
         if (cs.controller_state == CONTROLLER_PAUSED) {
             cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
         }
     }
+*/
 	return (STAT_OK);
 }
 
