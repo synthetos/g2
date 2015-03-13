@@ -32,7 +32,7 @@
 #include "canonical_machine.h"
 #include "spindle.h"
 #include "report.h"
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
 #include "gpio.h"
 #else
 #include "switch.h"
@@ -48,7 +48,7 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	stat_t (*func)();							// binding for callback function state machine
 
 	// switch configuration
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
 	uint8_t probe_input;						// which switch should we check?
 #else
 	uint8_t probe_switch_axis;					// which axis should we check?
@@ -115,7 +115,7 @@ uint8_t _set_pb_func(uint8_t (*func)())
  *	to cm_get_runtime_busy() is about.
  */
 
-#ifndef __NEW_SWITCHES
+#ifndef __NEW_INPUTS
 static void _probe_trigger_feedhold(switch_t *s)
 {
 	cm_request_feedhold();
@@ -199,7 +199,7 @@ static uint8_t _probing_init()
 	}
 
 	// initialize the probe switch
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
     // Get the probe input
 
     // TODO -- for now we hard code it to zmin
@@ -235,7 +235,7 @@ static uint8_t _probing_init()
 static stat_t _probing_start()
 {
 	// initial probe state, don't probe if we're already contacted!
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
     int8_t probe = gpio_read_input(pb.probe_input);
 #else
 	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
@@ -256,7 +256,7 @@ static stat_t _probing_start()
  */
 static stat_t _probing_backoff()
 {
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
     int8_t probe = gpio_read_input(pb.probe_input);
 #else
     // If we've contacted, back off & then record position
@@ -282,7 +282,7 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
-#ifdef __NEW_SWITCHES
+#ifdef __NEW_INPUTS
     int8_t probe = gpio_read_input(pb.probe_input);
 #else
 	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
@@ -322,7 +322,7 @@ static void _probe_restore_settings()
 	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
-#ifdef __NEW_SWITCHES // restore switch settings (old style)
+#ifdef __NEW_INPUTS // restore switch settings (old style)
     gpio_set_probing_mode(pb.probe_input, false);
 #else // restore switch settings (new style)
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = pb.saved_switch_mode;

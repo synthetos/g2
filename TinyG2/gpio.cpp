@@ -75,36 +75,21 @@ static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
 
 // WARNING: this returns raw pin values, NOT corrected for NO/NV Active high/low
 // Also, this takes EXTERNAL pin numbers -- 1-based
-bool _read_input_pin(const uint8_t input_num) {
-    switch(input_num) {
-        case 1:
-        { return (input_1_pin.get() != 0); }
-        case 2:
-        { return (input_2_pin.get() != 0); }
-        case 3:
-        { return (input_3_pin.get() != 0); }
-        case 4:
-        { return (input_4_pin.get() != 0); }
-        case 5:
-        { return (input_5_pin.get() != 0); }
-        case 6:
-        { return (input_6_pin.get() != 0); }
-        case 7:
-        { return (input_7_pin.get() != 0); }
-        case 8:
-        { return (input_8_pin.get() != 0); }
-        case 9:
-        { return (input_9_pin.get() != 0); }
-        case 10:
-        { return (input_10_pin.get() != 0); }
-        case 11:
-        { return (input_11_pin.get() != 0); }
-        case 12:
-        { return (input_12_pin.get() != 0); }
-        default:
-        { // ERROR?
-            return false;
-        }
+bool _read_input_pin(const uint8_t input_num_ext) {
+    switch(input_num_ext) {
+        case 1: { return (input_1_pin.get() != 0); }
+        case 2: { return (input_2_pin.get() != 0); }
+        case 3: { return (input_3_pin.get() != 0); }
+        case 4: { return (input_4_pin.get() != 0); }
+        case 5: { return (input_5_pin.get() != 0); }
+        case 6: { return (input_6_pin.get() != 0); }
+        case 7: { return (input_7_pin.get() != 0); }
+        case 8: { return (input_8_pin.get() != 0); }
+        case 9: { return (input_9_pin.get() != 0); }
+        case 10: { return (input_10_pin.get() != 0); }
+        case 11: { return (input_11_pin.get() != 0); }
+        case 12: { return (input_12_pin.get() != 0); }
+        default: { return false; } // ERROR?
     }
 }
 
@@ -153,21 +138,28 @@ void gpio_reset(void)
 	}
 }
 
-// input_num_ext meand EXTERNAL input number -- 1-based
+/*
+ * gpio_set_homing_mode()   - set/clear input to homing mode
+ * gpio_set_probing_mode()  - set/clear input to probing mode
+ * gpio_read_input()        - read conditioned input
+ *
+ (* Note: input_num_ext means EXTERNAL input number -- 1-based
+ */
 void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
 {
+    if (input_num_ext == 0) return;
     io.in[input_num_ext-1].homing_mode = is_homing;
 }
 
-// input_num_ext meand EXTERNAL input number -- 1-based
 void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
 {
+    if (input_num_ext == 0) return;
     io.in[input_num_ext-1].probing_mode = is_probing;
 }
 
-// input_num_ext meand EXTERNAL input number -- 1-based
 bool gpio_read_input(const uint8_t input_num_ext)
 {
+    if (input_num_ext == 0) return false;
     return io.in[input_num_ext-1].state;
 }
 
@@ -210,8 +202,6 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 {
     io_di_t *in = &io.in[input_num_ext-1];  // array index is one less than input number
 
-//    printf("input num %d\n", input_num);
-
     // return if input is disabled (not supposed to happen)
 	if (in->mode == IO_MODE_DISABLED) {
     	in->state = IO_DISABLED;
@@ -240,26 +230,29 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     }
 
     // perform homing operations if in homing mode
+    // We want either edge -- leading on home and trailing on backoff
     if (in->homing_mode) {
-        // We want either edge -- leading on home and trailing on backoff
         cm_start_hold();
         return;
     }
-
-	// NOTE: From this point on all conditionals assume we are NOT in homing mode
+/*
+    if (in->probing_mode) {
+        cm_start_hold();
+        return;
+    }
+*/
+	// *** NOTE: From this point on all conditionals assume we are NOT in homing or probe mode ***
 
     // trigger the action on leading edges
-    // *** for now all the actions do the same thing ***
+
     if (in->edge == IO_EDGE_LEADING) {
         if (in->action == IO_ACTION_STOP) {
 			cm_start_hold();
         }
         if (in->action == IO_ACTION_FAST_STOP) {
-		//	cm_request_feedhold();
-			cm_start_hold();
+			cm_start_hold();                // for now is same as STOP
         }
         if (in->action == IO_ACTION_HALT) {
-		//	cm_request_feedhold();
 	        stepper_init();					// hard stop
         }
         if (in->action == IO_ACTION_RESET) {
@@ -282,7 +275,6 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 			cm.shutdown_requested = input_num_ext;
 		}
     }
-
     sr_request_status_report(SR_REQUEST_TIMED);
 }
 

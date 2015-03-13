@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.45 // inX now usable in status reports
+#define TINYG_FIRMWARE_BUILD   		079.46 // reviewed homing and gpio changes; made some (hopefully) low-risk changes
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -65,7 +65,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_SWITCHES						// Using v9 style switch code
+#define __NEW_INPUTS						// Using g2 revised digital inouts
 #define __DUAL_USB							// use dual endpoint USB
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
@@ -555,8 +555,8 @@ char *get_status_message(stat_t status);
 #define	STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY 243
 #define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL 244
 #define	STAT_HOMING_ERROR_NEGATIVE_LATCH_BACKOFF 245
-#define	STAT_HOMING_ERROR_SWITCH_MISCONFIGURATION 246
-#define	STAT_HOMING_ERROR_SWITCH_BACKOFF_IMPOSSIBLE 247
+#define	STAT_HOMING_ERROR_HOMING_INPUT_MISCONFIGURED 246
+#define	STAT_HOMING_ERROR_MUST_CLEAR_SWITCHES_BEFORE_HOMING 247
 #define	STAT_ERROR_248 248
 #define	STAT_ERROR_249 249
 
