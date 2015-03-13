@@ -484,10 +484,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t estop_state;				// true if estop has been triggered
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
-//	uint8_t homing_state;			    // home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
 
-//	uint8_t probe_state;			    //
 	cmProbeState probe_state;			// probing state machine (simple)
 	float probe_results[AXES];			// probing results
 
@@ -497,8 +495,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool g28_flag;					    // true = complete a G28 move
 	bool g30_flag;					    // true = complete a G30 move
 	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
-//	bool feedhold_requested;			// feedhold character has been received
-//	bool queue_flush_requested;		    // queue flush character has been received
 	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)

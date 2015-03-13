@@ -140,7 +140,7 @@ static void _application_init(void)
 	stepper_init(); 				// stepper subsystem 				- must precede gpio_init() on AVR
 	encoder_init();					// virtual encoders
 	gpio_init();					// inputs and outputs
-#ifndef __NEW_SWITCHES
+#ifndef __NEW_INPUTS
 	switch_init();					// switches
 #endif
 	pwm_init();						// pulse width modulation drivers
@@ -466,8 +466,8 @@ static const char stat_242[] PROGMEM = "Homing Err - Search velocity is zero";
 static const char stat_243[] PROGMEM = "Homing Err - Latch velocity is zero";
 static const char stat_244[] PROGMEM = "Homing Err - Travel min & max are the same";
 static const char stat_245[] PROGMEM = "Homing Err - Negative latch backoff";
-static const char stat_246[] PROGMEM = "Homing Err - Homing switches misconfigured";
-static const char stat_247[] PROGMEM = "247";
+static const char stat_246[] PROGMEM = "Homing Err - Homing input is misconfigured";
+static const char stat_247[] PROGMEM = "Homing Err - Must clear switches before homing";
 static const char stat_248[] PROGMEM = "248";
 static const char stat_249[] PROGMEM = "249";
 

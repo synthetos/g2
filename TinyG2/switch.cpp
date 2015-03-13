@@ -42,7 +42,7 @@
 
 #include "tinyg2.h"
 
-#ifndef __NEW_SWITCHES
+#ifndef __NEW_INPUTS
 
 #include "config.h"
 #include "settings.h"
@@ -354,4 +354,4 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 	}
 #endif
 
-#endif // !__NEW_SWITCHES
+#endif // !__NEW_INPUTS

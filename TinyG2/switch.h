@@ -37,7 +37,7 @@
  *
  *	Read switch contains the results of read pin and manages edges and debouncing.
  */
-#ifndef __NEW_SWITCHES
+#ifndef __NEW_INPUTS
 #ifndef SWITCH_H_ONCE
 #define SWITCH_H_ONCE
 

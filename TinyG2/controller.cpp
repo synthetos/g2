@@ -311,10 +311,16 @@ static void _dispatch_kernel()
         __NOP();
     }
     if (cm.flush_state == FLUSH_COMMANDS) {
-//      if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
-        if (*cs.bufp == ETX) {
+        if (strchr(cs.bufp, ETX) != NULL) {                 // see if there's an ETX in the buffer
             cm_end_queue_flush();
-        }
+        } 
+//        else if (_parse_clear(cs.bufp)) {                 // see if a clear has been sent
+//            cm_end_queue_flush();
+//        }
+//      if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
+//        if (*cs.bufp == ETX) {
+//            cm_end_queue_flush();
+//        }
         return;                                             // silently dump the command
     }
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
