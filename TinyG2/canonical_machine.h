@@ -114,7 +114,7 @@ typedef enum {				        // feedhold_state machine
 typedef enum {				        // queue flush_state machine
     FLUSH_OFF = 0,				    // no queue flush in effect
     FLUSH_REQUESTED,                // queue flush has been requested but not started yet
-    FLUSH_PLANNER,                  // queue flush can flush the planner queue
+    FLUSH_PLANNER,                  // queue flush can flush the planner queue (state is not actually used - here for clarity)
     FLUSH_COMMANDS                  // queue flush can flush the serial command queues
 } cmQueueFlushState;
 

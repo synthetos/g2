@@ -419,13 +419,13 @@ void mp_commit_write_buffer(const moveType move_type)
 
 bool mp_has_runnable_buffer()
 {
-//    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED ||
-        mb.r->buffer_state == MP_BUFFER_RUNNING ||
-        mb.r->buffer_state == MP_BUFFER_PLANNING) {
-        return true;
-    }
-    return false;
+    return (mb.r->buffer_state);                // anything other than MP_BUFFER_EMPTY returns true
+//    if (mb.r->buffer_state == MP_BUFFER_QUEUED ||
+//        mb.r->buffer_state == MP_BUFFER_RUNNING ||
+//        mb.r->buffer_state == MP_BUFFER_PLANNING) {
+//        return true;
+//    }
+//    return false;
 }
 
 mpBuf_t * mp_get_run_buffer()
