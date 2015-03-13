@@ -89,6 +89,7 @@ typedef struct ioDigitalInput {		// one struct per digital input
     int8_t state;                   // input state 0=inactive, 1=active, -1=disabled
     ioEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
     bool homing_mode;               // set true when input is in homing mode.
+    bool probing_mode;              // set true when input is in probing mode.
 
 	uint16_t lockout_ms;            // number of milliseconds for debounce lockout
 	uint32_t lockout_timer;         // time to expire current debounce lockout, or 0 if no lockout
@@ -120,6 +121,10 @@ extern io_t io;
 
 void gpio_init(void);
 void gpio_reset(void);
+
+bool gpio_read_input(const uint8_t input_num);
+void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
+void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
 
 stat_t io_set_mo(nvObj_t *nv);
 stat_t io_set_ac(nvObj_t *nv);

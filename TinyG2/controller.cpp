@@ -172,7 +172,7 @@ static void _controller_HSM()
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
-	DISPATCH( poll_switches());					// 4. run a switch polling cycle
+//	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
     DISPATCH(_shutdown_handler());
     DISPATCH(_interlock_handler());

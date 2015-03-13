@@ -1985,6 +1985,15 @@ stat_t cm_set_hi(nvObj_t *nv)
 	return (STAT_OK);
 }
 
+stat_t cm_set_hd(nvObj_t *nv)
+{
+    if ((nv->value < 0) || (nv->value > 1)) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }
+    set_ui8(nv);
+    return (STAT_OK);
+}
+
 /*
  * Commands
  *
