@@ -135,18 +135,19 @@ namespace Motate {
     pin_number kSpindle_PwmPinNumber            =  -1;
     pin_number kSpindle_Pwm2PinNumber           =  -1;
 
-	pin_number kXAxis_MinPinNumber              =  18;
-	pin_number kXAxis_MaxPinNumber              =  -1;
-	pin_number kYAxis_MinPinNumber              =  18;
-	pin_number kYAxis_MaxPinNumber              =  -1;
-	pin_number kZAxis_MinPinNumber              =  -1;
-	pin_number kZAxis_MaxPinNumber              =  18;
-	pin_number kAAxis_MinPinNumber              =  -1;
-	pin_number kAAxis_MaxPinNumber              =  -1;
-	pin_number kBAxis_MinPinNumber              =  -1;
-	pin_number kBAxis_MaxPinNumber              =  -1;
-	pin_number kCAxis_MinPinNumber              =  -1;
-	pin_number kCAxis_MaxPinNumber              =  -1;
+    pin_number kInput1_PinNumber              =  16;
+    pin_number kInput2_PinNumber              =  17;
+    pin_number kInput3_PinNumber              =  18;
+    pin_number kInput4_PinNumber              =  19;
+    pin_number kInput5_PinNumber              =  20;
+    pin_number kInput6_PinNumber              =  21;
+
+    pin_number kInput7_PinNumber              =  22;
+    pin_number kInput8_PinNumber              =  23;
+    pin_number kInput9_PinNumber              =  24;
+    pin_number kInput10_PinNumber              =  25;
+    pin_number kInput11_PinNumber              =  26;
+    pin_number kInput12_PinNumber              =  27;
 
     pin_number kSD_CardDetect                   =  -1;
     pin_number kInterlock_In                    =  -1;

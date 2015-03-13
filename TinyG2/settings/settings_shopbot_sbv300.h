@@ -161,6 +161,8 @@
 #define X_LATCH_VELOCITY	    	(30 * 25.4)				// xlv	mm/min
 #define X_LATCH_BACKOFF		    	(0.125 * 25.4)			// xlb	mm
 #define X_ZERO_BACKOFF		    	(0.375 * 25.4)			// xzb	mm
+#define X_HOMING_INPUT				0
+#define X_HOMING_DIR				0
 
 #define Y_AXIS_MODE			    	AXIS_STANDARD
 #define Y_VELOCITY_MAX		    	(360 * 25.4)
@@ -178,6 +180,9 @@
 #define Y_LATCH_VELOCITY	    	(30 * 25.4)
 #define Y_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define Y_ZERO_BACKOFF		    	(0.375 * 25.4)
+#define Y_HOMING_INPUT				0
+#define Y_HOMING_DIR				0
+
 
 #define Z_AXIS_MODE			       	AXIS_STANDARD
 #define Z_VELOCITY_MAX		    	(360 * 25.4)
@@ -195,6 +200,9 @@
 #define Z_LATCH_VELOCITY	    	(30 * 25.4)
 #define Z_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define Z_ZERO_BACKOFF		    	(0.375 * 25.4)
+#define Z_HOMING_INPUT				0
+#define Z_HOMING_DIR				0
+
 
 #define A_AXIS_MODE			    	AXIS_STANDARD
 #define A_VELOCITY_MAX		    	(360 * 25.4)
@@ -213,6 +221,8 @@
 #define A_LATCH_VELOCITY	    	(30 * 25.4)
 #define A_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define A_ZERO_BACKOFF		    	(0.375 * 25.4)
+#define A_HOMING_INPUT				0
+#define A_HOMING_DIR				0
 
 #define B_AXIS_MODE			    	AXIS_DISABLED
 #define B_VELOCITY_MAX		    	(360 * 25.4)
@@ -231,6 +241,9 @@
 #define B_LATCH_VELOCITY	    	(30 * 25.4)
 #define B_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define B_ZERO_BACKOFF		    	(0.375 * 25.4)
+#define B_HOMING_INPUT				0
+#define B_HOMING_DIR				0
+
 
 #define C_AXIS_MODE			    	AXIS_DISABLED
 #define C_VELOCITY_MAX		    	(360 * 25.4)
@@ -249,6 +262,8 @@
 #define C_LATCH_VELOCITY	    	(30 * 25.4)
 #define C_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define C_ZERO_BACKOFF		    	(0.375 * 25.4)
+#define C_HOMING_INPUT				0
+#define C_HOMING_DIR				0
 
 //*** Input / output settings ***
 
