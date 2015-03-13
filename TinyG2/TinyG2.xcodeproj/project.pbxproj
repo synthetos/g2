@@ -378,6 +378,7 @@
 		D49EC6311706789800F2BF9B /* instance_wdt.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2A817054FDE00F2BF9B /* instance_wdt.h */; };
 		D49EC6371706789800F2BF9B /* pio_sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2AF17054FDE00F2BF9B /* pio_sam3x8e.h */; };
 		D49EC6391706789800F2BF9B /* sam3x8e.h in Sources */ = {isa = PBXBuildFile; fileRef = D49EC2B617054FDE00F2BF9B /* sam3x8e.h */; };
+		D4B485B61AB1FBC900C6614F /* gpio.h in Sources */ = {isa = PBXBuildFile; fileRef = D4B93DF01AAA9DFE00632FAB /* gpio.h */; };
 		D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */; };
 		D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */; };
 		D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579F18B5C21500F8616C /* cycle_probing.cpp */; };
@@ -3209,6 +3210,7 @@
 		D49EC3F817054FDF00F2BF9B /* SAM4S8B.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8B.svd; sourceTree = "<group>"; };
 		D49EC3F917054FDF00F2BF9B /* SAM4S8C.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8C.svd; sourceTree = "<group>"; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
+		D4B485B11AB1EC5500C6614F /* settings_shapeoko375_Dual.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375_Dual.h; sourceTree = "<group>"; };
 		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
@@ -3271,6 +3273,7 @@
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
+				D4B485B11AB1EC5500C6614F /* settings_shapeoko375_Dual.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
 				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
@@ -7571,6 +7574,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 PLATFORM=ShapeokoDualY";
+			buildConfigurationList = D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "TinyG2 V9 Shapeoko Dual-Y" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 V9 Shapeoko Dual-Y";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4B6579318B5197600F8616C /* TinyG2 G2V9f */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9f";
@@ -7674,6 +7691,7 @@
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
+				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -7687,6 +7705,8 @@
 				D49EC5EB1706789800F2BF9B /* component_adc.h in Sources */,
 				D49EC5EC1706789800F2BF9B /* component_can.h in Sources */,
 				D49EC5ED1706789800F2BF9B /* component_chipid.h in Sources */,
+				D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */,
+				D4B485B61AB1FBC900C6614F /* gpio.h in Sources */,
 				D49EC5EE1706789800F2BF9B /* component_dacc.h in Sources */,
 				D49EC5EF1706789800F2BF9B /* component_dmac.h in Sources */,
 				D49EC5F01706789800F2BF9B /* component_efc.h in Sources */,
@@ -7947,7 +7967,6 @@
 				D49EC53917054FDF00F2BF9B /* arm_mat_scale_f32.c in Sources */,
 				D49EC53A17054FDF00F2BF9B /* arm_mat_scale_q15.c in Sources */,
 				D49EC53B17054FDF00F2BF9B /* arm_mat_scale_q31.c in Sources */,
-				D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */,
 				D49EC53C17054FDF00F2BF9B /* arm_mat_sub_f32.c in Sources */,
 				D49EC53D17054FDF00F2BF9B /* arm_mat_sub_q15.c in Sources */,
 				D49EC53E17054FDF00F2BF9B /* arm_mat_sub_q31.c in Sources */,
@@ -8180,6 +8199,22 @@
 			};
 			name = Release;
 		};
+		D4B485B41AB1F3CB00C6614F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 V9 Shapeoko Dual-Y";
+			};
+			name = Debug;
+		};
+		D4B485B51AB1F3CB00C6614F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 V9 Shapeoko Dual-Y";
+			};
+			name = Release;
+		};
 		D4B6579518B5197600F8616C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -8279,6 +8314,15 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "TinyG2 V9 Shapeoko Dual-Y" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4B485B41AB1F3CB00C6614F /* Debug */,
+				D4B485B51AB1F3CB00C6614F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
