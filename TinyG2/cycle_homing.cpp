@@ -361,14 +361,13 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
 #ifdef __NEW_SWITCHES
 	if (gpio_read_input(hm.homing_input) == IO_ACTIVE) {
-        /* TODO
-        if (gpio_multiple_axes_homing_on_input(hm.homing_input)) {
 
-            // IS THIS CORRECT?
-            return (_homing_error_exit(axis, STAT_HOMING_ERROR_SWITCH_BACKOFF_IMPOSSIBLE)); // axis cannot be homed
-            
+        for (unit8_t check_axis = 0; check_axis < AXES; check_axis++) {
+            if (axis != check_axis && cm.a[check_axis].homing_input == hm.homing_input)
+                // IS THIS CORRECT? Do we need more cleanup here?
+                return (_homing_error_exit(axis, STAT_HOMING_ERROR_SWITCH_BACKOFF_IMPOSSIBLE)); // axis cannot be homed
+            }
         }
-        */
 
         _homing_axis_move(axis, hm.latch_backoff, hm.search_velocity);
     }
