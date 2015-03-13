@@ -25,8 +25,8 @@
 #include "util.h"
 #include "xio.h"			// for char definitions
 
-struct gcodeParserSingleton {	 	  // struct to manage globals
-	uint8_t modals[MODAL_GROUP_COUNT];// collects modal groups in a block
+struct gcodeParserSingleton {	 	        // struct to manage globals
+	uint8_t modals[MODAL_GROUP_COUNT];      // collects modal groups in a block
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
@@ -39,7 +39,8 @@ static stat_t _execute_gcode_block(void);		// Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
-#define EXEC_FUNC(f,v) if((uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
+#define EXEC_FUNC(f,v) if((bool)(uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
+//#define EXEC_FUNC(f,v) if(fp_TRUE(cm.gf.v)) { status = f(cm.gn.v);}
 
 /*
  * gc_gcode_parser() - parse a block (line) of gcode

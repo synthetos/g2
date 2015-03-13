@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.46 // reviewed homing and gpio changes; made some (hopefully) low-risk changes
+#define TINYG_FIRMWARE_BUILD   		079.47 // feedhold sequencing fixes
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
