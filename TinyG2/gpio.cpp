@@ -46,6 +46,7 @@
 #include "stepper.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "report.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
@@ -281,6 +282,8 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 			cm.shutdown_requested = input_num_ext;
 		}
     }
+
+    sr_request_status_report(SR_REQUEST_TIMED);
 }
 
 /***********************************************************************************

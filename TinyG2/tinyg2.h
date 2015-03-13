@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.44 // checkpoint
+#define TINYG_FIRMWARE_BUILD   		079.45 // inX now usable in status reports
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
