@@ -3,6 +3,7 @@
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -112,12 +113,23 @@ static void _homing_debug_print(int8_t axis)
 }
 */
 
+/**** HELPERS ***************************************************************************
+ * _set_homing_func() - a convenience for setting the next dispatch vector and exiting
+ */
+
+static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
+{
+    hm.func = func;
+    return (STAT_EAGAIN);
+}
+
 /***********************************************************************************
  **** G28.2 Homing Cycle ***********************************************************
  ***********************************************************************************/
 
 /*****************************************************************************
- * cm_homing_cycle_start()	- G28.2 homing cycle using limit switches
+ * cm_homing_cycle_start()	    - G28.2 homing cycle using limit switches
+ * cm_homing_cycle_callback()   - main loop callback for running the homing cycle
  *
  * Homing works from a G28.2 according to the following writeup:
  *	https://github.com/synthetos/TinyG/wiki/TinyG-Homing-(version-0.95-and-above)
@@ -204,6 +216,13 @@ stat_t cm_homing_cycle_start_no_set(void)
 	return (STAT_OK);
 }
 
+stat_t cm_homing_cycle_callback(void)
+{
+    if (cm.cycle_state != CYCLE_HOMING) return (STAT_NOOP);     // exit if not in a homing cycle
+    if (cm_get_runtime_busy()) return (STAT_EAGAIN);            // sync to planner move ends
+    return (hm.func(hm.axis));                                  // execute the current homing move
+}
+
 /* Homing axis moves - these execute in sequence for each axis
  * cm_homing_cycle_callback() 	- main loop callback for running the homing cycle
  *	_set_homing_func()			- a convenience for setting the next dispatch vector and exiting
@@ -221,19 +240,6 @@ stat_t cm_homing_cycle_start_no_set(void)
 static stat_t _verify_position(int8_t axis)
 See build 071.09 for _verify_position()
 */
-
-stat_t cm_homing_cycle_callback(void)
-{
-    if (cm.cycle_state != CYCLE_HOMING) return (STAT_NOOP);     // exit if not in a homing cycle
-    if (cm_get_runtime_busy()) return (STAT_EAGAIN);            // sync to planner move ends
-    return (hm.func(hm.axis));                                  // execute the current homing move
-}
-
-static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
-{
-	hm.func = func;
-	return (STAT_EAGAIN);
-}
 
 #ifndef __NEW_INPUTS
 static void _homing_trigger_feedhold(switch_t *s)
