@@ -273,6 +273,8 @@ stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
+void mp_request_out_of_band_dwell(float seconds);
+stat_t mp_exec_out_of_band_dwell(void);
 
 void mp_init_buffers(void);                             // planner buffer handlers...
 uint8_t mp_get_planner_buffers_available(void);

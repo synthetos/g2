@@ -200,17 +200,16 @@ uint8_t cm_get_motion_state() { return cm.motion_state;}
 uint8_t cm_get_hold_state() { return cm.hold_state;}
 uint8_t cm_get_homing_state() { return cm.homing_state;}
 
-//void cm_set_motion_state(uint8_t motion_state)
 void cm_set_motion_state(cmMotionState motion_state)
 {
-	cm.motion_state = motion_state;
+    cm.motion_state = motion_state;
 
-	switch (motion_state) {
-		case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
+    switch (motion_state) {
+        case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
         case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
-		case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
-		case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
-	}
+        case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
+        case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
+    }
 }
 
 /***********************************
@@ -592,9 +591,13 @@ void canonical_machine_reset()
     cm.hold_state = FEEDHOLD_OFF;
 	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 */
-	cm.gmx.block_delete_switch = true;
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
-	cm.machine_state = MACHINE_READY;
+    cm.estop_state = ESTOP_INACTIVE;
+    cm.safety_state = SAFETY_ESC_REBOOTING;
+    cm.esc_boot_timer = SysTickTimer_getValue();
+
+    cm.gmx.block_delete_switch = true;
+    cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
+    cm.machine_state = MACHINE_READY;
 }
 
 /*
@@ -1302,7 +1305,7 @@ void cm_message(char_t *message)
  * cm_request_queue_flush()
  */
 void cm_request_feedhold(void) {
-    if(cm.estop_state) return;
+    if(cm.estop_state != ESTOP_INACTIVE) { return; }
 
     if (cm.hold_state == FEEDHOLD_OFF) {    // only honor request if not already in a feedhold
         cm.hold_state = FEEDHOLD_REQUESTED;
@@ -1312,7 +1315,7 @@ void cm_request_feedhold(void) {
 
 void cm_request_end_hold(void)
 {
-    if(cm.estop_state) return;
+    if(cm.estop_state != ESTOP_INACTIVE) { return; }
 
 //    if (cm.hold_state != FEEDHOLD_OFF) {
         cm.end_hold_requested = true;
@@ -1324,11 +1327,12 @@ void cm_request_end_hold(void)
  */
 void cm_request_queue_flush()
 {
-    if(cm.estop_state) return;
+    if(cm.estop_state != ESTOP_INACTIVE) { return; }
 
     if (cm.hold_state != FEEDHOLD_OFF) {    // don't honor request unless you are in a feedhold
         cm.flush_state = FLUSH_REQUESTED;
-        cm_queue_flush();                   // attempt to run this right now
+//		cm.waiting_for_gcode_resume = true;
+//        cm_queue_flush();                   // attempt to run this right now
     }
 }
 
@@ -1354,14 +1358,6 @@ stat_t cm_feedhold_sequencing_callback()
             cm.end_hold_requested = false;
 		}
 	}
-/*
-    // safety dance. Release the controller if paused
-    if (cm.hold_state == FEEDHOLD_HOLD) {
-        if (cs.controller_state == CONTROLLER_PAUSED) {
-            cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
-        }
-    }
-*/
 	return (STAT_OK);
 }
 
@@ -1386,9 +1382,15 @@ void cm_start_hold()
 
 void cm_end_hold()
 {
-	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF)
-		return;
+//    if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && 
+//        (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//        return;
+//    }
 
+	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+		return;
+    }
+        
     cm.end_hold_requested = false;
 	mp_exit_hold_state();
 
@@ -1402,12 +1404,16 @@ void cm_end_hold()
 
     } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		cm_cycle_start();
-		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-    		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-    	} else {
-    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-		}
+//		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+//    		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
+//    	} else {
+//    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+//		}
+	    if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+            mp_request_out_of_band_dwell(cm.pause_dwell_time);
+        }
+	    cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
         st_request_exec_move();
     }
 }
@@ -1564,6 +1570,7 @@ void cm_program_end()
 
 stat_t cm_start_estop(void)
 {
+	cm.waiting_for_gcode_resume = true;
     cm.cycle_state = CYCLE_OFF;
     for(int i = 0; i < HOMING_AXES; ++i)
         cm.homed[i] = false;
@@ -1717,10 +1724,16 @@ static const char msg_g94[] PROGMEM = "G94 - units-per-minute mode (i.e. feedrat
 static const char msg_g95[] PROGMEM = "G95 - units-per-revolution mode";
 static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
 
+static const char msg_safe0[] PROGMEM = "Interlock Circuit Closed/ESC nominal";
+static const char msg_safe1[] PROGMEM = "Interlock Circuit Broken/ESC nominal";
+static const char msg_safe2[] PROGMEM = "Interlock Circuit Closed/ESC rebooting";
+static const char msg_safe3[] PROGMEM = "Interlock Circuit Broken/ESC rebooting";
+static const char *const msg_safe[] PROGMEM = { msg_safe0, msg_safe1, msg_safe2, msg_safe3 };
+/*
 static const char msg_ilck0[] PROGMEM = "Interlock Circuit Closed";
 static const char msg_ilck1[] PROGMEM = "Interlock Circuit Broken";
 static const char *const msg_ilck[] PROGMEM = { msg_ilck0, msg_ilck1 };
-
+*/
 static const char msg_estp0[] PROGMEM = "E-Stop Circuit Closed";
 static const char msg_estp1[] PROGMEM = "E-Stop Circuit Closed but unacked";
 static const char msg_estp2[] PROGMEM = "E-Stop Circuit Broken and acked";
@@ -1840,7 +1853,7 @@ stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_pa
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
-stat_t cm_get_ilck(nvObj_t *nv) { return(_get_msg_helper(nv, msg_ilck, cm.interlock_state)); }
+stat_t cm_get_ilck(nvObj_t *nv) { return(_get_msg_helper(nv, msg_safe, cm.interlock_state)); }
 stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_state)); }
 
 stat_t cm_get_toolv(nvObj_t *nv)

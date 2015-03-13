@@ -131,9 +131,9 @@ typedef enum  {					    // applies to cm.probe_state
 } cmProbeState;
 
 typedef enum {
-    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
-    ESTOP_ACKED    = 0,
-    ESTOP_INACTIVE = 0,
+    ESTOP_RELEASED = 0,             // pressed/released is physical state
+    ESTOP_ACKED    = 0,             // acked/unacked is machine control state
+    ESTOP_INACTIVE = 0,             // active/inactive is whether we're currently in estop mode
     ESTOP_PRESSED  = 0x1,
     ESTOP_UNACKED  = 0x2,
     ESTOP_ACTIVE   = 0x4,
@@ -142,6 +142,22 @@ typedef enum {
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
 } cmEstopState;
+
+typedef enum {
+    SAFETY_INTERLOCK_CLOSED = 0,
+    SAFETY_INTERLOCK_OPEN
+} cmSafetyState;
+
+typedef enum {
+    SAFETY_ESC_ONLINE = 0,
+    SAFETY_ESC_OFFLINE,
+    SAFETY_ESC_LOCKOUT,
+    SAFETY_ESC_REBOOTING,
+    SAFETY_ESC_LOCKOUT_AND_REBOOTING,
+} cmESCState;
+
+#define SAFETY_INTERLOCK_MASK 0x1
+#define SAFETY_ESC_MASK = 0xE
 
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
@@ -457,7 +473,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
-    bool interlock_enable;              // true to enable interlock system
+//    bool interlock_enable;              // true to enable interlock system
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -480,8 +496,15 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState flush_state;      // hold: queue flush state machine
 
-	uint8_t interlock_state;			// true if interlock has been triggered
-	uint8_t estop_state;				// true if estop has been triggered
+	uint8_t estop_state;                // true if estop has been triggered
+
+	uint8_t interlock_state;            // true if interlock has been triggered
+//    cmSafetyState safety_state;         // safety interlock state
+	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
+
+    cmESCState esc_state;               // state management for ESC controller
+	uint32_t esc_boot_timer;            // When the ESC last booted up
+	uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
@@ -489,7 +512,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	cmProbeState probe_state;			// probing state machine (simple)
 	float probe_results[AXES];			// probing results
 
-	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
 	float jogging_dest;					// jogging direction as a relative move from current position
 
 	bool g28_flag;					    // true = complete a G28 move
@@ -499,6 +521,11 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
     uint8_t interlock_requested;        // set non-zero to request interlock processing (value is leading or trailing edge)
+
+	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
+
+	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
+	                                    // see explanation in gcode_parser.cpp::wait_for_gcode_resume
 
 	/**** Model states ****/
 	GCodeState_t *am;                   // active Gcode model is maintained by state management
