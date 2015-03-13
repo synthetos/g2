@@ -46,6 +46,7 @@
 #include "stepper.h"
 #include "hardware.h"
 #include "canonical_machine.h"
+#include "report.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
@@ -71,6 +72,41 @@ static InputPin<kInput9_PinNumber> input_9_pin(kPullUp);
 static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
 static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
 static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
+
+// WARNING: this returns raw pin values, NOT corrected for NO/NV Active high/low
+// Also, this takes EXTERNAL pin numbers -- 1-based
+bool _read_input_pin(const uint8_t input_num) {
+    switch(input_num) {
+        case 1:
+        { return (input_1_pin.get() != 0); }
+        case 2:
+        { return (input_2_pin.get() != 0); }
+        case 3:
+        { return (input_3_pin.get() != 0); }
+        case 4:
+        { return (input_4_pin.get() != 0); }
+        case 5:
+        { return (input_5_pin.get() != 0); }
+        case 6:
+        { return (input_6_pin.get() != 0); }
+        case 7:
+        { return (input_7_pin.get() != 0); }
+        case 8:
+        { return (input_8_pin.get() != 0); }
+        case 9:
+        { return (input_9_pin.get() != 0); }
+        case 10:
+        { return (input_10_pin.get() != 0); }
+        case 11:
+        { return (input_11_pin.get() != 0); }
+        case 12:
+        { return (input_12_pin.get() != 0); }
+        default:
+        { // ERROR?
+            return false;
+        }
+    }
+}
 
 /*
  * gpio_init() - initialize inputs and outputs
@@ -110,10 +146,29 @@ void gpio_init(void)
 void gpio_reset(void)
 {
 	for (uint8_t i=0; i<DI_CHANNELS; i++) {
-		io.in[i].state = IO_INACTIVE;
+        int8_t pin_value_corrected = (_read_input_pin(i+1) ^ (io.in[i].mode ^ 1));	// correct for NO or NC mode
+		io.in[i].state = pin_value_corrected;
         io.in[i].lockout_ms = IO_LOCKOUT_MS;
 		io.in[i].lockout_timer = SysTickTimer.getValue();
 	}
+}
+
+// input_num_ext meand EXTERNAL input number -- 1-based
+void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
+{
+    io.in[input_num_ext-1].homing_mode = is_homing;
+}
+
+// input_num_ext meand EXTERNAL input number -- 1-based
+void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
+{
+    io.in[input_num_ext-1].probing_mode = is_probing;
+}
+
+// input_num_ext meand EXTERNAL input number -- 1-based
+bool gpio_read_input(const uint8_t input_num_ext)
+{
+    return io.in[input_num_ext-1].state;
 }
 
 /*
@@ -151,11 +206,11 @@ MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _handle_pin_changed(11, (input_12_pin
  *  pin_value = 1 if pin is set, 0 otherwise
  */
 
-void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
+void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_value)
 {
-    io_di_t *in = &io.in[input_num-1];  // array index is one less than input number
+    io_di_t *in = &io.in[input_num_ext-1];  // array index is one less than input number
 
-    printf("input num %d\n", input_num);
+//    printf("input num %d\n", input_num);
 
     // return if input is disabled (not supposed to happen)
 	if (in->mode == IO_MODE_DISABLED) {
@@ -169,7 +224,7 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
     }
 
 	// return if no change in state
-	int8_t pin_value_corrected = (pin_value ^ (in->mode ^ 1));	// correct for NO or NC mode
+	int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
 	if ( in->state == pin_value_corrected ) {
 //    	in->edge = IO_EDGE_NONE;        // edge should only be reset by function or opposite edge
     	return;
@@ -186,10 +241,8 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 
     // perform homing operations if in homing mode
     if (in->homing_mode) {
-		if (in->edge == IO_EDGE_LEADING) {
-		//  cm_request_feedhold();
-			cm_start_hold();
-		}
+        // We want either edge -- leading on home and trailing on backoff
+        cm_start_hold();
         return;
     }
 
@@ -223,12 +276,14 @@ void static _handle_pin_changed(const uint8_t input_num, const int8_t pin_value)
 	// the remainder of the functions only trigger on the leading edge
     if (in->edge == IO_EDGE_LEADING) {
 		if (in->function == IO_FUNCTION_LIMIT) {
-			cm.limit_requested = input_num;
+			cm.limit_requested = input_num_ext;
 
 		} else if (in->function == IO_FUNCTION_SHUTDOWN) {
-			cm.shutdown_requested = input_num;
+			cm.shutdown_requested = input_num_ext;
 		}
     }
+
+    sr_request_status_report(SR_REQUEST_TIMED);
 }
 
 /***********************************************************************************

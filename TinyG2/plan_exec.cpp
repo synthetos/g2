@@ -28,6 +28,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
+#include "controller.h"
 #include "planner.h"
 #include "kinematics.h"
 #include "stepper.h"
@@ -247,14 +248,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             cm.hold_state = FEEDHOLD_HOLD;
 	        mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
+            cs.controller_state = CONTROLLER_READY;                     // remove controller readline() PAUSE
             return (STAT_OK);                                           // hold here. No more movement
         }
 
         // Case (5) - decelerated to zero
+        // Update the run buffer then force a replan of the whole planner queue
         if (cm.hold_state == FEEDHOLD_DECEL_END) {
-            // update the run buffer then force a replan of the whole planner queue
-
-//          mpBuf_t *bp = mp_get_run_buffer();  // get the current run buffer  +++ test if same as run buffer
             mr.move_state = MOVE_OFF;	                                // invalidate mr buffer to reset the new move
             bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
@@ -281,7 +281,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 }
             } else {
                 mr.entry_velocity = mr.segment_velocity;
-//                if (mr.section != SECTION_BODY) {
                 if (mr.section == SECTION_HEAD) {
                     mr.entry_velocity += mr.forward_diff_5; // compute velocity for next segment (this new one)
                 }

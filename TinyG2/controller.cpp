@@ -172,7 +172,7 @@ static void _controller_HSM()
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
-	DISPATCH( poll_switches());					// 4. run a switch polling cycle
+//	DISPATCH( poll_switches());					// 4. run a switch polling cycle
 	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
     DISPATCH(_shutdown_handler());
     DISPATCH(_interlock_handler());
@@ -254,7 +254,7 @@ static bool _parse_clear(char *str) // return true if it's a clear command
     if (strcmp("clear", p) == 0) return (true);
     if (strcmp("clr", p) == 0) return (true);
     return (false);
-    
+
 /* the above abbreviation is worth 88 bytes and faster execution
     if (strcmp("{clear:n}", str) == 0) return (true);
     if (strcmp("{\"clear\":n}", str) == 0) return (true);
@@ -307,8 +307,11 @@ static void _dispatch_kernel()
         cs.bufp++;
     }
 
+    if (*cs.bufp == ETX) {
+        __NOP();
+    }
     if (cm.flush_state == FLUSH_COMMANDS) {
-//        if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
+//      if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
         if (*cs.bufp == ETX) {
             cm_end_queue_flush();
         }

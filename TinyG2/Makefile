@@ -224,6 +224,8 @@ ifeq ("$(PLATFORM)","G2v9i")
 
 endif
 
+#### Example config-specific additions:
+
 ifeq ("$(PLATFORM)","UltimakerTests")
 
 	BASE_PLATFORM=v9_3x8c
@@ -231,6 +233,18 @@ ifeq ("$(PLATFORM)","UltimakerTests")
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
+
+ifeq ("$(PLATFORM)","ShapeokoDualY")
+
+BASE_PLATFORM=v9_3x8c
+SETTINGS_FILE="settings_shapeoko375_dual.h"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
+##########
+
+
 
 #ifeq ("$(PLATFORM)","G2v9j")
 #

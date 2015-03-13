@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.42 // fixed queue flush MR restart under certain conditions
+#define TINYG_FIRMWARE_BUILD   		079.45 // inX now usable in status reports
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -556,7 +556,7 @@ char *get_status_message(stat_t status);
 #define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL 244
 #define	STAT_HOMING_ERROR_NEGATIVE_LATCH_BACKOFF 245
 #define	STAT_HOMING_ERROR_SWITCH_MISCONFIGURATION 246
-#define	STAT_ERROR_247 247
+#define	STAT_HOMING_ERROR_SWITCH_BACKOFF_IMPOSSIBLE 247
 #define	STAT_ERROR_248 248
 #define	STAT_ERROR_249 249
 

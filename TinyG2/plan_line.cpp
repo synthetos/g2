@@ -87,8 +87,10 @@ bool mp_runtime_is_idle()
 
 uint8_t mp_get_runtime_busy()
 {
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned);
+    if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned)
+    {
         return (true);
+    }
 	return (false);
 }
 

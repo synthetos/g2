@@ -114,7 +114,7 @@ typedef enum {				        // feedhold_state machine
 typedef enum {				        // queue flush_state machine
     FLUSH_OFF = 0,				    // no queue flush in effect
     FLUSH_REQUESTED,                // queue flush has been requested but not started yet
-    FLUSH_PLANNER,                  // queue flush can flush the planner queue
+    FLUSH_PLANNER,                  // queue flush can flush the planner queue (state is not actually used - here for clarity)
     FLUSH_COMMANDS                  // queue flush can flush the serial command queues
 } cmQueueFlushState;
 
@@ -727,6 +727,7 @@ stat_t cm_set_am(nvObj_t *nv);			// set axis mode
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 stat_t cm_set_hi(nvObj_t *nv);          // set homing input
+stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
 
 /*--- text_mode support functions ---*/
 

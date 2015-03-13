@@ -1228,16 +1228,14 @@ void cm_message(char_t *message)
  *    - A feedhold request received during a motion stop should be ignored
  *
  *    - A queue flush request should only be honored while in a feedhold
- *    - A queue flush request received during a feedhold should be deferred until
+ *    - Said queue flush request received during a feedhold should be deferred until
  *      the feedhold enters a HOLD state (i.e. until deceleration is complete and motors stop).
  *    - A queue flush request received during a motion stop should be honored
  *
- *    - An end_hold (cycle start) request received during motion should be ignored
- *    - An end_hold request received during a feedhold should be deferred until the
+ *    - An end_hold (cycle start) request should only be honored while in a feedhold
+ *    - Said end_hold request received during a feedhold should be deferred until the
  *      feedhold enters a HOLD state (i.e. until deceleration is complete).
  *      If a queue flush request is also present the queue flush should be done first
- *    - An end_hold request received during a motion stop should be honored and
- *      should start to run anything in the planner queue
  *
  *	Below the request level, feedholds work like this:
  *
@@ -1315,7 +1313,10 @@ void cm_request_feedhold(void) {
 void cm_request_end_hold(void)
 {
     if(cm.estop_state) return;
-    cm.end_hold_requested = true;
+
+//    if (cm.hold_state != FEEDHOLD_OFF) {
+        cm.end_hold_requested = true;
+//    }
 }
 
 /*
@@ -1347,19 +1348,20 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                   // queue flush won't run until runtime is idle
 	}
-	if ((cm.end_hold_requested == true) && (cm.flush_state == FLUSH_OFF)) {
-		if(cm.motion_state != MOTION_HOLD) {
-			cm.end_hold_requested = false;
-        } else if(cm.hold_state == FEEDHOLD_HOLD) {
+	if ((cm.end_hold_requested == true) && (cm.hold_state == FEEDHOLD_HOLD)) {
+        if (cm.flush_state == FLUSH_OFF) {  // either no flush or wait until it's done flushing
 			cm_end_hold();
+            cm.end_hold_requested = false;
 		}
 	}
-    // safety dance. This is supposed to happen in the plan_exec feedhold processing
+/*
+    // safety dance. Release the controller if paused
     if (cm.hold_state == FEEDHOLD_HOLD) {
         if (cs.controller_state == CONTROLLER_PAUSED) {
             cs.controller_state = CONTROLLER_READY;  // remove controller readline() pause
         }
     }
+*/
 	return (STAT_OK);
 }
 
@@ -1983,6 +1985,15 @@ stat_t cm_set_hi(nvObj_t *nv)
 	}
 	set_ui8(nv);
 	return (STAT_OK);
+}
+
+stat_t cm_set_hd(nvObj_t *nv)
+{
+    if ((nv->value < 0) || (nv->value > 1)) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }
+    set_ui8(nv);
+    return (STAT_OK);
 }
 
 /*

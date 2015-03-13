@@ -32,7 +32,11 @@
 #include "canonical_machine.h"
 #include "spindle.h"
 #include "report.h"
+#ifdef __NEW_SWITCHES
+#include "gpio.h"
+#else
 #include "switch.h"
+#endif
 #include "planner.h"
 #include "util.h"
 
@@ -44,10 +48,8 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	stat_t (*func)();							// binding for callback function state machine
 
 	// switch configuration
-#ifndef __NEW_SWITCHES
-	uint8_t probe_switch;						// which switch should we check?
-	uint8_t saved_switch_type;					// saved switch type NO/NC
-	uint8_t saved_switch_mode;			// save the probe switch's original settings
+#ifdef __NEW_SWITCHES
+	uint8_t probe_input;						// which switch should we check?
 #else
 	uint8_t probe_switch_axis;					// which axis should we check?
 	uint8_t probe_switch_position;				//...and position
@@ -113,10 +115,12 @@ uint8_t _set_pb_func(uint8_t (*func)())
  *	to cm_get_runtime_busy() is about.
  */
 
+#ifndef __NEW_SWITCHES
 static void _probe_trigger_feedhold(switch_t *s)
 {
 	cm_request_feedhold();
 }
+#endif
 
 uint8_t cm_straight_probe(float target[], float flags[])
 {
@@ -195,14 +199,15 @@ static uint8_t _probing_init()
 	}
 
 	// initialize the probe switch
-#ifndef __NEW_SWITCHES	// old style switch code:
-	pb.probe_switch = SW_MIN_Z;										// FIXME: hardcoded...
-	pb.saved_switch_mode = sw.mode[pb.probe_switch];
-	sw.mode[pb.probe_switch] = SW_MODE_HOMING;
-	pb.saved_switch_type = sw.switch_type;							// save the switch type for recovery later.
-	sw.switch_type = SW_TYPE_NORMALLY_OPEN;							// contact probes are NO switches... usually
-	switch_reset();													// reset switches to pick up new switch settings
-#else // new style switch code:
+#ifdef __NEW_SWITCHES
+    // Get the probe input
+
+    // TODO -- for now we hard code it to zmin
+    pb.probe_input = 5;
+
+    // Set the input into probing mode
+    gpio_set_probing_mode(pb.probe_input, true);
+#else
 	pb.probe_switch_axis = AXIS_Z;									// FIXME: hardcoded...
 	pb.probe_switch_position = SW_MIN;								// FIXME: hardcoded...
 
@@ -230,21 +235,20 @@ static uint8_t _probing_init()
 static stat_t _probing_start()
 {
 	// initial probe state, don't probe if we're already contacted!
-#ifndef __NEW_SWITCHES
-	int8_t probe = read_switch(pb.probe_switch);
+#ifdef __NEW_SWITCHES
+    int8_t probe = gpio_read_input(pb.probe_input);
 #else
 	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
 #endif
 
-	if( probe==SW_OPEN ) {
-        // FIXME: this should be its own parameter
-//        cm_set_feed_rate(cm.a[AXIS_Z].search_velocity);
+    /* false is SW_OPEN in old code, and IO_INACTIVE in new */
+	if ( probe == false ) {
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
-	} else {
-        cm.probe_state = PROBE_SUCCEEDED;
-        return (_set_pb_func(_probing_finish));
-    }
+	}
+
+    cm.probe_state = PROBE_SUCCEEDED;
+    return (_set_pb_func(_probing_finish));
 }
 
 /*
@@ -252,10 +256,15 @@ static stat_t _probing_start()
  */
 static stat_t _probing_backoff()
 {
+#ifdef __NEW_SWITCHES
+    int8_t probe = gpio_read_input(pb.probe_input);
+#else
     // If we've contacted, back off & then record position
     int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-    
-    if( probe == SW_CLOSED ) {
+#endif
+
+    /* true is SW_CLOSED in old code, and IO_ACTIVE in new */
+    if( probe == true  ) {
         cm.probe_state = PROBE_SUCCEEDED;
         // FIXME: this should be its own parameter
         //cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
@@ -273,12 +282,12 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
-#ifndef __NEW_SWITCHES
-	int8_t probe = read_switch(pb.probe_switch);
+#ifdef __NEW_SWITCHES
+    int8_t probe = gpio_read_input(pb.probe_input);
 #else
 	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
 #endif
-	cm.probe_state = (probe==SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
+	cm.probe_state = (probe==true) ? PROBE_SUCCEEDED : PROBE_FAILED;
 
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 		// if we got here because of a feed hold we need to keep the model position correct
@@ -313,10 +322,8 @@ static void _probe_restore_settings()
 	if (cm.hold_state == FEEDHOLD_HOLD);
 		cm_end_hold();
 
-#ifndef __NEW_SWITCHES // restore switch settings (old style)
-	sw.switch_type = pb.saved_switch_type;
-	sw.mode[pb.probe_switch] = pb.saved_switch_mode;
-	switch_reset();								// re-init to pick up changes
+#ifdef __NEW_SWITCHES // restore switch settings (old style)
+    gpio_set_probing_mode(pb.probe_input, false);
 #else // restore switch settings (new style)
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = pb.saved_switch_mode;
 	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = pb.saved_switch_type;
