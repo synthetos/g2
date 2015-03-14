@@ -182,7 +182,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 // if in a feedhold request a queue flush and leave a marker in the buffer (ETX)
                 // set _ready_to_send so the next time the marker will be will returned.
                 if (c == '%') {
-                    if (!cm_is_holding()) {
+                    if (!cm_has_hold()) {
                         read_buf[read_index++] = ';';
                         continue;
                     } else {

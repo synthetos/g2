@@ -111,12 +111,17 @@ typedef enum {				        // feedhold_state machine
     FEEDHOLD_HOLD					// holding
 } cmFeedholdState;
 
-typedef enum {				        // queue flush_state machine
+typedef enum {				        // master queue flush state machine
     FLUSH_OFF = 0,				    // no queue flush in effect
-    FLUSH_REQUESTED,                // queue flush has been requested but not started yet
-    FLUSH_PLANNER,                  // queue flush can flush the planner queue (state is not actually used - here for clarity)
-    FLUSH_COMMANDS                  // queue flush can flush the serial command queues
+    FLUSH_REQUESTED,                // flush has been requested but not started yet
+    FLUSH_PLANNER_DONE              // planner flush complete
 } cmQueueFlushState;
+
+typedef enum {				        // serial flush state machine (child to master)
+    FLUSH_SERIAL_OFF = 0,           // no serial flush in effect
+    FLUSH_SERIAL_ON,                // serial flush in processing
+    FLUSH_SERIAL_DONE               // serial flush complete
+} cmSerialFlushState;
 
 typedef enum {				        // applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
@@ -494,7 +499,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     cmCycleState cycle_state;           // cycs
     cmMotionState motion_state;         // momo
 	cmFeedholdState hold_state;         // hold: feedhold state machine
-	cmQueueFlushState flush_state;      // hold: queue flush state machine
+	cmQueueFlushState queue_flush_state;  // master queue flush state machine
+	cmSerialFlushState serial_flush_state;// serial queue flush sub-state machine
 
 	uint8_t estop_state;                // true if estop has been triggered
 
@@ -517,7 +523,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool g28_flag;					    // true = complete a G28 move
 	bool g30_flag;					    // true = complete a G30 move
 	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
-	bool end_hold_requested;			// cycle start character has been received (flag to end feedhold)
+	bool end_hold_requested;			//
+	bool end_flush_requested;			//
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
     uint8_t interlock_requested;        // set non-zero to request interlock processing (value is leading or trailing edge)
@@ -667,9 +674,10 @@ void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 void cm_request_feedhold(void);
 void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
+void cm_request_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
 
-bool cm_is_holding(void);
+bool cm_has_hold(void);
 void cm_start_hold(void);
 void cm_end_hold(void);
 

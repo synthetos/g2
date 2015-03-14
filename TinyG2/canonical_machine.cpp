@@ -1324,17 +1324,25 @@ void cm_request_end_hold(void)
 
 /*
  * cm_request_queue_flush()
+ * cm_request_end_queue_flush()
  */
 void cm_request_queue_flush()
 {
     if(cm.estop_state != ESTOP_INACTIVE) { return; }
 
-    if (cm.hold_state != FEEDHOLD_OFF) {    // don't honor request unless you are in a feedhold
-        cm.flush_state = FLUSH_REQUESTED;
+    if (cm.hold_state != FEEDHOLD_OFF) {            // don't honor request unless you are in a feedhold
+        cm.queue_flush_state = FLUSH_REQUESTED;
+        cm.serial_flush_state = FLUSH_SERIAL_ON;    // enable serial queue to flush immediately
 //		cm.waiting_for_gcode_resume = true;
-//        cm_queue_flush();                   // attempt to run this right now
     }
 }
+/*
+void cm_request_end_queue_flush()
+{
+//    cm.end_flush_requested = true;
+    cm.serial_flush_state = FLUSH_SERIAL_DONE       // serial flush complete
+}
+*/
 
 /*
  * cm_feedhold_sequencing_callback()
@@ -1343,36 +1351,38 @@ stat_t cm_feedhold_sequencing_callback()
 {
     // sequence feedhold, queue_flush, and end_hold requests
 	if (cm.hold_state == FEEDHOLD_REQUESTED) {
-		if (mp_has_runnable_buffer()) {     // meaning there is something running
-			cm_start_hold();
-		} else if (cm.gm.spindle_mode != SPINDLE_OFF) {
-			cm_spindle_control_immediate(SPINDLE_OFF);
-		}
+		cm_start_hold();                            // feed won't take unless it's moving
 	}
-	if (cm.flush_state == FLUSH_REQUESTED) {
-        cm_queue_flush();                   // queue flush won't run until runtime is idle
+	if (cm.queue_flush_state == FLUSH_REQUESTED) {
+        cm_queue_flush();                           // queue flush won't run until runtime is idle
 	}
-	if ((cm.end_hold_requested == true) && (cm.hold_state == FEEDHOLD_HOLD)) {
-        if (cm.flush_state == FLUSH_OFF) {  // either no flush or wait until it's done flushing
+	if (cm.end_hold_requested && (cm.hold_state == FEEDHOLD_HOLD)) {
+        if (cm.queue_flush_state == FLUSH_OFF) {    // either no flush or wait until it's done flushing
 			cm_end_hold();
-            cm.end_hold_requested = false;
 		}
 	}
+//	if (cm.end_flush_requested && (cm.queue_flush_state != FLUSH_OFF)) {
+//	if (cm.end_flush_requested) {
+    	cm_end_queue_flush();                       // queue flush won't run until runtime is idle
+//	}
 	return (STAT_OK);
 }
 
 /*
+ * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
  * cm_start_hold() - start a feedhhold by signalling the exec
  * cm_end_hold()   - end a feedhold by returning the system to normal operation
- * cm_is_holding() - return true if a hold condition exists (or a pending hold request)
  */
-bool cm_is_holding()
+bool cm_has_hold()
 {
     return (cm.hold_state != FEEDHOLD_OFF);
 }
 
 void cm_start_hold()
 {
+	if (!mp_has_runnable_buffer()) {     // meaning there's nothing running
+        return;
+    }
     if(cm.gm.spindle_mode != SPINDLE_OFF) {
         cm_spindle_control_immediate(SPINDLE_OFF);
     }
@@ -1382,7 +1392,7 @@ void cm_start_hold()
 
 void cm_end_hold()
 {
-//    if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && 
+//    if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 &&
 //        (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 //        return;
 //    }
@@ -1390,7 +1400,7 @@ void cm_end_hold()
 	if(cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 		return;
     }
-        
+
     cm.end_hold_requested = false;
 	mp_exit_hold_state();
 
@@ -1420,27 +1430,40 @@ void cm_end_hold()
 
 /*
  * cm_queue_flush() - Flush planner queue and correct model positions
- * cm_end_queue_flush() - end flush when marker is hit
+ * cm_end_queue_flush() - end queue flush when marker is hit
+ *
+ * Queue flush is a bit complicated because it's two unsynchronized processes that
+ * must finalize once both are complete. The first process flushes the planner queue
+ * in cm_queue_flush(). The second flushes the serial queue to the ETX marker in the
+ * controller. Once both are complete cm_end_queue_flush() can finalize the queue
+ * flush operation.
  */
 void cm_queue_flush()
 {
-	if (mp_runtime_is_idle()) {                 // can't flush during movement
+//    cm.serial_flush_state = FLUSH_SERIAL_ON;    // enable serial queue to flush
+
+	if (mp_runtime_is_idle()) {                 // can't flush planner during movement
         mp_flush_planner();
-        cm.flush_state = FLUSH_COMMANDS;        // initiate command flush
 
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
             cm_set_position(axis, mp_get_runtime_absolute_position(axis));
         }
+        cm.queue_flush_state = FLUSH_PLANNER_DONE;
     }
 }
 
 void cm_end_queue_flush()
 {
-	if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
-    	cm_end_hold();
-	}
-    cm.flush_state = FLUSH_OFF;
-	qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
+    if ((cm.queue_flush_state == FLUSH_PLANNER_DONE) &&
+        (cm.serial_flush_state == FLUSH_SERIAL_DONE)) {
+	    if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
+    	    cm_end_hold();
+	    }
+        cm.queue_flush_state = FLUSH_OFF;
+        cm.serial_flush_state = FLUSH_SERIAL_OFF;
+//        cm.end_flush_requested = false;
+	    qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
+    }
 }
 
 /******************************
@@ -1582,7 +1605,7 @@ stat_t cm_start_estop(void)
     float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
     _exec_program_finalize(value, value);	// finalize now, not later
     cm.hold_state = FEEDHOLD_OFF;
-    cm.flush_state = FLUSH_OFF;
+    cm.queue_flush_state = FLUSH_OFF;
     cm.end_hold_requested = false;
     return (STAT_OK);
 }

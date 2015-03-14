@@ -306,18 +306,17 @@ static void _dispatch_kernel()
         cs.bufp++;
     }
 
-    if (*cs.bufp == ETX) {
-        __NOP();
-    }
-    if (cm.flush_state == FLUSH_COMMANDS) {
+//    if (strchr(cs.bufp, ETX) != NULL) {     // ++++++ test
+//            cm_request_end_queue_flush();
+//        __NOP();
+//    }
+//    if (cm.serial_flush_state == FLUSH_SERIAL_ON) {
+    if (cm.serial_flush_state != FLUSH_OFF) {
         if (strchr(cs.bufp, ETX) != NULL) {                 // see if there's an ETX in the buffer
-            cm_end_queue_flush();
-        } 
+            cm.serial_flush_state = FLUSH_SERIAL_DONE;      // serial flush complete
+//            cm_request_end_queue_flush();
+        }
 //        else if (_parse_clear(cs.bufp)) {                 // see if a clear has been sent
-//            cm_end_queue_flush();
-//        }
-//      if ((*cs.bufp == ETX) || (_parse_clear(cs.bufp))) {  // +++ need to test _parser_clear()
-//        if (*cs.bufp == ETX) {
 //            cm_end_queue_flush();
 //        }
         return;                                             // silently dump the command
@@ -332,11 +331,9 @@ static void _dispatch_kernel()
     }
 
 	// trap single character commands
-    if (*cs.bufp == '!') {
-        cm_request_feedhold();
-    }
-	else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    if      (*cs.bufp == '!') { cm_request_feedhold(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
+	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
     else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
 

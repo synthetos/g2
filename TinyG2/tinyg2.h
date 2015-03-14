@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.48 // editorial changes to probing and homing
+#define TINYG_FIRMWARE_BUILD   		079.49 // queue flush
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
