@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.51 // removed old switch code from homing
+#define TINYG_FIRMWARE_BUILD   		079.52 // removed old switch code from probing; homing cleanup
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

@@ -817,13 +817,8 @@ stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
 	void cm_print_jd(nvObj_t *nv);
 	void cm_print_ra(nvObj_t *nv);
 
-	void cm_print_sn(nvObj_t *nv);
-	void cm_print_sx(nvObj_t *nv);
-	void cm_print_rn(nvObj_t *nv);
-	void cm_print_rx(nvObj_t *nv);
 	void cm_print_hi(nvObj_t *nv);
 	void cm_print_hd(nvObj_t *nv);
-
 	void cm_print_sv(nvObj_t *nv);
 	void cm_print_lv(nvObj_t *nv);
 	void cm_print_lb(nvObj_t *nv);
@@ -888,13 +883,8 @@ stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
 	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
 
-	#define cm_print_sn tx_print_stub
-	#define cm_print_sx tx_print_stub
-	#define cm_print_rn tx_print_stub
-	#define cm_print_rx tx_print_stub
 	#define cm_print_hi tx_print_stub
 	#define cm_print_hd tx_print_stub
-
 	#define cm_print_sv tx_print_stub
 	#define cm_print_lv tx_print_stub
 	#define cm_print_lb tx_print_stub

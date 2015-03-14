@@ -1993,13 +1993,13 @@ stat_t cm_set_jh(nvObj_t *nv)
 
 stat_t cm_set_hi(nvObj_t *nv)
 {
-	if ((nv->value <= 0) || (nv->value > DI_CHANNELS)) {
+	if ((nv->value < 0) || (nv->value > DI_CHANNELS)) {
     	return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);
 	return (STAT_OK);
 }
-
+/*
 stat_t cm_set_hd(nvObj_t *nv)
 {
     if ((nv->value < 0) || (nv->value > 1)) {
@@ -2008,7 +2008,7 @@ stat_t cm_set_hd(nvObj_t *nv)
     set_ui8(nv);
     return (STAT_OK);
 }
-
+*/
 /*
  * Commands
  *
@@ -2202,8 +2202,8 @@ void cm_print_pdt(nvObj_t *nv) { text_print_flt(nv, fmt_pdt);}
  *	cm_print_jh()
  *	cm_print_jd()
  *	cm_print_ra()
- *	cm_print_sn()
- *	cm_print_sx()
+ *	cm_print_hi()
+ *	cm_print_hd()
  *	cm_print_lv()
  *	cm_print_lb()
  *	cm_print_zb()
@@ -2221,12 +2221,8 @@ const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million
 const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
-const char fmt_Xsn[] PROGMEM = "[%s%s] %s minimum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
-const char fmt_Xsx[] PROGMEM = "[%s%s] %s maximum switch config%6d [0=off,1=homing,2=limit,3=limit+homing]\n";
-const char fmt_Xrn[] PROGMEM = "[%s%s] %s minimum switch type%8.0f [0=NO, 1=NC]\n";
-const char fmt_Xrx[] PROGMEM = "[%s%s] %s maximum switch type%8.0f [0=NO, 1=NC]\n";
-const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15.0f [input 1-N or 0 to disable homing this axis]\n";
-const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11.0f [0=search-to-negative, 1=search-to-positive]\n";
+const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
+const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
 const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";
 const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
@@ -2291,13 +2287,8 @@ void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
 void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 
-void cm_print_sn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsn);}
-void cm_print_sx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xsx);}
-void cm_print_rn(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrn);}
-void cm_print_rx(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xrx);}
 void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}
 void cm_print_hd(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhd);}
-
 void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
 void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
 void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}

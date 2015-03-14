@@ -60,9 +60,9 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t saved_coord_system;		// G54 - G59 setting
 	uint8_t saved_distance_mode;	// G90, G91 global setting
 	uint8_t saved_feed_rate_mode;	// G93, G94 global setting
-//    bool saved_limit_enable;        // limit switch processing / overrride
 	float saved_feed_rate;			// F setting
 	float saved_jerk;				// saved and restored for each axis homed
+//    bool saved_limit_enable;        // limit switch processing / overrride
 };
 static struct hmHomingSingleton hm;
 
@@ -123,14 +123,13 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
  *	  2. Move off the homing switch at latch velocity until switch opens
  *	  3. Back off switch by the zero backoff distance and set zero for that axis
  *
- *	Homing works as a state machine that is driven by registering a callback
- *	function at hm.func() for the next state to be run. Once the axis is
- *	initialized each callback basically does two things (1) start the move
- *	for the current function, and (2) register the next state with hm.func().
- *	When a move is started it will either be interrupted if the homing switch
- *	changes state. This will cause the move to stop with a feedhold. The other
- *	thing that can happen is the move will run to its full length if no switch
- *	change is detected (hit or open).
+ *	Homing works as a state machine that is driven by registering a callback function
+ *  at hm.func() for the next state to be run. Once the axis is initialized each
+ *  callback basically does two things (1) start the move for the current function,
+ *  and (2) register the next state with hm.func(). When a move is started it will
+ *  either be interrupted if the homing switch changes state. This will cause the
+ *  move to stop with a feedhold. The other thing that can happen is the move will
+ *  run to its full length if no switch change is detected (hit or open).
  *
  *	Once all moves for an axis are complete the next axis in the sequence is homed
  *
@@ -312,31 +311,28 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
 	mp_flush_planner();										// don't use cm_request_queue_flush() here
-	if (cm.hold_state == FEEDHOLD_HOLD)
+	if (cm.hold_state == FEEDHOLD_HOLD) {
 		cm_end_hold();
+    }
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
 }
 
 /*
  * _homing_error_exit()
+ *
+ * Generate an error message. Since the error exit returns via the homing callback
+ * - and not the main command parser - it requires its own display processing
  */
 
 static stat_t _homing_error_exit(int8_t axis, stat_t status)
 {
-	// Generate the warning message. Since the error exit returns via the homing callback
-	// - and not the main controller - it requires its own display processing
 	nv_reset_nv_list();
-
 	if (axis == -2) {
-		nv_add_conditional_message((const char *)"Homing error - Bad or no axis(es) specified");;
+		nv_add_conditional_message((const char *)"Homing error - Bad or no axis(es) specified");
 	} else {
 		char message[NV_MESSAGE_LEN];
-
-//		sprintf_P(message, PSTR("Homing error - %c axis settings mis-configured"), cm_get_axis_char(axis));
-//		nv_add_conditional_message((char_t *)message);
-
-		sprintf_P(message, PSTR("%s - %c axis"), get_status_message(status), cm_get_axis_char(axis));
+		sprintf_P(message, PSTR("%c axis %s"), cm_get_axis_char(axis), get_status_message(status));
 		nv_add_conditional_message(message);
 	}
 	nv_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
@@ -352,9 +348,9 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
 	mp_flush_planner(); 									// should be stopped, but in case of switch feedhold.
-	if (cm.hold_state == FEEDHOLD_HOLD);
+	if (cm.hold_state == FEEDHOLD_HOLD); {
 		cm_end_hold();
-
+    }
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -378,10 +374,12 @@ static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to ho
  *	user-specified axis homing orders
  */
 
+//#define __ALT_AXES
+
 static int8_t _get_next_axis(int8_t axis)
 {
-#if (HOMING_AXES <= 4)
-/* alternate code:
+#ifdef __ALT_AXES
+// alternate code:
 	uint8_t axis;
 	for(axis = AXIS_X; axis < HOMING_AXES; axis++)
 		if(fp_TRUE(cm.gf.target[axis])) break;
@@ -397,7 +395,8 @@ static int8_t _get_next_axis(int8_t axis)
 #endif
 		default:        return -1;
 	}
-*/
+#else // __ALT_AXES
+#if (HOMING_AXES <= 4)
 	if (axis == -1) {	// inelegant brute force solution
 		if (fp_TRUE(cm.gf.target[AXIS_Z])) return (AXIS_Z);
 		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
@@ -448,7 +447,8 @@ static int8_t _get_next_axis(int8_t axis)
 	}
 	return (-1);	// done
 
-#endif
+#endif //  (HOMING_AXES <= 4)
+#endif // __ALT_AXES
 }
 
 /*
