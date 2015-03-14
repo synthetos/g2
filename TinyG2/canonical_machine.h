@@ -524,7 +524,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool g30_flag;					    // true = complete a G30 move
 	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
 	bool end_hold_requested;			//
-	bool end_flush_requested;			//
+//	bool end_flush_requested;			//
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
     uint8_t interlock_requested;        // set non-zero to request interlock processing (value is leading or trailing edge)

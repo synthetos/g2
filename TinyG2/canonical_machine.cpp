@@ -1316,15 +1316,11 @@ void cm_request_feedhold(void) {
 void cm_request_end_hold(void)
 {
     if(cm.estop_state != ESTOP_INACTIVE) { return; }
-
-//    if (cm.hold_state != FEEDHOLD_OFF) {
-        cm.end_hold_requested = true;
-//    }
+    cm.end_hold_requested = true;
 }
 
 /*
  * cm_request_queue_flush()
- * cm_request_end_queue_flush()
  */
 void cm_request_queue_flush()
 {
@@ -1336,13 +1332,6 @@ void cm_request_queue_flush()
 //		cm.waiting_for_gcode_resume = true;
     }
 }
-/*
-void cm_request_end_queue_flush()
-{
-//    cm.end_flush_requested = true;
-    cm.serial_flush_state = FLUSH_SERIAL_DONE       // serial flush complete
-}
-*/
 
 /*
  * cm_feedhold_sequencing_callback()
@@ -1361,10 +1350,7 @@ stat_t cm_feedhold_sequencing_callback()
 			cm_end_hold();
 		}
 	}
-//	if (cm.end_flush_requested && (cm.queue_flush_state != FLUSH_OFF)) {
-//	if (cm.end_flush_requested) {
-    	cm_end_queue_flush();                       // queue flush won't run until runtime is idle
-//	}
+    cm_end_queue_flush();                           // queue flush won't end until both paths are complete
 	return (STAT_OK);
 }
 
@@ -1414,12 +1400,6 @@ void cm_end_hold()
 
     } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		cm_cycle_start();
-//		if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-//    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-//    		st_request_out_of_band_dwell((uint32_t)(cm.pause_dwell_time * 1000000));
-//    	} else {
-//    		cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-//		}
 	    if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
             mp_request_out_of_band_dwell(cm.pause_dwell_time);
         }
@@ -1430,7 +1410,7 @@ void cm_end_hold()
 
 /*
  * cm_queue_flush() - Flush planner queue and correct model positions
- * cm_end_queue_flush() - end queue flush when marker is hit
+ * cm_end_queue_flush() - end queue flush when planner is empty and ETX marker is hit
  *
  * Queue flush is a bit complicated because it's two unsynchronized processes that
  * must finalize once both are complete. The first process flushes the planner queue
@@ -1440,8 +1420,6 @@ void cm_end_hold()
  */
 void cm_queue_flush()
 {
-//    cm.serial_flush_state = FLUSH_SERIAL_ON;    // enable serial queue to flush
-
 	if (mp_runtime_is_idle()) {                 // can't flush planner during movement
         mp_flush_planner();
 
@@ -1461,7 +1439,6 @@ void cm_end_queue_flush()
 	    }
         cm.queue_flush_state = FLUSH_OFF;
         cm.serial_flush_state = FLUSH_SERIAL_OFF;
-//        cm.end_flush_requested = false;
 	    qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
