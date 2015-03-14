@@ -306,7 +306,7 @@ static void _dispatch_kernel()
         cs.bufp++;
     }
 
-    if (cm.serial_flush_state != FLUSH_OFF) {
+    if (cm.serial_flush_state == FLUSH_SERIAL_ON) {
         if (strchr(cs.bufp, ETX) != NULL) {                 // see if there's an ETX in the buffer
             cm.serial_flush_state = FLUSH_SERIAL_DONE;      // serial flush complete
 //        } else if (_parse_clear(cs.bufp)) {                 // see if a clear has been sent
