@@ -654,6 +654,9 @@ stat_t cm_clear(nvObj_t *nv)                // clear alarm condition
 
 stat_t cm_shutdown(stat_t status, const char *msg)
 {
+    if (cm.machine_state == MACHINE_SHUTDOWN) { // only do this once
+        return (STAT_OK);
+    }
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
 	cm_spindle_control(SPINDLE_OFF);
@@ -661,11 +664,8 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	// build a secondary message string (info) and call the exception report
 	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-//		sprintf_P((char *)info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
-	//	sprintf(info, "\"n\":%d,\"gc\":\"%s\"", (int)cm.gm.linenum, cs.saved_buf);	// example
-//		sprintf_P((char *)info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
 	rpt_exception(status, info);			// send shutdown message
@@ -1380,9 +1380,9 @@ void cm_end_hold()
 //        return;
 //    }
 
-	if (cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-		return;
-    }
+//	if (cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//		return;
+//    }
 	if (cm.hold_state == FEEDHOLD_HOLD) {
         cm.end_hold_requested = false;
 	    mp_exit_hold_state();

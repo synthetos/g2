@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.54 // simplifying end_hold state management (isolate this change)
+#define TINYG_FIRMWARE_BUILD   		079.55 // integrate interlock and shutdown states into state model; changed LED indicator idler
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -304,7 +304,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
-#define	STAT_ALARMED 27
+#define	STAT_SHUTDOWN_BY_EMERGENCY_STOP 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 

@@ -33,9 +33,9 @@
 #define MAXED_BUFFER_LEN 255			// same as streaming RX buffer size as a worst case
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
 
-#define LED_NORMAL_TIMER 3000           // blink rate for normal operation (in ms)
-#define LED_ALARM_TIMER 1000            // blink rate for alarm state (in ms)
-#define LED_SHUTDOWN_TIMER 100          // blink rate for shutdown state (in ms)
+#define LED_NORMAL_BLINK_RATE 2000      // blink rate for normal operation (in ms)
+#define LED_ALARM_BLINK_RATE 500        // blink rate for alarm state (in ms)
+#define LED_SHUTDOWN_BLINK_RATE 150     // blink rate for shutdown state (in ms)
 
 typedef enum {                          // manages startup lines
     CONTROLLER_INITIALIZING = 0,        // controller is initializing - not ready for use
@@ -44,7 +44,6 @@ typedef enum {                          // manages startup lines
     CONTROLLER_STARTUP,                 // is running startup messages and lines
     CONTROLLER_READY,                   // is active and ready for use
     CONTROLLER_PAUSED                   // is paused - presumably in preparation for queue flush
-//    CONTROLLER_FLUSHING                 // is flushing commands silently to ETX marker
 } csControllerState;
 
 typedef struct controllerSingleton {	// main TG controller struct
@@ -66,15 +65,11 @@ typedef struct controllerSingleton {	// main TG controller struct
 	csControllerState controller_state;
 	uint8_t state_usb0;
 	uint8_t state_usb1;
-	uint32_t led_timer;                 // used by idlers to flash indicator LED
+	uint32_t led_timer;                 // used to flash indicator LED
+	uint32_t led_blink_rate;            // used to flash indicator LED
 	bool hard_reset_requested;          // flag to perform a hard reset
 	bool bootloader_requested;          // flag to enter the bootloader
 	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
-
-//	uint8_t led_state;					// 0=off, 1=on (LEGACY)
-//	int32_t led_counter;				// a convenience for flashing an LED (LEGACY)
-//	uint8_t sync_to_time_state;
-//	uint32_t sync_to_time_time;
 
 	// controller serial buffers
 	char_t *bufp;						// pointer to primary or secondary in buffer
@@ -93,8 +88,6 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
 void controller_init_assertions(void);
 stat_t controller_test_assertions(void);
 void controller_run(void);
-//void controller_reset(void);
-
 void controller_set_connected(bool is_connected);
 
 #endif // End of include guard: CONTROLLER_H_ONCE

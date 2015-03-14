@@ -242,39 +242,39 @@
 #define DEFAULT_ACTION              IO_ACTION_NONE
 #define DEFAULT_FUNCTION            IO_FUNCTION_NONE
 
-#define DI1_MODE                    DEFAULT_MODE
+#define DI1_MODE                    DEFAULT_MODE            // Xmin
 #define DI1_ACTION                  IO_ACTION_STOP
 #define DI1_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI2_MODE                    DEFAULT_MODE
-#define DI2_ACTION                  DEFAULT_ACTION
-#define DI2_FUNCTION                DEFAULT_FUNCTION
+#define DI2_MODE                    DEFAULT_MODE            // Xmax
+#define DI2_ACTION                  IO_ACTION_STOP
+#define DI2_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI3_MODE                    DEFAULT_MODE
-#define DI3_ACTION                  DEFAULT_ACTION
-#define DI3_FUNCTION                DEFAULT_FUNCTION
+#define DI3_MODE                    DEFAULT_MODE            // Ymin
+#define DI3_ACTION                  IO_ACTION_STOP
+#define DI3_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI4_MODE                    DEFAULT_MODE
-#define DI4_ACTION                  DEFAULT_ACTION
-#define DI4_FUNCTION                DEFAULT_FUNCTION
+#define DI4_MODE                    DEFAULT_MODE            // Ymax
+#define DI4_ACTION                  IO_ACTION_STOP
+#define DI4_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI5_MODE                    DEFAULT_MODE
+#define DI5_MODE                    DEFAULT_MODE            // Zmin
 #define DI5_ACTION                  DEFAULT_ACTION
 #define DI5_FUNCTION                DEFAULT_FUNCTION
 
-#define DI6_MODE                    DEFAULT_MODE
-#define DI6_ACTION                  DEFAULT_ACTION
-#define DI6_FUNCTION                DEFAULT_FUNCTION
+#define DI6_MODE                    DEFAULT_MODE            // Zmax
+#define DI6_ACTION                  IO_ACTION_STOP
+#define DI6_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI7_MODE                    DEFAULT_MODE
-#define DI7_ACTION                  DEFAULT_ACTION
-#define DI7_FUNCTION                DEFAULT_FUNCTION
+#define DI7_MODE                    DEFAULT_MODE            // Amin (hijacked for INTERLOCK)
+#define DI7_ACTION                  IO_ACTION_STOP
+#define DI7_FUNCTION                IO_FUNCTION_INTERLOCK
 
-#define DI8_MODE                    DEFAULT_MODE
-#define DI8_ACTION                  DEFAULT_ACTION
-#define DI8_FUNCTION                DEFAULT_FUNCTION
+#define DI8_MODE                    NORMALLY_OPEN            // Amax (hijacked for SHUTDOWN)
+#define DI8_ACTION                  IO_ACTION_HALT
+#define DI8_FUNCTION                IO_FUNCTION_SHUTDOWN
 
-#define DI9_MODE                    DEFAULT_MODE
+#define DI9_MODE                    DEFAULT_MODE            // Hardware interlock input
 #define DI9_ACTION                  DEFAULT_ACTION
 #define DI9_FUNCTION                DEFAULT_FUNCTION
 

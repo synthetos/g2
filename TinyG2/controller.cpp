@@ -61,12 +61,12 @@ controller_t cs;		// controller state structure
  ***********************************************************************************/
 
 static void _controller_HSM(void);
-static stat_t _shutdown_idler(void);
-static stat_t _normal_idler(void);
-static stat_t _limit_switch_handler(void);      // revised for new GPIO code
-static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+static stat_t _led_indicator(void);             // twiddle the LED indicator
+static stat_t _shutdown_kill_point(void);
 static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
-static stat_t _interlock_estop_handler(void);   // old
+static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+static stat_t _limit_switch_handler(void);      // revised for new GPIO code
+//static stat_t _interlock_estop_handler(void);   // old
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -171,16 +171,15 @@ static void _controller_HSM()
 												// Order is important:
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
-	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
-//	DISPATCH( poll_switches());					// 4. run a switch polling cycle
-	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-    DISPATCH(_shutdown_handler());
-    DISPATCH(_interlock_handler());
-    DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
+	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
+ 	DISPATCH(_shutdown_kill_point());			// 4. shutdown kills the remainder of the loop
+    DISPATCH(_shutdown_handler());              //    invoke a shutdown
+    DISPATCH(_interlock_handler());             //    invoke / remove safety interlock
+	DISPATCH(_limit_switch_handler());			//    invoke limit switch
+//    DISPATCH(_interlock_estop_handler());     // 5a. interlock or estop have been thrown
     DISPATCH(_controller_state());				// controller state management
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
-
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
@@ -202,7 +201,7 @@ static void _controller_HSM()
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
 	DISPATCH(_dispatch_command());				// read and execute next command
-	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
+//	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 
 //---- phat city idle tasks ---------------------------------------------------------//
 
@@ -303,16 +302,6 @@ static void _dispatch_kernel()
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
     }
-/*
-    if (cm.serial_flush_state == FLUSH_SERIAL_ON) {
-        if (strchr(cs.bufp, ETX) != NULL) {                 // see if there's an ETX in the buffer
-            cm.serial_flush_state = FLUSH_SERIAL_DONE;      // serial flush complete
-//        } else if (_parse_clear(cs.bufp)) {                 // see if a clear has been sent
-//            cm.serial_flush_state = FLUSH_SERIAL_DONE;      // serial flush complete
-        }
-        return;                                             // silently dump the command
-    }
-*/
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
@@ -357,35 +346,49 @@ static stat_t _check_for_phat_city_time(void) {
 
 /**** Local Utilities ********************************************************/
 /*
- * _shutdown_idler() - blink rapidly and prevent further activity from occurring
- * _normal_idler() - blink Indicator LED slowly to show everything is OK
+ * _shutdown_kill_point() - stops execution of the rest of the main loop
  *
- *	Shutdown idler flashes indicator LED rapidly to show everything is not OK.
- *	Shutdown idler returns EAGAIN causing the control loop to never advance beyond
- *	this point. It's important that the reset handler is still called so a SW reset
- *	(ctrl-x) or bootloader request can be processed.
+ *	Returns EAGAIN causing the control loop to never advance beyond this point.
+ *  It's important that the hw_hard_reset_handler is still called so a SW reset
+ *  (ctrl-x) or bootloader request can be processed.
  */
-
-static stat_t _shutdown_idler()
+static stat_t _shutdown_kill_point()
 {
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
-
-	if (SysTickTimer_getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer_getValue() + LED_ALARM_TIMER;
-		IndicatorLed.toggle();
-	}
-	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+	if (cm_get_machine_state() != MACHINE_SHUTDOWN) {
+        return (STAT_OK);
+    } else {
+	    return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+    }
 }
 
-static stat_t _normal_idler()
+/*
+ * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
+ */
+static stat_t _led_indicator()
 {
-#ifdef __ARM
-	/*
-	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
-	 * See plan_line.cpp for explanations.
-	 * Here, the "velocity" goes from 0.0 to 1.0, then back.
-	 * t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
-	 */
+    uint32_t blink_rate;
+    if (cm_get_machine_state() == MACHINE_ALARM) {
+        blink_rate = LED_ALARM_BLINK_RATE;
+    } else if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
+        blink_rate = LED_SHUTDOWN_BLINK_RATE;
+    } else {
+        blink_rate = LED_NORMAL_BLINK_RATE;
+    }
+
+    if (blink_rate != cs.led_blink_rate) {
+        cs.led_blink_rate =  blink_rate;
+        cs.led_timer = 0;
+    }
+	if (SysTickTimer_getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer_getValue() + cs.led_blink_rate;
+		IndicatorLed.toggle();
+	}
+	return (STAT_OK);
+/*
+	 // S-curve heartbeat code. Uses forward-differencing math from the stepper code.
+	 // See plan_line.cpp for explanations.
+	 // Here, the "velocity" goes from 0.0 to 1.0, then back.
+	 // t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
 
 	// These are statics, and the assignments will only evaluate once.
 	static float indicator_led_value = 0.0;
@@ -414,16 +417,7 @@ static stat_t _normal_idler()
 
 		IndicatorLed = indicator_led_value/100.0;
 	}
-#endif
-#ifdef __AVR
-/*
-	if (SysTickTimer_getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer_getValue() + LED_NORMAL_TIMER;
-//		IndicatorLed_toggle();
-	}
 */
-#endif
-	return (STAT_OK);
 }
 
 /*
@@ -486,19 +480,42 @@ static stat_t _limit_switch_handler(void)
 	char message[20];
 	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
     cm.limit_requested = false;         // clear the limit request
-    return cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+    cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+    return (STAT_OK);
 }
 
+/*
+ * _interlock_handler() - feedhold and resume depending on edge
+ *
+ * Request == 0 (IO_EDGE_NONE) is normal operation (no interlock)
+ * Request == 1 (IO_EDGE_LEADING) is interlock onset
+ * Request == 2 (IO_EDGE_TRAILING) is interlock offset
+ */
 static stat_t _interlock_handler(void)
 {
+    if (cm.interlock_requested) {                           // NB: meaning non-zero
+        if (cm.interlock_requested == IO_EDGE_LEADING) {
+            cm.interlock_state = SAFETY_INTERLOCK_CLOSED;   // normal operation
+        } else {
+            cm.interlock_state = SAFETY_INTERLOCK_OPEN;     // interlock tripped
+            cm_request_end_hold();      // using cm_request_end_hold() instead of just ending
+        }                               // ...the hold keeps trying until the hold is complete
+        cm.interlock_requested = IO_EDGE_NONE;              // reset the calling condition
+    }
     return(STAT_OK);
 }
 
+/*
+ * _shutdown_handler() - put system into shutdown state
+ */
 static stat_t _shutdown_handler(void)
 {
+    if (cm.shutdown_requested) {                           // NB: meaning non-zero
+        cm_shutdown(STAT_SHUTDOWN_BY_EMERGENCY_STOP, "shutdown");
+    }
     return(STAT_OK);
 }
-
+/*
 static stat_t _interlock_estop_handler(void)
 {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
@@ -532,7 +549,7 @@ static stat_t _interlock_estop_handler(void)
 	return (STAT_OK);
 #endif
 }
-
+*/
 /*
  * _system_assertions() - check memory integrity and other assertions
  */
