@@ -1305,17 +1305,17 @@ void cm_message(char_t *message)
  * cm_request_queue_flush()
  */
 void cm_request_feedhold(void) {
-    if(cm.estop_state != ESTOP_INACTIVE) { return; }
+//    if (cm.estop_state != ESTOP_INACTIVE) { return; }
 
-    if (cm.hold_state == FEEDHOLD_OFF) {    // only honor request if not already in a feedhold
+    if (cm.hold_state == FEEDHOLD_OFF) {            // only honor request if not already in a feedhold
         cm.hold_state = FEEDHOLD_REQUESTED;
-        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
+//        cs.controller_state = CONTROLLER_PAUSED; // don't process new commands until FEEDHOLD_HOLD state
     }
 }
 
 void cm_request_end_hold(void)
 {
-    if(cm.estop_state != ESTOP_INACTIVE) { return; }
+//    if (cm.estop_state != ESTOP_INACTIVE) { return; }
     cm.end_hold_requested = true;
 }
 
@@ -1324,11 +1324,13 @@ void cm_request_end_hold(void)
  */
 void cm_request_queue_flush()
 {
-    if(cm.estop_state != ESTOP_INACTIVE) { return; }
+//    if (cm.estop_state != ESTOP_INACTIVE) { return; }
 
-    if (cm.hold_state != FEEDHOLD_OFF) {            // don't honor request unless you are in a feedhold
-        cm.queue_flush_state = FLUSH_REQUESTED;
-        cm.serial_flush_state = FLUSH_SERIAL_ON;    // enable serial queue to flush immediately
+    if ((cm.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
+        (cm.queue_flush_state == FLUSH_OFF)) {      // ...and only once
+        xio_flush_read();                           // flush the input buffers - you can do that now
+        cm.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
+//        cm.serial_flush_state = FLUSH_SERIAL_ON;    // enable serial queue to flush immediately
 //		cm.waiting_for_gcode_resume = true;
     }
 }
@@ -1432,13 +1434,15 @@ void cm_queue_flush()
 
 void cm_end_queue_flush()
 {
-    if ((cm.queue_flush_state == FLUSH_PLANNER_DONE) &&
-        (cm.serial_flush_state == FLUSH_SERIAL_DONE)) {
-	    if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold, if we're in one
+//    if ((cm.queue_flush_state == FLUSH_PLANNER_DONE) &&
+//        (cm.serial_flush_state == FLUSH_SERIAL_DONE)) {
+
+    if (cm.queue_flush_state == FLUSH_PLANNER_DONE) {
+	    if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold if we're in one
     	    cm_end_hold();
 	    }
         cm.queue_flush_state = FLUSH_OFF;
-        cm.serial_flush_state = FLUSH_SERIAL_OFF;
+//        cm.serial_flush_state = FLUSH_SERIAL_OFF;
 	    qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
@@ -1926,9 +1930,9 @@ stat_t cm_get_ofs(nvObj_t *nv)
 /*
  * AXIS GET AND SET FUNCTIONS
  *
- * cm_get_am()	- get axis mode w/enumeration string
- * cm_set_am()	- set axis mode w/exception handling for axis type
- * cm_set_sw()	- run this any time you change a switch setting
+ * cm_get_am() - get axis mode w/enumeration string
+ * cm_set_am() - set axis mode w/exception handling for axis type
+ * cm_set_hi() - set homing input
  */
 
 stat_t cm_get_am(nvObj_t *nv)
@@ -1946,6 +1950,15 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
 	}
 	set_ui8(nv);
 	return(STAT_OK);
+}
+
+stat_t cm_set_hi(nvObj_t *nv)
+{
+	if ((nv->value < 0) || (nv->value > DI_CHANNELS)) {
+    	return (STAT_INPUT_VALUE_UNSUPPORTED);
+	}
+	set_ui8(nv);
+	return (STAT_OK);
 }
 
 /**** Jerk functions
@@ -1991,24 +2004,6 @@ stat_t cm_set_jh(nvObj_t *nv)
 	return(STAT_OK);
 }
 
-stat_t cm_set_hi(nvObj_t *nv)
-{
-	if ((nv->value < 0) || (nv->value > DI_CHANNELS)) {
-    	return (STAT_INPUT_VALUE_UNSUPPORTED);
-	}
-	set_ui8(nv);
-	return (STAT_OK);
-}
-/*
-stat_t cm_set_hd(nvObj_t *nv)
-{
-    if ((nv->value < 0) || (nv->value > 1)) {
-        return (STAT_INPUT_VALUE_UNSUPPORTED);
-    }
-    set_ui8(nv);
-    return (STAT_OK);
-}
-*/
 /*
  * Commands
  *

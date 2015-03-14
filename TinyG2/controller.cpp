@@ -230,16 +230,14 @@ static stat_t _controller_state()
 }
 
 /*****************************************************************************************
- * controller_set_connected(bool) - hook for the xio system to tell the controller tha we
+ * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
  */
 
 void controller_set_connected(bool is_connected) {
     if (is_connected) {
-        // we JUST connected
-        cs.controller_state = CONTROLLER_CONNECTED;
-    } else {
-        // we just disconnected from the last device, we'll expect a banner again
+        cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
+    } else {  // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
@@ -305,7 +303,7 @@ static void _dispatch_kernel()
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
     }
-
+/*
     if (cm.serial_flush_state == FLUSH_SERIAL_ON) {
         if (strchr(cs.bufp, ETX) != NULL) {                 // see if there's an ETX in the buffer
             cm.serial_flush_state = FLUSH_SERIAL_DONE;      // serial flush complete
@@ -314,6 +312,7 @@ static void _dispatch_kernel()
         }
         return;                                             // silently dump the command
     }
+*/
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF

@@ -755,10 +755,10 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
+stat_t cm_set_hi(nvObj_t *nv);          // set homing input
+
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
-stat_t cm_set_hi(nvObj_t *nv);          // set homing input
-stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
 
 /*--- text_mode support functions ---*/
 
