@@ -86,8 +86,7 @@ typedef enum {
 #define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
 
 #define MIN_PLANNED_USEC		((float)30000)		// minimum time in the planner below which we must replan immediately
-#define PHAT_CITY_USEC			((float)50000)		// if you have at least this much time in the planner,
-                                                    // you can do whatever you want! (Including send SRs.)
+#define PHAT_CITY_USEC			((float)80000)		// if you have at least this much time in the planner,
 
 // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
 #define PLANNER_TIMEOUT_MS		(50)				// Max amount of time to wait between replans

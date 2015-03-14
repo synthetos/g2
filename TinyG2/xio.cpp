@@ -179,15 +179,12 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
                 // special handling for flush character
                 // if not in a feedhold substitute % with ; so it's treated as a comment and ignored.
-                // if in a feedhold request a queue flush and leave a marker in the buffer (ETX)
-                // set _ready_to_send so the next time the marker will be will returned.
+                // if in a feedhold request a queue flush by passing the % back as a single character.
                 if (c == '%') {
                     if (!cm_has_hold()) {
                         read_buf[read_index++] = ';';
                         continue;
                     } else {
-//                        read_buf[read_index++] = ETX;   // set a marker for end queue flush
-//                        _ready_to_send = true;          // will be read next time
                         single_char_buffer[0] = '%';    // send queue flush request
                         size = 1;
                         return single_char_buffer;

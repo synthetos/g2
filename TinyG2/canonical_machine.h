@@ -114,15 +114,15 @@ typedef enum {				        // feedhold_state machine
 typedef enum {				        // master queue flush state machine
     FLUSH_OFF = 0,				    // no queue flush in effect
     FLUSH_REQUESTED,                // flush has been requested but not started yet
-    FLUSH_PLANNER_DONE              // planner flush complete
+    FLUSH_DONE                      // flush complete
 } cmQueueFlushState;
-
+/*
 typedef enum {				        // serial flush state machine (child to master)
     FLUSH_SERIAL_OFF = 0,           // no serial flush in effect
     FLUSH_SERIAL_ON,                // serial flush in processing
     FLUSH_SERIAL_DONE               // serial flush complete
 } cmSerialFlushState;
-
+*/
 typedef enum {				        // applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
 	HOMING_HOMED = 1,				// machine is homed (1=true)
@@ -500,7 +500,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     cmMotionState motion_state;         // momo
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState queue_flush_state;  // master queue flush state machine
-	cmSerialFlushState serial_flush_state;// serial queue flush sub-state machine
+//	cmSerialFlushState serial_flush_state;// serial queue flush sub-state machine
 
 	uint8_t estop_state;                // true if estop has been triggered
 
