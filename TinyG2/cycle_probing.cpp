@@ -275,8 +275,9 @@ static stat_t _probing_finish()
 static void _probe_restore_settings()
 {
 	mp_flush_planner();
-	if (cm.hold_state == FEEDHOLD_HOLD);
-		cm_end_hold();
+//	if (cm.hold_state == FEEDHOLD_HOLD);
+//		cm_end_hold();
+    cm_end_hold();                                          // ends hold if on is in effect
 
     gpio_set_probing_mode(pb.probe_input, false);
 

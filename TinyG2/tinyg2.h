@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.53 // flushread cleanup; ^d testing
+#define TINYG_FIRMWARE_BUILD   		079.54 // simplifying end_hold state management (isolate this change)
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

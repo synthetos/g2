@@ -235,12 +235,11 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
         cm_start_hold();
         return;
     }
-/*
     if (in->probing_mode) {
         cm_start_hold();
         return;
     }
-*/
+
 	// *** NOTE: From this point on all conditionals assume we are NOT in homing or probe mode ***
 
     // trigger the action on leading edges

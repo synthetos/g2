@@ -1342,7 +1342,8 @@ stat_t cm_feedhold_sequencing_callback()
 	if (cm.queue_flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                           // queue flush won't run until runtime is idle
 	}
-	if (cm.end_hold_requested && (cm.hold_state == FEEDHOLD_HOLD)) {
+//	if (cm.end_hold_requested && (cm.hold_state == FEEDHOLD_HOLD)) {
+	if (cm.end_hold_requested) {
         if (cm.queue_flush_state == FLUSH_OFF) {    // either no flush or wait until it's done flushing
 			cm_end_hold();
 		}
@@ -1382,24 +1383,26 @@ void cm_end_hold()
 	if (cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 		return;
     }
-    cm.end_hold_requested = false;
-	mp_exit_hold_state();
+	if (cm.hold_state == FEEDHOLD_HOLD) {
+        cm.end_hold_requested = false;
+	    mp_exit_hold_state();
 
-    // State machine cases:
-    if (cm.machine_state == MACHINE_ALARM) {
-		cm_spindle_control_immediate(SPINDLE_OFF);
+        // State machine cases:
+        if (cm.machine_state == MACHINE_ALARM) {
+		    cm_spindle_control_immediate(SPINDLE_OFF);
 
-    } else if (cm.motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
-		cm_spindle_control_immediate(SPINDLE_OFF);
-		cm_cycle_end();
+        } else if (cm.motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
+		    cm_spindle_control_immediate(SPINDLE_OFF);
+		    cm_cycle_end();
 
-    } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
-		cm_cycle_start();
-	    if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-            mp_request_out_of_band_dwell(cm.pause_dwell_time);
+        } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
+		    cm_cycle_start();
+	        if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+                mp_request_out_of_band_dwell(cm.pause_dwell_time);
+            }
+	        cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+            st_request_exec_move();
         }
-	    cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
-        st_request_exec_move();
     }
 }
 
