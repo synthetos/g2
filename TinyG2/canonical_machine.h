@@ -279,6 +279,11 @@ typedef enum {				        // spindle state settings (See hardware.h for bit sett
 	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
 } cmSpindleState;
 
+typedef enum {				        // spindle state settings (See hardware.h for bit settings)
+    SPINDLE_MODE_NONE = 0,          // no special control
+    SPINDLE_MODE_STOP_HOLD          // stop on feedhold
+} cmSpindleMode;
+
 typedef enum {                      // mist and flood coolant states
 	COOLANT_OFF = 0,				// all coolant off
 	COOLANT_ON,						// request coolant on or indicates both coolants are on
@@ -356,7 +361,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t tool_select;				// T value - T sets this value
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
-	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t spindle_state;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
     bool spindle_paused;                // true if spindle is paused
 
 } GCodeState_t;
@@ -565,13 +570,13 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
-uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state);
+uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
 float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
-void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode);
+void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);

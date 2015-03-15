@@ -231,14 +231,14 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state) { return gcode_state->pat
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
 uint8_t cm_get_tool(GCodeState_t *gcode_state) { return gcode_state->tool;}
-uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state) { return gcode_state->spindle_mode;}
+uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
 uint8_t	cm_get_block_delete_switch() { return cm.gmx.block_delete_switch;}
 uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy());}
 
 float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
-void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode) { gcode_state->spindle_mode = spindle_mode;}
+void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
 
@@ -1374,7 +1374,7 @@ bool cm_has_hold()
 void cm_start_hold()
 {
 	if (mp_has_runnable_buffer()) {                 // meaning there's something running
-        if(cm.gm.spindle_mode != SPINDLE_OFF) {
+        if(cm.gm.spindle_state != SPINDLE_OFF) {
             cm_spindle_control_immediate(SPINDLE_OFF);
         }
 	    cm_set_motion_state(MOTION_HOLD);
@@ -1406,10 +1406,10 @@ void cm_end_hold()
 
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
-	        if((cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
                 mp_request_out_of_band_dwell(cm.pause_dwell_time);
             }
-	        cm_spindle_control_immediate((cm.gm.spindle_mode & (~SPINDLE_PAUSED)));
+	        cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
             st_request_exec_move();
         }
     }
@@ -2106,7 +2106,8 @@ const char fmt_tool[] PROGMEM = "Tool number          %d\n";
 const char fmt_ilck[] PROGMEM = "Safety Interlock:    %s\n";
 const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
-const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_spm[] PROGMEM = "Spindle Mode:%9d [0=none,1=pause_on_hold]\n";
+const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";

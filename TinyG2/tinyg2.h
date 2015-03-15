@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.56 // commented out omco estop and interlock code in prep for re-integration
+#define TINYG_FIRMWARE_BUILD   		079.57 // checkpoint - reworking spindle controls for optional hold behavior; changed refernced to spindle_mode to spindle_state
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
