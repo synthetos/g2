@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.55 // integrate interlock and shutdown states into state model; changed LED indicator idler
+#define TINYG_FIRMWARE_BUILD   		079.56 // commented out omco estop and interlock code in prep for re-integration
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

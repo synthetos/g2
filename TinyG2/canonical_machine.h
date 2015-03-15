@@ -494,15 +494,13 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState queue_flush_state;  // master queue flush state machine
 
-	uint8_t estop_state;                // true if estop has been triggered
-
 	uint8_t interlock_state;            // true if interlock has been triggered
 //    cmSafetyState safety_state;         // safety interlock state
-	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
-
-    cmESCState esc_state;               // state management for ESC controller
-	uint32_t esc_boot_timer;            // When the ESC last booted up
-	uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
+//	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
+//    cmESCState esc_state;               // state management for ESC controller
+//	uint32_t esc_boot_timer;            // When the ESC last booted up
+//	uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
+//	uint8_t estop_state;                // true if estop has been triggered
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags

@@ -241,27 +241,6 @@ void controller_set_connected(bool is_connected) {
     }
 }
 
-static bool _parse_clear(char *str) // return true if it's a clear command
-{
-    char *p = str;
-    if ((*p != '$') && (*p != '{')) return (false);
-    p++;
-    if (*p == '"') p++;
-    if (strcmp("clear", p) == 0) return (true);
-    if (strcmp("clr", p) == 0) return (true);
-    return (false);
-
-/* the above abbreviation is worth 88 bytes and faster execution
-    if (strcmp("{clear:n}", str) == 0) return (true);
-    if (strcmp("{\"clear\":n}", str) == 0) return (true);
-    if (strcmp("{clr:n}", str) == 0) return (true);
-    if (strcmp("{\"clr\":n}", str) == 0) return (true);
-    if (strcmp("$clear", str) == 0) return (true);
-    if (strcmp("$clr", str) == 0) return (true);
-    return (false);
-*/
-}
-
 /*****************************************************************************
  * command dispatchers
  * _dispatch_command - entry point for control and data dispatches
@@ -272,7 +251,7 @@ static bool _parse_clear(char *str) // return true if it's a clear command
  */
 static stat_t _dispatch_command()
 {
-	if(cm.estop_state == 0) {
+//	if(cm.estop_state == 0) {
         if (cs.controller_state == CONTROLLER_PAUSED) {
 	        return (STAT_NOOP);
         }
@@ -282,7 +261,7 @@ static stat_t _dispatch_command()
         	_dispatch_kernel();
             mp_plan_buffer();
         }
-	}
+//	}
 	return (STAT_OK);
 }
 

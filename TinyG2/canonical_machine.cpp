@@ -591,9 +591,9 @@ void canonical_machine_reset()
     cm.hold_state = FEEDHOLD_OFF;
 	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
 */
-    cm.estop_state = ESTOP_INACTIVE;
-    cm.safety_state = SAFETY_ESC_REBOOTING;
-    cm.esc_boot_timer = SysTickTimer_getValue();
+//    cm.estop_state = ESTOP_INACTIVE;
+//    cm.safety_state = SAFETY_ESC_REBOOTING;
+//    cm.esc_boot_timer = SysTickTimer_getValue();
 
     cm.gmx.block_delete_switch = true;
     cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
@@ -637,7 +637,7 @@ stat_t cm_alarm(stat_t status, const char *msg)
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();                  // ++++ experimental
+    cm_request_feedhold();
     cm_request_queue_flush();               // do a queue flush once runtime is not busy
 	cm_spindle_control(SPINDLE_OFF);
 	rpt_exception(status, msg);	            // send alarm message
@@ -659,7 +659,16 @@ stat_t cm_shutdown(stat_t status, const char *msg)
     }
 	// stop the motors and the spindle
 	stepper_init();							// hard stop
+    cm_request_queue_flush();               // do a queue flush - runtime is not busy
 	cm_spindle_control(SPINDLE_OFF);
+
+    // change internal states
+    cm.homing_state = HOMING_NOT_HOMED;
+	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+	_exec_program_finalize(value, value);	// finalize now, not later
+	cm.hold_state = FEEDHOLD_OFF;
+	cm.queue_flush_state = FLUSH_OFF;
+	cm.end_hold_requested = false;
 
 	// build a secondary message string (info) and call the exception report
 	char info[64];
@@ -1545,13 +1554,14 @@ void cm_program_end()
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	mp_queue_command(_exec_program_finalize, value, value);
 }
-
+/*
 stat_t cm_start_estop(void)
 {
 	cm.waiting_for_gcode_resume = true;
     cm.cycle_state = CYCLE_OFF;
-    for(int i = 0; i < HOMING_AXES; ++i)
+    for (int i = 0; i < HOMING_AXES; ++i) {
         cm.homed[i] = false;
+    }
     cm.homing_state = HOMING_NOT_HOMED;
 #ifdef __ARM
     xio_flush_read();
@@ -1577,6 +1587,7 @@ stat_t cm_ack_estop(nvObj_t *nv)
 	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
+*/
 
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *
@@ -1701,23 +1712,25 @@ static const char msg_g93[] PROGMEM = "G93 - inverse time mode";
 static const char msg_g94[] PROGMEM = "G94 - units-per-minute mode (i.e. feedrate mode)";
 static const char msg_g95[] PROGMEM = "G95 - units-per-revolution mode";
 static const char *const msg_frmo[] PROGMEM = { msg_g93, msg_g94, msg_g95 };
-
+/*
 static const char msg_safe0[] PROGMEM = "Interlock Circuit Closed/ESC nominal";
 static const char msg_safe1[] PROGMEM = "Interlock Circuit Broken/ESC nominal";
 static const char msg_safe2[] PROGMEM = "Interlock Circuit Closed/ESC rebooting";
 static const char msg_safe3[] PROGMEM = "Interlock Circuit Broken/ESC rebooting";
 static const char *const msg_safe[] PROGMEM = { msg_safe0, msg_safe1, msg_safe2, msg_safe3 };
+*/
 /*
 static const char msg_ilck0[] PROGMEM = "Interlock Circuit Closed";
 static const char msg_ilck1[] PROGMEM = "Interlock Circuit Broken";
 static const char *const msg_ilck[] PROGMEM = { msg_ilck0, msg_ilck1 };
 */
+/*
 static const char msg_estp0[] PROGMEM = "E-Stop Circuit Closed";
 static const char msg_estp1[] PROGMEM = "E-Stop Circuit Closed but unacked";
 static const char msg_estp2[] PROGMEM = "E-Stop Circuit Broken and acked";
 static const char msg_estp3[] PROGMEM = "E-Stop Circuit Broken and unacked";
 static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
-
+*/
 #else
 
 #define msg_units NULL
@@ -1831,8 +1844,8 @@ stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_pa
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
-stat_t cm_get_ilck(nvObj_t *nv) { return(_get_msg_helper(nv, msg_safe, cm.interlock_state)); }
-stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_state)); }
+//stat_t cm_get_ilck(nvObj_t *nv) { return(_get_msg_helper(nv, msg_safe, cm.interlock_state)); }
+//stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, cm.estop_state)); }
 
 stat_t cm_get_toolv(nvObj_t *nv)
 {
