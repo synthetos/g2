@@ -44,6 +44,11 @@ typedef enum {
     SPINDLE_OPTIONS_PAUSE_ON_HOLD   // stop on feedhold
 } spSpindleOptions;
 
+#define SPINDLE_NO_OPTIONS      (0x0000)
+#define SPINDLE_PAUSE_ON_HOLD   (0x0001)
+#define SPINDLE_STOP_ON_ALARM  (0x0002)
+#define SPINDLE_STOP_ON_LIMIT  (0x0004)
+
 typedef enum {
     ESC_ONLINE = 0,
     ESC_OFFLINE,
@@ -57,23 +62,24 @@ typedef enum {
  */
 
 typedef struct spSpindleSingleton {
+    // configuration
+    uint8_t flags;                  // options: feedhold flag & other operating options
+    uint8_t polarity;               // 0=active low, 1=active high
+    float autodwell_seconds;        // dwell on spindle restart
+    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
+    uint8_t override_enable;        // TRUE = override enabled
 
-    spSpindleOptions spindle_options;   // feedhold & other operating options
-//    float spindle_speed;
-//    spSpindleState spindle_state;       // current spindle state, OFF, CW, CCW. Might be paused, though
-//    spSpindlePause spindle_pause;       // pause state - applies to spindle state, above
-    float spindle_autodwell_seconds;    // dwell on spindle restart
+    // state
+    float speed;
+    spSpindleState state;           // current spindle state, OFF, CW, CCW. Might be paused, though
+    spSpindlePause pause;           // pause state - applies to spindle state, above
     
-    cmESCState esc_state;               // state management for ESC controller
-    uint32_t esc_boot_timer;            // When the ESC last booted up
-    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
-
-    float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
-    uint8_t spindle_override_enable;	// TRUE = override enabled
+    cmESCState esc_state;           // state management for ESC controller
+    uint32_t esc_boot_timer;        // When the ESC last booted up
+    uint32_t esc_lockout_timer;     // When the ESC lockout last triggered
 
 } spSpindleSingleton_t;
-
-extern spSpindleSingleton_t sp;         // config struct is exposed. The rest are private
+extern spSpindleSingleton_t spindle;
 
 /*
  * Global Scope Functions
@@ -81,22 +87,18 @@ extern spSpindleSingleton_t sp;         // config struct is exposed. The rest ar
 
 void cm_spindle_init();
 
-uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
-uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state);
-void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
-void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause);
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
+uint8_t cm_get_spindle_state(void);     // useful accessor for external modules
 
 stat_t cm_set_spindle_speed(float speed);			// S parameter
-float cm_get_spindle_pwm( uint8_t spindle_state );  // return PWM phase (duty cycle) for dir and speed
+//float cm_get_spindle_pwm(uint8_t spindle_state);    // return PWM phase (duty cycle) for dir and speed
 
-stat_t cm_spindle_control(uint8_t spindle_state);	// M3, M4, M5 integrated spindle control
+stat_t cm_spindle_control(uint8_t spindle_state);	        // M3, M4, M5 integrated spindle control
 stat_t cm_spindle_control_immediate(uint8_t spindle_state); //like cm_spindle_control but not synchronized to planner
-stat_t cm_spindle_conditional_pause(void);          // stop spindle based on system options selected
-stat_t cm_spindle_conditional_resume(float dwell_seconds);  // restart spindle based on previous state and system options
+void cm_spindle_conditional_pause(void);                    // stop spindle based on system options selected
+void cm_spindle_conditional_resume(float dwell_seconds);    // restart spindle based on previous state
 
-stat_t cm_spindle_override_enable(uint8_t flag);    // M51
-stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
+//stat_t cm_spindle_override_enable(uint8_t flag);    // M51
+//stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
 
 /*--- text_mode support functions ---*/
 

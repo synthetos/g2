@@ -630,18 +630,18 @@ stat_t canonical_machine_test_assertions(void)
  */
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_ALARM) { // don't alarm if already in an alarm state
+    if (cm.machine_state == MACHINE_ALARM) {    // don't alarm if already in an alarm state
         return (STAT_NOOP);
     }
 	cm.machine_state = MACHINE_ALARM;
     cm_request_feedhold();
-    cm_request_queue_flush();               // do a queue flush once runtime is not busy
-	cm_spindle_control(SPINDLE_OFF);
-	rpt_exception(status, msg);	            // send alarm message
+    cm_request_queue_flush();                   // do a queue flush once runtime is not busy
+	cm_spindle_control_immediate(SPINDLE_OFF);  // stop spindle on alarm
+	rpt_exception(status, msg);	                // send alarm message
     return (status);
 }
 
-stat_t cm_clear(nvObj_t *nv)                // clear alarm condition
+stat_t cm_clear(nvObj_t *nv)                    // clear alarm condition
 {
     if (cm.machine_state == MACHINE_ALARM) {
 	    cm.machine_state = MACHINE_PROGRAM_STOP;
@@ -655,14 +655,15 @@ stat_t cm_shutdown(stat_t status, const char *msg)
         return (STAT_OK);
     }
 	// stop the motors and the spindle
-	stepper_init();							// hard stop
-    cm_request_queue_flush();               // do a queue flush - runtime is not busy
-	cm_spindle_control(SPINDLE_OFF);
+	stepper_init();							    // hard stop
+    cm_request_queue_flush();                   // do a queue flush - runtime is not busy
+//	cm_spindle_control(SPINDLE_OFF);
+	cm_spindle_control_immediate(SPINDLE_OFF);  // stop spindle on alarm
 
     // change internal states
     cm.homing_state = HOMING_NOT_HOMED;
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	// finalize now, not later
+	_exec_program_finalize(value, value);	    // finalize now, not later
 	cm.hold_state = FEEDHOLD_OFF;
 	cm.queue_flush_state = FLUSH_OFF;
 	cm.end_hold_requested = false;
@@ -674,7 +675,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	} else {
 		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
-	rpt_exception(status, info);			// send shutdown message
+	rpt_exception(status, info);			    // send shutdown message
 	cm.machine_state = MACHINE_SHUTDOWN;
 	return (status);
 }
@@ -1154,12 +1155,12 @@ static void _exec_flood_coolant_control(float *value, float *flag)
  *	Override enables are kind of a mess in Gcode. This is an attempt to sort them out.
  *	See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
  */
-
+/*
 stat_t cm_override_enables(uint8_t flag)			// M48, M49
 {
 	cm.gmx.feed_rate_override_enable = flag;
 	cm.gmx.traverse_override_enable = flag;
-	sp.spindle_override_enable = flag;
+	spindle.override_enable = flag;
 	return (STAT_OK);
 }
 
@@ -1198,7 +1199,7 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 //	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
 	return (STAT_OK);
 }
-
+*/
 /*
  * cm_message() - queue a RAM string as a message in the response (unconditionally)
  *
@@ -1354,7 +1355,7 @@ bool cm_has_hold()
 void cm_start_hold()
 {
 	if (mp_has_runnable_buffer()) {                 // meaning there's something running
-        if (cm_get_spindle_state(MODEL) != SPINDLE_OFF) {
+        if (cm_get_spindle_state() != SPINDLE_OFF) {
 //        if(cm.gm.spindle_state != SPINDLE_OFF) {
             cm_spindle_control_immediate(SPINDLE_OFF);
         }
@@ -1389,7 +1390,7 @@ void cm_end_hold()
 
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
-            cm_spindle_conditional_resume(sp.spindle_autodwell_seconds);
+            cm_spindle_conditional_resume(spindle.autodwell_seconds);
 /* OMC code
 	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
                 mp_request_out_of_band_dwell(cm.pause_dwell_time);

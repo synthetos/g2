@@ -341,8 +341,8 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t tool_select;		// G			// T value - T sets this value
 	uint8_t mist_coolant;		// G			// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;		// G			// TRUE = flood on (M8), FALSE = off (M9)
-	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-	uint8_t spindle_pause;		// G			// 0=operating, 1=paused
+//	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+//	uint8_t spindle_pause;		// G			// 0=operating, 1=paused
 
 } GCodeState_t;
 
