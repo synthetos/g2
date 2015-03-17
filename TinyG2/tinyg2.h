@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.59 // cleanup spindle controls and some other code
+#define TINYG_FIRMWARE_BUILD   		080.01 // initial commit for edge-io2. More IO work to go
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
