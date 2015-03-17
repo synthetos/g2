@@ -59,13 +59,14 @@ typedef enum {
 typedef struct spSpindleSingleton {
 
     spSpindleOptions spindle_options;   // feedhold & other operating options
-    spSpindleState spindle_state;       // current spindle state, OFF, CW, CCW. Might be paused, though
-    spSpindlePause spindle_pause;       // pause state - applies to spindle state, above
+//    float spindle_speed;
+//    spSpindleState spindle_state;       // current spindle state, OFF, CW, CCW. Might be paused, though
+//    spSpindlePause spindle_pause;       // pause state - applies to spindle state, above
     float spindle_autodwell_seconds;    // dwell on spindle restart
     
-//    cmESCState esc_state;               // state management for ESC controller
-//    uint32_t esc_boot_timer;            // When the ESC last booted up
-//    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
+    cmESCState esc_state;               // state management for ESC controller
+    uint32_t esc_boot_timer;            // When the ESC last booted up
+    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
 
     float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
     uint8_t spindle_override_enable;	// TRUE = override enabled
@@ -81,6 +82,7 @@ extern spSpindleSingleton_t sp;         // config struct is exposed. The rest ar
 void cm_spindle_init();
 
 uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
+uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state);
 void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
 void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause);
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);

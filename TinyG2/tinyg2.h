@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.02 // pause_dwell_time (pdt) is now spindle_autostart_dwell (spd)
+#define TINYG_FIRMWARE_BUILD   		080.03 // 
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -46,14 +46,6 @@
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
-
-/*
-#if (PLATFORM == v9_3x8c)
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (3 = v9 board)
-#else
-#define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
-#endif
-*/
 
 /****** COMPILE-TIME SETTINGS ******/
 

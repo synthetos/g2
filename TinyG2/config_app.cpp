@@ -480,9 +480,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
     // Spindle functions
     { "sys","spo", _f0,   0, cm_print_spo,  get_ui8, set_01,     (float *)&sp.spindle_options, 0 },     // spindle feedhold options
     { "sys","spd", _fipn, 1, cm_print_spd,  get_flt, set_flu,    (float *)&sp.spindle_autodwell_seconds, PAUSE_DWELL_TIME },
-//	{ "sys","pdt", _fipn, 0, cm_print_pdt,  get_flt, set_flu,    (float *)&cm.pause_dwell_time,         PAUSE_DWELL_TIME },
-    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&cm.gm.spindle_state, 0 },    // read spindle state
-    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&cm.gm.spindle_speed, 0 },    // read spindle speed
+//    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&sp.spindle_state, 0 },       // read spindle state
+//    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&sp.spindle_speed, 0 },       // read spindle speed
+    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&cm.gm.spindle_state, 0 },       // read spindle state
+    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&cm.gm.spindle_speed, 0 },       // read spindle speed
 
     // Communications and reporting paramters
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cs.comm_mode,            COMM_MODE },

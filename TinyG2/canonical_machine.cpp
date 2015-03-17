@@ -1354,7 +1354,8 @@ bool cm_has_hold()
 void cm_start_hold()
 {
 	if (mp_has_runnable_buffer()) {                 // meaning there's something running
-        if(cm.gm.spindle_state != SPINDLE_OFF) {
+        if (cm_get_spindle_state(MODEL) != SPINDLE_OFF) {
+//        if(cm.gm.spindle_state != SPINDLE_OFF) {
             cm_spindle_control_immediate(SPINDLE_OFF);
         }
 	    cm_set_motion_state(MOTION_HOLD);

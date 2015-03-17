@@ -43,8 +43,9 @@ spSpindleSingleton_t sp;
 
 /**** Static functions ****/
 
-static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
+static void _exec_spindle_control(float *value, float *flag);
+static float _get_spindle_pwm (uint8_t spindle_state);
 
 /*
  * cm_spindle_init()
@@ -60,31 +61,55 @@ void cm_spindle_init()
 
 /*
  * cm_get_spindle_state()
+ *
  * cm_set_spindle_state()
  * cm_set_spindle_pause()
  * cm_set_spindle_speed_parameter()
  */
+
 uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
+uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state) { return gcode_state->spindle_pause;}
 void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
 void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { gcode_state->spindle_pause = spindle_pause;}
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
 
 /*
- * cm_set_spindle_speed() 	- queue the S parameter to the planner buffer
- * cm_exec_spindle_speed() 	- execute the S command (called from the planner buffer)
- * _exec_spindle_speed()	- spindle speed callback from planner queue
+uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { 
+    return sp.spindle_state;
+}
+uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state) { 
+    return sp.spindle_state;
+}
+void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { 
+    sp.spindle_state = (spSpindleState)spindle_state;
+}
+void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { 
+    sp.spindle_pause = (spSpindlePause)spindle_pause;
+}
+void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { 
+    sp.spindle_speed = speed;
+}
+*/
+
+/*
+ * cm_set_spindle_speed() - queue the S parameter to the planner buffer
+ * _exec_spindle_speed() - spindle speed callback from planner queue
  */
+
 stat_t cm_set_spindle_speed(float speed)
 {
 //	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
-	float value[AXES] = { speed, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_speed, value, value);
-	return (STAT_OK);
+
+    float value[AXES] = { speed, 0,0,0,0,0 };
+    mp_queue_command(_exec_spindle_speed, value, value);
+    return (STAT_OK);
 }
 
 static void _exec_spindle_speed(float *value, float *flag)
 {
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
+//	pwm_set_duty(PWM_1, _get_spindle_pwm(cm.gm.spindle_state) ); // update spindle speed if we're running
+	pwm_set_duty(PWM_1, _get_spindle_pwm(cm_get_spindle_state(MODEL)) ); // update spindle speed if we're running
 
 /* OMC code
 	uint8_t spindle_state = cm.gm.spindle_state & (~SPINDLE_PAUSED);
@@ -96,62 +121,12 @@ static void _exec_spindle_speed(float *value, float *flag)
    }
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_state) ); // update spindle speed if we're running
 */
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_state) ); // update spindle speed if we're running
-}
-
-/*
- * cm_get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
- */
-float cm_get_spindle_pwm( uint8_t spindle_state )
-{
-	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-	if (spindle_state == SPINDLE_CW ) {
-		speed_lo = pwm.c[PWM_1].cw_speed_lo;
-		speed_hi = pwm.c[PWM_1].cw_speed_hi;
-		phase_lo = pwm.c[PWM_1].cw_phase_lo;
-		phase_hi = pwm.c[PWM_1].cw_phase_hi;
-	} else if (spindle_state == SPINDLE_CCW ) {
-		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
-		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
-		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
-		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
-	}
-
-	if (spindle_state==SPINDLE_CW || spindle_state==SPINDLE_CCW ) {
-		// clamp spindle speed to lo/hi range
-		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
-		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
-
-		// normalize speed to [0..1]
-		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
-		return (speed * (phase_hi - phase_lo)) + phase_lo;
-	} else {
-		return pwm.c[PWM_1].phase_off;
-	}
-}
-
-/*
- * cm_spindle_control_immediate() - turn on/off spindle w/o planning
- * Turns spindle OFF, CW or CCW without planning. Ignores PAUSED bit
- */
-
-stat_t cm_spindle_control_immediate(uint8_t spindle_state)
-{
-/* OMC code
-    spindle_state &= ~SPINDLE_PAUSED;            // remove the pause bit
-    if (spindle_state != cm.gm.spindle_state) {   // if it's already there, skip it
-        float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
-        _exec_spindle_control(value, value);
-    }
-*/
-    float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
-    _exec_spindle_control(value, value);
-    return (STAT_OK);
 }
 
 /*
  * cm_spindle_control() - queue the spindle command to the planner buffer. Observe PAUSE
- * cm_exec_spindle_control() - execute the spindle command (called from planner)
+ * cm_spindle_control_immediate() - turn on/off spindle w/o planning
+ * _exec_spindle_control() - execute the spindle command (called from planner)
  *
  * This is kind of tricky...  If we're in interlock but still moving around, and we get an
  * M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's
@@ -175,7 +150,20 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	return(STAT_OK);
 }
 
-//static void _exec_spindle_control(uint8_t spindle_state, float f, float *vector, float *flag)
+stat_t cm_spindle_control_immediate(uint8_t spindle_state)
+{
+/* OMC code
+    spindle_state &= ~SPINDLE_PAUSED;            // remove the pause bit
+    if (spindle_state != cm.gm.spindle_state) {   // if it's already there, skip it
+        float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
+        _exec_spindle_control(value, value);
+    }
+*/
+    float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
+    _exec_spindle_control(value, value);
+    return (STAT_OK);
+}
+
 static void _exec_spindle_control(float *value, float *flag)
 {
 /* OMC code
@@ -221,7 +209,7 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __ARM
 
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_state));
+	pwm_set_duty(PWM_1, _get_spindle_pwm(raw_spindle_state));
 }
 
 /*
@@ -243,6 +231,40 @@ stat_t cm_spindle_conditional_resume(float dwell_seconds)
     cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
 */
     return (STAT_OK);    
+}
+
+/*
+ * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
+ */
+static float _get_spindle_pwm (uint8_t spindle_state)
+{
+	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
+	if (spindle_state == SPINDLE_CW ) {
+		speed_lo = pwm.c[PWM_1].cw_speed_lo;
+		speed_hi = pwm.c[PWM_1].cw_speed_hi;
+		phase_lo = pwm.c[PWM_1].cw_phase_lo;
+		phase_hi = pwm.c[PWM_1].cw_phase_hi;
+	} else if (spindle_state == SPINDLE_CCW ) {
+		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
+		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
+		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
+		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
+	}
+
+	if (spindle_state==SPINDLE_CW || spindle_state==SPINDLE_CCW ) {
+		// clamp spindle speed to lo/hi range
+		if (cm.gm.spindle_speed < speed_lo) {
+            cm.gm.spindle_speed = speed_lo;
+        }        
+		if (cm.gm.spindle_speed > speed_hi) {
+            cm.gm.spindle_speed = speed_hi;
+        }        
+		// normalize speed to [0..1]
+		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
+		return (speed * (phase_hi - phase_lo)) + phase_lo;
+	} else {
+		return pwm.c[PWM_1].phase_off;
+	}
 }
 
 /*
