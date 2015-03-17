@@ -138,7 +138,7 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	return(STAT_OK);
 }
 
-stat_t cm_spindle_control_immediate(uint8_t spindle_state)
+void cm_spindle_control_immediate(spSpindleState spindle_state)
 {
 /* OMC code
     spindle_state &= ~SPINDLE_PAUSED;            // remove the pause bit
@@ -147,9 +147,14 @@ stat_t cm_spindle_control_immediate(uint8_t spindle_state)
         _exec_spindle_control(value, value);
     }
 */
+    // cancel PAUSE if turning off spindle
+    if (spindle_state == SPINDLE_OFF) {
+        spindle.pause = SPINDLE_NORMAL;
+    }
+    
+    // turn it off
     float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
     _exec_spindle_control(value, value);
-    return (STAT_OK);
 }
 
 static void _exec_spindle_control(float *value, float *flag)
@@ -231,19 +236,16 @@ static void _exec_spindle_control(float *value, float *flag)
  *  Usage: // conditionally shut down spindle on alarm (called from inside cm_alarm())
  *            cm_spindle_conditional_stop(SPINDLE_PAUSE_ON_ALARM); 
  */
-//void cm_spindle_conditional_pause(uint8_t flags)
 void cm_spindle_conditional_pause()
 {
-//    if (spindle.flags & flags) {
-        if (spindle.state != SPINDLE_OFF) {
-            spindle.pause = SPINDLE_PAUSED;
-            cm_spindle_control_immediate(SPINDLE_OFF);
-        }
-//    }
+    if (spindle.state != SPINDLE_OFF) {
+        spSpindleState state = spindle.state;   // local copy
+        spindle.pause = SPINDLE_PAUSED;
+        cm_spindle_control_immediate(SPINDLE_OFF);
+        spindle.state = state;                  // restore
+    }
 }
 
-/*
- */
 void cm_spindle_conditional_resume(float dwell_seconds)
 {
     if(spindle.pause == SPINDLE_PAUSED) {

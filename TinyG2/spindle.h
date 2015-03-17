@@ -93,7 +93,7 @@ stat_t cm_set_spindle_speed(float speed);			// S parameter
 //float cm_get_spindle_pwm(uint8_t spindle_state);    // return PWM phase (duty cycle) for dir and speed
 
 stat_t cm_spindle_control(uint8_t spindle_state);	        // M3, M4, M5 integrated spindle control
-stat_t cm_spindle_control_immediate(uint8_t spindle_state); //like cm_spindle_control but not synchronized to planner
+void cm_spindle_control_immediate(spSpindleState spindle_state); //like cm_spindle_control but not synchronized to planner
 void cm_spindle_conditional_pause(void);                    // stop spindle based on system options selected
 void cm_spindle_conditional_resume(float dwell_seconds);    // restart spindle based on previous state
 
