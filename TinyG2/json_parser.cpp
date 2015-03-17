@@ -446,13 +446,13 @@ static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
 
 #define BUFFER_MARGIN 8			// safety margin to avoid buffer overruns during footer checksum generation
 
-uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
+uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
 {
 #ifdef __SILENCE_JSON_RESPONSES
 	return (0);
 #else
-	char_t *str = out_buf;
-	char_t *str_max = out_buf + size - BUFFER_MARGIN;
+	char *str = out_buf;
+	char *str_max = out_buf + size - BUFFER_MARGIN;
 	int8_t initial_depth = nv->depth;
 	int8_t prev_depth = 0;
 	uint8_t need_a_comma = false;
@@ -463,7 +463,7 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 		if (nv->valuetype != TYPE_EMPTY) {
 			if (need_a_comma) { *str++ = ',';}
 			need_a_comma = true;
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {		// write name
+			if (js.json_syntax == JSON_SYNTAX_RELAXED) {    // write name
 				str += sprintf((char *)str, "%s:", nv->token);
 			} else {
 				str += sprintf((char *)str, "\"%s\":", nv->token);
@@ -474,25 +474,25 @@ uint16_t json_serialize(nvObj_t *nv, char_t *out_buf, uint16_t size)
 				if (isnan((double)nv->value) || isinf((double)nv->value)) { nv->value = 0;}
 			}
 
-			// serialize output value
-			if		(nv->valuetype == TYPE_NULL)		{ str += (char_t)sprintf((char *)str, "null");} // Note that that "" is NOT null.
-			else if (nv->valuetype == TYPE_INTEGER)	{
-				str += (char_t)sprintf((char *)str, "%1.0f", (double)nv->value);
-			}
-			else if (nv->valuetype == TYPE_DATA)	{
+			// serialize output value (arranged in rough order of likely occurrence)
+			if      (nv->valuetype == TYPE_FLOAT)   { preprocess_float(nv);
+			                                          str += fntoa(str, nv->value, nv->precision);}
+			else if (nv->valuetype == TYPE_INT)     { str += sprintf((char *)str, "%1.0f", (double)nv->value);}
+			else if (nv->valuetype == TYPE_STRING)  { str += sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_ARRAY)   { str += sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
+			else if (nv->valuetype == TYPE_NULL)    { str += sprintf((char *)str, "null");} // Note that that "" is NOT null.
+            else if (nv->valuetype == TYPE_DATA)    {
 				uint32_t *v = (uint32_t*)&nv->value;
 				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);
-			}
-			else if (nv->valuetype == TYPE_STRING)	{ str += (char_t)sprintf((char *)str, "\"%s\"",(char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_ARRAY)	{ str += (char_t)sprintf((char *)str, "[%s]",  (char *)*nv->stringp);}
-			else if (nv->valuetype == TYPE_FLOAT)	{ preprocess_float(nv);
-													  str += fntoa(str, nv->value, nv->precision);
-			}
+            }
 			else if (nv->valuetype == TYPE_BOOL) {
-				if (fp_FALSE(nv->value)) { str += sprintf((char *)str, "false");}
-				else { str += (char_t)sprintf((char *)str, "true"); }
+				if (fp_FALSE(nv->value)) {
+                    str += sprintf((char *)str, "false");
+                } else {
+                    str += (char_t)sprintf((char *)str, "true");
+                }
 			}
-			if (nv->valuetype == TYPE_PARENT) {
+			else if (nv->valuetype == TYPE_PARENT) {
 				*str++ = '{';
 				need_a_comma = false;
 			}
@@ -614,7 +614,7 @@ void json_print_response(uint8_t status)
 	// Footer processing
 	while(nv->valuetype != TYPE_EMPTY) {					// find a free nvObj at end of the list...
 		if ((nv = nv->nx) == NULL) {						// oops! No free nvObj!
-			rpt_exception(STAT_JSON_TOO_LONG, (char_t *)"json_print"); // report this as an exception
+			rpt_exception(STAT_JSON_TOO_LONG, "json_print"); // report this as an exception
 			return;
 		}
 	}

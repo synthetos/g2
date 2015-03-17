@@ -25,8 +25,8 @@
 #include "util.h"
 #include "xio.h"			// for char definitions
 
-struct gcodeParserSingleton {	 	  // struct to manage globals
-	uint8_t modals[MODAL_GROUP_COUNT];// collects modal groups in a block
+struct gcodeParserSingleton {	 	        // struct to manage globals
+	uint8_t modals[MODAL_GROUP_COUNT];      // collects modal groups in a block
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
@@ -39,7 +39,8 @@ static stat_t _execute_gcode_block(void);		// Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
-#define EXEC_FUNC(f,v) if((uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
+#define EXEC_FUNC(f,v) if((bool)(uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
+//#define EXEC_FUNC(f,v) if(fp_TRUE(cm.gf.v)) { status = f(cm.gn.v);}
 
 /*
  * gc_gcode_parser() - parse a block (line) of gcode
@@ -56,8 +57,10 @@ stat_t gc_gcode_parser(char_t *block)
 	uint8_t block_delete_flag;
 
 	// don't process Gcode blocks if in alarmed state
-	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
-
+//	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
+	if (cm.machine_state == MACHINE_ALARM || cm.machine_state == MACHINE_SHUTDOWN) {
+         return (STAT_MACHINE_ALARMED);
+    }
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
 
 	// Block delete omits the line if a / char is present in the first space
@@ -125,9 +128,10 @@ static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint
 	else { *block_delete_flag = false; }
 
 	// normalize the command block & find the comment (if any)
+    // Gcode comments start with '(', Inkscape with '%', and random comments with ';'
 	for (; *wr != NUL; rd++) {
 		if (*rd == NUL) { *wr = NUL; }
-		else if ((*rd == '(') || (*rd == ';')) { *wr = NUL; *com = rd+1; }
+		else if ((*rd == '(') || (*rd == ';')  || (*rd == '%')) { *wr = NUL; *com = rd+1; }
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
 			*(wr++) = (char_t)toupper((char)*(rd));
 		}
@@ -335,9 +339,9 @@ static stat_t _parse_gcode_block(char_t *buf)
 						SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_STOP);
 				case 2: case 30:
 						SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_END);
-				case 3: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CW);
-				case 4: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_CCW);
-				case 5: SET_MODAL (MODAL_GROUP_M7, spindle_mode, SPINDLE_OFF);
+				case 3: SET_MODAL (MODAL_GROUP_M7, spindle_state, SPINDLE_CW);
+				case 4: SET_MODAL (MODAL_GROUP_M7, spindle_state, SPINDLE_CCW);
+				case 5: SET_MODAL (MODAL_GROUP_M7, spindle_state, SPINDLE_OFF);
 				case 6: SET_NON_MODAL (tool_change, true);
 				case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
 				case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
@@ -430,7 +434,7 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_spindle_override_factor, spindle_override_factor);
 	EXEC_FUNC(cm_select_tool, tool_select);					// tool_select is where it's written
 	EXEC_FUNC(cm_change_tool, tool_change);
-	EXEC_FUNC(cm_spindle_control, spindle_mode); 			// spindle on or off
+	EXEC_FUNC(cm_spindle_control, spindle_state); 			// spindle on or off
 	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
 	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// also disables mist coolant if OFF
 	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);

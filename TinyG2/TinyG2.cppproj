@@ -880,6 +880,12 @@
     <Compile Include="gcode_parser.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gpio.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="help.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1201,6 +1207,12 @@
     <Compile Include="platform\atmel_sam\syscalls_sam3.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="platform\atmel_sam\UniqueId.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="platform\atmel_sam\UniqueId.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="pwm.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1219,25 +1231,13 @@
     <Compile Include="settings\settings_default.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="settings\settings_hammer.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="settings\settings_othermill.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pendulum.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_pocketnc.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_probotixV90.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_shapeoko2.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="settings\settings_shapeoko375.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_shopbot_sbv300.h">

@@ -143,6 +143,7 @@ void mp_flush_planner()
 {
 	cm_abort_arc();
 	mp_init_buffers();
+    mr.move_state = MOVE_OFF;   // invalidate mr buffer to prevent subsequenc motion
 }
 
 /*
@@ -216,7 +217,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
+		cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
 		return;
 	}
 
@@ -234,12 +235,6 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 static stat_t _exec_command(mpBuf_t *bf)
 {
-/*
-	if(cm.hold_state == FEEDHOLD_SYNC) {
-		mp_transition_hold_to_stop();
-		return STAT_NOOP;
-	}
-*/
 	st_prep_command(bf);
 	return (STAT_OK);
 }
@@ -265,7 +260,7 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
+		return(cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
     bf->replannable = true;           // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
@@ -277,15 +272,23 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-/*
-	if(cm.hold_state == FEEDHOLD_SYNC) {
-		mp_transition_hold_to_stop();
-		return STAT_NOOP;
-	}
-*/
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	return (STAT_OK);
+}
+
+//++++ stubbed +++++
+void mp_request_out_of_band_dwell(float seconds)
+{
+//    mr.out_of_band_dwell_time = seconds;
+    return;
+}
+
+//++++ stubbed +++++
+stat_t mp_exec_out_of_band_dwell(void)
+{
+//    return _advance_dwell(mr.out_of_band_dwell_time);
+    return 0;
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -393,7 +396,7 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         mb.buffers_available--;
         return (w);
     }
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, (char_t *)"mp_get_write_buffer");
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer");
 	return (NULL);
 }
 
@@ -410,7 +413,8 @@ void mp_commit_write_buffer(const moveType move_type)
         mb.q->buffer_state = MP_BUFFER_QUEUED;
         mb.q = mb.q->nx;
         if (!mb.needs_replanned) {
-            if(cm.hold_state != FEEDHOLD_HOLD)
+            if (cm.hold_state != FEEDHOLD_HOLD)
+//            if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
                 st_request_exec_move();	        // requests an exec if the runtime is not busy
                 // NB: BEWARE! the exec may result in the planner buffer being
                 // processed IMMEDIATELY and then freed - invalidating the contents
@@ -429,10 +433,7 @@ void mp_commit_write_buffer(const moveType move_type)
 
 bool mp_has_runnable_buffer()
 {
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
-        return true;
-    }
-    return false;
+    return (mb.r->buffer_state);                // anything other than MP_BUFFER_EMPTY returns true
 }
 
 mpBuf_t * mp_get_run_buffer()
@@ -558,6 +559,7 @@ stat_t mp_plan_buffer()
     mp_plan_block_list(mb.q->pv, false);
 
     if(cm.hold_state != FEEDHOLD_HOLD)
+//    if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
         st_request_exec_move();					// requests an exec if the runtime is not busy
     // NB: BEWARE! the exec may result in the planner buffer being
     // processed immediately and then freed - invalidating the contents
@@ -688,6 +690,7 @@ static void _audit_buffers()
     __enable_irq();
 }
 #pragma GCC pop_options
+// About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
 
 /****************************
  * END OF PLANNER FUNCTIONS *
@@ -722,7 +725,7 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
         }
         b = b->pv;
     }
-    return(cm_hard_alarm(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
+    return(cm_shutdown(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
 }
 
 void mp_dump_running_plan_buffer() { _dump_plan_buffer(mb.r);}

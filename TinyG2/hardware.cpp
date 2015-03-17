@@ -57,21 +57,6 @@ void hardware_init()
 	return;
 }
 
-/*
- * _get_id() - get a human readable signature
- *
- *	Produce a unique deviceID based on the factory calibration data.
- *	Truncate to SYS_ID_LEN bytes
- */
-
-void _get_id(char_t *id)
-{
-    const uint16_t *uuid = readUniqueIdString();
-    for(int i = 0; i < SYS_ID_LEN-1; ++i)
-        id[i] = uuid[i];
-    id[SYS_ID_LEN-1] = 0;
-}
- 
  /*
  * Hardware Reset Handlers
  *
@@ -102,7 +87,7 @@ stat_t hw_hard_reset_handler(void)
  */
 
 void hw_request_bootloader() { cs.bootloader_requested = true;}
-    
+
 void hw_bootloader(void)
 {
     banzai(1);
@@ -115,8 +100,28 @@ stat_t hw_bootloader_handler(void)
     return (STAT_EAGAIN);
 }
 
-/***** END OF SYSTEM FUNCTIONS *****/
+/*
+ * _get_id() - get a human readable signature
+ *
+ *	Produce a unique deviceID based on the factory calibration data.
+ *	Truncate to SYS_ID_DIGITS length
+ */
 
+void _get_id(char_t *id)
+{
+    char *p = id;
+    const uint16_t *uuid = readUniqueIdString();
+
+    for(uint8_t i=0; i<SYS_ID_DIGITS; i++) {
+        *p++ = uuid[i];
+        if ( (i & 0x03) == 3) {     // put a dash every 4 digits
+            *p++ = '-';
+        }
+    }
+    *(--p) = 0; // nul termination
+}
+
+/***** END OF SYSTEM FUNCTIONS *****/
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
@@ -127,7 +132,7 @@ stat_t hw_bootloader_handler(void)
  * hw_get_id() - get device ID (signature)
  */
 
-stat_t hw_get_id(nvObj_t *nv) 
+stat_t hw_get_id(nvObj_t *nv)
 {
 	char_t tmp[SYS_ID_LEN];
 	_get_id(tmp);
@@ -148,7 +153,7 @@ stat_t hw_run_boot(nvObj_t *nv)
 /*
  * hw_set_hv() - set hardware version number
  */
-stat_t hw_set_hv(nvObj_t *nv) 
+stat_t hw_set_hv(nvObj_t *nv)
 {
 	return (STAT_OK);
 }
@@ -175,7 +180,7 @@ void hw_print_hp(nvObj_t *nv) { text_print_flt(nv, fmt_hp);}
 void hw_print_hv(nvObj_t *nv) { text_print_flt(nv, fmt_hv);}
 void hw_print_id(nvObj_t *nv) { text_print_str(nv, fmt_id);}
 
-#endif //__TEXT_MODE 
+#endif //__TEXT_MODE
 
 #ifdef __cplusplus
 }

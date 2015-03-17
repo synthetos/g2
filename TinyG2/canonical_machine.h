@@ -57,10 +57,10 @@
 
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
-enum cmCombinedState {				// check alignment with messages in config.c / msg_stat strings
+typedef enum {				        // check alignment with messages in config.c / msg_stat strings
 	COMBINED_INITIALIZING = 0,		// [0] machine is initializing          //iff macs == MACHINE_INITIALIZING
 	COMBINED_READY,					// [1] machine is ready for use         //iff macs == MACHINE_READY
-	COMBINED_ALARM,					// [2] machine in soft alarm state      //iff macs == MACHINE_ALARM
+	COMBINED_ALARM,					// [2] machine in alarm state           //iff macs == MACHINE_ALARM
 	COMBINED_PROGRAM_STOP,			// [3] program stop/no more blocks      //iff macs == MACHINE_PROGRAM_STOP
 	COMBINED_PROGRAM_END,			// [4] program end                      //iff macs == MACHINE_PROGRAM_END
 	COMBINED_RUN,					// [5] motion is running                //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
@@ -69,60 +69,69 @@ enum cmCombinedState {				// check alignment with messages in config.c / msg_sta
 	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
 	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-	COMBINED_SHUTDOWN,				// [11] machine in hard alarm state (shutdown) //iff macs == MACHINE_SHUTDOWN
-};
+	COMBINED_SHUTDOWN,				// [11] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
+    COMBINED_INTERLOCK              // [12] machine in interlock state
+} cmCombinedState   ;
 //### END CRITICAL REGION ###
 
-enum cmMachineState {
+typedef enum {
 	MACHINE_INITIALIZING = 0,		// machine is initializing
 	MACHINE_READY,					// machine is ready for use
-	MACHINE_ALARM,					// machine in soft alarm state
+	MACHINE_ALARM,					// machine in alarm state
 	MACHINE_PROGRAM_STOP,			// no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
 	MACHINE_PROGRAM_END,			// program end (same as MACHINE_READY, really...)
 	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
-	MACHINE_SHUTDOWN,				// machine in hard alarm state (shutdown)
-};
+	MACHINE_SHUTDOWN,				// machine in shutdown state
+    MACHINE_INTERLOCK               // machine in interlock state
+} cmMachineState;
 
-enum cmCycleState {
+typedef enum {
 	CYCLE_OFF = 0,					// machine is idle
 	CYCLE_MACHINING,				// in normal machining cycle
 	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// in homing cycle
 	CYCLE_JOG						// in jogging cycle
-};
+} cmCycleState;
 
-enum cmMotionState {
+typedef enum {
 	MOTION_STOP = 0,				// motion has stopped: set when the steppers reach the end of the planner queue
-    MOTION_PLANNING,				// machine has planned an ALINE segment, but not yes started to execute them
+    MOTION_PLANNING,				// machine has planned an ALINE segment, but not yet started to execute them
 	MOTION_RUN,						// machine is in motion: set when the steppers execute an ALINE segment
 	MOTION_HOLD						// feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
-};
+} cmMotionState;
 
-enum cmFeedholdState {				// feedhold_state machine
-	FEEDHOLD_OFF = 0,				// no feedhold in effect
-	FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
+typedef enum {				        // feedhold_state machine
+    FEEDHOLD_OFF = 0,				// no feedhold in effect
+    FEEDHOLD_REQUESTED,             // feedhold has been requested but not started yet
+    FEEDHOLD_SYNC, 					// start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
-	FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
-	FEEDHOLD_DECEL_DONE,            // deceleration is complete
-	FEEDHOLD_HOLD					// holding
-};
+    FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
+    FEEDHOLD_DECEL_END,             // end the deceleration
+    FEEDHOLD_PENDING,               // waiting to finalize the deceleration once motion stops
+    FEEDHOLD_HOLD					// holding
+} cmFeedholdState;
 
-enum cmHomingState {				// applies to cm.homing_state
+typedef enum {				        // master queue flush state machine
+    FLUSH_OFF = 0,				    // no queue flush in effect
+    FLUSH_REQUESTED,                // flush has been requested but not started yet
+} cmQueueFlushState;
+
+typedef enum {				        // applies to cm.homing_state
 	HOMING_NOT_HOMED = 0,			// machine is not homed (0=false)
 	HOMING_HOMED = 1,				// machine is homed (1=true)
 	HOMING_WAITING					// machine waiting to be homed
-};
+} cmHomingState;
 
-enum cmProbeState {					// applies to cm.probe_state
+typedef enum  {					    // applies to cm.probe_state
 	PROBE_FAILED = 0,				// probe reached endpoint without triggering
 	PROBE_SUCCEEDED = 1,			// probe was triggered, cm.probe_results has position
 	PROBE_WAITING					// probe is waiting to be started
-};
+} cmProbeState;
 
-enum cmEstopState {
-    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
-    ESTOP_ACKED    = 0,
-    ESTOP_INACTIVE = 0,
+typedef enum {
+    ESTOP_RELEASED = 0,             // pressed/released is physical state
+    ESTOP_ACKED    = 0,             // acked/unacked is machine control state
+    ESTOP_INACTIVE = 0,             // active/inactive is whether we're currently in estop mode
     ESTOP_PRESSED  = 0x1,
     ESTOP_UNACKED  = 0x2,
     ESTOP_ACTIVE   = 0x4,
@@ -130,14 +139,22 @@ enum cmEstopState {
     ESTOP_ACTIVE_MASK = 0x4,
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
-};
+} cmEstopState;
+
+typedef enum {
+    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low) 
+    SAFETY_INTERLOCK_DISENGAGED
+} cmSafetyState;
+
+//#define SAFETY_INTERLOCK_MASK 0x1
+//#define SAFETY_ESC_MASK = 0xE
 
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
  */
 
-enum cmNextAction {						// these are in order to optimized CASE statement
+typedef enum {						    // these are in order to optimized CASE statement
 	NEXT_ACTION_DEFAULT = 0,			// Must be zero (invokes motion modes)
 	NEXT_ACTION_SEARCH_HOME,			// G28.2 homing cycle
 	NEXT_ACTION_SET_ABSOLUTE_ORIGIN,	// G28.3 origin set
@@ -153,9 +170,9 @@ enum cmNextAction {						// these are in order to optimized CASE statement
 	NEXT_ACTION_RESUME_ORIGIN_OFFSETS,	// G92.3
 	NEXT_ACTION_DWELL,					// G4
 	NEXT_ACTION_STRAIGHT_PROBE			// G38.2
-};
+} cmNextAction;
 
-enum cmMotionMode {						// G Modal Group 1
+typedef enum {						    // G Modal Group 1
 	MOTION_MODE_STRAIGHT_TRAVERSE=0,	// G0 - straight traverse
 	MOTION_MODE_STRAIGHT_FEED,			// G1 - straight feed
 	MOTION_MODE_CW_ARC,					// G2 - clockwise arc feed
@@ -171,9 +188,9 @@ enum cmMotionMode {						// G Modal Group 1
 	MOTION_MODE_CANNED_CYCLE_87,		// G87 - back boring
 	MOTION_MODE_CANNED_CYCLE_88,		// G88 - boring, spindle stop, manual out
 	MOTION_MODE_CANNED_CYCLE_89			// G89 - boring, dwell, feed out
-};
+} cmMotionMode;
 
-enum cmModalGroup {						// Used for detecting gcode errors. See NIST section 3.4
+typedef enum {						    // Used for detecting gcode errors. See NIST section 3.4
 	MODAL_GROUP_G0 = 0, 				// {G10,G28,G28.1,G92} 	non-modal axis commands (note 1)
 	MODAL_GROUP_G1,						// {G0,G1,G2,G3,G80}	motion
 	MODAL_GROUP_G2,						// {G17,G18,G19}		plane selection
@@ -190,24 +207,24 @@ enum cmModalGroup {						// Used for detecting gcode errors. See NIST section 3.
 	MODAL_GROUP_M7,						// {M3,M4,M5}			spindle turning
 	MODAL_GROUP_M8,						// {M7,M8,M9}			coolant (M7 & M8 may be active together)
 	MODAL_GROUP_M9						// {M48,M49}			speed/feed override switches
-};
+} cmModalGroup;
 #define MODAL_GROUP_COUNT (MODAL_GROUP_M9+1)
 // Note 1: Our G0 omits G4,G30,G53,G92.1,G92.2,G92.3 as these have no axis components to error check
 
-enum cmCanonicalPlane {				// canonical plane - translates to:
+typedef enum {				        // canonical plane - translates to:
 									// 		axis_0	axis_1	axis_2
 	CANON_PLANE_XY = 0,				// G17    X		  Y		  Z
 	CANON_PLANE_XZ,					// G18    X		  Z		  Y
 	CANON_PLANE_YZ					// G19	  Y		  Z		  X
-};
+} cmCanonicalPlane;
 
-enum cmUnitsMode {
+typedef enum {
 	INCHES = 0,						// G20
 	MILLIMETERS,					// G21
 	DEGREES							// ABC axes (this value used for displays only)
-};
+} cmUnitsMode;
 
-enum cmCoordSystem {
+typedef enum {
 	ABSOLUTE_COORDS = 0,			// machine coordinate system
 	G54,							// G54 coordinate system
 	G55,							// G55 coordinate system
@@ -215,63 +232,56 @@ enum cmCoordSystem {
 	G57,							// G57 coordinate system
 	G58,							// G58 coordinate system
 	G59								// G59 coordinate system
-};
+} cmCoordSystem;
 #define COORD_SYSTEM_MAX G59		// set this manually to the last one
 
-enum cmPathControl {			    // G Modal Group 13
+typedef enum {			        // G Modal Group 13
 	PATH_EXACT_PATH = 0,			// G61 - hits corners but does not stop if it does not need to.
 	PATH_EXACT_STOP,				// G61.1 - stops at all corners
 	PATH_CONTINUOUS					// G64 and typically the default mode
-};
+} cmPathControl;
 
-enum cmDistanceMode {
+typedef enum {
 	ABSOLUTE_MODE = 0,				// G90
 	INCREMENTAL_MODE				// G91
-};
+} cmDistanceMode;
 
-enum cmFeedRateMode {
+typedef enum {
 	INVERSE_TIME_MODE = 0,			// G93
 	UNITS_PER_MINUTE_MODE,			// G94
 	UNITS_PER_REVOLUTION_MODE		// G95 (unimplemented)
-};
+} cmFeedRateMode;
 
-enum cmOriginOffset {
+typedef enum {
 	ORIGIN_OFFSET_SET=0,			// G92 - set origin offsets
 	ORIGIN_OFFSET_CANCEL,			// G92.1 - zero out origin offsets
 	ORIGIN_OFFSET_SUSPEND,			// G92.2 - do not apply offsets, but preserve the values
 	ORIGIN_OFFSET_RESUME			// G92.3 - resume application of the suspended offsets
-};
+} cmOriginOffset;
 
-enum cmProgramFlow {
+typedef enum {
 	PROGRAM_STOP = 0,
 	PROGRAM_END
-};
+} cmProgramFlow;
 
-enum cmSpindleState {				// spindle state settings (See hardware.h for bit settings)
-	SPINDLE_OFF = 0,
-	SPINDLE_CW,
-	SPINDLE_CCW,
-	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
-};
-
-enum cmCoolantState {				// mist and flood coolant states
+typedef enum {                      // mist and flood coolant states
 	COOLANT_OFF = 0,				// all coolant off
 	COOLANT_ON,						// request coolant on or indicates both coolants are on
 	COOLANT_MIST,					// indicates mist coolant on
 	COOLANT_FLOOD					// indicates flood coolant on
-};
+} cmCoolantState;
 
-enum cmDirection {					// used for spindle and arc dir
+typedef enum {					    // used for spindle and arc dir
 	DIRECTION_CW = 0,
 	DIRECTION_CCW
-};
+} cmDirection;
 
-enum cmAxisMode {					// axis modes (ordered: see _cm_get_feed_time())
+typedef enum {					    // axis modes (ordered: see _cm_get_feed_time())
 	AXIS_DISABLED = 0,				// kill axis
 	AXIS_STANDARD,					// axis in coordinated motion w/standard behaviors
 	AXIS_INHIBITED,					// axis is computed but not activated
 	AXIS_RADIUS						// rotary axis calibrated to circumference
-};	// ordering must be preserved. See cm_set_move_times()
+} cmAxisMode;                       // ordering must be preserved. See cm_set_move_times()
 #define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
 #define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
 
@@ -317,7 +327,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     float minimum_time;					// minimum time possible for move given axis constraints
     float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
-    float spindle_speed;				// in RPM
+    float spindle_speed;		// G	// in RPM
     float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
     uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
@@ -327,11 +337,12 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     uint8_t path_control;               // G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
     uint8_t distance_mode;              // G91   0=use absolute coords(G90), 1=incremental movement
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
-	uint8_t tool;						// M6 tool change - moves "tool_select" to "tool"
-	uint8_t tool_select;				// T value - T sets this value
-	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
-	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
-	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t tool;				// G			// M6 tool change - moves "tool_select" to "tool"
+	uint8_t tool_select;		// G			// T value - T sets this value
+	uint8_t mist_coolant;		// G			// TRUE = mist on (M7), FALSE = off (M9)
+	uint8_t flood_coolant;		// G			// TRUE = flood on (M8), FALSE = off (M9)
+	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t spindle_pause;		// G			// 0=operating, 1=paused
 
 } GCodeState_t;
 
@@ -353,9 +364,6 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 
 	uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
 	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
-
-	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
-	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
@@ -396,7 +404,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
 
-	uint8_t spindle_mode;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t spindle_state;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
@@ -422,10 +430,13 @@ typedef struct cmAxis {
 	float travel_max;					// max work envelope for soft limits
 	float travel_min;					// min work envelope for soft limits
 	float jerk_max;						// max jerk (Jm) in mm/min^3 divided by 1 million
-	float jerk_homing;					// homing jerk (Jh) in mm/min^3 divided by 1 million
+	float jerk_high;				    // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
 	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
 	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
+
+    uint8_t homing_input;               // set 1-N for homing input. 0 will disable homing
+    uint8_t homing_dir;                 // 0=search to negative, 1=search to positive
 	float search_velocity;				// homing search velocity
 	float latch_velocity;				// homing latch velocity
 	float latch_backoff;				// backoff from switches prior to homing latch movement
@@ -440,7 +451,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	// system group settings
 	float junction_acceleration;		// centripetal acceleration max for cornering
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
-	uint8_t soft_limit_enable;
+	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
+    bool limit_enable;                  // true to enable limit switches (disabled is same as override)
+//    bool interlock_enable;              // true to enable interlock system
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -457,44 +470,45 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
-//	uint8_t combined_state;				// stat: combination of states for display purposes, now computed in cm_get_combined_state
-	uint8_t machine_state;				// macs: machine/cycle/motion is the actual machine state
-	uint8_t cycle_state;				// cycs
-	uint8_t motion_state;				// momo
+    // global state variables and requestors
+    
+    cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
+    cmCycleState cycle_state;           // cycs
+    cmMotionState motion_state;         // momo
+	cmFeedholdState hold_state;         // hold: feedhold state machine
+	cmQueueFlushState queue_flush_state;  // master queue flush state machine
 
-//    cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
-//    cmCycleState cycle_state;			// cycs
-//    cmMotionState motion_state;			// momo
-	cmFeedholdState hold_state;			// hold: feedhold sub-state machine
+    uint8_t safety_interlock_requested; // set non-zero to request interlock processing (value is leading or trailing edge)
+    cmSafetyState safety_interlock_state;// safety interlock state
 
-	uint8_t interlock_state;			// true if interlock has been triggered
-	uint8_t estop_state;				// true if estop has been triggered
-//	cmHomingState homing_state;			// home: homing cycle sub-state machine
-	uint8_t homing_state;			    // home: homing cycle sub-state machine
+//    uint8_t estop_state;                // true if estop has been triggered
+
+	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
 
-	uint8_t probe_state;			    // 1==success, 0==failed
-//	cmProbeState probe_state;			// 1==success, 0==failed
+	cmProbeState probe_state;			// probing state machine (simple)
 	float probe_results[AXES];			// probing results
 
-	uint8_t	g28_flag;					// true = complete a G28 move
-	uint8_t	g30_flag;					// true = complete a G30 move
-	uint8_t deferred_write_flag;		// G10 data has changed (e.g. offsets) - flag to persist them
-	uint8_t feedhold_requested;			// feedhold character has been received
-	uint8_t queue_flush_requested;		// queue flush character has been received
-	uint8_t end_hold_requested;			// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
-	struct GCodeState *am;				// active Gcode model is maintained by state management
 
-	float pause_dwell_time;				//how long to dwell after ramping spindle up during a feedhold end
+	bool g28_flag;					    // true = complete a G28 move
+	bool g30_flag;					    // true = complete a G30 move
+	bool deferred_write_flag;		    // G10 data has changed (e.g. offsets) - flag to persist them
+	bool end_hold_requested;			//
+    uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
+    uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
+
+	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
+
+	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
+	                                    // see explanation in gcode_parser.cpp::wait_for_gcode_resume
 
 	/**** Model states ****/
+	GCodeState_t *am;                   // active Gcode model is maintained by state management
 	GCodeState_t  gm;					// core gcode model state
 	GCodeStateX_t gmx;					// extended gcode model state
 	GCodeInput_t  gn;					// gcode input values - transient
 	GCodeInput_t  gf;					// gcode input flags - transient
-
-	uint32_t ignored_gcodes;
 
 	magic_t magic_end;
 } cmSingleton_t;
@@ -518,7 +532,7 @@ uint8_t cm_get_motion_state(void);
 uint8_t cm_get_hold_state(void);
 uint8_t cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
-void cm_set_motion_state(uint8_t motion_state);
+void cm_set_motion_state(cmMotionState motion_state);
 float cm_get_axis_jerk(uint8_t axis);
 void cm_set_axis_jerk(uint8_t axis, float jerk);
 
@@ -531,14 +545,11 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
-uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
 float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
-void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode);
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);
 void cm_set_model_linenum(uint32_t linenum);
@@ -561,13 +572,13 @@ stat_t cm_test_soft_limits(float target[]);
 
 // Initialization and termination (4.3.2)
 void canonical_machine_init(void);
+void canonical_machine_reset(void);
 void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
-stat_t cm_hard_alarm(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
-stat_t cm_soft_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
-//stat_t cm_soft_alarm(stat_t status);							// enter soft alarm state. returns same status code
+stat_t cm_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
 stat_t cm_clear(nvObj_t *nv);
+stat_t cm_shutdown(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
 
 // Representation (4.3.3)
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
@@ -620,22 +631,22 @@ stat_t cm_feed_rate_override_enable(uint8_t flag); 				// M50
 stat_t cm_feed_rate_override_factor(uint8_t flag);				// M50.1
 stat_t cm_traverse_override_enable(uint8_t flag); 				// M50.2
 stat_t cm_traverse_override_factor(uint8_t flag);				// M50.3
-stat_t cm_spindle_override_enable(uint8_t flag); 				// M51
-stat_t cm_spindle_override_factor(uint8_t flag);				// M51.1
 
 void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 
 // Program Functions (4.3.10)
 void cm_request_feedhold(void);
-void cm_request_queue_flush(void);
 void cm_request_end_hold(void);
-
+void cm_request_queue_flush(void);
+void cm_request_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);					// process feedhold, cycle start and queue flush requests
-stat_t cm_queue_flush(void);									// flush serial and planner queues with coordinate resets
 
-//start or end a feedhold
-stat_t cm_start_hold(void);
-stat_t cm_end_hold(void);
+bool cm_has_hold(void);
+void cm_start_hold(void);
+void cm_end_hold(void);
+
+void cm_queue_flush(void);									    // flush serial and planner queues with coordinate resets
+void cm_end_queue_flush(void);
 
 void cm_cycle_start(void);										// (no Gcode)
 void cm_cycle_end(void); 										// (no Gcode)
@@ -685,7 +696,7 @@ stat_t cm_get_path(nvObj_t *nv);		// get patch control mode...
 stat_t cm_get_dist(nvObj_t *nv);		// get distance mode...
 stat_t cm_get_frmo(nvObj_t *nv);		// get feedrate mode...
 stat_t cm_get_toolv(nvObj_t *nv);		// get tool (value)
-//stat_t cm_get_pwr(nvObj_t *nv);			// get motor power enable state
+stat_t cm_get_pwr(nvObj_t *nv);			// get motor power enable state
 
 stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
 stat_t cm_get_feed(nvObj_t *nv);		// get feed rate, converted to units
@@ -693,8 +704,8 @@ stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
 
-stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
-stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
+//stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
+//stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
@@ -708,8 +719,10 @@ stat_t cm_run_joga(nvObj_t *nv);		// start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
-stat_t cm_set_xjm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
-stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
+stat_t cm_set_hi(nvObj_t *nv);          // set homing input
+
+stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
+stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
 /*--- text_mode support functions ---*/
 
@@ -735,8 +748,8 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_tool(nvObj_t *nv);
 	void cm_print_ilck(nvObj_t *nv);
 	void cm_print_estp(nvObj_t *nv);
-	void cm_print_spc(nvObj_t *nv);
-	void cm_print_sps(nvObj_t *nv);
+//	void cm_print_spc(nvObj_t *nv);
+//	void cm_print_sps(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -752,6 +765,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_ja(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
+	void cm_print_lim(nvObj_t *nv);
 	void cm_print_ml(nvObj_t *nv);
 	void cm_print_ma(nvObj_t *nv);
 	void cm_print_ms(nvObj_t *nv);
@@ -766,11 +780,9 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_jh(nvObj_t *nv);
 	void cm_print_jd(nvObj_t *nv);
 	void cm_print_ra(nvObj_t *nv);
-	void cm_print_sn(nvObj_t *nv);
-	void cm_print_sx(nvObj_t *nv);
-	void cm_print_rn(nvObj_t *nv);
-	void cm_print_rx(nvObj_t *nv);
 
+	void cm_print_hi(nvObj_t *nv);
+	void cm_print_hd(nvObj_t *nv);
 	void cm_print_sv(nvObj_t *nv);
 	void cm_print_lv(nvObj_t *nv);
 	void cm_print_lb(nvObj_t *nv);
@@ -802,8 +814,6 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_tool tx_print_stub
 	#define cm_print_ilck tx_print_stub
 	#define cm_print_estp tx_print_stub
-	#define cm_print_spc tx_print_stub
-	#define cm_print_sps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub
@@ -819,6 +829,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_ja tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
+	#define cm_print_lim tx_print_stub
 	#define cm_print_ml tx_print_stub
 	#define cm_print_ma tx_print_stub
 	#define cm_print_ms tx_print_stub
@@ -833,11 +844,9 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_jh tx_print_stub
 	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
-	#define cm_print_sn tx_print_stub
-	#define cm_print_sx tx_print_stub
-	#define cm_print_rn tx_print_stub
-	#define cm_print_rx tx_print_stub
 
+	#define cm_print_hi tx_print_stub
+	#define cm_print_hd tx_print_stub
 	#define cm_print_sv tx_print_stub
 	#define cm_print_lv tx_print_stub
 	#define cm_print_lb tx_print_stub

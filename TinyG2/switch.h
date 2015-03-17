@@ -37,6 +37,7 @@
  *
  *	Read switch contains the results of read pin and manages edges and debouncing.
  */
+#ifndef __NEW_INPUTS
 #ifndef SWITCH_H_ONCE
 #define SWITCH_H_ONCE
 
@@ -112,6 +113,7 @@ extern switches_t sw;
 /*
  * Function prototypes
  */
+
 void switch_init(void);
 void switch_reset(void);
 stat_t poll_switches(void);
@@ -137,3 +139,4 @@ void sw_print_ss(nvObj_t *nv);
 #endif // __TEXT_MODE
 
 #endif // End of include guard: SWITCH_H_ONCE
+#endif

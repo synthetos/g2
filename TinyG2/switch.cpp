@@ -41,6 +41,9 @@
  */
 
 #include "tinyg2.h"
+
+#ifndef __NEW_INPUTS
+
 #include "config.h"
 #include "settings.h"
 #include "switch.h"
@@ -55,7 +58,7 @@
 using Motate::SysTickTimer;
 #endif
 
-// Allocate switch array structure
+// Allocate IO array structures
 switches_t sw;
 
 //static void _no_action(switch_t *s);
@@ -70,6 +73,18 @@ static void _no_action(switch_t *s) { return; }
 //static void _led_on(switch_t *s) { IndicatorLed.clear(); }
 //static void _led_off(switch_t *s) { IndicatorLed.set(); }
 
+static InputPin<kInput1_PinNumber> axis_X_min_pin(kPullUp);
+static InputPin<kInput2_PinNumber> axis_X_max_pin(kPullUp);
+static InputPin<kInput3_PinNumber> axis_Y_min_pin(kPullUp);
+static InputPin<kInput4_PinNumber> axis_Y_max_pin(kPullUp);
+static InputPin<kInput5_PinNumber> axis_Z_min_pin(kPullUp);
+static InputPin<kInput6_PinNumber> axis_Z_max_pin(kPullUp);
+static InputPin<kInput7_PinNumber> axis_A_min_pin(kPullUp);
+static InputPin<kInput8_PinNumber> axis_A_max_pin(kPullUp);
+static InputPin<kInput9_PinNumber> axis_B_min_pin(kPullUp);
+static InputPin<kInput10_PinNumber> axis_B_max_pin(kPullUp);
+static InputPin<kInput11_PinNumber> axis_C_min_pin(kPullUp);
+static InputPin<kInput12_PinNumber> axis_C_max_pin(kPullUp);
 
 /*
  * switch_init() - initialize homing/limit switches
@@ -173,7 +188,7 @@ stat_t poll_switches()
  *
  *	Also sets disabled switches to switch state -1;
  */
-int8_t poll_switch(switch_t *s, uint8_t pin_value)
+int8_t poll_switch(switch_t *s, const uint8_t pin_value)
 {
 	// instant return conditions: switch disabled or in a lockout period
 	if (s->mode == SW_MODE_DISABLED) {
@@ -338,3 +353,5 @@ stat_t sw_get_ss(nvObj_t *nv)			// switch number (0-7)
 		fprintf(stderr, fmt_ss, nv->token, nv->value);
 	}
 #endif
+
+#endif // !__NEW_INPUTS

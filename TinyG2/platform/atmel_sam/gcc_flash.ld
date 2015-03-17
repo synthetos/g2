@@ -94,6 +94,11 @@ SECTIONS
         KEEP (*(SORT(.dtors.*)))
         KEEP (*crtend.o(.dtors))
 
+        /* MOTATE addition: support pin change interrupts */
+        PROVIDE(motate_pin_change_interrupts_start = .);
+        KEEP( *(.motate.pin_change_interrupts));
+        PROVIDE(motate_pin_change_interrupts_end = .);
+
         . = ALIGN(4);
         _efixed = .;            /* End of text section */
     } > rom

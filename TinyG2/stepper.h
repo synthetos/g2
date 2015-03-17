@@ -2,8 +2,8 @@
  * stepper.h - stepper motor interface
  * This file is part of TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -246,23 +246,23 @@
  *********************************/
 //See hardware.h for platform specific stepper definitions
 
-enum prepBufferState {
+typedef enum {
 	PREP_BUFFER_OWNED_BY_LOADER = 0,	// staging buffer is ready for load
 	PREP_BUFFER_OWNED_BY_EXEC			// staging buffer is being loaded
-};
+} prepBufferState;
 
 // Currently there is no distinction between IDLE and OFF (DEENERGIZED)
 // In the future IDLE will be powered at a low, torque-maintaining current
 
-enum motorPowerState {					// used w/start and stop flags to sequence motor power
+typedef enum {					        // used w/start and stop flags to sequence motor power
 	MOTOR_OFF = 0,						// motor is stopped and deenergized
 	MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
 	MOTOR_RUNNING,						// motor is running (and fully energized)
 	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
 	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motor
-};
+} motorPowerState;
 
-enum cmMotorPowerMode {
+typedef enum {
 	MOTOR_DISABLED = 0,					// motor enable is deactivated
 	MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
 	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles, de-powered out of cycle
@@ -270,7 +270,7 @@ enum cmMotorPowerMode {
 //	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
 //	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
 	MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
-};
+} cmMotorPowerMode;
 
 // Stepper power management settings (applicable to ARM only)
 #define Vcc	3.3							// volts
@@ -420,8 +420,8 @@ void stepper_init(void);
 void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
-uint8_t st_runtime_isbusy(void);
-uint8_t st_exec_isbusy(void);
+bool st_runtime_isbusy(void);
+bool st_exec_isbusy(void);
 void st_reset(void);
 stat_t st_clc(nvObj_t *nv);
 

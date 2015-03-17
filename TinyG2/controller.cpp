@@ -39,7 +39,7 @@
 #include "encoder.h"
 #include "hardware.h"
 #include "switch.h"
-//#include "gpio.h"
+#include "gpio.h"
 #include "report.h"
 #include "help.h"
 #include "util.h"
@@ -61,10 +61,12 @@ controller_t cs;		// controller state structure
  ***********************************************************************************/
 
 static void _controller_HSM(void);
-static stat_t _shutdown_idler(void);
-static stat_t _normal_idler(void);
-static stat_t _limit_switch_handler(void);
-static stat_t _interlock_estop_handler(void);
+static stat_t _led_indicator(void);             // twiddle the LED indicator
+static stat_t _shutdown_kill_point(void);
+static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
+static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+static stat_t _limit_switch_handler(void);      // revised for new GPIO code
+//static stat_t _interlock_estop_handler(void);   // old
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -87,15 +89,21 @@ stat_t hardware_hard_reset_handler(void);
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 {
-	memset(&cs, 0, sizeof(controller_t));			// clear all values, job_id's, pointers and status
+    // preserve settable parameters that may have already been set up
+    uint8_t comm_mode = cs.comm_mode;
+    uint8_t network_mode = cs.network_mode;
+
+	memset(&cs, 0, sizeof(controller_t));           // clear all values, job_id's, pointers and status
 	controller_init_assertions();
 
-	cs.fw_build = TINYG_FIRMWARE_BUILD;
+    cs.comm_mode = comm_mode;                       // restore parameters
+    cs.network_mode = network_mode;
+
+	cs.fw_build = TINYG_FIRMWARE_BUILD;             // set up identification
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
 	cs.config_version = TINYG_CONFIG_VERSION;
-	cs.hw_platform = TINYG_HARDWARE_PLATFORM;		// NB: HW version is set from EEPROM
-
-	cs.controller_state = CONTROLLER_STARTUP;		// ready to run startup lines
+	cs.hw_platform = TINYG_HARDWARE_PLATFORM;       // NB: HW version is set from EEPROM
+	cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
 
 #ifdef __AVR
 	xio_set_stdin(std_in);
@@ -163,14 +171,15 @@ static void _controller_HSM()
 												// Order is important:
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
-	DISPATCH(_shutdown_idler());				// 3. idle in shutdown state
-	DISPATCH( poll_switches());					// 4. run a switch polling cycle
-	DISPATCH(_limit_switch_handler());			// 5. limit switch has been thrown
-    DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
+	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
+ 	DISPATCH(_shutdown_kill_point());			// 4. shutdown kills the remainder of the loop
+    DISPATCH(_shutdown_handler());              //    invoke a shutdown
+    DISPATCH(_interlock_handler());             //    invoke / remove safety interlock
+	DISPATCH(_limit_switch_handler());			//    invoke limit switch
+//    DISPATCH(_interlock_estop_handler());     // 5a. interlock or estop have been thrown
     DISPATCH(_controller_state());				// controller state management
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
-
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 
@@ -192,14 +201,13 @@ static void _controller_HSM()
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
 	DISPATCH(_dispatch_command());				// read and execute next command
-	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
+//	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 
 //---- phat city idle tasks ---------------------------------------------------------//
 
     DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
-
     DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
-    //	DISPATCH(switch_debounce_callback());		// debounce switches
+//	DISPATCH(switch_debounce_callback());		// debounce switches
     DISPATCH(sr_status_report_callback());		// conditionally send status report
     DISPATCH(qr_queue_report_callback());		// conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
@@ -214,29 +222,24 @@ static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-		cm_request_queue_flush();
-        // OOps, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
+        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
-
 	return (STAT_OK);
 }
 
 /*****************************************************************************************
- * controller_set_connected(bool) - hook for the xio system to tell the controller tha we
+ * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
  */
 
 void controller_set_connected(bool is_connected) {
     if (is_connected) {
-        // we JUST connected
-        cs.controller_state = CONTROLLER_CONNECTED;
-    } else {
-        // we just disconnected from the last device, we'll expext a banner again
+        cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
+    } else {  // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
-
 
 /*****************************************************************************
  * command dispatchers
@@ -248,20 +251,25 @@ void controller_set_connected(bool is_connected) {
  */
 static stat_t _dispatch_command()
 {
-	if(cm.estop_state == 0) {
+//	if(cm.estop_state == 0) {
+        if (cs.controller_state == CONTROLLER_PAUSED) {
+	        return (STAT_NOOP);
+        }
 		devflags_t flags = DEV_IS_BOTH;
         while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
                (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
         	_dispatch_kernel();
-
             mp_plan_buffer();
         }
-	}
+//	}
 	return (STAT_OK);
 }
 
 static stat_t _dispatch_control()
 {
+    if (cs.controller_state == CONTROLLER_PAUSED) {
+        return (STAT_NOOP);
+    }
 	devflags_t flags = DEV_IS_CTRL;
 	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
         _dispatch_kernel();
@@ -270,48 +278,40 @@ static stat_t _dispatch_control()
 
 static void _dispatch_kernel()
 {
-
-	while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {		// position past any leading whitespace
-		cs.bufp++;
-	}
+    while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
+        cs.bufp++;
+    }
 	strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);		// save input buffer for reporting
 
 	if (*cs.bufp == NUL) {									// blank line - just a CR or the 2nd termination in a CRLF
 		if (cs.comm_mode == TEXT_MODE) {
 			text_response(STAT_OK, cs.saved_buf);
+            return;
 		}
+    }
 
-	// included for AVR diagnostics
-	} else if (*cs.bufp == '!') {
-        cm_request_feedhold();
-	} else if (*cs.bufp == '%') {
-		cm_request_queue_flush();
-	} else if (*cs.bufp == '~') {
-        cm_request_end_hold();
+	// trap single character commands
+    if      (*cs.bufp == '!') { cm_request_feedhold(); }
+    else if (*cs.bufp == '%') { cm_request_queue_flush(); }
+	else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
+    else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
 
-	} else if (*cs.bufp == '{') {							// process as JSON mode
-		cs.comm_mode = JSON_MODE;							// switch to JSON mode
+	else if (*cs.bufp == '{') {                             // process as JSON mode
+		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
-
-	} else if (strchr("$?Hh", *cs.bufp) != NULL) {			// process as text mode
-		cs.comm_mode = TEXT_MODE;							// switch to text mode
+    }
+    else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
+		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
-
-	} else if (cs.comm_mode == TEXT_MODE) {					// anything else must be Gcode
-		if(cm.machine_state != MACHINE_ALARM) {
-			text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);  // Toss if machine is alarmed
-		} else {
-			cm.ignored_gcodes += 1;
-		}
-	} else {
-		if(cm.machine_state != MACHINE_ALARM) {
-			strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11));	// use out_buf as temp; '-11' is buffer for JSON chars
-			sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
-			json_parser(cs.bufp);
-		} else {
-			asm("nop;");
-			cm.ignored_gcodes += 1;
-		}
+    }
+	else if (cs.comm_mode == TEXT_MODE) {                   // anything else must be Gcode
+        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
+    }
+	else {
+        strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
+        sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
+        json_parser(cs.bufp);
 	}
 }
 
@@ -325,35 +325,49 @@ static stat_t _check_for_phat_city_time(void) {
 
 /**** Local Utilities ********************************************************/
 /*
- * _shutdown_idler() - blink rapidly and prevent further activity from occurring
- * _normal_idler() - blink Indicator LED slowly to show everything is OK
+ * _shutdown_kill_point() - stops execution of the rest of the main loop
  *
- *	Shutdown idler flashes indicator LED rapidly to show everything is not OK.
- *	Shutdown idler returns EAGAIN causing the control loop to never advance beyond
- *	this point. It's important that the reset handler is still called so a SW reset
- *	(ctrl-x) or bootloader request can be processed.
+ *	Returns EAGAIN causing the control loop to never advance beyond this point.
+ *  It's important that the hw_hard_reset_handler is still called so a SW reset
+ *  (ctrl-x) or bootloader request can be processed.
  */
-
-static stat_t _shutdown_idler()
+static stat_t _shutdown_kill_point()
 {
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) { return (STAT_OK);}
-
-	if (SysTickTimer_getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer_getValue() + LED_ALARM_TIMER;
-		IndicatorLed.toggle();
-	}
-	return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+	if (cm_get_machine_state() != MACHINE_SHUTDOWN) {
+        return (STAT_OK);
+    } else {
+	    return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+    }
 }
 
-static stat_t _normal_idler()
+/*
+ * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
+ */
+static stat_t _led_indicator()
 {
-#ifdef __ARM
-	/*
-	 * S-curve heartbeat code. Uses forward-differencing math from the stepper code.
-	 * See plan_line.cpp for explanations.
-	 * Here, the "velocity" goes from 0.0 to 1.0, then back.
-	 * t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
-	 */
+    uint32_t blink_rate;
+    if (cm_get_machine_state() == MACHINE_ALARM) {
+        blink_rate = LED_ALARM_BLINK_RATE;
+    } else if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
+        blink_rate = LED_SHUTDOWN_BLINK_RATE;
+    } else {
+        blink_rate = LED_NORMAL_BLINK_RATE;
+    }
+
+    if (blink_rate != cs.led_blink_rate) {
+        cs.led_blink_rate =  blink_rate;
+        cs.led_timer = 0;
+    }
+	if (SysTickTimer_getValue() > cs.led_timer) {
+		cs.led_timer = SysTickTimer_getValue() + cs.led_blink_rate;
+		IndicatorLed.toggle();
+	}
+	return (STAT_OK);
+/*
+	 // S-curve heartbeat code. Uses forward-differencing math from the stepper code.
+	 // See plan_line.cpp for explanations.
+	 // Here, the "velocity" goes from 0.0 to 1.0, then back.
+	 // t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
 
 	// These are statics, and the assignments will only evaluate once.
 	static float indicator_led_value = 0.0;
@@ -382,16 +396,7 @@ static stat_t _normal_idler()
 
 		IndicatorLed = indicator_led_value/100.0;
 	}
-#endif
-#ifdef __AVR
-/*
-	if (SysTickTimer_getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer_getValue() + LED_NORMAL_TIMER;
-//		IndicatorLed_toggle();
-	}
 */
-#endif
-	return (STAT_OK);
 }
 
 /*
@@ -448,20 +453,55 @@ static stat_t _sync_to_time()
  */
 static stat_t _limit_switch_handler(void)
 {
-	if (get_limit_switch_thrown() == false) {
+    if ((cm.limit_enable == false) || (cm.limit_requested == false)) {
         return (STAT_NOOP);
-    } else {
-        return cm_hard_alarm(STAT_LIMIT_SWITCH_HIT, "cs1");
     }
+	char message[20];
+	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
+    cm.limit_requested = false;         // clear the limit request
+    cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+    return (STAT_OK);
 }
 
+/*
+ * _interlock_handler() - feedhold and resume depending on edge
+ *
+ * Request == 0 (IO_EDGE_NONE) is normal operation (no interlock)
+ * Request == 1 (IO_EDGE_LEADING) is interlock onset
+ * Request == 2 (IO_EDGE_TRAILING) is interlock offset
+ */
+static stat_t _interlock_handler(void)
+{
+    if (cm.safety_interlock_requested) {                    // NB: meaning non-zero
+        if (cm.safety_interlock_requested == IO_EDGE_LEADING) {
+            cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;     // normal operation
+        } else {
+            cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;  // interlock tripped
+            cm_request_end_hold();      // using cm_request_end_hold() instead of just ending
+        }                               // ...the hold keeps trying until the hold is complete
+        cm.safety_interlock_requested = IO_EDGE_NONE;       // reset the calling condition
+    }
+    return(STAT_OK);
+}
+
+/*
+ * _shutdown_handler() - put system into shutdown state
+ */
+static stat_t _shutdown_handler(void)
+{
+    if (cm.shutdown_requested) {                           // NB: meaning non-zero
+        cm_shutdown(STAT_SHUTDOWN_BY_EMERGENCY_STOP, "shutdown");
+    }
+    return(STAT_OK);
+}
+/*
 static stat_t _interlock_estop_handler(void)
 {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 	bool report = false;
 	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
 		cm.interlock_state = 1;
-		if(cm.gm.spindle_mode != SPINDLE_OFF)
+		if(cm.gm.spindle_state != SPINDLE_OFF)
 			cm_request_feedhold();
 		report = true;
 	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
@@ -488,11 +528,11 @@ static stat_t _interlock_estop_handler(void)
 	return (STAT_OK);
 #endif
 }
-
+*/
 /*
  * _system_assertions() - check memory integrity and other assertions
  */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_hard_alarm(status_code, "cs2"));
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_shutdown(status_code, "cs2"));
 
 stat_t _system_assertions()
 {

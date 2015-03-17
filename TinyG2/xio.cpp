@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -175,12 +175,31 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                     break;
                 }
 
-                read_buf[read_index] = (char_t)c;
+                read_buf[read_index] = (char)c;
 
-                if ((c == '!') || (c == '%') || (c == '~')) {
+                // special handling for flush character
+                // if not in a feedhold substitute % with ; so it's treated as a comment and ignored.
+                // if in a feedhold request a queue flush by passing the % back as a single character.
+                if (c == '%') {
+                    if (!cm_has_hold()) {
+                        read_buf[read_index++] = ';';
+                        continue;
+                    } else {
+                        single_char_buffer[0] = '%';    // send queue flush request
+                        size = 1;
+                        return single_char_buffer;
+                    }
+                }
+
+                // trap other special characters
+                if ((c == '!') ||                       // request feedhold
+                    (c == '~') ||                       // request end feedhold
+                    (c == EOT) ||                       // request job kill (end of transmission)
+                    (c == CAN)) {                       // reset (aka cancel, terminate)
                     single_char_buffer[0] = c;
                     size = 1;
                     return single_char_buffer;
+
                 } else if ((c == LF) || (c == CR)) {
                     _ready_to_send = true;
                     break;
@@ -321,7 +340,7 @@ struct xio_t {
      *			 the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
      *
      *   size -  Returns the size of the completed buffer, including the NUL termination character.
-     *			 Lines may be returned truncated the the length of the serial input buffer if the text
+     *			 Lines may be returned truncated to the length of the serial input buffer if the text
      *			 from the physical device is longer than the read buffer for the device. The size value
      *			 provided as a calling argument is ignored (size doesn't matter).
      *
@@ -439,7 +458,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, (char_t *)"xio_dev"); // where is this supposed to go!?
+                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev"); // where is this supposed to go!?
                         }
                         controller_set_connected(false);
                     } else if(checkForCtrlAndPrimary(oldflags)) {
@@ -482,7 +501,7 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
 
-// Define the xio singleton (and initilize it to hold our two deviceWrappers)
+// Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
     &serialUSB0Wrapper,
@@ -514,7 +533,7 @@ stat_t xio_test_assertions()
     if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
         return (STAT_XIO_ASSERTION_FAILURE);
     }
-				return (STAT_OK);
+    return (STAT_OK);
 }
 
 /*
@@ -537,7 +556,8 @@ char_t *xio_readline(devflags_t &flags, uint16_t &size)
     return xio.readline(flags, size);
 }
 
-void xio_flush_read() {
+void xio_flush_read()
+{
     return xio.flushRead();
 }
 

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		078.06 // fixed alarm exception report
+#define TINYG_FIRMWARE_BUILD   		079.59 // cleanup spindle controls and some other code
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -49,7 +49,7 @@
 
 /*
 #if (PLATFORM == v9_3x8c)
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (3 = v9 board)
 #else
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #endif
@@ -65,7 +65,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_SWITCHES						// Using v9 style switch code
+#define __NEW_INPUTS						// Using g2 revised digital inouts
 #define __DUAL_USB							// use dual endpoint USB
 
 #define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
@@ -142,10 +142,7 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 								// Use macros to fake out AVR's PROGMEM and other AVRisms.
 #define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
-
-typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uint8_t
-								// because in C++ uint8_t and char are distinct types and
-								// we want chars to behave as uint8's
+typedef char char_t;			// Vestigal. Will be removed at some point
 
 													// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray
@@ -163,38 +160,32 @@ typedef uint8_t char_t;			// In the ARM/GCC++ version char_t is typedef'd to uin
 #define STD_OUT 0
 #define STD_ERR 0
 
+
+// defines are BAD, M'kay? 'specially when you redfine a global function.
+
 /* String compatibility
- *
- * The ARM stdio functions we are using still use char as input and output. The macros
- * below do the casts for most cases, but not all. Vararg functions like the printf()
- * family need special handling. These like char * as input and require casts as per:
- *
- *   printf((const char *)"Good Morning Hoboken!\n");
  *
  * The AVR also has "_P" variants that take PROGMEM strings as args.
  * On the ARM/GCC++ the _P functions are just aliases of the non-P variants.
+ *
+ * Note that we have to be sure to cast non char variables to char types when used
+ * with standard functions. We must maintain const when it's required as well.
+ *
+ * The compiler will be your guide when you get it wrong. :)
+ *
+ * Example: char *ret = strcpy((char *)d, (const char *)s);
+ *
  */
-#define strncpy(d,s,l) (char_t *)strncpy((char *)d, (char *)s, l)
-#define strncat(d,s,l) (char_t *)strncat((char *)d, (char *)s, l)
-#define strpbrk(d,s) (char_t *)strpbrk((char *)d, (char *)s)
-#define strcpy(d,s) (char_t *)strcpy((char *)d, (char *)s)
-#define strcat(d,s) (char_t *)strcat((char *)d, (char *)s)
-#define strstr(d,s) (char_t *)strstr((char *)d, (char *)s)
-#define strchr(d,s) (char_t *)strchr((char *)d, (char)s)
-#define strcmp(d,s) strcmp((char *)d, (char *)s)
-#define strtod(d,p) strtod((char *)d, (char **)p)
-#define strtof(d,p) strtof((char *)d, (char **)p)
-#define strlen(s) strlen((char *)s)
-#define isdigit(c) isdigit((char)c)
-#define isalnum(c) isalnum((char)c)
-#define tolower(c) (char_t)tolower((char)c)
-#define toupper(c) (char_t)toupper((char)c)
 
+
+// These we'll allow for the sake of not having to pass the variadic variables...
 #define printf_P printf		// these functions want char * as inputs, not char_t *
 #define fprintf_P fprintf	// just sayin'
 #define sprintf_P sprintf
-#define strcpy_P strcpy
-#define strncpy_P strncpy
+
+// These are better -- inline jump functions.
+inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
+inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 #endif // __ARM
 
@@ -313,7 +304,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
-#define	STAT_ALARMED 27
+#define	STAT_SHUTDOWN_BY_EMERGENCY_STOP 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
@@ -564,8 +555,8 @@ char *get_status_message(stat_t status);
 #define	STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY 243
 #define	STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL 244
 #define	STAT_HOMING_ERROR_NEGATIVE_LATCH_BACKOFF 245
-#define	STAT_HOMING_ERROR_SWITCH_MISCONFIGURATION 246
-#define	STAT_ERROR_247 247
+#define	STAT_HOMING_ERROR_HOMING_INPUT_MISCONFIGURED 246
+#define	STAT_HOMING_ERROR_MUST_CLEAR_SWITCHES_BEFORE_HOMING 247
 #define	STAT_ERROR_248 248
 #define	STAT_ERROR_249 249
 

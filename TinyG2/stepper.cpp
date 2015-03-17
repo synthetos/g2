@@ -44,7 +44,7 @@ stConfig_t st_cfg;
 stPrepSingleton_t st_pre;
 static stRunSingleton_t st_run;
 
-/**** Setup local functions ****/
+/**** Static functions ****/
 
 static void _load_move(void);
 #ifdef __ARM
@@ -335,12 +335,13 @@ stat_t stepper_test_assertions()
  *	- dwell is running
  */
 
-uint8_t st_runtime_isbusy()
+bool st_runtime_isbusy()
 {
-	if (st_run.dda_ticks_downcount == 0) {
-		return (false);
-	}
-	return (true);
+    return (st_run.dda_ticks_downcount);    // returns false if downcount is zero
+//	if (st_run.dda_ticks_downcount == 0) {
+//		return (false);
+//	}
+//	return (true);
 }
 
 /*
@@ -351,7 +352,7 @@ uint8_t st_runtime_isbusy()
  * - we are currently running a segment (motors or dwell), after which we will request an exec interrupt
  */
 
-uint8_t st_exec_isbusy()
+bool st_exec_isbusy()
 {
     return (st_pre.exec_isbusy != 0);
 }
@@ -788,8 +789,8 @@ ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
 #ifdef __ARM
 void st_request_load_move()
 {
-	if (st_runtime_isbusy()) {
-		return;													// don't request a load if the runtime is busy
+	if (st_runtime_isbusy()) {                                  // don't request a load if the runtime is busy
+		return;
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
 		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
@@ -1038,9 +1039,9 @@ static void _load_move()
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queuing the line
-	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_hard_alarm(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
-	} else if (isinf(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
-	} else if (isnan(segment_time)) { return (cm_hard_alarm(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
+	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_shutdown(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
+	} else if (isinf(segment_time)) { return (cm_shutdown(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
+	} else if (isnan(segment_time)) { return (cm_shutdown(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
 	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters

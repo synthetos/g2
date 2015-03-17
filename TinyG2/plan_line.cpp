@@ -28,6 +28,7 @@
 
 #include "tinyg2.h"
 #include "config.h"
+#include "controller.h"
 #include "canonical_machine.h"
 #include "planner.h"
 #include "stepper.h"
@@ -52,7 +53,7 @@ static void _calculate_jerk(mpBuf_t *bf);
 //static float _calculate_junction_vmax(const float a_unit[], const float b_unit[]);
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[]);
 
-static void _reset_replannable_list(void);
+//static void _reset_replannable_list(void);
 
 /* Runtime-specific setters and getters
  *
@@ -77,9 +78,19 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
  *	FALSE you know the queue is empty and the motors have stopped.
  */
 
+bool mp_runtime_is_idle()
+{
+	return (!st_runtime_isbusy());
+}
+
+//bool mp_planner_is_empty()
+
 uint8_t mp_get_runtime_busy()
 {
-	if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned) return (true);
+    if ((st_runtime_isbusy() == true) || (mr.move_state == MOVE_RUN) || mb.needs_replanned)
+    {
+        return (true);
+    }
 	return (false);
 }
 
@@ -128,7 +139,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
     // get a cleared buffer and setup move variables
     if ((bf = mp_get_write_buffer()) == NULL) {                     // never supposed to fail
-        return(cm_hard_alarm(STAT_BUFFER_FULL_FATAL, "pl1"));
+        return(cm_shutdown(STAT_BUFFER_FULL_FATAL, "pl1"));
     }
     bf->bf_func = mp_exec_aline;                                    // register the callback to the exec function
     bf->length = length;
@@ -278,7 +289,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
             while(1);
         }
 
@@ -307,7 +318,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, (char_t *)"diagnostic ");
+            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
             while(1);
         }
 
@@ -329,7 +340,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
  * _calc_move_times()
  * _calculate_jerk()
  * _calculate_junction_vmax()
- * _reset_replannable_list()
+ * mp_reset_replannable_list()
  */
 
 /*
@@ -698,7 +709,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
     float sintheta_over2 = sqrt((1 - costheta)/2);
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
-    return(min(vmax, sqrt(radius * cm.junction_acceleration)));
+    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
 //    return(sqrt(radius * cm.junction_acceleration));
 
 // New junction code - untested
@@ -709,9 +720,9 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 }
 
 /*
- *	_reset_replannable_list() - resets all blocks in the planning list to be replannable
+ *	mp_reset_replannable_list() - resets all blocks in the planning list to be replannable
  */
-static void _reset_replannable_list()
+void mp_reset_replannable_list()
 {
 	mpBuf_t *bf = mp_get_first_buffer();
 	if (bf == NULL) return;
@@ -724,56 +735,4 @@ static void _reset_replannable_list()
 
     mb.needs_replanned = true;
     mb.needs_time_accounting = true;
-}
-
-/*************************************************************************
- *************************************************************************
- * Feedhold support - supporting functions for performing holds
- *************************************************************************
- *************************************************************************
- *
- * mp_transition_hold_to_stop() - called from the stepper chain when the hold takes effect
- * mp_restart_from_hold() - end a feedhold
- *
- *	Feedhold is executed as cm.hold_state transitions executed inside _exec_aline()
- *  Invoke a feedhold by calling cm_request_hold() or cm_start_hold() directly
- *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
- *  See canonical_macine.c for a more detailed exp;lanation of feedhold operation.
- */
-void mp_transition_hold_to_stop()
-{
-    cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
-    cm.hold_state = FEEDHOLD_HOLD;
-
-    mpBuf_t *bf = mp_get_run_buffer();      // Force it to use the run buffer
-
-    // NOW, we have to look at the run buffer and see if there's anything left,
-    // Update the buffer if we need to, then force a replan of the whole buffer.
-
-    bf->length = get_axis_vector_length(mr.target, mr.position);
-    bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf);
-    bf->entry_vmax = 0;						// set bp+0 as hold point
-    bf->move_state = MOVE_NEW;				// tell _exec to re-use the bf buffer
-	mr.move_state = MOVE_OFF;		        // invalidate mr buffer to reset the new move
-
-    _reset_replannable_list();				// make it replan all the blocks
-
-    // We have a moment, go ahead and replan:
-//    mp_plan_buffer();
-
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);
-//    sr_request_status_report(SR_REQUEST_TIMED);
-    return;
-}
-
-void mp_restart_from_hold()
-{
-	cm.hold_state = FEEDHOLD_OFF;
-	if (mp_has_runnable_buffer()) {
-	    cm_set_motion_state(MOTION_RUN);
-	    st_request_exec_move();					// restart the steppers -- now done in cm_feedhold_sequencing_callback
-	    sr_request_status_report(SR_REQUEST_IMMEDIATE);
-    } else {
-		cm_set_motion_state(MOTION_STOP);
-	}
 }

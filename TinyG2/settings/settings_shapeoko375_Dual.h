@@ -42,12 +42,50 @@
 
 #define JUNCTION_DEVIATION		0.01		// default value, in mm - smaller is faster
 #define JUNCTION_ACCELERATION	2000000		// 2 million - centripetal acceleration around corners
-//#define JUNCTION_ACCELERATION	20000000	// 20 million - centripetal acceleration around corners
+#define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
+#define SOFT_LIMIT_ENABLE           0                       // 0 = off, 1 = on
+#define HARD_LIMIT_ENABLE           1                       // 0 = off, 1 = on
+#define PAUSE_DWELL_TIME            0.0
 
-// *** settings.h overrides ***
+#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 
-#undef COMM_MODE
-#define COMM_MODE				JSON_MODE
+// Communications and reporting settings
+
+#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+#define COM_EXPAND_CR               false
+#define COM_ENABLE_ECHO             false
+#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define NETWORK_MODE                NETWORK_STANDALONE
+
+#define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
+
+#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
+#define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
+#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
+
+#define QUEUE_REPORT_VERBOSITY      QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+// Alternate SRs that report in drawable units
+//#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
+
+// Gcode startup defaults
+#define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM  G54                     // G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
+#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
+
+
+// *** motor settings ************************************************************************************
+
+#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
+#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
 // *** motor settings ***
 
@@ -108,11 +146,10 @@
 #define X_TRAVEL_MIN			0					// xtn		minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 			220					// xtm		maximum travel - used by soft limits and homing
 #define X_JERK_MAX				5000				// xjm		yes, that's "5 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           X_JERK_MAX			// xjh
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION	// xjd
-#define X_SWITCH_MODE_MIN		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX 		SW_MODE_DISABLED	// xsx		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED       // rsn    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-#define X_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED       // rsx    SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_HOMING_INPUT              1                   // xhi  number of the input to ise for homing, or 0 for off
+#define X_HOMING_DIR                0                   // xhd  0 to search to minimum, 1 to search to maximum
 #define X_SEARCH_VELOCITY		3000				// xsv		minus means move to minimum switch
 #define X_LATCH_VELOCITY		100					// xlv		mm/min
 #define X_LATCH_BACKOFF			20					// xlb		mm
@@ -125,11 +162,10 @@
 #define Y_TRAVEL_MIN			0
 #define Y_TRAVEL_MAX			220
 #define Y_JERK_MAX				5000
+#define Y_JERK_HIGH_SPEED           Y_JERK_MAX
 #define Y_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED
-#define Y_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
+#define Y_HOMING_INPUT              3
+#define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY		3000
 #define Y_LATCH_VELOCITY		100
 #define Y_LATCH_BACKOFF			20
@@ -137,16 +173,15 @@
 #define Y_JERK_HOMING			10000				// xjh
 
 #define Z_AXIS_MODE				AXIS_STANDARD
-#define Z_VELOCITY_MAX			800
+#define Z_VELOCITY_MAX			600
 #define Z_FEEDRATE_MAX			Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN			0
 #define Z_TRAVEL_MAX			100
 #define Z_JERK_MAX				50					// 50,000,000
+#define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define Z_SWITCH_MODE_MIN		SW_MODE_DISABLED
-#define Z_SWITCH_MODE_MAX		SW_MODE_DISABLED
-#define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED
-#define Z_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
+#define Z_HOMING_INPUT              5
+#define Z_HOMING_DIR                0
 #define Z_SEARCH_VELOCITY		Z_VELOCITY_MAX
 #define Z_LATCH_VELOCITY		100
 #define Z_LATCH_BACKOFF			20
@@ -160,12 +195,11 @@
 #define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
 #define A_TRAVEL_MAX 			-1
 #define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
+#define A_JERK_HIGH_SPEED           A_JERK_MAX
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED
-#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
+#define A_HOMING_INPUT              0
+#define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY 		600
 #define A_LATCH_VELOCITY 		100
 #define A_LATCH_BACKOFF 		5
@@ -178,12 +212,11 @@
 #define B_TRAVEL_MIN			-1
 #define B_TRAVEL_MAX 			-1
 #define B_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
+#define B_JERK_HIGH_SPEED           B_JERK_MAX
 #define B_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED
-#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
+#define B_HOMING_INPUT              0
+#define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF 		5
@@ -196,17 +229,64 @@
 #define C_TRAVEL_MIN			-1
 #define C_TRAVEL_MAX 			-1
 #define C_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
+#define C_JERK_HIGH_SPEED           C_JERK_MAX
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_CLOSED
-#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_CLOSED
+#define C_HOMING_INPUT              0
+#define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY 		600
 #define C_LATCH_VELOCITY 		100
 #define C_LATCH_BACKOFF 		5
 #define C_ZERO_BACKOFF 			2
 #define C_JERK_HOMING			C_JERK_MAX
+
+//*** Input / output settings ***
+
+#define DEFAULT_MODE                NORMALLY_CLOSED
+#define DEFAULT_ACTION              IO_ACTION_NONE
+#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
+
+// Old X-Min
+#define DI1_MODE                    DEFAULT_MODE
+#define DI1_ACTION                  DEFAULT_ACTION
+#define DI1_FUNCTION                DEFAULT_FUNCTION
+
+// Old X-Max
+#define DI2_MODE                    DEFAULT_MODE
+#define DI2_ACTION                  DEFAULT_ACTION
+#define DI2_FUNCTION                DEFAULT_FUNCTION
+
+// Old Y-Min
+#define DI3_MODE                    DEFAULT_MODE
+#define DI3_ACTION                  DEFAULT_ACTION
+#define DI3_FUNCTION                DEFAULT_FUNCTION
+
+// Old Y-Max
+#define DI4_MODE                    DEFAULT_MODE
+#define DI4_ACTION                  DEFAULT_ACTION
+#define DI4_FUNCTION                DEFAULT_FUNCTION
+
+// Old Z-Min
+#define DI5_MODE                    NORMALLY_OPEN
+#define DI5_ACTION                  DEFAULT_ACTION
+#define DI5_FUNCTION                DEFAULT_FUNCTION
+
+// Old Z-Max
+#define DI6_MODE                    DEFAULT_MODE
+#define DI6_ACTION                  DEFAULT_ACTION
+#define DI6_FUNCTION                DEFAULT_FUNCTION
+
+#define DI7_MODE                    DEFAULT_MODE
+#define DI7_ACTION                  DEFAULT_ACTION
+#define DI7_FUNCTION                DEFAULT_FUNCTION
+
+#define DI8_MODE                    DEFAULT_MODE
+#define DI8_ACTION                  DEFAULT_ACTION
+#define DI8_FUNCTION                DEFAULT_FUNCTION
+
+#define DI9_MODE                    DEFAULT_MODE
+#define DI9_ACTION                  DEFAULT_ACTION
+#define DI9_FUNCTION                DEFAULT_FUNCTION
 
 // *** PWM SPINDLE CONTROL ***
 
@@ -269,4 +349,22 @@
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
 
+/*** User-Defined Data Defaults ***/
+
+#define USER_DATA_A0 0
+#define USER_DATA_A1 0
+#define USER_DATA_A2 0
+#define USER_DATA_A3 0
+#define USER_DATA_B0 0
+#define USER_DATA_B1 0
+#define USER_DATA_B2 0
+#define USER_DATA_B3 0
+#define USER_DATA_C0 0
+#define USER_DATA_C1 0
+#define USER_DATA_C2 0
+#define USER_DATA_C3 0
+#define USER_DATA_D0 0
+#define USER_DATA_D1 0
+#define USER_DATA_D2 0
+#define USER_DATA_D3 0
 
