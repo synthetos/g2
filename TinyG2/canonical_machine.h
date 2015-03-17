@@ -146,16 +146,8 @@ typedef enum {
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
-typedef enum {
-    SAFETY_ESC_ONLINE = 0,
-    SAFETY_ESC_OFFLINE,
-    SAFETY_ESC_LOCKOUT,
-    SAFETY_ESC_REBOOTING,
-    SAFETY_ESC_LOCKOUT_AND_REBOOTING,
-} cmESCState;
-
-#define SAFETY_INTERLOCK_MASK 0x1
-#define SAFETY_ESC_MASK = 0xE
+//#define SAFETY_INTERLOCK_MASK 0x1
+//#define SAFETY_ESC_MASK = 0xE
 
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
@@ -373,9 +365,6 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 	uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
 	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
 
-//	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
-//	uint8_t	spindle_override_enable;	// TRUE = override enabled
-
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
 //	float cutter_length;				// H - cutter length compensation (0 is off)
@@ -491,9 +480,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
     uint8_t safety_interlock_requested; // set non-zero to request interlock processing (value is leading or trailing edge)
     cmSafetyState safety_interlock_state;// safety interlock state
-//    cmESCState esc_state;               // state management for ESC controller
-//    uint32_t esc_boot_timer;            // When the ESC last booted up
-//    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
 
 //    uint8_t estop_state;                // true if estop has been triggered
 
@@ -559,17 +545,12 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
-//uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
 float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
-//void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
-//void cm_set_spindle_pause(GCodeState_t *gcode_pause, uint8_t spindle_pause);
-//void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
-
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);
 void cm_set_model_linenum(uint32_t linenum);
 
@@ -650,8 +631,6 @@ stat_t cm_feed_rate_override_enable(uint8_t flag); 				// M50
 stat_t cm_feed_rate_override_factor(uint8_t flag);				// M50.1
 stat_t cm_traverse_override_enable(uint8_t flag); 				// M50.2
 stat_t cm_traverse_override_factor(uint8_t flag);				// M50.3
-//stat_t cm_spindle_override_enable(uint8_t flag); 				// M51
-//stat_t cm_spindle_override_factor(uint8_t flag);				// M51.1
 
 void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 
@@ -717,7 +696,7 @@ stat_t cm_get_path(nvObj_t *nv);		// get patch control mode...
 stat_t cm_get_dist(nvObj_t *nv);		// get distance mode...
 stat_t cm_get_frmo(nvObj_t *nv);		// get feedrate mode...
 stat_t cm_get_toolv(nvObj_t *nv);		// get tool (value)
-//stat_t cm_get_pwr(nvObj_t *nv);			// get motor power enable state
+stat_t cm_get_pwr(nvObj_t *nv);			// get motor power enable state
 
 stat_t cm_get_vel(nvObj_t *nv);			// get runtime velocity...
 stat_t cm_get_feed(nvObj_t *nv);		// get feed rate, converted to units
@@ -835,8 +814,6 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_tool tx_print_stub
 	#define cm_print_ilck tx_print_stub
 	#define cm_print_estp tx_print_stub
-//	#define cm_print_spc tx_print_stub
-//	#define cm_print_sps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub

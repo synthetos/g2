@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.58 // checkpoint - refactored spindle controls; moved all spindle specific stuff to spindle.c/.h
+#define TINYG_FIRMWARE_BUILD   		079.59 // cleanup spindle controls and some other code
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -49,7 +49,7 @@
 
 /*
 #if (PLATFORM == v9_3x8c)
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (3 = v9 board)
 #else
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #endif

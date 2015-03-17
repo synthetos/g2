@@ -132,7 +132,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, cm_ack_estop,(float *)&cs.null, 0 },		// E-stop status (SET to ack)
 //	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },	// E-stop status clear (GET to ack)
 
-//	{ "",   "spm", _f0, 0, cm_print_spm, get_ui8, set_01, (float *)&cm.gm.spindle_mode, 0 },    // spindle operating mode
+	{ "",   "spm", _f0, 0, cm_print_spm, get_ui8, set_01, (float *)&cm.gm.spindle_pause, 0 },   // spindle feedhold mode
 	{ "",   "spc", _f0, 0, cm_print_spc, get_ui8, set_nul,(float *)&cm.gm.spindle_state, 0 },   // read spindle state
 	{ "",   "sps", _f0, 0, cm_print_sps, get_flt, set_nul,(float *)&cm.gm.spindle_speed, 0 },   // read spindle speed
 

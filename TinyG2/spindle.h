@@ -32,28 +32,39 @@ typedef enum {				        // spindle state settings (See hardware.h for bit sett
     SPINDLE_OFF = 0,
     SPINDLE_CW,
     SPINDLE_CCW,
-//	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
-} cmSpindleState;
+} spSpindleState;
 
 typedef enum {
     SPINDLE_NORMAL = 0,
     SPINDLE_PAUSED,
-} cmSpindlePause;
+} spSpindlePause;
 
 typedef enum {
     SPINDLE_OPTIONS_NONE = 0,       // no special controls
     SPINDLE_OPTIONS_PAUSE_ON_HOLD   // stop on feedhold
-} cmSpindleOptions;
+} spSpindleOptions;
+
+typedef enum {
+    ESC_ONLINE = 0,
+    ESC_OFFLINE,
+    ESC_LOCKOUT,
+    ESC_REBOOTING,
+    ESC_LOCKOUT_AND_REBOOTING,
+} cmESCState;
 
 /*
  * Spindle control structure
  */
 
 typedef struct spSpindleSingleton {
-    cmSpindleState spindle_state;       // current state
-    cmSpindlePause spindle_pause;       // pause state
-    cmSpindleOptions spindle_options;   // feedhold & other operating options
+    spSpindleState spindle_state;       // current spindle state, OFF, CW, CCW. Might be paused, though
+    spSpindlePause spindle_pause;       // pause state - applies to spindle state, above
+    spSpindleOptions spindle_options;   // feedhold & other operating options
     
+//    cmESCState esc_state;               // state management for ESC controller
+//    uint32_t esc_boot_timer;            // When the ESC last booted up
+//    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
+
     float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
     uint8_t spindle_override_enable;	// TRUE = override enabled
 
@@ -83,17 +94,20 @@ stat_t cm_spindle_conditional_resume(float dwell_seconds);  // restart spindle b
 stat_t cm_spindle_override_enable(uint8_t flag);    // M51
 stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
 
-
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE
+
     void cm_print_spm(nvObj_t *nv);
     void cm_print_spc(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
+    
 #else
+
     #define cm_print_spm tx_print_stub
     #define cm_print_spc tx_print_stub
     #define cm_print_sps tx_print_stub
+    
 #endif // __TEXT_MODE
 
 #endif	// End of include guard: SPINDLE_H_ONCE
