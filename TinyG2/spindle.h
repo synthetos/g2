@@ -36,7 +36,7 @@ void cm_spindle_init();
 
 stat_t cm_set_spindle_speed(float speed);			// S parameter
 
-stat_t cm_spindle_control(uint8_t spindle_mode);	// M3, M4, M5 integrated spindle control
-stat_t cm_spindle_control_immediate(uint8_t spindle_mode); //like cm_spindle_control but not synchronized to planner
+stat_t cm_spindle_control(uint8_t spindle_state);	// M3, M4, M5 integrated spindle control
+stat_t cm_spindle_control_immediate(uint8_t spindle_state); //like cm_spindle_control but not synchronized to planner
 
 #endif	// End of include guard: SPINDLE_H_ONCE

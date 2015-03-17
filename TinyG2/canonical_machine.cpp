@@ -1385,11 +1385,11 @@ void cm_start_hold()
 void cm_end_hold()
 {
 //    if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 &&
-//        (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//        (cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 //        return;
 //    }
 
-//	if (cm.interlock_state != 0 && (cm.gm.spindle_mode & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//	if (cm.interlock_state != 0 && (cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
 //		return;
 //    }
 	if (cm.hold_state == FEEDHOLD_HOLD) {

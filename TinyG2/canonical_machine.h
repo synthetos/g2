@@ -347,7 +347,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     float minimum_time;					// minimum time possible for move given axis constraints
     float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
-    float spindle_speed;				// in RPM
+    float spindle_speed;		// G	// in RPM
     float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
     uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
@@ -357,12 +357,12 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     uint8_t path_control;               // G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
     uint8_t distance_mode;              // G91   0=use absolute coords(G90), 1=incremental movement
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
-	uint8_t tool;						// M6 tool change - moves "tool_select" to "tool"
-	uint8_t tool_select;				// T value - T sets this value
-	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
-	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
-	uint8_t spindle_state;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-    bool spindle_paused;                // true if spindle is paused
+	uint8_t tool;				// G			// M6 tool change - moves "tool_select" to "tool"
+	uint8_t tool_select;		// G			// T value - T sets this value
+	uint8_t mist_coolant;		// G			// TRUE = mist on (M7), FALSE = off (M9)
+	uint8_t flood_coolant;		// G			// TRUE = flood on (M8), FALSE = off (M9)
+	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+    bool spindle_paused;        // G	        // true if spindle is paused
 
 } GCodeState_t;
 
@@ -427,7 +427,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
 
-	uint8_t spindle_mode;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t spindle_state;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled

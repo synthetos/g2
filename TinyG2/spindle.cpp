@@ -51,22 +51,22 @@ void cm_spindle_init()
 /*
  * cm_get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
-float cm_get_spindle_pwm( uint8_t spindle_mode )
+float cm_get_spindle_pwm( uint8_t spindle_state )
 {
 	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-	if (spindle_mode == SPINDLE_CW ) {
+	if (spindle_state == SPINDLE_CW ) {
 		speed_lo = pwm.c[PWM_1].cw_speed_lo;
 		speed_hi = pwm.c[PWM_1].cw_speed_hi;
 		phase_lo = pwm.c[PWM_1].cw_phase_lo;
 		phase_hi = pwm.c[PWM_1].cw_phase_hi;
-	} else if (spindle_mode == SPINDLE_CCW ) {
+	} else if (spindle_state == SPINDLE_CCW ) {
 		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
 		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
 		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
 	}
 
-	if (spindle_mode==SPINDLE_CW || spindle_mode==SPINDLE_CCW ) {
+	if (spindle_state==SPINDLE_CW || spindle_state==SPINDLE_CCW ) {
 		// clamp spindle speed to lo/hi range
 		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
 		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
@@ -80,15 +80,24 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 }
 
 /*
+ * cm_spindle_control_optional() - perform spindle function based on system options selected
+ */
+stat_t cm_spindle_control_optional(bool immediate)
+{
+    
+    return (STAT_OK);
+}
+
+/*
  * cm_spindle_control_immediate() - turn on/off spindle w/o planning
  * Turns spindle OFF, CW or CCW without planning. Ignores PAUSED bit
  */
 
-stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
+stat_t cm_spindle_control_immediate(uint8_t spindle_state)
 {
-//    spindle_mode &= ~SPINDLE_PAUSED;            // remove the pause bit
-//    if (spindle_mode != cm.gm.spindle_mode) {   // if it's already there, skip it
-        float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
+//    spindle_state &= ~SPINDLE_PAUSED;            // remove the pause bit
+//    if (spindle_state != cm.gm.spindle_state) {   // if it's already there, skip it
+        float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
         _exec_spindle_control(value, value);
  //   }
     return (STAT_OK);
@@ -116,7 +125,7 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	return(STAT_OK);
 }
 
-//static void _exec_spindle_control(uint8_t spindle_mode, float f, float *vector, float *flag)
+//static void _exec_spindle_control(uint8_t spindle_state, float f, float *vector, float *flag)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_state = (uint8_t)value[0];
