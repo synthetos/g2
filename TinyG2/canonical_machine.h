@@ -142,7 +142,7 @@ typedef enum {
 } cmEstopState;
 
 typedef enum {
-    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low) 
+    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
@@ -471,7 +471,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	/**** Runtime variables (PRIVATE) ****/
 
     // global state variables and requestors
-    
+
     cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;           // cycs
     cmMotionState motion_state;         // momo

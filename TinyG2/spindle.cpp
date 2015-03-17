@@ -60,25 +60,9 @@ void cm_spindle_init()
 }
 
 /*
- * cm_get_spindle_state()
- *
- * cm_set_spindle_state()
- * cm_set_spindle_pause()
- * cm_set_spindle_speed_parameter()
+ * cm_get_spindle_state() - a convenient accessor
  */
-/*
-uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
-uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state) { return gcode_state->spindle_pause;}
-void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
-void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { gcode_state->spindle_pause = spindle_pause;}
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
-*/
-
 uint8_t cm_get_spindle_state() { return spindle.state;}
-//uint8_t cm_get_spindle_pause(GCodeState_t *gcode_state) { return spindle.state;}
-//void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { spindle.state = (spSpindleState)spindle_state;}
-//void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { spindle.pause = (spSpindlePause)spindle_pause;}
-//void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { spindle.speed = speed;}
 
 /*
  * cm_set_spindle_speed() - queue the S parameter to the planner buffer
@@ -108,6 +92,41 @@ static void _exec_spindle_speed(float *value, float *flag)
 		spindle_state = SPINDLE_OFF;
    }
 	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_state) ); // update spindle speed if we're running
+*/
+}
+
+/*
+ * cm_spindle_conditional_pause() - pause spindle based on system flags selected
+ * cm_spindle_conditional_resume() - restart a paused spindle with an optional dwell
+ *
+ *  Stops and Pauses are always immediate. Resumes may have an optional dwell
+ *
+ *  Usage: // conditionally shut down spindle on alarm (called from inside cm_alarm())
+ *            cm_spindle_conditional_stop(SPINDLE_PAUSE_ON_ALARM); 
+ */
+void cm_spindle_conditional_pause()
+{
+    if (spindle.state != SPINDLE_OFF) {
+        spSpindleState state = spindle.state;   // local copy
+        spindle.pause = SPINDLE_PAUSED;
+        cm_spindle_control_immediate(SPINDLE_OFF);
+        spindle.state = state;                  // restore
+    }
+}
+
+void cm_spindle_conditional_resume(float dwell_seconds)
+{
+    if(spindle.pause == SPINDLE_PAUSED) {
+        mp_request_out_of_band_dwell(dwell_seconds);
+        cm_spindle_control_immediate(spindle.state);
+    }
+    spindle.pause = SPINDLE_NORMAL;
+    
+/* OMC code - taken from other parts of the system, as this function was not here.
+    if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+        mp_request_out_of_band_dwell(dwell_seconds);
+    }
+    cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
 */
 }
 
@@ -224,41 +243,6 @@ static void _exec_spindle_control(float *value, float *flag)
     }
     #endif // __ARM
 	pwm_set_duty(PWM_1, _get_spindle_pwm(raw_spindle_state));
-*/
-}
-
-/*
- * cm_spindle_conditional_pause() - pause spindle based on system flags selected
- * cm_spindle_conditional_resume() - restart a paused spindle with an optional dwell
- *
- *  Stops and Pauses are always immediate. Resumes may have an optional dwell
- *
- *  Usage: // conditionally shut down spindle on alarm (called from inside cm_alarm())
- *            cm_spindle_conditional_stop(SPINDLE_PAUSE_ON_ALARM); 
- */
-void cm_spindle_conditional_pause()
-{
-    if (spindle.state != SPINDLE_OFF) {
-        spSpindleState state = spindle.state;   // local copy
-        spindle.pause = SPINDLE_PAUSED;
-        cm_spindle_control_immediate(SPINDLE_OFF);
-        spindle.state = state;                  // restore
-    }
-}
-
-void cm_spindle_conditional_resume(float dwell_seconds)
-{
-    if(spindle.pause == SPINDLE_PAUSED) {
-        mp_request_out_of_band_dwell(dwell_seconds);
-        cm_spindle_control_immediate(spindle.state);
-    }
-    spindle.pause = SPINDLE_NORMAL;
-    
-/* OMC code - taken from other parts of the system, as this function was not here.
-    if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-        mp_request_out_of_band_dwell(dwell_seconds);
-    }
-    cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
 */
 }
 

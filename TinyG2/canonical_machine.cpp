@@ -291,7 +291,7 @@ float cm_get_active_coord_offset(uint8_t axis)
 	float offset = cm.offset[cm.gm.coord_system][axis];
 	if (cm.gmx.origin_offset_enable == true) {
 		offset += cm.gmx.origin_offset[axis];				// includes G5x and G92 components
-    }    
+    }
 	return (offset);
 }
 
@@ -909,7 +909,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 		return (STAT_OK);
 	} else {
 		return (status);
-    }    
+    }
 }
 
 /*
@@ -1034,7 +1034,7 @@ stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = f
 		return (STAT_OK);
 	} else {
 		return (status);
-    }    
+    }
 }
 
 /*****************************
@@ -1100,14 +1100,14 @@ static void _exec_mist_coolant_control(float *value, float *flag)
 #ifdef __AVR
 	if (cm.gm.mist_coolant == true) {
 		gpio_set_bit_on(MIST_COOLANT_BIT);	// if
-    }    
+    }
 	gpio_set_bit_off(MIST_COOLANT_BIT);		// else
 #endif // __AVR
 
 #ifdef __ARM
 	if (cm.gm.mist_coolant == true) {
 		coolant_enable_pin.set();	// if
-    }    
+    }
 	coolant_enable_pin.clear();		// else
 #endif // __ARM
 }
@@ -1413,6 +1413,7 @@ void cm_queue_flush()
 	    if(cm.hold_state == FEEDHOLD_HOLD) {        // end feedhold if we're in one
     	    cm_end_hold();
 	    }
+        cm.queue_flush_state = FLUSH_OFF;
 	    qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
