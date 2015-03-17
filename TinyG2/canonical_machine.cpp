@@ -1355,10 +1355,10 @@ bool cm_has_hold()
 void cm_start_hold()
 {
 	if (mp_has_runnable_buffer()) {                 // meaning there's something running
-        if (cm_get_spindle_state() != SPINDLE_OFF) {
-//        if(cm.gm.spindle_state != SPINDLE_OFF) {
-            cm_spindle_control_immediate(SPINDLE_OFF);
-        }
+        cm_spindle_conditional_pause();             // pause if this option is selected
+//        if (cm_get_spindle_state() != SPINDLE_OFF) {
+//            cm_spindle_control_immediate(SPINDLE_OFF);
+//        }
 	    cm_set_motion_state(MOTION_HOLD);
 	    cm.hold_state = FEEDHOLD_SYNC;	            // invokes hold from aline execution
     }

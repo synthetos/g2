@@ -63,7 +63,7 @@ typedef enum {
 
 typedef struct spSpindleSingleton {
     // configuration
-    uint8_t flags;                  // options: feedhold flag & other operating options
+    uint8_t options;                // options: pause on feedhold
     uint8_t polarity;               // 0=active low, 1=active high
     float autodwell_seconds;        // dwell on spindle restart
     float override_factor;          // 1.0000 x S spindle speed. Go up or down from there

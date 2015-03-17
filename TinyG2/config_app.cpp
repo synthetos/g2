@@ -478,7 +478,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
-    { "sys","spo", _f0,   0, cm_print_spo,  get_ui8, set_01,     (float *)&spindle.flags, 0 },      // spindle feedhold options
+    { "sys","spo", _f0,   0, cm_print_spo,  get_ui8, set_01,     (float *)&spindle.options, 0 },     // spindle feedhold options
     { "sys","spd", _fipn, 1, cm_print_spd,  get_flt, set_flu,    (float *)&spindle.autodwell_seconds, PAUSE_DWELL_TIME },
     { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&spindle.state, 0 },       // read spindle state
     { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&spindle.speed, 0 },       // read spindle speed
