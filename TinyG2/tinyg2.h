@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.59 // cleanup spindle controls and some other code
+#define TINYG_FIRMWARE_BUILD   		079.60 // fixed bug in cm_end_queue_flush
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
