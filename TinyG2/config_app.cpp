@@ -478,10 +478,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
-    { "sys","spo", _f0,   0, cm_print_spo,  get_ui8, set_01,     (float *)&spindle.options, 0 },     // spindle feedhold options
-    { "sys","spd", _fipn, 1, cm_print_spd,  get_flt, set_flu,    (float *)&spindle.autodwell_seconds, PAUSE_DWELL_TIME },
-    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&spindle.state, 0 },       // read spindle state
-    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&spindle.speed, 0 },       // read spindle speed
+    { "sys","spp", _fipn, 0, cm_print_spp,  get_ui8, set_01,     (float *)&spindle.pause_on_hold,   SPINDLE_PAUSE_ON_HOLD },
+    { "sys","spd", _fipn, 1, cm_print_spd,  get_flt, set_flu,    (float *)&spindle.dwell_seconds,   SPINDLE_DWELL_TIME },
+    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&spindle.state, 0 },      // read spindle state
+    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&spindle.speed, 0 },      // read spindle speed
 
     // Communications and reporting paramters
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cs.comm_mode,            COMM_MODE },
@@ -519,7 +519,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "", "qo",  _f0, 0, qr_print_qo,  qo_get,    set_nul,   (float *)&cs.null, 0 },	// get queue value - buffers removed from queue
     { "", "er",  _f0, 0, tx_print_nul, rpt_er,    set_nul,   (float *)&cs.null, 0 },	// get bogus exception report for testing
     { "", "qf",  _f0, 0, tx_print_nul, get_nul,   cm_run_qf, (float *)&cs.null, 0 },	// SET to invoke queue flush
-    { "", "rx",  _f0, 0, tx_print_int, get_rx,    set_nul,   (float *)&cs.null, 0 },	// get RX buffer bytes or packets 
+    { "", "rx",  _f0, 0, tx_print_int, get_rx,    set_nul,   (float *)&cs.null, 0 },	// get RX buffer bytes or packets
     { "", "msg", _f0, 0, tx_print_str, get_nul,   set_nul,   (float *)&cs.null, 0 },	// string for generic messages
     { "", "clear",_f0,0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
     { "", "clr", _f0, 0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// Synonym for "clear"

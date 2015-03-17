@@ -62,7 +62,7 @@ void cm_spindle_init()
 /*
  * cm_get_spindle_state() - a convenient accessor
  */
-uint8_t cm_get_spindle_state() { return spindle.state;}
+//uint8_t cm_get_spindle_state() { return spindle.state;}
 
 /*
  * cm_set_spindle_speed() - queue the S parameter to the planner buffer
@@ -96,32 +96,32 @@ static void _exec_spindle_speed(float *value, float *flag)
 }
 
 /*
- * cm_spindle_conditional_pause() - pause spindle based on system flags selected
- * cm_spindle_conditional_resume() - restart a paused spindle with an optional dwell
+ * cm_spindle_optional_pause() - pause spindle if option is true
+ * cm_spindle_resume() - restart a paused spindle with an optional dwell
  *
  *  Stops and Pauses are always immediate. Resumes may have an optional dwell
  *
  *  Usage: // conditionally shut down spindle on alarm (called from inside cm_alarm())
- *            cm_spindle_conditional_stop(SPINDLE_PAUSE_ON_ALARM); 
+ *            cm_spindle_conditional_stop(SPINDLE_PAUSE_ON_ALARM);
  */
-void cm_spindle_conditional_pause()
+void cm_spindle_optional_pause(bool option)
 {
-    if (spindle.state != SPINDLE_OFF) {
+    if (option && (spindle.state != SPINDLE_OFF)) {
         spSpindleState state = spindle.state;   // local copy
-        spindle.pause = SPINDLE_PAUSED;
         cm_spindle_control_immediate(SPINDLE_OFF);
-        spindle.state = state;                  // restore
+        spindle.pause = SPINDLE_PAUSED;         // mark as paused
+        spindle.state = state;                  // restore previous spindle state
     }
 }
 
-void cm_spindle_conditional_resume(float dwell_seconds)
+void cm_spindle_resume(float dwell_seconds)
 {
     if(spindle.pause == SPINDLE_PAUSED) {
         mp_request_out_of_band_dwell(dwell_seconds);
         cm_spindle_control_immediate(spindle.state);
     }
     spindle.pause = SPINDLE_NORMAL;
-    
+
 /* OMC code - taken from other parts of the system, as this function was not here.
     if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
         mp_request_out_of_band_dwell(dwell_seconds);
@@ -147,7 +147,7 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	if (cm.gm.spindle_state & SPINDLE_PAUSED)
 		spindle_state |= SPINDLE_PAUSED;
 
-	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED && 
+	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED &&
       !(spindle_state & SPINDLE_PAUSED) && spindle_state != SPINDLE_OFF) {
 		cm_start_hold();
     }
@@ -170,7 +170,7 @@ void cm_spindle_control_immediate(spSpindleState spindle_state)
     if (spindle_state == SPINDLE_OFF) {
         spindle.pause = SPINDLE_NORMAL;
     }
-    
+
     // turn it off
     float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
     _exec_spindle_control(value, value);
@@ -219,7 +219,7 @@ static void _exec_spindle_control(float *value, float *flag)
     }
 	//FIXME: else if(we just rebooted the ESC)... delay the pwm command...
 	cm_set_spindle_state (MODEL, spindle_state);
-    
+
     #ifdef __AVR
     if (raw_spindle_state == SPINDLE_CW) {
         gpio_set_bit_on(SPINDLE_BIT);
@@ -268,10 +268,10 @@ static float _get_spindle_pwm (uint8_t spindle_state)
 		// clamp spindle speed to lo/hi range
 		if (cm.gm.spindle_speed < speed_lo) {
             cm.gm.spindle_speed = speed_lo;
-        }        
+        }
 		if (cm.gm.spindle_speed > speed_hi) {
             cm.gm.spindle_speed = speed_hi;
-        }        
+        }
 		// normalize speed to [0..1]
 		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
 		return (speed * (phase_hi - phase_lo)) + phase_lo;
@@ -310,12 +310,12 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 
 #ifdef __TEXT_MODE
 
-const char fmt_spo[] PROGMEM = "[spo] spindle options%14d [0=none,1=pause_on_hold]\n";
+const char fmt_spp[] PROGMEM = "[spp] spindle pause on hold%6d [0=no,1=pause_on_hold]\n";
 const char fmt_spd[] PROGMEM = "[spd] spindle auto-dwell time%6.1f seconds\n";
 const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spo(nvObj_t *nv) { text_print_int(nv, fmt_spo);}
+void cm_print_spp(nvObj_t *nv) { text_print_int(nv, fmt_spp);}
 void cm_print_spd(nvObj_t *nv) { text_print_flt(nv, fmt_spd);}
 void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
 void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}

@@ -43,7 +43,7 @@
  */
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Shopbot sbv300 profile"
+#define INIT_MESSAGE "Initializing configs to Shopbot test profile"
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
@@ -54,7 +54,8 @@
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
 
-#define PAUSE_DWELL_TIME            0.0
+#define SPINDLE_PAUSE_ON_HOLD       true
+#define SPINDLE_DWELL_TIME          1.0
 #define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 
 #define SWITCH_TYPE                 SW_TYPE_NORMALLY_CLOSED // SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED

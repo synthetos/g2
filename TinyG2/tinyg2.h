@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.04 //
+#define TINYG_FIRMWARE_BUILD   		080.05 // first pass at working optional spindle
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
