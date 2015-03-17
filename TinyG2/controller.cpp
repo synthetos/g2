@@ -472,14 +472,14 @@ static stat_t _limit_switch_handler(void)
  */
 static stat_t _interlock_handler(void)
 {
-    if (cm.interlock_requested) {                           // NB: meaning non-zero
-        if (cm.interlock_requested == IO_EDGE_LEADING) {
-            cm.interlock_state = SAFETY_INTERLOCK_CLOSED;   // normal operation
+    if (cm.safety_interlock_requested) {                    // NB: meaning non-zero
+        if (cm.safety_interlock_requested == IO_EDGE_LEADING) {
+            cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;     // normal operation
         } else {
-            cm.interlock_state = SAFETY_INTERLOCK_OPEN;     // interlock tripped
+            cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;  // interlock tripped
             cm_request_end_hold();      // using cm_request_end_hold() instead of just ending
         }                               // ...the hold keeps trying until the hold is complete
-        cm.interlock_requested = IO_EDGE_NONE;              // reset the calling condition
+        cm.safety_interlock_requested = IO_EDGE_NONE;       // reset the calling condition
     }
     return(STAT_OK);
 }

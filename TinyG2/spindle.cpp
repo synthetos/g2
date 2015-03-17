@@ -25,13 +25,23 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "tinyg2.h"		// #1
-#include "config.h"		// #2
+#include "tinyg2.h"             // #1 dependency order
+#include "config.h"             // #2
+#include "canonical_machine.h"  // #3
+#include "text_parser.h"        // #4
+
 #include "spindle.h"
 //#include "gpio.h"
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
+#include "util.h"
+
+/**** Allocate structures ****/
+
+spSpindleSingleton_t sp;
+
+/**** Static functions ****/
 
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
@@ -46,6 +56,45 @@ void cm_spindle_init()
 
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+}
+
+/*
+ * cm_get_spindle_state()
+ * cm_set_spindle_state()
+ * cm_set_spindle_pause()
+ * cm_set_spindle_speed_parameter()
+ */
+uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
+
+void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
+void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { gcode_state->spindle_pause = spindle_pause;}
+void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
+
+/*
+ * cm_set_spindle_speed() 	- queue the S parameter to the planner buffer
+ * cm_exec_spindle_speed() 	- execute the S command (called from the planner buffer)
+ * _exec_spindle_speed()	- spindle speed callback from planner queue
+ */
+stat_t cm_set_spindle_speed(float speed)
+{
+//	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
+	float value[AXES] = { speed, 0,0,0,0,0 };
+	mp_queue_command(_exec_spindle_speed, value, value);
+	return (STAT_OK);
+}
+
+static void _exec_spindle_speed(float *value, float *flag)
+{
+	cm_set_spindle_speed_parameter(MODEL, value[0]);
+
+//	uint8_t spindle_state = cm.gm.spindle_state & (~SPINDLE_PAUSED);
+//	bool paused = cm.gm.spindle_state & SPINDLE_PAUSED;
+//	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused) {
+
+//	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED || paused) {
+//		spindle_state = SPINDLE_OFF;
+//   }
+//	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_state) ); // update spindle speed if we're running
 }
 
 /*
@@ -80,15 +129,6 @@ float cm_get_spindle_pwm( uint8_t spindle_state )
 }
 
 /*
- * cm_spindle_control_optional() - perform spindle function based on system options selected
- */
-stat_t cm_spindle_control_optional(bool immediate)
-{
-    
-    return (STAT_OK);
-}
-
-/*
  * cm_spindle_control_immediate() - turn on/off spindle w/o planning
  * Turns spindle OFF, CW or CCW without planning. Ignores PAUSED bit
  */
@@ -117,7 +157,8 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	// M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's
     // anything in the buffer to actually process the feedhold.  Here, we're just about to add
     // something to the buffer, so we skip the check.
-	if(cm.interlock_state != 0 && !(spindle_state & SPINDLE_PAUSED) && spindle_state != SPINDLE_OFF) {
+	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED && 
+       !(spindle_state & SPINDLE_PAUSED) && spindle_state != SPINDLE_OFF) {
 		cm_start_hold();
     }
 	float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
@@ -136,7 +177,9 @@ static void _exec_spindle_control(float *value, float *flag)
 //	if(cm.estop_state != 0) { // In E-stop, don't process any spindle commands
 		spindle_state = raw_spindle_state = SPINDLE_OFF;
 //    } else
-    if (paused || cm.interlock_state != 0) { // If we're paused or in interlock, send the spindle an "OFF" command (invisible to cm.gm)
+    // If we're paused or in interlock, send the spindle an "OFF" command (invisible to cm.gm)
+    //++++ THE LOGIC HERE MIGHT BE WRONG - safety_interlock_requested versus safety_interlock_state
+    if (paused || cm.safety_interlock_requested  != 0) {
 		raw_spindle_state = SPINDLE_OFF;
     }
 	//FIXME: else if(we just rebooted the ESC)... delay the pwm command...
@@ -170,26 +213,57 @@ static void _exec_spindle_control(float *value, float *flag)
 }
 
 /*
- * cm_set_spindle_speed() 	- queue the S parameter to the planner buffer
- * cm_exec_spindle_speed() 	- execute the S command (called from the planner buffer)
- * _exec_spindle_speed()	- spindle speed callback from planner queue
+ * cm_spindle_conditional_pause() - stop spindle based on system options selected
+ * cm_spindle_conditional_resume() - restart spindle based on previous state and system options
  */
-stat_t cm_set_spindle_speed(float speed)
+stat_t cm_spindle_conditional_pause()
 {
-//	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
-	float value[AXES] = { speed, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_speed, value, value);
-	return (STAT_OK);
+    
+    return (STAT_OK);
 }
 
-static void _exec_spindle_speed(float *value, float *flag)
+stat_t cm_spindle_conditional_resume(float dwell_seconds)
 {
-	cm_set_spindle_speed_parameter(MODEL, value[0]);
-	uint8_t spindle_state = cm.gm.spindle_state & (~SPINDLE_PAUSED);
-	bool paused = cm.gm.spindle_state & SPINDLE_PAUSED;
-//	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused) {
-	if (cm.interlock_state != 0 || paused) {
-		spindle_state = SPINDLE_OFF;
+/*
+    if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+        mp_request_out_of_band_dwell(dwell_seconds);
     }
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_state) ); // update spindle speed if we're running
+    cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
+*/
+    return (STAT_OK);    
 }
+
+stat_t cm_spindle_override_enable(uint8_t flag)		// M51.1
+{
+    if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
+        sp.spindle_override_enable = false;
+    } else {
+        sp.spindle_override_enable = true;
+    }
+    return (STAT_OK);
+}
+
+stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
+{
+    sp.spindle_override_enable = flag;
+    sp.spindle_override_factor = cm.gn.parameter;
+//	change spindle speed
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * TEXT MODE SUPPORT
+ * Functions to print variables from the cfgArray table
+ ***********************************************************************************/
+
+#ifdef __TEXT_MODE
+
+const char fmt_spm[] PROGMEM = "Spindle Pause Mode:%3d [0=none,1=pause_on_hold]\n";
+const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+
+void cm_print_spm(nvObj_t *nv) { text_print_int(nv, fmt_spm);}
+void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
+void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+
+#endif // __TEXT_MODE

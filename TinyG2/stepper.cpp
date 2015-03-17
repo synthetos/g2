@@ -44,7 +44,7 @@ stConfig_t st_cfg;
 stPrepSingleton_t st_pre;
 static stRunSingleton_t st_run;
 
-/**** Setup local functions ****/
+/**** Static functions ****/
 
 static void _load_move(void);
 #ifdef __ARM

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.57 // checkpoint - reworking spindle controls for optional hold behavior; changed refernced to spindle_mode to spindle_state
+#define TINYG_FIRMWARE_BUILD   		079.58 // checkpoint - refactored spindle controls; moved all spindle specific stuff to spindle.c/.h
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

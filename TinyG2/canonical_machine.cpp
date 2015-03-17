@@ -231,15 +231,16 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state) { return gcode_state->pat
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
 uint8_t cm_get_tool(GCodeState_t *gcode_state) { return gcode_state->tool;}
-uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
+//uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
 uint8_t	cm_get_block_delete_switch() { return cm.gmx.block_delete_switch;}
 uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy());}
 
 float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
-void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
+//void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
+//void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { gcode_state->spindle_pause = spindle_pause;}
+//void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override)
@@ -1148,8 +1149,8 @@ static void _exec_flood_coolant_control(float *value, float *flag)
  * cm_feed_rate_override_factor() - M50.1
  * cm_traverse_override_enable() - M50.2
  * cm_traverse_override_factor() - M50.3
- * cm_spindle_override_enable() - M51
- * cm_spindle_override_factor() - M51.1
+ * cm_spindle_override_enable() - M51       (see spindle.c)
+ * cm_spindle_override_factor() - M51.1     (see spindle.c)
  *
  *	Override enables are kind of a mess in Gcode. This is an attempt to sort them out.
  *	See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
@@ -1159,7 +1160,8 @@ stat_t cm_override_enables(uint8_t flag)			// M48, M49
 {
 	cm.gmx.feed_rate_override_enable = flag;
 	cm.gmx.traverse_override_enable = flag;
-	cm.gmx.spindle_override_enable = flag;
+//	cm.gmx.spindle_override_enable = flag;
+	sp.spindle_override_enable = flag;
 	return (STAT_OK);
 }
 
@@ -1198,7 +1200,7 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 //	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
 	return (STAT_OK);
 }
-
+/*
 stat_t cm_spindle_override_enable(uint8_t flag)		// M51.1
 {
 	if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
@@ -1216,7 +1218,7 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 //	change spindle speed
 	return (STAT_OK);
 }
-
+*/
 /*
  * cm_message() - queue a RAM string as a message in the response (unconditionally)
  *
@@ -1406,10 +1408,11 @@ void cm_end_hold()
 
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
-	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-                mp_request_out_of_band_dwell(cm.pause_dwell_time);
-            }
-	        cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
+            cm_spindle_conditional_resume(cm.pause_dwell_time);
+//	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
+//                mp_request_out_of_band_dwell(cm.pause_dwell_time);
+//            }
+//	        cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
             st_request_exec_move();
         }
     }
@@ -2106,9 +2109,9 @@ const char fmt_tool[] PROGMEM = "Tool number          %d\n";
 const char fmt_ilck[] PROGMEM = "Safety Interlock:    %s\n";
 const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
-const char fmt_spm[] PROGMEM = "Spindle Mode:%9d [0=none,1=pause_on_hold]\n";
-const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
-const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+//const char fmt_spm[] PROGMEM = "Spindle Mode:%9d [0=none,1=pause_on_hold]\n";
+//const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
+//const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -2140,8 +2143,8 @@ void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
 void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
 void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
-void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
-void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+//void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
+//void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}

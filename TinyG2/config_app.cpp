@@ -38,13 +38,13 @@
 #include "stepper.h"
 #include "gpio.h"
 #include "switch.h"		// ++++ vestigial
+#include "spindle.h"
 #include "pwm.h"
 #include "report.h"
 #include "hardware.h"
 #include "test.h"
 #include "util.h"
 #include "help.h"
-//#include "network.h"
 #include "xio.h"
 
 /*** structures ***/
@@ -128,7 +128,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },			// feed rate mode
 	{ "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },			// active tool
 
-	{ "",   "ilck",_f0, 0, cm_print_ilck, cm_get_ilck, set_nul,(float *)&cs.null, 0 },          // read interlock status
+//	{ "",   "ilck",_f0, 0, cm_print_ilck, cm_get_ilck, set_nul,(float *)&cs.null, 0 },          // read interlock status
 //	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, cm_ack_estop,(float *)&cs.null, 0 },		// E-stop status (SET to ack)
 //	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },	// E-stop status clear (GET to ack)
 

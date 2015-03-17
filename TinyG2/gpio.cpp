@@ -261,7 +261,7 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 
     // trigger interlock function on either leading and trailing edge
 	if (in->function == IO_FUNCTION_INTERLOCK) {
-		cm.interlock_requested = in->edge;
+		cm.safety_interlock_requested = in->edge;
 		return;
 	}
 

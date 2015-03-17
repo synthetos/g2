@@ -142,8 +142,8 @@ typedef enum {
 } cmEstopState;
 
 typedef enum {
-    SAFETY_INTERLOCK_CLOSED = 0,
-    SAFETY_INTERLOCK_OPEN
+    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low) 
+    SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
 typedef enum {
@@ -272,18 +272,6 @@ typedef enum {
 	PROGRAM_END
 } cmProgramFlow;
 
-typedef enum {				        // spindle state settings (See hardware.h for bit settings)
-	SPINDLE_OFF = 0,
-	SPINDLE_CW,
-	SPINDLE_CCW,
-	SPINDLE_PAUSED = 0x8			// bit to indicate that spindle is currently paused
-} cmSpindleState;
-
-typedef enum {				        // spindle state settings (See hardware.h for bit settings)
-    SPINDLE_MODE_NONE = 0,          // no special control
-    SPINDLE_MODE_STOP_HOLD          // stop on feedhold
-} cmSpindleMode;
-
 typedef enum {                      // mist and flood coolant states
 	COOLANT_OFF = 0,				// all coolant off
 	COOLANT_ON,						// request coolant on or indicates both coolants are on
@@ -362,7 +350,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t mist_coolant;		// G			// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;		// G			// TRUE = flood on (M8), FALSE = off (M9)
 	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-    bool spindle_paused;        // G	        // true if spindle is paused
+	uint8_t spindle_pause;		// G			// 0=operating, 1=paused
 
 } GCodeState_t;
 
@@ -385,8 +373,8 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 	uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
 	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
 
-	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
-	uint8_t	spindle_override_enable;	// TRUE = override enabled
+//	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
+//	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
@@ -493,19 +481,21 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	/**** Runtime variables (PRIVATE) ****/
 
+    // global state variables and requestors
+    
     cmMachineState machine_state;	    // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;           // cycs
     cmMotionState motion_state;         // momo
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState queue_flush_state;  // master queue flush state machine
 
-	uint8_t interlock_state;            // true if interlock has been triggered
-//    cmSafetyState safety_state;         // safety interlock state
-//	uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
+    uint8_t safety_interlock_requested; // set non-zero to request interlock processing (value is leading or trailing edge)
+    cmSafetyState safety_interlock_state;// safety interlock state
 //    cmESCState esc_state;               // state management for ESC controller
-//	uint32_t esc_boot_timer;            // When the ESC last booted up
-//	uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
-//	uint8_t estop_state;                // true if estop has been triggered
+//    uint32_t esc_boot_timer;            // When the ESC last booted up
+//    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
+
+//    uint8_t estop_state;                // true if estop has been triggered
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
@@ -521,7 +511,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool end_hold_requested;			//
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
-    uint8_t interlock_requested;        // set non-zero to request interlock processing (value is leading or trailing edge)
 
 	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
 
@@ -570,15 +559,17 @@ uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
-uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
+//uint8_t cm_get_spindle_state(GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
 float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
-void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
+//void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state);
+//void cm_set_spindle_pause(GCodeState_t *gcode_pause, uint8_t spindle_pause);
+//void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
+
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);
 void cm_set_model_linenum(uint32_t linenum);
 
@@ -659,8 +650,8 @@ stat_t cm_feed_rate_override_enable(uint8_t flag); 				// M50
 stat_t cm_feed_rate_override_factor(uint8_t flag);				// M50.1
 stat_t cm_traverse_override_enable(uint8_t flag); 				// M50.2
 stat_t cm_traverse_override_factor(uint8_t flag);				// M50.3
-stat_t cm_spindle_override_enable(uint8_t flag); 				// M51
-stat_t cm_spindle_override_factor(uint8_t flag);				// M51.1
+//stat_t cm_spindle_override_enable(uint8_t flag); 				// M51
+//stat_t cm_spindle_override_factor(uint8_t flag);				// M51.1
 
 void cm_message(char_t *message);								// msg to console (e.g. Gcode comments)
 
@@ -734,8 +725,8 @@ stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
 
-stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
-stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
+//stat_t cm_get_ilck(nvObj_t *nv);        // get interlock state
+//stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
@@ -778,8 +769,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_tool(nvObj_t *nv);
 	void cm_print_ilck(nvObj_t *nv);
 	void cm_print_estp(nvObj_t *nv);
-	void cm_print_spc(nvObj_t *nv);
-	void cm_print_sps(nvObj_t *nv);
+//	void cm_print_spc(nvObj_t *nv);
+//	void cm_print_sps(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -844,8 +835,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_tool tx_print_stub
 	#define cm_print_ilck tx_print_stub
 	#define cm_print_estp tx_print_stub
-	#define cm_print_spc tx_print_stub
-	#define cm_print_sps tx_print_stub
+//	#define cm_print_spc tx_print_stub
+//	#define cm_print_sps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub
