@@ -38,11 +38,11 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.01 // initial commit for edge-io2. More IO work to go
+#define TINYG_FIRMWARE_BUILD   		080.02 // pause_dwell_time (pdt) is now spindle_autostart_dwell (spd)
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
-#define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
+#define TINYG_CONFIG_VERSION		6							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)

@@ -1388,7 +1388,7 @@ void cm_end_hold()
 
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
-            cm_spindle_conditional_resume(cm.pause_dwell_time);
+            cm_spindle_conditional_resume(sp.spindle_autodwell_seconds);
 /* OMC code
 	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
                 mp_request_out_of_band_dwell(cm.pause_dwell_time);
@@ -2131,12 +2131,12 @@ void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
-const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d\n";
-const char fmt_lim[] PROGMEM = "[lim] limit switch enable%10d\n";
+const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
+const char fmt_lim[] PROGMEM = "[lim] limit switch enable%10d [0=disable,1=enable]\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
-const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
+//const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
@@ -2145,7 +2145,7 @@ void cm_print_lim(nvObj_t *nv) { text_print_ui8(nv, fmt_lim);}
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
-void cm_print_pdt(nvObj_t *nv) { text_print_flt(nv, fmt_pdt);}
+//void cm_print_pdt(nvObj_t *nv) { text_print_flt(nv, fmt_pdt);}
 
 /*
  * axis print functions

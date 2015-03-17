@@ -1354,7 +1354,7 @@ static const char *const msg_units[] PROGMEM = { msg_units0, msg_units1, msg_uni
 
 static const char fmt_me[] PROGMEM = "motors energized\n";
 static const char fmt_md[] PROGMEM = "motors de-energized\n";
-static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f Sec\n";
+static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f seconds\n";
 static const char fmt_0ma[] PROGMEM = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
 static const char fmt_0sa[] PROGMEM = "[%s%s] m%s step angle%20.3f%s\n";
 static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%10.4f%s\n";

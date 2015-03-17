@@ -275,11 +275,13 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 
 #ifdef __TEXT_MODE
 
-const char fmt_spm[] PROGMEM = "Spindle Pause Mode:%3d [0=none,1=pause_on_hold]\n";
+const char fmt_spo[] PROGMEM = "[spo] spindle options%14d [0=none,1=pause_on_hold]\n";
+const char fmt_spd[] PROGMEM = "[spd] spindle auto-dwell time%6.1f seconds\n";
 const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
-const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spm(nvObj_t *nv) { text_print_int(nv, fmt_spm);}
+void cm_print_spo(nvObj_t *nv) { text_print_int(nv, fmt_spo);}
+void cm_print_spd(nvObj_t *nv) { text_print_flt(nv, fmt_spd);}
 void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
 void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 

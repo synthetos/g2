@@ -171,7 +171,7 @@ static const char fmt_fv[] PROGMEM = "[fv]  firmware version%16.2f\n";
 static const char fmt_cv[] PROGMEM = "[cv]  configuration version%11.2f\n";
 static const char fmt_hp[] PROGMEM = "[hp]  hardware platform%15.2f\n";
 static const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
-static const char fmt_id[] PROGMEM = "[id]  TinyG ID%30s\n";
+static const char fmt_id[] PROGMEM = "[id]  TinyG ID%21s\n";
 
 void hw_print_fb(nvObj_t *nv) { text_print_flt(nv, fmt_fb);}
 void hw_print_fv(nvObj_t *nv) { text_print_flt(nv, fmt_fv);}

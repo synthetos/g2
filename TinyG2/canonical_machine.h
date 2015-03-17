@@ -498,7 +498,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
 
-	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
+//	float pause_dwell_time;				// how long to dwell after ramping spindle up during a feedhold end
 
 	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
 	                                    // see explanation in gcode_parser.cpp::wait_for_gcode_resume
@@ -790,7 +790,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_cofs(nvObj_t *nv);
 	void cm_print_cpos(nvObj_t *nv);
 
-	void cm_print_pdt(nvObj_t *nv);
+//	void cm_print_pdt(nvObj_t *nv);
 
 #else // __TEXT_MODE
 

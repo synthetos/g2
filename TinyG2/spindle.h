@@ -57,9 +57,11 @@ typedef enum {
  */
 
 typedef struct spSpindleSingleton {
+
+    spSpindleOptions spindle_options;   // feedhold & other operating options
     spSpindleState spindle_state;       // current spindle state, OFF, CW, CCW. Might be paused, though
     spSpindlePause spindle_pause;       // pause state - applies to spindle state, above
-    spSpindleOptions spindle_options;   // feedhold & other operating options
+    float spindle_autodwell_seconds;    // dwell on spindle restart
     
 //    cmESCState esc_state;               // state management for ESC controller
 //    uint32_t esc_boot_timer;            // When the ESC last booted up
@@ -98,13 +100,15 @@ stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
 
 #ifdef __TEXT_MODE
 
-    void cm_print_spm(nvObj_t *nv);
+    void cm_print_spo(nvObj_t *nv);
+    void cm_print_spd(nvObj_t *nv);
     void cm_print_spc(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
     
 #else
 
-    #define cm_print_spm tx_print_stub
+    #define cm_print_spo tx_print_stub
+    #define cm_print_spd tx_print_stub
     #define cm_print_spc tx_print_stub
     #define cm_print_sps tx_print_stub
     

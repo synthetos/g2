@@ -132,10 +132,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, cm_ack_estop,(float *)&cs.null, 0 },		// E-stop status (SET to ack)
 //	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },	// E-stop status clear (GET to ack)
 
-	{ "",   "spm", _f0, 0, cm_print_spm, get_ui8, set_01, (float *)&cm.gm.spindle_pause, 0 },   // spindle feedhold mode
-	{ "",   "spc", _f0, 0, cm_print_spc, get_ui8, set_nul,(float *)&cm.gm.spindle_state, 0 },   // read spindle state
-	{ "",   "sps", _f0, 0, cm_print_sps, get_flt, set_nul,(float *)&cm.gm.spindle_speed, 0 },   // read spindle speed
-
 	{ "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// X machine position
 	{ "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// Y machine position
 	{ "mpo","mpoz",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// Z machine position
@@ -179,29 +175,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_joga, (float *)&cm.jogging_dest, 0},
 //	{ "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm.jogging_dest, 0},
 //	{ "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm.jogging_dest, 0},
-
-	// Reports, tests, help, and messages
-	{ "", "sr",  _f0, 0, sr_print_sr,  sr_get,  sr_set,   (float *)&cs.null, 0 },	// status report object
-	{ "", "qr",  _f0, 0, qr_print_qr,  qr_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - planner buffers available
-	{ "", "qi",  _f0, 0, qr_print_qi,  qi_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - buffers added to queue
-	{ "", "qo",  _f0, 0, qr_print_qo,  qo_get,  set_nul,  (float *)&cs.null, 0 },	// queue report - buffers removed from queue
-	{ "", "er",  _f0, 0, tx_print_nul, rpt_er,  set_nul,  (float *)&cs.null, 0 },	// invoke bogus exception report for testing
-	{ "", "qf",  _f0, 0, tx_print_nul, get_nul, cm_run_qf,(float *)&cs.null, 0 },	// queue flush
-	{ "", "rx",  _f0, 0, tx_print_int, get_rx,  set_nul,  (float *)&cs.null, 0 },	// space in RX buffer
-	{ "", "msg", _f0, 0, tx_print_str, get_nul, set_nul,  (float *)&cs.null, 0 },	// string for generic messages
-//	{ "", "clc", _f0, 0, tx_print_nul, st_clc,  st_clc,   (float *)&cs.null, 0 },	// clear diagnostic step counters
-	{ "", "clear",_f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// GET a clear to clear alarm state
-	{ "", "clr",  _f0,0, tx_print_nul, cm_clear,cm_clear, (float *)&cs.null, 0 },	// Synonym for "clear"
-	{ "", "ti",  _f0, 0, tx_print_int, get_tick,set_nul,  (float *)&cs.null, 0 },	// report system time tick
-
-	{ "", "test",_f0, 0, tx_print_nul, help_test, run_test, (float *)&cs.null,0 },	// run tests, print test help screen
-	{ "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
-	{ "", "boot",_f0, 0, tx_print_nul, help_boot_loader,hw_run_boot, (float *)&cs.null,0 },
-
-#ifdef __HELP_SCREENS
-	{ "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },  // prints config help screen
-	{ "", "h",   _f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },  // alias for "help"
-#endif
 
 	// Motor parameters
 	{ "1","1ma",_fip, 0, st_print_ma, get_ui8, set_ui8,   (float *)&st_cfg.mot[MOTOR_1].motor_map,	M1_MOTOR_MAP },
@@ -497,22 +470,24 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
-	// System parameters
+	// General system parameters
 	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt,   set_flu,    (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
 	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt,   set_flu,    (float *)&cm.chordal_tolerance,    CHORDAL_TOLERANCE },
 	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8,   set_ui8,    (float *)&cm.soft_limit_enable,    SOFT_LIMIT_ENABLE },
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8,   set_ui8,    (float *)&cm.limit_enable,	        HARD_LIMIT_ENABLE },
-//	{ "sys","st", _fipn, 0, sw_print_st,  get_ui8,   sw_set_st,  (float *)&sw.type,				    SWITCH_TYPE },
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt,   st_set_mt,  (float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
-	{ "",   "me", _f0,   0, tx_print_str, st_set_me, st_set_me,  (float *)&cs.null, 0 },
-	{ "",   "md", _f0,   0, tx_print_str, st_set_md, st_set_md,  (float *)&cs.null, 0 },
 
-	{ "sys","pdt", _fipn, 0, cm_print_pdt, get_flt,   set_flu,    (float *)&cm.pause_dwell_time, PAUSE_DWELL_TIME },
+    // Spindle functions
+    { "sys","spo", _f0,   0, cm_print_spo,  get_ui8, set_01,     (float *)&sp.spindle_options, 0 },     // spindle feedhold options
+    { "sys","spd", _fipn, 1, cm_print_spd,  get_flt, set_flu,    (float *)&sp.spindle_autodwell_seconds, PAUSE_DWELL_TIME },
+//	{ "sys","pdt", _fipn, 0, cm_print_pdt,  get_flt, set_flu,    (float *)&cm.pause_dwell_time,         PAUSE_DWELL_TIME },
+    { "",   "spc", _f0,   0, cm_print_spc,  get_ui8, set_nul,    (float *)&cm.gm.spindle_state, 0 },    // read spindle state
+    { "",   "sps", _f0,   0, cm_print_sps,  get_flt, set_nul,    (float *)&cm.gm.spindle_speed, 0 },    // read spindle speed
 
+    // Communications and reporting paramters
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8,   set_01,     (float *)&cs.comm_mode,            COMM_MODE },
 	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8,   json_set_jv,(float *)&js.json_verbosity,       JSON_VERBOSITY },
 	{ "sys","js", _fipn, 0, js_print_js,  get_ui8,   set_01,     (float *)&js.json_syntax,          JSON_SYNTAX_MODE },
-//	{ "sys","jf", _fipn, 0, js_print_jf,  get_ui8,   set_ui8,    (float *)&js.json_footer_style, 	JSON_FOOTER_STYLE },
 	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8,   set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
 	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8,   set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8,   set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
@@ -522,11 +497,11 @@ const cfgItem_t cfgArray[] PROGMEM = {
 //	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,    (float *)&cfg.enable_cr,			COM_EXPAND_CR },
 //	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,    (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
 //	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,    (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
-//	{ "sys","ew",  _fipn, 0, cfg_print_ew,  get_ui8,  set_01,    (float *)&xio.enable_window_mode,COM_ENABLE_WINDOW_MODE },
 //	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,  (float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 //	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,  set_ui8,   (float *)&cs.network_mode,		NETWORK_MODE },
 
-	// NOTE: The ordering within the gcode defaults is important for token resolution
+    // Gcode defaults
+	// NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
 	{ "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.select_plane,	GCODE_DEFAULT_PLANE },
 	{ "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.units_mode,	GCODE_DEFAULT_UNITS },
 	{ "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.coord_system,	GCODE_DEFAULT_COORD_SYSTEM },
@@ -535,8 +510,33 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc, gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// "hidden" parameters (not in system group)
-	{ "",   "ma",  _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
-	{ "",   "fd",  _fip, 0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
+	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
+	{ "", "fd", _fip, 0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
+
+    // Actions and Reports
+    { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },	// request and set status reports
+    { "", "qr",  _f0, 0, qr_print_qr,  qr_get,    set_nul,   (float *)&cs.null, 0 },	// get queue value - planner buffers available
+    { "", "qi",  _f0, 0, qr_print_qi,  qi_get,    set_nul,   (float *)&cs.null, 0 },	// get queue value - buffers added to queue
+    { "", "qo",  _f0, 0, qr_print_qo,  qo_get,    set_nul,   (float *)&cs.null, 0 },	// get queue value - buffers removed from queue
+    { "", "er",  _f0, 0, tx_print_nul, rpt_er,    set_nul,   (float *)&cs.null, 0 },	// get bogus exception report for testing
+    { "", "qf",  _f0, 0, tx_print_nul, get_nul,   cm_run_qf, (float *)&cs.null, 0 },	// SET to invoke queue flush
+    { "", "rx",  _f0, 0, tx_print_int, get_rx,    set_nul,   (float *)&cs.null, 0 },	// get RX buffer bytes or packets 
+    { "", "msg", _f0, 0, tx_print_str, get_nul,   set_nul,   (float *)&cs.null, 0 },	// string for generic messages
+    { "", "clear",_f0,0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
+    { "", "clr", _f0, 0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// Synonym for "clear"
+    { "", "ti",  _f0, 0, tx_print_int, get_tick,  set_nul,   (float *)&cs.null, 0 },	// get system time tick
+	{ "", "me",  _f0, 0, tx_print_str, st_set_me, st_set_me, (float *)&cs.null, 0 },    // GET or SET to enable motors
+	{ "", "md",  _f0, 0, tx_print_str, st_set_md, st_set_md, (float *)&cs.null, 0 },    // GET or SET to disable motors
+//	{ "", "clc", _f0, 0, tx_print_nul, st_clc,    st_clc,    (float *)&cs.null, 0 },	// clear diagnostic step counters
+
+    { "", "test",_f0, 0, tx_print_nul, help_test, run_test, (float *)&cs.null,0 },	    // run tests, print test help screen
+    { "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
+    { "", "boot",_f0, 0, tx_print_nul, help_boot_loader,hw_run_boot,(float *)&cs.null,0 },
+
+#ifdef __HELP_SCREENS
+    { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },     // prints config help screen
+    { "", "h",   _f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },     // alias for "help"
+#endif
 
 	// User defined data groups
 	{ "uda","uda0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
