@@ -20,7 +20,7 @@
 #ifndef HELP_H_ONCE
 #define HELP_H_ONCE
 
-#ifdef __HELP_SCREENS
+#if defined(__TEXT_MODE) && defined(__HELP_SCREENS)
 
 	stat_t help_general(nvObj_t *nv);
 	stat_t help_config(nvObj_t *nv);
@@ -37,6 +37,6 @@
 	#define help_defa help_stub
 	#define help_boot_loader help_stub
 
-#endif // __HELP_SCREENS
+#endif
 
 #endif // End of include guard: HELP_H_ONCE

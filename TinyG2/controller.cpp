@@ -301,14 +301,16 @@ static void _dispatch_kernel()
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
 		json_parser(cs.bufp);
     }
+#ifdef __TEXT_MODE
     else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
 		cs.comm_mode = TEXT_MODE;                           // switch to text mode
 		text_response(text_parser(cs.bufp), cs.saved_buf);
     }
-	else if (cs.comm_mode == TEXT_MODE) {                   // anything else must be Gcode
+	else if (cs.comm_mode == TEXT_MODE) {                   // anything else is interpreted as Gcode
         text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
     }
-	else {
+#endif
+	else {  // anything else is interpreted as Gcode
         strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
         sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
         json_parser(cs.bufp);

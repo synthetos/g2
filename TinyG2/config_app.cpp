@@ -489,7 +489,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,            COMM_MODE },
 	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,       JSON_VERBOSITY },
 	{ "sys","js", _fipn, 0, js_print_js,  get_ui8, set_01,     (float *)&js.json_syntax,          JSON_SYNTAX_MODE },
+#ifdef __TEXT_MODE
 	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
+#endif
 	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
 	{ "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },

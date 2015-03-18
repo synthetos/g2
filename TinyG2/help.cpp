@@ -26,7 +26,7 @@
 
 stat_t help_stub(nvObj_t *nv) {return (STAT_OK);}
 
-#ifdef __HELP_SCREENS
+#if defined(__TEXT_MODE) && defined(__HELP_SCREENS)
 
 static void _status_report_advisory()
 {
@@ -161,4 +161,4 @@ _postscript();
 return(STAT_OK);
 }
 
-#endif // __HELP_SCREENS
+#endif // defined(__TEXT_MODE) && defined(__HELP_SCREENS)

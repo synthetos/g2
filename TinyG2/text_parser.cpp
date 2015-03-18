@@ -255,7 +255,6 @@ void tx_print_flt(nvObj_t *nv) { text_print_flt(nv, fmt_flt);}
 
 void tx_print(nvObj_t *nv) {
     switch (nv->valuetype) {
-        case TYPE_EMPTY: case TYPE_NULL: case TYPE_PARENT: { return;}
         case TYPE_FLOAT: { text_print_flt(nv, fmt_flt);}
         case TYPE_INT:   { text_print_int(nv, fmt_int);}
         case TYPE_STRING:{ text_print_str(nv, fmt_str);}
@@ -277,6 +276,15 @@ void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format,
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
 	fprintf_P(stderr, format, nv->value, units);
+}
+
+void text_print(nvObj_t *nv, const char *format) {
+    switch (nv->valuetype) {
+        case TYPE_NULL:  { text_print_nul(nv, format);}
+        case TYPE_FLOAT: { text_print_flt(nv, format);}
+        case TYPE_INT:   { text_print_int(nv, format);}
+        case TYPE_STRING:{ text_print_str(nv, format);}
+    }
 }
 
 /*

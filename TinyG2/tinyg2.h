@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.07 // wired in spindle polarity settings
+#define TINYG_FIRMWARE_BUILD   		080.07 // review of text mode
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -49,22 +49,21 @@
 
 /****** COMPILE-TIME SETTINGS ******/
 
-#define __TEXT_MODE							// enables text mode support (~10Kb)
-#define __HELP_SCREENS						// enables help screens 	 (~3.5Kb)
-//#define __CANNED_TESTS 						// enables $tests 			 (~12Kb)
-//#define __TEST_99 							// enables diagnostic test 99
+#define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
+#define __HELP_SCREENS              // enable help screens      (~3.5Kb)
+#define __CANNED_TESTS              // enable $tests            (~12Kb)
 
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_INPUTS						// Using g2 revised digital inouts
-#define __DUAL_USB							// use dual endpoint USB
+#define __NEW_INPUTS                // Using g2 revised digital inouts
+#define __DUAL_USB                  // use dual endpoint USB
 
-#define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
-#define __CANNED_STARTUP					// run any canned startup moves
-//#define __DEBUG_SETTINGS					// special settings. See settings.h
+#define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
+#define __CANNED_STARTUP            // run any canned startup moves
+//#define __DEBUG_SETTINGS          // special settings. See settings.h
 
-//#define __SIMULATION						// for software-only simulations
+//#define __SIMULATION              // for software-only simulations
 #ifdef __SIMULATION
   #undef  __TEXT_MODE
   #undef  __HELP_SCREENS
@@ -72,7 +71,7 @@
   #ifndef __CANNED_STARTUP
     #define __CANNED_STARTUP
   #endif
-  #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
+  #define __DISABLE_PERSISTENCE     // disable EEPROM writes for faster simulation
   #define __SUPPRESS_STARTUP_MESSAGES
   #define __SUPPRESS_STATUS_REPORTS
   #define __SUPPRESS_QUEUE_REPORTS

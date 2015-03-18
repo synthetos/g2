@@ -64,12 +64,14 @@ extern txtSingleton_t txt;
 	void text_print_inline_values(nvObj_t *nv);
 	void text_print_multiline_formatted(nvObj_t *nv);
 
+	void tx_print(nvObj_t *nv);         // does all formats
 	void tx_print_nul(nvObj_t *nv);
 	void tx_print_str(nvObj_t *nv);
 	void tx_print_ui8(nvObj_t *nv);
 	void tx_print_int(nvObj_t *nv);
 	void tx_print_flt(nvObj_t *nv);
 
+	void text_print(nvObj_t *nv, const char *format);   // does all formats except units
 	void text_print_nul(nvObj_t *nv, const char *format);
 	void text_print_str(nvObj_t *nv, const char *format);
 	void text_print_ui8(nvObj_t *nv, const char *format);
@@ -83,6 +85,7 @@ extern txtSingleton_t txt;
 
 	#define text_parser text_parser_stub
 	#define text_response text_response_stub
+	#define text_print text_print_stub
 	#define text_print_list text_print_list_stub
 	#define tx_print_nul tx_print_stub
 	#define tx_print_ui8 tx_print_stub
@@ -92,6 +95,7 @@ extern txtSingleton_t txt;
 	#define tx_print_tv tx_print_stub
 
 	void tx_print_stub(nvObj_t *nv);
+    void text_print_stub(nvObj_t *nv, const char *format);
 
 #endif
 
