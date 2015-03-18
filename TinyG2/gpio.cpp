@@ -330,28 +330,17 @@ stat_t io_get_input(nvObj_t *nv)
  ***********************************************************************************/
 
 #ifdef __TEXT_MODE
-	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15.0f [-1=disabled, 0=NO,1=NC]\n";
-	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
-	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
-	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5.0f\n";
+	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15d [-1=disabled, 0=NO,1=NC]\n";
+	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13d [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
+	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11d [0=none,1=limit,2=interlock,3=shutdown]\n";
+	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5d\n";
 
-	void io_print_mo(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_mo, nv->group, nv->value);
-	}
-
-	void io_print_ac(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_ac, nv->group, nv->value);
-	}
-
-	void io_print_fn(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_fn, nv->group, nv->value);
-	}
-
-	void io_print_in(nvObj_t *nv)
-	{
-    	fprintf(stderr, fmt_gpio_in, nv->token, nv->value);
-	}
+    static void _print_di(nvObj_t *nv, const char *format)
+    {
+        fprintf_P(stderr, format, nv->group, (int)nv->value);
+    }
+	void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
+	void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
+	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
+	void io_print_in(nvObj_t *nv) {_print_di(nv, fmt_gpio_in);}
 #endif

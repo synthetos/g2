@@ -2,7 +2,7 @@
  * hardware.cpp - general hardware support functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -42,10 +42,6 @@
 #ifdef __AVR
 #include "xmega/xmega_init.h"
 #include "xmega/xmega_rtc.h"
-#endif
-
-#ifdef __cplusplus
-extern "C"{
 #endif
 
 /*
@@ -173,15 +169,11 @@ static const char fmt_hp[] PROGMEM = "[hp]  hardware platform%15.2f\n";
 static const char fmt_hv[] PROGMEM = "[hv]  hardware version%16.2f\n";
 static const char fmt_id[] PROGMEM = "[id]  TinyG ID%21s\n";
 
-void hw_print_fb(nvObj_t *nv) { text_print_flt(nv, fmt_fb);}
-void hw_print_fv(nvObj_t *nv) { text_print_flt(nv, fmt_fv);}
-void hw_print_cv(nvObj_t *nv) { text_print_flt(nv, fmt_cv);}
-void hw_print_hp(nvObj_t *nv) { text_print_flt(nv, fmt_hp);}
-void hw_print_hv(nvObj_t *nv) { text_print_flt(nv, fmt_hv);}
-void hw_print_id(nvObj_t *nv) { text_print_str(nv, fmt_id);}
+void hw_print_fb(nvObj_t *nv) { text_print(nv, fmt_fb);}    // TYPE_FLOAT
+void hw_print_fv(nvObj_t *nv) { text_print(nv, fmt_fv);}    // TYPE_FLOAT
+void hw_print_cv(nvObj_t *nv) { text_print(nv, fmt_cv);}    // TYPE_FLOAT
+void hw_print_hp(nvObj_t *nv) { text_print(nv, fmt_hp);}    // TYPE_FLOAT
+void hw_print_hv(nvObj_t *nv) { text_print(nv, fmt_hv);}    // TYPE_FLOAT
+void hw_print_id(nvObj_t *nv) { text_print(nv, fmt_id);}    // TYPE_STRING
 
 #endif //__TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif

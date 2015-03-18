@@ -189,7 +189,7 @@ void text_print_inline_pairs(nvObj_t *nv)
 {
 	uint32_t *v = (uint32_t*)&nv->value;
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch (nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
+		switch ((int8_t)nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
 			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
 			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
 			case TYPE_FLOAT:    { preprocess_float(nv);
@@ -211,7 +211,7 @@ void text_print_inline_values(nvObj_t *nv)
 {
 	uint32_t *v = (uint32_t*)&nv->value;
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch (nv->valuetype) {
+		switch ((int8_t)nv->valuetype) {
 			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
 			case TYPE_FLOAT:    { preprocess_float(nv);
 								  fntoa(global_string_buf, nv->value, nv->precision);
@@ -243,21 +243,21 @@ void text_print_multiline_formatted(nvObj_t *nv)
  * Text print primitives using generic formats
  */
 static const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
-static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
+//static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
 static const char fmt_int[] PROGMEM = "%lu\n";	// generic format for ui16's and ui32s
 static const char fmt_flt[] PROGMEM = "%f\n";	// generic format for floats
 
 void tx_print_nul(nvObj_t *nv) {}
 void tx_print_str(nvObj_t *nv) { text_print_str(nv, fmt_str);}
-void tx_print_ui8(nvObj_t *nv) { text_print_ui8(nv, fmt_ui8);}
+//void tx_print_ui8(nvObj_t *nv) { text_print_ui8(nv, fmt_ui8);}
 void tx_print_int(nvObj_t *nv) { text_print_int(nv, fmt_int);}
 void tx_print_flt(nvObj_t *nv) { text_print_flt(nv, fmt_flt);}
 
 void tx_print(nvObj_t *nv) {
-    switch (nv->valuetype) {
-        case TYPE_FLOAT: { text_print_flt(nv, fmt_flt);}
-        case TYPE_INT:   { text_print_int(nv, fmt_int);}
-        case TYPE_STRING:{ text_print_str(nv, fmt_str);}
+    switch ((int8_t)nv->valuetype) {
+        case TYPE_FLOAT: { text_print_flt(nv, fmt_flt); break;}
+        case TYPE_INT:   { text_print_int(nv, fmt_int); break;}
+        case TYPE_STRING:{ text_print_str(nv, fmt_str); break;}
     }
 }
 
@@ -269,7 +269,7 @@ void tx_print(nvObj_t *nv) {
 
 void text_print_nul(nvObj_t *nv, const char *format) { fprintf_P(stderr, format);}	// just print the format string
 void text_print_str(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, *nv->stringp);}
-void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint8_t)nv->value);}
+//void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint8_t)nv->value);}
 void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
 void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
 
@@ -279,11 +279,11 @@ void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 }
 
 void text_print(nvObj_t *nv, const char *format) {
-    switch (nv->valuetype) {
-        case TYPE_NULL:  { text_print_nul(nv, format);}
-        case TYPE_FLOAT: { text_print_flt(nv, format);}
-        case TYPE_INT:   { text_print_int(nv, format);}
-        case TYPE_STRING:{ text_print_str(nv, format);}
+    switch ((int8_t)nv->valuetype) {
+        case TYPE_NULL:  { text_print_nul(nv, format); break;}
+        case TYPE_FLOAT: { text_print_flt(nv, format); break;}
+        case TYPE_INT:   { text_print_int(nv, format); break;}
+        case TYPE_STRING:{ text_print_str(nv, format); break;}
     }
 }
 
@@ -292,7 +292,8 @@ void text_print(nvObj_t *nv, const char *format) {
  */
 static const char fmt_tv[] PROGMEM = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
 
-void tx_print_tv(nvObj_t *nv) { text_print_ui8(nv, fmt_tv);}
+//void tx_print_tv(nvObj_t *nv) { text_print_ui8(nv, fmt_tv);}
+void tx_print_tv(nvObj_t *nv) { text_print(nv, fmt_tv);}
 
 
 #endif // __TEXT_MODE

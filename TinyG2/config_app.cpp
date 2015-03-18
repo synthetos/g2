@@ -495,13 +495,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
 	{ "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
-//	{ "sys","spi",_fipn, 0, xio_print_spi,get_ui8, xio_set_spi,(float *)&xio.spi_state,			0 },
 
 //	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
 //	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,  (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
 //	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,  (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
 //	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
 //	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,  set_ui8, (float *)&cs.network_mode,		NETWORK_MODE },
+//	{ "sys","spi", _fipn, 0, xio_print_spi,get_ui8,xio_set_spi,(float *)&xio.spi_state,			0 },
 
     // Gcode defaults
 	// NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -510,11 +510,11 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.coord_system,	GCODE_DEFAULT_COORD_SYSTEM },
 	{ "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm.path_control,	GCODE_DEFAULT_PATH_CONTROL },
 	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.distance_mode,GCODE_DEFAULT_DISTANCE_MODE },
-	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc, gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
+	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
 
 	// "hidden" parameters (not in system group)
 	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
-	{ "", "fd", _fip, 0, tx_print_ui8, get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
+	{ "", "fd", _fip, 0, tx_print,     get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
 
     // Actions and Reports
     { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },	// request and set status reports
@@ -528,9 +528,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "", "clear",_f0,0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
     { "", "clr", _f0, 0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// Synonym for "clear"
     { "", "ti",  _f0, 0, tx_print_int, get_tick,  set_nul,   (float *)&cs.null, 0 },	// get system time tick
-	{ "", "me",  _f0, 0, tx_print_str, st_set_me, st_set_me, (float *)&cs.null, 0 },    // GET or SET to enable motors
-	{ "", "md",  _f0, 0, tx_print_str, st_set_md, st_set_md, (float *)&cs.null, 0 },    // GET or SET to disable motors
-//	{ "", "clc", _f0, 0, tx_print_nul, st_clc,    st_clc,    (float *)&cs.null, 0 },	// clear diagnostic step counters
+	{ "", "me",  _f0, 0, st_print_me,  st_set_me, st_set_me, (float *)&cs.null, 0 },    // GET or SET to enable motors
+	{ "", "md",  _f0, 0, st_print_md,  st_set_md, st_set_md, (float *)&cs.null, 0 },    // GET or SET to disable motors
 
     { "", "test",_f0, 0, tx_print_nul, help_test, run_test, (float *)&cs.null,0 },	    // run tests, print test help screen
     { "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
@@ -564,6 +563,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
+	{ "",    "clc",_f0, 0, tx_print_nul, st_clc,  st_clc, (float *)&cs.null, 0 },	// clear diagnostic step counters
+
 	{ "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },				// X target endpoint
 	{ "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Y], 0 },
 	{ "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_Z], 0 },
@@ -1069,21 +1070,16 @@ stat_t set_baud_callback(void)
 
 #ifdef __TEXT_MODE
 
-//static const char fmt_ic[] PROGMEM = "[ic]  ignore CR or LF on RX%8d [0=off,1=CR,2=LF]\n";
 static const char fmt_ec[] PROGMEM = "[ec]  expand LF to CRLF on TX%6d [0=off,1=on]\n";
 static const char fmt_ee[] PROGMEM = "[ee]  enable echo%18d [0=off,1=on]\n";
 static const char fmt_ex[] PROGMEM = "[ex]  enable flow control%10d [0=off,1=XON/XOFF, 2=RTS/CTS]\n";
-static const char fmt_ew[] PROGMEM = "[ew]  enable serial windowing%6d [0=off,1=on]\n";
 static const char fmt_baud[] PROGMEM = "[baud] USB baud rate%15d [1=9600,2=19200,3=38400,4=57600,5=115200,6=230400]\n";
-static const char fmt_net[] PROGMEM = "[net] network mode%17d [0=master]\n";
 static const char fmt_rx[] PROGMEM = "rx:%d\n";
 
-void cfg_print_ec(nvObj_t *nv) { text_print_ui8(nv, fmt_ec);}
-void cfg_print_ee(nvObj_t *nv) { text_print_ui8(nv, fmt_ee);}
-void cfg_print_ex(nvObj_t *nv) { text_print_ui8(nv, fmt_ex);}
-void cfg_print_ew(nvObj_t *nv) { text_print_ui8(nv, fmt_ew);}
-void cfg_print_baud(nvObj_t *nv) { text_print_ui8(nv, fmt_baud);}
-void cfg_print_net(nvObj_t *nv) { text_print_ui8(nv, fmt_net);}
-void cfg_print_rx(nvObj_t *nv) { text_print_ui8(nv, fmt_rx);}
+void cfg_print_ec(nvObj_t *nv) { text_print(nv, fmt_ec);}       // TYPE_INT
+void cfg_print_ee(nvObj_t *nv) { text_print(nv, fmt_ee);}       // TYPE_INT
+void cfg_print_ex(nvObj_t *nv) { text_print(nv, fmt_ex);}       // TYPE_INT
+void cfg_print_baud(nvObj_t *nv) { text_print(nv, fmt_baud);}   // TYPE_INT
+void cfg_print_rx(nvObj_t *nv) { text_print(nv, fmt_rx);}       // TYPE_INT
 
 #endif // __TEXT_MODE

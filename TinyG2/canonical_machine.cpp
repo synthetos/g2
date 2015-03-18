@@ -2095,8 +2095,9 @@ const char fmt_gdi[] PROGMEM = "[gdi] default gcode distance mode%2d [0=G90,1=G9
 
 void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_line(nvObj_t *nv) { text_print_int(nv, fmt_line);}
-void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);}
+
+void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line);}        // TYPE_INT
+void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);}    // print all these as TYPE_STRING
 void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs);}
 void cm_print_cycs(nvObj_t *nv) { text_print_str(nv, fmt_cycs);}
 void cm_print_mots(nvObj_t *nv) { text_print_str(nv, fmt_mots);}
@@ -2109,37 +2110,33 @@ void cm_print_plan(nvObj_t *nv) { text_print_str(nv, fmt_plan);}
 void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
 void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
-void cm_print_tool(nvObj_t *nv) { text_print_int(nv, fmt_tool);}
-void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
-void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
-//void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
-//void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool);}        // TYPE_INT
+//void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
+//void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
 
-void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
-void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}
-void cm_print_gco(nvObj_t *nv) { text_print_int(nv, fmt_gco);}
-void cm_print_gpa(nvObj_t *nv) { text_print_int(nv, fmt_gpa);}
-void cm_print_gdi(nvObj_t *nv) { text_print_int(nv, fmt_gdi);}
+void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl);}  // TYPE_INT
+void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun);}  // TYPE_INT
+void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
+void cm_print_gpa(nvObj_t *nv) { text_print(nv, fmt_gpa);}  // TYPE_INT
+void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system state print functions */
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
-const char fmt_lim[] PROGMEM = "[lim] limit switch enable%10d [0=disable,1=enable]\n";
+const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
-//const char fmt_pdt[] PROGMEM = "[pdt] pause dwell time%13.0f uSec\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_sl(nvObj_t *nv) { text_print_ui8(nv, fmt_sl);}
-void cm_print_lim(nvObj_t *nv) { text_print_ui8(nv, fmt_lim);}
+void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
+void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}  // TYPE_INT
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ms(nvObj_t *nv) { text_print_flt(nv, fmt_ms);}
-//void cm_print_pdt(nvObj_t *nv) { text_print_flt(nv, fmt_pdt);}
+void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
 
 /*
  * axis print functions
