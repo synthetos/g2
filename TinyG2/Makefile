@@ -300,7 +300,7 @@ ifeq ("$(BASE_PLATFORM)","sbv300")
 	_PLATFORM_FOUND = 1
 	DEVICE_FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
 
-	CHIP = SAM3X8E
+	export CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
     CMSIS_ROOT = CMSIS
 
