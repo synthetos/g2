@@ -31,6 +31,7 @@
 /*
  * GPIO defines
  */
+//--- change as required for board and switch hardware ---//
 
 #define DI_CHANNELS	        9       // number of digital inputs supported
 #define DO_CHANNELS	        4       // number of digital outputs supported
@@ -39,44 +40,46 @@
 
 #define IO_LOCKOUT_MS       50      // milliseconds to go dead after input firing
 
-enum ioMode {
+//--- do not change from here down ---//
+
+typedef enum {
     IO_MODE_DISABLED = -1,			// pin is disabled
     IO_MODE_ACTIVE_LOW = 0,			// pin is active low (aka normally open)
     IO_MODE_ACTIVE_HIGH = 1,		// pin is active high (aka normally closed)
 	IO_MODE_MAX						// unused. Just for range checking
-};
+} ioMode;
 #define NORMALLY_OPEN IO_MODE_ACTIVE_LOW    // equivalent
 #define NORMALLY_CLOSED IO_MODE_ACTIVE_HIGH // equivalent
 
-enum ioAction {                     // actions are initiated from within the input's ISR
+typedef enum {                      // actions are initiated from within the input's ISR
     IO_ACTION_NONE = 0,
     IO_ACTION_STOP,                 // stop at normal jerk - preserves positional accuracy
     IO_ACTION_FAST_STOP,            // stop at high jerk - preserves positional accuracy
     IO_ACTION_HALT,                 // stop immediately - not guaranteed to preserve position
     IO_ACTION_RESET,                // reset system immediately
 	IO_ACTION_MAX					// unused. Just for range checking
-};
+} ioAction;
 
-enum ioFunc {                       // functions are requested from the ISR, run from the main loop
+typedef enum {                       // functions are requested from the ISR, run from the main loop
     IO_FUNCTION_NONE = 0,
     IO_FUNCTION_LIMIT,              // limit switch processing
     IO_FUNCTION_INTERLOCK,          // interlock processing
     IO_FUNCTION_SHUTDOWN,           // shutdown in support of external emergency stop
     IO_FUNCTION_SPINDLE_READY,      // signal that spindle is ready (up to speed)
 	IO_FUNCTION_MAX					// unused. Just for range checking
-};
+} ioFunc;
 
-enum ioState {
+typedef enum {
     IO_DISABLED = -1,               // value returned if input is disabled
     IO_INACTIVE = 0,				// aka switch open, also read as 'false'
     IO_ACTIVE = 1					// aka switch closed, also read as 'true'
-};
+} ioState;
 
-enum ioEdgeFlag {
+typedef enum {
     IO_EDGE_NONE = 0,               // no edge detected or edge flag reset (must be zero)
     IO_EDGE_LEADING,				// flag is set when leading edge is detected
     IO_EDGE_TRAILING				// flag is set when trailing edge is detected
-};
+} ioEdgeFlag;
 
 /*
  * GPIO structures

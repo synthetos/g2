@@ -478,12 +478,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
+    { "sys","spo", _fipn,1, cm_print_spo, get_ui8, set_01,  (float *)&spindle.polarity_enable, SPINDLE_POLARITY_ENABLE },
+    { "sys","spd", _fipn,1, cm_print_spd, get_ui8, set_01,  (float *)&spindle.polarity_dir,    SPINDLE_POLARITY_DIR },
     { "sys","sph", _fipn,0, cm_print_sph, get_ui8, set_01,  (float *)&spindle.pause_on_hold,   SPINDLE_PAUSE_ON_HOLD },
     { "sys","sdw", _fipn,1, cm_print_sdw, get_flt, set_flu, (float *)&spindle.dwell_seconds,   SPINDLE_DWELL_TIME },
-    { "sys","spo", _fipn,1, cm_print_spo, get_flt, set_flu, (float *)&spindle.polarity_on,     SPINDLE_POLARITY_ON },
-    { "sys","spd", _fipn,1, cm_print_spd, get_flt, set_flu, (float *)&spindle.polarity_dir,    SPINDLE_POLARITY_DIRECTION },
-    { "",   "spc", _f0,  0, cm_print_spc, get_ui8, set_nul, (float *)&spindle.state, 0 },      // get spindle state
-    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },      // get spindle speed
+    { "",   "spc", _f0,  0, cm_print_spc, get_ui8, set_nul, (float *)&spindle.state, 0 },   // get spindle state
+    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },   // get spindle speed
 
     // Communications and reporting paramters
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,            COMM_MODE },

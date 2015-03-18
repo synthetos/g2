@@ -56,8 +56,8 @@
 
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_DWELL_TIME          1.0
-#define SPINDLE_POLARITY_ON         1                       // 0=active low, 1=active high
-#define SPINDLE_POLARITY_DIRECTION  1                       // 0=clockwise low, 1=clockwise high
+#define SPINDLE_POLARITY_ENABLE     1                       // 0=active low, 1=active high
+#define SPINDLE_POLARITY_DIR        0                       // 0=clockwise is low, 1=clockwise is high
 
 #define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 //#define SWITCH_TYPE                 SW_TYPE_NORMALLY_CLOSED // SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED

@@ -35,6 +35,11 @@ typedef enum {				        // spindle state settings (See hardware.h for bit sett
 } spSpindleState;
 
 typedef enum {
+    SPINDLE_ACTIVE_LOW = 0,
+    SPINDLE_ACTIVE_HIGH
+} spPolarity;
+
+typedef enum {
     SPINDLE_NORMAL = 0,
     SPINDLE_PAUSED,
 } spSpindlePause;
@@ -53,9 +58,9 @@ typedef enum {
 
 typedef struct spSpindleSingleton {
     // configuration
-    uint8_t pause_on_hold;          // pause on feedhold
-    uint8_t polarity_on;            // 0=active low, 1=active high
-    uint8_t polarity_dir;           // 0=clockwise low, 1=clockwise high
+    spSpindlePause pause_on_hold;   // pause on feedhold
+    spPolarity polarity_enable;     // 0=active low, 1=active high
+    spPolarity polarity_dir;        // 0=clockwise low, 1=clockwise high
     float dwell_seconds;            // dwell on spindle resume
 //    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
 //    uint8_t override_enable;        // TRUE = override enabled
@@ -90,19 +95,19 @@ void cm_spindle_resume(float dwell_seconds);            // restart spindle after
 
 #ifdef __TEXT_MODE
 
-    void cm_print_sph(nvObj_t *nv);
-    void cm_print_sdw(nvObj_t *nv);
     void cm_print_spo(nvObj_t *nv);
     void cm_print_spd(nvObj_t *nv);
+    void cm_print_sph(nvObj_t *nv);
+    void cm_print_sdw(nvObj_t *nv);
     void cm_print_spc(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
 
 #else
 
-    #define cm_print_sph tx_print_stub
-    #define cm_print_sdw tx_print_stub
     #define cm_print_spo tx_print_stub
     #define cm_print_spd tx_print_stub
+    #define cm_print_sph tx_print_stub
+    #define cm_print_sdw tx_print_stub
     #define cm_print_spc tx_print_stub
     #define cm_print_sps tx_print_stub
 

@@ -113,6 +113,7 @@ void config_init()
 // ++++ The following code is offered until persistence is implemented.
 // ++++ Then you can use the AVR code (or something like it)
 	_set_defa(nv, false);
+    rpt_print_loading_configs_message();
 #endif
 #ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
@@ -153,8 +154,9 @@ static void _set_defa(nvObj_t *nv, bool print)
 		}
 	}
 	sr_init_status_report();					// reset status reports
-    if(print)
-        rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+    if (print) {
+        rpt_print_initializing_message();       // don't start TX until all the NVM persistence is done
+    }
 }
 
 stat_t set_defaults(nvObj_t *nv)
@@ -348,7 +350,7 @@ stat_t set_flt(nvObj_t *nv)
  *	get_grp() is a group expansion function that expands the parent group and returns
  *	the values of all the children in that group. It expects the first nvObj in the
  *	nvBody to have a valid group name in the token field. This first object will be set
- *	to a TYPE_PARENT. The group field of the first nvOBJ is left nul - as the group 
+ *	to a TYPE_PARENT. The group field of the first nvOBJ is left nul - as the group
  *  field refers to a parent group, which this group has none.
  *
  *	All subsequent nvObjs in the body will be populated with their values.

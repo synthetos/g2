@@ -210,7 +210,6 @@ enum valueType {						// value typing for config and JSON
 	TYPE_PARENT,						// object is a parent to a sub-object
 	TYPE_FLOAT,							// value is a floating point number
 	TYPE_INT,						    // value is a signed or unsigned integer or any size
-//	TYPE_INT8,						    // value is a signed integer - int8_t, int32_t
 	TYPE_STRING,						// value is in string field
 	TYPE_BOOL,							// value is "true" (1) or "false"(0)
 	TYPE_DATA,							// value is blind cast to uint32_t

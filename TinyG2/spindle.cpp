@@ -171,6 +171,21 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __AVR
 #ifdef __ARM
+
+    bool enable = (bool)spindle.state;              // set to active state
+    enable = enable ^ ~spindle.polarity_enable;     // set to active state
+    bool dir = spindle.state-1;                     // set to CW state
+    dir = dir ^ ~spindle.polarity_dir;              // set to CW state
+
+	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
+        if (enable) { spindle_enable_pin.set();}
+        else        { spindle_enable_pin.clear();}
+        if (dir)    { spindle_dir_pin.set();}
+        else        { spindle_dir_pin.clear();}
+    } else {
+    	spindle_enable_pin.clear();	                // failsafe: any error causes stop
+	}
+/*
 	if (spindle.state == SPINDLE_CW) {
 		spindle_enable_pin.set();
 		spindle_dir_pin.clear();
@@ -180,6 +195,7 @@ static void _exec_spindle_control(float *value, float *flag)
 	} else {
 		spindle_enable_pin.clear();	// failsafe: any error causes stop
 	}
+*/
 #endif // __ARM
 	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state));
 
@@ -267,17 +283,17 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 
 #ifdef __TEXT_MODE
 
+const char fmt_spo[] PROGMEM = "[spo] spindle polarity on%10d [0=low is enabled,1=high is enabled]\n";
+const char fmt_spd[] PROGMEM = "[spd] spindle polarity direction%3d [0=low is clockwise,1=high is clockwise]\n";
 const char fmt_sph[] PROGMEM = "[sph] spindle pause on hold%8d [0=no,1=pause_on_hold]\n";
 const char fmt_sdw[] PROGMEM = "[sdw] spindle auto-dwell time%8.1f seconds\n";
-const char fmt_spo[] PROGMEM = "[spo] spindle polarity on%10d [0=active low,1=active high]\n";
-const char fmt_spd[] PROGMEM = "[spd] spindle polarity direction%3d [0=clockwise low,1=clockwise high]\n";
 const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
+void cm_print_spo(nvObj_t *nv) { text_print_int(nv, fmt_spo);}
+void cm_print_spd(nvObj_t *nv) { text_print_int(nv, fmt_spd);}
 void cm_print_sph(nvObj_t *nv) { text_print_int(nv, fmt_sph);}
 void cm_print_sdw(nvObj_t *nv) { text_print_flt(nv, fmt_sdw);}
-void cm_print_spo(nvObj_t *nv) { text_print_flt(nv, fmt_spo);}
-void cm_print_spd(nvObj_t *nv) { text_print_flt(nv, fmt_spd);}
 void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
 void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
 
