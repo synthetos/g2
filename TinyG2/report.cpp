@@ -719,15 +719,10 @@ static const char fmt_qr[] PROGMEM = "qr:%d\n";
 static const char fmt_qi[] PROGMEM = "qi:%d\n";
 static const char fmt_qo[] PROGMEM = "qo:%d\n";
 static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=single,2=triple]\n";
-/*
-void qr_print_qr(nvObj_t *nv) { text_print_int(nv, fmt_qr);}
-void qr_print_qi(nvObj_t *nv) { text_print_int(nv, fmt_qi);}
-void qr_print_qo(nvObj_t *nv) { text_print_int(nv, fmt_qo);}
-void qr_print_qv(nvObj_t *nv) { text_print_ui8(nv, fmt_qv);}
-*/
-void qr_print_qr(nvObj_t *nv) { text_print(nv, fmt_qr);}
-void qr_print_qi(nvObj_t *nv) { text_print(nv, fmt_qi);}
-void qr_print_qo(nvObj_t *nv) { text_print(nv, fmt_qo);}
-void qr_print_qv(nvObj_t *nv) { text_print(nv, fmt_qv);}
+
+void qr_print_qr(nvObj_t *nv) { text_print(nv, fmt_qr);}    // TYPE_INT
+void qr_print_qi(nvObj_t *nv) { text_print(nv, fmt_qi);}    // TYPE_INT
+void qr_print_qo(nvObj_t *nv) { text_print(nv, fmt_qo);}    // TYPE_INT
+void qr_print_qv(nvObj_t *nv) { text_print(nv, fmt_qv);}    // TYPE_INT
 
 #endif // __TEXT_MODE

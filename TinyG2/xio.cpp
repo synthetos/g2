@@ -596,7 +596,6 @@ void xio_flush_read()
 #ifdef __TEXT_MODE
 
 static const char fmt_spi[] PROGMEM = "[spi] SPI state%20d [0=disabled,1=enabled]\n";
-//void xio_print_spi(nvObj_t *nv) { text_print_ui8(nv, fmt_spi);}
-void xio_print_spi(nvObj_t *nv) { text_print(nv, fmt_spi);}
+void xio_print_spi(nvObj_t *nv) { text_print(nv, fmt_spi);} // TYPE_INT
 
 #endif // __TEXT_MODE

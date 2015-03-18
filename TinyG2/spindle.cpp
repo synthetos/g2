@@ -290,11 +290,11 @@ const char fmt_sdw[] PROGMEM = "[sdw] spindle auto-dwell time%8.1f seconds\n";
 const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spo(nvObj_t *nv) { text_print(nv, fmt_spo);}
-void cm_print_spd(nvObj_t *nv) { text_print(nv, fmt_spd);}
-void cm_print_sph(nvObj_t *nv) { text_print(nv, fmt_sph);}
-void cm_print_sdw(nvObj_t *nv) { text_print(nv, fmt_sdw);}
-void cm_print_spc(nvObj_t *nv) { text_print(nv, fmt_spc);}
-void cm_print_sps(nvObj_t *nv) { text_print(nv, fmt_sps);}
+void cm_print_spo(nvObj_t *nv) { text_print(nv, fmt_spo);}  // TYPE_INT
+void cm_print_spd(nvObj_t *nv) { text_print(nv, fmt_spd);}  // TYPE_INT
+void cm_print_sph(nvObj_t *nv) { text_print(nv, fmt_sph);}  // TYPE_INT
+void cm_print_sdw(nvObj_t *nv) { text_print(nv, fmt_sdw);}  // TYPE_FLOAT
+void cm_print_spc(nvObj_t *nv) { text_print(nv, fmt_spc);}  // TYPE_INT
+void cm_print_sps(nvObj_t *nv) { text_print(nv, fmt_sps);}  // TYPE_FLOAT
 
 #endif // __TEXT_MODE

@@ -486,22 +486,23 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },   // get spindle speed
 
     // Communications and reporting paramters
+#ifdef __TEXT_MODE
+    { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
+#endif
 	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,            COMM_MODE },
 	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,       JSON_VERBOSITY },
 	{ "sys","js", _fipn, 0, js_print_js,  get_ui8, set_01,     (float *)&js.json_syntax,          JSON_SYNTAX_MODE },
-#ifdef __TEXT_MODE
-	{ "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
-#endif
 	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
 	{ "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
-
-//	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
-//	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,  (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
-//	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,  (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
-//	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
-//	{ "sys","net", _fipn, 0, cfg_print_net, get_ui8,  set_ui8, (float *)&cs.network_mode,		NETWORK_MODE },
 //	{ "sys","spi", _fipn, 0, xio_print_spi,get_ui8,xio_set_spi,(float *)&xio.spi_state,			0 },
+
+#ifdef __AVR
+	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,  (float *)&cfg.enable_cr,			COM_EXPAND_CR },
+	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,  (float *)&cfg.enable_echo,		COM_ENABLE_ECHO },
+	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,  (float *)&cfg.enable_flow_control,COM_ENABLE_FLOW_CONTROL },
+	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,(float *)&cfg.usb_baud_rate,		XIO_BAUD_115200 },
+#endif
 
     // Gcode defaults
 	// NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -514,7 +515,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// "hidden" parameters (not in system group)
 	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
-//	{ "", "fd", _fip, 0, tx_print,     get_ui8, set_01,  (float *)&js.json_footer_depth,	JSON_FOOTER_DEPTH },
 
     // Actions and Reports
     { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },	// request and set status reports
@@ -741,7 +741,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "o", _f0, 0, tx_print_nul, _do_offsets,set_nul,(float *)&cs.null,0 },
 	{ "", "di", _f0, 0, tx_print_nul,_do_inputs, set_nul,(float *)&cs.null,0 },
 	{ "", "$", _f0, 0, tx_print_nul, _do_all,    set_nul,(float *)&cs.null,0 }
-
 };
 
 /***** Make sure these defines line up with any changes in the above table *****/
@@ -927,7 +926,6 @@ static stat_t _do_all(nvObj_t *nv)	// print all parameters
  * set_ex() - enable XON/XOFF or RTS/CTS flow control
  * set_baud() - set USB baud rate
  * get_rx() - get bytes available in RX buffer
- * get_wr() - get slots in sliding window buffer
  * get_tick() - get system tick count
  *	The above assume USB is the std device
  */

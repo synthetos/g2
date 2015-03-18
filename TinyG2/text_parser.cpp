@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -243,21 +243,22 @@ void text_print_multiline_formatted(nvObj_t *nv)
  * Text print primitives using generic formats
  */
 static const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
-//static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s
 static const char fmt_int[] PROGMEM = "%lu\n";	// generic format for ui16's and ui32s
 static const char fmt_flt[] PROGMEM = "%f\n";	// generic format for floats
+//static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s DEPRECATED
 
 void tx_print_nul(nvObj_t *nv) {}
 void tx_print_str(nvObj_t *nv) { text_print_str(nv, fmt_str);}
-//void tx_print_ui8(nvObj_t *nv) { text_print_ui8(nv, fmt_ui8);}
 void tx_print_int(nvObj_t *nv) { text_print_int(nv, fmt_int);}
 void tx_print_flt(nvObj_t *nv) { text_print_flt(nv, fmt_flt);}
+//void tx_print_ui8(nvObj_t *nv) { text_print_ui8(nv, fmt_ui8);}  DEPRECATED
 
 void tx_print(nvObj_t *nv) {
     switch ((int8_t)nv->valuetype) {
         case TYPE_FLOAT: { text_print_flt(nv, fmt_flt); break;}
         case TYPE_INT:   { text_print_int(nv, fmt_int); break;}
         case TYPE_STRING:{ text_print_str(nv, fmt_str); break;}
+        //   TYPE_NULL is not needed in this list as it does nothing
     }
 }
 
@@ -269,9 +270,9 @@ void tx_print(nvObj_t *nv) {
 
 void text_print_nul(nvObj_t *nv, const char *format) { fprintf_P(stderr, format);}	// just print the format string
 void text_print_str(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, *nv->stringp);}
-//void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint8_t)nv->value);}
 void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
 void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
+//void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint8_t)nv->value);} DEPRECATED
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
@@ -291,9 +292,6 @@ void text_print(nvObj_t *nv, const char *format) {
  * Formatted print supporting the text parser
  */
 static const char fmt_tv[] PROGMEM = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
-
-//void tx_print_tv(nvObj_t *nv) { text_print_ui8(nv, fmt_tv);}
-void tx_print_tv(nvObj_t *nv) { text_print(nv, fmt_tv);}
-
+void tx_print_tv(nvObj_t *nv) { text_print(nv, fmt_tv);}    // TYPE_INT
 
 #endif // __TEXT_MODE

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.07 // review of text mode; removed JSON footer depth option. Footer is now always child to 'r'
+#define TINYG_FIRMWARE_BUILD   		080.07 // text mode review
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -56,9 +56,7 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_INPUTS                // Using g2 revised digital inouts
-#define __DUAL_USB                  // use dual endpoint USB
-
+#define __NEW_INPUTS                // Using g2 revised digital inputs
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves
 //#define __DEBUG_SETTINGS          // special settings. See settings.h
