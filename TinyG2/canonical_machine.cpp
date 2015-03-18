@@ -98,6 +98,7 @@
 #include "stepper.h"
 #include "encoder.h"
 #include "spindle.h"
+#include "pwm.h"
 #include "report.h"
 #include "gpio.h"
 #include "hardware.h"
@@ -505,7 +506,7 @@ static stat_t _finalize_soft_limits(stat_t status)
 {
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
 	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_alarm(status, (char *)"soft_limits"));  // throw a soft alarm
+	return (cm_alarm(status, "soft_limits"));               // throw a soft alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -620,39 +621,116 @@ stat_t canonical_machine_test_assertions(void)
 }
 
 /*
- * cm_alarm()    - alarm state; send an exception report and stop processing input
- * cm_clear()    - clear alarm state
- * cm_shutdown() - shutdown state; send an exception report and shut down machine
+ * cm_alrm()     - invoke alarm from command
+ * cm_shut()     - invoke shutdown from command
+ * cm_pnic()     - invoke panic from command
+ * cm_clear()    - clear alarm or panic state
+ * cm_alarm()    - initiate alarm state
+ * cm_shutdown() - initiate shutdown state
+ * cm_panic()    - initiate panic state
  *
- * Note: An alarm state can be exited by a clear.
- *       A shutdown state can only be recovered by a system reset.
+ *  ALARM, SHUTDOWN, and PANIC are nested dolls. 
+ *
+ *  ALARM sets the ALARM state, clears out queued moves and serial input, and rejects new action commands
+ *  (gcode blocks, SET commands, and some others). It attempts to preserve Gcode and machine state.
+ *  It is cleared by a $clear
+ *
+ *  SHUTDOWN sets a SHUTDOWN state, does everything an ALARM does but deliberately wipes Gcode and 
+ *  machine state. It is also cleared by a $clear
+ *
+ *  PANIC occurs if the firmware has detected an unrecoverable internal error - such as an assertion 
+ *  failure or a code condition that should never be allowed to occur. It sets PANIC, leaves the 
+ *  system inspect able (if possible), and can only be recovered via a hard or soft reset.
+ *
+ *  All these states can be invoked from the commands for testing.
  */
+stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
+{
+    cm_alarm(STAT_MACHINE_ALARMED, "alarm received");
+    return (STAT_OK);
+}
+
+stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
+{
+    cm_alarm(STAT_RESET, "shutdown received");
+    return (STAT_OK);
+}
+
+stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
+{
+    cm_alarm(STAT_TERMINATE, "panic received");
+    return (STAT_OK);
+}
+
+stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condition
+{
+    if ((cm.machine_state == MACHINE_ALARM) ||
+        (cm.machine_state == MACHINE_SHUTDOWN)) {
+        cm.machine_state = MACHINE_PROGRAM_STOP;
+    }
+    return (STAT_OK);
+}
+
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_ALARM) {    // don't alarm if already in an alarm state
-        return (STAT_NOOP);
+    if ((cm.machine_state == MACHINE_ALARM) || 
+        (cm.machine_state == MACHINE_SHUTDOWN) ||
+        (cm.machine_state == MACHINE_PANIC)) {
+        return (STAT_OK);                       // don't alarm if already in an alarm state
     }
 	cm.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();
+    cm_request_feedhold();                      // stop motion
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
-	cm_spindle_control_immediate(SPINDLE_OFF);  // stop spindle on alarm
+	cm_spindle_control_immediate(SPINDLE_OFF);
+//	cm_coolant_control_immediate(COOLANT_OFF);
+	cm_coolant_off_immediate();
 	rpt_exception(status, msg);	                // send alarm message
     return (status);
 }
 
-stat_t cm_clear(nvObj_t *nv)                    // clear alarm condition
+stat_t cm_shutdown(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_ALARM) {
-	    cm.machine_state = MACHINE_PROGRAM_STOP;
+    if ((cm.machine_state == MACHINE_SHUTDOWN) ||
+        (cm.machine_state == MACHINE_PANIC)) {
+        return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-	return (STAT_OK);
+    if (cm_alarm(STAT_TERMINATE, "shutdown") == STAT_OK) {
+        return (STAT_OK);
+    }
+	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
+/*
+    cm.homing_state = HOMING_NOT_HOMED;         // unhome the machine
+	for( int i = 0; i < HOMING_AXES; ++i) {
+	    cm.homed[i] = HOMING_NOT_HOMED;        
+    }
+*/
+    // reset subsystems
+    application_init_machine();
+    application_init_startup();
+/*    
+    gpio_init();
+    gpio_reset();
+    planner_init();
+    stepper_init();
+    encoder_init();
+    pwm_init();
+    planner_init();
+    canonical_machine_init();
+
+    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
+    _exec_program_finalize(value, value);	// finalize now, not later
+*/
+	cm.machine_state = MACHINE_SHUTDOWN;
+    return (status);
 }
 
-stat_t cm_shutdown(stat_t status, const char *msg)
+stat_t cm_panic(stat_t status, const char *msg)
 {
     if (cm.machine_state == MACHINE_SHUTDOWN) { // only do this once
         return (STAT_OK);
     }
+	cm.machine_state = MACHINE_PANIC;
+/*
 	// stop the motors and the spindle
 	stepper_init();							    // hard stop
     cm_request_queue_flush();                   // do a queue flush - runtime is not busy
@@ -666,7 +744,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	cm.hold_state = FEEDHOLD_OFF;
 	cm.queue_flush_state = FLUSH_OFF;
 	cm.end_hold_requested = false;
-
+*/
 	// build a secondary message string (info) and call the exception report
 	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
@@ -674,8 +752,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	} else {
 		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
-	rpt_exception(status, info);			    // send shutdown message
-	cm.machine_state = MACHINE_SHUTDOWN;
+	rpt_exception(status, info);			    // send panic report
 	return (status);
 }
 
@@ -1084,6 +1161,7 @@ static void _exec_change_tool(float *value, float *flag)
 /*
  * cm_mist_coolant_control() - M7
  * cm_flood_coolant_control() - M8, M9
+ * cm_coolant_off_immediate()
  */
 
 stat_t cm_mist_coolant_control(uint8_t mist_coolant)
@@ -1141,6 +1219,12 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 	}
 #endif // __ARM
 }
+
+void cm_coolant_off_immediate() 
+{
+    return;
+}
+
 
 /*
  * cm_override_enables() - M48, M49
@@ -1297,8 +1381,10 @@ void cm_message(char_t *message)
  */
 void cm_request_feedhold(void) {
 // OMC    if (cm.estop_state != ESTOP_INACTIVE) { return; }
-
-    if (cm.hold_state == FEEDHOLD_OFF) {            // only honor request if not already in a feedhold
+    
+    // honor request if not already in a feedhold and you are moving
+    if ((cm.hold_state == FEEDHOLD_OFF) &&
+        (cm.motion_state != MOTION_STOP)) {
         cm.hold_state = FEEDHOLD_REQUESTED;
     }
 }

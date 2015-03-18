@@ -342,5 +342,7 @@ stat_t io_get_input(nvObj_t *nv)
 	void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
 	void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
 	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
-	void io_print_in(nvObj_t *nv) {_print_di(nv, fmt_gpio_in);}
+	void io_print_in(nvObj_t *nv) {
+        fprintf_P(stderr, fmt_gpio_in, nv->token, (int)nv->value);
+    }
 #endif

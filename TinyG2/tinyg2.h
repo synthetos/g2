@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.09 // wiring up spindle polarity settings
+#define TINYG_FIRMWARE_BUILD   		080.10 // 
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -79,6 +79,9 @@
 //#ifndef WEAK
 //#define WEAK  __attribute__ ((weak))
 //#endif
+
+void application_init_machine(void);
+void application_init_startup(void);
 
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************

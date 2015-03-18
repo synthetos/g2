@@ -151,14 +151,22 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// A work offset
 	{ "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// B work offset
 	{ "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// C work offset
-
-	{ "hom","home",_f0, 0, cm_print_home, cm_get_home, cm_run_home,(float *)&cs.null, 0 },		// homing state, invoke homing cycle
+/*
+	{ "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_run_home,(float *)&homing_state, 0 },	// homing state, invoke homing cycle
 	{ "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_X], false },	// X homed - Homing status group
 	{ "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_Y], false },	// Y homed
 	{ "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_Z], false },	// Z homed
 	{ "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_A], false },	// A homed
 	{ "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_B], false },	// B homed
 	{ "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_C], false },	// C homed
+*/
+	{ "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },	    // homing state, invoke homing cycle
+	{ "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },	// X homed - Homing status group
+	{ "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },	// Y homed
+	{ "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Z], false },	// Z homed
+	{ "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_A], false },	// A homed
+	{ "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_B], false },	// B homed
+	{ "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_C], false },	// C homed
 
 	{ "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm.probe_state, 0 },		// probing state
 	{ "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[AXIS_X], 0 },
@@ -524,6 +532,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "", "qf",  _f0, 0, tx_print_nul, get_nul,   cm_run_qf, (float *)&cs.null, 0 },	// SET to invoke queue flush
     { "", "rx",  _f0, 0, tx_print_int, get_rx,    set_nul,   (float *)&cs.null, 0 },	// get RX buffer bytes or packets
     { "", "msg", _f0, 0, tx_print_str, get_nul,   set_nul,   (float *)&cs.null, 0 },	// string for generic messages
+    { "", "alarm",_f0,0, tx_print_nul, cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },	// trigger alarm
+    { "", "panic",_f0,0, tx_print_nul, cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },	// trigger panic
+    { "", "shutd",_f0,0, tx_print_nul, cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },	// trigger shutdown
     { "", "clear",_f0,0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
     { "", "clr", _f0, 0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// Synonym for "clear"
     { "", "ti",  _f0, 0, tx_print_int, get_tick,  set_nul,   (float *)&cs.null, 0 },	// get system time tick

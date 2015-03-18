@@ -69,8 +69,9 @@ typedef enum {				        // check alignment with messages in config.c / msg_sta
 	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
 	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-	COMBINED_SHUTDOWN,				// [11] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
-    COMBINED_INTERLOCK              // [12] machine in interlock state
+    COMBINED_INTERLOCK,             // [11] machine in interlock state
+	COMBINED_SHUTDOWN,				// [12] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
+	COMBINED_PANIC				    // [13] syatem in panic state       //iff macs == MACHINE_SHUTDOWN
 } cmCombinedState   ;
 //### END CRITICAL REGION ###
 
@@ -81,8 +82,9 @@ typedef enum {
 	MACHINE_PROGRAM_STOP,			// no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
 	MACHINE_PROGRAM_END,			// program end (same as MACHINE_READY, really...)
 	MACHINE_CYCLE,					// machine is running; blocks still to run, or steppers are busy
+    MACHINE_INTERLOCK,              // machine in interlock state
 	MACHINE_SHUTDOWN,				// machine in shutdown state
-    MACHINE_INTERLOCK               // machine in interlock state
+	MACHINE_PANIC				    // machine in panic state
 } cmMachineState;
 
 typedef enum {
@@ -573,7 +575,11 @@ void canonical_machine_reset(void);
 void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
-stat_t cm_alarm(stat_t status, const char *msg);           // enter soft alarm state. returns same status code
+stat_t cm_alrm(nvObj_t *nv);                                // trigger alarm from command input
+stat_t cm_pnic(nvObj_t *nv);                                // trigger panic from command input
+stat_t cm_shutd(nvObj_t *nv);                               // trigger shutdown from command input
+stat_t cm_alarm(stat_t status, const char *msg);            // enter alarm state - preserve Gcode state
+stat_t cm_panic(stat_t status, const char *msg);            // enter alarm state - dump all state
 stat_t cm_clear(nvObj_t *nv);
 stat_t cm_shutdown(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
 
@@ -622,6 +628,7 @@ stat_t cm_change_tool(uint8_t tool);							// M6
 // Miscellaneous Functions (4.3.9)
 stat_t cm_mist_coolant_control(uint8_t mist_coolant); 			// M7
 stat_t cm_flood_coolant_control(uint8_t flood_coolant);			// M8, M9
+void cm_coolant_off_immediate(void);
 
 stat_t cm_override_enables(uint8_t flag); 						// M48, M49
 stat_t cm_feed_rate_override_enable(uint8_t flag); 				// M50

@@ -93,41 +93,72 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 /*
  * _system_init()
+ * _application_init_services()
+ * _application_init_machine()
+ * _application_init_startup()
+ *
+ * There are a lot of dependencies in the order of these inits.
+ * Don't change the ordering unless you understand this.
  */
 
 void _system_init(void)
 {
 #ifdef __ARM
 	SystemInit();
-
-	// Disable watchdog
-	WDT->WDT_MR = WDT_MR_WDDIS;
-
-	// Initialize C library
-	__libc_init_array();
-
-    // Store the flash UUID
-    cacheUniqueId();
-
-	usb.attach();					// USB setup
+	WDT->WDT_MR = WDT_MR_WDDIS;     // Disable watchdog
+	__libc_init_array();            // Initialize C library
+    cacheUniqueId();                // Store the flash UUID
+	usb.attach();                   // USB setup
 	delay(1000);
+#endif
+#ifdef __AVR
+    cli();
 #endif
 }
 
-/*
- * _application_init()
- */
-
-static void _application_init(void)
+void application_init_services(void)
 {
-	// There are a lot of dependencies in the order of these inits.
-	// Don't change the ordering unless you understand this.
+	hardware_init();				// system hardware setup 			- must be first
+	persistence_init();				// set up EEPROM or other NVM		- must be second
+	xio_init();						// xtended io subsystem				- must be third
+//	rtc_init();						// real time counter
+}
 
+void application_init_machine(void)
+{
+	cm.machine_state = MACHINE_INITIALIZING;
+    stepper_init();                 // stepper subsystem 				- must precede gpio_init() on AVR
+    encoder_init();                 // virtual encoders
+    gpio_init();                    // inputs and outputs
+    pwm_init();                     // pulse width modulation drivers
+    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
+    planner_init();                 // motion planning subsystem
+    canonical_machine_init();       // canonical machine
+}
+
+void application_init_startup(void)
+{
 #ifdef __AVR
-	cli();
+    // now bring up the interrupts and get started
+    PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
+    PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
+    PMIC_EnableMediumLevel();
+    PMIC_EnableLowLevel();
+    sei();							// enable global interrupts
 #endif
 
+    // start the application
+    config_init();					// apply the config settings from persistence
+    canonical_machine_reset();
+    // MOVED: report the system is ready is now in xio
+}
+/*
+static void _application_init(void)
+{
 	cm.machine_state = MACHINE_INITIALIZING;
+    _application_init_services();
+    _application_init_machine();
+    _application_init_startup();
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
@@ -158,6 +189,7 @@ static void _application_init(void)
     canonical_machine_reset();
     // MOVED: report the system is ready is now in xio
 }
+*/
 
 /*
  * main()
@@ -169,7 +201,10 @@ int main(void)
 	_system_init();
 
 	// TinyG application setup
-	_application_init();
+//	_application_init();
+	application_init_services();
+	application_init_machine();
+	application_init_startup();
 	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
