@@ -264,7 +264,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mb.force_replan = true;
             mp_plan_buffer();                                           // must replan now
 
-            cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_mode);
+//            cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_state);
+            cm_spindle_conditional_pause();
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }

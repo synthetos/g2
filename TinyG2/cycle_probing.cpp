@@ -1,7 +1,7 @@
 /*
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * Part of TinyG project
- * 
+ *
  * Copyright (c) 2010 - 2015 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
  * With contributions from Other Machine Company.
  *
@@ -32,11 +32,7 @@
 #include "canonical_machine.h"
 #include "spindle.h"
 #include "report.h"
-#ifdef __NEW_INPUTS
 #include "gpio.h"
-#else
-#include "switch.h"
-#endif
 #include "planner.h"
 #include "util.h"
 
@@ -48,16 +44,7 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	stat_t (*func)();							// binding for callback function state machine
 
 	// controls for probing cycle
-#ifdef __NEW_INPUTS
 	uint8_t probe_input;						// which input should we check?
-#else
-	uint8_t probe_switch_axis;					// which axis should we check?
-	uint8_t probe_switch_position;				//...and position
-	uint8_t saved_switch_type;					// saved switch type NO/NC
-	uint8_t saved_switch_mode;					// save the probe switch's original settings
-	void (*switch_saved_on_leading)(struct swSwitch *s);
-	void (*switch_saved_on_trailing)(struct swSwitch *s);
-#endif
 
 	// state saved from gcode model
 	uint8_t saved_distance_mode;				// G90,G91 global setting
@@ -91,13 +78,6 @@ static stat_t _set_pb_func(uint8_t (*func)())
 	return (STAT_EAGAIN);
 }
 
-#ifndef __NEW_INPUTS
-static void _probe_trigger_feedhold(switch_t *s)
-{
-    cm_request_feedhold();
-}
-#endif
-
 /***********************************************************************************
  **** G38.2 Probing Cycle ***********************************************************
  ***********************************************************************************/
@@ -111,13 +91,13 @@ static void _probe_trigger_feedhold(switch_t *s)
  *	OK, it also queues the function that's called once motion has stopped.
  *
  *  NOTE: it is *not* an error condition for the probe not to trigger.
- *  it is an error for the limit or homing switches to fire, or for some other 
+ *  it is an error for the limit or homing switches to fire, or for some other
  *  configuration error.
  *
  *	--- Some further details ---
  *
  *	Note: When coding a cycle (like this one) you get to perform one queued
- *	move per entry into the continuation, then you must exit. 
+ *	move per entry into the continuation, then you must exit.
  *
  *	Another Note: When coding a cycle (like this one) you must wait until
  *	the last move has actually been queued (or has finished) before declaring
@@ -134,7 +114,7 @@ uint8_t cm_straight_probe(float target[], float flags[])
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
 
-    // error if  no axes specified
+    // error if no axes specified
     if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z])) {
         return (STAT_GCODE_AXIS_IS_MISSING);
     }
@@ -180,7 +160,7 @@ static uint8_t _probing_init()
     // save relevant non-axis parameters from Gcode model
     pb.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
     pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
-    
+
     // set working values
     cm_set_distance_mode(ABSOLUTE_MODE);
     cm_set_coord_system(ABSOLUTE_COORDS);   // probing is done in machine coordinates
@@ -195,40 +175,23 @@ static uint8_t _probing_init()
     // error if the probe target is too close to the current position
     if (get_axis_vector_length(pb.start_position, pb.target) < MINIMUM_PROBE_TRAVEL) {
         _probing_error_exit(-2);
-    }    
-    
+    }
+
 	// error if the probe target requires a move along the A/B/C axes
 	for ( uint8_t axis=AXIS_A; axis<AXES; axis++ ) {
-		if (fp_NE(pb.start_position[axis], pb.target[axis]))
+		if (fp_NE(pb.start_position[axis], pb.target[axis])) {
 			_probing_error_exit(axis);
+        }
 	}
 
 	// initialize the probe switch
-#ifdef __NEW_INPUTS
-    // Get the probe input
 
+    // Get the probe input
     // TODO -- for now we hard code it to zmin
     pb.probe_input = 5;
 
     // Set the input into probing mode
     gpio_set_probing_mode(pb.probe_input, true);
-#else
-	pb.probe_switch_axis = AXIS_Z;									// FIXME: hardcoded...
-	pb.probe_switch_position = SW_MIN;								// FIXME: hardcoded...
-
-	pb.saved_switch_mode = sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = SW_MODE_HOMING;
-
-	pb.saved_switch_type = sw.s[pb.probe_switch_axis][pb.probe_switch_position].type;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = SW_TYPE_NORMALLY_OPEN; // contact probes are NO switches... usually.
-	pb.switch_saved_on_leading = sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading;
-	pb.switch_saved_on_trailing = sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading = _probe_trigger_feedhold;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing = _probe_trigger_feedhold;
-
-	//switch_reset();													// re-init to pick up new switch settings
-#endif
-
 	cm_spindle_control(SPINDLE_OFF);
 	return (_set_pb_func(_probing_start));							// start the move
 }
@@ -240,14 +203,9 @@ static uint8_t _probing_init()
 static stat_t _probing_start()
 {
 	// initial probe state, don't probe if we're already contacted!
-#ifdef __NEW_INPUTS
     int8_t probe = gpio_read_input(pb.probe_input);
-#else
-	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-#endif
 
     // false is SW_OPEN in old code, and IO_INACTIVE in new
-//	if ( probe == false ) {
 	if ( probe == IO_INACTIVE ) {
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
@@ -262,18 +220,13 @@ static stat_t _probing_start()
  */
 static stat_t _probing_backoff()
 {
-#ifdef __NEW_INPUTS
-    int8_t probe = gpio_read_input(pb.probe_input);
-#else
     // If we've contacted, back off & then record position
-    int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-#endif
+    int8_t probe = gpio_read_input(pb.probe_input);
 
     /* true is SW_CLOSED in old code, and IO_ACTIVE in new */
-//    if( probe == true  ) {
-    if( probe == IO_ACTIVE ) {
+    if (probe == IO_ACTIVE) {
         cm.probe_state = PROBE_SUCCEEDED;
-     // FIXME: this should be its own parameter
+    //  FIXME: this should be its own parameter
     //  cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
         cm_straight_feed(pb.start_position, pb.flags);
         return (_set_pb_func(_probing_finish));
@@ -289,14 +242,10 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
-#ifdef __NEW_INPUTS
     int8_t probe = gpio_read_input(pb.probe_input);
-#else
-	int8_t probe = read_switch(pb.probe_switch_axis, pb.probe_switch_position);
-#endif
 	cm.probe_state = (probe==true) ? PROBE_SUCCEEDED : PROBE_FAILED;
 
-	for( uint8_t axis=0; axis<AXES; axis++ ) {
+	for (uint8_t axis=0; axis<AXES; axis++ ) {
 		// if we got here because of a feed hold we need to keep the model position correct
 		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
 
@@ -326,24 +275,17 @@ static stat_t _probing_finish()
 static void _probe_restore_settings()
 {
 	mp_flush_planner();
-	if (cm.hold_state == FEEDHOLD_HOLD);
-		cm_end_hold();
+//	if (cm.hold_state == FEEDHOLD_HOLD);
+//		cm_end_hold();
+    cm_end_hold();                                          // ends hold if on is in effect
 
-#ifdef __NEW_INPUTS // restore switch settings (old style)
     gpio_set_probing_mode(pb.probe_input, false);
-#else // restore switch settings (new style)
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].mode = pb.saved_switch_mode;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].type = pb.saved_switch_type;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_leading = pb.switch_saved_on_leading;
-	sw.s[pb.probe_switch_axis][pb.probe_switch_position].on_trailing = pb.switch_saved_on_trailing;
-	//switch_reset();								// re-init to pick up changes
-#endif
 
 	// restore axis jerk
 	for (uint8_t axis=0; axis<AXES; axis++) {
 		cm.a[axis].jerk_max = pb.saved_jerk[axis];
     }
-        
+
 	// restore coordinate system and distance mode
 	cm_set_coord_system(pb.saved_coord_system);
 	cm_set_distance_mode(pb.saved_distance_mode);

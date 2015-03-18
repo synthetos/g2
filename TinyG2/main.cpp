@@ -230,7 +230,7 @@ static const char stat_23[] PROGMEM = "Divide by zero";
 static const char stat_24[] PROGMEM = "Invalid Address";
 static const char stat_25[] PROGMEM = "Read-only address";
 static const char stat_26[] PROGMEM = "Initialization failure";
-static const char stat_27[] PROGMEM = "Hard alarm / shutdown";
+static const char stat_27[] PROGMEM = "Shutdown by emergency stop";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
 

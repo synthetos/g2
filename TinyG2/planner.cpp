@@ -277,6 +277,20 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 	return (STAT_OK);
 }
 
+//++++ stubbed +++++
+void mp_request_out_of_band_dwell(float seconds)
+{
+//    mr.out_of_band_dwell_time = seconds;
+    return;
+}
+
+//++++ stubbed +++++
+stat_t mp_exec_out_of_band_dwell(void)
+{
+//    return _advance_dwell(mr.out_of_band_dwell_time);
+    return 0;
+}
+
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
  *
  *	Planner buffers are used to queue and operate on Gcode blocks. Each buffer contains
@@ -420,12 +434,6 @@ void mp_commit_write_buffer(const moveType move_type)
 bool mp_has_runnable_buffer()
 {
     return (mb.r->buffer_state);                // anything other than MP_BUFFER_EMPTY returns true
-//    if (mb.r->buffer_state == MP_BUFFER_QUEUED ||
-//        mb.r->buffer_state == MP_BUFFER_RUNNING ||
-//        mb.r->buffer_state == MP_BUFFER_PLANNING) {
-//        return true;
-//    }
-//    return false;
 }
 
 mpBuf_t * mp_get_run_buffer()

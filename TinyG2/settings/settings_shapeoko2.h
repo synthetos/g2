@@ -148,10 +148,8 @@
 #define X_JERK_MAX                  8000                    // xjm  yes, that's "5 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED           10000                   // xjh
 #define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION      // xjd
-#define X_SWITCH_MODE_MIN           SW_MODE_HOMING_LIMIT    // xsn  SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX           SW_MODE_LIMIT           // xsx  SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_TYPE_MIN           SWITCH_TYPE             // rsn  SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-#define X_SWITCH_TYPE_MAX           SWITCH_TYPE             // rsx  SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
+#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  minus means move to minimum switch
 #define X_LATCH_VELOCITY            100                     // xlv  mm/min
 #define X_LATCH_BACKOFF             20                      // xlb  mm
@@ -165,28 +163,24 @@
 #define Y_JERK_MAX                  5000
 #define Y_JERK_HIGH_SPEED           10000
 #define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN           SW_MODE_HOMING_LIMIT
-#define Y_SWITCH_MODE_MAX           SW_MODE_LIMIT
-#define Y_SWITCH_TYPE_MIN           SWITCH_TYPE
-#define Y_SWITCH_TYPE_MAX           SWITCH_TYPE
+#define Y_HOMING_INPUT              3
+#define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            100
 #define Y_LATCH_BACKOFF             20
 #define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              1200
+#define Z_VELOCITY_MAX              1000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX                0
 #define Z_TRAVEL_MIN                -95
 #define Z_JERK_MAX                  200
 #define Z_JERK_HIGH_SPEED           1000
 #define Z_JUNCTION_DEVIATION        0.05
-#define Z_SWITCH_MODE_MIN           SW_MODE_DISABLED
-#define Z_SWITCH_MODE_MAX           SW_MODE_HOMING_LIMIT
-#define Z_SWITCH_TYPE_MIN           SWITCH_TYPE
-#define Z_SWITCH_TYPE_MAX           SWITCH_TYPE
-#define Z_SEARCH_VELOCITY           Z_VELOCITY_MAX
+#define Z_HOMING_INPUT              6
+#define Z_HOMING_DIR                1
+#define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             10
 #define Z_ZERO_BACKOFF              2
@@ -200,10 +194,8 @@
 #define A_JERK_HIGH_SPEED           A_JERK_MAX
 #define A_JUNCTION_DEVIATION        0.1
 #define A_RADIUS                    1.0
-#define A_SWITCH_MODE_MIN           SW_MODE_HOMING
-#define A_SWITCH_MODE_MAX           SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN           SWITCH_TYPE
-#define A_SWITCH_TYPE_MAX           SWITCH_TYPE
+#define A_HOMING_INPUT              0
+#define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY           6000
 #define A_LATCH_VELOCITY            1000
 #define A_LATCH_BACKOFF             5
@@ -218,10 +210,8 @@
 #define B_JERK_HIGH_SPEED           B_JERK_MAX
 #define B_JUNCTION_DEVIATION        JUNCTION_DEVIATION
 #define B_RADIUS                    1
-#define B_SWITCH_MODE_MIN           SW_MODE_HOMING
-#define B_SWITCH_MODE_MAX           SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN           SWITCH_TYPE
-#define B_SWITCH_TYPE_MAX           SWITCH_TYPE
+#define B_HOMING_INPUT              0
+#define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY           6000
 #define B_LATCH_VELOCITY            1000
 #define B_LATCH_BACKOFF             5
@@ -236,10 +226,8 @@
 #define C_JERK_HIGH_SPEED           C_JERK_MAX
 #define C_JUNCTION_DEVIATION        JUNCTION_DEVIATION
 #define C_RADIUS                    1
-#define C_SWITCH_MODE_MIN           SW_MODE_HOMING
-#define C_SWITCH_MODE_MAX           SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN           SWITCH_TYPE
-#define C_SWITCH_TYPE_MAX           SWITCH_TYPE
+#define C_HOMING_INPUT              0
+#define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY           6000
 #define C_LATCH_VELOCITY            1000
 #define C_LATCH_BACKOFF             5
@@ -254,39 +242,39 @@
 #define DEFAULT_ACTION              IO_ACTION_NONE
 #define DEFAULT_FUNCTION            IO_FUNCTION_NONE
 
-#define DI1_MODE                    DEFAULT_MODE
+#define DI1_MODE                    DEFAULT_MODE            // Xmin
 #define DI1_ACTION                  IO_ACTION_STOP
 #define DI1_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI2_MODE                    DEFAULT_MODE
-#define DI2_ACTION                  DEFAULT_ACTION
-#define DI2_FUNCTION                DEFAULT_FUNCTION
+#define DI2_MODE                    DEFAULT_MODE            // Xmax
+#define DI2_ACTION                  IO_ACTION_STOP
+#define DI2_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI3_MODE                    DEFAULT_MODE
-#define DI3_ACTION                  DEFAULT_ACTION
-#define DI3_FUNCTION                DEFAULT_FUNCTION
+#define DI3_MODE                    DEFAULT_MODE            // Ymin
+#define DI3_ACTION                  IO_ACTION_STOP
+#define DI3_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI4_MODE                    DEFAULT_MODE
-#define DI4_ACTION                  DEFAULT_ACTION
-#define DI4_FUNCTION                DEFAULT_FUNCTION
+#define DI4_MODE                    DEFAULT_MODE            // Ymax
+#define DI4_ACTION                  IO_ACTION_STOP
+#define DI4_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI5_MODE                    DEFAULT_MODE
+#define DI5_MODE                    DEFAULT_MODE            // Zmin
 #define DI5_ACTION                  DEFAULT_ACTION
 #define DI5_FUNCTION                DEFAULT_FUNCTION
 
-#define DI6_MODE                    DEFAULT_MODE
-#define DI6_ACTION                  DEFAULT_ACTION
-#define DI6_FUNCTION                DEFAULT_FUNCTION
+#define DI6_MODE                    DEFAULT_MODE            // Zmax
+#define DI6_ACTION                  IO_ACTION_STOP
+#define DI6_FUNCTION                IO_FUNCTION_LIMIT
 
-#define DI7_MODE                    DEFAULT_MODE
-#define DI7_ACTION                  DEFAULT_ACTION
-#define DI7_FUNCTION                DEFAULT_FUNCTION
+#define DI7_MODE                    DEFAULT_MODE            // Amin (hijacked for INTERLOCK)
+#define DI7_ACTION                  IO_ACTION_STOP
+#define DI7_FUNCTION                IO_FUNCTION_INTERLOCK
 
-#define DI8_MODE                    DEFAULT_MODE
-#define DI8_ACTION                  DEFAULT_ACTION
-#define DI8_FUNCTION                DEFAULT_FUNCTION
+#define DI8_MODE                    NORMALLY_OPEN            // Amax (hijacked for SHUTDOWN)
+#define DI8_ACTION                  IO_ACTION_HALT
+#define DI8_FUNCTION                IO_FUNCTION_SHUTDOWN
 
-#define DI9_MODE                    DEFAULT_MODE
+#define DI9_MODE                    DEFAULT_MODE            // Hardware interlock input
 #define DI9_ACTION                  DEFAULT_ACTION
 #define DI9_FUNCTION                DEFAULT_FUNCTION
 

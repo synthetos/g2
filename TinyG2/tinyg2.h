@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.48 // editorial changes to probing and homing
+#define TINYG_FIRMWARE_BUILD   		079.60 // fixed bug in cm_end_queue_flush
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
@@ -49,7 +49,7 @@
 
 /*
 #if (PLATFORM == v9_3x8c)
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (3 = v9 board)
 #else
 #define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
 #endif
@@ -304,7 +304,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAIL 26
-#define	STAT_ALARMED 27
+#define	STAT_SHUTDOWN_BY_EMERGENCY_STOP 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
