@@ -61,6 +61,9 @@ typedef struct spSpindleSingleton {
     spSpindlePause pause_on_hold;   // pause on feedhold
     spPolarity polarity_enable;     // 0=active low, 1=active high
     spPolarity polarity_dir;        // 0=clockwise low, 1=clockwise high
+    bool enable;
+    bool dir;
+
     float dwell_seconds;            // dwell on spindle resume
 //    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
 //    uint8_t override_enable;        // TRUE = override enabled

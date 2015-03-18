@@ -155,48 +155,47 @@ void cm_spindle_control_immediate(spSpindleState spindle_state)
     _exec_spindle_control(value, value);
 }
 
+#ifdef __ARM
+#define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
+#define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
+#define _set_spindle_direction_bit_hi() spindle_dir_pin.set()
+#define _set_spindle_direction_bit_lo() spindle_dir_pin.clear()
+#endif
+#ifdef __AVR
+#define _set_spindle_enable_bit_hi() gpio_set_bit_on(SPINDLE_BIT)
+#define _set_spindle_enable_bit_lo() gpio_set_bit_off(SPINDLE_BIT)
+#define _set_spindle_direction_bit_hi() gpio_set_bit_on(SPINDLE_DIR)
+#define _set_spindle_direction_bit_lo() gpio_set_bit_off(SPINDLE_DIR)
+#endif
+
 static void _exec_spindle_control(float *value, float *flag)
 {
-    spindle.state = (spSpindleState)value[0];   // set spindle state
+    spindle.state = (spSpindleState)value[0];               // set spindle state
+    bool enable = spindle.state ^ ~spindle.polarity_enable; // enable is the polarity to set if turning ON
 
-#ifdef __AVR
-	if (spindle.state == SPINDLE_CW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_off(SPINDLE_DIR);
-	} else if (spindle.state == SPINDLE_CCW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_on(SPINDLE_DIR);
-	} else {
-		gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
+	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {     
+        
+        // set the direction first
+        if ((spindle.state & 0x02) ^ spindle.polarity_dir) { // xor the CCW bit to get direction
+            _set_spindle_direction_bit_hi();
+        } else {
+            _set_spindle_direction_bit_lo();
+        }
+        
+        // then run the enable
+        if (enable) {
+            _set_spindle_enable_bit_hi();
+        } else {
+            _set_spindle_enable_bit_lo();
+        }
+    
+    } else { // SPINDLE_OFF (for safety - any value other than CW or CCW causes stop)
+        if (enable) {
+            _set_spindle_enable_bit_lo();
+        } else {
+            _set_spindle_enable_bit_hi();
+        }
 	}
-#endif // __AVR
-#ifdef __ARM
-
-    bool enable = (bool)spindle.state;              // set to active state
-    enable = enable ^ ~spindle.polarity_enable;     // set to active state
-    bool dir = spindle.state-1;                     // set to CW state
-    dir = dir ^ ~spindle.polarity_dir;              // set to CW state
-
-	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
-        if (enable) { spindle_enable_pin.set();}
-        else        { spindle_enable_pin.clear();}
-        if (dir)    { spindle_dir_pin.set();}
-        else        { spindle_dir_pin.clear();}
-    } else {
-    	spindle_enable_pin.clear();	                // failsafe: any error causes stop
-	}
-/*
-	if (spindle.state == SPINDLE_CW) {
-		spindle_enable_pin.set();
-		spindle_dir_pin.clear();
-	} else if (spindle.state == SPINDLE_CCW) {
-		spindle_enable_pin.set();
-		spindle_dir_pin.set();
-	} else {
-		spindle_enable_pin.clear();	// failsafe: any error causes stop
-	}
-*/
-#endif // __ARM
 	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state));
 
 /* OMC code

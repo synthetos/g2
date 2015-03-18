@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.08 // removed switch.cpp/.h from project
+#define TINYG_FIRMWARE_BUILD   		080.09 // wiring up spindle polarity settings
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
