@@ -1276,12 +1276,6 @@
     <Compile Include="hardware.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="switch.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="switch.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="test.cpp">
       <SubType>compile</SubType>
     </Compile>

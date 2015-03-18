@@ -100,7 +100,6 @@
 #include "spindle.h"
 #include "report.h"
 #include "gpio.h"
-#include "switch.h"
 #include "hardware.h"
 #include "util.h"
 #include "xio.h"			// for serial queue flush

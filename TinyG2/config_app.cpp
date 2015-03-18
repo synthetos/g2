@@ -37,7 +37,6 @@
 #include "plan_arc.h"
 #include "stepper.h"
 #include "gpio.h"
-#include "switch.h"		// ++++ vestigial
 #include "spindle.h"
 #include "pwm.h"
 #include "report.h"

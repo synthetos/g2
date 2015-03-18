@@ -38,9 +38,9 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.07 // text mode review
-
+#define TINYG_FIRMWARE_BUILD   		080.08 // removed switch.cpp/.h from project
 #endif
+
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		6							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
@@ -56,7 +56,6 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_INPUTS                // Using g2 revised digital inputs
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves
 //#define __DEBUG_SETTINGS          // special settings. See settings.h

@@ -32,7 +32,6 @@
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
 #include "hardware.h"
-#include "switch.h"
 #include "controller.h"
 #include "text_parser.h"
 #ifdef __ARM
