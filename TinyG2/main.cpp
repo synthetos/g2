@@ -48,24 +48,25 @@
 #include "MotateTimers.h"
 using Motate::delay;
 
+/**************************
+ *** C++ specific stuff ***
+ **************************/
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus
 
 void _init() __attribute__ ((weak));
 void _init() {;}
-
 void __libc_init_array(void);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+/************************** to here ***************************/
 
 void* __dso_handle = nullptr;
 
 #endif // __ARM
-
-static void _unit_tests(void);
 
 /******************** Application Code ************************/
 
@@ -174,7 +175,6 @@ int main(void)
 
 	// TinyG application setup
 	_application_init();
-	_unit_tests();					// run any unit tests that are enabled
 	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
@@ -188,7 +188,9 @@ int main(void)
  * get_status_message() - return the status message
  *
  * See tinyg.h for status codes. These strings must align with the status codes in tinyg.h
- * The number of elements in the indexing array must match the # of strings
+ * The number of elements in the indexing array must match the # of strings.
+ *
+ * These strings are here even if text mode is disabled in order to support exception reports.
  *
  * Reference for putting display strings and string arrays in AVR program memory:
  * http://www.cs.mun.ca/~paul/cs4723/material/atmel/avr-libc-user-manual-1.6.5/pgmspace.html
@@ -196,8 +198,6 @@ int main(void)
 
 stat_t status_code;						// allocate a variable for the ritorno macro
 char_t global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
-
-//#ifdef __TEXT_MODE
 
 /*** Status message strings ***/
 
@@ -507,30 +507,4 @@ static const char *const stat_msg[] PROGMEM = {
 char *get_status_message(stat_t status)
 {
 	return ((char *)GET_TEXT_ITEM(stat_msg, status));
-}
-/*
-#else
-char *get_status_message(stat_t status)
-{
-	return ((char *)NULL);
-}
-#endif // __TEXT_MODE
-*/
-
-/*******************************************************************************
- * _unit_tests() - uncomment __UNITS... line in .h files to enable unit tests
- */
-
-static void _unit_tests(void)
-{
-#ifdef __UNIT_TESTS
-	XIO_UNITS;				// conditional unit tests for xio sub-system
-//	EEPROM_UNITS;			// if you want this you must include the .h file in this file
-	CONFIG_UNITS;
-	JSON_UNITS;
-//	GPIO_UNITS;
-	REPORT_UNITS;
-	PLANNER_UNITS;
-	PWM_UNITS;
-#endif
 }

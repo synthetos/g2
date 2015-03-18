@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.07 // review of text mode
+#define TINYG_FIRMWARE_BUILD   		080.07 // review of text mode; removed JSON footer depth option. Footer is now always child to 'r'
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

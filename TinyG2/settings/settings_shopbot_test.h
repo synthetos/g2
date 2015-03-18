@@ -75,7 +75,7 @@
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 #define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
-#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
+//#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
 #define QUEUE_REPORT_VERBOSITY		QR_TRIPLE		// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 

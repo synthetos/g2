@@ -122,7 +122,6 @@ stat_t rpt_er(nvObj_t *nv)
 void _startup_helper(stat_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
-	js.json_footer_depth = JSON_FOOTER_DEPTH;	//++++ temporary until changeover is complete
 	nv_reset_nv_list();
 	nv_add_object((const char_t *)"fv");		// firmware version
 	nv_add_object((const char_t *)"fb");		// firmware build

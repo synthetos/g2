@@ -2,7 +2,7 @@
  * help.cpp - collected help routines
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -40,9 +40,9 @@ See the wiki below for more details.\n\
 static void _postscript()
 {
 fprintf_P(stderr, PSTR("\n\
-For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
+For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki\n\
 For the latest firmware see: https://github.com/synthetos/TinyG\n\
-Please log any issues at http://www.synthetos.com/forums\n\
+Please log any issues at https://github.com/synthetos/TinyG/issues\n\
 Have fun\n"));
 }
 
