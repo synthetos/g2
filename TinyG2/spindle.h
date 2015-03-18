@@ -38,16 +38,6 @@ typedef enum {
     SPINDLE_NORMAL = 0,
     SPINDLE_PAUSED,
 } spSpindlePause;
-/*
-typedef enum {
-    SPINDLE_OPTIONS_NONE = 0,       // no special controls
-    SPINDLE_OPTIONS_PAUSE_ON_HOLD   // stop on feedhold
-} spSpindleOptions;
-*/
-//#define SPINDLE_NO_OPTIONS      (0x0000)
-//#define SPINDLE_PAUSE_ON_HOLD   (0x0001)
-//#define SPINDLE_STOP_ON_ALARM  (0x0002)
-//#define SPINDLE_STOP_ON_LIMIT  (0x0004)
 
 typedef enum {
     ESC_ONLINE = 0,
@@ -64,12 +54,13 @@ typedef enum {
 typedef struct spSpindleSingleton {
     // configuration
     uint8_t pause_on_hold;          // pause on feedhold
-    uint8_t polarity;               // 0=active low, 1=active high
+    uint8_t polarity_on;            // 0=active low, 1=active high
+    uint8_t polarity_dir;           // 0=clockwise low, 1=clockwise high
     float dwell_seconds;            // dwell on spindle resume
-    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
-    uint8_t override_enable;        // TRUE = override enabled
+//    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
+//    uint8_t override_enable;        // TRUE = override enabled
 
-    // state
+    // state variables
     float speed;
     spSpindleState state;           // current spindle state, OFF, CW, CCW. Might be paused, though
     spSpindlePause pause;           // pause state - applies to spindle state, above
@@ -78,18 +69,16 @@ typedef struct spSpindleSingleton {
     uint32_t esc_boot_timer;        // When the ESC last booted up
     uint32_t esc_lockout_timer;     // When the ESC lockout last triggered
 
-} spSpindleSingleton_t;
-extern spSpindleSingleton_t spindle;
+} spSpindleton_t;
+extern spSpindleton_t spindle;
 
 /*
  * Global Scope Functions
  */
 
 void cm_spindle_init();
-
-//uint8_t cm_get_spindle_state(void);     // useful accessor for external modules
 stat_t cm_set_spindle_speed(float speed);			    // S parameter
-stat_t cm_spindle_control(uint8_t spindle_state);	    // M3, M4, M5 integrated spindle control
+stat_t cm_spindle_control(uint8_t spindle_state);// M3, M4, M5 integrated spindle control
 void cm_spindle_control_immediate(spSpindleState spindle_state); //like cm_spindle_control but not synchronized to planner
 void cm_spindle_optional_pause(bool option);            // stop spindle based on system options selected
 void cm_spindle_resume(float dwell_seconds);            // restart spindle after pause based on previous state
@@ -101,14 +90,18 @@ void cm_spindle_resume(float dwell_seconds);            // restart spindle after
 
 #ifdef __TEXT_MODE
 
-    void cm_print_spp(nvObj_t *nv);
+    void cm_print_sph(nvObj_t *nv);
+    void cm_print_sdw(nvObj_t *nv);
+    void cm_print_spo(nvObj_t *nv);
     void cm_print_spd(nvObj_t *nv);
     void cm_print_spc(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
 
 #else
 
-    #define cm_print_spp tx_print_stub
+    #define cm_print_sph tx_print_stub
+    #define cm_print_sdw tx_print_stub
+    #define cm_print_spo tx_print_stub
     #define cm_print_spd tx_print_stub
     #define cm_print_spc tx_print_stub
     #define cm_print_sps tx_print_stub

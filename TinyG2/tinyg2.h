@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.05 // first pass at working optional spindle
+#define TINYG_FIRMWARE_BUILD   		080.06 // spindle cleanup; added settings for spindle on and direction polarity
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version

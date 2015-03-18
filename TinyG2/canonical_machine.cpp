@@ -1356,9 +1356,6 @@ void cm_start_hold()
 {
 	if (mp_has_runnable_buffer()) {                         // meaning there's something running
         cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
-//        if (cm_get_spindle_state() != SPINDLE_OFF) {
-//            cm_spindle_control_immediate(SPINDLE_OFF);
-//        }
 	    cm_set_motion_state(MOTION_HOLD);
 	    cm.hold_state = FEEDHOLD_SYNC;	            // invokes hold from aline execution
     }
@@ -1391,12 +1388,6 @@ void cm_end_hold()
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
             cm_spindle_resume(spindle.dwell_seconds);
-/* OMC code
-	        if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-                mp_request_out_of_band_dwell(cm.pause_dwell_time);
-            }
-	        cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
-*/
             st_request_exec_move();
         }
     }
