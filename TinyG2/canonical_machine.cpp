@@ -160,40 +160,15 @@ cmCombinedState cm_get_combined_state()
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2"));  // "machine is in motion but macs is not cycle"
 */
-    if      (cm.machine_state == MACHINE_INITIALIZING)  { return (COMBINED_INITIALIZING); }
-    else if (cm.machine_state == MACHINE_READY)         { return (COMBINED_READY); }
-    else if (cm.machine_state == MACHINE_ALARM)         { return (COMBINED_ALARM); }
-    else if (cm.machine_state == MACHINE_PROGRAM_STOP)  { return (COMBINED_PROGRAM_STOP); }
-    else if (cm.machine_state == MACHINE_PROGRAM_END)   { return (COMBINED_PROGRAM_END); }
-    else if (cm.machine_state == MACHINE_INTERLOCK)     { return (COMBINED_INTERLOCK); }
-    else if (cm.machine_state == MACHINE_SHUTDOWN)      { return (COMBINED_SHUTDOWN); }
-    else if (cm.machine_state == MACHINE_PANIC)         { return (COMBINED_PANIC); }
-    else if (cm.machine_state == MACHINE_SHUTDOWN)      { return (COMBINED_SHUTDOWN); }
-    else if (cm.machine_state == MACHINE_CYCLE) {
-        if      (cm.cycle_state == CYCLE_HOMING)        { return (COMBINED_HOMING); }
-        else if (cm.cycle_state == CYCLE_PROBE)         { return (COMBINED_PROBE); }
-        else if (cm.cycle_state == CYCLE_JOG)           { return (COMBINED_JOG); }
-        else if ((cm.cycle_state == CYCLE_MACHINING) || (cm.cycle_state == CYCLE_OFF)) {
-            if      (cm.motion_state == MOTION_PLANNING){ return (COMBINED_RUN); }
-            else if (cm.motion_state == MOTION_RUN)     { return (COMBINED_RUN); }
-            else if (cm.motion_state == MOTION_HOLD)    { return (COMBINED_HOLD); }
-            // MOTION_STOP case: on issuing a gcode command we call cm_cycle_start before the motion gets queued...
-            // we don't go to MOTION_RUN until the command is executed by mp_exec_aline so this assert isn't valid
-            // return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
-            else if (cm.motion_state == MOTION_STOP)    { return (COMBINED_RUN); }
-            else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots")); }    // "mots has impossible value"
-        }
-        else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs")); }        // "cycs has impossible value"
+    if (cm.machine_state <= MACHINE_PROGRAM_END) {
+        return ((cmCombinedState)cm.machine_state);
     }
-    else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs")); }            // "macs has impossible value"
-
-/*
     switch(cm.machine_state) {
-        case MACHINE_INITIALIZING:  { return (COMBINED_INITIALIZING); }
-        case MACHINE_READY:         { return (COMBINED_READY); }
-        case MACHINE_ALARM:         { return (COMBINED_ALARM); }
-        case MACHINE_PROGRAM_STOP:  { return (COMBINED_PROGRAM_STOP); }
-        case MACHINE_PROGRAM_END:   { return (COMBINED_PROGRAM_END); }
+//        case MACHINE_INITIALIZING:  { return (COMBINED_INITIALIZING); }
+//        case MACHINE_READY:         { return (COMBINED_READY); }
+//        case MACHINE_ALARM:         { return (COMBINED_ALARM); }
+//        case MACHINE_PROGRAM_STOP:  { return (COMBINED_PROGRAM_STOP); }
+//        case MACHINE_PROGRAM_END:   { return (COMBINED_PROGRAM_END); }
         case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
         case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
         case MACHINE_PANIC:         { return (COMBINED_PANIC); }
@@ -227,7 +202,6 @@ cmCombinedState cm_get_combined_state()
             return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs"));    // "macs has impossible value"
         }
     }
-*/
 }
 
 cmMachineState  cm_get_machine_state() { return cm.machine_state;}
@@ -762,7 +736,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 
 stat_t cm_panic(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_SHUTDOWN) { // only do this once
+    if (cm.machine_state == MACHINE_PANIC) { // only do this once
         return (STAT_OK);
     }
 	cm.machine_state = MACHINE_PANIC;

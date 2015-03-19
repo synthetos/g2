@@ -49,8 +49,9 @@
 
 #define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
 #define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
-
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
 
@@ -59,35 +60,30 @@
 #define SPINDLE_POLARITY_ENABLE     1                       // 0=active low, 1=active high
 #define SPINDLE_POLARITY_DIR        0                       // 0=clockwise is low, 1=clockwise is high
 
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
-//#define SWITCH_TYPE                 SW_TYPE_NORMALLY_CLOSED // SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-
 // Communications and reporting settings
 
-#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
-#define COM_EXPAND_CR               false
-#define COM_ENABLE_ECHO             false
-#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
-#define NETWORK_MODE                NETWORK_STANDALONE
-
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
+#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+
+#define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
+#define XIO_ENABLE_ECHO             false
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
-//#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
 #define QUEUE_REPORT_VERBOSITY		QR_TRIPLE		// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
 //#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","macs","cycs","mots","hold","line","coor"
 #define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa",\
-                               "line","vel","feed","stat","macs","cycs","mots","hold","unit",\
-                               "in1","in2","in3","in4","in5","in6","in7"
+                               "vel","feed","stat","macs","cycs","mots","hold",\
+                               "in1","in2","in3","in4","in5","in6","in7","in8","in9"
 //                               "home","homx","homy","homz"
+//                               "line","vel","feed","stat","macs","cycs","mots","hold","unit",
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         INCHES                  // MILLIMETERS or INCHES
@@ -248,46 +244,63 @@
 #define C_ZERO_BACKOFF		    	(0.375 * 25.4)
 
 //*** Input / output settings ***
+// See gpio.h GPIO defines for options
+//
+// Homing and probing settings are independent of ACTION and FUNCTION settings
+// but rely on proper switch MODE setting (i.e. NC or NO)
+//
+// Use the following to DISABLE an input and keep it from having any action or function
+// #define DI1_MODE                 INPUT_MODE_DISABLED     // switch is NC type. switch is hit for limit
 
-#define DEFAULT_MODE                NORMALLY_CLOSED
-#define DEFAULT_ACTION              IO_ACTION_NONE
-#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
+// Xmin on v9 board
+#define DI1_MODE                    NORMALLY_CLOSED         // switch is NC type. switch is hit for limit
+#define DI1_ACTION                  INPUT_ACTION_FAST_STOP
+#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT    // configured as limit switch. Also used for X homing
 
-#define DI1_MODE                    DEFAULT_MODE
-#define DI1_ACTION                  IO_ACTION_STOP
-#define DI1_FUNCTION                IO_FUNCTION_LIMIT
+// Xmax
+#define DI2_MODE                    INPUT_MODE_DISABLED     // testing disable
+//#define DI2_MODE                    NORMALLY_CLOSED       // configured as limit switch
+#define DI2_ACTION                  INPUT_ACTION_FAST_STOP
+#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI2_MODE                    DEFAULT_MODE
-#define DI2_ACTION                  DEFAULT_ACTION
-#define DI2_FUNCTION                DEFAULT_FUNCTION
+// Ymin
+#define DI3_MODE                    NORMALLY_CLOSED         // configured as limit switch. ALso used for Y homing
+#define DI3_ACTION                  INPUT_ACTION_FAST_STOP
+#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI3_MODE                    DEFAULT_MODE
-#define DI3_ACTION                  DEFAULT_ACTION
-#define DI3_FUNCTION                DEFAULT_FUNCTION
+// Ymax
+#define DI4_MODE                    NORMALLY_CLOSED         // configured as limit switch
+#define DI4_ACTION                  INPUT_ACTION_FAST_STOP
+#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI4_MODE                    DEFAULT_MODE
-#define DI4_ACTION                  DEFAULT_ACTION
-#define DI4_FUNCTION                DEFAULT_FUNCTION
+// Zmin
+#define DI5_MODE                    INPUT_ACTIVE_LOW        // used for Z probe. Active closes circuit (active LO)
+#define DI5_ACTION                  INPUT_ACTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI5_MODE                    DEFAULT_MODE
-#define DI5_ACTION                  DEFAULT_ACTION
-#define DI5_FUNCTION                DEFAULT_FUNCTION
+// Zmax
+#define DI6_MODE                    NORMALLY_CLOSED         // configured as shutdown for testing
+#define DI6_ACTION                  INPUT_ACTION_HALT
+#define DI6_FUNCTION                INPUT_FUNCTION_SHUTDOWN
 
-#define DI6_MODE                    DEFAULT_MODE
-#define DI6_ACTION                  DEFAULT_ACTION
-#define DI6_FUNCTION                DEFAULT_FUNCTION
+//#define DI6_MODE                    NORMALLY_CLOSED         // configured as limit switch. ALso used for Z homing
+//#define DI6_ACTION                  INPUT_ACTION_FAST_STOP
+//#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI7_MODE                    DEFAULT_MODE
-#define DI7_ACTION                  DEFAULT_ACTION
-#define DI7_FUNCTION                DEFAULT_FUNCTION
+// Amin
+#define DI7_MODE                    INPUT_ACTIVE_HIGH       // interlock happens when NO switch goes HI (opens)
+#define DI7_ACTION                  INPUT_FUNCTION_INTERLOCK // wired as interlock switch
+#define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI8_MODE                    DEFAULT_MODE
-#define DI8_ACTION                  DEFAULT_ACTION
-#define DI8_FUNCTION                DEFAULT_FUNCTION
+// Amax
+#define DI8_MODE                    INPUT_ACTIVE_LOW        // configured as panic switch, NO
+#define DI8_ACTION                  INPUT_ACTION_PANIC
+#define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI9_MODE                    DEFAULT_MODE
-#define DI9_ACTION                  DEFAULT_ACTION
-#define DI9_FUNCTION                DEFAULT_FUNCTION
+// Safety line
+#define DI9_MODE                    NORMALLY_CLOSED
+#define DI9_ACTION                  INPUT_ACTION_NONE
+#define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 /*** Handle optional modules that may not be in every machine ***/
 

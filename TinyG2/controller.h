@@ -34,8 +34,9 @@
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
 
 #define LED_NORMAL_BLINK_RATE 2000      // blink rate for normal operation (in ms)
-#define LED_ALARM_BLINK_RATE 500        // blink rate for alarm state (in ms)
-#define LED_SHUTDOWN_BLINK_RATE 150     // blink rate for shutdown state (in ms)
+#define LED_ALARM_BLINK_RATE 1000        // blink rate for alarm state (in ms)
+#define LED_SHUTDOWN_BLINK_RATE 500     // blink rate for shutdown state (in ms)
+#define LED_PANIC_BLINK_RATE 100        // blink rate for panic state (in ms)
 
 typedef enum {                          // manages startup lines
     CONTROLLER_INITIALIZING = 0,        // controller is initializing - not ready for use

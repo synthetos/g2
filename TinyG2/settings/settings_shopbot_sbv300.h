@@ -60,13 +60,14 @@
 
 // Communications and reporting settings
 
-#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
-#define COM_EXPAND_CR               false
-#define COM_ENABLE_ECHO             false
-#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
-#define NETWORK_MODE                NETWORK_STANDALONE
-
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
+
+#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+
+#define XIO_EXPAND_CR               false
+#define XIO_ENABLE_ECHO             false
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+//#define NETWORK_MODE                NETWORK_STANDALONE
 
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT

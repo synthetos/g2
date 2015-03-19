@@ -63,6 +63,7 @@ static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
 static stat_t _shutdown_kill_point(void);
 static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
+static stat_t _panic_kill_point(void);
 static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
 static stat_t _limit_switch_handler(void);      // revised for new GPIO code
 //static stat_t _interlock_estop_handler(void);   // old
@@ -171,11 +172,12 @@ static void _controller_HSM()
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
- 	DISPATCH(_shutdown_kill_point());			// 4. shutdown kills the remainder of the loop
-    DISPATCH(_shutdown_handler());              //    invoke a shutdown
-    DISPATCH(_interlock_handler());             //    invoke / remove safety interlock
-	DISPATCH(_limit_switch_handler());			//    invoke limit switch
-//    DISPATCH(_interlock_estop_handler());     // 5a. interlock or estop have been thrown
+ 	DISPATCH(_panic_kill_point());			    // 4. MACHINE_PANIC prevents rest of loop from executing
+    DISPATCH(_shutdown_handler());              // 5. invoke a shutdown
+ 	DISPATCH(_shutdown_kill_point());			// 6. MACHINE_SHUTDOWN prevents rest of loop from executing
+ 	DISPATCH(_interlock_handler());             // 7. invoke / remove safety interlock
+	DISPATCH(_limit_switch_handler());			// 8. invoke limit switch
+//    DISPATCH(_interlock_estop_handler());     // DEPRECATED interlock or estop have been thrown
     DISPATCH(_controller_state());				// controller state management
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
@@ -325,21 +327,6 @@ static stat_t _check_for_phat_city_time(void) {
 }
 
 /**** Local Utilities ********************************************************/
-/*
- * _shutdown_kill_point() - stops execution of the rest of the main loop
- *
- *	Returns EAGAIN causing the control loop to never advance beyond this point.
- *  It's important that the hw_hard_reset_handler is still called so a SW reset
- *  (ctrl-x) or bootloader request can be processed.
- */
-static stat_t _shutdown_kill_point()
-{
-	if (cm_get_machine_state() != MACHINE_SHUTDOWN) {
-        return (STAT_OK);
-    } else {
-	    return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
-    }
-}
 
 /*
  * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
@@ -351,6 +338,8 @@ static stat_t _led_indicator()
         blink_rate = LED_ALARM_BLINK_RATE;
     } else if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
         blink_rate = LED_SHUTDOWN_BLINK_RATE;
+    } else if (cm_get_machine_state() == MACHINE_PANIC) {
+        blink_rate = LED_PANIC_BLINK_RATE;
     } else {
         blink_rate = LED_NORMAL_BLINK_RATE;
     }
@@ -364,40 +353,6 @@ static stat_t _led_indicator()
 		IndicatorLed.toggle();
 	}
 	return (STAT_OK);
-/*
-	 // S-curve heartbeat code. Uses forward-differencing math from the stepper code.
-	 // See plan_line.cpp for explanations.
-	 // Here, the "velocity" goes from 0.0 to 1.0, then back.
-	 // t0 = 0, t1 = 0, t2 = 0.5, and we'll complete the S in 100 segments.
-
-	// These are statics, and the assignments will only evaluate once.
-	static float indicator_led_value = 0.0;
-	static float indicator_led_forward_diff_1 = 50.0 * square(1.0/100.0);
-	static float indicator_led_forward_diff_2 = indicator_led_forward_diff_1 * 2.0;
-
-
-	if (SysTickTimer.getValue() > cs.led_timer) {
-		cs.led_timer = SysTickTimer.getValue() + LED_NORMAL_TIMER / 100;
-
-		indicator_led_value += indicator_led_forward_diff_1;
-		if (indicator_led_value > 100.0)
-			indicator_led_value = 100.0;
-
-		if ((indicator_led_forward_diff_2 > 0.0 && indicator_led_value >= 50.0) || (indicator_led_forward_diff_2 < 0.0 && indicator_led_value <= 50.0)) {
-			indicator_led_forward_diff_2 = -indicator_led_forward_diff_2;
-		}
-		else if (indicator_led_value <= 0.0) {
-			indicator_led_value = 0.0;
-
-			// Reset to account for rounding errors
-			indicator_led_forward_diff_1 = 50.0 * square(1.0/100.0);
-		} else {
-			indicator_led_forward_diff_1 += indicator_led_forward_diff_2;
-		}
-
-		IndicatorLed = indicator_led_value/100.0;
-	}
-*/
 }
 
 /*
@@ -449,52 +404,76 @@ static stat_t _sync_to_time()
 }
 */
 
-/*
+/* ALARM STATE HANDLERS
+ *
+ * _shutdown_handler() - put system into shutdown state
+ * _shutdown_kill_point() - stops execution of the rest of the main loop
+ * _panic_kill_point() - stops execution of the rest of the main loop
  * _limit_switch_handler() - shut down system if limit switch fired
+ * _interlock_handler() - feedhold and resume depending on edge
+ *
+ *	Kill points return EAGAIN causing the control loop to never advance beyond this point.
+ *  It's important that the hw_hard_reset_handler is still called so a SW reset
+ *  (ctrl-x) or bootloader request can be processed.
+ *
+ * _interlock_handler() reacts the follwing ways:
+ *   - safety_interlock_requested == INPUT_EDGE_NONE is normal operation (no interlock)
+ *   - safety_interlock_requested == INPUT_EDGE_LEADING is interlock onset
+ *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
-static stat_t _limit_switch_handler(void)
+
+static stat_t _shutdown_handler(void)
 {
-    if ((cm.limit_enable == false) || (cm.limit_requested == false)) {
-        return (STAT_NOOP);
+    if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
+	    char message[20];
+	    sprintf_P(message, PSTR("input %d shutdown hit"), (int)cm.shutdown_requested);
+	    cm.shutdown_requested = false; // clear limit request used here ^
+        cm_shutdown(STAT_SHUTDOWN_BY_EMERGENCY_STOP, "shutdown");
     }
-	char message[20];
-	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
-    cm.limit_requested = false; // clear limit request used here ^
-    cm_shutdown(STAT_LIMIT_SWITCH_HIT, message);
+    return(STAT_OK);
+}
+
+static stat_t _shutdown_kill_point(void)
+{
+    if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
+        return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+    }
     return (STAT_OK);
 }
 
-/*
- * _interlock_handler() - feedhold and resume depending on edge
- *
- * Request == IO_EDGE_NONE is normal operation (no interlock)
- * Request == IO_EDGE_LEADING is interlock onset
- * Request == IO_EDGE_TRAILING is interlock offset
- */
+static stat_t _panic_kill_point(void)
+{
+    if (cm_get_machine_state() == MACHINE_PANIC) {
+        return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
+    }
+    return (STAT_OK);
+}
+
+static stat_t _limit_switch_handler(void)
+{
+    if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
+	    char message[20];
+	    sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
+        cm.limit_requested = false; // clear limit request used here ^
+        cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+    }
+    return (STAT_OK);
+}
+
 static stat_t _interlock_handler(void)
 {
-    if (cm.safety_interlock_requested) {                    // NB: meaning non-zero
-        if (cm.safety_interlock_requested == IO_EDGE_LEADING) {
+    if (cm.safety_interlock_requested != 0) {   // request contains leading or trailing edge or zero
+        if (cm.safety_interlock_requested == INPUT_EDGE_LEADING) {
             cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;     // normal operation
         } else {
             cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;  // interlock tripped
             cm_request_end_hold();      // using cm_request_end_hold() instead of just ending
         }                               // ...the hold keeps trying until the hold is complete
-        cm.safety_interlock_requested = IO_EDGE_NONE;       // reset the calling condition
+        cm.safety_interlock_requested = INPUT_EDGE_NONE;       // reset the calling condition
     }
     return(STAT_OK);
 }
 
-/*
- * _shutdown_handler() - put system into shutdown state
- */
-static stat_t _shutdown_handler(void)
-{
-    if (cm.shutdown_requested) {                           // NB: meaning non-zero
-        cm_shutdown(STAT_SHUTDOWN_BY_EMERGENCY_STOP, "shutdown");
-    }
-    return(STAT_OK);
-}
 /*
 static stat_t _interlock_estop_handler(void)
 {

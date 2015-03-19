@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.11 // checkpoint - alarms and shutdown
+#define TINYG_FIRMWARE_BUILD   		080.11 // wired in panic state; work on alarms and shutdown
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
