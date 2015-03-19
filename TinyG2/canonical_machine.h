@@ -72,7 +72,7 @@ typedef enum {				        // check alignment with messages in config.c / msg_sta
     COMBINED_INTERLOCK,             // [11] machine in interlock state
 	COMBINED_SHUTDOWN,				// [12] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
 	COMBINED_PANIC				    // [13] syatem in panic state       //iff macs == MACHINE_SHUTDOWN
-} cmCombinedState   ;
+} cmCombinedState;
 //### END CRITICAL REGION ###
 
 typedef enum {
@@ -90,8 +90,8 @@ typedef enum {
 typedef enum {
 	CYCLE_OFF = 0,					// machine is idle
 	CYCLE_MACHINING,				// in normal machining cycle
-	CYCLE_PROBE,					// in probe cycle
 	CYCLE_HOMING,					// in homing cycle
+	CYCLE_PROBE,					// in probe cycle
 	CYCLE_JOG						// in jogging cycle
 } cmCycleState;
 
@@ -524,12 +524,19 @@ extern cmSingleton_t cm;				// canonical machine controller singleton
 /*--- Internal functions and helpers ---*/
 
 // Model state getters and setters
-uint8_t cm_get_combined_state(void);
-uint8_t cm_get_machine_state(void);
-uint8_t cm_get_cycle_state(void);
-uint8_t cm_get_motion_state(void);
-uint8_t cm_get_hold_state(void);
-uint8_t cm_get_homing_state(void);
+cmCombinedState cm_get_combined_state(void);
+cmMachineState cm_get_machine_state(void);
+cmCycleState cm_get_cycle_state(void);
+cmMotionState cm_get_motion_state(void);
+cmFeedholdState cm_get_hold_state(void);
+cmHomingState cm_get_homing_state(void);
+
+//uint8_t cm_get_combined_state(void);
+//uint8_t cm_get_machine_state(void);
+//uint8_t cm_get_cycle_state(void);
+//uint8_t cm_get_motion_state(void);
+//uint8_t cm_get_hold_state(void);
+//uint8_t cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(cmMotionState motion_state);
 float cm_get_axis_jerk(uint8_t axis);

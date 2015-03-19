@@ -49,6 +49,7 @@ qrSingleton_t qr;
 rxSingleton_t rx;
 
 /**** Exception Reports ************************************************************
+ *
  * rpt_exception() - generate an exception message - always in JSON format
  *
  * Returns incoming status value
@@ -64,7 +65,7 @@ rxSingleton_t rx;
  *			or there is a potential for deadlock in the TX buffer.
  */
 
-stat_t rpt_exception(uint8_t status, const char *msg)
+stat_t rpt_exception(stat_t status, const char *msg)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
 
@@ -379,7 +380,7 @@ static stat_t _populate_unfiltered_status_report()
 
 		if ((nv = nv->nx) == NULL) {
 			return (cm_panic(STAT_BUFFER_FULL_FATAL, "sr1"));	// should never be NULL unless SR length exceeds available buffer array
-        }        
+        }
 	}
 	return (STAT_OK);
 }

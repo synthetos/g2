@@ -145,60 +145,96 @@ static int8_t _get_axis_type(const index_t index);
  * cm_get_homing_state()
  * cm_set_motion_state() - adjusts active model pointer as well
  */
-uint8_t cm_get_combined_state()
+
+static cmCombinedState _state_exception(stat_t status, const char *msg)
+{
+    rpt_exception(status, msg);
+    return (COMBINED_PANIC);
+}
+
+cmCombinedState cm_get_combined_state()
 {
 /*
     if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs1");  // "machine is in cycle but macs is not cycle"
+        return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs1"));  // "machine is in cycle but macs is not cycle"
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2");  // "machine is in motion but macs is not cycle"
+        return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2"));  // "machine is in motion but macs is not cycle"
 */
+    if      (cm.machine_state == MACHINE_INITIALIZING)  { return (COMBINED_INITIALIZING); }
+    else if (cm.machine_state == MACHINE_READY)         { return (COMBINED_READY); }
+    else if (cm.machine_state == MACHINE_ALARM)         { return (COMBINED_ALARM); }
+    else if (cm.machine_state == MACHINE_PROGRAM_STOP)  { return (COMBINED_PROGRAM_STOP); }
+    else if (cm.machine_state == MACHINE_PROGRAM_END)   { return (COMBINED_PROGRAM_END); }
+    else if (cm.machine_state == MACHINE_INTERLOCK)     { return (COMBINED_INTERLOCK); }
+    else if (cm.machine_state == MACHINE_SHUTDOWN)      { return (COMBINED_SHUTDOWN); }
+    else if (cm.machine_state == MACHINE_PANIC)         { return (COMBINED_PANIC); }
+    else if (cm.machine_state == MACHINE_SHUTDOWN)      { return (COMBINED_SHUTDOWN); }
+    else if (cm.machine_state == MACHINE_CYCLE) {
+        if      (cm.cycle_state == CYCLE_HOMING)        { return (COMBINED_HOMING); }
+        else if (cm.cycle_state == CYCLE_PROBE)         { return (COMBINED_PROBE); }
+        else if (cm.cycle_state == CYCLE_JOG)           { return (COMBINED_JOG); }
+        else if ((cm.cycle_state == CYCLE_MACHINING) || (cm.cycle_state == CYCLE_OFF)) {
+            if      (cm.motion_state == MOTION_PLANNING){ return (COMBINED_RUN); }
+            else if (cm.motion_state == MOTION_RUN)     { return (COMBINED_RUN); }
+            else if (cm.motion_state == MOTION_HOLD)    { return (COMBINED_HOLD); }
+            // MOTION_STOP case: on issuing a gcode command we call cm_cycle_start before the motion gets queued...
+            // we don't go to MOTION_RUN until the command is executed by mp_exec_aline so this assert isn't valid
+            // return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
+            else if (cm.motion_state == MOTION_STOP)    { return (COMBINED_RUN); }
+            else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots")); }    // "mots has impossible value"
+        }
+        else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs")); }        // "cycs has impossible value"
+    }
+    else { return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs")); }            // "macs has impossible value"
+
+/*
     switch(cm.machine_state) {
         case MACHINE_INITIALIZING:  { return (COMBINED_INITIALIZING); }
         case MACHINE_READY:         { return (COMBINED_READY); }
         case MACHINE_ALARM:         { return (COMBINED_ALARM); }
         case MACHINE_PROGRAM_STOP:  { return (COMBINED_PROGRAM_STOP); }
         case MACHINE_PROGRAM_END:   { return (COMBINED_PROGRAM_END); }
+        case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
         case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
+        case MACHINE_PANIC:         { return (COMBINED_PANIC); }
         case MACHINE_CYCLE: {
             switch(cm.cycle_state) {
+                case CYCLE_HOMING:  { return (COMBINED_HOMING); }
                 case CYCLE_PROBE:   { return (COMBINED_PROBE); }
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
-                case CYCLE_HOMING:  { return (COMBINED_HOMING); }
                 case CYCLE_MACHINING: case CYCLE_OFF: {
                     switch(cm.motion_state) {
-                        case MOTION_HOLD:     { return (COMBINED_HOLD); }
+                        case MOTION_STOP:
+                        //... on issuing a gcode command we call cm_cycle_start before the motion gets queued...
+                        //    we don't go to MOTION_RUN until the command is executed by mp_exec_aline...
+                        //    so this assert isn't valid
+                        // return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
+                        return (COMBINED_RUN);
                         case MOTION_PLANNING: { return (COMBINED_RUN); }
                         case MOTION_RUN:      { return (COMBINED_RUN); }
-                        case MOTION_STOP:
-                            //... on issuing a gcode command, we call cm_cycle_start before the motion gets queued... we don't go to MOTION_RUN
-                            //    until the command is executed by mp_exec_aline... so this assert isn't valid
-                            //rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, NULL/*"mots is stop but machine is in cycle"*/);
-                            return (COMBINED_RUN);
+                        case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs3");  // "mots has impossible value"
-                            return (COMBINED_SHUTDOWN);
+                            return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots"));    // "mots has impossible value"
                         }
                     }
                 }
                 default: {
-                    rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs4");  // "cycs has impossible value"
-                    return (COMBINED_SHUTDOWN);
+                    return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs"));    // "cycs has impossible value"
                 }
             }
         }
         default: {
-            rpt_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs5"); // "macs has impossible value"
-            return (COMBINED_SHUTDOWN);
+            return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs"));    // "macs has impossible value"
         }
     }
+*/
 }
 
-uint8_t cm_get_machine_state() { return cm.machine_state;}
-uint8_t cm_get_cycle_state()   { return cm.cycle_state;}
-uint8_t cm_get_motion_state()  { return cm.motion_state;}
-uint8_t cm_get_hold_state()    { return cm.hold_state;}
-uint8_t cm_get_homing_state()  { return cm.homing_state;}
+cmMachineState  cm_get_machine_state() { return cm.machine_state;}
+cmCycleState    cm_get_cycle_state()   { return cm.cycle_state;}
+cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
+cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
+cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
 
 void cm_set_motion_state(cmMotionState motion_state)
 {
@@ -629,17 +665,17 @@ stat_t canonical_machine_test_assertions(void)
  * cm_shutdown() - initiate shutdown state
  * cm_panic()    - initiate panic state
  *
- *  ALARM, SHUTDOWN, and PANIC are nested dolls. 
+ *  ALARM, SHUTDOWN, and PANIC are nested dolls.
  *
  *  ALARM sets the ALARM state, clears out queued moves and serial input, and rejects new action commands
  *  (gcode blocks, SET commands, and some others). It attempts to preserve Gcode and machine state.
  *  It is cleared by a $clear
  *
- *  SHUTDOWN sets a SHUTDOWN state, does everything an ALARM does but deliberately wipes Gcode and 
+ *  SHUTDOWN sets a SHUTDOWN state, does everything an ALARM does but deliberately wipes Gcode and
  *  machine state. It is also cleared by a $clear
  *
- *  PANIC occurs if the firmware has detected an unrecoverable internal error - such as an assertion 
- *  failure or a code condition that should never be allowed to occur. It sets PANIC, leaves the 
+ *  PANIC occurs if the firmware has detected an unrecoverable internal error - such as an assertion
+ *  failure or a code condition that should never be allowed to occur. It sets PANIC, leaves the
  *  system inspect able (if possible), and can only be recovered via a hard or soft reset.
  *
  *  All these states can be invoked from the commands for testing.
@@ -673,7 +709,7 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
 
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-    if ((cm.machine_state == MACHINE_ALARM) || 
+    if ((cm.machine_state == MACHINE_ALARM) ||
         (cm.machine_state == MACHINE_SHUTDOWN) ||
         (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't alarm if already in an alarm state
@@ -701,13 +737,13 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 /*
     cm.homing_state = HOMING_NOT_HOMED;         // unhome the machine
 	for( int i = 0; i < HOMING_AXES; ++i) {
-	    cm.homed[i] = HOMING_NOT_HOMED;        
+	    cm.homed[i] = HOMING_NOT_HOMED;
     }
 */
     // reset subsystems
     application_init_machine();
     application_init_startup();
-/*    
+/*
     gpio_init();
     gpio_reset();
     planner_init();
@@ -1220,7 +1256,7 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 #endif // __ARM
 }
 
-void cm_coolant_off_immediate() 
+void cm_coolant_off_immediate()
 {
     return;
 }
@@ -1381,7 +1417,7 @@ void cm_message(char_t *message)
  */
 void cm_request_feedhold(void) {
 // OMC    if (cm.estop_state != ESTOP_INACTIVE) { return; }
-    
+
     // honor request if not already in a feedhold and you are moving
     if ((cm.hold_state == FEEDHOLD_OFF) &&
         (cm.motion_state != MOTION_STOP)) {
