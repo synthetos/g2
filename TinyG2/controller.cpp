@@ -459,17 +459,17 @@ static stat_t _limit_switch_handler(void)
     }
 	char message[20];
 	sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
-    cm.limit_requested = false;         // clear the limit request
-    cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+    cm.limit_requested = false; // clear limit request used here ^
+    cm_shutdown(STAT_LIMIT_SWITCH_HIT, message);
     return (STAT_OK);
 }
 
 /*
  * _interlock_handler() - feedhold and resume depending on edge
  *
- * Request == 0 (IO_EDGE_NONE) is normal operation (no interlock)
- * Request == 1 (IO_EDGE_LEADING) is interlock onset
- * Request == 2 (IO_EDGE_TRAILING) is interlock offset
+ * Request == IO_EDGE_NONE is normal operation (no interlock)
+ * Request == IO_EDGE_LEADING is interlock onset
+ * Request == IO_EDGE_TRAILING is interlock offset
  */
 static stat_t _interlock_handler(void)
 {
@@ -533,7 +533,7 @@ static stat_t _interlock_estop_handler(void)
 /*
  * _system_assertions() - check memory integrity and other assertions
  */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_shutdown(status_code, "cs2"));
+#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_panic(status_code, "cs2"));
 
 stat_t _system_assertions()
 {

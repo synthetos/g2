@@ -217,7 +217,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
+		cm_panic(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
 		return;
 	}
 
@@ -260,7 +260,7 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
+		return(cm_panic(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
     bf->replannable = true;           // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
@@ -723,7 +723,7 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
         }
         b = b->pv;
     }
-    return(cm_shutdown(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
+    return(cm_panic(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
 }
 
 void mp_dump_running_plan_buffer() { _dump_plan_buffer(mb.r);}
@@ -732,7 +732,7 @@ void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[inde
 
 static void _dump_plan_buffer(mpBuf_t *bf)
 {
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
+	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),        
 			_get_buffer_index(bf),
 			bf->buffer_state,
 			bf->move_type,

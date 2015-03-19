@@ -576,12 +576,12 @@ void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
 stat_t cm_alrm(nvObj_t *nv);                                // trigger alarm from command input
-stat_t cm_pnic(nvObj_t *nv);                                // trigger panic from command input
 stat_t cm_shutd(nvObj_t *nv);                               // trigger shutdown from command input
-stat_t cm_alarm(stat_t status, const char *msg);            // enter alarm state - preserve Gcode state
-stat_t cm_panic(stat_t status, const char *msg);            // enter alarm state - dump all state
+stat_t cm_pnic(nvObj_t *nv);                                // trigger panic from command input
 stat_t cm_clear(nvObj_t *nv);
-stat_t cm_shutdown(stat_t status, const char *msg);			// enter hard alarm state. returns same status code
+stat_t cm_alarm(stat_t status, const char *msg);            // enter alarm state - preserve Gcode state
+stat_t cm_shutdown(stat_t status, const char *msg);			// enter shutdown state - dump all state
+stat_t cm_panic(stat_t status, const char *msg);            // enter panic state - needs RESET
 
 // Representation (4.3.3)
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
