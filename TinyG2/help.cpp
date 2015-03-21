@@ -150,13 +150,13 @@ return(STAT_OK);
 }
 
 /*
- * help_boot_loader()
+ * help_flash()
  */
-stat_t help_boot_loader(nvObj_t *nv)
+stat_t help_flash(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG BOOT LOADER Help ###\n"));
+fprintf_P(stderr, PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
 fprintf_P(stderr, PSTR("\
-Enter $boot=1 to enter the boot loader.\n"));
+Enter $flash=1 to enter the flash loader.\n"));
 _postscript();
 return(STAT_OK);
 }

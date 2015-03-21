@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.12 // changed reset handling to support PANIC
+#define TINYG_FIRMWARE_BUILD   		080.13 // renamed 'boot' to 'flash' - $boot is now $flash; cleaned up after 80.12
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -144,7 +144,7 @@ typedef char char_t;			// Vestigal. Will be removed at some point
  *
  *      Example: char *ret = strcpy((char *)d, (const char *)s);
  *      The compiler will be your guide when you get it wrong. :)
- * 
+ *
  * Avoid redefining global defines if possible The following inline jump functions are better.
  */
 inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }

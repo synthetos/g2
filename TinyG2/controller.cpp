@@ -76,10 +76,6 @@ static stat_t _dispatch_control(void);
 static stat_t _check_for_phat_city_time(void);
 static void _dispatch_kernel(void);
 
-// prep for export to other modules:
-//stat_t hardware_hard_reset_handler(void);
-//stat_t hardware_bootloader_handler(void);
-
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -169,9 +165,7 @@ static void _controller_HSM()
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
 												// Order is important:
-//	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
-//	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
-	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
+	DISPATCH(_led_indicator());				    // blink LEDs at the current rate
     DISPATCH(_shutdown_invoke());               // invoke shutdown
  	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
 	DISPATCH(_limit_switch_handler());			// invoke limit switch

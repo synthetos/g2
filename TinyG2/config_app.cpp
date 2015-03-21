@@ -541,9 +541,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "", "me",  _f0, 0, st_print_me,  st_set_me, st_set_me, (float *)&cs.null, 0 },    // GET or SET to enable motors
 	{ "", "md",  _f0, 0, st_print_md,  st_set_md, st_set_md, (float *)&cs.null, 0 },    // GET or SET to disable motors
 
-    { "", "test",_f0, 0, tx_print_nul, help_test, run_test, (float *)&cs.null,0 },	    // run tests, print test help screen
+    { "", "test",_f0, 0, tx_print_nul, help_test, run_test,  (float *)&cs.null,0 },	    // run tests, print test help screen
     { "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },	// set/print defaults / help screen
-    { "", "boot",_f0, 0, tx_print_nul, help_boot_loader,hw_run_boot,(float *)&cs.null,0 },
+    { "", "flash",_f0,0, tx_print_nul, help_flash,hw_flash,  (float *)&cs.null,0 },
 
 #ifdef __HELP_SCREENS
     { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },     // prints config help screen
