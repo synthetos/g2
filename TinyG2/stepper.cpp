@@ -317,7 +317,7 @@ void stepper_reset()
 		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
 		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
 	}
-	mp_set_steps_to_runtime_position();
+	mp_set_steps_to_runtime_position();             // reset excoder to agree with the above
 }
 
 /*

@@ -666,6 +666,26 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
     }
     return (STAT_OK);
 }
+
+/*
+ * cm_halt_motion() - stop motion immediately. Does not affect spindle, coolant, or other IO
+ *
+ * Stop motors and reset all system states accordingly.
+ * Does not de-energize motors as in some cases the motors must remain energized
+ * in order to prevent an axis from crashing.
+ */
+void cm_halt_motion(void)
+{
+    stepper_init();                 // stops all motion and resets state (including encoder state)
+                                    // ...need to init, not just reset
+    planner_reset();                // halt the runtime and planner queues
+    canonical_machine_reset();      // reset Gcode model
+
+	cm.cycle_state = CYCLE_OFF;     // Note: leaves machine_state alone
+	cm.motion_state = MOTION_STOP;
+	cm.hold_state = FEEDHOLD_OFF;
+}
+
 /*
  * cm_alarm() - enter ALARM state
  *
@@ -730,15 +750,13 @@ stat_t cm_shutdown(stat_t status, const char *msg)
         (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-    stepper_reset();                            // stops all motion immediately
-    encoder_reset();                            // make sure virtual encoders stay sync'd
-    planner_reset();                            // halt the runtime and planner queues
-    canonical_machine_reset();                  // reset Gcode model
+    cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
 //	coolant_reset();
+    cm_queue_flush();                           // flush all queues and reset positions
 
 	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
-	cm.machine_state = MACHINE_SHUTDOWN;        // do this after the resets
+	cm.machine_state = MACHINE_SHUTDOWN;        // do this after all other activity
 	rpt_exception(status, msg);	                // send exception report
     return (status);
 }
@@ -1699,12 +1717,13 @@ static const char msg_stat7[] PROGMEM = "Probe";
 static const char msg_stat8[] PROGMEM = "Cycle";
 static const char msg_stat9[] PROGMEM = "Homing";
 static const char msg_stat10[] PROGMEM = "Jog";
-static const char msg_stat11[] PROGMEM = "Shutdown";
-static const char msg_stat12[] PROGMEM = "Interlock";
+static const char msg_stat11[] PROGMEM = "Interlock";
+static const char msg_stat12[] PROGMEM = "Shutdown";
+static const char msg_stat13[] PROGMEM = "Panic";
 static const char *const msg_stat[] PROGMEM = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
 												msg_stat4, msg_stat5, msg_stat6, msg_stat7,
 												msg_stat8, msg_stat9, msg_stat10, msg_stat11,
-                                                msg_stat12 };
+                                                msg_stat12, msg_stat13 };
 
 static const char msg_macs0[] PROGMEM = "Initializing";
 static const char msg_macs1[] PROGMEM = "Ready";
@@ -1712,10 +1731,12 @@ static const char msg_macs2[] PROGMEM = "Alarm";
 static const char msg_macs3[] PROGMEM = "Stop";
 static const char msg_macs4[] PROGMEM = "End";
 static const char msg_macs5[] PROGMEM = "Cycle";
-static const char msg_macs6[] PROGMEM = "Shutdown";
-static const char msg_macs7[] PROGMEM = "Interlock";
+static const char msg_macs6[] PROGMEM = "Interlock";
+static const char msg_macs7[] PROGMEM = "Shutdown";
+static const char msg_macs8[] PROGMEM = "Panic";
 static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-												msg_macs4, msg_macs5, msg_macs6, msg_macs7 };
+												msg_macs4, msg_macs5, msg_macs6, msg_macs7,
+                                                msg_macs8 };
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";

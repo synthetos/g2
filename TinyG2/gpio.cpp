@@ -253,10 +253,10 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 			cm_start_hold();
         }
         if (in->action == INPUT_ACTION_FAST_STOP) {
-			cm_start_hold();                // for now is same as STOP
+			cm_start_hold();                        // for now is same as STOP
         }
         if (in->action == INPUT_ACTION_HALT) {
-	        stepper_init();					// hard stop
+	        cm_halt_motion();					    // hard stop
         }
         if (in->action == INPUT_ACTION_PANIC) {
             cm_panic(STAT_PANIC, "input triggered panic");

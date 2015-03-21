@@ -66,12 +66,12 @@ typedef enum {				        // check alignment with messages in config.c / msg_sta
 	COMBINED_RUN,					// [5] motion is running                //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
 	COMBINED_HOLD,					// [6] motion is holding                //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
 	COMBINED_PROBE,					// [7] probe cycle active               //iff macs == MACHINE_CYCLE, cycs == CYCLE_PROBE
-	COMBINED_CYCLE,					// [8] DEPRECATED: machine is running (cycling), now just COMBINED_RUN
-	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
+	COMBINED_CYCLE,					// [8] reserved for canned cycles       < not used >
+ 	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-    COMBINED_INTERLOCK,             // [11] machine in interlock state
+    COMBINED_INTERLOCK,             // [11] machine in interlock state      //iff macs == MACHINE_INTERLOCK
 	COMBINED_SHUTDOWN,				// [12] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
-	COMBINED_PANIC				    // [13] syatem in panic state       //iff macs == MACHINE_SHUTDOWN
+	COMBINED_PANIC				    // [13] syatem in panic state           //iff macs == MACHINE_PANIC
 } cmCombinedState;
 //### END CRITICAL REGION ###
 
@@ -478,7 +478,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     cmCycleState cycle_state;           // cycs
     cmMotionState motion_state;         // momo
 	cmFeedholdState hold_state;         // hold: feedhold state machine
-	cmQueueFlushState queue_flush_state;  // master queue flush state machine
+	cmQueueFlushState queue_flush_state;// master queue flush state machine
 
     uint8_t safety_interlock_requested; // set non-zero to request interlock processing (value is leading or trailing edge)
     cmSafetyState safety_interlock_state;// safety interlock state
@@ -531,12 +531,6 @@ cmMotionState cm_get_motion_state(void);
 cmFeedholdState cm_get_hold_state(void);
 cmHomingState cm_get_homing_state(void);
 
-//uint8_t cm_get_combined_state(void);
-//uint8_t cm_get_machine_state(void);
-//uint8_t cm_get_cycle_state(void);
-//uint8_t cm_get_motion_state(void);
-//uint8_t cm_get_hold_state(void);
-//uint8_t cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
 void cm_set_motion_state(cmMotionState motion_state);
 float cm_get_axis_jerk(uint8_t axis);
@@ -582,13 +576,15 @@ void canonical_machine_reset(void);
 void canonical_machine_init_assertions(void);
 stat_t canonical_machine_test_assertions(void);
 
-stat_t cm_alrm(nvObj_t *nv);                                // trigger alarm from command input
-stat_t cm_shutd(nvObj_t *nv);                               // trigger shutdown from command input
-stat_t cm_pnic(nvObj_t *nv);                                // trigger panic from command input
-stat_t cm_clear(nvObj_t *nv);
-stat_t cm_alarm(stat_t status, const char *msg);            // enter alarm state - preserve Gcode state
-stat_t cm_shutdown(stat_t status, const char *msg);			// enter shutdown state - dump all state
-stat_t cm_panic(stat_t status, const char *msg);            // enter panic state - needs RESET
+// Alarms and state management
+stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input
+stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutdown from command input
+stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
+stat_t cm_clear(nvObj_t *nv);                                   // clear alarm and shutdown states
+void cm_halt_motion(void);                                      // halt movement (immediate stop) but not spindle & other IO
+stat_t cm_alarm(stat_t status, const char *msg);                // enter alarm state - preserve Gcode state
+stat_t cm_shutdown(stat_t status, const char *msg);             // enter shutdown state - dump all state
+stat_t cm_panic(stat_t status, const char *msg);                // enter panic state - needs RESET
 
 // Representation (4.3.3)
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
