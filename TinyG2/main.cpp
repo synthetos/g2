@@ -31,6 +31,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
+#include "spindle.h"
 #include "gpio.h"
 #include "test.h"
 #include "pwm.h"
@@ -127,13 +128,16 @@ void application_init_services(void)
 void application_init_machine(void)
 {
 	cm.machine_state = MACHINE_INITIALIZING;
-    stepper_init();                 // stepper subsystem 				- must precede gpio_init() on AVR
+//    controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first machine init (requires xio_init())
+
+    stepper_init();                 // stepper subsystem (must precede gpio_init() on AVR)
     encoder_init();                 // virtual encoders
     gpio_init();                    // inputs and outputs
     pwm_init();                     // pulse width modulation drivers
-    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
+//    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
     planner_init();                 // motion planning subsystem
     canonical_machine_init();       // canonical machine
+    spindle_init();                 // should be after PWM and canonical machine inits
 }
 
 void application_init_startup(void)
@@ -148,8 +152,10 @@ void application_init_startup(void)
 #endif
 
     // start the application
+    controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first startup init (requires xio_init())
     config_init();					// apply the config settings from persistence
     canonical_machine_reset();
+    spindle_reset();
     // MOVED: report the system is ready is now in xio
 }
 

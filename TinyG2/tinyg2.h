@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.13 // renamed 'boot' to 'flash' - $boot is now $flash; cleaned up after 80.12
+#define TINYG_FIRMWARE_BUILD   		080.14 // work on shutdown - not done yet
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

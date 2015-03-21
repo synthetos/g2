@@ -175,7 +175,6 @@ static void _controller_HSM()
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
 // 	DISPATCH(_panic_handler());			        // MACHINE_PANIC prevents rest of loop from executing
 // 	DISPATCH(_shutdown_handler());			    // MACHINE_SHUTDOWN prevents rest of loop from executing
-//	DISPATCH(_system_assertions());				// system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -209,7 +208,7 @@ static void _controller_HSM()
 
 }
 
-/*****************************************************************************************
+/*
  * _controller_state() - manage controller connection, startup, and other state changes
  */
 
@@ -223,7 +222,7 @@ static stat_t _controller_state()
 	return (STAT_OK);
 }
 
-/*****************************************************************************
+/*
  * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
  */
@@ -236,7 +235,7 @@ void controller_set_connected(bool is_connected) {
     }
 }
 
-/******************************************************************************
+/*
  * controller_parse_control() - return true if command is a control (versus data)
  * Note: parsing for control is somewhat naiive. This will need to get better
  */
@@ -323,6 +322,12 @@ static void _dispatch_kernel()
 	}
 }
 
+/**** Local Utilities ********************************************************/
+
+/*
+ * _check_for_phat_city_time() - see if there are cycles available for low priority tasks
+ */
+
 static stat_t _check_for_phat_city_time(void) {
     if (mp_is_it_phat_city_time()) {
         return STAT_OK;
@@ -330,8 +335,6 @@ static stat_t _check_for_phat_city_time(void) {
 
     return STAT_EAGAIN;
 }
-
-/**** Local Utilities ********************************************************/
 
 /*
  * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
@@ -369,22 +372,23 @@ static stat_t _led_indicator()
  * also set the stdout/stderr console device so the prompt and other messages are sent
  * to the active device.
  */
-/*
+#ifdef __AVR
 void controller_reset_source() { controller_set_primary_source(xio.default_src);}
 void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
 void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
-*/
+#endif
+
 /*
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
  * _sync_to_planner() - return eagain if planner is not ready for a new command
- * _sync_to_time() - return eagain if planner is not ready for a new command
  */
-
 static stat_t _sync_to_tx_buffer()
 {
-//	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
-//		return (STAT_EAGAIN);
-//	}
+#ifdef __AVR
+	if ((xio_get_tx_bufcount_usart(ds[XIO_DEV_USB].x) >= XOFF_TX_LO_WATER_MARK)) {
+		return (STAT_EAGAIN);
+	}
+#endif
 	return (STAT_OK);
 }
 
@@ -395,25 +399,12 @@ static stat_t _sync_to_planner()
 	}
 	return (STAT_OK);
 }
-/*
-static stat_t _sync_to_time()
-{
-	if (cs.sync_to_time_time == 0) {		// initial pass
-		cs.sync_to_time_time = SysTickTimer_getValue() + 100; //ms
-		return (STAT_OK);
-	}
-	if (SysTickTimer_getValue() < cs.sync_to_time_time) {
-		return (STAT_EAGAIN);
-	}
-	return (STAT_OK);
-}
-*/
 
 /* ALARM STATE HANDLERS
  *
- * _shutdown_handler() - put system into shutdown state
- * _shutdown_kill_point() - stops execution of the rest of the main loop
- * _panic_kill_point() - stops execution of the rest of the main loop
+ * _shutdown_invoke() - put system into shutdown state
+ * _shutdown_handler() - stops execution of the rest of the main loop
+ * _panic_handler() - stops execution of the rest of the main loop
  * _limit_switch_handler() - shut down system if limit switch fired
  * _interlock_handler() - feedhold and resume depending on edge
  *
@@ -424,14 +415,13 @@ static stat_t _sync_to_time()
  *   - safety_interlock_requested == INPUT_EDGE_LEADING is interlock onset
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
-
 static stat_t _shutdown_invoke(void)
 {
     if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
-	    char message[20];
-	    sprintf_P(message, PSTR("input %d shutdown hit"), (int)cm.shutdown_requested);
+	    char msg[20];
+	    sprintf_P(msg, PSTR("input %d shutdown hit"), (int)cm.shutdown_requested);
 	    cm.shutdown_requested = false; // clear limit request used here ^
-        cm_shutdown(STAT_SHUTDOWN, "shutdown");
+        cm_shutdown(STAT_SHUTDOWN, msg);
     }
     return(STAT_OK);
 }

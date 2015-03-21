@@ -101,6 +101,7 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 
 /*
  * planner_init()
+ * planner_reset()
  */
 void planner_init()
 {
@@ -109,6 +110,11 @@ void planner_init()
 	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
 	planner_init_assertions();
 	mp_init_buffers();
+}
+
+void planner_reset()
+{
+    planner_init();
 }
 
 /*
@@ -732,7 +738,7 @@ void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[inde
 
 static void _dump_plan_buffer(mpBuf_t *bf)
 {
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),        
+	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
 			_get_buffer_index(bf),
 			bf->buffer_state,
 			bf->move_type,

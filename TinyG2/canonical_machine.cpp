@@ -569,7 +569,7 @@ void canonical_machine_init()
 	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
 
 	// sub-system inits
-	cm_spindle_init();
+//	spindle_init();
 	cm_arc_init();
 }
 
@@ -630,39 +630,25 @@ stat_t canonical_machine_test_assertions(void)
 	return (STAT_OK);
 }
 
-/*
+/********************************************************************************
+ *  ALARM, SHUTDOWN, and PANIC are nested dolls.
+ *
  * cm_alrm()     - invoke alarm from command
  * cm_shut()     - invoke shutdown from command
  * cm_pnic()     - invoke panic from command
  * cm_clear()    - clear alarm or panic state
- * cm_alarm()    - initiate alarm state
- * cm_shutdown() - initiate shutdown state
- * cm_panic()    - initiate panic state
  *
- *  ALARM, SHUTDOWN, and PANIC are nested dolls.
- *
- *  ALARM sets the ALARM state, clears out queued moves and serial input, and rejects new action commands
- *  (gcode blocks, SET commands, and some others). It attempts to preserve Gcode and machine state.
- *  It is cleared by a $clear
- *
- *  SHUTDOWN sets a SHUTDOWN state, does everything an ALARM does but deliberately wipes Gcode and
- *  machine state. It is also cleared by a $clear
- *
- *  PANIC occurs if the firmware has detected an unrecoverable internal error - such as an assertion
- *  failure or a code condition that should never be allowed to occur. It sets PANIC, leaves the
- *  system inspect able (if possible), and can only be recovered via a hard or soft reset.
- *
- *  All these states can be invoked from the commands for testing.
+ * The alarm states can be invoked from the above commands for testing and clearing
  */
 stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
 {
-    cm_alarm(STAT_MACHINE_ALARMED, "alarm received");
+    cm_alarm(STAT_MACHINE_ALARMED, "alarmed from command input");
     return (STAT_OK);
 }
 
 stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
 {
-    cm_shutdown(STAT_EXTERNAL_SHUTDOWN, NULL);
+    cm_shutdown(STAT_EXTERNAL_SHUTDOWN, "shutdown from command input");
     return (STAT_OK);
 }
 
@@ -680,6 +666,23 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
     }
     return (STAT_OK);
 }
+/*
+ * cm_alarm() - enter ALARM state
+ *
+ * An ALARM sets the ALARM machine state, clears out queued moves and serial input,
+ * and rejects new action commands (gcode blocks, SET commands, and other actions).
+ *
+ * ALARM is typically entered by a soft alarm (Gcode file problem) or a limit switch
+ * being hit. In the case of a limit switch the feedhold action may supersedes the
+ * feedhold - i.e. if the input action is "fast_stop" or "halt" that setting will take
+ * precedence of the feedhold in this alarm function.
+ *
+ * Gcode state is preserved. It may be possible to recover the job from here, but
+ * in many cases this is not possible.
+ * It attempts to preserve Gcode and machine state, so does not END the job.
+ *
+ * ALARM is cleared by entering any of: {clear:n}, {clr:n}, $clear, or $clr
+ */
 
 stat_t cm_alarm(stat_t status, const char *msg)
 {
@@ -706,6 +709,20 @@ stat_t cm_alarm(stat_t status, const char *msg)
 	rpt_exception(status, msg);	                // send alarm message
     return (status);
 }
+/*
+ * cm_shutdown() - enter shutdown state
+ *
+ * SHUTDOWN stops all motion, spindle and coolant immediately, sets a SHUTDOWN machine
+ * state, clears out queued moves and serial input, and rejects new action commands
+ * (gcode blocks, SET commands, and some others).
+ *
+ * Shutdown is typically entered as part of an external emergency stop (Estop), and
+ * is meant to augment but not replace the external Estop functions that shut down
+ * all motors, spindles and other moving parts. It may also be entered using {shutd:n}
+ * or $shutd from the command input.
+ *
+ * SHUTDOWN is cleared by entering any of: {clear:n}, {clr:n}, $clear, or $clr
+ */
 
 stat_t cm_shutdown(stat_t status, const char *msg)
 {
@@ -713,16 +730,27 @@ stat_t cm_shutdown(stat_t status, const char *msg)
         (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-    if (cm_alarm(STAT_SHUTDOWN, NULL) == STAT_OK) {
-        return (STAT_OK);
-    }
+    stepper_reset();                            // stops all motion immediately
+    encoder_reset();                            // make sure virtual encoders stay sync'd
+    planner_reset();                            // halt the runtime and planner queues
+    canonical_machine_reset();                  // reset Gcode model
+    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
+//	coolant_reset();
+
 	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
-    application_init_machine();                 // reset machine modules
-    application_init_startup();                 // restart application
 	cm.machine_state = MACHINE_SHUTDOWN;        // do this after the resets
+	rpt_exception(status, msg);	                // send exception report
     return (status);
 }
-
+/*
+ * cm_panic() - enter panic state
+ *
+ * PANIC occurs if the firmware has detected an unrecoverable internal error
+ * such as an assertion failure or a code condition that should never occur.
+ * It sets PANIC machine state, and leaves the system inspect able (if possible).
+ *
+ * PANIC can only be exited by a hardware reset or soft reset (^x)
+ */
 stat_t cm_panic(stat_t status, const char *msg)
 {
     if (cm.machine_state == MACHINE_PANIC) {    // only do this once
@@ -730,11 +758,6 @@ stat_t cm_panic(stat_t status, const char *msg)
     }
 	cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
 	rpt_exception(status, msg);			        // send panic report
-    
-//    application_init_services();
-//    application_init_machine();
-//    application_init_startup();
-
 	return (status);
 }
 

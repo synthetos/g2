@@ -81,7 +81,8 @@ extern spSpindleton_t spindle;
  * Global Scope Functions
  */
 
-void cm_spindle_init();
+void spindle_init();
+void spindle_reset();
 stat_t cm_set_spindle_speed(float speed);			    // S parameter
 stat_t cm_spindle_control(uint8_t spindle_state);// M3, M4, M5 integrated spindle control
 void cm_spindle_control_immediate(spSpindleState spindle_state); //like cm_spindle_control but not synchronized to planner

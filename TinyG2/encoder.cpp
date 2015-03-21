@@ -39,6 +39,7 @@ enEncoders_t en;
 
 /*
  * encoder_init() - initialize encoders
+ * encoder_reset() - reset encoders
  */
 
 void encoder_init()
@@ -47,6 +48,10 @@ void encoder_init()
 	encoder_init_assertions();
 }
 
+void encoder_reset()
+{
+    encoder_init();
+}
 /*
  * encoder_init_assertions() - initialize encoder assertions
  * encoder_test_assertions() - test assertions, return error code if violation exists

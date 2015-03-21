@@ -48,15 +48,23 @@ static void _exec_spindle_control(float *value, float *flag);
 static float _get_spindle_pwm (spSpindleState spindle_state);
 
 /*
- * cm_spindle_init()
+ * spindle_init()
+ * spindle_reset()
  */
-void cm_spindle_init()
+void spindle_init()
 {
 	if( pwm.c[PWM_1].frequency < 0 )
 		pwm.c[PWM_1].frequency = 0;
 
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+}
+
+void spindle_reset()
+{
+    float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
+    _exec_spindle_speed(value, value);
+    cm_spindle_control_immediate(SPINDLE_OFF);  // turn spindle off
 }
 
 /*
@@ -173,22 +181,22 @@ static void _exec_spindle_control(float *value, float *flag)
     spindle.state = (spSpindleState)value[0];               // set spindle state
     bool enable = spindle.state ^ ~spindle.polarity_enable; // enable is the polarity to set if turning ON
 
-	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {     
-        
+	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
+
         // set the direction first
         if ((spindle.state & 0x02) ^ spindle.polarity_dir) { // xor the CCW bit to get direction
             _set_spindle_direction_bit_hi();
         } else {
             _set_spindle_direction_bit_lo();
         }
-        
+
         // then run the enable
         if (enable) {
             _set_spindle_enable_bit_hi();
         } else {
             _set_spindle_enable_bit_lo();
         }
-    
+
     } else { // SPINDLE_OFF (for safety - any value other than CW or CCW causes stop)
         if (enable) {
             _set_spindle_enable_bit_lo();

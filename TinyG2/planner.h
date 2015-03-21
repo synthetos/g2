@@ -259,6 +259,7 @@ extern mpMoveRuntimeSingleton_t mr;     // context for line runtime
 //planner.c functions
 
 void planner_init(void);
+void planner_reset(void);
 void planner_init_assertions(void);
 stat_t planner_test_assertions(void);
 

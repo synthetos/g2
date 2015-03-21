@@ -219,6 +219,7 @@ Stepper<MOTOR_6,
  ************************************************************************************/
 /*
  * stepper_init() - initialize stepper motor subsystem
+ * stepper_reset() - reset stepper motor subsystem
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
@@ -237,7 +238,6 @@ Stepper<MOTOR_6,
  *	pmc_enable_periph_clk(TC_ID_DDA);
  *	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
  */
-
 void stepper_init()
 {
 	memset(&st_run, 0, sizeof(st_run));			// clear all values, pointers and status
@@ -276,7 +276,7 @@ void stepper_init()
 	TIMER_EXEC.PER = EXEC_TIMER_PERIOD;			// set period
 
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
-	st_reset();									// reset steppers to known state
+	stepper_reset();                            // reset steppers to known state
 #endif // __AVR
 
 #ifdef __ARM
@@ -303,6 +303,21 @@ void stepper_init()
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
 #endif // __ARM
+}
+
+/*
+ * stepper_reset() - reset stepper internals
+ */
+
+void stepper_reset()
+{
+	for (uint8_t motor=0; motor<MOTORS; motor++) {
+		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
+        st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
+		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
+		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
+	}
+	mp_set_steps_to_runtime_position();
 }
 
 /*
@@ -362,27 +377,12 @@ bool st_exec_isbusy()
 #define DDA_DWELL_BUSY_FLAG 0x4
 
 /*
- * st_reset() - reset stepper internals
- */
-
-void st_reset()
-{
-	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
-        st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
-		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
-		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
-	}
-	mp_set_steps_to_runtime_position();
-}
-
-/*
  * st_clc() - clear counters
  */
 
 stat_t st_clc(nvObj_t *nv)	// clear diagnostic counters, reset stepper prep
 {
-	st_reset();
+	stepper_reset();
 	return(STAT_OK);
 }
 

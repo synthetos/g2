@@ -417,12 +417,12 @@ extern stPrepSingleton_t st_pre;		// only used by config_app diagnostics
 /**** FUNCTION PROTOTYPES ****/
 
 void stepper_init(void);
+void stepper_reset(void);
 void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
 bool st_runtime_isbusy(void);
 bool st_exec_isbusy(void);
-void st_reset(void);
 stat_t st_clc(nvObj_t *nv);
 
 void st_energize_motors(float timeout_seconds);
