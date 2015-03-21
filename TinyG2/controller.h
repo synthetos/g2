@@ -68,8 +68,8 @@ typedef struct controllerSingleton {	// main TG controller struct
 	uint8_t state_usb1;
 	uint32_t led_timer;                 // used to flash indicator LED
 	uint32_t led_blink_rate;            // used to flash indicator LED
-	bool hard_reset_requested;          // flag to perform a hard reset
-	bool bootloader_requested;          // flag to enter the bootloader
+//	bool hard_reset_requested;          // flag to perform a hard reset
+//	bool bootloader_requested;          // flag to enter the bootloader
 	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
 
 	// controller serial buffers

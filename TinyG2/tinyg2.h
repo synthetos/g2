@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.12 // 
+#define TINYG_FIRMWARE_BUILD   		080.12 // changed reset handling to support PANIC
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

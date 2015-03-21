@@ -77,7 +77,7 @@ static stat_t _check_for_phat_city_time(void);
 static void _dispatch_kernel(void);
 
 // prep for export to other modules:
-stat_t hardware_hard_reset_handler(void);
+//stat_t hardware_hard_reset_handler(void);
 //stat_t hardware_bootloader_handler(void);
 
 /***********************************************************************************
@@ -169,8 +169,8 @@ static void _controller_HSM()
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
 												// Order is important:
-	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
-	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
+//	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
+//	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
     DISPATCH(_shutdown_invoke());               // invoke shutdown
  	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
@@ -284,7 +284,7 @@ static stat_t _dispatch_command()
             _dispatch_kernel();
 //            mp_plan_buffer();   // +++ removed for test. THisis called form the main loop
         }
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -307,7 +307,7 @@ static void _dispatch_kernel()
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, NULL); }
-    else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
+    else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset now
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
@@ -423,9 +423,7 @@ static stat_t _sync_to_time()
  * _limit_switch_handler() - shut down system if limit switch fired
  * _interlock_handler() - feedhold and resume depending on edge
  *
- *	Kill points return EAGAIN causing the control loop to never advance beyond this point.
- *  It's important that the hw_hard_reset_handler is still called so a SW reset
- *  (ctrl-x) or bootloader request can be processed.
+ *	Some handlers return EAGAIN causing the control loop to never advance beyond that point.
  *
  * _interlock_handler() reacts the follwing ways:
  *   - safety_interlock_requested == INPUT_EDGE_NONE is normal operation (no interlock)

@@ -59,20 +59,20 @@ void hardware_init()
  * hw_hard_reset()			- hard reset using watchdog timer
  * hw_hard_reset_handler()	- controller's rest handler
  */
-void hw_request_hard_reset() { cs.hard_reset_requested = true; }
+//void hw_request_hard_reset() { cs.hard_reset_requested = true; }
 
 void hw_hard_reset(void)
 {
-    banzai(0);   // arg=0 resets the system, 1 (or anything else) else erases FLASH 
+    banzai(0);   // arg=0 resets the system, 1 (or anything else) else erases FLASH
 }
-
+/*
 stat_t hw_hard_reset_handler(void)
 {
 	if (cs.hard_reset_requested == false) { return (STAT_NOOP);}
 	hw_hard_reset();				// hard reset - identical to hitting RESET button
 	return (STAT_EAGAIN);
 }
-
+*/
 /*
  * Bootloader Handlers
  *
@@ -81,20 +81,20 @@ stat_t hw_hard_reset_handler(void)
  * hw_request_bootloader_handler() - executes a software reset using CCPWrite
  */
 
-void hw_request_bootloader() { cs.bootloader_requested = true;}
+//void hw_request_bootloader() { cs.bootloader_requested = true;}
 
 void hw_bootloader(void)
 {
-    banzai(1);  // arg=0 resets the system, 1 (or anything else) else erases FLASH 
+    banzai(1);  // arg=0 resets the system, 1 (or anything else) else erases FLASH
 }
-
+/*
 stat_t hw_bootloader_handler(void)
 {
     if (cs.bootloader_requested == false) { return (STAT_NOOP);}
     hw_bootloader();
     return (STAT_EAGAIN);
 }
-
+*/
 /*
  * _get_id() - get a human readable signature
  *
@@ -137,11 +137,12 @@ stat_t hw_get_id(nvObj_t *nv)
 }
 
 /*
- * hw_run_boot() - invoke boot form the cfgArray
+ * hw_run_boot() - invoke boot from command input
  */
 stat_t hw_run_boot(nvObj_t *nv)
 {
-	hw_request_bootloader();
+//	hw_request_bootloader();
+    hw_bootloader();
 	return(STAT_OK);
 }
 
