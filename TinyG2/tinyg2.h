@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.17 // installed coolant settings and wired polarity
+#define TINYG_FIRMWARE_BUILD   		080.18 // minor edits
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -60,13 +60,6 @@
 #define __CANNED_STARTUP            // run any canned startup moves
 //#define __DEBUG_SETTINGS          // special settings. See settings.h
 
-
-/****** FUNCTION PROTOTYPES ******/
-
-void application_init_services(void);
-void application_init_machine(void);
-void application_init_startup(void);
-
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************
  ************************************************************************************/
@@ -83,7 +76,6 @@ void application_init_startup(void);
 #include <avr/pgmspace.h>		// defines PROGMEM and PSTR
 
 typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
-
 																	// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
@@ -172,11 +164,6 @@ typedef uint16_t magic_t;		// magic number size
 #define MOTORS		6			// number of motors on the board
 #define COORDS		6			// number of supported coordinate systems (1-6)
 #define PWMS		2			// number of supported PWM channels
-
-#ifdef __POCKETNC
-#undef	HOMING_AXES
-#define HOMING_AXES	5
-#endif
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
@@ -531,7 +518,10 @@ char *get_status_message(stat_t status);
 #define	STAT_PROBE_CYCLE_FAILED 250						// probing cycle did not complete
 #define STAT_PROBE_ENDPOINT_IS_STARTING_POINT 251
 #define	STAT_JOGGING_CYCLE_FAILED 252					// jogging cycle did not complete
+#define	STAT_ERROR_253 253
+#define	STAT_ERROR_254 254
+#define	STAT_ERROR_255 255
 
-// !!! Do not exceed 255 without also changing stat_t typedef
+// ****** !!! Do not exceed 255 without also changing stat_t typedef ******
 
 #endif // End of include guard: TINYG2_H_ONCE

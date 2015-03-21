@@ -59,18 +59,19 @@ void coolant_reset()
     cm_coolant_off_immediate();
 }
 
+/*
+ * cm_mist_coolant_control()    -
+ * _exec_mist_coolant_control() -
+ * cm_flood_coolant_control()   -
+ * _exec_flood_coolant_control()-
+ * cm_coolant_off_immediate()   -
+ */
+
 void cm_coolant_off_immediate()     // turn off all coolant
 {
     float vect[] = { 0,0,0,0,0,0 };
     _exec_flood_coolant_control(vect, vect);
 }
-
-/*
- * cm_mist_coolant_control()
- * _exec_mist_coolant_control()
- * cm_flood_coolant_control
- * _exec_flood_coolant_control
- */
 
 #ifdef __ARM
 #define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
