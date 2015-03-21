@@ -58,7 +58,9 @@ stat_t gc_gcode_parser(char_t *block)
 
 	// don't process Gcode blocks if in alarmed state
 // OMC	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
-	if (cm.machine_state == MACHINE_ALARM || cm.machine_state == MACHINE_SHUTDOWN) {
+	if ((cm.machine_state == MACHINE_ALARM) || 
+        (cm.machine_state == MACHINE_SHUTDOWN) ||   // ++++ temporary fix - remove later
+        (cm.machine_state == MACHINE_PANIC)) {      // ++++ temporary fix - remove later
          return (STAT_MACHINE_ALARMED);
     }
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);

@@ -86,7 +86,12 @@ stat_t text_parser(char_t *str)
 			return (STAT_OK);						// return for uber-group displays so they don't print twice
 		}
 	} else { 										// process SET and RUN commands
-		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+//		if (cm.machine_state == MACHINE_ALARM) { return (STAT_MACHINE_ALARMED); }
+    	if ((cm.machine_state == MACHINE_ALARM) ||
+    	    (cm.machine_state == MACHINE_SHUTDOWN) ||   // ++++ temporary fix - remove later
+    	    (cm.machine_state == MACHINE_PANIC)) {      // ++++ temporary fix - remove later
+        	return (STAT_MACHINE_ALARMED);
+    	}
 		status = nv_set(nv);						// set (or run) single value
 		if (status == STAT_OK) {
 			nv_persist(nv);							// conditionally persist depending on flags in array

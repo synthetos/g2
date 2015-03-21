@@ -152,44 +152,6 @@ void application_init_startup(void)
     canonical_machine_reset();
     // MOVED: report the system is ready is now in xio
 }
-/*
-static void _application_init(void)
-{
-	cm.machine_state = MACHINE_INITIALIZING;
-    _application_init_services();
-    _application_init_machine();
-    _application_init_startup();
-
-	// do these first
-	hardware_init();				// system hardware setup 			- must be first
-	persistence_init();				// set up EEPROM or other NVM		- must be second
-	xio_init();						// xtended io subsystem				- must be third
-//	rtc_init();						// real time counter
-
-	// do these next
-	stepper_init(); 				// stepper subsystem 				- must precede gpio_init() on AVR
-	encoder_init();					// virtual encoders
-	gpio_init();					// inputs and outputs
-	pwm_init();						// pulse width modulation drivers
-	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
-	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine
-
-#ifdef __AVR
-	// now bring up the interrupts and get started
-	PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
-	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
-	PMIC_EnableMediumLevel();
-	PMIC_EnableLowLevel();
-	sei();							// enable global interrupts
-#endif
-
-	// start the application
-	config_init();					// apply the config settings from persistence
-    canonical_machine_reset();
-    // MOVED: report the system is ready is now in xio
-}
-*/
 
 /*
  * main()
@@ -201,7 +163,6 @@ int main(void)
 	_system_init();
 
 	// TinyG application setup
-//	_application_init();
 	application_init_services();
 	application_init_machine();
 	application_init_startup();
@@ -236,8 +197,8 @@ static const char stat_01[] PROGMEM = "Error";
 static const char stat_02[] PROGMEM = "Eagain";
 static const char stat_03[] PROGMEM = "Noop";
 static const char stat_04[] PROGMEM = "Complete";
-static const char stat_05[] PROGMEM = "Terminated";
-static const char stat_06[] PROGMEM = "Hard reset";
+static const char stat_05[] PROGMEM = "Shutdown";
+static const char stat_06[] PROGMEM = "Panic";
 static const char stat_07[] PROGMEM = "End of line";
 static const char stat_08[] PROGMEM = "End of file";
 static const char stat_09[] PROGMEM = "File not open";
@@ -260,7 +221,7 @@ static const char stat_23[] PROGMEM = "Divide by zero";
 static const char stat_24[] PROGMEM = "Invalid Address";
 static const char stat_25[] PROGMEM = "Read-only address";
 static const char stat_26[] PROGMEM = "Initialization failure";
-static const char stat_27[] PROGMEM = "Shutdown by emergency stop";
+static const char stat_27[] PROGMEM = "External shutdown";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
 
@@ -400,6 +361,7 @@ static const char stat_154[] PROGMEM = "Spindle must be turning for this command
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
+//--------------------------------------1--------10--------20--------30--------40--------50--------60-64
 static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";
 static const char stat_159[] PROGMEM = "Arc specification error - endpoint is starting point";
 
@@ -450,10 +412,11 @@ static const char stat_199[] PROGMEM = "199";
 static const char stat_200[] PROGMEM = "Generic error";
 static const char stat_201[] PROGMEM = "Move < min length";
 static const char stat_202[] PROGMEM = "Move < min time";
-static const char stat_203[] PROGMEM = "Alarmed, command rejected [type $clear to clear alarm]"; // current longest message 55 chars (including NUL)
-static const char stat_204[] PROGMEM = "Hard limit [enter $clear to clear, $lim=0 to override]";
+static const char stat_203[] PROGMEM = "Alarmed, command rejected [$clear to reset]";
+//--------------------------------------1--------10--------20--------30--------40--------50--------60-64
+static const char stat_204[] PROGMEM = "Limit hit [$clear to reset, $lim=0 to override]";
 static const char stat_205[] PROGMEM = "Planner did not converge";
-static const char stat_206[] PROGMEM = "206";
+static const char stat_206[] PROGMEM = "Kill job";
 static const char stat_207[] PROGMEM = "207";
 static const char stat_208[] PROGMEM = "208";
 static const char stat_209[] PROGMEM = "209";

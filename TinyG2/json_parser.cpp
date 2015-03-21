@@ -129,7 +129,12 @@ static stat_t _json_parser_kernal(char_t *str)
 	if (nv->valuetype == TYPE_NULL){				// means GET the value
 		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
 	} else {
-		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+//		if (cm.machine_state == MACHINE_ALARM) { return (STAT_MACHINE_ALARMED); }
+    	if ((cm.machine_state == MACHINE_ALARM) ||
+    	    (cm.machine_state == MACHINE_SHUTDOWN) ||   // ++++ temporary fix - remove later
+    	    (cm.machine_state == MACHINE_PANIC)) {      // ++++ temporary fix - remove later
+            return (STAT_MACHINE_ALARMED);
+        }        
 		ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
 		nv_persist(nv);
 	}

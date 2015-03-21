@@ -34,13 +34,15 @@
  */
 #include "tinyg2.h"
 #include "config.h"
-#include "util.h"
 #include "hardware.h"
-#include "text_parser.h"
-#include "canonical_machine.h"
+#include "canonical_machine.h"  // needs cm_has_hold()
 #include "xio.h"
 #include "report.h"
 #include "controller.h"
+#include "util.h"
+#ifdef __TEXT_MODE
+#include "text_parser.h"
+#endif
 
 using namespace Motate;
 //OutputPin<kDebug1_PinNumber> xio_debug_pin1;
@@ -80,8 +82,6 @@ using namespace Motate;
  *
  ***************************************/
 
-
-
 /**** Structures ****/
 
 // We need a buffer to hold single character commands, like !~%
@@ -114,10 +114,10 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     bool _ready_to_send;
 
     // Checks against calss flags variable:
-    //	bool canRead() { return caps & DEV_CAN_READ; }
-    //	bool canWrite() { return caps & DEV_CAN_WRITE; }
-    //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
-    //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
+//	bool canRead() { return caps & DEV_CAN_READ; }
+//	bool canWrite() { return caps & DEV_CAN_WRITE; }
+//	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
+//	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
     bool isCtrl() { return flags & DEV_IS_CTRL; }    // called externally:      DeviceWrappers[i]->isCtrl()
     bool isData() { return flags & DEV_IS_DATA; }    // subclasses can call directly (no pointer): isCtrl()
     bool isPrimary() { return flags & DEV_IS_PRIMARY; }
@@ -131,7 +131,6 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     bool isDataAndActive() { return ((flags & (DEV_IS_DATA|DEV_IS_ACTIVE)) == (DEV_IS_DATA|DEV_IS_ACTIVE)); }
 
     bool isNotCtrlOnly() { return ((flags & (DEV_IS_CTRL|DEV_IS_DATA)) != (DEV_IS_CTRL)); }
-
 
     // Manipulation functions
     void setData() { flags |= DEV_IS_DATA; }
@@ -148,8 +147,12 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void setAsActiveData() { flags |= ( DEV_IS_DATA | DEV_IS_ACTIVE); };
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
-    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps), flags(DEV_FLAGS_CLEAR), next_flags(DEV_FLAGS_CLEAR), read_index(0), read_buf_size(USB_LINE_BUFFER_SIZE), _ready_to_send(false) {
-
+    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps), 
+                                          flags(DEV_FLAGS_CLEAR), 
+                                          next_flags(DEV_FLAGS_CLEAR), 
+                                          read_index(0), 
+                                          read_buf_size(USB_LINE_BUFFER_SIZE), 
+                                          _ready_to_send(false) {
     };
 
     // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
@@ -174,7 +177,6 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 if ((c = readchar()) == _FDEV_ERR) {
                     break;
                 }
-
                 read_buf[read_index] = (char)c;
 
                 // special handling for flush character
@@ -308,7 +310,6 @@ struct xio_t {
                 written = DeviceWrappers[i]->write(buffer, size);
             }
         }
-
         return written;
     }
 

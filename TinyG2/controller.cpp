@@ -61,9 +61,9 @@ controller_t cs;		// controller state structure
 
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
-static stat_t _shutdown_kill_point(void);
+static stat_t _shutdown_invoke(void);
 static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
-static stat_t _panic_kill_point(void);
+static stat_t _panic_handler(void);
 static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
 static stat_t _limit_switch_handler(void);      // revised for new GPIO code
 //static stat_t _interlock_estop_handler(void);   // old
@@ -172,22 +172,21 @@ static void _controller_HSM()
 	DISPATCH(hw_hard_reset_handler());			// 1. handle hard reset requests
 	DISPATCH(hw_bootloader_handler());			// 2. handle requests to enter bootloader
 	DISPATCH(_led_indicator());				    // 3. blink LEDs at the current rate
- 	DISPATCH(_panic_kill_point());			    // 4. MACHINE_PANIC prevents rest of loop from executing
-    DISPATCH(_shutdown_handler());              // 5. invoke a shutdown
- 	DISPATCH(_shutdown_kill_point());			// 6. MACHINE_SHUTDOWN prevents rest of loop from executing
- 	DISPATCH(_interlock_handler());             // 7. invoke / remove safety interlock
-	DISPATCH(_limit_switch_handler());			// 8. invoke limit switch
-//    DISPATCH(_interlock_estop_handler());     // DEPRECATED interlock or estop have been thrown
+    DISPATCH(_shutdown_invoke());               // invoke shutdown
+ 	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
+	DISPATCH(_limit_switch_handler());			// invoke limit switch
     DISPATCH(_controller_state());				// controller state management
+	DISPATCH(_system_assertions());				// system integrity assertions
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
-	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(_system_assertions());				// 8. system integrity assertions
+// 	DISPATCH(_panic_handler());			        // MACHINE_PANIC prevents rest of loop from executing
+// 	DISPATCH(_shutdown_handler());			    // MACHINE_SHUTDOWN prevents rest of loop from executing
+//	DISPATCH(_system_assertions());				// system integrity assertions
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
+	DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
-
     DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
@@ -202,13 +201,14 @@ static void _controller_HSM()
 	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
 #endif
 	DISPATCH(_dispatch_command());				// read and execute next command
-//	DISPATCH(_normal_idler());					// blink LEDs slowly to show everything is OK
 
 //---- phat city idle tasks ---------------------------------------------------------//
 
     DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
     DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
-//	DISPATCH(switch_debounce_callback());		// debounce switches
+#ifdef __AVR
+	DISPATCH(switch_debounce_callback());		// debounce switches
+#endif
     DISPATCH(sr_status_report_callback());		// conditionally send status report
     DISPATCH(qr_queue_report_callback());		// conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
@@ -229,7 +229,7 @@ static stat_t _controller_state()
 	return (STAT_OK);
 }
 
-/*****************************************************************************************
+/*****************************************************************************
  * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
  */
@@ -242,38 +242,49 @@ void controller_set_connected(bool is_connected) {
     }
 }
 
+/******************************************************************************
+ * controller_parse_control() - return true if command is a control (versus data)
+ * Note: parsing for control is somewhat naiive. This will need to get better
+ */
+
+bool controller_parse_control(char *p) {
+    if (strchr("{$?!~%Hh", *p) != NULL) {		    // a match indicates control line
+        return (true);
+    }
+    return (false);
+}
+
 /*****************************************************************************
  * command dispatchers
- * _dispatch_command - entry point for control and data dispatches
  * _dispatch_control - entry point for control-only dispatches
+ * _dispatch_command - entry point for control and data dispatches
  * _dispatch_kernel - core dispatch routines
  *
  *	Reads next command line and dispatches to relevant parser or action
  */
-static stat_t _dispatch_command()
-{
-//	if(cm.estop_state == 0) {
-        if (cs.controller_state == CONTROLLER_PAUSED) {
-	        return (STAT_NOOP);
-        }
-		devflags_t flags = DEV_IS_BOTH;
-        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
-               (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
-        	_dispatch_kernel();
-            mp_plan_buffer();
-        }
-//	}
-	return (STAT_OK);
-}
 
 static stat_t _dispatch_control()
 {
-    if (cs.controller_state == CONTROLLER_PAUSED) {
-        return (STAT_NOOP);
+    if (cs.controller_state != CONTROLLER_PAUSED) {
+        devflags_t flags = DEV_IS_CTRL;
+        if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+            _dispatch_kernel();
+        }
+//        return (STAT_EAGAIN);   //??? should this restart the loop?
     }
-	devflags_t flags = DEV_IS_CTRL;
-	if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL)
-        _dispatch_kernel();
+    return (STAT_OK);
+}
+
+static stat_t _dispatch_command()
+{
+    if (cs.controller_state != CONTROLLER_PAUSED) {
+        devflags_t flags = DEV_IS_BOTH;
+        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
+            (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+            _dispatch_kernel();
+//            mp_plan_buffer();   // +++ removed for test. THisis called form the main loop
+        }
+    }    
 	return (STAT_OK);
 }
 
@@ -295,7 +306,7 @@ static void _dispatch_kernel()
     if      (*cs.bufp == '!') { cm_request_feedhold(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
-    else if (*cs.bufp == EOT) { cm_alarm(STAT_TERMINATE, NULL); }
+    else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, NULL); }
     else if (*cs.bufp == CAN) { hw_request_hard_reset(); }
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode
@@ -422,18 +433,18 @@ static stat_t _sync_to_time()
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
 
-static stat_t _shutdown_handler(void)
+static stat_t _shutdown_invoke(void)
 {
     if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
 	    char message[20];
 	    sprintf_P(message, PSTR("input %d shutdown hit"), (int)cm.shutdown_requested);
 	    cm.shutdown_requested = false; // clear limit request used here ^
-        cm_shutdown(STAT_SHUTDOWN_BY_EMERGENCY_STOP, "shutdown");
+        cm_shutdown(STAT_SHUTDOWN, "shutdown");
     }
     return(STAT_OK);
 }
 
-static stat_t _shutdown_kill_point(void)
+static stat_t _shutdown_handler(void)
 {
     if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
         return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
@@ -441,7 +452,7 @@ static stat_t _shutdown_kill_point(void)
     return (STAT_OK);
 }
 
-static stat_t _panic_kill_point(void)
+static stat_t _panic_handler(void)
 {
     if (cm_get_machine_state() == MACHINE_PANIC) {
         return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running

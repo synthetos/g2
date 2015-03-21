@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.11 // wired in panic state; work on alarms and shutdown
+#define TINYG_FIRMWARE_BUILD   		080.12 // 
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -60,26 +60,10 @@
 #define __CANNED_STARTUP            // run any canned startup moves
 //#define __DEBUG_SETTINGS          // special settings. See settings.h
 
-//#define __SIMULATION              // for software-only simulations
-#ifdef __SIMULATION
-  #undef  __TEXT_MODE
-  #undef  __HELP_SCREENS
-  #undef  __CANNED_TESTS
-  #ifndef __CANNED_STARTUP
-    #define __CANNED_STARTUP
-  #endif
-  #define __DISABLE_PERSISTENCE     // disable EEPROM writes for faster simulation
-  #define __SUPPRESS_STARTUP_MESSAGES
-  #define __SUPPRESS_STATUS_REPORTS
-  #define __SUPPRESS_QUEUE_REPORTS
-  #define __SUPRESS_DIAGNOSTIC_DISPLAYS
-  #define __SILENCE_JSON_RESPONSES
-#endif // __SIMULATION
 
-//#ifndef WEAK
-//#define WEAK  __attribute__ ((weak))
-//#endif
+/****** FUNCTION PROTOTYPES ******/
 
+void application_init_services(void);
 void application_init_machine(void);
 void application_init_startup(void);
 
@@ -150,32 +134,26 @@ typedef char char_t;			// Vestigal. Will be removed at some point
 #define STD_OUT 0
 #define STD_ERR 0
 
-
-// defines are BAD, M'kay? 'specially when you redfine a global function.
-
 /* String compatibility
  *
- * The AVR also has "_P" variants that take PROGMEM strings as args.
+ * AVR GCC has "_P" variants that take PROGMEM strings as args.
  * On the ARM/GCC++ the _P functions are just aliases of the non-P variants.
  *
  * Note that we have to be sure to cast non char variables to char types when used
  * with standard functions. We must maintain const when it's required as well.
  *
- * The compiler will be your guide when you get it wrong. :)
- *
- * Example: char *ret = strcpy((char *)d, (const char *)s);
- *
+ *      Example: char *ret = strcpy((char *)d, (const char *)s);
+ *      The compiler will be your guide when you get it wrong. :)
+ * 
+ * Avoid redefining global defines if possible The following inline jump functions are better.
  */
-
+inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
+inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
 #define printf_P printf		// these functions want char * as inputs, not char_t *
-#define fprintf_P fprintf	// just sayin'
+#define fprintf_P fprintf
 #define sprintf_P sprintf
-
-// These are better -- inline jump functions.
-inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
-inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 #endif // __ARM
 
@@ -270,8 +248,8 @@ char *get_status_message(stat_t status);
 #define	STAT_EAGAIN 2					// function would block here (call again)
 #define	STAT_NOOP 3						// function had no-operation
 #define	STAT_COMPLETE 4					// operation is complete
-#define STAT_TERMINATE 5				// operation terminated (gracefully)
-#define STAT_RESET 6					// operation was hard reset (sig kill)
+#define STAT_SHUTDOWN 5				    // operation was shutdown (terminated gracefully)
+#define STAT_PANIC 6					// system panic (not graceful)
 #define	STAT_EOL 7						// function returned end-of-line
 #define	STAT_EOF 8						// function returned end-of-file
 #define	STAT_FILE_NOT_OPEN 9
@@ -293,8 +271,8 @@ char *get_status_message(stat_t status);
 #define	STAT_DIVIDE_BY_ZERO 23
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
-#define	STAT_INIT_FAIL 26
-#define	STAT_SHUTDOWN_BY_EMERGENCY_STOP 27
+#define	STAT_INIT_FAILURE 26
+#define	STAT_EXTERNAL_SHUTDOWN 27       // externally invoked system shutdown
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
@@ -501,7 +479,7 @@ char *get_status_message(stat_t status);
 #define	STAT_MACHINE_ALARMED 203						// machine is alarmed. Command not processed
 #define	STAT_LIMIT_SWITCH_HIT 204						// a limit switch was hit causing shutdown
 #define	STAT_PLANNER_FAILED_TO_CONVERGE 205				// trapezoid generator can through this exception
-#define	STAT_ERROR_206 206
+#define	STAT_KILL_JOB 206
 #define	STAT_ERROR_207 207
 #define	STAT_ERROR_208 208
 #define	STAT_ERROR_209 209

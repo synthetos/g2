@@ -90,5 +90,6 @@ void controller_init_assertions(void);
 stat_t controller_test_assertions(void);
 void controller_run(void);
 void controller_set_connected(bool is_connected);
+bool controller_parse_control(char *p);
 
 #endif // End of include guard: CONTROLLER_H_ONCE

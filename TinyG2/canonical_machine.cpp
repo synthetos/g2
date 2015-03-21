@@ -662,13 +662,13 @@ stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
 
 stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
 {
-    cm_alarm(STAT_RESET, "shutdown received");
+    cm_shutdown(STAT_EXTERNAL_SHUTDOWN, NULL);
     return (STAT_OK);
 }
 
 stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
 {
-    cm_alarm(STAT_TERMINATE, "panic received");
+    cm_panic(STAT_PANIC, NULL);
     return (STAT_OK);
 }
 
@@ -692,8 +692,17 @@ stat_t cm_alarm(stat_t status, const char *msg)
     cm_request_feedhold();                      // stop motion
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
 	cm_spindle_control_immediate(SPINDLE_OFF);
-//	cm_coolant_control_immediate(COOLANT_OFF);
 	cm_coolant_off_immediate();
+/*
+	// build a secondary message string (info) and call the exception report
+	char info[64];
+	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+	} else {
+		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
+	}
+	rpt_exception(status, info);	            // send alarm message
+*/
 	rpt_exception(status, msg);	                // send alarm message
     return (status);
 }
@@ -704,65 +713,28 @@ stat_t cm_shutdown(stat_t status, const char *msg)
         (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-    if (cm_alarm(STAT_TERMINATE, "shutdown") == STAT_OK) {
+    if (cm_alarm(STAT_SHUTDOWN, NULL) == STAT_OK) {
         return (STAT_OK);
     }
 	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
-/*
-    cm.homing_state = HOMING_NOT_HOMED;         // unhome the machine
-	for( int i = 0; i < HOMING_AXES; ++i) {
-	    cm.homed[i] = HOMING_NOT_HOMED;
-    }
-*/
-    // reset subsystems
-    application_init_machine();
-    application_init_startup();
-/*
-    gpio_init();
-    gpio_reset();
-    planner_init();
-    stepper_init();
-    encoder_init();
-    pwm_init();
-    planner_init();
-    canonical_machine_init();
-
-    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-    _exec_program_finalize(value, value);	// finalize now, not later
-*/
-	cm.machine_state = MACHINE_SHUTDOWN;
+    application_init_machine();                 // reset machine modules
+    application_init_startup();                 // restart application
+	cm.machine_state = MACHINE_SHUTDOWN;        // do this after the resets
     return (status);
 }
 
 stat_t cm_panic(stat_t status, const char *msg)
 {
-    if (cm.machine_state == MACHINE_PANIC) { // only do this once
+    if (cm.machine_state == MACHINE_PANIC) {    // only do this once
         return (STAT_OK);
     }
-	cm.machine_state = MACHINE_PANIC;
-/*
-	// stop the motors and the spindle
-	stepper_init();							    // hard stop
-    cm_request_queue_flush();                   // do a queue flush - runtime is not busy
-//	cm_spindle_control(SPINDLE_OFF);
-	cm_spindle_control_immediate(SPINDLE_OFF);  // stop spindle on alarm
+	cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
+	rpt_exception(status, msg);			        // send panic report
+    
+//    application_init_services();
+//    application_init_machine();
+//    application_init_startup();
 
-    // change internal states
-    cm.homing_state = HOMING_NOT_HOMED;
-	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-	_exec_program_finalize(value, value);	    // finalize now, not later
-	cm.hold_state = FEEDHOLD_OFF;
-	cm.queue_flush_state = FLUSH_OFF;
-	cm.end_hold_requested = false;
-*/
-	// build a secondary message string (info) and call the exception report
-	char info[64];
-	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
-	} else {
-		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
-	}
-	rpt_exception(status, info);			    // send panic report
 	return (status);
 }
 

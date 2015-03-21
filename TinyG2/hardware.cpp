@@ -61,9 +61,9 @@ void hardware_init()
  */
 void hw_request_hard_reset() { cs.hard_reset_requested = true; }
 
-void hw_hard_reset(void)			// software hard reset using the watchdog timer
+void hw_hard_reset(void)
 {
-    banzai(0);
+    banzai(0);   // arg=0 resets the system, 1 (or anything else) else erases FLASH 
 }
 
 stat_t hw_hard_reset_handler(void)
@@ -85,7 +85,7 @@ void hw_request_bootloader() { cs.bootloader_requested = true;}
 
 void hw_bootloader(void)
 {
-    banzai(1);
+    banzai(1);  // arg=0 resets the system, 1 (or anything else) else erases FLASH 
 }
 
 stat_t hw_bootloader_handler(void)
