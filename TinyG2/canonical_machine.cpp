@@ -98,6 +98,7 @@
 #include "stepper.h"
 #include "encoder.h"
 #include "spindle.h"
+#include "coolant.h"
 #include "pwm.h"
 #include "report.h"
 #include "gpio.h"
@@ -119,8 +120,6 @@ cmSingleton_t cm;		// canonical machine controller singleton
 static void _exec_offset(float *value, float *flag);
 static void _exec_change_tool(float *value, float *flag);
 static void _exec_select_tool(float *value, float *flag);
-static void _exec_mist_coolant_control(float *value, float *flag);
-static void _exec_flood_coolant_control(float *value, float *flag);
 static void _exec_absolute_origin(float *value, float *flag);
 static void _exec_program_finalize(float *value, float *flag);
 
@@ -160,15 +159,10 @@ cmCombinedState cm_get_combined_state()
     if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
         return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2"));  // "machine is in motion but macs is not cycle"
 */
-    if (cm.machine_state <= MACHINE_PROGRAM_END) {
+    if (cm.machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 case statements where MACHINE_xxx == COMBINED_xxx
         return ((cmCombinedState)cm.machine_state);
     }
     switch(cm.machine_state) {
-//        case MACHINE_INITIALIZING:  { return (COMBINED_INITIALIZING); }
-//        case MACHINE_READY:         { return (COMBINED_READY); }
-//        case MACHINE_ALARM:         { return (COMBINED_ALARM); }
-//        case MACHINE_PROGRAM_STOP:  { return (COMBINED_PROGRAM_STOP); }
-//        case MACHINE_PROGRAM_END:   { return (COMBINED_PROGRAM_END); }
         case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
         case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
         case MACHINE_PANIC:         { return (COMBINED_PANIC); }
@@ -179,12 +173,13 @@ cmCombinedState cm_get_combined_state()
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
                 case CYCLE_MACHINING: case CYCLE_OFF: {
                     switch(cm.motion_state) {
-                        case MOTION_STOP:
+                        case MOTION_STOP: {
                         //... on issuing a gcode command we call cm_cycle_start before the motion gets queued...
                         //    we don't go to MOTION_RUN until the command is executed by mp_exec_aline...
                         //    so this assert isn't valid
                         // return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
-                        return (COMBINED_RUN);
+                            return (COMBINED_RUN);
+                        }
                         case MOTION_PLANNING: { return (COMBINED_RUN); }
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
@@ -752,7 +747,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
     }
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-//	coolant_reset();
+	coolant_reset();
     cm_queue_flush();                           // flush all queues and reset positions
 
 	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
@@ -1139,7 +1134,7 @@ stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = f
 /*****************************
  * Spindle Functions (4.3.7) *
  *****************************/
-// see spindle.c, spindle.h
+// see spindle.cpp/.h
 
 /**************************
  * Tool Functions (4.3.8) *
@@ -1181,73 +1176,17 @@ static void _exec_change_tool(float *value, float *flag)
 /***********************************
  * Miscellaneous Functions (4.3.9) *
  ***********************************/
+// see coolant.cpp/.h
+
 /*
- * cm_mist_coolant_control() - M7
- * cm_flood_coolant_control() - M8, M9
- * cm_coolant_off_immediate()
+ * cm_message() - queue a RAM string as a message in the response (unconditionally)
+ *
+ *	Note: If you need to post a FLASH string use pstr2str to convert it to a RAM string
  */
-
-stat_t cm_mist_coolant_control(uint8_t mist_coolant)
+void cm_message(char_t *message)
 {
-	float value[AXES] = { (float)mist_coolant,0,0,0,0,0 };
-	mp_queue_command(_exec_mist_coolant_control, value, value);
-	return (STAT_OK);
+    nv_add_string((const char_t *)"msg", message);	// add message to the response object
 }
-static void _exec_mist_coolant_control(float *value, float *flag)
-{
-	cm.gm.mist_coolant = (uint8_t)value[0];
-
-#ifdef __AVR
-	if (cm.gm.mist_coolant == true) {
-		gpio_set_bit_on(MIST_COOLANT_BIT);	// if
-    }
-	gpio_set_bit_off(MIST_COOLANT_BIT);		// else
-#endif // __AVR
-
-#ifdef __ARM
-	if (cm.gm.mist_coolant == true) {
-		coolant_enable_pin.set();	// if
-    }
-	coolant_enable_pin.clear();		// else
-#endif // __ARM
-}
-
-stat_t cm_flood_coolant_control(uint8_t flood_coolant)
-{
-	float value[AXES] = { (float)flood_coolant,0,0,0,0,0 };
-	mp_queue_command(_exec_flood_coolant_control, value, value);
-	return (STAT_OK);
-}
-static void _exec_flood_coolant_control(float *value, float *flag)
-{
-	cm.gm.flood_coolant = (uint8_t)value[0];
-
-#ifdef __AVR
-	if (cm.gm.flood_coolant == true) {
-		gpio_set_bit_on(FLOOD_COOLANT_BIT);
-	} else {
-		gpio_set_bit_off(FLOOD_COOLANT_BIT);
-		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
-		_exec_mist_coolant_control(vect, vect);		// M9 special function
-	}
-#endif // __AVR
-
-#ifdef __ARM
-	if (cm.gm.flood_coolant == true) {
-		coolant_enable_pin.set();
-	} else {
-		coolant_enable_pin.clear();
-		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
-		_exec_mist_coolant_control(vect, vect);		// M9 special function
-	}
-#endif // __ARM
-}
-
-void cm_coolant_off_immediate()
-{
-    return;
-}
-
 
 /*
  * cm_override_enables() - M48, M49
@@ -1306,16 +1245,6 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
 	return (STAT_OK);
 }
 */
-/*
- * cm_message() - queue a RAM string as a message in the response (unconditionally)
- *
- *	Note: If you need to post a FLASH string use pstr2str to convert it to a RAM string
- */
-
-void cm_message(char_t *message)
-{
-	nv_add_string((const char_t *)"msg", message);	// add message to the response object
-}
 
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *

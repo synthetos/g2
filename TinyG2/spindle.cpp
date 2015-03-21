@@ -39,13 +39,13 @@
 
 /**** Allocate structures ****/
 
-spSpindleton_t spindle;
+cmSpindleton_t spindle;
 
 /**** Static functions ****/
 
 static void _exec_spindle_speed(float *value, float *flag);
 static void _exec_spindle_control(float *value, float *flag);
-static float _get_spindle_pwm (spSpindleState spindle_state);
+static float _get_spindle_pwm (cmSpindleState spindle_state);
 
 /*
  * spindle_init()
@@ -105,7 +105,7 @@ static void _exec_spindle_speed(float *value, float *flag)
 void cm_spindle_optional_pause(bool option)
 {
     if (option && (spindle.state != SPINDLE_OFF)) {
-        spSpindleState state = spindle.state;   // local copy
+        cmSpindleState state = spindle.state;   // local copy
         cm_spindle_control_immediate(SPINDLE_OFF);
         spindle.pause = SPINDLE_PAUSED;         // mark as paused
         spindle.state = state;                  // restore previous spindle state
@@ -147,7 +147,7 @@ stat_t cm_spindle_control(uint8_t spindle_state)
 	return(STAT_OK);
 }
 
-void cm_spindle_control_immediate(spSpindleState spindle_state)
+void cm_spindle_control_immediate(cmSpindleState spindle_state)
 {
 /* OMC code
     spindle_state &= ~SPINDLE_PAUSED;           // remove the pause bit
@@ -178,7 +178,7 @@ void cm_spindle_control_immediate(spSpindleState spindle_state)
 
 static void _exec_spindle_control(float *value, float *flag)
 {
-    spindle.state = (spSpindleState)value[0];               // set spindle state
+    spindle.state = (cmSpindleState)value[0];               // set spindle state
     bool enable = spindle.state ^ ~spindle.polarity_enable; // enable is the polarity to set if turning ON
 
 	if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
@@ -229,7 +229,7 @@ static void _exec_spindle_control(float *value, float *flag)
 /*
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
-static float _get_spindle_pwm (spSpindleState spindle_state)
+static float _get_spindle_pwm (cmSpindleState spindle_state)
 {
 	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
 	if (spindle_state == SPINDLE_CW ) {

@@ -32,17 +32,17 @@ typedef enum {				        // spindle state settings (See hardware.h for bit sett
     SPINDLE_OFF = 0,
     SPINDLE_CW,
     SPINDLE_CCW,
-} spSpindleState;
+} cmSpindleState;
 
 typedef enum {
     SPINDLE_ACTIVE_LOW = 0,
     SPINDLE_ACTIVE_HIGH
-} spPolarity;
+} cmSpindlePolarity;
 
 typedef enum {
     SPINDLE_NORMAL = 0,
     SPINDLE_PAUSED,
-} spSpindlePause;
+} cmSpindlePause;
 
 typedef enum {
     ESC_ONLINE = 0,
@@ -56,26 +56,26 @@ typedef enum {
  * Spindle control structure
  */
 
-typedef struct spSpindleSingleton {
+typedef struct cmSpindleSingleton {
     // configuration
-    spSpindlePause pause_on_hold;   // pause on feedhold
-    spPolarity polarity_enable;     // 0=active low, 1=active high
-    spPolarity polarity_dir;        // 0=clockwise low, 1=clockwise high
-    float dwell_seconds;            // dwell on spindle resume
-//    float override_factor;          // 1.0000 x S spindle speed. Go up or down from there
-//    uint8_t override_enable;        // TRUE = override enabled
+    cmSpindlePause pause_on_hold;       // pause on feedhold
+    cmSpindlePolarity polarity_enable;  // 0=active low, 1=active high
+    cmSpindlePolarity polarity_dir;     // 0=clockwise low, 1=clockwise high
+    float dwell_seconds;                // dwell on spindle resume
+//    float override_factor;            // 1.0000 x S spindle speed. Go up or down from there
+//    uint8_t override_enable;          // TRUE = override enabled
 
     // state variables
     float speed;
-    spSpindleState state;           // current spindle state, OFF, CW, CCW. Might be paused, though
-    spSpindlePause pause;           // pause state - applies to spindle state, above
+    cmSpindleState state;               // current spindle state, OFF, CW, CCW. Might be paused, though
+    cmSpindlePause pause;               // pause state - applies to spindle state, above
 
-    cmESCState esc_state;           // state management for ESC controller
-    uint32_t esc_boot_timer;        // When the ESC last booted up
-    uint32_t esc_lockout_timer;     // When the ESC lockout last triggered
+    cmESCState esc_state;               // state management for ESC controller
+    uint32_t esc_boot_timer;            // When the ESC last booted up
+    uint32_t esc_lockout_timer;         // When the ESC lockout last triggered
 
-} spSpindleton_t;
-extern spSpindleton_t spindle;
+} cmSpindleton_t;
+extern cmSpindleton_t spindle;
 
 /*
  * Global Scope Functions
@@ -85,7 +85,7 @@ void spindle_init();
 void spindle_reset();
 stat_t cm_set_spindle_speed(float speed);			    // S parameter
 stat_t cm_spindle_control(uint8_t spindle_state);// M3, M4, M5 integrated spindle control
-void cm_spindle_control_immediate(spSpindleState spindle_state); //like cm_spindle_control but not synchronized to planner
+void cm_spindle_control_immediate(cmSpindleState spindle_state); //like cm_spindle_control but not synchronized to planner
 void cm_spindle_optional_pause(bool option);            // stop spindle based on system options selected
 void cm_spindle_resume(float dwell_seconds);            // restart spindle after pause based on previous state
 

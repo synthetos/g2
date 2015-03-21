@@ -22,6 +22,7 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "spindle.h"
+#include "coolant.h"
 #include "util.h"
 #include "xio.h"			// for char definitions
 
@@ -58,13 +59,13 @@ stat_t gc_gcode_parser(char_t *block)
 
 	// don't process Gcode blocks if in alarmed state
 // OMC	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
-	if ((cm.machine_state == MACHINE_ALARM) || 
+	if ((cm.machine_state == MACHINE_ALARM) ||
         (cm.machine_state == MACHINE_SHUTDOWN) ||   // ++++ temporary fix - remove later
         (cm.machine_state == MACHINE_PANIC)) {      // ++++ temporary fix - remove later
          return (STAT_MACHINE_ALARMED);
     }
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
- 
+
 	// Block delete omits the line if a / char is present in the first space
 	// For now this is unconditional and will always delete
 //	if ((block_delete_flag == true) && (cm_get_block_delete_switch() == true)) {

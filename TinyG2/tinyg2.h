@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.15 // shutdown - incorporated OMCO behaviors; added explicit cm_halt() function
+#define TINYG_FIRMWARE_BUILD   		080.16 // moved coolant controls to their own file
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

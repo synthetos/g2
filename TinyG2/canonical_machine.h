@@ -266,13 +266,6 @@ typedef enum {
 	PROGRAM_END
 } cmProgramFlow;
 
-typedef enum {                      // mist and flood coolant states
-	COOLANT_OFF = 0,				// all coolant off
-	COOLANT_ON,						// request coolant on or indicates both coolants are on
-	COOLANT_MIST,					// indicates mist coolant on
-	COOLANT_FLOOD					// indicates flood coolant on
-} cmCoolantState;
-
 typedef enum {					    // used for spindle and arc dir
 	DIRECTION_CW = 0,
 	DIRECTION_CCW
@@ -339,12 +332,12 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     uint8_t path_control;               // G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
     uint8_t distance_mode;              // G91   0=use absolute coords(G90), 1=incremental movement
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
-	uint8_t tool;				// G			// M6 tool change - moves "tool_select" to "tool"
-	uint8_t tool_select;		// G			// T value - T sets this value
-	uint8_t mist_coolant;		// G			// TRUE = mist on (M7), FALSE = off (M9)
-	uint8_t flood_coolant;		// G			// TRUE = flood on (M8), FALSE = off (M9)
-//	uint8_t spindle_state;		// G			// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-//	uint8_t spindle_pause;		// G			// 0=operating, 1=paused
+	uint8_t tool;				// G	// M6 tool change - moves "tool_select" to "tool"
+	uint8_t tool_select;		// G	// T value - T sets this value
+//	uint8_t mist_coolant;		// G	// TRUE = mist on (M7), FALSE = off (M9)
+//	uint8_t flood_coolant;		// G	// TRUE = flood on (M8), FALSE = off (M9)
+//	uint8_t spindle_state;		// G	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+//	uint8_t spindle_pause;		// G	// 0=operating, 1=paused
 
 } GCodeState_t;
 
@@ -622,16 +615,14 @@ stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)
-// see spindle.h for spindle definitions - which would go right here
+// see spindle.h for spindle functions - which would go right here
 
 // Tool Functions (4.3.8)
 stat_t cm_select_tool(uint8_t tool);							// T parameter
 stat_t cm_change_tool(uint8_t tool);							// M6
 
 // Miscellaneous Functions (4.3.9)
-stat_t cm_mist_coolant_control(uint8_t mist_coolant); 			// M7
-stat_t cm_flood_coolant_control(uint8_t flood_coolant);			// M8, M9
-void cm_coolant_off_immediate(void);
+// see coolant.h for coolant functions - which would go right here
 
 stat_t cm_override_enables(uint8_t flag); 						// M48, M49
 stat_t cm_feed_rate_override_enable(uint8_t flag); 				// M50
