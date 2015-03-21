@@ -178,7 +178,7 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 
 										// pre-allocated defines (take RAM permanently)
 #define NV_SHARED_STRING_LEN 512		// shared string for string values
-#define NV_BODY_LEN 30					// body elements - allow for 1 parent + N children
+#define NV_BODY_LEN 40					// body elements - allow for 1 parent + N children
 										// (each body element takes about 30 bytes of RAM)
 
 // Stuff you probably don't want to change
@@ -192,17 +192,17 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 //#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS // max number of status report elements - see cfgArray
 //											// **** must also line up in cfgArray, se00 - seXX ****
 
-enum tgCommunicationsMode {
+typedef enum {
 	TEXT_MODE = 0,						// text command line mode
 	JSON_MODE,							// strict JSON construction
 	JSON_MODE_RELAXED					// relaxed JSON construction (future)
-};
+} tgCommunicationsMode;
 
-enum flowControl {
+typedef enum {
 	FLOW_CONTROL_OFF = 0,				// flow control disabled
 	FLOW_CONTROL_XON,					// flow control uses XON/XOFF
 	FLOW_CONTROL_RTS					// flow control uses RTS/CTS
-};
+} flowControl;
 
 typedef enum {						    // value typing for config and JSON
 	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")

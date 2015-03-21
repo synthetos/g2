@@ -56,6 +56,13 @@ void coolant_init()
 void coolant_reset()
 {
     coolant_init();
+    cm_coolant_off_immediate();
+}
+
+void cm_coolant_off_immediate()     // turn off all coolant
+{
+    float vect[] = { 0,0,0,0,0,0 };
+    _exec_flood_coolant_control(vect, vect);
 }
 
 /*
@@ -64,6 +71,15 @@ void coolant_reset()
  * cm_flood_coolant_control
  * _exec_flood_coolant_control
  */
+
+#ifdef __ARM
+#define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
+#define _set_coolant_enable_bit_lo() coolant_enable_pin.clear()
+#endif
+#ifdef __AVR
+#define _set_coolant_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
+#define _set_coolant_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
+#endif
 
 stat_t cm_mist_coolant_control(uint8_t mist_state)
 {
@@ -76,19 +92,11 @@ static void _exec_mist_coolant_control(float *value, float *flag)
 {
     coolant.mist_state = (cmCoolantState)value[0];
 
-#ifdef __AVR
-    if (coolant.mist_state == COOLANT_ON) {
-        gpio_set_bit_on(MIST_COOLANT_BIT);	// if
+    if (!(coolant.mist_state ^ coolant.mist_polarity)) {    // inverted XOR
+        _set_coolant_enable_bit_hi();
+    } else {
+        _set_coolant_enable_bit_lo();
     }
-    gpio_set_bit_off(MIST_COOLANT_BIT);		// else
-#endif // __AVR
-
-#ifdef __ARM
-    if (coolant.mist_state == COOLANT_ON) {
-        coolant_enable_pin.set();	// if
-    }
-    coolant_enable_pin.clear();		// else
-#endif // __ARM
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_state)
@@ -102,30 +110,13 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 {
     coolant.flood_state = (cmCoolantState)value[0];
 
-#ifdef __AVR
-    if (coolant.flood_state == COOLANT_ON) {
-        gpio_set_bit_on(FLOOD_COOLANT_BIT);
+    if (!(coolant.flood_state ^ coolant.flood_polarity)) {
+        _set_coolant_enable_bit_hi();
     } else {
-        gpio_set_bit_off(FLOOD_COOLANT_BIT);
+        _set_coolant_enable_bit_lo();
         float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
         _exec_mist_coolant_control(vect, vect);		// M9 special function
     }
-#endif // __AVR
-
-#ifdef __ARM
-    if (coolant.flood_state == COOLANT_ON) {
-        coolant_enable_pin.set();
-    } else {
-        coolant_enable_pin.clear();
-        float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
-        _exec_mist_coolant_control(vect, vect);		// M9 special function
-    }
-#endif // __ARM
-}
-
-void cm_coolant_off_immediate()
-{
-    return;
 }
 
 /***********************************************************************************
@@ -135,16 +126,16 @@ void cm_coolant_off_immediate()
 
 #ifdef __TEXT_MODE
 
-const char fmt_cph[] PROGMEM = "[cph] coolant pause on hold%8d [0=no,1=pause_on_hold]\n";
-const char fmt_cpm[] PROGMEM = "[cpm] coolant polarity on%10d [0=low is enabled,1=high is enabled]\n";
-const char fmt_cpf[] PROGMEM = "[spd] coolant polarity direction%3d [0=low is clockwise,1=high is clockwise]\n";
-const char fmt_cm[] PROGMEM = "Mist coolant:%6d [0=OFF,1=ON]\n";
-const char fmt_cf[] PROGMEM = "Flood coolant:%5d [0=OFF,1=ON]\n";
+const char fmt_coph[] PROGMEM = "[coph] coolant pause on hold%7d [0=no,1=pause_on_hold]\n";
+const char fmt_comp[] PROGMEM = "[comp] coolant mist polarity%7d [0=low is ON,1=high is ON]\n";
+const char fmt_cofp[] PROGMEM = "[cofp] coolant flood polarity%6d [0=low is ON,1=high is ON]\n";
+const char fmt_com[] PROGMEM = "Mist coolant:%6d [0=OFF,1=ON]\n";
+const char fmt_cof[] PROGMEM = "Flood coolant:%5d [0=OFF,1=ON]\n";
 
-void cm_print_cph(nvObj_t *nv) { text_print(nv, fmt_cph);}  // TYPE_INT
-void cm_print_cpm(nvObj_t *nv) { text_print(nv, fmt_cpm);}  // TYPE_INT
-void cm_print_cpf(nvObj_t *nv) { text_print(nv, fmt_cpf);}  // TYPE_INT
-void cm_print_cm(nvObj_t *nv) { text_print(nv, fmt_cm);}    // TYPE_INT
-void cm_print_cf(nvObj_t *nv) { text_print(nv, fmt_cf);}    // TYPE_INT
+void cm_print_coph(nvObj_t *nv) { text_print(nv, fmt_coph);}  // TYPE_INT
+void cm_print_comp(nvObj_t *nv) { text_print(nv, fmt_comp);}  // TYPE_INT
+void cm_print_cofp(nvObj_t *nv) { text_print(nv, fmt_cofp);}  // TYPE_INT
+void cm_print_com(nvObj_t *nv) { text_print(nv, fmt_com);}    // TYPE_INT
+void cm_print_cof(nvObj_t *nv) { text_print(nv, fmt_cof);}    // TYPE_INT
 
 #endif // __TEXT_MODE

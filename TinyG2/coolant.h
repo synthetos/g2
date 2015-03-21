@@ -51,13 +51,13 @@ typedef struct cmCoolatSingleton {
 
     cmCoolantPause pause_on_hold;       // set to COOLANT_PAUSE to pause coolant on feedhold
 
-    cmCoolantPolarity mist_polarity;    // 0=active low, 1=active high
 	cmCoolantState mist_state;          // COOLANT_ON = mist on (M7), COOLANT_OFF = off (M9)
     cmCoolantPause mist_pause;          // pause state - applies to above states
+    cmCoolantPolarity mist_polarity;    // 0=active low, 1=active high
 
-    cmCoolantPolarity flood_polarity;   // 0=active low, 1=active high
 	cmCoolantState flood_state;         // COOLANT_ON = flood on (M8), COOLANT_OFF = off (M9)
     cmCoolantPause flood_pause;         // pause state - applies to above states
+    cmCoolantPolarity flood_polarity;   // 0=active low, 1=active high
 
 } cmCoolantSingleton_t;
 extern cmCoolantSingleton_t coolant;
@@ -77,19 +77,19 @@ void cm_coolant_off_immediate(void);
 
 #ifdef __TEXT_MODE
 
-    void cm_print_cph(nvObj_t *nv);     // coolant pause on hold
-    void cm_print_cpm(nvObj_t *nv);     // coolant polarity mist
-    void cm_print_cpf(nvObj_t *nv);     // coolant polarity flood
-    void cm_print_cm(nvObj_t *nv);     // report mist coolant state
-    void cm_print_cf(nvObj_t *nv);     // report flood coolant state
+    void cm_print_coph(nvObj_t *nv);     // coolant pause on hold
+    void cm_print_comp(nvObj_t *nv);     // coolant polarity mist
+    void cm_print_cofp(nvObj_t *nv);     // coolant polarity flood
+    void cm_print_com(nvObj_t *nv);     // report mist coolant state
+    void cm_print_cof(nvObj_t *nv);     // report flood coolant state
 
 #else
 
-    #define cm_print_cph tx_print_stub
-    #define cm_print_cpm tx_print_stub
-    #define cm_print_cpf tx_print_stub
-    #define cm_print_cm tx_print_stub
-    #define cm_print_cf tx_print_stub
+    #define cm_print_coph tx_print_stub
+    #define cm_print_comp tx_print_stub
+    #define cm_print_cofp tx_print_stub
+    #define cm_print_com tx_print_stub
+    #define cm_print_cof tx_print_stub
 
 #endif // __TEXT_MODE
 

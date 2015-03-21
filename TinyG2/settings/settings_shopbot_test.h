@@ -60,6 +60,10 @@
 #define SPINDLE_POLARITY_ENABLE     1                       // 0=active low, 1=active high
 #define SPINDLE_POLARITY_DIR        0                       // 0=clockwise is low, 1=clockwise is high
 
+#define COOLANT_PAUSE_ON_HOLD       false
+#define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY      1                        // 0=active low, 1=active high
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE

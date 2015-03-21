@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.16 // moved coolant controls to their own file
+#define TINYG_FIRMWARE_BUILD   		080.17 // installed coolant settings and wired polarity
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

@@ -38,6 +38,7 @@
 #include "stepper.h"
 #include "gpio.h"
 #include "spindle.h"
+#include "coolant.h"
 #include "pwm.h"
 #include "report.h"
 #include "hardware.h"
@@ -478,47 +479,54 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
 	// General system parameters
-	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,JUNCTION_ACCELERATION },
-	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,    CHORDAL_TOLERANCE },
-	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_ui8,  (float *)&cm.soft_limit_enable,    SOFT_LIMIT_ENABLE },
-	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_ui8,  (float *)&cm.limit_enable,	        HARD_LIMIT_ENABLE },
-	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,MOTOR_POWER_TIMEOUT},
+	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,    JUNCTION_ACCELERATION },
+	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
+	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_ui8,  (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
+	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_ui8,  (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
+	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
-    { "sys","spo", _fipn,1, cm_print_spo, get_ui8, set_01,  (float *)&spindle.polarity_enable, SPINDLE_POLARITY_ENABLE },
-    { "sys","spd", _fipn,1, cm_print_spd, get_ui8, set_01,  (float *)&spindle.polarity_dir,    SPINDLE_POLARITY_DIR },
-    { "sys","sph", _fipn,0, cm_print_sph, get_ui8, set_01,  (float *)&spindle.pause_on_hold,   SPINDLE_PAUSE_ON_HOLD },
-    { "sys","sdw", _fipn,1, cm_print_sdw, get_flt, set_flu, (float *)&spindle.dwell_seconds,   SPINDLE_DWELL_TIME },
-    { "",   "spc", _f0,  0, cm_print_spc, get_ui8, set_nul, (float *)&spindle.state, 0 },   // get spindle state
-    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },   // get spindle speed
+    { "sys","spo", _fipn,0, cm_print_spo, get_ui8, set_01,  (float *)&spindle.polarity_enable,      SPINDLE_POLARITY_ENABLE },
+    { "sys","spd", _fipn,0, cm_print_spd, get_ui8, set_01,  (float *)&spindle.polarity_dir,         SPINDLE_POLARITY_DIR },
+    { "sys","sph", _fipn,0, cm_print_sph, get_ui8, set_01,  (float *)&spindle.pause_on_hold,        SPINDLE_PAUSE_ON_HOLD },
+    { "sys","sdw", _fipn,2, cm_print_sdw, get_flt, set_flu, (float *)&spindle.dwell_seconds,        SPINDLE_DWELL_TIME },
+    { "",   "spc", _f0,  0, cm_print_spc, get_ui8, set_nul, (float *)&spindle.state, 0 },           // get spindle state
+    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },           // get spindle speed
+
+    // Coolant functions
+    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,  (float *)&coolant.pause_on_hold,        COOLANT_PAUSE_ON_HOLD },
+    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,  (float *)&coolant.mist_polarity,        COOLANT_MIST_POLARITY },
+    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,  (float *)&coolant.flood_polarity,       COOLANT_FLOOD_POLARITY },
+    { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul, (float *)&coolant.mist_state, 0 },      // get mist coolant state
+    { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul, (float *)&coolant.flood_state, 0 },     // get flood coolant state
 
     // Communications and reporting paramters
 #ifdef __TEXT_MODE
-    { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,      TEXT_VERBOSITY },
+    { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,        TEXT_VERBOSITY },
 #endif
-	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,            COMM_MODE },
-	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,       JSON_VERBOSITY },
-	{ "sys","js", _fipn, 0, js_print_js,  get_ui8, set_01,     (float *)&js.json_syntax,          JSON_SYNTAX_MODE },
-	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity,QUEUE_REPORT_VERBOSITY },
+	{ "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,              COMM_MODE },
+	{ "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
+	{ "sys","js", _fipn, 0, js_print_js,  get_ui8, set_01,     (float *)&js.json_syntax,            JSON_SYNTAX_MODE },
+	{ "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
 	{ "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
-	{ "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval,STATUS_REPORT_INTERVAL_MS },
+	{ "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
 //	{ "sys","spi", _fipn, 0, xio_print_spi,get_ui8,xio_set_spi,(float *)&xio.spi_state,			0 },
 
 #ifdef __AVR
-	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,  (float *)&cfg.enable_cr,			 XIO_EXPAND_CR },
-	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,  (float *)&cfg.enable_echo,		 XIO_ENABLE_ECHO },
-	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,  (float *)&cfg.enable_flow_control,XIO_ENABLE_FLOW_CONTROL },
-	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,(float *)&cfg.usb_baud_rate,		 XIO_BAUD_115200 },
+	{ "sys","ec",  _fipn, 0, cfg_print_ec,  get_ui8,  set_ec,  (float *)&cfg.enable_cr,			    XIO_EXPAND_CR },
+	{ "sys","ee",  _fipn, 0, cfg_print_ee,  get_ui8,  set_ee,  (float *)&cfg.enable_echo,		    XIO_ENABLE_ECHO },
+	{ "sys","ex",  _fipn, 0, cfg_print_ex,  get_ui8,  set_ex,  (float *)&cfg.enable_flow_control,   XIO_ENABLE_FLOW_CONTROL },
+	{ "sys","baud",_fn,   0, cfg_print_baud,get_ui8,  set_baud,(float *)&cfg.usb_baud_rate,		    XIO_BAUD_115200 },
 #endif
 
     // Gcode defaults
 	// NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
-	{ "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.select_plane,	GCODE_DEFAULT_PLANE },
-	{ "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.units_mode,	GCODE_DEFAULT_UNITS },
-	{ "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.coord_system,	GCODE_DEFAULT_COORD_SYSTEM },
-	{ "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm.path_control,	GCODE_DEFAULT_PATH_CONTROL },
-	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.distance_mode,GCODE_DEFAULT_DISTANCE_MODE },
-	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 }, // gcode block - must be last in this group
+	{ "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.select_plane,     GCODE_DEFAULT_PLANE },
+	{ "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.units_mode,       GCODE_DEFAULT_UNITS },
+	{ "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
+	{ "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm.path_control,     GCODE_DEFAULT_PATH_CONTROL },
+	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
+	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },      // gcode block - must be last in this group
 
 	// "hidden" parameters (not in system group)
 	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
