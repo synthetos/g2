@@ -241,6 +241,10 @@
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 
+#ifndef PLANNER_H_ONCE
+#include "planner.h"    // planner.h must precede stepper.h for moveType typedef
+#endif
+
 /*********************************
  * Stepper configs and constants *
  *********************************/
@@ -401,7 +405,8 @@ typedef struct stPrepSingleton {
 	uint16_t magic_start;                   // magic number to test memory integrity
 	volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
 	struct mpBuffer *bf;                    // static pointer to relevant buffer
-	uint8_t move_type;                      // move type (should be moveType from planner.h)
+//	uint8_t move_type;                      // move type (should be moveType from planner.h)
+	moveType move_type;                     // move type (requires planner.h)
 
 	uint16_t dda_period;                    // DDA or dwell clock period setting
 	uint32_t dda_ticks;                     // DDA or dwell ticks for the move

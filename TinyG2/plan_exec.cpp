@@ -160,7 +160,8 @@ stat_t mp_exec_move()
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
     exec_debug_pin3 = 1;
-    if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
+    if (bf->move_state == MOVE_OFF) { return (STAT_NOOP); }
+    if (mr.move_state == MOVE_HALT) { return (STAT_NOOP); }
 
     // Initialize all new blocks, regardless of normal or feedhold operation
 
@@ -316,8 +317,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_HEAD) { status = _exec_aline_head();} else
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else
-	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
-	else { return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
+//	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;} else
+	{ return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {

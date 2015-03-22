@@ -292,7 +292,10 @@ typedef enum {					    // axis modes (ordered: see _cm_get_feed_time())
  *	 used for planning, replanning, and reporting.
  *
  * - gmx is the extended gcode model variables that are only used by the canonical
- *	 machine and do not need to be passed further down.
+ *	 machine and do not need to be passed further down. It keeps "global" gcode
+ *   state that does not change when you go down through the planner to the runtime.
+ *   Other Gcode model state is kept in the singletons for various sub-systems, such
+ *   as arcs, spindle, coolant, and others (i.e. not ALL gcode global state is in gmx)
  *
  * - gn is used by the gcode interpreter and is re-initialized for each
  *   gcode block.It accepts data in the new gcode block in the formats

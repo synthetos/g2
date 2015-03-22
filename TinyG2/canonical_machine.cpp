@@ -669,12 +669,13 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
  */
 void cm_halt_motion(void)
 {
-    stepper_init();                 // stops all motion and resets state (including encoder state)
-                                    // ...need to init, not just reset
-    canonical_machine_reset();      // reset Gcode model
-    planner_reset();                // halt the runtime and reset the planner queues
+    planner_reset(); // MUST BE FIRST   // halt the runtime and reset the planner queues
 
-	cm.cycle_state = CYCLE_OFF;     // Note: leaves machine_state alone
+    stepper_init();                     // stop all motion and reset state (including encoder state)
+                                        // ...need to init, not just reset
+
+    canonical_machine_reset();          // reset Gcode model
+	cm.cycle_state = CYCLE_OFF;         // Note: leaves machine_state alone
 	cm.motion_state = MOTION_STOP;
 	cm.hold_state = FEEDHOLD_OFF;
 }

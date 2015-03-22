@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.21 // commented out references to exec_isbusy (have not removed them yet)
+#define TINYG_FIRMWARE_BUILD   		080.22 //
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

@@ -318,7 +318,7 @@ void stepper_reset()
 		st_pre.mot[motor].corrected_steps = 0;          // diagnostic only - no action effect
 	}
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // or it won't restart
-	mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
+ 	mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
 }
 
 /*
