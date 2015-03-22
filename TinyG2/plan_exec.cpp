@@ -161,7 +161,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 {
     exec_debug_pin3 = 1;
     if (bf->move_state == MOVE_OFF) { return (STAT_NOOP); }
-    if (mr.move_state == MOVE_HALT) { return (STAT_NOOP); }
+//    if (mr.move_state == MOVE_HALT) { return (STAT_NOOP); }
 
     // Initialize all new blocks, regardless of normal or feedhold operation
 

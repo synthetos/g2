@@ -58,9 +58,7 @@ typedef enum {				        // bf->move_type values
 typedef enum {
     MOVE_OFF = 0,                   // move inactive (MUST BE ZERO)
     MOVE_NEW,                       // general value if you need an initialization
-    MOVE_RUN,                       // general run state (for non-acceleration moves)
-    MOVE_HALT                       // move is halted
-//	MOVE_SKIP_BLOCK                 // mark a skipped block
+    MOVE_RUN                        // general run state (for non-acceleration moves)
 } moveState;
 
 typedef enum {
@@ -265,8 +263,6 @@ void planner_init_assertions(void);
 stat_t planner_test_assertions(void);
 
 void mp_halt_runtime(void);
-void mp_restart_runtime(void);
-
 void mp_flush_planner(void);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);

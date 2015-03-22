@@ -301,7 +301,7 @@ void stepper_init()
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
 #endif // __ARM
-//	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
+
     stepper_reset();                            // reset steppers to known state
 }
 
@@ -313,16 +313,17 @@ void stepper_init()
 
 void stepper_reset()
 {
+    dda_timer.stop();                                   // stop all movement
+    dwell_timer.stop();
+    st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
+    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
+
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
         st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
 		st_run.mot[motor].substep_accumulator = 0;      // will become max negative during per-motor setup;
 		st_pre.mot[motor].corrected_steps = 0;          // diagnostic only - no action effect
 	}
-    dda_timer.stop();                                   // turn it off or move state will flip over to loader
-    dwell_timer.stop();
-    st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
-    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
  	mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
 }
 
