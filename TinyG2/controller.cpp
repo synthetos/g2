@@ -416,14 +416,20 @@ static stat_t _limit_switch_handler(void)
 
 static stat_t _interlock_handler(void)
 {
-    if (cm.safety_interlock_requested != 0) {   // request contains leading or trailing edge or zero
-        if (cm.safety_interlock_requested == INPUT_EDGE_LEADING) {
-            cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;     // normal operation
-        } else {
-            cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;  // interlock tripped
-            cm_request_end_hold();      // using cm_request_end_hold() instead of just ending
-        }                               // ...the hold keeps trying until the hold is complete
-        cm.safety_interlock_requested = INPUT_EDGE_NONE;       // reset the calling condition
+    if (cm.safety_interlock_disengaged != 0) {                  // interlock broken
+        cm.safety_interlock_disengaged = 0;
+        cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
+        cm_request_feedhold();                                  // may have already requested STOP as INPUT_ACTION
+        // feedhold was initiated by input action in gpio
+        // pause spindle
+        // pause coolant
+    }
+    if (cm.safety_interlock_reengaged != 0) {                   // interlock restored
+        cm.safety_interlock_reengaged = 0;
+        cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;   // interlock restored
+        // restart spindle with dwell
+        cm_request_end_hold();                                // use cm_request_end_hold() instead of just ending
+        // restart coolant
     }
     return(STAT_OK);
 }

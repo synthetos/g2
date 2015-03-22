@@ -476,10 +476,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState queue_flush_state;// master queue flush state machine
 
-    uint8_t safety_interlock_requested; // set non-zero to request interlock processing (value is leading or trailing edge)
+    uint8_t safety_interlock_disengaged; // set non-zero to start interlock processing (value is input number)
+    uint8_t safety_interlock_reengaged;  // set non-zero to end interlock processing (value is input number)
     cmSafetyState safety_interlock_state;// safety interlock state
-
-//    uint8_t estop_state;                // true if estop has been triggered
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags

@@ -268,20 +268,24 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
         }
     }
 
-    // trigger interlock function on either leading and trailing edge
-	if (in->function == INPUT_FUNCTION_INTERLOCK) {
-		cm.safety_interlock_requested = in->edge;
-		return;
-	}
-
-	// the remainder of the functions only trigger on the leading edge
+	// these functions trigger on the leading edge
     if (in->edge == INPUT_EDGE_LEADING) {
 		if (in->function == INPUT_FUNCTION_LIMIT) {
 			cm.limit_requested = input_num_ext;
 
 		} else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
 			cm.shutdown_requested = input_num_ext;
+
+		} else if (in->function == INPUT_FUNCTION_INTERLOCK) {
+		    cm.safety_interlock_disengaged = input_num_ext;
 		}
+    }
+
+    // trigger interlock release on trailing edge
+    if (in->edge == INPUT_EDGE_TRAILING) {
+        if (in->function == INPUT_FUNCTION_INTERLOCK) {
+		    cm.safety_interlock_reengaged = input_num_ext;
+        }
     }
     sr_request_status_report(SR_REQUEST_TIMED);
 }

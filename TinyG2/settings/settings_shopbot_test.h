@@ -293,8 +293,8 @@
 
 // Amin
 #define DI7_MODE                    INPUT_ACTIVE_HIGH       // interlock happens when NO switch goes HI (opens)
-#define DI7_ACTION                  INPUT_FUNCTION_INTERLOCK // wired as interlock switch
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
+#define DI7_ACTION                  INPUT_ACTION_STOP       // wired as interlock switch
+#define DI7_FUNCTION                INPUT_FUNCTION_INTERLOCK
 
 // Amax
 #define DI8_MODE                    INPUT_ACTIVE_LOW        // configured as panic switch, NO
