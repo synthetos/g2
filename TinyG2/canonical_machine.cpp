@@ -144,13 +144,6 @@ static int8_t _get_axis_type(const index_t index);
  * cm_get_homing_state()
  * cm_set_motion_state() - adjusts active model pointer as well
  */
-
-static cmCombinedState _state_exception(stat_t status, const char *msg)
-{
-    rpt_exception(status, msg);
-    return (COMBINED_PANIC);
-}
-
 cmCombinedState cm_get_combined_state()
 {
 /*
@@ -184,17 +177,20 @@ cmCombinedState cm_get_combined_state()
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots"));    // "mots has impossible value"
+                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots");    // "mots has impossible value"
+                            return (COMBINED_PANIC);
                         }
                     }
                 }
                 default: {
-                    return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs"));    // "cycs has impossible value"
+                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs");    // "cycs has impossible value"
+                    return (COMBINED_PANIC);
                 }
             }
         }
         default: {
-            return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs"));    // "macs has impossible value"
+            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs");    // "macs has impossible value"
+            return (COMBINED_PANIC);
         }
     }
 }
@@ -619,10 +615,20 @@ void canonical_machine_init_assertions(void)
 
 stat_t canonical_machine_test_assertions(void)
 {
-	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-	if ((cm.gmx.magic_start != MAGICNUM) || (cm.gmx.magic_end != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-	if ((arc.magic_start 	!= MAGICNUM) || (arc.magic_end    != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-	return (STAT_OK);
+//	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
+//	if ((cm.gmx.magic_start != MAGICNUM) || (cm.gmx.magic_end != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
+//	if ((arc.magic_start 	!= MAGICNUM) || (arc.magic_end    != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
+//	return (STAT_OK);
+
+    if ((BAD_MAGIC(cm.magic_start)) ||
+        (BAD_MAGIC(cm.magic_end)) ||
+        (BAD_MAGIC(cm.gmx.magic_start)) ||
+        (BAD_MAGIC(cm.gmx.magic_end)) ||
+        (BAD_MAGIC(arc.magic_start)) ||
+        (BAD_MAGIC(arc.magic_end))) {
+        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, NULL));
+    }
+    return (STAT_OK);
 }
 
 /********************************************************************************

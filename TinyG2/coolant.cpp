@@ -60,11 +60,11 @@ void coolant_reset()
 }
 
 /*
- * cm_mist_coolant_control()    -
- * _exec_mist_coolant_control() -
- * cm_flood_coolant_control()   -
- * _exec_flood_coolant_control()-
- * cm_coolant_off_immediate()   -
+ *  cm_mist_coolant_control()    -
+ * _exec_mist_coolant_control()  -
+ *  cm_flood_coolant_control()   -
+ * _exec_flood_coolant_control() -
+ *  cm_coolant_off_immediate()   -
  */
 
 void cm_coolant_off_immediate()     // turn off all coolant

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.18 // minor edits
+#define TINYG_FIRMWARE_BUILD   		080.19 // changed assertion tests
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -153,8 +153,9 @@ inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t 
  ***** TINYG APPLICATION DEFINITIONS ******************************************
  ******************************************************************************/
 
-typedef uint16_t magic_t;		// magic number size
-#define MAGICNUM 0x12EF			// used for memory integrity assertions
+typedef uint16_t magic_t;		        // magic number size
+#define MAGICNUM 0x12EF			        // used for memory integrity assertions
+#define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
 /***** Axes, motors & PWM channels used by the application *****/
 // Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used

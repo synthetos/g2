@@ -61,20 +61,21 @@ controller_t cs;		// controller state structure
 
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
-static stat_t _shutdown_invoke(void);
 static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
-static stat_t _panic_handler(void);
 static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
 static stat_t _limit_switch_handler(void);      // revised for new GPIO code
-//static stat_t _interlock_estop_handler(void);   // old
+
+static void _init_assertions(void);
+static stat_t _test_assertions(void);
 static stat_t _system_assertions(void);
+
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
-static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
-static stat_t _check_for_phat_city_time(void);
 static void _dispatch_kernel(void);
+static stat_t _controller_state(void);          // manage controller state transitions
+static stat_t _check_for_phat_city_time(void);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -90,7 +91,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
     uint8_t network_mode = cs.network_mode;
 
 	memset(&cs, 0, sizeof(controller_t));           // clear all values, job_id's, pointers and status
-	controller_init_assertions();
+	_init_assertions();
 
     cs.comm_mode = comm_mode;                       // restore parameters
     cs.network_mode = network_mode;
@@ -115,19 +116,35 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 }
 
 /*
- * controller_init_assertions()
- * controller_test_assertions() - check memory integrity of controller
+ * _init_assertions() - initialize controller memory integrity assertions
+ * _test_assertions() - check controller memory integrity assertions
+ * _system_assertions() - check assertions for entire application
  */
 
-void controller_init_assertions()
+static void _init_assertions()
 {
 	cs.magic_start = MAGICNUM;
 	cs.magic_end = MAGICNUM;
 }
 
-stat_t controller_test_assertions()
+static stat_t _test_assertions()
 {
-	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+//	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
+	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) {
+        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, NULL));
+    }
+	return (STAT_OK);
+}
+
+stat_t _system_assertions()
+{
+	_test_assertions();         // these functions will panic if an assertion fails
+    config_test_assertions();
+    canonical_machine_test_assertions();
+    planner_test_assertions();
+    stepper_test_assertions();
+    encoder_test_assertions();
+    xio_test_assertions();
 	return (STAT_OK);
 }
 
@@ -166,15 +183,12 @@ static void _controller_HSM()
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
 												// Order is important:
 	DISPATCH(_led_indicator());				    // blink LEDs at the current rate
-    DISPATCH(_shutdown_invoke());               // invoke shutdown
+    DISPATCH(_shutdown_handler());              // invoke shutdown
  	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
 	DISPATCH(_limit_switch_handler());			// invoke limit switch
     DISPATCH(_controller_state());				// controller state management
 	DISPATCH(_system_assertions());				// system integrity assertions
-
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
-// 	DISPATCH(_panic_handler());			        // MACHINE_PANIC prevents rest of loop from executing
-// 	DISPATCH(_shutdown_handler());			    // MACHINE_SHUTDOWN prevents rest of loop from executing
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -206,20 +220,6 @@ static void _controller_HSM()
     DISPATCH(qr_queue_report_callback());		// conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
 
-}
-
-/*
- * _controller_state() - manage controller connection, startup, and other state changes
- */
-
-static stat_t _controller_state()
-{
-	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
-		cs.controller_state = CONTROLLER_READY;
-        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
-		rpt_print_system_ready_message();
-	}
-	return (STAT_OK);
 }
 
 /*
@@ -263,7 +263,6 @@ static stat_t _dispatch_control()
         if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
         }
-//        return (STAT_EAGAIN);   //??? should this restart the loop?
     }
     return (STAT_OK);
 }
@@ -275,7 +274,7 @@ static stat_t _dispatch_command()
         while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
             (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
-//            mp_plan_buffer();   // +++ removed for test. THisis called form the main loop
+//            mp_plan_buffer();   // +++ removed for test. This is called form the main loop
         }
     }
 	return (STAT_OK);
@@ -300,7 +299,7 @@ static void _dispatch_kernel()
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, NULL); }
-    else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset now
+    else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
@@ -323,6 +322,21 @@ static void _dispatch_kernel()
 }
 
 /**** Local Utilities ********************************************************/
+
+
+/*
+ * _controller_state() - manage controller connection, startup, and other state changes
+ */
+
+static stat_t _controller_state()
+{
+	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
+		cs.controller_state = CONTROLLER_READY;
+        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
+		rpt_print_system_ready_message();
+	}
+	return (STAT_OK);
+}
 
 /*
  * _check_for_phat_city_time() - see if there are cycles available for low priority tasks
@@ -402,9 +416,7 @@ static stat_t _sync_to_planner()
 
 /* ALARM STATE HANDLERS
  *
- * _shutdown_invoke() - put system into shutdown state
- * _shutdown_handler() - stops execution of the rest of the main loop
- * _panic_handler() - stops execution of the rest of the main loop
+ * _shutdown_handler() - put system into shutdown state
  * _limit_switch_handler() - shut down system if limit switch fired
  * _interlock_handler() - feedhold and resume depending on edge
  *
@@ -415,7 +427,7 @@ static stat_t _sync_to_planner()
  *   - safety_interlock_requested == INPUT_EDGE_LEADING is interlock onset
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
-static stat_t _shutdown_invoke(void)
+static stat_t _shutdown_handler(void)
 {
     if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
 	    char msg[20];
@@ -424,22 +436,6 @@ static stat_t _shutdown_invoke(void)
         cm_shutdown(STAT_SHUTDOWN, msg);
     }
     return(STAT_OK);
-}
-
-static stat_t _shutdown_handler(void)
-{
-    if (cm_get_machine_state() == MACHINE_SHUTDOWN) {
-        return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
-    }
-    return (STAT_OK);
-}
-
-static stat_t _panic_handler(void)
-{
-    if (cm_get_machine_state() == MACHINE_PANIC) {
-        return (STAT_EAGAIN);	// EAGAIN prevents any lower-priority actions from running
-    }
-    return (STAT_OK);
 }
 
 static stat_t _limit_switch_handler(void)
@@ -502,19 +498,3 @@ static stat_t _interlock_estop_handler(void)
 #endif
 }
 */
-/*
- * _system_assertions() - check memory integrity and other assertions
- */
-#define emergency___everybody_to_get_from_street(a) if((status_code=a) != STAT_OK) return (cm_panic(status_code, "cs2"));
-
-stat_t _system_assertions()
-{
-	emergency___everybody_to_get_from_street(config_test_assertions());
-	emergency___everybody_to_get_from_street(controller_test_assertions());
-	emergency___everybody_to_get_from_street(canonical_machine_test_assertions());
-	emergency___everybody_to_get_from_street(planner_test_assertions());
-	emergency___everybody_to_get_from_street(stepper_test_assertions());
-	emergency___everybody_to_get_from_street(encoder_test_assertions());
-	emergency___everybody_to_get_from_street(xio_test_assertions());
-	return (STAT_OK);
-}

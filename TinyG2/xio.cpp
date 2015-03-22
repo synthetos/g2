@@ -147,11 +147,11 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void setAsActiveData() { flags |= ( DEV_IS_DATA | DEV_IS_ACTIVE); };
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
-    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps), 
-                                          flags(DEV_FLAGS_CLEAR), 
-                                          next_flags(DEV_FLAGS_CLEAR), 
-                                          read_index(0), 
-                                          read_buf_size(USB_LINE_BUFFER_SIZE), 
+    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
+                                          flags(DEV_FLAGS_CLEAR),
+                                          next_flags(DEV_FLAGS_CLEAR),
+                                          read_index(0),
+                                          read_buf_size(USB_LINE_BUFFER_SIZE),
                                           _ready_to_send(false) {
     };
 
@@ -531,8 +531,12 @@ void xio_init()
 
 stat_t xio_test_assertions()
 {
-    if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
-        return (STAT_XIO_ASSERTION_FAILURE);
+//    if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
+//        return (STAT_XIO_ASSERTION_FAILURE);
+//    }
+    if ((BAD_MAGIC(xio.magic_start)) ||
+        (BAD_MAGIC(xio.magic_end))) {
+        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, NULL));
     }
     return (STAT_OK);
 }
