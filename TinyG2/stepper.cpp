@@ -307,6 +307,8 @@ void stepper_init()
 
 /*
  * stepper_reset() - reset stepper internals
+ *
+ * Used to initialize stepper and also to halt movement
  */
 
 void stepper_reset()
@@ -317,7 +319,10 @@ void stepper_reset()
 		st_run.mot[motor].substep_accumulator = 0;      // will become max negative during per-motor setup;
 		st_pre.mot[motor].corrected_steps = 0;          // diagnostic only - no action effect
 	}
-    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // or it won't restart
+    dda_timer.stop();                                   // turn it off or move state will flip over to loader
+    dwell_timer.stop();
+    st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
+    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
  	mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
 }
 
@@ -658,10 +663,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 
 		// process end of segment
 		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
-//		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
-//		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();									// load the next move at the current interrupt level
-//		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 //    dda_debug_pin2=0;
 } // MOTATE_TIMER_INTERRUPT

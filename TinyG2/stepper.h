@@ -264,7 +264,7 @@ typedef enum {					        // used w/start and stop flags to sequence motor powe
 	MOTOR_RUNNING,						// motor is running (and fully energized)
 	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
 	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motor
-} motorPowerState;
+} stPowerState;
 
 typedef enum {
 	MOTOR_DISABLED = 0,					// motor enable is deactivated
@@ -274,7 +274,7 @@ typedef enum {
 //	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
 //	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
 	MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
-} cmMotorPowerMode;
+} stPowerMode;
 
 // Stepper power management settings (applicable to ARM only)
 #define Vcc	3.3							// volts
@@ -340,80 +340,79 @@ typedef enum {
 
 // Motor config structure
 
-typedef struct cfgMotor {				// per-motor configs
-	// public
-	uint8_t	motor_map;					// map motor to axis
-	uint8_t microsteps;					// microsteps to apply for each axis (ex: 8)
-	uint8_t polarity;					// 0=normal polarity, 1=reverse motor direction
-	uint8_t power_mode;					// See cmMotorPowerMode for enum
-	float power_level;					// set 0.000 to 1.000 for PMW vref setting
-	float step_angle;					// degrees per whole step (ex: 1.8)
-	float travel_rev;					// mm or deg of travel per motor revolution
-	float steps_per_unit;				// microsteps per mm (or degree) of travel
-	float units_per_step;				// mm or degrees of travel per microstep
+typedef struct cfgMotor {               // per-motor configs
+    // public
+    uint8_t	motor_map;                  // map motor to axis
+    uint8_t microsteps;                 // microsteps to apply for each axis (ex: 8)
+    uint8_t polarity;                   // 0=normal polarity, 1=reverse motor direction
+    stPowerMode power_mode;             // See stPowerMode for values
+    float power_level;                  // set 0.000 to 1.000 for PMW vref setting
+    float step_angle;                   // degrees per whole step (ex: 1.8)
+    float travel_rev;                   // mm or deg of travel per motor revolution
+    float steps_per_unit;               // microsteps per mm (or degree) of travel
+    float units_per_step;               // mm or degrees of travel per microstep
 
-	// private
-	float power_level_scaled;			// scaled to internal range - must be between 0 and 1
+    // private
+    float power_level_scaled;           // scaled to internal range - must be between 0 and 1
 } cfgMotor_t;
 
-typedef struct stConfig {				// stepper configs
-	float motor_power_timeout;			// seconds before setting motors to idle current (currently this is OFF)
-	cfgMotor_t mot[MOTORS];				// settings for motors 1-N
+typedef struct stConfig {               // stepper configs
+    float motor_power_timeout;          // seconds before setting motors to idle current (currently this is OFF)
+    cfgMotor_t mot[MOTORS];             // settings for motors 1-N
 } stConfig_t;
 
 // Motor runtime structure. Used exclusively by step generation ISR (HI)
 
-typedef struct stRunMotor {				// one per controlled motor
-	uint32_t substep_increment;			// total steps in axis times substeps factor
-	int32_t substep_accumulator;		// DDA phase angle accumulator
-	uint8_t power_state;				// state machine for managing motor power
-	uint32_t power_systick;				// sys_tick for next motor power state transition
-	float power_level_dynamic;			// power level for this segment of idle (ARM only)
+typedef struct stRunMotor {             // one per controlled motor
+    uint32_t substep_increment;         // total steps in axis times substeps factor
+    int32_t substep_accumulator;        // DDA phase angle accumulator
+    stPowerState power_state;           // state machine for managing motor power
+    uint32_t power_systick;             // sys_tick for next motor power state transition
+    float power_level_dynamic;          // power level for this segment of idle (ARM only)
 } stRunMotor_t;
 
-typedef struct stRunSingleton {			// Stepper static values and axis parameters
-	uint16_t magic_start;				// magic number to test memory integrity
-	uint32_t dda_ticks_downcount;		// tick down-counter (unscaled)
-	uint32_t dda_ticks_X_substeps;		// ticks multiplied by scaling factor
-	stRunMotor_t mot[MOTORS];			// runtime motor structures
-	uint16_t magic_end;
+typedef struct stRunSingleton {         // Stepper static values and axis parameters
+    magic_t magic_start;               // magic number to test memory integrity
+    uint32_t dda_ticks_downcount;       // tick down-counter (unscaled)
+    uint32_t dda_ticks_X_substeps;      // ticks multiplied by scaling factor
+    stRunMotor_t mot[MOTORS];           // runtime motor structures
+    magic_t magic_end;
 } stRunSingleton_t;
 
 // Motor prep structure. Used by exec/prep ISR (MED) and read-only during load
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-	uint32_t substep_increment;             // total steps in axis times substep factor
+    uint32_t substep_increment;             // total steps in axis times substep factor
 
-	// direction and direction change
-	uint8_t direction;                      // travel direction corrected for polarity (CW==0. CCW==1)
-	uint8_t prev_direction;                 // travel direction from previous segment run for this motor
-	int8_t step_sign;                       // set to +1 or -1 for encoders
+    // direction and direction change
+    uint8_t direction;                      // travel direction corrected for polarity (CW==0. CCW==1)
+    uint8_t prev_direction;                 // travel direction from previous segment run for this motor
+    int8_t step_sign;                       // set to +1 or -1 for encoders
 
-	// following error correction
-	int32_t correction_holdoff;             // count down segments between corrections
-	float corrected_steps;                  // accumulated correction steps for the cycle (for diagnostic display only)
+    // following error correction
+    int32_t correction_holdoff;             // count down segments between corrections
+    float corrected_steps;                  // accumulated correction steps for the cycle (for diagnostic display only)
 
-	// accumulator phase correction
-	float prev_segment_time;                // segment time from previous segment run for this motor
-	float accumulator_correction;           // factor for adjusting accumulator between segments
-	uint8_t accumulator_correction_flag;    // signals accumulator needs correction
-
+    // accumulator phase correction
+    float prev_segment_time;                // segment time from previous segment run for this motor
+    float accumulator_correction;           // factor for adjusting accumulator between segments
+    uint8_t accumulator_correction_flag;    // signals accumulator needs correction
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-	uint16_t magic_start;                   // magic number to test memory integrity
-	volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
-	struct mpBuffer *bf;                    // static pointer to relevant buffer
+    magic_t magic_start;                   // magic number to test memory integrity
+    volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
+    struct mpBuffer *bf;                    // static pointer to relevant buffer
 //	uint8_t move_type;                      // move type (should be moveType from planner.h)
-	moveType move_type;                     // move type (requires planner.h)
+    moveType move_type;                     // move type (requires planner.h)
 
-	uint16_t dda_period;                    // DDA or dwell clock period setting
-	uint32_t dda_ticks;                     // DDA or dwell ticks for the move
-	uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
-	stPrepMotor_t mot[MOTORS];              // prep time motor structs
+    uint16_t dda_period;                    // DDA or dwell clock period setting
+    uint32_t dda_ticks;                     // DDA or dwell ticks for the move
+    uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
+    stPrepMotor_t mot[MOTORS];              // prep time motor structs
 //	volatile bool exec_isbusy;              // are the stepper interrupts firing?
-	uint16_t magic_end;
+    magic_t magic_end;
 } stPrepSingleton_t;
 
 extern stConfig_t st_cfg;                   // config struct is exposed. The rest are private

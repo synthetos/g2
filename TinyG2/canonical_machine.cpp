@@ -653,8 +653,11 @@ stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
 
 stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condition
 {
-    if ((cm.machine_state == MACHINE_ALARM) ||
-        (cm.machine_state == MACHINE_SHUTDOWN)) {
+    if (cm.machine_state == MACHINE_ALARM) {
+        cm.machine_state = MACHINE_PROGRAM_STOP;
+
+    } else if (cm.machine_state == MACHINE_SHUTDOWN) {
+        mp_restart_runtime();
         cm.machine_state = MACHINE_READY;
     }
     return (STAT_OK);
@@ -669,9 +672,9 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
  */
 void cm_halt_motion(void)
 {
-    planner_reset(); // MUST BE FIRST   // halt the runtime and reset the planner queues
-
-    stepper_init();                     // stop all motion and reset state (including encoder state)
+    mp_halt_runtime();                  // stop the runtime. Do this immediately. (Reset is in cm_clear)
+//    planner_reset(); // MUST BE FIRST   // halt the runtime and reset the planner queues
+//    stepper_init();                     // stop all motion and reset state (including encoder state)
                                         // ...need to init, not just reset
 
     canonical_machine_reset();          // reset Gcode model

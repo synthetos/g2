@@ -140,6 +140,25 @@ stat_t planner_test_assertions()
 }
 
 /*
+ * mp_halt_runtime() - stop runtime movement immediately
+ * mp_release_runtime() - reset runtime to release halt
+ */
+void mp_halt_runtime()
+{
+    mr.move_state = MOVE_HALT;      // prevent next segment from running
+    stepper_reset();                // stop the steppers and dwells
+    planner_reset();                // reset the planner queues
+//    stepper_init();                     // stop all motion and reset state (including encoder state)
+                                        // ...need to init, not just reset
+}
+
+void mp_restart_runtime()
+{
+    mr.move_state = MOVE_OFF;
+}
+
+
+/*
  * mp_flush_planner() - flush all moves in the planner and all arcs
  *
  *	Does not affect the move currently running in mr.
