@@ -635,19 +635,19 @@ stat_t canonical_machine_test_assertions(void)
  */
 stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
 {
-    cm_alarm(STAT_MACHINE_ALARMED, "alarmed from command input");
+    cm_alarm(STAT_ALARM, "ALARM from command input");
     return (STAT_OK);
 }
 
 stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
 {
-    cm_shutdown(STAT_EXTERNAL_SHUTDOWN, "shutdown from command input");
+    cm_shutdown(STAT_SHUTDOWN, "SHUTDOWN from command input");
     return (STAT_OK);
 }
 
 stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
 {
-    cm_panic(STAT_PANIC, NULL);
+    cm_panic(STAT_PANIC, "PANIC from command input");
     return (STAT_OK);
 }
 

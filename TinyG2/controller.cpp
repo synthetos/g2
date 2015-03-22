@@ -293,7 +293,7 @@ static void _dispatch_kernel()
 		text_response(text_parser(cs.bufp), cs.saved_buf);
     }
 	else if (cs.comm_mode == TEXT_MODE) {                   // anything else is interpreted as Gcode
-        text_response(gc_gcode_parser(cs.bufp), cs.saved_buf);
+        text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
 	else {  // anything else is interpreted as Gcode

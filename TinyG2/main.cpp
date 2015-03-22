@@ -217,7 +217,7 @@ static const char stat_14[] PROGMEM = "Buffer full FATAL";
 static const char stat_15[] PROGMEM = "Initializing";
 static const char stat_16[] PROGMEM = "Entering boot loader";
 static const char stat_17[] PROGMEM = "Function is stubbed";
-static const char stat_18[] PROGMEM = "18";
+static const char stat_18[] PROGMEM = "Alarm";
 static const char stat_19[] PROGMEM = "19";
 
 static const char stat_20[] PROGMEM = "Internal error";
@@ -227,7 +227,7 @@ static const char stat_23[] PROGMEM = "Divide by zero";
 static const char stat_24[] PROGMEM = "Invalid Address";
 static const char stat_25[] PROGMEM = "Read-only address";
 static const char stat_26[] PROGMEM = "Initialization failure";
-static const char stat_27[] PROGMEM = "External shutdown";
+static const char stat_27[] PROGMEM = "27";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
 
@@ -418,12 +418,12 @@ static const char stat_199[] PROGMEM = "199";
 static const char stat_200[] PROGMEM = "Generic error";
 static const char stat_201[] PROGMEM = "Move < min length";
 static const char stat_202[] PROGMEM = "Move < min time";
-static const char stat_203[] PROGMEM = "Alarmed, command rejected [$clear to reset]";
 //--------------------------------------1--------10--------20--------30--------40--------50--------60-64
-static const char stat_204[] PROGMEM = "Limit hit [$clear to reset, $lim=0 to override]";
-static const char stat_205[] PROGMEM = "Planner did not converge";
-static const char stat_206[] PROGMEM = "Kill job";
-static const char stat_207[] PROGMEM = "207";
+static const char stat_203[] PROGMEM = "Limit hit [$clear to reset, $lim=0 to override]";
+static const char stat_204[] PROGMEM = "Command rejected by ALARM [$clear to reset]";
+static const char stat_205[] PROGMEM = "Command rejected by SHUTDOWN [$clear to reset]";
+static const char stat_206[] PROGMEM = "Command rejected by PANIC [^x to reset]";
+static const char stat_207[] PROGMEM = "Kill job";
 static const char stat_208[] PROGMEM = "208";
 static const char stat_209[] PROGMEM = "209";
 

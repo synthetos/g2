@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.22 // added explicit halt runtime function
+#define TINYG_FIRMWARE_BUILD   		080.23 // cleaned up command reject cases
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -249,7 +249,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INITIALIZING 15			// initializing - not ready for use
 #define	STAT_ENTERING_BOOT_LOADER 16	// this code actually emitted from boot loader, not TinyG
 #define	STAT_FUNCTION_IS_STUBBED 17
-#define	STAT_ERROR_18 18
+#define	STAT_ALARM 18                   // system alarm triggered
 #define	STAT_ERROR_19 19				// NOTE: XIO codes align to here
 
 // Internal errors and startup messages
@@ -260,7 +260,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAILURE 26
-#define	STAT_EXTERNAL_SHUTDOWN 27       // externally invoked system shutdown
+#define	STAT_ERROR_27 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
@@ -464,11 +464,11 @@ char *get_status_message(stat_t status);
 #define STAT_GENERIC_ERROR 200
 #define	STAT_MINIMUM_LENGTH_MOVE 201					// move is less than minimum length
 #define	STAT_MINIMUM_TIME_MOVE 202						// move is less than minimum time
-#define	STAT_MACHINE_ALARMED 203						// machine is alarmed. Command not processed
-#define	STAT_LIMIT_SWITCH_HIT 204						// a limit switch was hit causing shutdown
-#define	STAT_PLANNER_FAILED_TO_CONVERGE 205				// trapezoid generator can through this exception
-#define	STAT_KILL_JOB 206
-#define	STAT_ERROR_207 207
+#define	STAT_LIMIT_SWITCH_HIT 203						// a limit switch was hit causing shutdown
+#define	STAT_COMMAND_REJECTED_BY_ALARM 204              // command was not processed because machine is alarmed
+#define	STAT_COMMAND_REJECTED_BY_SHUTDOWN 205           // command was not processed because machine is shutdown
+#define	STAT_COMMAND_REJECTED_BY_PANIC 206              // command was not processed because machine is paniced
+#define	STAT_KILL_JOB 207                               // ^d received (job kill)
 #define	STAT_ERROR_208 208
 #define	STAT_ERROR_209 209
 

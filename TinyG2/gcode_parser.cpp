@@ -44,12 +44,12 @@ static stat_t _execute_gcode_block(void);		// Execute the gcode block
 //#define EXEC_FUNC(f,v) if(fp_TRUE(cm.gf.v)) { status = f(cm.gn.v);}
 
 /*
- * gc_gcode_parser() - parse a block (line) of gcode
+ * gcode_parser() - parse a block (line) of gcode
  *
  *	Top level of gcode parser. Normalizes block and looks for special cases
  */
 
-stat_t gc_gcode_parser(char_t *block)
+stat_t gcode_parser(char_t *block)
 {
 	char_t *str = block;					// gcode command or NUL string
 	char_t none = NUL;
@@ -57,13 +57,11 @@ stat_t gc_gcode_parser(char_t *block)
 	char_t *msg = &none;					// gcode message or NUL string
 	uint8_t block_delete_flag;
 
-	// don't process Gcode blocks if in alarmed state
-// OMC	if (cm.machine_state == MACHINE_ALARM || cm.estop_state != 0) return (STAT_MACHINE_ALARMED);
-	if ((cm.machine_state == MACHINE_ALARM) ||
-        (cm.machine_state == MACHINE_SHUTDOWN) ||   // ++++ temporary fix - remove later
-        (cm.machine_state == MACHINE_PANIC)) {      // ++++ temporary fix - remove later
-         return (STAT_MACHINE_ALARMED);
-    }
+	// don't process Gcode blocks if in alarm, shutdown or panic state
+	if (cm.machine_state == MACHINE_ALARM) { return (STAT_COMMAND_REJECTED_BY_ALARM); }
+	if (cm.machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
+	if (cm.machine_state == MACHINE_PANIC) { return (STAT_COMMAND_REJECTED_BY_PANIC); }
+
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
 
 	// Block delete omits the line if a / char is present in the first space
@@ -547,7 +545,7 @@ stat_t gc_get_gc(nvObj_t *nv)
 
 stat_t gc_run_gc(nvObj_t *nv)
 {
-	return(gc_gcode_parser(*nv->stringp));
+	return(gcode_parser(*nv->stringp));
 }
 
 /***********************************************************************************
