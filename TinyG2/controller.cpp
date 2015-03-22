@@ -67,7 +67,7 @@ static stat_t _limit_switch_handler(void);      // revised for new GPIO code
 
 static void _init_assertions(void);
 static stat_t _test_assertions(void);
-static stat_t _system_assertions(void);
+static stat_t _test_system_assertions(void);
 
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -116,39 +116,6 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 }
 
 /*
- * _init_assertions() - initialize controller memory integrity assertions
- * _test_assertions() - check controller memory integrity assertions
- * _system_assertions() - check assertions for entire application
- */
-
-static void _init_assertions()
-{
-	cs.magic_start = MAGICNUM;
-	cs.magic_end = MAGICNUM;
-}
-
-static stat_t _test_assertions()
-{
-//	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) return (STAT_CONTROLLER_ASSERTION_FAILURE);
-	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) {
-        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, NULL));
-    }
-	return (STAT_OK);
-}
-
-stat_t _system_assertions()
-{
-	_test_assertions();         // these functions will panic if an assertion fails
-    config_test_assertions();
-    canonical_machine_test_assertions();
-    planner_test_assertions();
-    stepper_test_assertions();
-    encoder_test_assertions();
-    xio_test_assertions();
-	return (STAT_OK);
-}
-
-/*
  * controller_run() - MAIN LOOP - top-level controller
  *
  * The order of the dispatched tasks is very important.
@@ -181,45 +148,44 @@ static void _controller_HSM()
 //      See hardware.h for a list of ISRs and their priorities.
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
-												// Order is important:
+                                                // Order is important:
 	DISPATCH(_led_indicator());				    // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
  	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
-	DISPATCH(_limit_switch_handler());			// invoke limit switch
-    DISPATCH(_controller_state());				// controller state management
-	DISPATCH(_system_assertions());				// system integrity assertions
-	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
+	DISPATCH(_limit_switch_handler());          // invoke limit switch
+    DISPATCH(_controller_state());              // controller state management
+	DISPATCH(_test_system_assertions());        // system integrity assertions
+	DISPATCH(_dispatch_control());              // read any control messages prior to executing cycles
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
 	DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
-    DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
-	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
-	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
-	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
-	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
+    DISPATCH(cm_arc_cycle_callback());          // arc generation runs as a cycle above lines
+	DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
+	DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
+	DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
+	DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
 
-    DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue
-	DISPATCH(_sync_to_tx_buffer());				// sync with TX buffer (pseudo-blocking)
+    DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue
+	DISPATCH(_sync_to_tx_buffer());             // sync with TX buffer (pseudo-blocking)
 #ifdef __AVR
-	DISPATCH(set_baud_callback());				// perform baud rate update (must be after TX sync)
+	DISPATCH(set_baud_callback());              // perform baud rate update (must be after TX sync)
 #endif
-	DISPATCH(_dispatch_command());				// read and execute next command
+	DISPATCH(_dispatch_command());              // read and execute next command
 
 //---- phat city idle tasks ---------------------------------------------------------//
 
-    DISPATCH(_check_for_phat_city_time());		// stop here if it's not phat city time!
-    DISPATCH(st_motor_power_callback());		// stepper motor power sequencing
+    DISPATCH(_check_for_phat_city_time());      // stop here if it's not phat city time!
+    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
 #ifdef __AVR
-	DISPATCH(switch_debounce_callback());		// debounce switches
+	DISPATCH(switch_debounce_callback());       // debounce switches
 #endif
-    DISPATCH(sr_status_report_callback());		// conditionally send status report
-    DISPATCH(qr_queue_report_callback());		// conditionally send queue report
+    DISPATCH(sr_status_report_callback());      // conditionally send status report
+    DISPATCH(qr_queue_report_callback());       // conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
-
 }
 
 /*
@@ -246,6 +212,22 @@ bool controller_parse_control(char *p) {
     }
     return (false);
 }
+
+/*
+ * controller_reset_source() 		 - reset source to default input device (see note)
+ * controller_set_primary_source() 	 - set current primary input source
+ * controller_set_secondary_source() - set current primary input source
+ *
+ * Note: Once multiple serial devices are supported reset_source() should be expanded to
+ * also set the stdout/stderr console device so the prompt and other messages are sent
+ * to the active device.
+ */
+#ifdef __AVR
+void controller_reset_source() { controller_set_primary_source(xio.default_src);}
+void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
+void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
+#endif
+
 
 /*****************************************************************************
  * command dispatchers
@@ -274,7 +256,7 @@ static stat_t _dispatch_command()
         while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
             (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
-//            mp_plan_buffer();   // +++ removed for test. This is called form the main loop
+            mp_plan_buffer();   // +++ removed for test. This is called form the main loop
         }
     }
 	return (STAT_OK);
@@ -321,9 +303,7 @@ static void _dispatch_kernel()
 	}
 }
 
-/**** Local Utilities ********************************************************/
-
-
+/**** Local Functions ********************************************************/
 /*
  * _controller_state() - manage controller connection, startup, and other state changes
  */
@@ -376,21 +356,6 @@ static stat_t _led_indicator()
 	}
 	return (STAT_OK);
 }
-
-/*
- * controller_reset_source() 		 - reset source to default input device (see note)
- * controller_set_primary_source() 	 - set current primary input source
- * controller_set_secondary_source() - set current primary input source
- *
- * Note: Once multiple serial devices are supported reset_source() should be expanded to
- * also set the stdout/stderr console device so the prompt and other messages are sent
- * to the active device.
- */
-#ifdef __AVR
-void controller_reset_source() { controller_set_primary_source(xio.default_src);}
-void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
-void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
-#endif
 
 /*
  * _sync_to_tx_buffer() - return eagain if TX queue is backed up
@@ -498,3 +463,35 @@ static stat_t _interlock_estop_handler(void)
 #endif
 }
 */
+
+/*
+ * _init_assertions() - initialize controller memory integrity assertions
+ * _test_assertions() - check controller memory integrity assertions
+ * _test_system_assertions() - check assertions for entire system
+ */
+
+static void _init_assertions()
+{
+	cs.magic_start = MAGICNUM;
+	cs.magic_end = MAGICNUM;
+}
+
+static stat_t _test_assertions()
+{
+	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) {
+        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, NULL));
+    }
+	return (STAT_OK);
+}
+
+stat_t _test_system_assertions()
+{
+	_test_assertions();         // these functions will panic if an assertion fails
+    config_test_assertions();
+    canonical_machine_test_assertions();
+    planner_test_assertions();
+    stepper_test_assertions();
+    encoder_test_assertions();
+    xio_test_assertions();
+	return (STAT_OK);
+}

@@ -531,11 +531,7 @@ void xio_init()
 
 stat_t xio_test_assertions()
 {
-//    if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
-//        return (STAT_XIO_ASSERTION_FAILURE);
-//    }
-    if ((BAD_MAGIC(xio.magic_start)) ||
-        (BAD_MAGIC(xio.magic_end))) {
+    if ((BAD_MAGIC(xio.magic_start)) || (BAD_MAGIC(xio.magic_end))) {
         return(cm_panic(STAT_XIO_ASSERTION_FAILURE, NULL));
     }
     return (STAT_OK);

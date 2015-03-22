@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.19 // changed assertion tests
+#define TINYG_FIRMWARE_BUILD   		080.20 // testing shutdown conditions
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

@@ -615,17 +615,9 @@ void canonical_machine_init_assertions(void)
 
 stat_t canonical_machine_test_assertions(void)
 {
-//	if ((cm.magic_start 	!= MAGICNUM) || (cm.magic_end 	  != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-//	if ((cm.gmx.magic_start != MAGICNUM) || (cm.gmx.magic_end != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-//	if ((arc.magic_start 	!= MAGICNUM) || (arc.magic_end    != MAGICNUM)) return (STAT_CANONICAL_MACHINE_ASSERTION_FAILURE);
-//	return (STAT_OK);
-
-    if ((BAD_MAGIC(cm.magic_start)) ||
-        (BAD_MAGIC(cm.magic_end)) ||
-        (BAD_MAGIC(cm.gmx.magic_start)) ||
-        (BAD_MAGIC(cm.gmx.magic_end)) ||
-        (BAD_MAGIC(arc.magic_start)) ||
-        (BAD_MAGIC(arc.magic_end))) {
+    if ((BAD_MAGIC(cm.magic_start)) || (BAD_MAGIC(cm.magic_end)) ||
+        (BAD_MAGIC(cm.gmx.magic_start)) || (BAD_MAGIC(cm.gmx.magic_end)) ||
+        (BAD_MAGIC(arc.magic_start)) || (BAD_MAGIC(arc.magic_end))) {
         return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, NULL));
     }
     return (STAT_OK);
@@ -663,7 +655,7 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
 {
     if ((cm.machine_state == MACHINE_ALARM) ||
         (cm.machine_state == MACHINE_SHUTDOWN)) {
-        cm.machine_state = MACHINE_PROGRAM_STOP;
+        cm.machine_state = MACHINE_READY;
     }
     return (STAT_OK);
 }
@@ -775,6 +767,12 @@ stat_t cm_panic(stat_t status, const char *msg)
     if (cm.machine_state == MACHINE_PANIC) {    // only do this once
         return (STAT_OK);
     }
+    cm_halt_motion();                           // halt motors (may have already been done from GPIO)
+    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
+    coolant_reset();
+    cm_queue_flush();                           // flush all queues and reset positions
+
+    cm.waiting_for_gcode_resume = true;         // support OMC USB fix
 	cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
 	rpt_exception(status, msg);			        // send panic report
 	return (status);
