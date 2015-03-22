@@ -379,40 +379,40 @@ typedef struct stRunSingleton {			// Stepper static values and axis parameters
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-	uint32_t substep_increment;			// total steps in axis times substep factor
+	uint32_t substep_increment;             // total steps in axis times substep factor
 
 	// direction and direction change
-	uint8_t direction;					// travel direction corrected for polarity (CW==0. CCW==1)
-	uint8_t prev_direction;				// travel direction from previous segment run for this motor
-	int8_t step_sign;					// set to +1 or -1 for encoders
+	uint8_t direction;                      // travel direction corrected for polarity (CW==0. CCW==1)
+	uint8_t prev_direction;                 // travel direction from previous segment run for this motor
+	int8_t step_sign;                       // set to +1 or -1 for encoders
 
 	// following error correction
-	int32_t correction_holdoff;			// count down segments between corrections
-	float corrected_steps;				// accumulated correction steps for the cycle (for diagnostic display only)
+	int32_t correction_holdoff;             // count down segments between corrections
+	float corrected_steps;                  // accumulated correction steps for the cycle (for diagnostic display only)
 
 	// accumulator phase correction
-	float prev_segment_time;			// segment time from previous segment run for this motor
-	float accumulator_correction;		// factor for adjusting accumulator between segments
-	uint8_t accumulator_correction_flag;// signals accumulator needs correction
+	float prev_segment_time;                // segment time from previous segment run for this motor
+	float accumulator_correction;           // factor for adjusting accumulator between segments
+	uint8_t accumulator_correction_flag;    // signals accumulator needs correction
 
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-	uint16_t magic_start;				// magic number to test memory integrity
-	volatile uint8_t buffer_state;		// prep buffer state - owned by exec or loader
-	struct mpBuffer *bf;				// static pointer to relevant buffer
-	uint8_t move_type;					// move type
+	uint16_t magic_start;                   // magic number to test memory integrity
+	volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
+	struct mpBuffer *bf;                    // static pointer to relevant buffer
+	uint8_t move_type;                      // move type (should be moveType from planner.h)
 
-	uint16_t dda_period;				// DDA or dwell clock period setting
-	uint32_t dda_ticks;					// DDA or dwell ticks for the move
-	uint32_t dda_ticks_X_substeps;		// DDA ticks scaled by substep factor
-	stPrepMotor_t mot[MOTORS];			// prep time motor structs
-	volatile uint8_t exec_isbusy;       // are the stepper interrupts firing?
+	uint16_t dda_period;                    // DDA or dwell clock period setting
+	uint32_t dda_ticks;                     // DDA or dwell ticks for the move
+	uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
+	stPrepMotor_t mot[MOTORS];              // prep time motor structs
+//	volatile bool exec_isbusy;              // are the stepper interrupts firing?
 	uint16_t magic_end;
 } stPrepSingleton_t;
 
-extern stConfig_t st_cfg;				// config struct is exposed. The rest are private
-extern stPrepSingleton_t st_pre;		// only used by config_app diagnostics
+extern stConfig_t st_cfg;                   // config struct is exposed. The rest are private
+extern stPrepSingleton_t st_pre;            // only used by config_app diagnostics
 
 /**** FUNCTION PROTOTYPES ****/
 
@@ -422,7 +422,7 @@ void stepper_init_assertions(void);
 stat_t stepper_test_assertions(void);
 
 bool st_runtime_isbusy(void);
-bool st_exec_isbusy(void);
+//bool st_exec_isbusy(void);
 stat_t st_clc(nvObj_t *nv);
 
 void st_energize_motors(float timeout_seconds);

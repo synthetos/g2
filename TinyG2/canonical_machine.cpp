@@ -671,8 +671,8 @@ void cm_halt_motion(void)
 {
     stepper_init();                 // stops all motion and resets state (including encoder state)
                                     // ...need to init, not just reset
-    planner_reset();                // halt the runtime and planner queues
     canonical_machine_reset();      // reset Gcode model
+    planner_reset();                // halt the runtime and reset the planner queues
 
 	cm.cycle_state = CYCLE_OFF;     // Note: leaves machine_state alone
 	cm.motion_state = MOTION_STOP;
@@ -946,7 +946,7 @@ static void _exec_absolute_origin(float *value, float *flag)
 stat_t cm_set_origin_offsets(float offset[], float flag[])
 {
 	// set offsets in the Gcode model extended context
-	cm.gmx.origin_offset_enable = 1;
+	cm.gmx.origin_offset_enable = true;
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (fp_TRUE(flag[axis])) {
 			cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
@@ -961,7 +961,7 @@ stat_t cm_set_origin_offsets(float offset[], float flag[])
 
 stat_t cm_reset_origin_offsets()
 {
-	cm.gmx.origin_offset_enable = 0;
+	cm.gmx.origin_offset_enable = false;
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		cm.gmx.origin_offset[axis] = 0;
 	}
@@ -972,7 +972,7 @@ stat_t cm_reset_origin_offsets()
 
 stat_t cm_suspend_origin_offsets()
 {
-	cm.gmx.origin_offset_enable = 0;
+	cm.gmx.origin_offset_enable = false;
 	float value[AXES] = { (float)cm.gm.coord_system,0,0,0,0,0 };
 	mp_queue_command(_exec_offset, value, value);
 	return (STAT_OK);
@@ -980,7 +980,7 @@ stat_t cm_suspend_origin_offsets()
 
 stat_t cm_resume_origin_offsets()
 {
-	cm.gmx.origin_offset_enable = 1;
+	cm.gmx.origin_offset_enable = true;
 	float value[AXES] = { (float)cm.gm.coord_system,0,0,0,0,0 };
 	mp_queue_command(_exec_offset, value, value);
 	return (STAT_OK);
@@ -1059,7 +1059,7 @@ stat_t cm_goto_g30_position(float target[], float flags[])
 stat_t cm_set_feed_rate(float feed_rate)
 {
 	if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-		cm.gm.feed_rate = 1 / feed_rate;	// normalize to minutes (NB: active for this gcode block only)
+		cm.gm.feed_rate = 1/feed_rate;	// normalize to minutes (NB: active for this gcode block only)
 	} else {
 		cm.gm.feed_rate = _to_millimeters(feed_rate);
 	}

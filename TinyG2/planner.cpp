@@ -426,7 +426,7 @@ void mp_commit_write_buffer(const moveType move_type)
                 // processed IMMEDIATELY and then freed - invalidating the contents
         }
     } else {
-        mb.needs_replanned = 1;
+        mb.needs_replanned = true;
         if(cm.hold_state == FEEDHOLD_OFF)
             cm_set_motion_state(MOTION_PLANNING);
         mb.q = mb.q->nx;                        // advance the queued buffer pointer
