@@ -395,8 +395,8 @@ static stat_t _sync_to_planner()
 static stat_t _shutdown_handler(void)
 {
     if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
-	    char msg[20];
-	    sprintf_P(msg, PSTR("input %d shutdown hit"), (int)cm.shutdown_requested);
+	    char msg[10];
+	    sprintf_P(msg, PSTR("input %d"), (int)cm.shutdown_requested);
 	    cm.shutdown_requested = false; // clear limit request used here ^
         cm_shutdown(STAT_SHUTDOWN, msg);
     }
@@ -406,10 +406,10 @@ static stat_t _shutdown_handler(void)
 static stat_t _limit_switch_handler(void)
 {
     if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
-	    char message[20];
-	    sprintf_P(message, PSTR("input %d limit hit"), (int)cm.limit_requested);
+	    char msg[10];
+	    sprintf_P(msg, PSTR("input %d"), (int)cm.limit_requested);
         cm.limit_requested = false; // clear limit request used here ^
-        cm_alarm(STAT_LIMIT_SWITCH_HIT, message);
+        cm_alarm(STAT_LIMIT_SWITCH_HIT, msg);
     }
     return (STAT_OK);
 }

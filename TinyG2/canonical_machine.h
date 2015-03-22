@@ -577,6 +577,7 @@ stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm
 stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutdown from command input
 stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
 stat_t cm_clear(nvObj_t *nv);                                   // clear alarm and shutdown states
+stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
 void cm_halt_motion(void);                                      // halt movement (immediate stop) but not spindle & other IO
 stat_t cm_alarm(stat_t status, const char *msg);                // enter alarm state - preserve Gcode state
 stat_t cm_shutdown(stat_t status, const char *msg);             // enter shutdown state - dump all state

@@ -57,10 +57,7 @@ stat_t gcode_parser(char_t *block)
 	char_t *msg = &none;					// gcode message or NUL string
 	uint8_t block_delete_flag;
 
-	// don't process Gcode blocks if in alarm, shutdown or panic state
-	if (cm.machine_state == MACHINE_ALARM) { return (STAT_COMMAND_REJECTED_BY_ALARM); }
-	if (cm.machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
-	if (cm.machine_state == MACHINE_PANIC) { return (STAT_COMMAND_REJECTED_BY_PANIC); }
+    ritorno(cm_is_alarmed());               // don't process Gcode blocks if in alarm, shutdown or panic state
 
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
 
@@ -75,7 +72,6 @@ stat_t gcode_parser(char_t *block)
 	if (*msg != NUL) {
 		(void)cm_message(msg);				// queue the message
 	}
-
 	return(_parse_gcode_block(block));
 }
 

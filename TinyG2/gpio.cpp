@@ -259,7 +259,9 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 	        cm_halt_motion();					    // hard stop
         }
         if (in->action == INPUT_ACTION_PANIC) {
-            cm_panic(STAT_PANIC, "input triggered panic");
+	        char msg[10];
+	        sprintf_P(msg, PSTR("input %d"), input_num_ext);
+	        cm_panic(STAT_PANIC, msg);
         }
         if (in->action == INPUT_ACTION_RESET) {
             hw_hard_reset();

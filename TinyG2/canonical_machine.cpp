@@ -635,19 +635,19 @@ stat_t canonical_machine_test_assertions(void)
  */
 stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
 {
-    cm_alarm(STAT_ALARM, "ALARM from command input");
+    cm_alarm(STAT_ALARM, "sent by host");
     return (STAT_OK);
 }
 
 stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
 {
-    cm_shutdown(STAT_SHUTDOWN, "SHUTDOWN from command input");
+    cm_shutdown(STAT_SHUTDOWN, "sent by host");
     return (STAT_OK);
 }
 
 stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
 {
-    cm_panic(STAT_PANIC, "PANIC from command input");
+    cm_panic(STAT_PANIC, "sent by host");
     return (STAT_OK);
 }
 
@@ -659,6 +659,14 @@ stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condi
     } else if (cm.machine_state == MACHINE_SHUTDOWN) {
         cm.machine_state = MACHINE_READY;
     }
+    return (STAT_OK);
+}
+
+stat_t cm_is_alarmed()
+{
+	if (cm.machine_state == MACHINE_ALARM) { return (STAT_COMMAND_REJECTED_BY_ALARM); }
+	if (cm.machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
+	if (cm.machine_state == MACHINE_PANIC) { return (STAT_COMMAND_REJECTED_BY_PANIC); }
     return (STAT_OK);
 }
 
@@ -698,8 +706,7 @@ void cm_halt_motion(void)
 
 stat_t cm_alarm(stat_t status, const char *msg)
 {
-    if ((cm.machine_state == MACHINE_ALARM) ||
-        (cm.machine_state == MACHINE_SHUTDOWN) ||
+    if ((cm.machine_state == MACHINE_ALARM) || (cm.machine_state == MACHINE_SHUTDOWN) ||
         (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't alarm if already in an alarm state
     }
@@ -738,8 +745,7 @@ stat_t cm_alarm(stat_t status, const char *msg)
 
 stat_t cm_shutdown(stat_t status, const char *msg)
 {
-    if ((cm.machine_state == MACHINE_SHUTDOWN) ||
-        (cm.machine_state == MACHINE_PANIC)) {
+    if ((cm.machine_state == MACHINE_SHUTDOWN) || (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
