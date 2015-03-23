@@ -57,9 +57,11 @@ stat_t gcode_parser(char_t *block)
 	char_t *msg = &none;					// gcode message or NUL string
 	uint8_t block_delete_flag;
 
-    ritorno(cm_is_alarmed());               // don't process Gcode blocks if in alarm, shutdown or panic state
-
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
+
+    // Trap M30 and M2 as $clear conditions. This has no effect it not in ALARM or SHUTDOWN
+    cm_parse_clear(str);                    // parse Gcode and clear alarms if M30 or M2 is found
+    ritorno(cm_is_alarmed());               // return error status if in alarm, shutdown or panic
 
 	// Block delete omits the line if a / char is present in the first space
 	// For now this is unconditional and will always delete
@@ -84,8 +86,9 @@ stat_t gcode_parser(char_t *block)
  *	 - remove (erroneous) leading zeros that might be taken to mean Octal
  *	 - identify and return start of comments and messages
  *	 - signal if a block-delete character (/) was encountered in the first space
+ *   - NOTE: Assumes no leading whitespace as this was removed at the controller dispatch level
  *
- *	So this: "  g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
+ *	So this: "g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *	Comment and message handling:
  *	 - Comments field start with a '(' char or alternately a semicolon ';'

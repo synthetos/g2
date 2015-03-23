@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.25 // added interlock enable function
+#define TINYG_FIRMWARE_BUILD   		080.26 // installed M30 and M2 as valid alarm $clear conditions
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

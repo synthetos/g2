@@ -536,8 +536,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "", "alarm",_f0,0, tx_print_nul, cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },	// trigger alarm
     { "", "panic",_f0,0, tx_print_nul, cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },	// trigger panic
     { "", "shutd",_f0,0, tx_print_nul, cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },	// trigger shutdown
-    { "", "clear",_f0,0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
-    { "", "clr", _f0, 0, tx_print_nul, cm_clear,  cm_clear,  (float *)&cs.null, 0 },	// Synonym for "clear"
+    { "", "clear",_f0,0, tx_print_nul, cm_clr,    cm_clr,    (float *)&cs.null, 0 },	// GET "clear" to clear alarm state
+    { "", "clr",  _f0, 0, tx_print_nul,cm_clr,    cm_clr,    (float *)&cs.null, 0 },	// synonym for "clear"
+//  { "", "expor",_f0,0, tx_print_nul, cm_export, cm_export, (float *)&cs.null, 0 },	// export settings
     { "", "ti",  _f0, 0, tx_print_int, get_tick,  set_nul,   (float *)&cs.null, 0 },	// get system time tick
 	{ "", "me",  _f0, 0, st_print_me,  st_set_me, st_set_me, (float *)&cs.null, 0 },    // GET or SET to enable motors
 	{ "", "md",  _f0, 0, st_print_md,  st_set_md, st_set_md, (float *)&cs.null, 0 },    // GET or SET to disable motors

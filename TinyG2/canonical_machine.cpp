@@ -623,13 +623,17 @@ stat_t canonical_machine_test_assertions(void)
     return (STAT_OK);
 }
 
+/**************************
+ * Alarms                 *
+ **************************/
+
 /********************************************************************************
  *  ALARM, SHUTDOWN, and PANIC are nested dolls.
  *
- * cm_alrm()     - invoke alarm from command
- * cm_shut()     - invoke shutdown from command
- * cm_pnic()     - invoke panic from command
- * cm_clear()    - clear alarm or panic state
+ * cm_alrm()  - invoke alarm from command
+ * cm_shutd() - invoke shutdown from command
+ * cm_pnic()  - invoke panic from command
+ * cm_clr()   - clear alarm or shutdown from command
  *
  * The alarm states can be invoked from the above commands for testing and clearing
  */
@@ -651,22 +655,47 @@ stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
     return (STAT_OK);
 }
 
-stat_t cm_clear(nvObj_t *nv)                    // clear alarm or shutdown condition
+stat_t cm_clr(nvObj_t *nv)                      // clear alarm or shutdown from command line
 {
-    if (cm.machine_state == MACHINE_ALARM) {
-        cm.machine_state = MACHINE_PROGRAM_STOP;
-
-    } else if (cm.machine_state == MACHINE_SHUTDOWN) {
-        cm.machine_state = MACHINE_READY;
-    }
+    cm_clear();
     return (STAT_OK);
 }
 
+/*
+ * cm_clear() - clear ALARM and SHUTDOWN states
+ * cm_parse_clear() - parse incoming gcode for M30 or M2 clears
+ *
+ * Parse clear interprets an M30 or M2 PROGRAM_END as a $clear condition and clear ALARMs and
+ * SHUTDOWNs but not PANICs. Assumes Gcode string has no leading or embedded whitespace
+ */
+
+void cm_clear()
+{
+    if (cm.machine_state == MACHINE_ALARM) {
+        cm.machine_state = MACHINE_PROGRAM_STOP;
+    } else if (cm.machine_state == MACHINE_SHUTDOWN) {
+        cm.machine_state = MACHINE_READY;
+    }
+}
+
+void cm_parse_clear(char *s)
+{
+    if (toupper(s[0]) == 'M') { // M30 or M2 will clear ALARM or SHUTDOWN, but not a PANIC
+        if (( (s[1]=='3') && (s[2]=='0') && (s[3]==NUL)) || ((s[1]=='2') && (s[2]==NUL) )) {
+            cm_clear();
+        }
+    }
+}
+
+/*
+ * cm_is_alarmed() - return alarm status code or OK if no alarms
+ */
+
 stat_t cm_is_alarmed()
 {
-	if (cm.machine_state == MACHINE_ALARM) { return (STAT_COMMAND_REJECTED_BY_ALARM); }
-	if (cm.machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
-	if (cm.machine_state == MACHINE_PANIC) { return (STAT_COMMAND_REJECTED_BY_PANIC); }
+    if (cm.machine_state == MACHINE_ALARM)    { return (STAT_COMMAND_REJECTED_BY_ALARM); }
+    if (cm.machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
+    if (cm.machine_state == MACHINE_PANIC)    { return (STAT_COMMAND_REJECTED_BY_PANIC); }
     return (STAT_OK);
 }
 
@@ -677,6 +706,7 @@ stat_t cm_is_alarmed()
  * Does not de-energize motors as in some cases the motors must remain energized
  * in order to prevent an axis from crashing.
  */
+
 void cm_halt_motion(void)
 {
     mp_halt_runtime();                  // stop the runtime. Do this immediately. (Reset is in cm_clear)

@@ -129,7 +129,8 @@ static stat_t _json_parser_kernal(char_t *str)
 	if (nv->valuetype == TYPE_NULL){				// means GET the value
 		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
 	} else {
-        ritorno(cm_is_alarmed());                   // don't process SET or RUN commands if in alarm, shutdown or panic
+        cm_parse_clear(*nv->stringp);               // parse Gcode and clear alarms if M30 or M2 is found
+        ritorno(cm_is_alarmed());                   // return error status if in alarm, shutdown or panic
 		ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
 		nv_persist(nv);
 	}

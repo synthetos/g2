@@ -575,7 +575,9 @@ stat_t canonical_machine_test_assertions(void);
 stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input
 stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutdown from command input
 stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
-stat_t cm_clear(nvObj_t *nv);                                   // clear alarm and shutdown states
+stat_t cm_clr(nvObj_t *nv);                                     // clear alarm and shutdown from command input
+void cm_clear(void);                                            // raw clear command
+void cm_parse_clear(char *s);                                   // parse gcode for M30 or M2 clear condition
 stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
 void cm_halt_motion(void);                                      // halt movement (immediate stop) but not spindle & other IO
 stat_t cm_alarm(stat_t status, const char *msg);                // enter alarm state - preserve Gcode state
