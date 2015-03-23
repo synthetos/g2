@@ -719,19 +719,24 @@ void cm_halt_motion(void)
 /*
  * cm_alarm() - enter ALARM state
  *
- * An ALARM sets the ALARM machine state, clears out queued moves and serial input,
- * and rejects new action commands (gcode blocks, SET commands, and other actions).
+ * An ALARM sets the ALARM machine state, starts a feedhold to stop motion, stops the
+ * spindle, turns off coolant, clears out queued planner moves and serial input,
+ * and rejects new action commands (gcode blocks, SET commands, and other actions)
+ * until the alarm is cleared.
  *
- * ALARM is typically entered by a soft alarm (Gcode file problem) or a limit switch
- * being hit. In the case of a limit switch the feedhold action may supersedes the
- * feedhold - i.e. if the input action is "fast_stop" or "halt" that setting will take
- * precedence of the feedhold in this alarm function.
+ * ALARM is typically entered by a soft limit or a limit switch being hit. In the
+ * limit switch case the INPUT_ACTION will override the feedhold - i.e. if the
+ * input action is "FAST_STOP" or "HALT" that setting will take precedence over
+ * the feedhold native to the alarm function.
  *
- * Gcode state is preserved. It may be possible to recover the job from here, but
- * in many cases this is not possible.
- * It attempts to preserve Gcode and machine state, so does not END the job.
+ * Gcode and machine state is preserved. It may be possible to recover the job from
+ * an alarm, but in many cases this is not possible. Since ALARM attempts to preserve
+ * Gcode and machine state it does not END the job.
  *
- * ALARM is cleared by entering any of: {clear:n}, {clr:n}, $clear, or $clr
+ * ALARM may also be invoked from the command line using {alarm:n} or $alarm
+ * ALARM can be manually cleared by entering: {clear:n}, {clr:n}, $clear, or $clr
+ * ALARMs will also clear on receipt of an M30 or M2 command if one is received
+ * while draining the host command queue.
  */
 
 stat_t cm_alarm(stat_t status, const char *msg)
@@ -765,12 +770,14 @@ stat_t cm_alarm(stat_t status, const char *msg)
  * state, clears out queued moves and serial input, and rejects new action commands
  * (gcode blocks, SET commands, and some others).
  *
- * Shutdown is typically entered as part of an external emergency stop (Estop), and
- * is meant to augment but not replace the external Estop functions that shut down
- * all motors, spindles and other moving parts. It may also be entered using {shutd:n}
- * or $shutd from the command input.
+ * Shutdown is typically invoked as an electrical input signal sent to the board as
+ * part of an external emergency stop (Estop). Shutdown is meant to augment but not
+ * replace the external Estop functions that shut down power to motors, spindles and
+ * other moving parts.
  *
- * SHUTDOWN is cleared by entering any of: {clear:n}, {clr:n}, $clear, or $clr
+ * Shutdown may also be invoked from the command line using {shutd:n} or $shutd
+ * Shutdown must be manually cleared by entering: {clear:n}, {clr:n}, $clear, or $clr
+ * Shutdown does not clear on M30 or M2 Gcode commands
  */
 
 stat_t cm_shutdown(stat_t status, const char *msg)
