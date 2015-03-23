@@ -416,7 +416,7 @@ static stat_t _limit_switch_handler(void)
 
 static stat_t _interlock_handler(void)
 {
-//    if (cm.interlock_enable) {
+    if (cm.safety_interlock_enable) {
     // interlock broken
         if (cm.safety_interlock_disengaged != 0) {
             cm.safety_interlock_disengaged = 0;
@@ -435,7 +435,7 @@ static stat_t _interlock_handler(void)
             cm_request_end_hold();                                // use cm_request_end_hold() instead of just ending
             // restart coolant
         }
-//    }
+    }
     return(STAT_OK);
 }
 

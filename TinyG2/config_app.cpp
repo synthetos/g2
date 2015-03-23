@@ -152,15 +152,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// A work offset
 	{ "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// B work offset
 	{ "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// C work offset
-/*
-	{ "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_run_home,(float *)&homing_state, 0 },	// homing state, invoke homing cycle
-	{ "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_X], false },	// X homed - Homing status group
-	{ "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_Y], false },	// Y homed
-	{ "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_Z], false },	// Z homed
-	{ "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_A], false },	// A homed
-	{ "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_B], false },	// B homed
-	{ "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_nul,(float *)&cm.homed[AXIS_C], false },	// C homed
-*/
+
 	{ "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },	    // homing state, invoke homing cycle
 	{ "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },	// X homed - Homing status group
 	{ "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },	// Y homed
@@ -481,8 +473,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	// General system parameters
 	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,    JUNCTION_ACCELERATION },
 	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
-	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_ui8,  (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
-	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_ui8,  (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
+	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
+	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
+	{ "sys","saf",_fipn, 0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,	SAFETY_INTERLOCK_ENABLE },
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
@@ -500,7 +493,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul, (float *)&coolant.mist_state, 0 },      // get mist coolant state
     { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul, (float *)&coolant.flood_state, 0 },     // get flood coolant state
 
-    // Communications and reporting paramters
+    // Communications and reporting parameters
 #ifdef __TEXT_MODE
     { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,        TEXT_VERBOSITY },
 #endif

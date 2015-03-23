@@ -54,6 +54,7 @@
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     1						// 0=off, 1=on
 
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_DWELL_TIME          1.0

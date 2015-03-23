@@ -451,7 +451,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
-//  bool interlock_enable;              // true to enable interlock system
+    bool safety_interlock_enable;       // true to enable safety interlock system
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -765,6 +765,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
+	void cm_print_saf(nvObj_t *nv);
 	void cm_print_ml(nvObj_t *nv);
 	void cm_print_ma(nvObj_t *nv);
 	void cm_print_ms(nvObj_t *nv);
@@ -827,6 +828,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub
+	#define cm_print_saf tx_print_stub
 	#define cm_print_ml tx_print_stub
 	#define cm_print_ma tx_print_stub
 	#define cm_print_ms tx_print_stub

@@ -2177,6 +2177,7 @@ const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
+const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
 const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
@@ -2184,7 +2185,8 @@ const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
-void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}  // TYPE_INT
+void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
+void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}   // TYPE_INT
 void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
