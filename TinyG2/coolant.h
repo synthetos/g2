@@ -43,6 +43,11 @@ typedef enum {
     COOLANT_PAUSE,
 } cmCoolantPause;
 
+typedef enum {                      // used to index the value and flag vectors for coolant execs
+    COOLANT_FLOOD = 0,
+    COOLANT_MIST
+} cmCoolantIndex;
+
 /*
  * Coolant control structure
  */

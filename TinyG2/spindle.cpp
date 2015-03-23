@@ -105,10 +105,10 @@ static void _exec_spindle_speed(float *value, float *flag)
 void cm_spindle_optional_pause(bool option)
 {
     if (option && (spindle.state != SPINDLE_OFF)) {
-        cmSpindleState state = spindle.state;   // local copy
-        cm_spindle_control_immediate(SPINDLE_OFF);
-        spindle.pause = SPINDLE_PAUSED;         // mark as paused
-        spindle.state = state;                  // restore previous spindle state
+        cmSpindleState state = spindle.state;       // local copy
+        cm_spindle_control_immediate(SPINDLE_OFF);  // changes spindle state
+        spindle.pause = SPINDLE_PAUSED;             // mark as paused
+        spindle.state = state;                      // restore previous spindle state
     }
 }
 
