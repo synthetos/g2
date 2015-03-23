@@ -451,7 +451,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
-//    bool interlock_enable;              // true to enable interlock system
+//  bool interlock_enable;              // true to enable interlock system
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default

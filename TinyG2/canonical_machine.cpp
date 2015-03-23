@@ -1344,8 +1344,7 @@ void cm_request_feedhold(void) {
 // OMC    if (cm.estop_state != ESTOP_INACTIVE) { return; }
 
     // honor request if not already in a feedhold and you are moving
-    if ((cm.hold_state == FEEDHOLD_OFF) &&
-        (cm.motion_state != MOTION_STOP)) {
+    if ((cm.hold_state == FEEDHOLD_OFF) && (cm.motion_state != MOTION_STOP)) {
         cm.hold_state = FEEDHOLD_REQUESTED;
     }
 }

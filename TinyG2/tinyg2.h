@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.24 // testing interlock
+#define TINYG_FIRMWARE_BUILD   		080.24 // testing interlock function
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
