@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		080.27 // documentation pass
+#define TINYG_FIRMWARE_BUILD   		080.28 // a few changes to alarm behaviors
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

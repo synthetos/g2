@@ -663,10 +663,10 @@ stat_t cm_clr(nvObj_t *nv)                      // clear alarm or shutdown from 
 
 /*
  * cm_clear() - clear ALARM and SHUTDOWN states
- * cm_parse_clear() - parse incoming gcode for M30 or M2 clears
+ * cm_parse_clear() - parse incoming gcode for M30 or M2 clears if in ALARM state
  *
- * Parse clear interprets an M30 or M2 PROGRAM_END as a $clear condition and clear ALARMs and
- * SHUTDOWNs but not PANICs. Assumes Gcode string has no leading or embedded whitespace
+ * Parse clear interprets an M30 or M2 PROGRAM_END as a $clear condition and clear ALARM
+ * but not SHUTDOWN or PANIC. Assumes Gcode string has no leading or embedded whitespace
  */
 
 void cm_clear()
@@ -680,10 +680,12 @@ void cm_clear()
 
 void cm_parse_clear(char *s)
 {
-    if (toupper(s[0]) == 'M') { // M30 or M2 will clear ALARM or SHUTDOWN, but not a PANIC
-        if (( (s[1]=='3') && (s[2]=='0') && (s[3]==NUL)) || ((s[1]=='2') && (s[2]==NUL) )) {
-            cm_clear();
-        }
+    if (cm.machine_state == MACHINE_ALARM) {
+        if (toupper(s[0]) == 'M') {
+            if (( (s[1]=='3') && (s[2]=='0') && (s[3]==NUL)) || ((s[1]=='2') && (s[2]==NUL) )) {
+                cm_clear();
+            }
+        }        
     }
 }
 
@@ -750,15 +752,16 @@ stat_t cm_alarm(stat_t status, const char *msg)
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
 	cm_spindle_control_immediate(SPINDLE_OFF);
 	cm_coolant_off_immediate();
-/*
+
 	// build a secondary message string (info) and call the exception report
+/*
 	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
 		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	} else {
 		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
 	}
-	rpt_exception(status, info);	            // send alarm message
+	rpt_exception(status, info);	            // send alarm exception report
 */
 	rpt_exception(status, msg);	                // send alarm message
     return (status);
@@ -790,7 +793,11 @@ stat_t cm_shutdown(stat_t status, const char *msg)
 	coolant_reset();
     cm_queue_flush();                           // flush all queues and reset positions
 
-	cm.waiting_for_gcode_resume = true;         // support OMC USB fix
+    for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
+        cm.homed[i] = false;
+    }
+    cm.homing_state = HOMING_NOT_HOMED;
+
 	cm.machine_state = MACHINE_SHUTDOWN;        // do this after all other activity
 	rpt_exception(status, msg);	                // send exception report
     return (status);
@@ -814,7 +821,6 @@ stat_t cm_panic(stat_t status, const char *msg)
     coolant_reset();
     cm_queue_flush();                           // flush all queues and reset positions
 
-    cm.waiting_for_gcode_resume = true;         // support OMC USB fix
 	cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
 	rpt_exception(status, msg);			        // send panic report
 	return (status);
@@ -1445,16 +1451,6 @@ void cm_start_hold()
 
 void cm_end_hold()
 {
-/* OMC code
-    if((cm.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 &&
-        (cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-        return;
-    }
-
-	if (cm.interlock_state != 0 && (cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-		return;
-    }
-*/
 	if (cm.hold_state == FEEDHOLD_HOLD) {
         cm.end_hold_requested = false;
 	    mp_exit_hold_state();

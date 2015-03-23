@@ -60,11 +60,47 @@ void coolant_reset()
 }
 
 /*
+ * cm_coolant_optional_pause() - pause coolant immediately if option is true
+ * cm_coolant_resume() - restart a paused coolant
+ */
+/*
+void cm_coolant_optional_pause(bool option)
+{
+    if (option && (coolant.mist_state || coolant.flood_state)) {    // if either are on
+        cmCoolantState mist_state = coolant.mist_state;             // local copies
+        cmCoolantState flood_state = coolant.flood_state;
+
+//        cm_coolant_control_immediate(COOLANT_OFF);
+        // cancel PAUSE if turning off coolant
+        if (mist_state == COOLANT_OFF) { coolant.mist_pause = COOLANT_NORMAL; }
+        if (flood_state == COOLANT_OFF) { coolant.flood_pause = COOLANT_NORMAL; }
+
+        float value[AXES] = { (float)coolant_state, 0,0,0,0,0 };
+        _exec_flood_coolant_control(value, value);
+        //    float vect[] = { 0,0,0,0,0,0 };
+        //    _exec_flood_coolant_control(vect, vect);
+
+        coolant.pause = COOLANT_PAUSED;         // mark as paused
+        coolant.state = state;                  // restore previous coolant state
+    }
+
+}
+
+void cm_coolant_resume()
+{
+    if(coolant.pause == SPINDLE_PAUSED) {
+        cm_coolant_control_immediate(spindle.state);
+    }
+    coolant.pause = SPINDLE_NORMAL;
+}
+*/
+/*
  *  cm_mist_coolant_control()    -
  * _exec_mist_coolant_control()  -
  *  cm_flood_coolant_control()   -
  * _exec_flood_coolant_control() -
  *  cm_coolant_off_immediate()   -
+ *  cm_coolant_control_immediate()   -
  */
 
 void cm_coolant_off_immediate()     // turn off all coolant
@@ -72,7 +108,18 @@ void cm_coolant_off_immediate()     // turn off all coolant
     float vect[] = { 0,0,0,0,0,0 };
     _exec_flood_coolant_control(vect, vect);
 }
-
+/*
+void cm_coolant_control_immediate(cmCoolantState coolant_state) // turn on/off coolant
+{
+    if (coolant_state == COOLANT_OFF) {         // cancel PAUSE if turning off coolant
+        coolant.pause = COOLANT_NORMAL;
+    }
+    float value[AXES] = { (float)coolant_state, 0,0,0,0,0 };
+    _exec_flood_coolant_control(value, value);
+//    float vect[] = { 0,0,0,0,0,0 };
+//    _exec_flood_coolant_control(vect, vect);
+}
+*/
 #ifdef __ARM
 #define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
 #define _set_coolant_enable_bit_lo() coolant_enable_pin.clear()

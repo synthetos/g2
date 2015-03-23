@@ -63,15 +63,15 @@ typedef enum {				        // check alignment with messages in config.c / msg_sta
 	COMBINED_ALARM,					// [2] machine in alarm state           //iff macs == MACHINE_ALARM
 	COMBINED_PROGRAM_STOP,			// [3] program stop/no more blocks      //iff macs == MACHINE_PROGRAM_STOP
 	COMBINED_PROGRAM_END,			// [4] program end                      //iff macs == MACHINE_PROGRAM_END
-	COMBINED_RUN,					// [5] motion is running                //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
-	COMBINED_HOLD,					// [6] motion is holding                //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
+	COMBINED_RUN,					// [5] machine is running               //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
+	COMBINED_HOLD,					// [6] machine is holding               //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
 	COMBINED_PROBE,					// [7] probe cycle active               //iff macs == MACHINE_CYCLE, cycs == CYCLE_PROBE
 	COMBINED_CYCLE,					// [8] reserved for canned cycles       < not used >
  	COMBINED_HOMING,				// [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
 	COMBINED_JOG,					// [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-    COMBINED_INTERLOCK,             // [11] machine in interlock state      //iff macs == MACHINE_INTERLOCK
+    COMBINED_INTERLOCK,             // [11] machine in safety interlock hold//iff macs == MACHINE_INTERLOCK
 	COMBINED_SHUTDOWN,				// [12] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
-	COMBINED_PANIC				    // [13] syatem in panic state           //iff macs == MACHINE_PANIC
+	COMBINED_PANIC				    // [13] machine in panic state          //iff macs == MACHINE_PANIC
 } cmCombinedState;
 //### END CRITICAL REGION ###
 
@@ -495,8 +495,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     uint8_t limit_requested;            // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;         // set non-zero to request shutdown in support of external estop (value is input number)
 
-	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
-	                                    // see explanation in gcode_parser.cpp::wait_for_gcode_resume
 	/**** Model states ****/
 	GCodeState_t *am;                   // active Gcode model is maintained by state management
 	GCodeState_t  gm;					// core gcode model state

@@ -71,9 +71,7 @@ static stat_t _do_all(nvObj_t *nv);			// print all parameters
 //static stat_t set_ex(nvObj_t *nv);		// enable XON/XOFF and RTS/CTS flow control
 //static stat_t set_baud(nvObj_t *nv);		// set USB baud rate
 static stat_t get_rx(nvObj_t *nv);			// get bytes in RX buffer
-//static stat_t get_wr(nvObj_t *nv);		// get window report (sliding window slots)
 static stat_t get_tick(nvObj_t *nv);		// get system tick count
-//static stat_t run_sx(nvObj_t *nv);		// send XOFF, XON
 
 /***********************************************************************************
  **** CONFIG TABLE  ****************************************************************
