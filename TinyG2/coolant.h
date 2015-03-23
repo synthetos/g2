@@ -77,7 +77,8 @@ void coolant_reset();
 stat_t cm_mist_coolant_control(uint8_t mist_state); 			// M7
 stat_t cm_flood_coolant_control(uint8_t flood_state);			// M8, M9
 void cm_coolant_off_immediate(void);
-void cm_coolant_control_immediate(cmCoolantState coolant_state);
+void cm_coolant_optional_pause(bool option);
+void cm_coolant_resume(void);
 
 /*--- text_mode support functions ---*/
 

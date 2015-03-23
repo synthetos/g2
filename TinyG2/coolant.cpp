@@ -78,6 +78,7 @@ void cm_coolant_optional_pause(bool option)
 
     float value[] = { 0,0,0,0,0,0 };
     float flags[] = { 0,0,0,0,0,0 };
+    
 
     if (coolant.flood_state) {
         flags[COOLANT_FLOOD] = 1.0;        
@@ -88,12 +89,16 @@ void cm_coolant_optional_pause(bool option)
         coolant.mist_pause = COOLANT_PAUSE;     // mark as paused
     }
     _exec_coolant_control(value, flags);        // execute (w/o changing local state)
+
 }
 
 void cm_coolant_resume()
 {
     float value[] = { 0,0,0,0,0,0 };
     float flags[] = { 0,0,0,0,0,0 };
+
+    cmCoolantState saved_flood_state = coolant.flood_state;
+    cmCoolantState saved_mist_state = coolant.mist_state;
 
     if (coolant.flood_pause == COOLANT_PAUSE) {
         flags[COOLANT_FLOOD] = 1.0;
@@ -105,7 +110,9 @@ void cm_coolant_resume()
         value[COOLANT_MIST] = (float)coolant.flood_state;
         coolant.mist_pause = COOLANT_NORMAL;        // mark as not paused
     }
-    _exec_coolant_control(value, flags);            // execute (w/o changing local state)
+    _exec_coolant_control(value, flags);            // execute (changes state)
+    coolant.flood_state = saved_flood_state;        // restore state
+    coolant.mist_state = saved_mist_state;
 }
 
 #ifdef __ARM

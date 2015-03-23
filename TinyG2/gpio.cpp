@@ -256,7 +256,7 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 			cm_start_hold();                        // for now is same as STOP
         }
         if (in->action == INPUT_ACTION_HALT) {
-	        cm_halt_motion();					    // hard stop
+	        cm_halt_all();					        // hard stop, including spindle and coolant
         }
         if (in->action == INPUT_ACTION_PANIC) {
 	        char msg[10];

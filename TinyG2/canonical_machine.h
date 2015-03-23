@@ -337,11 +337,6 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
 	uint8_t tool;				// G	// M6 tool change - moves "tool_select" to "tool"
 	uint8_t tool_select;		// G	// T value - T sets this value
-//	uint8_t mist_coolant;		// G	// TRUE = mist on (M7), FALSE = off (M9)
-//	uint8_t flood_coolant;		// G	// TRUE = flood on (M8), FALSE = off (M9)
-//	uint8_t spindle_state;		// G	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
-//	uint8_t spindle_pause;		// G	// 0=operating, 1=paused
-
 } GCodeState_t;
 
 typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by model and arcs
@@ -402,7 +397,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
 	uint8_t flood_coolant;				// TRUE = flood on (M8), FALSE = off (M9)
 
-	uint8_t spindle_state;	        	// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+	uint8_t spindle_control;            // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
@@ -577,7 +572,8 @@ stat_t cm_clr(nvObj_t *nv);                                     // clear alarm a
 void cm_clear(void);                                            // raw clear command
 void cm_parse_clear(char *s);                                   // parse gcode for M30 or M2 clear condition
 stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
-void cm_halt_motion(void);                                      // halt movement (immediate stop) but not spindle & other IO
+void cm_halt_all(void);                                         // halt motion, spindle and coolant
+void cm_halt_motion(void);                                      // halt motion (immediate stop) but not spindle & other IO
 stat_t cm_alarm(stat_t status, const char *msg);                // enter alarm state - preserve Gcode state
 stat_t cm_shutdown(stat_t status, const char *msg);             // enter shutdown state - dump all state
 stat_t cm_panic(stat_t status, const char *msg);                // enter panic state - needs RESET

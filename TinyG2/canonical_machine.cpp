@@ -702,12 +702,20 @@ stat_t cm_is_alarmed()
 }
 
 /*
+ * cm_halt_all() - stop, spindle and coolant immediately
  * cm_halt_motion() - stop motion immediately. Does not affect spindle, coolant, or other IO
  *
  * Stop motors and reset all system states accordingly.
  * Does not de-energize motors as in some cases the motors must remain energized
  * in order to prevent an axis from crashing.
  */
+
+void cm_halt_all(void)
+{
+    cm_halt_motion();
+	cm_spindle_off_immediate();
+	cm_coolant_off_immediate();
+}
 
 void cm_halt_motion(void)
 {
@@ -750,8 +758,10 @@ stat_t cm_alarm(stat_t status, const char *msg)
 	cm.machine_state = MACHINE_ALARM;
     cm_request_feedhold();                      // stop motion
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
-	cm_spindle_control_immediate(SPINDLE_OFF);
-	cm_coolant_off_immediate();
+//	cm_spindle_control_immediate(SPINDLE_OFF);
+//	cm_coolant_off_immediate();
+//	cm_spindle_optional_pause(spindle.pause_on_hold);
+//	cm_coolant_optional_pause(coolant.pause_on_hold);
 
 	// build a secondary message string (info) and call the exception report
 /*
@@ -790,7 +800,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
     }
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-	coolant_reset();
+    coolant_reset();
     cm_queue_flush();                           // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
@@ -1384,8 +1394,6 @@ stat_t cm_traverse_override_factor(uint8_t flag)	// M51
  * cm_request_queue_flush()
  */
 void cm_request_feedhold(void) {
-// OMC    if (cm.estop_state != ESTOP_INACTIVE) { return; }
-
     // honor request if not already in a feedhold and you are moving
     if ((cm.hold_state == FEEDHOLD_OFF) && (cm.motion_state != MOTION_STOP)) {
         cm.hold_state = FEEDHOLD_REQUESTED;
@@ -1394,19 +1402,15 @@ void cm_request_feedhold(void) {
 
 void cm_request_end_hold(void)
 {
-// OMC    if (cm.estop_state != ESTOP_INACTIVE) { return; }
     cm.end_hold_requested = true;
 }
 
 void cm_request_queue_flush()
 {
-// OMC   if (cm.estop_state != ESTOP_INACTIVE) { return; }
-
     if ((cm.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
         (cm.queue_flush_state == FLUSH_OFF)) {      // ...and only once
         xio_flush_read();                           // flush the input buffers - you can do that now
         cm.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
-// OMC  cm.waiting_for_gcode_resume = true;
     }
 }
 
@@ -1442,10 +1446,11 @@ bool cm_has_hold()
 
 void cm_start_hold()
 {
-	if (mp_has_runnable_buffer()) {                         // meaning there's something running
+    if (mp_has_runnable_buffer()) {                         // meaning there's something running
         cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
-	    cm_set_motion_state(MOTION_HOLD);
-	    cm.hold_state = FEEDHOLD_SYNC;	            // invokes hold from aline execution
+        cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
+        cm_set_motion_state(MOTION_HOLD);
+        cm.hold_state = FEEDHOLD_SYNC;	                    // invokes hold from aline execution
     }
 }
 
@@ -1457,15 +1462,18 @@ void cm_end_hold()
 
         // State machine cases:
         if (cm.machine_state == MACHINE_ALARM) {
-		    cm_spindle_control_immediate(SPINDLE_OFF);
+            cm_spindle_off_immediate();
+		    cm_coolant_off_immediate();
 
         } else if (cm.motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
-		    cm_spindle_control_immediate(SPINDLE_OFF);
+            cm_spindle_off_immediate();
+		    cm_coolant_off_immediate();
 		    cm_cycle_end();
 
         } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
 		    cm_cycle_start();
             cm_spindle_resume(spindle.dwell_seconds);
+            cm_coolant_resume();
             st_request_exec_move();
         }
     }
@@ -1561,8 +1569,9 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
-		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
-		cm_flood_coolant_control(false);				// M9
+		cm_spindle_off_immediate();                     // M5
+		cm_coolant_off_immediate();                     // M9
+//		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
 	}
