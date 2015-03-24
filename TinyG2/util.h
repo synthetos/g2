@@ -95,29 +95,9 @@ uint32_t SysTickTimer_getValue(void);
 
 using std::isnan;
 using std::isinf;
-/*
 using std::min;
 using std::max;
-*/
-// side-effect safe forms of min and max
-#ifndef max
-#define max(a,b) \
-    ({ __typeof__ (a) termA = (a); \
-        __typeof__ (b) termB = (b); \
-        termA>termB ? termA:termB; })
-#endif
 
-#ifndef min
-#define min(a,b) \
-    ({ __typeof__ (a) term1 = (a); \
-        __typeof__ (b) term2 = (b); \
-        term1<term2 ? term1:term2; })
-#endif
-/*
-#ifndef avg
-#define avg(a,b) ((a+b)/2)
-#endif
-*/
 template <typename T>
 inline T square(const T x) { return (x)*(x); }		/* UNSAFE */
 

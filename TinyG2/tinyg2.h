@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		081.01 // porting in v8 arcs
+#define TINYG_FIRMWARE_BUILD   		081.02 // testing and cleanup
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

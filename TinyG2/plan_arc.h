@@ -58,8 +58,6 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 //	float work_offset[AXES];	// offset from machine coord system for reporting (same for each segment)
 //	float move_time;			// segment_time: constant time per aline segment
 
-//	float min_arc_segment_len;	// arc drawing resolution in mm
-
 	magic_t magic_end;
 } arc_t;
 extern arc_t arc;
