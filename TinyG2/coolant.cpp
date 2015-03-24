@@ -61,7 +61,7 @@ void coolant_reset()
 
 /*
  * cm_coolant_off_immediate() - turn off all coolant
- * cm_coolant_optional_pause() - pause coolants if options are true
+ * cm_coolant_optional_pause() - pause coolants if option is true
  * cm_coolant_resume() - restart paused coolants
  */
 
@@ -74,45 +74,35 @@ void cm_coolant_off_immediate()
 
 void cm_coolant_optional_pause(bool option)
 {
-    if (!option) { return; }    // don't pause if they haven't selected the option
+    if (option) {
+        float value[] = { 0,0,0,0,0,0 };
+        float flags[] = { 0,0,0,0,0,0 };
 
-    float value[] = { 0,0,0,0,0,0 };
-    float flags[] = { 0,0,0,0,0,0 };
-
-
-    if (coolant.flood_enable) {
-        flags[COOLANT_FLOOD] = 1.0;
-        coolant.flood_pause = COOLANT_PAUSE;    // mark as paused
+        if (coolant.flood_enable == COOLANT_ON) {
+            coolant.flood_enable = COOLANT_PAUSE;   // mark as paused
+            flags[COOLANT_FLOOD] = 1;               // set flag so it will turn off
+        }
+        if (coolant.mist_enable == COOLANT_ON) {
+            coolant.mist_enable = COOLANT_PAUSE;     // mark as paused
+            flags[COOLANT_MIST] = 1;
+        }
+        _exec_coolant_control(value, flags);        // execute (w/o changing local state)
     }
-    if (coolant.mist_enable) {
-        flags[COOLANT_MIST] = 1.0;
-        coolant.mist_pause = COOLANT_PAUSE;     // mark as paused
-    }
-    _exec_coolant_control(value, flags);        // execute (w/o changing local state)
-
 }
 
 void cm_coolant_resume()
 {
     float value[] = { 0,0,0,0,0,0 };
-    float flags[] = { 0,0,0,0,0,0 };
 
-    cmCoolantEnable saved_flood_enable = coolant.flood_enable;
-    cmCoolantEnable saved_mist_enable = coolant.mist_enable;
-
-    if (coolant.flood_pause == COOLANT_PAUSE) {
-        flags[COOLANT_FLOOD] = 1.0;
-        value[COOLANT_FLOOD] = (float)coolant.flood_enable;
-        coolant.flood_pause = COOLANT_NORMAL;       // mark as not paused
+    if (coolant.flood_enable == COOLANT_PAUSE) {
+        coolant.flood_enable = COOLANT_ON;
+        value[COOLANT_FLOOD] = 1;
     }
-    if (coolant.mist_pause == COOLANT_PAUSE) {
-        flags[COOLANT_MIST] = 1.0;
-        value[COOLANT_MIST] = (float)coolant.flood_enable;
-        coolant.mist_pause = COOLANT_NORMAL;        // mark as not paused
+    if (coolant.mist_enable == COOLANT_PAUSE) {
+        coolant.mist_enable = COOLANT_ON;
+        value[COOLANT_MIST] = 1;
     }
-    _exec_coolant_control(value, flags);            // execute (changes state)
-    coolant.flood_enable = saved_flood_enable;        // restore state
-    coolant.mist_enable = saved_mist_enable;
+    _exec_coolant_control(value, value);
 }
 
 /*
@@ -142,30 +132,35 @@ stat_t cm_mist_coolant_control(uint8_t mist_enable)
 }
 
 #ifdef __ARM
-    #define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
-    #define _set_coolant_enable_bit_lo() coolant_enable_pin.clear()
+    // NOTE: flood and mist coolants are mapped to the same bit - see hardware.h
+    #define _set_flood_enable_bit_hi() flood_enable_pin.set()
+    #define _set_flood_enable_bit_lo() flood_enable_pin.clear()
+    #define _set_mist_enable_bit_hi() mist_enable_pin.set()
+    #define _set_mist_enable_bit_lo() mist_enable_pin.clear()
 #endif
 #ifdef __AVR
-    #define _set_coolant_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
-    #define _set_coolant_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
+    #define _set_flood_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
+    #define _set_flood_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
+    #define _set_mist_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
+    #define _set_mist_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
 #endif
 
 static void _exec_coolant_control(float *value, float *flags)
 {
     if (fp_TRUE(flags[COOLANT_FLOOD])) {
         coolant.flood_enable = (cmCoolantEnable)value[COOLANT_FLOOD];
-        if (!(coolant.flood_enable ^ coolant.flood_polarity)) {    // inverted XOR
-            _set_coolant_enable_bit_hi();
+        if (!((coolant.flood_enable & 0x01) ^ coolant.flood_polarity)) {    // inverted XOR
+            _set_flood_enable_bit_hi();
         } else {
-            _set_coolant_enable_bit_lo();
+            _set_flood_enable_bit_lo();
         }
     }
     if (fp_TRUE(flags[COOLANT_MIST])) {
         coolant.mist_enable = (cmCoolantEnable)value[COOLANT_MIST];
-        if (!(coolant.mist_enable ^ coolant.mist_polarity)) {
-            _set_coolant_enable_bit_hi();
+        if (!((coolant.mist_enable & 0x01) ^ coolant.mist_polarity)) {
+            _set_mist_enable_bit_hi();
         } else {
-            _set_coolant_enable_bit_lo();
+            _set_mist_enable_bit_lo();
         }
     }
 }

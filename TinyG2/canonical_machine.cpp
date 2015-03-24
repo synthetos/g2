@@ -685,7 +685,7 @@ void cm_parse_clear(char *s)
             if (( (s[1]=='3') && (s[2]=='0') && (s[3]==NUL)) || ((s[1]=='2') && (s[2]==NUL) )) {
                 cm_clear();
             }
-        }        
+        }
     }
 }
 

@@ -29,19 +29,15 @@
 #define COOLANT_H_ONCE
 
 typedef enum {
-    COOLANT_OFF = 0,
+    COOLANT_OFF = 0,                // don't change the order. It gets masked.
     COOLANT_ON,
+    COOLANT_PAUSE
 } cmCoolantEnable;
 
 typedef enum {
     COOLANT_ACTIVE_LOW = 0,
     COOLANT_ACTIVE_HIGH
 } cmCoolantPolarity;
-
-typedef enum {
-    COOLANT_NORMAL = 0,
-    COOLANT_PAUSE,
-} cmCoolantPause;
 
 typedef enum {                      // used to index the value and flag vectors for coolant execs
     COOLANT_FLOOD = 0,
@@ -54,15 +50,13 @@ typedef enum {                      // used to index the value and flag vectors 
 
 typedef struct cmCoolatSingleton {
 
-    cmCoolantPause pause_on_hold;       // set to COOLANT_PAUSE to pause coolant on feedhold
-
-	cmCoolantEnable mist_enable;        // COOLANT_ON = mist on (M7), COOLANT_OFF = off (M9)
-    cmCoolantPause mist_pause;          // pause state - applies to above states
-    cmCoolantPolarity mist_polarity;    // 0=active low, 1=active high
+    bool pause_on_hold;                 // true to pause coolant on feedhold
 
 	cmCoolantEnable flood_enable;       // COOLANT_ON = flood on (M8), COOLANT_OFF = off (M9)
-    cmCoolantPause flood_pause;         // pause state - applies to above states
     cmCoolantPolarity flood_polarity;   // 0=active low, 1=active high
+
+	cmCoolantEnable mist_enable;        // COOLANT_ON = mist on (M7), COOLANT_OFF = off (M9)
+    cmCoolantPolarity mist_polarity;    // 0=active low, 1=active high
 
 } cmCoolantSingleton_t;
 extern cmCoolantSingleton_t coolant;
