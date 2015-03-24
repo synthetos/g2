@@ -76,7 +76,7 @@
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
-#define QUEUE_REPORT_VERBOSITY		QR_TRIPLE		// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define QUEUE_REPORT_VERBOSITY		QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
@@ -255,6 +255,22 @@
 //
 // Use the following to DISABLE an input and keep it from having any action or function
 // #define DI1_MODE                 INPUT_MODE_DISABLED     // switch is NC type. switch is hit for limit
+
+/*  NORMALLY_OPEN
+    NORMALLY_CLOSED
+    
+    INPUT_ACTION_NONE
+    INPUT_ACTION_STOP
+    INPUT_ACTION_FAST_STOP
+    INPUT_ACTION_HALT
+    INPUT_ACTION_RESET
+
+    INPUT_FUNCTION_NONE
+    INPUT_FUNCTION_LIMIT
+    INPUT_FUNCTION_INTERLOCK
+    INPUT_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_PANIC
+*/
 
 // Xmin on v9 board
 #define DI1_MODE                    NORMALLY_CLOSED         // switch is NC type. switch is hit for limit

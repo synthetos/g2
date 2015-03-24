@@ -45,37 +45,33 @@
 #define JUNCTION_DEVIATION          0.10					// default value, in mm
 #define JUNCTION_ACCELERATION       1000000					// centripetal acceleration around corners
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
 #define SAFETY_INTERLOCK_ENABLE     1						// 0=off, 1=on
 
+#define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
+#define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_DWELL_TIME          1.0
-#define SPINDLE_POLARITY_ENABLE     1                       // 0=active low, 1=active high
-#define SPINDLE_POLARITY_DIR        0                       // 0=clockwise is low, 1=clockwise is high
 
-#define COOLANT_PAUSE_ON_HOLD       false
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD       false
 
 // Communications and reporting settings
 
-#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
-#define COM_EXPAND_CR               false
-#define COM_ENABLE_ECHO             false
-#define COM_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
-#define NETWORK_MODE                NETWORK_STANDALONE
-
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
+#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+
+#define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
+#define XIO_ENABLE_ECHO             false
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
-#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
-#define QUEUE_REPORT_VERBOSITY      QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
@@ -243,49 +239,56 @@
 #define C_ZERO_BACKOFF              2
 
 //*** Input / output settings ***
+/*  NORMALLY_OPEN
+    NORMALLY_CLOSED
+    
+    INPUT_ACTION_NONE
+    INPUT_ACTION_STOP
+    INPUT_ACTION_FAST_STOP
+    INPUT_ACTION_HALT
+    INPUT_ACTION_RESET
 
-// IO_ACTION_NONE, IO_ACTION_STOP ,IO_ACTION_FAST_STOP, IO_ACTION_HALT,  IO_ACTION_RESET
-// IO_FUNCTION_NONE, IO_FUNCTION_LIMIT, IO_FUNCTION_INTERLOCK, IO_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_NONE
+    INPUT_FUNCTION_LIMIT
+    INPUT_FUNCTION_INTERLOCK
+    INPUT_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_PANIC
+*/
+#define DI1_MODE                    NORMALLY_CLOSED            // Xmin
+#define DI1_ACTION                  INPUT_ACTION_STOP
+#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DEFAULT_MODE                NORMALLY_CLOSED
-#define DEFAULT_ACTION              IO_ACTION_NONE
-#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
+#define DI2_MODE                    NORMALLY_CLOSED            // Xmax
+#define DI2_ACTION                  INPUT_ACTION_STOP
+#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI1_MODE                    DEFAULT_MODE            // Xmin
-#define DI1_ACTION                  IO_ACTION_STOP
-#define DI1_FUNCTION                IO_FUNCTION_LIMIT
+#define DI3_MODE                    NORMALLY_CLOSED            // Ymin
+#define DI3_ACTION                  INPUT_ACTION_STOP
+#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI2_MODE                    DEFAULT_MODE            // Xmax
-#define DI2_ACTION                  IO_ACTION_STOP
-#define DI2_FUNCTION                IO_FUNCTION_LIMIT
+#define DI4_MODE                    NORMALLY_CLOSED            // Ymax
+#define DI4_ACTION                  INPUT_ACTION_STOP
+#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI3_MODE                    DEFAULT_MODE            // Ymin
-#define DI3_ACTION                  IO_ACTION_STOP
-#define DI3_FUNCTION                IO_FUNCTION_LIMIT
+#define DI5_MODE                    NORMALLY_CLOSED            // Zmin
+#define DI5_ACTION                  INPUT_ACTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI4_MODE                    DEFAULT_MODE            // Ymax
-#define DI4_ACTION                  IO_ACTION_STOP
-#define DI4_FUNCTION                IO_FUNCTION_LIMIT
+#define DI6_MODE                    NORMALLY_CLOSED            // Zmax
+#define DI6_ACTION                  INPUT_ACTION_STOP
+#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
-#define DI5_MODE                    DEFAULT_MODE            // Zmin
-#define DI5_ACTION                  DEFAULT_ACTION
-#define DI5_FUNCTION                DEFAULT_FUNCTION
+#define DI7_MODE                    NORMALLY_CLOSED            // Amin (hijacked for INTERLOCK)
+#define DI7_ACTION                  INPUT_ACTION_STOP
+#define DI7_FUNCTION                INPUT_FUNCTION_INTERLOCK
 
-#define DI6_MODE                    DEFAULT_MODE            // Zmax
-#define DI6_ACTION                  IO_ACTION_STOP
-#define DI6_FUNCTION                IO_FUNCTION_LIMIT
+#define DI8_MODE                    NORMALLY_CLOSED            // Amax (hijacked for SHUTDOWN)
+#define DI8_ACTION                  INPUT_ACTION_HALT
+#define DI8_FUNCTION                INPUT_FUNCTION_SHUTDOWN
 
-#define DI7_MODE                    DEFAULT_MODE            // Amin (hijacked for INTERLOCK)
-#define DI7_ACTION                  IO_ACTION_STOP
-#define DI7_FUNCTION                IO_FUNCTION_INTERLOCK
-
-#define DI8_MODE                    NORMALLY_OPEN            // Amax (hijacked for SHUTDOWN)
-#define DI8_ACTION                  IO_ACTION_HALT
-#define DI8_FUNCTION                IO_FUNCTION_SHUTDOWN
-
-#define DI9_MODE                    DEFAULT_MODE            // Hardware interlock input
-#define DI9_ACTION                  DEFAULT_ACTION
-#define DI9_FUNCTION                DEFAULT_FUNCTION
+#define DI9_MODE                    NORMALLY_CLOSED            // Hardware interlock input
+#define DI9_ACTION                  INPUT_ACTION_NONE
+#define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 /*** Handle optional modules that may not be in every machine ***/
 
