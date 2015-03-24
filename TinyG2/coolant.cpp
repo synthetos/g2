@@ -132,7 +132,7 @@ stat_t cm_mist_coolant_control(uint8_t mist_enable)
 }
 
 #ifdef __ARM
-    // NOTE: flood and mist coolants are mapped to the same bit - see hardware.h
+    // NOTE: flood and mist coolants are mapped to the same pin - see hardware.h
     #define _set_flood_enable_bit_hi() flood_enable_pin.set()
     #define _set_flood_enable_bit_lo() flood_enable_pin.clear()
     #define _set_mist_enable_bit_hi() mist_enable_pin.set()

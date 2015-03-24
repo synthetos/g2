@@ -152,6 +152,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	bf->tail_length = 0;
 
     if (fp_ZERO(bf->length)) {
+        rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero length line in calculate trapezoid");    // +++++++
         while (1);
     }
 
@@ -166,7 +167,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // Test exit == cruise
 
 
-    // Try to optimize out the assymetric last move
+    // Try to optimize out the asymmetric last move
 
 
 	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
@@ -186,11 +187,12 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     // If bf->real_move_time <= MIN_SEGMENT_TIME_PLUS_MARGIN, don't check MIN_SEGMENT_TIME_PLUS_MARGIN
     if (naiive_move_time < (MIN_SEGMENT_TIME_PLUS_MARGIN / 2)) { // compensating for reduced equation
-        // test to add backj later: bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN &&
+        // test to add back later: bf->real_move_time > MIN_SEGMENT_TIME_PLUS_MARGIN &&
         bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
         if (fp_ZERO(bf->cruise_velocity)) {
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity1 in calculate trapezoid");    // +++++++
             while (1);
         }
 
@@ -227,6 +229,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
         if (fp_ZERO(bf->cruise_velocity)) {
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity2 in calculate trapezoid");    // +++++++
             while (1);
         }
 
@@ -299,6 +302,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
 
             if (fp_ZERO(bf->cruise_velocity)) {
+                rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity3 in calculate trapezoid");    // +++++++
                 while (1);
             }
 
@@ -327,6 +331,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = mp_get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
 
         if (fp_ZERO(bf->cruise_velocity)) {
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity4 in calculate trapezoid");    // +++++++
             while (1);
         }
 
@@ -375,6 +380,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
 
         if (fp_ZERO(bf->cruise_velocity)) {
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity5 in calculate trapezoid");    // +++++++
             while (1);
         }
 
@@ -388,6 +394,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //        bf->real_move_time = (bf->body_length/bf->cruise_velocity);
 
         if (fp_ZERO(bf->cruise_velocity)) {
+            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity6 in calculate trapezoid");    // +++++++
             while (1);
         }
 
@@ -395,6 +402,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	}
 
     if (fp_ZERO(bf->cruise_velocity)) {
+        rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity7 in calculate trapezoid");    // +++++++
         while (1);
     }
 
@@ -584,7 +592,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     return v_1;
 }
 
-#else 
+#else
 // Non LINEAR_SNAP_MATH math:
 
 
