@@ -49,8 +49,8 @@ static void _exec_coolant_control(float *value, float *flags);
  */
 void coolant_init()
 {
-    coolant.mist_state = COOLANT_OFF;
-    coolant.flood_state = COOLANT_OFF;
+    coolant.mist_enable = COOLANT_OFF;
+    coolant.flood_enable = COOLANT_OFF;
 }
 
 void coolant_reset()
@@ -78,13 +78,13 @@ void cm_coolant_optional_pause(bool option)
 
     float value[] = { 0,0,0,0,0,0 };
     float flags[] = { 0,0,0,0,0,0 };
-    
 
-    if (coolant.flood_state) {
-        flags[COOLANT_FLOOD] = 1.0;        
+
+    if (coolant.flood_enable) {
+        flags[COOLANT_FLOOD] = 1.0;
         coolant.flood_pause = COOLANT_PAUSE;    // mark as paused
     }
-    if (coolant.mist_state) {
+    if (coolant.mist_enable) {
         flags[COOLANT_MIST] = 1.0;
         coolant.mist_pause = COOLANT_PAUSE;     // mark as paused
     }
@@ -97,22 +97,22 @@ void cm_coolant_resume()
     float value[] = { 0,0,0,0,0,0 };
     float flags[] = { 0,0,0,0,0,0 };
 
-    cmCoolantState saved_flood_state = coolant.flood_state;
-    cmCoolantState saved_mist_state = coolant.mist_state;
+    cmCoolantEnable saved_flood_enable = coolant.flood_enable;
+    cmCoolantEnable saved_mist_enable = coolant.mist_enable;
 
     if (coolant.flood_pause == COOLANT_PAUSE) {
         flags[COOLANT_FLOOD] = 1.0;
-        value[COOLANT_FLOOD] = (float)coolant.flood_state;
+        value[COOLANT_FLOOD] = (float)coolant.flood_enable;
         coolant.flood_pause = COOLANT_NORMAL;       // mark as not paused
     }
     if (coolant.mist_pause == COOLANT_PAUSE) {
         flags[COOLANT_MIST] = 1.0;
-        value[COOLANT_MIST] = (float)coolant.flood_state;
+        value[COOLANT_MIST] = (float)coolant.flood_enable;
         coolant.mist_pause = COOLANT_NORMAL;        // mark as not paused
     }
     _exec_coolant_control(value, flags);            // execute (changes state)
-    coolant.flood_state = saved_flood_state;        // restore state
-    coolant.mist_state = saved_mist_state;
+    coolant.flood_enable = saved_flood_enable;        // restore state
+    coolant.mist_enable = saved_mist_enable;
 }
 
 /*
@@ -125,17 +125,17 @@ void cm_coolant_resume()
  *  - uses flags to determine which to run
  */
 
-stat_t cm_flood_coolant_control(uint8_t flood_state)
+stat_t cm_flood_coolant_control(uint8_t flood_enable)
 {
-    float value[] = { (float)flood_state, 0,0,0,0,0 };
+    float value[] = { (float)flood_enable, 0,0,0,0,0 };
     float flags[] = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_coolant_control, value, flags);
     return (STAT_OK);
 }
 
-stat_t cm_mist_coolant_control(uint8_t mist_state)
+stat_t cm_mist_coolant_control(uint8_t mist_enable)
 {
-    float value[] = { 0, (float)mist_state, 0,0,0,0 };
+    float value[] = { 0, (float)mist_enable, 0,0,0,0 };
     float flags[] = { 0,1,0,0,0,0 };
     mp_queue_command(_exec_coolant_control, value, flags);
     return (STAT_OK);
@@ -153,21 +153,21 @@ stat_t cm_mist_coolant_control(uint8_t mist_state)
 static void _exec_coolant_control(float *value, float *flags)
 {
     if (fp_TRUE(flags[COOLANT_FLOOD])) {
-        coolant.flood_state = (cmCoolantState)value[COOLANT_FLOOD];
-        if (!(coolant.flood_state ^ coolant.flood_polarity)) {    // inverted XOR
-            _set_coolant_enable_bit_hi();
-        } else {
-            _set_coolant_enable_bit_lo();
-        }        
-    }
-    if (fp_TRUE(flags[COOLANT_MIST])) {
-        coolant.mist_state = (cmCoolantState)value[COOLANT_MIST];
-        if (!(coolant.mist_state ^ coolant.mist_polarity)) {
+        coolant.flood_enable = (cmCoolantEnable)value[COOLANT_FLOOD];
+        if (!(coolant.flood_enable ^ coolant.flood_polarity)) {    // inverted XOR
             _set_coolant_enable_bit_hi();
         } else {
             _set_coolant_enable_bit_lo();
         }
-    }    
+    }
+    if (fp_TRUE(flags[COOLANT_MIST])) {
+        coolant.mist_enable = (cmCoolantEnable)value[COOLANT_MIST];
+        if (!(coolant.mist_enable ^ coolant.mist_polarity)) {
+            _set_coolant_enable_bit_hi();
+        } else {
+            _set_coolant_enable_bit_lo();
+        }
+    }
 }
 
 /***********************************************************************************

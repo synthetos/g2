@@ -44,7 +44,7 @@ cmSpindleton_t spindle;
 
 static void _exec_spindle_speed(float *value, float *flag);
 static void _exec_spindle_control(float *value, float *flag);
-static float _get_spindle_pwm (cmSpindleState state, cmSpindleDir direction);
+static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction);
 
 /*
  * spindle_init()
@@ -85,7 +85,7 @@ static void _exec_spindle_speed(float *value, float *flag)
     spindle.speed = value[0];
     spindle.direction = (cmSpindleDir)value[1];
     // update spindle speed if we're running
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
@@ -96,23 +96,23 @@ static void _exec_spindle_speed(float *value, float *flag)
 
 void cm_spindle_off_immediate()
 {
-    spindle.state = SPINDLE_OFF;
+    spindle.enable = SPINDLE_OFF;
     float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
     _exec_spindle_control(value, value);
 }
 
 void cm_spindle_optional_pause(bool option)
 {
-    if (option && spindle.state == SPINDLE_ON) {
+    if (option && spindle.enable == SPINDLE_ON) {
         cm_spindle_off_immediate();
-        spindle.state = SPINDLE_PAUSE;
+        spindle.enable = SPINDLE_PAUSE;
     }
 }
 
 void cm_spindle_resume(float dwell_seconds)
 {
-    if(spindle.state == SPINDLE_PAUSE) {
-        spindle.state = SPINDLE_ON;
+    if(spindle.enable == SPINDLE_PAUSE) {
+        spindle.enable = SPINDLE_ON;
         mp_request_out_of_band_dwell(dwell_seconds);
         float value[] = { (float)SPINDLE_ON, (float)spindle.direction, 0,0,0,0 };
         _exec_spindle_control(value, value);
@@ -127,16 +127,16 @@ void cm_spindle_resume(float dwell_seconds)
 stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx style args
 {
     if (control == SPINDLE_CONTROL_OFF) {
-        spindle.state = SPINDLE_OFF;
+        spindle.enable = SPINDLE_OFF;
     } else {
-        spindle.state = SPINDLE_ON;
+        spindle.enable = SPINDLE_ON;
         if (control == SPINDLE_CONTROL_CW) {
             spindle.direction = SPINDLE_CW;
         } else {
             spindle.direction = SPINDLE_CCW;
         }
     }
-	float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
+	float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
 	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
 }
@@ -165,20 +165,20 @@ static void _exec_spindle_control(float *value, float *flag)
     }
 
     // set on/off. Mask out PAUSE and consider it OFF
-    spindle.state = (cmSpindleState)value[0];               // record spindle state in the struct
-    if ((spindle.state & 0x01) ^ spindle.on_polarity) {
+    spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
+    if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
         _set_spindle_enable_bit_lo();
     } else {
         _set_spindle_enable_bit_hi();
     }
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
 
-static float _get_spindle_pwm (cmSpindleState state, cmSpindleDir direction)
+static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 {
 	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
 	if (direction == SPINDLE_CW ) {
@@ -186,14 +186,15 @@ static float _get_spindle_pwm (cmSpindleState state, cmSpindleDir direction)
 		speed_hi = pwm.c[PWM_1].cw_speed_hi;
 		phase_lo = pwm.c[PWM_1].cw_phase_lo;
 		phase_hi = pwm.c[PWM_1].cw_phase_hi;
-	} else if (direction == SPINDLE_CCW ) {
+//	} else if (direction == SPINDLE_CCW ) {
+	} else {
 		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
 		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
 		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
 	}
 
-	if (state == SPINDLE_ON) {
+	if (enable == SPINDLE_ON) {
 		// clamp spindle speed to lo/hi range
 		if (cm.gm.spindle_speed < speed_lo) {
             cm.gm.spindle_speed = speed_lo;
@@ -245,13 +246,13 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
  * cm_set_dir() - a cheat to set direction w/o using the M commands
  *
  * This is provided as a way to set and clear spindle direction without using M commands
- * It's here because disabling a spindle (M5) does not change the direction, only the state.
+ * It's here because disabling a spindle (M5) does not change the direction, only the enable.
  */
 
 stat_t cm_set_dir(nvObj_t *nv)
 {
     set_01(nv);
-    float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
+    float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
     _exec_spindle_control(value, value);
     return (STAT_OK);
 }
@@ -264,19 +265,19 @@ stat_t cm_set_dir(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-const char fmt_spop[] PROGMEM = "[spop] spindle on polarity%9d [0=active_low,1=active_high]\n";
+const char fmt_spep[] PROGMEM = "[spep] spindle enable polarity%5d [0=active_low,1=active_high]\n";
 const char fmt_spdp[] PROGMEM = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] PROGMEM = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_spdw[] PROGMEM = "[spdw] spindle dwell time%12.1f seconds\n";
-const char fmt_spo[] PROGMEM = "Spindle State:%9d [0=OFF,1=ON,2=PAUSE]\n";
+const char fmt_spe[] PROGMEM = "Spindle Enable:%8d [0=OFF,1=ON,2=PAUSE]\n";
 const char fmt_spd[] PROGMEM = "Spindle Direction:%5d [0=CW,1=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spop(nvObj_t *nv) { text_print(nv, fmt_spop);}    // TYPE_INT
+void cm_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void cm_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
 void cm_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
-void cm_print_spo(nvObj_t *nv)  { text_print(nv, fmt_spo);}     // TYPE_INT
+void cm_print_spe(nvObj_t *nv)  { text_print(nv, fmt_spe);}     // TYPE_INT
 void cm_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
 void cm_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT
 

@@ -34,11 +34,11 @@ typedef enum {				        // how spindle controls are presented by the Gcode par
     SPINDLE_CONTROL_CCW             // M4
 } cmSpindleControl;
 
-typedef enum {				        // spindle ON/OFF state
+typedef enum {
     SPINDLE_OFF = 0,
     SPINDLE_ON,
     SPINDLE_PAUSE                   // meaning it was on and now it's off
-} cmSpindleState;
+} cmSpindleEnable;
 
 typedef enum {				        // spindle direction state
     SPINDLE_CW = 0,
@@ -65,11 +65,11 @@ typedef enum {
 typedef struct cmSpindleSingleton {
 
     float speed;                        // S in RPM
-    cmSpindleState state;               // current spindle state, OFF, ON, PAUSE
-    cmSpindleDir direction;             // current spindle direction, CW, CCW
+    cmSpindleEnable enable;             // OFF, ON, PAUSE
+    cmSpindleDir direction;             // CW, CCW
 
     bool pause_on_hold;                 // pause on feedhold
-    cmSpindlePolarity on_polarity;      // 0=active low, 1=active high
+    cmSpindlePolarity enable_polarity;  // 0=active low, 1=active high
     cmSpindlePolarity dir_polarity;     // 0=clockwise low, 1=clockwise high
     float dwell_seconds;                // dwell on spindle resume
 
@@ -104,21 +104,21 @@ stat_t cm_set_dir(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
-    void cm_print_spop(nvObj_t *nv);
+    void cm_print_spep(nvObj_t *nv);
     void cm_print_spdp(nvObj_t *nv);
     void cm_print_spph(nvObj_t *nv);
     void cm_print_spdw(nvObj_t *nv);
-    void cm_print_spo(nvObj_t *nv);
+    void cm_print_spe(nvObj_t *nv);
     void cm_print_spd(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
 
 #else
 
-    #define cm_print_spop tx_print_stub
+    #define cm_print_spep tx_print_stub
     #define cm_print_spdp tx_print_stub
     #define cm_print_spph tx_print_stub
     #define cm_print_spdw tx_print_stub
-    #define cm_print_spo tx_print_stub
+    #define cm_print_spe tx_print_stub
     #define cm_print_spd tx_print_stub
     #define cm_print_sps tx_print_stub
 

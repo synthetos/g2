@@ -28,10 +28,10 @@
 #ifndef COOLANT_H_ONCE
 #define COOLANT_H_ONCE
 
-typedef enum {				        // spindle state settings (See hardware.h for bit settings)
+typedef enum {
     COOLANT_OFF = 0,
     COOLANT_ON,
-} cmCoolantState;
+} cmCoolantEnable;
 
 typedef enum {
     COOLANT_ACTIVE_LOW = 0,
@@ -56,11 +56,11 @@ typedef struct cmCoolatSingleton {
 
     cmCoolantPause pause_on_hold;       // set to COOLANT_PAUSE to pause coolant on feedhold
 
-	cmCoolantState mist_state;          // COOLANT_ON = mist on (M7), COOLANT_OFF = off (M9)
+	cmCoolantEnable mist_enable;        // COOLANT_ON = mist on (M7), COOLANT_OFF = off (M9)
     cmCoolantPause mist_pause;          // pause state - applies to above states
     cmCoolantPolarity mist_polarity;    // 0=active low, 1=active high
 
-	cmCoolantState flood_state;         // COOLANT_ON = flood on (M8), COOLANT_OFF = off (M9)
+	cmCoolantEnable flood_enable;       // COOLANT_ON = flood on (M8), COOLANT_OFF = off (M9)
     cmCoolantPause flood_pause;         // pause state - applies to above states
     cmCoolantPolarity flood_polarity;   // 0=active low, 1=active high
 
@@ -74,8 +74,8 @@ extern cmCoolantSingleton_t coolant;
 void coolant_init();
 void coolant_reset();
 
-stat_t cm_mist_coolant_control(uint8_t mist_state); 			// M7
-stat_t cm_flood_coolant_control(uint8_t flood_state);			// M8, M9
+stat_t cm_mist_coolant_control(uint8_t mist_enable); 			// M7
+stat_t cm_flood_coolant_control(uint8_t flood_enable);			// M8, M9
 void cm_coolant_off_immediate(void);
 void cm_coolant_optional_pause(bool option);
 void cm_coolant_resume(void);

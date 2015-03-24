@@ -477,20 +477,20 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
 
     // Spindle functions
-    { "sys","spop",_fipn,0, cm_print_spop,get_ui8, set_01,  (float *)&spindle.on_polarity,          SPINDLE_ON_POLARITY },
+    { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,  (float *)&spindle.enable_polarity,      SPINDLE_ENABLE_POLARITY },
     { "sys","spdp",_fipn,0, cm_print_spdp,get_ui8, set_01,  (float *)&spindle.dir_polarity,         SPINDLE_DIR_POLARITY },
     { "sys","spph",_fipn,0, cm_print_spph,get_ui8, set_01,  (float *)&spindle.pause_on_hold,        SPINDLE_PAUSE_ON_HOLD },
     { "sys","spdw",_fipn,2, cm_print_spdw,get_flt, set_flu, (float *)&spindle.dwell_seconds,        SPINDLE_DWELL_TIME },
-    { "",   "spo", _f0,  0, cm_print_spo, get_ui8, set_nul, (float *)&spindle.state, 0 },           // get spindle state
-    { "",   "spd", _f0,  0, cm_print_spd, get_ui8, cm_set_dir,(float *)&spindle.direction, 0 },       // get spindle direction
+    { "",   "spe", _f0,  0, cm_print_spe, get_ui8, set_nul, (float *)&spindle.enable, 0 },          // get spindle enable
+    { "",   "spd", _f0,  0, cm_print_spd, get_ui8, cm_set_dir,(float *)&spindle.direction, 0 },     // get spindle direction
     { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },           // get spindle speed
 
     // Coolant functions
     { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,  (float *)&coolant.flood_polarity,       COOLANT_FLOOD_POLARITY },
     { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,  (float *)&coolant.mist_polarity,        COOLANT_MIST_POLARITY },
     { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,  (float *)&coolant.pause_on_hold,        COOLANT_PAUSE_ON_HOLD },
-    { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul, (float *)&coolant.mist_state, 0 },      // get mist coolant state
-    { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul, (float *)&coolant.flood_state, 0 },     // get flood coolant state
+    { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul, (float *)&coolant.mist_enable, 0 },     // get mist coolant enable
+    { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul, (float *)&coolant.flood_enable, 0 },    // get flood coolant enable
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE
