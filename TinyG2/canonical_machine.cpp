@@ -1813,8 +1813,6 @@ static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2,
 #define msg_path NULL
 #define msg_dist NULL
 #define msg_frmo NULL
-//#define msg_iclk NULL // OMC
-//#define msg_estp NULL // OMC
 #define msg_am NULL
 
 #endif // __TEXT_MODE

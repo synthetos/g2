@@ -45,11 +45,20 @@
 #define JUNCTION_DEVIATION          0.10					// default value, in mm
 #define JUNCTION_ACCELERATION       1000000					// centripetal acceleration around corners
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
+#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     1						// 0=off, 1=on
 
-#define PAUSE_DWELL_TIME            0.0
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+#define SPINDLE_PAUSE_ON_HOLD       true
+#define SPINDLE_DWELL_TIME          1.0
+#define SPINDLE_POLARITY_ENABLE     1                       // 0=active low, 1=active high
+#define SPINDLE_POLARITY_DIR        0                       // 0=clockwise is low, 1=clockwise is high
+
+#define COOLANT_PAUSE_ON_HOLD       false
+#define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 
 // Communications and reporting settings
 

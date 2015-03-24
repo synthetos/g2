@@ -69,8 +69,8 @@ typedef struct cmSpindleSingleton {
     cmSpindleDir direction;             // current spindle direction, CW, CCW
 
     bool pause_on_hold;                 // pause on feedhold
-    cmSpindlePolarity polarity_enable;  // 0=active low, 1=active high
-    cmSpindlePolarity polarity_dir;     // 0=clockwise low, 1=clockwise high
+    cmSpindlePolarity on_polarity;      // 0=active low, 1=active high
+    cmSpindlePolarity dir_polarity;     // 0=clockwise low, 1=clockwise high
     float dwell_seconds;                // dwell on spindle resume
 
 //    float override_factor;            // 1.0000 x S spindle speed. Go up or down from there
@@ -98,24 +98,28 @@ void cm_spindle_resume(float dwell_seconds);            // restart spindle after
 //stat_t cm_spindle_override_enable(uint8_t flag);    // M51
 //stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
 
+stat_t cm_set_dir(nvObj_t *nv);
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE
 
+    void cm_print_spop(nvObj_t *nv);
+    void cm_print_spdp(nvObj_t *nv);
+    void cm_print_spph(nvObj_t *nv);
+    void cm_print_spdw(nvObj_t *nv);
     void cm_print_spo(nvObj_t *nv);
     void cm_print_spd(nvObj_t *nv);
-    void cm_print_sph(nvObj_t *nv);
-    void cm_print_sdw(nvObj_t *nv);
-    void cm_print_spc(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
 
 #else
 
+    #define cm_print_spop tx_print_stub
+    #define cm_print_spdp tx_print_stub
+    #define cm_print_spph tx_print_stub
+    #define cm_print_spdw tx_print_stub
     #define cm_print_spo tx_print_stub
     #define cm_print_spd tx_print_stub
-    #define cm_print_sph tx_print_stub
-    #define cm_print_sdw tx_print_stub
-    #define cm_print_spc tx_print_stub
     #define cm_print_sps tx_print_stub
 
 #endif // __TEXT_MODE

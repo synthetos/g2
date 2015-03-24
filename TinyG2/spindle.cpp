@@ -85,7 +85,7 @@ static void _exec_spindle_speed(float *value, float *flag)
     spindle.speed = value[0];
     spindle.direction = (cmSpindleDir)value[1];
     // update spindle speed if we're running
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction)); 
+	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
 }
 
 /*
@@ -135,7 +135,7 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
         } else {
             spindle.direction = SPINDLE_CCW;
         }
-    }    
+    }
 	float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
 	mp_queue_command(_exec_spindle_control, value, value);
 	return(STAT_OK);
@@ -156,33 +156,21 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
 
 static void _exec_spindle_control(float *value, float *flag)
 {
-    spindle.state = (cmSpindleState)value[0];               // set spindle state for the record
-    spindle.direction = (cmSpindleDir)value[1];             // set spindle direction for the record
-    bool enable = spindle.state ^ ~spindle.polarity_enable; // enable is the polarity to set if turning ON
+    // set the direction first
+    spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
+    if (spindle.direction ^ spindle.dir_polarity) {
+        _set_spindle_direction_bit_hi();
+    } else {
+        _set_spindle_direction_bit_lo();
+    }
 
-	if (spindle.state == SPINDLE_ON) {                      // spindle is on and CW or CCW
-
-        // set the direction first
-        if (spindle.direction ^ spindle.polarity_dir) {     // xor the CCW bit to get direction
-            _set_spindle_direction_bit_hi();
-        } else {
-            _set_spindle_direction_bit_lo();
-        }
-
-        // then run the enable
-        if (enable) {
-            _set_spindle_enable_bit_hi();
-        } else {
-            _set_spindle_enable_bit_lo();
-        }
-
-    } else { // SPINDLE_OFF (for safety - any value other than ON causes stop)
-        if (enable) {
-            _set_spindle_enable_bit_lo();
-        } else {
-            _set_spindle_enable_bit_hi();
-        }
-	}
+    // set on/off. Mask out PAUSE and consider it OFF
+    spindle.state = (cmSpindleState)value[0];               // record spindle state in the struct
+    if ((spindle.state & 0x01) ^ spindle.on_polarity) {
+        _set_spindle_enable_bit_lo();
+    } else {
+        _set_spindle_enable_bit_hi();
+    }
 	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
 }
 
@@ -244,6 +232,31 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
     return (STAT_OK);
 }
 */
+/****************************
+ * END OF SPINDLE FUNCTIONS *
+ ****************************/
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/*
+ * cm_set_dir() - a cheat to set direction w/o using the M commands
+ *
+ * This is provided as a way to set and clear spindle direction without using M commands
+ * It's here because disabling a spindle (M5) does not change the direction, only the state.
+ */
+
+stat_t cm_set_dir(nvObj_t *nv)
+{
+    set_01(nv);
+    float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
+    _exec_spindle_control(value, value);
+    return (STAT_OK);
+}
+
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -251,19 +264,20 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 
 #ifdef __TEXT_MODE
 
-const char fmt_spo[] PROGMEM = "[spo] spindle polarity on%10d [0=low is enabled,1=high is enabled]\n";
-const char fmt_spd[] PROGMEM = "[spd] spindle polarity direction%3d [0=low is clockwise,1=high is clockwise]\n";
-const char fmt_sph[] PROGMEM = "[sph] spindle pause on hold%8d [0=no,1=pause_on_hold]\n";
-const char fmt_sdw[] PROGMEM = "[sdw] spindle auto-dwell time%8.1f seconds\n";
-const char fmt_spc[] PROGMEM = "Spindle State:%6d [0=OFF,1=ON,2=Paused]\n";
-//const char fmt_spr[] PROGMEM = "Spindle Direction:%2d [0=CW,1=CCW]\n";
+const char fmt_spop[] PROGMEM = "[spop] spindle on polarity%9d [0=active_low,1=active_high]\n";
+const char fmt_spdp[] PROGMEM = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
+const char fmt_spph[] PROGMEM = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
+const char fmt_spdw[] PROGMEM = "[spdw] spindle dwell time%12.1f seconds\n";
+const char fmt_spo[] PROGMEM = "Spindle State:%9d [0=OFF,1=ON,2=PAUSE]\n";
+const char fmt_spd[] PROGMEM = "Spindle Direction:%5d [0=CW,1=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spo(nvObj_t *nv) { text_print(nv, fmt_spo);}  // TYPE_INT
-void cm_print_spd(nvObj_t *nv) { text_print(nv, fmt_spd);}  // TYPE_INT
-void cm_print_sph(nvObj_t *nv) { text_print(nv, fmt_sph);}  // TYPE_INT
-void cm_print_sdw(nvObj_t *nv) { text_print(nv, fmt_sdw);}  // TYPE_FLOAT
-void cm_print_spc(nvObj_t *nv) { text_print(nv, fmt_spc);}  // TYPE_INT
-void cm_print_sps(nvObj_t *nv) { text_print(nv, fmt_sps);}  // TYPE_FLOAT
+void cm_print_spop(nvObj_t *nv) { text_print(nv, fmt_spop);}    // TYPE_INT
+void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
+void cm_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
+void cm_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
+void cm_print_spo(nvObj_t *nv)  { text_print(nv, fmt_spo);}     // TYPE_INT
+void cm_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
+void cm_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT
 
 #endif // __TEXT_MODE
