@@ -31,7 +31,6 @@
 #include "text_parser.h"        // #4
 
 #include "spindle.h"
-//#include "gpio.h"
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
@@ -46,7 +45,6 @@ cmSpindleton_t spindle;
 static void _exec_spindle_speed(float *value, float *flag);
 static void _exec_spindle_control(float *value, float *flag);
 static float _get_spindle_pwm (cmSpindleState state, cmSpindleDir direction);
-//static void _spindle_on_immediate(void);
 
 /*
  * spindle_init()
@@ -91,10 +89,18 @@ static void _exec_spindle_speed(float *value, float *flag)
 }
 
 /*
+ * cm_spindle_off_immediate() - turn on/off spindle w/o planning
  * cm_spindle_optional_pause() - pause spindle immediately if option is true
  * cm_spindle_resume() - restart a paused spindle with an optional dwell
- * cm_spindle_off_immediate() - turn on/off spindle w/o planning
  */
+
+void cm_spindle_off_immediate()
+{
+    spindle.state = SPINDLE_OFF;
+    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
+    _exec_spindle_control(value, value);
+}
+
 void cm_spindle_optional_pause(bool option)
 {
     if (option && spindle.state == SPINDLE_ON) {
@@ -111,13 +117,6 @@ void cm_spindle_resume(float dwell_seconds)
         float value[] = { (float)SPINDLE_ON, (float)spindle.direction, 0,0,0,0 };
         _exec_spindle_control(value, value);
     }
-}
-
-void cm_spindle_off_immediate()
-{
-    spindle.state = SPINDLE_OFF;
-    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
-    _exec_spindle_control(value, value);
 }
 
 /*
@@ -256,7 +255,8 @@ const char fmt_spo[] PROGMEM = "[spo] spindle polarity on%10d [0=low is enabled,
 const char fmt_spd[] PROGMEM = "[spd] spindle polarity direction%3d [0=low is clockwise,1=high is clockwise]\n";
 const char fmt_sph[] PROGMEM = "[sph] spindle pause on hold%8d [0=no,1=pause_on_hold]\n";
 const char fmt_sdw[] PROGMEM = "[sdw] spindle auto-dwell time%8.1f seconds\n";
-const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW,3=CW_paused,4=CCW_paused]\n";
+const char fmt_spc[] PROGMEM = "Spindle State:%6d [0=OFF,1=ON,2=Paused]\n";
+//const char fmt_spr[] PROGMEM = "Spindle Direction:%2d [0=CW,1=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
 void cm_print_spo(nvObj_t *nv) { text_print(nv, fmt_spo);}  // TYPE_INT

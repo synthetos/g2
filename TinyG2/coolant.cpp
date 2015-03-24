@@ -115,15 +115,6 @@ void cm_coolant_resume()
     coolant.mist_state = saved_mist_state;
 }
 
-#ifdef __ARM
-#define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
-#define _set_coolant_enable_bit_lo() coolant_enable_pin.clear()
-#endif
-#ifdef __AVR
-#define _set_coolant_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
-#define _set_coolant_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
-#endif
-
 /*
  * cm_mist_coolant_control() - access points from Gcode parser
  * cm_flood_coolant_control() - access points from Gcode parser
@@ -149,6 +140,15 @@ stat_t cm_mist_coolant_control(uint8_t mist_state)
     mp_queue_command(_exec_coolant_control, value, flags);
     return (STAT_OK);
 }
+
+#ifdef __ARM
+    #define _set_coolant_enable_bit_hi() coolant_enable_pin.set()
+    #define _set_coolant_enable_bit_lo() coolant_enable_pin.clear()
+#endif
+#ifdef __AVR
+    #define _set_coolant_enable_bit_hi() gpio_set_bit_on(COOLANT_BIT)
+    #define _set_coolant_enable_bit_lo() gpio_set_bit_off(COOLANT_BIT)
+#endif
 
 static void _exec_coolant_control(float *value, float *flags)
 {
