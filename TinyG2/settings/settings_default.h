@@ -50,7 +50,7 @@
 #define HARD_LIMIT_ENABLE           1                       // 0 = off, 1 = on
 #define PAUSE_DWELL_TIME            0.0
 
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+#define ARC_SEGMENT_LEN             ((float)0.1)	        // default minimum arc segment length in mm
 
 // Communications and reporting settings
 

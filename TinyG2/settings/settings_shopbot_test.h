@@ -50,7 +50,6 @@
 #define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
 #define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on

@@ -472,6 +472,23 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS: { status = cm_resume_origin_offsets(); break;}
 
+		case NEXT_ACTION_DEFAULT: {
+    		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply override setting to gm struct
+    		switch (cm.gn.motion_mode) {
+        		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
+        		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
+        		case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
+        		case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
+        		// gf.radius sets radius mode if radius was collected in gn
+        		{ status = cm_arc_feed( cm.gn.target, cm.gf.target, 
+                                        cm.gn.arc_offset[0], cm.gn.arc_offset[1], cm.gn.arc_offset[2], 
+                                        cm.gn.arc_radius, cm.gn.motion_mode); 
+                                        break;}
+    		}
+            cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
+		}
+
+/*
 		case NEXT_ACTION_DEFAULT:
         {
             //set the motion mode, if applicable
@@ -516,6 +533,7 @@ static stat_t _execute_gcode_block()
             cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
         }
         break;
+*/
     }
 
 	// do the program stops and ends : M0, M1, M2, M30, M60
