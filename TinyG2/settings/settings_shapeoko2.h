@@ -42,8 +42,9 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_DEVIATION          0.10					// default value, in mm
-#define JUNCTION_ACCELERATION       1000000					// centripetal acceleration around corners
+#define JUNCTION_DEVIATION          0.01					// default value, in mm - larger is faster
+//#define JUNCTION_ACCELERATION       1000000					// centripetal acceleration around corners
+#define JUNCTION_ACCELERATION       2000000					// centripetal acceleration around corners - larger is faster
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
@@ -96,7 +97,7 @@
 #define M1_MOTOR_MAP                AXIS_X				    // 1ma
 #define M1_STEP_ANGLE               1.8					    // 1sa
 #define M1_TRAVEL_PER_REV           40.00                   // 1tr
-#define M1_MICROSTEPS               32                      // 1mi  1,2,4,8
+#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po  0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  TRUE=low power idle enabled
 #define M1_POWER_LEVEL              MOTOR_POWER_LEVEL
@@ -104,7 +105,7 @@
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40.00
-#define M2_MICROSTEPS               32
+#define M2_MICROSTEPS               8
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              MOTOR_POWER_LEVEL
@@ -112,7 +113,7 @@
 #define M3_MOTOR_MAP                AXIS_Y
 #define M3_STEP_ANGLE               1.8
 #define M3_TRAVEL_PER_REV           40.00
-#define M3_MICROSTEPS               32
+#define M3_MICROSTEPS               8
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
 #define M3_POWER_LEVEL              MOTOR_POWER_LEVEL
@@ -149,9 +150,9 @@
 #define X_VELOCITY_MAX              50000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel for soft limits
-#define X_TRAVEL_MAX                280                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  8000                    // xjm  yes, that's "5 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED           10000                   // xjh
+#define X_TRAVEL_MAX                420                     // xtm  travel between switches or crashes
+#define X_JERK_MAX                  10000                    // xjm  yes, that's "5 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           20000                   // xjh
 #define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION      // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
@@ -164,9 +165,9 @@
 #define Y_VELOCITY_MAX              50000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                280
-#define Y_JERK_MAX                  5000
-#define Y_JERK_HIGH_SPEED           10000
+#define Y_TRAVEL_MAX                420
+#define Y_JERK_MAX                  10000
+#define Y_JERK_HIGH_SPEED           20000
 #define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
@@ -176,12 +177,12 @@
 #define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              1000
+#define Z_VELOCITY_MAX              1200
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX                0
 #define Z_TRAVEL_MIN                -95
-#define Z_JERK_MAX                  200
-#define Z_JERK_HIGH_SPEED           1000
+#define Z_JERK_MAX                  100
+#define Z_JERK_HIGH_SPEED           500
 #define Z_JUNCTION_DEVIATION        0.05
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
@@ -241,7 +242,7 @@
 //*** Input / output settings ***
 /*  NORMALLY_OPEN
     NORMALLY_CLOSED
-    
+
     INPUT_ACTION_NONE
     INPUT_ACTION_STOP
     INPUT_ACTION_FAST_STOP
