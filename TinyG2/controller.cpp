@@ -228,7 +228,6 @@ void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
 void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
 #endif
 
-
 /*****************************************************************************
  * command dispatchers
  * _dispatch_control - entry point for control-only dispatches
@@ -236,6 +235,9 @@ void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
  * _dispatch_kernel - core dispatch routines
  *
  *	Reads next command line and dispatches to relevant parser or action
+ *
+ *  Note: The dispatchers must only read and process a single line from the 
+ *        RX queue before returning control to the main loop.
  */
 
 static stat_t _dispatch_control()
