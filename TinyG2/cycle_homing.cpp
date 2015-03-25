@@ -254,7 +254,7 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-	if (gpio_read_input(hm.homing_input) == IO_ACTIVE) {    // the switch is closed at startup
+	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) {    // the switch is closed at startup
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {

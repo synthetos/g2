@@ -31,63 +31,67 @@
 /*
  * GPIO defines
  */
+//--- change as required for board and switch hardware ---//
 
 #define DI_CHANNELS	        9       // number of digital inputs supported
 #define DO_CHANNELS	        4       // number of digital outputs supported
 #define AI_CHANNELS	        0       // number of analog inputs supported
 #define AO_CHANNELS	        0       // number of analog outputs supported
 
-#define IO_LOCKOUT_MS       50      // milliseconds to go dead after input firing
+#define INPUT_LOCKOUT_MS    50      // milliseconds to go dead after input firing
 
-enum ioMode {
-    IO_MODE_DISABLED = -1,			// pin is disabled
-    IO_MODE_ACTIVE_LOW = 0,			// pin is active low (aka normally open)
-    IO_MODE_ACTIVE_HIGH = 1,		// pin is active high (aka normally closed)
-	IO_MODE_MAX						// unused. Just for range checking
-};
-#define NORMALLY_OPEN IO_MODE_ACTIVE_LOW    // equivalent
-#define NORMALLY_CLOSED IO_MODE_ACTIVE_HIGH // equivalent
+//--- do not change from here down ---//
 
-enum ioAction {                     // actions are initiated from within the input's ISR
-    IO_ACTION_NONE = 0,
-    IO_ACTION_STOP,                 // stop at normal jerk - preserves positional accuracy
-    IO_ACTION_FAST_STOP,            // stop at high jerk - preserves positional accuracy
-    IO_ACTION_HALT,                 // stop immediately - not guaranteed to preserve position
-    IO_ACTION_RESET,                // reset system immediately
-	IO_ACTION_MAX					// unused. Just for range checking
-};
+typedef enum {
+    INPUT_MODE_DISABLED = -1,       // input is disabled
+    INPUT_ACTIVE_LOW = 0,           // input is active low (aka normally open)
+    INPUT_ACTIVE_HIGH = 1,		    // input is active high (aka normally closed)
+	INPUT_MODE_MAX                  // unused. Just for range checking
+} inputMode;
+#define NORMALLY_OPEN   INPUT_ACTIVE_LOW    // equivalent
+#define NORMALLY_CLOSED INPUT_ACTIVE_HIGH   // equivalent
 
-enum ioFunc {                       // functions are requested from the ISR, run from the main loop
-    IO_FUNCTION_NONE = 0,
-    IO_FUNCTION_LIMIT,              // limit switch processing
-    IO_FUNCTION_INTERLOCK,          // interlock processing
-    IO_FUNCTION_SHUTDOWN,           // shutdown in support of external emergency stop
-    IO_FUNCTION_SPINDLE_READY,      // signal that spindle is ready (up to speed)
-	IO_FUNCTION_MAX					// unused. Just for range checking
-};
+typedef enum {                      // actions are initiated from within the input's ISR
+    INPUT_ACTION_NONE = 0,
+    INPUT_ACTION_STOP,              // stop at normal jerk - preserves positional accuracy
+    INPUT_ACTION_FAST_STOP,         // stop at high jerk - preserves positional accuracy
+    INPUT_ACTION_HALT,              // stop immediately - not guaranteed to preserve position
+    INPUT_ACTION_PANIC,             // initiate a panic. stops everything immediately - does not preserve position
+    INPUT_ACTION_RESET,             // reset system
+	INPUT_ACTION_MAX                // unused. Just for range checking
+} inputAction;
 
-enum ioState {
-    IO_DISABLED = -1,               // value returned if input is disabled
-    IO_INACTIVE = 0,				// aka switch open, also read as 'false'
-    IO_ACTIVE = 1					// aka switch closed, also read as 'true'
-};
+typedef enum {                      // functions are requested from the ISR, run from the main loop
+    INPUT_FUNCTION_NONE = 0,
+    INPUT_FUNCTION_LIMIT,           // limit switch processing
+    INPUT_FUNCTION_INTERLOCK,       // interlock processing
+    INPUT_FUNCTION_SHUTDOWN,        // shutdown in support of external emergency stop
+//    INPUT_FUNCTION_SPINDLE_READY,   // signal that spindle is ready (up to speed)
+	INPUT_FUNCTION_MAX              // unused. Just for range checking
+} inputFunc;
 
-enum ioEdgeFlag {
-    IO_EDGE_NONE = 0,               // no edge detected or edge flag reset (must be zero)
-    IO_EDGE_LEADING,				// flag is set when leading edge is detected
-    IO_EDGE_TRAILING				// flag is set when trailing edge is detected
-};
+typedef enum {
+    INPUT_DISABLED = -1,            // value returned if input is disabled
+    INPUT_INACTIVE = 0,             // aka switch open, also read as 'false'
+    INPUT_ACTIVE = 1                // aka switch closed, also read as 'true'
+} inputState;
+
+typedef enum {
+    INPUT_EDGE_NONE = 0,            // no edge detected or edge flag reset (must be zero)
+    INPUT_EDGE_LEADING,             // flag is set when leading edge is detected
+    INPUT_EDGE_TRAILING             // flag is set when trailing edge is detected
+} inputEdgeFlag;
 
 /*
  * GPIO structures
  */
 typedef struct ioDigitalInput {		// one struct per digital input
-	ioMode mode;					// -1=disabled, 0=active low (NO), 1= active high (NC)
-	ioAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-	ioFunc function;                // function to perform when activated / deactivated
+	inputMode mode;					// -1=disabled, 0=active low (NO), 1= active high (NC)
+	inputAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
+	inputFunc function;                // function to perform when activated / deactivated
 
     int8_t state;                   // input state 0=inactive, 1=active, -1=disabled
-    ioEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
+    inputEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
     bool homing_mode;               // set true when input is in homing mode.
     bool probing_mode;              // set true when input is in probing mode.
 
@@ -96,15 +100,15 @@ typedef struct ioDigitalInput {		// one struct per digital input
 } io_di_t;
 
 typedef struct gpioDigitalOutput {  // one struct per digital output
-    ioMode mode;
+    inputMode mode;
 } io_do_t;
 
 typedef struct gpioAnalogInput {    // one struct per analog input
-    ioMode mode;
+    inputMode mode;
 } io_ai_t;
 
 typedef struct gpioAnalogOutput {   // one struct per analog output
-    ioMode mode;
+    inputMode mode;
 } io_ao_t;
 
 typedef struct gpioSingleton {      // collected gpio

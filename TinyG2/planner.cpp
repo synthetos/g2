@@ -101,6 +101,7 @@ static void _dump_plan_buffer(mpBuf_t *bf);
 
 /*
  * planner_init()
+ * planner_reset()
  */
 void planner_init()
 {
@@ -111,13 +112,18 @@ void planner_init()
 	mp_init_buffers();
 }
 
+void planner_reset()
+{
+    planner_init();
+}
+
 /*
  * planner_init_assertions()
- * planner_test_assertions() - test assertions, return error code if violation exists
+ * planner_test_assertions() - test assertions, PANIC if violation exists
  */
 void planner_init_assertions()
 {
-	mm.magic_start = MAGICNUM;
+	mm.magic_start = MAGICNUM;      // Note: mb magic numbers set up by mp_init_buffers()
 	mm.magic_end = MAGICNUM;
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
@@ -125,10 +131,21 @@ void planner_init_assertions()
 
 stat_t planner_test_assertions()
 {
-	if ((mm.magic_start  != MAGICNUM) || (mm.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
-	if ((mb.magic_start  != MAGICNUM) || (mb.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
-	if ((mr.magic_start  != MAGICNUM) || (mr.magic_end 	 != MAGICNUM)) return (STAT_PLANNER_ASSERTION_FAILURE);
-	return (STAT_OK);
+    if ((BAD_MAGIC(mm.magic_start)) || (BAD_MAGIC(mm.magic_end)) ||
+        (BAD_MAGIC(mb.magic_start)) || (BAD_MAGIC(mb.magic_end)) ||
+        (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
+        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, NULL));
+    }
+    return (STAT_OK);
+}
+
+/*
+ * mp_halt_runtime() - stop runtime movement immediately
+ */
+void mp_halt_runtime()
+{
+    stepper_reset();                // stop the steppers and dwells
+    planner_reset();                // reset the planner queues
 }
 
 /*
@@ -143,7 +160,7 @@ void mp_flush_planner()
 {
 	cm_abort_arc();
 	mp_init_buffers();
-    mr.move_state = MOVE_OFF;   // invalidate mr buffer to prevent subsequenc motion
+    mr.move_state = MOVE_OFF;   // invalidate mr buffer to prevent subsequent motion
 }
 
 /*
@@ -217,7 +234,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
+		cm_panic(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
 		return;
 	}
 
@@ -242,8 +259,9 @@ static stat_t _exec_command(mpBuf_t *bf)
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
-	if (mp_free_run_buffer())
+	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
+    }    
 	return (STAT_OK);
 }
 
@@ -260,10 +278,10 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_shutdown(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
+		return(cm_panic(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
-    bf->replannable = true;           // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
+    bf->replannable = true;  // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
 	bf->gm.move_time = seconds;							// in seconds, not minutes
 	bf->move_state = MOVE_NEW;
 	mp_commit_write_buffer(MOVE_TYPE_DWELL);			// must be final operation before exit
@@ -273,18 +291,18 @@ stat_t mp_dwell(float seconds)
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
-	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
+	if (mp_free_run_buffer()) {
+        cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
+    }    
 	return (STAT_OK);
 }
 
-//++++ stubbed +++++
+//++++ stubbed ++++
 void mp_request_out_of_band_dwell(float seconds)
 {
 //    mr.out_of_band_dwell_time = seconds;
-    return;
 }
-
-//++++ stubbed +++++
+//++++ stubbed ++++
 stat_t mp_exec_out_of_band_dwell(void)
 {
 //    return _advance_dwell(mr.out_of_band_dwell_time);
@@ -420,7 +438,7 @@ void mp_commit_write_buffer(const moveType move_type)
                 // processed IMMEDIATELY and then freed - invalidating the contents
         }
     } else {
-        mb.needs_replanned = 1;
+        mb.needs_replanned = true;
         if(cm.hold_state == FEEDHOLD_OFF)
             cm_set_motion_state(MOTION_PLANNING);
         mb.q = mb.q->nx;                        // advance the queued buffer pointer
@@ -725,7 +743,7 @@ uint8_t mp_get_buffer_index(mpBuf_t *bf)
         }
         b = b->pv;
     }
-    return(cm_shutdown(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
+    return(cm_panic(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
 }
 
 void mp_dump_running_plan_buffer() { _dump_plan_buffer(mb.r);}

@@ -117,6 +117,7 @@ extern enEncoders_t en;
 /**** FUNCTION PROTOTYPES ****/
 
 void encoder_init(void);
+void encoder_reset(void);
 void encoder_init_assertions(void);
 stat_t encoder_test_assertions(void);
 
