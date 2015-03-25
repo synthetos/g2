@@ -77,6 +77,9 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
+#define ARC_SEGMENT_LENGTH      ((float)0.1)		// Arc segment size (mm).(0.03)
+#define MIN_ARC_RADIUS          ((float)0.1)
+
 #define JERK_MULTIPLIER			((float)1000000)	// must alway be 1 million - do not change
 #define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 

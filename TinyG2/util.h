@@ -92,9 +92,9 @@ uint32_t SysTickTimer_getValue(void);
 //**** Math Support *****
 
 // See http://www.cplusplus.com/doc/tutorial/namespaces/#using
+
 using std::isnan;
 using std::isinf;
-
 using std::min;
 using std::max;
 

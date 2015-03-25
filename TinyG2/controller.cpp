@@ -161,7 +161,7 @@ static void _controller_HSM()
 
 	DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
-    DISPATCH(cm_arc_cycle_callback());          // arc generation runs as a cycle above lines
+    DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
@@ -253,7 +253,7 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH;
-        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
+        if ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
             (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
             mp_plan_buffer();   // +++ removed for test. This is called form the main loop

@@ -178,9 +178,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             st_prep_null();								// call this to keep the loader happy
 
 	        // free buffer & end cycle if planner is empty
-            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
                 cm_cycle_end();
-
+            }            
             exec_debug_pin3 = 0;
             mb.time_in_run = 0;
             return (STAT_OK);
@@ -263,8 +263,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mp_reset_replannable_list();                                // make it replan all the blocks
             mb.force_replan = true;
             mp_plan_buffer();                                           // must replan now
-
-// OMC      cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_state); // (redundant w/start_hold -ash)
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }
@@ -343,8 +341,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {
-			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
 				cm_cycle_end();	// free buffer & end cycle if planner is empty
+            }            
 		}
 	}
 	exec_debug_pin3 = 0;

@@ -448,6 +448,11 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;       // true to enable safety interlock system
 
+	// hidden system settings
+//	float min_segment_len;				// line drawing resolution in mm
+	float arc_segment_len;				// arc drawing resolution in mm
+//	float estd_segment_usec;			// approximate segment time in microseconds
+
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
 	uint8_t select_plane;				// G17,G18,G19 reset default
@@ -474,6 +479,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     uint8_t safety_interlock_disengaged; // set non-zero to start interlock processing (value is input number)
     uint8_t safety_interlock_reengaged;  // set non-zero to end interlock processing (value is input number)
     cmSafetyState safety_interlock_state;// safety interlock state
+
+    uint32_t esc_boot_timer;            // timer for Electronic Speed Control (Spindle electronics) to boot
 
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
@@ -608,9 +615,12 @@ stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(float target[], float flags[], bool defer_planning = false);			// G1
-stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
-					float i, float j, float k,
-					float radius, float radius_flag, uint8_t motion_mode);
+//stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
+//					float i, float j, float k,
+//					float radius, float radius_flag, uint8_t motion_mode);
+stat_t cm_arc_feed(	float target[], float flags[],              // G2, G3
+                    float i, float j, float k,
+                    float radius, uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)

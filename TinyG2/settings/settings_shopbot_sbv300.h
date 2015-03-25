@@ -46,38 +46,38 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
 #define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
-
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     1						// 0=off, 1=on
 
-#define PAUSE_DWELL_TIME            0.0
-#define MIN_ARC_SEGMENT_LEN         ((float)0.1)	        // default minimum arc segment length in mm
+#define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
+#define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
+#define SPINDLE_PAUSE_ON_HOLD       true
+#define SPINDLE_DWELL_TIME          1.0
 
-#define SWITCH_TYPE                 SW_TYPE_NORMALLY_CLOSED // SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD       true
 
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
-
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 
-#define XIO_EXPAND_CR               false
+#define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
 #define XIO_ENABLE_ECHO             false
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
-//#define NETWORK_MODE                NETWORK_STANDALONE
 
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-#define JSON_FOOTER_STYLE           1                       // 1 = footer w/checksum, 2 = footer w/window slots
-#define JSON_FOOTER_DEPTH           0                       // 0 = footer is child of R, 1 = footer is child of response object (deprecated)
 
-#define QUEUE_REPORT_VERBOSITY		QR_TRIPLE		// one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define QUEUE_REPORT_VERBOSITY		QR_TRIPLE		        // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 #define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
 
@@ -146,6 +146,8 @@
 
 // *** axis settings *********************************************************************************
 
+#define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
+
 #define X_AXIS_MODE		    		AXIS_STANDARD			// xam	see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX			    (360 * 25.4) 			// xvm	G0 max velocity in mm/min
 #define X_FEEDRATE_MAX		    	X_VELOCITY_MAX			// xfr 	G1 max feed rate in mm/min
@@ -154,10 +156,8 @@
 #define X_JERK_MAX			    	(2 * 25.4)				// xjm	jerk is multipled by 1,000,000 internally
 #define X_JERK_HIGH_SPEED		    10000					// xjh
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
-#define X_SWITCH_MODE_MIN	    	SW_MODE_HOMING			// xsn	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_MODE_MAX 	    	SW_MODE_DISABLED		// xsx	SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
-#define X_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED	// rsn	SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
-#define X_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED	// rsx  SW_TYPE_NORMALLY_OPEN, SW_TYPE_NORMALLY_CLOSED
+#define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
+#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY	    	(60 * 25.4)				// xsv	minus means move to minimum switch
 #define X_LATCH_VELOCITY	    	(30 * 25.4)				// xlv	mm/min
 #define X_LATCH_BACKOFF		    	(0.125 * 25.4)			// xlb	mm
@@ -171,10 +171,8 @@
 #define Y_JERK_MAX			    	(2 * 25.4)
 #define Y_JERK_HIGH_SPEED		    10000
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
-#define Y_SWITCH_MODE_MIN	    	SW_MODE_HOMING
-#define Y_SWITCH_MODE_MAX		    SW_MODE_DISABLED
-#define Y_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define Y_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define Y_HOMING_INPUT              3
+#define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Y_LATCH_VELOCITY	    	(30 * 25.4)
 #define Y_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -188,10 +186,8 @@
 #define Z_JERK_MAX			    	(2 * 25.4)
 #define Z_JERK_HIGH_SPEED		    1000
 #define Z_JUNCTION_DEVIATION    	0.05
-#define Z_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define Z_SWITCH_MODE_MAX	    	SW_MODE_HOMING
-#define Z_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define Z_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define Z_HOMING_INPUT              6
+#define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Z_LATCH_VELOCITY	    	(30 * 25.4)
 #define Z_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -206,10 +202,8 @@
 #define A_JERK_HIGH_SPEED		    A_JERK_MAX
 #define A_JUNCTION_DEVIATION    	0.1
 #define A_RADIUS			    	1.0
-#define A_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define A_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define A_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define A_HOMING_INPUT              0
+#define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY	    	(60 * 25.4)
 #define A_LATCH_VELOCITY	    	(30 * 25.4)
 #define A_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -224,10 +218,8 @@
 #define B_JERK_HIGH_SPEED		    B_JERK_MAX
 #define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
-#define B_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define B_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define B_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define B_HOMING_INPUT              0
+#define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY	    	(60 * 25.4)
 #define B_LATCH_VELOCITY	    	(30 * 25.4)
 #define B_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -242,10 +234,8 @@
 #define C_JERK_HIGH_SPEED		    C_JERK_MAX
 #define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
-#define C_SWITCH_MODE_MIN	    	SW_MODE_DISABLED
-#define C_SWITCH_MODE_MAX	    	SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN           SW_TYPE_NORMALLY_CLOSED
-#define C_SWITCH_TYPE_MAX           SW_TYPE_NORMALLY_CLOSED
+#define C_HOMING_INPUT              0
+#define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY	    	(60 * 25.4)
 #define C_LATCH_VELOCITY	    	(30 * 25.4)
 #define C_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -253,62 +243,81 @@
 
 //*** Input / output settings ***
 
-#define DEFAULT_MODE                NORMALLY_CLOSED
-#define DEFAULT_ACTION              IO_ACTION_NONE
-#define DEFAULT_FUNCTION            IO_FUNCTION_NONE
+/* 
+    INPUT_MODE_DISABLED
+    INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
+    INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
+    
+    INPUT_ACTION_NONE
+    INPUT_ACTION_STOP
+    INPUT_ACTION_FAST_STOP
+    INPUT_ACTION_HALT
+    INPUT_ACTION_RESET
 
-#define DI1_MODE                    DEFAULT_MODE
-#define DI1_ACTION                  DEFAULT_ACTION
-#define DI1_FUNCTION                DEFAULT_FUNCTION
+    INPUT_FUNCTION_NONE
+    INPUT_FUNCTION_LIMIT
+    INPUT_FUNCTION_INTERLOCK
+    INPUT_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_PANIC
+*/
 
-#define DI2_MODE                    DEFAULT_MODE
-#define DI2_ACTION                  DEFAULT_ACTION
-#define DI2_FUNCTION                DEFAULT_FUNCTION
+// Xmin on v9 board
+#define DI1_MODE                    INPUT_MODE_DISABLED
+#define DI1_ACTION                  INPUT_ACTION_NONE
+#define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI3_MODE                    DEFAULT_MODE
-#define DI3_ACTION                  DEFAULT_ACTION
-#define DI3_FUNCTION                DEFAULT_FUNCTION
+// Xmax
+#define DI2_MODE                    INPUT_MODE_DISABLED
+#define DI2_ACTION                  INPUT_ACTION_NONE
+#define DI2_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI4_MODE                    DEFAULT_MODE
-#define DI4_ACTION                  DEFAULT_ACTION
-#define DI4_FUNCTION                DEFAULT_FUNCTION
+// Ymin
+#define DI3_MODE                    INPUT_MODE_DISABLED
+#define DI3_ACTION                  INPUT_ACTION_NONE
+#define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI5_MODE                    DEFAULT_MODE
-#define DI5_ACTION                  DEFAULT_ACTION
-#define DI5_FUNCTION                DEFAULT_FUNCTION
+// Ymax
+#define DI4_MODE                    INPUT_MODE_DISABLED
+#define DI4_ACTION                  INPUT_ACTION_NONE
+#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI6_MODE                    DEFAULT_MODE
-#define DI6_ACTION                  DEFAULT_ACTION
-#define DI6_FUNCTION                DEFAULT_FUNCTION
+// Zmin
+#define DI5_MODE                    INPUT_MODE_DISABLED
+#define DI5_ACTION                  INPUT_ACTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI7_MODE                    DEFAULT_MODE
-#define DI7_ACTION                  DEFAULT_ACTION
-#define DI7_FUNCTION                DEFAULT_FUNCTION
+// Zmax
+#define DI6_MODE                    INPUT_MODE_DISABLED
+#define DI6_ACTION                  INPUT_ACTION_NONE
+#define DI6_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI8_MODE                    DEFAULT_MODE
-#define DI8_ACTION                  DEFAULT_ACTION
-#define DI8_FUNCTION                DEFAULT_FUNCTION
+// Amin
+#define DI7_MODE                    INPUT_MODE_DISABLED
+#define DI7_ACTION                  INPUT_ACTION_NONE
+#define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
-#define DI9_MODE                    DEFAULT_MODE
-#define DI9_ACTION                  DEFAULT_ACTION
-#define DI9_FUNCTION                DEFAULT_FUNCTION
+// Amax
+#define DI8_MODE                    INPUT_MODE_DISABLED
+#define DI8_ACTION                  INPUT_ACTION_NONE
+#define DI8_FUNCTION                INPUT_FUNCTION_NONE
+
+// Safety line
+#define DI9_MODE                    INPUT_MODE_DISABLED
+#define DI9_ACTION                  INPUT_ACTION_NONE
+#define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 /*** Handle optional modules that may not be in every machine ***/
 
-// If PWM_1 is not defined fill it with default values
-#ifndef	P1_PWM_FREQUENCY
-
-#define P1_PWM_FREQUENCY            100                     // in Hz
-#define P1_CW_SPEED_LO              1000                    // in RPM (arbitrary units)
-#define P1_CW_SPEED_HI              2000
-#define P1_CW_PHASE_LO              0.125                   // phase [0..1]
-#define P1_CW_PHASE_HI              0.2
-#define P1_CCW_SPEED_LO             1000
-#define P1_CCW_SPEED_HI             2000
-#define P1_CCW_PHASE_LO             0.125
-#define P1_CCW_PHASE_HI             0.2
-#define P1_PWM_PHASE_OFF            0.1
-#endif //P1_PWM_FREQUENCY
+#define P1_PWM_FREQUENCY		    100					// in Hz
+#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			    12800
+#define P1_CW_PHASE_LO			    0.13				// phase [0..1]
+#define P1_CW_PHASE_HI			    0.17
+#define P1_CCW_SPEED_LO			    0
+#define P1_CCW_SPEED_HI			    0
+#define P1_CCW_PHASE_LO			    0.1
+#define P1_CCW_PHASE_HI			    0.1
+#define P1_PWM_PHASE_OFF		    0.1
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 // Our convention is:
@@ -323,8 +332,8 @@
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
 
-#define G55_X_OFFSET 0
-#define G55_Y_OFFSET 0
+#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
+#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
 #define G55_Z_OFFSET 0
 #define G55_A_OFFSET 0
 #define G55_B_OFFSET 0

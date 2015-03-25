@@ -143,17 +143,19 @@ static int8_t _get_axis_type(const index_t index);
  * cm_get_hold_state()
  * cm_get_homing_state()
  * cm_set_motion_state() - adjusts active model pointer as well
+ *
+ * NOTE_1:
+ *  On issuing a gcode command we call cm_cycle_start() before the motion gets queued. We don't go 
+ *  to MOTION_RUN until the command is executed by mp_exec_aline(), planned, queued, and started. 
+ *  So MOTION_STOP must actually return COMBINED_RUN to address this case, even though under some 
+ *  circumstances it might actually ne an exception case. Therefore this assertion isn't valid:
+ *      cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
+ *      return (COMBINED_PANIC);
  */
 cmCombinedState cm_get_combined_state()
 {
-/*
-    if ((cm.cycle_state != CYCLE_OFF) && (cm.machine_state != MACHINE_CYCLE))
-        return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs1"));  // "machine is in cycle but macs is not cycle"
-    if ((cm.motion_state != MOTION_STOP) && (cm.motion_state != MOTION_PLANNING) && (cm.machine_state != MACHINE_CYCLE))
-        return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "gcs2"));  // "machine is in motion but macs is not cycle"
-*/
-    if (cm.machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 case statements where MACHINE_xxx == COMBINED_xxx
-        return ((cmCombinedState)cm.machine_state);
+    if (cm.machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 cm.machine_state cases 
+        return ((cmCombinedState)cm.machine_state); //...where MACHINE_xxx == COMBINED_xxx
     }
     switch(cm.machine_state) {
         case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
@@ -166,13 +168,7 @@ cmCombinedState cm_get_combined_state()
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
                 case CYCLE_MACHINING: case CYCLE_OFF: {
                     switch(cm.motion_state) {
-                        case MOTION_STOP: {
-                        //... on issuing a gcode command we call cm_cycle_start before the motion gets queued...
-                        //    we don't go to MOTION_RUN until the command is executed by mp_exec_aline...
-                        //    so this assert isn't valid
-                        // return (_state_exception(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
-                            return (COMBINED_RUN);
-                        }
+                        case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE_1, above
                         case MOTION_PLANNING: { return (COMBINED_RUN); }
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
@@ -341,7 +337,9 @@ void cm_set_work_offsets(GCodeState_t *gcode_state)
 
 float cm_get_absolute_position(GCodeState_t *gcode_state, uint8_t axis)
 {
-	if (gcode_state == MODEL) { return (cm.gmx.position[axis]);}
+	if (gcode_state == MODEL) { 
+        return (cm.gmx.position[axis]);
+    }
 	return (mp_get_runtime_absolute_position(axis));
 }
 
@@ -369,7 +367,9 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
 	} else {
 		position = mp_get_runtime_work_position(axis);
 	}
-	if (gcode_state->units_mode == INCHES) { position /= MM_PER_INCH; }
+	if (gcode_state->units_mode == INCHES) { 
+        position /= MM_PER_INCH; 
+    }
 	return (position);
 }
 
@@ -394,7 +394,8 @@ void cm_finalize_move() {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 
 	// if in inverse time mode reset feed rate so next block requires an explicit feed rate setting
-	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
+	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && 
+        (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
 		cm.gm.feed_rate = 0;
 	}
 }
@@ -507,7 +508,7 @@ static stat_t _finalize_soft_limits(stat_t status)
 {
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
 	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_alarm(status, "soft_limits"));               // throw a soft alarm
+	return (cm_alarm(status, "soft_limits"));               // throw an alarm
 }
 
 stat_t cm_test_soft_limits(float target[])
@@ -558,10 +559,7 @@ void canonical_machine_init()
 
 	canonical_machine_init_assertions();		// establish assertions
 	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
-
-	// sub-system inits
-//	spindle_init();
-	cm_arc_init();
+	cm_arc_init();                              // Note: spindle and coolant inits are independent
 }
 
 void canonical_machine_reset()
@@ -574,27 +572,24 @@ void canonical_machine_reset()
 	cm_set_distance_mode(cm.distance_mode);
 	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
 
-/*
+    // NOTE: Should unhome axes here
+
 	// reset request flags
-	cm.feedhold_requested = false;
-	cm.queue_flush_requested = false;
+	cm.queue_flush_state = FLUSH_OFF;
 	cm.end_hold_requested = false;
-    cm.limit_requested = false;                 // resets switch closures that occurred during initialization
-    cm.interlock_requested = false;             // ditto
-    cm.shutdown_requested = false;              // ditto
+    cm.limit_requested = 0;                 // resets switch closures that occurred during initialization
+    cm.safety_interlock_disengaged = 0;     // ditto
+    cm.safety_interlock_reengaged = 0;      // ditto
+    cm.shutdown_requested = 0;              // ditto
 
 	// set initial state and signal that the machine is ready for action
     cm.cycle_state = CYCLE_OFF;
     cm.motion_state = MOTION_STOP;
     cm.hold_state = FEEDHOLD_OFF;
-	cm.interlock_state = cm.estop_state = 0;    // vestigal. Will be removed
-*/
-//    cm.estop_state = ESTOP_INACTIVE;
-//    cm.safety_state = SAFETY_ESC_REBOOTING;
-//    cm.esc_boot_timer = SysTickTimer_getValue();
-
+    cm.esc_boot_timer = SysTickTimer_getValue();
     cm.gmx.block_delete_switch = true;
     cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
+
     cm.machine_state = MACHINE_READY;
 }
 
@@ -800,7 +795,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
     }
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-    coolant_reset();
+    coolant_reset();                            // stop coolant immediately
     cm_queue_flush();                           // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
@@ -828,7 +823,7 @@ stat_t cm_panic(stat_t status, const char *msg)
     }
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-    coolant_reset();
+    coolant_reset();                            // stop coolant immediately
     cm_queue_flush();                           // flush all queues and reset positions
 
 	cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
@@ -1059,13 +1054,16 @@ stat_t cm_straight_traverse(float target[], float flags[])
 	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
+//    if (!defer_planning) {                        // ++++ Shouldn't this be uncommented?
+//        mb.force_replan = true;
+//        mp_plan_buffer();                           // if we aren't deferring planning, plan now
+//    }
 	cm_finalize_move();
 	if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
 		return (STAT_OK);
-	} else {
-		return (status);
-    }
+	}
+    return (status);
 }
 
 /*
@@ -1188,9 +1186,8 @@ stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = f
 	if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
 		return (STAT_OK);
-	} else {
-		return (status);
-    }
+	}
+    return (status);
 }
 
 /*****************************
@@ -1571,7 +1568,6 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_set_distance_mode(cm.distance_mode);
 		cm_spindle_off_immediate();                     // M5
 		cm_coolant_off_immediate();                     // M9
-//		cm_flood_coolant_control(false);				// M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
 	}
@@ -1619,40 +1615,6 @@ void cm_program_end()
 	float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
 	mp_queue_command(_exec_program_finalize, value, value);
 }
-/* OMC code
-stat_t cm_start_estop(void)
-{
-	cm.waiting_for_gcode_resume = true;
-    cm.cycle_state = CYCLE_OFF;
-    for (int i = 0; i < HOMING_AXES; ++i) {
-        cm.homed[i] = false;
-    }
-    cm.homing_state = HOMING_NOT_HOMED;
-#ifdef __ARM
-    xio_flush_read();
-#endif
-    mp_flush_planner();
-    float value[AXES] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-    _exec_program_finalize(value, value);	// finalize now, not later
-    cm.hold_state = FEEDHOLD_OFF;
-    cm.queue_flush_state = FLUSH_OFF;
-    cm.end_hold_requested = false;
-    return (STAT_OK);
-}
-
-stat_t cm_end_estop(void)
-{
-	return (STAT_OK);
-}
-
-stat_t cm_ack_estop(nvObj_t *nv)
-{
-	cm.estop_state &= ~ESTOP_UNACKED;
-	nv->value = (float)cm.estop_state;
-	nv->valuetype = TYPE_INT;
-	return (STAT_OK);
-}
-*/
 
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *
