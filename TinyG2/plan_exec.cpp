@@ -263,8 +263,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mp_reset_replannable_list();                                // make it replan all the blocks
             mb.force_replan = true;
             mp_plan_buffer();                                           // must replan now
-
-// OMC      cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_state); // (redundant w/start_hold -ash)
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }

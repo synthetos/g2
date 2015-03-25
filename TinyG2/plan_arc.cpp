@@ -72,8 +72,6 @@ stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
 	////////////////////////////////////////////////////
 	// Set axis plane and trap arc specification errors
 
-    arc.count_arc++;    //+++++
-
 	// trap missing feed rate
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
     	return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
@@ -197,7 +195,6 @@ stat_t cm_arc_callback()
 	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
         return (STAT_EAGAIN);
     }
-    arc.count_segs++;   //+++++
 	arc.theta += arc.segment_theta;
 	arc.gm.target[arc.plane_axis_0] = arc.center_0 + sin(arc.theta) * arc.radius;
 	arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
@@ -207,7 +204,7 @@ stat_t cm_arc_callback()
 
 	if (--arc.segment_count > 0) {
         return (STAT_EAGAIN);
-    }    
+    }
 	arc.run_state = MOVE_OFF;
 	return (STAT_OK);
 }

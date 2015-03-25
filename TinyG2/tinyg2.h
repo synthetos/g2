@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		081.02 // testing and cleanup
+#define TINYG_FIRMWARE_BUILD   		081.03 // debugging session
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
