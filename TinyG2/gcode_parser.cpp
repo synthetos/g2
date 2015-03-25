@@ -373,9 +373,10 @@ static stat_t _parse_gcode_block(char_t *buf)
 			case 'I': SET_NON_MODAL (arc_offset[0], value);
 			case 'J': SET_NON_MODAL (arc_offset[1], value);
 			case 'K': SET_NON_MODAL (arc_offset[2], value);
+            case 'L': SET_NON_MODAL (L_word, value);
 			case 'R': SET_NON_MODAL (arc_radius, value);
 			case 'N': SET_NON_MODAL (linenum,(uint32_t)value);		// line number
-			case 'L': break;										// not used for anything
+//			case 'L': break;										// not used for anything
 			default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
 		}
 		if(status != STAT_OK) break;
@@ -469,7 +470,7 @@ static stat_t _execute_gcode_block()
 
 		case NEXT_ACTION_STRAIGHT_PROBE: { status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}			// G38.2
 
-		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.target, cm.gf.target); break;}
+		case NEXT_ACTION_SET_COORD_DATA: { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS: { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_RESET_ORIGIN_OFFSETS: { status = cm_reset_origin_offsets(); break;}
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}
@@ -482,7 +483,8 @@ static stat_t _execute_gcode_block()
         		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_CW_ARC: 
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target, cm.gf.target, 
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target, 
+                                                                 cm.gf.target, 
                                                                  cm.gn.arc_offset[0], 
                                                                  cm.gn.arc_offset[1], 
                                                                  cm.gn.arc_offset[2], 

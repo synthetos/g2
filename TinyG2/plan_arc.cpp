@@ -63,11 +63,16 @@ void cm_arc_init()
  * Generates an arc by queuing line segments to the move buffer. The arc is
  * approximated by generating a large number of tiny, linear segments.
  */
-
-stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
-				   float i, float j, float k,           // raw arc offsets
-				   float radius,                        // non-zero radius implies radius mode
-				   uint8_t motion_mode)                 // defined motion mode
+/*
+stat_t cm_arc_feed(const float target[], const float flags[],   // arc endpoints
+				   const float i, const float j, const float k, // raw arc offsets
+				   const float radius,                          // non-zero radius implies radius mode
+				   const uint8_t motion_mode)                   // defined motion mode
+*/
+stat_t cm_arc_feed(float target[], float flags[],   // arc endpoints
+                   float i, float j, float k,       // raw arc offsets
+                   float radius,                    // non-zero radius implies radius mode
+                   uint8_t motion_mode)             // defined motion mode
 {
 	//****** Set axis plane and trap arc specification errors ******
 

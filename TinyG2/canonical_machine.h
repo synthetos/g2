@@ -353,7 +353,7 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
 	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
 	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
-	uint8_t l_word;						// L word - used by G10s
+	uint8_t L_word;						// L word - used by G10s
 
 	uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
 	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
@@ -381,7 +381,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
 	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
 	uint8_t override_enables;			// enables for feed and spindle (GN/GF only)
-	uint8_t l_word;						// L word - used by G10s
+	uint8_t L_word;						// L word - used by G10s
 
 	uint8_t feed_rate_mode;	        	// See cmFeedRateMode for settings
     uint8_t select_plane;	        	// G17,G18,G19 - values to set plane to
@@ -476,8 +476,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	cmFeedholdState hold_state;         // hold: feedhold state machine
 	cmQueueFlushState queue_flush_state;// master queue flush state machine
 
-    uint8_t safety_interlock_disengaged; // set non-zero to start interlock processing (value is input number)
-    uint8_t safety_interlock_reengaged;  // set non-zero to end interlock processing (value is input number)
+    uint8_t safety_interlock_disengaged;// set non-zero to start interlock processing (value is input number)
+    uint8_t safety_interlock_reengaged; // set non-zero to end interlock processing (value is input number)
     cmSafetyState safety_interlock_state;// safety interlock state
 
     uint32_t esc_boot_timer;            // timer for Electronic Speed Control (Spindle electronics) to boot
@@ -560,6 +560,7 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis);
 void cm_update_model_position_from_runtime(void);
 void cm_finalize_move(void);
 stat_t cm_deferred_write_callback(void);
+//void cm_set_model_target(const float target[], const float flag[]);
 void cm_set_model_target(float target[], float flag[]);
 stat_t cm_test_soft_limits(float target[]);
 
@@ -589,7 +590,10 @@ stat_t cm_panic(stat_t status, const char *msg);                // enter panic s
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
 stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
-stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
+//stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
+stat_t cm_set_coord_offsets(const uint8_t coord_system,
+                            const uint8_t L_word,
+                            const float offset[], const float flag[]);
 
 void cm_set_position(uint8_t axis, float position);				// set absolute position - single axis
 stat_t cm_set_absolute_origin(float origin[], float flag[]);	// G28.3
@@ -615,12 +619,11 @@ stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(float target[], float flags[], bool defer_planning = false);			// G1
-//stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
-//					float i, float j, float k,
-//					float radius, float radius_flag, uint8_t motion_mode);
-stat_t cm_arc_feed(	float target[], float flags[],              // G2, G3
-                    float i, float j, float k,
-                    float radius, uint8_t motion_mode);
+stat_t cm_arc_feed(	 float target[],                       // G2, G3 
+                     float flags[],
+                     float i,  float j,  float k,
+                     float radius, 
+                     uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)
