@@ -1070,7 +1070,7 @@ stat_t cm_resume_origin_offsets()
  * cm_straight_traverse() - G0 linear rapid
  */
 
-stat_t cm_straight_traverse(float target[], float flags[])
+stat_t cm_straight_traverse(const float target[], const float flags[])
 {
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 	cm_set_model_target(target, flags);
@@ -1099,7 +1099,7 @@ stat_t cm_set_g28_position(void)
 	return (STAT_OK);
 }
 
-stat_t cm_goto_g28_position(float target[], float flags[])
+stat_t cm_goto_g28_position(const float target[], const float flags[])
 {
 	cm_set_absolute_override(MODEL, true);
 	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
@@ -1114,7 +1114,7 @@ stat_t cm_set_g30_position(void)
 	return (STAT_OK);
 }
 
-stat_t cm_goto_g30_position(float target[], float flags[])
+stat_t cm_goto_g30_position(const float target[], const float flags[])
 {
 	cm_set_absolute_override(MODEL, true);
 	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
@@ -1132,7 +1132,7 @@ stat_t cm_goto_g30_position(float target[], float flags[])
  * Normalize feed rate to mm/min or to minutes if in inverse time mode
  */
 
-stat_t cm_set_feed_rate(float feed_rate)
+stat_t cm_set_feed_rate(const float feed_rate)
 {
 	if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {
 		cm.gm.feed_rate = 1/feed_rate;	// normalize to minutes (NB: active for this gcode block only)
@@ -1150,7 +1150,7 @@ stat_t cm_set_feed_rate(float feed_rate)
  *	UNITS_PER_REVOLUTION_MODE		// G95 (unimplemented)
  */
 
-stat_t cm_set_feed_rate_mode(uint8_t mode)
+stat_t cm_set_feed_rate_mode(const uint8_t mode)
 {
 	cm.gm.feed_rate_mode = mode;
 	return (STAT_OK);
@@ -1160,7 +1160,7 @@ stat_t cm_set_feed_rate_mode(uint8_t mode)
  * cm_set_path_control() - G61, G61.1, G64 (affects MODEL only)
  */
 
-stat_t cm_set_path_control(uint8_t mode)
+stat_t cm_set_path_control(const uint8_t mode)
 {
 	cm.gm.path_control = mode;
 	return (STAT_OK);
@@ -1176,7 +1176,7 @@ stat_t cm_set_path_control(uint8_t mode)
 /*
  * cm_dwell() - G4, P parameter (seconds)
  */
-stat_t cm_dwell(float seconds)
+stat_t cm_dwell(const float seconds)
 {
 	cm.gm.parameter = seconds;
 	mp_dwell(seconds);
@@ -1186,7 +1186,7 @@ stat_t cm_dwell(float seconds)
 /*
  * cm_straight_feed() - G1
  */
-stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = false*/)
+stat_t cm_straight_feed(const float target[], const float flags[], bool defer_planning/* = false*/)
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -1228,9 +1228,9 @@ stat_t cm_straight_feed(float target[], float flags[], bool defer_planning/* = f
  * Note: These functions don't actually do anything for now, and there's a bug
  *		 where T and M in different blocks don;t work correctly
  */
-stat_t cm_select_tool(uint8_t tool_select)
+stat_t cm_select_tool(const uint8_t tool_select)
 {
-	float value[AXES] = { (float)tool_select,0,0,0,0,0 };
+	float value[AXES] = { (float)tool_select, 0,0,0,0,0 };
 	mp_queue_command(_exec_select_tool, value, value);
 	return (STAT_OK);
 }
@@ -1240,7 +1240,7 @@ static void _exec_select_tool(float *value, float *flag)
 	cm.gm.tool_select = (uint8_t)value[0];
 }
 
-stat_t cm_change_tool(uint8_t tool_change)
+stat_t cm_change_tool(const uint8_t tool_change)
 {
 	float value[AXES] = { (float)cm.gm.tool_select,0,0,0,0,0 };
 	mp_queue_command(_exec_change_tool, value, value);
@@ -1263,9 +1263,9 @@ static void _exec_change_tool(float *value, float *flag)
  *	Note: If you need to post a FLASH string use pstr2str to convert it to a RAM string
  */
 
-void cm_message(char_t *message)
+void cm_message(const char *message)
 {
-    nv_add_string((const char_t *)"msg", message);	// add message to the response object
+    nv_add_string((const char *)"msg", message);	// add message to the response object
 }
 
 /*
