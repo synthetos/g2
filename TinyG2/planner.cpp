@@ -259,8 +259,9 @@ static stat_t _exec_command(mpBuf_t *bf)
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
-	if (mp_free_run_buffer())
+	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
+    }    
 	return (STAT_OK);
 }
 
@@ -280,7 +281,7 @@ stat_t mp_dwell(float seconds)
 		return(cm_panic(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
-    bf->replannable = true;           // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
+    bf->replannable = true;  // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
 	bf->gm.move_time = seconds;							// in seconds, not minutes
 	bf->move_state = MOVE_NEW;
 	mp_commit_write_buffer(MOVE_TYPE_DWELL);			// must be final operation before exit
@@ -290,7 +291,9 @@ stat_t mp_dwell(float seconds)
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
-	if (mp_free_run_buffer()) cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
+	if (mp_free_run_buffer()) {
+        cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
+    }    
 	return (STAT_OK);
 }
 

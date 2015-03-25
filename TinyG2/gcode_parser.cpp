@@ -169,6 +169,7 @@ static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint
  *	Normalization must remove any leading zeros or they will be converted to Octal
  *	G0X... is not interpreted as hexadecimal. This is trapped.
  */
+
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 {
 	if (**pstr == NUL) { return (STAT_COMPLETE); }	// no more words
@@ -200,6 +201,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 /*
  * _point() - isolate the decimal point value as an integer
  */
+
 static uint8_t _point(float value)
 {
 	return((uint8_t)(value*10 - trunc(value)*10));	// isolate the decimal point as an int
@@ -240,6 +242,7 @@ static stat_t _validate_gcode_block()
  *	A number of implicit things happen when the gn struct is zeroed:
  *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
+
 static stat_t _parse_gcode_block(char_t *buf)
 {
 	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
@@ -478,62 +481,18 @@ static stat_t _execute_gcode_block()
         		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
         		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
-        		case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
-        		// gf.radius sets radius mode if radius was collected in gn
-        		{ status = cm_arc_feed( cm.gn.target, cm.gf.target, 
-                                        cm.gn.arc_offset[0], cm.gn.arc_offset[1], cm.gn.arc_offset[2], 
-                                        cm.gn.arc_radius, cm.gn.motion_mode); 
-                                        break;}
+        		case MOTION_MODE_CW_ARC: 
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target, cm.gf.target, 
+                                                                 cm.gn.arc_offset[0], 
+                                                                 cm.gn.arc_offset[1], 
+                                                                 cm.gn.arc_offset[2], 
+                                                                 cm.gn.arc_radius, 
+                                                                 cm.gn.motion_mode); 
+                                                                 break;
+                                          }
     		}
             cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
 		}
-
-/*
-		case NEXT_ACTION_DEFAULT:
-        {
-            //set the motion mode, if applicable
-            if(cm.gf.motion_mode)
-                cm.gm.motion_mode = cm.gn.motion_mode;
-
-            bool lineCoords = false;
-            for(int8_t i = 0; i < AXES; ++i)
-                if(fp_NOT_ZERO(cm.gf.target[i]))
-                    lineCoords = true;
-
-            //if any coordinates were specified, issue a move
-            cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply override setting to gm struct
-            switch (cm.gn.motion_mode) {
-                case MOTION_MODE_STRAIGHT_TRAVERSE:
-                    if(lineCoords) { status = cm_straight_traverse(cm.gn.target, cm.gf.target); } break;
-                case MOTION_MODE_STRAIGHT_FEED:
-                    if(lineCoords) {
-                        status = cm_straight_feed(cm.gn.target, cm.gf.target, true); // true to defer planning
-                    } break;
-                case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
-                    //      -for IJK, it's an error to specify an irrelevant axis (e.g. K while you're on the XZ plane)
-                    //      -it's an error to specify both IJK and R
-                    //      -if IJK are specified, no axis coordinates need to be specified, but if R is specified at least one axis coordinate needs to be specified (e.g. X while you're on the XZ plane)
-                    if(fp_NOT_ZERO(cm.gf.arc_radius) && (fp_NOT_ZERO(cm.gf.arc_offset[0]) || fp_NOT_ZERO(cm.gf.arc_offset[1]) || fp_NOT_ZERO(cm.gf.arc_offset[2])))
-                        status = STAT_ARC_SPECIFICATION_ERROR;
-                    else if(fp_NOT_ZERO(cm.gf.arc_radius) && (
-                            (cm.gm.select_plane == CANON_PLANE_XY && fp_ZERO(cm.gf.target[AXIS_X]) && fp_ZERO(cm.gf.target[AXIS_Y])) ||
-                            (cm.gm.select_plane == CANON_PLANE_XZ && fp_ZERO(cm.gf.target[AXIS_X]) && fp_ZERO(cm.gf.target[AXIS_Z])) ||
-                            (cm.gm.select_plane == CANON_PLANE_YZ && fp_ZERO(cm.gf.target[AXIS_Y]) && fp_ZERO(cm.gf.target[AXIS_Z]))))
-                        status = STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE;
-                    else if(fp_ZERO(cm.gf.arc_radius) && (
-                            (cm.gm.select_plane == CANON_PLANE_XY && fp_ZERO(cm.gf.arc_offset[0]) && fp_ZERO(cm.gf.arc_offset[1])) ||
-                            (cm.gm.select_plane == CANON_PLANE_XZ && fp_ZERO(cm.gf.arc_offset[0]) && fp_ZERO(cm.gf.arc_offset[2])) ||
-                            (cm.gm.select_plane == CANON_PLANE_YZ && fp_ZERO(cm.gf.arc_offset[1]) && fp_ZERO(cm.gf.arc_offset[2]))))
-                        status = STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE;
-                    else
-                        status = cm_arc_feed(cm.gn.target, cm.gf.target, cm.gn.arc_offset[0], cm.gn.arc_offset[1], cm.gn.arc_offset[2], cm.gn.arc_radius, cm.gf.arc_radius, cm.gn.motion_mode);
-                    break;
-                default: break;
-            }
-            cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
-        }
-        break;
-*/
     }
 
 	// do the program stops and ends : M0, M1, M2, M30, M60

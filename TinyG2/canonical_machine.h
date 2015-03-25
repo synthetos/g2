@@ -480,6 +480,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     uint8_t safety_interlock_reengaged;  // set non-zero to end interlock processing (value is input number)
     cmSafetyState safety_interlock_state;// safety interlock state
 
+    uint32_t esc_boot_timer;            // timer for Electronic Speed Control (Spindle electronics) to boot
+
 	cmHomingState homing_state;			// home: homing cycle sub-state machine
 	uint8_t homed[AXES];				// individual axis homing flags
 

@@ -77,9 +77,6 @@ static void _dispatch_kernel(void);
 static stat_t _controller_state(void);          // manage controller state transitions
 static stat_t _check_for_phat_city_time(void);
 
-//using namespace Motate;
-//OutputPin<kDebug1_PinNumber> controller_debug_pin1;
-
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -254,8 +251,6 @@ static stat_t _dispatch_control()
 
 static stat_t _dispatch_command()
 {
-//controller_debug_pin1.toggle(); //++++++ debug pin
-
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH;
         if ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&

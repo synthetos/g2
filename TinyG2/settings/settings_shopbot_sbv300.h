@@ -46,7 +46,6 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
 #define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
 
@@ -147,6 +146,8 @@
 
 // *** axis settings *********************************************************************************
 
+#define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
+
 #define X_AXIS_MODE		    		AXIS_STANDARD			// xam	see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX			    (360 * 25.4) 			// xvm	G0 max velocity in mm/min
 #define X_FEEDRATE_MAX		    	X_VELOCITY_MAX			// xfr 	G1 max feed rate in mm/min
@@ -242,8 +243,10 @@
 
 //*** Input / output settings ***
 
-/*  NORMALLY_OPEN
-    NORMALLY_CLOSED
+/* 
+    INPUT_MODE_DISABLED
+    INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
+    INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
     
     INPUT_ACTION_NONE
     INPUT_ACTION_STOP
@@ -259,7 +262,7 @@
 */
 
 // Xmin on v9 board
-#define DI1_MODE                    NORMALLY_CLOSED
+#define DI1_MODE                    INPUT_MODE_DISABLED
 #define DI1_ACTION                  INPUT_ACTION_NONE
 #define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
@@ -269,56 +272,52 @@
 #define DI2_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymin
-#define DI3_MODE                    NORMALLY_CLOSED
+#define DI3_MODE                    INPUT_MODE_DISABLED
 #define DI3_ACTION                  INPUT_ACTION_NONE
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymax
-#define DI4_MODE                    NORMALLY_CLOSED
+#define DI4_MODE                    INPUT_MODE_DISABLED
 #define DI4_ACTION                  INPUT_ACTION_NONE
 #define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmin
-#define DI5_MODE                    INPUT_ACTIVE_LOW
+#define DI5_MODE                    INPUT_MODE_DISABLED
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmax
-#define DI6_MODE                    NORMALLY_CLOSED
+#define DI6_MODE                    INPUT_MODE_DISABLED
 #define DI6_ACTION                  INPUT_ACTION_NONE
 #define DI6_FUNCTION                INPUT_FUNCTION_NONE
 
 // Amin
-#define DI7_MODE                    INPUT_ACTIVE_HIGH
+#define DI7_MODE                    INPUT_MODE_DISABLED
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // Amax
-#define DI8_MODE                    INPUT_ACTIVE_LOW
+#define DI8_MODE                    INPUT_MODE_DISABLED
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
 // Safety line
-#define DI9_MODE                    NORMALLY_CLOSED
+#define DI9_MODE                    INPUT_MODE_DISABLED
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 /*** Handle optional modules that may not be in every machine ***/
 
-// If PWM_1 is not defined fill it with default values
-#ifndef	P1_PWM_FREQUENCY
-
-#define P1_PWM_FREQUENCY            100                     // in Hz
-#define P1_CW_SPEED_LO              1000                    // in RPM (arbitrary units)
-#define P1_CW_SPEED_HI              2000
-#define P1_CW_PHASE_LO              0.125                   // phase [0..1]
-#define P1_CW_PHASE_HI              0.2
-#define P1_CCW_SPEED_LO             1000
-#define P1_CCW_SPEED_HI             2000
-#define P1_CCW_PHASE_LO             0.125
-#define P1_CCW_PHASE_HI             0.2
-#define P1_PWM_PHASE_OFF            0.1
-#endif //P1_PWM_FREQUENCY
+#define P1_PWM_FREQUENCY		    100					// in Hz
+#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			    12800
+#define P1_CW_PHASE_LO			    0.13				// phase [0..1]
+#define P1_CW_PHASE_HI			    0.17
+#define P1_CCW_SPEED_LO			    0
+#define P1_CCW_SPEED_HI			    0
+#define P1_CCW_PHASE_LO			    0.1
+#define P1_CCW_PHASE_HI			    0.1
+#define P1_PWM_PHASE_OFF		    0.1
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 // Our convention is:
@@ -333,8 +332,8 @@
 #define G54_B_OFFSET 0
 #define G54_C_OFFSET 0
 
-#define G55_X_OFFSET 0
-#define G55_Y_OFFSET 0
+#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
+#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
 #define G55_Z_OFFSET 0
 #define G55_A_OFFSET 0
 #define G55_B_OFFSET 0

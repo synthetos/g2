@@ -178,9 +178,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             st_prep_null();								// call this to keep the loader happy
 
 	        // free buffer & end cycle if planner is empty
-            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
                 cm_cycle_end();
-
+            }            
             exec_debug_pin3 = 0;
             mb.time_in_run = 0;
             return (STAT_OK);
@@ -341,8 +341,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {
-			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
 				cm_cycle_end();	// free buffer & end cycle if planner is empty
+            }            
 		}
 	}
 	exec_debug_pin3 = 0;

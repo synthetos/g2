@@ -735,11 +735,13 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float sintheta_over2 = sqrt((1 - costheta)/2);
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
 
-//    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
+    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
 
+/* DIAGNOSTIC
     float velocity = min(vmax, (float)sqrt(radius * cm.junction_acceleration));
     printf("v:%f\n", velocity);
     return (velocity);
+*/
 
 //    return(sqrt(radius * cm.junction_acceleration));
 

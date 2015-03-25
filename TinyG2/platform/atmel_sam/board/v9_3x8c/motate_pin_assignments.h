@@ -167,7 +167,7 @@ namespace Motate {
 //    pin_number kLEDPWM_PinNumber                = 121;
 //    pin_number kNeopixel_DataPinNumber		= 121;
 
-    pin_number kDebug1_PinNumber                =  -1;  // change to 116
+    pin_number kDebug1_PinNumber                =  -1;  // change to 116, for example
     pin_number kDebug2_PinNumber                =  -1;
     pin_number kDebug3_PinNumber                =  -1;
     pin_number kDebug4_PinNumber                =  -1;

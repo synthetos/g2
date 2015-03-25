@@ -69,8 +69,7 @@ stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
 				   float radius,                        // non-zero radius implies radius mode
 				   uint8_t motion_mode)                 // defined motion mode
 {
-	////////////////////////////////////////////////////
-	// Set axis plane and trap arc specification errors
+	//****** Set axis plane and trap arc specification errors ******
 
 	// trap missing feed rate
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -133,6 +132,8 @@ stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
         }
 	}
 
+	//****** Setup the arc ******
+
 	// set values in the Gcode model state & copy it (linenum was already captured)
 	cm_set_model_target(target, flags);
 
@@ -165,14 +166,14 @@ stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
 	// compute arc runtime values
 	ritorno(_compute_arc());
 
-/*	// test arc soft limits
+	// test arc soft limits
 	stat_t status = _test_arc_soft_limits();
 	if (status != STAT_OK) {
     	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
     	copy_vector(cm.gm.target, cm.gmx.position);		// reset model position
-    	return (cm_soft_alarm(status));
+	    return (cm_alarm(status, "arc soft_limits"));   // throw an alarm
 	}
-*/
+
 	cm_cycle_start();						// if not already started
 	arc.run_state = MOVE_RUN;				// enable arc to be run from the callback
 	cm_finalize_move();
@@ -541,7 +542,7 @@ static float _get_theta(const float x, const float y)
  *	  - arc angular travel in radians (arc.angular_travel)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  */
-
+/*
 static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 {
 	if (center <= arc.position[plane_axis]) {
@@ -557,9 +558,10 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 	}
 	return(STAT_OK);
 }
-
+*/
 static stat_t _test_arc_soft_limits()
 {
+/*
     if (cm.soft_limit_enable == true) {
 
         // Test if target falls outside boundaries. This is a 3 dimensional test
@@ -570,5 +572,6 @@ static stat_t _test_arc_soft_limits()
         ritorno(_test_arc_soft_limit_plane_axis(arc.center_0, arc.plane_axis_0));
         ritorno(_test_arc_soft_limit_plane_axis(arc.center_1, arc.plane_axis_1));
     }
+*/
     return(STAT_OK);
 }
