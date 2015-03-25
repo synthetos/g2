@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		081.05 // updated profiles
+#define TINYG_FIRMWARE_BUILD   		081.06 // smoke testing edge-io2 + edge-arc merge
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
