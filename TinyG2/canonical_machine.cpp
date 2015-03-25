@@ -251,7 +251,7 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
 void cm_set_model_linenum(const uint32_t linenum)
 {
 	cm.gm.linenum = linenum;				// you must first set the model line number,
-	nv_add_object((const char_t *)"n");	// then add the line number to the nv list
+	nv_add_object((const char *)"n");	// then add the line number to the nv list
 }
 
 /***********************************************************************************
@@ -430,7 +430,7 @@ stat_t cm_deferred_write_callback()
 		for (uint8_t i=1; i<=COORDS; i++) {
 			for (uint8_t j=0; j<AXES; j++) {
 				sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
-				nv.index = nv_get_index((const char_t *)"", nv.token);
+				nv.index = nv_get_index((const char *)"", nv.token);
 				nv.value = cm.offset[i][j];
 				nv_persist(&nv);				// Note: only writes values that have changed
 			}
@@ -1807,18 +1807,18 @@ static const char *const msg_estp[] PROGMEM = { msg_estp0, msg_estp1, msg_estp2,
  * _get_axis_type()	  - return 0 -f axis is linear, 1 if rotary, -1 if NA
  */
 
-char_t cm_get_axis_char(const int8_t axis)
+char cm_get_axis_char(const int8_t axis)
 {
-	char_t axis_char[] = "XYZABC";
+	char axis_char[] = "XYZABC";
 	if ((axis < 0) || (axis > AXES)) return (' ');
 	return (axis_char[axis]);
 }
 
 static int8_t _get_axis(const index_t index)
 {
-	char_t *ptr;
-	char_t tmp[TOKEN_LEN+1];
-	char_t axes[] = {"xyzabc"};
+	char *ptr;
+	char tmp[TOKEN_LEN+1];
+	char axes[] = {"xyzabc"};
 
 	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for an axis
 	if ((ptr = strchr(axes, tmp[0])) == NULL) {			// character in the 0 and 3 positions
@@ -1874,7 +1874,7 @@ stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value
 {
 	nv->value = (float)value;
     nv->valuetype = TYPE_INT;
-	return(nv_copy_string(nv, (const char_t *)GET_TEXT_ITEM(msg_array, value)));
+	return(nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
 }
 
 stat_t cm_get_stat(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state()));}

@@ -681,7 +681,7 @@ float cm_get_jogging_dest(void);
 
 /*--- cfgArray interface functions ---*/
 
-char_t cm_get_axis_char(const int8_t axis);
+char cm_get_axis_char(const int8_t axis);
 
 stat_t cm_get_mline(nvObj_t *nv);		// get model line number
 stat_t cm_get_line(nvObj_t *nv);		// get active (model or runtime) line number

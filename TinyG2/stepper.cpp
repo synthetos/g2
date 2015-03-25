@@ -1204,9 +1204,9 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 
 static int8_t _get_motor(const index_t index)
 {
-	char_t *ptr;
-	char_t motors[] = {"123456"};
-	char_t tmp[TOKEN_LEN+1];
+	char *ptr;
+	char motors[] = {"123456"};
+	char tmp[TOKEN_LEN+1];
 
 	strcpy_P(tmp, cfgArray[index].group);
 	if ((ptr = strchr(motors, tmp[0])) == NULL) {
@@ -1256,12 +1256,12 @@ stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 #ifdef __AVR
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
 //	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {
-		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
+		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
 	}
 #endif
 #ifdef __ARM
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
-		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
+		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
 	}
 #endif
 	set_ui8(nv);						// set it anyway, even if it's unsupported

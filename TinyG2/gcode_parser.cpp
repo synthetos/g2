@@ -31,12 +31,12 @@ struct gcodeParserSingleton {	 	        // struct to manage globals
 }; struct gcodeParserSingleton gp;
 
 // local helper functions and macros
-static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint8_t *block_delete_flag);
+static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
 static stat_t _validate_gcode_block(void);
-static stat_t _parse_gcode_block(char_t *line);	// Parse the block into the GN/GF structs
-static stat_t _execute_gcode_block(void);		// Execute the gcode block
+static stat_t _parse_gcode_block(char *line);   // Parse the block into the GN/GF structs
+static stat_t _execute_gcode_block(void);       // Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
@@ -49,13 +49,13 @@ static stat_t _execute_gcode_block(void);		// Execute the gcode block
  *	Top level of gcode parser. Normalizes block and looks for special cases
  */
 
-stat_t gcode_parser(char_t *block)
+stat_t gcode_parser(char *block)
 {
-	char_t *str = block;					// gcode command or NUL string
-	char_t none = NUL;
-	char_t *com = &none;					// gcode comment or NUL string
-	char_t *msg = &none;					// gcode message or NUL string
-	uint8_t block_delete_flag;
+    char *str = block;                      // gcode command or NUL string
+    char none = NUL;
+    char *com = &none;                      // gcode comment or NUL string
+    char *msg = &none;                      // gcode message or NUL string
+    uint8_t block_delete_flag;
 
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
 
@@ -114,10 +114,10 @@ stat_t gcode_parser(char_t *block)
  *	 - msg points to message string or to NUL if no comment
  *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
-static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint8_t *block_delete_flag)
+static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag)
 {
-	char_t *rd = str;				// read pointer
-	char_t *wr = str;				// write pointer
+	char *rd = str;				// read pointer
+	char *wr = str;				// write pointer
 
 	// Preset comments and messages to NUL string
 	// Not required if com and msg already point to NUL on entry
@@ -133,7 +133,7 @@ static void _normalize_gcode_block(char_t *str, char_t **com, char_t **msg, uint
 		if (*rd == NUL) { *wr = NUL; }
 		else if ((*rd == '(') || (*rd == ';')  || (*rd == '%')) { *wr = NUL; *com = rd+1; }
 		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
-			*(wr++) = (char_t)toupper((char)*(rd));
+			*(wr++) = toupper(*(rd));
 		}
 	}
 
@@ -243,7 +243,7 @@ static stat_t _validate_gcode_block()
  *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
 
-static stat_t _parse_gcode_block(char_t *buf)
+static stat_t _parse_gcode_block(char *buf)
 {
 	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
   	char letter;					// parsed letter, eg.g. G or X or Y
