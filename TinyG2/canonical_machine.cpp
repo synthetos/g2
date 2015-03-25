@@ -197,7 +197,7 @@ cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
 cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
 cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
 
-void cm_set_motion_state(cmMotionState motion_state)
+void cm_set_motion_state(const cmMotionState motion_state)
 {
     cm.motion_state = motion_state;
 
@@ -219,29 +219,36 @@ void cm_set_motion_state(cmMotionState motion_state)
  *		RUNTIME		(GCodeState_t *)&mr.gm		// absolute pointer from runtime mm struct
  *		ACTIVE_MODEL cm.am						// active model pointer is maintained by state management
  */
-uint32_t cm_get_linenum(GCodeState_t *gcode_state) { return gcode_state->linenum;}
-uint8_t cm_get_motion_mode(GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
-uint8_t cm_get_coord_system(GCodeState_t *gcode_state) { return gcode_state->coord_system;}
-uint8_t cm_get_units_mode(GCodeState_t *gcode_state) { return gcode_state->units_mode;}
-uint8_t cm_get_select_plane(GCodeState_t *gcode_state) { return gcode_state->select_plane;}
-uint8_t cm_get_path_control(GCodeState_t *gcode_state) { return gcode_state->path_control;}
-uint8_t cm_get_distance_mode(GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
-uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
-uint8_t cm_get_tool(GCodeState_t *gcode_state) { return gcode_state->tool;}
+uint32_t cm_get_linenum(const GCodeState_t *gcode_state) { return gcode_state->linenum;}
+uint8_t cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
+uint8_t cm_get_coord_system(const GCodeState_t *gcode_state) { return gcode_state->coord_system;}
+uint8_t cm_get_units_mode(const GCodeState_t *gcode_state) { return gcode_state->units_mode;}
+uint8_t cm_get_select_plane(const GCodeState_t *gcode_state) { return gcode_state->select_plane;}
+uint8_t cm_get_path_control(const GCodeState_t *gcode_state) { return gcode_state->path_control;}
+uint8_t cm_get_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
+uint8_t cm_get_feed_rate_mode(const GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
+uint8_t cm_get_tool(const GCodeState_t *gcode_state) { return gcode_state->tool;}
 uint8_t	cm_get_block_delete_switch() { return cm.gmx.block_delete_switch;}
 uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy());}
-float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
+float cm_get_feed_rate(const GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
 
-void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
-void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
+void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode) 
+{
+    gcode_state->motion_mode = motion_mode;
+}
 
-void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override)
+void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool) 
+{ 
+    gcode_state->tool = tool;
+}
+
+void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
 	gcode_state->absolute_override = absolute_override;
 	cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
 }
 
-void cm_set_model_linenum(uint32_t linenum)
+void cm_set_model_linenum(const uint32_t linenum)
 {
 	cm.gm.linenum = linenum;				// you must first set the model line number,
 	nv_add_object((const char_t *)"n");	// then add the line number to the nv list
@@ -282,14 +289,14 @@ void cm_set_model_linenum(uint32_t linenum)
  *	which merely returns what's in the work_offset[] array.
  */
 
-float cm_get_active_coord_offset(uint8_t axis)
+float cm_get_active_coord_offset(const uint8_t axis)
 {
-	if (cm.gm.absolute_override == true) return (0);		// no offset if in absolute override mode
-	float offset = cm.offset[cm.gm.coord_system][axis];
-	if (cm.gmx.origin_offset_enable == true) {
-		offset += cm.gmx.origin_offset[axis];				// includes G5x and G92 components
+    if (cm.gm.absolute_override == true) { return (0); }    // no offset if in absolute override mode
+    float offset = cm.offset[cm.gm.coord_system][axis];
+    if (cm.gmx.origin_offset_enable == true) {
+        offset += cm.gmx.origin_offset[axis];               // includes G5x and G92 components
     }
-	return (offset);
+    return (offset);
 }
 
 /*
@@ -302,7 +309,7 @@ float cm_get_active_coord_offset(uint8_t axis)
  *		ACTIVE_MODEL cm.am						// active model pointer is maintained by state management
  */
 
-float cm_get_work_offset(GCodeState_t *gcode_state, uint8_t axis)
+float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis)
 {
 	return (gcode_state->work_offset[axis]);
 }
@@ -335,7 +342,7 @@ void cm_set_work_offsets(GCodeState_t *gcode_state)
  *	NOTE: Machine position is always returned in mm mode. No units conversion is performed
  */
 
-float cm_get_absolute_position(GCodeState_t *gcode_state, uint8_t axis)
+float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
 	if (gcode_state == MODEL) { 
         return (cm.gmx.position[axis]);
@@ -358,7 +365,7 @@ float cm_get_absolute_position(GCodeState_t *gcode_state, uint8_t axis)
  * NOTE: Only MODEL and RUNTIME are supported (no PLANNER or bf's)
  */
 
-float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis)
+float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
 	float position;
 
@@ -400,7 +407,10 @@ void cm_finalize_move() {
 	}
 }
 
-void cm_update_model_position_from_runtime() { copy_vector(cm.gmx.position, mr.gm.target); }
+void cm_update_model_position_from_runtime() 
+{
+    copy_vector(cm.gmx.position, mr.gm.target); 
+}
 
 /*
  * cm_deferred_write_callback() - write any changed G10 values back to persistence
@@ -453,7 +463,7 @@ stat_t cm_deferred_write_callback()
 //        registers we moved this block into its own function so that we get a fresh stack push
 // ALDEN: This shows up in avr-gcc 4.7.0 and avr-libc 1.8.0
 
-static float _calc_ABC(uint8_t axis, float target[], float flag[])
+static float _calc_ABC(const uint8_t axis, const float target[], const float flag[])
 {
 	if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
 		return(target[axis]);	// no mm conversion - it's in degrees
@@ -461,7 +471,7 @@ static float _calc_ABC(uint8_t axis, float target[], float flag[])
 	return(_to_millimeters(target[axis]) * 360 / (2 * M_PI * cm.a[axis].radius));
 }
 
-void cm_set_model_target(float target[], float flag[])
+void cm_set_model_target(const float target[], const float flag[])
 {
 	uint8_t axis;
 	float tmp = 0;
@@ -504,14 +514,14 @@ void cm_set_model_target(float target[], float flag[])
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
-static stat_t _finalize_soft_limits(stat_t status)
+static stat_t _finalize_soft_limits(const stat_t status)
 {
 	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
 	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
 	return (cm_alarm(status, "soft_limits"));               // throw an alarm
 }
 
-stat_t cm_test_soft_limits(float target[])
+stat_t cm_test_soft_limits(const float target[])
 {
 	if (cm.soft_limit_enable == true) {
 		for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
@@ -632,25 +642,25 @@ stat_t canonical_machine_test_assertions(void)
  *
  * The alarm states can be invoked from the above commands for testing and clearing
  */
-stat_t cm_alrm(nvObj_t *nv)                    // invoke alarm from command
+stat_t cm_alrm(nvObj_t *nv)               // invoke alarm from command
 {
     cm_alarm(STAT_ALARM, "sent by host");
     return (STAT_OK);
 }
 
-stat_t cm_shutd(nvObj_t *nv)                   // invoke shutdown from command
+stat_t cm_shutd(nvObj_t *nv)              // invoke shutdown from command
 {
     cm_shutdown(STAT_SHUTDOWN, "sent by host");
     return (STAT_OK);
 }
 
-stat_t cm_pnic(nvObj_t *nv)                    // invoke panic from command
+stat_t cm_pnic(nvObj_t *nv)               // invoke panic from command
 {
     cm_panic(STAT_PANIC, "sent by host");
     return (STAT_OK);
 }
 
-stat_t cm_clr(nvObj_t *nv)                      // clear alarm or shutdown from command line
+stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from command line
 {
     cm_clear();
     return (STAT_OK);
@@ -673,7 +683,7 @@ void cm_clear()
     }
 }
 
-void cm_parse_clear(char *s)
+void cm_parse_clear(const char *s)
 {
     if (cm.machine_state == MACHINE_ALARM) {
         if (toupper(s[0]) == 'M') {
@@ -744,7 +754,7 @@ void cm_halt_motion(void)
  * while draining the host command queue.
  */
 
-stat_t cm_alarm(stat_t status, const char *msg)
+stat_t cm_alarm(const stat_t status, const char *msg)
 {
     if ((cm.machine_state == MACHINE_ALARM) || (cm.machine_state == MACHINE_SHUTDOWN) ||
         (cm.machine_state == MACHINE_PANIC)) {
@@ -788,7 +798,7 @@ stat_t cm_alarm(stat_t status, const char *msg)
  * Shutdown does not clear on M30 or M2 Gcode commands
  */
 
-stat_t cm_shutdown(stat_t status, const char *msg)
+stat_t cm_shutdown(const stat_t status, const char *msg)
 {
     if ((cm.machine_state == MACHINE_SHUTDOWN) || (cm.machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
@@ -816,7 +826,7 @@ stat_t cm_shutdown(stat_t status, const char *msg)
  *
  * PANIC can only be exited by a hardware reset or soft reset (^x)
  */
-stat_t cm_panic(stat_t status, const char *msg)
+stat_t cm_panic(const stat_t status, const char *msg)
 {
     if (cm.machine_state == MACHINE_PANIC) {    // only do this once
         return (STAT_OK);
@@ -846,19 +856,19 @@ stat_t cm_panic(stat_t status, const char *msg)
  *	These functions assume input validation occurred upstream.
  */
 
-stat_t cm_select_plane(uint8_t plane)
+stat_t cm_select_plane(const uint8_t plane)
 {
 	cm.gm.select_plane = plane;
 	return (STAT_OK);
 }
 
-stat_t cm_set_units_mode(uint8_t mode)
+stat_t cm_set_units_mode(const uint8_t mode)
 {
 	cm.gm.units_mode = mode;		// 0 = inches, 1 = mm.
 	return(STAT_OK);
 }
 
-stat_t cm_set_distance_mode(uint8_t mode)
+stat_t cm_set_distance_mode(const uint8_t mode)
 {
 	cm.gm.distance_mode = mode;		// 0 = absolute mode, 1 = incremental
 	return (STAT_OK);
@@ -910,7 +920,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
  * cm_set_coord_system() - G54-G59
  * _exec_offset() - callback from planner
  */
-stat_t cm_set_coord_system(uint8_t coord_system)
+stat_t cm_set_coord_system(const uint8_t coord_system)
 {
 	cm.gm.coord_system = coord_system;
 
@@ -949,7 +959,7 @@ static void _exec_offset(float *value, float *flag)
  *	Use cm_get_runtime_busy() to be sure the system is quiescent.
  */
 
-void cm_set_position(uint8_t axis, float position)
+void cm_set_position(const uint8_t axis, const float position)
 {
 	// TODO: Interlock involving runtime_busy test
 	cm.gmx.position[axis] = position;
@@ -973,7 +983,7 @@ void cm_set_position(uint8_t axis, float position)
  *	as homed.
  */
 
-stat_t cm_set_absolute_origin(float origin[], float flag[])
+stat_t cm_set_absolute_origin(const float origin[], float flag[])
 {
 	float value[AXES];
 
@@ -1010,7 +1020,7 @@ static void _exec_absolute_origin(float *value, float *flag)
  * G92's behave according to NIST 3.5.18 & LinuxCNC G92
  * http://linuxcnc.org/docs/html/gcode/gcode.html#sec:G92-G92.1-G92.2-G92.3
  */
-stat_t cm_set_origin_offsets(float offset[], float flag[])
+stat_t cm_set_origin_offsets(const float offset[], const float flag[])
 {
 	// set offsets in the Gcode model extended context
 	cm.gmx.origin_offset_enable = true;
@@ -2003,12 +2013,12 @@ stat_t cm_set_hi(nvObj_t *nv)
  *
  *	The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
  */
-float cm_get_axis_jerk(uint8_t axis)
+float cm_get_axis_jerk(const uint8_t axis)
 {
 	return (cm.a[axis].jerk_max);
 }
 
-void cm_set_axis_jerk(uint8_t axis, float jerk)
+void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
 	cm.a[axis].jerk_max = jerk;
 	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);

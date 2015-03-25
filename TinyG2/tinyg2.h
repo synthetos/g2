@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.01 // added G10 L20 operator
+#define TINYG_FIRMWARE_BUILD   		082.02 // changing some args to const's for tighter code - checkpoint
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

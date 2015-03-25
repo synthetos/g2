@@ -525,44 +525,43 @@ cmCycleState cm_get_cycle_state(void);
 cmMotionState cm_get_motion_state(void);
 cmFeedholdState cm_get_hold_state(void);
 cmHomingState cm_get_homing_state(void);
-
 uint8_t cm_get_jogging_state(void);
-void cm_set_motion_state(cmMotionState motion_state);
-float cm_get_axis_jerk(uint8_t axis);
-void cm_set_axis_jerk(uint8_t axis, float jerk);
 
-uint32_t cm_get_linenum(GCodeState_t *gcode_state);
-uint8_t cm_get_motion_mode(GCodeState_t *gcode_state);
-uint8_t cm_get_coord_system(GCodeState_t *gcode_state);
-uint8_t cm_get_units_mode(GCodeState_t *gcode_state);
-uint8_t cm_get_select_plane(GCodeState_t *gcode_state);
-uint8_t cm_get_path_control(GCodeState_t *gcode_state);
-uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
-uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
-uint8_t cm_get_tool(GCodeState_t *gcode_state);
+void cm_set_motion_state(const cmMotionState motion_state);
+float cm_get_axis_jerk(const uint8_t axis);
+void cm_set_axis_jerk(const uint8_t axis, const float jerk);
+
+uint32_t cm_get_linenum(const GCodeState_t *gcode_state);
+uint8_t cm_get_motion_mode(const GCodeState_t *gcode_state);
+uint8_t cm_get_coord_system(const GCodeState_t *gcode_state);
+uint8_t cm_get_units_mode(const GCodeState_t *gcode_state);
+uint8_t cm_get_select_plane(const GCodeState_t *gcode_state);
+uint8_t cm_get_path_control(const GCodeState_t *gcode_state);
+uint8_t cm_get_distance_mode(const GCodeState_t *gcode_state);
+uint8_t cm_get_feed_rate_mode(const GCodeState_t *gcode_state);
+uint8_t cm_get_tool(const GCodeState_t *gcode_state);
 uint8_t	cm_get_block_delete_switch(void);
 uint8_t cm_get_runtime_busy(void);
-float cm_get_feed_rate(GCodeState_t *gcode_state);
+float cm_get_feed_rate(const GCodeState_t *gcode_state);
 
-void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
-void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
-void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);
-void cm_set_model_linenum(uint32_t linenum);
+void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode);
+void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool);
+void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override);
+void cm_set_model_linenum(const uint32_t linenum);
 
 // Coordinate systems and offsets
-float cm_get_active_coord_offset(uint8_t axis);
-float cm_get_work_offset(GCodeState_t *gcode_state, uint8_t axis);
+float cm_get_active_coord_offset(const uint8_t axis);
+float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis);
 void cm_set_work_offsets(GCodeState_t *gcode_state);
-float cm_get_absolute_position(GCodeState_t *gcode_state, uint8_t axis);
-float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis);
+float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis);
+float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis);
 
 // Critical helpers
 void cm_update_model_position_from_runtime(void);
 void cm_finalize_move(void);
 stat_t cm_deferred_write_callback(void);
-//void cm_set_model_target(const float target[], const float flag[]);
-void cm_set_model_target(float target[], float flag[]);
-stat_t cm_test_soft_limits(float target[]);
+void cm_set_model_target(const float target[], const float flag[]);
+stat_t cm_test_soft_limits(const float target[]);
 
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
 
@@ -578,29 +577,28 @@ stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutd
 stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
 stat_t cm_clr(nvObj_t *nv);                                     // clear alarm and shutdown from command input
 void cm_clear(void);                                            // raw clear command
-void cm_parse_clear(char *s);                                   // parse gcode for M30 or M2 clear condition
+void cm_parse_clear(const char *s);                             // parse gcode for M30 or M2 clear condition
 stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
 void cm_halt_all(void);                                         // halt motion, spindle and coolant
 void cm_halt_motion(void);                                      // halt motion (immediate stop) but not spindle & other IO
-stat_t cm_alarm(stat_t status, const char *msg);                // enter alarm state - preserve Gcode state
-stat_t cm_shutdown(stat_t status, const char *msg);             // enter shutdown state - dump all state
-stat_t cm_panic(stat_t status, const char *msg);                // enter panic state - needs RESET
+stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
+stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
+stat_t cm_panic(const stat_t status, const char *msg);          // enter panic state - needs RESET
 
 // Representation (4.3.3)
-stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
-stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
-stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
-//stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[]); // G10 L2
-stat_t cm_set_coord_offsets(const uint8_t coord_system,
+stat_t cm_select_plane(const uint8_t plane);                    // G17, G18, G19
+stat_t cm_set_units_mode(const uint8_t mode);                   // G20, G21
+stat_t cm_set_distance_mode(const uint8_t mode);                // G90, G91
+stat_t cm_set_coord_offsets(const uint8_t coord_system,         // G10
                             const uint8_t L_word,
                             const float offset[], const float flag[]);
 
-void cm_set_position(uint8_t axis, float position);				// set absolute position - single axis
-stat_t cm_set_absolute_origin(float origin[], float flag[]);	// G28.3
-void cm_set_axis_origin(uint8_t axis, const float position);	// G28.3 planner callback
+void cm_set_position(const uint8_t axis, const float position); // set absolute position - single axis
+stat_t cm_set_absolute_origin(const float origin[], float flag[]); // G28.3
+void cm_set_axis_origin(uint8_t axis, const float position);	        // G28.3 planner callback
 
-stat_t cm_set_coord_system(uint8_t coord_system);				// G54 - G59
-stat_t cm_set_origin_offsets(float offset[], float flag[]);		// G92
+stat_t cm_set_coord_system(const uint8_t coord_system);         // G54 - G59
+stat_t cm_set_origin_offsets(const float offset[], const float flag[]); // G92
 stat_t cm_reset_origin_offsets(void); 							// G92.1
 stat_t cm_suspend_origin_offsets(void); 						// G92.2
 stat_t cm_resume_origin_offsets(void);				 			// G92.3
@@ -618,12 +616,12 @@ stat_t cm_set_feed_rate_mode(uint8_t mode);						// G93, G94, (G95 unimplemented
 stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(float target[], float flags[], bool defer_planning = false);			// G1
-stat_t cm_arc_feed(	 float target[],                       // G2, G3 
-                     float flags[],
-                     float i,  float j,  float k,
-                     float radius, 
-                     uint8_t motion_mode);
+stat_t cm_straight_feed(float target[], float flags[], bool defer_planning = false); // G1
+stat_t cm_arc_feed(const float target[],                       // G2, G3 
+                   const float flags[],
+                   const float i, const float j, const float k,
+                   const float radius, 
+                   const uint8_t motion_mode);
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)
