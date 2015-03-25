@@ -253,7 +253,9 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH;
-        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
+//        while ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
+//            (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+        if ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
             (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
             mp_plan_buffer();   // +++ removed for test. This is called form the main loop

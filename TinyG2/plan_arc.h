@@ -26,6 +26,9 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 	magic_t magic_start;
 	uint8_t run_state;			// runtime state machine sequence
 
+    uint32_t count_arc;
+    uint32_t count_segs;
+
 	float position[AXES];		// accumulating runtime position
 	float offset[3]; 	 		// IJK offsets
 

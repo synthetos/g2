@@ -37,7 +37,7 @@ static stat_t _compute_arc(void);
 static stat_t _compute_arc_offsets_from_radius(void);
 static void _estimate_arc_time(void);
 static float _get_theta(const float x, const float y);
-//static stat_t _test_arc_soft_limits(void);
+static stat_t _test_arc_soft_limits(void);
 
 /*****************************************************************************
  * Canonical Machining arc functions (arc prep for planning and runtime)
@@ -71,6 +71,8 @@ stat_t cm_arc_feed(float target[], float flags[],       // arc endpoints
 {
 	////////////////////////////////////////////////////
 	// Set axis plane and trap arc specification errors
+
+    arc.count_arc++;    //+++++
 
 	// trap missing feed rate
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -195,6 +197,7 @@ stat_t cm_arc_callback()
 	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
         return (STAT_EAGAIN);
     }
+    arc.count_segs++;   //+++++
 	arc.theta += arc.segment_theta;
 	arc.gm.target[arc.plane_axis_0] = arc.center_0 + sin(arc.theta) * arc.radius;
 	arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
@@ -541,7 +544,7 @@ static float _get_theta(const float x, const float y)
  *	  - arc angular travel in radians (arc.angular_travel)
  *	  - max and min travel in axis 0 and axis 1 (in cm struct)
  */
-/*
+
 static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 {
 	if (center <= arc.position[plane_axis]) {
@@ -572,4 +575,3 @@ static stat_t _test_arc_soft_limits()
     }
     return(STAT_OK);
 }
-*/
