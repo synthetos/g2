@@ -98,6 +98,7 @@ static stat_t _exec_command(mpBuf_t *bf);
 static uint8_t _get_buffer_index(mpBuf_t *bf);
 static void _dump_plan_buffer(mpBuf_t *bf);
 #endif
+static void _planner_report(void);
 
 /*
  * planner_init()
@@ -721,6 +722,7 @@ static void _audit_buffers()
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit7");
+            _planner_report();
 #ifdef __DIAGNOSTICS    // +++++
             while (1) {
                 __NOP();
@@ -734,6 +736,29 @@ static void _audit_buffers()
 }
 #pragma GCC pop_options
 // About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
+
+#ifdef __DIAGNOSTICS
+
+static void _planner_report()
+{
+    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+//        printf("{\"er\":\"stat:%d, type:%d, lock:%d, replan:%d\"}\n", 
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"replan\":%d\"",
+                mb.bf[i].buffer_state,
+                mb.bf[i].move_type,
+                mb.bf[i].locked,
+                mb.bf[i].replannable);
+        if (&mb.bf[i] == mb.r) { 
+            printf("\"R\":t");}
+        if (&mb.bf[i] == mb.q) { 
+            printf("\"Q\":t");}
+        if (&mb.bf[i] == mb.w) { 
+            printf("\"W\":t");}
+        printf("}}\n");
+    }    
+}
+
+#endif
 
 /****************************
  * END OF PLANNER FUNCTIONS *
