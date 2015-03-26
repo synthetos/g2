@@ -522,7 +522,6 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 */
 //#define __OLD_JERK
 //#define __TEST_JERK
-//#define __OLD_JERK
 #define __REVISED_JERK
 
 static void _calculate_jerk(mpBuf_t *bf)
