@@ -645,16 +645,22 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
+        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit1");
+#ifdef __DIAGNOSTICS    // +++++
         while (1) {
             __NOP();
         }
+#endif
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
+        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit2");
+#ifdef __DIAGNOSTICS    // +++++
         while (1) {
             __NOP();
         }
+#endif
     }
 
     // Now check every buffer, in order we would execute them.
@@ -662,9 +668,12 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit3");
+#ifdef __DIAGNOSTICS    // +++++
             while (1) {
                 __NOP();
             }
+#endif
         }
 
         // Order should be:
@@ -680,33 +689,44 @@ static void _audit_buffers()
             if (bf->buffer_state == MP_BUFFER_PLANNING) {
                 __NOP();
             } else {
+                rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit4");
+#ifdef __DIAGNOSTICS    // +++++
                 while (1) {
                     __NOP();
                 }
             }
+#endif
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit5");
+#ifdef __DIAGNOSTICS    // +++++
             while (1) {
                 __NOP();
             }
+#endif
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit6");
+#ifdef __DIAGNOSTICS    // +++++
             while (1) {
                 __NOP();
             }
+#endif
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer audit7");
+#ifdef __DIAGNOSTICS    // +++++
             while (1) {
                 __NOP();
             }
+#endif
         }
-
         // Now look at the next one.
         bf = bf->nx;
     }

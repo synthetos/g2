@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.05 // Testing some diagnostics
+#define TINYG_FIRMWARE_BUILD   		082.06 // added execption reports in buffer audit
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
