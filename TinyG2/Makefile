@@ -248,6 +248,14 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
+ifeq ($(DEBUG),1)
+	DEVICE_DEFINES += DEBUG=1
+endif
+ifeq ($(DEBUG),2)
+DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
+endif
+
+
 ##########
 
 
