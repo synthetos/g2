@@ -63,15 +63,15 @@
 #include "util.h"
 
 using namespace Motate;
-extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
 //extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 //extern OutputPin<-1> plan_debug_pin1;
 //extern OutputPin<-1> plan_debug_pin2;
-extern OutputPin<-1> plan_debug_pin3;
-extern OutputPin<-1> plan_debug_pin4;
+//extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<-1> plan_debug_pin4;
 
 
 // Allocate planner structures
@@ -261,7 +261,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
 	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -293,7 +293,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -540,7 +540,7 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 
 stat_t mp_plan_buffer()
 {
-    plan_debug_pin1 = 1;
+//    plan_debug_pin1 = 1;
 
     // Criteria to replan:
     // 0) There are items in the buffer that need replanning.
@@ -548,7 +548,7 @@ stat_t mp_plan_buffer()
     // 2) Less than MIN_PLANNED_TIME in the planner
 
     if (!mb.needs_replanned) {
-        plan_debug_pin1 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
     bool do_continue = false;
@@ -563,14 +563,19 @@ stat_t mp_plan_buffer()
     }
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
 
+#ifdef __DIAGNOSTICS // +++++
+    if (total_buffer_time < EPSILON) {
+        printf ("{\"debug\":\"Q empty\"}\n");
+    }
+#endif
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
-        plan_debug_pin4 = 1;
+//        plan_debug_pin4 = 1;
     }
 
     if (!do_continue) {
-        plan_debug_pin4 = 0;
-        plan_debug_pin1 = 0;
+//        plan_debug_pin4 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
 
@@ -585,8 +590,8 @@ stat_t mp_plan_buffer()
     mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = false;
 
-    plan_debug_pin4 = 0;
-    plan_debug_pin1 = 0;
+//    plan_debug_pin4 = 0;
+//    plan_debug_pin1 = 0;
     return (STAT_OK);
 }
 

@@ -236,7 +236,7 @@ void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
  *
  *	Reads next command line and dispatches to relevant parser or action
  *
- *  Note: The dispatchers must only read and process a single line from the 
+ *  Note: The dispatchers must only read and process a single line from the
  *        RX queue before returning control to the main loop.
  */
 
@@ -258,7 +258,7 @@ static stat_t _dispatch_command()
         if ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
             (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
-            mp_plan_buffer();   // +++ removed for test. This is called form the main loop
+            mp_plan_buffer();   // +++ removed for test. This is called from the main loop
         }
     }
 	return (STAT_OK);

@@ -988,24 +988,20 @@ static void _load_move()
 
 		//**** do this last ****
 
-//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+// OMC  st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dda_timer.start();									// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
-//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+// OMC  st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dwell_timer.start();
 
 	// handle synchronous commands
 	} else if (st_pre.move_type == MOVE_TYPE_COMMAND) {
 		mp_runtime_command(st_pre.bf);
 
-	// null
-	} else {
-// We cannot printf from here!! Causes crashes.
-//		printf("prep_null encountered\n");
-	}
+	} // else null - WARNING - We cannot printf from here!! Causes crashes.
 
 	// all other cases drop to here (e.g. Null moves after Mcodes skip to here)
 	st_pre.move_type = MOVE_TYPE_NULL;
@@ -1041,9 +1037,9 @@ static void _load_move()
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queuing the line
-	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_panic(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
-	} else if (isinf(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
-	} else if (isnan(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
+	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_panic(STAT_INTERNAL_ERROR, "prep1"));// never supposed to happen
+	} else if (isinf(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "prep2"));// never supposed to happen
+	} else if (isnan(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "prep3"));// never supposed to happen
 	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters
@@ -1293,10 +1289,8 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
 stat_t st_set_pl(nvObj_t *nv)	// motor power level
 {
 #ifdef __ARM
-	if (nv->value < (float)0.0) nv->value = 0.0;
-	if (nv->value > (float)1.0) {
-		if (nv->value > (float)100) nv->value = 1;
- 		nv->value /= 100;		// accommodate old 0-100 inputs
+	if ((nv->value < (float)0.0) || (nv->value > (float)1.0)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
 	}
 	set_flt(nv);	// set power_setting value in the motor config struct (st)
 
