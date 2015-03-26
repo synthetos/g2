@@ -632,6 +632,10 @@ void mp_planner_time_accounting() {
     mb.time_in_planner = time_in_planner;
 }
 
+#ifdef DEBUG
+
+#warning DEBUG TRAPS ENABLED
+
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 static void _audit_buffers()
@@ -640,16 +644,12 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
-        while (1) {
-            __NOP();
-        }
+        _debug_trap();
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
-        while (1) {
-            __NOP();
-        }
+        _debug_trap();
     }
 
     // Now check every buffer, in order we would execute them.
@@ -657,9 +657,7 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
-            while (1) {
-                __NOP();
-            }
+            _debug_trap();
         }
 
         // Order should be:
@@ -675,31 +673,23 @@ static void _audit_buffers()
             if (bf->buffer_state == MP_BUFFER_PLANNING) {
                 __NOP();
             } else {
-                while (1) {
-                    __NOP();
-                }
+                _debug_trap();
             }
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _debug_trap();
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _debug_trap();
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _debug_trap();
         }
 
         // Now look at the next one.
@@ -709,6 +699,8 @@ static void _audit_buffers()
 }
 #pragma GCC pop_options
 // About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
+
+#endif // DEBUG
 
 /****************************
  * END OF PLANNER FUNCTIONS *

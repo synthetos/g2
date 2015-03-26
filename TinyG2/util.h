@@ -50,6 +50,10 @@ using Motate::SysTickTimer;
 
 /****** Global Scope Variables and Functions ******/
 
+//*** debug utilities ***
+
+void _debug_trap();
+
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
