@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.05 // revised power level setting function for better error trapping - no longer accepts 0-100 ranges, only 0.00 - 1.00
+#define TINYG_FIRMWARE_BUILD   		082.05 // Testing some diagnostics
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

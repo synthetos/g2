@@ -77,27 +77,24 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-#define ARC_SEGMENT_LENGTH      ((float)0.1)		// Arc segment size (mm).(0.03)
-#define MIN_ARC_RADIUS          ((float)0.1)
+#define JERK_MULTIPLIER         ((float)1000000)    // must alway be 1 million - do not change
+#define JERK_MATCH_TOLERANCE    ((float)1000)       // precision to which jerk must match to be considered effectively the same
 
-#define JERK_MULTIPLIER			((float)1000000)	// must alway be 1 million - do not change
-#define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
+#define MIN_SEGMENT_USEC        ((float)2500)       // minimum segment time (also minimum move time)
+#define NOM_SEGMENT_USEC        ((float)5000)       // nominal segment time
+#define MIN_ARC_SEGMENT_USEC    ((float)10000)      // minimum arc segment time
 
-#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time (also minimum move time)
-#define NOM_SEGMENT_USEC 		((float)5000)		// nominal segment time
-#define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
-
-#define MIN_PLANNED_USEC		((float)30000)		// minimum time in the planner below which we must replan immediately
-#define PHAT_CITY_USEC			((float)80000)		// if you have at least this much time in the planner,
+#define MIN_PLANNED_USEC        ((float)30000)      // minimum time in the planner below which we must replan immediately
+#define PHAT_CITY_USEC          ((float)80000)      // if you have at least this much time in the planner,
 
 // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
-#define PLANNER_TIMEOUT_MS		(50)				// Max amount of time to wait between replans
+#define PLANNER_TIMEOUT_MS      (50)                // Max amount of time to wait between replans
 // PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
 // ++++++++ NOT SURE THIS IS STILL OPERATIVE ++++++++ ash)
 
 // derived definitions - do not change
-#define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
-#define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define MIN_SEGMENT_TIME        (MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
+#define NOM_SEGMENT_TIME        (NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)

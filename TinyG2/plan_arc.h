@@ -20,7 +20,8 @@
 #ifndef PLAN_ARC_H_ONCE
 #define PLAN_ARC_H_ONCE
 
-// See settings.h for MIN_ARC_SEGMENT_LEN setting
+#define ARC_SEGMENT_LENGTH      ((float)0.1)        // Arc segment size (mm).(0.03)
+#define MIN_ARC_RADIUS          ((float)0.1)
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
 	magic_t magic_start;
