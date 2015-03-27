@@ -153,7 +153,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     if (fp_ZERO(bf->length)) {
         rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero length line in calculate trapezoid");    // +++++++
-        while (1);
+        _debug_trap();
     }
 
     // Quick sanity check: We can't exit at a speed higher than we cruise.
@@ -193,7 +193,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         if (fp_ZERO(bf->cruise_velocity)) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity1 in calculate trapezoid");    // +++++++
-            while (1);
+            _debug_trap();
         }
 
         // Why assume we want to decelerate or accelerate?
@@ -215,7 +215,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 //
 //        if (fp_ZERO(bf->cruise_velocity)) {
-//            while (1);
+//            _debug_trap();
 //        }
 //
 //        bf->exit_velocity = bf->cruise_velocity;
@@ -230,7 +230,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         if (fp_ZERO(bf->cruise_velocity)) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity2 in calculate trapezoid");    // +++++++
-            while (1);
+            _debug_trap();
         }
 
         bf->exit_velocity = bf->cruise_velocity;
@@ -303,7 +303,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
             if (fp_ZERO(bf->cruise_velocity)) {
                 rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity3 in calculate trapezoid");    // +++++++
-                while (1);
+                _debug_trap();
             }
 
 			if (bf->head_length < MIN_HEAD_LENGTH) {
@@ -332,7 +332,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         if (fp_ZERO(bf->cruise_velocity)) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity4 in calculate trapezoid");    // +++++++
-            while (1);
+            _debug_trap();
         }
 
 		bf->head_length = mp_get_target_length(bf->entry_velocity, bf->cruise_velocity, bf);
@@ -381,7 +381,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         if (fp_ZERO(bf->cruise_velocity)) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity5 in calculate trapezoid");    // +++++++
-            while (1);
+            _debug_trap();
         }
 
         return;
@@ -395,7 +395,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         if (fp_ZERO(bf->cruise_velocity)) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity6 in calculate trapezoid");    // +++++++
-            while (1);
+            _debug_trap();
         }
 
         return;
@@ -403,7 +403,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     if (fp_ZERO(bf->cruise_velocity)) {
         rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zero cruise velocity7 in calculate trapezoid");    // +++++++
-        while (1);
+        _debug_trap();
     }
 
 //    bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));

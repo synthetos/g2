@@ -248,6 +248,10 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 {
     plan_debug_pin2 = 1;
 
+#ifdef DEBUG
+    volatile uint32_t start_time = SysTickTimer.getValue();
+#endif
+
     // the the exec not to change the moves out from under us
     mb.planning = true;
 
@@ -290,14 +294,13 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
             rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
-            while(1);
+            _debug_trap();
         }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
 		// Test for optimally planned trapezoids - only need to check various exit conditions
-        // We also lock if the planner doesn't have more than MIN_PLANNED_TIME worth of moves in it that are locked.
         if  ( ((fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
                (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) ) ||
                ((bp->pv->replannable == false) && fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) )
@@ -319,15 +322,19 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
             rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
-            while(1);
+            _debug_trap();
         }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
     }
 
-    // since it was locked before, this will incorporate any changes when we were calculating
-    bp->buffer_state = MP_BUFFER_QUEUED;
+#ifdef DEBUG
+    volatile uint32_t end_time = SysTickTimer.getValue();
+    if ((end_time - start_time) > (MIN_PLANNED_USEC / 1000)) {
+        _debug_trap();
+    }
+#endif
 
     // let the exec know we're done planning, and that the times are likely wrong
     mb.planning = false;

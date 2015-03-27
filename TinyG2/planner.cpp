@@ -632,6 +632,7 @@ void mp_planner_time_accounting() {
     mb.time_in_planner = time_in_planner;
 }
 
+#if 0
 #ifdef DEBUG
 
 #warning DEBUG TRAPS ENABLED
@@ -701,6 +702,13 @@ static void _audit_buffers()
 // About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
 
 #endif // DEBUG
+
+#else
+static void _audit_buffers()
+{
+    // empty stub
+}
+#endif // 0
 
 /****************************
  * END OF PLANNER FUNCTIONS *
