@@ -278,6 +278,7 @@ endif
 # Make sure we pass these into subprocesses (such as gdb)
 export PLATFORM
 export SETTINGS_FILE
+export DEBUG
 
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
