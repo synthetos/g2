@@ -164,6 +164,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     // Initialize all new blocks, regardless of normal or feedhold operation
 
+//#ifdef DEBUG
+//    if (!bf->locked) {
+//        _debug_trap();
+//    }
+//#endif
+
     if (mr.move_state == MOVE_OFF) {
 
         // too short lines have already been removed...
@@ -173,8 +179,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;
-            mb.needs_time_accounting = true;
-            mp_planner_time_accounting();
+//            mb.needs_time_accounting = true;
+//            mp_planner_time_accounting();
             st_prep_null();								// call this to keep the loader happy
 
 	        // free buffer & end cycle if planner is empty
@@ -215,7 +221,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Update the planner buffer times --
         // We can "guess" quite accurately but we still need a full re-accounting to handle the locking.
-        mb.needs_time_accounting = true;
+//        mb.needs_time_accounting = true;
         //mb.time_in_planner -= bf->real_move_time;
         mb.time_in_run = bf->real_move_time;
     }
@@ -338,7 +344,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		mr.section_state = SECTION_OFF;
 
         mb.time_in_run = 0.0;
-        mp_planner_time_accounting();
+//        mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {

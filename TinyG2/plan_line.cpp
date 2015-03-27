@@ -272,7 +272,11 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         // plan dwells, commands and other move types
         if (bp->move_type != MOVE_TYPE_ALINE) {
             bp->replannable = false;
-            bp->buffer_state = MP_BUFFER_QUEUED;
+            if (bp->buffer_state == MP_BUFFER_PLANNING) {
+                bp->buffer_state = MP_BUFFER_QUEUED;
+            } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+                _debug_trap();
+            }
             // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
             continue;
         }
@@ -307,7 +311,11 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
             {
             bp->replannable = false;
         }
-        bp->buffer_state = MP_BUFFER_QUEUED;
+        if (bp->buffer_state == MP_BUFFER_PLANNING) {
+            bp->buffer_state = MP_BUFFER_QUEUED;
+        } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            _debug_trap();
+        }
 	}
 
     if (bp->move_type == MOVE_TYPE_ALINE) {
@@ -327,6 +335,12 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+
+        if (bp->buffer_state == MP_BUFFER_PLANNING) {
+            bp->buffer_state = MP_BUFFER_QUEUED;
+        } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            _debug_trap();
+        }
     }
 
 #ifdef DEBUG

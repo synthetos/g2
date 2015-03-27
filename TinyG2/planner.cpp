@@ -460,8 +460,10 @@ mpBuf_t * mp_get_run_buffer()
     if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
         mb.needs_time_accounting = true;
-        mp_planner_time_accounting();
     }
+
+    mp_planner_time_accounting();
+
     // CASE: asking for the same run buffer for the Nth time
     if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
         return (mb.r);                          // return same buffer
@@ -472,6 +474,8 @@ mpBuf_t * mp_get_run_buffer()
 bool mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
 {
     _audit_buffers();           // diagnostic audit for buffer chain integrity
+
+    mb.needs_time_accounting = true;
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                            // advance to next run buffer
@@ -574,13 +578,20 @@ stat_t mp_plan_buffer()
         return (STAT_OK);
     }
 
+    // Call mp_planner_time_accounting() before planning to go through and lock all the
+    // moves up to MIN_PLANNED_TIME, in an attempt to keep the runtime from crashing into
+    // the planner.
+//    mp_planner_time_accounting();
+
+    // Now, finally, plan the buffer.
     mp_plan_block_list(mb.q->pv, false);
 
-    if(cm.hold_state != FEEDHOLD_HOLD)
+    if (cm.hold_state != FEEDHOLD_HOLD) {
 //    if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
         st_request_exec_move();					// requests an exec if the runtime is not busy
     // NB: BEWARE! the exec may result in the planner buffer being
     // processed immediately and then freed - invalidating the contents
+    }
 
     mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = false;
@@ -595,13 +606,13 @@ bool mp_is_it_phat_city_time() {
 	if(cm.hold_state == FEEDHOLD_HOLD) {
     	return true;
 	}
-    mp_planner_time_accounting();
+//    mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
     return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
 void mp_planner_time_accounting() {
-    if (mb.planning || !mb.needs_time_accounting)
+    if ((mb.time_in_run > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
         return;
 
     mpBuf_t *bf = mp_get_first_buffer();  // potential to return a NULL buffer
