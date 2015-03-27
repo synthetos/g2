@@ -49,6 +49,7 @@ qrSingleton_t qr;
 rxSingleton_t rx;
 
 /**** Exception Reports ************************************************************
+ *
  * rpt_exception() - generate an exception message - always in JSON format
  *
  * Returns incoming status value
@@ -64,7 +65,7 @@ rxSingleton_t rx;
  *			or there is a potential for deadlock in the TX buffer.
  */
 
-stat_t rpt_exception(uint8_t status, const char *msg)
+stat_t rpt_exception(stat_t status, const char *msg)
 {
 	if (status != STAT_OK) {	// makes it possible to call exception reports w/o checking status value
 
@@ -122,7 +123,6 @@ stat_t rpt_er(nvObj_t *nv)
 void _startup_helper(stat_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
-	js.json_footer_depth = JSON_FOOTER_DEPTH;	//++++ temporary until changeover is complete
 	nv_reset_nv_list();
 	nv_add_object((const char_t *)"fv");		// firmware version
 	nv_add_object((const char_t *)"fb");		// firmware build
@@ -215,7 +215,7 @@ void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
 	sr.status_report_request = SR_OFF;
-	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };	// see settings.h
+	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
 	nv->index = nv_get_index((const char_t *)"", (char_t *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 
@@ -378,8 +378,9 @@ static stat_t _populate_unfiltered_status_report()
 		strcat(tmp, nv->token);
 		strcpy(nv->token, tmp);			//...or here.
 
-		if ((nv = nv->nx) == NULL)
-			return (cm_shutdown(STAT_BUFFER_FULL_FATAL, "sr1"));	// should never be NULL unless SR length exceeds available buffer array
+		if ((nv = nv->nx) == NULL) {
+			return (cm_panic(STAT_BUFFER_FULL_FATAL, "sr1"));	// should never be NULL unless SR length exceeds available buffer array
+        }
 	}
 	return (STAT_OK);
 }
@@ -452,12 +453,14 @@ stat_t sr_set_si(nvObj_t *nv)
  *********************/
 #ifdef __TEXT_MODE
 
-static const char fmt_si[] PROGMEM = "[si]  status interval%14.0f ms\n";
+static const char fmt_si[] PROGMEM = "[si]  status interval%14d ms\n";
 static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
 
 void sr_print_sr(nvObj_t *nv) { _populate_unfiltered_status_report();}
-void sr_print_si(nvObj_t *nv) { text_print_flt(nv, fmt_si);}
-void sr_print_sv(nvObj_t *nv) { text_print_ui8(nv, fmt_sv);}
+//void sr_print_si(nvObj_t *nv) { text_print_flt(nv, fmt_si);}
+//void sr_print_sv(nvObj_t *nv) { text_print_ui8(nv, fmt_sv);}
+void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
+void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
 
 #endif // __TEXT_MODE
 
@@ -719,9 +722,9 @@ static const char fmt_qi[] PROGMEM = "qi:%d\n";
 static const char fmt_qo[] PROGMEM = "qo:%d\n";
 static const char fmt_qv[] PROGMEM = "[qv]  queue report verbosity%7d [0=off,1=single,2=triple]\n";
 
-void qr_print_qr(nvObj_t *nv) { text_print_int(nv, fmt_qr);}
-void qr_print_qi(nvObj_t *nv) { text_print_int(nv, fmt_qi);}
-void qr_print_qo(nvObj_t *nv) { text_print_int(nv, fmt_qo);}
-void qr_print_qv(nvObj_t *nv) { text_print_ui8(nv, fmt_qv);}
+void qr_print_qr(nvObj_t *nv) { text_print(nv, fmt_qr);}    // TYPE_INT
+void qr_print_qi(nvObj_t *nv) { text_print(nv, fmt_qi);}    // TYPE_INT
+void qr_print_qo(nvObj_t *nv) { text_print(nv, fmt_qo);}    // TYPE_INT
+void qr_print_qv(nvObj_t *nv) { text_print(nv, fmt_qv);}    // TYPE_INT
 
 #endif // __TEXT_MODE

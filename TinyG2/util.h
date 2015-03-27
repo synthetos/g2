@@ -50,6 +50,10 @@ using Motate::SysTickTimer;
 
 /****** Global Scope Variables and Functions ******/
 
+//*** debug utilities ***
+
+void _debug_trap();
+
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
@@ -92,9 +96,9 @@ uint32_t SysTickTimer_getValue(void);
 //**** Math Support *****
 
 // See http://www.cplusplus.com/doc/tutorial/namespaces/#using
+
 using std::isnan;
 using std::isinf;
-
 using std::min;
 using std::max;
 

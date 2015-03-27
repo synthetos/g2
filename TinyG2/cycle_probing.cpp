@@ -205,8 +205,8 @@ static stat_t _probing_start()
 	// initial probe state, don't probe if we're already contacted!
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    // false is SW_OPEN in old code, and IO_INACTIVE in new
-	if ( probe == IO_INACTIVE ) {
+    // false is SW_OPEN in old code, and INPUT_INACTIVE in new
+	if ( probe == INPUT_INACTIVE ) {
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
 	}
@@ -223,8 +223,8 @@ static stat_t _probing_backoff()
     // If we've contacted, back off & then record position
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    /* true is SW_CLOSED in old code, and IO_ACTIVE in new */
-    if (probe == IO_ACTIVE) {
+    /* true is SW_CLOSED in old code, and INPUT_ACTIVE in new */
+    if (probe == INPUT_ACTIVE) {
         cm.probe_state = PROBE_SUCCEEDED;
     //  FIXME: this should be its own parameter
     //  cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);

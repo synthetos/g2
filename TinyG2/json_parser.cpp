@@ -129,7 +129,8 @@ static stat_t _json_parser_kernal(char_t *str)
 	if (nv->valuetype == TYPE_NULL){				// means GET the value
 		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
 	} else {
-		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+        cm_parse_clear(*nv->stringp);               // parse Gcode and clear alarms if M30 or M2 is found
+        ritorno(cm_is_alarmed());                   // return error status if in alarm, shutdown or panic
 		ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
 		nv_persist(nv);
 	}
@@ -692,10 +693,10 @@ static const char fmt_jv[] PROGMEM = "[jv]  json verbosity%15d [0=silent,1=foote
 static const char fmt_js[] PROGMEM = "[js]  json serialize style%9d [0=relaxed,1=strict]\n";
 static const char fmt_jf[] PROGMEM = "[jf]  json footer style%12d [1=checksum,2=window report]\n";
 
-void js_print_ej(nvObj_t *nv) { text_print_ui8(nv, fmt_ej);}
-void js_print_jv(nvObj_t *nv) { text_print_ui8(nv, fmt_jv);}
-void js_print_js(nvObj_t *nv) { text_print_ui8(nv, fmt_js);}
-void js_print_jf(nvObj_t *nv) { text_print_ui8(nv, fmt_jf);}
+void js_print_ej(nvObj_t *nv) { text_print(nv, fmt_ej);}    // TYPE_INT
+void js_print_jv(nvObj_t *nv) { text_print(nv, fmt_jv);}    // TYPE_INT
+void js_print_js(nvObj_t *nv) { text_print(nv, fmt_js);}    // TYPE_INT
+void js_print_jf(nvObj_t *nv) { text_print(nv, fmt_jf);}    // TYPE_INT
 
 #endif // __TEXT_MODE
 

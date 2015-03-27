@@ -31,12 +31,11 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
+#include "spindle.h"
 #include "gpio.h"
-#include "switch.h"
 #include "test.h"
 #include "pwm.h"
 #include "xio.h"
-//#include "network.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
@@ -48,24 +47,25 @@
 #include "MotateTimers.h"
 using Motate::delay;
 
+/**************************
+ *** C++ specific stuff ***
+ **************************/
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus
 
 void _init() __attribute__ ((weak));
 void _init() {;}
-
 void __libc_init_array(void);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+/************************** to here ***************************/
 
 void* __dso_handle = nullptr;
 
 #endif // __ARM
-
-static void _unit_tests(void);
 
 /******************** Application Code ************************/
 
@@ -94,72 +94,68 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 /*
  * _system_init()
+ * _application_init_services()
+ * _application_init_machine()
+ * _application_init_startup()
+ *
+ * There are a lot of dependencies in the order of these inits.
+ * Don't change the ordering unless you understand this.
  */
 
 void _system_init(void)
 {
 #ifdef __ARM
 	SystemInit();
-
-	// Disable watchdog
-	WDT->WDT_MR = WDT_MR_WDDIS;
-
-	// Initialize C library
-	__libc_init_array();
-
-    // Store the flash UUID
-    cacheUniqueId();
-
-	usb.attach();					// USB setup
+	WDT->WDT_MR = WDT_MR_WDDIS;     // Disable watchdog
+	__libc_init_array();            // Initialize C library
+    cacheUniqueId();                // Store the flash UUID
+	usb.attach();                   // USB setup
 	delay(1000);
+#endif
+#ifdef __AVR
+    cli();
 #endif
 }
 
-/*
- * _application_init()
- */
-
-static void _application_init(void)
+void application_init_services(void)
 {
-	// There are a lot of dependencies in the order of these inits.
-	// Don't change the ordering unless you understand this.
-
-#ifdef __AVR
-	cli();
-#endif
-
-	cm.machine_state = MACHINE_INITIALIZING;
-
-	// do these first
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
 	xio_init();						// xtended io subsystem				- must be third
 //	rtc_init();						// real time counter
+}
 
-	// do these next
-	stepper_init(); 				// stepper subsystem 				- must precede gpio_init() on AVR
-	encoder_init();					// virtual encoders
-	gpio_init();					// inputs and outputs
-#ifndef __NEW_INPUTS
-	switch_init();					// switches
-#endif
-	pwm_init();						// pulse width modulation drivers
-	controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
-	planner_init();					// motion planning subsystem
-	canonical_machine_init();		// canonical machine
+void application_init_machine(void)
+{
+	cm.machine_state = MACHINE_INITIALIZING;
+//    controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first machine init (requires xio_init())
 
+    stepper_init();                 // stepper subsystem (must precede gpio_init() on AVR)
+    encoder_init();                 // virtual encoders
+    gpio_init();                    // inputs and outputs
+    pwm_init();                     // pulse width modulation drivers
+//    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
+    planner_init();                 // motion planning subsystem
+    canonical_machine_init();       // canonical machine
+    spindle_init();                 // should be after PWM and canonical machine inits
+}
+
+void application_init_startup(void)
+{
 #ifdef __AVR
-	// now bring up the interrupts and get started
-	PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
-	PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
-	PMIC_EnableMediumLevel();
-	PMIC_EnableLowLevel();
-	sei();							// enable global interrupts
+    // now bring up the interrupts and get started
+    PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
+    PMIC_EnableHighLevel();			// all levels are used, so don't bother to abstract them
+    PMIC_EnableMediumLevel();
+    PMIC_EnableLowLevel();
+    sei();							// enable global interrupts
 #endif
 
-	// start the application
-	config_init();					// apply the config settings from persistence
+    // start the application
+    controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first startup init (requires xio_init())
+    config_init();					// apply the config settings from persistence
     canonical_machine_reset();
+    spindle_reset();
     // MOVED: report the system is ready is now in xio
 }
 
@@ -173,8 +169,9 @@ int main(void)
 	_system_init();
 
 	// TinyG application setup
-	_application_init();
-	_unit_tests();					// run any unit tests that are enabled
+	application_init_services();
+	application_init_machine();
+	application_init_startup();
 	run_canned_startup();			// run any pre-loaded commands
 
 	// main loop
@@ -188,7 +185,9 @@ int main(void)
  * get_status_message() - return the status message
  *
  * See tinyg.h for status codes. These strings must align with the status codes in tinyg.h
- * The number of elements in the indexing array must match the # of strings
+ * The number of elements in the indexing array must match the # of strings.
+ *
+ * These strings are here even if text mode is disabled in order to support exception reports.
  *
  * Reference for putting display strings and string arrays in AVR program memory:
  * http://www.cs.mun.ca/~paul/cs4723/material/atmel/avr-libc-user-manual-1.6.5/pgmspace.html
@@ -197,8 +196,6 @@ int main(void)
 stat_t status_code;						// allocate a variable for the ritorno macro
 char_t global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
 
-//#ifdef __TEXT_MODE
-
 /*** Status message strings ***/
 
 static const char stat_00[] PROGMEM = "OK";
@@ -206,8 +203,8 @@ static const char stat_01[] PROGMEM = "Error";
 static const char stat_02[] PROGMEM = "Eagain";
 static const char stat_03[] PROGMEM = "Noop";
 static const char stat_04[] PROGMEM = "Complete";
-static const char stat_05[] PROGMEM = "Terminated";
-static const char stat_06[] PROGMEM = "Hard reset";
+static const char stat_05[] PROGMEM = "Shutdown";
+static const char stat_06[] PROGMEM = "Panic";
 static const char stat_07[] PROGMEM = "End of line";
 static const char stat_08[] PROGMEM = "End of file";
 static const char stat_09[] PROGMEM = "File not open";
@@ -220,7 +217,7 @@ static const char stat_14[] PROGMEM = "Buffer full FATAL";
 static const char stat_15[] PROGMEM = "Initializing";
 static const char stat_16[] PROGMEM = "Entering boot loader";
 static const char stat_17[] PROGMEM = "Function is stubbed";
-static const char stat_18[] PROGMEM = "18";
+static const char stat_18[] PROGMEM = "Alarm";
 static const char stat_19[] PROGMEM = "19";
 
 static const char stat_20[] PROGMEM = "Internal error";
@@ -230,7 +227,7 @@ static const char stat_23[] PROGMEM = "Divide by zero";
 static const char stat_24[] PROGMEM = "Invalid Address";
 static const char stat_25[] PROGMEM = "Read-only address";
 static const char stat_26[] PROGMEM = "Initialization failure";
-static const char stat_27[] PROGMEM = "Shutdown by emergency stop";
+static const char stat_27[] PROGMEM = "27";
 static const char stat_28[] PROGMEM = "Failed to get planner buffer";
 static const char stat_29[] PROGMEM = "Generic exception report";
 
@@ -370,6 +367,7 @@ static const char stat_154[] PROGMEM = "Spindle must be turning for this command
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
+//--------------------------------------1--------10--------20--------30--------40--------50--------60-64
 static const char stat_158[] PROGMEM = "Arc specification error - radius arc out of tolerance";
 static const char stat_159[] PROGMEM = "Arc specification error - endpoint is starting point";
 
@@ -420,11 +418,12 @@ static const char stat_199[] PROGMEM = "199";
 static const char stat_200[] PROGMEM = "Generic error";
 static const char stat_201[] PROGMEM = "Move < min length";
 static const char stat_202[] PROGMEM = "Move < min time";
-static const char stat_203[] PROGMEM = "Alarmed, command rejected [type $clear to clear alarm]"; // current longest message 55 chars (including NUL)
-static const char stat_204[] PROGMEM = "Hard limit [enter $clear to clear, $lim=0 to override]";
-static const char stat_205[] PROGMEM = "Planner did not converge";
-static const char stat_206[] PROGMEM = "206";
-static const char stat_207[] PROGMEM = "207";
+//--------------------------------------1--------10--------20--------30--------40--------50--------60-64
+static const char stat_203[] PROGMEM = "Limit hit [$clear to reset, $lim=0 to override]";
+static const char stat_204[] PROGMEM = "Command rejected by ALARM [$clear to reset]";
+static const char stat_205[] PROGMEM = "Command rejected by SHUTDOWN [$clear to reset]";
+static const char stat_206[] PROGMEM = "Command rejected by PANIC [^x to reset]";
+static const char stat_207[] PROGMEM = "Kill job";
 static const char stat_208[] PROGMEM = "208";
 static const char stat_209[] PROGMEM = "209";
 
@@ -507,30 +506,4 @@ static const char *const stat_msg[] PROGMEM = {
 char *get_status_message(stat_t status)
 {
 	return ((char *)GET_TEXT_ITEM(stat_msg, status));
-}
-/*
-#else
-char *get_status_message(stat_t status)
-{
-	return ((char *)NULL);
-}
-#endif // __TEXT_MODE
-*/
-
-/*******************************************************************************
- * _unit_tests() - uncomment __UNITS... line in .h files to enable unit tests
- */
-
-static void _unit_tests(void)
-{
-#ifdef __UNIT_TESTS
-	XIO_UNITS;				// conditional unit tests for xio sub-system
-//	EEPROM_UNITS;			// if you want this you must include the .h file in this file
-	CONFIG_UNITS;
-	JSON_UNITS;
-//	GPIO_UNITS;
-	REPORT_UNITS;
-	PLANNER_UNITS;
-	PWM_UNITS;
-#endif
 }

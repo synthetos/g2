@@ -45,38 +45,40 @@ typedef enum {                      // bf->buffer_state values
 } mpBufferState;
 
 typedef enum {				        // bf->move_type values
-	MOVE_TYPE_NULL = 0,		        // null move - does a no-op
-	MOVE_TYPE_ALINE,		        // acceleration planned line
-	MOVE_TYPE_DWELL,                // delay with no movement
-	MOVE_TYPE_COMMAND,              // general command
-	MOVE_TYPE_TOOL,                 // T command
-	MOVE_TYPE_SPINDLE_SPEED,        // S command
-	MOVE_TYPE_STOP,                 // program stop
-	MOVE_TYPE_END                   // program end
+    MOVE_TYPE_NULL = 0,		        // null move - does a no-op
+    MOVE_TYPE_ALINE,		        // acceleration planned line
+    MOVE_TYPE_DWELL,                // delay with no movement
+    MOVE_TYPE_COMMAND,              // general command
+    MOVE_TYPE_TOOL,                 // T command
+    MOVE_TYPE_SPINDLE_SPEED,        // S command
+    MOVE_TYPE_STOP,                 // program stop
+    MOVE_TYPE_END                   // program end
 } moveType;
 
 typedef enum {
-	MOVE_OFF = 0,                   // move inactive (MUST BE ZERO)
-	MOVE_NEW,                       // general value if you need an initialization
-	MOVE_RUN,                       // general run state (for non-acceleration moves)
-	MOVE_SKIP_BLOCK                 // mark a skipped block
+    MOVE_OFF = 0,                   // move inactive (MUST BE ZERO)
+    MOVE_NEW,                       // general value if you need an initialization
+    MOVE_RUN                        // general run state (for non-acceleration moves)
 } moveState;
 
 typedef enum {
-	SECTION_HEAD = 0,               // acceleration
-	SECTION_BODY,                   // cruise
-	SECTION_TAIL                    // deceleration
+    SECTION_HEAD = 0,               // acceleration
+    SECTION_BODY,                   // cruise
+    SECTION_TAIL                    // deceleration
 } moveSection;
 #define SECTIONS 3
 
 typedef enum {
-	SECTION_OFF = 0,                // section inactive
-	SECTION_NEW,                    // uninitialized section
-	SECTION_1st_HALF,               // first half of S curve
-	SECTION_2nd_HALF                // second half of S curve or running a BODY (cruise)
+    SECTION_OFF = 0,                // section inactive
+    SECTION_NEW,                    // uninitialized section
+    SECTION_1st_HALF,               // first half of S curve
+    SECTION_2nd_HALF                // second half of S curve or running a BODY (cruise)
 } sectionState;
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
+
+#define ARC_SEGMENT_LENGTH      ((float)0.1)		// Arc segment size (mm).(0.03)
+#define MIN_ARC_RADIUS          ((float)0.1)
 
 #define JERK_MULTIPLIER			((float)1000000)	// must alway be 1 million - do not change
 #define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
@@ -179,10 +181,10 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// get_write_buffer pointer
 	mpBuf_t *q;						// queue_write_buffer pointer
 	mpBuf_t *r;						// get/end_run_buffer pointer
-    bool    needs_replanned;        // mark to indicate that at least one ALINE was put in the buffer
-    bool    needs_time_accounting;  // mark to indicate that the buffer has changed and the times (below) may be wrong
-    bool    planning;               // the planner marks this to indicate it's (re)planning the block list
-    bool    force_replan;           // true to indicate that we must plan, ignoring the normal timing tests
+    bool needs_replanned;           // mark to indicate that at least one ALINE was put in the buffer
+    bool needs_time_accounting;     // mark to indicate that the buffer has changed and the times (below) may be wrong
+    bool planning;                  // the planner marks this to indicate it's (re)planning the block list
+    bool force_replan;              // true to indicate that we must plan, ignoring the normal timing tests
 
     volatile float time_in_run;		// time left in the buffer executed by the runtime
     volatile float time_in_planner;	// total time of the buffer
@@ -259,9 +261,11 @@ extern mpMoveRuntimeSingleton_t mr;     // context for line runtime
 //planner.c functions
 
 void planner_init(void);
+void planner_reset(void);
 void planner_init_assertions(void);
 stat_t planner_test_assertions(void);
 
+void mp_halt_runtime(void);
 void mp_flush_planner(void);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);

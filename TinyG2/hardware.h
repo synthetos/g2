@@ -157,7 +157,11 @@ static OutputPin<kSpindle_EnablePinNumber> spindle_enable_pin;
 static OutputPin<kSpindle_DirPinNumber> spindle_dir_pin;
 static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
-static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
+
+// NOTE: In the v9 and the Due the flood and mist coolants are mapped to a the same pin
+//static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
+static OutputPin<kCoolant_EnablePinNumber> flood_enable_pin;
+static OutputPin<kCoolant_EnablePinNumber> mist_enable_pin;
 
 // Input pins are defined in switch.cpp
 
@@ -166,13 +170,8 @@ static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
  ********************************/
 
 void hardware_init(void);			// master hardware init
-void hw_request_hard_reset();
 void hw_hard_reset(void);
-stat_t hw_hard_reset_handler(void);
-
-void hw_request_bootloader(void);
-stat_t hw_bootloader_handler(void);
-stat_t hw_run_boot(nvObj_t *nv);
+stat_t hw_flash(nvObj_t *nv);
 
 stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);

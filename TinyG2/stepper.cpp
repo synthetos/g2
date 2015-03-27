@@ -219,6 +219,7 @@ Stepper<MOTOR_6,
  ************************************************************************************/
 /*
  * stepper_init() - initialize stepper motor subsystem
+ * stepper_reset() - reset stepper motor subsystem
  *
  *	Notes:
  *	  - This init requires sys_init() to be run beforehand
@@ -237,10 +238,10 @@ Stepper<MOTOR_6,
  *	pmc_enable_periph_clk(TC_ID_DDA);
  *	TC_Start(TC_BLOCK_DDA, TC_CHANNEL_DDA);
  */
-
 void stepper_init()
 {
 	memset(&st_run, 0, sizeof(st_run));			// clear all values, pointers and status
+	memset(&st_pre, 0, sizeof(st_pre));			// clear all values, pointers and status
 	stepper_init_assertions();
 
 #ifdef __AVR
@@ -274,9 +275,6 @@ void stepper_init()
 	TIMER_EXEC.CTRLB = EXEC_TIMER_WGMODE;		// waveform mode
 	TIMER_EXEC.INTCTRLA = TIMER_EXEC_INTLVL;	// interrupt mode
 	TIMER_EXEC.PER = EXEC_TIMER_PERIOD;			// set period
-
-	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
-	st_reset();									// reset steppers to known state
 #endif // __AVR
 
 #ifdef __ARM
@@ -303,6 +301,30 @@ void stepper_init()
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
 #endif // __ARM
+
+    stepper_reset();                            // reset steppers to known state
+}
+
+/*
+ * stepper_reset() - reset stepper internals
+ *
+ * Used to initialize stepper and also to halt movement
+ */
+
+void stepper_reset()
+{
+    dda_timer.stop();                                   // stop all movement
+    dwell_timer.stop();
+    st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
+    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
+
+	for (uint8_t motor=0; motor<MOTORS; motor++) {
+		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
+        st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
+		st_run.mot[motor].substep_accumulator = 0;      // will become max negative during per-motor setup;
+		st_pre.mot[motor].corrected_steps = 0;          // diagnostic only - no action effect
+	}
+ 	mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
 }
 
 /*
@@ -320,11 +342,11 @@ void stepper_init_assertions()
 
 stat_t stepper_test_assertions()
 {
-	if (st_run.magic_end	!= MAGICNUM) return (STAT_STEPPER_ASSERTION_FAILURE);
-	if (st_run.magic_start	!= MAGICNUM) return (STAT_STEPPER_ASSERTION_FAILURE);
-	if (st_pre.magic_end	!= MAGICNUM) return (STAT_STEPPER_ASSERTION_FAILURE);
-	if (st_pre.magic_start	!= MAGICNUM) return (STAT_STEPPER_ASSERTION_FAILURE);
-	return (STAT_OK);
+    if ((BAD_MAGIC(st_run.magic_start)) || (BAD_MAGIC(st_run.magic_end)) ||
+        (BAD_MAGIC(st_pre.magic_start)) || (BAD_MAGIC(st_pre.magic_end))) {
+        return(cm_panic(STAT_STEPPER_ASSERTION_FAILURE, NULL));
+    }
+    return (STAT_OK);
 }
 
 /*
@@ -338,10 +360,6 @@ stat_t stepper_test_assertions()
 bool st_runtime_isbusy()
 {
     return (st_run.dda_ticks_downcount);    // returns false if downcount is zero
-//	if (st_run.dda_ticks_downcount == 0) {
-//		return (false);
-//	}
-//	return (true);
 }
 
 /*
@@ -351,30 +369,17 @@ bool st_runtime_isbusy()
  * - we are in _load_move or the exec or load interrupt handlers
  * - we are currently running a segment (motors or dwell), after which we will request an exec interrupt
  */
-
-bool st_exec_isbusy()
-{
-    return (st_pre.exec_isbusy != 0);
-}
-
+/*
 #define EXEC_BUSY_FLAG 0x1
 #define LOAD_BUSY_FLAG 0x2
 #define DDA_DWELL_BUSY_FLAG 0x4
 
-/*
- * st_reset() - reset stepper internals
- */
-
-void st_reset()
+bool st_exec_isbusy()
 {
-	for (uint8_t motor=0; motor<MOTORS; motor++) {
-		st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
-        st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
-		st_run.mot[motor].substep_accumulator = 0;	// will become max negative during per-motor setup;
-		st_pre.mot[motor].corrected_steps = 0;		// diagnostic only - no action effect
-	}
-	mp_set_steps_to_runtime_position();
+//    return (st_pre.exec_isbusy != 0);
+    return (st_pre.exec_isbusy);        // returns true if exec is busy
 }
+*/
 
 /*
  * st_clc() - clear counters
@@ -382,7 +387,7 @@ void st_reset()
 
 stat_t st_clc(nvObj_t *nv)	// clear diagnostic counters, reset stepper prep
 {
-	st_reset();
+	stepper_reset();
 	return(STAT_OK);
 }
 
@@ -590,10 +595,10 @@ ISR(TIMER_DDA_ISR_vect)
 	if (--st_run.dda_ticks_downcount != 0) return;
 
 	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;				// disable DDA timer
-	st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
-	st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
+//	st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+//	st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 	_load_move();										// load the next move
-	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
+//	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -659,10 +664,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 
 		// process end of segment
 		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
-		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
-		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();									// load the next move at the current interrupt level
-		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 //    dda_debug_pin2=0;
 } // MOTATE_TIMER_INTERRUPT
@@ -678,10 +680,10 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 ISR(TIMER_DWELL_ISR_vect) {								// DWELL timer interrupt
 	if (--st_run.dda_ticks_downcount == 0) {
 		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;			// disable DWELL timer
-		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
-		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
+//		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();
-		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 }
 #endif
@@ -692,10 +694,10 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
 	if (--st_run.dda_ticks_downcount == 0) {
 		dwell_timer.stop();
-		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
-		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
+//		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~DDA_DWELL_BUSY_FLAG;
 		_load_move();
-		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 }
 } // namespace Motate
@@ -711,7 +713,7 @@ MOTATE_TIMER_INTERRUPT(dwell_timer_num)
 void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
-		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
+//		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
 		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
 		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
 	}
@@ -727,7 +729,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 			st_request_load_move();
 		}
 	}
-	st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
+//	st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -735,7 +737,7 @@ ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
 void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
-		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
+//		st_pre.exec_isbusy |= EXEC_BUSY_FLAG;
 		exec_timer.setInterruptPending();
 	}
 }
@@ -750,7 +752,7 @@ namespace Motate {	// Define timer inside Motate namespace
 				st_request_load_move();
 			}
 		}
-		st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~EXEC_BUSY_FLAG;
 	}
 } // namespace Motate
 
@@ -773,7 +775,7 @@ void st_request_load_move()
 		return;													// don't request a load if the runtime is busy
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
-		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
 		TIMER_LOAD.PER = LOAD_TIMER_PERIOD;
 		TIMER_LOAD.CTRLA = LOAD_TIMER_ENABLE;					// trigger a HI interrupt
 	}
@@ -782,7 +784,7 @@ void st_request_load_move()
 ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
 	TIMER_LOAD.CTRLA = LOAD_TIMER_DISABLE;						// disable SW interrupt timer
 	_load_move();
-	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
+//	st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 }
 #endif // __AVR
 
@@ -793,7 +795,7 @@ void st_request_load_move()
 		return;
 	}
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
-		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy |= LOAD_BUSY_FLAG;
 		load_timer.setInterruptPending();
 	}
 }
@@ -803,7 +805,7 @@ namespace Motate {	// Define timer inside Motate namespace
 	{
 		load_timer.getInterruptCause();							// read SR to clear interrupt condition
 		_load_move();
-		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
+//		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
 	}
 } // namespace Motate
 #endif // __ARM
@@ -986,13 +988,13 @@ static void _load_move()
 
 		//**** do this last ****
 
-        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dda_timer.start();									// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
-        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dwell_timer.start();
 
 	// handle synchronous commands
@@ -1039,9 +1041,9 @@ static void _load_move()
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
 	// trap conditions that would prevent queuing the line
-	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_shutdown(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
-	} else if (isinf(segment_time)) { return (cm_shutdown(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
-	} else if (isnan(segment_time)) { return (cm_shutdown(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
+	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_panic(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
+	} else if (isinf(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
+	} else if (isnan(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
 	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters
@@ -1222,7 +1224,7 @@ static void _set_motor_steps_per_unit(nvObj_t *nv)
 {
 	uint8_t m = _get_motor(nv->index);
 	st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / (360 * st_cfg.mot[m].microsteps);
-	st_cfg.mot[m].steps_per_unit = 1 / st_cfg.mot[m].units_per_step;
+	st_cfg.mot[m].steps_per_unit = 1/st_cfg.mot[m].units_per_step;
 }
 
 /* PER-MOTOR FUNCTIONS
@@ -1354,27 +1356,26 @@ static const char *const msg_units[] PROGMEM = { msg_units0, msg_units1, msg_uni
 
 static const char fmt_me[] PROGMEM = "motors energized\n";
 static const char fmt_md[] PROGMEM = "motors de-energized\n";
-static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f Sec\n";
+static const char fmt_mt[] PROGMEM = "[mt]  motor idle timeout%14.2f seconds\n";
 static const char fmt_0ma[] PROGMEM = "[%s%s] m%s map to axis%15d [0=X,1=Y,2=Z...]\n";
 static const char fmt_0sa[] PROGMEM = "[%s%s] m%s step angle%20.3f%s\n";
 static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%10.4f%s\n";
-static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
 static const char fmt_0pl[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
+#ifdef __AVR
+    static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
+#else
+    static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8,16,32]\n";
+#endif
 
-void st_print_mt(nvObj_t *nv) { text_print_flt(nv, fmt_mt);}
-void st_print_me(nvObj_t *nv) { text_print_nul(nv, fmt_me);}
-void st_print_md(nvObj_t *nv) { text_print_nul(nv, fmt_md);}
+void st_print_me(nvObj_t *nv) { text_print(nv, fmt_me);}    // TYPE_NULL - message only
+void st_print_md(nvObj_t *nv) { text_print(nv, fmt_md);}    // TYPE_NULL - message only
+void st_print_mt(nvObj_t *nv) { text_print(nv, fmt_mt);}    // TYPE_FLOAT
 
-static void _print_motor_ui8(nvObj_t *nv, const char *format)
+static void _print_motor_int(nvObj_t *nv, const char *format)
 {
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
-}
-
-static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t units)
-{
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
+	fprintf_P(stderr, format, nv->group, nv->token, nv->group, (int)nv->value);
 }
 
 static void _print_motor_flt(nvObj_t *nv, const char *format)
@@ -1382,12 +1383,17 @@ static void _print_motor_flt(nvObj_t *nv, const char *format)
 	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value);
 }
 
-void st_print_ma(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0ma);}
+static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t units)
+{
+    fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
+}
+
+void st_print_ma(nvObj_t *nv) { _print_motor_int(nv, fmt_0ma);}
 void st_print_sa(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0sa, DEGREE_INDEX);}
 void st_print_tr(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0tr, cm_get_units_mode(MODEL));}
-void st_print_mi(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0mi);}
-void st_print_po(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0po);}
-void st_print_pm(nvObj_t *nv) { _print_motor_ui8(nv, fmt_0pm);}
+void st_print_mi(nvObj_t *nv) { _print_motor_int(nv, fmt_0mi);}
+void st_print_po(nvObj_t *nv) { _print_motor_int(nv, fmt_0po);}
+void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
 
 #endif // __TEXT_MODE

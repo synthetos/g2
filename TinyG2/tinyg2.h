@@ -38,60 +38,27 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		079.60 // fixed bug in cm_end_queue_flush
-
+#define TINYG_FIRMWARE_BUILD   		081.07 // resolving merge conflicts between edge and edge-io2
 #endif
-#define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
-#define TINYG_CONFIG_VERSION		5							// CV values started at 5 to provide bkwds compatibility
+
+#define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
+#define TINYG_CONFIG_VERSION		6							// CV values started at 5 to provide bkwds compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
 
-/*
-#if (PLATFORM == v9_3x8c)
-#define TINYG_HARDWARE_PLATFORM		3		// hardware platform indicator (3 = v9 board)
-#else
-#define TINYG_HARDWARE_PLATFORM		2		// hardware platform indicator (2 = Native Arduino Due)
-#endif
-*/
-
 /****** COMPILE-TIME SETTINGS ******/
 
-#define __TEXT_MODE							// enables text mode support (~10Kb)
-#define __HELP_SCREENS						// enables help screens 	 (~3.5Kb)
-#define __CANNED_TESTS 						// enables $tests 			 (~12Kb)
-#define __TEST_99 							// enables diagnostic test 99
+#define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
+#define __HELP_SCREENS              // enable help screens      (~3.5Kb)
+#define __CANNED_TESTS              // enable $tests            (~12Kb)
 
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
-#define __NEW_INPUTS						// Using g2 revised digital inouts
-#define __DUAL_USB							// use dual endpoint USB
-
-#define __DIAGNOSTIC_PARAMETERS				// enables system diagnostic parameters (_xx) in config_app
-#define __CANNED_STARTUP					// run any canned startup moves
-//#define __DEBUG_SETTINGS					// special settings. See settings.h
-//#define __UNIT_TESTS						// master enable for unit tests; USAGE: uncomment test in .h file
-
-//#define __SIMULATION						// for software-only simulations
-#ifdef __SIMULATION
-  #undef  __TEXT_MODE
-  #undef  __HELP_SCREENS
-  #undef  __CANNED_TESTS
-  #ifndef __CANNED_STARTUP
-    #define __CANNED_STARTUP
-  #endif
-  #define __DISABLE_PERSISTENCE				// disable EEPROM writes for faster simulation
-  #define __SUPPRESS_STARTUP_MESSAGES
-  #define __SUPPRESS_STATUS_REPORTS
-  #define __SUPPRESS_QUEUE_REPORTS
-  #define __SUPRESS_DIAGNOSTIC_DISPLAYS
-  #define __SILENCE_JSON_RESPONSES
-#endif // __SIMULATION
-
-//#ifndef WEAK
-//#define WEAK  __attribute__ ((weak))
-//#endif
+#define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
+#define __CANNED_STARTUP            // run any canned startup moves
+//#define __DEBUG_SETTINGS          // special settings. See settings.h
 
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************
@@ -109,7 +76,6 @@
 #include <avr/pgmspace.h>		// defines PROGMEM and PSTR
 
 typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
-
 																	// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
@@ -160,32 +126,26 @@ typedef char char_t;			// Vestigal. Will be removed at some point
 #define STD_OUT 0
 #define STD_ERR 0
 
-
-// defines are BAD, M'kay? 'specially when you redfine a global function.
-
 /* String compatibility
  *
- * The AVR also has "_P" variants that take PROGMEM strings as args.
+ * AVR GCC has "_P" variants that take PROGMEM strings as args.
  * On the ARM/GCC++ the _P functions are just aliases of the non-P variants.
  *
  * Note that we have to be sure to cast non char variables to char types when used
  * with standard functions. We must maintain const when it's required as well.
  *
- * The compiler will be your guide when you get it wrong. :)
+ *      Example: char *ret = strcpy((char *)d, (const char *)s);
+ *      The compiler will be your guide when you get it wrong. :)
  *
- * Example: char *ret = strcpy((char *)d, (const char *)s);
- *
+ * Avoid redefining global defines if possible The following inline jump functions are better.
  */
-
+inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
+inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
 #define printf_P printf		// these functions want char * as inputs, not char_t *
-#define fprintf_P fprintf	// just sayin'
+#define fprintf_P fprintf
 #define sprintf_P sprintf
-
-// These are better -- inline jump functions.
-inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
-inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
 
 #endif // __ARM
 
@@ -193,8 +153,9 @@ inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t 
  ***** TINYG APPLICATION DEFINITIONS ******************************************
  ******************************************************************************/
 
-typedef uint16_t magic_t;		// magic number size
-#define MAGICNUM 0x12EF			// used for memory integrity assertions
+typedef uint16_t magic_t;		        // magic number size
+#define MAGICNUM 0x12EF			        // used for memory integrity assertions
+#define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
 /***** Axes, motors & PWM channels used by the application *****/
 // Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
@@ -204,11 +165,6 @@ typedef uint16_t magic_t;		// magic number size
 #define MOTORS		6			// number of motors on the board
 #define COORDS		6			// number of supported coordinate systems (1-6)
 #define PWMS		2			// number of supported PWM channels
-
-#ifdef __POCKETNC
-#undef	HOMING_AXES
-#define HOMING_AXES	5
-#endif
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
@@ -280,8 +236,8 @@ char *get_status_message(stat_t status);
 #define	STAT_EAGAIN 2					// function would block here (call again)
 #define	STAT_NOOP 3						// function had no-operation
 #define	STAT_COMPLETE 4					// operation is complete
-#define STAT_TERMINATE 5				// operation terminated (gracefully)
-#define STAT_RESET 6					// operation was hard reset (sig kill)
+#define STAT_SHUTDOWN 5				    // operation was shutdown (terminated gracefully)
+#define STAT_PANIC 6					// system panic (not graceful)
 #define	STAT_EOL 7						// function returned end-of-line
 #define	STAT_EOF 8						// function returned end-of-file
 #define	STAT_FILE_NOT_OPEN 9
@@ -293,7 +249,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INITIALIZING 15			// initializing - not ready for use
 #define	STAT_ENTERING_BOOT_LOADER 16	// this code actually emitted from boot loader, not TinyG
 #define	STAT_FUNCTION_IS_STUBBED 17
-#define	STAT_ERROR_18 18
+#define	STAT_ALARM 18                   // system alarm triggered
 #define	STAT_ERROR_19 19				// NOTE: XIO codes align to here
 
 // Internal errors and startup messages
@@ -303,8 +259,8 @@ char *get_status_message(stat_t status);
 #define	STAT_DIVIDE_BY_ZERO 23
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
-#define	STAT_INIT_FAIL 26
-#define	STAT_SHUTDOWN_BY_EMERGENCY_STOP 27
+#define	STAT_INIT_FAILURE 26
+#define	STAT_ERROR_27 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
@@ -508,11 +464,11 @@ char *get_status_message(stat_t status);
 #define STAT_GENERIC_ERROR 200
 #define	STAT_MINIMUM_LENGTH_MOVE 201					// move is less than minimum length
 #define	STAT_MINIMUM_TIME_MOVE 202						// move is less than minimum time
-#define	STAT_MACHINE_ALARMED 203						// machine is alarmed. Command not processed
-#define	STAT_LIMIT_SWITCH_HIT 204						// a limit switch was hit causing shutdown
-#define	STAT_PLANNER_FAILED_TO_CONVERGE 205				// trapezoid generator can through this exception
-#define	STAT_ERROR_206 206
-#define	STAT_ERROR_207 207
+#define	STAT_LIMIT_SWITCH_HIT 203						// a limit switch was hit causing shutdown
+#define	STAT_COMMAND_REJECTED_BY_ALARM 204              // command was not processed because machine is alarmed
+#define	STAT_COMMAND_REJECTED_BY_SHUTDOWN 205           // command was not processed because machine is shutdown
+#define	STAT_COMMAND_REJECTED_BY_PANIC 206              // command was not processed because machine is paniced
+#define	STAT_KILL_JOB 207                               // ^d received (job kill)
 #define	STAT_ERROR_208 208
 #define	STAT_ERROR_209 209
 
@@ -563,7 +519,10 @@ char *get_status_message(stat_t status);
 #define	STAT_PROBE_CYCLE_FAILED 250						// probing cycle did not complete
 #define STAT_PROBE_ENDPOINT_IS_STARTING_POINT 251
 #define	STAT_JOGGING_CYCLE_FAILED 252					// jogging cycle did not complete
+#define	STAT_ERROR_253 253
+#define	STAT_ERROR_254 254
+#define	STAT_ERROR_255 255
 
-// !!! Do not exceed 255 without also changing stat_t typedef
+// ****** !!! Do not exceed 255 without also changing stat_t typedef ******
 
 #endif // End of include guard: TINYG2_H_ONCE
