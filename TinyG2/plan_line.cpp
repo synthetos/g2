@@ -275,6 +275,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
             if (bp->buffer_state == MP_BUFFER_PLANNING) {
                 bp->buffer_state = MP_BUFFER_QUEUED;
             } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+                rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty1 in mp_plan_block_list");
                 _debug_trap();
             }
             // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
@@ -297,7 +298,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero velocity in mp_plan_block_list");
             _debug_trap();
         }
 
@@ -314,6 +315,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         if (bp->buffer_state == MP_BUFFER_PLANNING) {
             bp->buffer_state = MP_BUFFER_QUEUED;
         } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty2 in mp_plan_block_list");
             _debug_trap();
         }
 	}
@@ -329,7 +331,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "min time move in mp_plan_block_list");
             _debug_trap();
         }
 
@@ -339,6 +341,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         if (bp->buffer_state == MP_BUFFER_PLANNING) {
             bp->buffer_state = MP_BUFFER_QUEUED;
         } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty3 in mp_plan_block_list");
             _debug_trap();
         }
     }
@@ -346,6 +349,7 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
 #ifdef DEBUG
     volatile uint32_t end_time = SysTickTimer.getValue();
     if ((end_time - start_time) > (MIN_PLANNED_USEC / 1000)) {
+        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "time mis-match in mp_plan_block_list");
         _debug_trap();
     }
 #endif
@@ -541,8 +545,8 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
  0.7803358969289657274992034530009202136449618925894543
 
 */
-//#define __OLD_JERK
-//#define __TEST_JERK
+//#define __FIXED_JERK
+//#define __TEST_JERKg
 //#define __OLD_JERK
 #define __REVISED_JERK
 

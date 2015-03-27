@@ -88,16 +88,12 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 #define value_vector gm.target	// alias for vector of values
 #define flag_vector unit		// alias for vector of flags
 
+static void _planner_time_accounting();
 static void _audit_buffers();
 
 // execution routines (NB: These are called from the LO interrupt)
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
-
-#ifdef __DEBUG
-static uint8_t _get_buffer_index(mpBuf_t *bf);
-static void _dump_plan_buffer(mpBuf_t *bf);
-#endif
 
 /*
  * planner_init()
@@ -461,8 +457,11 @@ mpBuf_t * mp_get_run_buffer()
         mb.r->buffer_state = MP_BUFFER_RUNNING;
         mb.needs_time_accounting = true;
     }
-
-    mp_planner_time_accounting();
+    
+    // This is the one point where an accurate accounting of the total time in the 
+    // run and the planner is established. _planner_time_accounting() also performs
+    // the locking of planner buffers to ensure that sufficient "safe" time is reserved.
+    _planner_time_accounting();
 
     // CASE: asking for the same run buffer for the Nth time
     if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
@@ -538,7 +537,7 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
  *
  *	mp_plan_buffer()
  *	mp_is_it_phat_city_time()
- *	mp_planner_time_accounting()
+ *	_planner_time_accounting()
  *  _audit_buffers()
  */
 
@@ -611,7 +610,8 @@ bool mp_is_it_phat_city_time() {
     return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
-void mp_planner_time_accounting() {
+static void _planner_time_accounting() 
+{
     if ((mb.time_in_run > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
         return;
 
@@ -734,83 +734,3 @@ static void _audit_buffers()
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
  ***********************************************************************************/
-
-//************************************************************************************
-//***** DEBUG CODE *******************************************************************
-//************************************************************************************
-
-/****** DEBUG Code ******	(see beginning of file for static function prototypes) */
-
-#ifdef __DEBUG
-
-// currently this routine is only used by debug routines
-uint8_t mp_get_buffer_index(mpBuf_t *bf)
-{
-    mpBuf_t *b = bf;				// temp buffer pointer
-
-    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-        if (b->pv > b) {
-            return (i);
-        }
-        b = b->pv;
-    }
-    return(cm_panic(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
-}
-
-void mp_dump_running_plan_buffer() { _dump_plan_buffer(mb.r);}
-
-void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[index]);	}
-
-static void _dump_plan_buffer(mpBuf_t *bf)
-{
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
-			_get_buffer_index(bf),
-			bf->buffer_state,
-			bf->move_type,
-			bf->move_state,
-			bf->replannable);
-
-	print_scalar(PSTR("line number:     "), bf->linenum);
-	print_vector(PSTR("position:        "), mm.position, AXES);
-	print_vector(PSTR("target:          "), bf->target, AXES);
-	print_vector(PSTR("unit:            "), bf->unit, AXES);
-	print_scalar(PSTR("jerk:            "), bf->jerk);
-	print_scalar(PSTR("time:            "), bf->time);
-	print_scalar(PSTR("length:          "), bf->length);
-	print_scalar(PSTR("head_length:     "), bf->head_length);
-	print_scalar(PSTR("body_length:     "), bf->body_length);
-	print_scalar(PSTR("tail_length:     "), bf->tail_length);
-	print_scalar(PSTR("entry_velocity:  "), bf->entry_velocity);
-	print_scalar(PSTR("cruise_velocity: "), bf->cruise_velocity);
-	print_scalar(PSTR("exit_velocity:   "), bf->exit_velocity);
-	print_scalar(PSTR("exit_vmax:       "), bf->exit_vmax);
-	print_scalar(PSTR("entry_vmax:      "), bf->entry_vmax);
-	print_scalar(PSTR("cruise_vmax:     "), bf->cruise_vmax);
-	print_scalar(PSTR("delta_vmax:      "), bf->delta_vmax);
-	print_scalar(PSTR("braking_velocity:"), bf->braking_velocity);
-}
-
-void mp_dump_runtime_state(void)
-{
-	fprintf_P(stderr, PSTR("***Runtime Singleton (mr)\n"));
-	print_scalar(PSTR("line number:       "), mr.linenum);
-	print_vector(PSTR("position:          "), mr.position, AXES);
-	print_vector(PSTR("target:            "), mr.target, AXES);
-	print_scalar(PSTR("length:            "), mr.length);
-
-	print_scalar(PSTR("move_time:         "), mr.move_time);
-//	print_scalar(PSTR("accel_time;        "), mr.accel_time);
-//	print_scalar(PSTR("elapsed_accel_time:"), mr.elapsed_accel_time);
-	print_scalar(PSTR("midpoint_velocity: "), mr.midpoint_velocity);
-//	print_scalar(PSTR("midpoint_accel:    "), mr.midpoint_acceleration);
-//	print_scalar(PSTR("jerk_div2:         "), mr.jerk_div2);
-
-	print_scalar(PSTR("segments:          "), mr.segments);
-	print_scalar(PSTR("segment_count:     "), mr.segment_count);
-	print_scalar(PSTR("segment_move_time: "), mr.segment_move_time);
-//	print_scalar(PSTR("segment_accel_time:"), mr.segment_accel_time);
-	print_scalar(PSTR("microseconds:      "), mr.microseconds);
-	print_scalar(PSTR("segment_length:	  "), mr.segment_length);
-	print_scalar(PSTR("segment_velocity:  "), mr.segment_velocity);
-}
-#endif // __DEBUG

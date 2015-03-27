@@ -173,9 +173,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     if (mr.move_state == MOVE_OFF) {
 
         // too short lines have already been removed...
-        // +++ so is the following code ever executed? ++++ ash
+        // so is the following code is no longer needed ++++ ash
+        // But let's still alert the condition should it ever occur
         if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
-            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "exec_aline");   /// +++ diagnostic
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero length move in exec_aline");
+        }
+/*
+        if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero length move in exec_aline");
 
             mr.move_state = MOVE_OFF;					// reset mr buffer
             mr.section_state = SECTION_OFF;
@@ -192,7 +197,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             return (STAT_OK);
         }
         // ++++ to here
-
+*/
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t)); // copy in the gcode model state
         bf->move_state = MOVE_RUN;                       // signal the planner that this buffer is running
@@ -223,7 +228,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // We can "guess" quite accurately but we still need a full re-accounting to handle the locking.
 //        mb.needs_time_accounting = true;
         //mb.time_in_planner -= bf->real_move_time;
-        mb.time_in_run = bf->real_move_time;
+        mb.time_in_run = bf->real_move_time;    // initialize the time_in_run
     }
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
@@ -232,20 +237,22 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //   (1b) - The deceleration will not fit in the running block
     //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
     //  (3) - We are in the middle of a block that is currently decelerating
-    //  (4) - We have decelerated a block that has not decelerated to zero (needs continuation)
+    //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
     //  (5) - We have decelerated a block to zero velocity
     //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
     //  (7) - The steppers have stopped. No motion should occur
-    //  (8) - We are removing the hold state and there is queued motion (handled by normal operations)
-    //  (9) - We are removing the hold state and there is no queued motion (also handled by normal operations)
+    //  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
+    //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm.motion_state == MOTION_HOLD) {
 
+        // Case (3) is a no-op and is not trapped. It just continues the deceleration.
+
         // Case (7) - all motion has ceased
         if (cm.hold_state == FEEDHOLD_HOLD) {
-            return (STAT_NOOP);                 // very important to exit as a NOOP. No more movement
+            return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. No more movement
         }
-
+/*
         // Case (6) - wait for the steppers to stop
         if (cm.hold_state == FEEDHOLD_PENDING) {
             if (!mp_runtime_is_idle()) {                                // wait for the steppers to actually clear out
@@ -255,6 +262,17 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	        mp_zero_segment_velocity();                                 // for reporting purposes
             sr_request_status_report(SR_REQUEST_IMMEDIATE);             // was SR_REQUEST_TIMED
             cs.controller_state = CONTROLLER_READY;                     // remove controller readline() PAUSE
+            return (STAT_OK);                                           // hold here. No more movement
+        }
+*/
+        // Case (6) - wait for the steppers to stop
+        if (cm.hold_state == FEEDHOLD_PENDING) {
+            if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
+                cm.hold_state = FEEDHOLD_HOLD;
+                mp_zero_segment_velocity();                             // for reporting purposes
+                sr_request_status_report(SR_REQUEST_IMMEDIATE);         // was SR_REQUEST_TIMED
+                cs.controller_state = CONTROLLER_READY;                 // remove controller readline() PAUSE
+            }            
             return (STAT_OK);                                           // hold here. No more movement
         }
 
@@ -273,7 +291,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             return (STAT_OK);
         }
 
-        // Case (1), Case (2), Case (4)
+        // Cases (1a, 1b), Case (2), Case (4)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
@@ -308,7 +326,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     mr.exit_velocity = 0;
                 }
             }
-            // Case (3) is a no-op. It just runs.
         }
     }
     mr.move_state = MOVE_RUN;
@@ -342,8 +359,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;
-
-        mb.time_in_run = 0.0;
+        mb.time_in_run = 0.0;                           // it's done, so time goes to zero
 //        mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {
