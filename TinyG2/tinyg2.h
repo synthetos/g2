@@ -38,11 +38,11 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.05 // Testing some diagnostics
+#define TINYG_FIRMWARE_BUILD   		082.06 // tests before merge with main edge branch; removed diagnostic traps and buffer audit
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
-#define TINYG_CONFIG_VERSION		6							// CV values started at 5 to provide backwards compatibility
+#define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
@@ -59,7 +59,6 @@
 #define __DIAGNOSTICS               // enables various debug functions
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves
-//#define __DEBUG_SETTINGS          // special settings. See settings.h
 
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************

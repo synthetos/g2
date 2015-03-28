@@ -471,7 +471,7 @@ mpBuf_t * mp_get_run_buffer()
 
 bool mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
 {
-    _audit_buffers();           // diagnostic audit for buffer chain integrity
+//    _audit_buffers();           // diagnostic audit for buffer chain integrity
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                            // advance to next run buffer
@@ -564,10 +564,11 @@ stat_t mp_plan_buffer()
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
 
 #ifdef __DIAGNOSTICS // +++++
-    if (total_buffer_time < EPSILON) {
-        printf ("{\"debug\":\"Q empty\"}\n");
-    }
+//    if (total_buffer_time < EPSILON) {
+//        printf ("{\"debug\":\"Q empty\"}\n");
+//    }
 #endif
+
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
 //        plan_debug_pin4 = 1;

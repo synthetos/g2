@@ -126,10 +126,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },			// feed rate mode
 	{ "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },			// active tool
 
-//	{ "",   "ilck",_f0, 0, cm_print_ilck, cm_get_ilck, set_nul,(float *)&cs.null, 0 },          // read interlock status
-//	{ "",   "estp",_f0, 0, cm_print_estp, cm_get_estp, cm_ack_estop,(float *)&cs.null, 0 },		// E-stop status (SET to ack)
-//	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },	// E-stop status clear (GET to ack)
-
 	{ "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// X machine position
 	{ "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// Y machine position
 	{ "mpo","mpoz",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// Z machine position
