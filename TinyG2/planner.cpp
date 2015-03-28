@@ -130,7 +130,7 @@ stat_t planner_test_assertions()
     if ((BAD_MAGIC(mm.magic_start)) || (BAD_MAGIC(mm.magic_end)) ||
         (BAD_MAGIC(mb.magic_start)) || (BAD_MAGIC(mb.magic_end)) ||
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
-        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "mp  magic numbers"));
     }
     return (STAT_OK);
 }
@@ -230,7 +230,7 @@ void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *fla
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_panic(STAT_BUFFER_FULL_FATAL, "mp_queue_command");
+		cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in mp_queue_command");
 		return;
 	}
 
@@ -274,7 +274,7 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_panic(STAT_BUFFER_FULL_FATAL, "mp_dwell")); // not ever supposed to fail
+		return(cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in mp_dwell")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
     bf->replannable = true;  // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"

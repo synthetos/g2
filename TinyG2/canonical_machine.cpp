@@ -173,19 +173,19 @@ cmCombinedState cm_get_combined_state()
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots");    // "mots has impossible value"
+                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots bad");    // "mots has impossible value"
                             return (COMBINED_PANIC);
                         }
                     }
                 }
                 default: {
-                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs");    // "cycs has impossible value"
+                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs bad");    // "cycs has impossible value"
                     return (COMBINED_PANIC);
                 }
             }
         }
         default: {
-            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs");    // "macs has impossible value"
+            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs bad");    // "macs has impossible value"
             return (COMBINED_PANIC);
         }
     }
@@ -613,7 +613,7 @@ stat_t canonical_machine_test_assertions(void)
     if ((BAD_MAGIC(cm.magic_start)) || (BAD_MAGIC(cm.magic_end)) ||
         (BAD_MAGIC(cm.gmx.magic_start)) || (BAD_MAGIC(cm.gmx.magic_end)) ||
         (BAD_MAGIC(arc.magic_start)) || (BAD_MAGIC(arc.magic_end))) {
-        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "cm magic numbers"));
     }
     return (STAT_OK);
 }

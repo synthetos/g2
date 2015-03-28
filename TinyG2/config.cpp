@@ -204,7 +204,7 @@ stat_t config_test_assertions()
         (BAD_MAGIC(nvStr.magic_start)) ||
         (BAD_MAGIC(nvStr.magic_end)) ||
         (global_string_buf[MESSAGE_LEN-1] != NUL)) {
-        return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "cfg magic numbers"));
     }
 	return (STAT_OK);
 }

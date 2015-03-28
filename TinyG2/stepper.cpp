@@ -344,7 +344,7 @@ stat_t stepper_test_assertions()
 {
     if ((BAD_MAGIC(st_run.magic_start)) || (BAD_MAGIC(st_run.magic_end)) ||
         (BAD_MAGIC(st_pre.magic_start)) || (BAD_MAGIC(st_pre.magic_end))) {
-        return(cm_panic(STAT_STEPPER_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_STEPPER_ASSERTION_FAILURE, "st magic numbers"));
     }
     return (STAT_OK);
 }
@@ -1040,24 +1040,28 @@ static void _load_move()
 
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
-	// trap conditions that would prevent queuing the line
-	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) { return (cm_panic(STAT_INTERNAL_ERROR, "st1"));// never supposed to happen
-	} else if (isinf(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st2"));// never supposed to happen
-	} else if (isnan(segment_time)) { return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st3"));// never supposed to happen
-	} else if (segment_time < EPSILON) { return (STAT_MINIMUM_TIME_MOVE);
+	// trap assertion failures and other conditions that would prevent queuing the line
+	if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) {     // never supposed to happen
+        return (cm_panic(STAT_INTERNAL_ERROR, "prep sync"));
+	} else if (isinf(segment_time)) {                           // never supposed to happen
+        return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "prep isinf"));
+	} else if (isnan(segment_time)) {                           // never supposed to happen
+        return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "prep isnan"));
+	} else if (segment_time < EPSILON) { 
+        return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters
 	// - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
 	// - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
-	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);
+	st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
 	st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
 	st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
 
 	// setup motor parameters
 
 	float correction_steps;
-	for (uint8_t motor=0; motor<MOTORS; motor++) {	// I want to remind myself that this is motors, not axes
+	for (uint8_t motor=0; motor<MOTORS; motor++) {	// remind us that this is motors, not axes
 
 		// Skip this motor if there are no new steps. Leave all other values intact.
 		if (fp_ZERO(travel_steps[motor])) { st_pre.mot[motor].substep_increment = 0; continue;}
