@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.07 // queue dump; disabled debug traps and queue audit
+#define TINYG_FIRMWARE_BUILD   		082.08 // removed erroneous unit conversion on homing input and direction settings
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

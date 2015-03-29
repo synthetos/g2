@@ -145,16 +145,16 @@ static int8_t _get_axis_type(const index_t index);
  * cm_set_motion_state() - adjusts active model pointer as well
  *
  * NOTE_1:
- *  On issuing a gcode command we call cm_cycle_start() before the motion gets queued. We don't go 
- *  to MOTION_RUN until the command is executed by mp_exec_aline(), planned, queued, and started. 
- *  So MOTION_STOP must actually return COMBINED_RUN to address this case, even though under some 
+ *  On issuing a gcode command we call cm_cycle_start() before the motion gets queued. We don't go
+ *  to MOTION_RUN until the command is executed by mp_exec_aline(), planned, queued, and started.
+ *  So MOTION_STOP must actually return COMBINED_RUN to address this case, even though under some
  *  circumstances it might actually ne an exception case. Therefore this assertion isn't valid:
  *      cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
  *      return (COMBINED_PANIC);
  */
 cmCombinedState cm_get_combined_state()
 {
-    if (cm.machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 cm.machine_state cases 
+    if (cm.machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 cm.machine_state cases
         return ((cmCombinedState)cm.machine_state); //...where MACHINE_xxx == COMBINED_xxx
     }
     switch(cm.machine_state) {
@@ -232,13 +232,13 @@ uint8_t	cm_get_block_delete_switch() { return cm.gmx.block_delete_switch;}
 uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy());}
 float cm_get_feed_rate(const GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
 
-void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode) 
+void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode)
 {
     gcode_state->motion_mode = motion_mode;
 }
 
-void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool) 
-{ 
+void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
+{
     gcode_state->tool = tool;
 }
 
@@ -344,7 +344,7 @@ void cm_set_work_offsets(GCodeState_t *gcode_state)
 
 float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
-	if (gcode_state == MODEL) { 
+	if (gcode_state == MODEL) {
         return (cm.gmx.position[axis]);
     }
 	return (mp_get_runtime_absolute_position(axis));
@@ -374,8 +374,8 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 	} else {
 		position = mp_get_runtime_work_position(axis);
 	}
-	if (gcode_state->units_mode == INCHES) { 
-        position /= MM_PER_INCH; 
+	if (gcode_state->units_mode == INCHES) {
+        position /= MM_PER_INCH;
     }
 	return (position);
 }
@@ -401,15 +401,15 @@ void cm_finalize_move() {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 
 	// if in inverse time mode reset feed rate so next block requires an explicit feed rate setting
-	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) && 
+	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) &&
         (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
 		cm.gm.feed_rate = 0;
 	}
 }
 
-void cm_update_model_position_from_runtime() 
+void cm_update_model_position_from_runtime()
 {
-    copy_vector(cm.gmx.position, mr.gm.target); 
+    copy_vector(cm.gmx.position, mr.gm.target);
 }
 
 /*
@@ -885,7 +885,7 @@ stat_t cm_set_distance_mode(const uint8_t mode)
  *	cm_set_work_offsets() immediately afterwards.
  */
 
-stat_t cm_set_coord_offsets(const uint8_t coord_system, 
+stat_t cm_set_coord_offsets(const uint8_t coord_system,
                             const uint8_t L_word,
                             const float offset[], const float flag[])
 {
@@ -893,20 +893,20 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
 		return (STAT_P_WORD_IS_INVALID);
 	}
     if (fp_FALSE(cm.gf.L_word)) {
-		return (STAT_L_WORD_IS_MISSING);  
+		return (STAT_L_WORD_IS_MISSING);
     }
     if ((L_word != 2) && (L_word != 20)) {
 		return (STAT_L_WORD_IS_INVALID);
     }
     cm.gmx.L_word = L_word;
-  
+
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (fp_TRUE(flag[axis])) {
             if (L_word == 2) {
     			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
             } else {
     			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]) + cm.gmx.position[axis];
-            }                        
+            }
 			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
 		}
 	}
@@ -2252,7 +2252,7 @@ const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
 const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
 const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
 const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
-const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.0f%s/min\n";
+const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.2f%s/min\n";
 const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
 const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
 const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";

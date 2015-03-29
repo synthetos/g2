@@ -89,13 +89,16 @@ static stat_t get_tick(nvObj_t *nv);		// get system tick count
  *	- Groups do not have groups. Neither do uber-groups, e.g.
  *	  'x' is --> { "", "x",  	and 'm' is --> { "", "m",
  *
- *	- Be careful not to define groups longer than GROUP_LEN (3) and tokens longer
- *	  than TOKEN_LEN (5). (See config.h for lengths). The combined group + token
+ *	- Be careful not to define groups longer than GROUP_LEN [4] and tokens longer
+ *	  than TOKEN_LEN [6]. (See config.h for lengths). The combined group + token
  *	  cannot exceed TOKEN_LEN. String functions working on the table assume these
  *	  rules are followed and do not check lengths or perform other validation.
  *
- *	NOTE: If the count of lines in cfgArray exceeds 255 you need to change index_t
- *	uint16_t in the config.h file.
+ *	- If the count of lines in cfgArray exceeds 255 you need to ensure
+ *    index_t is uint16_t in the config.h file (and not unit8_t).
+ *
+ *  - The precision value 'p' only affects JSON responses. You need to also set
+ *    the %f in the corresponding format string to set text mode display precision
  */
 
 const cfgItem_t cfgArray[] PROGMEM = {
@@ -244,10 +247,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
 	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,	    X_JERK_HIGH_SPEED },
 	{ "x","xjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
-	{ "x","xhi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
-	{ "x","xhd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIR },
+	{ "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
+	{ "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIR },
 	{ "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
-	{ "x","xlv",_fipc, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
+	{ "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
 	{ "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,	X_LATCH_BACKOFF },
 	{ "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].zero_backoff,	X_ZERO_BACKOFF },
 
@@ -259,10 +262,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "y","yjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
 	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,	    Y_JERK_HIGH_SPEED },
 	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },
-	{ "y","yhi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
-	{ "y","yhd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIR },
+	{ "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
+	{ "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIR },
 	{ "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
-	{ "y","ylv",_fipc, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
+	{ "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
 	{ "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,	Y_LATCH_BACKOFF },
 	{ "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].zero_backoff,	Y_ZERO_BACKOFF },
 
@@ -274,10 +277,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "z","zjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
 	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high, 	    Z_JERK_HIGH_SPEED },
 	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },
-	{ "z","zhi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
-	{ "z","zhd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIR },
+	{ "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
+	{ "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIR },
     { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
-	{ "z","zlv",_fipc, 0, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
+	{ "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
 	{ "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,	Z_LATCH_BACKOFF },
 	{ "z","zzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].zero_backoff,	Z_ZERO_BACKOFF },
 
@@ -290,10 +293,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "a","ajh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_A].jerk_high,  	A_JERK_HIGH_SPEED },
 	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },
 	{ "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
-	{ "a","ahi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
-	{ "a","ahd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIR },
+	{ "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
+	{ "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIR },
     { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
-	{ "a","alv",_fip,  0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_velocity,	A_LATCH_VELOCITY },
+	{ "a","alv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_velocity,	A_LATCH_VELOCITY },
 	{ "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_backoff,	A_LATCH_BACKOFF },
 	{ "a","azb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].zero_backoff,	A_ZERO_BACKOFF },
 
@@ -307,10 +310,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","bjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },
 	{ "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,			B_RADIUS },
 #ifdef __ARM	// B axis extended parameters
-	{ "b","bhi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
-	{ "b","bhd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIR },
+	{ "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
+	{ "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIR },
     { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
-	{ "b","blv",_fip,  0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
+	{ "b","blv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
 	{ "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,	B_LATCH_BACKOFF },
 	{ "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].zero_backoff,	B_ZERO_BACKOFF },
 #endif
@@ -325,10 +328,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },
 	{ "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters
-	{ "c","chi",_fipc, 0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
-	{ "c","chd",_fipc, 0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIR },
+	{ "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
+	{ "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIR },
     { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
-	{ "c","clv",_fip,  0, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
+	{ "c","clv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
 	{ "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
 	{ "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,	C_ZERO_BACKOFF },
 #endif
@@ -639,7 +642,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif	//  __DIAGNOSTIC_PARAMETERS
 
 	// Persistence for status report - must be in sequence
-	// *** Count must agree with NV_STATUS_REPORT_LEN in config.h ***
+	// *** Count must agree with NV_STATUS_REPORT_LEN in report.h ***
 	{ "","se00",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[0],0 },
 	{ "","se01",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[1],0 },
 	{ "","se02",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[2],0 },
@@ -670,7 +673,17 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","se27",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[27],0 },
 	{ "","se28",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[28],0 },
 	{ "","se29",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[29],0 },
-// Count is 30, since se00 counts as one.
+	{ "","se30",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[30],0 },
+	{ "","se31",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[31],0 },
+	{ "","se32",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[32],0 },
+	{ "","se33",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[33],0 },
+	{ "","se34",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[34],0 },
+	{ "","se35",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[35],0 },
+	{ "","se36",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[36],0 },
+	{ "","se37",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[37],0 },
+	{ "","se38",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[38],0 },
+	{ "","se39",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[39],0 },
+// Count is 40, since se00 counts as one.
 
 	// Group lookups - must follow the single-valued entries for proper sub-string matching
 	// *** Must agree with NV_COUNT_GROUPS below ***
