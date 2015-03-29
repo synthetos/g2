@@ -58,6 +58,9 @@ stat_t gcode_parser(char *block)
     uint8_t block_delete_flag;
 
 	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
+    if (str[0] == NUL) {                    // normalization returned null string
+        return (STAT_OK);                   // most likely a comment line
+    }
 
     // Trap M30 and M2 as $clear conditions. This has no effect it not in ALARM or SHUTDOWN
     cm_parse_clear(str);                    // parse Gcode and clear alarms if M30 or M2 is found
@@ -124,8 +127,11 @@ static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *b
 //	for (rd = str; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = str;} }
 
 	// mark block deletes
-	if (*rd == '/') { *block_delete_flag = true; }
-	else { *block_delete_flag = false; }
+	if (*rd == '/') {
+        *block_delete_flag = true;
+    } else {
+        *block_delete_flag = false;
+    }
 
 	// normalize the command block & find the comment (if any)
     // Gcode comments start with '(', Inkscape with '%', and random comments with ';'
@@ -482,14 +488,14 @@ static stat_t _execute_gcode_block()
         		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
         		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
-        		case MOTION_MODE_CW_ARC: 
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target, 
-                                                                 cm.gf.target, 
-                                                                 cm.gn.arc_offset[0], 
-                                                                 cm.gn.arc_offset[1], 
-                                                                 cm.gn.arc_offset[2], 
-                                                                 cm.gn.arc_radius, 
-                                                                 cm.gn.motion_mode); 
+        		case MOTION_MODE_CW_ARC:
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,
+                                                                 cm.gf.target,
+                                                                 cm.gn.arc_offset[0],
+                                                                 cm.gn.arc_offset[1],
+                                                                 cm.gn.arc_offset[2],
+                                                                 cm.gn.arc_radius,
+                                                                 cm.gn.motion_mode);
                                                                  break;
                                           }
     		}

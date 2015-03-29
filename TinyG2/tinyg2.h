@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.08 // removed erroneous unit conversion on homing input and direction settings
+#define TINYG_FIRMWARE_BUILD   		082.09 // stopped gcode comment lines from returning zero length moves
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
