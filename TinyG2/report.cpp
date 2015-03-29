@@ -81,26 +81,6 @@ stat_t rpt_exception(stat_t status, const char *msg)
         }
         printf_P(PSTR("\"}}\n"));
      }
-/*
-		if (msg != NULL) {
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s, %s\"}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s, %s\"}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-			}
-		} else {
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\"}}\n"),
-				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
-				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			}
-		}
-    }
-*/
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }
 
@@ -126,7 +106,7 @@ void _startup_helper(stat_t status, const char *msg)
 	nv_reset_nv_list();
 	nv_add_object((const char *)"fv");		// firmware version
 	nv_add_object((const char *)"fb");		// firmware build
-	nv_add_object((const char *)"cv");		// configuration version
+//	nv_add_object((const char *)"cv");		// configuration version
 	nv_add_object((const char *)"hp");		// hardware platform
 	nv_add_object((const char *)"hv");		// hardware version
 	nv_add_object((const char *)"id");		// hardware ID
@@ -211,6 +191,7 @@ uint8_t _is_stat(nvObj_t *nv)
  *	Call this function to completely re-initialize the status report
  *	Sets SR list to hard-coded defaults and re-initializes SR values in NVM
  */
+
 void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
@@ -243,6 +224,7 @@ void sr_init_status_report()
  *	rejected by the JSON or text parser. In other words, it should never get to here if
  *	there is an unrecognized token in the SR string.
  */
+
 stat_t sr_set_status_report(nvObj_t *nv)
 {
 	uint8_t elements = 0;
@@ -281,10 +263,12 @@ stat_t sr_set_status_report(nvObj_t *nv)
  *	Requests can specify immediate or timed reports, and can also force a filtered or full report.
  *	See cmStatusReportRequest enum in report.h for details.
  */
+
 stat_t sr_request_status_report(uint8_t request_type)
 {
-	// +++ Might require making the FULL requests be sticky, and override previous non-FULL requests
-	if (sr.status_report_request != SR_OFF) return (STAT_OK); // ignore multiple requests. First one wins.
+	if (sr.status_report_request != SR_OFF) {       // ignore multiple requests. First one wins.
+        return (STAT_OK);
+   }
 
 	sr.status_report_systick = SysTickTimer_getValue();
 	if (request_type == SR_REQUEST_IMMEDIATE) {
@@ -439,13 +423,23 @@ static uint8_t _populate_filtered_status_report()
  * sr_set()		- set status report elements
  * sr_set_si()	- set status report interval
  */
-stat_t sr_get(nvObj_t *nv) { return (_populate_unfiltered_status_report());}
-stat_t sr_set(nvObj_t *nv) { return (sr_set_status_report(nv));}
+
+stat_t sr_get(nvObj_t *nv)
+{
+    return (_populate_unfiltered_status_report());
+}
+
+stat_t sr_set(nvObj_t *nv)
+{
+    return (sr_set_status_report(nv));
+}
 
 stat_t sr_set_si(nvObj_t *nv)
 {
-	if (nv->value < STATUS_REPORT_MIN_MS) { nv->value = STATUS_REPORT_MIN_MS;}
-	sr.status_report_interval = (uint32_t)nv->value;
+	if (nv->value < STATUS_REPORT_MIN_MS) {
+        nv->value = STATUS_REPORT_MIN_MS;
+    }
+	set_int(nv);
 	return(STAT_OK);
 }
 
@@ -458,8 +452,6 @@ static const char fmt_si[] PROGMEM = "[si]  status interval%14d ms\n";
 static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
 
 void sr_print_sr(nvObj_t *nv) { _populate_unfiltered_status_report();}
-//void sr_print_si(nvObj_t *nv) { text_print_flt(nv, fmt_si);}
-//void sr_print_sv(nvObj_t *nv) { text_print_ui8(nv, fmt_sv);}
 void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
 
@@ -487,6 +479,7 @@ void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
 /*
  * qr_init_queue_report() - initialize or clear queue report values
  */
+
 void qr_init_queue_report()
 {
 	qr.queue_report_requested = false;
@@ -501,6 +494,7 @@ void qr_init_queue_report()
  *	Requests a queue report and also records the buffers added and removed
  *	since the last init (usually re-initted when a report is generated).
  */
+
 void qr_request_queue_report(int8_t buffers)
 {
 	// get buffer depth and added/removed count
@@ -530,6 +524,7 @@ void qr_request_queue_report(int8_t buffers)
 /*
  * qr_queue_report_callback() - generate a queue report if one has been requested
  */
+
 stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
 #ifdef __SUPPRESS_QUEUE_REPORTS
@@ -575,6 +570,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 /*
  * rx_request_rx_report() - request an update on usb serial buffer space available
  */
+
 void rx_request_rx_report(void) {
     rx.rx_report_requested = true;
 #ifdef __AVR
@@ -651,6 +647,7 @@ stat_t qo_get(nvObj_t *nv)
  *	job_set()
  *	job_print_job()
  */
+
 stat_t job_populate_job_report()
 {
 	const char job_str[] = "job";

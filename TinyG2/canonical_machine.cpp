@@ -374,8 +374,10 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 	} else {
 		position = mp_get_runtime_work_position(axis);
 	}
-	if (gcode_state->units_mode == INCHES) {
-        position /= MM_PER_INCH;
+    if (axis <= AXIS_Z) {
+	    if (gcode_state->units_mode == INCHES) {
+            position /= MM_PER_INCH;
+        }
     }
 	return (position);
 }
@@ -905,7 +907,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
             if (L_word == 2) {
     			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
             } else {
-    			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]) + cm.gmx.position[axis];
+    			cm.offset[coord_system][axis] = cm.gmx.position[axis] - _to_millimeters(offset[axis]);
             }
 			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
 		}
@@ -1922,7 +1924,9 @@ stat_t cm_get_vel(nvObj_t *nv)
 		nv->value = 0;
 	} else {
 		nv->value = mp_get_runtime_velocity();
-		if (cm_get_units_mode(RUNTIME) == INCHES) nv->value *= INCHES_PER_MM;
+		if (cm_get_units_mode(RUNTIME) == INCHES) {
+            nv->value *= INCHES_PER_MM;
+        }
 	}
 	nv->precision = GET_TABLE_WORD(precision);
 	nv->valuetype = TYPE_FLOAT;
@@ -1932,7 +1936,9 @@ stat_t cm_get_vel(nvObj_t *nv)
 stat_t cm_get_feed(nvObj_t *nv)
 {
 	nv->value = cm_get_feed_rate(ACTIVE_MODEL);
-	if (cm_get_units_mode(ACTIVE_MODEL) == INCHES) nv->value *= INCHES_PER_MM;
+	if (cm_get_units_mode(ACTIVE_MODEL) == INCHES) {
+        nv->value *= INCHES_PER_MM;
+    }
 	nv->precision = GET_TABLE_WORD(precision);
 	nv->valuetype = TYPE_FLOAT;
 	return (STAT_OK);

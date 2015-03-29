@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.09 // stopped gcode comment lines from returning zero length moves
+#define TINYG_FIRMWARE_BUILD   		082.10 // fixed some reporting errors involving units conversion
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

@@ -1249,17 +1249,13 @@ stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 {
 	uint8_t mi = (uint8_t)nv->value;
 
-#ifdef __AVR
-	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
-//	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {
-		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
-	}
-#endif
 #ifdef __ARM
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
+#else
+	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
+#endif
 		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
 	}
-#endif
 	set_ui8(nv);						// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(nv);
 	_set_hw_microsteps(_get_motor(nv->index), (uint8_t)nv->value);
