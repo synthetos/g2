@@ -113,6 +113,7 @@ void config_init()
 // ++++ The following code is offered until persistence is implemented.
 // ++++ Then you can use the AVR code (or something like it)
 	_set_defa(nv, false);
+    rpt_print_loading_configs_message();
 #endif
 #ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
@@ -153,8 +154,9 @@ static void _set_defa(nvObj_t *nv, bool print)
 		}
 	}
 	sr_init_status_report();					// reset status reports
-    if(print)
-        rpt_print_initializing_message();			// don't start TX until all the NVM persistence is done
+    if (print) {
+        rpt_print_initializing_message();       // don't start TX until all the NVM persistence is done
+    }
 }
 
 stat_t set_defaults(nvObj_t *nv)
@@ -190,10 +192,20 @@ void config_init_assertions()
 
 stat_t config_test_assertions()
 {
-	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-	if ((nvl.magic_start	!= MAGICNUM) || (nvl.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-	if ((nvStr.magic_start	!= MAGICNUM) || (nvStr.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-	if (global_string_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONFIG_ASSERTION_FAILURE);
+//	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+//	if ((nvl.magic_start	!= MAGICNUM) || (nvl.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+//	if ((nvStr.magic_start	!= MAGICNUM) || (nvStr.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
+//	if (global_string_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONFIG_ASSERTION_FAILURE);
+
+    if ((BAD_MAGIC(cfg.magic_start)) ||
+        (BAD_MAGIC(cfg.magic_end)) ||
+        (BAD_MAGIC(nvl.magic_start)) ||
+        (BAD_MAGIC(nvl.magic_end)) ||
+        (BAD_MAGIC(nvStr.magic_start)) ||
+        (BAD_MAGIC(nvStr.magic_end)) ||
+        (global_string_buf[MESSAGE_LEN-1] != NUL)) {
+        return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, NULL));
+    }
 	return (STAT_OK);
 }
 
@@ -348,7 +360,7 @@ stat_t set_flt(nvObj_t *nv)
  *	get_grp() is a group expansion function that expands the parent group and returns
  *	the values of all the children in that group. It expects the first nvObj in the
  *	nvBody to have a valid group name in the token field. This first object will be set
- *	to a TYPE_PARENT. The group field of the first nvOBJ is left nul - as the group 
+ *	to a TYPE_PARENT. The group field of the first nvOBJ is left nul - as the group
  *  field refers to a parent group, which this group has none.
  *
  *	All subsequent nvObjs in the body will be populated with their values.
@@ -360,8 +372,8 @@ stat_t set_flt(nvObj_t *nv)
 
 stat_t get_grp(nvObj_t *nv)
 {
-	char_t *parent_group = nv->token;				// token in the parent nv object is the group
-	char_t group[GROUP_LEN+1];						// group string retrieved from cfgArray child
+	char *parent_group = nv->token;				// token in the parent nv object is the group
+	char group[GROUP_LEN+1];						// group string retrieved from cfgArray child
 	nv->valuetype = TYPE_PARENT;					// make first object the parent
 	for (index_t i=0; nv_index_is_single(i); i++) {
 		strcpy_P(group, cfgArray[i].group);			// don't need strncpy as it's always terminated
@@ -412,10 +424,10 @@ stat_t set_grp(nvObj_t *nv)
  * linear table scan of the PROGMEM strings, which of course could be further
  * optimized with indexes or hashing.
  */
-index_t nv_get_index(const char_t *group, const char_t *token)
+index_t nv_get_index(const char *group, const char *token)
 {
-	char_t c;
-	char_t str[TOKEN_LEN + GROUP_LEN+1];	// should actually never be more than TOKEN_LEN+1
+	char c;
+	char str[TOKEN_LEN + GROUP_LEN+1];	// should actually never be more than TOKEN_LEN+1
 	strncpy(str, group, GROUP_LEN+1);
 	strncat(str, token, TOKEN_LEN+1);
 
@@ -473,9 +485,9 @@ uint8_t nv_get_type(nvObj_t *nv)
  *	all you want to do is display it.
  *
  *	Note: A trick is to cast all string constants for nv_copy_string(), nv_add_object(),
- *	nv_add_string() and nv_add_conditional_message() to (const char_t *). Examples:
+ *	nv_add_string() and nv_add_conditional_message() to (const char *). Examples:
  *
- *		nv_add_string((const char_t *)"msg", string);
+ *		nv_add_string((const char *)"msg", string);
  *
  *	On the AVR this will save a little static RAM. The "msg" string will occupy flash
  *	as an initializer and be instantiated in stack RAM when the function executes.
@@ -548,27 +560,27 @@ nvObj_t *nv_reset_nv_list()					// clear the header and response body
 	return (nv_body);						// this is a convenience for calling routines
 }
 
-stat_t nv_copy_string(nvObj_t *nv, const char_t *src)
+stat_t nv_copy_string(nvObj_t *nv, const char *src)
 {
 	if ((nvStr.wp + strlen(src)) > NV_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
-	char_t *dst = &nvStr.string[nvStr.wp];
+	char *dst = &nvStr.string[nvStr.wp];
 	strcpy(dst, src);						// copy string to current head position
 											// string has already been tested for overflow, above
 	nvStr.wp += strlen(src)+1;				// advance head for next string
-	nv->stringp = (char_t (*)[])dst;
+	nv->stringp = (char (*)[])dst;
 	return (STAT_OK);
 }
 
 /* UNUSED
-stat_t nv_copy_string_P(nvObj_t *nv, const char_t *src_P)
+stat_t nv_copy_string_P(nvObj_t *nv, const char *src_P)
 {
-	char_t buf[NV_SHARED_STRING_LEN];
+	char buf[NV_SHARED_STRING_LEN];
 	strncpy_P(buf, src_P, NV_SHARED_STRING_LEN);
 	return (nv_copy_string(nv, buf));
 }
 */
 
-nvObj_t *nv_add_object(const char_t *token)  // add an object to the body using a token
+nvObj_t *nv_add_object(const char *token)  // add an object to the body using a token
 {
 	nvObj_t *nv = nv_body;
 	for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -577,14 +589,14 @@ nvObj_t *nv_add_object(const char_t *token)  // add an object to the body using 
 			continue;
 		}
 		// load the index from the token or die trying
-		if ((nv->index = nv_get_index((const char_t *)"",token)) == NO_MATCH) { return (NULL);}
+		if ((nv->index = nv_get_index((const char *)"",token)) == NO_MATCH) { return (NULL);}
 		nv_get_nvObj(nv);				// populate the object from the index
 		return (nv);
 	}
 	return (NULL);
 }
 
-nvObj_t *nv_add_integer(const char_t *token, const uint32_t value)// add an integer object to the body
+nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an integer object to the body
 {
 	nvObj_t *nv = nv_body;
 	for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -600,7 +612,7 @@ nvObj_t *nv_add_integer(const char_t *token, const uint32_t value)// add an inte
 	return (NULL);
 }
 
-nvObj_t *nv_add_data(const char_t *token, const uint32_t value)// add an integer object to the body
+nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer object to the body
 {
 	nvObj_t *nv = nv_body;
 	for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -617,7 +629,7 @@ nvObj_t *nv_add_data(const char_t *token, const uint32_t value)// add an integer
 	return (NULL);
 }
 
-nvObj_t *nv_add_float(const char_t *token, const float value)	// add a float object to the body
+nvObj_t *nv_add_float(const char *token, const float value)	// add a float object to the body
 {
 	nvObj_t *nv = nv_body;
 	for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -634,7 +646,7 @@ nvObj_t *nv_add_float(const char_t *token, const float value)	// add a float obj
 }
 
 // ASSUMES A RAM STRING. If you need to post a FLASH string use pstr2str to convert it to a RAM string
-nvObj_t *nv_add_string(const char_t *token, const char_t *string) // add a string object to the body
+nvObj_t *nv_add_string(const char *token, const char *string) // add a string object to the body
 {
 	nvObj_t *nv = nv_body;
 	for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -644,7 +656,7 @@ nvObj_t *nv_add_string(const char_t *token, const char_t *string) // add a strin
 		}
 		strncpy(nv->token, token, TOKEN_LEN);
 		if (nv_copy_string(nv, string) != STAT_OK) { return (NULL);}
-		nv->index = nv_get_index((const char_t *)"", nv->token);
+		nv->index = nv_get_index((const char *)"", nv->token);
 		nv->valuetype = TYPE_STRING;
 		return (nv);
 	}
@@ -657,10 +669,10 @@ nvObj_t *nv_add_string(const char_t *token, const char_t *string) // add a strin
  *	Note: If you need to post a FLASH string use pstr2str to convert it to a RAM string
  */
 
-nvObj_t *nv_add_conditional_message(const char_t *string)	// conditionally add a message object to the body
+nvObj_t *nv_add_conditional_message(const char *string)	// conditionally add a message object to the body
 {
 	if ((cs.comm_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL);}
-	return(nv_add_string((const char_t *)"msg", string));
+	return(nv_add_string((const char *)"msg", string));
 }
 
 /**** nv_print_list() - print nv_array as JSON or text **********************

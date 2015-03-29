@@ -50,6 +50,10 @@ using Motate::SysTickTimer;
 
 /****** Global Scope Variables and Functions ******/
 
+//*** debug utilities ***
+
+void _debug_trap();
+
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
@@ -76,12 +80,12 @@ float max4(float x1, float x2, float x3, float x4);
 //uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
 //#endif
 
-uint8_t isnumber(char_t c);
-char_t *escape_string(char_t *dst, char_t *src);
-char_t *pstr2str(const char *pgm_string);
+uint8_t isnumber(char c);
+char *escape_string(char *dst, char *src);
+const char *pstr2str(const char *pgm_string);
 //int fntoa(char_t *str, float n, uint8_t precision);
-char_t fntoa(char_t *str, float n, uint8_t precision);
-uint16_t compute_checksum(char_t const *string, const uint16_t length);
+char fntoa(char *str, float n, uint8_t precision);
+uint16_t compute_checksum(char const *string, const uint16_t length);
 
 //*** other utilities ***
 
@@ -92,9 +96,9 @@ uint32_t SysTickTimer_getValue(void);
 //**** Math Support *****
 
 // See http://www.cplusplus.com/doc/tutorial/namespaces/#using
+
 using std::isnan;
 using std::isinf;
-
 using std::min;
 using std::max;
 

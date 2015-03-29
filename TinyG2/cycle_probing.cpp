@@ -205,8 +205,8 @@ static stat_t _probing_start()
 	// initial probe state, don't probe if we're already contacted!
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    // false is SW_OPEN in old code, and IO_INACTIVE in new
-	if ( probe == IO_INACTIVE ) {
+    // false is SW_OPEN in old code, and INPUT_INACTIVE in new
+	if ( probe == INPUT_INACTIVE ) {
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
 	}
@@ -223,8 +223,8 @@ static stat_t _probing_backoff()
     // If we've contacted, back off & then record position
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    /* true is SW_CLOSED in old code, and IO_ACTIVE in new */
-    if (probe == IO_ACTIVE) {
+    /* true is SW_CLOSED in old code, and INPUT_ACTIVE in new */
+    if (probe == INPUT_ACTIVE) {
         cm.probe_state = PROBE_SUCCEEDED;
     //  FIXME: this should be its own parameter
     //  cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
@@ -307,11 +307,12 @@ static stat_t _probing_error_exit(int8_t axis)
 	// - and not the main controller - it requires its own display processing
 	nv_reset_nv_list();
 	if (axis == -2) {
-		nv_add_conditional_message((const char_t *)"Probing error - invalid probe destination");
+		nv_add_conditional_message((const char *)"Probing error - invalid probe destination");
 	} else {
-		char message[NV_MESSAGE_LEN];
-		sprintf_P(message, PSTR("Probing error - %c axis cannot move during probing"), cm_get_axis_char(axis));
-		nv_add_conditional_message((char_t *)message);
+		char msg[NV_MESSAGE_LEN];
+		sprintf_P(msg, PSTR("Probing error - %c axis cannot move during probing"), cm_get_axis_char(axis));
+//		nv_add_conditional_message((char *)msg);
+		nv_add_conditional_message(msg);
 	}
 	nv_print_list(STAT_PROBE_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
 

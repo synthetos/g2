@@ -73,7 +73,7 @@ stat_t mp_exec_move()
         }
 	}
     if (bf->bf_func == NULL) {
-        return(cm_shutdown(STAT_INTERNAL_ERROR, "exec_move")); // never supposed to get here
+        return(cm_panic(STAT_INTERNAL_ERROR, "exec_move")); // never supposed to get here
     }
 	return (bf->bf_func(bf)); 							// run the move callback in the planner buffer
 }
@@ -160,7 +160,7 @@ stat_t mp_exec_move()
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
     exec_debug_pin3 = 1;
-    if (bf->move_state == MOVE_OFF) return (STAT_NOOP);
+    if (bf->move_state == MOVE_OFF) { return (STAT_NOOP); }
 
     // Initialize all new blocks, regardless of normal or feedhold operation
 
@@ -178,9 +178,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             st_prep_null();								// call this to keep the loader happy
 
 	        // free buffer & end cycle if planner is empty
-            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+            if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
                 cm_cycle_end();
-
+            }            
             exec_debug_pin3 = 0;
             mb.time_in_run = 0;
             return (STAT_OK);
@@ -263,9 +263,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mp_reset_replannable_list();                                // make it replan all the blocks
             mb.force_replan = true;
             mp_plan_buffer();                                           // must replan now
-
-//            cm_spindle_control_immediate(SPINDLE_PAUSED | cm.gm.spindle_state);
-            cm_spindle_conditional_pause();
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }
@@ -317,8 +314,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (mr.section == SECTION_HEAD) { status = _exec_aline_head();} else
 	if (mr.section == SECTION_BODY) { status = _exec_aline_body();} else
 	if (mr.section == SECTION_TAIL) { status = _exec_aline_tail();} else
-	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;}
-	else { return(cm_shutdown(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
+//	if (mr.move_state == MOVE_SKIP_BLOCK) { status = STAT_OK;} else
+	{ return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline"));}	// never supposed to get here
 
 	// Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {
@@ -344,8 +341,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mp_planner_time_accounting();
 
         if (bf->move_state == MOVE_RUN) {
-			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
+			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
 				cm_cycle_end();	// free buffer & end cycle if planner is empty
+            }            
 		}
 	}
 	exec_debug_pin3 = 0;

@@ -31,7 +31,6 @@
 #include "text_parser.h"        // #4
 
 #include "spindle.h"
-//#include "gpio.h"
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
@@ -39,17 +38,19 @@
 
 /**** Allocate structures ****/
 
-spSpindleSingleton_t sp;
+cmSpindleton_t spindle;
 
 /**** Static functions ****/
 
-static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
+static void _exec_spindle_control(float *value, float *flag);
+static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction);
 
 /*
- * cm_spindle_init()
+ * spindle_init()
+ * spindle_reset() - stop spindle, set speed to zero, and reset values
  */
-void cm_spindle_init()
+void spindle_init()
 {
 	if( pwm.c[PWM_1].frequency < 0 )
 		pwm.c[PWM_1].frequency = 0;
@@ -58,70 +59,149 @@ void cm_spindle_init()
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
 }
 
-/*
- * cm_get_spindle_state()
- * cm_set_spindle_state()
- * cm_set_spindle_pause()
- * cm_set_spindle_speed_parameter()
- */
-uint8_t cm_get_spindle_state(GCodeState_t *gcode_state) { return gcode_state->spindle_state;}
-void cm_set_spindle_state(GCodeState_t *gcode_state, uint8_t spindle_state) { gcode_state->spindle_state = spindle_state;}
-void cm_set_spindle_pause(GCodeState_t *gcode_state, uint8_t spindle_pause) { gcode_state->spindle_pause = spindle_pause;}
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
+void spindle_reset()
+{
+    float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
+    _exec_spindle_speed(value, value);
+    cm_spindle_off_immediate();                 // turn spindle off
+}
 
 /*
- * cm_set_spindle_speed() 	- queue the S parameter to the planner buffer
- * cm_exec_spindle_speed() 	- execute the S command (called from the planner buffer)
- * _exec_spindle_speed()	- spindle speed callback from planner queue
+ * cm_set_spindle_speed() - queue the S parameter to the planner buffer
+ * _exec_spindle_speed() - spindle speed callback from planner queue
  */
+
 stat_t cm_set_spindle_speed(float speed)
 {
 //	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
-	float value[AXES] = { speed, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_speed, value, value);
-	return (STAT_OK);
+
+    float value[AXES] = { speed, 0,0,0,0,0 };
+    mp_queue_command(_exec_spindle_speed, value, value);
+    return (STAT_OK);
 }
 
 static void _exec_spindle_speed(float *value, float *flag)
 {
-	cm_set_spindle_speed_parameter(MODEL, value[0]);
-
-/* OMC code
-	uint8_t spindle_state = cm.gm.spindle_state & (~SPINDLE_PAUSED);
-	bool paused = cm.gm.spindle_state & SPINDLE_PAUSED;
-	if(cm.estop_state != 0 || cm.interlock_state != 0 || paused) {
-
-	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED || paused) {
-		spindle_state = SPINDLE_OFF;
-   }
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_state) ); // update spindle speed if we're running
-*/
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(cm.gm.spindle_state) ); // update spindle speed if we're running
+    spindle.speed = value[0];
+    spindle.direction = (cmSpindleDir)value[1];
+    // update spindle speed if we're running
+	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
- * cm_get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
+ * cm_spindle_off_immediate() - turn on/off spindle w/o planning
+ * cm_spindle_optional_pause() - pause spindle immediately if option is true
+ * cm_spindle_resume() - restart a paused spindle with an optional dwell
  */
-float cm_get_spindle_pwm( uint8_t spindle_state )
+
+void cm_spindle_off_immediate()
+{
+    spindle.enable = SPINDLE_OFF;
+    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
+    _exec_spindle_control(value, value);
+}
+
+void cm_spindle_optional_pause(bool option)
+{
+    if (option && spindle.enable == SPINDLE_ON) {
+        cm_spindle_off_immediate();
+        spindle.enable = SPINDLE_PAUSE;
+    }
+}
+
+void cm_spindle_resume(float dwell_seconds)
+{
+    if(spindle.enable == SPINDLE_PAUSE) {
+        spindle.enable = SPINDLE_ON;
+        mp_request_out_of_band_dwell(dwell_seconds);
+        float value[] = { (float)SPINDLE_ON, (float)spindle.direction, 0,0,0,0 };
+        _exec_spindle_control(value, value);
+    }
+}
+
+/*
+ * cm_spindle_control() - queue the spindle command to the planner buffer. Observe PAUSE
+ * _exec_spindle_control() - actually execute the spindle command
+ */
+
+stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx style args
+{
+    if (control == SPINDLE_CONTROL_OFF) {
+        spindle.enable = SPINDLE_OFF;
+    } else {
+        spindle.enable = SPINDLE_ON;
+        if (control == SPINDLE_CONTROL_CW) {
+            spindle.direction = SPINDLE_CW;
+        } else {
+            spindle.direction = SPINDLE_CCW;
+        }
+    }
+	float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
+	mp_queue_command(_exec_spindle_control, value, value);
+	return(STAT_OK);
+}
+
+#ifdef __ARM
+    #define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
+    #define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
+    #define _set_spindle_direction_bit_hi() spindle_dir_pin.set()
+    #define _set_spindle_direction_bit_lo() spindle_dir_pin.clear()
+#endif
+#ifdef __AVR
+    #define _set_spindle_enable_bit_hi() gpio_set_bit_on(SPINDLE_BIT)
+    #define _set_spindle_enable_bit_lo() gpio_set_bit_off(SPINDLE_BIT)
+    #define _set_spindle_direction_bit_hi() gpio_set_bit_on(SPINDLE_DIR)
+    #define _set_spindle_direction_bit_lo() gpio_set_bit_off(SPINDLE_DIR)
+#endif
+
+static void _exec_spindle_control(float *value, float *flag)
+{
+    // set the direction first
+    spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
+    if (spindle.direction ^ spindle.dir_polarity) {
+        _set_spindle_direction_bit_hi();
+    } else {
+        _set_spindle_direction_bit_lo();
+    }
+
+    // set on/off. Mask out PAUSE and consider it OFF
+    spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
+    if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
+        _set_spindle_enable_bit_lo();
+    } else {
+        _set_spindle_enable_bit_hi();
+    }
+	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
+}
+
+/*
+ * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
+ */
+
+static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 {
 	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-	if (spindle_state == SPINDLE_CW ) {
+	if (direction == SPINDLE_CW ) {
 		speed_lo = pwm.c[PWM_1].cw_speed_lo;
 		speed_hi = pwm.c[PWM_1].cw_speed_hi;
 		phase_lo = pwm.c[PWM_1].cw_phase_lo;
 		phase_hi = pwm.c[PWM_1].cw_phase_hi;
-	} else if (spindle_state == SPINDLE_CCW ) {
+//	} else if (direction == SPINDLE_CCW ) {
+	} else {
 		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
 		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
 		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
 	}
 
-	if (spindle_state==SPINDLE_CW || spindle_state==SPINDLE_CCW ) {
+	if (enable == SPINDLE_ON) {
 		// clamp spindle speed to lo/hi range
-		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
-		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
-
+		if (cm.gm.spindle_speed < speed_lo) {
+            cm.gm.spindle_speed = speed_lo;
+        }
+		if (cm.gm.spindle_speed > speed_hi) {
+            cm.gm.spindle_speed = speed_hi;
+        }
 		// normalize speed to [0..1]
 		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
 		return (speed * (phase_hi - phase_lo)) + phase_lo;
@@ -131,142 +211,52 @@ float cm_get_spindle_pwm( uint8_t spindle_state )
 }
 
 /*
- * cm_spindle_control_immediate() - turn on/off spindle w/o planning
- * Turns spindle OFF, CW or CCW without planning. Ignores PAUSED bit
- */
-
-stat_t cm_spindle_control_immediate(uint8_t spindle_state)
-{
-/* OMC code
-    spindle_state &= ~SPINDLE_PAUSED;            // remove the pause bit
-    if (spindle_state != cm.gm.spindle_state) {   // if it's already there, skip it
-        float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
-        _exec_spindle_control(value, value);
-    }
-*/
-    float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
-    _exec_spindle_control(value, value);
-    return (STAT_OK);
-}
-
-/*
- * cm_spindle_control() - queue the spindle command to the planner buffer. Observe PAUSE
- * cm_exec_spindle_control() - execute the spindle command (called from planner)
- *
- * This is kind of tricky...  If we're in interlock but still moving around, and we get an
- * M3, we just start a feedhold...  Usually, before we call cm_start_hold we check if there's
- * anything in the buffer to actually process the feedhold. Here, we're just about to add
- * something to the buffer, so we skip the check.
- */
-
-stat_t cm_spindle_control(uint8_t spindle_state)
-{
-/* OMC code
-	if (cm.gm.spindle_state & SPINDLE_PAUSED)
-		spindle_state |= SPINDLE_PAUSED;
-
-	if (cm.safety_interlock_state != SAFETY_INTERLOCK_ENGAGED && 
-      !(spindle_state & SPINDLE_PAUSED) && spindle_state != SPINDLE_OFF) {
-		cm_start_hold();
-    }
-*/
-	float value[AXES] = { (float)spindle_state, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, value);
-	return(STAT_OK);
-}
-
-//static void _exec_spindle_control(uint8_t spindle_state, float f, float *vector, float *flag)
-static void _exec_spindle_control(float *value, float *flag)
-{
-/* OMC code
-	uint8_t spindle_state = (uint8_t)value[0];
-	bool paused = spindle_state & SPINDLE_PAUSED;
-	uint8_t raw_spindle_state = spindle_state & (~SPINDLE_PAUSED);
-
-	if(cm.estop_state != 0) { // In E-stop, don't process any spindle commands
-		spindle_state = raw_spindle_state = SPINDLE_OFF;
-    } else
-    // If we're paused or in interlock, send the spindle an "OFF" command (invisible to cm.gm)
-    //++++ THE LOGIC HERE MIGHT BE WRONG - safety_interlock_requested versus safety_interlock_state
-    if (paused || cm.safety_interlock_requested  != 0) {
-		raw_spindle_state = SPINDLE_OFF;
-    }
-	//FIXME: else if(we just rebooted the ESC)... delay the pwm command...
-	cm_set_spindle_state (MODEL, spindle_state);
-*/
-	uint8_t spindle_state = (uint8_t)value[0];
-	uint8_t raw_spindle_state = spindle_state;  // ++++ Note: raw spindle state is not needed. Added for compatibility
-	cm_set_spindle_state (MODEL, spindle_state);
-
-#ifdef __AVR
-	if (raw_spindle_state == SPINDLE_CW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_off(SPINDLE_DIR);
-	} else if (raw_spindle_state == SPINDLE_CCW) {
-		gpio_set_bit_on(SPINDLE_BIT);
-		gpio_set_bit_on(SPINDLE_DIR);
-	} else {
-		gpio_set_bit_off(SPINDLE_BIT);	// failsafe: any error causes stop
-	}
-#endif // __AVR
-#ifdef __ARM
-	if (raw_spindle_state == SPINDLE_CW) {
-		spindle_enable_pin.set();
-		spindle_dir_pin.clear();
-	} else if (raw_spindle_state == SPINDLE_CCW) {
-		spindle_enable_pin.set();
-		spindle_dir_pin.set();
-	} else {
-		spindle_enable_pin.clear();	// failsafe: any error causes stop
-	}
-#endif // __ARM
-
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_state));
-}
-
-/*
- * cm_spindle_conditional_pause() - stop spindle based on system options selected
- * cm_spindle_conditional_resume() - restart spindle based on previous state and system options
- */
-stat_t cm_spindle_conditional_pause()
-{
-    
-    return (STAT_OK);
-}
-
-stat_t cm_spindle_conditional_resume(float dwell_seconds)
-{
-/* OMC code - taken from other parts of the system, as this fucntion was not here.
-    if((cm.gm.spindle_state & (~SPINDLE_PAUSED)) != SPINDLE_OFF) {
-        mp_request_out_of_band_dwell(dwell_seconds);
-    }
-    cm_spindle_control_immediate((cm.gm.spindle_state & (~SPINDLE_PAUSED)));
-*/
-    return (STAT_OK);    
-}
-
-/*
  * cm_spindle_override_enable()
  * cm_spindle_override_factor()
  */
-
+/*
 stat_t cm_spindle_override_enable(uint8_t flag)		// M51.1
 {
     if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
-        sp.spindle_override_enable = false;
+        spindle.override_enable = false;
     } else {
-        sp.spindle_override_enable = true;
+        spindle.override_enable = true;
     }
     return (STAT_OK);
 }
 
 stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 {
-    sp.spindle_override_enable = flag;
-    sp.spindle_override_factor = cm.gn.parameter;
+    spindle.override_enable = flag;
+    spindle.override_factor = cm.gn.parameter;
 //	change spindle speed
     return (STAT_OK);
 }
+*/
+/****************************
+ * END OF SPINDLE FUNCTIONS *
+ ****************************/
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/*
+ * cm_set_dir() - a cheat to set direction w/o using the M commands
+ *
+ * This is provided as a way to set and clear spindle direction without using M commands
+ * It's here because disabling a spindle (M5) does not change the direction, only the enable.
+ */
+
+stat_t cm_set_dir(nvObj_t *nv)
+{
+    set_01(nv);
+    float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
+    _exec_spindle_control(value, value);
+    return (STAT_OK);
+}
+
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
@@ -275,12 +265,20 @@ stat_t cm_spindle_override_factor(uint8_t flag)		// M50.1
 
 #ifdef __TEXT_MODE
 
-const char fmt_spm[] PROGMEM = "Spindle Pause Mode:%3d [0=none,1=pause_on_hold]\n";
-const char fmt_spc[] PROGMEM = "Spindle Control:%6d [0=OFF,1=CW,2=CCW]\n";
-const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+const char fmt_spep[] PROGMEM = "[spep] spindle enable polarity%5d [0=active_low,1=active_high]\n";
+const char fmt_spdp[] PROGMEM = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
+const char fmt_spph[] PROGMEM = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
+const char fmt_spdw[] PROGMEM = "[spdw] spindle dwell time%12.1f seconds\n";
+const char fmt_spe[] PROGMEM = "Spindle Enable:%8d [0=OFF,1=ON,2=PAUSE]\n";
+const char fmt_spd[] PROGMEM = "Spindle Direction:%5d [0=CW,1=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
 
-void cm_print_spm(nvObj_t *nv) { text_print_int(nv, fmt_spm);}
-void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
-void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+void cm_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
+void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
+void cm_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
+void cm_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
+void cm_print_spe(nvObj_t *nv)  { text_print(nv, fmt_spe);}     // TYPE_INT
+void cm_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
+void cm_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT
 
 #endif // __TEXT_MODE

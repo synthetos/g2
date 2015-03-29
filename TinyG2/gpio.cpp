@@ -131,9 +131,13 @@ void gpio_init(void)
 void gpio_reset(void)
 {
 	for (uint8_t i=0; i<DI_CHANNELS; i++) {
+        if (io.in[i].mode == INPUT_MODE_DISABLED) {
+            io.in[i].state = INPUT_DISABLED;
+            continue;
+        }
         int8_t pin_value_corrected = (_read_input_pin(i+1) ^ (io.in[i].mode ^ 1));	// correct for NO or NC mode
 		io.in[i].state = pin_value_corrected;
-        io.in[i].lockout_ms = IO_LOCKOUT_MS;
+        io.in[i].lockout_ms = INPUT_LOCKOUT_MS;
 		io.in[i].lockout_timer = SysTickTimer.getValue();
 	}
 }
@@ -203,8 +207,8 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     io_di_t *in = &io.in[input_num_ext-1];  // array index is one less than input number
 
     // return if input is disabled (not supposed to happen)
-	if (in->mode == IO_MODE_DISABLED) {
-    	in->state = IO_DISABLED;
+	if (in->mode == INPUT_MODE_DISABLED) {
+    	in->state = INPUT_DISABLED;
         return;
     }
 
@@ -216,17 +220,17 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 	// return if no change in state
 	int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
 	if ( in->state == pin_value_corrected ) {
-//    	in->edge = IO_EDGE_NONE;        // edge should only be reset by function or opposite edge
+//    	in->edge = INPUT_EDGE_NONE;        // edge should only be reset by function or opposite edge
     	return;
 	}
 
 	// record the changed state
     in->state = pin_value_corrected;
 	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
-    if (pin_value_corrected == IO_ACTIVE) {
-        in->edge = IO_EDGE_LEADING;
+    if (pin_value_corrected == INPUT_ACTIVE) {
+        in->edge = INPUT_EDGE_LEADING;
     } else {
-        in->edge = IO_EDGE_TRAILING;
+        in->edge = INPUT_EDGE_TRAILING;
     }
 
     // perform homing operations if in homing mode
@@ -244,35 +248,44 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
 
     // trigger the action on leading edges
 
-    if (in->edge == IO_EDGE_LEADING) {
-        if (in->action == IO_ACTION_STOP) {
+    if (in->edge == INPUT_EDGE_LEADING) {
+        if (in->action == INPUT_ACTION_STOP) {
 			cm_start_hold();
         }
-        if (in->action == IO_ACTION_FAST_STOP) {
-			cm_start_hold();                // for now is same as STOP
+        if (in->action == INPUT_ACTION_FAST_STOP) {
+			cm_start_hold();                        // for now is same as STOP
         }
-        if (in->action == IO_ACTION_HALT) {
-	        stepper_init();					// hard stop
+        if (in->action == INPUT_ACTION_HALT) {
+	        cm_halt_all();					        // hard stop, including spindle and coolant
         }
-        if (in->action == IO_ACTION_RESET) {
+        if (in->action == INPUT_ACTION_PANIC) {
+	        char msg[10];
+	        sprintf_P(msg, PSTR("input %d"), input_num_ext);
+	        cm_panic(STAT_PANIC, msg);
+        }
+        if (in->action == INPUT_ACTION_RESET) {
             hw_hard_reset();
         }
     }
 
-    // trigger interlock function on either leading and trailing edge
-	if (in->function == IO_FUNCTION_INTERLOCK) {
-		cm.safety_interlock_requested = in->edge;
-		return;
-	}
-
-	// the remainder of the functions only trigger on the leading edge
-    if (in->edge == IO_EDGE_LEADING) {
-		if (in->function == IO_FUNCTION_LIMIT) {
+	// these functions trigger on the leading edge
+    if (in->edge == INPUT_EDGE_LEADING) {
+		if (in->function == INPUT_FUNCTION_LIMIT) {
 			cm.limit_requested = input_num_ext;
 
-		} else if (in->function == IO_FUNCTION_SHUTDOWN) {
+		} else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
 			cm.shutdown_requested = input_num_ext;
+
+		} else if (in->function == INPUT_FUNCTION_INTERLOCK) {
+		    cm.safety_interlock_disengaged = input_num_ext;
 		}
+    }
+
+    // trigger interlock release on trailing edge
+    if (in->edge == INPUT_EDGE_TRAILING) {
+        if (in->function == INPUT_FUNCTION_INTERLOCK) {
+		    cm.safety_interlock_reengaged = input_num_ext;
+        }
     }
     sr_request_status_report(SR_REQUEST_TIMED);
 }
@@ -295,7 +308,7 @@ static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t
 
 stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 {
-	if ((nv->value < IO_DISABLED) || (nv->value >= IO_MODE_MAX)) {
+	if ((nv->value < INPUT_MODE_DISABLED) || (nv->value >= INPUT_MODE_MAX)) {
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_int8(nv);
@@ -305,12 +318,12 @@ stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 
 stat_t io_set_ac(nvObj_t *nv)			// input action
 {
-	return (_io_set_helper(nv, IO_ACTION_NONE, IO_ACTION_MAX));
+	return (_io_set_helper(nv, INPUT_ACTION_NONE, INPUT_ACTION_MAX));
 }
 
 stat_t io_set_fn(nvObj_t *nv)			// input function
 {
-	return (_io_set_helper(nv, IO_FUNCTION_NONE, IO_FUNCTION_MAX));
+	return (_io_set_helper(nv, INPUT_FUNCTION_NONE, INPUT_FUNCTION_MAX));
 }
 
 /*
@@ -330,28 +343,20 @@ stat_t io_get_input(nvObj_t *nv)
  ***********************************************************************************/
 
 #ifdef __TEXT_MODE
-	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15.0f [-1=disabled, 0=NO,1=NC]\n";
-	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13.0f [0=none,1=stop,2=halt,3=stop_steps,4=reset]\n";
-	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11.0f [0=none,1=limit,2=interlock,3=shutdown]\n";
-	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5.0f\n";
 
-	void io_print_mo(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_mo, nv->group, nv->value);
-	}
+	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15d [-1=disabled, 0=NO,1=NC]\n";
+	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13d [0=none,1=stop,2=halt,3=stop_steps,4=panic,5=reset]\n";
+	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11d [0=none,1=limit,2=interlock,3=shutdown]\n";
+	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5d\n";
 
-	void io_print_ac(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_ac, nv->group, nv->value);
-	}
-
-	void io_print_fn(nvObj_t *nv)
-	{
-		fprintf(stderr, fmt_gpio_fn, nv->group, nv->value);
-	}
-
-	void io_print_in(nvObj_t *nv)
-	{
-    	fprintf(stderr, fmt_gpio_in, nv->token, nv->value);
-	}
+    static void _print_di(nvObj_t *nv, const char *format)
+    {
+        fprintf_P(stderr, format, nv->group, (int)nv->value);
+    }
+	void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
+	void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
+	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
+	void io_print_in(nvObj_t *nv) {
+        fprintf_P(stderr, fmt_gpio_in, nv->token, (int)nv->value);
+    }
 #endif

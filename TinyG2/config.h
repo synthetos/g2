@@ -178,7 +178,7 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 
 										// pre-allocated defines (take RAM permanently)
 #define NV_SHARED_STRING_LEN 512		// shared string for string values
-#define NV_BODY_LEN 30					// body elements - allow for 1 parent + N children
+#define NV_BODY_LEN 40					// body elements - allow for 1 parent + N children
 										// (each body element takes about 30 bytes of RAM)
 
 // Stuff you probably don't want to change
@@ -189,33 +189,30 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 #define NV_LIST_LEN (NV_BODY_LEN+2)		// +2 allows for a header and a footer
 #define NV_MAX_OBJECTS (NV_BODY_LEN-1)	// maximum number of objects in a body string
 #define NO_MATCH (index_t)0xFFFF
-//#define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS // max number of status report elements - see cfgArray
-//											// **** must also line up in cfgArray, se00 - seXX ****
 
-enum tgCommunicationsMode {
+typedef enum {
 	TEXT_MODE = 0,						// text command line mode
 	JSON_MODE,							// strict JSON construction
 	JSON_MODE_RELAXED					// relaxed JSON construction (future)
-};
+} tgCommunicationsMode;
 
-enum flowControl {
+typedef enum {
 	FLOW_CONTROL_OFF = 0,				// flow control disabled
 	FLOW_CONTROL_XON,					// flow control uses XON/XOFF
 	FLOW_CONTROL_RTS					// flow control uses RTS/CTS
-};
+} flowControl;
 
-enum valueType {						// value typing for config and JSON
+typedef enum {						    // value typing for config and JSON
 	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
 	TYPE_PARENT,						// object is a parent to a sub-object
 	TYPE_FLOAT,							// value is a floating point number
 	TYPE_INT,						    // value is a signed or unsigned integer or any size
-//	TYPE_INT8,						    // value is a signed integer - int8_t, int32_t
 	TYPE_STRING,						// value is in string field
 	TYPE_BOOL,							// value is "true" (1) or "false"(0)
 	TYPE_DATA,							// value is blind cast to uint32_t
 	TYPE_ARRAY							// value is array element count, values are CSV ASCII in string field
-};
+} valueType;
 
 /**** operations flags and shorthand ****/
 
@@ -243,7 +240,7 @@ typedef struct nvString {				// shared string object
   #else
 	uint16_t wp;						// use this string array index value is string len > 255 bytes
   #endif
-	char_t string[NV_SHARED_STRING_LEN];
+	char string[NV_SHARED_STRING_LEN];
 	uint16_t magic_end;					// guard to detect string buffer underruns
 } nvStr_t;
 
@@ -252,12 +249,12 @@ typedef struct nvObject {				// depending on use, not all elements may be popula
 	struct nvObject *nx;				// pointer to next object or NULL if last object
 	index_t index;						// index of tokenized name, or -1 if no token (optional)
 	int8_t depth;						// depth of object in the tree. 0 is root (-1 is invalid)
-	int8_t valuetype;					// see valueType enum
+	valueType valuetype;                // see valueType enum
 	int8_t precision;					// decimal precision for reporting (JSON)
 	float value;						// numeric value
-	char_t group[GROUP_LEN+1];			// group prefix or NUL if not in a group
-	char_t token[TOKEN_LEN+1];			// full mnemonic token for lookup
-	char_t (*stringp)[];				// pointer to array of characters from shared character array
+	char group[GROUP_LEN+1];			// group prefix or NUL if not in a group
+	char token[TOKEN_LEN+1];			// full mnemonic token for lookup
+	char (*stringp)[];				// pointer to array of characters from shared character array
 } nvObj_t; 								// OK, so it's not REALLY an object
 
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access
@@ -270,8 +267,8 @@ typedef struct nvList {
 } nvList_t;
 
 typedef struct cfgItem {
-	char_t group[GROUP_LEN+1];			// group prefix (with NUL termination)
-	char_t token[TOKEN_LEN+1];			// token - stripped of group prefix (w/NUL termination)
+	char group[GROUP_LEN+1];			// group prefix (with NUL termination)
+	char token[TOKEN_LEN+1];			// token - stripped of group prefix (w/NUL termination)
 	uint8_t flags;						// operations flags - see defines below
 	int8_t precision;					// decimal precision for display (JSON)
 	fptrPrint print;					// print binding: aka void (*print)(nvObj_t *nv);
@@ -306,12 +303,12 @@ stat_t nv_persist(nvObj_t *nv);				// main entry point for persistence
 
 // helpers
 uint8_t nv_get_type(nvObj_t *nv);
-index_t nv_get_index(const char_t *group, const char_t *token);
+index_t nv_get_index(const char *group, const char *token);
 index_t	nv_index_max(void);					// (see config_app.c)
 uint8_t nv_index_is_single(index_t index);	// (see config_app.c)
 uint8_t nv_index_is_group(index_t index);	// (see config_app.c)
 uint8_t nv_index_lt_groups(index_t index);	// (see config_app.c)
-uint8_t nv_group_is_prefixed(char_t *group);
+uint8_t nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
 stat_t set_nul(nvObj_t *nv);				// set nothing (no operation)
@@ -338,12 +335,12 @@ stat_t get_grp(nvObj_t *nv);				// get data for a group
 void nv_get_nvObj(nvObj_t *nv);
 nvObj_t *nv_reset_nv(nvObj_t *nv);
 nvObj_t *nv_reset_nv_list(void);
-stat_t nv_copy_string(nvObj_t *nv, const char_t *src);
-nvObj_t *nv_add_object(const char_t *token);
-nvObj_t *nv_add_integer(const char_t *token, const uint32_t value);
-nvObj_t *nv_add_float(const char_t *token, const float value);
-nvObj_t *nv_add_string(const char_t *token, const char_t *string);
-nvObj_t *nv_add_conditional_message(const char_t *string);
+stat_t nv_copy_string(nvObj_t *nv, const char *src);
+nvObj_t *nv_add_object(const char *token);
+nvObj_t *nv_add_integer(const char *token, const uint32_t value);
+nvObj_t *nv_add_float(const char *token, const float value);
+nvObj_t *nv_add_string(const char *token, const char *string);
+nvObj_t *nv_add_conditional_message(const char *string);
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)

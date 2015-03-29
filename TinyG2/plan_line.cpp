@@ -139,7 +139,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
     // get a cleared buffer and setup move variables
     if ((bf = mp_get_write_buffer()) == NULL) {                     // never supposed to fail
-        return(cm_shutdown(STAT_BUFFER_FULL_FATAL, "pl1"));
+        return(cm_panic(STAT_BUFFER_FULL_FATAL, "pl1"));
     }
     bf->bf_func = mp_exec_aline;                                    // register the callback to the exec function
     bf->length = length;
@@ -520,8 +520,8 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
  0.7803358969289657274992034530009202136449618925894543
 
 */
-//#define __FIXED_JERK
 //#define __OLD_JERK
+//#define __TEST_JERK
 #define __REVISED_JERK
 
 static void _calculate_jerk(mpBuf_t *bf)
@@ -530,6 +530,30 @@ static void _calculate_jerk(mpBuf_t *bf)
 #ifdef __FIXED_JERK
 //	bf->jerk = (JERK_MULTIPLIER * cm.a[AXIS_Z].jerk_max) / fabs(bf->unit[AXIS_Z]);
 	bf->jerk = cm.a[AXIS_Z].jerk_max;
+#endif
+
+#ifdef __TEST_JERK
+	bf->jerk = 8675309;										// a ridiculously large number
+	float jerk=0;
+
+	for (uint8_t axis=0; axis<AXES; axis++) {
+    	if (fabs(bf->unit[axis]) > 0) {						// if this axis is participating in the move
+        	jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
+        	//float j_peak = (1.64224*(800000)^2)/(v_end-v_start);
+        	//			jerk = cm.a[axis].jerk_max / (bf->unit[axis] * bf->unit[axis]);
+        	if (jerk < bf->jerk) {
+            	bf->jerk = jerk;
+            	bf->jerk_axis = axis;						// +++ diagnostic
+        	}
+    	}
+	}
+
+    if (fp_NOT_ZERO(bf->unit[AXIS_Z])) {
+        bf->jerk = cm.a[AXIS_Z].jerk_max;
+    } else {
+        bf->jerk = cm.a[AXIS_X].jerk_max;
+    }
+    bf->jerk *= JERK_MULTIPLIER;							// goose it!
 #endif
 
 #ifdef __OLD_JERK
@@ -709,7 +733,15 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
     float sintheta_over2 = sqrt((1 - costheta)/2);
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
+
     return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
+
+/* DIAGNOSTIC
+    float velocity = min(vmax, (float)sqrt(radius * cm.junction_acceleration));
+    printf("v:%f\n", velocity);
+    return (velocity);
+*/
+
 //    return(sqrt(radius * cm.junction_acceleration));
 
 // New junction code - untested

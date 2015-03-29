@@ -41,10 +41,10 @@ jsSingleton_t js;
 
 /**** local scope stuff ****/
 
-static stat_t _json_parser_kernal(char_t *str);
-//static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth);
-static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth);
-static stat_t _normalize_json_string(char_t *str, uint16_t size);
+static stat_t _json_parser_kernal(char *str);
+//static stat_t _get_nv_pair_strict(nvObj_t *nv, char **pstr, int8_t *depth);
+static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char **pstr, int8_t *depth);
+static stat_t _normalize_json_string(char *str, uint16_t size);
 
 /****************************************************************************
  * json_parser() - exposed part of JSON parser
@@ -84,7 +84,7 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size);
  *		in an application agnostic way. It should work for other apps than TinyG
  */
 
-void json_parser(char_t *str)
+void json_parser(char *str)
 {
 	stat_t status = _json_parser_kernal(str);
 	if (status == STAT_COMPLETE) return;	// skip the print if returning from something at already did it.
@@ -92,12 +92,12 @@ void json_parser(char_t *str)
 	sr_request_status_report(SR_REQUEST_TIMED); // generate incremental status report to show any changes
 }
 
-static stat_t _json_parser_kernal(char_t *str)
+static stat_t _json_parser_kernal(char *str)
 {
 	stat_t status;
 	int8_t depth;
 	nvObj_t *nv = nv_reset_nv_list();				// get a fresh nvObj list
-	char_t group[GROUP_LEN+1] = {""};				// group identifier - starts as NUL
+	char group[GROUP_LEN+1] = {""};				// group identifier - starts as NUL
 	int8_t i = NV_BODY_LEN;
 
 	ritorno(_normalize_json_string(str, JSON_OUTPUT_STRING_MAX));	// return if error
@@ -129,7 +129,8 @@ static stat_t _json_parser_kernal(char_t *str)
 	if (nv->valuetype == TYPE_NULL){				// means GET the value
 		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
 	} else {
-		if (cm.machine_state == MACHINE_ALARM) return (STAT_MACHINE_ALARMED);
+        cm_parse_clear(*nv->stringp);               // parse Gcode and clear alarms if M30 or M2 is found
+        ritorno(cm_is_alarmed());                   // return error status if in alarm, shutdown or panic
 		ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
 		nv_persist(nv);
 	}
@@ -143,9 +144,9 @@ static stat_t _json_parser_kernal(char_t *str)
  *	to lower case, with the exception of gcode comments
  */
 
-static stat_t _normalize_json_string(char_t *str, uint16_t size)
+static stat_t _normalize_json_string(char *str, uint16_t size)
 {
-	char_t *wr;								// write pointer
+	char *wr;								// write pointer
 	uint8_t in_comment = false;
 
 	if (strlen(str) > size) return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
@@ -195,20 +196,20 @@ static stat_t _normalize_json_string(char_t *str, uint16_t size)
 #define MAX_PAD_CHARS 8
 #define MAX_NAME_CHARS 32
 
-static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
+static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char **pstr, int8_t *depth)
 {
 	uint8_t i;
-	char_t *tmp;
-	char_t leaders[] = {"{,\""};				// open curly, quote and leading comma
-	char_t separators[] = {":\""};				// colon and quote
-	char_t terminators[] = {"},\""};			// close curly, comma and quote
-	char_t value[] = {"{\".-+"};				// open curly, quote, period, minus and plus
+	char *tmp;
+	char leaders[] = {"{,\""};                  // open curly, quote and leading comma
+	char separators[] = {":\""};                // colon and quote
+	char terminators[] = {"},\""};              // close curly, comma and quote
+	char value[] = {"{\".-+"};                  // open curly, quote, period, minus and plus
 
-	nv_reset_nv(nv);							// wipes the object and sets the depth
+	nv_reset_nv(nv);                            // wipes the object and sets the depth
 
 	// --- Process name part ---
 	// Find, terminate and set pointers for the name. Allow for leading and trailing name quotes.
-	char_t * name = *pstr;
+	char * name = *pstr;
 	for (i=0; true; i++, (*pstr)++) {
 		if (strchr(leaders, (int)**pstr) == NULL) { 		// find leading character of name
 			name = (*pstr)++;
@@ -324,10 +325,10 @@ static stat_t _get_nv_pair_relaxed(nvObj_t *nv, char_t **pstr, int8_t *depth)
  *	cfgArray.
  */
  /*
-static stat_t _get_nv_pair_strict(nvObj_t *nv, char_t **pstr, int8_t *depth)
+static stat_t _get_nv_pair_strict(nvObj_t *nv, char **pstr, int8_t *depth)
 {
-	char_t *tmp;
-	char_t terminators[] = {"},"};
+	char *tmp;
+	char terminators[] = {"},"};
 
 	nv_reset_nv(nv);							// wipes the object and sets the depth
 
@@ -483,13 +484,16 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
 			else if (nv->valuetype == TYPE_NULL)    { str += sprintf((char *)str, "null");} // Note that that "" is NOT null.
             else if (nv->valuetype == TYPE_DATA)    {
 				uint32_t *v = (uint32_t*)&nv->value;
-				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);
+//				str += (char_t)sprintf((char *)str, "\"0x%lx\"", *v);
+				str += sprintf(str, "\"0x%lx\"", *v);
             }
 			else if (nv->valuetype == TYPE_BOOL) {
 				if (fp_FALSE(nv->value)) {
-                    str += sprintf((char *)str, "false");
+//                    str += sprintf((char *)str, "false");
+                    str += sprintf(str, "false");
                 } else {
-                    str += (char_t)sprintf((char *)str, "true");
+//                    str += (char_t)sprintf((char *)str, "true");
+                    str += sprintf(str, "true");
                 }
 			}
 			else if (nv->valuetype == TYPE_PARENT) {
@@ -581,7 +585,7 @@ void json_print_response(uint8_t status)
 	nvObj_t *nv = nv_body;
 	if (status == STAT_JSON_SYNTAX_ERROR) {
 		nv_reset_nv_list();
-		nv_add_string((const char_t *)"err", escape_string(cs.bufp, cs.saved_buf));
+		nv_add_string((const char *)"err", escape_string(cs.bufp, cs.saved_buf));
 
 	} else if (cm.machine_state != MACHINE_INITIALIZING) {	// always do full echo during startup
 		uint8_t nv_type;
@@ -618,7 +622,7 @@ void json_print_response(uint8_t status)
 			return;
 		}
 	}
-	char_t footer_string[NV_FOOTER_LEN];
+	char footer_string[NV_FOOTER_LEN];
 
 //	if (xio.enable_window_mode) {							// 2 footer styles are supported...
 //		sprintf((char *)footer_string, "%d,%d,%d", 2, status, xio_get_window_slots());	//...windowing
@@ -692,10 +696,10 @@ static const char fmt_jv[] PROGMEM = "[jv]  json verbosity%15d [0=silent,1=foote
 static const char fmt_js[] PROGMEM = "[js]  json serialize style%9d [0=relaxed,1=strict]\n";
 static const char fmt_jf[] PROGMEM = "[jf]  json footer style%12d [1=checksum,2=window report]\n";
 
-void js_print_ej(nvObj_t *nv) { text_print_ui8(nv, fmt_ej);}
-void js_print_jv(nvObj_t *nv) { text_print_ui8(nv, fmt_jv);}
-void js_print_js(nvObj_t *nv) { text_print_ui8(nv, fmt_js);}
-void js_print_jf(nvObj_t *nv) { text_print_ui8(nv, fmt_jf);}
+void js_print_ej(nvObj_t *nv) { text_print(nv, fmt_ej);}    // TYPE_INT
+void js_print_jv(nvObj_t *nv) { text_print(nv, fmt_jv);}    // TYPE_INT
+void js_print_js(nvObj_t *nv) { text_print(nv, fmt_js);}    // TYPE_INT
+void js_print_jf(nvObj_t *nv) { text_print(nv, fmt_jf);}    // TYPE_INT
 
 #endif // __TEXT_MODE
 

@@ -225,6 +225,7 @@ ifeq ("$(PLATFORM)","G2v9i")
 	SETTINGS_FILE="settings_shapeoko2.h"
 #	SETTINGS_FILE="settings_shopbot_sbv300.h"
 #	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_Ultimaker.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
@@ -246,6 +247,22 @@ SETTINGS_FILE="settings_shapeoko375_dual.h"
 DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
+
+
+##### TEMPORARY TEMPORARY TEMPORARY ####
+
+DEBUG ?= 2
+
+##### END TEMPORARY TEMPORARY TEMPORARY ####
+
+
+ifeq ($(DEBUG),1)
+	DEVICE_DEFINES += DEBUG=1
+endif
+ifeq ($(DEBUG),2)
+DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
+endif
+
 
 ##########
 

@@ -36,24 +36,24 @@
 
 #define MIN_ARC_QR_INTERVAL 200		// minimum interval between QRs during arc generation (in system ticks)
 
-enum srVerbosity {					// status report enable, verbosity and request type
+typedef enum {					    // status report enable, verbosity and request type
 	SR_OFF = 0,						// no reports
 	SR_FILTERED,					// reports only values that have changed from the last report
 	SR_VERBOSE						// reports all values specified
-};
+} srVerbosity;
 
-enum cmStatusReportRequest {
+typedef enum {
 	SR_REQUEST_IMMEDIATE = 0,		// request a full or filtered status report ASAP (depending on SR_VERBOSITY setting)
 	SR_REQUEST_IMMEDIATE_FULL,		// request a full status report ASAP (regardless of SR_VERBOSITY setting)
 	SR_REQUEST_TIMED,				// request a full or filtered status report at next timer interval (as above)
 	SR_REQUEST_TIMED_FULL			// request a full status report at next timer interval (as above)
-};
+} cmStatusReportRequest;
 
-enum qrVerbosity {					// planner queue enable and verbosity
+typedef enum {					    // planner queue enable and verbosity
 	QR_OFF = 0,						// no response is provided
 	QR_SINGLE,						// queue depth reported
 	QR_TRIPLE						// queue depth reported for buffers, buffers added, buffered removed
-};
+} qrVerbosity;
 
 typedef struct srSingleton {
 
@@ -100,7 +100,7 @@ extern rxSingleton_t rx;
 /**** Function Prototypes ****/
 
 void rpt_print_message(char *msg);
-stat_t rpt_exception(uint8_t status, const char *msg);
+stat_t rpt_exception(stat_t status, const char *msg);
 
 stat_t rpt_er(nvObj_t *nv);
 void rpt_print_loading_configs_message(void);

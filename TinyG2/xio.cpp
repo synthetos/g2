@@ -34,13 +34,15 @@
  */
 #include "tinyg2.h"
 #include "config.h"
-#include "util.h"
 #include "hardware.h"
-#include "text_parser.h"
-#include "canonical_machine.h"
+#include "canonical_machine.h"  // needs cm_has_hold()
 #include "xio.h"
 #include "report.h"
 #include "controller.h"
+#include "util.h"
+#ifdef __TEXT_MODE
+#include "text_parser.h"
+#endif
 
 using namespace Motate;
 //OutputPin<kDebug1_PinNumber> xio_debug_pin1;
@@ -80,13 +82,11 @@ using namespace Motate;
  *
  ***************************************/
 
-
-
 /**** Structures ****/
 
 // We need a buffer to hold single character commands, like !~%
 // We also want it to have a NULL character, so we make it two characters.
-char_t single_char_buffer[2] = " ";
+char single_char_buffer[2] = " ";
 
 // Checks against arbitrary flags variable (passed in)
 // Prefer to use the object is*() methods over these.
@@ -108,16 +108,16 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     // line reader functions
     uint16_t read_index;					// index into line being read
     uint16_t read_buf_size;					// static variable set at init time
-    char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
+    char read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 
     // Internal use only:
     bool _ready_to_send;
 
     // Checks against calss flags variable:
-    //	bool canRead() { return caps & DEV_CAN_READ; }
-    //	bool canWrite() { return caps & DEV_CAN_WRITE; }
-    //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
-    //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
+//	bool canRead() { return caps & DEV_CAN_READ; }
+//	bool canWrite() { return caps & DEV_CAN_WRITE; }
+//	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
+//	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
     bool isCtrl() { return flags & DEV_IS_CTRL; }    // called externally:      DeviceWrappers[i]->isCtrl()
     bool isData() { return flags & DEV_IS_DATA; }    // subclasses can call directly (no pointer): isCtrl()
     bool isPrimary() { return flags & DEV_IS_PRIMARY; }
@@ -131,7 +131,6 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     bool isDataAndActive() { return ((flags & (DEV_IS_DATA|DEV_IS_ACTIVE)) == (DEV_IS_DATA|DEV_IS_ACTIVE)); }
 
     bool isNotCtrlOnly() { return ((flags & (DEV_IS_CTRL|DEV_IS_DATA)) != (DEV_IS_CTRL)); }
-
 
     // Manipulation functions
     void setData() { flags |= DEV_IS_DATA; }
@@ -148,8 +147,12 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void setAsActiveData() { flags |= ( DEV_IS_DATA | DEV_IS_ACTIVE); };
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
-    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps), flags(DEV_FLAGS_CLEAR), next_flags(DEV_FLAGS_CLEAR), read_index(0), read_buf_size(USB_LINE_BUFFER_SIZE), _ready_to_send(false) {
-
+    xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
+                                          flags(DEV_FLAGS_CLEAR),
+                                          next_flags(DEV_FLAGS_CLEAR),
+                                          read_index(0),
+                                          read_buf_size(USB_LINE_BUFFER_SIZE),
+                                          _ready_to_send(false) {
     };
 
     // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
@@ -159,7 +162,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
 
     // Readline and line flushing functions
-    char_t *readline(devflags_t limit_flags, uint16_t &size) {
+    char *readline(devflags_t limit_flags, uint16_t &size) {
         if (!(limit_flags & flags)) {
         	size = 0;
         	return NULL;
@@ -174,7 +177,6 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 if ((c = readchar()) == _FDEV_ERR) {
                     break;
                 }
-
                 read_buf[read_index] = (char)c;
 
                 // special handling for flush character
@@ -308,7 +310,6 @@ struct xio_t {
                 written = DeviceWrappers[i]->write(buffer, size);
             }
         }
-
         return written;
     }
 
@@ -344,11 +345,11 @@ struct xio_t {
      *			 from the physical device is longer than the read buffer for the device. The size value
      *			 provided as a calling argument is ignored (size doesn't matter).
      *
-     *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
+     *	 char * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
      */
-    char_t *readline(devflags_t &flags, uint16_t &size)
+    char *readline(devflags_t &flags, uint16_t &size)
     {
-        char_t *ret_buffer;
+        char *ret_buffer;
         devflags_t limit_flags = flags; // Store it so it can't get mangled
 
         // Always check control-capable devices FIRST
@@ -530,8 +531,8 @@ void xio_init()
 
 stat_t xio_test_assertions()
 {
-    if ((xio.magic_start != MAGICNUM) || (xio.magic_end != MAGICNUM)) {
-        return (STAT_XIO_ASSERTION_FAILURE);
+    if ((BAD_MAGIC(xio.magic_start)) || (BAD_MAGIC(xio.magic_end))) {
+        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, NULL));
     }
     return (STAT_OK);
 }
@@ -551,7 +552,7 @@ size_t xio_write(const uint8_t *buffer, size_t size)
  *	Defers to xio.readline().
  */
 
-char_t *xio_readline(devflags_t &flags, uint16_t &size)
+char *xio_readline(devflags_t &flags, uint16_t &size)
 {
     return xio.readline(flags, size);
 }
@@ -596,6 +597,6 @@ void xio_flush_read()
 #ifdef __TEXT_MODE
 
 static const char fmt_spi[] PROGMEM = "[spi] SPI state%20d [0=disabled,1=enabled]\n";
-void xio_print_spi(nvObj_t *nv) { text_print_ui8(nv, fmt_spi);}
+void xio_print_spi(nvObj_t *nv) { text_print(nv, fmt_spi);} // TYPE_INT
 
 #endif // __TEXT_MODE

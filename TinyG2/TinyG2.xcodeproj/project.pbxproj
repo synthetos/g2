@@ -13,7 +13,6 @@
 		D4021FA4175E37BF0099576C /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9F175E37BF0099576C /* Reset.cpp */; };
 		D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */; };
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
-		D41D13F517374B4E00D522D9 /* switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41D13F317374B4E00D522D9 /* switch.cpp */; };
 		D41EF714194D6B0D001EA37B /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D41EF712194D6B0D001EA37B /* startup_sam3xa.c */; };
 		D41EF715194D6B0D001EA37B /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D41EF713194D6B0D001EA37B /* system_sam3xa.c */; };
 		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
@@ -415,8 +414,6 @@
 		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D409C00F1902F70C00F15547 /* G2v9i-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "G2v9i-pinout.h"; sourceTree = "<group>"; };
 		D40A5F921A07E42600F90F4F /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
-		D41D13F317374B4E00D522D9 /* switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = switch.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		D41D13F417374B4E00D522D9 /* switch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = switch.h; sourceTree = "<group>"; };
 		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
 		D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_probotixV90.h; sourceTree = "<group>"; };
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
@@ -3210,7 +3207,6 @@
 		D49EC3F817054FDF00F2BF9B /* SAM4S8B.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8B.svd; sourceTree = "<group>"; };
 		D49EC3F917054FDF00F2BF9B /* SAM4S8C.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8C.svd; sourceTree = "<group>"; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
-		D4B485B11AB1EC5500C6614F /* settings_shapeoko375_Dual.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375_Dual.h; sourceTree = "<group>"; };
 		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
@@ -3227,6 +3223,8 @@
 		D4B657A518B5C23C00F8616C /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pwm.cpp; sourceTree = "<group>"; };
 		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
 		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
+		D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375_dual.h; sourceTree = "<group>"; };
+		D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; };
 		D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gpio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
@@ -3237,6 +3235,7 @@
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
 		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
 		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
+		D4E913611AC4759F0042A16C /* settings_shapeoko2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko2.h; sourceTree = "<group>"; };
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
@@ -3273,7 +3272,9 @@
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
-				D4B485B11AB1EC5500C6614F /* settings_shapeoko375_Dual.h */,
+				D4E913611AC4759F0042A16C /* settings_shapeoko2.h */,
+				D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */,
+				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
 				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
@@ -3341,8 +3342,6 @@
 				D48F5A7C172CB21100D0E055 /* spindle.h */,
 				D48F5A52172CB1FA00D0E055 /* stepper.cpp */,
 				D48F5A7D172CB21100D0E055 /* stepper.h */,
-				D41D13F317374B4E00D522D9 /* switch.cpp */,
-				D41D13F417374B4E00D522D9 /* switch.h */,
 				D48F5A53172CB1FA00D0E055 /* text_parser.cpp */,
 				D48F5A7E172CB21100D0E055 /* text_parser.h */,
 				D48F5A7F172CB21100D0E055 /* tinyg2.h */,
@@ -7644,6 +7643,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4E9135D1AC46B8B0042A16C /* TinyG2 gShield Debugger */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield DEBUG=2";
+			buildConfigurationList = D4E9135E1AC46B8B0042A16C /* Build configuration list for PBXLegacyTarget "TinyG2 gShield Debugger" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 gShield Debugger";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -7686,6 +7699,7 @@
 			projectRoot = "";
 			targets = (
 				D45710C21705330C00EA19A8 /* TinyG2 gShield */,
+				D4E9135D1AC46B8B0042A16C /* TinyG2 gShield Debugger */,
 				D4C12814180D9560002A898C /* TinyG2 G2V9d */,
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
@@ -8066,7 +8080,6 @@
 				D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */,
 				D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */,
 				D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */,
-				D41D13F517374B4E00D522D9 /* switch.cpp in Sources */,
 				D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */,
 				D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */,
 				D4021FA4175E37BF0099576C /* Reset.cpp in Sources */,
@@ -8279,6 +8292,22 @@
 			};
 			name = Release;
 		};
+		D4E9135F1AC46B8B0042A16C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield Debugger";
+			};
+			name = Debug;
+		};
+		D4E913601AC46B8B0042A16C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield Debugger";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -8359,6 +8388,15 @@
 			buildConfigurations = (
 				D4CBBAD21A0D51FE00150DE2 /* Debug */,
 				D4CBBAD31A0D51FE00150DE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4E9135E1AC46B8B0042A16C /* Build configuration list for PBXLegacyTarget "TinyG2 gShield Debugger" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4E9135F1AC46B8B0042A16C /* Debug */,
+				D4E913601AC46B8B0042A16C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

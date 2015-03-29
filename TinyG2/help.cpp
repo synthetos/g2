@@ -2,7 +2,7 @@
  * help.cpp - collected help routines
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2013 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -26,7 +26,7 @@
 
 stat_t help_stub(nvObj_t *nv) {return (STAT_OK);}
 
-#ifdef __HELP_SCREENS
+#if defined(__TEXT_MODE) && defined(__HELP_SCREENS)
 
 static void _status_report_advisory()
 {
@@ -40,9 +40,9 @@ See the wiki below for more details.\n\
 static void _postscript()
 {
 fprintf_P(stderr, PSTR("\n\
-For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki/\n\
+For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki\n\
 For the latest firmware see: https://github.com/synthetos/TinyG\n\
-Please log any issues at http://www.synthetos.com/forums\n\
+Please log any issues at https://github.com/synthetos/TinyG/issues\n\
 Have fun\n"));
 }
 
@@ -150,15 +150,15 @@ return(STAT_OK);
 }
 
 /*
- * help_boot_loader()
+ * help_flash()
  */
-stat_t help_boot_loader(nvObj_t *nv)
+stat_t help_flash(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG BOOT LOADER Help ###\n"));
+fprintf_P(stderr, PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
 fprintf_P(stderr, PSTR("\
-Enter $boot=1 to enter the boot loader.\n"));
+Enter $flash=1 to enter the flash loader.\n"));
 _postscript();
 return(STAT_OK);
 }
 
-#endif // __HELP_SCREENS
+#endif // defined(__TEXT_MODE) && defined(__HELP_SCREENS)
