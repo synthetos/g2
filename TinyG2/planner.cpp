@@ -98,6 +98,7 @@ static stat_t _exec_command(mpBuf_t *bf);
 static uint8_t _get_buffer_index(mpBuf_t *bf);
 static void _dump_plan_buffer(mpBuf_t *bf);
 #endif
+static void _planner_report(const char *msg);
 
 /*
  * planner_init()
@@ -638,6 +639,10 @@ void mp_planner_time_accounting() {
     mb.time_in_planner = time_in_planner;
 }
 
+//#ifdef DEBUG
+
+#warning DEBUG TRAPS ENABLED
+
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 static void _audit_buffers()
@@ -646,16 +651,14 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
-        while (1) {
-            __NOP();
-        }
+        _planner_report("buffer audit1");
+        _debug_trap();
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
-        while (1) {
-            __NOP();
-        }
+        _planner_report("buffer audit2");
+        _debug_trap();
     }
 
     // Now check every buffer, in order we would execute them.
@@ -663,9 +666,8 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
-            while (1) {
-                __NOP();
-            }
+            _planner_report("buffer audit3");
+            _debug_trap();
         }
 
         // Order should be:
@@ -681,33 +683,28 @@ static void _audit_buffers()
             if (bf->buffer_state == MP_BUFFER_PLANNING) {
                 __NOP();
             } else {
-                while (1) {
-                    __NOP();
-                }
+                _planner_report("buffer audit4");
+                _debug_trap();
             }
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _planner_report("buffer audit5");
+            _debug_trap();
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _planner_report("buffer audit6");
+            _debug_trap();
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
-            while (1) {
-                __NOP();
-            }
+            _planner_report("buffer audit7");
+            _debug_trap();
         }
-
         // Now look at the next one.
         bf = bf->nx;
     }
@@ -715,6 +712,32 @@ static void _audit_buffers()
 }
 #pragma GCC pop_options
 // About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
+
+//#endif // DEBUG
+
+#ifdef __DIAGNOSTICS
+
+static void _planner_report(const char *msg)
+{
+    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
+    
+    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"replan\":%d",
+                mb.bf[i].buffer_state,
+                mb.bf[i].move_type,
+                mb.bf[i].locked,
+                mb.bf[i].replannable);
+        if (&mb.bf[i] == mb.r) { 
+            printf(", \"RUN\":t");}
+        if (&mb.bf[i] == mb.q) { 
+            printf(", \"QUE\":t");}
+        if (&mb.bf[i] == mb.w) { 
+            printf(", \"WRT\":t");}
+        printf("}}\n");
+    }    
+}
+
+#endif // __DIAGNOSTICS
 
 /****************************
  * END OF PLANNER FUNCTIONS *

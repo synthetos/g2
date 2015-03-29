@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.06 // tests before merge with main edge branch; removed diagnostic traps and buffer audit
+#define TINYG_FIRMWARE_BUILD   		082.07 // queue dump; disabled debug traps and queue audit
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
