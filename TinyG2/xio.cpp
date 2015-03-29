@@ -86,7 +86,7 @@ using namespace Motate;
 
 // We need a buffer to hold single character commands, like !~%
 // We also want it to have a NULL character, so we make it two characters.
-char_t single_char_buffer[2] = " ";
+char single_char_buffer[2] = " ";
 
 // Checks against arbitrary flags variable (passed in)
 // Prefer to use the object is*() methods over these.
@@ -108,7 +108,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     // line reader functions
     uint16_t read_index;					// index into line being read
     uint16_t read_buf_size;					// static variable set at init time
-    char_t read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
+    char read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 
     // Internal use only:
     bool _ready_to_send;
@@ -162,7 +162,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
 
     // Readline and line flushing functions
-    char_t *readline(devflags_t limit_flags, uint16_t &size) {
+    char *readline(devflags_t limit_flags, uint16_t &size) {
         if (!(limit_flags & flags)) {
         	size = 0;
         	return NULL;
@@ -345,11 +345,11 @@ struct xio_t {
      *			 from the physical device is longer than the read buffer for the device. The size value
      *			 provided as a calling argument is ignored (size doesn't matter).
      *
-     *	 char_t * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
+     *	 char * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
      */
-    char_t *readline(devflags_t &flags, uint16_t &size)
+    char *readline(devflags_t &flags, uint16_t &size)
     {
-        char_t *ret_buffer;
+        char *ret_buffer;
         devflags_t limit_flags = flags; // Store it so it can't get mangled
 
         // Always check control-capable devices FIRST
@@ -552,7 +552,7 @@ size_t xio_write(const uint8_t *buffer, size_t size)
  *	Defers to xio.readline().
  */
 
-char_t *xio_readline(devflags_t &flags, uint16_t &size)
+char *xio_readline(devflags_t &flags, uint16_t &size)
 {
     return xio.readline(flags, size);
 }

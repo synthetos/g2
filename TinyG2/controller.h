@@ -71,10 +71,10 @@ typedef struct controllerSingleton {	// main TG controller struct
 	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
 
 	// controller serial buffers
-	char_t *bufp;						// pointer to primary or secondary in buffer
-	uint16_t linelen;					// length of currently processing line
-	char_t out_buf[OUTPUT_BUFFER_LEN];	// output buffer
-	char_t saved_buf[SAVED_BUFFER_LEN];	// save the input buffer
+	char *bufp;                         // pointer to primary or secondary in buffer
+	uint16_t linelen;                   // length of currently processing line
+	char out_buf[OUTPUT_BUFFER_LEN];    // output buffer
+	char saved_buf[SAVED_BUFFER_LEN];   // save the input buffer
 
 	magic_t magic_end;
 } controller_t;

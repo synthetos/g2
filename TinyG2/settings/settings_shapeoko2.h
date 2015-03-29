@@ -88,9 +88,12 @@
 
 // *** motor settings ************************************************************************************
 
+
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY        0.375                   // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_Z         0.750
+#define MOTOR_POWER_LEVEL_ABC       0.000
 
 #define M1_MOTOR_MAP                AXIS_X				    // 1ma
 #define M1_STEP_ANGLE               1.8					    // 1sa
@@ -98,7 +101,7 @@
 #define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po  0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  TRUE=low power idle enabled
-#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
@@ -106,7 +109,7 @@
 #define M2_MICROSTEPS               8
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
 #define M3_MOTOR_MAP                AXIS_Y
 #define M3_STEP_ANGLE               1.8
@@ -114,7 +117,7 @@
 #define M3_MICROSTEPS               8
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
 #define M4_MOTOR_MAP                AXIS_Z
 #define M4_STEP_ANGLE               1.8
@@ -122,7 +125,7 @@
 #define M4_MICROSTEPS               8
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
 
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
@@ -130,7 +133,7 @@
 #define M5_MICROSTEPS               8
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
-#define M5_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M5_POWER_LEVEL              MOTOR_POWER_LEVEL_ABC
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
@@ -138,7 +141,7 @@
 #define M6_MICROSTEPS               8
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
-#define M6_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M6_POWER_LEVEL              MOTOR_POWER_LEVEL_ABC
 
 // *** axis settings **********************************************************************************
 
@@ -240,7 +243,7 @@
 #define C_ZERO_BACKOFF              2
 
 //*** Input / output settings ***
-/*  
+/*
     INPUT_MODE_DISABLED
     INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
     INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
@@ -278,12 +281,12 @@
 #define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Zmin
-#define DI5_MODE                    INPUT_ACTIVE_HIGH   // Z probe            
+#define DI5_MODE                    INPUT_ACTIVE_HIGH   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmax
-#define DI6_MODE                    NORMALLY_CLOSED            
+#define DI6_MODE                    NORMALLY_CLOSED
 #define DI6_ACTION                  INPUT_ACTION_STOP
 #define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 

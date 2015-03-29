@@ -63,15 +63,15 @@
 #include "util.h"
 
 using namespace Motate;
-extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
 //extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 //extern OutputPin<-1> plan_debug_pin1;
 //extern OutputPin<-1> plan_debug_pin2;
-extern OutputPin<-1> plan_debug_pin3;
-extern OutputPin<-1> plan_debug_pin4;
+//extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<-1> plan_debug_pin4;
 
 
 // Allocate planner structures
@@ -88,7 +88,7 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 #define value_vector gm.target	// alias for vector of values
 #define flag_vector unit		// alias for vector of flags
 
-static void _audit_buffers();
+//static void _audit_buffers();
 
 // execution routines (NB: These are called from the LO interrupt)
 static stat_t _exec_dwell(mpBuf_t *bf);
@@ -97,6 +97,7 @@ static stat_t _exec_command(mpBuf_t *bf);
 #ifdef __DEBUG
 static uint8_t _get_buffer_index(mpBuf_t *bf);
 static void _dump_plan_buffer(mpBuf_t *bf);
+static void _planner_report(const char *msg);
 #endif
 
 /*
@@ -261,7 +262,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
 	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -293,7 +294,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -471,7 +472,7 @@ mpBuf_t * mp_get_run_buffer()
 
 bool mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
 {
-    _audit_buffers();           // diagnostic audit for buffer chain integrity
+//    _audit_buffers();           // diagnostic audit for buffer chain integrity
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                            // advance to next run buffer
@@ -540,7 +541,7 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 
 stat_t mp_plan_buffer()
 {
-    plan_debug_pin1 = 1;
+//    plan_debug_pin1 = 1;
 
     // Criteria to replan:
     // 0) There are items in the buffer that need replanning.
@@ -548,7 +549,7 @@ stat_t mp_plan_buffer()
     // 2) Less than MIN_PLANNED_TIME in the planner
 
     if (!mb.needs_replanned) {
-        plan_debug_pin1 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
     bool do_continue = false;
@@ -563,14 +564,20 @@ stat_t mp_plan_buffer()
     }
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
 
+#ifdef __DIAGNOSTICS // +++++
+//    if (total_buffer_time < EPSILON) {
+//        printf ("{\"debug\":\"Q empty\"}\n");
+//    }
+#endif
+
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
-        plan_debug_pin4 = 1;
+//        plan_debug_pin4 = 1;
     }
 
     if (!do_continue) {
-        plan_debug_pin4 = 0;
-        plan_debug_pin1 = 0;
+//        plan_debug_pin4 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
 
@@ -585,8 +592,8 @@ stat_t mp_plan_buffer()
     mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = false;
 
-    plan_debug_pin4 = 0;
-    plan_debug_pin1 = 0;
+//    plan_debug_pin4 = 0;
+//    plan_debug_pin1 = 0;
     return (STAT_OK);
 }
 
@@ -632,10 +639,9 @@ void mp_planner_time_accounting() {
     mb.time_in_planner = time_in_planner;
 }
 
-#ifdef DEBUG
-
-#warning DEBUG TRAPS ENABLED
-
+//#ifdef DEBUG
+//#warning DEBUG TRAPS ENABLED
+/*
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 static void _audit_buffers()
@@ -644,11 +650,13 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
+        _planner_report("buffer audit1");
         _debug_trap();
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
+        _planner_report("buffer audit2");
         _debug_trap();
     }
 
@@ -657,6 +665,7 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
+            _planner_report("buffer audit3");
             _debug_trap();
         }
 
@@ -673,25 +682,28 @@ static void _audit_buffers()
             if (bf->buffer_state == MP_BUFFER_PLANNING) {
                 __NOP();
             } else {
+                _planner_report("buffer audit4");
                 _debug_trap();
             }
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit5");
             _debug_trap();
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit6");
             _debug_trap();
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit7");
             _debug_trap();
         }
-
         // Now look at the next one.
         bf = bf->nx;
     }
@@ -700,7 +712,28 @@ static void _audit_buffers()
 #pragma GCC pop_options
 // About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
 
-#endif // DEBUG
+static void _planner_report(const char *msg)
+{
+    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
+
+    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"replan\":%d",
+                mb.bf[i].buffer_state,
+                mb.bf[i].move_type,
+                mb.bf[i].locked,
+                mb.bf[i].replannable);
+        if (&mb.bf[i] == mb.r) {
+            printf(", \"RUN\":t");}
+        if (&mb.bf[i] == mb.q) {
+            printf(", \"QUE\":t");}
+        if (&mb.bf[i] == mb.w) {
+            printf(", \"WRT\":t");}
+        printf("}}\n");
+    }
+}
+
+//#endif // DEBUG
+*/
 
 /****************************
  * END OF PLANNER FUNCTIONS *
@@ -715,83 +748,3 @@ static void _audit_buffers()
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
  ***********************************************************************************/
-
-//************************************************************************************
-//***** DEBUG CODE *******************************************************************
-//************************************************************************************
-
-/****** DEBUG Code ******	(see beginning of file for static function prototypes) */
-
-#ifdef __DEBUG
-
-// currently this routine is only used by debug routines
-uint8_t mp_get_buffer_index(mpBuf_t *bf)
-{
-    mpBuf_t *b = bf;				// temp buffer pointer
-
-    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-        if (b->pv > b) {
-            return (i);
-        }
-        b = b->pv;
-    }
-    return(cm_panic(PLANNER_BUFFER_POOL_SIZE, NULL));	// should never happen
-}
-
-void mp_dump_running_plan_buffer() { _dump_plan_buffer(mb.r);}
-
-void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[index]);	}
-
-static void _dump_plan_buffer(mpBuf_t *bf)
-{
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
-			_get_buffer_index(bf),
-			bf->buffer_state,
-			bf->move_type,
-			bf->move_state,
-			bf->replannable);
-
-	print_scalar(PSTR("line number:     "), bf->linenum);
-	print_vector(PSTR("position:        "), mm.position, AXES);
-	print_vector(PSTR("target:          "), bf->target, AXES);
-	print_vector(PSTR("unit:            "), bf->unit, AXES);
-	print_scalar(PSTR("jerk:            "), bf->jerk);
-	print_scalar(PSTR("time:            "), bf->time);
-	print_scalar(PSTR("length:          "), bf->length);
-	print_scalar(PSTR("head_length:     "), bf->head_length);
-	print_scalar(PSTR("body_length:     "), bf->body_length);
-	print_scalar(PSTR("tail_length:     "), bf->tail_length);
-	print_scalar(PSTR("entry_velocity:  "), bf->entry_velocity);
-	print_scalar(PSTR("cruise_velocity: "), bf->cruise_velocity);
-	print_scalar(PSTR("exit_velocity:   "), bf->exit_velocity);
-	print_scalar(PSTR("exit_vmax:       "), bf->exit_vmax);
-	print_scalar(PSTR("entry_vmax:      "), bf->entry_vmax);
-	print_scalar(PSTR("cruise_vmax:     "), bf->cruise_vmax);
-	print_scalar(PSTR("delta_vmax:      "), bf->delta_vmax);
-	print_scalar(PSTR("braking_velocity:"), bf->braking_velocity);
-}
-
-void mp_dump_runtime_state(void)
-{
-	fprintf_P(stderr, PSTR("***Runtime Singleton (mr)\n"));
-	print_scalar(PSTR("line number:       "), mr.linenum);
-	print_vector(PSTR("position:          "), mr.position, AXES);
-	print_vector(PSTR("target:            "), mr.target, AXES);
-	print_scalar(PSTR("length:            "), mr.length);
-
-	print_scalar(PSTR("move_time:         "), mr.move_time);
-//	print_scalar(PSTR("accel_time;        "), mr.accel_time);
-//	print_scalar(PSTR("elapsed_accel_time:"), mr.elapsed_accel_time);
-	print_scalar(PSTR("midpoint_velocity: "), mr.midpoint_velocity);
-//	print_scalar(PSTR("midpoint_accel:    "), mr.midpoint_acceleration);
-//	print_scalar(PSTR("jerk_div2:         "), mr.jerk_div2);
-
-	print_scalar(PSTR("segments:          "), mr.segments);
-	print_scalar(PSTR("segment_count:     "), mr.segment_count);
-	print_scalar(PSTR("segment_move_time: "), mr.segment_move_time);
-//	print_scalar(PSTR("segment_accel_time:"), mr.segment_accel_time);
-	print_scalar(PSTR("microseconds:      "), mr.microseconds);
-	print_scalar(PSTR("segment_length:	  "), mr.segment_length);
-	print_scalar(PSTR("segment_velocity:  "), mr.segment_velocity);
-}
-#endif // __DEBUG
