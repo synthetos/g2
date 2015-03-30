@@ -564,8 +564,8 @@ stat_t mp_plan_buffer()
     if (!do_continue && (mb.planner_timer < SysTickTimer.getValue()) ) {
         do_continue = true;
     }
-    float total_buffer_time = mb.time_in_run + mb.time_in_planner;
 
+    float total_buffer_time = mb.time_in_run + mb.time_in_planner;
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
         plan_debug_pin4 = 1;
@@ -577,19 +577,13 @@ stat_t mp_plan_buffer()
         return (STAT_OK);
     }
 
-    // Call mp_planner_time_accounting() before planning to go through and lock all the
-    // moves up to MIN_PLANNED_TIME, in an attempt to keep the runtime from crashing into
-    // the planner.
-//    mp_planner_time_accounting();
-
     // Now, finally, plan the buffer.
-    mp_plan_block_list(mb.q->pv, false);
+    mp_plan_block_list(mb.q->pv);
 
     if (cm.hold_state != FEEDHOLD_HOLD) {
-//    if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
         st_request_exec_move();					// requests an exec if the runtime is not busy
-    // NB: BEWARE! the exec may result in the planner buffer being
-    // processed immediately and then freed - invalidating the contents
+        // NB: BEWARE! the exec may result in the planner buffer being
+        // processed immediately and then freed - invalidating the contents
     }
 
     mb.planner_timer = 0; // clear the planner timer
@@ -612,24 +606,25 @@ bool mp_is_it_phat_city_time() {
 
 static void _planner_time_accounting() 
 {
-    if ((mb.time_in_run > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
-        return;
+//    if (((mb.time_in_run + mb.time_locked) > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
+//        return;
 
     mpBuf_t *bf = mp_get_first_buffer();  // potential to return a NULL buffer
     mpBuf_t *bp = bf;
 
-    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
-
     if (bf == NULL) {
-        mb.time_in_planner = time_in_planner;
+        mb.time_in_planner = 0;
         return;
     }
 
+    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
+
+    // Now step through the moves and add up the planner time, locking up until MIN_PLANNED_TIME
     while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
         if (bp->buffer_state == MP_BUFFER_QUEUED) {
             if (!bp->locked) {
                 if (time_in_planner < MIN_PLANNED_TIME) {
-                    bp->locked = true;;
+                    bp->locked = true;
                 }
             } // !locked
 

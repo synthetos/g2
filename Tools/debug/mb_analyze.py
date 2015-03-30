@@ -36,7 +36,7 @@ def load_pool(filename):
             if current_buffer == pool['q']:
                 pool[current_buffer]['is_q'] = True
         else:
-            match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9]+|[A-Z_]+)|true|false)', line)
+            match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9.]+|[A-Z_]+)|true|false)', line)
             if match:
                 key, val = match.groups()
                 if key == 'pv':
@@ -49,6 +49,8 @@ def load_pool(filename):
                     pool[current_buffer]['nx'] = nv
                 elif key == 'buffer_state':
                     pool[current_buffer]['buffer_state'] = val
+                elif key == 'real_move_time':
+                    pool[current_buffer]['real_move_time'] = val
     return pool
 
 def check_integrity(pool):
@@ -80,7 +82,7 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            print '0x%08x : %-20s %-8s %s' % (key, buffer['buffer_state'].strip(), 'locked' if buffer['locked'] else 'unlocked', pointer)
+            print '0x%08x : %-20s %-8s %-6s %04.2f' % (key, buffer['buffer_state'].strip(), 'locked' if buffer['locked'] else 'unlocked', pointer, float(buffer['real_move_time'])*60000)
 
 if __name__ == "__main__":
     pool = check_pool(sys.argv[1])

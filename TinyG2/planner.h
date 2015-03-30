@@ -78,10 +78,10 @@ typedef enum {
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 //#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time (also minimum move time)
-#define MIN_SEGMENT_USEC 		((float)1000)		// minimum segment time (also minimum move time)
-#define NOM_SEGMENT_USEC 		((float)4000)		// nominal segment time
+#define MIN_SEGMENT_USEC 		((float)750)		// minimum segment time (also minimum move time)
+#define NOM_SEGMENT_USEC 		((float)1500)		// nominal segment time
 
-#define MIN_PLANNED_USEC		((float)15000)		// minimum time in the planner below which we must replan immediately
+#define MIN_PLANNED_USEC		((float)20000)		// minimum time in the planner below which we must replan immediately
 #define PHAT_CITY_USEC			((float)80000)		// if you have at least this much time in the planner,
 
 #define JERK_MULTIPLIER			((float)1000000)	// DO NOT CHANGE - must always be 1 million
@@ -309,7 +309,7 @@ uint8_t mp_get_runtime_busy(void);
 bool mp_runtime_is_idle(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
-void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag);
+void mp_plan_block_list(mpBuf_t *bf);
 void mp_reset_replannable_list(void);
 
 // plan_zoid.c functions

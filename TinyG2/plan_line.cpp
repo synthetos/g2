@@ -240,11 +240,8 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *		These routines also set all blocks in the list to be replannable so the
  *		list can be recomputed regardless of exact stops and previous replanning
  *		optimizations.
- *
- *	[2] The mr_flag is used to tell replan to account for mr buffer's exit velocity (Vx)
- *		mr's Vx is always found in the provided bf buffer. Used to replan feedholds
  */
-void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
+void mp_plan_block_list(mpBuf_t *bf)
 {
     plan_debug_pin2 = 1;
 
@@ -283,9 +280,8 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         }
 
         // plan lines
-		if ((bp->pv == bf) || (mr_flag == true))  {
+		if (bp->pv == bf)  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
-            mr_flag = false;
 		} else {
 			bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
 		}
