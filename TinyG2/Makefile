@@ -494,7 +494,7 @@ ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
-$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
+$(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
