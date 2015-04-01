@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.10 // fixed some reporting errors involving units conversion
+#define TINYG_FIRMWARE_BUILD   		082.11 // fixes for spindle speed setting
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

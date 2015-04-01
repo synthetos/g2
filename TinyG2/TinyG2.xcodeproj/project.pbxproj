@@ -7683,7 +7683,7 @@
 		D45710B8170532AC00EA19A8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0620;
 				ORGANIZATIONNAME = "Rob Giseburt";
 			};
 			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "TinyG2" */;
@@ -8110,6 +8110,7 @@
 		D45710BD170532AC00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
