@@ -313,6 +313,9 @@ void mp_plan_block_list(mpBuf_t *bf)
         } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty2 in mp_plan_block_list");
             _debug_trap();
+        } else if (bp->buffer_state == MP_BUFFER_RUNNING) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "we just replanned a running buffer!");
+            _debug_trap();
         }
 	}
 

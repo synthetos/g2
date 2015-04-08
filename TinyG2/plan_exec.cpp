@@ -200,7 +200,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 */
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t)); // copy in the gcode model state
-        bf->move_state = MOVE_RUN;                       // signal the planner that this buffer is running
+        bf->replannable = false;                         // signal the planner that this buffer is not replnnalbe
+        bf->move_state = MOVE_RUN;                       // note that this buffer is running -- note the planner doesn't look at move_state
         mr.move_state = MOVE_NEW;
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
