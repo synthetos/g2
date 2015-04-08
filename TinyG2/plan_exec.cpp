@@ -236,6 +236,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (1) - We have a block midway through normal execution and a new feedhold request
     //   (1a) - The deceleration will fit in the length remaining in the running block (mr)
     //   (1b) - The deceleration will not fit in the running block
+    //   (1c) - 1a, expect the remaining move length would be less than fp_ZERO()
     //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
     //  (3) - We are in the middle of a block that is currently decelerating
     //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
@@ -318,11 +319,16 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 float available_length = get_axis_vector_length(mr.target, mr.position);
                 mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
 
-                if (available_length < mr.tail_length) {    // (1b) the deceleration has to span multiple moves
+
+                if (fp_ZERO(available_length - mr.tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
+                    cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                    mr.exit_velocity = 0;
+                    mr.tail_length = available_length;
+                } else if (available_length < mr.tail_length) {    // (1b) the deceleration has to span multiple moves
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                     mr.tail_length = available_length;
                     mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
-                } else {                                    // (1a) the deceleration will fit into the current move
+                } else {                                    // (1a)the deceleration will fit into the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr.exit_velocity = 0;
                 }
