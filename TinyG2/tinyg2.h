@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.03 // updated panic messages to be more informative
+#define TINYG_FIRMWARE_BUILD   		083.04 // fix for replanning a running buffer #72
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
