@@ -492,7 +492,7 @@ static void _init_assertions()
 static stat_t _test_assertions()
 {
 	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) {
-        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, "cs magic numbers"));
     }
 	return (STAT_OK);
 }

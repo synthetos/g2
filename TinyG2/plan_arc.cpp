@@ -299,15 +299,17 @@ static stat_t _compute_arc()
 
     // length is the total mm of travel of the helix (or just a planar arc)
     arc.length = hypot(arc.angular_travel * arc.radius, fabs(arc.linear_travel));
-    if (arc.length < cm.arc_segment_len) {
+//    if (arc.length < cm.arc_segment_len) {
+    if (arc.length < MIN_ARC_SEGMENT_LENGTH) {
         return (STAT_MINIMUM_LENGTH_MOVE);                  // arc is too short to draw
     }
     // Find the minimum number of segments that meets these constraints...
     _estimate_arc_time();	// get an estimate of execution time to inform segment calculation
 
     float segments_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * arc.radius - cm.chordal_tolerance));
-    float segments_for_minimum_distance = arc.length / cm.arc_segment_len;
-    float segments_for_minimum_time = arc.time * MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC;
+//    float segments_for_minimum_distance = arc.length / cm.arc_segment_len;
+    float segments_for_minimum_distance = arc.length / MIN_ARC_SEGMENT_LENGTH;
+    float segments_for_minimum_time = arc.time * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
 
     arc.segments = floor(min3(segments_for_chordal_accuracy,
                               segments_for_minimum_distance,

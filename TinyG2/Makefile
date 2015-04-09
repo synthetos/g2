@@ -221,8 +221,8 @@ ifeq ("$(PLATFORM)","G2v9i")
 	BASE_PLATFORM=v9_3x8c
 #	SETTINGS_FILE="settings_default.h"
 #	SETTINGS_FILE="settings_othermill.h"
-	SETTINGS_FILE="settings_probotixV90.h"
-#	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_probotixV90.h"
+	SETTINGS_FILE="settings_shapeoko2.h"
 #	SETTINGS_FILE="settings_shopbot_sbv300.h"
 #	SETTINGS_FILE="settings_shopbot_test.h"
 #	SETTINGS_FILE="settings_Ultimaker.h"
@@ -278,6 +278,7 @@ endif
 # Make sure we pass these into subprocesses (such as gdb)
 export PLATFORM
 export SETTINGS_FILE
+export DEBUG
 
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
@@ -493,7 +494,7 @@ ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
-$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
+$(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group

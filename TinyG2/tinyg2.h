@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		081.07 // resolving merge conflicts between edge and edge-io2
+#define TINYG_FIRMWARE_BUILD   		083.05 // fixed rare edge case with feedhold
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
