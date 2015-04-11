@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.05 // fixed rare edge case with feedhold
+#define TINYG_FIRMWARE_BUILD   		083.06 // Correction to forward difference calculation.
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
