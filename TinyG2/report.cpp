@@ -364,7 +364,7 @@ static stat_t _populate_unfiltered_status_report()
 		strcpy(nv->token, tmp);			//...or here.
 
 		if ((nv = nv->nx) == NULL) {
-			return (cm_panic(STAT_BUFFER_FULL_FATAL, "sr1"));	// should never be NULL unless SR length exceeds available buffer array
+			return (cm_panic(STAT_BUFFER_FULL_FATAL, "sr link NULL"));	// should never be NULL unless SR length exceeds available buffer array
         }
 	}
 	return (STAT_OK);

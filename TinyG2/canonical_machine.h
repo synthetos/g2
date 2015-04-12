@@ -325,7 +325,6 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     float minimum_time;					// minimum time possible for move given axis constraints
     float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
-    float spindle_speed;		// G	// in RPM
     float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
     uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
@@ -450,7 +449,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	// hidden system settings
 //	float min_segment_len;				// line drawing resolution in mm
-	float arc_segment_len;				// arc drawing resolution in mm
+//	float arc_segment_len;				// arc drawing resolution in mm
 //	float estd_segment_usec;			// approximate segment time in microseconds
 
 	// gcode power-on default settings - defaults are not the same as the gm state
