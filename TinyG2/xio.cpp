@@ -532,7 +532,7 @@ void xio_init()
 stat_t xio_test_assertions()
 {
     if ((BAD_MAGIC(xio.magic_start)) || (BAD_MAGIC(xio.magic_end))) {
-        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, NULL));
+        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, "xio  magic numbers"));
     }
     return (STAT_OK);
 }

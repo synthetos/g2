@@ -32,3 +32,4 @@ JLink.log
 Tools/gcc-arm-none-eabi
 openocd.cfg
 openocd.log
+TinyG2/mb.txt

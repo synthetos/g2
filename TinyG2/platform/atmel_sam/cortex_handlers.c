@@ -56,9 +56,7 @@ void PMC_Handler        (void) __attribute__ ((weak, alias("__halt")));
 void EFC0_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void EFC1_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void UART_Handler       (void) __attribute__ ((weak, alias("__halt")));
-#ifdef _SAM3XA_SMC_INSTANCE_
 void SMC_Handler        (void) __attribute__ ((weak, alias("__halt")));
-#endif
 #ifdef _SAM3XA_SDRAMC_INSTANCE_
 void SDRAMC_Handler     (void) __attribute__ ((weak, alias("__halt")));
 #endif
@@ -79,9 +77,7 @@ void PIOF_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void USART0_Handler     (void) __attribute__ ((weak, alias("__halt")));
 void USART1_Handler     (void) __attribute__ ((weak, alias("__halt")));
 void USART2_Handler     (void) __attribute__ ((weak, alias("__halt")));
-#ifdef _SAM3XA_USART3_INSTANCE_
 void USART3_Handler     (void) __attribute__ ((weak, alias("__halt")));
-#endif
 void HSMCI_Handler      (void) __attribute__ ((weak, alias("__halt")));
 void TWI0_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void TWI1_Handler       (void) __attribute__ ((weak, alias("__halt")));
@@ -107,9 +103,7 @@ void DACC_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void DMAC_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void UOTGHS_Handler     (void) __attribute__ ((weak));
 void TRNG_Handler       (void) __attribute__ ((weak, alias("__halt")));
-#ifdef _SAM3XA_EMAC_INSTANCE_
 void EMAC_Handler       (void) __attribute__ ((weak, alias("__halt")));
-#endif
 void CAN0_Handler       (void) __attribute__ ((weak, alias("__halt")));
 void CAN1_Handler       (void) __attribute__ ((weak, alias("__halt")));
 
