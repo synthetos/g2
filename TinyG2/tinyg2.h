@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		082.11 // fixes for spindle speed setting
+#define TINYG_FIRMWARE_BUILD   		083.07 // Merge edge-replan-replan into edge
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -110,10 +110,10 @@
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
 //typedef char char_t;			// Vestigal. Will be removed at some point
 
-                                                    // gets rely on nv->index having been set
-#define GET_TABLE_WORD(a)  cfgArray[nv->index].a    // get word value from cfgArray
-#define GET_TABLE_BYTE(a)  cfgArray[nv->index].a    // get byte value from cfgArray
-#define GET_TABLE_FLOAT(a) cfgArray[nv->index].a    // get byte value from cfgArray
+													// gets rely on nv->index having been set
+#define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray
+#define GET_TABLE_BYTE(a)  cfgArray[nv->index].a	// get byte value from cfgArray
+#define GET_TABLE_FLOAT(a) cfgArray[nv->index].a	// get byte value from cfgArray
 #define GET_TOKEN_BYTE(a)  cfgArray[i].a            // get token byte value from cfgArray
 
 #define GET_TOKEN_STRING(i,a) strcpy_P(a, (char *)&cfgArray[(index_t)i].token); // populate the token string given the index

@@ -449,7 +449,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	// hidden system settings
 //	float min_segment_len;				// line drawing resolution in mm
-	float arc_segment_len;				// arc drawing resolution in mm
+//	float arc_segment_len;				// arc drawing resolution in mm
 //	float estd_segment_usec;			// approximate segment time in microseconds
 
 	// gcode power-on default settings - defaults are not the same as the gm state

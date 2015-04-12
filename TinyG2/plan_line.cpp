@@ -139,7 +139,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
     // get a cleared buffer and setup move variables
     if ((bf = mp_get_write_buffer()) == NULL) {                     // never supposed to fail
-        return(cm_panic(STAT_BUFFER_FULL_FATAL, "pl1"));
+        return(cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in aline"));
     }
     bf->bf_func = mp_exec_aline;                                    // register the callback to the exec function
     bf->length = length;
@@ -240,13 +240,14 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *		These routines also set all blocks in the list to be replannable so the
  *		list can be recomputed regardless of exact stops and previous replanning
  *		optimizations.
- *
- *	[2] The mr_flag is used to tell replan to account for mr buffer's exit velocity (Vx)
- *		mr's Vx is always found in the provided bf buffer. Used to replan feedholds
  */
-void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
+void mp_plan_block_list(mpBuf_t *bf)
 {
     plan_debug_pin2 = 1;
+
+#ifdef DEBUG
+    volatile uint32_t start_time = SysTickTimer.getValue();
+#endif
 
     // the the exec not to change the moves out from under us
     mb.planning = true;
@@ -268,15 +269,19 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         // plan dwells, commands and other move types
         if (bp->move_type != MOVE_TYPE_ALINE) {
             bp->replannable = false;
-            bp->buffer_state = MP_BUFFER_QUEUED;
+            if (bp->buffer_state == MP_BUFFER_PLANNING) {
+                bp->buffer_state = MP_BUFFER_QUEUED;
+            } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+                rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty1 in mp_plan_block_list");
+                _debug_trap();
+            }
             // TODO: Add support for non-plan-to-zero commands by caching the correct pv value
             continue;
         }
 
         // plan lines
-		if ((bp->pv == bf) || (mr_flag == true))  {
+		if (bp->pv == bf)  {
 			bp->entry_velocity = bp->entry_vmax;		// first block in the list
-            mr_flag = false;
 		} else {
 			bp->entry_velocity = bp->pv->exit_velocity;	// other blocks in the list
 		}
@@ -289,22 +294,29 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
-            while(1);
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero velocity in mp_plan_block_list");
+            _debug_trap();
         }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
 		// Test for optimally planned trapezoids - only need to check various exit conditions
-        // We also lock if the planner doesn't have more than MIN_PLANNED_TIME worth of moves in it that are locked.
         if  ( ((fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
                (fp_EQ(bp->exit_velocity, bp->nx->entry_vmax)) ) ||
                ((bp->pv->replannable == false) && fp_EQ(bp->exit_velocity, (bp->entry_velocity + bp->delta_vmax))) )
             {
             bp->replannable = false;
         }
-        bp->buffer_state = MP_BUFFER_QUEUED;
+        if (bp->buffer_state == MP_BUFFER_PLANNING) {
+            bp->buffer_state = MP_BUFFER_QUEUED;
+        } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty2 in mp_plan_block_list");
+            _debug_trap();
+        } else if (bp->buffer_state == MP_BUFFER_RUNNING) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "we just replanned a running buffer!");
+            _debug_trap();
+        }
 	}
 
     if (bp->move_type == MOVE_TYPE_ALINE) {
@@ -318,16 +330,28 @@ void mp_plan_block_list(mpBuf_t *bf, uint8_t mr_flag)
         plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
-            rpt_exception(STAT_MINIMUM_TIME_MOVE, "diagnostic ");
-            while(1);
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "min time move in mp_plan_block_list");
+            _debug_trap();
         }
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+
+        if (bp->buffer_state == MP_BUFFER_PLANNING) {
+            bp->buffer_state = MP_BUFFER_QUEUED;
+        } else if (bp->buffer_state == MP_BUFFER_EMPTY) {
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "buffer empty3 in mp_plan_block_list");
+            _debug_trap();
+        }
     }
 
-    // since it was locked before, this will incorporate any changes when we were calculating
-    bp->buffer_state = MP_BUFFER_QUEUED;
+#ifdef DEBUG
+    volatile uint32_t end_time = SysTickTimer.getValue();
+    if ((end_time - start_time) > (MIN_PLANNED_USEC / 1000)) {
+        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "time mis-match in mp_plan_block_list");
+        _debug_trap();
+    }
+#endif
 
     // let the exec know we're done planning, and that the times are likely wrong
     mb.planning = false;
@@ -520,8 +544,9 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
  0.7803358969289657274992034530009202136449618925894543
 
 */
+//#define __FIXED_JERK
+//#define __TEST_JERKg
 //#define __OLD_JERK
-//#define __TEST_JERK
 #define __REVISED_JERK
 
 static void _calculate_jerk(mpBuf_t *bf)

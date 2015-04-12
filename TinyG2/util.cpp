@@ -48,7 +48,7 @@ void _debug_trap() {
         __NOP();
     }
 }
-#pragma GCC pop_options
+#pragma GCC reset_options
 #else
 void _debug_trap() {
     // We might be able to put a print here, but it MIGHT interrupt other output

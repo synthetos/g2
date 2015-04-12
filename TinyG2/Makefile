@@ -52,6 +52,10 @@ USER_LIBS =
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
+DEBUG ?= 0
+#DEBUG ?= 1 # Use this to turn on some debugging functions
+#DEBUG ?= 2 # Use this for DEBUG=1 + some debug traps that need a HW debugger
+
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
@@ -249,18 +253,11 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
-##### TEMPORARY TEMPORARY TEMPORARY ####
-
-DEBUG ?= 2
-
-##### END TEMPORARY TEMPORARY TEMPORARY ####
-
-
 ifeq ($(DEBUG),1)
 	DEVICE_DEFINES += DEBUG=1
 endif
 ifeq ($(DEBUG),2)
-DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
+	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
 endif
 
 
@@ -278,6 +275,7 @@ endif
 # Make sure we pass these into subprocesses (such as gdb)
 export PLATFORM
 export SETTINGS_FILE
+export DEBUG
 
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
