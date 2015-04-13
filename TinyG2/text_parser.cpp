@@ -146,7 +146,7 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
  * text_response() - text mode responses
  */
 static const char prompt_ok[] PROGMEM = "tinyg [%s] ok> ";
-static const char prompt_err[] PROGMEM = "tinyg [%s] err: %s: %s ";
+static const char prompt_err[] PROGMEM = "tinyg [%s] err[%d]: %s: %s ";
 
 void text_response(const stat_t status, char *buf)
 {
@@ -158,7 +158,7 @@ void text_response(const stat_t status, char *buf)
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
 		fprintf_P(stderr, prompt_ok, units);
 	} else {
-		fprintf_P(stderr, prompt_err, units, get_status_message(status), buf);
+		fprintf_P(stderr, prompt_err, units, (int)status, get_status_message(status), buf);
 	}
 	nvObj_t *nv = nv_body+1;
 

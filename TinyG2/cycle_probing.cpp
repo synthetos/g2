@@ -54,7 +54,7 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	// probe destination
 	float start_position[AXES];
 	float target[AXES];
-	float flags[AXES];
+	bool flags[AXES];
 };
 static struct pbProbingSingleton pb;
 
@@ -107,7 +107,7 @@ static stat_t _set_pb_func(uint8_t (*func)())
  *	to cm_get_runtime_busy() is about.
  */
 
-uint8_t cm_straight_probe(float target[], float flags[])
+uint8_t cm_straight_probe(float target[], bool flags[])
 {
     // trap zero feed rate condition
     if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -115,7 +115,8 @@ uint8_t cm_straight_probe(float target[], float flags[])
     }
 
     // error if no axes specified
-    if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z])) {
+//    if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z])) {
+    if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z]) {
         return (STAT_GCODE_AXIS_IS_MISSING);
     }
 
@@ -255,12 +256,21 @@ static stat_t _probing_finish()
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
 	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
-	if (fp_TRUE(pb.flags[AXIS_X])) printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]);
-	if (fp_TRUE(pb.flags[AXIS_Y])) printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]);
-	if (fp_TRUE(pb.flags[AXIS_Z])) printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]);
-	if (fp_TRUE(pb.flags[AXIS_A])) printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]);
-	if (fp_TRUE(pb.flags[AXIS_B])) printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
-	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
+
+//	if (fp_TRUE(pb.flags[AXIS_X])) printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]);
+//	if (fp_TRUE(pb.flags[AXIS_Y])) printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]);
+//	if (fp_TRUE(pb.flags[AXIS_Z])) printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]);
+//	if (fp_TRUE(pb.flags[AXIS_A])) printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]);
+//	if (fp_TRUE(pb.flags[AXIS_B])) printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
+//	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
+
+	if (pb.flags[AXIS_X]) { printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]); }
+	if (pb.flags[AXIS_Y]) { printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]); }
+	if (pb.flags[AXIS_Z]) { printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]); }
+	if (pb.flags[AXIS_A]) { printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]); }
+	if (pb.flags[AXIS_B]) { printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]); }
+	if (pb.flags[AXIS_C]) { printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]); }
+    
 	printf_P(PSTR("}}\n"));
 
 	return (_set_pb_func(_probing_finalize_exit));

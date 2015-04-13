@@ -42,8 +42,8 @@ cmSpindleton_t spindle;
 
 /**** Static functions ****/
 
-static void _exec_spindle_speed(float *value, float *flag);
-static void _exec_spindle_control(float *value, float *flag);
+static void _exec_spindle_speed(float *value, bool *flag);
+static void _exec_spindle_control(float *value, bool *flag);
 static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction);
 
 /*
@@ -62,7 +62,8 @@ void spindle_init()
 void spindle_reset()
 {
     float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
-    _exec_spindle_speed(value, value);
+    bool flags[] = { 1,0,0,0,0,0 };
+   _exec_spindle_speed(value, flags);
     cm_spindle_off_immediate();                 // turn spindle off
 }
 
@@ -76,11 +77,12 @@ stat_t cm_set_spindle_speed(float speed)
 //	if (speed > cfg.max_spindle speed) { return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);}
 
     float value[AXES] = { speed, 0,0,0,0,0 };
-    mp_queue_command(_exec_spindle_speed, value, value);
+    bool flags[] = { 1,0,0,0,0,0 };
+    mp_queue_command(_exec_spindle_speed, value, flags);
     return (STAT_OK);
 }
 
-static void _exec_spindle_speed(float *value, float *flag)
+static void _exec_spindle_speed(float *value, bool *flag)
 {
     spindle.speed = value[0];
     spindle.direction = (cmSpindleDir)value[1];
@@ -98,7 +100,8 @@ void cm_spindle_off_immediate()
 {
     spindle.enable = SPINDLE_OFF;
     float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
-    _exec_spindle_control(value, value);
+    bool flags[] =  { 1,0,0,0,0,0 };
+    _exec_spindle_control(value, flags);
 }
 
 void cm_spindle_optional_pause(bool option)
@@ -115,7 +118,8 @@ void cm_spindle_resume(float dwell_seconds)
         spindle.enable = SPINDLE_ON;
         mp_request_out_of_band_dwell(dwell_seconds);
         float value[] = { (float)SPINDLE_ON, (float)spindle.direction, 0,0,0,0 };
-        _exec_spindle_control(value, value);
+        bool flags[] =  { 1,0,0,0,0,0 };
+        _exec_spindle_control(value, flags);
     }
 }
 
@@ -137,7 +141,8 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
         }
     }
 	float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, value);
+    bool flags[] =  { 1,0,0,0,0,0 };
+	mp_queue_command(_exec_spindle_control, value, flags);
 	return(STAT_OK);
 }
 
@@ -154,7 +159,7 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
     #define _set_spindle_direction_bit_lo() gpio_set_bit_off(SPINDLE_DIR)
 #endif
 
-static void _exec_spindle_control(float *value, float *flag)
+static void _exec_spindle_control(float *value, bool *flag)
 {
     // set the direction first
     spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
@@ -253,7 +258,8 @@ stat_t cm_set_dir(nvObj_t *nv)
 {
     set_01(nv);
     float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
-    _exec_spindle_control(value, value);
+    bool flags[] =  { 1,1,0,0,0,0 };
+    _exec_spindle_control(value, flags);
     return (STAT_OK);
 }
 

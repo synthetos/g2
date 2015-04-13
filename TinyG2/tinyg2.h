@@ -38,13 +38,13 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.09 // Added TinyG2 v9k compile options (you can stop using v9i)
+#define TINYG_FIRMWARE_BUILD   		083.33 // arc testing; testing
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
-#define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
+#define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9K			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
 
 /****** COMPILE-TIME SETTINGS ******/
@@ -182,6 +182,12 @@ typedef enum {
     AXIS_V,                     // reserved
     AXIS_W                      // reserved
 } cmAxes;
+
+typedef enum {
+    OFS_I = 0,
+    OFS_J,
+    OFS_K
+} cmIJKOffsets;
 
 typedef enum {
     MOTOR_1 = 0,
@@ -414,10 +420,10 @@ char *get_status_message(stat_t status);
 #define	STAT_SPINDLE_SPEED_BELOW_MINIMUM 149
 
 #define	STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
-#define	STAT_S_WORD_IS_MISSING 151
-#define	STAT_S_WORD_IS_INVALID 152
-#define	STAT_SPINDLE_MUST_BE_OFF 153
-#define	STAT_SPINDLE_MUST_BE_TURNING 154				// some canned cycles require spindle to be turning when called
+#define	STAT_SPINDLE_MUST_BE_OFF 151
+#define	STAT_SPINDLE_MUST_BE_TURNING 152				// some canned cycles require spindle to be turning when called
+#define	STAT_ARC_ERROR_RESERVED 153                     // RESERVED
+#define	STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154        // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
 #define	STAT_ARC_SPECIFICATION_ERROR 155				// generic arc specification error
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156	// arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified
@@ -443,12 +449,12 @@ char *get_status_message(stat_t status);
 #define STAT_Q_WORD_IS_INVALID 175
 #define STAT_R_WORD_IS_MISSING 176
 #define STAT_R_WORD_IS_INVALID 177
-#define STAT_T_WORD_IS_MISSING 178
-#define STAT_T_WORD_IS_INVALID 179
+#define	STAT_S_WORD_IS_MISSING 178
+#define	STAT_S_WORD_IS_INVALID 179
 
-#define	STAT_ERROR_180 180									// reserved for Gcode errors
-#define	STAT_ERROR_181 181
-#define	STAT_ERROR_182 182
+#define STAT_T_WORD_IS_MISSING 180
+#define STAT_T_WORD_IS_INVALID 181
+#define	STAT_ERROR_182 182									// reserved for Gcode errors
 #define	STAT_ERROR_183 183
 #define	STAT_ERROR_184 184
 #define	STAT_ERROR_185 185

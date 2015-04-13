@@ -434,7 +434,13 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 	float tmp_time=0;				// used in computation
 	gms->minimum_time = 8675309;	// arbitrarily large number
 
-	// compute times for feed motion
+	// bypass time calculation for arcs - times have already been set in arc processing
+	if ((gms->motion_mode == MOTION_MODE_CW_ARC) ||
+	    (gms->motion_mode == MOTION_MODE_CCW_ARC)) {
+        return;
+    }
+
+	// compute times for feed and probe motion
 	if (gms->motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
 		if (gms->feed_rate_mode == INVERSE_TIME_MODE) {
 			inv_time = gms->feed_rate;	// NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
