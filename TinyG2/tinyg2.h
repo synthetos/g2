@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.07 // Merge edge-replan-replan into edge
+#define TINYG_FIRMWARE_BUILD   		083.08 // Work on Issue #76
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -160,16 +160,44 @@ typedef uint16_t magic_t;		        // magic number size
 #define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
 /***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
+// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+//  #if (MOTORS >= 6)  will work
 
-#define AXES		6			// number of axes supported in this version
-#define HOMING_AXES	4			// number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS		6			// number of motors on the board
-#define COORDS		6			// number of supported coordinate systems (1-6)
-#define PWMS		2			// number of supported PWM channels
+#define AXES        6           // number of axes supported in this version
+#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS      6           // number of motors on the board
+#define COORDS      6           // number of supported coordinate systems (1-6)
+#define PWMS        2           // number of supported PWM channels
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z,
+    AXIS_A,
+    AXIS_B,
+    AXIS_C,
+    AXIS_U,                     // reserved
+    AXIS_V,                     // reserved
+    AXIS_W                      // reserved
+} cmAxes;
+
+typedef enum {
+    MOTOR_1 = 0,
+    MOTOR_2,
+    MOTOR_3,
+    MOTOR_4,
+    MOTOR_5,
+    MOTOR_6
+} cmMotors;
+
+typedef enum {
+    PWM_1 = 0,
+    PWM_2
+} cmPWMs;
+
+/*
 #define AXIS_X		0
 #define AXIS_Y		1
 #define AXIS_Z		2
@@ -189,6 +217,7 @@ typedef uint16_t magic_t;		        // magic number size
 
 #define PWM_1		0
 #define PWM_2		1
+*/
 
 /************************************************************************************
  * STATUS CODES

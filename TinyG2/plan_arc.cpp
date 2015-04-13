@@ -257,8 +257,13 @@ static stat_t _compute_arc()
     // Calculate the theta (angle) of the current point (position)
     // arc.theta is starting point for theta (is also needed for calculating center point)
     arc.theta = _get_theta(-arc.offset[arc.plane_axis_0], -arc.offset[arc.plane_axis_1]);
+    arc.theta_deg = arc.theta * 3.141592653589793/180.0;    //+++++
     if(isnan(arc.theta) == true) {
         return(STAT_ARC_SPECIFICATION_ERROR);
+    }
+
+    if (arc.gm.linenum == 846) {
+        printf("BREAK\n");
     }
 
     //// compute the angular travel ////
@@ -271,6 +276,7 @@ static stat_t _compute_arc()
             arc.gm.target[arc.plane_axis_0] - arc.offset[arc.plane_axis_0] - arc.position[arc.plane_axis_0],
             arc.gm.target[arc.plane_axis_1] - arc.offset[arc.plane_axis_1] - arc.position[arc.plane_axis_1]);
 
+        arc.theta_end_deg = arc.theta_end * 3.141592653589793/180.0;    //+++++
         if(isnan(arc.theta_end) == true) {
             return (STAT_ARC_SPECIFICATION_ERROR);
         }
@@ -278,6 +284,7 @@ static stat_t _compute_arc()
             arc.theta_end += 2*M_PI;
         }
         arc.angular_travel = arc.theta_end - arc.theta;     // compute positive angular travel
+        arc.angular_travel_deg = arc.angular_travel * 3.141592653589793/180.0;    //+++++
         if (cm.gm.motion_mode == MOTION_MODE_CCW_ARC) {     // reverse travel direction if it's CCW arc
             arc.angular_travel -= 2*M_PI;
         }

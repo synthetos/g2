@@ -25,42 +25,46 @@
 #define MIN_ARC_SEGMENT_USEC	((float)10000)		// minimum arc segment time
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
-	magic_t magic_start;
-	uint8_t run_state;			// runtime state machine sequence
+    magic_t magic_start;
+    uint8_t run_state;          // runtime state machine sequence
 
-	float position[AXES];		// accumulating runtime position
-	float offset[3]; 	 		// IJK offsets
+    float position[AXES];       // accumulating runtime position
+    float offset[3];            // IJK offsets
 
-	float length;				// length of line or helix in mm
-	float time;					// total running time for arc (derived)
-	float theta;				// total angle specified by arc
-	float theta_end;            // (could be a local scope var - not needed in struct)
-	float radius;				// Raw R value, or computed via offsets
-	float angular_travel;		// travel along the arc
-	float linear_travel;		// travel along linear axis of arc
+    float length;               // length of line or helix in mm
+    float time;                 // total running time for arc (derived)
+    float theta;                // total angle specified by arc
+    float theta_end;            // (could be a local scope var - not needed in struct)
+    float radius;               // Raw R value, or computed via offsets
+    float angular_travel;       // travel along the arc
+    float linear_travel;        // travel along linear axis of arc
     float planar_travel;        // (could be local scope)
-    uint8_t full_circle;		// set true if full circle arcs specified
-    uint32_t rotations;			// Number of full rotations for full circles (P value)
+    uint8_t full_circle;        // set true if full circle arcs specified
+    uint32_t rotations;         // Number of full rotations for full circles (P value)
 
-	uint8_t plane_axis_0;		// arc plane axis 0 - e.g. X for G17
-	uint8_t plane_axis_1;		// arc plane axis 1 - e.g. Y for G17
-	uint8_t linear_axis; 		// linear axis (normal to plane)
+    float theta_deg;                // total angle specified by arc
+    float theta_end_deg;            // (could be a local scope var - not needed in struct)
+    float angular_travel_deg;       // travel along the arc
 
-	float segments;				// number of segments in arc or blend
-	int32_t segment_count;		// count of running segments
-	float segment_theta;		// angular motion per segment
-	float segment_linear_travel;// linear motion per segment
-	float center_0;				// center of circle at plane axis 0 (e.g. X for G17)
-	float center_1;				// center of circle at plane axis 1 (e.g. Y for G17)
+    cmAxes plane_axis_0;        // arc plane axis 0 - e.g. X for G17
+    cmAxes plane_axis_1;        // arc plane axis 1 - e.g. Y for G17
+    cmAxes linear_axis;         // linear axis (normal to plane)
 
-	GCodeState_t gm;			// Gcode state struct is passed for each arc segment.
+    float segments;             // number of segments in arc or blend
+    int32_t segment_count;      // count of running segments
+    float segment_theta;        // angular motion per segment
+    float segment_linear_travel;// linear motion per segment
+    float center_0;             // center of circle at plane axis 0 (e.g. X for G17)
+    float center_1;             // center of circle at plane axis 1 (e.g. Y for G17)
+
+    GCodeState_t gm;            // Gcode state struct is passed for each arc segment.
 //	Usage:
 //	uint32_t linenum;			// line number of the arc feed move - same for each segment
 //	float target[AXES];			// arc segment target
 //	float work_offset[AXES];	// offset from machine coord system for reporting (same for each segment)
 //	float move_time;			// segment_time: constant time per aline segment
 
-	magic_t magic_end;
+    magic_t magic_end;
 } arc_t;
 extern arc_t arc;
 
