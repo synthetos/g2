@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.08 // Work on Issue #76
+#define TINYG_FIRMWARE_BUILD   		083.09 // Added TinyG2 v9k compile options (you can stop using v9i)
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -196,28 +196,6 @@ typedef enum {
     PWM_1 = 0,
     PWM_2
 } cmPWMs;
-
-/*
-#define AXIS_X		0
-#define AXIS_Y		1
-#define AXIS_Z		2
-#define AXIS_A		3
-#define AXIS_B		4
-#define AXIS_C		5
-#define AXIS_U		6			// reserved
-#define AXIS_V		7			// reserved
-#define AXIS_W		8			// reserved
-
-#define MOTOR_1		0 			// define motor numbers and array indexes
-#define MOTOR_2		1			// must be defines. enums don't work
-#define MOTOR_3		2
-#define MOTOR_4		3
-#define MOTOR_5		4
-#define MOTOR_6		5
-
-#define PWM_1		0
-#define PWM_2		1
-*/
 
 /************************************************************************************
  * STATUS CODES
