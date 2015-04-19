@@ -531,7 +531,7 @@ static void _init_forward_diffs(float Vi, float Vt)
 	float half_h = h/2.0;
 	float half_Ch_3 = C * half_h * half_h * half_h;
 	float half_Bh_4 = B * half_h * half_h * half_h * half_h;
-	float half_Ah_5 = C * half_h * half_h * half_h * half_h * half_h;
+	float half_Ah_5 = A * half_h * half_h * half_h * half_h * half_h;
 	mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + Vi;
 }
 
