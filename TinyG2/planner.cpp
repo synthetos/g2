@@ -196,6 +196,8 @@ void mp_set_steps_to_runtime_position()
         mr.position_steps[motor] = step_position[motor];
         mr.commanded_steps[motor] = step_position[motor];
         en_set_encoder_steps(motor, step_position[motor]);  // write steps to encoder register
+        mr.encoder_steps[motor] = en_read_encoder(motor);
+//xxxxxxx mr.encoder_steps[motor] = en.en[motor].encoder_steps;
 
         // These must be zero:
         mr.following_error[motor] = 0;

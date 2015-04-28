@@ -43,7 +43,7 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	// controls for homing cycle
 	int8_t axis;					// axis currently being homed
 	int8_t homing_input;			// homing input for current axis
-    uint8_t set_coordinates;		// G28.4 flag. true = set coords to zero at the end of homing cycle
+    bool set_coordinates;		    // G28.4 flag. true = set coords to zero at the end of homing cycle
 	stat_t (*func)(int8_t axis);	// binding for callback function state machine
 
 	// per-axis parameters
@@ -62,7 +62,6 @@ struct hmHomingSingleton {			// persistent homing runtime variables
 	uint8_t saved_feed_rate_mode;	// G93, G94 global setting
 	float saved_feed_rate;			// F setting
 	float saved_jerk;				// saved and restored for each axis homed
-//    bool saved_limit_enable;        // limit switch processing / overrride
 };
 static struct hmHomingSingleton hm;
 
@@ -73,6 +72,8 @@ static stat_t _homing_axis_start(int8_t axis);
 static stat_t _homing_axis_clear(int8_t axis);
 static stat_t _homing_axis_search(int8_t axis);
 static stat_t _homing_axis_latch(int8_t axis);
+static stat_t _homing_axis_search2(int8_t axis);
+static stat_t _homing_axis_latch2(int8_t axis);
 static stat_t _homing_axis_zero_backoff(int8_t axis);
 static stat_t _homing_axis_set_zero(int8_t axis);
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity);
@@ -119,8 +120,8 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
  *
  *    0. Limits are automatically disabled. Shutdown and safety interlocks are not.
  *	  1. If a homing input is active on invocation, clear off the input (switch)
- *	  2. Search towards homing switch in the set direction until switch is hit
- *	  2. Move off the homing switch at latch velocity until switch opens
+ *	  2. Drive towards homing switch in the set direction until switch is hit
+ *	  2. Drive away from the homing switch at latch velocity until switch opens
  *	  3. Back off switch by the zero backoff distance and set zero for that axis
  *
  *	Homing works as a state machine that is driven by registering a callback function
@@ -171,7 +172,6 @@ stat_t cm_homing_cycle_start(void)
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
-//    cm.limit_enable = false;                // disable limit switch processing
 	return (STAT_OK);
 }
 
@@ -254,7 +254,7 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) {    // the switch is closed at startup
+	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) { // the switch is closed at startup
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {
@@ -267,22 +267,34 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
  	return (_set_homing_func(_homing_axis_search));			// start the search
 }
 
-static stat_t _homing_axis_search(int8_t axis)				// start the search
+static stat_t _homing_axis_search(int8_t axis)				// drive to switch
 {
+    printf("starting steps:   _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
 	cm_set_axis_jerk(axis, cm.a[axis].jerk_high);			// use the high-speed jerk for search onward
 	_homing_axis_move(axis, hm.search_travel, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_latch));
 }
 
-static stat_t _homing_axis_latch(int8_t axis)				// latch to switch open
+static stat_t _homing_axis_latch(int8_t axis)				// drive away from switch at low speed
 {
+    printf("finished search:  _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
 	mp_flush_planner();                                     // clear out the remaining search move
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
 	return (_set_homing_func(_homing_axis_zero_backoff));
+//	return (_set_homing_func(_homing_axis_search2));
 }
-
+/*
+static stat_t _homing_axis_search2(int8_t axis)				// drive to switch at low speed
+{
+    printf("finished latch    _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
+	mp_flush_planner();                                     // clear out the remaining search move
+	_homing_axis_move(axis, -(hm.latch_backoff + 2), hm.latch_velocity);
+	return (_set_homing_func(_homing_axis_zero_backoff));
+}
+*/
 static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
 {
+    printf("finished search2: _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
     mp_flush_planner();                                     // clear out the remaining latch move
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_set_zero));
@@ -290,6 +302,8 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
+    printf("finished backoff: _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
+
 	if (hm.set_coordinates) {
 		cm_set_position(axis, 0);
 		cm.homed[axis] = true;
@@ -299,6 +313,7 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 	cm_set_axis_jerk(axis, hm.saved_jerk);					// restore the max jerk value
 
     gpio_set_homing_mode(hm.homing_input, false);           // end homing mode
+    printf("finished setzero: _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
 	return (_set_homing_func(_homing_axis_start));
 }
 

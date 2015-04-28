@@ -236,7 +236,9 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     // perform homing operations if in homing mode
     // We want either edge -- leading on home and trailing on backoff
     if (in->homing_mode) {
+//        if (in->edge == INPUT_EDGE_LEADING) {
         cm_start_hold();
+//        }        
         return;
     }
     if (in->probing_mode) {

@@ -50,9 +50,9 @@
 #define SPINDLE_ENABLE_POLARITY     1       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_DWELL_TIME          1.5     //after unpausing and turning the spindle on, dwell for 1.5s
+#define SPINDLE_DWELL_TIME          1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
-#define ESC_BOOT_TIME               5000    //how long the ESC takes to boot, in milliseconds
+#define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
@@ -84,14 +84,23 @@
 #define JSON_VERBOSITY				JV_CONFIGS		        // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
-#define QUEUE_REPORT_VERBOSITY		QR_SINGLE
+//#define QUEUE_REPORT_VERBOSITY		QR_SINGLE           // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define QUEUE_REPORT_VERBOSITY		QR_OFF
 
-#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY     SR_VERBOSE              // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
 // edited for v9 code
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","spe","spd","hold","macs","cycs","sps"
+/*
+#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
+                                "unit","stat","coor","momo","dist","home","mots","plan","line",\
+                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps",\
+                                "_tez","_trz",\
+                                "_ts3","_ps3","_cs3","_es3","_xs3","_fe3"
+*/
+#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES
@@ -175,7 +184,8 @@
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX					500			// 500 million mm/(min^3)
-#define JERK_HIGH_SPEED				1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+//#define JERK_HIGH_SPEED				1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JERK_HIGH_SPEED				2000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
 
 #define JUNCTION_DEVIATION_XY       0.01        // larger is faster
@@ -352,8 +362,8 @@
 // *** PWM SPINDLE CONTROL ***
 
 #define P1_PWM_FREQUENCY		    100					// in Hz
-#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			    12800
+#define P1_CW_SPEED_LO			    10500				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			    16400
 #define P1_CW_PHASE_LO			    0.13				// phase [0..1]
 #define P1_CW_PHASE_HI			    0.17
 #define P1_CCW_SPEED_LO			    0
@@ -361,6 +371,12 @@
 #define P1_CCW_PHASE_LO			    0.1
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
+
+#define P1_USE_MAPPING_CUBIC
+#define P1_MAPPING_CUBIC_X3         2.1225328766717546e-013
+#define P1_MAPPING_CUBIC_X2        -7.2900167282605129e-009
+#define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
+#define P1_MAPPING_CUBIC_X0        -2.1301489219406905e-001
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
