@@ -59,6 +59,8 @@ DEBUG ?= 0
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
+SETTINGS_FILE = settings_othermill.h
+
 CFLAGS   :=
 CPPFLAGS :=
 
