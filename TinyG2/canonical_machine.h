@@ -615,7 +615,7 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(const uint8_t mode);                             // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(const float target[], const float flags[], bool defer_planning = false); // G1
+stat_t cm_straight_feed(const float target[], const float flags[]); // G1
 stat_t cm_arc_feed(const float target[],                                    // G2, G3 
                    const float flags[],
                    const float i, const float j, const float k,

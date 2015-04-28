@@ -157,6 +157,18 @@ stat_t mp_exec_move()
  *	The Kahan corrections have also been removed in 445.01 as they were not needed.
  */
 
+/**** NOTICE ** NOTICE ** NOTICE ****
+ **
+ **    mp_exec_aline is called in
+ **     --INTERRUPT CONTEXT!!--
+ **
+ **    Things we MUST NOT do
+ **            (even indirectly):
+ **       mp_plan_buffer()
+ **       printf
+ **
+ **** NOTICE ** NOTICE ** NOTICE ****/
+
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
     exec_debug_pin3 = 1;
@@ -288,7 +300,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             bf->entry_vmax = 0;                                         // set bp+0 as hold point
             mp_reset_replannable_list();                                // make it replan all the blocks
             mb.force_replan = true;
-            mp_plan_buffer();                                           // must replan now
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }
