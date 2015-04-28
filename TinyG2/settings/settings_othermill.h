@@ -100,7 +100,8 @@
                                 "_tez","_trz",\
                                 "_ts3","_ps3","_cs3","_es3","_xs3","_fe3"
 */
-#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
+//#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
+#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES

@@ -30,6 +30,7 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "canonical_machine.h"
+#include "encoder.h"    //++++++
 #include "spindle.h"
 #include "report.h"
 #include "gpio.h"
@@ -262,6 +263,8 @@ static stat_t _probing_finish()
 	if (fp_TRUE(pb.flags[AXIS_B])) printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
 	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
 	printf_P(PSTR("}}\n"));
+
+    en_show_encoder_snapshot(); //+++++
 
 	return (_set_pb_func(_probing_finalize_exit));
 }

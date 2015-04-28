@@ -2,7 +2,7 @@
  * encoder.c - encoder interface
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -29,6 +29,7 @@
 #include "config.h"
 #include "encoder.h"
 #include "canonical_machine.h"  // needed for cm_panic() in assertions
+#include "kinematics.h"
 
 /**** Allocate Structures ****/
 
@@ -99,6 +100,50 @@ float en_read_encoder(uint8_t motor)
 {
 	return((float)en.en[motor].encoder_steps);
 }
+
+/*
+ * en_take_encoder_snapshot()
+ * en_read_encoder_snapshot()
+ *
+ *  Take a snapshot of the encoder position before an accumulation has taken place
+ *  Do not disturb the accumulation
+ */
+void en_take_encoder_snapshot()
+{
+    for (uint8_t m=0; m<MOTORS; m++) {
+        en.snapshot[m] = en.en[m].encoder_steps + en.en[m].steps_run;
+    }
+/*
+    en.snapshot[MOTOR_1] = en.en[MOTOR_1].encoder_steps + en.en[MOTOR_1].steps_run;
+    en.snapshot[MOTOR_2] = en.en[MOTOR_2].encoder_steps + en.en[MOTOR_2].steps_run;
+    en.snapshot[MOTOR_3] = en.en[MOTOR_3].encoder_steps + en.en[MOTOR_3].steps_run;
+    en.snapshot[MOTOR_4] = en.en[MOTOR_4].encoder_steps + en.en[MOTOR_4].steps_run;
+    en.snapshot[MOTOR_5] = en.en[MOTOR_5].encoder_steps + en.en[MOTOR_5].steps_run;
+    en.snapshot[MOTOR_6] = en.en[MOTOR_6].encoder_steps + en.en[MOTOR_6].steps_run;
+*/
+}
+
+float en_get_encoder_snapshot_position()
+{
+    ik_forward_kinematics(en.snapshot, position);
+    return (&en.snapshot);
+}
+
+float *en_get_encoder_snapshot_position()
+{
+    ik_forward_kinematics(en.snapshot, position);
+    return (&en.snapshot);
+}
+
+/*
+void en_show_encoder_snapshot() 
+{
+    float position[AXES];
+
+    ik_forward_kinematics(en.snapshot, position);
+    printf ("Z snapshot: %1.6f\n", position[AXIS_Z]);
+}
+*/
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
