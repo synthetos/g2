@@ -30,7 +30,8 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "canonical_machine.h"
-#include "encoder.h"    //++++++
+#include "kinematics.h"
+#include "encoder.h"
 #include "spindle.h"
 #include "report.h"
 #include "gpio.h"
@@ -64,6 +65,7 @@ static struct pbProbingSingleton pb;
 static stat_t _probing_init();
 static stat_t _probing_start();
 static stat_t _probing_backoff();
+static stat_t _probing_touch();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
@@ -92,8 +94,8 @@ static stat_t _set_pb_func(uint8_t (*func)())
  *	OK, it also queues the function that's called once motion has stopped.
  *
  *  NOTE: it is *not* an error condition for the probe not to trigger.
- *  it is an error for the limit or homing switches to fire, or for some other
- *  configuration error.
+ *  it is an error for the limit or homing switches to fire,
+ *  or if there is some other configuration error.
  *
  *	--- Some further details ---
  *
@@ -206,7 +208,7 @@ static stat_t _probing_start()
 	// initial probe state, don't probe if we're already contacted!
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    // false is SW_OPEN in old code, and INPUT_INACTIVE in new
+    // INPUT_INACTIVE means switch is OPEN
 	if ( probe == INPUT_INACTIVE ) {
 		cm_straight_feed(pb.target, pb.flags);
         return (_set_pb_func(_probing_backoff));
@@ -231,10 +233,20 @@ static stat_t _probing_backoff()
     //  cm_set_feed_rate(cm.a[AXIS_Z].latch_velocity);
         cm_straight_feed(pb.start_position, pb.flags);
         return (_set_pb_func(_probing_finish));
+//        return (_set_pb_func(_probing_touch));
     } else {
         cm.probe_state = PROBE_FAILED;
         return (_set_pb_func(_probing_finish));
     }
+}
+
+/*
+ * _probing_touch()
+ */
+
+static stat_t _probing_touch()
+{
+    return (_set_pb_func(_probing_finish));
 }
 
 /*
@@ -246,8 +258,12 @@ static stat_t _probing_finish()
     int8_t probe = gpio_read_input(pb.probe_input);
 	cm.probe_state = (probe==true) ? PROBE_SUCCEEDED : PROBE_FAILED;
 
+    float position[AXES];
+    ik_forward_kinematics(en_get_encoder_snapshot_vector(), position);
+
 	for (uint8_t axis=0; axis<AXES; axis++ ) {
 		// if we got here because of a feed hold we need to keep the model position correct
+
 		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
 
 		// store the probe results
@@ -264,7 +280,7 @@ static stat_t _probing_finish()
 	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
 	printf_P(PSTR("}}\n"));
 
-    en_show_encoder_snapshot(); //+++++
+//    en_show_encoder_snapshot(); //+++++
 
 	return (_set_pb_func(_probing_finalize_exit));
 }

@@ -29,7 +29,6 @@
 #include "config.h"
 #include "encoder.h"
 #include "canonical_machine.h"  // needed for cm_panic() in assertions
-#include "kinematics.h"
 
 /**** Allocate Structures ****/
 
@@ -123,20 +122,18 @@ void en_take_encoder_snapshot()
 */
 }
 
-float en_get_encoder_snapshot_position()
+float en_get_encoder_snapshot_position(uint8_t motor)
 {
-    ik_forward_kinematics(en.snapshot, position);
-    return (&en.snapshot);
+    return (en.snapshot[motor]);
 }
 
-float *en_get_encoder_snapshot_position()
+float *en_get_encoder_snapshot_vector()
 {
-    ik_forward_kinematics(en.snapshot, position);
-    return (&en.snapshot);
+    return (en.snapshot);
 }
 
 /*
-void en_show_encoder_snapshot() 
+void en_show_encoder_snapshot()
 {
     float position[AXES];
 
