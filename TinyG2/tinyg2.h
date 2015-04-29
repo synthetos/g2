@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.10 // homing accuracy enhancements - working
+#define TINYG_FIRMWARE_BUILD   		083.11 // homing accuracy enhancements - testing
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

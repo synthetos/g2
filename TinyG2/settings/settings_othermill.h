@@ -203,7 +203,7 @@
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX/3)      // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
-#define X_LATCH_BACKOFF 	    	5                       // xlb  mm
+#define X_LATCH_BACKOFF 	    	1.5                     // xlb  mm
 #define X_ZERO_BACKOFF 		    	0.4                     // xzb  mm
 
 #define Y_AXIS_MODE 		    	AXIS_STANDARD
@@ -218,7 +218,7 @@
 #define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Y_LATCH_BACKOFF 	    	5
+#define Y_LATCH_BACKOFF 	    	1.5
 #define Y_ZERO_BACKOFF 		    	0.4
 
 #define Z_AXIS_MODE 		    	AXIS_STANDARD
@@ -237,7 +237,7 @@
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Z_LATCH_BACKOFF 	    	2
+#define Z_LATCH_BACKOFF 	    	1.5
 #define Z_ZERO_BACKOFF 		    	0.4
 
 // Rotary values are chosen to make the motor react the same as X for testing
@@ -254,7 +254,7 @@
 #define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY 	    	600
 #define A_LATCH_VELOCITY 	    	100
-#define A_LATCH_BACKOFF 	    	5
+#define A_LATCH_BACKOFF 	    	1.5
 #define A_ZERO_BACKOFF 		    	2
 
 #define B_AXIS_MODE 		    	AXIS_DISABLED	// DISABLED
@@ -270,7 +270,7 @@
 #define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY 		    600
 #define B_LATCH_VELOCITY 	    	100
-#define B_LATCH_BACKOFF 	    	5
+#define B_LATCH_BACKOFF 	    	1.5
 #define B_ZERO_BACKOFF 		    	2
 
 #define C_AXIS_MODE 	    		AXIS_DISABLED	// DISABLED
@@ -286,7 +286,7 @@
 #define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY 	    	600
 #define C_LATCH_VELOCITY 	    	100
-#define C_LATCH_BACKOFF 	    	5
+#define C_LATCH_BACKOFF 	    	1.5
 #define C_ZERO_BACKOFF 		    	2
 
 //*** Input / output settings ***
