@@ -33,6 +33,8 @@
 #include "text_parser.h"
 #include "canonical_machine.h"
 #include "planner.h"
+#include "encoder.h"
+#include "kinematics.h"
 #include "gpio.h"
 #include "report.h"
 
@@ -301,8 +303,14 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 	if (hm.set_coordinates) {
 		cm_set_position(axis, 0);
 		cm.homed[axis] = true;
-	} else {                                                // do not set axis if in G28.4 cycle
-		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
+
+	} else { // handle G28.4 cycle - set position to the point of switch closure  
+//		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
+        // set position to exact point of switch closure
+        cm_queue_flush();                                   // flush queue & end feedhold
+        float contact_position[AXES];
+        kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
+        _homing_axis_move(axis, contact_position[AXIS_Z], hm.search_velocity);
 	}
 	cm_set_axis_jerk(axis, hm.saved_jerk);					// restore the max jerk value
 
