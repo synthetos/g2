@@ -709,10 +709,10 @@ static stat_t _exec_aline_segment()
 		mr.encoder_steps[i] = en_read_encoder(i);			// get current encoder position (time aligns to commanded_steps)
 		mr.following_error[i] = mr.encoder_steps[i] - mr.commanded_steps[i];
 	}
-	ik_kinematics(mr.gm.target, mr.target_steps);			// now determine the target steps...
-	for (i=0; i<MOTORS; i++) {								// and compute the distances to be traveled
-		travel_steps[i] = mr.target_steps[i] - mr.position_steps[i];
-	}
+    kn_inverse_kinematics(mr.gm.target, mr.target_steps);   // now determine the target steps...
+    for (i=0; i<MOTORS; i++) {                              // and compute the distances to be traveled
+        travel_steps[i] = mr.target_steps[i] - mr.position_steps[i];
+    }
 
     // Update the mb->time_in_run -- we know it's missing the current segment's time before it's loaded, that's ok.
     mb.time_in_run -= mr.segment_time;

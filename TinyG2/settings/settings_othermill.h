@@ -93,15 +93,13 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
 // edited for v9 code
-/*
+
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
                                 "unit","stat","coor","momo","dist","home","mots","plan","line",\
-                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps",\
-                                "_tez","_trz",\
-                                "_ts3","_ps3","_cs3","_es3","_xs3","_fe3"
-*/
+                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps"
+
 //#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
-#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
+//#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES

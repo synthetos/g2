@@ -35,7 +35,6 @@
 #include "planner.h"
 #include "gpio.h"
 #include "report.h"
-#include "encoder.h"    // +++++
 
 /**** Homing singleton structure ****/
 
@@ -268,8 +267,6 @@ static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 
 static stat_t _homing_axis_search(int8_t axis)				// drive to switch
 {
-//    printf("starting steps:   _es3: %1.0f, %1.0f\n", mr.encoder_steps[MOTOR_3], en_read_condi);
-//    printf("starting steps:   _es3: %1.0f, %1.0f\n", en_read_encoder(MOTOR_3), en_read_encoder_snapshot(MOTOR_3));
 	cm_set_axis_jerk(axis, cm.a[axis].jerk_high);			// use the high-speed jerk for search onward
 	_homing_axis_move(axis, hm.search_travel, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_latch));
@@ -277,9 +274,6 @@ static stat_t _homing_axis_search(int8_t axis)				// drive to switch
 
 static stat_t _homing_axis_latch(int8_t axis)				// drive away from switch at low speed
 {
-//  printf("finished search:  _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
-//    printf("finished search:  _es3: %1.0f, %1.0f\n", en_read_encoder(MOTOR_3), en_read_encoder_snapshot(MOTOR_3));
-
 	mp_flush_planner();                                     // clear out the remaining search move
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
 	return (_set_homing_func(_homing_axis_zero_backoff));
@@ -287,9 +281,6 @@ static stat_t _homing_axis_latch(int8_t axis)				// drive away from switch at lo
 
 static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
 {
-//    printf("finished latch:   _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
-//    printf("finished latch:   _es3: %1.0f, %1.0f\n", en_read_encoder(MOTOR_3), en_read_encoder_snapshot(MOTOR_3));
-
     mp_flush_planner();                                     // clear out the remaining latch move
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_set_zero));
@@ -297,9 +288,6 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
-//    printf("finished backoff: _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
-//    printf("finished backoff: _es3: %1.0f, %1.0f\n", en_read_encoder(MOTOR_3), en_read_encoder_snapshot(MOTOR_3));
-
 	if (hm.set_coordinates) {
 		cm_set_position(axis, 0);
 		cm.homed[axis] = true;
@@ -309,10 +297,6 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 	cm_set_axis_jerk(axis, hm.saved_jerk);					// restore the max jerk value
 
     gpio_set_homing_mode(hm.homing_input, false);           // end homing mode
-
-//    printf("finished setzero: _es3: %1.0f\n", mr.encoder_steps[MOTOR_3]);
-//    printf("finished setzero: _es3: %1.0f, %1.0f\n", en_read_encoder(MOTOR_3), en_read_encoder_snapshot(MOTOR_3));
-
 	return (_set_homing_func(_homing_axis_start));
 }
 

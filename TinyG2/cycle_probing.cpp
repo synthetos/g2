@@ -54,7 +54,6 @@ struct pbProbingSingleton {						// persistent probing runtime variables
 	float saved_jerk[AXES];						// saved and restored for each axis
 
 	// probe destination
-	float start_position[AXES];
 	float target[AXES];
 	float flags[AXES];
 };
@@ -68,7 +67,6 @@ static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
-
 
 /**** HELPERS ***************************************************************************
  * _set_pb_func() - a convenience for setting the next dispatch vector and exiting
@@ -152,6 +150,8 @@ uint8_t cm_probing_cycle_callback(void)
 
 static uint8_t _probing_init()
 {
+    float start_position[AXES];
+
     // so optimistic... ;)
     // NOTE: it is *not* an error condition for the probe not to trigger.
     // it is an error for the limit or homing switches to fire, or for some other configuration error.
@@ -171,30 +171,30 @@ static uint8_t _probing_init()
     for( uint8_t axis=0; axis<AXES; axis++ ) {
         pb.saved_jerk[axis] = cm_get_axis_jerk(axis);	// save the max jerk value
         cm_set_axis_jerk(axis, cm.a[axis].jerk_high);	// use the high-speed jerk for probe
-        pb.start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+        start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
 
     // error if the probe target is too close to the current position
-    if (get_axis_vector_length(pb.start_position, pb.target) < MINIMUM_PROBE_TRAVEL) {
+    if (get_axis_vector_length(start_position, pb.target) < MINIMUM_PROBE_TRAVEL) {
         _probing_error_exit(-2);
     }
 
 	// error if the probe target requires a move along the A/B/C axes
 	for ( uint8_t axis=AXIS_A; axis<AXES; axis++ ) {
-		if (fp_NE(pb.start_position[axis], pb.target[axis])) {
-			_probing_error_exit(axis);
+//		if (fp_NE(start_position[axis], pb.target[axis])) { // old style
+		if (fp_TRUE(pb.flags[axis])) {
+//		if (pb.flags[axis]) {           // will reduce to this once flags are booleans
+   			_probing_error_exit(axis);
         }
 	}
 
 	// initialize the probe switch
-
-    // Get the probe input
-    // TODO -- for now we hard code it to zmin
-    pb.probe_input = 5;
-
-    // Set the input into probing mode
+    pb.probe_input = 5;     // TODO -- for now we hard code it to zmin
     gpio_set_probing_mode(pb.probe_input, true);
-	cm_spindle_control(SPINDLE_OFF);
+
+    // turn off spindle and start the move
+//	cm_spindle_control(SPINDLE_OFF);        // (could do this 
+    cm_spindle_optional_pause(true);        // pause the spindle if it's on
 	return (_set_pb_func(_probing_start));	// start the probe move
 }
 
@@ -210,15 +210,16 @@ static stat_t _probing_start()
     // INPUT_INACTIVE means switch is OPEN
 	if ( probe == INPUT_INACTIVE ) {
 		cm_straight_feed(pb.target, pb.flags);
-        return (_set_pb_func(_probing_backoff)); 
-	}
+        return (_set_pb_func(_probing_backoff));
 
-    cm.probe_state = PROBE_SUCCEEDED;
-    return (_set_pb_func(_probing_finish));
+	} else {
+        cm.probe_state = PROBE_SUCCEEDED;
+        return (_set_pb_func(_probing_finish));
+    }    
 }
 
 /*
- * _probing_backoff() - runs after the probe move, whether it touched or not
+ * _probing_backoff() - runs after the probe move, whether it contacted or not
  * 
  * Back off to the measured touch position captured by encoder snapshot 
  */
@@ -228,20 +229,20 @@ static stat_t _probing_backoff()
     // Test if we've contacted
     int8_t probe = gpio_read_input(pb.probe_input);
 
-    // INPUT_ACTIVE means switch is CLOSED (at least for now)
-    if (probe == INPUT_ACTIVE) {
+    // INPUT_INACTIVE means switch is OPEN (at least for now)
+    if ( probe == INPUT_INACTIVE ) {
+        cm.probe_state = PROBE_FAILED;
+
+    } else {    
         cm.probe_state = PROBE_SUCCEEDED;
 
-        // capture contact position in axis space (convert from steps to mm)
+        // capture contact position in step space and convert from steps to mm.
+        // snapshot was taken by switch interrupt at the time of closure
         float contact_position[AXES];
-        ik_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
-        printf("%1.6f, %1.6f\n", contact_position[AXIS_Z], cm_get_work_position(RUNTIME, AXIS_Z));
+        kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
 
-        cm_queue_flush();                               // flush the queue & end the feedhold
+        cm_queue_flush();                               // flush queue & end feedhold
         cm_straight_feed(contact_position, pb.flags);   // NB: feed rate is the same as the probe move
-
-    } else {
-        cm.probe_state = PROBE_FAILED;
     }
     return (_set_pb_func(_probing_finish));
 }
@@ -257,8 +258,6 @@ static stat_t _probing_finish()
 
     // store the probe results
 	for (uint8_t axis=0; axis<AXES; axis++ ) {
-//		// if we got here because of a feed hold we need to keep the model position correct
-//		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
 		cm.probe_results[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 	}
 
@@ -283,11 +282,8 @@ static stat_t _probing_finish()
 
 static void _probe_restore_settings()
 {
-    cm_queue_flush();   // flush queue and end feedhold (if any)
-//	mp_flush_planner();
-//	if (cm.hold_state == FEEDHOLD_HOLD);
-//		cm_end_hold();
-//    cm_end_hold();                                          // ends hold if on is in effect
+    // flush queue and end feedhold (if any)
+    cm_queue_flush();
 
     // set input back to normal operation
     gpio_set_probing_mode(pb.probe_input, false);
@@ -300,6 +296,9 @@ static void _probe_restore_settings()
 	// restore coordinate system and distance mode
 	cm_set_coord_system(pb.saved_coord_system);
 	cm_set_distance_mode(pb.saved_distance_mode);
+
+    // restart spindle if it was paused
+    cm_spindle_resume(spindle.dwell_seconds);
 
 	// cancel the feed modes used during probing
 	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);

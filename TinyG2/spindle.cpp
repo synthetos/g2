@@ -269,9 +269,9 @@ const char fmt_spep[] PROGMEM = "[spep] spindle enable polarity%5d [0=active_low
 const char fmt_spdp[] PROGMEM = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] PROGMEM = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_spdw[] PROGMEM = "[spdw] spindle dwell time%12.1f seconds\n";
-const char fmt_spe[] PROGMEM = "Spindle Enable:%8d [0=OFF,1=ON,2=PAUSE]\n";
-const char fmt_spd[] PROGMEM = "Spindle Direction:%5d [0=CW,1=CCW]\n";
-const char fmt_sps[] PROGMEM = "Spindle Speed: %8.0f rpm\n";
+const char fmt_spe[] PROGMEM = "Spindle Enable:%7d [0=OFF,1=ON,2=PAUSE]\n";
+const char fmt_spd[] PROGMEM = "Spindle Direction:%4d [0=CW,1=CCW]\n";
+const char fmt_sps[] PROGMEM = "Spindle Speed: %7.0f rpm\n";
 
 void cm_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
