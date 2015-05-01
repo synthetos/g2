@@ -182,9 +182,9 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX					500			// 500 million mm/(min^3)
-//#define JERK_HIGH_SPEED				1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
-#define JERK_HIGH_SPEED				2000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JERK_MAX                    500			// 500 million mm/(min^3)
+//#define JERK_HIGH_SPEED           1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JERK_HIGH_SPEED             3000		// 3000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
 
 #define JUNCTION_DEVIATION_XY       0.01        // larger is faster
@@ -201,9 +201,10 @@
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX/3)      // xsv
+//#define X_SEARCH_VELOCITY         (X_FEEDRATE_MAX/3)      // xsv
+#define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX * 0.5)  // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
-#define X_LATCH_BACKOFF 	    	1.5                     // xlb  mm
+#define X_LATCH_BACKOFF 	    	1                       // xlb  mm
 #define X_ZERO_BACKOFF 		    	0.4                     // xzb  mm
 
 #define Y_AXIS_MODE 		    	AXIS_STANDARD
@@ -216,9 +217,10 @@
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
-#define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX/3)
+//#define Y_SEARCH_VELOCITY         (Y_FEEDRATE_MAX/3)
+#define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX * 0.5)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Y_LATCH_BACKOFF 	    	1.5
+#define Y_LATCH_BACKOFF 	    	1
 #define Y_ZERO_BACKOFF 		    	0.4
 
 #define Z_AXIS_MODE 		    	AXIS_STANDARD
@@ -235,9 +237,10 @@
 #define Z_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
-#define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX/3)
+//#define Z_SEARCH_VELOCITY 	    (Z_FEEDRATE_MAX/3)
+#define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX * 0.5)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Z_LATCH_BACKOFF 	    	1.5
+#define Z_LATCH_BACKOFF 	    	1
 #define Z_ZERO_BACKOFF 		    	0.4
 
 // Rotary values are chosen to make the motor react the same as X for testing
@@ -299,7 +302,7 @@
     INPUT_MODE_DISABLED
     INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
     INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
-    
+
     INPUT_ACTION_NONE
     INPUT_ACTION_STOP
     INPUT_ACTION_FAST_STOP

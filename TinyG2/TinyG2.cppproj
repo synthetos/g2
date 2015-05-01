@@ -880,6 +880,9 @@
     <Compile Include="encoder.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="error.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="gcode_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
