@@ -45,7 +45,7 @@ static void _inverse_kinematics(const float travel[], float joint[]);
  *	as floats and converted to fixed-point binary during queue loading. See stepper.c for details.
  */
 
-void ik_kinematics(const float travel[], float steps[])
+void kn_inverse_kinematics(const float travel[], float steps[])
 {
 	float joint[AXES];
 
@@ -102,7 +102,11 @@ static void _inverse_kinematics(const float travel[], float joint[])
 //	}
 }
 
-void ik_forward_kinematics(const float steps[], float travel[])
+/*
+ * ik_forward_kinematics() - forward kinematics - example is for a cartesian machine
+ */
+
+void kn_forward_kinematics(const float steps[], float travel[])
 {
     travel[AXIS_X] = steps[MOTOR_1] * st_cfg.mot[MOTOR_1].units_per_step;
     travel[AXIS_Y] = steps[MOTOR_2] * st_cfg.mot[MOTOR_2].units_per_step;

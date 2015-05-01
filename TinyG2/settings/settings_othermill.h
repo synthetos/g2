@@ -93,15 +93,13 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
 // edited for v9 code
-/*
+
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
                                 "unit","stat","coor","momo","dist","home","mots","plan","line",\
-                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps",\
-                                "_tez","_trz",\
-                                "_ts3","_ps3","_cs3","_es3","_xs3","_fe3"
-*/
+                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps"
+
 //#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
-#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
+//#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES
@@ -157,7 +155,7 @@
 
 #define M4_MOTOR_MAP 		    	AXIS_A
 #define M4_STEP_ANGLE 		    	1.8
-#define M4_TRAVEL_PER_REV 	    	360					// degrees moved per motor rev
+#define M4_TRAVEL_PER_REV 	    	360			// degrees moved per motor rev
 #define M4_MICROSTEPS 		    	8
 #define M4_POLARITY 		    	1
 #define M4_POWER_MODE 			    MOTOR_DISABLED
@@ -205,7 +203,7 @@
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX/3)      // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
-#define X_LATCH_BACKOFF 	    	5                       // xlb  mm
+#define X_LATCH_BACKOFF 	    	1.5                     // xlb  mm
 #define X_ZERO_BACKOFF 		    	0.4                     // xzb  mm
 
 #define Y_AXIS_MODE 		    	AXIS_STANDARD
@@ -220,7 +218,7 @@
 #define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Y_LATCH_BACKOFF 	    	5
+#define Y_LATCH_BACKOFF 	    	1.5
 #define Y_ZERO_BACKOFF 		    	0.4
 
 #define Z_AXIS_MODE 		    	AXIS_STANDARD
@@ -239,7 +237,7 @@
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
-#define Z_LATCH_BACKOFF 	    	5
+#define Z_LATCH_BACKOFF 	    	1.5
 #define Z_ZERO_BACKOFF 		    	0.4
 
 // Rotary values are chosen to make the motor react the same as X for testing
@@ -256,7 +254,7 @@
 #define A_HOMING_DIR                0
 #define A_SEARCH_VELOCITY 	    	600
 #define A_LATCH_VELOCITY 	    	100
-#define A_LATCH_BACKOFF 	    	5
+#define A_LATCH_BACKOFF 	    	1.5
 #define A_ZERO_BACKOFF 		    	2
 
 #define B_AXIS_MODE 		    	AXIS_DISABLED	// DISABLED
@@ -272,7 +270,7 @@
 #define B_HOMING_DIR                0
 #define B_SEARCH_VELOCITY 		    600
 #define B_LATCH_VELOCITY 	    	100
-#define B_LATCH_BACKOFF 	    	5
+#define B_LATCH_BACKOFF 	    	1.5
 #define B_ZERO_BACKOFF 		    	2
 
 #define C_AXIS_MODE 	    		AXIS_DISABLED	// DISABLED
@@ -288,7 +286,7 @@
 #define C_HOMING_DIR                0
 #define C_SEARCH_VELOCITY 	    	600
 #define C_LATCH_VELOCITY 	    	100
-#define C_LATCH_BACKOFF 	    	5
+#define C_LATCH_BACKOFF 	    	1.5
 #define C_ZERO_BACKOFF 		    	2
 
 //*** Input / output settings ***

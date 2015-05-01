@@ -241,15 +241,20 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     }
 
     // perform homing operations if in homing mode
-    // We want either edge -- leading on home and trailing on backoff
     if (in->homing_mode) {
-        en_take_encoder_snapshot();
-        cm_start_hold();
+        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+            en_take_encoder_snapshot();
+            cm_start_hold();
+        }        
         return;
     }
+    
+    // perform probing operations if in probing mode
     if (in->probing_mode) {
-        en_take_encoder_snapshot();
-        cm_start_hold();
+        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+            en_take_encoder_snapshot();
+            cm_start_hold();
+        }        
         return;
     }
 

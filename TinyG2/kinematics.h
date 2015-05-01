@@ -32,8 +32,8 @@
  * Global Scope Functions
  */
 
-void ik_kinematics(const float travel[], float steps[]);
-void ik_forward_kinematics(const float steps[], float travel[]);
+void kn_inverse_kinematics(const float travel[], float steps[]);
+void kn_forward_kinematics(const float steps[], float travel[]);
 
 #endif // End of include Guard: KINEMATICS_H_ONCE
 

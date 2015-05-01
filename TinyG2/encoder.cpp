@@ -102,17 +102,24 @@ float en_read_encoder(uint8_t motor)
 
 /*
  * en_take_encoder_snapshot()
- * en_read_encoder_snapshot()
+ * en_get_encoder_snapshot_position()
+ * en_get_encoder_snapshot_vector()
  *
- *  Take a snapshot of the encoder position before an accumulation has taken place
- *  Do not disturb the accumulation
+ *  Take a snapshot of the encoder position at an exact point in time. This provides 
+ *  a very accurate view of step position at the time of the snapshot,  which is 
+ *  presumably in the middle of a switch closure interrupt. Taking the snapshot 
+ *  does not affect the normal accumulation run by the stepper DDA.
+ *
+ *  The results are in STEPS, which may need to be converted back to position using 
+ *  forward kinematics, depending on your use. See probe cycle for example.
  */
 void en_take_encoder_snapshot()
 {
     for (uint8_t m=0; m<MOTORS; m++) {
         en.snapshot[m] = en.en[m].encoder_steps + en.en[m].steps_run;
     }
-/*
+
+/* loop unrolled version for faster execution
     en.snapshot[MOTOR_1] = en.en[MOTOR_1].encoder_steps + en.en[MOTOR_1].steps_run;
     en.snapshot[MOTOR_2] = en.en[MOTOR_2].encoder_steps + en.en[MOTOR_2].steps_run;
     en.snapshot[MOTOR_3] = en.en[MOTOR_3].encoder_steps + en.en[MOTOR_3].steps_run;
@@ -122,7 +129,7 @@ void en_take_encoder_snapshot()
 */
 }
 
-float en_get_encoder_snapshot_position(uint8_t motor)
+float en_get_encoder_snapshot_steps(uint8_t motor)
 {
     return (en.snapshot[motor]);
 }
@@ -131,16 +138,6 @@ float *en_get_encoder_snapshot_vector()
 {
     return (en.snapshot);
 }
-
-/*
-void en_show_encoder_snapshot()
-{
-    float position[AXES];
-
-    ik_forward_kinematics(en.snapshot, position);
-    printf ("Z snapshot: %1.6f\n", position[AXIS_Z]);
-}
-*/
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

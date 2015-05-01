@@ -126,8 +126,7 @@ void en_set_encoder_steps(uint8_t motor, float steps);
 float en_read_encoder(uint8_t motor);
 
 void en_take_encoder_snapshot();
-float en_get_encoder_snapshot_position(uint8_t motor);
+float en_get_encoder_snapshot_steps(uint8_t motor);
 float *en_get_encoder_snapshot_vector();
-//void en_show_encoder_snapshot();
 
 #endif	// End of include guard: ENCODER_H_ONCE
