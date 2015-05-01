@@ -224,7 +224,7 @@ static stat_t _homing_axis_start(int8_t axis)
 
 	// calculate and test travel distance
 	float travel_distance = fabs(cm.a[axis].travel_max - cm.a[axis].travel_min) + cm.a[axis].latch_backoff;
-	if (fp_ZERO(travel_distance)) { 
+	if (fp_ZERO(travel_distance)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL));
     }
 
@@ -256,9 +256,9 @@ static stat_t _homing_axis_start(int8_t axis)
 
 // Handle an initial switch closure by backing off the closed switch
 // NOTE: clear_init() relies on independent switches per axis (not shared)
-static stat_t _homing_axis_clear_init(int8_t axis)				// first clear move
+static stat_t _homing_axis_clear_init(int8_t axis)          // first clear move
 {
-	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) { // the switch is closed at startup
+    if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) { // the switch is closed at startup
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {
@@ -266,9 +266,9 @@ static stat_t _homing_axis_clear_init(int8_t axis)				// first clear move
                 return (_homing_error_exit(axis, STAT_HOMING_ERROR_MUST_CLEAR_SWITCHES_BEFORE_HOMING)); // axis cannot be homed
             }
         }
-        _homing_axis_move(axis, hm.latch_backoff, hm.search_velocity);  // otherwise back off the switch
+        _homing_axis_move(axis, -hm.latch_backoff, hm.search_velocity);  // otherwise back off the switch
     }
- 	return (_set_homing_func(_homing_axis_search));			// start the search
+    return (_set_homing_func(_homing_axis_search));         // start the search
 }
 
 static stat_t _homing_axis_search(int8_t axis)				// drive to switch
@@ -304,7 +304,7 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 		cm_set_position(axis, 0);
 		cm.homed[axis] = true;
 
-	} else { // handle G28.4 cycle - set position to the point of switch closure  
+	} else { // handle G28.4 cycle - set position to the point of switch closure
 //		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
         // set position to exact point of switch closure
         cm_queue_flush();                                   // flush queue & end feedhold
