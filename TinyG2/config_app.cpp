@@ -474,6 +474,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
 	{ "sys","saf",_fipn, 0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,	SAFETY_INTERLOCK_ENABLE },
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
+	{ "sys","mfoe",_fipn,0, cm_print_mfoe,get_ui8, set_01,   (float *)&cm.mfo_enable,               MANUAL_FEEDRATE_OVERRIDE_ENABLE},
+	{ "sys","mfo", _fipn,3, cm_print_mfo, get_flt, cm_set_mfo,(float *)&cm.mfo_factor,              MANUAL_FEEDRATE_OVERRIDE_FACTOR},
 
     // Spindle functions
     { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,  (float *)&spindle.enable_polarity,      SPINDLE_ENABLE_POLARITY },

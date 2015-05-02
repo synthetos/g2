@@ -45,6 +45,10 @@
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
 
+#define MIN_MANUAL_FEEDRATE_OVERRIDE 0.100
+#define MAX_MANUAL_FEEDRATE_OVERRIDE 10.000
+
+
 /*****************************************************************************
  * MACHINE STATE MODEL
  *
@@ -447,6 +451,9 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;       // true to enable safety interlock system
 
+    float mfo_factor;                   // manual feedrate override factor
+    bool mfo_enable;                    // manual feedrate override enable
+
 	// hidden system settings
 //	float min_segment_len;				// line drawing resolution in mm
 //	float arc_segment_len;				// arc drawing resolution in mm
@@ -616,10 +623,10 @@ stat_t cm_set_path_control(const uint8_t mode);                             // G
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(const float target[], const float flags[], bool defer_planning = false); // G1
-stat_t cm_arc_feed(const float target[],                                    // G2, G3 
+stat_t cm_arc_feed(const float target[],                                    // G2, G3
                    const float flags[],
                    const float i, const float j, const float k,
-                   const float radius, 
+                   const float radius,
                    const uint8_t motion_mode);
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
@@ -723,6 +730,8 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
+stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE
@@ -764,9 +773,11 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
 	void cm_print_saf(nvObj_t *nv);
-	void cm_print_ml(nvObj_t *nv);
-	void cm_print_ma(nvObj_t *nv);
-	void cm_print_ms(nvObj_t *nv);
+	void cm_print_mfo(nvObj_t *nv);
+	void cm_print_mfoe(nvObj_t *nv);
+//	void cm_print_ml(nvObj_t *nv);
+//	void cm_print_ma(nvObj_t *nv);
+//	void cm_print_ms(nvObj_t *nv);
 	void cm_print_st(nvObj_t *nv);
 
 	void cm_print_am(nvObj_t *nv);		// axis print functions
