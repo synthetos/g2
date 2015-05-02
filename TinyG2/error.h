@@ -1,5 +1,5 @@
 /*
- * status_codes.h - TinyG status codes
+ * error.h - TinyG status codes
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
