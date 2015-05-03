@@ -438,20 +438,18 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 	if (gms->motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
 		if (gms->feed_rate_mode == INVERSE_TIME_MODE) {
 			inv_time = gms->feed_rate;	// NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
-            if (cm.mfo_enable) {
-                inv_time /=  cm.mfo_factor;
+            if (cm.gmx.mfo_enable && cm.gmx.m48_enable) {
+                inv_time /=  cm.gmx.mfo_parameter;
             }
 			gms->feed_rate_mode = UNITS_PER_MINUTE_MODE;
 
 		} else {
-            float feed_rate = cm.mfo_enable ? (gms->feed_rate * cm.mfo_factor) : gms->feed_rate;
+            float feed_rate = (cm.gmx.mfo_enable && cm.gmx.m48_enable) ? (gms->feed_rate * cm.gmx.mfo_parameter) : gms->feed_rate;
 			// compute length of linear move in millimeters. Feed rate is provided as mm/min
-//			xyz_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / gms->feed_rate;
 			xyz_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / feed_rate;
 
 			// if no linear axes, compute length of multi-axis rotary move in degrees. Feed rate is provided as degrees/min
 			if (fp_ZERO(xyz_time)) {
-//				abc_time = sqrt(axis_square[AXIS_A] + axis_square[AXIS_B] + axis_square[AXIS_C]) / gms->feed_rate;
 				abc_time = sqrt(axis_square[AXIS_A] + axis_square[AXIS_B] + axis_square[AXIS_C]) / feed_rate;
 			}
 		}

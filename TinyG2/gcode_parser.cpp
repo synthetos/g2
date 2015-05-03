@@ -355,10 +355,10 @@ static stat_t _parse_gcode_block(char *buf)
 				case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
 				case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
 				case 9: SET_MODAL (MODAL_GROUP_M8, flood_coolant, false);
-//				case 48: SET_MODAL (MODAL_GROUP_M9, override_enables, true);
-//				case 49: SET_MODAL (MODAL_GROUP_M9, override_enables, false);
-//				case 50: SET_MODAL (MODAL_GROUP_M9, feed_rate_override_enable, true); // conditionally true
-//				case 51: SET_MODAL (MODAL_GROUP_M9, spindle_override_enable, true);	  // conditionally true
+				case 48: SET_MODAL (MODAL_GROUP_M9, m48_enable, true);
+				case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
+				case 50: SET_MODAL (MODAL_GROUP_M9, mfo_enable, true);
+				case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
 				default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
 			}
 			break;
@@ -447,10 +447,9 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_spindle_control, spindle_control); 		// spindle CW, CCW, OFF
 	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
 	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// also disables mist coolant if OFF
-//	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
-//	EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
-//	EXEC_FUNC(cm_spindle_override_enable, spindle_override_enable);
-//	EXEC_FUNC(cm_override_enables, override_enables);
+	EXEC_FUNC(cm_m48_enable, m48_enable);
+	EXEC_FUNC(cm_mfo_enable, mfo_enable);
+//	EXEC_FUNC(cm_sso_enable, sso_enable);
 
 	if (cm.gn.next_action == NEXT_ACTION_DWELL) { 			// G4 - dwell
 		ritorno(cm_dwell(cm.gn.parameter));					// return if error, otherwise complete the block

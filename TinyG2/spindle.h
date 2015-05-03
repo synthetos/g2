@@ -73,8 +73,8 @@ typedef struct cmSpindleSingleton {
     cmSpindlePolarity dir_polarity;     // 0=clockwise low, 1=clockwise high
     float dwell_seconds;                // dwell on spindle resume
 
-//    float override_factor;            // 1.0000 x S spindle speed. Go up or down from there
-//    uint8_t override_enable;          // TRUE = override enabled
+    bool sso_enable;                    // 1.0000 x S spindle speed. Go up or down from there
+    float sso_parameter;                // TRUE = override enabled (see also m38_enable)
 
     cmESCState esc_state;               // state management for ESC controller
     uint32_t esc_boot_timer;            // When the ESC last booted up

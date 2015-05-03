@@ -352,14 +352,14 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 	float g28_position[AXES];			// XYZABC stored machine position for G28
 	float g30_position[AXES];			// XYZABC stored machine position for G30
 
-	float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
-	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
-	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
-	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
+    bool m48_enable;                    // master feedrate / spindle speed override enable
+	bool mfo_enable;	                // feedrate override enable
+	float mfo_parameter;	            // 1.0000 x F feed rate. Go up or down from there
+
 	uint8_t L_word;						// L word - used by G10s
 
-	uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
-	uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
+	bool origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
+	bool block_delete_switch;		// set true to enable block deletes (true is default)
 
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
@@ -379,11 +379,9 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	float target[AXES]; 				// XYZABC where the move should go
 
 	float feed_rate; 					// F - normalized to millimeters/minute
-	float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
-	float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
-	uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
-	uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
-	uint8_t override_enables;			// enables for feed and spindle (GN/GF only)
+	bool m48_enable;			        // M48/M49 input (enables for feed and spindle)
+	bool mfo_enable;                    // M50 feedrate override enable
+	bool sso_enable;                    // M51 spindle speed override anable
 	uint8_t L_word;						// L word - used by G10s
 
 	uint8_t feed_rate_mode;	        	// See cmFeedRateMode for settings
@@ -450,14 +448,6 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;       // true to enable safety interlock system
-
-    float mfo_factor;                   // manual feedrate override factor
-    bool mfo_enable;                    // manual feedrate override enable
-
-	// hidden system settings
-//	float min_segment_len;				// line drawing resolution in mm
-//	float arc_segment_len;				// arc drawing resolution in mm
-//	float estd_segment_usec;			// approximate segment time in microseconds
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
@@ -628,24 +618,23 @@ stat_t cm_arc_feed(const float target[],                                    // G
                    const float i, const float j, const float k,
                    const float radius,
                    const uint8_t motion_mode);
-stat_t cm_dwell(const float seconds);                                       // G4, P parameter
+stat_t cm_dwell(const float seconds);                           // G4, P parameter
 
 // Spindle Functions (4.3.7)
 // see spindle.h for spindle functions - which would go right here
+//stat_t sp_sso_enable(uint8_t flag);                           // M51
 
 // Tool Functions (4.3.8)
-stat_t cm_select_tool(const uint8_t tool);                                  // T parameter
-stat_t cm_change_tool(const uint8_t tool);                                  // M6
+stat_t cm_select_tool(const uint8_t tool);                      // T parameter
+stat_t cm_change_tool(const uint8_t tool);                      // M6
 
 // Miscellaneous Functions (4.3.9)
 // see coolant.h for coolant functions - which would go right here
-/*
-stat_t cm_override_enables(uint8_t flag);                       // M48, M49
-stat_t cm_feed_rate_override_enable(uint8_t flag);              // M50
-stat_t cm_feed_rate_override_factor(uint8_t flag);              // M50.1
-stat_t cm_traverse_override_enable(uint8_t flag);               // M50.2
-stat_t cm_traverse_override_factor(uint8_t flag);               // M50.3
-*/
+
+void cm_reset_overrides(void);
+stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
+stat_t cm_mfo_enable(uint8_t enable);                           // M50
+
 void cm_message(const char *message);                           // msg to console (e.g. Gcode comments)
 
 // Program Functions (4.3.10)
