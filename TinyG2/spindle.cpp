@@ -55,12 +55,15 @@ void spindle_init()
 	if( pwm.c[PWM_1].frequency < 0 )
 		pwm.c[PWM_1].frequency = 0;
 
-    pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
-    pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+//    pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
+//    pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
 }
 
 void spindle_reset()
 {
+    pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
+    pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+
     float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
     _exec_spindle_speed(value, value);
     cm_spindle_off_immediate();                 // turn spindle off
