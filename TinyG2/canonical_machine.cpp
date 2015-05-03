@@ -1593,6 +1593,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_coolant_off_immediate();                     // M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
+        cm.mfo_enable = false;                          // disable manual feedrate override
 	}
 	sr_request_status_report(SR_REQUEST_IMMEDIATE);		// request a final and full status report (not filtered)
 }
