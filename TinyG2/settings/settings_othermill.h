@@ -91,7 +91,7 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",
 //                                "unit","stat","coor","momo","dist","home","mots","plan","line",
-                                  "path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
+//                                  "path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
 // edited for g2 new edge:
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
                                 "unit","stat","coor","momo","dist","home","mots","plan","line",\
