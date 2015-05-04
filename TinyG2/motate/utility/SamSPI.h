@@ -262,9 +262,13 @@ namespace Motate {
                 divider = 1;
             
             // Cruft from Arduino: TODO: Make configurable.
+#ifdef OMC
+            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_CSAAT;
+#else
             // SPI_CSR_DLYBCT(1) keeps CS enabled for 32 MCLK after a completed
             // transfer. Some device needs that for working properly.
             spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
+#endif
             
             // Should be a non-op for already-enabled devices.
             hardware.enable();
@@ -284,21 +288,21 @@ namespace Motate {
 		};
         
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-		int16_t read(const uint8_t *buffer, const uint16_t length) {
+		int16_t read(uint8_t *buffer, const uint16_t length, bool useLastXfer = true) {
 			if (!setChannel())
                 return -1;
             
 
 			int16_t total_read = 0;
 			int16_t to_read = length;
-			const uint8_t *read_ptr = buffer;
+			uint8_t *read_ptr = buffer;
 
             bool lastXfer = false;
 
 			// BLOCKING!!
 			while (to_read > 0) {
                 
-                if (to_read == 1)
+                if (to_read == 1 && useLastXfer)
                     lastXfer = true;
 
 				int16_t ret = read(lastXfer);
@@ -313,7 +317,7 @@ namespace Motate {
 			return total_read;
 		};
         
-        int16_t write(uint16_t data, const bool lastXfer = false) {
+        int16_t write(uint8_t data, const bool lastXfer = false) {
             return hardware.write(data, lastXfer);
 		};
         
@@ -328,8 +332,11 @@ namespace Motate {
         
         // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
 		int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
+#ifdef OMC
+#else
 			if (!setChannel())
                 return -1;
+#endif
             
             int16_t total_written = 0;
 			const uint8_t *out_buffer = data;

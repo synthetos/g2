@@ -28,7 +28,7 @@ PROJECT  = TinyG2
 
 # Include all of the *directories* containing files to compile to SOURCE_DIRS.
 # *EXCEPT* motate paths and processor-specific directories!
-SOURCE_DIRS = .
+SOURCE_DIRS = . fatfs
 
 # List *project-specific* files that must be linked to first in FIRST_LINK_SOURCES.
 # For device-specific FIRST_LINK_SOURCES, use DEVICE_FIRST_LINK_SOURCES (in the
@@ -39,7 +39,7 @@ SOURCE_DIRS = .
 FIRST_LINK_SOURCES = main.cpp
 
 # List all user directories here that aren't in SOURCE_DIRS
-USER_INCLUDE_DIRS =
+USER_INCLUDE_DIRS = fatfs
 
 # List the user directory to look for the libraries here
 USER_LIB_DIRS =
@@ -59,12 +59,17 @@ DEBUG ?= 0
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
-	SETTINGS_FILE="settings_othermill.h"
+#   SETTINGS_FILE="settings_othermill.h"
 #	SETTINGS_FILE="settings_probotixV90.h"
 #	SETTINGS_FILE="settings_shapeoko2.h"
 #	SETTINGS_FILE="settings_shopbot_sbv300.h"
 #	SETTINGS_FILE="settings_shopbot_test.h"
 #	SETTINGS_FILE="settings_Ultimaker.h"
+
+# enable OMC specific changes if our settings file is active
+ifeq ($(SETTINGS_FILE),"settings_othermill.h")
+CFLAGS += -DOMC=1
+endif
 
 CFLAGS   :=
 CPPFLAGS :=

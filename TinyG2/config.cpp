@@ -109,18 +109,19 @@ void config_init()
 	config_init_assertions();
 	cs.comm_mode = JSON_MODE;					// initial value until persistence is read
 
-#ifdef __ARM
-// ++++ The following code is offered until persistence is implemented.
-// ++++ Then you can use the AVR code (or something like it)
-	_set_defa(nv, false);
-    rpt_print_loading_configs_message();
-#endif
-#ifdef __AVR
+// #ifdef __ARM
+// // ++++ The following code is offered until persistence is implemented.
+// // ++++ Then you can use the AVR code (or something like it)
+// 	_set_defa(nv, false);
+//     rpt_print_loading_configs_message();
+// #endif
+// #ifdef __AVR
 	cm_set_units_mode(MILLIMETERS);				// must do inits in millimeter mode
 	nv->index = 0;								// this will read the first record in NVM
 
 	read_persistent_value(nv);
-	if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
+	//if (nv->value != cs.fw_build) {				// case (1) NVM is not setup or not in revision
+	if (fp_NE(nv->value, TINYG_FIRMWARE_BUILD)) {				// case (1) NVM is not setup or not in revision
 //	if (fp_NE(nv->value, cs.fw_build)) {
 		_set_defa(nv, false);
 	} else {									// case (2) NVM is setup and in revision
@@ -134,7 +135,7 @@ void config_init()
 		}
 		sr_init_status_report();
 	}
-#endif
+//#endif
 }
 
 /*
@@ -169,7 +170,12 @@ stat_t set_defaults(nvObj_t *nv)
 	// Mark the nv as $defa so it displays nicely in the response
 	nv_reset_nv_list();
 	strncpy(nv->token, "defa", TOKEN_LEN);
-//	nv->index = nv_get_index("", nv->token);	// correct, but not required
+
+	// the index-setting call used to be marked as "correct but not required" -
+	// however, on ARM, this value was being wrongly persisted in index 0 when
+	// set_defaults was called immediately after a firmware update.
+	nv->index = nv_get_index((const char*)"", nv->token);
+	
 	nv->valuetype = TYPE_INT;
 	nv->value = 1;
 	return (STAT_OK);
