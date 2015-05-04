@@ -61,6 +61,8 @@ void pwm_init(void);
 stat_t pwm_set_freq(uint8_t channel, float freq);
 stat_t pwm_set_duty(uint8_t channel, float duty);
 
+stat_t pwm_set_pwm(nvObj_t *nv);
+
 #ifdef __TEXT_MODE
 
 	void pwm_print_p1frq(nvObj_t *nv);
