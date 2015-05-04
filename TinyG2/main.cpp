@@ -142,7 +142,7 @@ void application_init_machine(void)
 //    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
     planner_init();                 // motion planning subsystem
     canonical_machine_init();       // canonical machine
-    spindle_init();                 // should be after PWM and canonical machine inits
+//    spindle_init();                 // should be after PWM and canonical machine inits
 }
 
 void application_init_startup(void)
@@ -160,6 +160,7 @@ void application_init_startup(void)
     controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first startup init (requires xio_init())
     config_init();					// apply the config settings from persistence
     canonical_machine_reset();
+    spindle_init();                 // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
     // MOVED: report the system is ready is now in xio
 }

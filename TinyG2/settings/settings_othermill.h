@@ -84,16 +84,15 @@
 #define JSON_VERBOSITY				JV_CONFIGS		        // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
-//#define QUEUE_REPORT_VERBOSITY		QR_SINGLE           // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
-#define QUEUE_REPORT_VERBOSITY		QR_OFF
+#define QUEUE_REPORT_VERBOSITY		QR_SINGLE           // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-//#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_VERBOSITY     SR_VERBOSE              // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z","unit","stat","coor","momo","dist","home","mots","plan","line","path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
-// edited for v9 code
-
+//#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",
+//                                "unit","stat","coor","momo","dist","home","mots","plan","line",
+                                  "path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
+// edited for g2 new edge:
 #define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
                                 "unit","stat","coor","momo","dist","home","mots","plan","line",\
                                 "path","frmo","prbe","spe","spd","hold","macs","cycs","sps"
@@ -184,7 +183,7 @@
 
 #define JERK_MAX                    500			// 500 million mm/(min^3)
 //#define JERK_HIGH_SPEED           1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
-#define JERK_HIGH_SPEED             3000		// 3000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JERK_HIGH_SPEED             2000
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
 
 #define JUNCTION_DEVIATION_XY       0.01        // larger is faster
@@ -201,8 +200,7 @@
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
-//#define X_SEARCH_VELOCITY         (X_FEEDRATE_MAX/3)      // xsv
-#define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX * 0.5)  // xsv
+#define X_SEARCH_VELOCITY           (X_FEEDRATE_MAX/3)      // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
 #define X_LATCH_BACKOFF 	    	1                       // xlb  mm
 #define X_ZERO_BACKOFF 		    	0.4                     // xzb  mm
@@ -217,8 +215,7 @@
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
-//#define Y_SEARCH_VELOCITY         (Y_FEEDRATE_MAX/3)
-#define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX * 0.5)
+#define Y_SEARCH_VELOCITY           (Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 	    	1
 #define Y_ZERO_BACKOFF 		    	0.4
@@ -237,8 +234,7 @@
 #define Z_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
-//#define Z_SEARCH_VELOCITY 	    (Z_FEEDRATE_MAX/3)
-#define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX * 0.5)
+#define Z_SEARCH_VELOCITY           (Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 	    	1
 #define Z_ZERO_BACKOFF 		    	0.4
