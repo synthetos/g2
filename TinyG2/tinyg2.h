@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.07 // Merge edge-replan-replan into edge
+#define TINYG_FIRMWARE_BUILD   		083.08 // Issue #80 - Fixed PWM settings for spindle controls
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

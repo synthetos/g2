@@ -28,8 +28,8 @@
 #include "tinyg2.h"		// #1
 #include "config.h"		// #2
 #include "hardware.h"
+#include "spindle.h"
 #include "text_parser.h"
-//#include "gpio.h"
 #include "pwm.h"
 
 #ifdef __AVR
@@ -219,8 +219,15 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
 
-// none
-
+/*
+ * pwm_set_pwm() - set PWM parameter and reset PWM channels
+ */
+stat_t pwm_set_pwm(nvObj_t *nv)
+{
+    set_flt(nv);
+    spindle_init();
+    return(STAT_OK);
+}
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
