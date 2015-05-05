@@ -81,7 +81,7 @@
 #define XIO_ENABLE_ECHO             false
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
-#define JSON_VERBOSITY				JV_CONFIGS		        // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY				JV_MESSAGES		        // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_SINGLE           // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -182,8 +182,8 @@
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX                    500			// 500 million mm/(min^3)
-//#define JERK_HIGH_SPEED           1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
-#define JERK_HIGH_SPEED             2000
+#define JERK_HIGH_SPEED             1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+//#define JERK_HIGH_SPEED             2000
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
 
 #define JUNCTION_DEVIATION_XY       0.01        // larger is faster
