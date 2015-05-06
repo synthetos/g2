@@ -2,7 +2,7 @@
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * Part of TinyG project
  * 
- * Copyright (c) 2010 - 2014 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois
+ * Copyright (c) 2010 - 2015 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
  * With contributions from Other Machine Company.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -30,6 +30,8 @@
 #include "json_parser.h"
 #include "text_parser.h"
 #include "canonical_machine.h"
+#include "kinematics.h"
+#include "encoder.h"
 #include "spindle.h"
 #include "report.h"
 #include "switch.h"
