@@ -258,7 +258,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
 	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -290,7 +290,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -458,8 +458,8 @@ mpBuf_t * mp_get_run_buffer()
         mb.r->buffer_state = MP_BUFFER_RUNNING;
         mb.needs_time_accounting = true;
     }
-    
-    // This is the one point where an accurate accounting of the total time in the 
+
+    // This is the one point where an accurate accounting of the total time in the
     // run and the planner is established. _planner_time_accounting() also performs
     // the locking of planner buffers to ensure that sufficient "safe" time is reserved.
     _planner_time_accounting();
@@ -605,7 +605,7 @@ bool mp_is_it_phat_city_time() {
     return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
-static void _planner_time_accounting() 
+static void _planner_time_accounting()
 {
 //    if (((mb.time_in_run + mb.time_locked) > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
 //        return;
