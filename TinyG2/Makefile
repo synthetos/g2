@@ -60,6 +60,7 @@ DEBUG ?= 0
 SETTINGS_FILE ?= settings_default.h
 
 	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_othermill_test.h"
 #	SETTINGS_FILE="settings_probotixV90.h"
 #	SETTINGS_FILE="settings_shapeoko2.h"
 #	SETTINGS_FILE="settings_shopbot_sbv300.h"

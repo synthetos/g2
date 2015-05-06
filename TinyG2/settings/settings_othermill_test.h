@@ -53,7 +53,8 @@
 #define SPINDLE_DWELL_TIME          1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
-#define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
+//#define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
+#define ESC_LOCKOUT_TIME            0     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
@@ -62,15 +63,6 @@
 // WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
 // new machines use a stepper which has the same config as the other axis.
 #define HAS_CANSTACK_Z_AXIS 0
-/*
-// Switch definitions for interlock & E-stop
-#define ENABLE_INTERLOCK_AND_ESTOP
-#define INTERLOCK_SWITCH_AXIS       AXIS_Y
-#define INTERLOCK_SWITCH_POSITION   SW_MAX
-#define ESTOP_SWITCH_AXIS           AXIS_X
-#define ESTOP_SWITCH_POSITION       SW_MAX
-#define PAUSE_DWELL_TIME			1.5 //after unpausing and turning the spindle on, dwell for 1.5s
-*/
 
 // Communications and reporting settings
 
@@ -89,13 +81,10 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",
-//                                "unit","stat","coor","momo","dist","home","mots","plan","line",
-//                                "path","frmo","prbe","safe","estp","spe","hold","macs","cycs","sps"
-// edited for g2 new edge:
-#define STATUS_REPORT_DEFAULTS  "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
-                                "unit","stat","coor","momo","dist","home","mots","plan","line",\
-                                "path","frmo","prbe","spe","spd","hold","macs","cycs","sps"
+
+#define STATUS_REPORT_DEFAULTS      "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
+                                    "unit","stat","coor","momo","dist","home","mots","plan","line",\
+                                    "path","frmo","prbe","spe","spd","hold","macs","cycs","sps"
 
 //#define STATUS_REPORT_DEFAULTS  "mpoz","stat","_cs3","_es3","_xs3","_fe3"
 //#define STATUS_REPORT_DEFAULTS  "posx","posy","posz","stat","_cs3","_es3","_xs3","_fe3"
@@ -181,9 +170,8 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX                    500			// 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
-//#define JERK_HIGH_SPEED             2000
+#define JERK_MAX                    500         // normally 500 million mm/(min^3)
+#define JERK_HIGH_SPEED             500         // normally 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
 #define LATCH_VELOCITY				25			// reeeeally slow for accuracy
 
 #define JUNCTION_DEVIATION_XY       0.01        // larger is faster
