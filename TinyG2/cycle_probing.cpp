@@ -1,7 +1,7 @@
 /*
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * Part of TinyG project
- * 
+ *
  * Copyright (c) 2010 - 2015 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
  * With contributions from Other Machine Company.
  *
@@ -93,6 +93,10 @@ uint8_t _set_pb_func(uint8_t (*func)())
 	return (STAT_EAGAIN);
 }
 
+/***********************************************************************************
+ **** G38.2 Probing Cycle ***********************************************************
+ ***********************************************************************************/
+
 /****************************************************************************************
  * cm_probing_cycle_start()		- G38.2 homing cycle using limit switches
  * cm_probing_cycle_callback()	- main loop callback for running the probing cycle
@@ -147,9 +151,9 @@ uint8_t cm_straight_probe(float target[], float flags[])
 	}
 
 	// trap no axes specified
-	if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z]))
+	if (fp_NOT_ZERO(flags[AXIS_X]) && fp_NOT_ZERO(flags[AXIS_Y]) && fp_NOT_ZERO(flags[AXIS_Z])) {
 		return (STAT_GCODE_AXIS_IS_MISSING);
-
+    }    
 	// set probe move endpoint
 	copy_vector(pb.target, target);		// set probe move endpoint
 	copy_vector(pb.flags, flags);		// set axes involved on the move
@@ -274,7 +278,8 @@ static stat_t _probing_backoff()
     if (cm.probe_state == PROBE_WAITING) {
         cm.probe_state = (_read_switch() == SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
     }
-    
+
+/* 072.65 code    
     // if the switch is still closed, back off until it opens again.
     // if the switch has reopened (e.g. if the probe connection was flaky or the object
     // being probed has moved), we don't back off - treat current position as final.
@@ -284,6 +289,19 @@ static stat_t _probing_backoff()
         cm_straight_feed(pb.start_position, pb.flags);
     }
     return (_set_pb_func(_probing_finish));
+*/
+// replacement code
+    if ( cm.probe_state == PROBE_SUCCEEDED) {
+
+        // capture contact position in step space and convert from steps to mm.
+        // snapshot was taken by switch interrupt at the time of closure
+        float contact_position[AXES];
+        kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
+
+        cm_straight_feed(contact_position, pb.flags);   // NB: feed rate is the same as the probe move
+    }
+
+    return (_set_pb_func(_probing_finish));
 }
 
 /*
@@ -292,6 +310,7 @@ static stat_t _probing_backoff()
 
 static stat_t _probing_finish()
 {
+/* 072.65 code
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 		float position = cm_get_absolute_position(RUNTIME, axis);
         
@@ -300,7 +319,14 @@ static stat_t _probing_finish()
         
 		// store the probe results
 		cm.probe_results[axis] = position;
+    }    
+*/
+// new code
+	// store the probe results
+	for (uint8_t axis=0; axis<AXES; axis++ ) {
+    	cm.probe_results[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
 	}
+
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
 	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
