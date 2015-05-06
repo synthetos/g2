@@ -78,7 +78,7 @@ stat_t gcode_parser(char *block)
 	if (block_delete_flag == true) {
 		return (STAT_NOOP);
 	}
-
+	
 	return(_parse_gcode_block(block));
 }
 

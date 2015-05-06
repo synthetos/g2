@@ -154,7 +154,7 @@ void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
 {
     if (input_num_ext == 0) {
         return;
-    }    
+    }
     io.in[input_num_ext-1].homing_mode = is_homing;
 }
 
@@ -162,7 +162,7 @@ void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
 {
     if (input_num_ext == 0) {
         return;
-    }    
+    }
     io.in[input_num_ext-1].probing_mode = is_probing;
 }
 
@@ -170,7 +170,7 @@ bool gpio_read_input(const uint8_t input_num_ext)
 {
     if (input_num_ext == 0) {
         return false;
-    }    
+    }
     return (io.in[input_num_ext-1].state);
 }
 
@@ -245,16 +245,16 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
         if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
             en_take_encoder_snapshot();
             cm_start_hold();
-        }        
+        }
         return;
     }
-    
+
     // perform probing operations if in probing mode
     if (in->probing_mode) {
         if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
             en_take_encoder_snapshot();
             cm_start_hold();
-        }        
+        }
         return;
     }
 

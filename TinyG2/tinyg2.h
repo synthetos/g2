@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.15 // merged spindle fixes in
+#define TINYG_FIRMWARE_BUILD   		083.16 // fixed message return in a blank Gcode line
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
