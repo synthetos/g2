@@ -506,9 +506,14 @@ static void _calculate_jerk(mpBuf_t *bf)
 */
 }
 
-#define CENTRIPEDAL_JERK
+// The amount of time that we expect a change in velocity to actually take effect in reality.
+// Used it to determine jerk from an "instantaneous" velocity change.
+//#define CORNER_TIME_QUANTUM (1/200000)  // one clock tick
+#define CORNER_TIME_QUANTUM (1/100000)  // one clock tick
 
-#ifdef CENTRIPEDAL_JERK
+//#define __CENTRIPETAL_JERK
+
+#ifdef __CENTRIPETAL_JERK
 /*
  * _calculate_junction_vmax() - Sonny's algorithm - simple
  *
@@ -616,16 +621,16 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 //    return((radius * cm.junction_acceleration) / delta);
 }
 
-#else //CENTRIPEDAL_JERK
+#else // __CENTRIPETAL_JERK
 
 /*
  * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
  *
  *  Computes the maximum allowable junction speed by finding the velocity that
- *  will not volate the jerk value of any axis.
+ *  will not violate the jerk value of any axis.
  *
  *  In order to achieve this, we take the unit vector of the difference of the
- *  unit vectors of the two movesof the corner corner, goint from vector a to
+ *  unit vectors of the two moves of the corner corner, point from vector a to
  *  vector b. We are given the unit vectors of those two moves as a_unit and
  *  b_unit.
  *
@@ -705,7 +710,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 
     return(min(vmax, best_velocity));
 }
-#endif // CENTRIPEDAL_JERK
+#endif // __CENTRIPETAL_JERK
 
 /*
  *  mp_reset_replannable_list() - resets all blocks in the planning list to be replannable

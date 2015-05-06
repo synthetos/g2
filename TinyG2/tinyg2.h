@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.07 // Merge edge-replan-replan into edge
+#define TINYG_FIRMWARE_BUILD   		085.01 // renumbered edge-cornered to its own series
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
