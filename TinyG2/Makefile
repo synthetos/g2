@@ -47,6 +47,12 @@ USER_LIBS =
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
+# SETTINGS_FILE may get overriden by the PLATFORM setings below
+SETTINGS_FILE ?= settings_default.h
+
+	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_othermill_test.h"
+
 CFLAGS   :=
 CPPFLAGS :=
 
@@ -409,8 +415,20 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
-	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
-	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
+
+# For those that don't have xxd on their platform
+#	$(QUIET)printf "%08x" `cksum $(OUTPUT_BIN).bin | cut -d' ' -f1` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x100 conv=notrunc
+#	$(QUIET)printf "%08x" `ls -nl "$(OUTPUT_BIN).bin" | cut -d' ' -f8` | xxd -r -p | dd of=$(OUTPUT_BIN).bin bs=1 count=4 seek=0x104 conv=notrunc
+
+#	$(QUIET)if `command -v xxd >/dev/null 2>&1`; then\
+#		printf '%08x' `cksum "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f1` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=256 conv=notrunc;\
+#		printf '%08x' `ls -nl "$(OUTPUT_BIN).tmp.bin" | cut -d' ' -f8` | xxd -r -p | dd of="$(OUTPUT_BIN).tmp.bin" bs=1 count=4 seek=260 conv=notrunc;\
+#		mv "$(OUTPUT_BIN).tmp.bin" "$(OUTPUT_BIN).bin";\
+#	else\
+#		echo "Unable to add checksum to '$(OUTPUT_BIN).bin' due to missing 'xcd' utility. Continuing anyway.";\
+#		mv "$(OUTPUT_BIN).tmp.bin" "$(OUTPUT_BIN).bin";\
+#	fi
+
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 

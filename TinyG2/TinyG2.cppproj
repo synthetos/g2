@@ -49,15 +49,15 @@
     </com_atmel_avrdbg_tool_samice>
     <AsfFrameworkConfig>
       <framework-data>
-        <options />
-        <configurations />
-        <files />
-        <documentation help="" />
-        <offline-documentation help="" />
-        <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
-        </dependencies>
-      </framework-data>
+  <options />
+  <configurations />
+  <files />
+  <documentation help="" />
+  <offline-documentation help="" />
+  <dependencies>
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.10.1" />
+  </dependencies>
+</framework-data>
     </AsfFrameworkConfig>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
@@ -72,7 +72,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800005101</ToolNumber>
+      <ToolNumber>J41800019454</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>False</UseGdb>
@@ -98,6 +98,7 @@
       <HWProfiling>True</HWProfiling>
       <HWProgramCounterSampling>True</HWProgramCounterSampling>
     </PercepioTrace>
+    <preserveEEPROM>true</preserveEEPROM>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
