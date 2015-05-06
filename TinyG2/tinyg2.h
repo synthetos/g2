@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.16 // fixed message return in a blank Gcode line
+#define TINYG_FIRMWARE_BUILD   		083.17 // fixed homing startup condition with Otherplan; added settings_othermill_test.h
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
