@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.17 // fixed homing startup condition with Otherplan; added settings_othermill_test.h
+#define TINYG_FIRMWARE_BUILD   		083.18 // changes to jogging function to agree with OMC production
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
