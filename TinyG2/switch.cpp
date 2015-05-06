@@ -2,8 +2,8 @@
  * switch.cpp - switch handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -47,6 +47,7 @@
 #include "hardware.h"
 #include "canonical_machine.h"
 #include "text_parser.h"
+#include "encoder.h"
 
 #ifdef __AVR
 #include <avr/interrupt.h>
@@ -195,6 +196,7 @@ int8_t poll_switch(switch_t *s, uint8_t pin_value)
 		s->edge = SW_TRAILING;
 		s->on_trailing(s);
 	} else {
+        en_take_encoder_snapshot();
 		s->edge = SW_LEADING;
 		s->on_leading(s);
 	}
