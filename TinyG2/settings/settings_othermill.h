@@ -40,8 +40,9 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION		100000		// centripetal acceleration around corners
-#define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
+//#define JUNCTION_ACCELERATION		100000	// centripetal acceleration around corners
+#define CORNERING_AGGRESSION        1.00    // 0.00 <= ja <= 1.00 - how fast to move through corners
+#define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -221,7 +222,8 @@
 #define Z_FEEDRATE_MAX 		    	Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN		    	-60.1
 #define Z_TRAVEL_MAX 		    	0
-#define Z_JERK_MAX 			    	JERK_MAX
+//#define Z_JERK_MAX 			    	JERK_MAX
+#define Z_JERK_MAX 			    	50
 #define Z_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 #define Z_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6

@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		085.02 // changed the structure of the formula, added fabs() 
+#define TINYG_FIRMWARE_BUILD   		085.04 // testing new cornering algorithm
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

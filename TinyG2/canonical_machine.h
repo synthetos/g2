@@ -441,15 +441,12 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	/**** Config variables (PUBLIC) ****/
 
 	// system group settings
-	float junction_acceleration;		// centripetal acceleration max for cornering
+//	float junction_acceleration;		// centripetal acceleration max for cornering
+	float cornering_aggression;		    // amount to de-rate optimal cornering
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;       // true to enable safety interlock system
-
-    float test_velocity;    //+++++
-    float best_velocity;    //+++++
-    float recip_delta;      //+++++
 
 	// hidden system settings
 //	float min_segment_len;				// line drawing resolution in mm
@@ -726,6 +723,7 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
+stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 
 /*--- text_mode support functions ---*/
 
@@ -763,7 +761,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_mpo(nvObj_t *nv);		// print runtime work position always in MM uints
 	void cm_print_ofs(nvObj_t *nv);		// print runtime work offset always in MM uints
 
-	void cm_print_ja(nvObj_t *nv);		// global CM settings
+//	void cm_print_ja(nvObj_t *nv);		// global CM settings
+	void cm_print_ca(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
@@ -826,7 +825,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_mpo tx_print_stub		// print runtime work position always in MM uints
 	#define cm_print_ofs tx_print_stub		// print runtime work offset always in MM uints
 
-	#define cm_print_ja tx_print_stub		// global CM settings
+//	#define cm_print_ja tx_print_stub		// global CM settings
+	#define cm_print_ca tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub

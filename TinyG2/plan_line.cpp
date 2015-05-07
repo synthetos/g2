@@ -506,12 +506,77 @@ static void _calculate_jerk(mpBuf_t *bf)
 */
 }
 
-// The amount of time that we expect a change in velocity to actually take effect in reality.
-// Used it to determine jerk from an "instantaneous" velocity change.
+#define __NEW_CORNERING_ALGORITHM
+#ifdef __NEW_CORNERING_ALGORITHM
 
-//#define __CENTRIPETAL_JERK
+/*
+ * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
+ *
+ *  Computes the maximum allowable junction speed by finding the velocity that
+ *  will not violate the jerk value of any axis.
+ *
+ *  In order to achieve this, we take the unit vector of the difference of the
+ *  unit vectors of the two moves of the corner, at the point from vector a to
+ *  vector b. The unit vectors of those two moves are a_unit and b_unit.
+ *
+ *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
+ *      UnitMagnitude  = sqrt(Delta[i]^2 + Delta[i+1]^2 + Delta[i+2]^2 + ...)
+ *                                                                 (2)
+ *      UnitAccel[i]   = Delta[i] / UnitMagnitude                  (3)
+ *
+ *  We take, axis by axis, the difference in "unit velocity" to get a vector
+ *  that represents the direction of acceleration - which may be the opposite
+ *  direction as that of the a vector to achieve deceleration. To get the actual
+ *  acceleration, we use the corner velocity (what we intend to calculate) as
+ *  the magnitude.
+ *
+ *      Acceleration[i] = UnitAccel[i] * Velocity                  (4)
+ *
+ *  Since we need the jerk value, which is defined as the "rate of change of
+ *  acceleration. That is, the derivative of acceleration with respect to time",
+ *  (Wikipedia) we need to have a quantum of time where the change in
+ *  acceleration is actually carried out by the physics. That will give us the
+ *  time over which to "apply" the change of acceleration in order to get a
+ *  physically realistic jerk. The yields a fairly simple formula:
+ *
+ *      Jerk[i] = Acceleration[i] / Time                           (5)
+ *
+ *  Now that we can compute the jerk for a given corner, we need to know the
+ *  maximum Velocity that we can take the corner without violating that jerk for
+ *  any axis. Let's incorporate formula (4) above into formula (5) above, and
+ *  solve for Velocity, using the known max Jerk and UnitAccel for this corner:
+ *
+ *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (6)
+ *
+ *  We then compute (6) for each axis, and use the smallest (most limited)
+ *  result.
+ */
+static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
+{
+    uint8_t best_axis = 0;
+    float velocity = (1000000000000.0);    // an arbitrarily large number
+    
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        float delta = fabs(b_unit[axis] - a_unit[axis]);
+        if (delta > EPSILON) {                  // remove divide-by-zero for efficiency
+//            velocity = min((cm.a[axis].jerk_max / delta), velocity);
+            
+          // alternate form if best_axis is needed
+            float test_velocity = cm.a[axis].jerk_max / delta;
+            if (test_velocity < velocity) {         
+                velocity = test_velocity;
+                best_axis = axis;
+            }
+        }
+    }
+//    printf ("delta: %f\n", fabs(b_unit[best_axis] - a_unit[best_axis]));
+//    velocity *= cm.cornering_aggression;   // apply cornering aggression factor
+    printf ("corner velocity: %f\n", min(vmax, velocity));  //+++++ omit after testing
+    return(min(vmax, velocity));
+}
 
-#ifdef __CENTRIPETAL_JERK
+#else // __NEW_CORNERING_ALGORITHM
+
 /*
  * _calculate_junction_vmax() - Sonny's algorithm - simple
  *
@@ -603,123 +668,8 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
 
     return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
-
-/* DIAGNOSTIC
-    float velocity = min(vmax, (float)sqrt(radius * cm.junction_acceleration));
-    printf("v:%f\n", velocity);
-    return (velocity);
-*/
-
-//    return(sqrt(radius * cm.junction_acceleration));
-
-// New junction code - untested
-//    float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
-//    float delta_over_costheta = delta / costheta;
-//    float radius = sqrt(delta_over_costheta * delta_over_costheta - delta * delta);
-//    return((radius * cm.junction_acceleration) / delta);
 }
-
-#else // __CENTRIPETAL_JERK
-
-/*
- * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
- *
- *  Computes the maximum allowable junction speed by finding the velocity that
- *  will not violate the jerk value of any axis.
- *
- *  In order to achieve this, we take the unit vector of the difference of the
- *  unit vectors of the two moves of the corner, at the point from vector a to
- *  vector b. The unit vectors of those two moves are a_unit and b_unit.
- *
- *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
- *      UnitMagnitude  = sqrt(Delta[i]^2 + Delta[i+1]^2 + Delta[i+2]^2 + ...)
- *                                                                 (2)
- *      UnitAccel[i]   = Delta[i] / UnitMagnitude                  (3)
- *
- *  We take, axis by axis, the difference in "unit velocity" to get a vector
- *  that represents the direction of acceleration - which may be the opposite
- *  direction as that of the a vector to achieve deceleration. To get the actual
- *  acceleration, we use the corner velocity (what we intend to calculate) as
- *  the magnitude.
- *
- *      Acceleration[i] = UnitAccel[i] * Velocity                  (4)
- *
- *  Since we need the jerk value, which is defined as the "rate of change of
- *  acceleration. That is, the derivative of acceleration with respect to time",
- *  (Wikipedia) we need to have a quantum of time where the change in
- *  acceleration is actually carried out by the physics. That will give us the
- *  time over which to "apply" the change of acceleration in order to get a
- *  physically realistic jerk. The yields a fairly simple formula:
- *
- *      Jerk[i] = Acceleration[i] / Time                           (5)
- *
- *  Now that we can compute the jerk for a given corner, we need to know the
- *  maximum Velocity that we can take the corner without violating that jerk for
- *  any axis. Let's incorporate formula (4) above into formula (5) above, and
- *  solve for Velocity, using the known max Jerk and UnitAccel for this corner:
- *
- *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (6)
- *
- *  We then compute (6) for each axis, and use the smallest (most limited)
- *  result.
- */
-static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
-{
-    uint8_t best_axis;
-    float best_velocity = (1000000000.0);    // an arbitrarily large number
-    float test_velocity = 0;
-    
-    for (uint8_t axis=0; axis<AXES; axis++) {
-        float delta = fabs(b_unit[axis] - a_unit[axis]);
-        if (delta > EPSILON) {                              // remove divide-by-zero for efficiency
-            test_velocity = cm.a[axis].jerk_max / delta;
-            printf ("%d: %f, %f\n", axis, test_velocity, best_velocity); //+++++ omit
-            best_velocity = min(test_velocity, best_velocity);
-//            if (test_velocity < best_velocity) {          // alternate form is best_axis is needed
-//                best_velocity = test_velocity;
-//                best_axis = axis;
-//            }
-        }
-    }
-    printf ("end: %f, %f\n", test_velocity, best_velocity); //+++++ omit
-//    best_velocity /= (cm.junction_acceleration);       // convert to mm/min and adjust for quantum
-    printf ("corner velocity: %f\n", min(vmax, best_velocity));  //+++++ omit after testing
-    return(min(vmax, best_velocity));
-}
-
-/*
-static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
-{
-    cm.junction_acceleration = (CORNER_TIME_QUANTUM);
-
-    float delta[AXES]; // (1)
-    delta[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
-    delta[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
-    delta[AXIS_Z] = b_unit[AXIS_Z] - a_unit[AXIS_Z];
-    delta[AXIS_A] = b_unit[AXIS_A] - a_unit[AXIS_A];
-    delta[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
-    delta[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
-
-    uint8_t best_axis = 0;    // reserved for later
-    float best_velocity = 8675309;
-
-    for (uint8_t axis=0; axis<AXES; axis++) {
-        float recip_delta = 1/delta[axis]; // (3a)
-        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
-
-        if (test_velocity < best_velocity) {
-            best_velocity = test_velocity;
-//            best_axis = axis;
-        }
-    }
-    cm.junction_acceleration = (min(vmax, best_velocity));
-    printf ("%f\n", cm.junction_acceleration);
-    return (cm.junction_acceleration);
-//    return(min(vmax, best_velocity));
-}
-*/
-
-#endif // __CENTRIPETAL_JERK
+#endif // __NEW_CORNERING_ALGORITHM
 
 /*
  *  mp_reset_replannable_list() - resets all blocks in the planning list to be replannable

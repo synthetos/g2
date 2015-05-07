@@ -2044,6 +2044,21 @@ stat_t cm_set_jh(nvObj_t *nv)
 }
 
 /*
+ * cm_set_ca() - set cornering aggression
+ */
+stat_t cm_set_ca(nvObj_t *nv)
+{
+    if (nv->value > 1.00) {
+        return (STAT_INPUT_VALUE_TOO_LARGE);
+    }    
+    if (nv->value < 0.00) {
+        return (STAT_INPUT_VALUE_TOO_SMALL);
+    }
+    set_flt(nv);
+    return(STAT_OK);
+}
+
+/*
  * Commands
  *
  * cm_run_qf() - flush planner queue
@@ -2200,7 +2215,8 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system state print functions */
 
-const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+//const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+const char fmt_ca[] PROGMEM = "[ja]  cornering aggression%9.2f%s [0.00 < ca < 1.00 maximum]\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
@@ -2209,7 +2225,8 @@ const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 
-void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+//void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ca(nvObj_t *nv) { text_print(nv, fmt_ca);}    // TYPE_FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
