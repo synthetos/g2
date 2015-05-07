@@ -988,24 +988,20 @@ static void _load_move()
 
 		//**** do this last ****
 
-//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+// OMC  st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dda_timer.start();									// start the DDA timer if not already running
 
 	// handle dwells
 	} else if (st_pre.move_type == MOVE_TYPE_DWELL) {
 		st_run.dda_ticks_downcount = st_pre.dda_ticks;
-//        st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
+// OMC  st_pre.exec_isbusy |= DDA_DWELL_BUSY_FLAG;
 		dwell_timer.start();
 
 	// handle synchronous commands
 	} else if (st_pre.move_type == MOVE_TYPE_COMMAND) {
 		mp_runtime_command(st_pre.bf);
 
-	// null
-	} else {
-// We cannot printf from here!! Causes crashes.
-//		printf("prep_null encountered\n");
-	}
+	} // else null - WARNING - We cannot printf from here!! Causes crashes.
 
 	// all other cases drop to here (e.g. Null moves after Mcodes skip to here)
 	st_pre.move_type = MOVE_TYPE_NULL;
@@ -1208,9 +1204,9 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 
 static int8_t _get_motor(const index_t index)
 {
-	char_t *ptr;
-	char_t motors[] = {"123456"};
-	char_t tmp[TOKEN_LEN+1];
+	char *ptr;
+	char motors[] = {"123456"};
+	char tmp[TOKEN_LEN+1];
 
 	strcpy_P(tmp, cfgArray[index].group);
 	if ((ptr = strchr(motors, tmp[0])) == NULL) {
@@ -1257,17 +1253,13 @@ stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 {
 	uint8_t mi = (uint8_t)nv->value;
 
-#ifdef __AVR
-	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
-//	if (fp_NE(nv->value,1) && fp_NE(nv->value,2) && fp_NE(nv->value,4) && fp_NE(nv->value,8)) {
-		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
-	}
-#endif
 #ifdef __ARM
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
-		nv_add_conditional_message((const char_t *)"*** WARNING *** Setting non-standard microstep value");
-	}
+#else
+	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
 #endif
+		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
+	}
 	set_ui8(nv);						// set it anyway, even if it's unsupported
 	_set_motor_steps_per_unit(nv);
 	_set_hw_microsteps(_get_motor(nv->index), (uint8_t)nv->value);
@@ -1297,10 +1289,8 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
 stat_t st_set_pl(nvObj_t *nv)	// motor power level
 {
 #ifdef __ARM
-	if (nv->value < (float)0.0) nv->value = 0.0;
-	if (nv->value > (float)1.0) {
-		if (nv->value > (float)100) nv->value = 1;
- 		nv->value /= 100;		// accommodate old 0-100 inputs
+	if ((nv->value < (float)0.0) || (nv->value > (float)1.0)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
 	}
 	set_flt(nv);	// set power_setting value in the motor config struct (st)
 

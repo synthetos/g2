@@ -77,15 +77,15 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
+#define JERK_MULTIPLIER			((float)1000000)	// DO NOT CHANGE - must always be 1 million
+#define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
+
 //#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time (also minimum move time)
 #define MIN_SEGMENT_USEC 		((float)750)		// minimum segment time (also minimum move time)
 #define NOM_SEGMENT_USEC 		((float)1500)		// nominal segment time
 
 #define MIN_PLANNED_USEC		((float)20000)		// minimum time in the planner below which we must replan immediately
 #define PHAT_CITY_USEC			((float)80000)		// if you have at least this much time in the planner,
-
-#define JERK_MULTIPLIER			((float)1000000)	// DO NOT CHANGE - must always be 1 million
-#define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 
 // Note that PLANNER_TIMEOUT is in milliseconds (seconds/1000), not microseconds (usec) like the above!
 #define PLANNER_TIMEOUT_MS		(50)				// Max amount of time to wait between replans
@@ -296,7 +296,6 @@ mpBuf_t * mp_get_first_buffer(void);
 
 stat_t mp_plan_buffer();                                // planner functions and helpers...
 bool mp_is_it_phat_city_time();
-//void mp_planner_time_accounting();
 
 // plan_line.c functions
 

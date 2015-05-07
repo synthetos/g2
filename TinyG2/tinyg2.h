@@ -38,11 +38,11 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.06 // Correction to forward difference calculation.
+#define TINYG_FIRMWARE_BUILD   		083.09 // Fix issue 85 -- "zero length line in calculate trapezoid" asserts
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
-#define TINYG_CONFIG_VERSION		6							// CV values started at 5 to provide bkwds compatibility
+#define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
 #define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
@@ -56,9 +56,9 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
+#define __DIAGNOSTICS               // enables various debug functions
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves
-//#define __DEBUG_SETTINGS          // special settings. See settings.h
 
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************
@@ -75,7 +75,7 @@
 
 #include <avr/pgmspace.h>		// defines PROGMEM and PSTR
 
-typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
+//typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 																	// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
@@ -108,15 +108,15 @@ typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 								// Use macros to fake out AVR's PROGMEM and other AVRisms.
 #define PROGMEM					// ignore PROGMEM declarations in ARM/GCC++
 #define PSTR (const char *)		// AVR macro is: PSTR(s) ((const PROGMEM char *)(s))
-typedef char char_t;			// Vestigal. Will be removed at some point
+//typedef char char_t;			// Vestigal. Will be removed at some point
 
 													// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  cfgArray[nv->index].a	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) cfgArray[nv->index].a	// get byte value from cfgArray
-#define GET_TOKEN_BYTE(a)  (char_t)cfgArray[i].a	// get token byte value from cfgArray
+#define GET_TOKEN_BYTE(a)  cfgArray[i].a            // get token byte value from cfgArray
 
-#define GET_TOKEN_STRING(i,a) strcpy_P(a, (char_t *)&cfgArray[(index_t)i].token); // populate the token string given the index
+#define GET_TOKEN_STRING(i,a) strcpy_P(a, (char *)&cfgArray[(index_t)i].token); // populate the token string given the index
 
 #define GET_TEXT_ITEM(b,a) b[a]						// get text from an array of strings in flash
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
@@ -139,8 +139,10 @@ typedef char char_t;			// Vestigal. Will be removed at some point
  *
  * Avoid redefining global defines if possible The following inline jump functions are better.
  */
-inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
-inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
+//inline char_t* strcpy_P(char_t* d, const char_t* s) { return (char_t *)strcpy((char *)d, (const char *)s); }
+//inline char_t* strncpy_P(char_t* d, const char_t* s, size_t l) { return (char_t *)strncpy((char *)d, (const char *)s, l); }
+inline char* strcpy_P(char* d, const char* s) { return (char *)strcpy((char *)d, (const char *)s); }
+inline char* strncpy_P(char* d, const char* s, size_t l) { return (char *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
 #define printf_P printf		// these functions want char * as inputs, not char_t *
@@ -222,7 +224,7 @@ typedef uint8_t stat_t;
 extern stat_t status_code;				// allocated in main.c
 
 #define MESSAGE_LEN 80					// global message string storage allocation
-extern char_t global_string_buf[];		// allocated in main.c
+extern char global_string_buf[];		// allocated in main.c
 
 char *get_status_message(stat_t status);
 

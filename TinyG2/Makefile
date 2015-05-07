@@ -52,6 +52,10 @@ USER_LIBS =
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
+DEBUG ?= 0
+#DEBUG ?= 1 # Use this to turn on some debugging functions
+#DEBUG ?= 2 # Use this for DEBUG=1 + some debug traps that need a HW debugger
+
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
@@ -249,18 +253,11 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
-##### TEMPORARY TEMPORARY TEMPORARY ####
-
-DEBUG ?= 2
-
-##### END TEMPORARY TEMPORARY TEMPORARY ####
-
-
 ifeq ($(DEBUG),1)
 	DEVICE_DEFINES += DEBUG=1
 endif
 ifeq ($(DEBUG),2)
-DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
+	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
 endif
 
 
@@ -430,13 +427,17 @@ define NEWLINE_TAB
 	${EMPTY}
 endef
 
-$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info PLATFORM=$(PLATFORM))
+$(info SETTING_FILE=$(SETTINGS_FILE))
+$(info DEBUG=$(DEBUG))
+$(info $(NEWLINE_ONLY)DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
 $(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
 $(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
 $(info $(NEWLINE_ONLY)SAM_SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SAM_SOURCE_DIRS)))
 $(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
 $(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_FIRST_LINK_SOURCES) $(FIRST_LINK_SOURCES)))
+$(info $(NEWLINE_ONLY)DEVICE_DEFINES: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_DEFINES)))
 endif
 
 
@@ -449,10 +450,10 @@ all: $(OUTPUT_BIN).elf $(OUTPUT_BIN).bin
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
-MK_DIRS =   $(shell                              \
-		for d in $(REQUIRED_DIRS);         \
-		do                                 \
-		[[ -d $$d ]] || mkdir -p $$d;    \
+MK_DIRS = $(shell                         \
+		for d in $(REQUIRED_DIRS);        \
+			do                            \
+			[[ -d $$d ]] || mkdir -p $$d; \
 		done)
 
 $(eval $(DEVICE_RULES))
@@ -462,6 +463,11 @@ $(eval $(DEVICE_RULES))
 MKTOOLS:
 	@echo Looking for tools...
 	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
+
+GIT_VERSION = $(shell git describe --abbrev=4 --dirty --always --tags)
+
+# Push the git version into the code -- as yet unused
+DEVICE_DEFINES += GIT_VERSION=$(GIT_VERSION)
 
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)

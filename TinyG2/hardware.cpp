@@ -74,7 +74,7 @@ void hw_flash_loader(void)
  *	Truncate to SYS_ID_DIGITS length
  */
 
-void _get_id(char_t *id)
+void _get_id(char *id)
 {
     char *p = id;
     const uint16_t *uuid = readUniqueIdString();
@@ -101,7 +101,7 @@ void _get_id(char_t *id)
 
 stat_t hw_get_id(nvObj_t *nv)
 {
-	char_t tmp[SYS_ID_LEN];
+	char tmp[SYS_ID_LEN];
 	_get_id(tmp);
 	nv->valuetype = TYPE_STRING;
 	ritorno(nv_copy_string(nv, tmp));

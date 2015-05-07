@@ -63,15 +63,15 @@
 #include "util.h"
 
 using namespace Motate;
-extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
 //extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 //extern OutputPin<-1> plan_debug_pin1;
 //extern OutputPin<-1> plan_debug_pin2;
-extern OutputPin<-1> plan_debug_pin3;
-extern OutputPin<-1> plan_debug_pin4;
+//extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<-1> plan_debug_pin4;
 
 
 // Allocate planner structures
@@ -543,7 +543,7 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 
 stat_t mp_plan_buffer()
 {
-    plan_debug_pin1 = 1;
+//    plan_debug_pin1 = 1;
 
     // Criteria to replan:
     // 0) There are items in the buffer that need replanning.
@@ -551,7 +551,7 @@ stat_t mp_plan_buffer()
     // 2) Less than MIN_PLANNED_TIME in the planner
 
     if (!mb.needs_replanned) {
-        plan_debug_pin1 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
     bool do_continue = false;
@@ -568,12 +568,12 @@ stat_t mp_plan_buffer()
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
-        plan_debug_pin4 = 1;
+//        plan_debug_pin4 = 1;
     }
 
     if (!do_continue) {
-        plan_debug_pin4 = 0;
-        plan_debug_pin1 = 0;
+//        plan_debug_pin4 = 0;
+//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
 
@@ -589,8 +589,8 @@ stat_t mp_plan_buffer()
     mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = false;
 
-    plan_debug_pin4 = 0;
-    plan_debug_pin1 = 0;
+//    plan_debug_pin4 = 0;
+//    plan_debug_pin1 = 0;
     return (STAT_OK);
 }
 
@@ -643,19 +643,43 @@ static void _planner_time_accounting()
 
 #warning DEBUG TRAPS ENABLED
 
-#pragma GCC push_options
+
 #pragma GCC optimize ("O0")
+
+
+static void _planner_report(const char *msg)
+{
+    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
+
+    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"replan\":%d",
+                mb.bf[i].buffer_state,
+                mb.bf[i].move_type,
+                mb.bf[i].locked,
+                mb.bf[i].replannable);
+        if (&mb.bf[i] == mb.r) {
+            printf(", \"RUN\":t");}
+        if (&mb.bf[i] == mb.q) {
+            printf(", \"QUE\":t");}
+        if (&mb.bf[i] == mb.w) {
+            printf(", \"WRT\":t");}
+        printf("}}\n");
+    }
+}
+
 static void _audit_buffers()
 {
     __disable_irq();
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
+        _planner_report("buffer audit1");
         _debug_trap();
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
+        _planner_report("buffer audit2");
         _debug_trap();
     }
 
@@ -664,6 +688,7 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
+            _planner_report("buffer audit3");
             _debug_trap();
         }
 
@@ -680,41 +705,47 @@ static void _audit_buffers()
             if (bf->buffer_state == MP_BUFFER_PLANNING) {
                 __NOP();
             } else {
+                _planner_report("buffer audit4");
                 _debug_trap();
             }
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit5");
             _debug_trap();
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit6");
             _debug_trap();
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
+            _planner_report("buffer audit7");
             _debug_trap();
         }
-
         // Now look at the next one.
         bf = bf->nx;
     }
     __enable_irq();
 }
-#pragma GCC pop_options
-// About the ggc warning on the previous line: http://comments.gmane.org/gmane.comp.gcc.bugs/404291
+
+#pragma GCC reset_options
 
 #endif // DEBUG
 
 #else
+
 static void _audit_buffers()
 {
     // empty stub
 }
+
 #endif // 0
+
 
 /****************************
  * END OF PLANNER FUNCTIONS *

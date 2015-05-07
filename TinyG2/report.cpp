@@ -81,26 +81,6 @@ stat_t rpt_exception(stat_t status, const char *msg)
         }
         printf_P(PSTR("\"}}\n"));
      }
-/*
-		if (msg != NULL) {
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s, %s\"}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s, %s\"}}\n"),
-					TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-			}
-		} else {
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-				printf_P(PSTR("{er:{fb:%0.2f,st:%d,msg:\"%s\"}}\n"),
-				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			} else {
-				printf_P(PSTR("{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s\"}}\n"),
-				TINYG_FIRMWARE_BUILD, status, get_status_message(status));
-			}
-		}
-    }
-*/
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }
 
@@ -124,13 +104,13 @@ void _startup_helper(stat_t status, const char *msg)
 {
 #ifndef __SUPPRESS_STARTUP_MESSAGES
 	nv_reset_nv_list();
-	nv_add_object((const char_t *)"fv");		// firmware version
-	nv_add_object((const char_t *)"fb");		// firmware build
-	nv_add_object((const char_t *)"cv");		// configuration version
-	nv_add_object((const char_t *)"hp");		// hardware platform
-	nv_add_object((const char_t *)"hv");		// hardware version
-	nv_add_object((const char_t *)"id");		// hardware ID
-	nv_add_string((const char_t *)"msg", pstr2str(msg));	// startup message
+	nv_add_object((const char *)"fv");		// firmware version
+	nv_add_object((const char *)"fb");		// firmware build
+//	nv_add_object((const char *)"cv");		// configuration version
+	nv_add_object((const char *)"hp");		// hardware platform
+	nv_add_object((const char *)"hv");		// hardware version
+	nv_add_object((const char *)"id");		// hardware ID
+	nv_add_string((const char *)"msg", pstr2str(msg));	// startup message
 	json_print_response(status);
 #endif
 }
@@ -148,7 +128,7 @@ void rpt_print_loading_configs_message(void)
 void rpt_print_system_ready_message(void)
 {
 	_startup_helper(STAT_OK, PSTR("SYSTEM READY"));
-	if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char_t *)"");}// prompt
+	if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char *)"");}// prompt
 }
 
 /*****************************************************************************
@@ -198,7 +178,7 @@ static uint8_t _populate_filtered_status_report(void);
 
 uint8_t _is_stat(nvObj_t *nv)
 {
-	char_t tok[TOKEN_LEN+1];
+	char tok[TOKEN_LEN+1];
 
 	GET_TOKEN_STRING(nv->value, tok);
 	if (strcmp(tok, "stat") == 0) { return (true);}
@@ -211,18 +191,20 @@ uint8_t _is_stat(nvObj_t *nv)
  *	Call this function to completely re-initialize the status report
  *	Sets SR list to hard-coded defaults and re-initializes SR values in NVM
  */
+
 void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
 	sr.status_report_request = SR_OFF;
-	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
-	nv->index = nv_get_index((const char_t *)"", (char_t *)"se00");	// set first SR persistence index
+//	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
+	char sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
+	nv->index = nv_get_index((const char *)"", (char *)"se00");	// set first SR persistence index
 	sr.stat_index = 0;
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;				// quit on first blank array entry
 		sr.status_report_value[i] = -1234567;				// pre-load values with an unlikely number
-		nv->value = nv_get_index((const char_t *)"", sr_defaults[i]);// load the index for the SR element
+		nv->value = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
 		if (fp_EQ(nv->value, NO_MATCH)) {
 			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init"); // trap mis-configured profile settings
 			return;
@@ -242,12 +224,13 @@ void sr_init_status_report()
  *	rejected by the JSON or text parser. In other words, it should never get to here if
  *	there is an unrecognized token in the SR string.
  */
+
 stat_t sr_set_status_report(nvObj_t *nv)
 {
 	uint8_t elements = 0;
 	index_t status_report_list[NV_STATUS_REPORT_LEN];
 	memset(status_report_list, 0, sizeof(status_report_list));
-	index_t sr_start = nv_get_index((const char_t *)"",(const char_t *)"se00");// set first SR persistence index
+	index_t sr_start = nv_get_index((const char *)"",(const char *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
 		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) break;
@@ -280,10 +263,12 @@ stat_t sr_set_status_report(nvObj_t *nv)
  *	Requests can specify immediate or timed reports, and can also force a filtered or full report.
  *	See cmStatusReportRequest enum in report.h for details.
  */
+
 stat_t sr_request_status_report(uint8_t request_type)
 {
-	// +++ Might require making the FULL requests be sticky, and override previous non-FULL requests
-	if (sr.status_report_request != SR_OFF) return (STAT_OK); // ignore multiple requests. First one wins.
+	if (sr.status_report_request != SR_OFF) {       // ignore multiple requests. First one wins.
+        return (STAT_OK);
+   }
 
 	sr.status_report_systick = SysTickTimer_getValue();
 	if (request_type == SR_REQUEST_IMMEDIATE) {
@@ -361,13 +346,13 @@ stat_t sr_run_text_status_report()
  */
 static stat_t _populate_unfiltered_status_report()
 {
-	const char_t sr_str[] = "sr";
-	char_t tmp[TOKEN_LEN+1];
+	const char sr_str[] = "sr";
+	char tmp[TOKEN_LEN+1];
 	nvObj_t *nv = nv_reset_nv_list();		// sets *nv to the start of the body
 
 	nv->valuetype = TYPE_PARENT; 			// setup the parent object (no length checking required)
 	strcpy(nv->token, sr_str);
-	nv->index = nv_get_index((const char_t *)"", sr_str);// set the index - may be needed by calling function
+	nv->index = nv_get_index((const char *)"", sr_str);// set the index - may be needed by calling function
 	nv = nv->nx;							// no need to check for NULL as list has just been reset
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
@@ -400,14 +385,14 @@ static stat_t _populate_unfiltered_status_report()
  */
 static uint8_t _populate_filtered_status_report()
 {
-	const char_t sr_str[] = "sr";
+	const char sr_str[] = "sr";
 	uint8_t has_data = false;
-	char_t tmp[TOKEN_LEN+1];
+	char tmp[TOKEN_LEN+1];
 	nvObj_t *nv = nv_reset_nv_list();		// sets nv to the start of the body
 
 	nv->valuetype = TYPE_PARENT; 			// setup the parent object (no need to length check the copy)
 	strcpy(nv->token, sr_str);
-//	nv->index = nv_get_index((const char_t *)"", sr_str);// OMITTED - set the index - may be needed by calling function
+//	nv->index = nv_get_index((const char *)"", sr_str);// OMITTED - set the index - may be needed by calling function
 	nv = nv->nx;							// no need to check for NULL as list has just been reset
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
@@ -438,13 +423,23 @@ static uint8_t _populate_filtered_status_report()
  * sr_set()		- set status report elements
  * sr_set_si()	- set status report interval
  */
-stat_t sr_get(nvObj_t *nv) { return (_populate_unfiltered_status_report());}
-stat_t sr_set(nvObj_t *nv) { return (sr_set_status_report(nv));}
+
+stat_t sr_get(nvObj_t *nv)
+{
+    return (_populate_unfiltered_status_report());
+}
+
+stat_t sr_set(nvObj_t *nv)
+{
+    return (sr_set_status_report(nv));
+}
 
 stat_t sr_set_si(nvObj_t *nv)
 {
-	if (nv->value < STATUS_REPORT_MIN_MS) { nv->value = STATUS_REPORT_MIN_MS;}
-	sr.status_report_interval = (uint32_t)nv->value;
+	if (nv->value < STATUS_REPORT_MIN_MS) {
+        nv->value = STATUS_REPORT_MIN_MS;
+    }
+	set_int(nv);
 	return(STAT_OK);
 }
 
@@ -457,8 +452,6 @@ static const char fmt_si[] PROGMEM = "[si]  status interval%14d ms\n";
 static const char fmt_sv[] PROGMEM = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
 
 void sr_print_sr(nvObj_t *nv) { _populate_unfiltered_status_report();}
-//void sr_print_si(nvObj_t *nv) { text_print_flt(nv, fmt_si);}
-//void sr_print_sv(nvObj_t *nv) { text_print_ui8(nv, fmt_sv);}
 void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
 
@@ -486,6 +479,7 @@ void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
 /*
  * qr_init_queue_report() - initialize or clear queue report values
  */
+
 void qr_init_queue_report()
 {
 	qr.queue_report_requested = false;
@@ -500,6 +494,7 @@ void qr_init_queue_report()
  *	Requests a queue report and also records the buffers added and removed
  *	since the last init (usually re-initted when a report is generated).
  */
+
 void qr_request_queue_report(int8_t buffers)
 {
 	// get buffer depth and added/removed count
@@ -529,6 +524,7 @@ void qr_request_queue_report(int8_t buffers)
 /*
  * qr_queue_report_callback() - generate a queue report if one has been requested
  */
+
 stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
 #ifdef __SUPPRESS_QUEUE_REPORTS
@@ -574,6 +570,7 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 /*
  * rx_request_rx_report() - request an update on usb serial buffer space available
  */
+
 void rx_request_rx_report(void) {
     rx.rx_report_requested = true;
 #ifdef __AVR
@@ -650,19 +647,20 @@ stat_t qo_get(nvObj_t *nv)
  *	job_set()
  *	job_print_job()
  */
+
 stat_t job_populate_job_report()
 {
-	const char_t job_str[] = "job";
-	char_t tmp[TOKEN_LEN+1];
+	const char job_str[] = "job";
+	char tmp[TOKEN_LEN+1];
 	nvObj_t *nv = nv_reset_nv_list();		// sets *nv to the start of the body
 
 	nv->valuetype = TYPE_PARENT; 			// setup the parent object
 	strcpy(nv->token, job_str);
 
-	//nv->index = nv_get_index((const char_t *)"", job_str);// set the index - may be needed by calling function
+	//nv->index = nv_get_index((const char *)"", job_str);// set the index - may be needed by calling function
 	nv = nv->nx;							// no need to check for NULL as list has just been reset
 
-	index_t job_start = nv_get_index((const char_t *)"",(const char_t *)"job1");// set first job persistence index
+	index_t job_start = nv_get_index((const char *)"",(const char *)"job1");// set first job persistence index
 	for (uint8_t i=0; i<4; i++) {
 
 		nv->index = job_start + i;
@@ -679,7 +677,7 @@ stat_t job_populate_job_report()
 
 stat_t job_set_job_report(nvObj_t *nv)
 {
-	index_t job_start = nv_get_index((const char_t *)"",(const char_t *)"job1");// set first job persistence index
+	index_t job_start = nv_get_index((const char *)"",(const char *)"job1");// set first job persistence index
 
 	for (uint8_t i=0; i<4; i++) {
 		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}

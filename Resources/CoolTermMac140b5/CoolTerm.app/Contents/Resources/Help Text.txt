@@ -1,0 +1,211 @@
+<b><font size="16">CoolTerm - Help</font></b>
+
+<b><font size="14">Contents</font></b>
+- Overview
+- Quick Start
+- Connection Options
+- Plain Text and Hexadecimal Display Mode
+- Sending Strings
+- Capturing Received Data
+- Launching CoolTerm from the Command Line
+- Configurations for advanced users
+
+
+
+<b><font size="14">Overview</font></b>
+
+CoolTerm is an easy-to-use terminal for communication with hardware connected to serial ports.
+
+CoolTerm is a simple serial port terminal application (no terminal emulation) that is geared towards hobbyists and professionals with a need to exchange data with hardware connected to serial ports such as servo controllers, robotic kits, GPS receivers, microcontrollers, etc.
+
+The features of CoolTerm include:
+- Capability of multiple concurrent connections if multiple serial ports are available.
+- Display of received data in plain text or hexadecimal format.
+- Sending data via keypresses as well as a "Send String" dialog that supports data entry in plain text or hexadecimal format.
+- Sending data via copy-paste of text into the terminal window.
+- Sending of text files.
+- Capability of capturing received data to text files.
+- Local echo of transmitted data.
+- Local echo of received data (loop back to sender).
+- Hardware (CTS, DTR) and software flow control (XON).
+- Optical line status indicators.
+- Capability of manually toggling line states of certain handshaking signals when hardware flow control is disabled.
+- Configurable character and line delays.
+- Capability of saving and retrieving connection options.
+- and more...
+
+
+<b><font size="14">Quick Start</font></b>
+
+- Use the <i>Connection Options</i> dialog to configure your serial port.
+- Click <i>Connect</i> to open the serial port and use the keyboard to type the characters to be sent. 
+- Received data will be displayed in the terminal window. Use <i>View Hex</i> to view the data in the terminal window in hexadecimal format.
+- Use <i>Connection/Send String...</i> to send strings of text. This dialog allows data to be entered as plain text or in hexadecimal format for special characters.
+- Use <i>Connection/Send Textfile...</i> to send entire text files.
+- Received data can be recorded to textfile using <i>Connection/Capture to Textfile</i>.
+- Line states are indicated via the indicator icons in the lower right corner of the terminal window.
+- Line states that can be toggled manually are indicated by a bold font type. Click the indicator to toggle the line state of such a signal.
+- Display preferences such as Font, Text Color and Background Color can be configured via the <i>File/Preferences...</i> menu.
+
+Connection options can be saved and retrieved via the <i>File/Save</i> and <i>File/Open</i> menu items.
+It is possible to define the default connection options that are applied each time a new terminal window is opened. To create customized default connection options, use "File/Save As Default" to save the current settings to a 'default.stc' file which will be placed in the same folder in which the CoolTerm application resides. The settings in this file will be applied as default to new terminal windows.
+
+To open a new Terminal, use <i>File/New</i>.
+
+<b>Viewing Options (<i>View</i> Menu)</b>
+<i>Plain Text and Hexadecimal Display Mode</i>
+The display mode of the terminal window can be switched between plain text and hexadecimal via the <i>View Hex/View ASCII</i> toolbar button. Hex mode is particularly useful when characters are received that can not be displayed in plain text.
+Characters to be sent can be typed via the keyboard, independent of the current display mode.
+
+<i>Autoscroll</i>
+If enabled, the data display (ASCII and Hex mode) is automatically scrolled to the bottom when new data is received to show the new data. If disabled, the data display is not automatically scrolled.
+
+<i>Clear Data</i>
+Clears the data display (ASCII and Hex).
+
+<i>Status LEDs</i>
+The status LEDs display the line states of various serial port signals. A lit LED indicates the "active" state of a signal. An unlit LED indicates that the signal is "inactive".
+
+
+<b><font size="14">Connection Options</font></b>
+
+Connection options can be saved and retrieved via the <i>File/Save</i> and <i>File/Open</i> menu items.
+It is possible to define the default connection options that are applied each time a new terminal window is opened. To create customized default connection options, use "File/Save As Default" to save the current settings to a 'default.stc' file which will be placed in the same folder in which the CoolTerm application resides. The settings in this file will be applied as default to new terminal windows.
+
+To modify the <i>Connection Options</i>, click the <i>Options</i> in the toolbar or use the <i>Connection/Options...</i> menu to open the Connection Options Window. The options are divided into the following categories:
+
+<b><u><font size="13">Serial Port</font></u></b>
+Serial port specific options can be adjusted here. The port can not be changed while the connection is open. Close the connection first to change the port. All other settings can be changed while the connection is open.
+
+<i><b>Serial Port Options</b></i>
+Select the serial port from the popup menu and configure its settings according to the requirements (Baudrate, Data Bits, Parity, etc.) of the connected hardware.
+If the serial port to be used is not listed in the popup menu (e.g. in case it is a USB to Serial port adapter that was connected after CoolTerm was started) push the <i>Re-Scan Serial Ports</i> button. Should the serial port still not be available for selection, ensure that the proper drivers for the serial port are installed.
+Additional information (such as driver names and rated speeds) about the selected port can be displayed by clicking the bevel button to the right side of the <i>Port:</i> popup menu.
+
+
+<b><u><font size="13">Terminal</font></u></b>
+Options related to terminal behavior are adjusted here. These options are accessible regardless of the connection state of the serial port.
+
+<i><b>Terminal Options</b></i>
+<i>Terminal Mode</i>
+Sets the operating mode of the terminal. In <i>Raw Mode</i> every key is sent via the serial port immediately as it is pressed. When in <i>Line Mode</i>, a command line field is visible in the terminal window. Characters typed in this field are added to a send buffer. The contents of the send buffer (i.e. one line of text) are sent when the enter key is pressed.
+<i>Line Mode</i> supports History. I.e. the up and down arrow keys can be used to send previously typed lines. Alternatively, the square button to the right of the command line field can be pressed to show a history of previously sent lines. Select any line to add it to the send buffer.
+
+<i>Enter Key Emulation</i>
+Defines what character(s) to send when the Enter key is pressed. When in <i>Line Mode</i>, the contents of the send buffer are terminated with the character(s) selected here before they are sent.
+
+<i>Handle Bell Character</i>
+If checked, received bell characters (ASCII code 7) will play a terminal beep.
+
+<i>Local Echo</i>
+If checked, locally entered data will be echoed in the terminal window.
+
+<i>Replace TAB key with spaces</i>
+If checked, TAB key presses are replaced with the number of spaces specified in the field below. Default is 4, with a maximum of 32.
+
+<i><b>ASCII View Options</b></i>
+<i>Convert Non-printable Characters (ASCII View)</i>
+If checked, non-printable characters (ASCII codes 0 to 31, and 127 to 255) will be displayed as a period character in ASCII View mode.
+
+<i>Handle Backspace Character</i>
+If checked, backspace characters (ASCII code 8) will be visually handled in ASCII View mode, i.e. when a backspace character is received (or typed with local echo enabled) the last character in the ASCII viewer is deleted.
+
+
+<b><u><font size="13">Receive</font></u></b>
+Settings with regard to received data can be adjusted here. These options are accessible regardless of the connection state of the serial port.
+
+<i><b>Receive Options</b></i>
+<i>Loop back received data</i>
+If checked, all received data will be echoed back to the sender. This is a useful feature e.g. when working with hardware that has a built-in selftest which requires a loopback adapter. CoolTerm can act as such a loopback adapter and it allows for the data to be observed in the terminal window.
+
+<i>Ignore receive signal errors</i>
+If un-checked, CoolTerm will notify the users of signal errors (e.g. an attached device toggles a line state unexpectedly) and close the serial port. If checked, such errors will be ignored and the serial port will remain open.
+
+<i>Receive Buffer Size</i>
+The receive buffer, i.e. the amount of data being retained by the terminal window at any given time, is limited to the number of characters specified by this value. To avoid slow performance as the receive buffer fills up, this number should be kept small. The receive buffer size is limited to 2,147,483,647 Bytes or less on systems will less available memory.
+
+<i><b>Capture Text Options</b></i>
+The <i>Capture raw data</i> and <i>Add timestamps to received lines</i> selections determine how received data is stored in the capture file. Raw data capture is suitable when a true representation of the received date is to be captured. Added timestamp capture is suited for data logging applications. Timestamps are added after each received new line character as well as individual <i>DataAvailable</i> events generated by the serial port API to allow timestamped capture of data that is not terminated by new line characters. The format of the timestamps is as follows: YYYY-MM-DD HH:MM:SS:mmm, where mmm denotes milliseconds.
+
+<i>Capture Local Echo</i>
+If checked, the local echo (if enabled in the <i>Terminal Options</i>) of transmitted data will be captured in addition to the received data.
+
+<i>Leave File open while capturing</i>If checked (default), CoolTerm will maintain a lock on the capture file by leaving it open as long as capturing is in progress.If unchecked, the file will be closed each time after writing to it, and reopened when new data arrives. This allows other applications to read the contents of the capture file while capturing is in progress. This can be useful in automated environments where received data needs to be available to other applications.
+NOTE: This option should be used with caution. The capture file should only be opened "read-only" so that CoolTerm can write new data to it.
+
+
+<b><u><font size="13">Transmit</font></u></b>
+Settings with regard to transmission of data can be adjusted here. These options are accessible regardless of the connection state of the serial port.
+
+<i><b>Transmit Options</b></i>
+<i>Use transmit character delay</i>
+Checking this option enables a character delay specified by the value (in milliseconds) in the <i>Delay</i> text field below. This option guarantees a minimum time between characters to support targets with limited or no receive buffering in order to avoid data loss during transmission. This option is also recommended for targets that employ CTS flow control. At least 3ms delay between characters should be allowed for software and hardware latency on the PC side to shut off data flow when using a CTS command. The maximum character delay that can be specified is 10,000ms.
+
+<i>Use transmit line delay</i>
+Checking this option enables a delay specified by the value (in milliseconds) in the <i>Delay</i> text field below. This option guarantees a minimum time after certain characters which are specified in the <i>Delay characters</i> text field below. The default is the Line Feed character (ASCII 10, or 0A hex). This supports targets that execute commands upon receipt of such a character and won't be able to process new data for a certain amount of time. The maximum line delay that can be specified is 10,000ms.
+
+<i><b>Send String Options</b></i>
+<i>Terminate 'Send String' Data</i>
+Enables automatic termination of strings sent by <i>Send String</i> windows with a configurable <i>Termination String</i>. When pressing <i>Send</i> in any <i>Send String</i> window, the <i>Termination String</i> is automatically appended to the sent data.
+
+<i>Termination String</i>
+If enabled, this String is automatically appended when sending data from <i>Send String</i> windows.
+
+<i><b>Send Text Options</b></i>
+<i>Notify after sending text files</i>
+If enabled, a short notification sound will be played upon completion of sending a text file.
+
+
+<b><u><font size="13">Miscellaneous</font></u></b>
+<i><b>Misc. Options</b></i>
+<i>Automatically connect on open</i>
+If checked, the specified serial port will automatically open if these connection settings are loaded via the <i>File/Open</i> menu item. If this option is enabled in the 'default.stc' connection options file in the CoolTerm application directory, the serial port will be opened automatically whenever a new terminal is opened. Note, that each physical serial port can only be opened once, i.e. if a port is already opened, attempts to open the same port in another terminal window will cause a connection error.
+
+
+
+<b><font size="14">Sending Strings</font></b>
+
+Strings of text can be sent via the <i>Send String</i> dialog windows which can be opened via the <i>Connection/Send String...</i> menu. Multiple <i>Send String</i> windows can be open at the same time. Strings can be entered in plain text as well as in hexadecimal mode. The modes can be switched between ASCII and Hex at any time. When entering data in hexadecimal mode, 2 hex-digits must be used for every character. It is not necessary to use spaces between characters. Press the <i>Send</i> button to send the string to the serial port. Pressing Shift+ENTER or Shift+RETURN will also invoke the "Send" button. 
+NOTE: The serial port must be open to send strings. If the serial port is not open, the <i>Send</i> button is disabled.
+
+
+<b><font size="14">Sending Text Files</font></b>
+
+Entire text files can be transmitted via the <i>Connection/Send Textfile...</i> menu. Transmitting text files is only possible when the serial port is open. Use the file dialog opened by <i>Connection/Send Textfile...</i> to navigate to the text file to be sent.
+Text files can also be sent via drag-and-drop. Drag the text file to be sent and drop it onto the terminal window with which to send the file.
+
+
+<b><font size="14">Capturing Received Data</font></b>
+
+CoolTerm is capable of capturing received data to textfiles.
+- Use the <i>Connection/Capture to TextFile/Start...</i> menu to open a file dialog.
+- Specify the location and the name of the capture file and press <i>Save</i>. This will start the capture.
+- To pause capturing, use <i>Connection/Capture to TextFile/Pause</i>.
+- To resume capturing, use <i>Connection/Capture to TextFile/Resume</i>.
+- To pause capturing and close the capture file, use <i>Connection/Capture to TextFile/Stop</i>.
+
+
+<b><font size="14">Launching CoolTerm from the Command Line</font></b>
+
+CoolTerm can be launched from the command line, using the paths to settings files as arguments. If launched without an argument, the 'default.stc' settings file will be loaded if it exists. If one or more settings file paths are passed as arguments (separated by spaces), each one will be opened when CoolTerm launches.
+
+Examples:
+
+Mac:    open CoolTerm.app setting1.stc setting2.stc setting3.stc
+Win:    CoolTerm.exe setting1.stc setting2.stc setting3.stc
+Linux:  CoolTerm setting1.stc setting2.stc setting3.stc
+
+
+
+<b><font size="14">Configuration for Advanced Users</font></b>
+
+<b><u><font size="13">Adding extra serial ports to the selection in Connection Options</font></u></b>
+
+In case the system has serial ports that can not be discovered by CoolTerm, such as the /dev/tty.xxx devices on OS X, a text file named "ports.ini" can be placed inside the same directory in which the CoolTerm application resides. Additional ports can be added to this file, one per line. At startup, CoolTerm will read the contents of this file and attempt to obtain handles on the listed devices. Devices with valid handles will then be accessible via the Connection Settings.
+
+
+<b><u><font size="13">Adding extra baudrates to the selection in Connection Options</font></u></b>
+
+CoolTerm only lists the baudrates that are guaranteed to work on all platforms. However, some USB adapter are knowns to work with higher/non-standard baudrates such as 128000, 153600, 256000, 460800, or even 921600 baud. Some users may have hardware that require lower baudrates, such as 150, 110, or 100 baud. To use such baudrates in CoolTerm, create and place a "baudrates.ini" file inside the same directory in which the CoolTerm application resides. Additional baudrates can be added to this file, one per line. At startup, CoolTerm will read the contents of this file and the additional baudrates will then be accessible via the Connection Settings. When selecting one of these additional baudrates, CoolTerm will attempt to pass the baudrates to the driver.
+
+NOTE: There is no guarantee that setting the baudrate to one of these settings will produce the desired result. In case a value is not accepted by the driver, CoolTerm will generate an "Invalid Option" error message. But there are other cases where the driver will accept the value, but not actually generate the correct baudrate. Such cases include some of the lower baudrates like 150, 110, and 100 baud. Only Keyspan USB adapters have been found to support such settings reliably. Both FTDI and Prolific adapters produce baudrates around 30kBaud when set to one of these settings. The user is required to verify that the port is set to the correct baudrate when selecting a non-standard setting. Reports of adapter that reliably support the lower baudrates will be appreciated.

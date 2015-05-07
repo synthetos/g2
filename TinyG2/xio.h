@@ -133,7 +133,7 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 void xio_init(void);
 stat_t xio_test_assertions(void);
 
-char_t *xio_readline(devflags_t &flags, uint16_t &size);
+char *xio_readline(devflags_t &flags, uint16_t &size);
 void xio_flush_read();
 size_t xio_write(const uint8_t *buffer, size_t size);
 

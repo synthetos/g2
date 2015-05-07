@@ -52,9 +52,9 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction);
  */
 void spindle_init()
 {
-	if( pwm.c[PWM_1].frequency < 0 )
+	if( pwm.c[PWM_1].frequency < 0 ) {
 		pwm.c[PWM_1].frequency = 0;
-
+    }
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
 }
@@ -196,14 +196,14 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 
 	if (enable == SPINDLE_ON) {
 		// clamp spindle speed to lo/hi range
-		if (cm.gm.spindle_speed < speed_lo) {
-            cm.gm.spindle_speed = speed_lo;
+		if (spindle.speed < speed_lo) {
+            spindle.speed = speed_lo;
         }
-		if (cm.gm.spindle_speed > speed_hi) {
-            cm.gm.spindle_speed = speed_hi;
+		if (spindle.speed > speed_hi) {
+            spindle.speed = speed_hi;
         }
 		// normalize speed to [0..1]
-		float speed = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
+		float speed = (spindle.speed - speed_lo) / (speed_hi - speed_lo);
 		return (speed * (phase_hi - phase_lo)) + phase_lo;
 	} else {
 		return pwm.c[PWM_1].phase_off;
