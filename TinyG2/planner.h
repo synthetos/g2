@@ -99,7 +99,8 @@ typedef enum {
 // PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
 // ++++++++ NOT SURE THIS IS STILL OPERATIVE ++++++++ ash)
 
-#define CORNER_TIME_QUANTUM (1/250000)              // Cornering time constant
+//#define CORNER_TIME_QUANTUM (1 / 250000)              // Cornering time constant
+#define CORNER_TIME_QUANTUM (0.00004)              // Cornering time constant
 
 //*** derived definitions - do not change ***
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)

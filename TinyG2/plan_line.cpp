@@ -672,7 +672,43 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
  *      Velocity[i] = (Jerk[i] * Time) * RecipUnitAccel[i]         (6a)
  *
  */
+static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
+{
+    cm.junction_acceleration = (CORNER_TIME_QUANTUM);
+/*
+    float delta[AXES]; // (1)
+    delta[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
+    delta[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
+    delta[AXIS_Z] = b_unit[AXIS_Z] - a_unit[AXIS_Z];
+    delta[AXIS_A] = b_unit[AXIS_A] - a_unit[AXIS_A];
+    delta[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
+    delta[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
+*/
+//    uint8_t best_axis = 0;
+    float best_velocity = 86753090000000.0;
 
+    for (uint8_t axis=0; axis<AXES; axis++) {
+//        float recip_delta = 1/delta[axis]; // (3a)
+//        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
+//        float test_velocity = (cm.a[axis].jerk_max * 0.001) * recip_delta; // (6a)
+//        float test_velocity = cm.a[axis].jerk_max * recip_delta; // (6a)
+//        float test_velocity = cm.a[axis].jerk_max / delta[axis]; // (6a)
+        float test_velocity = cm.a[axis].jerk_max / (b_unit[axis] - a_unit[axis]); // (6a)
+
+        if (test_velocity < best_velocity) {
+            best_velocity = test_velocity;
+        }
+    }
+//    best_velocity /= CORNER_TIME_QUANTUM;
+    best_velocity /= 0.01;
+
+    cm.junction_acceleration = (min(vmax, best_velocity));
+    printf ("%f\n", cm.junction_acceleration);
+
+    return(min(vmax, best_velocity));
+}
+
+/*
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
     cm.junction_acceleration = (CORNER_TIME_QUANTUM);
@@ -710,45 +746,8 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     return (cm.junction_acceleration);
 //    return(min(vmax, best_velocity));
 }
-/*
-static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
-{
-    float accel[AXES]; // (1)
-    accel[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
-    accel[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
-    accel[AXIS_Z] = b_unit[AXIS_Z] - a_unit[AXIS_Z];
-    accel[AXIS_A] = b_unit[AXIS_A] - a_unit[AXIS_A];
-    accel[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
-    accel[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
-
-    float unit_accel;
-    unit_accel  = square(accel[AXIS_X]);
-    unit_accel += square(accel[AXIS_Y]);
-    unit_accel += square(accel[AXIS_Z]);
-    unit_accel += square(accel[AXIS_A]);
-    unit_accel += square(accel[AXIS_B]);
-    unit_accel += square(accel[AXIS_C]);
-    unit_accel = sqrt(unit_accel); // (2)
-
-
-//    uint8_t best_axis = 0;
-    float best_velocity = 0;
-
-    for (uint8_t axis=0; axis<AXES; axis++) {
-        float recip_unit_accel = unit_accel/accel[axis]; // (3a)
-        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_unit_accel; // (6a)
-
-        if (fp_ZERO(best_velocity) || (test_velocity < best_velocity)) {
-            best_velocity = test_velocity;
-//            best_axis = axis;
-        }
-    }
-    cm.junction_acceleration = (min(vmax, best_velocity));
-    printf ("%f\n", cm.junction_acceleration);
-    return (cm.junction_acceleration);
-//    return(min(vmax, best_velocity));
-}
 */
+
 #endif // __CENTRIPETAL_JERK
 
 /*
