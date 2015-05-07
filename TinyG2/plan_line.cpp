@@ -506,9 +506,6 @@ static void _calculate_jerk(mpBuf_t *bf)
 */
 }
 
-#define __NEW_CORNERING_ALGORITHM
-#ifdef __NEW_CORNERING_ALGORITHM
-
 /*
  * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
  *
@@ -552,9 +549,6 @@ static void _calculate_jerk(mpBuf_t *bf)
  *  result.
  */
 
-// TODO: move this somewhere saner:
-#define CORNER_TIME_QUANTUM 0.0000025 // (1.0/400000.0)  // one clock tick
-
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
     float velocity = vmax;    // start with our maximum
@@ -563,110 +557,13 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
         float delta = fabs(b_unit[axis] - a_unit[axis]);
         if (delta > EPSILON) {                  // remove divide-by-zero for efficiency
             float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
-            velocity = min(test_velocity, velocity);
+            velocity = min(velocity, test_velocity);
         }
     }
 //    printf ("delta: %f\n", fabs(b_unit[best_axis] - a_unit[best_axis]));
-//    velocity *= cm.cornering_aggression;   // apply cornering aggression factor
-//    printf ("corner velocity: %f\n", velocity);  //+++++ omit after testing
+//    printf ("velocity: %f\n", velocity);  //+++++ omit after testing
     return(velocity);
 }
-
-#else // __NEW_CORNERING_ALGORITHM
-
-/*
- * _calculate_junction_vmax() - Sonny's algorithm - simple
- *
- *  Computes the maximum allowable junction speed by finding the velocity that will yield
- *	the centripetal acceleration in the corner_acceleration value. The value of delta sets
- *	the effective radius of curvature. Here's Sonny's (Sungeun K. Jeon's) explanation
- *	of what's going on:
- *
- *	"First let's assume that at a junction we only look a centripetal acceleration to simply
- *	things. At a junction of two lines, let's place a circle such that both lines are tangent
- *	to the circle. The circular segment joining the lines represents the path for constant
- *	centripetal acceleration. This creates a deviation from the path (let's call this delta),
- *	which is the distance from the junction to the edge of the circular segment. Delta needs
- *	to be defined, so let's replace the term max_jerk (see note 1) with max_junction_deviation,
- *	or "delta". This indirectly sets the radius of the circle, and hence limits the velocity
- *	by the centripetal acceleration. Think of the this as widening the race track. If a race
- *	car is driving on a track only as wide as a car, it'll have to slow down a lot to turn
- *	corners. If we widen the track a bit, the car can start to use the track to go into the
- *	turn. The wider it is, the faster through the corner it can go.
- *
- * (Note 1: "max_jerk" refers to the old grbl/marlin max_jerk" approximation term, not the
- *	tinyG jerk terms)
- *
- *	If you do the geometry in terms of the known variables, you get:
- *		sin(theta/2) = R/(R+delta)  Re-arranging in terms of circle radius (R)
- *		R = delta*sin(theta/2)/(1-sin(theta/2).
- *
- *	Theta is the angle between line segments given by:
- *		cos(theta) = dot(a,b)/(norm(a)*norm(b)).
- *
- *	Most of these calculations are already done in the planner. To remove the acos()
- *	and sin() computations, use the trig half angle identity:
- *		sin(theta/2) = +/- sqrt((1-cos(theta))/2).
- *
- *	For our applications, this should always be positive. Now just plug the equations into
- *	the centripetal acceleration equation: v_c = sqrt(a_max*R). You'll see that there are
- *	only two sqrt computations and no sine/cosines."
- *
- *	How to compute the radius using brute-force trig:
- *		float theta = acos(costheta);
- *		float radius = delta * sin(theta/2)/(1-sin(theta/2));
- */
-/*  This version extends Chamnit's algorithm by computing a value for delta that takes
- *	the contributions of the individual axes in the move into account. This allows the
- *	control radius to vary by axis. This is necessary to support axes that have
- *	different dynamics; such as a Z axis that doesn't move as fast as X and Y (such as a
- *	screw driven Z axis on machine with a belt driven XY - like a Shapeoko), or rotary
- *	axes ABC that have completely different dynamics than their linear counterparts.
- *
- *	The function takes the absolute values of the sum of the unit vector components as
- *	a measure of contribution to the move, then scales the delta values from the non-zero
- *	axes into a composite delta to be used for the move. Shown for an XY vector:
- *
- *	 	U[i]	Unit sum of i'th axis	fabs(unit_a[i]) + fabs(unit_b[i])
- *	 	Usum	Length of sums			Ux + Uy
- *	 	d		Delta of sums			(Dx*Ux+DY*UY)/Usum
- */
-
-//static float _calculate_junction_vmax(const float a_unit[], const float b_unit[])
-static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
-{
-	float costheta = - (a_unit[AXIS_X] * b_unit[AXIS_X])
-					 - (a_unit[AXIS_Y] * b_unit[AXIS_Y])
-					 - (a_unit[AXIS_Z] * b_unit[AXIS_Z])
-					 - (a_unit[AXIS_A] * b_unit[AXIS_A])
-					 - (a_unit[AXIS_B] * b_unit[AXIS_B])
-					 - (a_unit[AXIS_C] * b_unit[AXIS_C]);
-
-	if (costheta < -0.99) { return (vmax); } 		// straight line cases
-	if (costheta > 0.99)  { return (0); } 				// reversal cases
-
-	// Fuse the junction deviations into a vector sum
-	float a_delta = square(a_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
-
-	float b_delta = square(b_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
-
-    float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
-    float sintheta_over2 = sqrt((1 - costheta)/2);
-    float radius = delta * sintheta_over2 / (1-sintheta_over2);
-
-    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
-}
-#endif // __NEW_CORNERING_ALGORITHM
 
 /*
  *  mp_reset_replannable_list() - resets all blocks in the planning list to be replannable

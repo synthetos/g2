@@ -424,7 +424,7 @@ typedef struct cmAxis {
 	float jerk_max;						// max jerk (Jm) in mm/min^3 divided by 1 million
 	float jerk_high;				    // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
 	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
-	float junction_dev;					// aka cornering delta
+//	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
 
     uint8_t homing_input;               // set 1-N for homing input. 0 will disable homing
@@ -442,7 +442,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	// system group settings
 //	float junction_acceleration;		// centripetal acceleration max for cornering
-	float cornering_aggression;		    // amount to de-rate optimal cornering
+//	float cornering_aggression;		    // amount to de-rate optimal cornering
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
@@ -762,7 +762,7 @@ stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 	void cm_print_ofs(nvObj_t *nv);		// print runtime work offset always in MM uints
 
 //	void cm_print_ja(nvObj_t *nv);		// global CM settings
-	void cm_print_ca(nvObj_t *nv);		// global CM settings
+//	void cm_print_ca(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
@@ -779,7 +779,7 @@ stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 	void cm_print_tn(nvObj_t *nv);
 	void cm_print_jm(nvObj_t *nv);
 	void cm_print_jh(nvObj_t *nv);
-	void cm_print_jd(nvObj_t *nv);
+//	void cm_print_jd(nvObj_t *nv);
 	void cm_print_ra(nvObj_t *nv);
 
 	void cm_print_hi(nvObj_t *nv);
@@ -826,7 +826,7 @@ stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 	#define cm_print_ofs tx_print_stub		// print runtime work offset always in MM uints
 
 //	#define cm_print_ja tx_print_stub		// global CM settings
-	#define cm_print_ca tx_print_stub		// global CM settings
+//	#define cm_print_ca tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub
@@ -843,7 +843,7 @@ stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 	#define cm_print_tn tx_print_stub
 	#define cm_print_jm tx_print_stub
 	#define cm_print_jh tx_print_stub
-	#define cm_print_jd tx_print_stub
+//	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
 
 	#define cm_print_hi tx_print_stub
