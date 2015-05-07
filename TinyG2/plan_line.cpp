@@ -551,28 +551,25 @@ static void _calculate_jerk(mpBuf_t *bf)
  *  We then compute (6) for each axis, and use the smallest (most limited)
  *  result.
  */
+
+// TODO: move this somewhere saner:
+#define CORNER_TIME_QUANTUM 0.0000025 // (1.0/400000.0)  // one clock tick
+
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
-    uint8_t best_axis = 0;
-    float velocity = (1000000000000.0);    // an arbitrarily large number
+    float velocity = vmax;    // start with our maximum
     
     for (uint8_t axis=0; axis<AXES; axis++) {
         float delta = fabs(b_unit[axis] - a_unit[axis]);
         if (delta > EPSILON) {                  // remove divide-by-zero for efficiency
-//            velocity = min((cm.a[axis].jerk_max / delta), velocity);
-            
-          // alternate form if best_axis is needed
-            float test_velocity = cm.a[axis].jerk_max / delta;
-            if (test_velocity < velocity) {         
-                velocity = test_velocity;
-                best_axis = axis;
-            }
+            float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
+            velocity = min(test_velocity, velocity);
         }
     }
 //    printf ("delta: %f\n", fabs(b_unit[best_axis] - a_unit[best_axis]));
 //    velocity *= cm.cornering_aggression;   // apply cornering aggression factor
-    printf ("corner velocity: %f\n", min(vmax, velocity));  //+++++ omit after testing
-    return(min(vmax, velocity));
+//    printf ("corner velocity: %f\n", velocity);  //+++++ omit after testing
+    return(velocity);
 }
 
 #else // __NEW_CORNERING_ALGORITHM
