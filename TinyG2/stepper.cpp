@@ -517,6 +517,10 @@ void st_deenergize_motors()
  */
 stat_t st_motor_power_callback() 	// called by controller
 {
+    if (!mp_is_it_phat_city_time()) {
+        return (STAT_NOOP);
+    }
+
     bool have_actually_stopped = false;
     if ((!st_runtime_isbusy()) && (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)) {	// if there are no moves to load...
         have_actually_stopped = true;

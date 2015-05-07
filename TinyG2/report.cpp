@@ -36,12 +36,6 @@
 #include "util.h"
 #include "xio.h"
 
-using namespace Motate;
-//OutputPin<kDebug1_PinNumber> sr_debug_pin1;
-//OutputPin<kDebug2_PinNumber> sr_debug_pin2;
-//OutputPin<kDebug3_PinNumber> sr_debug_pin3;
-OutputPin<-1> sr_debug_pin3;
-
 /**** Allocation ****/
 
 srSingleton_t sr;
@@ -298,14 +292,16 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	return (STAT_NOOP);
 #endif
 
-    if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
-	if (sr.status_report_request == SR_OFF) return (STAT_NOOP);
-
-	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
-
-    sr_debug_pin3 = 1;
+    if (sr.status_report_verbosity == SR_OFF) {
+        return (STAT_NOOP);
+    }
+	if (sr.status_report_request == SR_OFF) {
+        return (STAT_NOOP);
+    }    
+	if (SysTickTimer_getValue() < sr.status_report_systick) {
+        return (STAT_NOOP);
+    }    
     if (!mp_is_it_phat_city_time()) {
-        sr_debug_pin3 = 0;
         return (STAT_NOOP);
     }
 
@@ -314,14 +310,11 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	} else {
 		if (_populate_filtered_status_report() == false) {	// no new data
 			sr.status_report_request = SR_OFF;				// disable reports until requested again
-            sr_debug_pin3 = 0;
 			return (STAT_OK);
 		}
 	}
 	sr.status_report_request = SR_OFF;
 	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
-
-    sr_debug_pin3 = 0;
     return (STAT_OK);
 }
 
@@ -330,12 +323,8 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
  */
 stat_t sr_run_text_status_report()
 {
-    sr_debug_pin3 = 1;
-
     _populate_unfiltered_status_report();
 	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-
-    sr_debug_pin3 = 0;
 	return (STAT_OK);
 }
 
@@ -531,14 +520,17 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 	return (STAT_NOOP);
 #endif
 
-	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
-	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
-
-    if (!mp_is_it_phat_city_time()) { return (STAT_NOOP);}
+	if (qr.queue_report_verbosity == QR_OFF) { 
+        return (STAT_NOOP);
+    }
+	if (qr.queue_report_requested == false) { 
+        return (STAT_NOOP);
+    }
+    if (!mp_is_it_phat_city_time()) { 
+        return (STAT_NOOP);
+    }
 
     qr.queue_report_requested = false;
-
-    sr_debug_pin3 = 1;
 
 	if (cs.comm_mode == TEXT_MODE) {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
@@ -562,8 +554,6 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 		}
 	}
 	qr_init_queue_report();
-
-    sr_debug_pin3 = 0;
     return (STAT_OK);
 }
 
@@ -584,7 +574,12 @@ void rx_request_rx_report(void) {
  * rx_report_callback() - send rx report if one has been requested
  */
 stat_t rx_report_callback(void) {
-    if (!rx.rx_report_requested) { return (STAT_NOOP); }
+    if (!rx.rx_report_requested) { 
+        return (STAT_NOOP); 
+    }
+    if (!mp_is_it_phat_city_time()) {
+        return (STAT_NOOP);
+    }
     rx.rx_report_requested = false;
 
     fprintf(stderr, "{\"rx\":%d}\n", rx.space_available);

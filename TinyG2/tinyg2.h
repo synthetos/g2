@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.18 // changes to jogging function to agree with OMC production
+#define TINYG_FIRMWARE_BUILD   		083.19 // fixed displays during jogging
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
