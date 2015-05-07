@@ -628,9 +628,8 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
  *  will not violate the jerk value of any axis.
  *
  *  In order to achieve this, we take the unit vector of the difference of the
- *  unit vectors of the two moves of the corner corner, point from vector a to
- *  vector b. We are given the unit vectors of those two moves as a_unit and
- *  b_unit.
+ *  unit vectors of the two moves of the corner, at the point from vector a to
+ *  vector b. The unit vectors of those two moves are a_unit and b_unit.
  *
  *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
  *      UnitMagnitude  = sqrt(Delta[i]^2 + Delta[i+1]^2 + Delta[i+2]^2 + ...)
@@ -666,25 +665,24 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
  */
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
-    cm.junction_acceleration = (CORNER_TIME_QUANTUM);   //+++++
-
-    float best_velocity = (8675309.0 / CORNER_TIME_QUANTUM);    // an arbitrarily large number
-    float test_velocity = 0;
-    float delta;
+    float best_velocity = (1000000000.0);    // an arbitrarily large number
+    float test_velocity;
     
     for (uint8_t axis=0; axis<AXES; axis++) {
-        delta = fabs(b_unit[axis] - a_unit[axis]);
-        if (delta > EPSILON) {                              // remove divide by zero for efficiency
+        float delta = fabs(b_unit[axis] - a_unit[axis]);
+        if (delta > EPSILON) {                              // remove divide-by-zero for efficiency
             test_velocity = cm.a[axis].jerk_max / delta;
-            printf ("%d: %f, %f\n", axis, test_velocity, best_velocity); //+++++
+            printf ("%d: %f, %f\n", axis, test_velocity, best_velocity); //+++++ omit
             test_velocity = min(test_velocity, best_velocity);
-        }        
+//            if (test_velocity < best_velocity) {          // alternate form is best_axis is needed
+//                best_velocity = test_velocity;
+//                best_axis = axis;
+//            }
+        }
     }
-//    best_velocity /= CORNER_TIME_QUANTUM;                 //scale the velocity to reality
-    best_velocity /= 0.001;
-
-    cm.junction_acceleration = (min(vmax, best_velocity));
-    printf ("%f\n", cm.junction_acceleration);
+    printf ("end: %f, %f\n", test_velocity, best_velocity); //+++++ omit
+    best_velocity /= (60 * cm.junction_acceleration);       // convert to mm/min and adjust for quantum
+    printf ("corner velocity: %f\n", min(vmax, best_velocity));  //+++++ omit after testing
     return(min(vmax, best_velocity));
 }
 
@@ -701,27 +699,19 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     delta[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
     delta[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
 
-//    uint8_t best_axis = 0;    // reserved for later
-//    float best_velocity = 8675309;
-    cm.best_velocity = 8675309;
+    uint8_t best_axis = 0;    // reserved for later
+    float best_velocity = 8675309;
 
     for (uint8_t axis=0; axis<AXES; axis++) {
-//        float recip_delta = 1/delta[axis]; // (3a)
-//        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
-        cm.recip_delta = 1/delta[axis]; // (3a)
-        cm.test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * cm.recip_delta; // (6a)
+        float recip_delta = 1/delta[axis]; // (3a)
+        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
 
-        if (cm.test_velocity < cm.best_velocity) {
-            cm.best_velocity = cm.test_velocity;
-        }
-//        printf ("test_velocity: %f\n", test_velocity);
-
-//        if (fp_ZERO(best_velocity) || (test_velocity < best_velocity)) {
-//            best_velocity = test_velocity;
+        if (test_velocity < best_velocity) {
+            best_velocity = test_velocity;
 //            best_axis = axis;
-//        }
+        }
     }
-    cm.junction_acceleration = (min(vmax, cm.best_velocity));
+    cm.junction_acceleration = (min(vmax, best_velocity));
     printf ("%f\n", cm.junction_acceleration);
     return (cm.junction_acceleration);
 //    return(min(vmax, best_velocity));
