@@ -665,15 +665,16 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
  */
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
+    uint8_t best_axis;
     float best_velocity = (1000000000.0);    // an arbitrarily large number
-    float test_velocity;
+    float test_velocity = 0;
     
     for (uint8_t axis=0; axis<AXES; axis++) {
         float delta = fabs(b_unit[axis] - a_unit[axis]);
         if (delta > EPSILON) {                              // remove divide-by-zero for efficiency
             test_velocity = cm.a[axis].jerk_max / delta;
             printf ("%d: %f, %f\n", axis, test_velocity, best_velocity); //+++++ omit
-            test_velocity = min(test_velocity, best_velocity);
+            best_velocity = min(test_velocity, best_velocity);
 //            if (test_velocity < best_velocity) {          // alternate form is best_axis is needed
 //                best_velocity = test_velocity;
 //                best_axis = axis;
@@ -681,7 +682,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
         }
     }
     printf ("end: %f, %f\n", test_velocity, best_velocity); //+++++ omit
-    best_velocity /= (60 * cm.junction_acceleration);       // convert to mm/min and adjust for quantum
+//    best_velocity /= (cm.junction_acceleration);       // convert to mm/min and adjust for quantum
     printf ("corner velocity: %f\n", min(vmax, best_velocity));  //+++++ omit after testing
     return(min(vmax, best_velocity));
 }
