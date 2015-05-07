@@ -675,6 +675,44 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
+    cm.junction_acceleration = (CORNER_TIME_QUANTUM);
+
+    float delta[AXES]; // (1)
+    delta[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
+    delta[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
+    delta[AXIS_Z] = b_unit[AXIS_Z] - a_unit[AXIS_Z];
+    delta[AXIS_A] = b_unit[AXIS_A] - a_unit[AXIS_A];
+    delta[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
+    delta[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
+
+//    uint8_t best_axis = 0;    // reserved for later
+//    float best_velocity = 8675309;
+    cm.best_velocity = 8675309;
+
+    for (uint8_t axis=0; axis<AXES; axis++) {
+//        float recip_delta = 1/delta[axis]; // (3a)
+//        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
+        cm.recip_delta = 1/delta[axis]; // (3a)
+        cm.test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * cm.recip_delta; // (6a)
+
+        if (cm.test_velocity < cm.best_velocity) {
+            cm.best_velocity = cm.test_velocity;
+        }
+//        printf ("test_velocity: %f\n", test_velocity);
+
+//        if (fp_ZERO(best_velocity) || (test_velocity < best_velocity)) {
+//            best_velocity = test_velocity;
+//            best_axis = axis;
+//        }
+    }
+    cm.junction_acceleration = (min(vmax, cm.best_velocity));
+    printf ("%f\n", cm.junction_acceleration);
+    return (cm.junction_acceleration);
+//    return(min(vmax, best_velocity));
+}
+/*
+static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
+{
     float accel[AXES]; // (1)
     accel[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
     accel[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
@@ -710,6 +748,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     return (cm.junction_acceleration);
 //    return(min(vmax, best_velocity));
 }
+*/
 #endif // __CENTRIPETAL_JERK
 
 /*
