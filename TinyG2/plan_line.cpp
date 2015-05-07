@@ -663,48 +663,28 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
  *
  *  We then compute (6) for each axis, and use the smallest (most limited)
  *  result.
- *
- *  For the sake of optimization, we precompute the expensive division and use
- *  the Reciprocal of UnitAccel[i].
- *
- *      RecipUnitAccel[i]   = 1/(Delta[i] / UnitMagnitude)
- *      RecipUnitAccel[i]   = UnitMagnitude / Delta[i]             (3a)
- *      Velocity[i] = (Jerk[i] * Time) * RecipUnitAccel[i]         (6a)
- *
  */
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
-    cm.junction_acceleration = (CORNER_TIME_QUANTUM);
-/*
-    float delta[AXES]; // (1)
-    delta[AXIS_X] = b_unit[AXIS_X] - a_unit[AXIS_X];
-    delta[AXIS_Y] = b_unit[AXIS_Y] - a_unit[AXIS_Y];
-    delta[AXIS_Z] = b_unit[AXIS_Z] - a_unit[AXIS_Z];
-    delta[AXIS_A] = b_unit[AXIS_A] - a_unit[AXIS_A];
-    delta[AXIS_B] = b_unit[AXIS_B] - a_unit[AXIS_B];
-    delta[AXIS_C] = b_unit[AXIS_C] - a_unit[AXIS_C];
-*/
-//    uint8_t best_axis = 0;
-    float best_velocity = 86753090000000.0;
+    cm.junction_acceleration = (CORNER_TIME_QUANTUM);   //+++++
 
+    float best_velocity = (8675309.0 / CORNER_TIME_QUANTUM);    // an arbitrarily large number
+    float test_velocity = 0;
+    float delta;
+    
     for (uint8_t axis=0; axis<AXES; axis++) {
-//        float recip_delta = 1/delta[axis]; // (3a)
-//        float test_velocity = (cm.a[axis].jerk_max * CORNER_TIME_QUANTUM) * recip_delta; // (6a)
-//        float test_velocity = (cm.a[axis].jerk_max * 0.001) * recip_delta; // (6a)
-//        float test_velocity = cm.a[axis].jerk_max * recip_delta; // (6a)
-//        float test_velocity = cm.a[axis].jerk_max / delta[axis]; // (6a)
-        float test_velocity = cm.a[axis].jerk_max / (b_unit[axis] - a_unit[axis]); // (6a)
-
-        if (test_velocity < best_velocity) {
-            best_velocity = test_velocity;
-        }
+        delta = fabs(b_unit[axis] - a_unit[axis]);
+        if (delta > EPSILON) {                              // remove divide by zero for efficiency
+            test_velocity = cm.a[axis].jerk_max / delta;
+            printf ("%d: %f, %f\n", axis, test_velocity, best_velocity); //+++++
+            test_velocity = min(test_velocity, best_velocity);
+        }        
     }
-//    best_velocity /= CORNER_TIME_QUANTUM;
-    best_velocity /= 0.01;
+//    best_velocity /= CORNER_TIME_QUANTUM;                 //scale the velocity to reality
+    best_velocity /= 0.001;
 
     cm.junction_acceleration = (min(vmax, best_velocity));
     printf ("%f\n", cm.junction_acceleration);
-
     return(min(vmax, best_velocity));
 }
 
