@@ -99,6 +99,10 @@ typedef enum {
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 
+//#define CORNER_TIME_QUANTUM (1/200000)  // one clock tick
+#define CORNER_TIME_QUANTUM (1/ 1000000000)
+//#define CORNER_TIME_QUANTUM (1/cm.junction_acceleration)
+
 /* PLANNER_BUFFER_POOL_SIZE
  *	Should be at least the number of buffers requires to support optimal
  *	planning in the case of very short lines or arc segments.

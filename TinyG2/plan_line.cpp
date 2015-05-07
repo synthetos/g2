@@ -508,8 +508,6 @@ static void _calculate_jerk(mpBuf_t *bf)
 
 // The amount of time that we expect a change in velocity to actually take effect in reality.
 // Used it to determine jerk from an "instantaneous" velocity change.
-//#define CORNER_TIME_QUANTUM (1/200000)  // one clock tick
-#define CORNER_TIME_QUANTUM (1/100000)  // one clock tick
 
 //#define __CENTRIPETAL_JERK
 
@@ -695,7 +693,7 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     unit_accel = sqrt(unit_accel); // (2)
 
 
-    uint8_t best_axis = 0;
+//    uint8_t best_axis = 0;
     float best_velocity = 0;
 
     for (uint8_t axis=0; axis<AXES; axis++) {
@@ -704,11 +702,13 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 
         if (fp_ZERO(best_velocity) || (test_velocity < best_velocity)) {
             best_velocity = test_velocity;
-            best_axis = axis;
+//            best_axis = axis;
         }
     }
-
-    return(min(vmax, best_velocity));
+    cm.junction_acceleration = (min(vmax, best_velocity));
+    printf ("%f\n", cm.junction_acceleration);
+    return (cm.junction_acceleration);
+//    return(min(vmax, best_velocity));
 }
 #endif // __CENTRIPETAL_JERK
 
