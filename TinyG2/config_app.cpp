@@ -469,7 +469,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	// General system parameters
 //	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,    JUNCTION_ACCELERATION },
-	{ "sys","ca", _fipnc,0, cm_print_ca,  get_flt, cm_set_ca,(float *)&cm.cornering_aggression,     CORNERING_AGGRESSION },
+//	{ "sys","ca", _fipnc,0, cm_print_ca,  get_flt, cm_set_ca,(float *)&cm.cornering_aggression,     CORNERING_AGGRESSION },
 	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
 	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
