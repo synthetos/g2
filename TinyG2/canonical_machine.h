@@ -447,6 +447,10 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;       // true to enable safety interlock system
 
+    float test_velocity;    //+++++
+    float best_velocity;    //+++++
+    float recip_delta;      //+++++
+
 	// hidden system settings
 //	float min_segment_len;				// line drawing resolution in mm
 //	float arc_segment_len;				// arc drawing resolution in mm
@@ -616,10 +620,10 @@ stat_t cm_set_path_control(const uint8_t mode);                             // G
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(const float target[], const float flags[]); // G1
-stat_t cm_arc_feed(const float target[],                                    // G2, G3 
+stat_t cm_arc_feed(const float target[],                                    // G2, G3
                    const float flags[],
                    const float i, const float j, const float k,
-                   const float radius, 
+                   const float radius,
                    const uint8_t motion_mode);
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
