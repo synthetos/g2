@@ -25,7 +25,6 @@
 
 PROJECT  = TinyG2
 
-
 # Include all of the *directories* containing files to compile to SOURCE_DIRS.
 # *EXCEPT* motate paths and processor-specific directories!
 SOURCE_DIRS = . fatfs
@@ -58,7 +57,6 @@ DEBUG ?= 0
 
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
-
 
 #	SETTINGS_FILE="settings_othermill.h"
 #	SETTINGS_FILE="settings_othermill_test.h"
