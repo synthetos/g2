@@ -55,12 +55,12 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
 
 /* Runtime-specific setters and getters
  *
- * mp_zero_segment_velocity() 		- correct velocity in last segment for reporting purposes
- * mp_get_runtime_velocity() 		- returns current velocity (aggregate)
- * mp_get_runtime_machine_position()- returns current axis position in machine coordinates
- * mp_set_runtime_work_offset()		- set offsets in the MR struct
- * mp_get_runtime_work_position() 	- returns current axis position in work coordinates
- *									  that were in effect at move planning time
+ * mp_zero_segment_velocity()         - correct velocity in last segment for reporting purposes
+ * mp_get_runtime_velocity()          - returns current velocity (aggregate)
+ * mp_get_runtime_machine_position()  - returns current axis position in machine coordinates
+ * mp_set_runtime_work_offset()       - set offsets in the MR struct
+ * mp_get_runtime_work_position()     - returns current axis position in work coordinates
+ *                                      that were in effect at move planning time
  */
 
 void mp_zero_segment_velocity() { mr.segment_velocity = 0;}
@@ -170,7 +170,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
     plan_debug_pin1 = 0;
-	return (STAT_OK);
+    return (STAT_OK);
 }
 
 /*
@@ -190,42 +190,42 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *
  *	Variables that must be provided in the mpBuffers that will be processed:
  *
- *	  bf (function arg)     - end of block list (last block in time)
- *	  bf->replannable       - start of block list set by last FALSE value [Note 1]
- *	  bf->move_type         - typically MOVE_TYPE_ALINE. Other move_types should be set to
+ *	  bf (function arg)		- end of block list (last block in time)
+ *	  bf->replannable		- start of block list set by last FALSE value [Note 1]
+ *	  bf->move_type			- typically MOVE_TYPE_ALINE. Other move_types should be set to
  *                            length=0, entry_vmax=0 and exit_vmax=0 and are treated as a 
  *                            momentary stop (plan to zero and from zero).
  *
- *	  bf->length	            - provides block length
- *	  bf->entry_vmax	        - used during forward planning to set entry velocity
- *	  bf->cruise_vmax       - used during forward planning to set cruise velocity
- *	  bf->exit_vmax         - used during forward planning to set exit velocity
- *	  bf->delta_vmax	        - used during forward planning to set exit velocity
+ *	  bf->length			- provides block length
+ *	  bf->entry_vmax		- used during forward planning to set entry velocity
+ *	  bf->cruise_vmax		- used during forward planning to set cruise velocity
+ *	  bf->exit_vmax			- used during forward planning to set exit velocity
+ *	  bf->delta_vmax		- used during forward planning to set exit velocity
  *
- *	  bf->recip_jerk	        - used during trapezoid generation
- *	  bf->cbrt_jerk         - used during trapezoid generation
+ *	  bf->recip_jerk		- used during trapezoid generation
+ *	  bf->cbrt_jerk			- used during trapezoid generation
  *
  *	Variables that will be set during processing:
  *
- *	  bf->replannable       - set if the block becomes optimally planned
+ *	  bf->replannable		- set if the block becomes optimally planned
  *
- *	  bf->braking_velocity  - set during backward planning
- *	  bf->entry_velocity	    - set during forward planning
- *	  bf->cruise_velocity   - set during forward planning
- *	  bf->exit_velocity     - set during forward planning
+ *	  bf->braking_velocity	- set during backward planning
+ *	  bf->entry_velocity	- set during forward planning
+ *	  bf->cruise_velocity	- set during forward planning
+ *	  bf->exit_velocity		- set during forward planning
  *
- *	  bf->head_length       - set during trapezoid generation
- *	  bf->body_length       - set during trapezoid generation
- *	  bf->tail_length       - set during trapezoid generation
+ *	  bf->head_length		- set during trapezoid generation
+ *	  bf->body_length		- set during trapezoid generation
+ *	  bf->tail_length		- set during trapezoid generation
  *
  *	  bf->real_move_time    - set after trapezoid generation
  *
  *	Variables that are ignored but here's what you would expect them to be:
- *	  bf->move_state        - NEW for all blocks but the earliest
- *	  bf->target[]          - block target position
- *	  bf->unit[]	            - block unit vector
- *	  bf->time              - gets set later
- *	  bf->jerk              - source of the other jerk variables. Used in mr.
+ *	  bf->move_state		- NEW for all blocks but the earliest
+ *	  bf->target[]			- block target position
+ *	  bf->unit[]			- block unit vector
+ *	  bf->time				- gets set later
+ *	  bf->jerk				- source of the other jerk variables. Used in mr.
  */
 /* Notes:
  *  Whether or not a block is planned is controlled by the bf->replannable setting
@@ -482,183 +482,102 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 /*
  * _calculate_jerk() - calculate jerk given the dynamic state
  *
- * To determine the jerk value to use for the block we want to find the axis for which
- * the jerk cannot be exceeded - the 'jerk-limit' axis. This is the axis for which
- * the time to decelerate from the target velocity to zero would be the longest.
- *
- *	We can determine the "longest" deceleration in terms of time or distance.
- *
- *  The math for time-to-decelerate T from speed S to speed E with constant
- *  jerk J is:
- *
- *		T = 2*sqrt((S-E)/J[n])
- *
- *	Since E is always zero in this calculation, we can simplify:
- *		T = 2*sqrt(S/J[n])
- *
- *	The math for distance-to-decelerate l from speed S to speed E with constant
- *  jerk J is:
- *
- *		l = (S+E)*sqrt((S-E)/J)
- *
- *	Since E is always zero in this calculation, we can simplify:
- *		l = S*sqrt(S/J)
- *
- *  The final value we want is to know which one is *longest*, compared to the others,
- *	so we don't need the actual value. This means that the scale of the value doesn't
- *	matter, so for T we can remove the "2 *" and For L we can remove the "S*".
- *	This leaves both to be simply "sqrt(S/J)". Since we don't need the scale,
- *	it doesn't matter what speed we're coming from, so S can be replaced with 1.
- *
- *  However, we *do* need to compensate for the fact that each axis contributes
- *	differently to the move, so we will scale each contribution C[n] by the
- *	proportion of the axis movement length D[n] to the total length of the move L.
- *	Using that, we construct the following, with these definitions:
- *
- *		J[n] = max_jerk for axis n
- *		D[n] = distance traveled for this move for axis n
- *		L = total length of the move in all axes
- *		C[n] = "axis contribution" of axis n
- *
- * For each axis n: C[n] = sqrt(1/J[n]) * (D[n]/L)   , which is the unit vector that that axis
- *
- *	Keeping in mind that we only need a rank compared to the other axes, we can further
- *	optimize the calculations::
- *
- *	Square the expression to remove the square root:
- *		C[n]^2 = (1/J[n]) * (D[n]/L)^2	(We don't care the C is squared, we'll use it that way.)
- *
- *	Re-arranged to optimize divides for pre-calculated values, we create a value
- *  M that we compute once:
- *		M = (1/(L^2))
- *  Then we use it in the calculations for every axis:
- *		C[n] = (1/J[n]) * D[n]^2 * M
- *
- *  Also note that we already have (1/J[n]) calculated for each axis, which simplifies it further.
- *
- * Finally, the selected jerk term needs to be scaled by the reciprocal of the absolute value
- * of the jerk-limit axis's unit vector term. This way when the move is finally decomposed into
- * its constituent axes for execution the jerk for that axis will be at it's maximum value.
- *
- *	l = S*sqrt(S/J)
- */
-/*
- Revised Jerk:
- set the jerk scaling to the lowest axis with a non-zero unit vector.
- go through the axes one by one and compute the scaled jerk, then pick
+
+ Set the jerk scaling to the lowest axis with a non-zero unit vector.
+ Go through the axes one by one and compute the scaled jerk, then pick
  the highest jerk that does not violate any of the axes in the move.
 
- peak_a = 3/8 sqrt(5/2) 3^(1/4) j sqrt((v_1-v_0)/j)
-
- j = -(1.64224 a^2)/(v_0-v_1)
- j = -(128 a^2)/(45 sqrt(3) (v_0-v_1))
-
- 1.642240765694935507937134308983345651619844981390583114008468...
-
- 0.7803358969289657274992034530009202136449618925894543
-
 */
-//#define __REVISED_JERK
 
 static void _calculate_jerk(mpBuf_t *bf)
 {
-	// compute the jerk as the largest jerk that still meets axis constraints
-	bf->jerk = 8675309;										// a ridiculously large number
-	float jerk=0;
+    // compute the jerk as the largest jerk that still meets axis constraints
+    bf->jerk = 8675309;                                        // a ridiculously large number
+    float jerk=0;
 
-	for (uint8_t axis=0; axis<AXES; axis++) {
-		if (fabs(bf->unit[axis]) > 0) {						// if this axis is participating in the move
-			jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
-			//float j_peak = (1.64224*(800000)^2)/(v_end-v_start);
-//			jerk = cm.a[axis].jerk_max / (bf->unit[axis] * bf->unit[axis]);
-			if (jerk < bf->jerk) {
-				bf->jerk = jerk;
-				bf->jerk_axis = axis;						// +++ diagnostic
-			}
-		}
-	}
-	bf->jerk *= JERK_MULTIPLIER;							// goose it!
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        if (fabs(bf->unit[axis]) > 0) {                        // if this axis is participating in the move
+            jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
+            if (jerk < bf->jerk) {
+                bf->jerk = jerk;
+                bf->jerk_axis = axis;                        // +++ diagnostic
+            }
+        }
+    }
+    bf->jerk *= JERK_MULTIPLIER;                            // goose it!
 
-	// set up and pre-compute the jerk terms needed for this round of planning
-	if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {	// specialized comparison for tolerance of delta
-		mm.jerk = bf->jerk;
-		mm.recip_jerk = 1/bf->jerk;							// compute cached jerk terms used by planning
-		mm.cbrt_jerk = cbrt(bf->jerk);
-	}
-	bf->recip_jerk = mm.recip_jerk;
-	bf->cbrt_jerk = mm.cbrt_jerk;
+    // set up and pre-compute the jerk terms needed for this round of planning
+    if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {    // specialized comparison for tolerance of delta
+        mm.jerk = bf->jerk;
+        mm.recip_jerk = 1/bf->jerk;                            // compute cached jerk terms used by planning
+        mm.cbrt_jerk = cbrt(bf->jerk);
+    }
+    bf->recip_jerk = mm.recip_jerk;
+    bf->cbrt_jerk = mm.cbrt_jerk;
 
-/*	// use this form if you don't want the caching
-	bf->recip_jerk = 1/bf->jerk;
-	bf->cbrt_jerk = cbrt(bf->jerk);
+/*    // use this form if you don't want the caching
+    bf->recip_jerk = 1/bf->jerk;
+    bf->cbrt_jerk = cbrt(bf->jerk);
 */
 }
 
 /*
- peak_a = 3/8 sqrt(5/2) 3^(1/4) j sqrt((v_1-v_0)/j)
-
- j = -(128 a^2)/(45 sqrt(3) (v_0-v_1))
- j = -(1.64224 a^2)/(v_0-v_1)
-
- 1.642240765694935507937134308983345651619844981390583114008468...
-
- 0.7803358969289657274992034530009202136449618925894543
-
- Arguments: uses the following from bf, which must be set
-
-	bf->jerk				current jerk value - may be downgraded
-	bf->jerk_axis			dominant axis affecting jerk
-	bf->unit[]
-*/
-
-/*
-static void _scale_jerk_to_acceleration(const float Vi, const float Vt, mpBuf_t *bf)
-{
-	static const float jerk_scale = 1.64224076569;
-
-	for (uint8_t axis=0; axis < AXES; axis++) {
-		if (bf->unit[axis] > 0) {
-			bf->jerk_temp = jerk_scale * square(cm.a[axis].accel_limit) / (Vt * bf->unit[axis]);
-			bf->jerk = min (bf->jerk, bf->jerk_temp);
-		}
-	}
-}
-*/
-
-/*
- * _calculate_junction_vmax()
+ * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
+ *
+ *  Computes the maximum allowable junction speed by finding the velocity that
+ *  will not violate the jerk value of any axis.
+ *
+ *  In order to achieve this, we take the difference of the unit vectors of the
+ *  two moves of the corner, at the point from vector a to vector b.
+ *  The unit vectors of those two moves are provided as a_unit and b_unit.
+ *
+ *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
+ *
+ *  We take, axis by axis, the difference in "unit velocity" to get a vector
+ *  that represents the direction of acceleration - which may be the opposite
+ *  direction as that of the "a" vector to achieve deceleration. To get the actual
+ *  acceleration, we use the corner velocity (what we intend to calculate) as
+ *  the magnitude.
+ *
+ *      Acceleration[i] = UnitAccel[i] * Velocity[i]               (2)
+ *
+ *  Since we need the jerk value, which is defined as the "rate of change of
+ *  acceleration. That is, the derivative of acceleration with respect to time",
+ *  (Wikipedia) we need to have a quantum of time where the change in
+ *  acceleration is actually carried out by the physics. That will give us the
+ *  time over which to "apply" the change of acceleration in order to get a
+ *  physically realistic jerk. The yields a fairly simple formula:
+ *
+ *      Jerk[i] = Acceleration[i] / Time                           (3)
+ *
+ *  Now that we can compute the jerk for a given corner, we need to know the
+ *  maximum Velocity that we can take the corner without violating that jerk for
+ *  any axis. Let's incorporate formula (2) into formula (3), and solve for
+ *  Velocity, using the known max Jerk and UnitAccel for this corner:
+ *
+ *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (4)
+ *
+ *  We then compute (4) for each axis, and use the smallest (most limited)
+ *  result, or vmax, whichever is smaller.
  */
 
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
-	float costheta = - (a_unit[AXIS_X] * b_unit[AXIS_X])
-					 - (a_unit[AXIS_Y] * b_unit[AXIS_Y])
-					 - (a_unit[AXIS_Z] * b_unit[AXIS_Z])
-					 - (a_unit[AXIS_A] * b_unit[AXIS_A])
-					 - (a_unit[AXIS_B] * b_unit[AXIS_B])
-					 - (a_unit[AXIS_C] * b_unit[AXIS_C]);
+    float velocity = vmax;    // start with our maximum
+    
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        float delta = fabs(b_unit[axis] - a_unit[axis]); // formula (1)
 
-	if (costheta < -0.99) { return (vmax); } 		// straight line cases
-	if (costheta > 0.99)  { return (0); } 				// reversal cases
-
-	// Fuse the junction deviations into a vector sum
-	float a_delta = square(a_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	a_delta += square(a_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	a_delta += square(a_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	a_delta += square(a_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	a_delta += square(a_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	a_delta += square(a_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
-
-	float b_delta = square(b_unit[AXIS_X] * cm.a[AXIS_X].junction_dev);
-	b_delta += square(b_unit[AXIS_Y] * cm.a[AXIS_Y].junction_dev);
-	b_delta += square(b_unit[AXIS_Z] * cm.a[AXIS_Z].junction_dev);
-	b_delta += square(b_unit[AXIS_A] * cm.a[AXIS_A].junction_dev);
-	b_delta += square(b_unit[AXIS_B] * cm.a[AXIS_B].junction_dev);
-	b_delta += square(b_unit[AXIS_C] * cm.a[AXIS_C].junction_dev);
-
-    float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
-    float sintheta_over2 = sqrt((1 - costheta)/2);
-    float radius = delta * sintheta_over2 / (1-sintheta_over2);
-
-    return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
+        // Corner case: If an axis has zero delta, we might have a stright line.
+        // Corner case: An axis doesn't change (and it's not a stright line).
+        //   In either case, division-by-zero is bad, m'kay?
+        if (delta > EPSILON) {
+             // formula (4):
+            float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
+            velocity = min(velocity, test_velocity);
+        }
+    }
+//    printf ("delta: %f\n", fabs(b_unit[best_axis] - a_unit[best_axis]));
+//    printf ("velocity: %f\n", velocity);  //+++++ omit after testing
+    return(velocity);
 }

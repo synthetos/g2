@@ -1188,7 +1188,7 @@ stat_t cm_dwell(const float seconds)
 /*
  * cm_straight_feed() - G1
  */
-stat_t cm_straight_feed(const float target[], const float flags[], bool defer_planning/* = false*/)
+stat_t cm_straight_feed(const float target[], const float flags[])
 {
 	// trap zero feed rate condition
 	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
@@ -1200,14 +1200,12 @@ stat_t cm_straight_feed(const float target[], const float flags[], bool defer_pl
 	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
 	cm_cycle_start();								// required for homing & other cycles
 	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
-    if (!defer_planning) {
-        mb.force_replan = true;
-        mp_plan_buffer();                           // if we aren't deferring planning, plan now
-    }
-	cm_finalize_move();
-	if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
-		cm_cycle_end();
-		return (STAT_OK);
+
+    cm_finalize_move(); // <-- ONLY safe because we don't care about status...
+
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
+        cm_cycle_end();
+        return (STAT_OK);
 	}
     return (status);
 }
@@ -2046,6 +2044,23 @@ stat_t cm_set_jh(nvObj_t *nv)
 }
 
 /*
+ * cm_set_ca() - set cornering aggression
+ */
+/*
+stat_t cm_set_ca(nvObj_t *nv)
+{
+    if (nv->value > 1.00) {
+        return (STAT_INPUT_VALUE_TOO_LARGE);
+    }    
+    if (nv->value < 0.00) {
+        return (STAT_INPUT_VALUE_TOO_SMALL);
+    }
+    set_flt(nv);
+    return(STAT_OK);
+}
+*/
+
+/*
  * Commands
  *
  * cm_run_qf() - flush planner queue
@@ -2203,6 +2218,8 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 /* system state print functions */
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+//const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+//const char fmt_ca[] PROGMEM = "[ja]  cornering aggression%9.2f%s [0.00 < ca < 1.00 maximum]\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
@@ -2212,6 +2229,8 @@ const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+//void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+//void cm_print_ca(nvObj_t *nv) { text_print(nv, fmt_ca);}    // TYPE_FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
@@ -2234,7 +2253,6 @@ void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
  *	cm_print_tn()
  *	cm_print_jm()
  *	cm_print_jh()
- *	cm_print_jd()
  *	cm_print_ra()
  *	cm_print_hi()
  *	cm_print_hd()
@@ -2254,6 +2272,7 @@ const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
 const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
 const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+//const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
 const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
 const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
@@ -2319,6 +2338,7 @@ void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn);}
 void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
 void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
 void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
+//void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 
 void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}

@@ -425,6 +425,7 @@ typedef struct cmAxis {
 	float jerk_high;				    // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
 	float recip_jerk;					// stored reciprocal of current jerk value - has the million in it
 	float junction_dev;					// aka cornering delta
+//	float junction_dev;					// aka cornering delta
 	float radius;						// radius in mm for rotary axis modes
 
     uint8_t homing_input;               // set 1-N for homing input. 0 will disable homing
@@ -442,6 +443,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	// system group settings
 	float junction_acceleration;		// centripetal acceleration max for cornering
+//	float junction_acceleration;		// centripetal acceleration max for cornering
+//	float cornering_aggression;		    // amount to de-rate optimal cornering
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
@@ -615,11 +618,11 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(const uint8_t mode);                             // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(const float target[], const float flags[], bool defer_planning = false); // G1
-stat_t cm_arc_feed(const float target[],                                    // G2, G3 
+stat_t cm_straight_feed(const float target[], const float flags[]); // G1
+stat_t cm_arc_feed(const float target[],                                    // G2, G3
                    const float flags[],
                    const float i, const float j, const float k,
-                   const float radius, 
+                   const float radius,
                    const uint8_t motion_mode);
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
@@ -722,6 +725,7 @@ stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
+stat_t cm_set_ca(nvObj_t *nv);          // set junction aggression factor
 
 /*--- text_mode support functions ---*/
 
@@ -760,6 +764,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_ofs(nvObj_t *nv);		// print runtime work offset always in MM uints
 
 	void cm_print_ja(nvObj_t *nv);		// global CM settings
+//	void cm_print_ja(nvObj_t *nv);		// global CM settings
+//	void cm_print_ca(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
@@ -777,6 +783,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_jm(nvObj_t *nv);
 	void cm_print_jh(nvObj_t *nv);
 	void cm_print_jd(nvObj_t *nv);
+//	void cm_print_jd(nvObj_t *nv);
 	void cm_print_ra(nvObj_t *nv);
 
 	void cm_print_hi(nvObj_t *nv);
@@ -823,6 +830,8 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_ofs tx_print_stub		// print runtime work offset always in MM uints
 
 	#define cm_print_ja tx_print_stub		// global CM settings
+//	#define cm_print_ja tx_print_stub		// global CM settings
+//	#define cm_print_ca tx_print_stub		// global CM settings
 	#define cm_print_ct tx_print_stub
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub
@@ -840,6 +849,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_jm tx_print_stub
 	#define cm_print_jh tx_print_stub
 	#define cm_print_jd tx_print_stub
+//	#define cm_print_jd tx_print_stub
 	#define cm_print_ra tx_print_stub
 
 	#define cm_print_hi tx_print_stub

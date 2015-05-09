@@ -33,3 +33,4 @@ Tools/gcc-arm-none-eabi
 openocd.cfg
 openocd.log
 TinyG2/mb.txt
+TinyG2/old
