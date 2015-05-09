@@ -149,7 +149,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	bf->head_length = 0;
 	bf->tail_length = 0;
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
     if (fp_ZERO(bf->length)) {
         rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero length line in calculate trapezoid");    // +++++++
         _debug_trap();
@@ -164,20 +164,19 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     // Try to optimize out the asymmetric last move
 
-	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
-    float naiive_move_time = 0;
     // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length,
     // and the width is the move time. This formula is to get the move time (width) from the
     // sides and the area (move length).
     // The actual formula is T=(2L)/(v_0+v_1) == T/2=L/(v_0+v_1)
 
-    naiive_move_time = bf->length / (bf->entry_velocity + max(bf->cruise_velocity,bf->exit_velocity));		// reduced equation
+    // In some cases the naiive move time is inf(inite) or NAN. This is OK.
+    // reduced equation:
+    float naiive_move_time = bf->length / (bf->entry_velocity + max(bf->cruise_velocity,bf->exit_velocity));
 
     // F case: Block is too short - run time < minimum segment time
     // Execute block as a single segment body with limited velocities
     // Accept the entry velocity, limit the cruise, and go for the best exit velocity
     // you can get given the delta_vmax (maximum velocity slew) supportable.
-
     // <no F cases - these are now unnecessary and have been removed>
 
     // B" case: Block is short, but fits into a single body segment
@@ -188,58 +187,45 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->length / MIN_SEGMENT_TIME_PLUS_MARGIN;
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bf->cruise_velocity)) {
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity1 in calculate trapezoid");    // +++++++
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity1 in calculate trapezoid");
             _debug_trap();
         }
 #endif
         // Why assume we want to decelerate or accelerate?
-        //bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
+        // bf->exit_velocity = max(0.0, min(bf->cruise_velocity, (bf->entry_velocity - bf->delta_vmax)));
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
-
-        // LOCK IT
-//        bf->replannable = false;
-
-//        bf->real_move_time = bf->length/bf->cruise_velocity;
-        // We are violating the jerk value but since it's a single segment move we don't use it.
-        return;
+//      bf->replannable = false;         // LOCK IT
+//      bf->real_move_time = bf->length/bf->cruise_velocity;
+        return; // We are violating the jerk value but since it's a single segment move we don't use it.
     }
 
-// Replace this with NOM_SEGMENT TIME for now
-//    if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
-//        bf->cruise_velocity = bf->length / bf->real_move_time;
-//        bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
-//
-//        if (fp_ZERO(bf->cruise_velocity)) {
-//            _debug_trap();
-//        }
-//
-//        bf->exit_velocity = bf->cruise_velocity;
-//        bf->body_length = bf->length;
-//        // We are violating the jerk value but since it's a single segment move we don't use it.
-//        return;
-//    }
+    // Replace this with NOM_SEGMENT TIME for now
+    // if (naiive_move_time <= (bf->real_move_time / 2)) { // compensating for reduced equation
+    //      bf->cruise_velocity = bf->length / bf->real_move_time;
+    //      bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
+    //      bf->exit_velocity = bf->cruise_velocity;
+    //      bf->body_length = bf->length;
+    //      // We are violating the jerk value but since it's a single segment move we don't use it.
+    //      return;
+    // }
 
     if (naiive_move_time <= (NOM_SEGMENT_TIME / 2)) { // compensating for reduced equation
         bf->cruise_velocity = bf->length / NOM_SEGMENT_TIME;
         bf->cruise_velocity = min3(bf->cruise_velocity, bf->cruise_vmax, (bf->entry_velocity + bf->delta_vmax));
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bf->cruise_velocity)) {
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity2 in calculate trapezoid");    // +++++++
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity2 in calculate trapezoid");
             _debug_trap();
         }
 #endif
         bf->exit_velocity = bf->cruise_velocity;
         bf->body_length = bf->length;
-
-        // LOCK IT
-//        bf->replannable = false;
-
-        // We are violating the jerk value but since it's a single segment move we don't use it.
-        return;
+//      bf->replannable = false;         // LOCK IT
+        return; // We are violating the jerk value but since it's a single segment move we don't use it.
     }
 
 	// Head-only and tail-only short-line cases
@@ -255,8 +241,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	if (((bf->cruise_velocity - bf->entry_velocity) < TRAPEZOID_VELOCITY_TOLERANCE) &&
 		((bf->cruise_velocity - bf->exit_velocity) < TRAPEZOID_VELOCITY_TOLERANCE)) {
 		bf->body_length = bf->length;
-
-//        bf->real_move_time = bf->length/bf->cruise_velocity;
+//      bf->real_move_time = bf->length/bf->cruise_velocity;
 //		printf("4");
 		return;
 	}
@@ -294,7 +279,6 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         }
     }
 
-
 	// Rate-limited HT and HT' cases
 	if (bf->length < (bf->head_length + bf->tail_length)) { // it's rate limited
 
@@ -305,13 +289,12 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //			bf->cruise_velocity = min(bf->cruise_vmax, mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf));
             bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
             if (fp_ZERO(bf->cruise_velocity)) {
-                rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity3 in calculate trapezoid");    // +++++++
+                rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity3 in calculate trapezoid");
                 _debug_trap();
             }
 #endif
-
 			if (bf->head_length < MIN_HEAD_LENGTH) {
 				// Convert this to a body-only move
 				bf->body_length = bf->length;
@@ -322,10 +305,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 				bf->cruise_velocity = (bf->entry_velocity + bf->cruise_velocity)/2;
 //				bf->entry_velocity = bf->cruise_velocity;
 				bf->exit_velocity = bf->cruise_velocity;
-
-//                bf->real_move_time = bf->length/bf->cruise_velocity;
-            } else {
-                // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
+//              bf->real_move_time = bf->length/bf->cruise_velocity;
+//            } else {
+//                // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
 //                bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
             }
 			return;
@@ -336,9 +318,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		// set velocity and clean up any parts that are too short
         bf->cruise_velocity = mp_get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bf->cruise_velocity)) {
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity4 in calculate trapezoid");    // +++++++
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity4 in calculate trapezoid");
             _debug_trap();
         }
 #endif
@@ -347,21 +329,16 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		if (bf->head_length < MIN_HEAD_LENGTH) {
 			bf->tail_length = bf->length;			// adjust the move to be all tail...
 			bf->head_length = 0;
-
-//            bf->real_move_time = ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
-
+//          bf->real_move_time = ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
             return;
 		}
 		else if (bf->tail_length < MIN_TAIL_LENGTH) {
 			bf->head_length = bf->length;			//...or all head
 			bf->tail_length = 0;
-
-//            bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity));
-
+//          bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity));
             return;
 		}
-
-//        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
+//      bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + (bf->body_length/bf->cruise_velocity) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
         return;
 	}
 
@@ -383,12 +360,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 			bf->tail_length += bf->body_length;
 		}
 		bf->body_length = 0;
+//      bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
 
-//        bf->real_move_time = ((bf->head_length*2)/(bf->entry_velocity + bf->cruise_velocity)) + ((bf->tail_length*2)/(bf->exit_velocity + bf->cruise_velocity));
-
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bf->cruise_velocity)) {
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity5 in calculate trapezoid");    // +++++++
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity5 in calculate trapezoid");
             _debug_trap();
         }
 #endif
@@ -398,21 +374,20 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	// This removes a potential velocity discontinuity at the expense of top speed
 	} else if ((fp_ZERO(bf->head_length)) && (fp_ZERO(bf->tail_length))) {
 		bf->cruise_velocity = min(bf->entry_vmax, bf->cruise_vmax);
+//      bf->real_move_time = (bf->body_length/bf->cruise_velocity);
 
-//        bf->real_move_time = (bf->body_length/bf->cruise_velocity);
-
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bf->cruise_velocity)) {
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity6 in calculate trapezoid");    // +++++++
+            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity6 in calculate trapezoid");
             _debug_trap();
         }
 #endif
         return;
 	}
 
-#ifdef __DIAGNOSTICS    // +++++
+#ifdef __DIAGNOSTICS
     if (fp_ZERO(bf->cruise_velocity)) {
-        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity7 in calculate trapezoid");    // +++++++
+        rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero cruise velocity7 in calculate trapezoid");
         _debug_trap();
     }
 #endif
@@ -434,9 +409,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
  *
  */
 
-#define LINEAR_SNAP_MATH
+#define __LINEAR_SNAP_MATH
 
-#ifdef LINEAR_SNAP_MATH
+#ifdef __LINEAR_SNAP_MATH
 
 //Try 1 constants:
 // L_c(v_0, v_1, j) = sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
@@ -485,7 +460,7 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
     const float recip_j = bf->recip_jerk;
 
     float l_c_head, l_c_tail, l_c; // calculated L
-    float l_d_head, l_d_tail, l_d; // claculated derivitave of L with respect to v_1
+    float l_d_head, l_d_tail, l_d; // calculated derivative of L with respect to v_1
 
     // chuncks of precomputed values
     float sqrt_j_delta_v_0, sqrt_j_delta_v_1;
@@ -600,7 +575,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     return v_1;
 }
 
-#else
+#else // __LINEAR_SNAP_MATH
 // Non LINEAR_SNAP_MATH math:
 
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf)
@@ -677,5 +652,5 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf)
     return estimate;
 }
 
-#endif
+#endif  // __LINEAR_SNAP_MATH
 // end non-LINEAR_SNAP_MATH
