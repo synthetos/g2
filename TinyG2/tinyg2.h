@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		086.01 // THrottling branch; cleaned up some plan line code & comments
+#define TINYG_FIRMWARE_BUILD   		086.02 // Throttling branch; edited plan_zoid comments - no functional changes
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
