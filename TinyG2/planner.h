@@ -180,7 +180,6 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *r;						// get/end_run_buffer pointer
     bool needs_replanned;           // mark to indicate that at least one ALINE was put in the buffer
     bool needs_time_accounting;     // mark to indicate that the buffer has changed and the times (below) may be wrong
-    bool planning;                  // the planner marks this to indicate it's (re)planning the block list
     bool force_replan;              // true to indicate that we must plan, ignoring the normal timing tests
 
     volatile float time_in_run;		// time left in the buffer executed by the runtime

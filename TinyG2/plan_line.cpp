@@ -37,22 +37,20 @@
 #include "spindle.h"
 
 using namespace Motate;
-OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-OutputPin<kDebug2_PinNumber> plan_debug_pin2;
-//OutputPin<kDebug3_PinNumber> plan_debug_pin3;
-OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+//OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//OutputPin<kDebug3_PinNumber> plan_debug_pin3;    // trapezoid timer
+//OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
-//OutputPin<-1> plan_debug_pin1;
-//OutputPin<-1> plan_debug_pin2;
+OutputPin<-1> plan_debug_pin1;
+OutputPin<-1> plan_debug_pin2;
 OutputPin<-1> plan_debug_pin3;
-//OutputPin<-1> plan_debug_pin4;
+OutputPin<-1> plan_debug_pin4;
 
 // planner helper functions
 static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
 static void _calculate_jerk(mpBuf_t *bf);
-//static float _calculate_junction_vmax(const float a_unit[], const float b_unit[]);
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[]);
-
 //static void _reset_replannable_list(void);
 
 /* Runtime-specific setters and getters
@@ -192,65 +190,62 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *
  *	Variables that must be provided in the mpBuffers that will be processed:
  *
- *	  bf (function arg)		- end of block list (last block in time)
- *	  bf->replannable		- start of block list set by last FALSE value [Note 1]
- *	  bf->move_type			- typically MOVE_TYPE_ALINE. Other move_types should be set to
- *							  length=0, entry_vmax=0 and exit_vmax=0 and are treated
- *							  as a momentary stop (plan to zero and from zero).
+ *	  bf (function arg)     - end of block list (last block in time)
+ *	  bf->replannable       - start of block list set by last FALSE value [Note 1]
+ *	  bf->move_type         - typically MOVE_TYPE_ALINE. Other move_types should be set to
+ *                            length=0, entry_vmax=0 and exit_vmax=0 and are treated as a 
+ *                            momentary stop (plan to zero and from zero).
  *
- *	  bf->length			- provides block length
- *	  bf->entry_vmax		- used during forward planning to set entry velocity
- *	  bf->cruise_vmax		- used during forward planning to set cruise velocity
- *	  bf->exit_vmax			- used during forward planning to set exit velocity
- *	  bf->delta_vmax		- used during forward planning to set exit velocity
+ *	  bf->length	            - provides block length
+ *	  bf->entry_vmax	        - used during forward planning to set entry velocity
+ *	  bf->cruise_vmax       - used during forward planning to set cruise velocity
+ *	  bf->exit_vmax         - used during forward planning to set exit velocity
+ *	  bf->delta_vmax	        - used during forward planning to set exit velocity
  *
- *	  bf->recip_jerk		- used during trapezoid generation
- *	  bf->cbrt_jerk			- used during trapezoid generation
+ *	  bf->recip_jerk	        - used during trapezoid generation
+ *	  bf->cbrt_jerk         - used during trapezoid generation
  *
  *	Variables that will be set during processing:
  *
- *	  bf->replannable		- set if the block becomes optimally planned
+ *	  bf->replannable       - set if the block becomes optimally planned
  *
- *	  bf->braking_velocity	- set during backward planning
- *	  bf->entry_velocity	- set during forward planning
- *	  bf->cruise_velocity	- set during forward planning
- *	  bf->exit_velocity		- set during forward planning
+ *	  bf->braking_velocity  - set during backward planning
+ *	  bf->entry_velocity	    - set during forward planning
+ *	  bf->cruise_velocity   - set during forward planning
+ *	  bf->exit_velocity     - set during forward planning
  *
- *	  bf->head_length		- set during trapezoid generation
- *	  bf->body_length		- set during trapezoid generation
- *	  bf->tail_length		- set during trapezoid generation
+ *	  bf->head_length       - set during trapezoid generation
+ *	  bf->body_length       - set during trapezoid generation
+ *	  bf->tail_length       - set during trapezoid generation
+ *
+ *	  bf->real_move_time    - set after trapezoid generation
  *
  *	Variables that are ignored but here's what you would expect them to be:
- *	  bf->move_state		- NEW for all blocks but the earliest
- *	  bf->target[]			- block target position
- *	  bf->unit[]			- block unit vector
- *	  bf->time				- gets set later
- *	  bf->jerk				- source of the other jerk variables. Used in mr.
+ *	  bf->move_state        - NEW for all blocks but the earliest
+ *	  bf->target[]          - block target position
+ *	  bf->unit[]	            - block unit vector
+ *	  bf->time              - gets set later
+ *	  bf->jerk              - source of the other jerk variables. Used in mr.
  */
 /* Notes:
- *	[1]	Whether or not a block is planned is controlled by the bf->replannable
- *		setting (set TRUE if it should be). Replan flags are checked during the
- *		backwards pass and prune the replan list to include only the the latest
- *		blocks that require planning
+ *  Whether or not a block is planned is controlled by the bf->replannable setting
+ *  (set TRUE if it should be). Replan flags are checked during the backwards pass 
+ *  and prune the replan list to include only the the latest blocks that require planning
  *
- *		In normal operation the first block (currently running block) is not
- *		replanned, but may be for feedholds and feed overrides. In these cases
- *		the prep routines modify the contents of the mr buffer and re-shuffle
- *		the block list, re-enlisting the current bf buffer with new parameters.
- *		These routines also set all blocks in the list to be replannable so the
- *		list can be recomputed regardless of exact stops and previous replanning
- *		optimizations.
+ *  In normal operation the first block (currently running block) is not replanned, 
+ *  but may be for feedholds and feed overrides. In these cases the prep routines 
+ *  modify the contents of the mr buffer and re-shuffle the block list, re-enlisting 
+ *  the current bf buffer with new parameters. These routines also set all blocks in 
+ *  the list to be replannable so the list can be recomputed regardless of exact 
+ *  stops and previous replanning optimizations.
  */
 void mp_plan_block_list(mpBuf_t *bf)
 {
     plan_debug_pin2 = 1;
 
-#ifdef DEBUG
+#ifdef __DIAGNOSTICS
     volatile uint32_t start_time = SysTickTimer.getValue();
 #endif
-
-    // the the exec not to change the moves out from under us
-    mb.planning = true;
 
     mpBuf_t *bp = bf;
 
@@ -293,10 +288,12 @@ void mp_plan_block_list(mpBuf_t *bf)
         mp_calculate_trapezoid(bp);
         plan_debug_pin3 = 0;
 
+#ifdef __DIAGNOSTICS
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero velocity in mp_plan_block_list");
             _debug_trap();
         }
+#endif
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
@@ -329,10 +326,12 @@ void mp_plan_block_list(mpBuf_t *bf)
         mp_calculate_trapezoid(bp);
         plan_debug_pin3 = 0;
 
-        if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
+#ifdef __DIAGNOSTICS
+        if (fp_ZERO(bp->cruise_velocity)) {
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "min time move in mp_plan_block_list");
             _debug_trap();
         }
+#endif
 
         // Force a calculation of this here
         bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
@@ -345,7 +344,7 @@ void mp_plan_block_list(mpBuf_t *bf)
         }
     }
 
-#ifdef DEBUG
+#ifdef __DIAGNOSTICS
     volatile uint32_t end_time = SysTickTimer.getValue();
     if ((end_time - start_time) > (MIN_PLANNED_USEC / 1000)) {
         rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "time mis-match in mp_plan_block_list");
@@ -353,18 +352,34 @@ void mp_plan_block_list(mpBuf_t *bf)
     }
 #endif
 
-    // let the exec know we're done planning, and that the times are likely wrong
-    mb.planning = false;
+    // let the exec know we're done planning and that the times are likely wrong
     mb.needs_time_accounting = true;
-
     plan_debug_pin2 = 0;
+}
+
+/*
+ *	mp_reset_replannable_list() - resets all blocks in the planning list to be replannable
+ */
+
+void mp_reset_replannable_list()
+{
+	mpBuf_t *bf = mp_get_first_buffer();
+	if (bf == NULL) return;
+	mpBuf_t *bp = bf;
+	do {
+		bp->replannable = true;
+        bp->locked = false;
+        bp->buffer_state = MP_BUFFER_PLANNING;
+	} while (((bp = mp_get_next_buffer(bp)) != bf) && (bp->move_state != MOVE_OFF));
+
+    mb.needs_replanned = true;
+    mb.needs_time_accounting = true;
 }
 
 /***** ALINE HELPERS *****
  * _calc_move_times()
  * _calculate_jerk()
  * _calculate_junction_vmax()
- * mp_reset_replannable_list()
  */
 
 /*
@@ -527,7 +542,6 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
  *
  *	l = S*sqrt(S/J)
  */
-
 /*
  Revised Jerk:
  set the jerk scaling to the lowest axis with a non-zero unit vector.
@@ -544,60 +558,10 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
  0.7803358969289657274992034530009202136449618925894543
 
 */
-//#define __FIXED_JERK
-//#define __TEST_JERKg
-//#define __OLD_JERK
-#define __REVISED_JERK
+//#define __REVISED_JERK
 
 static void _calculate_jerk(mpBuf_t *bf)
 {
-
-#ifdef __FIXED_JERK
-//	bf->jerk = (JERK_MULTIPLIER * cm.a[AXIS_Z].jerk_max) / fabs(bf->unit[AXIS_Z]);
-	bf->jerk = cm.a[AXIS_Z].jerk_max;
-#endif
-
-#ifdef __TEST_JERK
-	bf->jerk = 8675309;										// a ridiculously large number
-	float jerk=0;
-
-	for (uint8_t axis=0; axis<AXES; axis++) {
-    	if (fabs(bf->unit[axis]) > 0) {						// if this axis is participating in the move
-        	jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
-        	//float j_peak = (1.64224*(800000)^2)/(v_end-v_start);
-        	//			jerk = cm.a[axis].jerk_max / (bf->unit[axis] * bf->unit[axis]);
-        	if (jerk < bf->jerk) {
-            	bf->jerk = jerk;
-            	bf->jerk_axis = axis;						// +++ diagnostic
-        	}
-    	}
-	}
-
-    if (fp_NOT_ZERO(bf->unit[AXIS_Z])) {
-        bf->jerk = cm.a[AXIS_Z].jerk_max;
-    } else {
-        bf->jerk = cm.a[AXIS_X].jerk_max;
-    }
-    bf->jerk *= JERK_MULTIPLIER;							// goose it!
-#endif
-
-#ifdef __OLD_JERK
-	float C;				// contribution term. C = T * a
-	float maxC = 0;
-
-	for (uint8_t axis=0; axis<AXES; axis++) {
-		if (fabs(bf->unit[axis]) > 0) {								// if this axis is participating in the move
-			C = sqrt(cm.a[axis].recip_jerk) * fabs(bf->unit[axis]);	// C = sqrt(1/J[n]) * (D[n]/L)
-			if (C > maxC) {
-				bf->jerk_axis = axis;
-				maxC = C;
-			}
-		}
-	}
-	bf->jerk = cm.a[bf->jerk_axis].jerk_max * JERK_MULTIPLIER / fabs(bf->unit[bf->jerk_axis]);	// scale the jerk
-#endif
-
-#ifdef __REVISED_JERK
 	// compute the jerk as the largest jerk that still meets axis constraints
 	bf->jerk = 8675309;										// a ridiculously large number
 	float jerk=0;
@@ -613,17 +577,7 @@ static void _calculate_jerk(mpBuf_t *bf)
 			}
 		}
 	}
-	// +++ diagnostics
-//	mm.x_jerk = cm.a[AXIS_X].jerk_max / fabs(bf->unit[AXIS_X]);
-//	mm.z_jerk = cm.a[AXIS_Z].jerk_max / fabs(bf->unit[AXIS_Z]);
-//	mm.x_jerk_scaled = bf->jerk * fabs(bf->unit[AXIS_X]);
-//	mm.z_jerk_scaled = bf->jerk * fabs(bf->unit[AXIS_Z]);
-	// +++ to here
-
-//	bf->jerk = sqrt(cm.a[bf->jerk_axis].jerk_max);
-//	bf->jerk = cm.a[bf->jerk_axis].jerk_max;
 	bf->jerk *= JERK_MULTIPLIER;							// goose it!
-#endif	// __REVISED_JERK
 
 	// set up and pre-compute the jerk terms needed for this round of planning
 	if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {	// specialized comparison for tolerance of delta
@@ -656,6 +610,7 @@ static void _calculate_jerk(mpBuf_t *bf)
 	bf->jerk_axis			dominant axis affecting jerk
 	bf->unit[]
 */
+
 /*
 static void _scale_jerk_to_acceleration(const float Vi, const float Vt, mpBuf_t *bf)
 {
@@ -669,65 +624,11 @@ static void _scale_jerk_to_acceleration(const float Vi, const float Vt, mpBuf_t 
 	}
 }
 */
+
 /*
- * _calculate_junction_vmax() - Sonny's algorithm - simple
- *
- *  Computes the maximum allowable junction speed by finding the velocity that will yield
- *	the centripetal acceleration in the corner_acceleration value. The value of delta sets
- *	the effective radius of curvature. Here's Sonny's (Sungeun K. Jeon's) explanation
- *	of what's going on:
- *
- *	"First let's assume that at a junction we only look a centripetal acceleration to simply
- *	things. At a junction of two lines, let's place a circle such that both lines are tangent
- *	to the circle. The circular segment joining the lines represents the path for constant
- *	centripetal acceleration. This creates a deviation from the path (let's call this delta),
- *	which is the distance from the junction to the edge of the circular segment. Delta needs
- *	to be defined, so let's replace the term max_jerk (see note 1) with max_junction_deviation,
- *	or "delta". This indirectly sets the radius of the circle, and hence limits the velocity
- *	by the centripetal acceleration. Think of the this as widening the race track. If a race
- *	car is driving on a track only as wide as a car, it'll have to slow down a lot to turn
- *	corners. If we widen the track a bit, the car can start to use the track to go into the
- *	turn. The wider it is, the faster through the corner it can go.
- *
- * (Note 1: "max_jerk" refers to the old grbl/marlin max_jerk" approximation term, not the
- *	tinyG jerk terms)
- *
- *	If you do the geometry in terms of the known variables, you get:
- *		sin(theta/2) = R/(R+delta)  Re-arranging in terms of circle radius (R)
- *		R = delta*sin(theta/2)/(1-sin(theta/2).
- *
- *	Theta is the angle between line segments given by:
- *		cos(theta) = dot(a,b)/(norm(a)*norm(b)).
- *
- *	Most of these calculations are already done in the planner. To remove the acos()
- *	and sin() computations, use the trig half angle identity:
- *		sin(theta/2) = +/- sqrt((1-cos(theta))/2).
- *
- *	For our applications, this should always be positive. Now just plug the equations into
- *	the centripetal acceleration equation: v_c = sqrt(a_max*R). You'll see that there are
- *	only two sqrt computations and no sine/cosines."
- *
- *	How to compute the radius using brute-force trig:
- *		float theta = acos(costheta);
- *		float radius = delta * sin(theta/2)/(1-sin(theta/2));
- */
-/*  This version extends Chamnit's algorithm by computing a value for delta that takes
- *	the contributions of the individual axes in the move into account. This allows the
- *	control radius to vary by axis. This is necessary to support axes that have
- *	different dynamics; such as a Z axis that doesn't move as fast as X and Y (such as a
- *	screw driven Z axis on machine with a belt driven XY - like a Shapeoko), or rotary
- *	axes ABC that have completely different dynamics than their linear counterparts.
- *
- *	The function takes the absolute values of the sum of the unit vector components as
- *	a measure of contribution to the move, then scales the delta values from the non-zero
- *	axes into a composite delta to be used for the move. Shown for an XY vector:
- *
- *	 	U[i]	Unit sum of i'th axis	fabs(unit_a[i]) + fabs(unit_b[i])
- *	 	Usum	Length of sums			Ux + Uy
- *	 	d		Delta of sums			(Dx*Ux+DY*UY)/Usum
+ * _calculate_junction_vmax()
  */
 
-//static float _calculate_junction_vmax(const float a_unit[], const float b_unit[])
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
 	float costheta = - (a_unit[AXIS_X] * b_unit[AXIS_X])
@@ -760,36 +661,4 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
     float radius = delta * sintheta_over2 / (1-sintheta_over2);
 
     return(min(vmax, (float)sqrt(radius * cm.junction_acceleration)));
-
-/* DIAGNOSTIC
-    float velocity = min(vmax, (float)sqrt(radius * cm.junction_acceleration));
-    printf("v:%f\n", velocity);
-    return (velocity);
-*/
-
-//    return(sqrt(radius * cm.junction_acceleration));
-
-// New junction code - untested
-//    float delta = (sqrt(a_delta) + sqrt(b_delta))/2;
-//    float delta_over_costheta = delta / costheta;
-//    float radius = sqrt(delta_over_costheta * delta_over_costheta - delta * delta);
-//    return((radius * cm.junction_acceleration) / delta);
-}
-
-/*
- *	mp_reset_replannable_list() - resets all blocks in the planning list to be replannable
- */
-void mp_reset_replannable_list()
-{
-	mpBuf_t *bf = mp_get_first_buffer();
-	if (bf == NULL) return;
-	mpBuf_t *bp = bf;
-	do {
-		bp->replannable = true;
-        bp->locked = false;
-        bp->buffer_state = MP_BUFFER_PLANNING;
-	} while (((bp = mp_get_next_buffer(bp)) != bf) && (bp->move_state != MOVE_OFF));
-
-    mb.needs_replanned = true;
-    mb.needs_time_accounting = true;
 }
