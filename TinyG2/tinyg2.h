@@ -56,7 +56,9 @@
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __STEP_CORRECTION
+#ifdef DEBUG // Coming in fromt he Makefile
 #define __DIAGNOSTICS               // enables various debug functions
+#endif
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves
 
