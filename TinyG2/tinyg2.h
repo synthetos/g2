@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		085.05 // testing new cornering algorithm
+#define TINYG_FIRMWARE_BUILD   		085.06 // ja and jd are back in, but are dummies
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
