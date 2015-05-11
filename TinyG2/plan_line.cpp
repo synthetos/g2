@@ -193,7 +193,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
  *	  bf (function arg)		- end of block list (last block in time)
  *	  bf->replannable		- start of block list set by last FALSE value [Note 1]
  *	  bf->move_type			- typically MOVE_TYPE_ALINE. Other move_types should be set to
- *                            length=0, entry_vmax=0 and exit_vmax=0 and are treated as a 
+ *                            length=0, entry_vmax=0 and exit_vmax=0 and are treated as a
  *                            momentary stop (plan to zero and from zero).
  *
  *	  bf->length			- provides block length
@@ -229,14 +229,14 @@ stat_t mp_aline(GCodeState_t *gm_in)
  */
 /* Notes:
  *  Whether or not a block is planned is controlled by the bf->replannable setting
- *  (set TRUE if it should be). Replan flags are checked during the backwards pass 
+ *  (set TRUE if it should be). Replan flags are checked during the backwards pass
  *  and prune the replan list to include only the the latest blocks that require planning
  *
- *  In normal operation the first block (currently running block) is not replanned, 
- *  but may be for feedholds and feed overrides. In these cases the prep routines 
- *  modify the contents of the mr buffer and re-shuffle the block list, re-enlisting 
- *  the current bf buffer with new parameters. These routines also set all blocks in 
- *  the list to be replannable so the list can be recomputed regardless of exact 
+ *  In normal operation the first block (currently running block) is not replanned,
+ *  but may be for feedholds and feed overrides. In these cases the prep routines
+ *  modify the contents of the mr buffer and re-shuffle the block list, re-enlisting
+ *  the current bf buffer with new parameters. These routines also set all blocks in
+ *  the list to be replannable so the list can be recomputed regardless of exact
  *  stops and previous replanning optimizations.
  */
 void mp_plan_block_list(mpBuf_t *bf)
@@ -477,6 +477,11 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 		}
 	}
 	gms->move_time = max4(inv_time, max_time, xyz_time, abc_time);
+
+    // apply input throttle
+    if (gms->move_time < cm.throttle_time) {
+        gms->move_time = cm.throttle_time;
+    }
 }
 
 /*
@@ -564,7 +569,7 @@ static void _calculate_jerk(mpBuf_t *bf)
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
     float velocity = vmax;    // start with our maximum
-    
+
     for (uint8_t axis=0; axis<AXES; axis++) {
         float delta = fabs(b_unit[axis] - a_unit[axis]); // formula (1)
 

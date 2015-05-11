@@ -529,6 +529,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	// "hidden" parameters (not in system group)
 //	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&cm.arc_segment_len,	MIN_ARC_SEGMENT_LENGTH },
 //	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
+	{ "", "_thr",_fip,4, tx_print_flt, get_flt, set_flt, (float *)&cm.throttle_time,  0.000017 },
 
     // Actions and Reports
     { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },	// request and set status reports
