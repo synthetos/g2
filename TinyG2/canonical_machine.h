@@ -454,6 +454,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 //	float min_segment_len;				// line drawing resolution in mm
 //	float arc_segment_len;				// arc drawing resolution in mm
 //	float estd_segment_usec;			// approximate segment time in microseconds
+    float throttle_time;                // minimum time before input throttling is applied (in minutes)
 
 	// gcode power-on default settings - defaults are not the same as the gm state
 	uint8_t coord_system;				// G10 active coordinate system default
