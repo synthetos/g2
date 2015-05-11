@@ -139,8 +139,8 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
     // This heuristic helps prevent the buffer from filling with moves that we
     // can't plan as fast as they can move.
-    if (mm.avg_move_time < MIN_AVG_BLOCK_TIME) {
-        bf->gm.move_time = MIN_AVG_BLOCK_TIME; // intentionally stretch the move to slow it down
+    if (mm.avg_move_time < cm.throttle_time) {
+        bf->gm.move_time = cm.throttle_time; // intentionally stretch the move to slow it down
     }
 
     // get a cleared buffer and setup move variables
@@ -485,11 +485,6 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 		}
 	}
 	gms->move_time = max4(inv_time, max_time, xyz_time, abc_time);
-
-    // apply input throttle
-    if (gms->move_time < cm.throttle_time) {
-        gms->move_time = cm.throttle_time;
-    }
 }
 
 /*
