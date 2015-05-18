@@ -621,7 +621,7 @@ static void _planner_time_accounting()
 
     // Now step through the moves and add up the planner time, locking up until MIN_PLANNED_TIME
     while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
-        if (bp->buffer_state == MP_BUFFER_QUEUED) {
+        if (bp->buffer_state == MP_BUFFER_QUEUED && bp->nx->buffer_state != MP_BUFFER_EMPTY) {
             if (!bp->locked) {
                 if (time_in_planner < MIN_PLANNED_TIME) {
                     bp->locked = true;

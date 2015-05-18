@@ -91,7 +91,7 @@ typedef enum {
 #define MIN_SEGMENT_USEC 		((float)750)		// minimum segment time (also minimum move time)
 #define NOM_SEGMENT_USEC 		((float)1500)		// nominal segment time
 
-//#define MIN_AVG_BLOCK_USEC 		((float)5000)		// nominal segment time
+#define MIN_AVG_BLOCK_USEC 		((float)10000)		// nominal segment time
 
 #define MIN_PLANNED_USEC		((float)20000)		// minimum time in the planner below which we must replan immediately
 #define PHAT_CITY_USEC			((float)80000)		// if you have at least this much time in the planner,
@@ -107,7 +107,7 @@ typedef enum {
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
-//#define MIN_AVG_BLOCK_TIME        (MIN_AVG_BLOCK_USEC / MICROSECONDS_PER_MINUTE)
+#define MIN_AVG_BLOCK_TIME        (MIN_AVG_BLOCK_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
 

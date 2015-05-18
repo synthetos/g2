@@ -135,18 +135,11 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
     _calculate_move_times(gm_in, axis_length, axis_square);         // set move time and minimum time in the state
 
-    mm.avg_move_time = (mm.avg_move_time + bf->gm.move_time)/2;
-
-    // This heuristic helps prevent the buffer from filling with moves that we
-    // can't plan as fast as they can move.
-    if (mm.avg_move_time < cm.throttle_time) {
-        bf->gm.move_time = cm.throttle_time; // intentionally stretch the move to slow it down
-    }
-
     // get a cleared buffer and setup move variables
     if ((bf = mp_get_write_buffer()) == NULL) {                     // never supposed to fail
         return(cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in aline"));
     }
+
     bf->bf_func = mp_exec_aline;                                    // register the callback to the exec function
     bf->length = length;
     for (uint8_t axis=0; axis<AXES; axis++) {                       // generate the unit vector
@@ -156,6 +149,14 @@ stat_t mp_aline(GCodeState_t *gm_in)
         }
     }
 	memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));                   // copy model state into planner buffer
+
+    mm.avg_move_time = (mm.avg_move_time + bf->gm.move_time)/2.0;
+
+    // This heuristic helps prevent the buffer from filling with moves that we
+    // can't plan as fast as they can move.
+    if (mm.avg_move_time < MIN_AVG_BLOCK_TIME) {
+        bf->gm.move_time = MIN_AVG_BLOCK_TIME; // intentionally stretch the move to slow it down
+    }
 
     _calculate_jerk(bf);                                            // get initial value for bf->jerk
 	bf->cruise_vmax = bf->length / bf->gm.move_time;                // target velocity requested
@@ -515,17 +516,17 @@ static void _calculate_jerk(mpBuf_t *bf)
     bf->jerk *= JERK_MULTIPLIER;                            // goose it!
 
     // set up and pre-compute the jerk terms needed for this round of planning
-//    if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {    // specialized comparison for tolerance of delta
-//        mm.jerk = bf->jerk;
-//        mm.recip_jerk = 1/bf->jerk;                            // compute cached jerk terms used by planning
-//        mm.cbrt_jerk = cbrt(bf->jerk);
-//    }
-//    bf->recip_jerk = mm.recip_jerk;
-//    bf->cbrt_jerk = mm.cbrt_jerk;
+    if (fabs(bf->jerk - mm.jerk) > JERK_MATCH_TOLERANCE) {    // specialized comparison for tolerance of delta
+        mm.jerk = bf->jerk;
+        mm.recip_jerk = 1/bf->jerk;                            // compute cached jerk terms used by planning
+        mm.cbrt_jerk = cbrt(bf->jerk);
+    }
+    bf->recip_jerk = mm.recip_jerk;
+    bf->cbrt_jerk = mm.cbrt_jerk;
 
     // use this form if you don't want the caching
-    bf->recip_jerk = 1/bf->jerk;
-    bf->cbrt_jerk = cbrt(bf->jerk);
+//    bf->recip_jerk = 1/bf->jerk;
+//    bf->cbrt_jerk = cbrt(bf->jerk);
 }
 
 /*

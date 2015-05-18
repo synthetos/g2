@@ -3238,7 +3238,6 @@
 		D4E913611AC4759F0042A16C /* settings_shapeoko2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko2.h; sourceTree = "<group>"; };
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
-		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
 		E29D7210198978BE00F22E5F /* UniqueId.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UniqueId.cpp; sourceTree = "<group>"; };
 		E29D7211198978BE00F22E5F /* UniqueId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniqueId.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -3277,7 +3276,6 @@
 				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
-				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
 				D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */,
 				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
 			);
