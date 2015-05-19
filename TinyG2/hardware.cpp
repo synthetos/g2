@@ -35,7 +35,7 @@
 #include "controller.h"
 #include "text_parser.h"
 #ifdef __ARM
-#include "UniqueId.h"
+#include "MotateUniqueID.h"
 #include "Reset.h"
 #endif
 #ifdef __AVR
