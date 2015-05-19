@@ -111,7 +111,6 @@
 		D48F5A7F172CB21100D0E055 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
-		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = index; path = /Users/rob/PersonalProjects/TinyG2/TinyG2/build/Debug/index; sourceTree = "<absolute>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_exec.cpp; sourceTree = "<group>"; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -130,6 +129,7 @@
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
+		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -263,6 +263,7 @@
 				D48F5A81172CB21100D0E055 /* xio.h */,
 				D40A240D1AD5B7C200406A3A /* board */,
 				D41D13F617374B7D00D522D9 /* settings */,
+				D4FEBFF81B0A65E30042EA32 /* index */,
 			);
 			sourceTree = "<group>";
 		};
@@ -285,7 +286,7 @@
 		};
 		D409C0101902F73000F15547 /* TinyG2 G2V9i */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9i";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9i";
 			buildConfigurationList = D409C0111902F73000F15547 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */;
 			buildPhases = (
 			);
@@ -299,7 +300,7 @@
 		};
 		D45710C21705330C00EA19A8 /* TinyG2 gShield */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield";
 			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "TinyG2 gShield" */;
 			buildPhases = (
 			);
@@ -313,7 +314,7 @@
 		};
 		D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 PLATFORM=ShapeokoDualY";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=ShapeokoDualY";
 			buildConfigurationList = D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "TinyG2 V9 Shapeoko Dual-Y" */;
 			buildPhases = (
 			);
@@ -327,7 +328,7 @@
 		};
 		D4B6579318B5197600F8616C /* TinyG2 G2V9f */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9f";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9f";
 			buildConfigurationList = D4B6579418B5197600F8616C /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9f" */;
 			buildPhases = (
 			);
@@ -341,7 +342,7 @@
 		};
 		D4B6579718B5198D00F8616C /* TinyG2 G2V9g */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9g";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9g";
 			buildConfigurationList = D4B6579818B5198D00F8616C /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9g" */;
 			buildPhases = (
 			);
@@ -355,7 +356,7 @@
 		};
 		D4C12814180D9560002A898C /* TinyG2 G2V9d */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9d";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9d";
 			buildConfigurationList = D4C12815180D9560002A898C /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9d" */;
 			buildPhases = (
 			);
@@ -369,7 +370,7 @@
 		};
 		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=UltimakerTests";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=UltimakerTests";
 			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */;
 			buildPhases = (
 			);
@@ -383,7 +384,7 @@
 		};
 		D4E9135D1AC46B8B0042A16C /* TinyG2 gShield Debugger */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield DEBUG=2";
 			buildConfigurationList = D4E9135E1AC46B8B0042A16C /* Build configuration list for PBXLegacyTarget "TinyG2 gShield Debugger" */;
 			buildPhases = (
 			);
@@ -412,7 +413,7 @@
 			);
 			name = index;
 			productName = index;
-			productReference = D49EB85417054C4000F2BF9B /* index */;
+			productReference = D4FEBFF81B0A65E30042EA32 /* index */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */

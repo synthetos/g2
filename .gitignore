@@ -23,13 +23,16 @@ bin/
 */*.xcodeproj/project.xcworkspace/xcuserdata
 *.xcodeproj/xcuserdata
 */*.xcodeproj/xcuserdata
+*.xcworkspace/xcuserdata
+*/*.xcworkspace/xcuserdata
 .DS_Store
 TcfTransactionLog.csv
 *.xcbkptlist
 *.xccheckout
 .gdb_history
 JLink.log
-Tools/gcc-arm-none-eabi
+Tools/gcc-arm-none-eabi*
 openocd.cfg
 openocd.log
 TinyG2/mb.txt
+Tools/gcc-arm-none-eabi-*.tar.bz2
