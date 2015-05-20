@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.34 // arc testing; g28/g30 tests
+#define TINYG_FIRMWARE_BUILD   		083.35 // arc testing; g28/g30 tests
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

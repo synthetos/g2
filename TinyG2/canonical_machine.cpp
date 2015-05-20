@@ -292,7 +292,7 @@ void cm_set_model_linenum(const uint32_t linenum)
 
 float cm_get_active_coord_offset(const uint8_t axis)
 {
-    if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_OFF) { // no offset if in absolute override mode
+    if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_ON) {  // no offset if in absolute override mode
         return (0.0); 
     }
     float offset = cm.offset[cm.gm.coord_system][axis];
@@ -923,7 +923,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
             } else {
     			cm.offset[coord_system][axis] = cm.gmx.position[axis] - _to_millimeters(offset[axis]);
             }
-			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
+			cm.deferred_write_flag = true;                  // persist offsets once machining cycle is over
 		}
 	}
 	return (STAT_OK);
