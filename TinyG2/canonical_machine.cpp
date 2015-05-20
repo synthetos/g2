@@ -245,7 +245,7 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
-	gcode_state->absolute_override = absolute_override;
+	gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
 	cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
 }
 
@@ -292,7 +292,9 @@ void cm_set_model_linenum(const uint32_t linenum)
 
 float cm_get_active_coord_offset(const uint8_t axis)
 {
-    if (cm.gm.absolute_override == true) { return (0); }    // no offset if in absolute override mode
+    if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_OFF) { // no offset if in absolute override mode
+        return (0.0); 
+    }
     float offset = cm.offset[cm.gm.coord_system][axis];
     if (cm.gmx.origin_offset_enable == true) {
         offset += cm.gmx.origin_offset[axis];               // includes G5x and G92 components
@@ -774,8 +776,7 @@ stat_t cm_alarm(const stat_t status, const char *msg)
 //	cm_spindle_optional_pause(spindle.pause_on_hold);
 //	cm_coolant_optional_pause(coolant.pause_on_hold);
 
-	// build a secondary message string (info) and call the exception report
-/*
+/*	// build a secondary message string (info) and call the exception report
 	char info[64];
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
 		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
@@ -833,6 +834,7 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
  *
  * PANIC can only be exited by a hardware reset or soft reset (^x)
  */
+
 stat_t cm_panic(const stat_t status, const char *msg)
 {
     if (cm.machine_state == MACHINE_PANIC) {    // only do this once
@@ -906,7 +908,6 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
 	if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {	// you can't set G53
 		return (STAT_P_WORD_IS_INVALID);
 	}
-//    if (fp_FALSE(cm.gf.L_word)) {
     if (!cm.gf.L_word) {
 		return (STAT_L_WORD_IS_MISSING);
     }
@@ -916,7 +917,6 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     cm.gmx.L_word = L_word;
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//		if (fp_TRUE(flag[axis])) {
 		if (flag[axis]) {
             if (L_word == 2) {
     			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
@@ -1005,7 +1005,6 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
 	float value[AXES];
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//		if (fp_TRUE(flag[axis])) {
 		if (flag[axis]) {
 // REMOVED  value[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(origin[axis]);	// G2 Issue #26
 			value[axis] = _to_millimeters(origin[axis]);
@@ -1021,7 +1020,6 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
 static void _exec_absolute_origin(float *value, bool *flag)
 {
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//		if (fp_TRUE(flag[axis])) {
 		if (flag[axis]) {
 			mp_set_runtime_position(axis, value[axis]);
 			cm.homed[axis] = true;	// G28.3 is not considered homed until you get here
@@ -1045,10 +1043,9 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
 	// set offsets in the Gcode model extended context
 	cm.gmx.origin_offset_enable = true;
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//		if (fp_TRUE(flag[axis])) {
 		if (flag[axis]) {
 			cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-									  cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
+	            cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
 		}
 	}
 	// now pass the offset to the callback - setting the coordinate system also applies the offsets
@@ -1125,34 +1122,46 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
  * cm_goto_g30_position() - G30
  */
 
+stat_t _goto_stored_position(float target2[], const float target[], const bool flags[])
+{
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
+    cm_straight_traverse(target, flags);            // Go through intermediate point if provided
+
+    if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called while in inches mode
+        for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted 
+            target2[i] *= INCHES_PER_MM;            // to inches so the traverse will behave.
+        }
+    }    
+    if (cm.gm.distance_mode == INCREMENTAL_MODE) {  // Subtract out any movement already performed
+        for (uint8_t i=0; i<AXES; i++) {            // if in incremental distance mode
+            target2[i] -= target[i];
+        }
+    }
+    while (mp_get_planner_buffers_available() == 0);// Make sure you have an available buffer
+    bool flags2[] = { 1,1,1,1,1,1 };
+    return (cm_straight_traverse(target2, flags2)); // Go to programmed endpoint
+}
+
 stat_t cm_set_g28_position(void)
 {
-	copy_vector(cm.gmx.g28_position, cm.gmx.position);
+	copy_vector(cm.gmx.g28_position, cm.gmx.position); // in MM and machine coordinates
 	return (STAT_OK);
 }
 
 stat_t cm_goto_g28_position(const float target[], const bool flags[])
 {
-	cm_set_absolute_override(MODEL, true);
-	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
-	while (mp_get_planner_buffers_available() == 0);	// make sure you have an available buffer
-	bool f[] = {1,1,1,1,1,1};
-	return (cm_straight_traverse(cm.gmx.g28_position, f));// execute actual stored move
+    return (_goto_stored_position(cm.gmx.g28_position, target, flags));
 }
 
 stat_t cm_set_g30_position(void)
 {
-	copy_vector(cm.gmx.g30_position, cm.gmx.position);
+	copy_vector(cm.gmx.g30_position, cm.gmx.position); // in MM and machine coordinates
 	return (STAT_OK);
 }
 
 stat_t cm_goto_g30_position(const float target[], const bool flags[])
 {
-	cm_set_absolute_override(MODEL, true);
-	cm_straight_traverse(target, flags);				// move through intermediate point, or skip
-	while (mp_get_planner_buffers_available() == 0);	// make sure you have an available buffer
-	bool f[] = {1,1,1,1,1,1};
-	return (cm_straight_traverse(cm.gmx.g30_position, f));// execute actual stored move
+    return (_goto_stored_position(cm.gmx.g30_position, target, flags));
 }
 
 /********************************

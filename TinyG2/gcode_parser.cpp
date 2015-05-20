@@ -511,7 +511,7 @@ static stat_t _execute_gcode_block()
                                                                  break;
                                           }
     		}
-            cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
+            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);	 // un-set absolute override once the move is planned
 		}
     }
 

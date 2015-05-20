@@ -237,6 +237,11 @@ typedef enum {
 } cmCoordSystem;
 #define COORD_SYSTEM_MAX G59		// set this manually to the last one
 
+typedef enum {
+	ABSOLUTE_OVERRIDE_OFF = 0,      // G53 enabled
+    ABSOLUTE_OVERRIDE_ON
+} cmAbsoluteOverride;
+
 typedef enum {			            // G Modal Group 13
 	PATH_EXACT_PATH = 0,			// G61 - hits corners but does not stop if it does not need to.
 	PATH_EXACT_STOP,				// G61.1 - stops at all corners
@@ -333,7 +338,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
     cmPathControl path_control;         // G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
     cmDistanceMode distance_mode;       // G90=use absolute coords, G91=incremental movement
     cmDistanceMode arc_distance_mode;   // G90.1=use absolute IJK offsets, G91.1=incremental IJK offsets
-	bool absolute_override;			    // G53 TRUE = move using machine coordinates - this block only (G53)
+    cmAbsoluteOverride absolute_override;// G53 TRUE = move using machine coordinates - this block only
     cmCoordSystem coord_system;         // G54-G59 - select coordinate system 1-9
 	uint8_t tool;				// G	// M6 tool change - moves "tool_select" to "tool"
 	uint8_t tool_select;		// G	// T value - T sets this value
@@ -355,7 +360,7 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
     uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
     uint8_t L_word;						// L word - used by G10s
 
-    uint8_t origin_offset_enable;		// G92 offsets enabled/disabled.  0=disabled, 1=enabled
+    uint8_t origin_offset_enable;		// G92 offsets enabled/disabled. 0=disabled, 1=enabled
     uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
 
 // unimplemented gcode parameters
