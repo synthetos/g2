@@ -1,8 +1,8 @@
 /*
  * http://tinkerin.gs/
  *
- * Copyright (c) 2013 - 2015 Robert Giseburt
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -28,15 +28,8 @@
  *
  */
 
-#ifndef G2v9k_pinout_h
-#define G2v9k_pinout_h
-
-/* Pinouts for TinyG2 v9k board 
- *
- * 6 axes
- * 4 motors
- * 1 PWM channel
- */
+#ifndef G2v9_pinout_h
+#define G2v9_pinout_h
 
 #include <MotatePins.h>
 

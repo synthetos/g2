@@ -86,7 +86,7 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
-#define flag_vector unit		// alias for vector of flags
+//#define flag_vector unit		// alias for vector of flags
 
 static void _planner_time_accounting();
 static void _audit_buffers();
@@ -224,7 +224,8 @@ void mp_set_steps_to_runtime_position()
  *  and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag)
+//void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag)
+void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 {
 	mpBuf_t *bf;
 

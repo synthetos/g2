@@ -76,14 +76,11 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
-//#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
-//#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","macs","cycs","mots","hold","line","coor"
-#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa",\
-"vel","feed","stat","macs","cycs","mots","hold",\
-"in1","in2","in3","in4","in5","in6","in7","in8","in9"
-//                               "home","homx","homy","homz"
-//                               "line","vel","feed","stat","macs","cycs","mots","hold","unit",
+#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa"\
+,"line","vel","feed","stat",\
+"macs","cycs","mots","hold","dist","admo"
+//,"in1","in2","in3","in4","in5","in6","in7","in8","in9"
+//,"home","homx","homy","homz"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -104,7 +101,7 @@
 #define M1_MICROSTEPS		    	8						// 1mi		1,2,4,8
 #define M1_POLARITY			    	0						// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE		    	MOTOR_POWER_MODE		// 1pm		standard
-#define M1_POWER_LEVEL		    	0.625		            // 1pl
+#define M1_POWER_LEVEL		    	0.75		            // 1pl
 
 #define M2_MOTOR_MAP	 	    	AXIS_Y
 #define M2_STEP_ANGLE		    	1.8
@@ -112,7 +109,7 @@
 #define M2_MICROSTEPS		    	8
 #define M2_POLARITY			    	1
 #define M2_POWER_MODE		    	MOTOR_POWER_MODE
-#define M2_POWER_LEVEL		    	0.625
+#define M2_POWER_LEVEL		    	0.75
 
 #define M3_MOTOR_MAP		    	AXIS_Z
 #define M3_STEP_ANGLE		    	1.8

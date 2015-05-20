@@ -28,15 +28,15 @@
  * 		 into a virgin EEPROM, and can be changed using the config commands.
  *		 After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change 
- *		 are in hardware.h  Application settings that also shouldn't need 
+ *		 System and hardware settings that you shouldn't need to change
+ *		 are in hardware.h  Application settings that also shouldn't need
  *		 to be changed are in tinyg.h
  */
 /***********************************************************************/
 /**** Default profile for screw driven machines ************************/
 /***********************************************************************/
 
-// ***> NOTE: The init message must be a single line with no CRs or LFs 
+// ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to default settings"
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
@@ -76,7 +76,7 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 // Alternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 
@@ -121,9 +121,9 @@
 #define M4_MOTOR_MAP                AXIS_A				// 1ma
 #define M4_STEP_ANGLE               1.8					// 1sa
 #define M4_TRAVEL_PER_REV           360 				// 1tr		degrees moved per motor rev
-#define M4_MICROSTEPS               8					// 1mi		
-#define M4_POLARITY                 0					// 1po		
-#define M4_POWER_MODE               MOTOR_POWER_MODE	// 1pm		
+#define M4_MICROSTEPS               8					// 1mi
+#define M4_POLARITY                 0					// 1po
+#define M4_POWER_MODE               MOTOR_POWER_MODE	// 1pm
 #define M4_POWER_LEVEL              MOTOR_POWER_LEVEL	// 1mp
 
 #define M5_MOTOR_MAP                AXIS_B
@@ -136,7 +136,7 @@
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
-#define M6_TRAVEL_PER_REV           360                 // degrees moved per motor rev	
+#define M6_TRAVEL_PER_REV           360                 // degrees moved per motor rev
 #define M6_MICROSTEPS               8
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
@@ -204,7 +204,7 @@
  *
  * It will return s= as the value you want to enter.
  *
- * If the value is over 1 million, the code will divide it by 1 million, 
+ * If the value is over 1 million, the code will divide it by 1 million,
  * so you have to pre-multiply it by 1000000.0. (The value is in millions, btw.)
  *
  * Note that you need these to be floating point values, so always have a .0 at the end!
@@ -261,11 +261,11 @@
 
 //*** Input / output settings ***
 
-/*  
+/*
     INPUT_MODE_DISABLED
     INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
     INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
-    
+
     INPUT_ACTION_NONE
     INPUT_ACTION_STOP
     INPUT_ACTION_FAST_STOP

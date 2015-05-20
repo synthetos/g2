@@ -58,6 +58,7 @@ enum hwPlatform {
 #define HW_VERSION_TINYGV9F		2
 #define HW_VERSION_TINYGV9H		3
 #define HW_VERSION_TINYGV9I		4
+#define HW_VERSION_TINYGV9K		5
 
 ////////////////////////////
 /////// ARM VERSION ////////
