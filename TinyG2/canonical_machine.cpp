@@ -1124,8 +1124,8 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
 
 stat_t _goto_stored_position(float target2[], const float target[], const bool flags[])
 {
-    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
     cm_straight_traverse(target, flags);            // Go through intermediate point if provided
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
 
     if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called while in inches mode
         for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted 
