@@ -26,10 +26,6 @@
 #include "util.h"
 #include "xio.h"			// for char definitions
 
-struct gcodeParserSingleton {	 	        // struct to manage globals
-	uint8_t modals[MODAL_GROUP_COUNT];      // collects modal groups in a block
-}; struct gcodeParserSingleton gp;
-
 // local helper functions and macros
 static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
@@ -38,10 +34,11 @@ static stat_t _validate_gcode_block(void);
 static stat_t _parse_gcode_block(char *line);   // Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(void);       // Execute the gcode block
 
-#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=1; gp.modals[m]+=1; break;})
-#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=1; break;})
-#define EXEC_FUNC(f,v) if((bool)(uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
-//#define EXEC_FUNC(f,v) if(fp_TRUE(cm.gf.v)) { status = f(cm.gn.v);}
+//#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gn.modals[m]+=1; cm.gf.modals[m]=true; break;})
+#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
+#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
+#define EXEC_FUNC(f,v) if(cm.gf.v) { status=f(cm.gn.v);}
+//#define EXEC_FUNC(f,v) if((bool)(uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
 
 /*
  * gcode_parser() - parse a block (line) of gcode
@@ -226,12 +223,12 @@ static stat_t _validate_gcode_block()
 	//	uses axis words appears on the line, the activity of the group 1 G-code is suspended
 	//	for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
 
-//	if ((gp.modals[MODAL_GROUP_G0] == true) && (gp.modals[MODAL_GROUP_G1] == true)) {
+//	if ((cm.gn.modals[MODAL_GROUP_G0] == true) && (cm.gn.modals[MODAL_GROUP_G1] == true)) {
 //		return (STAT_MODAL_GROUP_VIOLATION);
 //	}
 
 	// look for commands that require an axis word to be present
-//	if ((gp.modals[MODAL_GROUP_G0] == true) || (gp.modals[MODAL_GROUP_G1] == true)) {
+//	if ((cm.gn.modals[MODAL_GROUP_G0] == true) || (cm.gn.modals[MODAL_GROUP_G1] == true)) {
 //		if (_axis_changed() == false)
 //		return (STAT_GCODE_AXIS_IS_MISSING);
 //	}
@@ -251,16 +248,16 @@ static stat_t _validate_gcode_block()
 
 static stat_t _parse_gcode_block(char *buf)
 {
-	char *pstr = (char *)buf;		// persistent pointer into gcode block for parsing words
-  	char letter;					// parsed letter, eg.g. G or X or Y
-	float value = 0;				// value parsed from letter (e.g. 2 for G2)
-	stat_t status = STAT_OK;
+    char *pstr = (char *)buf;       // persistent pointer into gcode block for parsing words
+    char letter;                    // parsed letter, eg.g. G or X or Y
+    float value = 0;                // value parsed from letter (e.g. 2 for G2)
+    stat_t status = STAT_OK;
 
-	// set initial state for new move
-	memset(&gp, 0, sizeof(gp));						// clear all parser values
-	memset(&cm.gf, 0, sizeof(GCodeInput_t));		// clear all next-state flags
-	memset(&cm.gn, 0, sizeof(GCodeInput_t));		// clear all next-state values
-	cm.gn.motion_mode = cm_get_motion_mode(MODEL);	// get motion mode from previous block
+    // set initial state for new move
+//    memset(&gp, 0, sizeof(gp));                     // clear all parser values
+    memset(&cm.gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
+    memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
+    cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
 
 	// extract commands and parameters
 	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
@@ -323,8 +320,22 @@ static stat_t _parse_gcode_block(char *buf)
 				}
 				case 64: SET_MODAL (MODAL_GROUP_G13,path_control, PATH_CONTINUOUS);
 				case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
-				case 90: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
-				case 91: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
+				case 90: {
+					switch (_point(value)) {
+    					case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
+    					case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_MODE);
+    					default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+                    }
+                    break;
+                }
+				case 91: {
+    				switch (_point(value)) {
+        				case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
+        				case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_MODE);
+        				default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+    				}
+    				break;
+				}
 				case 92: {
 					switch (_point(value)) {
 						case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_ORIGIN_OFFSETS);
@@ -420,7 +431,8 @@ static stat_t _parse_gcode_block(char *buf)
  *		15. coordinate system selection (G54, G55, G56, G57, G58, G59)
  *		16. set path control mode (G61, G61.1, G64)
  *		17. set distance mode (G90, G91)
- *		18. set retract mode (G98, G99)
+ *		17a. set arc distance mode (G90.1, G91.1)
+ *		18.  set retract mode (G98, G99)
  *		19a. homing functions (G28.2, G28.3, G28.1, G28, G30)
  *		19b. update system data (G10)
  *		19c. set axis offsets (G92, G92.1, G92.2, G92.3)
@@ -462,6 +474,7 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_set_coord_system, coord_system);
 	EXEC_FUNC(cm_set_path_control, path_control);
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);
+	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode);
 	//--> set retract mode goes here
 
 	switch (cm.gn.next_action) {
@@ -489,17 +502,16 @@ static stat_t _execute_gcode_block()
         		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_STRAIGHT_FEED: { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
         		case MOTION_MODE_CW_ARC:
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,
-                                                                 cm.gf.target,
-                                                                 cm.gn.arc_offset[0],
-                                                                 cm.gn.arc_offset[1],
-                                                                 cm.gn.arc_offset[2],
-                                                                 cm.gn.arc_radius,
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,
+                                                                 cm.gn.arc_offset, cm.gf.arc_offset,
+                                                                 cm.gn.arc_radius, cm.gf.arc_radius,
+                                                                 cm.gn.parameter,  cm.gf.parameter,
+                                                                 cm.gf.modals[MODAL_GROUP_G1],
                                                                  cm.gn.motion_mode);
                                                                  break;
                                           }
     		}
-            cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
+            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);	 // un-set absolute override once the move is planned
 		}
     }
 

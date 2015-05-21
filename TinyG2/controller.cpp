@@ -159,6 +159,13 @@ static void _controller_HSM()
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
+    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
+#ifdef __AVR
+    DISPATCH(switch_debounce_callback());       // debounce switches
+#endif
+    DISPATCH(sr_status_report_callback());      // conditionally send status report
+    DISPATCH(qr_queue_report_callback());       // conditionally send queue report
+
 	DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
     DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
@@ -179,12 +186,6 @@ static void _controller_HSM()
 //---- phat city idle tasks ---------------------------------------------------------//
 
     DISPATCH(_check_for_phat_city_time());      // stop here if it's not phat city time!
-    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
-#ifdef __AVR
-	DISPATCH(switch_debounce_callback());       // debounce switches
-#endif
-    DISPATCH(sr_status_report_callback());      // conditionally send status report
-    DISPATCH(qr_queue_report_callback());       // conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
 }
 

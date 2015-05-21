@@ -195,7 +195,7 @@
 #define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX/3)      // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
 #define X_LATCH_BACKOFF 	    	5                       // xlb  mm
-#define X_ZERO_BACKOFF 		    	1.0                     // xzb  mm
+#define X_ZERO_BACKOFF 		    	0.4                     // xzb  mm
 
 #define Y_AXIS_MODE 		    	AXIS_STANDARD
 #define Y_VELOCITY_MAX 		    	X_VELOCITY_MAX
@@ -210,7 +210,7 @@
 #define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 	    	5
-#define Y_ZERO_BACKOFF 		    	1.0
+#define Y_ZERO_BACKOFF 		    	0.4
 
 #define Z_AXIS_MODE 		    	AXIS_STANDARD
 #if HAS_CANSTACK_Z_AXIS
@@ -229,7 +229,7 @@
 #define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 	    	5
-#define Z_ZERO_BACKOFF 		    	1.0
+#define Z_ZERO_BACKOFF 		    	0.4
 
 // Rotary values are chosen to make the motor react the same as X for testing
 #define A_AXIS_MODE 		    	AXIS_DISABLED // DISABLED
