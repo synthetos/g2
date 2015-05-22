@@ -402,14 +402,9 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
  *	execution, and the real tool position is still close to the starting point.
  */
 
-void cm_finalize_move() {
+void cm_finalize_move() 
+{
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
-
-	// if in inverse time mode reset feed rate so next block requires an explicit feed rate setting
-	if ((cm.gm.feed_rate_mode == INVERSE_TIME_MODE) &&
-        (cm.gm.motion_mode == MOTION_MODE_STRAIGHT_FEED)) {
-		cm.gm.feed_rate = 0;
-	}
 }
 
 void cm_update_model_position_from_runtime()
@@ -1176,6 +1171,9 @@ stat_t cm_goto_g30_position(const float target[], const bool flags[])
 stat_t cm_set_feed_rate(const float feed_rate)
 {
 	if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        if (fp_ZERO(feed_rate)) {
+            return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+        }
 		cm.gm.feed_rate = 1/feed_rate;	// normalize to minutes (NB: active for this gcode block only)
 	} else {
 		cm.gm.feed_rate = _to_millimeters(feed_rate);
@@ -1230,8 +1228,8 @@ stat_t cm_dwell(const float seconds)
 stat_t cm_straight_feed(const float target[], const bool flags[])
 {
 	// trap zero feed rate condition
-	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
-		return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+	if (fp_ZERO(cm.gm.feed_rate)) {
+    	return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 	cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 

@@ -94,9 +94,6 @@ stat_t cm_arc_callback()
 	if (--arc.segment_count > 0) {
         return (STAT_EAGAIN);
     }
-    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-        cm.gm.feed_rate = 0;                         // next block requires new feed rate
-    }
 	arc.run_state = MOVE_OFF;
 	return (STAT_OK);
 }
@@ -140,7 +137,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     //  - rotary axes are present. Ignored
 
 	// trap missing feed rate
-	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
+	if (fp_ZERO(cm.gm.feed_rate)) {
     	return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 
