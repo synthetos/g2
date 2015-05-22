@@ -202,7 +202,8 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                     size = 1;
                     return single_char_buffer;
 
-                } else if ((c == LF) || (c == CR)) {
+//                } else if ((c == LF) || (c == CR)) {
+                } else if ((c == LF) || (c == CR) || (c == TAB)) {
                     _ready_to_send = true;
                     break;
                 }

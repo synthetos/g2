@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.36 // arc testing; testing
+#define TINYG_FIRMWARE_BUILD   		083.37 // arc testing; fixed issue with G3 speed miscalculation in overspeed case
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
