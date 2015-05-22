@@ -184,8 +184,12 @@ stat_t cm_homing_cycle_start_no_set(void)
 
 stat_t cm_homing_cycle_callback(void)
 {
-    if (cm.cycle_state != CYCLE_HOMING) return (STAT_NOOP);     // exit if not in a homing cycle
-    if (cm_get_runtime_busy()) return (STAT_EAGAIN);            // sync to planner move ends
+    if (cm.cycle_state != CYCLE_HOMING) {   // exit if not in a homing cycle
+        return (STAT_NOOP);
+    }
+    if (cm_get_runtime_busy()) {            // sync to planner move ends
+        return (STAT_EAGAIN);
+    }
     return (hm.func(hm.axis));                                  // execute the current homing move
 }
 

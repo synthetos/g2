@@ -293,7 +293,7 @@ void cm_set_model_linenum(const uint32_t linenum)
 float cm_get_active_coord_offset(const uint8_t axis)
 {
     if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_ON) {  // no offset if in absolute override mode
-        return (0.0); 
+        return (0.0);
     }
     float offset = cm.offset[cm.gm.coord_system][axis];
     if (cm.gmx.origin_offset_enable == true) {
@@ -914,7 +914,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     if ((L_word != 2) && (L_word != 20)) {
 		return (STAT_L_WORD_IS_INVALID);
     }
-    cm.gmx.L_word = L_word;
+//    cm.gmx.L_word = L_word;
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (flag[axis]) {
@@ -1128,10 +1128,10 @@ stat_t _goto_stored_position(float target2[], const float target[], const bool f
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
 
     if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called while in inches mode
-        for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted 
+        for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted
             target2[i] *= INCHES_PER_MM;            // to inches so the traverse will behave.
         }
-    }    
+    }
     if (cm.gm.distance_mode == INCREMENTAL_MODE) {  // Subtract out any movement already performed
         for (uint8_t i=0; i<AXES; i++) {            // if in incremental distance mode
             target2[i] -= target[i];
