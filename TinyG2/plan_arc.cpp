@@ -86,13 +86,16 @@ stat_t cm_arc_callback()
 	arc.theta += arc.segment_theta;
 	arc.gm.target[arc.plane_axis_0] = arc.center_0 + sin(arc.theta) * arc.radius;
 	arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
-
 	arc.gm.target[arc.linear_axis] += arc.segment_linear_travel;
+
 	mp_aline(&arc.gm);								// run the line
 	copy_vector(arc.position, arc.gm.target);		// update arc current position
 
 	if (--arc.segment_count > 0) {
         return (STAT_EAGAIN);
+    }
+    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        cm.gm.feed_rate = 0;                         // next block requires new feed rate
     }
 	arc.run_state = MOVE_OFF;
 	return (STAT_OK);
@@ -120,11 +123,12 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // simple as "I25" if CW or CCW motion mode was already set by a previous block.
     // Here are 2 cases to handle if CW or CCW motion mode was set by a previous block:
     //
-    // Case 1: F, P or other non modal is specified but no movement is specified (no offsets or radius)
-    //  This is OK: return STAT_OK
+    // Case 1: F, P or other non modal is specified but no movement is specified 
+    //         (no offsets or radius). This is OK: return STAT_OK
     //
-    // Case 2: Movement is specified w/o a new G2 or G3 word in the (new) block
-    //  This is OK: continue the move
+    // Case 2: Movement is specified w/o a new G2 or G3 word in the (new) block.
+    //         This is OK: continue the move
+    //
     if ((!modal_g1_f) &&                                                // G2 or G3 not present
         (!(offset_f[AXIS_X] | offset_f[AXIS_Y] | offset_f[AXIS_Z])) &&  // no offsets are present
         (!radius_f)) {                                                  // radius not present
@@ -338,6 +342,9 @@ static stat_t _compute_arc(const bool radius_f)
     arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
     arc.segments = max(arc.segments, (float)1.0);		//...but is at least 1 segment
 
+    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        arc.gm.feed_rate /= arc.segments; 
+    }    
     // setup the rest of the arc parameters
     arc.segment_count = (int32_t)arc.segments;
     arc.segment_theta = arc.angular_travel / arc.segments;
@@ -480,8 +487,6 @@ static float _estimate_arc_time (float arc_time)
 	// Determine move time at requested feed rate
 	if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
 		arc_time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
-		arc.gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
-		cm.gm.feed_rate = 0;            // reset feed rate in CM so next block requires an explicit feed rate setting
 	} else {
 		arc_time = arc.length / cm.gm.feed_rate;
 	}

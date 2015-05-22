@@ -241,9 +241,6 @@ static stat_t _validate_gcode_block()
  *	All the parser does is load the state values in gn (next model state) and set flags
  *	in gf (model state flags). The execute routine applies them. The buffer is assumed to
  *	contain only uppercase characters and signed floats (no whitespace).
- *
- *	A number of implicit things happen when the gn struct is zeroed:
- *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
 
 static stat_t _parse_gcode_block(char *buf)
@@ -254,7 +251,6 @@ static stat_t _parse_gcode_block(char *buf)
     stat_t status = STAT_OK;
 
     // set initial state for new move
-//    memset(&gp, 0, sizeof(gp));                     // clear all parser values
     memset(&cm.gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
     cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
