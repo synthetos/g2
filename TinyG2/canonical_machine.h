@@ -358,7 +358,7 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
     float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
     uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
     uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
-    uint8_t L_word;						// L word - used by G10s
+//    uint8_t L_word;						// L word - used by G10s
 
     uint8_t origin_offset_enable;		// G92 offsets enabled/disabled. 0=disabled, 1=enabled
     uint8_t block_delete_switch;		// set true to enable block deletes (true is default)

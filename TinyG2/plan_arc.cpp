@@ -31,9 +31,10 @@
 arc_t arc;
 
 // Local functions
+
 static stat_t _compute_arc(const bool radius_f);
 static void _compute_arc_offsets_from_radius(void);
-static void _estimate_arc_time(void);
+static float _estimate_arc_time (float arc_time);
 static stat_t _test_arc_soft_limits(void);
 
 /*****************************************************************************
@@ -291,7 +292,6 @@ static stat_t _compute_arc(const bool radius_f)
     // Calculate the theta angle of the current position (theta is also needed for calculating center point)
     // Note: gcc atan2 reverses args, i.e.: atan2(Y,X)
     arc.theta = atan2(-arc.offset[arc.plane_axis_0], -arc.offset[arc.plane_axis_1]);
-//    arc.angular_travel = 0;                                 // angular travel always starts as zero for full circles
 
     // Compute angular travel if not a full circle arc
     if (!arc.full_circle) {
@@ -329,19 +329,16 @@ static stat_t _compute_arc(const bool radius_f)
     arc.linear_travel = arc.gm.target[arc.linear_axis] - arc.position[arc.linear_axis];
     arc.planar_travel = arc.angular_travel * arc.radius;
     arc.length = hypotf(arc.planar_travel, fabs(arc.linear_travel));
-    _estimate_arc_time();                                   // estimate execution time to inform segment calculation
 
-    // Find the minimum number of segments that meet these constraints...
+    // Find the minimum number of segments that meet accuracy and time constraints...
+    // Note: removed segment_length test as segment_time accounts for this (build 083.37)
+    float arc_time;
+    float segments_for_minimum_time = _estimate_arc_time(arc_time) * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
     float segments_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * arc.radius - cm.chordal_tolerance));
-    float segments_for_minimum_distance = arc.length / MIN_ARC_SEGMENT_LENGTH;
-    float segments_for_minimum_time = arc.time * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
-
-    arc.segments = floor(min3(segments_for_chordal_accuracy,
-                              segments_for_minimum_distance,
-                              segments_for_minimum_time));
-
+    arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
     arc.segments = max(arc.segments, (float)1.0);		//...but is at least 1 segment
-    arc.gm.move_time = arc.time / arc.segments;	        // gcode state struct gets segment_time, not arc time
+
+    // setup the rest of the arc parameters
     arc.segment_count = (int32_t)arc.segments;
     arc.segment_theta = arc.angular_travel / arc.segments;
     arc.segment_linear_travel = arc.linear_travel / arc.segments;
@@ -478,23 +475,24 @@ static void _compute_arc_offsets_from_radius()
  *	where the unit vector is 1 in that dimension. This is not true for any arbitrary arc,
  *	with the result that the time returned may be less than optimal.
  */
-static void _estimate_arc_time ()
+static float _estimate_arc_time (float arc_time)
 {
 	// Determine move time at requested feed rate
 	if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-		arc.time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
+		arc_time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
 		arc.gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
 		cm.gm.feed_rate = 0;            // reset feed rate in CM so next block requires an explicit feed rate setting
 	} else {
-		arc.time = arc.length / cm.gm.feed_rate;
+		arc_time = arc.length / cm.gm.feed_rate;
 	}
 
 	// Downgrade the time if there is a rate-limiting axis
-	arc.time = max(arc.time, arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max);
-	arc.time = max(arc.time, arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max);
+	arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max));
+	arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max));
 	if (fabs(arc.linear_travel) > 0) {
-		arc.time = max(arc.time, (float)fabs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
+		arc_time = max(arc_time, (float)fabs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
 	}
+    return (arc_time);
 }
 
 /*

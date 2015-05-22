@@ -171,7 +171,7 @@ stat_t cm_homing_cycle_start(void)
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
-//    cm.limit_enable = false;                // disable limit switch processing
+//    cm.limit_enable = false;                // disable limit switch processing (no longer needed)
 	return (STAT_OK);
 }
 
@@ -184,8 +184,12 @@ stat_t cm_homing_cycle_start_no_set(void)
 
 stat_t cm_homing_cycle_callback(void)
 {
-    if (cm.cycle_state != CYCLE_HOMING) return (STAT_NOOP);     // exit if not in a homing cycle
-    if (cm_get_runtime_busy()) return (STAT_EAGAIN);            // sync to planner move ends
+    if (cm.cycle_state != CYCLE_HOMING) {   // exit if not in a homing cycle
+        return (STAT_NOOP);
+    }
+    if (cm_get_runtime_busy()) {            // sync to planner move ends
+        return (STAT_EAGAIN);
+    }
     return (hm.func(hm.axis));                                  // execute the current homing move
 }
 
@@ -254,7 +258,7 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) {    // the switch is closed at startup
+	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) { // the switch is closed at startup
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {
@@ -291,7 +295,7 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
 	if (hm.set_coordinates) {
-		cm_set_position(axis, 0);
+		cm_set_position(axis, 0.0);
 		cm.homed[axis] = true;
 	} else {                                                // do not set axis if in G28.4 cycle
 		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
@@ -305,16 +309,13 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 {
 	float vect[] = {0,0,0,0,0,0};
-//	float flags[] = {false, false, false, false, false, false};
 	bool flags[] = {false, false, false, false, false, false};
 
 	vect[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
 	mp_flush_planner();										// don't use cm_request_queue_flush() here
-//	if (cm.hold_state == FEEDHOLD_HOLD) {
     cm_end_hold();                                          // ends hold if on is in effect
-//    }
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
 }
