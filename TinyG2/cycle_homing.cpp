@@ -171,7 +171,7 @@ stat_t cm_homing_cycle_start(void)
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
-//    cm.limit_enable = false;                // disable limit switch processing (no longer needed)
+//    cm.limit_enable = false;              // disable limit switch processing (no longer needed)
 	return (STAT_OK);
 }
 
@@ -389,13 +389,13 @@ static int8_t _get_next_axis(int8_t axis)
     }
 	if(axis >= HOMING_AXES) return -2;
 	  switch(axis) {
-		case -1:        if (cm.gf.target[AXIS_Z]) return (AXIS_Z);
-		case AXIS_Z:    if (cm.gf.target[AXIS_X]) return (AXIS_X);
-		case AXIS_X:    if (cm.gf.target[AXIS_Y]) return (AXIS_Y);
-		case AXIS_Y:    if (cm.gf.target[AXIS_A]) return (AXIS_A);
+		case -1:        if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
+		case AXIS_Z:    if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		case AXIS_X:    if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		case AXIS_Y:    if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 #if (HOMING_AXES > 4)
-		case AXIS_A:    if (cm.gf.target[AXIS_B]) return (AXIS_B);
-		case AXIS_B:    if (cm.gf.target[AXIS_C]) return (AXIS_C);
+		case AXIS_A:    if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		case AXIS_B:    if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 #endif
 		default:        return -1;
 	}

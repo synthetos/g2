@@ -434,15 +434,14 @@ static void _compute_arc_offsets_from_radius()
 	float y = cm.gm.target[arc.plane_axis_1] - cm.gmx.position[arc.plane_axis_1];
 
 	// *** From Forrest Green - Other Machine Co, 3/27/14
-	// If the distance between endpoints is greater than the arc diameter, disc
-	// will be negative indicating that the arc is offset into the complex plane
-	// beyond the reach of any real CNC. However, numerical errors can flip the
-	// sign of disc as it approaches zero (which happens as the arc angle approaches
-	// 180 degrees). To avoid mishandling these arcs we use the closest real
-	// solution (which will be 0 when disc <= 0). This risks obscuring g-code errors
-	// where the radius is actually too small (they will be treated as half circles),
-	// but ensures that all valid arcs end up reasonably close to their intended
-	// paths regardless of any numerical issues.
+	// If the distance between endpoints is greater than the arc diameter, disc will be
+	// negative indicating that the arc is offset into the complex plane beyond the reach 
+    // of any real CNC. However, numerical errors can flip the sign of disc as it approaches
+    // zero (which happens as the arc angle approaches 180 degrees). To avoid mishandling 
+    // these arcs we use the closest real solution (which will be 0 when disc <= 0). This 
+    // risks obscuring g-code errors where the radius is actually too small (they will be 
+    // treated as half circles), but ensures that all valid arcs end up reasonably close 
+    // to their intended paths regardless of any numerical issues.
 	float disc = 4 * square(arc.radius) - (square(x) + square(y));
 
 	// h_x2_div_d == -(h * 2 / d)
@@ -453,11 +452,11 @@ static void _compute_arc_offsets_from_radius()
         h_x2_div_d = -h_x2_div_d;
     }
 
-	// Negative R is g-code-alese for "I want a circle with more than 180 degrees
-	// of travel" (go figure!), even though it is advised against ever generating
-	// such circles in a single line of g-code. By inverting the sign of
-	// h_x2_div_d the center of the circles is placed on the opposite side of
-	// the line of travel and thus we get the inadvisably long arcs as prescribed.
+	// Negative R is g-code-alese for "I want a circle with more than 180 degrees of travel" 
+    // (go figure!), even though it is advised against ever generating such circles in a 
+    // single Gcode block. By inverting the sign of h_x2_div_d the center of the circles is 
+    // placed on the opposite side of the line of travel and thus we get the inadvisably 
+    // long arcs as prescribed.
 	if (arc.radius < 0) {
         h_x2_div_d = -h_x2_div_d;
         arc.radius *= -1;           // and flip the radius sign while you are at it

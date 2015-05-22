@@ -909,8 +909,6 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     if ((L_word != 2) && (L_word != 20)) {
 		return (STAT_L_WORD_IS_INVALID);
     }
-//    cm.gmx.L_word = L_word;
-
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (flag[axis]) {
             if (L_word == 2) {
@@ -1337,7 +1335,6 @@ stat_t cm_override_enables(uint8_t flag)			// M48, M49
 
 stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
 {
-//	if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
 	if (cm.gf.parameter && fp_ZERO(cm.gn.parameter)) {
 		cm.gmx.feed_rate_override_enable = false;
 	} else {
@@ -1356,7 +1353,6 @@ stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
 
 stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
 {
-//	if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
 	if (cm.gf.parameter && fp_ZERO(cm.gn.parameter)) {
 		cm.gmx.traverse_override_enable = false;
 	} else {
