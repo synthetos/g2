@@ -34,11 +34,9 @@ static stat_t _validate_gcode_block(void);
 static stat_t _parse_gcode_block(char *line);   // Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(void);       // Execute the gcode block
 
-//#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gn.modals[m]+=1; cm.gf.modals[m]=true; break;})
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
 #define EXEC_FUNC(f,v) if(cm.gf.v) { status=f(cm.gn.v);}
-//#define EXEC_FUNC(f,v) if((bool)(uint8_t)cm.gf.v != false) { status = f(cm.gn.v);}
 
 /*
  * gcode_parser() - parse a block (line) of gcode
@@ -241,9 +239,6 @@ static stat_t _validate_gcode_block()
  *	All the parser does is load the state values in gn (next model state) and set flags
  *	in gf (model state flags). The execute routine applies them. The buffer is assumed to
  *	contain only uppercase characters and signed floats (no whitespace).
- *
- *	A number of implicit things happen when the gn struct is zeroed:
- *	  - inverse feed rate mode is canceled - set back to units_per_minute mode
  */
 
 static stat_t _parse_gcode_block(char *buf)
@@ -254,10 +249,17 @@ static stat_t _parse_gcode_block(char *buf)
     stat_t status = STAT_OK;
 
     // set initial state for new move
-//    memset(&gp, 0, sizeof(gp));                     // clear all parser values
     memset(&cm.gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
     cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
+
+    // Causes a later exception if 
+    //  (1) INVERSE_TIME_MODE is active and a feed rate is not provided or
+    //  (2) INVERSE_TIME_MODE is changed to UNITS_PER_MINUTE and a new feed rate is missing  
+    if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate req'd when in INV_TIME_MODE
+        cm.gn.feed_rate = 0;
+        cm.gf.feed_rate = true;
+    }
 
 	// extract commands and parameters
 	while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
@@ -496,7 +498,7 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS: { status = cm_resume_origin_offsets(); break;}
 
 		case NEXT_ACTION_DEFAULT: {
-    		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply override setting to gm struct
+    		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply absolute override
     		switch (cm.gn.motion_mode) {
         		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
         		case MOTION_MODE_STRAIGHT_TRAVERSE: { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}

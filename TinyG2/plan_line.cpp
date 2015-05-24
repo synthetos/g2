@@ -52,8 +52,6 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 static void _calculate_jerk(mpBuf_t *bf);
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[]);
 
-//static void _reset_replannable_list(void);
-
 /* Runtime-specific setters and getters
  *
  * mp_zero_segment_velocity() 		- correct velocity in last segment for reporting purposes
@@ -132,6 +130,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
+//    ritorno(_calculate_move_times(gm_in, axis_length, axis_square));// set move time and minimum time in the state
     _calculate_move_times(gm_in, axis_length, axis_square);         // set move time and minimum time in the state
 
     // get a cleared buffer and setup move variables
@@ -412,7 +411,7 @@ void mp_plan_block_list(mpBuf_t *bf)
  *		any time required for acceleration or deceleration.
  */
 static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[])
-										// gms = Gcode model state
+										     // gms = Gcode model state
 {
 	float inv_time=0;				// inverse time if doing a feed in G93 mode
 	float xyz_time=0;				// coordinated move linear part at requested feed rate
@@ -425,7 +424,6 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 	if (gms->motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
 		if (gms->feed_rate_mode == INVERSE_TIME_MODE) {
 			inv_time = gms->feed_rate;	// NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
-			gms->feed_rate_mode = UNITS_PER_MINUTE_MODE;
 		} else {
 			// compute length of linear move in millimeters. Feed rate is provided as mm/min
 			xyz_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / gms->feed_rate;

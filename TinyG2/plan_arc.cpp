@@ -86,8 +86,8 @@ stat_t cm_arc_callback()
 	arc.theta += arc.segment_theta;
 	arc.gm.target[arc.plane_axis_0] = arc.center_0 + sin(arc.theta) * arc.radius;
 	arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
-
 	arc.gm.target[arc.linear_axis] += arc.segment_linear_travel;
+
 	mp_aline(&arc.gm);								// run the line
 	copy_vector(arc.position, arc.gm.target);		// update arc current position
 
@@ -120,11 +120,12 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // simple as "I25" if CW or CCW motion mode was already set by a previous block.
     // Here are 2 cases to handle if CW or CCW motion mode was set by a previous block:
     //
-    // Case 1: F, P or other non modal is specified but no movement is specified (no offsets or radius)
-    //  This is OK: return STAT_OK
+    // Case 1: F, P or other non modal is specified but no movement is specified 
+    //         (no offsets or radius). This is OK: return STAT_OK
     //
-    // Case 2: Movement is specified w/o a new G2 or G3 word in the (new) block
-    //  This is OK: continue the move
+    // Case 2: Movement is specified w/o a new G2 or G3 word in the (new) block.
+    //         This is OK: continue the move
+    //
     if ((!modal_g1_f) &&                                                // G2 or G3 not present
         (!(offset_f[AXIS_X] | offset_f[AXIS_Y] | offset_f[AXIS_Z])) &&  // no offsets are present
         (!radius_f)) {                                                  // radius not present
@@ -136,7 +137,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     //  - rotary axes are present. Ignored
 
 	// trap missing feed rate
-	if ((cm.gm.feed_rate_mode != INVERSE_TIME_MODE) && (fp_ZERO(cm.gm.feed_rate))) {
+	if (fp_ZERO(cm.gm.feed_rate)) {
     	return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
 	}
 
@@ -338,6 +339,9 @@ static stat_t _compute_arc(const bool radius_f)
     arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
     arc.segments = max(arc.segments, (float)1.0);		//...but is at least 1 segment
 
+    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        arc.gm.feed_rate /= arc.segments; 
+    }    
     // setup the rest of the arc parameters
     arc.segment_count = (int32_t)arc.segments;
     arc.segment_theta = arc.angular_travel / arc.segments;
@@ -430,15 +434,14 @@ static void _compute_arc_offsets_from_radius()
 	float y = cm.gm.target[arc.plane_axis_1] - cm.gmx.position[arc.plane_axis_1];
 
 	// *** From Forrest Green - Other Machine Co, 3/27/14
-	// If the distance between endpoints is greater than the arc diameter, disc
-	// will be negative indicating that the arc is offset into the complex plane
-	// beyond the reach of any real CNC. However, numerical errors can flip the
-	// sign of disc as it approaches zero (which happens as the arc angle approaches
-	// 180 degrees). To avoid mishandling these arcs we use the closest real
-	// solution (which will be 0 when disc <= 0). This risks obscuring g-code errors
-	// where the radius is actually too small (they will be treated as half circles),
-	// but ensures that all valid arcs end up reasonably close to their intended
-	// paths regardless of any numerical issues.
+	// If the distance between endpoints is greater than the arc diameter, disc will be
+	// negative indicating that the arc is offset into the complex plane beyond the reach 
+    // of any real CNC. However, numerical errors can flip the sign of disc as it approaches
+    // zero (which happens as the arc angle approaches 180 degrees). To avoid mishandling 
+    // these arcs we use the closest real solution (which will be 0 when disc <= 0). This 
+    // risks obscuring g-code errors where the radius is actually too small (they will be 
+    // treated as half circles), but ensures that all valid arcs end up reasonably close 
+    // to their intended paths regardless of any numerical issues.
 	float disc = 4 * square(arc.radius) - (square(x) + square(y));
 
 	// h_x2_div_d == -(h * 2 / d)
@@ -449,11 +452,11 @@ static void _compute_arc_offsets_from_radius()
         h_x2_div_d = -h_x2_div_d;
     }
 
-	// Negative R is g-code-alese for "I want a circle with more than 180 degrees
-	// of travel" (go figure!), even though it is advised against ever generating
-	// such circles in a single line of g-code. By inverting the sign of
-	// h_x2_div_d the center of the circles is placed on the opposite side of
-	// the line of travel and thus we get the inadvisably long arcs as prescribed.
+	// Negative R is g-code-alese for "I want a circle with more than 180 degrees of travel" 
+    // (go figure!), even though it is advised against ever generating such circles in a 
+    // single Gcode block. By inverting the sign of h_x2_div_d the center of the circles is 
+    // placed on the opposite side of the line of travel and thus we get the inadvisably 
+    // long arcs as prescribed.
 	if (arc.radius < 0) {
         h_x2_div_d = -h_x2_div_d;
         arc.radius *= -1;           // and flip the radius sign while you are at it
@@ -480,8 +483,6 @@ static float _estimate_arc_time (float arc_time)
 	// Determine move time at requested feed rate
 	if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
 		arc_time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
-		arc.gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
-		cm.gm.feed_rate = 0;            // reset feed rate in CM so next block requires an explicit feed rate setting
 	} else {
 		arc_time = arc.length / cm.gm.feed_rate;
 	}
