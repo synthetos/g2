@@ -171,7 +171,7 @@ stat_t cm_homing_cycle_start(void)
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
-//    cm.limit_enable = false;                // disable limit switch processing
+//    cm.limit_enable = false;              // disable limit switch processing (no longer needed)
 	return (STAT_OK);
 }
 
@@ -184,8 +184,12 @@ stat_t cm_homing_cycle_start_no_set(void)
 
 stat_t cm_homing_cycle_callback(void)
 {
-    if (cm.cycle_state != CYCLE_HOMING) return (STAT_NOOP);     // exit if not in a homing cycle
-    if (cm_get_runtime_busy()) return (STAT_EAGAIN);            // sync to planner move ends
+    if (cm.cycle_state != CYCLE_HOMING) {   // exit if not in a homing cycle
+        return (STAT_NOOP);
+    }
+    if (cm_get_runtime_busy()) {            // sync to planner move ends
+        return (STAT_EAGAIN);
+    }
     return (hm.func(hm.axis));                                  // execute the current homing move
 }
 
@@ -254,7 +258,7 @@ static stat_t _homing_axis_start(int8_t axis)
 // NOTE: Relies on independent switches per axis (not shared)
 static stat_t _homing_axis_clear(int8_t axis)				// first clear move
 {
-	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) {    // the switch is closed at startup
+	if (gpio_read_input(hm.homing_input) == INPUT_ACTIVE) { // the switch is closed at startup
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {
@@ -291,7 +295,7 @@ static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero positio
 static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 {
 	if (hm.set_coordinates) {
-		cm_set_position(axis, 0);
+		cm_set_position(axis, 0.0);
 		cm.homed[axis] = true;
 	} else {                                                // do not set axis if in G28.4 cycle
 		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
@@ -305,15 +309,13 @@ static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 {
 	float vect[] = {0,0,0,0,0,0};
-	float flags[] = {false, false, false, false, false, false};
+	bool flags[] = {false, false, false, false, false, false};
 
 	vect[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
 	mp_flush_planner();										// don't use cm_request_queue_flush() here
-//	if (cm.hold_state == FEEDHOLD_HOLD) {
     cm_end_hold();                                          // ends hold if on is in effect
-//    }
 	ritorno(cm_straight_feed(vect, flags));
 	return (STAT_EAGAIN);
 }
@@ -348,9 +350,7 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
 	mp_flush_planner(); 									// should be stopped, but in case of switch feedhold.
-//	if (cm.hold_state == FEEDHOLD_HOLD); {
-    cm_end_hold();                                          // ends hold if on is in effect
-//    }
+    cm_end_hold();                                          // ends hold if one is in effect
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
@@ -380,70 +380,75 @@ static int8_t _get_next_axis(int8_t axis)
 {
 #ifdef __ALT_AXES
 // alternate code:
+// UNTESTED - DOES NOT WORK AFAIK
 	uint8_t axis;
-	for(axis = AXIS_X; axis < HOMING_AXES; axis++)
-		if(fp_TRUE(cm.gf.target[axis])) break;
+	for(axis = AXIS_X; axis < HOMING_AXES; axis++) {
+		if (cm.gf.target[axis]) {
+            break;
+        }
+    }
 	if(axis >= HOMING_AXES) return -2;
 	  switch(axis) {
-		case -1:        if (fp_TRUE(cm.gf.target[AXIS_Z])) return (AXIS_Z);
-		case AXIS_Z:    if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
-		case AXIS_X:    if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		case AXIS_Y:    if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+		case -1:        if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
+		case AXIS_Z:    if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		case AXIS_X:    if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		case AXIS_Y:    if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 #if (HOMING_AXES > 4)
-		case AXIS_A:    if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		case AXIS_B:    if (fp_True(cm.gf.target[AXIS_C])) return (AXIS_C);
+		case AXIS_A:    if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		case AXIS_B:    if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 #endif
 		default:        return -1;
 	}
 #else // __ALT_AXES
+
 #if (HOMING_AXES <= 4)
 	if (axis == -1) {	// inelegant brute force solution
-		if (fp_TRUE(cm.gf.target[AXIS_Z])) return (AXIS_Z);
-		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+		if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
+		if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 		return (-2);	// error
 	} else if (axis == AXIS_Z) {
-		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+		if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 	} else if (axis == AXIS_X) {
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 	} else if (axis == AXIS_Y) {
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
 	}
 	return (-1);	// done
 
 #else
 	if (axis == -1) {
-		if (fp_TRUE(cm.gf.target[AXIS_Z])) return (AXIS_Z);
-		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
-		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
+		if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
+		if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 		return (-2);	// error
 	} else if (axis == AXIS_Z) {
-		if (fp_TRUE(cm.gf.target[AXIS_X])) return (AXIS_X);
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
-		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
+		if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 	} else if (axis == AXIS_X) {
-		if (fp_TRUE(cm.gf.target[AXIS_Y])) return (AXIS_Y);
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
-		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
+		if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 	} else if (axis == AXIS_Y) {
-		if (fp_TRUE(cm.gf.target[AXIS_A])) return (AXIS_A);
-		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
+		if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 	} else if (axis == AXIS_A) {
-		if (fp_TRUE(cm.gf.target[AXIS_B])) return (AXIS_B);
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 	} else if (axis == AXIS_B) {
-		if (fp_TRUE(cm.gf.target[AXIS_C])) return (AXIS_C);
+		if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
 	}
 	return (-1);	// done
 

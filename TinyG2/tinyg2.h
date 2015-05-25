@@ -38,13 +38,13 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.07 // Merge edge-replan-replan into edge
+#define TINYG_FIRMWARE_BUILD   		083.39 // arc testing; more testing, some cleanup
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
-#define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9I			// hardware platform revision number
+#define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9K			// hardware platform revision number
 #define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
 
 /****** COMPILE-TIME SETTINGS ******/
@@ -160,35 +160,48 @@ typedef uint16_t magic_t;		        // magic number size
 #define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
 /***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
+// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+//  #if (MOTORS >= 6)  will work
 
-#define AXES		6			// number of axes supported in this version
-#define HOMING_AXES	4			// number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS		6			// number of motors on the board
-#define COORDS		6			// number of supported coordinate systems (1-6)
-#define PWMS		2			// number of supported PWM channels
+#define AXES        6           // number of axes supported in this version
+#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS      6           // number of motors on the board
+#define COORDS      6           // number of supported coordinate systems (1-6)
+#define PWMS        2           // number of supported PWM channels
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
-#define AXIS_X		0
-#define AXIS_Y		1
-#define AXIS_Z		2
-#define AXIS_A		3
-#define AXIS_B		4
-#define AXIS_C		5
-#define AXIS_U		6			// reserved
-#define AXIS_V		7			// reserved
-#define AXIS_W		8			// reserved
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z,
+    AXIS_A,
+    AXIS_B,
+    AXIS_C,
+    AXIS_U,                     // reserved
+    AXIS_V,                     // reserved
+    AXIS_W                      // reserved
+} cmAxes;
 
-#define MOTOR_1		0 			// define motor numbers and array indexes
-#define MOTOR_2		1			// must be defines. enums don't work
-#define MOTOR_3		2
-#define MOTOR_4		3
-#define MOTOR_5		4
-#define MOTOR_6		5
+typedef enum {
+    OFS_I = 0,
+    OFS_J,
+    OFS_K
+} cmIJKOffsets;
 
-#define PWM_1		0
-#define PWM_2		1
+typedef enum {
+    MOTOR_1 = 0,
+    MOTOR_2,
+    MOTOR_3,
+    MOTOR_4,
+    MOTOR_5,
+    MOTOR_6
+} cmMotors;
+
+typedef enum {
+    PWM_1 = 0,
+    PWM_2
+} cmPWMs;
 
 /************************************************************************************
  * STATUS CODES
@@ -407,10 +420,10 @@ char *get_status_message(stat_t status);
 #define	STAT_SPINDLE_SPEED_BELOW_MINIMUM 149
 
 #define	STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
-#define	STAT_S_WORD_IS_MISSING 151
-#define	STAT_S_WORD_IS_INVALID 152
-#define	STAT_SPINDLE_MUST_BE_OFF 153
-#define	STAT_SPINDLE_MUST_BE_TURNING 154				// some canned cycles require spindle to be turning when called
+#define	STAT_SPINDLE_MUST_BE_OFF 151
+#define	STAT_SPINDLE_MUST_BE_TURNING 152				// some canned cycles require spindle to be turning when called
+#define	STAT_ARC_ERROR_RESERVED 153                     // RESERVED
+#define	STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154        // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
 #define	STAT_ARC_SPECIFICATION_ERROR 155				// generic arc specification error
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156	// arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified
@@ -436,12 +449,12 @@ char *get_status_message(stat_t status);
 #define STAT_Q_WORD_IS_INVALID 175
 #define STAT_R_WORD_IS_MISSING 176
 #define STAT_R_WORD_IS_INVALID 177
-#define STAT_T_WORD_IS_MISSING 178
-#define STAT_T_WORD_IS_INVALID 179
+#define	STAT_S_WORD_IS_MISSING 178
+#define	STAT_S_WORD_IS_INVALID 179
 
-#define	STAT_ERROR_180 180									// reserved for Gcode errors
-#define	STAT_ERROR_181 181
-#define	STAT_ERROR_182 182
+#define STAT_T_WORD_IS_MISSING 180
+#define STAT_T_WORD_IS_INVALID 181
+#define	STAT_ERROR_182 182									// reserved for Gcode errors
 #define	STAT_ERROR_183 183
 #define	STAT_ERROR_184 184
 #define	STAT_ERROR_185 185

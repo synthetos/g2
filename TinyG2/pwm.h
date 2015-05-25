@@ -2,7 +2,7 @@
  * pwm.h - pulse width modulation drivers
  * This file is part of the TinyG project
  *
- * Copyright (c) 2012 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -60,6 +60,8 @@ extern pwmSingleton_t pwm;
 void pwm_init(void);
 stat_t pwm_set_freq(uint8_t channel, float freq);
 stat_t pwm_set_duty(uint8_t channel, float duty);
+
+stat_t pwm_set_pwm(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

@@ -37,23 +37,20 @@
 #include "spindle.h"
 
 using namespace Motate;
-OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//OutputPin<kDebug2_PinNumber> plan_debug_pin2;
 //OutputPin<kDebug3_PinNumber> plan_debug_pin3;
-OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+//OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 //OutputPin<-1> plan_debug_pin1;
 //OutputPin<-1> plan_debug_pin2;
-OutputPin<-1> plan_debug_pin3;
+//OutputPin<-1> plan_debug_pin3;
 //OutputPin<-1> plan_debug_pin4;
 
 // planner helper functions
 static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[]);
 static void _calculate_jerk(mpBuf_t *bf);
-//static float _calculate_junction_vmax(const float a_unit[], const float b_unit[]);
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[]);
-
-//static void _reset_replannable_list(void);
 
 /* Runtime-specific setters and getters
  *
@@ -112,7 +109,6 @@ uint8_t mp_get_runtime_busy()
 
 stat_t mp_aline(GCodeState_t *gm_in)
 {
-    plan_debug_pin1 = 1;
 	mpBuf_t *bf; 						// current move pointer
 
 	// compute some reused terms
@@ -131,10 +127,10 @@ stat_t mp_aline(GCodeState_t *gm_in)
 	if (fp_ZERO(length)) {
 //		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
 		sr_request_status_report(SR_REQUEST_TIMED_FULL);
-        plan_debug_pin1 = 0;
 		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
+//    ritorno(_calculate_move_times(gm_in, axis_length, axis_square));// set move time and minimum time in the state
     _calculate_move_times(gm_in, axis_length, axis_square);         // set move time and minimum time in the state
 
     // get a cleared buffer and setup move variables
@@ -168,10 +164,8 @@ stat_t mp_aline(GCodeState_t *gm_in)
     bf->real_move_time = 0;
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
-//	mp_plan_block_list(bf, false);				// replan block list
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
-    plan_debug_pin1 = 0;
 	return (STAT_OK);
 }
 
@@ -243,8 +237,6 @@ stat_t mp_aline(GCodeState_t *gm_in)
  */
 void mp_plan_block_list(mpBuf_t *bf)
 {
-    plan_debug_pin2 = 1;
-
 #ifdef DEBUG
     volatile uint32_t start_time = SysTickTimer.getValue();
 #endif
@@ -289,9 +281,7 @@ void mp_plan_block_list(mpBuf_t *bf)
 		bp->exit_velocity = min4( bp->exit_vmax, bp->nx->entry_vmax, bp->nx->braking_velocity,
 								 (bp->entry_velocity + bp->delta_vmax) );
 
-        plan_debug_pin3 = 1;
         mp_calculate_trapezoid(bp);
-        plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // ++++ Diagnostic - can be removed
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "zero velocity in mp_plan_block_list");
@@ -325,9 +315,7 @@ void mp_plan_block_list(mpBuf_t *bf)
         bp->cruise_velocity = bp->cruise_vmax;
         bp->exit_velocity = 0;
 
-        plan_debug_pin3 = 1;
         mp_calculate_trapezoid(bp);
-        plan_debug_pin3 = 0;
 
         if (fp_ZERO(bp->cruise_velocity)) { // +++ diagnostic +++ remove later
             rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "min time move in mp_plan_block_list");
@@ -356,8 +344,6 @@ void mp_plan_block_list(mpBuf_t *bf)
     // let the exec know we're done planning, and that the times are likely wrong
     mb.planning = false;
     mb.needs_time_accounting = true;
-
-    plan_debug_pin2 = 0;
 }
 
 /***** ALINE HELPERS *****
@@ -425,7 +411,7 @@ void mp_plan_block_list(mpBuf_t *bf)
  *		any time required for acceleration or deceleration.
  */
 static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], const float axis_square[])
-										// gms = Gcode model state
+										     // gms = Gcode model state
 {
 	float inv_time=0;				// inverse time if doing a feed in G93 mode
 	float xyz_time=0;				// coordinated move linear part at requested feed rate
@@ -434,11 +420,10 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 	float tmp_time=0;				// used in computation
 	gms->minimum_time = 8675309;	// arbitrarily large number
 
-	// compute times for feed motion
+	// compute times for feed and probe motion
 	if (gms->motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
 		if (gms->feed_rate_mode == INVERSE_TIME_MODE) {
 			inv_time = gms->feed_rate;	// NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
-			gms->feed_rate_mode = UNITS_PER_MINUTE_MODE;
 		} else {
 			// compute length of linear move in millimeters. Feed rate is provided as mm/min
 			xyz_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / gms->feed_rate;

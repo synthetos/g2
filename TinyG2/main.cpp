@@ -137,7 +137,7 @@ void application_init_machine(void)
 //    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
     planner_init();                 // motion planning subsystem
     canonical_machine_init();       // canonical machine
-    spindle_init();                 // should be after PWM and canonical machine inits
+//    spindle_init();                 // should be after PWM and canonical machine inits
 }
 
 void application_init_startup(void)
@@ -155,6 +155,7 @@ void application_init_startup(void)
     controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first startup init (requires xio_init())
     config_init();					// apply the config settings from persistence
     canonical_machine_reset();
+    spindle_init();                 // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
     // MOVED: report the system is ready is now in xio
 }
@@ -360,10 +361,10 @@ static const char stat_148[] PROGMEM = "Programmed point same as current point";
 static const char stat_149[] PROGMEM = "Spindle speed below minimum";
 
 static const char stat_150[] PROGMEM = "Spindle speed exceeded maximum";
-static const char stat_151[] PROGMEM = "Spindle S word is missing";
-static const char stat_152[] PROGMEM = "Spindle S word is invalid";
-static const char stat_153[] PROGMEM = "Spindle must be off for this command";
-static const char stat_154[] PROGMEM = "Spindle must be turning for this command";
+static const char stat_151[] PROGMEM = "Spindle must be off for this command";
+static const char stat_152[] PROGMEM = "Spindle must be turning for this command";
+static const char stat_153[] PROGMEM = "153";
+static const char stat_154[] PROGMEM = "Arc specification error - impossible center point";
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
@@ -390,11 +391,11 @@ static const char stat_174[] PROGMEM = "Q word missing";
 static const char stat_175[] PROGMEM = "Q word invalid";
 static const char stat_176[] PROGMEM = "R word missing";
 static const char stat_177[] PROGMEM = "R word invalid";
-static const char stat_178[] PROGMEM = "T word missing";
-static const char stat_179[] PROGMEM = "T word invalid";
+static const char stat_178[] PROGMEM = "S word missing";
+static const char stat_179[] PROGMEM = "S word invalid";
 
-static const char stat_180[] PROGMEM = "180";
-static const char stat_181[] PROGMEM = "181";
+static const char stat_180[] PROGMEM = "T word missing";
+static const char stat_181[] PROGMEM = "T word invalid";
 static const char stat_182[] PROGMEM = "182";
 static const char stat_183[] PROGMEM = "183";
 static const char stat_184[] PROGMEM = "184";
