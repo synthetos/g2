@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		086.01 // staging Othermachine changes into edge
+#define TINYG_FIRMWARE_BUILD   		086.01 // merged Othermachine changes into edge staging
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -65,40 +65,53 @@
  ***** TINYG APPLICATION DEFINITIONS ******************************************
  ******************************************************************************/
 
-typedef uint16_t magic_t;		    // magic number size
-#define MAGICNUM 0x12EF			    // used for memory integrity assertions
-#define BAD_MAGIC(a) (a != MAGICNUM)// simple assertion test
+typedef uint16_t magic_t;		        // magic number size
+#define MAGICNUM 0x12EF			        // used for memory integrity assertions
+#define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
 /***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so #ifdef <value> can be used
+// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+//  #if (MOTORS >= 6)  will work
 
-#define AXES		6               // number of axes supported in this version
-#define HOMING_AXES	4               // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS		6               // number of motors on the board
-#define PWMS		2               // number of supported PWM channels
-#define COORDS		6               // number of supported coordinate systems (1-6)
-                                    // if this changes check the config_apps table
+#define AXES        6           // number of axes supported in this version
+#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS      6           // number of motors on the board
+#define COORDS      6           // number of supported coordinate systems (1-6)
+#define PWMS        2           // number of supported PWM channels
 
-// The following must lined up with the AXES, MOTORS and PWMS settings above
-#define AXIS_X		0
-#define AXIS_Y		1
-#define AXIS_Z		2
-#define AXIS_A		3
-#define AXIS_B		4
-#define AXIS_C		5
-#define AXIS_U		6               // reserved
-#define AXIS_V		7               // reserved
-#define AXIS_W		8               // reserved
+// Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
-#define MOTOR_1		0               // define motor numbers and array indexes
-#define MOTOR_2		1               // must be defines. enums don't work
-#define MOTOR_3		2
-#define MOTOR_4		3
-#define MOTOR_5		4
-#define MOTOR_6		5
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z,
+    AXIS_A,
+    AXIS_B,
+    AXIS_C,
+    AXIS_U,                     // reserved
+    AXIS_V,                     // reserved
+    AXIS_W                      // reserved
+} cmAxes;
 
-#define PWM_1		0
-#define PWM_2		1
+typedef enum {
+    OFS_I = 0,
+    OFS_J,
+    OFS_K
+} cmIJKOffsets;
+
+typedef enum {
+    MOTOR_1 = 0,
+    MOTOR_2,
+    MOTOR_3,
+    MOTOR_4,
+    MOTOR_5,
+    MOTOR_6
+} cmMotors;
+
+typedef enum {
+    PWM_1 = 0,
+    PWM_2
+} cmPWMs;
 
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************
@@ -161,7 +174,7 @@ typedef uint16_t magic_t;		    // magic number size
 #define GET_UNITS(a) msg_units[cm_get_units_mode(a)]
 
 // IO settings
-#define STD_IN 0				// STDIO defaults (stdio is not yet used in the ARM version)
+#define STD_IN 0				// STDIO defaults (stdio is not used in the ARM version)
 #define STD_OUT 0
 #define STD_ERR 0
 

@@ -86,7 +86,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ENTERING_BOOT_LOADER 16	// this code actually emitted from boot loader, not TinyG
 #define	STAT_FUNCTION_IS_STUBBED 17
 #define	STAT_ALARM 18                   // system alarm triggered
-//#define STAT_ERROR_19 19				// NOTE: XIO codes align to here
+#define STAT_ERROR_19 19				// NOTE: XIO codes align to here
 
 // Internal errors and startup messages
 #define	STAT_INTERNAL_ERROR 20			// unrecoverable internal error
@@ -96,7 +96,7 @@ char *get_status_message(stat_t status);
 #define	STAT_INVALID_ADDRESS 24
 #define	STAT_READ_ONLY_ADDRESS 25
 #define	STAT_INIT_FAILURE 26
-//#define	STAT_ERROR_27 27
+#define	STAT_ERROR_27 27
 #define	STAT_FAILED_TO_GET_PLANNER_BUFFER 28
 #define STAT_GENERIC_EXCEPTION_REPORT 29	// used for test
 
@@ -243,10 +243,10 @@ char *get_status_message(stat_t status);
 #define	STAT_SPINDLE_SPEED_BELOW_MINIMUM 149
 
 #define	STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
-#define	STAT_S_WORD_IS_MISSING 151
-#define	STAT_S_WORD_IS_INVALID 152
-#define	STAT_SPINDLE_MUST_BE_OFF 153
-#define	STAT_SPINDLE_MUST_BE_TURNING 154				// some canned cycles require spindle to be turning when called
+#define	STAT_SPINDLE_MUST_BE_OFF 151
+#define	STAT_SPINDLE_MUST_BE_TURNING 152				// some canned cycles require spindle to be turning when called
+#define	STAT_ARC_ERROR_RESERVED 153                     // RESERVED
+#define	STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154        // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
 #define	STAT_ARC_SPECIFICATION_ERROR 155				// generic arc specification error
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156	// arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified
@@ -272,12 +272,14 @@ char *get_status_message(stat_t status);
 #define STAT_Q_WORD_IS_INVALID 175
 #define STAT_R_WORD_IS_MISSING 176
 #define STAT_R_WORD_IS_INVALID 177
-#define STAT_T_WORD_IS_MISSING 178
-#define STAT_T_WORD_IS_INVALID 179
-/*
-#define	STAT_ERROR_180 180									// reserved for Gcode errors
-#define	STAT_ERROR_181 181
-#define	STAT_ERROR_182 182
+#define	STAT_S_WORD_IS_MISSING 178
+#define	STAT_S_WORD_IS_INVALID 179
+
+#define STAT_T_WORD_IS_MISSING 180
+#define STAT_T_WORD_IS_INVALID 181
+
+/* reserved for Gcode or other program errors
+
 #define	STAT_ERROR_183 183
 #define	STAT_ERROR_184 184
 #define	STAT_ERROR_185 185
@@ -534,10 +536,10 @@ static const char stat_148[] PROGMEM = "Programmed point same as current point";
 static const char stat_149[] PROGMEM = "Spindle speed below minimum";
 
 static const char stat_150[] PROGMEM = "Spindle speed exceeded maximum";
-static const char stat_151[] PROGMEM = "Spindle S word is missing";
-static const char stat_152[] PROGMEM = "Spindle S word is invalid";
-static const char stat_153[] PROGMEM = "Spindle must be off for this command";
-static const char stat_154[] PROGMEM = "Spindle must be turning for this command";
+static const char stat_151[] PROGMEM = "Spindle must be off for this command";
+static const char stat_152[] PROGMEM = "Spindle must be turning for this command";
+static const char stat_153[] PROGMEM = "153";
+static const char stat_154[] PROGMEM = "Arc specification error - impossible center point";
 static const char stat_155[] PROGMEM = "Arc specification error";
 static const char stat_156[] PROGMEM = "Arc specification error - missing axis(es)";
 static const char stat_157[] PROGMEM = "Arc specification error - missing offset(s)";
@@ -564,11 +566,11 @@ static const char stat_174[] PROGMEM = "Q word missing";
 static const char stat_175[] PROGMEM = "Q word invalid";
 static const char stat_176[] PROGMEM = "R word missing";
 static const char stat_177[] PROGMEM = "R word invalid";
-static const char stat_178[] PROGMEM = "T word missing";
-static const char stat_179[] PROGMEM = "T word invalid";
+static const char stat_178[] PROGMEM = "S word missing";
+static const char stat_179[] PROGMEM = "S word invalid";
 
-static const char stat_180[] PROGMEM = "180";
-static const char stat_181[] PROGMEM = "181";
+static const char stat_180[] PROGMEM = "T word missing";
+static const char stat_181[] PROGMEM = "T word invalid";
 static const char stat_182[] PROGMEM = "182";
 static const char stat_183[] PROGMEM = "183";
 static const char stat_184[] PROGMEM = "184";
