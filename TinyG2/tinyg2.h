@@ -188,4 +188,11 @@ inline char* strncpy_P(char* d, const char* s, size_t l) { return (char *)strncp
 
 #endif // __ARM
 
+/******************************************************************************
+ ***** STATUS CODE DEFINITIONS ************************************************
+ ******************************************************************************/
+// NB: must follow platform compatibility to manage PROGMEM and PSTR
+
+#include "error.h"
+
 #endif // End of include guard: TINYG2_H_ONCE
