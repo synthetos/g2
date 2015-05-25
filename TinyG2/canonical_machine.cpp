@@ -2243,6 +2243,7 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 /* system state print functions */
 
 const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+//const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
@@ -2252,6 +2253,7 @@ const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+//void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
@@ -2274,7 +2276,6 @@ void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
  *	cm_print_tn()
  *	cm_print_jm()
  *	cm_print_jh()
- *	cm_print_jd()
  *	cm_print_ra()
  *	cm_print_hi()
  *	cm_print_hd()
@@ -2294,6 +2295,7 @@ const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
 const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
 const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+//const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
 const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
 const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
@@ -2359,6 +2361,7 @@ void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn);}
 void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
 void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
 void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
+//void cm_print_jd(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjd);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
 
 void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}

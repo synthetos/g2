@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.40 // merged arc changes into edge
+#define TINYG_FIRMWARE_BUILD   		085.07 // merged cornering changes into edge staging branch
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -52,6 +52,7 @@
 #define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
 #define __HELP_SCREENS              // enable help screens      (~3.5Kb)
 #define __CANNED_TESTS              // enable $tests            (~12Kb)
+#define __USER_DATA                 // enable user defined data groups
 
 /****** DEVELOPMENT SETTINGS ******/
 
