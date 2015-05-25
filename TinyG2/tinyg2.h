@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.39 // arc testing; more testing, some cleanup
+#define TINYG_FIRMWARE_BUILD   		083.40 // merged arc changes into edge
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
