@@ -628,11 +628,17 @@ void json_print_response(uint8_t status)
 	}
 	char footer_string[NV_FOOTER_LEN];
 
+    // in xio.cpp:xio.readline the CR||LF read from the host is not appended to the string.
+    // to ensure that the correct number of bytes are reported back to the host we add a +1 to 
+    // cs.linelen so that the number of bytes received matches the number of bytes reported
+    sprintf((char *)footer_string, "%d,%d,%d", 1, status, cs.linelen + 1);
+    cs.linelen = 0;										    // reset linelen so it's only reported once
+
 //	if (xio.enable_window_mode) {							// 2 footer styles are supported...
 //		sprintf((char *)footer_string, "%d,%d,%d", 2, status, xio_get_window_slots());	//...windowing
 //	} else {
-		sprintf((char *)footer_string, "%d,%d,%d", 1, status, cs.linelen);				//...streaming
-		cs.linelen = 0;										// reset linelen so it's only reported once
+//		sprintf((char *)footer_string, "%d,%d,%d", 1, status, cs.linelen);				//...streaming
+//		cs.linelen = 0;										// reset linelen so it's only reported once
 //	}
 
 	nv_copy_string(nv, footer_string);						// link string to nv object

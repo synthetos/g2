@@ -517,6 +517,10 @@ void st_deenergize_motors()
  */
 stat_t st_motor_power_callback() 	// called by controller
 {
+    if (!mp_is_it_phat_city_time()) {
+        return (STAT_NOOP);
+    }
+
     bool have_actually_stopped = false;
     if ((!st_runtime_isbusy()) && (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)) {	// if there are no moves to load...
         have_actually_stopped = true;
@@ -527,7 +531,6 @@ stat_t st_motor_power_callback() 	// called by controller
 
         if (have_actually_stopped && st_run.mot[motor].power_state == MOTOR_RUNNING)
             st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
-
 
 		// start timeouts initiated during a load so the loader does not need to burn these cycles
 		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START && st_cfg.mot[motor].power_mode != MOTOR_ALWAYS_POWERED) {

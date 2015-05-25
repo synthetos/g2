@@ -67,6 +67,11 @@ void* __dso_handle = nullptr;
 
 #endif // __ARM
 
+/******************** System Globals *************************/
+
+stat_t status_code;						// allocate a variable for the ritorno macro
+char global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
+
 /******************** Application Code ************************/
 
 #ifdef __ARM
@@ -182,16 +187,8 @@ int main(void)
 	return 0;
 }
 
-/**** Status Messages ***************************************************************
- * get_status_message() - return the status message
- *
- * See tinyg.h for status codes. These strings must align with the status codes in tinyg.h
- * The number of elements in the indexing array must match the # of strings.
- *
- * These strings are here even if text mode is disabled in order to support exception reports.
- *
- * Reference for putting display strings and string arrays in AVR program memory:
- * http://www.cs.mun.ca/~paul/cs4723/material/atmel/avr-libc-user-manual-1.6.5/pgmspace.html
+/*
+ * get_status_message() - support for status messages.
  */
 
 stat_t status_code;						// allocate a variable for the ritorno macro
@@ -506,5 +503,5 @@ static const char *const stat_msg[] PROGMEM = {
 
 char *get_status_message(stat_t status)
 {
-	return ((char *)GET_TEXT_ITEM(stat_msg, status));
+    return ((char *)GET_TEXT_ITEM(stat_msg, status));
 }

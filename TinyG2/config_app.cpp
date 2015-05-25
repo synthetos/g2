@@ -443,24 +443,24 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "g92","g92x",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
 	{ "g92","g92y",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Y], 0 },
 	{ "g92","g92z",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Z], 0 },
-	{ "g92","g92a",_fi, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_A], 0 },
-	{ "g92","g92b",_fi, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_B], 0 },
-	{ "g92","g92c",_fi, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_C], 0 },
+	{ "g92","g92a",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_A], 0 },
+	{ "g92","g92b",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_B], 0 },
+	{ "g92","g92c",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_C], 0 },
 
 	// Coordinate positions (G28, G30)
 	{ "g28","g28x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_X], 0 },// g28 handled differently
 	{ "g28","g28y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Y], 0 },
 	{ "g28","g28z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Z], 0 },
-	{ "g28","g28a",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_A], 0 },
-	{ "g28","g28b",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_B], 0 },
-	{ "g28","g28c",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_C], 0 },
+	{ "g28","g28a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_A], 0 },
+	{ "g28","g28b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_B], 0 },
+	{ "g28","g28c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_C], 0 },
 
 	{ "g30","g30x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_X], 0 },// g30 handled differently
 	{ "g30","g30y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Y], 0 },
 	{ "g30","g30z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Z], 0 },
-	{ "g30","g30a",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_A], 0 },
-	{ "g30","g30b",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_B], 0 },
-	{ "g30","g30c",_fi, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_C], 0 },
+	{ "g30","g30a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_A], 0 },
+	{ "g30","g30b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_B], 0 },
+	{ "g30","g30c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_C], 0 },
 
 	// this is a 128bit UUID for identifying a previously committed job state
 	{ "jid","jida",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[0], 0},

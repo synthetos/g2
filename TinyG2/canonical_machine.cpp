@@ -88,6 +88,7 @@
 
 #include "tinyg2.h"			// #1
 #include "config.h"			// #2
+#include "error.h"
 #include "canonical_machine.h"
 #include "controller.h"
 #include "json_parser.h"
@@ -1464,7 +1465,9 @@ void cm_request_feedhold(void) {
 
 void cm_request_end_hold(void)
 {
-    cm.end_hold_requested = true;
+    if (cm.hold_state != FEEDHOLD_OFF) {
+        cm.end_hold_requested = true;
+    }
 }
 
 void cm_request_queue_flush()

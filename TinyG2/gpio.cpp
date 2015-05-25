@@ -44,6 +44,7 @@
 #include "config.h"
 #include "gpio.h"
 #include "stepper.h"
+#include "encoder.h"
 #include "hardware.h"
 #include "canonical_machine.h"
 #include "report.h"
@@ -73,7 +74,7 @@ static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
 static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
 static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
 
-// WARNING: this returns raw pin values, NOT corrected for NO/NV Active high/low
+// WARNING: this returns raw pin values, NOT corrected for NO/NC Active high/low
 // Also, this takes EXTERNAL pin numbers -- 1-based
 bool _read_input_pin(const uint8_t input_num_ext) {
     switch(input_num_ext) {
@@ -151,26 +152,32 @@ void gpio_reset(void)
  */
 void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
 {
-    if (input_num_ext == 0) return;
+    if (input_num_ext == 0) {
+        return;
+    }
     io.in[input_num_ext-1].homing_mode = is_homing;
 }
 
 void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
 {
-    if (input_num_ext == 0) return;
+    if (input_num_ext == 0) {
+        return;
+    }
     io.in[input_num_ext-1].probing_mode = is_probing;
 }
 
 bool gpio_read_input(const uint8_t input_num_ext)
 {
-    if (input_num_ext == 0) return false;
-    return io.in[input_num_ext-1].state;
+    if (input_num_ext == 0) {
+        return false;
+    }
+    return (io.in[input_num_ext-1].state);
 }
 
 /*
  * pin change ISRs - ISR entry point for input pin changes
  *
- * NOTE: InpuTPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
+ * NOTE: InputPin<>.get() returns a uint32_t, and will NOT necessarily be 1 for true.
  * The actual values will be the pin's port mask or 0, so you must check for non-zero.
  */
 
@@ -194,7 +201,7 @@ MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _handle_pin_changed(11, (input_12_pin
  *
  * Since we set the interrupt to kPinInterruptOnChange _handle_pin_changed() should
  * only be called when the pin *changes* values, so we can assume that the current
- * pin value is not the same as the previous value. Note that The value may have
+ * pin value is not the same as the previous value. Note that the value may have
  * changed rapidly, and may even have changed again since the interrupt was triggered.
  * In this case a second interrupt will likely follow this one immediately after exiting.
  *
@@ -234,13 +241,20 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     }
 
     // perform homing operations if in homing mode
-    // We want either edge -- leading on home and trailing on backoff
     if (in->homing_mode) {
-        cm_start_hold();
+        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+            en_take_encoder_snapshot();
+            cm_start_hold();
+        }
         return;
     }
+
+    // perform probing operations if in probing mode
     if (in->probing_mode) {
-        cm_start_hold();
+        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+            en_take_encoder_snapshot();
+            cm_start_hold();
+        }
         return;
     }
 
