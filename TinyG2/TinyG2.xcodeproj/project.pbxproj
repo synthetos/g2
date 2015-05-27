@@ -423,6 +423,7 @@
 		D41EF713194D6B0D001EA37B /* system_sam3xa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = system_sam3xa.c; sourceTree = "<group>"; };
 		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
 		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
+		D43C7AEF1B162874007440D6 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Play.h; sourceTree = "<group>"; };
 		D43CAF9C187BABDB0042B58F /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
 		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
 		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
@@ -3275,6 +3276,7 @@
 				D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */,
 				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
+				D43C7AEF1B162874007440D6 /* settings_Printrbot_Play.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
 				D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */,
 				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
@@ -7557,6 +7559,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D43C7AF01B162953007440D6 /* TinyG2 G2PrintrbotPlay */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=PrintrbotPlay";
+			buildConfigurationList = D43C7AF11B162953007440D6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2PrintrbotPlay" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 G2PrintrbotPlay";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D45710C21705330C00EA19A8 /* TinyG2 gShield */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=gShield";
@@ -7703,6 +7719,7 @@
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
+				D43C7AF01B162953007440D6 /* TinyG2 G2PrintrbotPlay */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
@@ -8105,6 +8122,22 @@
 			};
 			name = Release;
 		};
+		D43C7AF21B162953007440D6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2Ultimaker copy";
+			};
+			name = Debug;
+		};
+		D43C7AF31B162953007440D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2Ultimaker copy";
+			};
+			name = Release;
+		};
 		D45710BD170532AC00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -8315,6 +8348,15 @@
 			buildConfigurations = (
 				D409C0121902F73000F15547 /* Debug */,
 				D409C0131902F73000F15547 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43C7AF11B162953007440D6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2PrintrbotPlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43C7AF21B162953007440D6 /* Debug */,
+				D43C7AF31B162953007440D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

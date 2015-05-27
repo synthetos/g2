@@ -244,6 +244,15 @@ ifeq ("$(PLATFORM)","UltimakerTests")
 
 endif
 
+
+ifeq ("$(PLATFORM)","PrintrbotPlay")
+
+BASE_PLATFORM=v9_3x8c
+SETTINGS_FILE="settings_Printrbot_Play.h"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
 ifeq ("$(PLATFORM)","ShapeokoDualY")
 
 BASE_PLATFORM=v9_3x8c
