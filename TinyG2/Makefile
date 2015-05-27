@@ -53,4 +53,11 @@ SETTINGS_FILE ?= settings_default.h
 # Now invoke the Motate compile system
 include $(MOTATE_PATH)/Motate.mk
 
+ifeq ($(DEBUG),1)
+DEVICE_DEFINES += DEBUG=1
+endif
+ifeq ($(DEBUG),2)
+DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
+endif
+
 # *** EOF ***
