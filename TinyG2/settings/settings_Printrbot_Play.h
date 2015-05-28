@@ -224,7 +224,7 @@
 #define A_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				648000 // 1,000 million mm/min^3
+#define A_JERK_MAX 				324000 // 1,000 million mm/min^3
                                        // * a million IF it's over a million
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
