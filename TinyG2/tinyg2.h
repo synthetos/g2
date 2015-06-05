@@ -37,9 +37,8 @@
 
 /****** REVISIONS ******/
 
-#ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		083.09 // Fix issue 85 -- "zero length line in calculate trapezoid" asserts
-#endif
+#define TINYG_FIRMWARE_BUILD   		    GIT_EXACT_VERSION
+#define TINYG_FIRMWARE_BUILD_STRING   	GIT_VERSION
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility

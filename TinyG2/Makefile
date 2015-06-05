@@ -465,9 +465,10 @@ MKTOOLS:
 	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
 
 GIT_VERSION = $(shell git describe --abbrev=4 --dirty --always --tags)
+GIT_EXACT_VERSION = $(shell git describe --abbrev=0 --tags)
 
-# Push the git version into the code -- as yet unused
-DEVICE_DEFINES += GIT_VERSION=$(GIT_VERSION)
+# Push the git version into the code -- the ""s must be escaped and make it into the code intact
+DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
 
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)

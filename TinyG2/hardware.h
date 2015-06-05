@@ -173,12 +173,14 @@ void hardware_init(void);			// master hardware init
 void hw_hard_reset(void);
 stat_t hw_flash(nvObj_t *nv);
 
+stat_t hw_get_fbs(nvObj_t *nv);
 stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
 	void hw_print_fb(nvObj_t *nv);
+    void hw_print_fbs(nvObj_t *nv);
 	void hw_print_fv(nvObj_t *nv);
 	void hw_print_cv(nvObj_t *nv);
 	void hw_print_hp(nvObj_t *nv);
@@ -188,6 +190,7 @@ stat_t hw_get_id(nvObj_t *nv);
 #else
 
 	#define hw_print_fb tx_print_stub
+    #define hw_print_fbs tx_print_stub
 	#define hw_print_fv tx_print_stub
 	#define hw_print_cv tx_print_stub
 	#define hw_print_hp tx_print_stub
