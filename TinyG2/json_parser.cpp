@@ -574,12 +574,16 @@ void json_print_response(uint8_t status)
 	return;
 #endif
 
-	if (js.json_verbosity == JV_SILENT) return;				// silent means no responses
-
-	if (js.json_verbosity == JV_EXCEPTIONS)					// cutout for JV_EXCEPTIONS mode
-		if (status == STAT_OK)
-			if (cm.machine_state != MACHINE_INITIALIZING)	// always do full echo during startup
+	if (js.json_verbosity == JV_SILENT) {				    // silent means no responses
+        return;
+    }    
+	if (js.json_verbosity == JV_EXCEPTIONS)	{				// cutout for JV_EXCEPTIONS mode
+		if (status == STAT_OK) {
+			if (cm.machine_state != MACHINE_INITIALIZING) {	// always do full echo during startup
 				return;
+            }
+        }
+    }                        
 
 	// Body processing
 	nvObj_t *nv = nv_body;

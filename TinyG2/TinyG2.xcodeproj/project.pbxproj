@@ -7545,6 +7545,20 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
+		BF3BEEE91AE150C7009ABADE /* TinyG2 G2V9k */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9k";
+			buildConfigurationList = BF3BEEEA1AE150C7009ABADE /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 G2V9k";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D409C0101902F73000F15547 /* TinyG2 G2V9i */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9i";
@@ -7704,6 +7718,7 @@
 				D4B6579318B5197600F8616C /* TinyG2 G2V9f */,
 				D4B6579718B5198D00F8616C /* TinyG2 G2V9g */,
 				D409C0101902F73000F15547 /* TinyG2 G2V9i */,
+				BF3BEEE91AE150C7009ABADE /* TinyG2 G2V9k */,
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D457112317053BFB00EA19A8 /* index */,
@@ -8091,6 +8106,22 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		BF3BEEEB1AE150C7009ABADE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Debug;
+		};
+		BF3BEEEC1AE150C7009ABADE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Release;
+		};
 		D409C0121902F73000F15547 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -8312,6 +8343,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		BF3BEEEA1AE150C7009ABADE /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF3BEEEB1AE150C7009ABADE /* Debug */,
+				BF3BEEEC1AE150C7009ABADE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D409C0111902F73000F15547 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

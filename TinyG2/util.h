@@ -112,7 +112,9 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 
 #ifndef EPSILON
 #define EPSILON		((float)0.00001)		// allowable rounding error for floats
-//#define EPSILON 	((float)0.000001)		// allowable rounding error for floats
+#define EPSILON4 	((float)0.0001)		    // reduced precision epsilon
+#define EPSILON3 	((float)0.001)		    // reduced precision epsilon
+#define EPSILON2 	((float)0.01)		    // reduced precision epsilon
 #endif
 
 #ifndef fp_EQ
