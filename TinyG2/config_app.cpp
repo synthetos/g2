@@ -247,7 +247,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
 	{ "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
 	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,	    X_JERK_HIGH_SPEED },
-	{ "x","xjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },
+	{ "x","xjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },//++++REMOVE
 	{ "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
 	{ "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIR },
 	{ "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
@@ -262,7 +262,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
 	{ "y","yjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
 	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,	    Y_JERK_HIGH_SPEED },
-	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },
+	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },//++++REMOVE
 	{ "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
 	{ "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIR },
 	{ "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
@@ -277,7 +277,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "z","ztm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
 	{ "z","zjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
 	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high, 	    Z_JERK_HIGH_SPEED },
-	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },
+	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },//++++REMOVE
 	{ "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
 	{ "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIR },
     { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
@@ -292,7 +292,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "a","atm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_max,		A_TRAVEL_MAX },
 	{ "a","ajm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_A].jerk_max,		A_JERK_MAX },
 	{ "a","ajh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_A].jerk_high,  	A_JERK_HIGH_SPEED },
-	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },
+	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },//++++REMOVE
 	{ "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
 	{ "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIR },
@@ -308,7 +308,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","btm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].travel_max,		B_TRAVEL_MAX },
 	{ "b","bjm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_B].jerk_max,		B_JERK_MAX },
 	{ "b","bjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_B].jerk_high,	    B_JERK_HIGH_SPEED },
-	{ "b","bjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },
+	{ "b","bjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },//++++REMOVE
 	{ "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,			B_RADIUS },
 #ifdef __ARM	// B axis extended parameters
 	{ "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
@@ -326,7 +326,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","ctm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,		C_TRAVEL_MAX },
 	{ "c","cjm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
 	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_C].jerk_high, 	    C_JERK_HIGH_SPEED },
-	{ "c","cjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },
+	{ "c","cjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },//++++REMOVE
 	{ "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters
 	{ "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
@@ -469,7 +469,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
 	// General system parameters
-	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,    JUNCTION_ACCELERATION },
+	{ "sys","ja", _fipnc,0, cm_print_ja,  get_flt, set_flu,  (float *)&cm.junction_acceleration,    JUNCTION_ACCELERATION },//++++REMOVE
 	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
 	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
@@ -520,10 +520,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
 	{ "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },          // gcode block - must be last in this group
 
-	// "hidden" parameters (not in system group)
-//	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&cm.arc_segment_len,	MIN_ARC_SEGMENT_LENGTH },
-//	{ "", "ma", _fipc,4, cm_print_ma,  get_flt, set_flu, (float *)&arc.min_arc_segment_len, MIN_ARC_SEGMENT_LEN },
-
     // Actions and Reports
     { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },	// request and set status reports
     { "", "qr",  _f0, 0, qr_print_qr,  qr_get,    set_nul,   (float *)&cs.null, 0 },	// get queue value - planner buffers available
@@ -552,6 +548,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "", "h",   _f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 },     // alias for "help"
 #endif
 
+#ifdef __USER_DATA
 	// User defined data groups
 	{ "uda","uda0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
 	{ "uda","uda1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[1], USER_DATA_A1 },
@@ -572,6 +569,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "udd","udd1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[1], USER_DATA_D1 },
 	{ "udd","udd2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
 	{ "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
+#endif
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -721,7 +719,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","di8", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","di9", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 
-//	{ "","ss", _f0, 0, tx_print_nul, get_grp, set_nul,(float *)&cs.null,0 },	// switch states
 	{ "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g56",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -740,11 +737,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
 	{ "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
 
+#ifdef __USER_DATA
 	{ "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udb", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
-
+#endif
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
 	{ "","_tr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis runtime group
@@ -768,7 +766,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	5 		// count of uber-groups, above
-#define STANDARD_GROUPS 		42		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 		38		// count of standard groups, excluding diagnostic and user data groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
@@ -782,12 +780,19 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #define MOTOR_GROUP_6			0
 #endif
 
+
+#ifdef __USER_DATA
+#define USER_DATA_GROUPS 		4		// count of user data groups only
+#else
+#define USER_DATA_GROUPS 		0
+#endif
+
 #ifdef __DIAGNOSTIC_PARAMETERS
 #define DIAGNOSTIC_GROUPS 		8		// count of diagnostic groups only
 #else
 #define DIAGNOSTIC_GROUPS 		0
 #endif
-#define NV_COUNT_GROUPS 		(STANDARD_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + DIAGNOSTIC_GROUPS)
+#define NV_COUNT_GROUPS 		(STANDARD_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + DIAGNOSTIC_GROUPS + USER_DATA_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
 #define NV_INDEX_MAX (sizeof(cfgArray) / sizeof(cfgItem_t))
