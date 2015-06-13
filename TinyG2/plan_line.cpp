@@ -497,29 +497,29 @@ static void _calculate_jerk(mpBuf_t *bf)
  *  violate the jerk value of any axis.
  *
  *  In order to achieve this, we take the difference of the unit vectors of the two moves
- *  of the corner, at the point from vector a to vector b. The unit vectors of those 
+ *  of the corner, at the point from vector a to vector b. The unit vectors of those
  *  two moves are provided as a_unit and b_unit.
  *
  *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
  *
- *  We take, axis by axis, the difference in "unit velocity" to get a vector that 
- *  represents the direction of acceleration - which may be the opposite direction 
- *  as that of the "a" vector to achieve deceleration. To get the actual acceleration, 
+ *  We take, axis by axis, the difference in "unit velocity" to get a vector that
+ *  represents the direction of acceleration - which may be the opposite direction
+ *  as that of the "a" vector to achieve deceleration. To get the actual acceleration,
  *  we use the corner velocity (what we intend to calculate) as the magnitude.
  *
  *      Acceleration[i] = UnitAccel[i] * Velocity[i]               (2)
  *
- *  Since we need the jerk value, which is defined as the "rate of change of acceleration, 
- *  that is, the derivative of acceleration with respect to time", (Wikipedia) we need to 
- *  have a quantum of time where the change in acceleration is actually carried out by the 
- *  physics. That will give us the time over which to "apply" the change of acceleration 
+ *  Since we need the jerk value, which is defined as the "rate of change of acceleration,
+ *  that is, the derivative of acceleration with respect to time", (Wikipedia) we need to
+ *  have a quantum of time where the change in acceleration is actually carried out by the
+ *  physics. That will give us the time over which to "apply" the change of acceleration
  *  in order to get a physically realistic jerk. The yields a fairly simple formula:
  *
  *      Jerk[i] = Acceleration[i] / Time                           (3)
  *
- *  Now that we can compute the jerk for a given corner, we need to know the maximum 
- *  velocity that we can take the corner without violating that jerk for any axis. 
- *  Let's incorporate formula (2) into formula (3), and solve for Velocity, using 
+ *  Now that we can compute the jerk for a given corner, we need to know the maximum
+ *  velocity that we can take the corner without violating that jerk for any axis.
+ *  Let's incorporate formula (2) into formula (3), and solve for Velocity, using
  *  the known max Jerk and UnitAccel for this corner:
  *
  *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (4)
@@ -531,7 +531,7 @@ static void _calculate_jerk(mpBuf_t *bf)
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
     float velocity = vmax;    // start with our maximum cornering velocity
-    
+
     for (uint8_t axis=0; axis<AXES; axis++) {
         float delta = fabs(b_unit[axis] - a_unit[axis]); // formula (1)
 
@@ -540,10 +540,20 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
         //   In either case, division-by-zero is bad, m'kay?
         if (delta > EPSILON) {
              // formula (4):
-            float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
+             // junction acceleration is X 1,000,000, so jerk multiplier (== 1,000,000) can be dropped
+//            float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
+            float test_velocity = (cm.a[axis].jerk_max * cm.junction_acceleration) / delta;
             velocity = min(velocity, test_velocity);
         }
     }
+/*
+    // +++++ diagnostic
+    char str[20];
+    sprintf(str, "%d", (int)cm_get_linenum(ACTIVE_MODEL));
+    nv_add_string("line", str);
+    sprintf(str, "%1.0f", velocity);
+    nv_add_string("vmax", str);
+*/
     return(velocity);
 }
 
