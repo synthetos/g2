@@ -510,7 +510,7 @@ static void _calculate_jerk(mpBuf_t *bf)
  *      Acceleration[i] = UnitAccel[i] * Velocity[i]               (2)
  *
  *  Since we need the jerk value, which is defined as the "rate of change of acceleration,
- *  that is, the derivative of acceleration with respect to time", (Wikipedia) we need to
+ *  that is, the derivative of acceleration with respect to time" (Wikipedia), we need to
  *  have a quantum of time where the change in acceleration is actually carried out by the
  *  physics. That will give us the time over which to "apply" the change of acceleration
  *  in order to get a physically realistic jerk. The yields a fairly simple formula:
@@ -527,6 +527,15 @@ static void _calculate_jerk(mpBuf_t *bf)
  *  We then compute (4) for each axis, and use the smallest (most limited) result or
  *  vmax, whichever is smaller.
  */
+/* Note 1:
+ *  "junction_aggression" is the integration Time quantum expressed in minutes.
+ *  This is roughly on the order of 1 DDA clock tick to integrate jerk to acceleration.
+ *  This is a very small number, so we multiple JA by 1,000,000 for entry and display.
+ *  A reasonable JA is there fore between 0.10 and 1.0, maybe a little smaller or larger.
+ *
+ *  In formula 4 the jerk is multiplied by 1,000,000 and JA is divided by 1,000,000,
+ *  so those terms cancel out.
+ */
 
 static float _calculate_junction_vmax(const float vmax, const float a_unit[], const float b_unit[])
 {
@@ -539,21 +548,10 @@ static float _calculate_junction_vmax(const float vmax, const float a_unit[], co
         // Corner case: An axis doesn't change (and it's not a straight line).
         //   In either case, division-by-zero is bad, m'kay?
         if (delta > EPSILON) {
-             // formula (4):
-             // junction acceleration is X 1,000,000, so jerk multiplier (== 1,000,000) can be dropped
-//            float test_velocity = (cm.a[axis].jerk_max * JERK_MULTIPLIER * CORNER_TIME_QUANTUM) / delta;
-            float test_velocity = (cm.a[axis].jerk_max * cm.junction_acceleration) / delta;
-            velocity = min(velocity, test_velocity);
+             // formula (4): (See Note 1, above)
+            velocity = min(velocity, (cm.a[axis].jerk_max * cm.junction_aggression / delta));
         }
     }
-/*
-    // +++++ diagnostic
-    char str[20];
-    sprintf(str, "%d", (int)cm_get_linenum(ACTIVE_MODEL));
-    nv_add_string("line", str);
-    sprintf(str, "%1.0f", velocity);
-    nv_add_string("vmax", str);
-*/
     return(velocity);
 }
 

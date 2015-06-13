@@ -488,8 +488,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	/**** Config variables (PUBLIC) ****/
 
 	// system group settings
-	float junction_acceleration;		// centripetal acceleration max for cornering
-//	float junction_acceleration;		// centripetal acceleration max for cornering
+	float junction_aggression;		    // how agressively will the machine corner? 1.0 is about the upper limit
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
@@ -768,6 +767,7 @@ stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
 stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 
+stat_t cm_set_ja(nvObj_t *nv);			// set junction aggression with 1,000,000 correction
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 

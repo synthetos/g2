@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		086.01 // merged Othermachine changes into edge staging
+#define TINYG_FIRMWARE_BUILD   		086.02 // added controls for junction aggression (the new JA term)
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version

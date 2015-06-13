@@ -402,7 +402,7 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
  *	execution, and the real tool position is still close to the starting point.
  */
 
-void cm_finalize_move() 
+void cm_finalize_move()
 {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 }
@@ -2083,6 +2083,13 @@ stat_t cm_set_jh(nvObj_t *nv)
 	return(STAT_OK);
 }
 
+stat_t cm_set_ja(nvObj_t *nv)
+{
+    if (nv->value > 1000) nv->value /= 1000000;
+    set_flt(nv);
+    return(STAT_OK);
+}
+
 /*
  * Commands
  *
@@ -2244,8 +2251,8 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system state print functions */
 
-const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 //const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
@@ -2254,8 +2261,8 @@ const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 
-void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
 //void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}    // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT

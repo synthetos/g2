@@ -100,7 +100,7 @@ typedef enum {
 // ++++++++ NOT SURE THIS IS STILL OPERATIVE ++++++++ ash)
 
 //#define CORNER_TIME_QUANTUM 0.0000025               // (1.0/400000.0)  // one clock tick
-#define CORNER_TIME_QUANTUM (85/1000000)               // (1.0/400000.0)  // one clock tick
+#define JUNCTION_AGGRESSION     0.25               // Actually this # divided by 1 million
 
 //*** derived definitions - do not change ***
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
