@@ -478,7 +478,7 @@ typedef struct cmAxis {
     uint8_t homing_dir;                 // 0=search to negative, 1=search to positive
 	float search_velocity;				// homing search velocity
 	float latch_velocity;				// homing latch velocity
-	float latch_backoff;				// backoff from switches prior to homing latch movement
+	float latch_backoff;				// backoff sufficient to clear a switch
 	float zero_backoff;					// backoff from switches for machine zero
 } cfgAxis_t;
 

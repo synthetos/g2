@@ -300,7 +300,7 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
     if ((sr.status_report_verbosity == SR_OFF) ||
         (js.json_verbosity == JV_SILENT) ||
 	    (sr.status_report_request == SR_OFF) ||
- //++++       (!mp_is_it_phat_city_time()) ||
+//++++  (!mp_is_it_phat_city_time()) ||
 	    (SysTickTimer_getValue() < sr.status_report_systick) ) {
         return (STAT_NOOP);
     }
@@ -315,7 +315,6 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	}
 	sr.status_report_request = SR_OFF;
 	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
-
     return (STAT_OK);
 }
 
@@ -573,7 +572,12 @@ void rx_request_rx_report(void) {
  * rx_report_callback() - send rx report if one has been requested
  */
 stat_t rx_report_callback(void) {
-    if (!rx.rx_report_requested) { return (STAT_NOOP); }
+    if (!rx.rx_report_requested) { 
+        return (STAT_NOOP); 
+    }
+    if (!mp_is_it_phat_city_time()) {
+        return (STAT_NOOP);
+    }
     rx.rx_report_requested = false;
 
     fprintf(stderr, "{\"rx\":%d}\n", rx.space_available);
