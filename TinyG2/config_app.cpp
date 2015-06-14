@@ -129,6 +129,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "admo",_f0, 0, cm_print_admo, cm_get_admo, set_nul,(float *)&cs.null, 0 },			// arc distance mode
 	{ "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },			// feed rate mode
 	{ "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },			// active tool
+	{ "",   "g92e",_f0, 0, cm_print_g92e, get_ui8,     set_nul,(float *)&cm.gmx.origin_offset_enable, 0 }, // G92 enabled
 
 	{ "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// X machine position
 	{ "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// Y machine position
@@ -480,22 +481,29 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
 	{ "sys","saf",_fipn, 0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,	SAFETY_INTERLOCK_ENABLE },
 	{ "sys","mt", _fipn, 2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
+	{ "sys","m48e",_fipn,0, cm_print_m48e,get_ui8, set_01,   (float *)&cm.gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
+	{ "sys","mfoe",_fipn,0, cm_print_mfoe,get_ui8, set_01,   (float *)&cm.gmx.mfo_enable,           MANUAL_FEEDRATE_OVERRIDE_ENABLE},
+	{ "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm.gmx.mfo_parameter,        MANUAL_FEEDRATE_OVERRIDE_PARAMETER},
+//	{ "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm.gmx.mfo_enable,           MANUAL_FEEDRATE_OVERRIDE_ENABLE},
+//	{ "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm.gmx.mfo_parameter,        MANUAL_FEEDRATE_OVERRIDE_PARAMETER},
 
     // Spindle functions
-    { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,  (float *)&spindle.enable_polarity,      SPINDLE_ENABLE_POLARITY },
-    { "sys","spdp",_fipn,0, cm_print_spdp,get_ui8, set_01,  (float *)&spindle.dir_polarity,         SPINDLE_DIR_POLARITY },
-    { "sys","spph",_fipn,0, cm_print_spph,get_ui8, set_01,  (float *)&spindle.pause_on_hold,        SPINDLE_PAUSE_ON_HOLD },
-    { "sys","spdw",_fipn,2, cm_print_spdw,get_flt, set_flt, (float *)&spindle.dwell_seconds,        SPINDLE_DWELL_TIME },
-    { "",   "spe", _f0,  0, cm_print_spe, get_ui8, set_nul, (float *)&spindle.enable, 0 },          // get spindle enable
+    { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,   (float *)&spindle.enable_polarity,     SPINDLE_ENABLE_POLARITY },
+    { "sys","spdp",_fipn,0, cm_print_spdp,get_ui8, set_01,   (float *)&spindle.dir_polarity,        SPINDLE_DIR_POLARITY },
+    { "sys","spph",_fipn,0, cm_print_spph,get_ui8, set_01,   (float *)&spindle.pause_on_hold,       SPINDLE_PAUSE_ON_HOLD },
+    { "sys","spdw",_fipn,2, cm_print_spdw,get_flt, set_flt,  (float *)&spindle.dwell_seconds,       SPINDLE_DWELL_TIME },
+//	{ "sys","ssoe",_fipn,0, cm_print_msoe,get_ui8, set_01,   (float *)&sp.sso_enable,               SPINDLE_SPEED_OVERRIDE_ENABLE},
+//	{ "sys","sso", _fipn,3, cm_print_mso, get_flt, cm_set_sso,(float *)&sp.sso_parameter,           SPINDLE_SPEED_OVERRIDE_PARAMETER},
+    { "",   "spe", _f0,  0, cm_print_spe, get_ui8, set_nul,  (float *)&spindle.enable, 0 },         // get spindle enable
     { "",   "spd", _f0,  0, cm_print_spd, get_ui8, cm_set_dir,(float *)&spindle.direction, 0 },     // get spindle direction
-    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul, (float *)&spindle.speed, 0 },           // get spindle speed
+    { "",   "sps", _f0,  0, cm_print_sps, get_flt, set_nul,  (float *)&spindle.speed, 0 },          // get spindle speed
 
     // Coolant functions
-    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,  (float *)&coolant.flood_polarity,       COOLANT_FLOOD_POLARITY },
-    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,  (float *)&coolant.mist_polarity,        COOLANT_MIST_POLARITY },
-    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,  (float *)&coolant.pause_on_hold,        COOLANT_PAUSE_ON_HOLD },
-    { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul, (float *)&coolant.mist_enable, 0 },     // get mist coolant enable
-    { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul, (float *)&coolant.flood_enable, 0 },    // get flood coolant enable
+    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,   (float *)&coolant.flood_polarity,      COOLANT_FLOOD_POLARITY },
+    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,   (float *)&coolant.mist_polarity,       COOLANT_MIST_POLARITY },
+    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,   (float *)&coolant.pause_on_hold,       COOLANT_PAUSE_ON_HOLD },
+    { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
+    { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE

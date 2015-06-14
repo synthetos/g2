@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		086.03 // cleanup - no functional changes except; changed epsilon value in filtered status reports; removed TAB as a valid line terminator
+#define TINYG_FIRMWARE_BUILD   		087.01 // Experimental branch
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
