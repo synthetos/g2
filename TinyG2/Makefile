@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2013 Robert Giseburt
-# Copyright (c) 2013 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2015 Robert Giseburt
+# Copyright (c) 2015 Alden S. Hart Jr.
 #
 # This file is part of the TinyG2 project.
 #
@@ -473,9 +473,10 @@ MKTOOLS:
 	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
 
 GIT_VERSION = $(shell git describe --abbrev=4 --dirty --always --tags)
+GIT_EXACT_VERSION = $(shell git describe --abbrev=0 --tags)
 
-# Push the git version into the code -- as yet unused
-DEVICE_DEFINES += GIT_VERSION=$(GIT_VERSION)
+# Push the git version into the code -- the ""s must be escaped and make it into the code intact
+DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
 
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)

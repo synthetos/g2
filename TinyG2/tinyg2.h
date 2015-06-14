@@ -37,15 +37,19 @@
 
 /****** REVISIONS ******/
 
-#ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		087.01 // Experimental branch
-#endif
+// You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
 
-#define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
-#define TINYG_CONFIG_VERSION		7							// CV values started at 5 to provide backwards compatibility
-#define TINYG_HARDWARE_PLATFORM		HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
-#define TINYG_HARDWARE_VERSION		HW_VERSION_TINYGV9K			// hardware platform revision number
-#define TINYG_HARDWARE_VERSION_MAX (TINYG_HARDWARE_VERSION)
+//#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION
+#define TINYG_FIRMWARE_BUILD            089.01 // labeled as a compile w/o a build number
+#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
+//#ifndef TINYG_FIRMWARE_BUILD
+//#endif
+
+#define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
+#define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
+#define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
+#define TINYG_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
+#define TINYG_HARDWARE_VERSION_MAX      (TINYG_HARDWARE_VERSION)
 
 /****** COMPILE-TIME SETTINGS ******/
 
