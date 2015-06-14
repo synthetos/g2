@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		086.02 // added controls for junction aggression (the new JA term)
+#define TINYG_FIRMWARE_BUILD   		086.03 // cleanup - no functional changes except; changed epsilon value in filtered status reports; removed TAB as a valid line terminator
 #endif
 
 #define TINYG_FIRMWARE_VERSION		0.98						// firmware major version
@@ -56,7 +56,6 @@
 
 /****** DEVELOPMENT SETTINGS ******/
 
-#define __STEP_CORRECTION
 #define __DIAGNOSTICS               // enables various debug functions
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
 #define __CANNED_STARTUP            // run any canned startup moves

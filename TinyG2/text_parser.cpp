@@ -103,7 +103,7 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
 	char separators[] = {" =:|\t"};				// RELAXED: any separator someone might use
 
 	// pre-process and normalize the string
-//	nv_reset_nv(nv);								// initialize config object
+//	nv_reset_nv(nv);								// initialize config object (not required)
 	nv_copy_string(nv, str);						// make a copy for eventual reporting
 	if (*str == '$') str++;							// ignore leading $
 	for (rd = wr = str; *rd != NUL; rd++, wr++) {
@@ -245,13 +245,11 @@ void text_print_multiline_formatted(nvObj_t *nv)
 static const char fmt_str[] PROGMEM = "%s\n";	// generic format for string message (with no formatting)
 static const char fmt_int[] PROGMEM = "%lu\n";	// generic format for ui16's and ui32s
 static const char fmt_flt[] PROGMEM = "%f\n";	// generic format for floats
-//static const char fmt_ui8[] PROGMEM = "%d\n";	// generic format for ui8s DEPRECATED
 
 void tx_print_nul(nvObj_t *nv) {}
 void tx_print_str(nvObj_t *nv) { text_print_str(nv, fmt_str);}
 void tx_print_int(nvObj_t *nv) { text_print_int(nv, fmt_int);}
 void tx_print_flt(nvObj_t *nv) { text_print_flt(nv, fmt_flt);}
-//void tx_print_ui8(nvObj_t *nv) { text_print_ui8(nv, fmt_ui8);}  DEPRECATED
 
 void tx_print(nvObj_t *nv) {
     switch ((int8_t)nv->valuetype) {
@@ -272,7 +270,6 @@ void text_print_nul(nvObj_t *nv, const char *format) { fprintf_P(stderr, format)
 void text_print_str(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, *nv->stringp);}
 void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
 void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
-//void text_print_ui8(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint8_t)nv->value);} DEPRECATED
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {

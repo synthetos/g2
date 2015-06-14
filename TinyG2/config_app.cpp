@@ -247,8 +247,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,		X_TRAVEL_MAX },
 	{ "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_X].jerk_max,		X_JERK_MAX },
 	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,	    X_JERK_HIGH_SPEED },
-//	{ "x","xjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].junction_dev,	X_JUNCTION_DEVIATION },//++++REMOVE
-	{ "x","xjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                //++++REMOVE
+	{ "x","xjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
 	{ "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIR },
 	{ "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
@@ -263,7 +262,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,		Y_TRAVEL_MAX },
 	{ "y","yjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Y].jerk_max,		Y_JERK_MAX },
 	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,	    Y_JERK_HIGH_SPEED },
-	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },//++++REMOVE
+//	{ "y","yjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].junction_dev,	Y_JUNCTION_DEVIATION },//++++REMOVE
+	{ "y","yjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
 	{ "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIR },
 	{ "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
@@ -278,7 +278,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "z","ztm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,		Z_TRAVEL_MAX },
 	{ "z","zjm",_fipc, 0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_Z].jerk_max,		Z_JERK_MAX },
 	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high, 	    Z_JERK_HIGH_SPEED },
-	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },//++++REMOVE
+//	{ "z","zjd",_fipc, 4, cm_print_jd, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].junction_dev,	Z_JUNCTION_DEVIATION },//++++REMOVE
+	{ "z","zjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
 	{ "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIR },
     { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
@@ -293,7 +294,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "a","atm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_max,		A_TRAVEL_MAX },
 	{ "a","ajm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_A].jerk_max,		A_JERK_MAX },
 	{ "a","ajh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_A].jerk_high,  	A_JERK_HIGH_SPEED },
-	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },//++++REMOVE
+//	{ "a","ajd",_fip,  4, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].junction_dev,	A_JUNCTION_DEVIATION },//++++REMOVE
+	{ "a","ajd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
 	{ "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIR },
@@ -309,7 +311,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","btm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].travel_max,		B_TRAVEL_MAX },
 	{ "b","bjm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_B].jerk_max,		B_JERK_MAX },
 	{ "b","bjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_B].jerk_high,	    B_JERK_HIGH_SPEED },
-	{ "b","bjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },//++++REMOVE
+//	{ "b","bjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].junction_dev,	B_JUNCTION_DEVIATION },//++++REMOVE
+	{ "b","bjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,			B_RADIUS },
 #ifdef __ARM	// B axis extended parameters
 	{ "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
@@ -327,7 +330,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","ctm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,		C_TRAVEL_MAX },
 	{ "c","cjm",_fip,  0, cm_print_jm, get_flt,	  cm_set_jm, (float *)&cm.a[AXIS_C].jerk_max,		C_JERK_MAX },
 	{ "c","cjh",_fip,  0, cm_print_jh, get_flt,	  cm_set_jh, (float *)&cm.a[AXIS_C].jerk_high, 	    C_JERK_HIGH_SPEED },
-	{ "c","cjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },//++++REMOVE
+//	{ "c","cjd",_fip,  0, cm_print_jd, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].junction_dev,	C_JUNCTION_DEVIATION },//++++REMOVE
+	{ "c","cjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters
 	{ "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
@@ -970,22 +974,6 @@ static stat_t _set_comm_helper(nvObj_t *nv, uint32_t yes, uint32_t no)
 	return (STAT_OK);
 }
 */
-/* REMOVED - too easy to make the board appear to be bricked
-static stat_t set_ic(nvObj_t *nv) 				// ignore CR or LF on RX
-{
-	if (nv->value > IGNORE_LF) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
-	cfg.ignore_crlf = (uint8_t)nv->value;
-	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORECR);	// clear them both
-	(void)xio_ctrl(XIO_DEV_USB, XIO_NOIGNORELF);
-
-	if (cfg.ignore_crlf == IGNORE_CR) {				// $ic=1
-		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORECR);
-	} else if (cfg.ignore_crlf == IGNORE_LF) {		// $ic=2
-		(void)xio_ctrl(XIO_DEV_USB, XIO_IGNORELF);
-	}
-	return (STAT_OK);
-}
-*/
 /*
 static stat_t set_ec(nvObj_t *nv) 				// expand CR to CRLF on TX
 {
@@ -1019,18 +1007,6 @@ static stat_t get_rx(nvObj_t *nv)
 	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
-/*
-static stat_t get_wr(nvObj_t *nv)
-{
-#ifdef __AVR
-	nv->value = (float)xio_get_window_slots();
-#else
-	nv->value = (float)4;				// ARM always says there are 4 slots available
-#endif
-	nv->valuetype = TYPE_INT;
-	return (STAT_OK);
-}
-*/
 
 static stat_t get_tick(nvObj_t *nv)
 {
@@ -1038,15 +1014,6 @@ static stat_t get_tick(nvObj_t *nv)
 	nv->valuetype = TYPE_INT;
 	return (STAT_OK);
 }
-
-/* run_sx()	- send XOFF, XON --- test only
-static stat_t run_sx(nvObj_t *nv)
-{
-	xio_putc(XIO_DEV_USB, XOFF);
-	xio_putc(XIO_DEV_USB, XON);
-	return (STAT_OK);
-}
-*/
 
 /*
  * set_baud() - set USB baud rate

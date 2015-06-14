@@ -502,7 +502,6 @@ mpBuf_t * mp_get_first_buffer(void) {
     return NULL;
 }
 
-
 /* UNUSED FUNCTIONS - left in for completeness and for reference
 void mp_unget_write_buffer()
 {

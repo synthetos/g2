@@ -179,7 +179,6 @@ static stat_t _jogging_axis_ramp_jog(int8_t axis)           // run the jog ramp
 static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 {
 	float vect[] = {0,0,0,0,0,0};
-//	float flags[] = {false, false, false, false, false, false};
 	bool flags[] = {false, false, false, false, false, false};
 
 	vect[axis] = target;

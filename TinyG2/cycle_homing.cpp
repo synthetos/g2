@@ -389,33 +389,8 @@ static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to ho
  *	user-specified axis homing orders
  */
 
-//#define __ALT_AXES
-
 static int8_t _get_next_axis(int8_t axis)
 {
-#ifdef __ALT_AXES
-// alternate code:
-// UNTESTED - DOES NOT WORK AFAIK
-	uint8_t axis;
-	for(axis = AXIS_X; axis < HOMING_AXES; axis++) {
-		if (cm.gf.target[axis]) {
-            break;
-        }
-    }
-	if(axis >= HOMING_AXES) return -2;
-	  switch(axis) {
-		case -1:        if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
-		case AXIS_Z:    if (cm.gf.target[AXIS_X]) { return (AXIS_X); }
-		case AXIS_X:    if (cm.gf.target[AXIS_Y]) { return (AXIS_Y); }
-		case AXIS_Y:    if (cm.gf.target[AXIS_A]) { return (AXIS_A); }
-#if (HOMING_AXES > 4)
-		case AXIS_A:    if (cm.gf.target[AXIS_B]) { return (AXIS_B); }
-		case AXIS_B:    if (cm.gf.target[AXIS_C]) { return (AXIS_C); }
-#endif
-		default:        return -1;
-	}
-#else // __ALT_AXES
-
 #if (HOMING_AXES <= 4)
 	if (axis == -1) {	// inelegant brute force solution
 		if (cm.gf.target[AXIS_Z]) { return (AXIS_Z); }
@@ -468,5 +443,4 @@ static int8_t _get_next_axis(int8_t axis)
 	return (-1);	// done
 
 #endif //  (HOMING_AXES <= 4)
-#endif // __ALT_AXES
 }

@@ -193,7 +193,6 @@ static uint8_t _probing_init()
     gpio_set_probing_mode(pb.probe_input, true);
 
     // turn off spindle and start the move
-//	cm_spindle_control(SPINDLE_OFF);        // (could do this 
     cm_spindle_optional_pause(true);        // pause the spindle if it's on
 	return (_set_pb_func(_probing_start));	// start the probe move
 }
@@ -215,13 +214,13 @@ static stat_t _probing_start()
 	} else {
         cm.probe_state = PROBE_SUCCEEDED;
         return (_set_pb_func(_probing_finish));
-    }    
+    }
 }
 
 /*
  * _probing_backoff() - runs after the probe move, whether it contacted or not
- * 
- * Back off to the measured touch position captured by encoder snapshot 
+ *
+ * Back off to the measured touch position captured by encoder snapshot
  */
 
 static stat_t _probing_backoff()
@@ -233,7 +232,7 @@ static stat_t _probing_backoff()
     if ( probe == INPUT_INACTIVE ) {
         cm.probe_state = PROBE_FAILED;
 
-    } else {    
+    } else {
         cm.probe_state = PROBE_SUCCEEDED;
 
         // capture contact position in step space and convert from steps to mm.
@@ -264,20 +263,13 @@ static stat_t _probing_finish()
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
 	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
 
-//	if (fp_TRUE(pb.flags[AXIS_X])) printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]);
-//	if (fp_TRUE(pb.flags[AXIS_Y])) printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]);
-//	if (fp_TRUE(pb.flags[AXIS_Z])) printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]);
-//	if (fp_TRUE(pb.flags[AXIS_A])) printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]);
-//	if (fp_TRUE(pb.flags[AXIS_B])) printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]);
-//	if (fp_TRUE(pb.flags[AXIS_C])) printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]);
-
 	if (pb.flags[AXIS_X]) { printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]); }
 	if (pb.flags[AXIS_Y]) { printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]); }
 	if (pb.flags[AXIS_Z]) { printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]); }
 	if (pb.flags[AXIS_A]) { printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]); }
 	if (pb.flags[AXIS_B]) { printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]); }
 	if (pb.flags[AXIS_C]) { printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]); }
-    
+
 	printf_P(PSTR("}}\n"));
 
 	return (_set_pb_func(_probing_finalize_exit));

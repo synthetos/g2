@@ -106,7 +106,6 @@ void _startup_helper(stat_t status, const char *msg)
 	nv_reset_nv_list();
 	nv_add_object((const char *)"fv");		// firmware version
 	nv_add_object((const char *)"fb");		// firmware build
-//	nv_add_object((const char *)"cv");		// configuration version
 	nv_add_object((const char *)"hp");		// hardware platform
 	nv_add_object((const char *)"hv");		// hardware version
 	nv_add_object((const char *)"id");		// hardware ID
@@ -281,7 +280,6 @@ stat_t sr_request_status_report(uint8_t request_type)
 		sr.status_report_request = SR_VERBOSE;		// will always trigger verbose report, regardless of verbosity setting
 
 	} else if (request_type == SR_REQUEST_TIMED) {
-//		sr.status_report_request = SR_FILTERED;
 		sr.status_report_request = sr.status_report_verbosity;
 		sr.status_report_systick += sr.status_report_interval;
 
@@ -297,10 +295,12 @@ stat_t sr_request_status_report(uint8_t request_type)
  */
 stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
+//    if (!mp_is_it_phat_city_time()) {   // don't process this if you are time constrained in the planner
+//        return (STAT_NOOP);
+//    }
     if ((sr.status_report_verbosity == SR_OFF) ||
-        (js.json_verbosity == JV_SILENT) ||
 	    (sr.status_report_request == SR_OFF) ||
-//++++  (!mp_is_it_phat_city_time()) ||
+        (js.json_verbosity == JV_SILENT) ||
 	    (SysTickTimer_getValue() < sr.status_report_systick) ) {
         return (STAT_NOOP);
     }
@@ -390,9 +390,8 @@ static uint8_t _populate_filtered_status_report()
         }
 		nv_get_nvObj(nv);
 
-		// report values that have changed by more than 0.001, but always stops and ends
-//		if (fp_NE(nv->value, sr.status_report_value[i]) ||
-		if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON2) ||
+		// report values that have changed by more than 0.0001, but always stops and ends
+		if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
 
@@ -521,10 +520,10 @@ void qr_request_queue_report(int8_t buffers)
 
 stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
-	if ((qr.queue_report_verbosity == QR_OFF) || 
+	if ((qr.queue_report_verbosity == QR_OFF) ||
         (js.json_verbosity == JV_SILENT) ||
 	    (qr.queue_report_requested == false) ||
-        (!mp_is_it_phat_city_time())) { 
+        (!mp_is_it_phat_city_time())) {
         return (STAT_NOOP);
     }
 
@@ -572,10 +571,10 @@ void rx_request_rx_report(void) {
  * rx_report_callback() - send rx report if one has been requested
  */
 stat_t rx_report_callback(void) {
-    if (!rx.rx_report_requested) { 
-        return (STAT_NOOP); 
+    if (!rx.rx_report_requested) {
+        return (STAT_NOOP);
     }
-    if (!mp_is_it_phat_city_time()) {
+    if (!mp_is_it_phat_city_time()) {   // Don;t process this if you are time constrained in the planner
         return (STAT_NOOP);
     }
     rx.rx_report_requested = false;

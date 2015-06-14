@@ -172,7 +172,7 @@ static void _controller_HSM()
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
-    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
+//    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
@@ -182,11 +182,7 @@ static void _controller_HSM()
 #ifdef __AVR
     DISPATCH(set_baud_callback());              // perform baud rate update (must be after TX sync)
 #endif
-    DISPATCH(_dispatch_command());              // read and execute next command
-
-//---- phat city idle tasks ---------------------------------------------------------//
-//    DISPATCH(_check_for_phat_city_time());      // stop here if it's not phat city time!
-//    DISPATCH(rx_report_callback());             // conditionally send rx report
+    DISPATCH(_dispatch_command());              // MUST BE LAST - read and execute next command
 }
 
 /*
@@ -429,42 +425,6 @@ static stat_t _interlock_handler(void)
     }
     return(STAT_OK);
 }
-
-/*
-static stat_t _interlock_estop_handler(void)
-{
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-	bool report = false;
-	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
-		cm.interlock_state = 1;
-		if(cm.gm.spindle_state != SPINDLE_OFF)
-			cm_request_feedhold();
-		report = true;
-	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
-		cm.interlock_state = 0;
-		report = true;
-	}
-	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
-		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
-		report = true;
-		cm_start_estop();
-	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
-		cm.estop_state &= ~ESTOP_PRESSED;
-		report = true;
-	}
-	if(cm.estop_state == ESTOP_ACTIVE) {
-        cm.estop_state = 0;
-		cm_end_estop();
-		report = true;
-	}
-	if(report)
-		sr_request_status_report(SR_REQUEST_IMMEDIATE);
-	return (STAT_OK);
-#else
-	return (STAT_OK);
-#endif
-}
-*/
 
 /*
  * _init_assertions() - initialize controller memory integrity assertions

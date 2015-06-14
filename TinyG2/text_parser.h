@@ -2,7 +2,7 @@
  * text_parser.h - text parser and text mode support for tinyg2
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -42,12 +42,7 @@ enum textFormats {					// text output print modes
 
 typedef struct txtSingleton {		// text mode data
 
-	/*** config values (PUBLIC) ***/
-
 	char format[NV_FORMAT_LEN+1];
-
-	/*** runtime values (PRIVATE) ***/
-
 	uint8_t text_verbosity;			// see enum in this file for settings
 
 } txtSingleton_t;
@@ -74,7 +69,6 @@ extern txtSingleton_t txt;
 	void text_print(nvObj_t *nv, const char *format);   // does all formats except units
 	void text_print_nul(nvObj_t *nv, const char *format);
 	void text_print_str(nvObj_t *nv, const char *format);
-//	void text_print_ui8(nvObj_t *nv, const char *format);
 	void text_print_int(nvObj_t *nv, const char *format);
 	void text_print_flt(nvObj_t *nv, const char *format);
 	void text_print_flt_units(nvObj_t *nv, const char *format, const char *units);
@@ -88,7 +82,6 @@ extern txtSingleton_t txt;
 	#define text_print text_print_stub
 	#define text_print_list text_print_list_stub
 	#define tx_print_nul tx_print_stub
-//	#define tx_print_ui8 tx_print_stub
 	#define tx_print_int tx_print_stub
 	#define tx_print_flt tx_print_stub
 	#define tx_print_str tx_print_stub

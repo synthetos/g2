@@ -640,7 +640,6 @@ static const char stat_241[] PROGMEM = "Homing Err - Bad or no axis specified";
 static const char stat_242[] PROGMEM = "Homing Err - Search velocity is zero";
 static const char stat_243[] PROGMEM = "Homing Err - Latch velocity is zero";
 static const char stat_244[] PROGMEM = "Homing Err - Travel min & max are the same";
-//static const char stat_245[] PROGMEM = "Homing Err - Negative latch backoff";
 static const char stat_245[] PROGMEM = "245";
 static const char stat_246[] PROGMEM = "Homing Err - Homing input is misconfigured";
 static const char stat_247[] PROGMEM = "Homing Err - Must clear switches before homing";

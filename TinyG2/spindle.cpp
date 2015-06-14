@@ -191,8 +191,7 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 		speed_hi = pwm.c[PWM_1].cw_speed_hi;
 		phase_lo = pwm.c[PWM_1].cw_phase_lo;
 		phase_hi = pwm.c[PWM_1].cw_phase_hi;
-//	} else if (direction == SPINDLE_CCW ) {
-	} else {
+	} else { // if (direction == SPINDLE_CCW ) {
 		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
 		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;

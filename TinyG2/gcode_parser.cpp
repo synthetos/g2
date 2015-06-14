@@ -254,9 +254,9 @@ static stat_t _parse_gcode_block(char *buf)
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
     cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
 
-    // Causes a later exception if 
+    // Causes a later exception if
     //  (1) INVERSE_TIME_MODE is active and a feed rate is not provided or
-    //  (2) INVERSE_TIME_MODE is changed to UNITS_PER_MINUTE and a new feed rate is missing  
+    //  (2) INVERSE_TIME_MODE is changed to UNITS_PER_MINUTE and a new feed rate is missing
     if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate req'd when in INV_TIME_MODE
         cm.gn.feed_rate = 0;
         cm.gf.feed_rate = true;
@@ -396,7 +396,6 @@ static stat_t _parse_gcode_block(char *buf)
             case 'L': SET_NON_MODAL (L_word, value);
 			case 'R': SET_NON_MODAL (arc_radius, value);
 			case 'N': SET_NON_MODAL (linenum,(uint32_t)value);		// line number
-//			case 'L': break;										// not used for anything
 			default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
 		}
 		if(status != STAT_OK) break;
@@ -451,17 +450,17 @@ static stat_t _execute_gcode_block()
 	stat_t status = STAT_OK;
 
 	cm_set_model_linenum(cm.gn.linenum);
-	EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);
-	EXEC_FUNC(cm_set_feed_rate, feed_rate);
+	EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
+	EXEC_FUNC(cm_set_feed_rate, feed_rate);                 // F
 //	EXEC_FUNC(cm_feed_rate_override_factor, feed_rate_override_factor);
 //	EXEC_FUNC(cm_traverse_override_factor, traverse_override_factor);
-	EXEC_FUNC(cm_set_spindle_speed, spindle_speed);
+	EXEC_FUNC(cm_set_spindle_speed, spindle_speed);         // S
 //	EXEC_FUNC(cm_spindle_override_factor, spindle_override_factor);
 	EXEC_FUNC(cm_select_tool, tool_select);					// tool_select is where it's written
-	EXEC_FUNC(cm_change_tool, tool_change);
+	EXEC_FUNC(cm_change_tool, tool_change);                 // M6
 	EXEC_FUNC(cm_spindle_control, spindle_control); 		// spindle CW, CCW, OFF
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// also disables mist coolant if OFF
+	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
+	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// M8, M9 also disables mist coolant if OFF
 //	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
 //	EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
 //	EXEC_FUNC(cm_spindle_override_enable, spindle_override_enable);
@@ -470,14 +469,14 @@ static stat_t _execute_gcode_block()
 	if (cm.gn.next_action == NEXT_ACTION_DWELL) { 			// G4 - dwell
 		ritorno(cm_dwell(cm.gn.parameter));					// return if error, otherwise complete the block
 	}
-	EXEC_FUNC(cm_select_plane, select_plane);
-	EXEC_FUNC(cm_set_units_mode, units_mode);
+	EXEC_FUNC(cm_select_plane, select_plane);               // G17, G18, G19
+	EXEC_FUNC(cm_set_units_mode, units_mode);               // G20, G21
 	//--> cutter radius compensation goes here
 	//--> cutter length compensation goes here
-	EXEC_FUNC(cm_set_coord_system, coord_system);
-	EXEC_FUNC(cm_set_path_control, path_control);
-	EXEC_FUNC(cm_set_distance_mode, distance_mode);
-	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode);
+	EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
+	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
+	EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
+	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
 	//--> set retract mode goes here
 
 	switch (cm.gn.next_action) {
@@ -493,19 +492,19 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_STRAIGHT_PROBE:      { status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}     // G38.2
 
 		case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
-		case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}
-		case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}
-		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}
-		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}
+		case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
+		case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
+		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2
+		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                     // G92.3
 
 		case NEXT_ACTION_DEFAULT: {
     		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply absolute override
     		switch (cm.gn.motion_mode) {
-        		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}
-        		case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;}
-        		case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;}
-        		case MOTION_MODE_CW_ARC:
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,
+        		case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}               // G80
+        		case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;} // G0
+        		case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;} // G1
+        		case MOTION_MODE_CW_ARC:                                                                            // G2
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,                    // G3
                                                                  cm.gn.arc_offset, cm.gf.arc_offset,
                                                                  cm.gn.arc_radius, cm.gf.arc_radius,
                                                                  cm.gn.parameter,  cm.gf.parameter,

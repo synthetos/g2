@@ -125,8 +125,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	// exit if the move has zero movement. At all.
 	if (fp_ZERO(length)) {
-//		sr_request_status_report(SR_REQUEST_IMMEDIATE_FULL);
-		sr_request_status_report(SR_REQUEST_TIMED_FULL);
+		sr_request_status_report(SR_REQUEST_TIMED_FULL);            // Was SR_REQUEST_IMMEDIATE_FULL
 		return (STAT_MINIMUM_LENGTH_MOVE);
 	}
 
@@ -288,7 +287,9 @@ void mp_plan_block_list(mpBuf_t *bf)
         }
 
         // Force a calculation of this here
-        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) +
+                              (bp->body_length/bp->cruise_velocity) +
+                             ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
 		// Test for optimally planned trapezoids - only need to check various exit conditions
         if  ( ((fp_EQ(bp->exit_velocity, bp->exit_vmax)) ||
@@ -322,7 +323,9 @@ void mp_plan_block_list(mpBuf_t *bf)
         }
 
         // Force a calculation of this here
-        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) + (bp->body_length/bp->cruise_velocity) + ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
+        bp->real_move_time = ((bp->head_length*2)/(bp->entry_velocity + bp->cruise_velocity)) +
+                              (bp->body_length/bp->cruise_velocity) +
+                             ((bp->tail_length*2)/(bp->exit_velocity + bp->cruise_velocity));
 
         if (bp->buffer_state == MP_BUFFER_PLANNING) {
             bp->buffer_state = MP_BUFFER_QUEUED;
@@ -469,7 +472,7 @@ static void _calculate_jerk(mpBuf_t *bf)
             jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
             if (jerk < bf->jerk) {
                 bf->jerk = jerk;
-//                bf->jerk_axis = axis;                     // +++ diagnostic
+//              bf->jerk_axis = axis;                     // +++ diagnostic
             }
         }
     }

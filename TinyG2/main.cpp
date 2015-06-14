@@ -133,16 +133,13 @@ void application_init_services(void)
 void application_init_machine(void)
 {
 	cm.machine_state = MACHINE_INITIALIZING;
-//    controller_init(STD_IN, STD_OUT, STD_ERR);  // should be first machine init (requires xio_init())
 
     stepper_init();                 // stepper subsystem (must precede gpio_init() on AVR)
     encoder_init();                 // virtual encoders
     gpio_init();                    // inputs and outputs
     pwm_init();                     // pulse width modulation drivers
-//    controller_init(STD_IN, STD_OUT, STD_ERR);// must be first app init; reqs xio_init()
     planner_init();                 // motion planning subsystem
     canonical_machine_init();       // canonical machine
-//    spindle_init();                 // should be after PWM and canonical machine inits
 }
 
 void application_init_startup(void)
