@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2015 Robert Giseburt
-# Copyright (c) 2015 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2013 Robert Giseburt
+# Copyright (c) 2013 Alden S. Hart Jr.
 #
 # This file is part of the TinyG2 project.
 #
@@ -59,14 +59,6 @@ DEBUG ?= 0
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
-#	SETTINGS_FILE="settings_othermill.h"
-#	SETTINGS_FILE="settings_othermill_test.h"
-#	SETTINGS_FILE="settings_probotixV90.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
-#	SETTINGS_FILE="settings_shopbot_sbv300.h"
-#	SETTINGS_FILE="settings_shopbot_test.h"
-#	SETTINGS_FILE="settings_Ultimaker.h"
-
 CFLAGS   :=
 CPPFLAGS :=
 
@@ -77,6 +69,14 @@ MOTATE_PATH := motate
 
 SOURCE_DIRS += $(MOTATE_PATH)
 USER_INCLUDE_DIRS += $(SOURCE_DIRS)
+
+#	SETTINGS_FILE="settings_default.h"
+#	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_probotixV90.h"
+	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
+#	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_Ultimaker.h"
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
@@ -254,9 +254,9 @@ endif
 
 ifeq ("$(PLATFORM)","ShapeokoDualY")
 
-	BASE_PLATFORM=v9_3x8c
-	SETTINGS_FILE="settings_shapeoko375_dual.h"
-	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+BASE_PLATFORM=v9_3x8c
+SETTINGS_FILE="settings_shapeoko375_dual.h"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -371,9 +371,43 @@ DD		= dd
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
+GIT     ?= git
 
 SHELL = bash
+
+# Here we use some heuristics to find the OS.
+# We only use this now for fiding if we're on windows.
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+ifneq (,$(findstring WINDOWS,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+ifneq (,$(findstring Atmel Studio,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+
+UNAME := $(shell uname -s)
+
+ifeq (Darwin,${UNAME})
+OS = OSX
+else
+ifeq (Linux,${UNAME})
+OS = LINUX
+endif #LINUX
+endif #Darwin
+
+
 PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+
+endif #Atmel Studio
+endif #cygdrive
+endif #WINDOWS
+
+export PATH
 
 
 # ---------------------------------------------------------------------------------------
@@ -472,8 +506,11 @@ MKTOOLS:
 	@echo Looking for tools...
 	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
 
-GIT_VERSION = $(shell git describe --abbrev=4 --dirty --always --tags)
-GIT_EXACT_VERSION = $(shell git describe --abbrev=0 --tags)
+$(info Make: $(PATH))
+GIT_LOCATED = $(GIT)
+$(info Git: $(GIT_LOCATED))
+GIT_VERSION = $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
+GIT_EXACT_VERSION = $(shell $(GIT) describe --abbrev=0 --tags)
 
 # Push the git version into the code -- the ""s must be escaped and make it into the code intact
 DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
