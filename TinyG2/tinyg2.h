@@ -40,7 +40,7 @@
 // You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
 
 //#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION
-#define TINYG_FIRMWARE_BUILD            089.01 // labeled as a compile w/o a build number
+#define TINYG_FIRMWARE_BUILD            089.02 // labeled as a compile w/o a build number
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 //#ifndef TINYG_FIRMWARE_BUILD
 //#endif
