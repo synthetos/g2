@@ -1,10 +1,9 @@
 /*
- * http://tinkerin.gs/
+ * G2v9k-pinout.h - tinyg2 board pinout specification
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Robert Giseburt
- * Copyright (c) 2013 - 2014 Alden S. Hart Jr.
- *
- * This file is part of the Motate Library.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the

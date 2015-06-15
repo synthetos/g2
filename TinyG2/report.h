@@ -34,6 +34,7 @@
 #define NV_STATUS_REPORT_LEN NV_MAX_OBJECTS 	// max number of status report elements - see cfgArray
 												// **** must also line up in cfgArray, se00 - seXX ****
 
+#define SR_THROTTLE_COUNT   4       // scale back filtered SR's during time-constrained intervals
 #define MIN_ARC_QR_INTERVAL 200		// minimum interval between QRs during arc generation (in system ticks)
 
 typedef enum {					    // status report enable, verbosity and request type
@@ -59,15 +60,16 @@ typedef struct srSingleton {
 
 	/*** config values (PUBLIC) ***/
 	srVerbosity status_report_verbosity;
-	uint32_t status_report_interval;					// in milliseconds
+	uint32_t status_report_interval;                    // in milliseconds
 
 	/*** runtime values (PRIVATE) ***/
-	uint8_t status_report_request;						// flag that SR has been requested, and what type
-	uint32_t status_report_systick;						// SysTick value for next status report
+	srVerbosity status_report_request;                  // flag that SR has been requested, and what type
+	uint32_t status_report_systick;                     // SysTick value for next status report
     index_t index_of_stat_variable;                     // like it says, the index of the "stat" variable
-	index_t stat_index;									// table index value for stat - determined during initialization
-	index_t status_report_list[NV_STATUS_REPORT_LEN];	// status report elements to report
-	float status_report_value[NV_STATUS_REPORT_LEN];	// previous values for filtered reporting
+	index_t stat_index;                                 // table index value for stat - determined during initialization
+    uint8_t throttle_counter;                           // slow down SRs when in a constrained time (not phat_city)
+	index_t status_report_list[NV_STATUS_REPORT_LEN];   // status report elements to report
+	float status_report_value[NV_STATUS_REPORT_LEN];    // previous values for filtered reporting
 
 } srSingleton_t;
 
@@ -87,16 +89,11 @@ typedef struct qrSingleton {		// data for queue reports
 
 } qrSingleton_t;
 
-typedef struct rxSingleton {
-	uint8_t rx_report_requested;
-	uint16_t space_available;		// space available in usb rx buffer at time of request
-} rxSingleton_t;
-
 /**** Externs - See report.c for allocation ****/
 
 extern srSingleton_t sr;
 extern qrSingleton_t qr;
-extern rxSingleton_t rx;
+//extern rxSingleton_t rx;
 
 /**** Function Prototypes ****/
 
@@ -110,7 +107,7 @@ void rpt_print_system_ready_message(void);
 
 void sr_init_status_report(void);
 stat_t sr_set_status_report(nvObj_t *nv);
-stat_t sr_request_status_report(uint8_t request_type);
+stat_t sr_request_status_report(cmStatusReportRequest request_type);
 stat_t sr_status_report_callback(void);
 stat_t sr_run_text_status_report(void);
 

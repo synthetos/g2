@@ -53,7 +53,7 @@
 typedef uint8_t stat_t;
 extern stat_t status_code;
 
-#define MESSAGE_LEN 80                  // global message string storage allocation
+#define GLOBAL_STRING_LEN 256  // allow sufficient space for JSON responses and message strings
 extern char global_string_buf[];
 
 char *get_status_message(stat_t status);
@@ -106,8 +106,8 @@ char *get_status_message(stat_t status);
 #define	STAT_FLOAT_IS_NAN 33
 #define	STAT_PERSISTENCE_ERROR 34
 #define	STAT_BAD_STATUS_REPORT_SETTING 35
+#define	STAT_FAILED_GET_PLANNER_BUFFER 36
 /*
-#define	STAT_ERROR_36 36
 #define	STAT_ERROR_37 37
 #define	STAT_ERROR_38 38
 #define	STAT_ERROR_39 39
@@ -413,7 +413,7 @@ static const char stat_32[] PROGMEM = "Float is infinite";
 static const char stat_33[] PROGMEM = "Float is NAN";
 static const char stat_34[] PROGMEM = "Persistence error";
 static const char stat_35[] PROGMEM = "Bad status report setting";
-static const char stat_36[] PROGMEM = "36";
+static const char stat_36[] PROGMEM = "Failed to get planner buffer";
 static const char stat_37[] PROGMEM = "37";
 static const char stat_38[] PROGMEM = "38";
 static const char stat_39[] PROGMEM = "39";

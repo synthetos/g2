@@ -42,7 +42,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION       2000000					// centripetal acceleration around corners - larger is faster
+#define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
@@ -57,9 +57,6 @@
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
-
-#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
-#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
 
 // Communications and reporting settings
 
@@ -147,24 +144,20 @@
 
 // *** axis settings **********************************************************************************
 
-#define JUNCTION_DEVIATION_XY       0.1                     // larger is faster
-#define JUNCTION_DEVIATION_Z        0.01                    // larger is faster
-#define JUNCTION_DEVIATION_ABC      0.5                     // larger is faster
-
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              50000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel for soft limits
 #define X_TRAVEL_MAX                420                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  10000                   // xjm  yes, that's "5 billion" mm/(min^3)
+//#define X_JERK_MAX                  500                   // xjm  yes, that's "5 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED           20000                   // xjh
-#define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  minus means move to minimum switch
 #define X_LATCH_VELOCITY            100                     // xlv  mm/min
-#define X_LATCH_BACKOFF             20                      // xlb  mm
-#define X_ZERO_BACKOFF              3                       // xzb  mm
+#define X_LATCH_BACKOFF             3                       // xlb  mm
+#define X_ZERO_BACKOFF              2                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
 #define Y_VELOCITY_MAX              50000
@@ -172,28 +165,27 @@
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                420
 #define Y_JERK_MAX                  10000
+//#define Y_JERK_MAX                  500
 #define Y_JERK_HIGH_SPEED           20000
-#define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            100
-#define Y_LATCH_BACKOFF             20
-#define Y_ZERO_BACKOFF              3
+#define Y_LATCH_BACKOFF             3
+#define Y_ZERO_BACKOFF              2
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #define Z_VELOCITY_MAX              1200
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX                0
 #define Z_TRAVEL_MIN                -95
-#define Z_JERK_MAX                  500                 // was 100
-#define Z_JERK_HIGH_SPEED           500
-#define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
+#define Z_JERK_MAX                  500
+#define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
-#define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             10
+#define Z_LATCH_VELOCITY            25
+#define Z_LATCH_BACKOFF             3
 #define Z_ZERO_BACKOFF              2
 
 #define A_AXIS_MODE                 AXIS_STANDARD
@@ -203,7 +195,6 @@
 #define A_TRAVEL_MAX                -1					// same value means infinite, no limit
 #define A_JERK_MAX                  24000				// yes, 24 billion
 #define A_JERK_HIGH_SPEED           A_JERK_MAX
-#define A_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define A_RADIUS                    1.0
 #define A_HOMING_INPUT              0
 #define A_HOMING_DIR                0
@@ -219,7 +210,6 @@
 #define B_TRAVEL_MIN                -1
 #define B_JERK_MAX                  20
 #define B_JERK_HIGH_SPEED           B_JERK_MAX
-#define B_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define B_RADIUS                    1
 #define B_HOMING_INPUT              0
 #define B_HOMING_DIR                0
@@ -235,7 +225,6 @@
 #define C_TRAVEL_MIN                -1
 #define C_JERK_MAX                  20
 #define C_JERK_HIGH_SPEED           C_JERK_MAX
-#define C_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define C_RADIUS                    1
 #define C_HOMING_INPUT              0
 #define C_HOMING_DIR                0

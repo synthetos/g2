@@ -130,7 +130,8 @@ stat_t cm_jogging_cycle_callback(void)
 	if (jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true) {
 	    return (STAT_EAGAIN);	                                    // sync to planner move ends
     }
-	if (jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+//	if (jog.func == _jogging_axis_ramp_jog && mp_get_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+	if (jog.func == _jogging_axis_ramp_jog && mp_planner_is_full()) {
 	    return (STAT_EAGAIN);                                       // prevent flooding the queue with jog moves
     }
 	return (jog.func(jog.axis));									// execute the current jogging move

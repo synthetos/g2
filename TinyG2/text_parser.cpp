@@ -150,26 +150,34 @@ static const char prompt_err[] PROGMEM = "tinyg [%s] err[%d]: %s: %s ";
 
 void text_response(const stat_t status, char *buf)
 {
-	if (txt.text_verbosity == TV_SILENT) return;	// skip all this
+	if (txt.text_verbosity == TV_SILENT) {	// skip all this
+         return;
+    }
+
+    char buffer[128];
+    char *p = buffer;
 
 	char units[] = "inch";
-	if (cm_get_units_mode(MODEL) != INCHES) { strcpy(units, "mm"); }
+	if (cm_get_units_mode(MODEL) != INCHES) {
+        strcpy(units, "mm");
+    }
 
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		fprintf_P(stderr, prompt_ok, units);
+		p += sprintf_P(p, prompt_ok, (char *)units);
 	} else {
-		fprintf_P(stderr, prompt_err, units, (int)status, get_status_message(status), buf);
+		p += sprintf_P(p, prompt_err, (char *)units, (int)status, get_status_message(status), buf);
 	}
 	nvObj_t *nv = nv_body+1;
 
 	if (nv_get_type(nv) == NV_TYPE_MESSAGE) {
-		fprintf(stderr, (char *)*nv->stringp);
+		p += sprintf(p, (char *)*nv->stringp);
 	}
-	fprintf(stderr, "\n");
+	sprintf(p, "\n");
+    xio_writeline(buffer);
 }
 
 /***** PRINT FUNCTIONS ********************************************************
- * json_print_list() - command to select and produce a JSON formatted output
+ * text_print_list() - command to select and produce a JSON formatted output
  * text_print_inline_pairs()
  * text_print_inline_values()
  * text_print_multiline_formatted()
@@ -189,41 +197,44 @@ void text_print_inline_pairs(nvObj_t *nv)
 {
 	uint32_t *v = (uint32_t*)&nv->value;
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch ((int8_t)nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
-			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
-			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:    { preprocess_float(nv);
-								  fntoa(global_string_buf, nv->value, nv->precision);
-								  fprintf_P(stderr,PSTR("%s:%s"), nv->token, global_string_buf) ; break;
-								}
-			case TYPE_INT:      { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;}
-			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s:%s"), nv->token, *nv->stringp); break;}
-			case TYPE_BOOL:     { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;} // print as 0 or 1, do t & f later
-			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%s:%lu"), nv->token, *v); break;}
-//			case TYPE_ARRAY:    { <not implemented> ; break;}
-		}
-		if ((nv = nv->nx) == NULL) return;
-		if (nv->valuetype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
+    	switch ((int8_t)nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
+        	case TYPE_EMPTY:    { printf_P(PSTR("\n")); return; }
+        	case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
+        	case TYPE_FLOAT:    { preprocess_float(nv);
+            	                  floattoa(global_string_buf, nv->value, nv->precision);
+            	                  printf_P(PSTR("%s:%s"), nv->token, global_string_buf) ; break;
+        	}
+        	case TYPE_INT:      { printf_P(PSTR("%s:%1.0f"), nv->token, nv->value); break;}
+        	case TYPE_STRING:   { printf_P(PSTR("%s:%s"), nv->token, *nv->stringp); break;}
+        	case TYPE_BOOL:     { printf_P(PSTR("%s:%1.0f"), nv->token, nv->value); break;} // print as 0 or 1, do t & f later
+        	case TYPE_DATA:     { printf_P(PSTR("%s:%lu"), nv->token, *v); break;}
+        //  case TYPE_ARRAY:    { <not implemented> ; break;}
+            default:            { return; }
+    	}
+    	if ((nv = nv->nx) == NULL) return;
+    	if (nv->valuetype != TYPE_EMPTY) { printf_P(PSTR(","));}
 	}
+
 }
 
 void text_print_inline_values(nvObj_t *nv)
 {
 	uint32_t *v = (uint32_t*)&nv->value;
 	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch ((int8_t)nv->valuetype) {
-			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:    { preprocess_float(nv);
-								  fntoa(global_string_buf, nv->value, nv->precision);
-								  fprintf_P(stderr,PSTR("%s"), global_string_buf) ; break;
-								}
-			case TYPE_INT:     { fprintf_P(stderr,PSTR("%1.0f"), nv->value); break;}
-			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%lu"), *v); break;}
-			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s"), *nv->stringp); break;}
-			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
-		}
-		if ((nv = nv->nx) == NULL) return;
-		if (nv->valuetype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
+    	switch ((int8_t)nv->valuetype) {
+        	case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
+        	case TYPE_FLOAT:    { preprocess_float(nv);
+            	                  floattoa(global_string_buf, nv->value, nv->precision);
+            	                  printf_P(PSTR("%s"), global_string_buf) ; break;
+        	}
+        	case TYPE_INT:      { printf_P(PSTR("%1.0f"), nv->value); break;}
+        	case TYPE_DATA:     { printf_P(PSTR("%lu"), *v); break;}
+        	case TYPE_STRING:   { printf_P(PSTR("%s"), *nv->stringp); break;}
+        	case TYPE_EMPTY:    { printf_P(PSTR("\n")); return; }
+            default:            { return; }
+    	}
+    	if ((nv = nv->nx) == NULL) return;
+    	if (nv->valuetype != TYPE_EMPTY) { printf_P(PSTR(","));}
 	}
 }
 
@@ -265,15 +276,14 @@ void tx_print(nvObj_t *nv) {
  *
  *	NOTE: format's are passed in as flash strings (PROGMEM)
  */
-
-void text_print_nul(nvObj_t *nv, const char *format) { fprintf_P(stderr, format);}	// just print the format string
-void text_print_str(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, *nv->stringp);}
-void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
-void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
+void text_print_nul(nvObj_t *nv, const char *format) { printf_P(format);}	// just print the format string
+void text_print_str(nvObj_t *nv, const char *format) { printf_P(format, *nv->stringp);}
+void text_print_int(nvObj_t *nv, const char *format) { printf_P(format, (uint32_t)nv->value);}
+void text_print_flt(nvObj_t *nv, const char *format) { printf_P(format, nv->value);}
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
-	fprintf_P(stderr, format, nv->value, units);
+	printf_P(format, nv->value, units);
 }
 
 void text_print(nvObj_t *nv, const char *format) {

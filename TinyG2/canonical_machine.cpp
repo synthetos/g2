@@ -130,21 +130,42 @@ static int8_t _get_axis_type(const index_t index);
  **** CODE *************************************************************************
  ***********************************************************************************/
 
-/********************************
- * Internal getters and setters *
- ********************************/
+/*************************************
+ * Internal getters and setters      *
+ * Canonical Machine State functions *
+ *************************************/
 /*
- * Canonical Machine State functions
- *
- * cm_get_combined_state() - combines raw states into something a user might want to see
+ * cm_set_motion_state() - adjusts active model pointer as well
+ */
+void cm_set_motion_state(const cmMotionState motion_state)
+{
+    cm.motion_state = motion_state;
+
+    switch (motion_state) {
+        case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
+        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
+        case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
+        case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
+    }
+}
+
+/*
  * cm_get_machine_state()
  * cm_get_motion_state()
  * cm_get_cycle_state()
  * cm_get_hold_state()
  * cm_get_homing_state()
- * cm_set_motion_state() - adjusts active model pointer as well
+ */
+cmMachineState  cm_get_machine_state() { return cm.machine_state;}
+cmCycleState    cm_get_cycle_state()   { return cm.cycle_state;}
+cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
+cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
+cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
+
+/*
+ * cm_get_combined_state() - combines raw states into something a user might want to see
  *
- * NOTE_1:
+ *  Note:
  *  On issuing a gcode command we call cm_cycle_start() before the motion gets queued. We don't go
  *  to MOTION_RUN until the command is executed by mp_exec_aline(), planned, queued, and started.
  *  So MOTION_STOP must actually return COMBINED_RUN to address this case, even though under some
@@ -173,39 +194,21 @@ cmCombinedState cm_get_combined_state()
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots bad");    // "mots has impossible value"
+                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");    // "mots has impossible value"
                             return (COMBINED_PANIC);
                         }
                     }
                 }
                 default: {
-                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs bad");    // "cycs has impossible value"
+                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() cycs bad");    // "cycs has impossible value"
                     return (COMBINED_PANIC);
                 }
             }
         }
         default: {
-            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs bad");    // "macs has impossible value"
+            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() macs bad");    // "macs has impossible value"
             return (COMBINED_PANIC);
         }
-    }
-}
-
-cmMachineState  cm_get_machine_state() { return cm.machine_state;}
-cmCycleState    cm_get_cycle_state()   { return cm.cycle_state;}
-cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
-cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
-cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
-
-void cm_set_motion_state(const cmMotionState motion_state)
-{
-    cm.motion_state = motion_state;
-
-    switch (motion_state) {
-        case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
-        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
-        case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
-        case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
     }
 }
 
@@ -245,14 +248,14 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
-	gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-	cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
+    gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
+    cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
 {
-	cm.gm.linenum = linenum;				// you must first set the model line number,
-	nv_add_object((const char *)"n");	// then add the line number to the nv list
+    cm.gm.linenum = linenum;				// you must first set the model line number,
+    nv_add_object((const char *)"n");	// then add the line number to the nv list
 }
 
 /***********************************************************************************
@@ -370,19 +373,19 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
 
 float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
-	float position;
+    float position;
 
-	if (gcode_state == MODEL) {
-		position = cm.gmx.position[axis] - cm_get_active_coord_offset(axis);
-	} else {
-		position = mp_get_runtime_work_position(axis);
-	}
+    if (gcode_state == MODEL) {
+        position = cm.gmx.position[axis] - cm_get_active_coord_offset(axis);
+    } else {
+        position = mp_get_runtime_work_position(axis);
+    }
     if (axis <= AXIS_Z) {
-	    if (gcode_state->units_mode == INCHES) {
+        if (gcode_state->units_mode == INCHES) {
             position /= MM_PER_INCH;
         }
     }
-	return (position);
+    return (position);
 }
 
 /***********************************************************************************
@@ -463,7 +466,7 @@ stat_t cm_deferred_write_callback()
 //        registers we moved this block into its own function so that we get a fresh stack push
 // ALDEN: This shows up in avr-gcc 4.7.0 and avr-libc 1.8.0
 
-static float _calc_ABC(const uint8_t axis, const float target[], const bool flag[])
+static float _calc_ABC(const uint8_t axis, const float target[])
 {
 	if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
 		return(target[axis]);	// no mm conversion - it's in degrees
@@ -496,7 +499,7 @@ void cm_set_model_target(const float target[], const bool flag[])
 		if (!flag[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
 			continue;		// skip axis if not flagged for update or its disabled
 		} else {
-			tmp = _calc_ABC(axis, target, flag);
+			tmp = _calc_ABC(axis, target);
 		}
 		if (cm.gm.distance_mode == ABSOLUTE_MODE) {
 			cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis); // sacidu93's fix to Issue #22
@@ -519,29 +522,29 @@ void cm_set_model_target(const float target[], const bool flag[])
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
-	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_alarm(status, "soft_limits"));               // throw an alarm
+    cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
+    copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
+    return (cm_alarm(status, "soft_limits"));               // throw an alarm
 }
 
 stat_t cm_test_soft_limits(const float target[])
 {
-	if (cm.soft_limit_enable == true) {
-		for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-			if (cm.homed[axis] != true) continue;								// skip axis if not homed
-			if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) continue;	// skip axis if identical
-			if (fabs(cm.a[axis].travel_min) > DISABLE_SOFT_LIMIT) continue;		// skip min test if disabled
-			if (fabs(cm.a[axis].travel_max) > DISABLE_SOFT_LIMIT) continue;		// skip max test if disabled
+    if (cm.soft_limit_enable == true) {
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            if (cm.homed[axis] != true) { continue; }                               // skip axis if not homed
+            if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) { continue; }  // skip axis if identical
+            if (fabs(cm.a[axis].travel_min) > DISABLE_SOFT_LIMIT) { continue; }     // skip min test if disabled
+            if (fabs(cm.a[axis].travel_max) > DISABLE_SOFT_LIMIT) { continue; }     // skip max test if disabled
 
-			if (target[axis] < cm.a[axis].travel_min) {
-				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
-			}
-			if (target[axis] > cm.a[axis].travel_max) {
-				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
-			}
-		}
-	}
-	return (STAT_OK);
+            if (target[axis] < cm.a[axis].travel_min) {
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
+            }
+            if (target[axis] > cm.a[axis].travel_max) {
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
+            }
+        }
+    }
+    return (STAT_OK);
 }
 
 /*************************************************************************
@@ -565,39 +568,39 @@ stat_t cm_test_soft_limits(const float target[])
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
-	memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
-	memset(&cm.gn, 0, sizeof(GCodeInput_t));
-	memset(&cm.gf, 0, sizeof(GCodeFlags_t));
+    memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
+    memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
+    memset(&cm.gn, 0, sizeof(GCodeInput_t));
+    memset(&cm.gf, 0, sizeof(GCodeFlags_t));
 
-	canonical_machine_init_assertions();		// establish assertions
-	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
-	cm_arc_init();                              // Note: spindle and coolant inits are independent
+    canonical_machine_init_assertions();		// establish assertions
+    ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
+    cm_arc_init();                              // Note: spindle and coolant inits are independent
 }
 
 void canonical_machine_reset()
 {
 	// set gcode defaults
-	cm_set_units_mode(cm.default_units_mode);
-	cm_set_coord_system(cm.default_coord_system);
-	cm_select_plane(cm.default_select_plane);
-	cm_set_path_control(cm.default_path_control);
-	cm_set_distance_mode(cm.default_distance_mode);
-	cm_set_arc_distance_mode(INCREMENTAL_MODE);  // always the default
-	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
-    cm_reset_overrides();                       // setup overrides to initial conditions
+    cm_set_units_mode(cm.default_units_mode);
+    cm_set_coord_system(cm.default_coord_system);
+    cm_select_plane(cm.default_select_plane);
+    cm_set_path_control(MODEL, cm.default_path_control);
+    cm_set_distance_mode(cm.default_distance_mode);
+    cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
+    cm_reset_overrides();                           // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
 
-	// reset request flags
-	cm.queue_flush_state = FLUSH_OFF;
-	cm.end_hold_requested = false;
-    cm.limit_requested = 0;                 // resets switch closures that occurred during initialization
-    cm.safety_interlock_disengaged = 0;     // ditto
-    cm.safety_interlock_reengaged = 0;      // ditto
-    cm.shutdown_requested = 0;              // ditto
+    // reset request flags
+    cm.queue_flush_state = FLUSH_OFF;
+    cm.end_hold_requested = false;
+    cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
+    cm.safety_interlock_disengaged = 0;         // ditto
+    cm.safety_interlock_reengaged = 0;          // ditto
+    cm.shutdown_requested = 0;                  // ditto
 
-	// set initial state and signal that the machine is ready for action
+    // set initial state and signal that the machine is ready for action
     cm.cycle_state = CYCLE_OFF;
     cm.motion_state = MOTION_STOP;
     cm.hold_state = FEEDHOLD_OFF;
@@ -627,7 +630,7 @@ stat_t canonical_machine_test_assertions(void)
     if ((BAD_MAGIC(cm.magic_start)) || (BAD_MAGIC(cm.magic_end)) ||
         (BAD_MAGIC(cm.gmx.magic_start)) || (BAD_MAGIC(cm.gmx.magic_end)) ||
         (BAD_MAGIC(arc.magic_start)) || (BAD_MAGIC(arc.magic_end))) {
-        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "cm magic numbers"));
+        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
     }
     return (STAT_OK);
 }
@@ -926,10 +929,10 @@ stat_t cm_set_coord_system(const uint8_t coord_system)
 {
     cm.gm.coord_system = (cmCoordSystem)coord_system;
 
-	float value[] = { (float)coord_system,0,0,0,0,0 };	    // pass coordinate system in value[0] element
+    float value[] = { (float)coord_system,0,0,0,0,0 };	    // pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
-	return (STAT_OK);
+    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    return (STAT_OK);
 }
 
 static void _exec_offset(float *value, bool *flag)
@@ -1031,13 +1034,13 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (flag[axis]) {
 			cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-	            cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
+                                         cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
 		}
 	}
 	// now pass the offset to the callback - setting the coordinate system also applies the offsets
 	float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 }; // pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_offset, value, flags);				  // second vector is not used
+	mp_queue_command(_exec_offset, value, flags);
 	return (STAT_OK);
 }
 
@@ -1089,10 +1092,10 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     }
 
 	cm_set_model_target(target, flags);
-	ritorno (cm_test_soft_limits(cm.gm.target)); 	// test soft limits; exit if thrown
-	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
-	cm_cycle_start();								// required for homing & other cycles
-	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
+	ritorno (cm_test_soft_limits(cm.gm.target));    // test soft limits; exit if thrown
+	cm_set_work_offsets(&cm.gm);                    // capture the fully resolved offsets to the state
+	cm_cycle_start();                               // required for homing & other cycles
+	stat_t status = mp_aline(&cm.gm);               // send the move to the planner
 	cm_finalize_move();
 	if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
@@ -1123,7 +1126,8 @@ stat_t _goto_stored_position(float target2[], const float target[], const bool f
             target2[i] -= target[i];
         }
     }
-    while (mp_get_planner_buffers_available() == 0);// Make sure you have an available buffer
+    while (mp_planner_is_full());                   // Make sure you have available buffers
+
     bool flags2[] = { 1,1,1,1,1,1 };
     return (cm_straight_traverse(target2, flags2)); // Go to programmed endpoint
 }
@@ -1187,14 +1191,15 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode)
 }
 
 /*
- * cm_set_path_control() - G61, G61.1, G64 (affects MODEL only)
+ * cm_set_path_control() - G61, G61.1, G64
  */
 
-stat_t cm_set_path_control(const uint8_t mode)
+stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
 {
-	cm.gm.path_control = (cmPathControl)mode;
+	gcode_state->path_control = (cmPathControl)mode;
 	return (STAT_OK);
 }
+
 
 /*******************************
  * Machining Functions (4.3.6) *
@@ -1227,7 +1232,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     // it's legal for a G1 to have no axis words but we don't want to process it
     if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
           flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-        return(STAT_OK);
+          return(STAT_OK);
     }
 
 	cm_set_model_target(target, flags);
@@ -1312,59 +1317,121 @@ void cm_message(const char *message)
 void cm_reset_overrides()
 {
     cm.gmx.m48_enable = true;
-    cm.gmx.mfo_enable = false;
-    cm.gmx.mfo_parameter = 1.0;
+    cm.gmx.mfo_enable = false;  // feed rate overrides
+    cm.gmx.mfo_factor = 1.0;
+    cm.gmx.mto_enable = false;  // traverse overrides
+    cm.gmx.mto_factor = 1.0;
 }
 
+
+/*
+static void _exec_feed_override(const bool m48_enable, const bool m50_enable, const float override_factor)
+{
+
+}
+*/
 /*
  * cm_m48_enable() - M48, M49
  *
  * M48 is the master enable for manual feedrate override and spindle override
- * If M48 is asserted M50 (mfo) and M51 (sso) settings are in effect
- * If M49 is asserted M50 (mfo) and M51 (sso) settings are in ignored
+ * If M48 is asserted M50 (mfo), M50.1 (mto) and M51 (sso) settings are in effect
+ * If M49 is asserted M50 (mfo), M501. (mto) and M51 (sso) settings are in ignored
  *
  * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
  */
-
+/*  M48state    M48new      M50state                action (notes):
+ *  disable     disable     disable                 no action, no state change
+ *  disable     disable     ENABLE                  no action, no state change
+ *
+ *  disable     ENABLE      disable                 no action, no state change
+ *  disable     ENABLE      ENABLE                  start ramp w/stored P value
+ *
+ *  ENABLE      disable     disable                 no action, no state change
+ *  ENABLE      disable     ENABLE                  end ramp
+ *
+ *  ENABLE      ENABLE      disable                 no action, no state change
+ *  ENABLE      ENABLE      ENABLE                  no action, no state change
+ */
 stat_t cm_m48_enable(uint8_t enable)			// M48, M49
 {
-	cm.gmx.m48_enable = enable;
+    // handle changes to feed override given new state of m48/m49
+
+	cm.gmx.m48_enable = enable;                 // update state
 	return (STAT_OK);
 }
 
 /*
  * cm_feed_rate_override_enable() - M50
  *
- * M50 enables manual feedrate override and optionally sets the P override parameter.
- * P is expressed as 10% to N% of programmed feedrate, as a value from 0.100 to N.000
+ *  M50 enables manual feedrate override and the optional P override parameter.
+ *  P is expressed as M% to N% of programmed feedrate, typically a value from 0.05 to 2.000.
+ *  P may also be zero or missing. Behaviors:
  *
- *  - P = 0. Turn off feedrate override. Do not change stored P value
- *  - P < minimum or P > maximum parameter. Error is returned. No action taken
- *  - M50 has no feedrate parameter. Turn on feedrate override to current P value
- *
- *  M50 is set OFF on initialization and program end
- *  P value is set to 1.000 on initialization and program end
- *
+ *    P < minimum or P > maximum parameter, and not zero. Return error, no state change or action
+ *    P omitted. Turn on feedrate override to current stored P value
+ *    P = 0. Turn off feedrate override. (Do not change stored P value
+ *    P = N. Turn on feedrate override to value of N, preserve new P value
  * See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
+ *
+ *  M48 is set ON on initialization and program end
+ *  M50 is set OFF on initialization and program end
+ *  P is set to 1.000 on initialization and program end (there is always a valid value)
  */
-
+/* Implementation Notes:
+ *
+ * To do this correctly need to look not just at new values, but at current state
+ * and transitions. See m48 for M48 transitions
+ *
+ *  M48state    M50enable   M50new   M50 endstate:  action (notes):
+ *  disable     disable     M50 P0    disable       no action or state change
+ *  disable     disable     M50       ENABLE        no action (m48 is disabled)
+ *  disable     disable     M50 Pn    ENABLE        store new P value (no other action)
+ *
+ *  disable     ENABLE      M50 P0    disable       no action
+ *  disable     ENABLE      M50       ENABLE        no action (m48 is disabled)
+ *  disable     ENABLE      M50 Pn    ENABLE        store new P value (no other action)
+ *
+ *  ENABLE      disable     M50 P0    disable       no action or state change
+ *  ENABLE      disable     M50       ENABLE        start ramp w/stored P value
+ *  ENABLE      disable     M50 Pn    ENABLE        start ramp w/new P value; store P value
+ *
+ *  ENABLE      ENABLE      M50 P0    disable       end ramp
+ *  ENABLE      ENABLE      M50       ENABLE        no action
+ *  ENABLE      ENABLE      M50 Pn    ENABLE        start ramp w/new P value; store P value
+ *                                                  (Note: new ramp will supercede any existing ramp)
+ */
 stat_t cm_mfo_enable(uint8_t enable)	        // M50
 {
-	if (fp_NOT_ZERO(cm.gf.parameter)) {         // parameter is not present in Gcode block
-        cm.gmx.mfo_enable = false;
-
-    } else {
-        if (cm.gn.parameter < MIN_MANUAL_FEEDRATE_OVERRIDE) {
-            return (STAT_INPUT_VALUE_TOO_SMALL);
+    bool new_enable = true;
+    bool new_override = false;
+    if (cm.gf.parameter) {                      // if parameter is present in Gcode block
+        if (fp_ZERO(cm.gn.parameter)) {
+            new_enable = false;                 // P0 disables override
+        } else {
+            if (cm.gn.parameter < FEED_OVERRIDE_MIN) {
+                return (STAT_INPUT_VALUE_TOO_SMALL);
+            }
+            if (cm.gn.parameter > FEED_OVERRIDE_MAX) {
+                return (STAT_INPUT_VALUE_TOO_LARGE);
+            }
+		    cm.gmx.mfo_factor = cm.gn.parameter; // it validates - store it.
+            new_override = true;
         }
-        if (cm.gn.parameter > MAX_MANUAL_FEEDRATE_OVERRIDE) {
-            return (STAT_INPUT_VALUE_TOO_LARGE);
+    }
+    if (cm.gmx.m48_enable) {                    // if master enable is ON
+        if (new_enable && (new_override || !cm.gmx.mfo_enable)) {   // 3 cases to start a ramp
+            mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm.gmx.mfo_factor);
+        } else if (cm.gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
+            mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
         }
-        cm.gmx.mfo_enable = true;
-		cm.gmx.mfo_parameter = cm.gn.parameter;
-	}
+    }
+    cm.gmx.mfo_enable = new_enable;             // always update the enable state
 	return (STAT_OK);
 }
+
+//    if ((new_enable && new_override) || (new_enable && !cm.gmx.mfo_enable)) {
+//        if (!(cm.gmx.mfo_enable && new_override)) {
+
 
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *
@@ -1611,8 +1678,9 @@ static void _exec_program_finalize(float *value, bool *flag)
 	cm_set_motion_state(MOTION_STOP);
 
 	// Allow update in the alarm state, to accommodate queue flush (RAS)
-	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) /*&&
-	    (cm.machine_state != MACHINE_ALARM)*/ && (cm.machine_state != MACHINE_SHUTDOWN)) { // OMC
+	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
+//        (cm.machine_state != MACHINE_ALARM) &&        // omitted by OMC (RAS)
+        (cm.machine_state != MACHINE_SHUTDOWN)) {
 		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
@@ -1751,8 +1819,8 @@ static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2,
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";
-static const char msg_cycs2[] PROGMEM = "Probe";
-static const char msg_cycs3[] PROGMEM = "Homing";
+static const char msg_cycs2[] PROGMEM = "Homing";
+static const char msg_cycs3[] PROGMEM = "Probe";
 static const char msg_cycs4[] PROGMEM = "Jog";
 static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
 
@@ -1787,7 +1855,7 @@ static const char msg_g58[] PROGMEM = "G58 - coordinate system 5";
 static const char msg_g59[] PROGMEM = "G59 - coordinate system 6";
 static const char *const msg_coor[] PROGMEM = { msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59 };
 
-static const char msg_g00[] PROGMEM = "G0  - linear traverse (seek)";
+static const char msg_g00[] PROGMEM = "G0  - linear traverse";
 static const char msg_g01[] PROGMEM = "G1  - linear feed";
 static const char msg_g02[] PROGMEM = "G2  - clockwise arc feed";
 static const char msg_g03[] PROGMEM = "G3  - counter clockwise arc feed";
@@ -2037,12 +2105,14 @@ stat_t cm_set_hi(nvObj_t *nv)
 	return (STAT_OK);
 }
 
-/**** Jerk functions
+/**** Velocity and Jerk functions
  * cm_get_axis_jerk() - returns jerk for an axis
  * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
  *
- * cm_set_xjm()		  - set jerk max value - called from dispatch table
- * cm_set_xjh()		  - set jerk homing value - called from dispatch table
+ * cm_set_vm()		  - set velocity max value - called from dispatch table
+ * cm_set_fr()		  - set feedrate max value - called from dispatch table
+ * cm_set_jm()		  - set jerk max value - called from dispatch table
+ * cm_set_jh()		  - set jerk homing value - called from dispatch table
  *
  *	Jerk values can be rather large, often in the billions. This makes for some pretty big
  *	numbers for people to deal with. Jerk values are stored in the system in truncated format;
@@ -2065,6 +2135,30 @@ void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
 }
 
+stat_t cm_set_vm(nvObj_t *nv)
+{
+    uint8_t axis = _get_axis(nv->index);
+    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
+    	set_flt(nv);
+    } else {
+    	set_flu(nv);
+    }
+	cm.a[axis].recip_velocity_max = 1/nv->value;
+	return(STAT_OK);
+}
+
+stat_t cm_set_fr(nvObj_t *nv)
+{
+    uint8_t axis = _get_axis(nv->index);
+    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
+    	set_flt(nv);
+    } else {
+    	set_flu(nv);
+    }
+    cm.a[axis].recip_feedrate_max = 1/nv->value;
+    return(STAT_OK);
+}
+
 stat_t cm_set_jm(nvObj_t *nv)
 {
 	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
@@ -2082,9 +2176,21 @@ stat_t cm_set_jh(nvObj_t *nv)
 
 stat_t cm_set_ja(nvObj_t *nv)
 {
-    if (nv->value > 1000) nv->value /= 1000000;
+    // Prescale it. Mostly for backwards compatibility with Junction Acceleration settings
+    if (nv->value > 10) nv->value /= 1000000;
+
+    stat_t status = STAT_OK;
+
+    if (nv->value < JUNCTION_AGGRESSION_MIN) {
+        nv->value = JUNCTION_AGGRESSION_MIN;
+        status = STAT_INPUT_VALUE_TOO_SMALL;
+    }
+    if (nv->value > JUNCTION_AGGRESSION_MAX) {
+        nv->value = JUNCTION_AGGRESSION_MAX;
+        status = STAT_INPUT_VALUE_TOO_LARGE;
+    }
     set_flt(nv);
-    return(STAT_OK);
+    return(status);
 }
 
 /*
@@ -2094,10 +2200,10 @@ stat_t cm_set_ja(nvObj_t *nv)
 
 stat_t cm_set_mfo(nvObj_t *nv)
 {
-    if (nv->value < MIN_MANUAL_FEEDRATE_OVERRIDE) {
+    if (nv->value < FEED_OVERRIDE_MIN) {
         return (STAT_INPUT_VALUE_TOO_SMALL);
     }
-    if (nv->value > MAX_MANUAL_FEEDRATE_OVERRIDE) {
+    if (nv->value > FEED_OVERRIDE_MAX) {
         return (STAT_INPUT_VALUE_TOO_LARGE);
     }
     set_flt(nv);
@@ -2106,10 +2212,10 @@ stat_t cm_set_mfo(nvObj_t *nv)
 
 stat_t cm_set_mto(nvObj_t *nv)
 {
-    if (nv->value < MIN_MANUAL_TRAVERSE_OVERRIDE) {
+    if (nv->value < TRAVERSE_OVERRIDE_MIN) {
         return (STAT_INPUT_VALUE_TOO_SMALL);
     }
-    if (nv->value > MAX_MANUAL_TRAVERSE_OVERRIDE) {
+    if (nv->value > TRAVERSE_OVERRIDE_MAX) {
         return (STAT_INPUT_VALUE_TOO_LARGE);
     }
     set_flt(nv);
@@ -2279,6 +2385,7 @@ const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
 const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
+
 const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled %10d [0=disable,1=enable]\n";
 const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab %2d [0=disable,1=enable]\n";
 const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
@@ -2290,6 +2397,7 @@ void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIV
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
+
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
 void cm_print_mfoe(nvObj_t *nv){ text_print(nv, fmt_mfoe);}     // TYPE INT
 void cm_print_mfo(nvObj_t *nv) { text_print(nv, fmt_mfo);}      // TYPE FLOAT
@@ -2321,27 +2429,27 @@ void cm_print_mto(nvObj_t *nv) { text_print(nv, fmt_mto);}      // TYPE FLOAT
  * 	cm_print_mpo() - print position with fixed unit display - always in Degrees or MM
  */
 
-const char fmt_Xam[] PROGMEM = "[%s%s] %s axis mode%18d %s\n";
-const char fmt_Xfr[] PROGMEM = "[%s%s] %s feedrate maximum%11.0f%s/min\n";
-const char fmt_Xvm[] PROGMEM = "[%s%s] %s velocity maximum%11.0f%s/min\n";
-const char fmt_Xtm[] PROGMEM = "[%s%s] %s travel maximum%17.3f%s\n";
-const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
-const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
-const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
-const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
-const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
-const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
-const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
-const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
-const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.2f%s/min\n";
-const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
-const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
-const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";
-const char fmt_cpos[] PROGMEM = "[%s%s] %s %s position%18.3f%s\n";
+static const char fmt_Xam[] PROGMEM = "[%s%s] %s axis mode%18d %s\n";
+static const char fmt_Xfr[] PROGMEM = "[%s%s] %s feedrate maximum%11.0f%s/min\n";
+static const char fmt_Xvm[] PROGMEM = "[%s%s] %s velocity maximum%11.0f%s/min\n";
+static const char fmt_Xtm[] PROGMEM = "[%s%s] %s travel maximum%17.3f%s\n";
+static const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
+static const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
+static const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
+static const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+static const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
+static const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
+static const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
+static const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
+static const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.2f%s/min\n";
+static const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
+static const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
+static const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";
+static const char fmt_cpos[] PROGMEM = "[%s%s] %s %s position%18.3f%s\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
 {
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
+	printf_P(format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
 }
 
 static void _print_axis_flt(nvObj_t *nv, const char *format)
@@ -2352,7 +2460,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, units);
+	printf_P(format, nv->group, nv->token, nv->group, nv->value, units);
 }
 
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
@@ -2363,7 +2471,7 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
+	printf_P(format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
 }
 
 static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
@@ -2371,19 +2479,19 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
 	if (axis >= AXIS_A) { units = DEGREES;}
-	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
+	printf_P(format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
 }
 
 static void _print_hom(nvObj_t *nv, const char *format)
 {
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
-	fprintf_P(stderr, format, axes[axis], nv->value);
+	printf_P(format, axes[axis], nv->value);
 }
 
 void cm_print_am(nvObj_t *nv)	// print axis mode with enumeration string
 {
-	fprintf_P(stderr, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
+	printf_P(fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
 	GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
 }
 

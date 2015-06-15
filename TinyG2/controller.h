@@ -51,24 +51,39 @@ typedef struct controllerSingleton {	// main TG controller struct
 	magic_t magic_start;				// magic number to test memory integrity
 	float null;							// dumping ground for items with no target
 
-    // settable parameters (from config)
-	uint8_t comm_mode;					// 0=text mode, 1=JSON mode
-	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
-
 	// system identification values
 	float fw_build;                     // tinyg firmware build number
 	float fw_version;                   // tinyg firmware version number
-	float config_version;               // tinyg configuration version for host / UI control
+//	float config_version;               // tinyg configuration version for host / UI control
 	float hw_platform;                  // tinyg hardware compatibility - platform type
 	float hw_version;                   // tinyg hardware compatibility - platform revision
 
 	// system state variables
 	csControllerState controller_state;
-	uint8_t state_usb0;
-	uint8_t state_usb1;
+	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint32_t led_timer;                 // used to flash indicator LED
 	uint32_t led_blink_rate;            // used to flash indicator LED
-	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
+
+	// communications (and other) state variables
+	uint8_t comm_mode;					// 0=text mode, 1=JSON mode
+
+#ifdef __ARM
+    uint8_t state_usb0;
+    uint8_t state_usb1;
+//	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
+#endif
+
+#ifdef __AVR
+    uint8_t primary_src;                // primary input source device
+    uint8_t secondary_src;              // secondary input source device
+    uint8_t default_src;                // default source device
+
+    uint16_t read_index;				// length of line being read
+    uint8_t led_state;		            // used by AVR IndicatorLed_toggle() in gpio.c
+    uint8_t usb_baud_flag;              // running a USB baudrate update sequence
+    uint8_t hard_reset_requested;       // flag to perform a hard reset
+    uint8_t bootloader_requested;       // flag to enter the bootloader
+#endif
 
 	// controller serial buffers
 	char *bufp;                         // pointer to primary or secondary in buffer

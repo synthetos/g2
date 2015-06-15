@@ -78,7 +78,7 @@ uint8_t run_test(nvObj_t *nv)
 */
 #endif
 		default: {
-			fprintf_P(stderr,PSTR("Test #%d not found\n"),(uint8_t)nv->value);
+			printf_P(PSTR("Test #%d not found\n"),(uint8_t)nv->value);
 			return (STAT_ERROR);
 		}
 	}

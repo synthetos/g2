@@ -203,7 +203,7 @@ typedef enum {
 } flowControl;
 
 typedef enum {						    // value typing for config and JSON
-	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
+	TYPE_EMPTY = -1,					    // value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
 	TYPE_PARENT,						// object is a parent to a sub-object
 	TYPE_FLOAT,							// value is a floating point number
@@ -255,7 +255,7 @@ typedef struct nvObject {				// depending on use, not all elements may be popula
 	float value;						// numeric value
 	char group[GROUP_LEN+1];			// group prefix or NUL if not in a group
 	char token[TOKEN_LEN+1];			// full mnemonic token for lookup
-	char (*stringp)[];				// pointer to array of characters from shared character array
+	char (*stringp)[];				    // pointer to array of characters from shared character array
 } nvObj_t; 								// OK, so it's not REALLY an object
 
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access

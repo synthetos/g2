@@ -116,7 +116,8 @@ extern "C"{
 
 /**** Stepper DDA and dwell timer settings ****/
 
-#define FREQUENCY_DDA		200000.0		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
+//#define FREQUENCY_DDA		200000.0		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
+#define FREQUENCY_DDA		150000.0		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
 #define FREQUENCY_DWELL		1000UL
 #define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
 
@@ -164,7 +165,7 @@ static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 static OutputPin<kCoolant_EnablePinNumber> flood_enable_pin;
 static OutputPin<kCoolant_EnablePinNumber> mist_enable_pin;
 
-// Input pins are defined in switch.cpp
+// Input pins are defined in gpio.cpp
 
 /********************************
  * Function Prototypes (Common) *

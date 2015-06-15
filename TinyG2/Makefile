@@ -207,38 +207,17 @@ ifeq ("$(PLATFORM)","sbv300")
 
 endif
 
-ifeq ("$(PLATFORM)","G2v9d")
-
-	BASE_PLATFORM=v9_3x8c
-	DEVICE_DEFINES += MOTATE_BOARD="G2v9d" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9f")
-
-	BASE_PLATFORM=v9_3x8c
-	DEVICE_DEFINES += MOTATE_BOARD="G2v9f" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9g")
-
-	BASE_PLATFORM=v9_3x8c
-	DEVICE_DEFINES += MOTATE_BOARD="G2v9g" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9i")
-
-	BASE_PLATFORM=v9_3x8c
-	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
 ifeq ("$(PLATFORM)","G2v9k")
 
 	BASE_PLATFORM=v9_3x8c
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
+ifeq ("$(PLATFORM)","g2refa")
+
+	BASE_PLATFORM=g2ref
+	DEVICE_DEFINES += MOTATE_BOARD="g2refa" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -267,17 +246,7 @@ ifeq ($(DEBUG),2)
 	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=2
 endif
 
-
 ##########
-
-
-
-#ifeq ("$(PLATFORM)","G2v9j")
-#
-#BASE_PLATFORM=v9_3x8c
-#DEVICE_DEFINES += MOTATE_BOARD="G2v9j"
-#
-#endif
 
 # Make sure we pass these into subprocesses (such as gdb)
 export PLATFORM
@@ -313,6 +282,21 @@ ifeq ("$(BASE_PLATFORM)","v9_3x8c")
 	CMSIS_ROOT = CMSIS
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/v9_3x8c
+
+	include $(PLATFORM_BASE).mk
+
+endif
+
+ifeq ("$(BASE_PLATFORM)","g2ref")
+	_PLATFORM_FOUND = 1
+	DEVICE_FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+
+# Set CHIP and export it for GDB to see
+	export CHIP = SAM3X8C
+	PLATFORM_BASE = platform/atmel_sam
+	CMSIS_ROOT = CMSIS
+
+	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/g2ref
 
 	include $(PLATFORM_BASE).mk
 

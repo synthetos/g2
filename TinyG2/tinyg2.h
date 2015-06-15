@@ -21,6 +21,19 @@
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
+/*
+ *  Back-back-port to g2
+ *    - changes in digital IO system
+ *    - pwr indicator lights (pwr settings)
+ *    - controller assertions in controller.cpp should be same style as .c file
+ *
+ *  New features (so they might have to wait)
+ *    - update firmware build number for FBS values (not sure how this will work)
+ *    - add control to invert enable line (motor enable polarity)
+ *    - incremental SR build
+ *    - install JH in halts
+ */
+
 #ifndef TINYG_H_ONCE
 #define TINYG_H_ONCE
 
@@ -33,14 +46,14 @@
 #include <string.h>
 #include <math.h>
 
-#include "MotatePins.h"
+#include "MotatePins.h"     // comment in if Motate / ARM
 
 /****** REVISIONS ******/
 
 // You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
 
-//#define TINYG_FIRMWARE_BUILD            089.02 // labeled as a compile w/o a build number
-#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
+#define TINYG_FIRMWARE_BUILD            091.17                       // labeled as a compile w/o a build number
+//#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
 
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
@@ -128,13 +141,11 @@ typedef enum {
 #ifdef __AVR
 
 #include <avr/pgmspace.h>		// defines PROGMEM and PSTR
-
-//typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 																	// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[nv->index].a)	// get float value from cfgArray
-#define GET_TOKEN_BYTE(a)  (char_t)pgm_read_byte(&cfgArray[i].a)	// get token byte value from cfgArray
+#define GET_TOKEN_BYTE(a)  pgm_read_byte(&cfgArray[i].a)	        // get token byte value from cfgArray
 
 // populate the shared buffer with the token string given the index
 #define GET_TOKEN_STRING(i,a) strcpy_P(a, (char *)&cfgArray[(index_t)i].token);
@@ -196,7 +207,7 @@ inline char* strcpy_P(char* d, const char* s) { return (char *)strcpy((char *)d,
 inline char* strncpy_P(char* d, const char* s, size_t l) { return (char *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
-#define printf_P printf		// these functions want char * as inputs, not char_t *
+#define printf_P printf
 #define fprintf_P fprintf
 #define sprintf_P sprintf
 

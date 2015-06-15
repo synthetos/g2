@@ -30,11 +30,12 @@
 #include "canonical_machine.h"
 #include "stepper.h"
 #include "kinematics.h"
+#include "util.h"
 
 static void _inverse_kinematics(const float travel[], float joint[]);
 
 /*
- * ik_kinematics() - wrapper routine for inverse kinematics
+ * kn_kinematics() - wrapper routine for inverse kinematics
  *
  *	Calls kinematics function(s).
  *	Performs axis mapping & conversion of length units to steps (and deals with inhibited axes)
@@ -56,15 +57,27 @@ void kn_inverse_kinematics(const float travel[], float steps[])
 	// which takes axis travel, step angle and microsteps into account.
 	for (uint8_t axis=0; axis<AXES; axis++) {
 		if (cm.a[axis].axis_mode == AXIS_INHIBITED) { joint[axis] = 0;}
-		if (st_cfg.mot[MOTOR_1].motor_map == axis) { steps[MOTOR_1] = joint[axis] * st_cfg.mot[MOTOR_1].steps_per_unit;}
-		if (st_cfg.mot[MOTOR_2].motor_map == axis) { steps[MOTOR_2] = joint[axis] * st_cfg.mot[MOTOR_2].steps_per_unit;}
-		if (st_cfg.mot[MOTOR_3].motor_map == axis) { steps[MOTOR_3] = joint[axis] * st_cfg.mot[MOTOR_3].steps_per_unit;}
-		if (st_cfg.mot[MOTOR_4].motor_map == axis) { steps[MOTOR_4] = joint[axis] * st_cfg.mot[MOTOR_4].steps_per_unit;}
+		if (st_cfg.mot[MOTOR_1].motor_map == axis) {
+            steps[MOTOR_1] = joint[axis] * st_cfg.mot[MOTOR_1].steps_per_unit;
+        }
+        if (st_cfg.mot[MOTOR_2].motor_map == axis) {
+            steps[MOTOR_2] = joint[axis] * st_cfg.mot[MOTOR_2].steps_per_unit;
+        }
+        if (st_cfg.mot[MOTOR_3].motor_map == axis) {
+            steps[MOTOR_3] = joint[axis] * st_cfg.mot[MOTOR_3].steps_per_unit;
+        }
+		if (st_cfg.mot[MOTOR_4].motor_map == axis) {
+            steps[MOTOR_4] = joint[axis] * st_cfg.mot[MOTOR_4].steps_per_unit;
+        }
 #if (MOTORS >= 5)
-		if (st_cfg.mot[MOTOR_5].motor_map == axis) { steps[MOTOR_5] = joint[axis] * st_cfg.mot[MOTOR_5].steps_per_unit;}
+		if (st_cfg.mot[MOTOR_5].motor_map == axis) {
+            steps[MOTOR_5] = joint[axis] * st_cfg.mot[MOTOR_5].steps_per_unit;
+        }
 #endif
 #if (MOTORS >= 6)
-		if (st_cfg.mot[MOTOR_6].motor_map == axis) { steps[MOTOR_6] = joint[axis] * st_cfg.mot[MOTOR_6].steps_per_unit;}
+		if (st_cfg.mot[MOTOR_6].motor_map == axis) {
+            steps[MOTOR_6] = joint[axis] * st_cfg.mot[MOTOR_6].steps_per_unit;
+        }
 #endif
 	}
 
@@ -76,7 +89,7 @@ void kn_inverse_kinematics(const float travel[], float steps[])
 			}
 		}
 	}
-*/
+    I'm really not sure it it's worth manually loop unrolling this sort of thing */
 }
 
 /*
@@ -103,7 +116,7 @@ static void _inverse_kinematics(const float travel[], float joint[])
 }
 
 /*
- * ik_forward_kinematics() - forward kinematics for a cartesian machine
+ * kn_forward_kinematics() - forward kinematics for a cartesian machine
  */
 
 void kn_forward_kinematics(const float steps[], float travel[])

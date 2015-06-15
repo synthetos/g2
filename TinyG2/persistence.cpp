@@ -93,7 +93,9 @@ stat_t read_persistent_value(nvObj_t *nv)
 #ifdef __AVR
 stat_t write_persistent_value(nvObj_t *nv)
 {
-	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent")); // can't write when machine is moving
+	if (cm.cycle_state != CYCLE_OFF) { // can't write when machine is moving
+        return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent_value() can't write when machine is in cycle"));
+    }
 	nvm.tmp_value = nv->value;
 	ritorno(read_persistent_value(nv));
 	if ((isnan((double)nv->value)) || (isinf((double)nv->value)) || (fp_NE(nv->value, nvm.tmp_value))) {
@@ -109,7 +111,9 @@ stat_t write_persistent_value(nvObj_t *nv)
 #ifdef __ARM
 stat_t write_persistent_value(nvObj_t *nv)
 {
-	if (cm.cycle_state != CYCLE_OFF) return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent")); // can't write when machine is moving
+	if (cm.cycle_state != CYCLE_OFF) { // can't write when machine is moving
+    	return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent_value() can't write when machine is in cycle"));
+	}
 	return (STAT_OK);
 }
 #endif // __ARM
