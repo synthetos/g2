@@ -2,7 +2,7 @@
  * util.h - a random assortment of useful functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -112,7 +112,9 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 
 #ifndef EPSILON
 #define EPSILON		((float)0.00001)		// allowable rounding error for floats
-//#define EPSILON 	((float)0.000001)		// allowable rounding error for floats
+#define EPSILON4 	((float)0.0001)		    // reduced precision epsilon
+#define EPSILON3 	((float)0.001)		    // reduced precision epsilon
+#define EPSILON2 	((float)0.01)		    // reduced precision epsilon
 #endif
 
 #ifndef fp_EQ

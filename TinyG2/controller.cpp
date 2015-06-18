@@ -75,7 +75,6 @@ static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
 static void _dispatch_kernel(void);
 static stat_t _controller_state(void);          // manage controller state transitions
-static stat_t _check_for_phat_city_time(void);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -159,33 +158,31 @@ static void _controller_HSM()
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
-	DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
-    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
-    DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
-	DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
-	DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
-	DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
-	DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
-
-//----- command readers and parsers --------------------------------------------------//
-
-    DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue
-	DISPATCH(_sync_to_tx_buffer());             // sync with TX buffer (pseudo-blocking)
-#ifdef __AVR
-	DISPATCH(set_baud_callback());              // perform baud rate update (must be after TX sync)
-#endif
-	DISPATCH(_dispatch_command());              // read and execute next command
-
-//---- phat city idle tasks ---------------------------------------------------------//
-
-    DISPATCH(_check_for_phat_city_time());      // stop here if it's not phat city time!
     DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
 #ifdef __AVR
-	DISPATCH(switch_debounce_callback());       // debounce switches
+    DISPATCH(switch_debounce_callback());       // debounce switches
 #endif
     DISPATCH(sr_status_report_callback());      // conditionally send status report
     DISPATCH(qr_queue_report_callback());       // conditionally send queue report
     DISPATCH(rx_report_callback());             // conditionally send rx report
+
+    DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
+    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
+    DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
+    DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
+    DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
+    DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
+//    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
+    DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
+
+//----- command readers and parsers --------------------------------------------------//
+
+    DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue
+    DISPATCH(_sync_to_tx_buffer());             // sync with TX buffer (pseudo-blocking)
+#ifdef __AVR
+    DISPATCH(set_baud_callback());              // perform baud rate update (must be after TX sync)
+#endif
+    DISPATCH(_dispatch_command());              // MUST BE LAST - read and execute next command
 }
 
 /*
@@ -321,18 +318,6 @@ static stat_t _controller_state()
 }
 
 /*
- * _check_for_phat_city_time() - see if there are cycles available for low priority tasks
- */
-
-static stat_t _check_for_phat_city_time(void) {
-    if (mp_is_it_phat_city_time()) {
-        return STAT_OK;
-    }
-
-    return STAT_EAGAIN;
-}
-
-/*
  * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
  */
 static stat_t _led_indicator()
@@ -440,42 +425,6 @@ static stat_t _interlock_handler(void)
     }
     return(STAT_OK);
 }
-
-/*
-static stat_t _interlock_estop_handler(void)
-{
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-	bool report = false;
-	if(cm.interlock_state == 0 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_CLOSED) {
-		cm.interlock_state = 1;
-		if(cm.gm.spindle_state != SPINDLE_OFF)
-			cm_request_feedhold();
-		report = true;
-	} else if(cm.interlock_state == 1 && read_switch(INTERLOCK_SWITCH_AXIS, INTERLOCK_SWITCH_POSITION) == SW_OPEN) {
-		cm.interlock_state = 0;
-		report = true;
-	}
-	if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_CLOSED) {
-		cm.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
-		report = true;
-		cm_start_estop();
-	} else if((cm.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && read_switch(ESTOP_SWITCH_AXIS, ESTOP_SWITCH_POSITION) == SW_OPEN) {
-		cm.estop_state &= ~ESTOP_PRESSED;
-		report = true;
-	}
-	if(cm.estop_state == ESTOP_ACTIVE) {
-        cm.estop_state = 0;
-		cm_end_estop();
-		report = true;
-	}
-	if(report)
-		sr_request_status_report(SR_REQUEST_IMMEDIATE);
-	return (STAT_OK);
-#else
-	return (STAT_OK);
-#endif
-}
-*/
 
 /*
  * _init_assertions() - initialize controller memory integrity assertions

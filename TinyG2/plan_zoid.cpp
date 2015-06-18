@@ -34,13 +34,13 @@
 
 using namespace Motate;
 //extern OutputPin<-1> plan_debug_pin1;
-extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
+//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
 //extern OutputPin<-1> plan_debug_pin2;
-extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
-extern OutputPin<-1> plan_debug_pin3;
+//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
+//extern OutputPin<-1> plan_debug_pin3;
 //extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
 //extern OutputPin<-1> plan_debug_pin4;
-extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
+//extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
 
 template<typename T>
 inline T our_abs(const T number) {
@@ -164,7 +164,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     // Try to optimize out the asymmetric last move
 
-	// In some cases the naiive move time is inf(inite) or NAN. This is OK.
+	// In some cases the naive move time is inf(inite) or NAN. This is OK.
     float naiive_move_time = 0;
     // Notes: With v_0 and v_1 being the sides of a quadrilateral, the area is the move length,
     // and the width is the move time. This formula is to get the move time (width) from the
@@ -485,9 +485,9 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
     const float recip_j = bf->recip_jerk;
 
     float l_c_head, l_c_tail, l_c; // calculated L
-    float l_d_head, l_d_tail, l_d; // claculated derivitave of L with respect to v_1
+    float l_d_head, l_d_tail, l_d; // calculated derivative of L with respect to v_1
 
-    // chuncks of precomputed values
+    // chunks of precomputed values
     float sqrt_j_delta_v_0, sqrt_j_delta_v_1;
 
     // v_1 is our estimated return value.
@@ -507,7 +507,7 @@ float mp_get_meet_velocity(const float v_0, const float v_2, const float L, cons
         l_c_head = tl_constant * sqrt_j_delta_v_0 * (v_0+v_1) * recip_j;
         l_c_tail = tl_constant * sqrt_j_delta_v_1 * (v_2+v_1) * recip_j;
 
-        // l_c is our total-length calculation wih the curent v_1 estimate, minus the expected length.
+        // l_c is our total-length calculation with the current v_1 estimate, minus the expected length.
         // This makes l_c == 0 when v_1 is the correct value.
         l_c = (l_c_head + l_c_tail) - L;
 
@@ -538,7 +538,7 @@ static const float sqrt_3 = 1.732050807568877;
 static const float third = 0.333333333333333;
 
 
-//f is added to the beginning when the first char whould be a number:
+//f is added to the beginning when the first char would be a number:
 //3*sqrt(3) = 5.196152422706631
 static const float f3_sqrt_3 = 5.196152422706631;
 //27*sqrt(3) = 46.765371804359679
@@ -589,9 +589,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     //         = pow( (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) ), third)
 
     const float chunk_1_cubed = (27 * L_sq_x_j_x_sqrt_3 + v_0_cu_x_40 + f3_sqrt_3 * sqrt(2 * v_0_cu_x_40 * L_sq_x_j_x_sqrt_3 + 81 * L_fourth * j_sq) );
-//    plan_debug_pin1.toggle();
     const float chunk_1 = cbrtf(chunk_1_cubed);
-//    plan_debug_pin1.toggle();
 
     // v_1 = 4/3*5^(1/3)        * v_0^2  / chunk_1  +   1/15*5^(2/3)       * chunk_1  -  1/3  *v_0
     // v_1 = f4_thirds_x_cbrt_5 * v_0_sq / chunk_1  +   f1_15th_x_2_3_rt_5 * chunk_1  -  third*v_0

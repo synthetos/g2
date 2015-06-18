@@ -35,7 +35,7 @@
  * Enums and other type definitions
  */
 
-typedef void (*cm_exec_t)(float[], float[]); // callback to canonical_machine execution function
+typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine execution function
 
 typedef enum {                      // bf->buffer_state values
     MP_BUFFER_EMPTY = 0,            // struct is available for use (MUST BE 0)
@@ -77,10 +77,17 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
+/* PLANNER_BUFFER_POOL_SIZE
+ *	Should be at least the number of buffers requires to support optimal
+ *	planning in the case of very short lines or arc segments.
+ *	Suggest 12 min. Limit is 255
+ */
+#define PLANNER_BUFFER_POOL_SIZE 28
+#define PLANNER_BUFFER_HEADROOM 4                   // buffers to reserve in planner before processing new input line
+
 #define JERK_MULTIPLIER			((float)1000000)	// DO NOT CHANGE - must always be 1 million
 #define JERK_MATCH_TOLERANCE	((float)1000)		// precision to which jerk must match to be considered effectively the same
 
-//#define MIN_SEGMENT_USEC 		((float)2500)		// minimum segment time (also minimum move time)
 #define MIN_SEGMENT_USEC 		((float)750)		// minimum segment time (also minimum move time)
 #define NOM_SEGMENT_USEC 		((float)1500)		// nominal segment time
 
@@ -92,20 +99,15 @@ typedef enum {
 // PLANNER_TIMEOUT should be < (MIN_PLANNED_USEC/1000) - (max time to replan)
 // ++++++++ NOT SURE THIS IS STILL OPERATIVE ++++++++ ash)
 
-// derived definitions - do not change
+//#define CORNER_TIME_QUANTUM 0.0000025               // (1.0/400000.0)  // one clock tick
+#define JUNCTION_AGGRESSION     0.25               // Actually this # divided by 1 million
+
+//*** derived definitions - do not change ***
 #define MIN_SEGMENT_TIME 		(MIN_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define NOM_SEGMENT_TIME 		(NOM_SEGMENT_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_PLANNED_TIME        (MIN_PLANNED_USEC / MICROSECONDS_PER_MINUTE)
 #define PHAT_CITY_TIME          (PHAT_CITY_USEC / MICROSECONDS_PER_MINUTE)
 #define MIN_SEGMENT_TIME_PLUS_MARGIN ((MIN_SEGMENT_USEC+1) / MICROSECONDS_PER_MINUTE)
-
-/* PLANNER_BUFFER_POOL_SIZE
- *	Should be at least the number of buffers requires to support optimal
- *	planning in the case of very short lines or arc segments.
- *	Suggest 12 min. Limit is 255
- */
-#define PLANNER_BUFFER_POOL_SIZE 28
-#define PLANNER_BUFFER_HEADROOM 4			// buffers to reserve in planner before processing new input line
 
 # if 0
 // THESE ARE NO LONGER USED -- but the code that uses them is still conditional in plan_zoid.cpp
@@ -145,6 +147,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 
 	float unit[AXES];				// unit vector for axis scaling & planning
     bool unit_flags[AXES];          // set true for axes participating in the move
+    bool flag_vector[AXES];
 
 	float length;					// total length of line or helix in mm
 	float head_length;
@@ -268,7 +271,8 @@ void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
 
-void mp_queue_command(void(*cm_exec_t)(float[], float[]), float *value, float *flag);
+//void mp_queue_command(void(*cm_exec_t)(float[], float[]), float *value, float *flag);
+void mp_queue_command(void(*cm_exec_t)(float[], bool[]), float *value, bool *flag);
 stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_dwell(const float seconds);

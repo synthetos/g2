@@ -33,9 +33,9 @@
 #define MAXED_BUFFER_LEN 255			// same as streaming RX buffer size as a worst case
 #define OUTPUT_BUFFER_LEN 512			// text buffer size
 
-#define LED_NORMAL_BLINK_RATE 2000      // blink rate for normal operation (in ms)
-#define LED_ALARM_BLINK_RATE 1000        // blink rate for alarm state (in ms)
-#define LED_SHUTDOWN_BLINK_RATE 500     // blink rate for shutdown state (in ms)
+#define LED_NORMAL_BLINK_RATE 3000      // blink rate for normal operation (in ms)
+#define LED_ALARM_BLINK_RATE 750        // blink rate for alarm state (in ms)
+#define LED_SHUTDOWN_BLINK_RATE 300     // blink rate for shutdown state (in ms)
 #define LED_PANIC_BLINK_RATE 100        // blink rate for panic state (in ms)
 
 typedef enum {                          // manages startup lines
@@ -84,8 +84,6 @@ extern controller_t cs;					// controller state structure
 /**** function prototypes ****/
 
 void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err);
-//void controller_init_assertions(void);
-//stat_t controller_test_assertions(void);
 void controller_run(void);
 void controller_set_connected(bool is_connected);
 bool controller_parse_control(char *p);

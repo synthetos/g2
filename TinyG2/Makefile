@@ -59,6 +59,14 @@ DEBUG ?= 0
 # SETTINGS_FILE may get overriden by the PLATFORM setings below
 SETTINGS_FILE ?= settings_default.h
 
+#	SETTINGS_FILE="settings_othermill.h"
+#	SETTINGS_FILE="settings_othermill_test.h"
+#	SETTINGS_FILE="settings_probotixV90.h"
+	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shopbot_sbv300.h"
+#	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_Ultimaker.h"
+
 CFLAGS   :=
 CPPFLAGS :=
 
@@ -223,14 +231,14 @@ endif
 ifeq ("$(PLATFORM)","G2v9i")
 
 	BASE_PLATFORM=v9_3x8c
-#	SETTINGS_FILE="settings_default.h"
-#	SETTINGS_FILE="settings_othermill.h"
-#	SETTINGS_FILE="settings_probotixV90.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
-#	SETTINGS_FILE="settings_shopbot_sbv300.h"
-#	SETTINGS_FILE="settings_shopbot_test.h"
-#	SETTINGS_FILE="settings_Ultimaker.h"
 	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
+ifeq ("$(PLATFORM)","G2v9k")
+
+	BASE_PLATFORM=v9_3x8c
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -246,9 +254,9 @@ endif
 
 ifeq ("$(PLATFORM)","ShapeokoDualY")
 
-BASE_PLATFORM=v9_3x8c
-SETTINGS_FILE="settings_shapeoko375_dual.h"
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+	BASE_PLATFORM=v9_3x8c
+	SETTINGS_FILE="settings_shapeoko375_dual.h"
+	DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 

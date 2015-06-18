@@ -2,7 +2,7 @@
  * report.h - TinyG status report and other reporting functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -58,12 +58,13 @@ typedef enum {					    // planner queue enable and verbosity
 typedef struct srSingleton {
 
 	/*** config values (PUBLIC) ***/
-	uint8_t status_report_verbosity;
+	srVerbosity status_report_verbosity;
 	uint32_t status_report_interval;					// in milliseconds
 
 	/*** runtime values (PRIVATE) ***/
 	uint8_t status_report_request;						// flag that SR has been requested, and what type
 	uint32_t status_report_systick;						// SysTick value for next status report
+    index_t index_of_stat_variable;                     // like it says, the index of the "stat" variable
 	index_t stat_index;									// table index value for stat - determined during initialization
 	index_t status_report_list[NV_STATUS_REPORT_LEN];	// status report elements to report
 	float status_report_value[NV_STATUS_REPORT_LEN];	// previous values for filtered reporting
@@ -73,7 +74,7 @@ typedef struct srSingleton {
 typedef struct qrSingleton {		// data for queue reports
 
 	/*** config values (PUBLIC) ***/
-	uint8_t queue_report_verbosity;	// queue reports enabled and verbosity level
+	qrVerbosity queue_report_verbosity;	// queue reports enabled and verbosity level
 
 	/*** runtime values (PRIVATE) ***/
 	uint8_t queue_report_requested;	// set to true to request a report
@@ -116,7 +117,6 @@ stat_t sr_run_text_status_report(void);
 stat_t sr_get(nvObj_t *nv);
 stat_t sr_set(nvObj_t *nv);
 stat_t sr_set_si(nvObj_t *nv);
-//void sr_print_sr(nvObj_t *nv);
 
 void qr_init_queue_report(void);
 void qr_request_queue_report(int8_t buffers);

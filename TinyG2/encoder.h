@@ -2,7 +2,7 @@
  * encoder.h - encoder interface
  * This file is part of TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -101,13 +101,14 @@
 
 typedef struct enEncoder { 			// one real or virtual encoder per controlled motor
 	int8_t  step_sign;				// set to +1 or -1
-	int16_t steps_run;				// steps counted during stepper interrupt
+	int16_t steps_run;				// + or - steps counted during stepper interrupt
 	int32_t encoder_steps;			// counted encoder position	in steps
 } enEncoder_t;
 
 typedef struct enEncoders {
 	magic_t magic_start;
 	enEncoder_t en[MOTORS];			// runtime encoder structures
+    float snapshot[MOTORS];         // snapshot vector
 	magic_t magic_end;
 } enEncoders_t;
 
@@ -123,5 +124,9 @@ stat_t encoder_test_assertions(void);
 
 void en_set_encoder_steps(uint8_t motor, float steps);
 float en_read_encoder(uint8_t motor);
+
+void en_take_encoder_snapshot();
+float en_get_encoder_snapshot_steps(uint8_t motor);
+float *en_get_encoder_snapshot_vector();
 
 #endif	// End of include guard: ENCODER_H_ONCE

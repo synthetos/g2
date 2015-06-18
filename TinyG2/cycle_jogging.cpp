@@ -50,6 +50,7 @@ struct jmJoggingSingleton {			// persistent jogging runtime variables
 	uint8_t saved_units_mode;		// G20,G21 global setting
 	uint8_t saved_coord_system;		// G54 - G59 setting
 	uint8_t saved_distance_mode;	// G90,G91 global setting
+	uint8_t saved_feed_rate_mode;
 	float saved_jerk;				// saved and restored for each axis jogged
 };
 static struct jmJoggingSingleton jog;
@@ -86,13 +87,15 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 	jog.saved_units_mode = cm_get_units_mode(ACTIVE_MODEL);			//cm.gm.units_mode;
 	jog.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);		//cm.gm.coord_system;
 	jog.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);	//cm.gm.distance_mode;
-	jog.saved_feed_rate = cm_get_distance_mode(ACTIVE_MODEL);		//cm.gm.feed_rate;
+	jog.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
+	jog.saved_feed_rate = (ACTIVE_MODEL)->feed_rate;		//cm.gm.feed_rate;
 	jog.saved_jerk = cm.a[axis].jerk_max;
 
 	// set working values
 	cm_set_units_mode(MILLIMETERS);
 	cm_set_distance_mode(ABSOLUTE_MODE);
 	cm_set_coord_system(ABSOLUTE_COORDS);			// jogging is done in machine coordinates
+	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
 
 	jog.velocity_start = JOGGING_START_VELOCITY;	// see canonical_machine.h for #define
 	jog.velocity_max = cm.a[axis].velocity_max;
@@ -121,11 +124,15 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 
 stat_t cm_jogging_cycle_callback(void)
 {
-	if (cm.cycle_state != CYCLE_JOG) { return (STAT_NOOP); } 		// exit if not in a jogging cycle
-	if(jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true)
-	{ return (STAT_EAGAIN); }	// sync to planner move ends
-	if(jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM)
-	{ return (STAT_EAGAIN); }   // prevent flooding the queue with jog moves
+	if (cm.cycle_state != CYCLE_JOG) {
+        return (STAT_NOOP);                                         // exit if not in a jogging cycle
+    }
+	if (jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true) {
+	    return (STAT_EAGAIN);	                                    // sync to planner move ends
+    }
+	if (jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+	    return (STAT_EAGAIN);                                       // prevent flooding the queue with jog moves
+    }
 	return (jog.func(jog.axis));									// execute the current jogging move
 }
 
@@ -137,11 +144,7 @@ static stat_t _set_jogging_func(stat_t (*func)(int8_t axis))
 
 static stat_t _jogging_axis_start(int8_t axis)
 {
-	mp_flush_planner();
-//	if (cm.hold_state == FEEDHOLD_HOLD); {
-//		cm_end_hold();
-//    }    
-    cm_end_hold();                                          // ends hold if on is in effect
+//    cm_end_hold();                                          // ends hold if one is in effect
 	return (_set_jogging_func(_jogging_axis_ramp_jog));
 }
 
@@ -166,16 +169,18 @@ static stat_t _jogging_axis_ramp_jog(int8_t axis)           // run the jog ramp
 	_jogging_axis_move(axis, target, velocity);
 	jog.step++;
 
-	if(last)
+	if(last) {
 		return (_set_jogging_func(_jogging_finalize_exit));
-	else
+    } else {
 		return (_set_jogging_func(_jogging_axis_ramp_jog));
+    }
 }
 
 static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 {
 	float vect[] = {0,0,0,0,0,0};
-	float flags[] = {false, false, false, false, false, false};
+	bool flags[] = {false, false, false, false, false, false};
+
 	vect[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
@@ -185,19 +190,17 @@ static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 {
-	mp_flush_planner();
-//	if (cm.hold_state == FEEDHOLD_HOLD);
-//		cm_end_hold();
-    cm_end_hold();                                  // ends hold if on is in effect
+//    cm_end_hold();                                  // ends hold if one is in effect
 
- 	cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system
-	cm_set_units_mode(jog.saved_units_mode);
-	cm_set_distance_mode(jog.saved_distance_mode);
-	cm_set_feed_rate(jog.saved_feed_rate);
-	cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
-	cm_canned_cycle_end();
-	printf("{\"jog\":0}\n");						// needed by OMC jogging function
-	return (STAT_OK);
+    cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system
+    cm_set_units_mode(jog.saved_units_mode);
+    cm_set_distance_mode(jog.saved_distance_mode);
+    cm_set_feed_rate_mode(jog.saved_feed_rate_mode);
+    (MODEL)->feed_rate = jog.saved_feed_rate;
+    cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
+    cm_canned_cycle_end();
+    printf("{\"jog\":0}\n");						// needed by OMC jogging function
+    return (STAT_OK);
 }
 
 /*

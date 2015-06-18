@@ -45,7 +45,7 @@ static void _inverse_kinematics(const float travel[], float joint[]);
  *	as floats and converted to fixed-point binary during queue loading. See stepper.c for details.
  */
 
-void ik_kinematics(const float travel[], float steps[])
+void kn_inverse_kinematics(const float travel[], float steps[])
 {
 	float joint[AXES];
 
@@ -82,12 +82,12 @@ void ik_kinematics(const float travel[], float steps[])
 /*
  * _inverse_kinematics() - inverse kinematics - example is for a cartesian machine
  *
- *	You can glue in inverse kinematics here, but be aware of time budget constrants.
+ *	You can glue in inverse kinematics here, but be aware of time budget constraints.
  *	This function is run during the _exec() portion of the cycle and will therefore
  *	be run once per interpolation segment. The total time for the segment load,
  *	including the inverse kinematics transformation cannot exceed the segment time,
  *	and ideally should be no more than 25-50% of the segment time. Currently segments
- *	run avery 5 ms, but this might be lowered. To profile this time look at the
+ *	run every 1.5 ms, but this might be lowered. To profile this time look at the
  *	time it takes to complete the mp_exec_move() function.
  *
  *	Note: the compiler will  inline trivial functions (like memcpy) so there is no
@@ -100,4 +100,18 @@ static void _inverse_kinematics(const float travel[], float joint[])
 //	for (uint8_t i=0; i<AXES; i++) {
 //		joint[i] = travel[i];
 //	}
+}
+
+/*
+ * ik_forward_kinematics() - forward kinematics for a cartesian machine
+ */
+
+void kn_forward_kinematics(const float steps[], float travel[])
+{
+    travel[AXIS_X] = steps[MOTOR_1] * st_cfg.mot[MOTOR_1].units_per_step;
+    travel[AXIS_Y] = steps[MOTOR_2] * st_cfg.mot[MOTOR_2].units_per_step;
+    travel[AXIS_Z] = steps[MOTOR_3] * st_cfg.mot[MOTOR_3].units_per_step;
+    travel[AXIS_A] = steps[MOTOR_4] * st_cfg.mot[MOTOR_4].units_per_step;
+    travel[AXIS_B] = steps[MOTOR_5] * st_cfg.mot[MOTOR_5].units_per_step;
+    travel[AXIS_C] = steps[MOTOR_6] * st_cfg.mot[MOTOR_6].units_per_step;
 }

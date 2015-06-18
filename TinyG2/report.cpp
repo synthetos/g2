@@ -40,7 +40,7 @@ using namespace Motate;
 //OutputPin<kDebug1_PinNumber> sr_debug_pin1;
 //OutputPin<kDebug2_PinNumber> sr_debug_pin2;
 //OutputPin<kDebug3_PinNumber> sr_debug_pin3;
-OutputPin<-1> sr_debug_pin3;
+//OutputPin<-1> sr_debug_pin3;
 
 /**** Allocation ****/
 
@@ -106,7 +106,6 @@ void _startup_helper(stat_t status, const char *msg)
 	nv_reset_nv_list();
 	nv_add_object((const char *)"fv");		// firmware version
 	nv_add_object((const char *)"fb");		// firmware build
-//	nv_add_object((const char *)"cv");		// configuration version
 	nv_add_object((const char *)"hp");		// hardware platform
 	nv_add_object((const char *)"hv");		// hardware version
 	nv_add_object((const char *)"id");		// hardware ID
@@ -196,10 +195,9 @@ void sr_init_status_report()
 {
 	nvObj_t *nv = nv_reset_nv_list();	// used for status report persistence locations
 	sr.status_report_request = SR_OFF;
-//	char_t sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
 	char sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
 	nv->index = nv_get_index((const char *)"", (char *)"se00");	// set first SR persistence index
-	sr.stat_index = 0;
+	sr.stat_index = nv_get_index((const char *)"", (const char *)"stat");
 
 	for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
 		if (sr_defaults[i][0] == NUL) break;				// quit on first blank array entry
@@ -209,12 +207,12 @@ void sr_init_status_report()
 			rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init"); // trap mis-configured profile settings
 			return;
 		}
-		if (_is_stat(nv) == true)
-			sr.stat_index = nv->value;						// identify index for 'stat' if status is in the report
 		nv_set(nv);
 		nv_persist(nv);										// conditionally persist - automatic by nv_persist()
 		nv->index++;										// increment SR NVM index
 	}
+    // record the index of the "stat" variable so we can use it during reporting
+    sr.index_of_stat_variable = nv_get_index((const char *)"", (const char *)"stat");
 }
 
 /*
@@ -233,7 +231,9 @@ stat_t sr_set_status_report(nvObj_t *nv)
 	index_t sr_start = nv_get_index((const char *)"",(const char *)"se00");// set first SR persistence index
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
-		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) break;
+		if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) {
+            break;
+        }
 		if ((nv->valuetype == TYPE_BOOL) && (fp_TRUE(nv->value))) {
 			status_report_list[i] = nv->index;
 			nv->value = nv->index;							// persist the index as the value
@@ -244,7 +244,9 @@ stat_t sr_set_status_report(nvObj_t *nv)
 			return (STAT_INPUT_VALUE_UNSUPPORTED);
 		}
 	}
-	if (elements == 0) { return (STAT_INPUT_VALUE_UNSUPPORTED);}
+	if (elements == 0) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }
 	memcpy(sr.status_report_list, status_report_list, sizeof(status_report_list));
 	return(_populate_unfiltered_status_report());			// return current values
 }
@@ -278,7 +280,6 @@ stat_t sr_request_status_report(uint8_t request_type)
 		sr.status_report_request = SR_VERBOSE;		// will always trigger verbose report, regardless of verbosity setting
 
 	} else if (request_type == SR_REQUEST_TIMED) {
-//		sr.status_report_request = SR_FILTERED;
 		sr.status_report_request = sr.status_report_verbosity;
 		sr.status_report_systick += sr.status_report_interval;
 
@@ -294,18 +295,13 @@ stat_t sr_request_status_report(uint8_t request_type)
  */
 stat_t sr_status_report_callback() 		// called by controller dispatcher
 {
-#ifdef __SUPPRESS_STATUS_REPORTS
-	return (STAT_NOOP);
-#endif
-
-    if (sr.status_report_verbosity == SR_OFF) return (STAT_NOOP);
-	if (sr.status_report_request == SR_OFF) return (STAT_NOOP);
-
-	if (SysTickTimer_getValue() < sr.status_report_systick) return (STAT_NOOP);
-
-    sr_debug_pin3 = 1;
-    if (!mp_is_it_phat_city_time()) {
-        sr_debug_pin3 = 0;
+//    if (!mp_is_it_phat_city_time()) {   // don't process this if you are time constrained in the planner
+//        return (STAT_NOOP);
+//    }
+    if ((sr.status_report_verbosity == SR_OFF) ||
+	    (sr.status_report_request == SR_OFF) ||
+        (js.json_verbosity == JV_SILENT) ||
+	    (SysTickTimer_getValue() < sr.status_report_systick) ) {
         return (STAT_NOOP);
     }
 
@@ -314,14 +310,11 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 	} else {
 		if (_populate_filtered_status_report() == false) {	// no new data
 			sr.status_report_request = SR_OFF;				// disable reports until requested again
-            sr_debug_pin3 = 0;
 			return (STAT_OK);
 		}
 	}
 	sr.status_report_request = SR_OFF;
 	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
-
-    sr_debug_pin3 = 0;
     return (STAT_OK);
 }
 
@@ -330,12 +323,8 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
  */
 stat_t sr_run_text_status_report()
 {
-    sr_debug_pin3 = 1;
-
     _populate_unfiltered_status_report();
 	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-
-    sr_debug_pin3 = 0;
 	return (STAT_OK);
 }
 
@@ -386,33 +375,37 @@ static stat_t _populate_unfiltered_status_report()
 static uint8_t _populate_filtered_status_report()
 {
 	const char sr_str[] = "sr";
-	uint8_t has_data = false;
+	bool has_data = false;
 	char tmp[TOKEN_LEN+1];
-	nvObj_t *nv = nv_reset_nv_list();		// sets nv to the start of the body
+	nvObj_t *nv = nv_reset_nv_list();		    // sets nv to the start of the body
 
-	nv->valuetype = TYPE_PARENT; 			// setup the parent object (no need to length check the copy)
+	nv->valuetype = TYPE_PARENT; 			    // setup the parent object (no need to length check the copy)
 	strcpy(nv->token, sr_str);
 //	nv->index = nv_get_index((const char *)"", sr_str);// OMITTED - set the index - may be needed by calling function
-	nv = nv->nx;							// no need to check for NULL as list has just been reset
+	nv = nv->nx;							    // no need to check for NULL as list has just been reset
 
 	for (uint8_t i=0; i<NV_STATUS_REPORT_LEN; i++) {
-		if ((nv->index = sr.status_report_list[i]) == 0) { break;}
-
+		if ((nv->index = sr.status_report_list[i]) == 0) {  // end of list
+            break;
+        }
 		nv_get_nvObj(nv);
-		// do not report values that have not changed...
-		if (fp_EQ(nv->value, sr.status_report_value[i])) {
-			nv->valuetype = TYPE_EMPTY;
-			continue;
-		// report anything that has changed
-		} else {
-			strcpy(tmp, nv->group);		// flatten out groups - WARNING - you cannot use strncpy here...
-			strcat(tmp, nv->token);
-			strcpy(nv->token, tmp);		//...or here.
-			sr.status_report_value[i] = nv->value;
-			if ((nv = nv->nx) == NULL) return (false);	// should never be NULL unless SR length exceeds available buffer array
-			has_data = true;
-		}
-	}
+
+		// report values that have changed by more than 0.0001, but always stops and ends
+		if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
+            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
+            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
+
+		    strcpy(tmp, nv->group);		    // flatten out groups - WARNING - you cannot use strncpy here...
+		    strcat(tmp, nv->token);
+		    strcpy(nv->token, tmp);		    //...or here.
+		    sr.status_report_value[i] = nv->value;
+		    if ((nv = nv->nx) == NULL) return (false);	// should never be NULL unless SR length exceeds available buffer array
+		    has_data = true;
+
+        } else {
+            nv->valuetype = TYPE_EMPTY;     // filter this value out of the report
+        }
+  	}
 	return (has_data);
 }
 
@@ -527,18 +520,14 @@ void qr_request_queue_report(int8_t buffers)
 
 stat_t qr_queue_report_callback() 		// called by controller dispatcher
 {
-#ifdef __SUPPRESS_QUEUE_REPORTS
-	return (STAT_NOOP);
-#endif
-
-	if (qr.queue_report_verbosity == QR_OFF) { return (STAT_NOOP);}
-	if (qr.queue_report_requested == false) { return (STAT_NOOP);}
-
-    if (!mp_is_it_phat_city_time()) { return (STAT_NOOP);}
+	if ((qr.queue_report_verbosity == QR_OFF) ||
+        (js.json_verbosity == JV_SILENT) ||
+	    (qr.queue_report_requested == false) ||
+        (!mp_is_it_phat_city_time())) {
+        return (STAT_NOOP);
+    }
 
     qr.queue_report_requested = false;
-
-    sr_debug_pin3 = 1;
 
 	if (cs.comm_mode == TEXT_MODE) {
 		if (qr.queue_report_verbosity == QR_SINGLE) {
@@ -562,8 +551,6 @@ stat_t qr_queue_report_callback() 		// called by controller dispatcher
 		}
 	}
 	qr_init_queue_report();
-
-    sr_debug_pin3 = 0;
     return (STAT_OK);
 }
 
@@ -584,7 +571,12 @@ void rx_request_rx_report(void) {
  * rx_report_callback() - send rx report if one has been requested
  */
 stat_t rx_report_callback(void) {
-    if (!rx.rx_report_requested) { return (STAT_NOOP); }
+    if (!rx.rx_report_requested) {
+        return (STAT_NOOP);
+    }
+    if (!mp_is_it_phat_city_time()) {   // Don;t process this if you are time constrained in the planner
+        return (STAT_NOOP);
+    }
     rx.rx_report_requested = false;
 
     fprintf(stderr, "{\"rx\":%d}\n", rx.space_available);

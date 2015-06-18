@@ -86,7 +86,7 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
-#define flag_vector unit		// alias for vector of flags
+//#define flag_vector unit		// alias for vector of flags
 
 static void _planner_time_accounting();
 static void _audit_buffers();
@@ -190,12 +190,13 @@ void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[a
 void mp_set_steps_to_runtime_position()
 {
     float step_position[MOTORS];
-    ik_kinematics(mr.position, step_position);              // convert lengths to steps in floating point
+    kn_inverse_kinematics(mr.position, step_position);      // convert lengths to steps in floating point
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         mr.target_steps[motor] = step_position[motor];
         mr.position_steps[motor] = step_position[motor];
         mr.commanded_steps[motor] = step_position[motor];
         en_set_encoder_steps(motor, step_position[motor]);  // write steps to encoder register
+        mr.encoder_steps[motor] = en_read_encoder(motor);
 
         // These must be zero:
         mr.following_error[motor] = 0;
@@ -224,7 +225,7 @@ void mp_set_steps_to_runtime_position()
  *  and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(float[], float[]), float *value, float *flag)
+void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 {
 	mpBuf_t *bf;
 
@@ -257,7 +258,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
 	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -289,7 +290,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
-    }    
+    }
 	return (STAT_OK);
 }
 
@@ -457,8 +458,8 @@ mpBuf_t * mp_get_run_buffer()
         mb.r->buffer_state = MP_BUFFER_RUNNING;
         mb.needs_time_accounting = true;
     }
-    
-    // This is the one point where an accurate accounting of the total time in the 
+
+    // This is the one point where an accurate accounting of the total time in the
     // run and the planner is established. _planner_time_accounting() also performs
     // the locking of planner buffers to ensure that sufficient "safe" time is reserved.
     _planner_time_accounting();
@@ -501,7 +502,6 @@ mpBuf_t * mp_get_first_buffer(void) {
     return NULL;
 }
 
-
 /* UNUSED FUNCTIONS - left in for completeness and for reference
 void mp_unget_write_buffer()
 {
@@ -543,15 +543,12 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 
 stat_t mp_plan_buffer()
 {
-//    plan_debug_pin1 = 1;
-
     // Criteria to replan:
     // 0) There are items in the buffer that need replanning.
     // 1) Planner timer has "timed out"
     // 2) Less than MIN_PLANNED_TIME in the planner
 
     if (!mb.needs_replanned) {
-//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
     bool do_continue = false;
@@ -568,12 +565,9 @@ stat_t mp_plan_buffer()
     float total_buffer_time = mb.time_in_run + mb.time_in_planner;
     if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
         do_continue = true;
-//        plan_debug_pin4 = 1;
     }
 
     if (!do_continue) {
-//        plan_debug_pin4 = 0;
-//        plan_debug_pin1 = 0;
         return (STAT_OK);
     }
 
@@ -588,9 +582,6 @@ stat_t mp_plan_buffer()
 
     mb.planner_timer = 0; // clear the planner timer
     mb.needs_replanned = false;
-
-//    plan_debug_pin4 = 0;
-//    plan_debug_pin1 = 0;
     return (STAT_OK);
 }
 
@@ -599,12 +590,11 @@ bool mp_is_it_phat_city_time() {
 	if(cm.hold_state == FEEDHOLD_HOLD) {
     	return true;
 	}
-//    mp_planner_time_accounting();
     float time_in_planner = mb.time_in_run + mb.time_in_planner;
     return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
 }
 
-static void _planner_time_accounting() 
+static void _planner_time_accounting()
 {
 //    if (((mb.time_in_run + mb.time_locked) > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
 //        return;
