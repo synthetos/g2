@@ -1,11 +1,18 @@
 {
-  "binaries": [
-    {
-      "board": "Due+gShield",
-      "branch": "edge",
-      "comment": "Compiled with default (safe, but rather slow) settings.",
-      "name": "TinyG2_Due-edge-078.03-default",
-      "version": "078.03"
-    }
-  ]
+    "binaries": [
+        {
+            "board": "Due+gShield",
+            "branch": "edge",
+            "comment": "Compiled with default (safe, but rather slow) settings.",
+            "name": "TinyG2_Due-edge-078.03-default",
+            "version": "078.03"
+        },
+        {
+            "board": "TinyGv9k",
+            "branch": "edge",
+            "comment": "Compiled with default (safe, but rather slow) settings.",
+            "name": "TinyG2v9k-edge-083.09-default",
+            "version": "083.09"
+        }
+    ]
 }
