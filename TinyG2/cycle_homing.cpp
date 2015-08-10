@@ -56,6 +56,7 @@ struct hmHomingSingleton {              // persistent homing runtime variables
     float latch_velocity;               // latch speed as positive number
     float zero_backoff;                 // distance to back off switch before setting zero
     float max_clear_backoff;            // maximum distance of switch clearing backoffs before erring out
+    float setpoint;                     // ultimate setpoint, usually zero, but not always
 
 	// state saved from gcode model
 	cmUnitsMode saved_units_mode;       // G20,G21 global setting
@@ -75,8 +76,8 @@ static stat_t _homing_axis_clear_init(int8_t axis);
 static stat_t _homing_axis_search(int8_t axis);
 static stat_t _homing_axis_clear(int8_t axis);
 static stat_t _homing_axis_latch(int8_t axis);
-static stat_t _homing_axis_zero_backoff(int8_t axis);
-static stat_t _homing_axis_set_zero(int8_t axis);
+static stat_t _homing_axis_setpoint_backoff(int8_t axis);
+static stat_t _homing_axis_set_position(int8_t axis);
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity);
 static stat_t _homing_error_exit(int8_t axis, stat_t status);
 static stat_t _homing_finalize_exit(int8_t axis);
@@ -247,10 +248,12 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.search_travel = travel_distance;                 // search travels in positive direction
 		hm.latch_backoff = fabs(cm.a[axis].latch_backoff);  // latch travels in positive direction
 		hm.zero_backoff  = -fabs(cm.a[axis].zero_backoff);  // zero backoff is negative direction
+        hm.setpoint      = cm.a[axis].travel_max;           // will set the maximum position
 	} else {
 		hm.search_travel = -travel_distance;                // search travels in negative direction
 		hm.latch_backoff = -fabs(cm.a[axis].latch_backoff); // latch travels in negative direction
 		hm.zero_backoff  = fabs(cm.a[axis].zero_backoff);   // zero backoff is positive direction
+        hm.setpoint      = cm.a[axis].travel_min;           // will set the minimum position
 	}
 
 	// if homing is disabled for the axis then skip to the next axis
@@ -292,25 +295,23 @@ static stat_t _homing_axis_clear(int8_t axis)		        // drive away from switch
 static stat_t _homing_axis_latch(int8_t axis)				// drive to switch at low speed
 {
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
-	return (_set_homing_func(_homing_axis_zero_backoff));
+	return (_set_homing_func(_homing_axis_setpoint_backoff));
 }
 
-static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
+static stat_t _homing_axis_setpoint_backoff(int8_t axis)    // backoff to zero or max setpoint position
 {
     mp_flush_planner();                                     // clear out the remaining latch move
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
-	return (_set_homing_func(_homing_axis_set_zero));
+	return (_set_homing_func(_homing_axis_set_position));
 }
 
-static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
+static stat_t _homing_axis_set_position(int8_t axis)        // set axis zero / max and finish up
 {
 	if (hm.set_coordinates) {
-		cm_set_position(axis, 0.0);
+		cm_set_position(axis, hm.setpoint);
 		cm.homed[axis] = true;
 
 	} else { // handle G28.4 cycle - set position to the point of switch closure
-//		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
-        // set position to exact point of switch closure
         cm_queue_flush();                                   // flush queue & end feedhold
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
@@ -331,7 +332,12 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
     cm_queue_flush();                                     // flush queue and end hold (if applicable)
-	ritorno(cm_straight_feed(vect, flags));
+//	ritorno(cm_straight_feed(vect, flags));
+    stat_t status = cm_straight_feed(vect, flags);
+    if (status != STAT_OK) {
+        rpt_exception(status, "Homing move failed. Check min/max settings");
+        return (_homing_error_exit(axis, STAT_HOMING_CYCLE_FAILED));
+    }
 	return (STAT_EAGAIN);
 }
 
