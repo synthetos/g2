@@ -103,14 +103,14 @@ static stat_t get_tick(nvObj_t *nv);		// get system tick count
  *  - The precision value 'p' only affects JSON responses. You need to also set
  *    the %f in the corresponding format string to set text mode display precision
  */
-/* !!! WARNING !!! 
+/* !!! WARNING !!!
  *
- *  If you are developing in this table and your board has persistence for configuration 
+ *  If you are developing in this table and your board has persistence for configuration
  *  settings (like TinyGv8 does) you must either change the firmware build number or
- *  run $defa=1 (or {defa:1} ) after you load new firmware or the items in persistence 
+ *  run $defa=1 (or {defa:1} ) after you load new firmware or the items in persistence
  *  from your previous load may write erroneous values into the initialization variables.
- *  This usually causes all hell to break loose during testing - making you think that 
- *  there is something wrong with your code or this table. 
+ *  This usually causes all hell to break loose during testing - making you think that
+ *  there is something wrong with your code or this table.
  */
 
 const cfgItem_t cfgArray[] PROGMEM = {
@@ -363,41 +363,41 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #endif
 
 	// Digital input configs
-	{ "di1","di1mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[0].mode,     DI1_MODE },
-	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[0].action,   DI1_ACTION },
-	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[0].function, DI1_FUNCTION },
+	{ "di1","di1mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[0].mode,     DI1_MODE },
+	{ "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[0].action,   DI1_ACTION },
+	{ "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[0].function, DI1_FUNCTION },
 
-	{ "di2","di2mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[1].mode,     DI2_MODE },
-	{ "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[1].action,   DI2_ACTION },
-	{ "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[1].function, DI2_FUNCTION },
+	{ "di2","di2mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[1].mode,     DI2_MODE },
+	{ "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[1].action,   DI2_ACTION },
+	{ "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[1].function, DI2_FUNCTION },
 
-	{ "di3","di3mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[2].mode,     DI3_MODE },
-	{ "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[2].action,   DI3_ACTION },
-	{ "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[2].function, DI3_FUNCTION },
+	{ "di3","di3mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[2].mode,     DI3_MODE },
+	{ "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[2].action,   DI3_ACTION },
+	{ "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[2].function, DI3_FUNCTION },
 
-	{ "di4","di4mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[3].mode,     DI4_MODE },
-	{ "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[3].action,   DI4_ACTION },
-	{ "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[3].function, DI4_FUNCTION },
+	{ "di4","di4mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[3].mode,     DI4_MODE },
+	{ "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[3].action,   DI4_ACTION },
+	{ "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[3].function, DI4_FUNCTION },
 
-	{ "di5","di5mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[4].mode,     DI5_MODE },
-	{ "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[4].action,   DI5_ACTION },
-	{ "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[4].function, DI5_FUNCTION },
+	{ "di5","di5mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[4].mode,     DI5_MODE },
+	{ "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[4].action,   DI5_ACTION },
+	{ "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[4].function, DI5_FUNCTION },
 
-	{ "di6","di6mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[5].mode,     DI6_MODE },
-	{ "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[5].action,   DI6_ACTION },
-	{ "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[5].function, DI6_FUNCTION },
+	{ "di6","di6mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[5].mode,     DI6_MODE },
+	{ "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[5].action,   DI6_ACTION },
+	{ "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[5].function, DI6_FUNCTION },
 
-	{ "di7","di7mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[6].mode,     DI7_MODE },
-	{ "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[6].action,   DI7_ACTION },
-	{ "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[6].function, DI7_FUNCTION },
+	{ "di7","di7mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[6].mode,     DI7_MODE },
+	{ "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[6].action,   DI7_ACTION },
+	{ "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[6].function, DI7_FUNCTION },
 
-	{ "di8","di8mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[7].mode,     DI8_MODE },
-	{ "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[7].action,   DI8_ACTION },
-	{ "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[7].function, DI8_FUNCTION },
-#if (DI_CHANNELS >= 9)
-	{ "di9","di9mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&io.in[8].mode,     DI9_MODE },
-	{ "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&io.in[8].action,   DI9_ACTION },
-	{ "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&io.in[8].function, DI9_FUNCTION },
+	{ "di8","di8mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[7].mode,     DI8_MODE },
+	{ "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[7].action,   DI8_ACTION },
+	{ "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[7].function, DI8_FUNCTION },
+#if (D_IN_CHANNELS >= 9)
+	{ "di9","di9mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[8].mode,     DI9_MODE },
+	{ "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[8].action,   DI9_ACTION },
+	{ "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[8].function, DI9_FUNCTION },
 #endif
 
     // Digital input state readers
@@ -409,7 +409,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "in","in6", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 	{ "in","in7", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 	{ "in","in8", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
-#if (DI_CHANNELS >= 9)
+#if (D_IN_CHANNELS >= 9)
 	{ "in","in9", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 #endif
 
@@ -970,7 +970,7 @@ static stat_t _do_offsets(nvObj_t *nv)	// print offset parameters for G54-G59,G9
 
 static stat_t _do_inputs(nvObj_t *nv)	// print parameters for all input groups
 {
-#if (DI_CHANNELS < 9)
+#if (D_IN_CHANNELS < 9)
     char list[][TOKEN_LEN+1] = {"di1","di2","di3","di4","di5","di6","di7","di8",""}; // must have a terminating element
 #else
     char list[][TOKEN_LEN+1] = {"di1","di2","di3","di4","di5","di6","di7","di8","di9",""}; // must have a terminating element

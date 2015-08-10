@@ -2098,7 +2098,7 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
 
 stat_t cm_set_hi(nvObj_t *nv)
 {
-	if ((nv->value < 0) || (nv->value > DI_CHANNELS)) {
+	if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
     	return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);
