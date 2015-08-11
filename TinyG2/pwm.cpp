@@ -40,6 +40,10 @@
 
 pwmSingleton_t pwm;
 
+
+static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
+static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
+
 // defines common to all PWM channels
 //#define PWM_TIMER_TYPE	TC1_struct	// PWM uses TC1's
 #define PWM_TIMER_t	TC1_t				// PWM uses TC1's

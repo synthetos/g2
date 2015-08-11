@@ -157,8 +157,8 @@ static OutputPin<kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 static OutputPin<kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
 static OutputPin<kSpindle_EnablePinNumber> spindle_enable_pin;
 static OutputPin<kSpindle_DirPinNumber> spindle_dir_pin;
-static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
-static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
+//static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
+//static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 
 // NOTE: In the v9 and the Due the flood and mist coolants are mapped to a the same pin
 //static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;

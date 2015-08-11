@@ -1564,6 +1564,9 @@
     <Compile Include="settings\settings_othermill_test.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_Printrbot_Play.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_probotixV90.h">
       <SubType>compile</SubType>
     </Compile>
