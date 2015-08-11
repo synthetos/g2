@@ -2129,10 +2129,27 @@ float cm_get_axis_jerk(const uint8_t axis)
 	return (cm.a[axis].jerk_max);
 }
 
+// Precompute sqrt(3)/10 for the max_junction_accel.
+// See plan_line.cpp -> _calculate_junction_vmax() notes for details.
+static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
+
+
+// Important note: Actual jerk is stored jerk * JERK_MULTIPLIER, and
+// Time Quanta is junction_aggression / 1000.
+void _cm_recalc_max_junction_accel(const uint8_t axis) {
+    float T = cm.junction_aggression / 1000.0;
+    float T2 = T*T;
+
+    cm.a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm.a[axis].jerk_max * JERK_MULTIPLIER);
+}
+
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
 	cm.a[axis].jerk_max = jerk;
 	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+
+    // Must reclculate the max_junction_accel now that the jerk has changed.
+    _cm_recalc_max_junction_accel(axis);
 }
 
 stat_t cm_set_vm(nvObj_t *nv)
@@ -2176,8 +2193,8 @@ stat_t cm_set_jh(nvObj_t *nv)
 
 stat_t cm_set_ja(nvObj_t *nv)
 {
-    // Prescale it. Mostly for backwards compatibility with Junction Acceleration settings
-    if (nv->value > 10) nv->value /= 1000000;
+//    // Prescale it. Mostly for backwards compatibility with Junction Acceleration settings
+//    if (nv->value > 10) nv->value /= 100;
 
     stat_t status = STAT_OK;
 
@@ -2190,6 +2207,12 @@ stat_t cm_set_ja(nvObj_t *nv)
         status = STAT_INPUT_VALUE_TOO_LARGE;
     }
     set_flt(nv);
+
+    // Must reclculate the max_junction_accel now that the time quanta has changed.
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        _cm_recalc_max_junction_accel(axis);
+    }
+
     return(status);
 }
 

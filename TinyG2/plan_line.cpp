@@ -708,7 +708,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             //   In either case, division-by-zero is bad, m'kay?
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
-                velocity = min(velocity, (cm.a[axis].jerk_max * cm.junction_aggression / delta));
+                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
             }
         }
     }

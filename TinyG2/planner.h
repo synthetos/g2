@@ -146,8 +146,8 @@ typedef enum {                      // planner operating state
 #define TRAVERSE_OVERRIDE_ENABLE    false               // initial value
 #define TRAVERSE_OVERRIDE_FACTOR    1.00                // initial value
 
-#define JUNCTION_AGGRESSION_MIN      0.01               // minimum allowable setting
-#define JUNCTION_AGGRESSION_MAX      1.00               // maximum allowable setting
+#define JUNCTION_AGGRESSION_MIN      0.001               // minimum allowable setting
+#define JUNCTION_AGGRESSION_MAX      10.00               // maximum allowable setting
 
 //#define MIN_MANUAL_FEEDRATE_OVERRIDE 0.05   // 5%
 //#define MAX_MANUAL_FEEDRATE_OVERRIDE 2.00   // 200%

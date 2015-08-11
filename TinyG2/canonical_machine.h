@@ -463,7 +463,8 @@ typedef struct cmAxis {
     float jerk_max;                         // max jerk (Jm) in mm/min^3 divided by 1 million
     float jerk_high;                        // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
     float recip_jerk;                       // stored reciprocal of current jerk value - has the million in it
-    float junction_dev;                     // aka cornering delta
+    float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
+    float junction_dev;                     // aka cornering delta -- DEPRICATED!
     float radius;                           // radius in mm for rotary axis modes
 
     uint8_t homing_input;                   // set 1-N for homing input. 0 will disable homing
