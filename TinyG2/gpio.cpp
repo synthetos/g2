@@ -142,14 +142,14 @@ void gpio_init(void)
         } else {
             hw.sw_port[i]->DIRCLR = SW_MIN_BIT_bm;          // set min input
             hw.sw_port[i]->PIN6CTRL = (PIN_MODE | PORT_ISC_BOTHEDGES_gc);
-            hw.sw_port[i]->INT0MASK = SW_MIN_BIT_bm;        // interrupt on min switch
+            hw.sw_port[i]->INT0MASK = SW_MIN_BIT_bm;	 	// interrupt on min switch
         }
         if (d_in[i+1].mode == INPUT_MODE_DISABLED) {
             hw.sw_port[i]->INT1MASK = 0;
         } else {
             hw.sw_port[i]->DIRCLR = SW_MAX_BIT_bm;          // set max input
             hw.sw_port[i]->PIN7CTRL = (PIN_MODE | PORT_ISC_BOTHEDGES_gc);
-            hw.sw_port[i]->INT1MASK = SW_MAX_BIT_bm;        // max on INT1
+            hw.sw_port[i]->INT1MASK = SW_MAX_BIT_bm;		// max on INT1
         }
         // Set interrupt level. Interrupts must be enabled in main()
         hw.sw_port[i]->INTCTRL = GPIO1_INTLVL;                  // see hardware.h for setting
@@ -171,7 +171,7 @@ void gpio_reset(void)
         in->state = (inputState)(_read_raw_pin(i+1) ^ (in->mode ^ 1));    // correct for NO or NC mode
         in->lockout_ms = INPUT_LOCKOUT_MS;
         in->lockout_timer = SysTickTimer_getValue();
-    }
+	}
 }
 
 /*
@@ -359,8 +359,116 @@ static void _dispatch_pin(const uint8_t input_num_ext)
             cm.safety_interlock_reengaged = input_num_ext;
         }
     }
-    sr_request_status_report(SR_REQUEST_TIMED);
+    sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
 }
+
+/*
+ * _handle_pin_changed() - ISR helper
+ *
+ * Since we set the interrupt to kPinInterruptOnChange _handle_pin_changed() should
+ * only be called when the pin *changes* values, so we can assume that the current
+ * pin value is not the same as the previous value. Note that the value may have
+ * changed rapidly, and may even have changed again since the interrupt was triggered.
+ * In this case a second interrupt will likely follow this one immediately after exiting.
+ *
+ *  input_num is the input channel, 1 - N
+ *  pin_value = 1 if pin is set, 0 otherwise
+ */
+
+//static void _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_value)
+//{
+//    io_di_t *in = &io.in[input_num_ext-1];  // array index is one less than input number
+//
+//    // return if input is disabled (not supposed to happen)
+//	if (in->mode == INPUT_MODE_DISABLED) {
+//    	in->state = INPUT_DISABLED;
+//        return;
+//    }
+//
+//    // return if the input is in lockout period (take no action)
+//    if (SysTickTimer.getValue() < in->lockout_timer) {
+//        return;
+//    }
+//
+//	// return if no change in state
+//	int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
+//	if ( in->state == (inputState)pin_value_corrected ) {
+////    	in->edge = INPUT_EDGE_NONE;        // edge should only be reset by function or opposite edge
+//    	return;
+//	}
+//
+//	// record the changed state
+//    in->state = (inputState)pin_value_corrected;
+//	in->lockout_timer = SysTickTimer.getValue() + in->lockout_ms;
+//    if (pin_value_corrected == INPUT_ACTIVE) {
+//        in->edge = INPUT_EDGE_LEADING;
+//    } else {
+//        in->edge = INPUT_EDGE_TRAILING;
+//    }
+//
+//    // perform homing operations if in homing mode
+//    if (in->homing_mode) {
+//        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+//            en_take_encoder_snapshot();
+//            cm_start_hold();
+//        }
+//        return;
+//    }
+//
+//    // perform probing operations if in probing mode
+//    if (in->probing_mode) {
+//        if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+//            en_take_encoder_snapshot();
+//            cm_start_hold();
+//        }
+//        return;
+//    }
+//
+//	// *** NOTE: From this point on all conditionals assume we are NOT in homing or probe mode ***
+//
+//    // trigger the action on leading edges
+//
+//    if (in->edge == INPUT_EDGE_LEADING) {
+//        if (in->action == INPUT_ACTION_STOP) {
+//			cm_start_hold();
+//        }
+//        if (in->action == INPUT_ACTION_FAST_STOP) {
+//			cm_start_hold();                        // for now is same as STOP
+//        }
+//        if (in->action == INPUT_ACTION_HALT) {
+//	        cm_halt_all();					        // hard stop, including spindle and coolant
+//        }
+//        if (in->action == INPUT_ACTION_PANIC) {
+//	        char msg[10];
+//	        sprintf_P(msg, PSTR("input %d"), input_num_ext);
+//	        cm_panic(STAT_PANIC, msg);
+//        }
+//        if (in->action == INPUT_ACTION_RESET) {
+//            hw_hard_reset();
+//        }
+//    }
+//
+//	// these functions trigger on the leading edge
+//    if (in->edge == INPUT_EDGE_LEADING) {
+//		if (in->function == INPUT_FUNCTION_LIMIT) {
+//			cm.limit_requested = input_num_ext;
+//
+//		} else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
+//			cm.shutdown_requested = input_num_ext;
+//
+//		} else if (in->function == INPUT_FUNCTION_INTERLOCK) {
+//		    cm.safety_interlock_disengaged = input_num_ext;
+//		}
+//    }
+//
+//    // trigger interlock release on trailing edge
+//    if (in->edge == INPUT_EDGE_TRAILING) {
+//        if (in->function == INPUT_FUNCTION_INTERLOCK) {
+//		    cm.safety_interlock_reengaged = input_num_ext;
+//        }
+//    }
+//    sr_request_status_report(SR_REQUEST_TIMED);
+//}
 
 /********************************************
  **** Digital Input Supporting Functions ****
