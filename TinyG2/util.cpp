@@ -636,29 +636,8 @@ char inttoa(char *str, int n)
         }
     return (strlen(str));
 }
-/*
-void test_ftoa()
-{
-    int i;
-    char str[32];
-    int len;
-    float d[] = {
-        0.0,
-        42.0,
-        123.456789,
-        -123.456789,
-        1234.0000,
-        -1234.0000,
-        0.00018,
-    };
-    for (i = 0; i < 6; i++) {
-        len = floattoa(str, d[i], 4, 10);
-        printf("%f: %s len:%d precision:4\n", d[i], str, len);
-    }
-}
-*/
 
-static const float round_lookup[] = {
+constexpr float round_lookup_[] = {
     0.5,          // precision 0
     0.05,         // precision 1
     0.005,        // precision 2
@@ -667,74 +646,80 @@ static const float round_lookup[] = {
     0.000005,     // precision 5
     0.0000005,    // precision 6
     0.00000005,   // precision 7
+    0.000000005,  // precision 8
+    0.0000000005, // precision 9
+    0.00000000005 // precision 10
 };
 
-
 // It's assumed that the string buffer contains at lest count_ non-\0 chars
-//constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
-//    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
-//}
-
-int c_strreverse(char * const t, const int count_) {
-    char hold = 0;
-    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
+int c_strreverse(char * const t, const int count_, char hold = 0) {
+    return count_>1
+    // Note: It always returns the count_, for a consistent interface.
+    ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_
+    : count_;
 }
 
-char floattoa(char *buffer, float in, int precision) {
-    int maxlen = 16;                    // set an arbitrary maximum length for the output string
-    int length = 0;
-    char *b = buffer;
+char floattoa(char *buffer, float in, int precision, int maxlen /*= 16*/) {
+    int length_ = 0;
+    char *b_ = buffer;
 
-    if (in < 0.0) {                     // handle negative numbers
-        *b++ = '-';
-        in = -in;
-        length++;
+    if (in < 0.0) {
+        *b_++ = '-';
+        return floattoa(b_, -in, precision, maxlen-1) + 1;
     }
 
-    in += round_lookup[precision];      // round up the number to the precision
-    int int_length = 0;
-    int integer_part = (int)in;
+    in += round_lookup_[precision];
+    int int_length_ = 0;
+    int integer_part_ = (int)in;
 
     // do integer part
-    while (integer_part > 0) {
-        if (length++ > maxlen) {
+    while (integer_part_ > 0) {
+        if (length_++ > maxlen) {
             *buffer = 0;
             return 0;
         }
-        int t = integer_part / 10;
-        *b++ = '0' + (integer_part - (t*10));
-        integer_part = t;
-        int_length++;
+        int t_ = integer_part_ / 10;
+        *b_++ = '0' + (integer_part_ - (t_*10));
+        integer_part_ = t_;
+        int_length_++;
     }
-    if (length > 0) {
-        c_strreverse(buffer, int_length);
+    if (length_ > 0) {
+        c_strreverse(buffer, int_length_);
     } else {
-        *b++ = '0';
+        *b_++ = '0';
+        int_length_++;
     }
 
     // do fractional part
-    *b++ = '.';
-    length++;
-    float frac_part = in;
-    frac_part -= (int)frac_part;
+    *b_++ = '.';
+    length_ = int_length_+1;
+
+    float frac_part_ = in;
+    frac_part_ -= (int)frac_part_;
     while (precision-- > 0) {
-        if (length++ > maxlen) {
+        if (length_++ > maxlen) {
             *buffer = 0;
             return 0;
         }
-        frac_part *= 10.0;
-        *b++ = ('0' + (int)frac_part);
-        frac_part -= (int)frac_part;
+        frac_part_ *= 10.0;
+        // if (precision==0) {
+        //     t_ += 0.5;
+        // }
+        *b_++ = ('0' + (int)frac_part_);
+        frac_part_ -= (int)frac_part_;
     }
 
     // right strip trailing zeroes (OPTIONAL)
-    while (*(b-1) == '0') {
-        *(b--) = 0;
-        length--;
+#if 1
+    while (*(b_-1) == '0' && length_>1) {
+        *(b_--) = 0;
+        length_--;
     }
-    if (*(b-1) == '.') {
-        *(b--) = 0;
-        length--;
+
+    if (*(b_-1) == '.') {
+        *(b_--) = 0;
+        length_--;
     }
-    return (char)length;
+#endif
+    return length_;
 }
