@@ -58,6 +58,9 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
+#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
