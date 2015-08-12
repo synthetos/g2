@@ -2,7 +2,7 @@
  * util.cpp - a random assortment of useful functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -229,7 +229,6 @@ const char *pstr2str(const char *pgm_string)
 	return (global_string_buf);
 #endif
 #ifdef __ARM
-//	return ((char_t *)pgm_string);
 	return (pgm_string);
 #endif
 }
@@ -249,18 +248,7 @@ char fntoa(char *str, float n, uint8_t precision)
 	} else if (isinf(n)) {
 		strcpy(str, "inf");
 		return (3);
-/*
-	} else if (precision == 0 ) { return((char_t)sprintf((char *)str, "%0.0f", (double) n));
-	} else if (precision == 1 ) { return((char_t)sprintf((char *)str, "%0.1f", (double) n));
-	} else if (precision == 2 ) { return((char_t)sprintf((char *)str, "%0.2f", (double) n));
-	} else if (precision == 3 ) { return((char_t)sprintf((char *)str, "%0.3f", (double) n));
-	} else if (precision == 4 ) { return((char_t)sprintf((char *)str, "%0.4f", (double) n));
-	} else if (precision == 5 ) { return((char_t)sprintf((char *)str, "%0.5f", (double) n));
-	} else if (precision == 6 ) { return((char_t)sprintf((char *)str, "%0.6f", (double) n));
-	} else if (precision == 7 ) { return((char_t)sprintf((char *)str, "%0.7f", (double) n));
-	} else					    { return((char_t)sprintf((char *)str, "%f", (double) n)); }
 
-*/
 	} else if (precision == 0 ) { return(sprintf(str, "%0.0f", (double) n));
 	} else if (precision == 1 ) { return(sprintf(str, "%0.1f", (double) n));
 	} else if (precision == 2 ) { return(sprintf(str, "%0.2f", (double) n));

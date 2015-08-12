@@ -148,9 +148,6 @@ typedef enum {
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
-//#define SAFETY_INTERLOCK_MASK 0x1
-//#define SAFETY_ESC_MASK = 0xE
-
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
@@ -358,7 +355,6 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
     float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
     uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
     uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
-//    uint8_t L_word;						// L word - used by G10s
 
     uint8_t origin_offset_enable;		// G92 offsets enabled/disabled. 0=disabled, 1=enabled
     uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
@@ -477,7 +473,7 @@ typedef struct cmAxis {
     uint8_t homing_dir;                 // 0=search to negative, 1=search to positive
 	float search_velocity;				// homing search velocity
 	float latch_velocity;				// homing latch velocity
-	float latch_backoff;				// backoff from switches prior to homing latch movement
+	float latch_backoff;				// backoff sufficient to clear a switch
 	float zero_backoff;					// backoff from switches for machine zero
 } cfgAxis_t;
 
@@ -487,7 +483,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	/**** Config variables (PUBLIC) ****/
 
 	// system group settings
-	float junction_acceleration;		// centripetal acceleration max for cornering
+	float junction_aggression;		    // how aggressively will the machine corner? 1.0 or so is about the upper limit
 	float chordal_tolerance;			// arc chordal accuracy setting in mm
 	bool soft_limit_enable;             // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                  // true to enable limit switches (disabled is same as override)
@@ -636,21 +632,21 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,         // G10
                             const float offset[], const bool flag[]);
 
 void cm_set_position(const uint8_t axis, const float position); // set absolute position - single axis
-stat_t cm_set_absolute_origin(const float origin[], bool flag[]);          // G28.3
+stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G28.3
 void cm_set_axis_origin(uint8_t axis, const float position);	            // G28.3 planner callback
 
 stat_t cm_set_coord_system(const uint8_t coord_system);                     // G54 - G59
-stat_t cm_set_origin_offsets(const float offset[], const bool flag[]);     // G92
+stat_t cm_set_origin_offsets(const float offset[], const bool flag[]);      // G92
 stat_t cm_reset_origin_offsets(void);                                       // G92.1
 stat_t cm_suspend_origin_offsets(void);                                     // G92.2
 stat_t cm_resume_origin_offsets(void);                                      // G92.3
 
 // Free Space Motion (4.3.4)
-stat_t cm_straight_traverse(const float target[], const bool flags[]);     // G0
+stat_t cm_straight_traverse(const float target[], const bool flags[]);      // G0
 stat_t cm_set_g28_position(void);                                           // G28.1
-stat_t cm_goto_g28_position(const float target[], const bool flags[]);     // G28
+stat_t cm_goto_g28_position(const float target[], const bool flags[]);      // G28
 stat_t cm_set_g30_position(void);                                           // G30.1
-stat_t cm_goto_g30_position(const float target[], const bool flags[]);     // G30
+stat_t cm_goto_g30_position(const float target[], const bool flags[]);      // G30
 
 // Machining Attributes (4.3.5)
 stat_t cm_set_feed_rate(const float feed_rate);                             // F parameter
@@ -658,7 +654,7 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(const uint8_t mode);                             // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(const float target[], const bool flags[]); // G1
+stat_t cm_straight_feed(const float target[], const bool flags[]);          // G1
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
 stat_t cm_arc_feed(const float target[], const bool target_f[],             // G2/G3 - target endpoint
@@ -715,7 +711,7 @@ stat_t cm_homing_cycle_start_no_set(void);						// G28.4
 stat_t cm_homing_cycle_callback(void);							// G28.2/.4 main loop callback
 
 // Probe cycles
-stat_t cm_straight_probe(float target[], bool flags[]);		// G38.2
+stat_t cm_straight_probe(float target[], bool flags[]);         // G38.2
 stat_t cm_probing_cycle_callback(void);							// G38.2 main loop callback
 
 // Jogging cycle
@@ -766,6 +762,7 @@ stat_t cm_get_am(nvObj_t *nv);			// get axis mode
 stat_t cm_set_am(nvObj_t *nv);			// set axis mode
 stat_t cm_set_hi(nvObj_t *nv);          // set homing input
 
+stat_t cm_set_ja(nvObj_t *nv);			// set junction aggression with 1,000,000 correction
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 

@@ -402,7 +402,7 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
  *	execution, and the real tool position is still close to the starting point.
  */
 
-void cm_finalize_move() 
+void cm_finalize_move()
 {
 	copy_vector(cm.gmx.position, cm.gm.target);		// update model position
 }
@@ -766,20 +766,12 @@ stat_t cm_alarm(const stat_t status, const char *msg)
 	cm.machine_state = MACHINE_ALARM;
     cm_request_feedhold();                      // stop motion
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
+
+//  TBD - these functions should probably be called - See cm_shutdown()
 //	cm_spindle_control_immediate(SPINDLE_OFF);
 //	cm_coolant_off_immediate();
 //	cm_spindle_optional_pause(spindle.pause_on_hold);
 //	cm_coolant_optional_pause(coolant.pause_on_hold);
-
-/*	// build a secondary message string (info) and call the exception report
-	char info[64];
-	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		sprintf_P(info, PSTR("msg:%s,n:%d,gc:\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
-	} else {
-		sprintf_P(info, PSTR("\"msg\":%s,\"n\":%d,\"gc\":\"%s\""), msg, (int)cm.gm.linenum, cs.saved_buf);
-	}
-	rpt_exception(status, info);	            // send alarm exception report
-*/
 	rpt_exception(status, msg);	                // send alarm message
     return (status);
 }
@@ -1207,7 +1199,7 @@ stat_t cm_set_path_control(const uint8_t mode)
  * Machining Functions (4.3.6) *
  *******************************/
 /*
- * cm_arc_feed() - SEE plan_arc.c(pp)
+ * cm_arc_feed() - SEE plan_arc.cpp
  */
 
 /*
@@ -1464,7 +1456,9 @@ void cm_request_feedhold(void) {
 
 void cm_request_end_hold(void)
 {
-    cm.end_hold_requested = true;
+    if (cm.hold_state != FEEDHOLD_OFF) {
+        cm.end_hold_requested = true;
+    }
 }
 
 void cm_request_queue_flush()
@@ -2081,6 +2075,13 @@ stat_t cm_set_jh(nvObj_t *nv)
 	return(STAT_OK);
 }
 
+stat_t cm_set_ja(nvObj_t *nv)
+{
+    if (nv->value > 1000) nv->value /= 1000000;
+    set_flt(nv);
+    return(STAT_OK);
+}
+
 /*
  * Commands
  *
@@ -2196,8 +2197,6 @@ const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
 const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
 const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
 const char fmt_tool[] PROGMEM = "Tool number          %d\n";
-//const char fmt_ilck[] PROGMEM = "Safety Interlock:    %s\n";
-//const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -2231,9 +2230,6 @@ void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 
-//void cm_print_ilck(nvObj_t *nv) { text_print_str(nv, fmt_ilck);}
-//void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
-
 void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl);}  // TYPE_INT
 void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun);}  // TYPE_INT
 void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
@@ -2242,7 +2238,8 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system state print functions */
 
-const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+//const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
+const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
@@ -2251,7 +2248,8 @@ const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
 const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
 const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
 
-void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+//void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}    // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
@@ -2274,7 +2272,6 @@ void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
  *	cm_print_tn()
  *	cm_print_jm()
  *	cm_print_jh()
- *	cm_print_jd()
  *	cm_print_ra()
  *	cm_print_hi()
  *	cm_print_hd()

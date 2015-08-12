@@ -40,8 +40,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION		100000		// centripetal acceleration around corners
-#define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+#define JUNCTION_ACCELERATION		100000  // centripetal acceleration around corners
+#define CHORDAL_TOLERANCE           0.001   // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -50,9 +50,9 @@
 #define SPINDLE_ENABLE_POLARITY     1       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_DWELL_TIME          1.5     //after unpausing and turning the spindle on, dwell for 1.5s
+#define SPINDLE_DWELL_TIME          1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
-#define ESC_BOOT_TIME               5000    //how long the ESC takes to boot, in milliseconds
+#define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
@@ -147,7 +147,7 @@
 
 #define M4_MOTOR_MAP 		    	AXIS_A
 #define M4_STEP_ANGLE 		    	1.8
-#define M4_TRAVEL_PER_REV 	    	360					// degrees moved per motor rev
+#define M4_TRAVEL_PER_REV 	    	360			// degrees moved per motor rev
 #define M4_MICROSTEPS 		    	8
 #define M4_POLARITY 		    	1
 #define M4_POWER_MODE 			    MOTOR_DISABLED
@@ -352,8 +352,8 @@
 // *** PWM SPINDLE CONTROL ***
 
 #define P1_PWM_FREQUENCY		    100					// in Hz
-#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			    12800
+#define P1_CW_SPEED_LO			    10500				// in RPM (arbitrary units)
+#define P1_CW_SPEED_HI			    16400
 #define P1_CW_PHASE_LO			    0.13				// phase [0..1]
 #define P1_CW_PHASE_HI			    0.17
 #define P1_CCW_SPEED_LO			    0
@@ -361,6 +361,12 @@
 #define P1_CCW_PHASE_LO			    0.1
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
+
+#define P1_USE_MAPPING_CUBIC
+#define P1_MAPPING_CUBIC_X3         2.1225328766717546e-013
+#define P1_MAPPING_CUBIC_X2        -7.2900167282605129e-009
+#define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
+#define P1_MAPPING_CUBIC_X0        -2.1301489219406905e-001
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

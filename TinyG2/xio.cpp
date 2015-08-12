@@ -40,6 +40,7 @@
 #include "report.h"
 #include "controller.h"
 #include "util.h"
+
 #ifdef __TEXT_MODE
 #include "text_parser.h"
 #endif
@@ -202,8 +203,8 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                     size = 1;
                     return single_char_buffer;
 
-//                } else if ((c == LF) || (c == CR)) {
-                } else if ((c == LF) || (c == CR) || (c == TAB)) {
+                } else if ((c == LF) || (c == CR)) {
+//                } else if ((c == LF) || (c == CR) || (c == TAB)) {  // use this to add TAB as a line terminator
                     _ready_to_send = true;
                     break;
                 }

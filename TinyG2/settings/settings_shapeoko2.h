@@ -90,10 +90,8 @@
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-//#define MOTOR_POWER_LEVEL_XY        0.375                   // default motor power level 0.00 - 1.00 (ARM only)
-//#define MOTOR_POWER_LEVEL_Z         0.750
-#define MOTOR_POWER_LEVEL_XY        0.250                   // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_Z         0.250
+#define MOTOR_POWER_LEVEL_XY        0.375                   // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_Z         0.750
 #define MOTOR_POWER_LEVEL_ABC       0.000
 
 #define M1_MOTOR_MAP                AXIS_X				    // 1ma
@@ -185,7 +183,7 @@
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX                0
 #define Z_TRAVEL_MIN                -95
-#define Z_JERK_MAX                  100
+#define Z_JERK_MAX                  500                 // was 100
 #define Z_JERK_HIGH_SPEED           500
 #define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6

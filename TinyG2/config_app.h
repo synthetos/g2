@@ -2,8 +2,8 @@
  * config_app.h - application-specific part of configuration sub-system
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -44,11 +44,13 @@ typedef struct cfgParameters {		// mostly communications variables at this point
 	// Job ID
 	int32_t job_id[4];				// uuid to identify the job
 
+#ifdef __USER_DATA
 	// user-defined data groups
 	uint32_t user_data_a[4];
 	uint32_t user_data_b[4];
 	uint32_t user_data_c[4];
 	uint32_t user_data_d[4];
+#endif
 
 	uint16_t magic_end;
 } cfgParameters_t;
