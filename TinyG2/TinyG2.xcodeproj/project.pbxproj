@@ -124,7 +124,6 @@
 		D4E913611AC4759F0042A16C /* settings_shapeoko2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko2.h; sourceTree = "<group>"; };
 		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
 		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
-		D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob.h; sourceTree = "<group>"; };
 		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -182,7 +181,6 @@
 				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
 				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
 				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
-				D4EC69FC18CAE1C200DF8E4F /* settings_Ultimaker_Rob.h */,
 				D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */,
 				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
 			);
@@ -254,20 +252,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		BF3BEEE91AE150C7009ABADE /* TinyG2 G2V9k */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s PLATFORM=G2v9k";
-			buildConfigurationList = BF3BEEEA1AE150C7009ABADE /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "TinyG2 G2V9k";
-			passBuildSettingsInEnvironment = 1;
-			productName = g3_due;
-		};
 		D409C0101902F73000F15547 /* TinyG2 G2V9i */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9i";
@@ -490,22 +474,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		BF3BEEEB1AE150C7009ABADE /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 G2V9k";
-			};
-			name = Debug;
-		};
-		BF3BEEEC1AE150C7009ABADE /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 G2V9k";
-			};
-			name = Release;
-		};
 		D409C0121902F73000F15547 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -743,15 +711,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		BF3BEEEA1AE150C7009ABADE /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				BF3BEEEB1AE150C7009ABADE /* Debug */,
-				BF3BEEEC1AE150C7009ABADE /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D409C0111902F73000F15547 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9i" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
