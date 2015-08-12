@@ -123,11 +123,10 @@ extern "C"{
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-
-timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
-timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
-timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
-timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
+typedef TimerChannel<2,1> dda_timer_type;	// stepper pulse generation in stepper.cpp
+typedef TimerChannel<3,1> dwell_timer_type;	// dwell timing in stepper.cpp
+typedef TimerChannel<4,1> load_timer_type;	// request load timer in stepper.cpp
+typedef TimerChannel<5,1> exec_timer_type;	// request exec timer in stepper.cpp
 
 // Pin assignments
 

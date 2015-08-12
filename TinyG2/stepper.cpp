@@ -69,11 +69,10 @@ OutputPin<kGRBL_CommonEnablePinNumber> common_enable;
 
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);// stepper pulse generation
-
-Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
-Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
-Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
-Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
+dda_timer_type dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
+dwell_timer_type dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
+load_timer_type load_timer;		// triggers load of next stepper segment
+exec_timer_type exec_timer;		// triggers calculation of next+1 stepper segment
 
 // Motor structures
 template<const uint8_t motor,
@@ -281,8 +280,8 @@ void stepper_init()
 	// Longer duty cycles stretch ON pulses but 75% is about the upper limit and about
 	// optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
 	// If you need more pulse width you need to drop the DDA clock rate
-	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	dda_timer.setDutyCycleA(1.0 - 0.75);		// This is a 75% duty cycle on the ON step part
+	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatch | kInterruptPriorityHighest);
+	dda_timer.setDutyCycle(1.0 - 0.75);		// This is a 75% duty cycle on the ON step part
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -358,7 +357,7 @@ stat_t stepper_test_assertions()
 
 bool st_runtime_isbusy()
 {
-    return (st_run.dda_ticks_downcount);    // returns false if down count is zero
+    return (st_run.dda_ticks_downcount);    // returns false if downcount is zero
 }
 
 /*
@@ -595,61 +594,60 @@ ISR(TIMER_DDA_ISR_vect)
  *	If motor_N is not defined that if{} clause (i.e. that motor) drops out of the complied code.
  */
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
-MOTATE_TIMER_INTERRUPT(dda_timer_num)
-{
-	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
+    template<>
+    void dda_timer_type::interrupt()
+    {
+        uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
+        //    dda_debug_pin2=1;
+        if (interrupt_cause == kInterruptOnMatch) {
 
-//  dda_debug_pin2=1;       // example of use of debug pin for profiling with a logic analyser or scope
+            if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
+                motor_1.step.set();		// turn step bit on
+                st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_1);
+            }
+            if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
+                motor_2.step.set();
+                st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_2);
+            }
+            if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
+                motor_3.step.set();
+                st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_3);
+            }
+            if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
+                motor_4.step.set();
+                st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_4);
+            }
+            if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
+                motor_5.step.set();
+                st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_5);
+            }
+            if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
+                motor_6.step.set();
+                st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
+                INCREMENT_ENCODER(MOTOR_6);
+            }
 
-	if (interrupt_cause == kInterruptOnMatchA) {
-
-		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-			motor_1.step.set();		// turn step bit on
-			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_1);
-		}
-		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-			motor_2.step.set();
-			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_2);
-		}
-		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-			motor_3.step.set();
-			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_3);
-		}
-		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-			motor_4.step.set();
-			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_4);
-		}
-		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-			motor_5.step.set();
-			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_5);
-		}
-		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-			motor_6.step.set();
-			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
-			INCREMENT_ENCODER(MOTOR_6);
-		}
-
-	} else if (interrupt_cause == kInterruptOnOverflow) {
-		motor_1.step.clear();							// turn step bits off
-		motor_2.step.clear();
-		motor_3.step.clear();
-		motor_4.step.clear();
-		motor_5.step.clear();
-		motor_6.step.clear();
-
-		if (--st_run.dda_ticks_downcount != 0) return;
-
-		// process end of segment
-		dda_timer.stop();								// turn it off or it will keep stepping out the last segment
-		_load_move();									// load the next move at the current interrupt level
-	}
-//    dda_debug_pin2=0;
-} // MOTATE_TIMER_INTERRUPT
+        } else if (interrupt_cause == kInterruptOnOverflow) {
+            motor_1.step.clear();							// turn step bits off
+            motor_2.step.clear();
+            motor_3.step.clear();
+            motor_4.step.clear();
+            motor_5.step.clear();
+            motor_6.step.clear();
+            
+            if (--st_run.dda_ticks_downcount != 0) return;
+            
+            // process end of segment
+            dda_timer.stop();								// turn it off or it will keep stepping out the last segment
+            _load_move();									// load the next move at the current interrupt level
+        }
+        //    dda_debug_pin2=0;
+    } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
 
 #endif // __ARM
@@ -668,14 +666,15 @@ ISR(TIMER_DWELL_ISR_vect) {								// DWELL timer interrupt
 #endif
 #ifdef __ARM
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
-MOTATE_TIMER_INTERRUPT(dwell_timer_num)
-{
-	dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
-	if (--st_run.dda_ticks_downcount == 0) {
-		dwell_timer.stop();
-		_load_move();
-	}
-}
+    template<>
+    void dwell_timer_type::interrupt()
+    {
+        dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
+        if (--st_run.dda_ticks_downcount == 0) {
+            dwell_timer.stop();
+            _load_move();
+        }
+    }
 } // namespace Motate
 #endif
 
@@ -690,7 +689,7 @@ void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
 		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
-		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;           // trigger a LO interrupt
+		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;				// trigger a LO interrupt
 	}
 }
 
@@ -716,7 +715,8 @@ void st_request_exec_move()
 }
 
 namespace Motate {	// Define timer inside Motate namespace
-	MOTATE_TIMER_INTERRUPT(exec_timer_num)				// exec move SW interrupt
+    template<>
+    void exec_timer_type::interrupt()
 	{
 		exec_timer.getInterruptCause();					// clears the interrupt condition
 		if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
@@ -770,7 +770,8 @@ void st_request_load_move()
 }
 
 namespace Motate {	// Define timer inside Motate namespace
-	MOTATE_TIMER_INTERRUPT(load_timer_num)						// load steppers SW interrupt
+    template<>
+    void load_timer_type::interrupt()
 	{
 		load_timer.getInterruptCause();							// read SR to clear interrupt condition
 		_load_move();
@@ -781,14 +782,14 @@ namespace Motate {	// Define timer inside Motate namespace
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper runtime structure
  *
- *  This routine can only be called be called from an ISR at the same or
- *  higher level as the DDA or dwell ISR. A software interrupt has been
+ *	This routine can only be called be called from an ISR at the same or
+ *	higher level as the DDA or dwell ISR. A software interrupt has been
  *  provided to allow a non-ISR to request a load (st_request_load_move())
  *
- *  In aline() code:
- *   - All axes must set steps and compensate for out-of-range pulse phasing.
- *   - If axis has 0 steps the direction setting can be omitted
- *   - If axis has 0 steps the motor must not be enabled to support power mode = 1
+ *	In aline() code:
+ *	 - All axes must set steps and compensate for out-of-range pulse phasing.
+ *	 - If axis has 0 steps the direction setting can be omitted
+ *	 - If axis has 0 steps the motor must not be enabled to support power mode = 1
  */
 /****** WARNING - THIS CODE IS SPECIFIC TO ARM. SEE TINYG FOR AVR CODE ******/
 
@@ -1008,7 +1009,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "prep isinf"));
 	} else if (isnan(segment_time)) {                           // never supposed to happen
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "prep isnan"));
-	} else if (segment_time < EPSILON) {
+	} else if (segment_time < EPSILON) { 
         return (STAT_MINIMUM_TIME_MOVE);
 	}
 	// setup segment parameters

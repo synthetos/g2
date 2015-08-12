@@ -45,9 +45,7 @@
 #include "xio.h"
 #include "settings.h"
 
-#ifdef __ARM
-#include "Reset.h"
-#endif
+#include "MotatePower.h"
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************

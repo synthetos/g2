@@ -32,9 +32,9 @@ MOTATE_PATH ?= ../Motate/MotateProject/motate
 # For device-specific FIRST_LINK_SOURCES, use DEVICE_FIRST_LINK_SOURCES (in the
 # device-specific section, below.)
 #
-# Do not include a ./ at the beginning of paths, or they won't match the glob
+# DO include a ./ at the beginning of paths, or they won't match the glob
 # results and will cause linkers errors.
-FIRST_LINK_SOURCES = main.cpp
+FIRST_LINK_SOURCES = ./main.cpp
 
 # Define optimisation level here
 #OPTIMIZATION ?= 0

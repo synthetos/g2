@@ -34,9 +34,12 @@
 #include "hardware.h"
 #include "controller.h"
 #include "text_parser.h"
+
+
 #ifdef __ARM
+#include "MotateUtilities.h"
 #include "MotateUniqueID.h"
-#include "Reset.h"
+#include "MotatePower.h"
 #endif
 #ifdef __AVR
 #include "xmega/xmega_init.h"
@@ -59,12 +62,12 @@ void hardware_init()
 
 void hw_hard_reset(void)
 {
-    banzai(0);   // arg=0 resets the system
+    Motate::System::reset(/*boootloader: */ false); // arg=0 resets the system
 }
 
 void hw_flash_loader(void)
 {
-    banzai(1);  // arg=1 erases FLASH and enters FLASH loader
+    Motate::System::reset(/*boootloader: */ true);  // arg=1 erases FLASH and enters FLASH loader
 }
 
 /*
@@ -77,15 +80,9 @@ void hw_flash_loader(void)
 void _get_id(char *id)
 {
     char *p = id;
-    const uint16_t *uuid = readUniqueIdString();
+    const char *uuid = Motate::UUID;
 
-    for(uint8_t i=0; i<SYS_ID_DIGITS; i++) {
-        *p++ = uuid[i];
-        if ( (i & 0x03) == 3) {     // put a dash every 4 digits
-            *p++ = '-';
-        }
-    }
-    *(--p) = 0; // nul termination
+    Motate::strncpy(p, uuid, Motate::strlen(uuid));
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/

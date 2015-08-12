@@ -37,35 +37,7 @@
 #include "pwm.h"
 #include "xio.h"
 
-#ifdef __AVR
-#include <avr/interrupt.h>
-#include "xmega/xmega_interrupts.h"
-#endif // __AVR
-
-#ifdef __ARM
-#include "UniqueId.h"
-#include "MotateTimers.h"
-using Motate::delay;
-
-/**************************
- *** C++ specific stuff ***
- **************************/
-#ifdef __cplusplus
-extern "C"{
-#endif // __cplusplus
-
-void _init() __attribute__ ((weak));
-void _init() {;}
-void __libc_init_array(void);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-/************************** to here ***************************/
-
-void* __dso_handle = nullptr;
-
-#endif // __ARM
+#include "MotateUniqueID.h"
 
 /******************** System Globals *************************/
 
@@ -75,6 +47,9 @@ char global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
 /******************** Application Code ************************/
 
 #ifdef __ARM
+// This is used by the USB system:
+void* __dso_handle = nullptr;
+
 const Motate::USBSettings_t Motate::USBSettings = {
 	/*gVendorID         = */ 0x1d50,
 	/*gProductID        = */ 0x606d,
@@ -98,7 +73,6 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 #endif
 
 /*
- * _system_init()
  * _application_init_services()
  * _application_init_machine()
  * _application_init_startup()
@@ -106,21 +80,6 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
  * There are a lot of dependencies in the order of these inits.
  * Don't change the ordering unless you understand this.
  */
-
-void _system_init(void)
-{
-#ifdef __ARM
-	SystemInit();
-	WDT->WDT_MR = WDT_MR_WDDIS;     // Disable watchdog
-	__libc_init_array();            // Initialize C library
-    cacheUniqueId();                // Store the flash UUID
-	usb.attach();                   // USB setup
-	delay(1000);
-#endif
-#ifdef __AVR
-    cli();
-#endif
-}
 
 void application_init_services(void)
 {
@@ -166,22 +125,17 @@ void application_init_startup(void)
  * main()
  */
 
-int main(void)
+void setup(void)
 {
-	// system initialization
-	_system_init();
-
 	// TinyG application setup
 	application_init_services();
 	application_init_machine();
 	application_init_startup();
 	run_canned_startup();			// run any pre-loaded commands
+}
 
-	// main loop
-	for (;;) {
-		controller_run( );			// single pass through the controller
-	}
-	return 0;
+void loop() {
+    controller_run( );			// single pass through the controller
 }
 
 /*
