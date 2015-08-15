@@ -49,6 +49,7 @@ DEBUG ?= 0
 # the appropriate board/*.mk files
 SETTINGS_FILE ?= settings_default.h
 
+NEEDS_PRINTF_FLOAT=1
 
 # Now invoke the Motate compile system
 include $(MOTATE_PATH)/Motate.mk
