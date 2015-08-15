@@ -139,6 +139,11 @@ size_t xio_write(const uint8_t *buffer, size_t size);
 
 stat_t xio_set_spi(nvObj_t *nv);
 
+/**** newlib-nano support function(s) ****/
+extern "C" {
+    int _write( int file, char *ptr, int len );
+}
+
 /* Some useful ASCII definitions */
 
 #define NUL (char)0x00		//  ASCII NUL char (0) (not "NULL" which is a pointer)

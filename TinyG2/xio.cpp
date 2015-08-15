@@ -564,6 +564,18 @@ void xio_flush_read()
     return xio.flushRead();
 }
 
+
+/***********************************************************************************
+ * newlib-nano support functions
+ * Here we wire printf to xio
+ ***********************************************************************************/
+
+int _write( int file, char *ptr, int len )
+{
+    return xio_write((const uint8_t *)ptr, len);
+}
+
+
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table

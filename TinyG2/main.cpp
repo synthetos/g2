@@ -83,7 +83,9 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 void application_init_services(void)
 {
-	hardware_init();				// system hardware setup 			- must be first
+    usb.attach();                   // USB setup
+
+    hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
 	xio_init();						// xtended io subsystem				- must be third
 //	rtc_init();						// real time counter
@@ -135,7 +137,10 @@ void setup(void)
 }
 
 void loop() {
-    controller_run( );			// single pass through the controller
+    // main loop
+    for (;;) {
+        controller_run( );			// single pass through the controller
+    }
 }
 
 /*
