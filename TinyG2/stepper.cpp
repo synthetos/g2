@@ -54,7 +54,7 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
 
-#define __NEW_DDA_ISR
+//#define __NEW_DDA_ISR
 
 /**** Setup motate ****/
 
