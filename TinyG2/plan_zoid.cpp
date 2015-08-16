@@ -252,13 +252,14 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     } else if (bf->tail_length < MIN_TAIL_LENGTH) {     // asymmetric acceleration (head-only move) (3a)
         head_only = true;
     } else {
-
+/*
         if (bf->tail_length <= bf->length) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: tail-only move (3d2)");
         }
         if (bf->head_length <= bf->length) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: head-only move (3a2)");
         }
+*/
         // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
         bf->cruise_velocity = _get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
