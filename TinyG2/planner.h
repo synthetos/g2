@@ -193,6 +193,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     moveState move_state;           // move state machine sequence
     uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // block is coded for trapezoid planning
+    bool im_so_dirty;               // set true if the block has been written
 
     float mfo_factor;               // override factor for this block
     float throttle;                 // preserved for backplanning
