@@ -137,6 +137,19 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 //    TRAP_ZERO (bf->length, "zoid() got L=0");
 //    TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
 
+    // If the move has already been planned one or more times re-initialize the lengths
+    // Otherwise you can end up with spurious lengths that kill accuracy
+    if (bf->im_so_dirty) {      // dirty bit to re-initialize parameters
+        bf->head_time = 0;
+        bf->body_time = 0;
+        bf->tail_time = 0;
+        bf->head_length = 0;
+        bf->body_length = 0;
+        bf->tail_length = 0;
+    } else {
+        bf->im_so_dirty = true;
+    }
+
     // *** Perfect-Fit Cases *** Cases where curve fitting has already been done
 
     // PERFECT_CRUISE (1c) Velocities all match (or close enough), treat as body-only
@@ -252,13 +265,14 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     } else if (bf->tail_length < MIN_TAIL_LENGTH) {     // asymmetric acceleration (head-only move) (3a)
         head_only = true;
     } else {
-
+/*
         if (bf->tail_length <= bf->length) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: tail-only move (3d2)");
         }
         if (bf->head_length <= bf->length) {
             rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: head-only move (3a2)");
         }
+*/
         // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
         bf->cruise_velocity = _get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid() Vc=0 asymmetric HT case");

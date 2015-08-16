@@ -66,14 +66,13 @@
 
 #define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
 #define __HELP_SCREENS              // enable help screens      (~3.5Kb)
-#define __CANNED_TESTS              // enable $tests            (~12Kb)
 #define __USER_DATA                 // enable user defined data groups
+#define __STEP_CORRECTION           // enable virtual encoder step correction
 
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __DIAGNOSTICS               // enables various debug functions
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
-#define __CANNED_STARTUP            // run any canned startup moves
 
 /******************************************************************************
  ***** TINYG APPLICATION DEFINITIONS ******************************************
