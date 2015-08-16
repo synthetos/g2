@@ -54,7 +54,7 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
 
-//#define __NEW_DDA_ISR
+#define __NEW_DDA_ISR
 
 /**** Setup motate ****/
 
@@ -609,7 +609,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 
     // clear all steps
 	if (!motor_1.step.isNull()) { motor_1.step.clear(); }
-    debug_pin3=0;
+//    debug_pin3=0;
 	if (!motor_2.step.isNull()) { motor_2.step.clear(); }
 	if (!motor_3.step.isNull()) { motor_3.step.clear(); }
 	if (!motor_4.step.isNull()) { motor_4.step.clear(); }
@@ -626,7 +626,7 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 	if (!motor_1.step.isNull()) {
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			motor_1.step.set();		// turn step bit on
-            debug_pin3=1;
+//            debug_pin3=1;
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_1);
         }

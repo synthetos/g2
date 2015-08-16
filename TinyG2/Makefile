@@ -75,10 +75,10 @@ USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 #	SETTINGS_FILE="settings_Printrbot_Play.h"
 #	SETTINGS_FILE="settings_Printrbot_SimpleMetal.h"
 #	SETTINGS_FILE="settings_probotixV90.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
+#	SETTINGS_FILE="settings_shapeoko2.h"
 #	SETTINGS_FILE="settings_shopbot_sbv300.h"
 #	SETTINGS_FILE="settings_shopbot_test.h"
-#	SETTINGS_FILE="settings_Ultimaker.h"
+	SETTINGS_FILE="settings_Ultimaker.h"
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
