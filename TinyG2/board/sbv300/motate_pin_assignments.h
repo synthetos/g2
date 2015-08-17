@@ -35,11 +35,6 @@
 #include <MotateTimers.h>
 
 namespace Motate {
-
-	_MAKE_MOTATE_PORT32(A, 'A');
-	_MAKE_MOTATE_PORT32(B, 'B');
-	_MAKE_MOTATE_PORT32(C, 'C');
-	_MAKE_MOTATE_PORT32(D, 'D');
     
 	// STEP Pins
 	_MAKE_MOTATE_PIN(0, C, 'C', 28);	// XSTEP
@@ -72,6 +67,10 @@ namespace Motate {
 	// (NONE YET)
 	
 } // namespace Motate
+
+// We then allow each chip-type to have it's own function definitions
+// that will refer to these pin assignments.
+#include "motate_chip_pin_functions.h"
 
 #ifdef MOTATE_BOARD
 #define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
