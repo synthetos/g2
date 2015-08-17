@@ -452,8 +452,6 @@ static stat_t _execute_gcode_block()
 	cm_set_model_linenum(cm.gn.linenum);
 	EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
 	EXEC_FUNC(cm_set_feed_rate, feed_rate);                 // F
-//	EXEC_FUNC(cm_feed_rate_override_factor, feed_rate_override_factor);
-//	EXEC_FUNC(cm_traverse_override_factor, traverse_override_factor);
 	EXEC_FUNC(cm_set_spindle_speed, spindle_speed);         // S
 //	EXEC_FUNC(cm_spindle_override_factor, spindle_override_factor);
 	EXEC_FUNC(cm_select_tool, tool_select);					// tool_select is where it's written
@@ -461,17 +459,16 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_spindle_control, spindle_control); 		// spindle CW, CCW, OFF
 
 /*
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// M8, M9 also disables mist coolant if OFF
 //	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
 //	EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
 //	EXEC_FUNC(cm_spindle_override_enable, spindle_override_enable);
 //	EXEC_FUNC(cm_override_enables, override_enables);
 */
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// also disables mist coolant if OFF
+	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
+	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// M8, M9 also disables mist coolant if OFF
 	EXEC_FUNC(cm_m48_enable, m48_enable);
 	EXEC_FUNC(cm_mfo_enable, mfo_enable);
+//	EXEC_FUNC(cm_mfo_enable, feed_rate_override_factor);
 //	EXEC_FUNC(cm_sso_enable, sso_enable);
 
 	if (cm.gn.next_action == NEXT_ACTION_DWELL) { 			// G4 - dwell
@@ -482,7 +479,9 @@ static stat_t _execute_gcode_block()
 	//--> cutter radius compensation goes here
 	//--> cutter length compensation goes here
 	EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
-	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
+//	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
+    if(cm.gf.path_control) { status = cm_set_path_control(MODEL, cm.gn.path_control); }
+   
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
 	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
 	//--> set retract mode goes here

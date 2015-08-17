@@ -66,27 +66,37 @@ nvList_t nvl;
  */
 stat_t nv_set(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) return(STAT_INTERNAL_RANGE_ERROR);
+	if (nv->index >= nv_index_max()) {
+        return(STAT_INTERNAL_RANGE_ERROR);
+    }    
 	return (((fptrCmd)GET_TABLE_WORD(set))(nv));
 }
 
 stat_t nv_get(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) return(STAT_INTERNAL_RANGE_ERROR);
+	if (nv->index >= nv_index_max()) {
+        return(STAT_INTERNAL_RANGE_ERROR);
+    }    
 	return (((fptrCmd)GET_TABLE_WORD(get))(nv));
 }
 
 void nv_print(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) return;
+	if (nv->index >= nv_index_max()) {
+        return;
+    }    
 	((fptrCmd)GET_TABLE_WORD(print))(nv);
 }
 
 stat_t nv_persist(nvObj_t *nv)	// nv_persist() cannot be called from an interrupt on the AVR due to the AVR1008 EEPROM workaround
 {
 #ifndef __DISABLE_PERSISTENCE	// cutout for faster simulation in test
-	if (nv_index_lt_groups(nv->index) == false) return(STAT_INTERNAL_RANGE_ERROR);
-	if (GET_TABLE_BYTE(flags) & F_PERSIST) return(write_persistent_value(nv));
+	if (nv_index_lt_groups(nv->index) == false) {
+        return(STAT_INTERNAL_RANGE_ERROR);
+    }
+	if (GET_TABLE_BYTE(flags) & F_PERSIST) {
+        return(write_persistent_value(nv));
+    }    
 #endif
 	return (STAT_OK);
 }
@@ -192,19 +202,14 @@ void config_init_assertions()
 
 stat_t config_test_assertions()
 {
-//	if ((cfg.magic_start	!= MAGICNUM) || (cfg.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-//	if ((nvl.magic_start	!= MAGICNUM) || (nvl.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-//	if ((nvStr.magic_start	!= MAGICNUM) || (nvStr.magic_end != MAGICNUM)) return (STAT_CONFIG_ASSERTION_FAILURE);
-//	if (global_string_buf[MESSAGE_LEN-1] != NUL) return (STAT_CONFIG_ASSERTION_FAILURE);
-
     if ((BAD_MAGIC(cfg.magic_start)) ||
         (BAD_MAGIC(cfg.magic_end)) ||
         (BAD_MAGIC(nvl.magic_start)) ||
         (BAD_MAGIC(nvl.magic_end)) ||
         (BAD_MAGIC(nvStr.magic_start)) ||
         (BAD_MAGIC(nvStr.magic_end)) ||
-        (global_string_buf[MESSAGE_LEN-1] != NUL)) {
-        return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "cfg magic numbers"));
+        (global_string_buf[GLOBAL_STRING_LEN-1] != NUL)) {
+        return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "config_test_assertions()"));
     }
 	return (STAT_OK);
 }
@@ -214,10 +219,10 @@ stat_t config_test_assertions()
 /* Generic gets()
  *	get_nul()  - get nothing (returns STAT_NOOP)
  *	get_ui8()  - get value as 8 bit uint8_t (use uint8 for booleans)
+ *  get_int8() - get value as 8 bit int8_t
  *	get_int()  - get value as 32 bit integer
  *	get_data() - get value as 32 bit integer blind cast
  *	get_flt()  - get value as float
- *	get_format() - internal accessor for printf() format string
  */
 stat_t get_nul(nvObj_t *nv)
 {
@@ -265,14 +270,15 @@ stat_t get_flt(nvObj_t *nv)
 /* Generic sets()
  *	set_nul()  - set nothing (returns STAT_NOOP)
  *	set_ui8()  - set value as 8 bit uint8_t value
+ *  set_int8() - set value as an 8 bit int8_t value
  *	set_01()   - set a 0 or 1 uint8_t value with validation
  *	set_012()  - set a 0, 1 or 2 uint8_t value with validation
  *	set_0123() - set a 0, 1, 2 or 3 uint8_t value with validation
- *	set_uint()  - set value as 32 bit insigned integer
+ *	set_uint() - set value as 32 bit unsigned integer
  *	set_data() - set value as 32 bit integer blind cast
  *	set_flt()  - set value as float
  */
-stat_t set_nul(nvObj_t *nv) { return (STAT_NOOP);}
+stat_t set_nul(nvObj_t *nv) { return (STAT_NOOP); }
 
 stat_t set_ui8(nvObj_t *nv)
 {
@@ -290,20 +296,26 @@ stat_t set_int8(nvObj_t *nv)
 
 stat_t set_01(nvObj_t *nv)
 {
-	if (nv->value > 1) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
-	return (set_ui8(nv));										// else
+	if (nv->value > 1) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }    
+	return (set_ui8(nv));
 }
 
 stat_t set_012(nvObj_t *nv)
 {
-	if (nv->value > 2) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
-	return (set_ui8(nv));										// else
+	if (nv->value > 2) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }    
+	return (set_ui8(nv));
 }
 
 stat_t set_0123(nvObj_t *nv)
 {
-	if (nv->value > 3) return (STAT_INPUT_VALUE_UNSUPPORTED);	// if
-	return (set_ui8(nv));										// else
+	if (nv->value > 3) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }    
+	return (set_ui8(nv));
 }
 
 stat_t set_int(nvObj_t *nv)
@@ -395,7 +407,9 @@ stat_t get_grp(nvObj_t *nv)
 
 stat_t set_grp(nvObj_t *nv)
 {
-	if (cs.comm_mode == TEXT_MODE) return (STAT_UNRECOGNIZED_NAME);
+	if (cs.comm_mode == TEXT_MODE) {
+        return (STAT_UNRECOGNIZED_NAME);
+    }    
 	for (uint8_t i=0; i<NV_MAX_OBJECTS; i++) {
 		if ((nv = nv->nx) == NULL) break;
 		if (nv->valuetype == TYPE_EMPTY) break;
@@ -450,18 +464,20 @@ index_t nv_get_index(const char *group, const char *token)
 
 /*
  * nv_get_type() - returns command type as a NV_TYPE enum
+ *
+ *  Note: Exception reports (er) do not go through this mechanism so they are
+ *        not in the list below
  */
-
 uint8_t nv_get_type(nvObj_t *nv)
 {
-	if (nv->token[0] == NUL) return (NV_TYPE_NULL);
-	if (strcmp("gc", nv->token) == 0) return (NV_TYPE_GCODE);
-	if (strcmp("sr", nv->token) == 0) return (NV_TYPE_REPORT);
-	if (strcmp("qr", nv->token) == 0) return (NV_TYPE_REPORT);
-	if (strcmp("msg",nv->token) == 0) return (NV_TYPE_MESSAGE);
-	if (strcmp("err",nv->token) == 0) return (NV_TYPE_MESSAGE); 	// errors are reported as messages
-	if (strcmp("n",  nv->token) == 0) return (NV_TYPE_LINENUM);
-	return (NV_TYPE_CONFIG);
+    if (nv->token[0] == NUL) return (NV_TYPE_NULL);
+    if (strcmp("gc", nv->token) == 0) { return (NV_TYPE_GCODE); }
+    if (strcmp("n",  nv->token) == 0) { return (NV_TYPE_LINENUM); }
+    if (strcmp("sr", nv->token) == 0) { return (NV_TYPE_REPORT); }
+    if (strcmp("qr", nv->token) == 0) { return (NV_TYPE_REPORT); }
+    if (strcmp("msg",nv->token) == 0) { return (NV_TYPE_MESSAGE); }
+    if (strcmp("err",nv->token) == 0) { return (NV_TYPE_MESSAGE); } // errors are reported as messages
+    return (NV_TYPE_CONFIG);
 }
 
 /******************************************************************************
@@ -495,7 +511,7 @@ uint8_t nv_get_type(nvObj_t *nv)
 
 void nv_get_nvObj(nvObj_t *nv)
 {
-	if (nv->index >= nv_index_max()) return;    // sanity
+	if (nv->index >= nv_index_max()) { return; }	// sanity
 
 	index_t tmp = nv->index;
 	nv_reset_nv(nv);
@@ -561,7 +577,9 @@ nvObj_t *nv_reset_nv_list()					// clear the header and response body
 
 stat_t nv_copy_string(nvObj_t *nv, const char *src)
 {
-	if ((nvStr.wp + strlen(src)) > NV_SHARED_STRING_LEN) { return (STAT_BUFFER_FULL);}
+    if ((nvStr.wp + strlen(src)) > NV_SHARED_STRING_LEN) {
+        return (STAT_BUFFER_FULL);
+    }
 	char *dst = &nvStr.string[nvStr.wp];
 	strcpy(dst, src);						// copy string to current head position
 											// string has already been tested for overflow, above
@@ -654,7 +672,9 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
 			continue;
 		}
 		strncpy(nv->token, token, TOKEN_LEN);
-		if (nv_copy_string(nv, string) != STAT_OK) { return (NULL);}
+        if (nv_copy_string(nv, string) != STAT_OK) {
+            return (NULL);
+        }
 		nv->index = nv_get_index((const char *)"", nv->token);
 		nv->valuetype = TYPE_STRING;
 		return (nv);

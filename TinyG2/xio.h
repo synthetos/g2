@@ -42,7 +42,7 @@
  *	(possibly more)
  */
 /*
- * CAVEAT EMPTOR: File under "watch your ass":
+ * CAVEAT EMPTOR: File under "watch out!":
  *
  * 	  - Short story: Do not call ANYTHING that can print (i.e. send chars to the TX
  *		buffer) from a medium or hi interrupt. This obviously includes any printf()
@@ -57,7 +57,7 @@
  *		is used. Everything else in TinyG is non-blocking. Sleep is woken (exited) whenever
  *		any interrupt fires. So there must always be a viable interrupt source running when
  *		you enter a sleep or the system will hang (lock up). In the IO functions this is the
- *		TX interupts, which fire when space becomes available in the USART for a TX char. This
+ *		TX interrupts, which fire when space becomes available in the USART for a TX char. This
  *		Means you cannot call a print function at or above the level of the TX interrupts,
  *		which are set to medium.
  */
@@ -108,10 +108,10 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 #define DEV_IS_BOTH			(DEV_IS_CTRL | DEV_IS_DATA)
 #define DEV_FLAGS_CLEAR		(0x0000)		// Apply as flags = DEV_FLAGS_CLEAR;
 
-enum xioDeviceEnum {						// reconfigure this enum as you add more physical devices
-	DEV_NONE=-1,							// no device is bound
-	DEV_USB0=0,								// must be 0
-	DEV_USB1,								// must be 1
+enum xioDeviceEnum {                        // reconfigure this enum as you add more physical devices
+	DEV_NONE=-1,	                            // no device is bound
+	DEV_USB0=0,                             // must be 0
+	DEV_USB1,                               // must be 1
 //	DEV_SPI0,                               // We can't have it here until we actually define it
 	DEV_MAX
 };
@@ -133,9 +133,10 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 void xio_init(void);
 stat_t xio_test_assertions(void);
 
-char *xio_readline(devflags_t &flags, uint16_t &size);
 void xio_flush_read();
 size_t xio_write(const uint8_t *buffer, size_t size);
+char *xio_readline(devflags_t &flags, uint16_t &size);
+int16_t xio_writeline(const char *buffer);
 
 stat_t xio_set_spi(nvObj_t *nv);
 

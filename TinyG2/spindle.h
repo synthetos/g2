@@ -58,8 +58,10 @@ typedef enum {
     ESC_LOCKOUT_AND_REBOOTING,
 } cmESCState;
 
-#define MIN_SPINDLE_SPEED_OVERRIDE 0.05 // 5%
-#define MAX_SPINDLE_SPEED_OVERRIDE 2.00 // 200%
+#define SPINDLE_OVERRIDE_ENABLE     false
+#define SPINDLE_OVERRIDE_FACTOR     1.00
+#define SPINDLE_OVERRIDE_MIN        0.05 // 5%
+#define SPINDLE_OVERRIDE_MAX        2.00 // 200%
 
 /*
  * Spindle control structure
@@ -76,8 +78,8 @@ typedef struct cmSpindleSingleton {
     cmSpindlePolarity dir_polarity;     // 0=clockwise low, 1=clockwise high
     float dwell_seconds;                // dwell on spindle resume
 
-    bool sso_enable;                    // 1.0000 x S spindle speed. Go up or down from there
-    float sso_parameter;                // TRUE = override enabled (see also m38_enable)
+    bool sso_enable;                    // TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
+    float sso_factor;                   // 1.0000 x S spindle speed. Go up or down from there
 
     cmESCState esc_state;               // state management for ESC controller
     uint32_t esc_boot_timer;            // When the ESC last booted up
@@ -102,6 +104,7 @@ void cm_spindle_resume(float dwell_seconds);            // restart spindle after
 //stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
 
 stat_t cm_set_dir(nvObj_t *nv);
+stat_t cm_set_sso(nvObj_t *nv);
 
 /*--- text_mode support functions ---*/
 

@@ -1,10 +1,9 @@
 /*
- * http://tinkerin.gs/
+ * G2v9k-pinout.h - tinyg2 board pinout specification
+ * This file is part of the TinyG project
  *
  * Copyright (c) 2013 - 2015 Robert Giseburt
  * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
- *
- * This file is part of the Motate Library.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,20 +27,13 @@
  *
  */
 
-#ifndef G2v9k_pinout_h
-#define G2v9k_pinout_h
-
-/* Pinouts for TinyG2 v9k board 
- *
- * 6 axes
- * 4 motors
- * 1 PWM channel
- */
+#ifndef G2v9_pinout_h
+#define G2v9_pinout_h
 
 #include <MotatePins.h>
 
 namespace Motate {
-
+    
     // v9_3x8c - The SAM3X8C is a 100-pin sister to the SAM3X8E that is on the Due
     // The SAM3X8C is missing port C and D.
 

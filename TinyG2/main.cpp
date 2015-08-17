@@ -37,12 +37,43 @@
 #include "pwm.h"
 #include "xio.h"
 
+#include "util.h"
 #include "MotateUniqueID.h"
 
 /******************** System Globals *************************/
 
-stat_t status_code;						// allocate a variable for the ritorno macro
-char global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
+stat_t status_code;						    // allocate a variable for the ritorno macro
+char global_string_buf[GLOBAL_STRING_LEN];	// allocate a string for global message use
+
+/************* System Globals For Diagnostics ****************/
+
+// Using motate pins for profiling
+// see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
+
+using namespace Motate;
+OutputPin<kDebug1_PinNumber> debug_pin1;
+OutputPin<kDebug2_PinNumber> debug_pin2;
+OutputPin<kDebug3_PinNumber> debug_pin3;
+//OutputPin<kDebug4_PinNumber> debug_pin4;
+
+//OutputPin<-1> debug_pin1;
+//OutputPin<-1> debug_pin2;
+//OutputPin<-1> debug_pin3;
+//OutputPin<-1> debug_pin4;
+
+// Put these lines in the .cpp file where you are using the debug pins (appropriately commented / uncommented)
+/*
+using namespace Motate;
+extern OutputPin<kDebug1_PinNumber> debug_pin1;
+extern OutputPin<kDebug2_PinNumber> debug_pin2;
+extern OutputPin<kDebug3_PinNumber> debug_pin3;
+//extern OutputPin<kDebug4_PinNumber> debug_pin4;
+
+//extern OutputPin<-1> debug_pin1;
+//extern OutputPin<-1> debug_pin2;
+//extern OutputPin<-1> debug_pin3;
+//extern OutputPin<-1> debug_pin4;
+*/
 
 /******************** Application Code ************************/
 
@@ -83,9 +114,9 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 void application_init_services(void)
 {
-    usb.attach();                   // USB setup
+	usb.attach();                   // USB setup
 
-    hardware_init();				// system hardware setup 			- must be first
+	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
 	xio_init();						// xtended io subsystem				- must be third
 //	rtc_init();						// real time counter
@@ -137,10 +168,10 @@ void setup(void)
 }
 
 void loop() {
-    // main loop
-    for (;;) {
-        controller_run( );			// single pass through the controller
-    }
+	// main loop
+	for (;;) {
+		controller_run( );			// single pass through the controller
+	}
 }
 
 /*

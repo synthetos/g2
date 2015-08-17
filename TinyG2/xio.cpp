@@ -45,15 +45,7 @@
 #include "text_parser.h"
 #endif
 
-using namespace Motate;
-//OutputPin<kDebug1_PinNumber> xio_debug_pin1;
-//OutputPin<kDebug2_PinNumber> xio_debug_pin2;
-//OutputPin<-1> xio_debug_pin2;
-//OutputPin<kDebug3_PinNumber> xio_debug_pin3;
-
-
-/*
- **** HIGH LEVEL EXPLANATION OF XIO ****
+/**** HIGH LEVEL EXPLANATION OF XIO ****
  *
  * The XIO subsystem serves three purposes:
  *  1) Handle the connection states of various IO channels (USB for now)
@@ -302,8 +294,8 @@ struct xio_t {
         // 1) If a device fails to write the data, or all the data, then it's ignored
         // 2) Only the amount written by the *last* device to match (CTRL|ACTIVE) is returned.
         //
-        // In the current environment, these are not forssen to cause trouble, since these are blocking writes
-        // and we expect to only really be writing to one device.
+        // In the current environment, these are not foreseen to cause trouble,
+        // since these are blocking writes and we expect to only really be writing to one device.
 
         size_t written = -1;
 
@@ -315,6 +307,27 @@ struct xio_t {
         return written;
     }
 
+    /*
+     * writeline() - write a complete line to the controldevice
+     *
+     * The input buffer must be NUL terminated
+     */
+
+    int16_t writeline(const char *buffer)
+    {
+        int16_t len = strlen(buffer);
+//        return xio_write(buffer, len);
+//        return DeviceWrappers[DEV_USB0]->write((const uint8_t *)buffer, len);
+
+        size_t written = -1;
+
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            if (DeviceWrappers[i]->isCtrlAndActive()) {
+                written = DeviceWrappers[i]->write((const uint8_t *)buffer, len);
+            }
+        }
+        return written;
+    };
 
     /*
      * flushRead() - flush all readable devices' read buffers
@@ -461,7 +474,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev"); // where is this supposed to go!?
+                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev() assertion error"); // where is this supposed to go!?
                         }
                         controller_set_connected(false);
                     } else if(checkForCtrlAndPrimary(oldflags)) {
@@ -534,7 +547,7 @@ void xio_init()
 stat_t xio_test_assertions()
 {
     if ((BAD_MAGIC(xio.magic_start)) || (BAD_MAGIC(xio.magic_end))) {
-        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, "xio  magic numbers"));
+        return(cm_panic(STAT_XIO_ASSERTION_FAILURE, "xio_test_assertions()"));
     }
     return (STAT_OK);
 }
@@ -549,14 +562,21 @@ size_t xio_write(const uint8_t *buffer, size_t size)
 }
 
 /*
- * readline() - read a complete line from a device
+ * xio_readline() - read a complete line from a device
+ * xio_writeline() - write a complete line to control device
+ * xio_flush_read() - flush read buffers
  *
- *	Defers to xio.readline().
+ *	Defers to xio.readline(), etc.
  */
 
 char *xio_readline(devflags_t &flags, uint16_t &size)
 {
     return xio.readline(flags, size);
+}
+
+int16_t xio_writeline(const char *buffer)
+{
+    return xio.writeline(buffer);
 }
 
 void xio_flush_read()

@@ -40,30 +40,31 @@
 
 /**** Homing singleton structure ****/
 
-struct hmHomingSingleton {			// persistent homing runtime variables
+struct hmHomingSingleton {              // persistent homing runtime variables
 
 	// controls for homing cycle
-	int8_t axis;					// axis currently being homed
-	int8_t homing_input;			// homing input for current axis
-    bool set_coordinates;		    // G28.4 flag. true = set coords to zero at the end of homing cycle
-	stat_t (*func)(int8_t axis);	// binding for callback function state machine
+	int8_t axis;                        // axis currently being homed
+	int8_t homing_input;                // homing input for current axis
+    bool set_coordinates;               // G28.4 flag. true = set coords to zero at the end of homing cycle
+	stat_t (*func)(int8_t axis);        // binding for callback function state machine
 
 	// per-axis parameters
-    float direction;                // set to 1 for positive (max), -1 for negative (to min);
-    float search_travel;            // signed distance to travel in search
-    float search_velocity;          // search speed as positive number
-    float latch_backoff;             // max distance to back off switch during latch phase
-    float latch_velocity;           // latch speed as positive number
-    float zero_backoff;             // distance to back off switch before setting zero
-    float max_clear_backoff;        // maximum distance of switch clearing backoffs before erring out
+    float direction;                    // set to 1 for positive (max), -1 for negative (to min);
+    float search_travel;                // signed distance to travel in search
+    float search_velocity;              // search speed as positive number
+    float latch_backoff;                // max distance to back off switch during latch phase
+    float latch_velocity;               // latch speed as positive number
+    float zero_backoff;                 // distance to back off switch before setting zero
+    float max_clear_backoff;            // maximum distance of switch clearing backoffs before erring out
+    float setpoint;                     // ultimate setpoint, usually zero, but not always
 
 	// state saved from gcode model
-	uint8_t saved_units_mode;		// G20,G21 global setting
-	uint8_t saved_coord_system;		// G54 - G59 setting
-	uint8_t saved_distance_mode;	// G90, G91 global setting
-	uint8_t saved_feed_rate_mode;	// G93, G94 global setting
-	float saved_feed_rate;			// F setting
-	float saved_jerk;				// saved and restored for each axis homed
+	cmUnitsMode saved_units_mode;       // G20,G21 global setting
+	cmCoordSystem saved_coord_system;   // G54 - G59 setting
+	cmDistanceMode saved_distance_mode; // G90, G91 global setting
+	cmFeedRateMode saved_feed_rate_mode;// G93, G94 global setting
+	float saved_feed_rate;              // F setting
+	float saved_jerk;                   // saved and restored for each axis homed
 };
 static struct hmHomingSingleton hm;
 
@@ -75,8 +76,8 @@ static stat_t _homing_axis_clear_init(int8_t axis);
 static stat_t _homing_axis_search(int8_t axis);
 static stat_t _homing_axis_clear(int8_t axis);
 static stat_t _homing_axis_latch(int8_t axis);
-static stat_t _homing_axis_zero_backoff(int8_t axis);
-static stat_t _homing_axis_set_zero(int8_t axis);
+static stat_t _homing_axis_setpoint_backoff(int8_t axis);
+static stat_t _homing_axis_set_position(int8_t axis);
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity);
 static stat_t _homing_error_exit(int8_t axis, stat_t status);
 static stat_t _homing_finalize_exit(int8_t axis);
@@ -156,10 +157,10 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis))
 stat_t cm_homing_cycle_start(void)
 {
 	// save relevant non-axis parameters from Gcode model
-	hm.saved_units_mode = cm_get_units_mode(ACTIVE_MODEL);
-	hm.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
-	hm.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
-	hm.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
+	hm.saved_units_mode = (cmUnitsMode)cm_get_units_mode(ACTIVE_MODEL);
+	hm.saved_coord_system = (cmCoordSystem)cm_get_coord_system(ACTIVE_MODEL);
+	hm.saved_distance_mode = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
+	hm.saved_feed_rate_mode = (cmFeedRateMode)cm_get_feed_rate_mode(ACTIVE_MODEL);
 	hm.saved_feed_rate = cm_get_feed_rate(ACTIVE_MODEL);
 
 	// set working values
@@ -174,7 +175,6 @@ stat_t cm_homing_cycle_start(void)
 	cm.machine_state = MACHINE_CYCLE;
 	cm.cycle_state = CYCLE_HOMING;
 	cm.homing_state = HOMING_NOT_HOMED;
-//  cm.limit_enable = false;                // disable limit switch processing (no longer needed)
 	return (STAT_OK);
 }
 
@@ -248,10 +248,12 @@ static stat_t _homing_axis_start(int8_t axis)
 		hm.search_travel = travel_distance;                 // search travels in positive direction
 		hm.latch_backoff = fabs(cm.a[axis].latch_backoff);  // latch travels in positive direction
 		hm.zero_backoff  = -fabs(cm.a[axis].zero_backoff);  // zero backoff is negative direction
+        hm.setpoint      = cm.a[axis].travel_max;           // will set the maximum position
 	} else {
 		hm.search_travel = -travel_distance;                // search travels in negative direction
 		hm.latch_backoff = -fabs(cm.a[axis].latch_backoff); // latch travels in negative direction
 		hm.zero_backoff  = fabs(cm.a[axis].zero_backoff);   // zero backoff is positive direction
+        hm.setpoint      = cm.a[axis].travel_min;           // will set the minimum position
 	}
 
 	// if homing is disabled for the axis then skip to the next axis
@@ -293,25 +295,23 @@ static stat_t _homing_axis_clear(int8_t axis)		        // drive away from switch
 static stat_t _homing_axis_latch(int8_t axis)				// drive to switch at low speed
 {
 	_homing_axis_move(axis, hm.latch_backoff, hm.latch_velocity);
-	return (_set_homing_func(_homing_axis_zero_backoff));
+	return (_set_homing_func(_homing_axis_setpoint_backoff));
 }
 
-static stat_t _homing_axis_zero_backoff(int8_t axis)		// backoff to zero position
+static stat_t _homing_axis_setpoint_backoff(int8_t axis)    // backoff to zero or max setpoint position
 {
     mp_flush_planner();                                     // clear out the remaining latch move
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
-	return (_set_homing_func(_homing_axis_set_zero));
+	return (_set_homing_func(_homing_axis_set_position));
 }
 
-static stat_t _homing_axis_set_zero(int8_t axis)			// set zero and finish up
+static stat_t _homing_axis_set_position(int8_t axis)        // set axis zero / max and finish up
 {
 	if (hm.set_coordinates) {
-		cm_set_position(axis, 0.0);
+		cm_set_position(axis, hm.setpoint);
 		cm.homed[axis] = true;
 
 	} else { // handle G28.4 cycle - set position to the point of switch closure
-//		cm_set_position(axis, cm_get_work_position(RUNTIME, axis));
-        // set position to exact point of switch closure
         cm_queue_flush();                                   // flush queue & end feedhold
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
@@ -332,7 +332,12 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
     cm_queue_flush();                                     // flush queue and end hold (if applicable)
-	ritorno(cm_straight_feed(vect, flags));
+//	ritorno(cm_straight_feed(vect, flags));
+    stat_t status = cm_straight_feed(vect, flags);
+    if (status != STAT_OK) {
+        rpt_exception(status, "Homing move failed. Check min/max settings");
+        return (_homing_error_exit(axis, STAT_HOMING_CYCLE_FAILED));
+    }
 	return (STAT_EAGAIN);
 }
 
@@ -349,9 +354,9 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 	if (axis == -2) {
 		nv_add_conditional_message((const char *)"Homing error - Bad or no axis(es) specified");
 	} else {
-		char message[NV_MESSAGE_LEN];
-		sprintf_P(message, PSTR("%c axis %s"), cm_get_axis_char(axis), get_status_message(status));
-		nv_add_conditional_message(message);
+		char msg[NV_MESSAGE_LEN];
+		sprintf_P(msg, PSTR("%c axis %s"), cm_get_axis_char(axis), get_status_message(status));
+		nv_add_conditional_message(msg);
 	}
 	nv_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
 

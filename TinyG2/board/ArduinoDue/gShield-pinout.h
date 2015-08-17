@@ -1,8 +1,9 @@
 /*
- * http://tinkerin.gs/
+ * motate_pin_assugnments.h - pin assignments for the TinyGv9 boards
+ * This file is part of the TinyG project
  *
- * Copyright (c) 2013 Robert Giseburt
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -38,11 +39,15 @@ namespace Motate {
     // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
     // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
-    pin_number kSerial_RX                       =   0;
-    pin_number kSerial_TX                       =   1;
+    pin_number kSerial_RX                       =  0;
+    pin_number kSerial_TX                       =  1;
+//    pin_number kSerial_RTS                      =  8;   // added later
+//    pin_number kSerial_CTS                      =  9;   // added later
 
-    pin_number kSerial0_RX                      =   0;
-    pin_number kSerial0_TX                      =   1;
+    pin_number kSerial0_RX                      =  0;
+    pin_number kSerial0_TX                      =  1;
+//    pin_number kSerial0_RTS                     =  8;   // added later
+//    pin_number kSerial0_CTS                     =  9;   // added later
 
     pin_number kI2C_SDAPinNumber                =  20;
     pin_number kI2C_SCLPinNumber                =  21;

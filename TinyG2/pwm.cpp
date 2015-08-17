@@ -40,6 +40,13 @@
 
 pwmSingleton_t pwm;
 
+
+// Setup motate PWM pins
+#ifdef __ARM
+static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
+static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
+#endif
+
 // defines common to all PWM channels
 //#define PWM_TIMER_TYPE	TC1_struct	// PWM uses TC1's
 #define PWM_TIMER_t	TC1_t				// PWM uses TC1's
@@ -218,9 +225,10 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
-
 /*
- * pwm_set_pwm() - set PWM parameter and reset PWM channels
+ * pwm_set_pwm() - set generic PWM parameter and reset PWM channels
+ *
+ * See config_app.cpp PWM settings for details of what paramters call this function 
  */
 stat_t pwm_set_pwm(nvObj_t *nv)
 {

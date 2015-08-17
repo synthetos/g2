@@ -61,37 +61,22 @@
 #include "encoder.h"
 #include "report.h"
 #include "util.h"
-
-using namespace Motate;
-//extern OutputPin<kDebug1_PinNumber> plan_debug_pin1;
-//extern OutputPin<kDebug2_PinNumber> plan_debug_pin2;
-//extern OutputPin<kDebug3_PinNumber> plan_debug_pin3;
-//extern OutputPin<kDebug4_PinNumber> plan_debug_pin4;
-
-//extern OutputPin<-1> plan_debug_pin1;
-//extern OutputPin<-1> plan_debug_pin2;
-//extern OutputPin<-1> plan_debug_pin3;
-//extern OutputPin<-1> plan_debug_pin4;
-
+#include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-
 mpBufferPool_t mb;				// move buffer queue
 mpMoveMasterSingleton_t mm;		// context for line planning
 mpMoveRuntimeSingleton_t mr;	// context for line runtime
 
-/*
- * Local Scope Data and Functions
- */
+// Local Scope Data and Functions
 #define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
-//#define flag_vector unit		// alias for vector of flags
 
 static void _planner_time_accounting();
 static void _audit_buffers();
 
-// execution routines (NB: These are called from the LO interrupt)
+// Execution routines (NB: These are called from the LO interrupt)
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
 
@@ -102,10 +87,13 @@ static stat_t _exec_command(mpBuf_t *bf);
 void planner_init()
 {
 // If you know all memory has been zeroed by a hard reset you don't need these next 2 lines
-	memset(&mr, 0, sizeof(mr));	// clear all values, pointers and status
-	memset(&mm, 0, sizeof(mm));	// clear all values, pointers and status
+	memset(&mr, 0, sizeof(mr));	            // clear all values, pointers and status
+	memset(&mm, 0, sizeof(mm));	            // clear all values, pointers and status
 	planner_init_assertions();
 	mp_init_buffers();
+
+    // reasonable starting values
+    mb.mfo_factor = 1.00;
 }
 
 void planner_reset()
@@ -130,7 +118,7 @@ stat_t planner_test_assertions()
     if ((BAD_MAGIC(mm.magic_start)) || (BAD_MAGIC(mm.magic_end)) ||
         (BAD_MAGIC(mb.magic_start)) || (BAD_MAGIC(mb.magic_end)) ||
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
-        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "mp  magic numbers"));
+        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
     return (STAT_OK);
 }
@@ -231,18 +219,17 @@ void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 
 	// Never supposed to fail as buffer availability was checked upstream in the controller
 	if ((bf = mp_get_write_buffer()) == NULL) {
-		cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in mp_queue_command");
+		cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_queue_command()");
 		return;
 	}
 
 	bf->move_type = MOVE_TYPE_COMMAND;
 	bf->bf_func = _exec_command;      // callback to planner queue exec function
 	bf->cm_func = cm_exec;            // callback to canonical machine exec function
-    bf->replannable = true;           // allow the normal planning to go backward past this zero-speed and zero-length "move"
 
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		bf->value_vector[axis] = value[axis];
-		bf->flag_vector[axis] = flag[axis];
+		bf->axis_flags[axis] = flag[axis];
 	}
 	mp_commit_write_buffer(MOVE_TYPE_COMMAND);			// must be final operation before exit
 }
@@ -255,7 +242,7 @@ static stat_t _exec_command(mpBuf_t *bf)
 
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
-	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
+	bf->cm_func(bf->value_vector, bf->axis_flags);		// 2 vectors used by callbacks
 	if (mp_free_run_buffer()) {
 		cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
     }
@@ -275,11 +262,10 @@ stat_t mp_dwell(float seconds)
 	mpBuf_t *bf;
 
 	if ((bf = mp_get_write_buffer()) == NULL) {			// get write buffer or fail
-		return(cm_panic(STAT_BUFFER_FULL_FATAL, "no write buffer in mp_dwell")); // not ever supposed to fail
+		return(cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_dwell()")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
-    bf->replannable = true;  // +++ TEST allow the normal planning to go backward past this zero-speed and zero-length "move"
-	bf->gm.move_time = seconds;							// in seconds, not minutes
+	bf->move_time = seconds;					        // in seconds, not minutes
 	bf->move_state = MOVE_NEW;
 	mp_commit_write_buffer(MOVE_TYPE_DWELL);			// must be final operation before exit
 	return (STAT_OK);
@@ -287,7 +273,7 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->gm.move_time * 1000000.0));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->move_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
     }
@@ -306,34 +292,352 @@ stat_t mp_exec_out_of_band_dwell(void)
     return 0;
 }
 
+/**********************************************************************************
+ * Planner helpers
+ *
+ * mp_get_planner_buffers()   - return # of available planner buffers
+ * mp_planner_is_full()       - true if planner has no room for a new block
+ * mp_has_runnable_buffer()   - true if next buffer is runnable, indicating motion has not stopped.
+ * mp_is_it_phat_city_time() - test if there is time for non-essential processes
+ */
+uint8_t mp_get_planner_buffers()
+{
+    return (mb.buffers_available);
+}
+
+bool mp_planner_is_full()
+{
+    return (mb.buffers_available < PLANNER_BUFFER_HEADROOM);
+}
+
+bool mp_has_runnable_buffer()
+{
+    return (mb.r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
+}
+
+bool mp_is_phat_city_time()
+{
+	if(cm.hold_state == FEEDHOLD_HOLD) {
+    	return true;
+	}
+    return ((mb.time_in_plan <= 0) || (PHAT_CITY_TIME < mb.time_in_plan));
+}
+
+/**** Helper functions for mp_plan_buffer()
+ * _stop_new_block_timer() - used to disable timer if blocks are not arriving
+ * _reset_new_block_timer() - restart new block timer
+ * _new_block_timeout() - detect a timeout
+ * _set_planner_state() - set planner state optimistic or pessimistic
+ */
+static void _stop_new_block_timer()
+{
+    mb.new_block_timer = 0;
+}
+
+static void _reset_new_block_timer()
+{
+    mb.new_block_timer = SysTickTimer.getValue() + NEW_BLOCK_TIMEOUT_MS;
+}
+
+static bool _new_block_timeout()
+{
+    mb.new_block_timeout = false;
+    if ((mp_planner_is_full()) || (mb.new_block_timer == 0)) {
+        _reset_new_block_timer();
+    } else if (mb.new_block_timer < SysTickTimer.getValue()) {
+        mb.new_block_timeout = true;
+    }
+    return (mb.new_block_timeout);
+}
+
+/*
+ * mp_plan_buffer()
+ *
+ *  mp_plan_buffer()'s job is to invoke planning intelligently. Items to note:
+ *
+ *    - At the start of a job the planner should fill up with unplanned moves before
+ *      motion starts. This eliminates an initial move that plans to zero and ensures
+ *      the planner gets a "head start" on managing the time in the planner queue.
+ *
+ *    - The planner should attempt to operate in OPTIMISTIC mode whenever possible, i.e.
+ *      It should not plan the last block and assume that the next block will arrive in
+ *      time and be a continuation of the movement. When this case is no longer true the
+ *      planner switches to PESSIMISTIC mode where all blocks are planned, and the last
+ *      block is always planned to zero (the tail). This handles the "last line" case
+ *      of a legitimate tail.
+ *
+ *      Planning optimistically minimizes "overplanning" - i.e. moves planned multiple
+ *      times (particularly tails). This requires leaving one unplanned move at the
+ *      end (N) of the buffer, so the N-1 block always has a valid exit velocity to
+ *      plan to (the entry velocity of the Nth block).
+ *
+ *    - It's important to distinguish between the case where the new block is actually a
+ *      startup condition and where it's the first block after a stop or a stall. The
+ *      planner wants to perform a STARTUP in the first case, but start planning
+ *      immediately in the latter cases.
+ *
+     - A hard case is where a long block is immediately followed by a very short block
+ *      at the same velocity, with no more blocks behind them. In this case the first block
+ *      will run and  lock, and the second block may have insufficient distance to get to zero.
+ *
+ *  State Machine (See planner.h/ plannerState)
+ *
+ *         -------------                 --------------
+ *        |             |  all stopped  |              |
+ *        |     IDLE    |<--------------| PESSIMISTIC  |
+ *        |             |       ------->|   [P]  [N]   |
+ *         -------------       /         --------------
+ *               |  new       /               ^  |
+ *               | block     / timeout    (1) |  | (2)
+ *               V          /                 |  V
+ *         -------------   /             --------------
+ *        |             |--             |              |
+ *        |   STARTUP   |-------------->|  OPTIMISTIC  |
+ *        |             | planner full  |              |
+ *         -------------                 --------------
+ *
+ *  TRANSITIONS
+ *    (1) time in planner is down to critical level or new blocks are not arriving fast enough
+ *    (2) time in planner is back in safe region and/or new blocks are arriving fast enough
+ *
+ *  CRITICAL can be entered in one 2 conditions, or both (sub-states):
+ *    [P] time_in_plan < PLANNER_TIME_CRITICAL: planned time is dangerously low (about to starve)
+ *    [N] new_block_timeout == true: buffer arrival rate is dangerously low (no new blocks)
+ */
+/*  Has to accurately detect end conditions to go pessimistic:
+ *    Case 1: Single block arrives, followed by timeout
+ *    Case 2: Two blocks arrive - both short, followed by timeout
+ *    Case 3: Two blocks arrive - long followed by a short - w/o timeout
+ *    Case 4: Two blocks arrive - long followed by a short - w timeout in between
+ *    Case 5: Three blocks arrive - first 2 starts running, then a third block arrives after timeout, Tplan < critical on arrival of #3
+ *    Case 6: Three blocks arrive - first 2 starts running, then a third block arrives after timeout, Tplan > critical on arrival of #3
+ *    Case 7: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan < critical
+ *    Case 8: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan > critical
+ */
+
+stat_t mp_planner_callback()
+{
+    if (!mb.request_planning) {
+        if ((cm.motion_state == MOTION_STOP) && (cm.hold_state == FEEDHOLD_OFF) &&
+            (mb.buffers_available == PLANNER_BUFFER_POOL_SIZE)) {
+            mb.planner_state = PLANNER_IDLE;
+        }
+        if ((mb.planner_state == PLANNER_PESSIMISTIC) && (!mb.new_block)) { // shortcut out of here
+            return (STAT_NOOP);
+        }
+        if (mb.planner_state == PLANNER_IDLE) {
+            if (!mb.new_block) {
+                _stop_new_block_timer();
+                return (STAT_NOOP);
+            }
+            mb.p = mb.r;                                // initialize planner pointer to run buffer
+            mb.planner_state = PLANNER_STARTUP;
+        }
+    } else {
+        mb.request_planning = false;
+    }
+    if (mb.new_block) {
+        _reset_new_block_timer();
+        mb.new_block = false;
+    }
+
+    // set planner state
+    if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
+        if (mp_planner_is_full()) {
+            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
+        } else if (_new_block_timeout()) {
+            mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
+        } else {
+            return (STAT_OK);                           // accumulate new blocks until it's time to plan
+        }
+    } else {                                            // set planner state for normal operation
+        if (_new_block_timeout() || mb.time_in_plan < PLANNER_CRITICAL_TIME) {
+            mb.planner_state = PLANNER_PESSIMISTIC;
+        } else {
+            mb.planner_state = PLANNER_OPTIMISTIC;
+        }
+    }
+    if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic
+        (mb.p->nx->buffer_state == MP_BUFFER_EMPTY)) {
+        return (STAT_OK);
+    }
+    if (mb.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
+        return (STAT_OK);
+    }
+    mp_plan_block_list();                               // plan blocks optimistically or pessimistically
+    return (STAT_OK);
+}
+
+/*
+ *  mp_replan_queue() - reset the blocks in the planner queue and request a planner run
+ */
+void mp_replan_queue(mpBuf_t *bf)
+{
+    mb.p = bf;    // reset planner pointer to start replan from here
+
+    do {
+        if (bf->buffer_state == MP_BUFFER_EMPTY) {
+            break;
+        }
+        bf->head_length = 0;
+        bf->body_length = 0;
+        bf->tail_length = 0;
+        bf->head_time = 0;
+        bf->body_time = 0;
+        bf->tail_time = 0;
+        bf->buffer_state = MP_BUFFER_NOT_PLANNED;
+    } while ((bf = mp_get_next_buffer(bf)) != mb.p);
+
+    mb.request_planning = true;
+}
+
+/*
+ *  mp_start_feed_override() - gradually adjust existing and new buffers to target override percentage
+ *  mp_end_feed_override() - gradually adjust existing and new buffers to no override percentage
+ *
+ *  Variables:
+ *    - 'mfo_factor' is the override scaling factor normalized to 1.0 = 100%
+ *      Values < 1.0 are speed decreases, > 1.0 are increases. Upper and lower limits are checked.
+ *
+ *    - 'ramp_time' is approximate, as the ramp dynamically changes move execution times
+ *      The ramp will attempt to meet the time specified but it will not be exact.
+ */
+/*  Function:
+ *  The override takes effect as close to real-time as possible. Practically, this mans about 20 or
+ *  so behind the current running move. How it works:
+ *
+ *    - If the planner is idle just apply the override factor and be done with it. That's easy.
+ *
+ *    - Otherwise look for the "break point" at 20 ms.
+ *
+ *
+ */
+
+void mp_start_feed_override(const float ramp_time, const float mfo_factor)
+{
+    cm.mfo_state = MFO_REQUESTED;
+
+    if (mb.planner_state == PLANNER_IDLE) {
+        mb.mfo_factor = mfo_factor;             // that was easy
+        return;
+    }
+
+    // Assume that the min and max values for override_factor have been validated upstream
+    // SUVAT: V = U+AT ==> A = (V-U)/T
+    mb.ramp_target = mfo_factor;
+//    mb.ramp_dvdt = (mfo_factor - mb.current_mfo_factor) / ramp_time;
+    mb.ramp_dvdt = (mfo_factor - mb.c->mfo_factor) / ramp_time;
+    mb.mfo_active = true;
+
+    if (fp_NOT_ZERO(mb.ramp_dvdt)) {    // do these things only if you actually have a ramp to run
+        mb.p = mb.c;                    // re-position the planner pointer
+        mb.ramp_active = true;
+        mb.request_planning = true;
+    }
+}
+
+void mp_end_feed_override(const float ramp_time)
+{
+    mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
+}
+
+/*
+ * _planner_time_accounting() - compute time in planner and lock buffers for runtime
+ *
+ *  Examines move times in the runtime and planner to lock MIN_LOCKED_TIME of time
+ *  in the planner buffer. Also interrogates the locked queue and unlocked planned
+ *  blocks to see if a tail deceleration is about to start. Sets force_planning if
+ *  this is true.
+ */
+
+static void _planner_time_accounting()
+{
+    // get run buffer and see if anything is running
+    if (mb.r->buffer_state == MP_BUFFER_EMPTY || mb.r->buffer_state == MP_BUFFER_NOT_PLANNED) {
+        mb.time_in_plan = 0;
+        return;
+    }
+    mpBuf_t *bf = mb.r;
+
+    // Step through the moves and add up the planner time
+    float time_in_plan = mb.time_in_run;            // initialize with time left in the runtime
+    bool in_critical = true;                        // used to look for transition to critical region
+
+    while ((bf = mp_get_next_buffer(bf)) != mb.r) {
+        if (bf->buffer_state == MP_BUFFER_PLANNED) {
+            time_in_plan += bf->move_time;
+            if (in_critical && (time_in_plan >= PLANNER_CRITICAL_TIME)) {
+                in_critical = false;
+                mb.c = bf;                          // mark the first non-critical block
+            }
+            continue;
+        }
+        break;
+    }
+    mb.time_in_plan = time_in_plan;
+    mb.time_in_plan_ms = time_in_plan * 60000;  //+++++
+//    mb.time_in_run_ms = mb.time_in_run * 60000; //+++++
+
+/*
+    // +++++ DIAGNOSTIC
+    mb.time_in_plan_ms = time_in_plan * 60000;
+    if (mb.time_in_plan < PLANNER_CRITICAL_TIME) {
+        char buf[24];
+        sprintf(buf, "critical %1.2f\n", mb.time_in_plan_ms);
+        xio_writeline(buf);
+    }
+*/
+}
+
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
  *
  *	Planner buffers are used to queue and operate on Gcode blocks. Each buffer contains
- *	one Gcode block which may be a move, and M code, or other command that must be
+ *	one Gcode block which may be a move, an M code, or other command that must be
  *	executed synchronously with movement.
  *
- *	Buffers are in a circularly linked list managed by a WRITE pointer and a RUN pointer.
+ *	The planner queue (mb) is a circular queue of planner buffers (bf's). Each block has a
+ *  pointer to the next block (nx), and one to the previous block (pv).
+ *
+ *  At the risk of being pedantic it's useful to get terms straight or it can get confusing.
+ *
+ *    - The "run" block is the block that is currently executing (i.e. in mr). Since
+ *      it's a circular FIFO queue the running block is considered the "first block".
+ *
+ *    - The "write" block (aka "new" block) is the block that was just put on the queue.
+ *      The new block is at the other end of the queue from the run block.
+ *
+ *    - Moving "forward" is advancing to the next block (nx), which is in the direction
+ *      of the new block. Moving "backwards" backs up to the previous block (pv) in the
+ *      direction of the running block. Since the queue is a doubly linked circular list
+ *      the ends connect, and blocks "outside" of the running and new blocks may be empty.
+ *
+ *    - The "planning" block is the block currently pointed to by the planner. This
+ *      starts out right next to the running block and advances towards the new block
+ *      as planning executes. Planning executes predominantly in the forward direction.
+ *
  *	New blocks are populated by (1) getting a write buffer, (2) populating the buffer,
  *	then (3) placing it in the queue (commit write buffer). If an exception occurs
  *	during step (2) you can unget the write buffer before queuing it, which returns
- *	it to the pool of available buffers. (NB: Unget is currently unused be left in)
+ *	it to the pool of available buffers. (NB: Unget is currently unused but left in.)
  *
- *	The RUN buffer is the buffer currently executing. It may be retrieved once for
- *	simple commands, or multiple times for long-running commands like moves. The
- *  first retrieval (get run buffer) will return the new run buffer. Subsequent
- *  retrievals will return the same buffer until it's state changes to complete.
- *  When the command is complete the run buffer is returned to the pool by freeing it.
+ *	The RUN buffer may be retrieved once for simple commands, or multiple times for
+ *  long-running commands such as moves that get called multiple times. The first
+ *  retrieval (get run buffer) will return the new run buffer. Subsequent retrievals
+ *  will return the same buffer until it's state changes to complete. When the command
+ *  is complete the run buffer is returned to the pool by freeing it.
  *
  * Notes:
- *	The write buffer pointer only moves forward on mp_commit_write_buffer,
- *  and the run buffer pointer only moves forward on mp_free_run_buffer().
+ *	The write buffer pointer only moves forward on mp_commit_write_buffer, and the
+ *  run buffer pointer only moves forward on mp_free_run_buffer().
  *	Tests, gets and unget have no effect on the pointers.
  *
- * _clear_buffer(bf)        Zero the contents of the buffer
+ * Functions Provided:
+ * _clear_buffer(bf)        Zero the contents of a buffer
  *
  * mp_init_buffers()        Initialize or reset buffers
  *
- * mp_get_planner_buffers_available() Return # of available planner buffers
+ * mp_get_prev_buffer(bf)   Return pointer to the previous buffer in the linked list
+ * mp_get_next_buffer(bf)   Return pointer to the next buffer in the linked list
  *
  * mp_get_write_buffer()    Get pointer to next available write buffer
  *                          Return pointer or NULL if no buffer available.
@@ -345,9 +649,6 @@ stat_t mp_exec_out_of_band_dwell(void)
  *                          buffer once it has been committed as it may be processed
  *                          and freed (cleared) before the commit function returns.
  *
- * mp_has_runnable_buffer() Check to see if the next buffer is runnable, indicating that
- *                          we have not stopped.
- *
  * mp_get_run_buffer()      Get pointer to the next or current run buffer.
  *                          Return a new run buffer if prev buf was ENDed.
  *                          Return same buf if called again before ENDing.
@@ -357,22 +658,23 @@ stat_t mp_exec_out_of_band_dwell(void)
  * mp_free_run_buffer()     Release the run buffer & return to buffer pool.
  *                          Return true if queue is empty, false otherwise.
  *                          This is useful for doing queue empty / end move functions.
- *
- * mp_get_prev_buffer(bf)   Return pointer to the previous buffer in the linked list
- * mp_get_next_buffer(bf)   Return pointer to the next buffer in the linked list
- * mp_get_first_buffer(bf)	Return pointer to first buffer, i.e. the running block
- *
- * UNUSED
+ * *
+ * UNUSED BUT PROVIDED FOR REFERENCE:
  * mp_unget_write_buffer()  Free write buffer if you decide not to commit it.
- * mp_get_last_buffer(bf)	Return pointer to last buffer, i.e. last block.
  * mp_copy_buffer(bf,bp)	Copy the contents of bp into bf - preserves links.
  */
 
 static inline void _clear_buffer(mpBuf_t *bf)
 {
-	// Note: bf->bf_func is the first address we wish to clear as
-    // we must preserve the integrity of the pointers during interrupts
+	// Note: bf->bf_func is the first address we wish to clear as we must preserve
+    // the pointers and buffer number during interrupts
+
+    // GCC did not like this line, so it's done differently
+//	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2) - sizeof(uint16_t));
+
+    uint8_t buffer_number = bf->buffer_number;    //+++++ DIAGNOSTIC
 	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2));
+    bf->buffer_number = buffer_number;            //+++++ DIAGNOSTIC
 }
 
 void mp_init_buffers(void)
@@ -380,38 +682,47 @@ void mp_init_buffers(void)
 	mpBuf_t *pv;
 	uint8_t i;
 
-	memset(&mb, 0, sizeof(mb));     // clear all values, pointers and status
+	memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
 	mb.magic_start = MAGICNUM;
 	mb.magic_end = MAGICNUM;
 
-	mb.w = &mb.bf[0];               // init write and read buffer pointers
-	mb.q = &mb.bf[0];
+	mb.w = &mb.bf[0];                               // init all buffer pointers
 	mb.r = &mb.bf[0];
+	mb.p = &mb.bf[0];
+	mb.c = &mb.bf[0];
 	pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) { // setup ring pointers
+	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+        mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
 		mb.bf[i].nx = &mb.bf[_bump(i)];
-		mb.bf[i].pv = pv;
+		mb.bf[i].pv = pv;                           // setup ring pointers
 		pv = &mb.bf[i];
 	}
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
 }
 
-uint8_t mp_get_planner_buffers_available(void)
+/*
+ * These GET functions are defined here but we use the macros in planner.h instead
+ *
+mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf)
 {
-	return (mb.buffers_available);
+    return (bf->pv);
 }
+mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf)
+{
+    return (bf->nx);
+}
+*/
 
 mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 {
     if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
-        mpBuf_t *w = mb.w;
-        mb.w = mb.w->nx;
-        _clear_buffer(w);
-        w->buffer_state = MP_BUFFER_PLANNING;
+        _clear_buffer(mb.w);
+        mb.w->buffer_state = MP_BUFFER_NOT_PLANNED;
         mb.buffers_available--;
-        return (w);
+        return (mb.w);
     }
-	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer");
+    // The no buffer condition always causes a panic - invoked by the caller
+	rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer()");
 	return (NULL);
 }
 
@@ -419,44 +730,33 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 * The function calling mp_commit_write_buffer() must NOT use the write buffer once it has
 * been committed. Interrupts may use the buffer immediately, invalidating its contents.
 */
+
 void mp_commit_write_buffer(const moveType move_type)
 {
-    mb.q->move_type = move_type;
-    mb.q->move_state = MOVE_NEW;
-//    mb.q->replannable = true;                   // ++++ TEST
-    if (MOVE_TYPE_ALINE != move_type) {
-        mb.q->buffer_state = MP_BUFFER_QUEUED;
-        mb.q = mb.q->nx;
-        if (!mb.needs_replanned) {
-            if (cm.hold_state != FEEDHOLD_HOLD)
-//            if ((cm.hold_state != FEEDHOLD_HOLD) && (cm.hold_state != FEEDHOLD_DECEL_FINALIZE))
-                st_request_exec_move();	        // requests an exec if the runtime is not busy
-                // NB: BEWARE! the exec may result in the planner buffer being
-                // processed IMMEDIATELY and then freed - invalidating the contents
+    mb.w->move_type = move_type;
+    mb.w->move_state = MOVE_NEW;
+
+    if (move_type == MOVE_TYPE_ALINE) {
+        if (cm.motion_state == MOTION_STOP) {
+            cm_set_motion_state(MOTION_PLANNING);
         }
     } else {
-        mb.needs_replanned = true;
-        if(cm.hold_state == FEEDHOLD_OFF)
-            cm_set_motion_state(MOTION_PLANNING);
-        mb.q = mb.q->nx;                        // advance the queued buffer pointer
-        if (mb.planner_timer == 0) {
-            mb.planner_timer = SysTickTimer.getValue() + PLANNER_TIMEOUT_MS;
+        if ((mb.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
+            // NB: BEWARE! the exec may result in the planner buffer being
+            // processed IMMEDIATELY and then freed - invalidating the contents
+            st_request_exec_move();	 // requests an exec if the runtime is not busy
         }
     }
-    qr_request_queue_report(+1);                // request a QR and add to the "added buffers" count
-}
-
-bool mp_has_runnable_buffer()
-{
-    return (mb.r->buffer_state);                // anything other than MP_BUFFER_EMPTY returns true
+    mb.new_block = true;                    // got a new block to plan
+    mb.w = mb.w->nx;                        // advance the write buffer pointer
+    qr_request_queue_report(+1);            // request a QR and add to the "added buffers" count
 }
 
 mpBuf_t * mp_get_run_buffer()
 {
-    // CASE: fresh buffer; becomes running if queued or pending
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED) {
+    // CASE: fresh buffer; becomes running if buffer planned
+    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
-        mb.needs_time_accounting = true;
     }
 
     // This is the one point where an accurate accounting of the total time in the
@@ -471,35 +771,16 @@ mpBuf_t * mp_get_run_buffer()
     return (NULL);								// CASE: no queued buffers. fail it.
 }
 
-bool mp_free_run_buffer()    // EMPTY current run buffer & advance to the next
+bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
 {
-    _audit_buffers();           // diagnostic audit for buffer chain integrity
-
-    mb.needs_time_accounting = true;
+    _audit_buffers();       // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                            // advance to next run buffer
-	_clear_buffer(r);                           // clear it out (& reset replannable and set MP_BUFFER_EMPTY)
-//	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
-//		mb.r->buffer_state = MP_BUFFER_RUNNING; // run next buffer
-////    } else {
-////        __NOP(); // something to get ahold of in debugging - gets here when queue empties
-//	}
+	_clear_buffer(r);                           // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
 	mb.buffers_available++;
 	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
-	return ((mb.w == mb.r) ? true : false); 	// return true if the queue emptied
-}
-
-/* These functions are defined here, but use the macros in planner.h instead.
-mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) return (bf->pv);
-mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) return (bf->nx);
-*/
-
-mpBuf_t * mp_get_first_buffer(void) {
-    if (mb.r->buffer_state == MP_BUFFER_QUEUED || mb.r->buffer_state == MP_BUFFER_RUNNING) {
-        return mb.r;
-    }
-    return NULL;
+	return (mb.w == mb.r); 	                    // return true if the queue emptied
 }
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
@@ -510,21 +791,6 @@ void mp_unget_write_buffer()
     mb.buffers_available++;
 }
 
-mpBuf_t * mp_get_last_buffer(void)
-{
-	mpBuf_t *bf = mp_get_run_buffer();
-	mpBuf_t *bp = bf;
-
-	if (bf == NULL) return(NULL);
-
-	do {
-		if ((bp->nx->move_state == MOVE_OFF) || (bp->nx == bf)) {
-			return (bp);
-		}
-	} while ((bp = mp_get_next_buffer(bp)) != bf);
-	return (bp);
-}
-
 void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 {
     // copy contents of bp to by while preserving pointers in bp
@@ -532,101 +798,10 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 }
 */
 
-/*
- * Planner functions and helpers
- *
- *	mp_plan_buffer()
- *	mp_is_it_phat_city_time()
- *	_planner_time_accounting()
- *  _audit_buffers()
+/************************************************************************************
+ * _planner_report()
+ * _audit_buffers() - a DEBUG diagnostic
  */
-
-stat_t mp_plan_buffer()
-{
-    // Criteria to replan:
-    // 0) There are items in the buffer that need replanning.
-    // 1) Planner timer has "timed out"
-    // 2) Less than MIN_PLANNED_TIME in the planner
-
-    if (!mb.needs_replanned) {
-        return (STAT_OK);
-    }
-    bool do_continue = false;
-
-    if (mb.force_replan) {
-        do_continue = true;
-        mb.force_replan = false;
-    }
-
-    if (!do_continue && (mb.planner_timer < SysTickTimer.getValue()) ) {
-        do_continue = true;
-    }
-
-    float total_buffer_time = mb.time_in_run + mb.time_in_planner;
-    if (!do_continue && (total_buffer_time > 0) && (MIN_PLANNED_TIME >= total_buffer_time) ) {
-        do_continue = true;
-    }
-
-    if (!do_continue) {
-        return (STAT_OK);
-    }
-
-    // Now, finally, plan the buffer.
-    mp_plan_block_list(mb.q->pv);
-
-    if (cm.hold_state != FEEDHOLD_HOLD) {
-        st_request_exec_move();					// requests an exec if the runtime is not busy
-        // NB: BEWARE! the exec may result in the planner buffer being
-        // processed immediately and then freed - invalidating the contents
-    }
-
-    mb.planner_timer = 0; // clear the planner timer
-    mb.needs_replanned = false;
-    return (STAT_OK);
-}
-
-bool mp_is_it_phat_city_time() {
-
-	if(cm.hold_state == FEEDHOLD_HOLD) {
-    	return true;
-	}
-    float time_in_planner = mb.time_in_run + mb.time_in_planner;
-    return ((time_in_planner <= 0) || (PHAT_CITY_TIME < time_in_planner));
-}
-
-static void _planner_time_accounting()
-{
-//    if (((mb.time_in_run + mb.time_locked) > MIN_PLANNED_TIME) && !mb.needs_time_accounting)
-//        return;
-
-    mpBuf_t *bf = mp_get_first_buffer();  // potential to return a NULL buffer
-    mpBuf_t *bp = bf;
-
-    if (bf == NULL) {
-        mb.time_in_planner = 0;
-        return;
-    }
-
-    float time_in_planner = mb.time_in_run; // start with how much time is left in the runtime
-
-    // Now step through the moves and add up the planner time, locking up until MIN_PLANNED_TIME
-    while ((bp = mp_get_next_buffer(bp)) != bf && bp != mb.q) {
-        if (bp->buffer_state == MP_BUFFER_QUEUED) {
-            if (!bp->locked) {
-                if (time_in_planner < MIN_PLANNED_TIME) {
-                    bp->locked = true;
-                }
-            } // !locked
-
-            // move on, it's already locked
-            time_in_planner += bp->real_move_time;
-
-        } else {
-            break;
-        }
-    };
-    mb.time_in_planner = time_in_planner;
-}
 
 #if 0
 #ifdef DEBUG
@@ -642,20 +817,22 @@ static void _planner_report(const char *msg)
     rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
 
     for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
-        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"replan\":%d",
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
                 mb.bf[i].buffer_state,
                 mb.bf[i].move_type,
                 mb.bf[i].locked,
-                mb.bf[i].replannable);
+                mb.bf[i].plannable);
         if (&mb.bf[i] == mb.r) {
             printf(", \"RUN\":t");}
-        if (&mb.bf[i] == mb.q) {
-            printf(", \"QUE\":t");}
         if (&mb.bf[i] == mb.w) {
             printf(", \"WRT\":t");}
         printf("}}\n");
     }
 }
+
+/*
+ * _audit_buffers() - diagnostic to determine if buffers are sane
+ */
 
 static void _audit_buffers()
 {
@@ -684,15 +861,17 @@ static void _audit_buffers()
 
         // Order should be:
         //  - MP_BUFFER_RUNNING
-        //  - MP_BUFFER_QUEUED (zero or more)
-        //  - MP_BUFFER_PLANNING (zero or more)
+        //  - MP_BUFFER_PLANNED (zero or more)
+        //  - MP_BUFFER_NOT_PLANNED (zero or more)
         //  - MP_BUFFER_EMPTY (zero or more up until mb.r)
         //  - no more
 
         // After RUNNING, we can see anything but PENDING, but prefer not to find PLANNING
-        if (bf->pv->buffer_state == MP_BUFFER_RUNNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+        if (bf->pv->buffer_state == MP_BUFFER_RUNNING &&
+                                    bf->buffer_state != MP_BUFFER_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_EMPTY) {
             // Exception: PLANNING is allowed, but we may want to watch for it:
-            if (bf->buffer_state == MP_BUFFER_PLANNING) {
+            if (bf->buffer_state == MP_BUFFER_NOT_PLANNED) {
                 __NOP();
             } else {
                 _planner_report("buffer audit4");
@@ -701,13 +880,19 @@ static void _audit_buffers()
         }
 
         // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
-        if (bf->pv->buffer_state == MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_EMPTY) {
+        if (bf->pv->buffer_state == MP_BUFFER_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_NOT_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_EMPTY) {
             _planner_report("buffer audit5");
             _debug_trap();
         }
 
         // After PLANNING, we can see PLANNING, or EMPTY
-        if (bf->pv->buffer_state == MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_PLANNING && bf->buffer_state != MP_BUFFER_QUEUED && bf->buffer_state != MP_BUFFER_EMPTY) {
+        if (bf->pv->buffer_state == MP_BUFFER_NOT_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_NOT_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_PLANNED &&
+                                    bf->buffer_state != MP_BUFFER_EMPTY) {
             _planner_report("buffer audit6");
             _debug_trap();
         }
