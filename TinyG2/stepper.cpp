@@ -609,7 +609,7 @@ void dda_timer_type::interrupt()
 
     // clear all steps
 	if (!motor_1.step.isNull()) { motor_1.step.clear(); }
-    debug_pin3=0;
+//    debug_pin3=0;
 	if (!motor_2.step.isNull()) { motor_2.step.clear(); }
 	if (!motor_3.step.isNull()) { motor_3.step.clear(); }
 	if (!motor_4.step.isNull()) { motor_4.step.clear(); }
@@ -626,7 +626,7 @@ void dda_timer_type::interrupt()
 	if (!motor_1.step.isNull()) {
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
 			motor_1.step.set();		// turn step bit on
-            debug_pin3=1;
+//            debug_pin3=1;
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_1);
         }

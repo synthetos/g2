@@ -197,14 +197,11 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 void mp_plan_block_list()
 {
-    debug_pin1=1;      //+++++
+//    debug_pin1=1;      //+++++
     mpBuf_t *bf = mb.p;
     bool planned_something = false;
 
     while (true) {
-//        if (mb.time_in_plan > PLANNER_JIT_TIME) {             // only plan to just-in-time threshold
-//            break;
-//        }
         if ((mb.planner_state == PLANNER_OPTIMISTIC) &&         // skip last block if optimistic
             (bf->nx->buffer_state == MP_BUFFER_EMPTY)) {
             break;
@@ -219,17 +216,17 @@ void mp_plan_block_list()
         }
 
         // plan the block
-        debug_pin2=1;               //+++++
+//        debug_pin2=1;               //+++++
         bf = _plan_block(bf);
         planned_something = true;
         mb.p = bf;                  //+++++ DIAGNOSTIC - put it here for debugging purposes
-        debug_pin2=0;               //+++++
+//        debug_pin2=0;               //+++++
     }
     if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
         st_request_exec_move();                     // start motion if runtime is not already busy
     }
     mb.p = bf;                                      // set planner pointer for exit
-    debug_pin1=0;                   //+++++
+//    debug_pin1=0;                   //+++++
 }
 
 /*
