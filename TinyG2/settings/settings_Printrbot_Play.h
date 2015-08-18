@@ -50,8 +50,7 @@
 #define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
-#define JUNCTION_ACCELERATION       400000					// centripetal acceleration around corners - larger is faster
-#define JUNCTION_DEVIATION          0.1                 // larger is faster
+#define JUNCTION_DEVIATION          0.1                     // larger is faster
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
