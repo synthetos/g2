@@ -585,6 +585,7 @@ void canonical_machine_reset()
 	cm_set_distance_mode(cm.default_distance_mode);
 	cm_set_arc_distance_mode(INCREMENTAL_MODE);  // always the default
 	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
+    cm_reset_overrides();                       // setup overrides to initial conditions
 
     // NOTE: Should unhome axes here
 
@@ -1305,62 +1306,65 @@ void cm_message(const char *message)
 }
 
 /*
- * cm_override_enables() - M48, M49
- * cm_feed_rate_override_enable() - M50
- * cm_feed_rate_override_factor() - M50.1
- * cm_traverse_override_enable() - M50.2
- * cm_traverse_override_factor() - M50.3
- * cm_spindle_override_enable() - M51       (see spindle.c)
- * cm_spindle_override_factor() - M51.1     (see spindle.c)
- *
- *	Override enables are kind of a mess in Gcode. This is an attempt to sort them out.
- *	See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
+ * cm_reset_overrides() - reset manual feedrate and spindle overrides to initial conditions
  */
+
+void cm_reset_overrides()
+{
+    cm.gmx.m48_enable = true;
+    cm.gmx.mfo_enable = false;
+    cm.gmx.mfo_parameter = 1.0;
+}
+
 /*
-stat_t cm_override_enables(uint8_t flag)			// M48, M49
+ * cm_m48_enable() - M48, M49
+ *
+ * M48 is the master enable for manual feedrate override and spindle override
+ * If M48 is asserted M50 (mfo) and M51 (sso) settings are in effect
+ * If M49 is asserted M50 (mfo) and M51 (sso) settings are in ignored
+ *
+ * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
+ */
+
+stat_t cm_m48_enable(uint8_t enable)			// M48, M49
 {
-	cm.gmx.feed_rate_override_enable = flag;
-	cm.gmx.traverse_override_enable = flag;
-	spindle.override_enable = flag;
+	cm.gmx.m48_enable = enable;
 	return (STAT_OK);
 }
 
-stat_t cm_feed_rate_override_enable(uint8_t flag)	// M50
+/*
+ * cm_feed_rate_override_enable() - M50
+ *
+ * M50 enables manual feedrate override and optionally sets the P override parameter.
+ * P is expressed as 10% to N% of programmed feedrate, as a value from 0.100 to N.000
+ *
+ *  - P = 0. Turn off feedrate override. Do not change stored P value
+ *  - P < minimum or P > maximum parameter. Error is returned. No action taken
+ *  - M50 has no feedrate parameter. Turn on feedrate override to current P value
+ *
+ *  M50 is set OFF on initialization and program end
+ *  P value is set to 1.000 on initialization and program end
+ *
+ * See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
+ */
+
+stat_t cm_mfo_enable(uint8_t enable)	        // M50
 {
-	if (cm.gf.parameter && fp_ZERO(cm.gn.parameter)) {
-		cm.gmx.feed_rate_override_enable = false;
-	} else {
-		cm.gmx.feed_rate_override_enable = true;
+	if (fp_NOT_ZERO(cm.gf.parameter)) {         // parameter is not present in Gcode block
+        cm.gmx.mfo_enable = false;
+
+    } else {
+        if (cm.gn.parameter < MIN_MANUAL_FEEDRATE_OVERRIDE) {
+            return (STAT_INPUT_VALUE_TOO_SMALL);
+        }
+        if (cm.gn.parameter > MAX_MANUAL_FEEDRATE_OVERRIDE) {
+            return (STAT_INPUT_VALUE_TOO_LARGE);
+        }
+        cm.gmx.mfo_enable = true;
+		cm.gmx.mfo_parameter = cm.gn.parameter;
 	}
 	return (STAT_OK);
 }
-
-stat_t cm_feed_rate_override_factor(uint8_t flag)	// M50.1
-{
-	cm.gmx.feed_rate_override_enable = flag;
-	cm.gmx.feed_rate_override_factor = cm.gn.parameter;
-//	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
-	return (STAT_OK);
-}
-
-stat_t cm_traverse_override_enable(uint8_t flag)	// M50.2
-{
-	if (cm.gf.parameter && fp_ZERO(cm.gn.parameter)) {
-		cm.gmx.traverse_override_enable = false;
-	} else {
-		cm.gmx.traverse_override_enable = true;
-	}
-	return (STAT_OK);
-}
-
-stat_t cm_traverse_override_factor(uint8_t flag)	// M51
-{
-	cm.gmx.traverse_override_enable = flag;
-	cm.gmx.traverse_override_factor = cm.gn.parameter;
-//	mp_feed_rate_override(flag, cm.gn.parameter);	// replan the queue for new feed rate
-	return (STAT_OK);
-}
-*/
 
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *
@@ -1630,6 +1634,7 @@ static void _exec_program_finalize(float *value, bool *flag)
 		cm_coolant_off_immediate();                     // M9
 		cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);	// G94
 		cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
+        cm_reset_overrides();                           // reset feedrate the spindle overrides
 	}
 	sr_request_status_report(SR_REQUEST_IMMEDIATE);		// request a final and full status report (not filtered)
 }
@@ -2083,6 +2088,35 @@ stat_t cm_set_ja(nvObj_t *nv)
 }
 
 /*
+ * cm_set_mfo() - set manual feedrate override factor
+ * cm_set_mto() - set manual traverse override factor
+ */
+
+stat_t cm_set_mfo(nvObj_t *nv)
+{
+    if (nv->value < MIN_MANUAL_FEEDRATE_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_SMALL);
+    }
+    if (nv->value > MAX_MANUAL_FEEDRATE_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_LARGE);
+    }
+    set_flt(nv);
+    return(STAT_OK);
+}
+
+stat_t cm_set_mto(nvObj_t *nv)
+{
+    if (nv->value < MIN_MANUAL_TRAVERSE_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_SMALL);
+    }
+    if (nv->value > MAX_MANUAL_TRAVERSE_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_LARGE);
+    }
+    set_flt(nv);
+    return(STAT_OK);
+}
+
+/*
  * Commands
  *
  * cm_run_qf() - flush planner queue
@@ -2197,6 +2231,7 @@ const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
 const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
 const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
 const char fmt_tool[] PROGMEM = "Tool number          %d\n";
+const char fmt_g92e[] PROGMEM = "G92 enabled          %d\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -2214,6 +2249,7 @@ void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(A
 
 void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line);}     // TYPE_INT
 void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool);}     // TYPE_INT
+void cm_print_g92e(nvObj_t *nv) { text_print(nv, fmt_g92e);}     // TYPE_INT
 
 void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);} // print all these as TYPE_STRING
 void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs);} // See _get_msg_helper() for details
@@ -2236,27 +2272,29 @@ void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
 void cm_print_gpa(nvObj_t *nv) { text_print(nv, fmt_gpa);}  // TYPE_INT
 void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
-/* system state print functions */
+/* system parameter print functions */
 
-//const char fmt_ja[] PROGMEM = "[ja]  junction acceleration%8.0f%s\n";
 const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
 const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
 const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
 const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
-const char fmt_ml[] PROGMEM = "[ml]  min line segment%17.3f%s\n";
-const char fmt_ma[] PROGMEM = "[ma]  min arc segment%18.3f%s\n";
-const char fmt_ms[] PROGMEM = "[ms]  min segment time%13.0f uSec\n";
+const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled %10d [0=disable,1=enable]\n";
+const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab %2d [0=disable,1=enable]\n";
+const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
+const char fmt_mtoe[] PROGMEM ="[mtoe] manual traverse over enab%2d [0=disable,1=enable]\n";
+const char fmt_mto[] PROGMEM ="[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
 
-//void cm_print_ja(nvObj_t *nv) { text_print_flt_units(nv, fmt_ja, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}    // TYPE FLOAT
+void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}        // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}    // TYPE_INT
-void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}   // TYPE_INT
-void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}   // TYPE_INT
-void cm_print_ml(nvObj_t *nv) { text_print_flt_units(nv, fmt_ml, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ma(nvObj_t *nv) { text_print_flt_units(nv, fmt_ma, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_ms(nvObj_t *nv) { text_print(nv, fmt_ms);}    // TYPE_FLOAT
+void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
+void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
+void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
+void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
+void cm_print_mfoe(nvObj_t *nv){ text_print(nv, fmt_mfoe);}     // TYPE INT
+void cm_print_mfo(nvObj_t *nv) { text_print(nv, fmt_mfo);}      // TYPE FLOAT
+void cm_print_mtoe(nvObj_t *nv){ text_print(nv, fmt_mtoe);}     // TYPE INT
+void cm_print_mto(nvObj_t *nv) { text_print(nv, fmt_mto);}      // TYPE FLOAT
 
 /*
  * axis print functions
