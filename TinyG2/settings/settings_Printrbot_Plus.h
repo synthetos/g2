@@ -98,33 +98,45 @@
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 #define MOTOR_POWER_LEVEL_XY        0.43                    // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_Z         0.25                    // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_A         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_Z         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_A         0.45                     // default motor power level 0.00 - 1.00 (ARM only)
 
+// steps/mm -> mm/rev calculations
+// s: steps/mm
+// a: degress/FULL step (1.8)
+// M: microstep level (4, 8, 16, etc)
+// R: mm/revolution (output)
+// Example entry to wolframalpha.com:
+// s=80, a=1.8, M=16, R=(M*(360/a))/s
+
+// 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           40.64                   // 1tr
+#define M1_TRAVEL_PER_REV           40                   // 1tr
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
-#define M1_POLARITY                 0                       // 1po		0=normal, 1=reversed
+#define M1_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
 #define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 1mp
 
+// 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           40.64
+#define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 0
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
+// 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           1.5842
+#define M3_TRAVEL_PER_REV           1.58416
 #define M3_MICROSTEPS               32
-#define M3_POLARITY                 0
+#define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
 #define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
 
+// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360			// degrees moved per motor rev
@@ -133,6 +145,7 @@
 #define M4_POWER_MODE               MOTOR_POWER_MODE
 #define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_A
 
+// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
 #define M5_TRAVEL_PER_REV           360			// degrees moved per motor rev
@@ -159,7 +172,7 @@
 #define X_VELOCITY_MAX              30000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
-#define X_TRAVEL_MAX                100                     // xtm  travel between switches or crashes
+#define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 //#define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
@@ -174,27 +187,27 @@
 #define Y_VELOCITY_MAX              30000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                100
+#define Y_TRAVEL_MAX                250
 #define Y_JERK_MAX                  15000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 //#define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
-#define Y_HOMING_INPUT              3
+#define Y_HOMING_INPUT              4
 #define Y_HOMING_DIR                1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
-#define Y_ZERO_BACKOFF              100
+#define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              800
+#define Z_VELOCITY_MAX              400
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                125
+#define Z_TRAVEL_MAX                196
 #define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 //#define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
-#define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_INPUT              8
+#define Z_HOMING_DIR                0
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             5
@@ -217,6 +230,9 @@
  * Note that you need these to be floating point values, so always have a .0 at the end!
  *
  ***************************************************************************************/
+
+
+// To compute radius from mm/rev (m) (that other axes give): r = m/(2*pi)
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				5.30516476972984
@@ -326,7 +342,7 @@
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // High Voltage Z Probe In (Amax on v9 board)
-#define DI8_MODE                    INPUT_MODE_DISABLED
+#define DI8_MODE                    INPUT_ACTIVE_LOW
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 

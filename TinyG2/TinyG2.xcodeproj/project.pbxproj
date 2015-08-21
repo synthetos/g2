@@ -112,7 +112,7 @@
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
 		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
 		D49367CC1B82C865000BB759 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Play.h; sourceTree = "<group>"; };
-		D49367CD1B82C8CD000BB759 /* settings_Printrbot_MetalPlus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_MetalPlus.h; sourceTree = "<group>"; };
+		D49367CD1B82C8CD000BB759 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; };
 		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_exec.cpp; sourceTree = "<group>"; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
@@ -188,7 +188,7 @@
 			children = (
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
-				D49367CD1B82C8CD000BB759 /* settings_Printrbot_MetalPlus.h */,
+				D49367CD1B82C8CD000BB759 /* settings_Printrbot_Plus.h */,
 				D49367CC1B82C865000BB759 /* settings_Printrbot_Play.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
 				D4E913611AC4759F0042A16C /* settings_shapeoko2.h */,

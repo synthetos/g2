@@ -7,9 +7,9 @@ ifeq ("$(BOARD)","g2ref-a")
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 endif
 
-ifeq ("$(BOARD)","PrintrbotMetalPlus")
+ifeq ("$(BOARD)","PrintrbotPlus")
     BASE_BOARD=g2-g2ref
-    SETTINGS_FILE="settings_Printrbot_MetalPlus.h"
+    SETTINGS_FILE="settings_Printrbot_Plus.h"
     DEVICE_DEFINES += MOTATE_BOARD="g2ref-a" SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
@@ -23,7 +23,8 @@ ifeq ("$(BASE_BOARD)","g2-g2ref")
     export CHIP
     CHIP_LOWERCASE = sam3x8c
 
-    DEVICE_INCLUDE_DIRS += ./board/g2ref
+    BOARD_PATH = ./board/g2ref
+    DEVICE_INCLUDE_DIRS += ${BOARD_PATH}
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk
