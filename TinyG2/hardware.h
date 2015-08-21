@@ -67,13 +67,10 @@ enum hwPlatform {
 // ARM specific code start here
 
 #include "MotatePins.h"
-#include "MotateTimers.h" // for timer_number
+#include "MotateTimers.h" // for TimerChanel<> and related...
+#include "MotateServiceCall.h" // for ServiceCall<>
 
 using namespace Motate;
-
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 /*************************
  * Global System Defines *
@@ -126,8 +123,8 @@ extern "C"{
 // Timer definitions. See stepper.h and other headers for setup
 typedef TimerChannel<2,0> dda_timer_type;	// stepper pulse generation in stepper.cpp
 typedef TimerChannel<3,0> dwell_timer_type;	// dwell timing in stepper.cpp
-typedef TimerChannel<4,0> load_timer_type;	// request load timer in stepper.cpp
-typedef TimerChannel<5,0> exec_timer_type;	// request exec timer in stepper.cpp
+typedef ServiceCall<0> load_timer_type;	// request load timer in stepper.cpp
+typedef ServiceCall<1> exec_timer_type;	// request exec timer in stepper.cpp
 
 // Pin assignments
 
@@ -197,9 +194,5 @@ stat_t hw_get_id(nvObj_t *nv);
 	#define hw_print_id tx_print_stub
 
 #endif // __TEXT_MODE
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif	// end of include guard: HARDWARE_H_ONCE
