@@ -144,6 +144,8 @@
 #define M6_POWER_LEVEL		    	MOTOR_POWER_LEVEL
 #endif
 
+#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
+#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
 // *** axis settings *********************************************************************************
 
 #define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
