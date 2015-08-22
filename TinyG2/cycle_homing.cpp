@@ -37,6 +37,7 @@
 #include "kinematics.h"
 #include "gpio.h"
 #include "report.h"
+#include "util.h"
 
 /**** Homing singleton structure ****/
 
@@ -245,15 +246,19 @@ static stat_t _homing_axis_start(int8_t axis)
 
     // setup parameters for positive or negative travel (homing to the max or min switch)
     if (homing_to_max) {
-		hm.search_travel = travel_distance;                 // search travels in positive direction
-		hm.latch_backoff = fabs(cm.a[axis].latch_backoff);  // latch travels in positive direction
-		hm.zero_backoff  = -fabs(cm.a[axis].zero_backoff);  // zero backoff is negative direction
-        hm.setpoint      = cm.a[axis].travel_max;           // will set the maximum position
+		hm.search_travel = travel_distance;                     // search travels in positive direction
+		hm.latch_backoff = fabs(cm.a[axis].latch_backoff);      // latch travels in positive direction
+		hm.zero_backoff  = -max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is negative direction (or zero)
+                                                                // will set the maximum position
+                                                                //     (plus any negative backoff)
+        hm.setpoint      = cm.a[axis].travel_max + (max(0.0f, -cm.a[axis].zero_backoff));
 	} else {
-		hm.search_travel = -travel_distance;                // search travels in negative direction
-		hm.latch_backoff = -fabs(cm.a[axis].latch_backoff); // latch travels in negative direction
-		hm.zero_backoff  = fabs(cm.a[axis].zero_backoff);   // zero backoff is positive direction
-        hm.setpoint      = cm.a[axis].travel_min;           // will set the minimum position
+		hm.search_travel = -travel_distance;                   // search travels in negative direction
+		hm.latch_backoff = -fabs(cm.a[axis].latch_backoff);    // latch travels in negative direction
+		hm.zero_backoff  = max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is positive direction (or zero)
+                                                               // will set the minimum position
+                                                               //     (minus any negative backoff)
+        hm.setpoint      = cm.a[axis].travel_min + (max(0.0f, -cm.a[axis].zero_backoff));
 	}
 
 	// if homing is disabled for the axis then skip to the next axis
