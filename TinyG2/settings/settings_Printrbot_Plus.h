@@ -188,7 +188,7 @@ constexpr float H1_DEFAULT_D = 114.0/255.0;
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              30000
+#define Y_VELOCITY_MAX              25000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                250
