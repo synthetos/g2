@@ -29,6 +29,7 @@
 		D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A53172CB1FA00D0E055 /* text_parser.cpp */; };
 		D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A54172CB1FA00D0E055 /* util.cpp */; };
 		D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A55172CB1FA00D0E055 /* xio.cpp */; };
+		D49367D91B87CA8A000BB759 /* temperature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49367D71B87CA8A000BB759 /* temperature.cpp */; };
 		D4B485B61AB1FBC900C6614F /* gpio.h in Sources */ = {isa = PBXBuildFile; fileRef = D4B93DF01AAA9DFE00632FAB /* gpio.h */; };
 		D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */; };
 		D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */; };
@@ -114,6 +115,8 @@
 		D49367CC1B82C865000BB759 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Play.h; sourceTree = "<group>"; };
 		D49367CD1B82C8CD000BB759 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; };
 		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
+		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = temperature.cpp; sourceTree = "<group>"; };
+		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_exec.cpp; sourceTree = "<group>"; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -251,6 +254,8 @@
 				D48F5A7C172CB21100D0E055 /* spindle.h */,
 				D48F5A52172CB1FA00D0E055 /* stepper.cpp */,
 				D48F5A7D172CB21100D0E055 /* stepper.h */,
+				D49367D71B87CA8A000BB759 /* temperature.cpp */,
+				D49367D81B87CA8A000BB759 /* temperature.h */,
 				D48F5A53172CB1FA00D0E055 /* text_parser.cpp */,
 				D48F5A7E172CB21100D0E055 /* text_parser.h */,
 				D48F5A7F172CB21100D0E055 /* tinyg2.h */,
@@ -444,6 +449,7 @@
 				D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */,
 				D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */,
 				D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */,
+				D49367D91B87CA8A000BB759 /* temperature.cpp in Sources */,
 				D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */,
 				D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */,
 				D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */,

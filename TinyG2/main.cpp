@@ -32,6 +32,7 @@
 #include "stepper.h"
 #include "encoder.h"
 #include "spindle.h"
+#include "temperature.h"
 #include "gpio.h"
 #include "test.h"
 #include "pwm.h"
@@ -151,6 +152,7 @@ void application_init_startup(void)
     canonical_machine_reset();
     spindle_init();                 // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
+    temperature_init();
     // MOVED: report the system is ready is now in xio
 }
 

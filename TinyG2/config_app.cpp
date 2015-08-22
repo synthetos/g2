@@ -38,6 +38,7 @@
 #include "stepper.h"
 #include "gpio.h"
 #include "spindle.h"
+#include "temperature.h"
 #include "coolant.h"
 #include "pwm.h"
 #include "report.h"
@@ -425,6 +426,20 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_hi,  P1_CCW_PHASE_HI },
 	{ "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].phase_off,     P1_PWM_PHASE_OFF },
 
+    // temperature configs - pid active values (read-only)
+    { "pid1","pid1p",_f0, 3, tx_print_nul, cm_get_pid_p, set_nul, (float *)&cs.null, 0 },
+    { "pid1","pid1i",_f0, 5, tx_print_nul, cm_get_pid_i, set_nul, (float *)&cs.null, 0 },
+    { "pid1","pid1d",_f0, 5, tx_print_nul, cm_get_pid_d, set_nul, (float *)&cs.null, 0 },
+
+    // temperature configs - heater set values (read-write)
+    { "he1","he1p", _fip, 3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H1_DEFAULT_P },
+    { "he1","he1i", _fip, 5, tx_print_nul, cm_get_heater_i,        cm_set_heater_i,        (float *)&cs.null, H1_DEFAULT_I },
+    { "he1","he1d", _fip, 5, tx_print_nul, cm_get_heater_d,        cm_set_heater_d,        (float *)&cs.null, H1_DEFAULT_D },
+    { "he1","he1st",_fp,  0, tx_print_nul, cm_get_set_temperature, cm_set_set_temperature, (float *)&cs.null, 0 },
+    { "he1","he1t", _f0,  1, tx_print_nul, cm_get_temperature,     set_nul,                (float *)&cs.null, 0 },
+    { "he1","he1op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_nul,                (float *)&cs.null, 0 },
+    { "he1","he1tr",_f0,  3, tx_print_nul, cm_get_thermocouple_resistance,   set_nul,      (float *)&cs.null, 0 },
+
 	// Coordinate system offsets (G54-G59 and G92)
 	{ "g54","g54x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },
 	{ "g54","g54y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_Y], G54_Y_OFFSET },
@@ -527,6 +542,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,   (float *)&coolant.pause_on_hold,       COOLANT_PAUSE_ON_HOLD },
     { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
     { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
+
+
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE
@@ -784,6 +801,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
 	{ "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
     // +8 = 39
+    { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 1 group
+    { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 1 group
+    // +2 = 41
 
 #ifdef __USER_DATA
     { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
@@ -839,7 +859,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #else
 #define DIAGNOSTIC_GROUPS 		0
 #endif
-#define NV_COUNT_GROUPS (FIXED_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + USER_DATA_GROUPS + DIAGNOSTIC_GROUPS)
+
+#define TEMPERATURE_GROUPS 		2
+#define NV_COUNT_GROUPS (FIXED_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + USER_DATA_GROUPS + DIAGNOSTIC_GROUPS + TEMPERATURE_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
 #define NV_INDEX_MAX (sizeof(cfgArray) / sizeof(cfgItem_t))

@@ -36,6 +36,7 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
+#include "temperature.h"
 #include "encoder.h"
 #include "hardware.h"
 #include "gpio.h"
@@ -149,6 +150,7 @@ static void _controller_HSM()
     DISPATCH(_led_indicator());				    // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
     DISPATCH(_interlock_handler());             // invoke / remove safety interlock
+    DISPATCH(temperature_callback());           // makes sure temperatures are under control
     DISPATCH(_limit_switch_handler());          // invoke limit switch
     DISPATCH(_controller_state());              // controller state management
     DISPATCH(_test_system_assertions());        // system integrity assertions

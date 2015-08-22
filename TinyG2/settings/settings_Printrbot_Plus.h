@@ -65,6 +65,10 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+constexpr float H1_DEFAULT_P = 22.2/255.0;
+constexpr float H1_DEFAULT_I = 1.08/255.0;
+constexpr float H1_DEFAULT_D = 114.0/255.0;
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
@@ -83,7 +87,7 @@
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1p","he1i","he1d","he1op","he1tr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
