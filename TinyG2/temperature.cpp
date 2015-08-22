@@ -246,7 +246,7 @@ struct PID {
 //    }
 };
 
-PID pid1 { 22.2/255.0, 1.08/255.0, 114.0/255.0}; // default values
+PID pid1 { 0.087, 0.0042, 0.447 }; // default values
 Timeout pid_timeout;
 
 /**** Static functions ****/
@@ -307,7 +307,7 @@ stat_t cm_set_temperature_setpoint(float temperature)
  */
 stat_t cm_get_heater_p(nvObj_t *nv)
 {
-    nv->value = pid1._p_factor;
+    nv->value = pid1._p_factor * 100.0;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -315,7 +315,7 @@ stat_t cm_get_heater_p(nvObj_t *nv)
 }
 stat_t cm_set_heater_p(nvObj_t *nv)
 {
-    pid1._p_factor = nv->value;
+    pid1._p_factor = nv->value / 100.0;
     return (STAT_OK);
 }
 
@@ -324,7 +324,7 @@ stat_t cm_set_heater_p(nvObj_t *nv)
  */
 stat_t cm_get_heater_i(nvObj_t *nv)
 {
-    nv->value = pid1._i_factor;
+    nv->value = pid1._i_factor * 100.0;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -332,7 +332,7 @@ stat_t cm_get_heater_i(nvObj_t *nv)
 }
 stat_t cm_set_heater_i(nvObj_t *nv)
 {
-    pid1._i_factor = nv->value;
+    pid1._i_factor = nv->value / 100.0;
     return (STAT_OK);
 }
 
@@ -341,7 +341,7 @@ stat_t cm_set_heater_i(nvObj_t *nv)
  */
 stat_t cm_get_heater_d(nvObj_t *nv)
 {
-    nv->value = pid1._d_factor;
+    nv->value = pid1._d_factor * 100.0;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -349,7 +349,7 @@ stat_t cm_get_heater_d(nvObj_t *nv)
 }
 stat_t cm_set_heater_d(nvObj_t *nv)
 {
-    pid1._d_factor = nv->value;
+    pid1._d_factor = nv->value / 100.0;
     return (STAT_OK);
 }
 
