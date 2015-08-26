@@ -35,6 +35,7 @@
 #include "planner.h"
 #include "hardware.h"
 #include "pwm.h"
+#include "report.h"
 #include "util.h"
 
 /**** Allocate structures ****/
@@ -168,6 +169,7 @@ void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
 };
 
+float last_reported_temp = 0; // keep track of what we've reported for SR generation
 
 
 // Output 1 FET info
@@ -280,8 +282,14 @@ void temperature_reset()
 stat_t temperature_callback()
 {
     if (pid_timeout.isPast()) {
-        fet_pin1 = pid1.getNewOutput(thermistor1.temperature_exact());
+        float temp = thermistor1.temperature_exact();
+        fet_pin1 = pid1.getNewOutput(temp);
         pid_timeout.set(100);
+
+        if (fabs(temp - last_reported_temp) > 1.0) {
+            sr_request_status_report(SR_REQUEST_TIMED);
+            last_reported_temp = temp;
+        }
     }
     return (STAT_OK);
 }
@@ -424,7 +432,9 @@ stat_t cm_get_heater_output(nvObj_t *nv)
  */
 stat_t cm_get_temperature(nvObj_t *nv)
 {
-    nv->value = thermistor1.temperature_exact();
+    float temp = thermistor1.temperature_exact();
+    last_reported_temp = temp;
+    nv->value = temp;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
