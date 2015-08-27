@@ -262,7 +262,7 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <BuildTarget>TinyG2.elf BOARD=gShield COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=gShield COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
     <CleanTarget>clean BOARD=gShield MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
@@ -271,7 +271,7 @@
     <OutputPath>bin\shopbotShield\</OutputPath>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf BOARD=shopbotShield COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=shopbotShield COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map </BuildTarget>
     <CleanTarget>clean BOARD=shopbotShield MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <ToolchainSettings>
@@ -353,7 +353,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'sbv300' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf BOARD=sbv300 COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=sbv300 COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
     <CleanTarget>clean BOARD=sbv300 MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\sbv300\</OutputPath>
@@ -511,7 +511,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf BOARD=G2v9k COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=G2v9k COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
     <CleanTarget>clean BOARD=G2v9k MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9k\</OutputPath>
@@ -594,7 +594,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>TinyG2.elf BOARD=g2ref-a COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=g2ref-a COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
     <CleanTarget>clean BOARD=g2ref-a MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\g2refa\</OutputPath>
@@ -677,7 +677,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>-j 8 TinyG2.elf BOARD=PrintrbotPlus COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir</BuildTarget>
+    <BuildTarget>BOARD=PrintrbotPlus COLOR=0 VERBOSE=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
     <CleanTarget>clean BOARD=PrintrbotPlus MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\PrintrbotPlay\</OutputPath>
