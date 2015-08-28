@@ -104,7 +104,6 @@ namespace Motate {
     _MAKE_MOTATE_PIN(16, A, 'A', 16);	// Socket1_Microstep_1PinNumber
     _MAKE_MOTATE_PIN(17, B, 'B', 16);	// Socket1_Microstep_2PinNumber
     _MAKE_MOTATE_PIN(18, B, 'B', 17);	// Socket1_VrefPinNumber
-    _MAKE_MOTATE_PIN(20, B, 'B', 20);	// Socket2_SPISlaveSelectPinNumber
     _MAKE_MOTATE_PIN(22, B, 'B', 0);	// Socket2_StepPinNumber
     _MAKE_MOTATE_PIN(23, B, 'B', 2);	// Socket2_DirPinNumber
     _MAKE_MOTATE_PIN(24, B, 'B', 1);	// Socket2_EnablePinNumber
@@ -112,7 +111,6 @@ namespace Motate {
     _MAKE_MOTATE_PIN(26, A, 'A', 21);	// Socket2_Microstep_1PinNumber
     _MAKE_MOTATE_PIN(27, A, 'A', 4);	// Socket2_Microstep_2PinNumber
     _MAKE_MOTATE_PIN(28, B, 'B', 18);	// Socket2_VrefPinNumber
-    _MAKE_MOTATE_PIN(30, B, 'B', 21);	// Socket3_SPISlaveSelectPinNumber
     _MAKE_MOTATE_PIN(32, B, 'B', 6);	// Socket3_StepPinNumber
     _MAKE_MOTATE_PIN(33, B, 'B', 8);	// Socket3_DirPinNumber
     _MAKE_MOTATE_PIN(34, B, 'B', 7);	// Socket3_EnablePinNumber
@@ -137,14 +135,20 @@ namespace Motate {
     _MAKE_MOTATE_PIN(105, A, 'A', 13);	// ZAxis_MaxPinNumber
     _MAKE_MOTATE_PIN(106, A, 'A', 14);	// AAxis_MinPinNumber
     _MAKE_MOTATE_PIN(107, A, 'A', 15);	// AAxis_MaxPinNumber
-    _MAKE_MOTATE_PIN(112, A, 'A', 5);	// Spindle_EnablePinNumber
     _MAKE_MOTATE_PIN(113, A, 'A', 7);	// Spindle_DirPinNumber
-    _MAKE_MOTATE_PIN(114, A, 'A', 8);	// Spindle_PwmPinNumber
     _MAKE_MOTATE_PIN(116, A, 'A', 1);	// Coolant_EnablePinNumber
     _MAKE_MOTATE_PIN(117, A, 'A', 18);	// LED_USBRXPinNumber
     _MAKE_MOTATE_PIN(118, A, 'A', 19);	// LED_USBTXPinNumber
     _MAKE_MOTATE_PIN(119, B, 'B', 15);	// SD_CardDetect
     _MAKE_MOTATE_PIN(120, A, 'A', 17);	// Interlock_In
+
+    // PWM Output Pins
+    _MAKE_MOTATE_PIN(130, A, 'A', 8);	// Spindle_PwmPinNumber -- now used for Extruder 1
+    _MAKE_MOTATE_PIN(132, A, 'A', 5);	// Spindle_EnablePinNumber -- now used for Fan 1
+
+    // ADC pins (for now, were SPI CS1 and CS2
+    _MAKE_MOTATE_PIN(150, B, 'B', 20);	// Socket2_SPISlaveSelectPinNumber
+    _MAKE_MOTATE_PIN(151, B, 'B', 21);	// Socket3_SPISlaveSelectPinNumber
 
     //UNASSIGNED, and disconnected:
     _MAKE_MOTATE_PIN(200, A, 'A', 0);	//
