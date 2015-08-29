@@ -284,7 +284,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     }
 
     // Set the cruise and entry velocities and calculate throttling (if needed)
-    bf->entry_velocity = bf->pv->exit_velocity;
+    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
     _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
     _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
