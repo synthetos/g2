@@ -13,6 +13,12 @@ ifeq ("$(BOARD)","PrintrbotPlus")
     DEVICE_DEFINES += MOTATE_BOARD="g2ref-a" SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
+ifeq ("$(BOARD)","PrintrbotSimple")
+    BASE_BOARD=g2-g2ref
+    SETTINGS_FILE="settings_Printrbot_Simple.h"
+    DEVICE_DEFINES += MOTATE_BOARD="g2ref-a" SETTINGS_FILE=${SETTINGS_FILE}
+endif
+
 # We call it g2-g2ref here to distinguish between the "g2Ref" in Motate
 ifeq ("$(BASE_BOARD)","g2-g2ref")
     _BOARD_FOUND = 1
