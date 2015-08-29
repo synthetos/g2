@@ -90,7 +90,7 @@ def check_integrity(pool):
         key = pool[key]['nx']
         count += 1
 
-    if count != 32:
+    if count != 48:
         raise Exception("Buffer pool integrity is bad.")
 
 def check_pool(filename):
