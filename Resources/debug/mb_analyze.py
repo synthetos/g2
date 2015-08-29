@@ -9,7 +9,7 @@ STATES = {
     4 : 'RUNNING'
 }
 
-TUMBLER = ['r', 'w', 'q']
+TUMBLER = ['r', 'w', 'p', 'c']
 
 
 def load_pool(filename):
@@ -33,8 +33,10 @@ def load_pool(filename):
                 pool[current_buffer]['is_r'] = True
             if current_buffer == pool['w']:
                 pool[current_buffer]['is_w'] = True
-            if current_buffer == pool['q']:
-                pool[current_buffer]['is_q'] = True
+            if current_buffer == pool['p']:
+                pool[current_buffer]['is_p'] = True
+            if current_buffer == pool['c']:
+                pool[current_buffer]['is_c'] = True
         else:
             match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9.]+|[A-Z_]+)|true|false)', line)
             if match:
@@ -42,15 +44,39 @@ def load_pool(filename):
                 if key == 'pv':
                     pv = int(val, 16)
                     pool[current_buffer]['pv'] = pv
-                if key == 'locked':
-                    pool[current_buffer]['locked'] = True if val == 'true' else False
+                # if key == 'locked':
+                #     pool[current_buffer]['locked'] = True if val == 'true' else False
                 elif key == 'nx':
                     nv = int(val, 16)
                     pool[current_buffer]['nx'] = nv
                 elif key == 'buffer_state':
                     pool[current_buffer]['buffer_state'] = val
-                elif key == 'real_move_time':
-                    pool[current_buffer]['real_move_time'] = val
+                elif key == 'move_time_ms':
+                    pool[current_buffer]['move_time_ms'] = val
+                elif key == 'linenum':
+                    pool[current_buffer]['linenum'] = val
+                elif key == 'buffer_number':
+                    pool[current_buffer]['buffer_number'] = val
+                elif key == 'entry_velocity':
+                    pool[current_buffer]['entry_velocity'] = val
+                elif key == 'cruise_velocity':
+                    pool[current_buffer]['cruise_velocity'] = val
+                elif key == 'exit_velocity':
+                    pool[current_buffer]['exit_velocity'] = val
+                elif key == 'head_length':
+                    pool[current_buffer]['head_length'] = val
+                elif key == 'body_length':
+                    pool[current_buffer]['body_length'] = val
+                elif key == 'tail_length':
+                    pool[current_buffer]['tail_length'] = val
+                elif key == 'head_time':
+                    pool[current_buffer]['head_time'] = val
+                elif key == 'body_time':
+                    pool[current_buffer]['body_time'] = val
+                elif key == 'tail_time':
+                    pool[current_buffer]['tail_time'] = val
+                elif key == 'move_time':
+                    pool[current_buffer]['move_time'] = val
     return pool
 
 def check_integrity(pool):
@@ -64,8 +90,8 @@ def check_integrity(pool):
         key = pool[key]['nx']
         count += 1
 
-    if count != 28:
-        raise "Buffer pool integrity is bad."
+    if count != 32:
+        raise Exception("Buffer pool integrity is bad.")
 
 def check_pool(filename):
     pool = load_pool(filename)
@@ -76,13 +102,34 @@ def print_pool(pool):
     for key in sorted(pool.keys()):
         buffer = pool[key]
         if isinstance(buffer, dict):
-            flags = ['r' if 'is_r' in buffer else None, 'w' if 'is_w' in buffer else None, 'q' if 'is_q' in buffer else None]
+            flags = [
+                'r' if 'is_r' in buffer else None,
+                'w' if 'is_w' in buffer else None,
+                'p' if 'is_p' in buffer else None,
+                'c' if 'is_c' in buffer else None
+                ]
             if any(flags):
                 pointer = '(%s)' % (','.join([flag for flag in flags if flag]))
             else:
                 pointer = ''
 
-            print '0x%08x : %-20s %-8s %-6s %04.2f' % (key, buffer['buffer_state'].strip(), 'locked' if buffer['locked'] else 'unlocked', pointer, float(buffer['real_move_time'])*60000)
+            print '0x%08x [%02d] : N%04d %-22s %-8s Ti% 8.2f  E% 10.2f  C% 10.2f  X% 10.2f  H% 10.2f@% 10.2f  B% 10.2f@% 10.2f  T% 10.2f@% 10.2f' % (
+                key,
+                float(buffer['buffer_number']),
+                float(buffer['linenum']),
+                buffer['buffer_state'].strip(),
+                pointer,
+                float(buffer['move_time_ms']),
+                float(buffer['entry_velocity']),
+                float(buffer['cruise_velocity']),
+                float(buffer['exit_velocity']),
+                float(buffer['head_length']),
+                float(buffer['head_time']) * 60000,
+                float(buffer['body_length']),
+                float(buffer['body_time']) * 60000,
+                float(buffer['tail_length']),
+                float(buffer['tail_time']) * 60000
+                )
 
 if __name__ == "__main__":
     pool = check_pool(sys.argv[1])
