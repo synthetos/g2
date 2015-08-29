@@ -194,6 +194,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity) &&
             VELOCITY_LT(bf->entry_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->head_length;
+            bf->tail_length = 0; // we just set it, now we unset it
             bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
             bf->body_time = bf->body_length / bf->cruise_velocity;
     	    bf->move_time = bf->head_time + bf->body_time;
@@ -206,6 +207,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity) &&
             VELOCITY_LT(bf->exit_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->tail_length;
+            bf->head_length = 0; // we just set it, now we unset it
             bf->body_time = bf->body_length / bf->cruise_velocity;
             bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
             bf->move_time = bf->body_time + bf->tail_time;

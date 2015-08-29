@@ -11,5 +11,21 @@ set history expansion on
 
 set print pretty on
 
-# Halt the device
-monitor reset halt
+define boot_from_flash
+    monitor at91sam3 gpnvm set 1
+end
+
+define reset
+    boot_from_flash
+    monitor reset init
+end
+
+define flash
+    make
+    load
+    reset
+end
+
+define dump_mb
+    source ../Resources/debug/mb.gdb
+end
