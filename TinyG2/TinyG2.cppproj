@@ -682,144 +682,6 @@
     <OutputPath>bin\PrintrbotPlay\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="arduino\Arduino.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\binary.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Client.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\cortex_handlers.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\cxxabi-compat.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\HardwareSerial.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\hooks.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\itoa.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Print.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Print.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Printable.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Reset.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Reset.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\RingBuffer.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\RingBuffer.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Server.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Stream.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Stream.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\syscalls.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\syscalls_sam3.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Tone.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\UARTClass.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\UARTClass.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\Udp.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USARTClass.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USARTClass.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\CDC.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\HID.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\USBAPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\USBCore.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\USBCore.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\USB\USBDesc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\WCharacter.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\WInterrupts.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_analog.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_analog.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_constants.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_digital.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_digital.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_private.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_pulse.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\wiring_shift.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\WMath.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="arduino\WString.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\ArduinoDue\gShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>
@@ -851,12 +713,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="canonical_machine.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cmsis\src\startup_sam3xa.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cmsis\src\system_sam3xa.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="config.cpp">
@@ -934,63 +790,6 @@
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="motate\AvrUSB.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\MotatePins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\MotateSPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\MotateTimers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\MotateUSB.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\MotateUSBCDC.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\SamSPI.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\SamTimers.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\SamUSB.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\AvrPins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\AvrTimers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\AvrUSB.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\AvrXPins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\MotateUSBHelpers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\SamCommon.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\SamPins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\SamSPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\SamTimers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motate\utility\SamUSB.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="persistence.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1016,222 +815,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="plan_zoid.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\due\gShield-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\due\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\due\shopbotShield-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\g2ref\g2refa-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\g2ref\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\sbv300\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\sbv300\sbv300-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\v9_3x8c\G2v9k-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\board\v9_3x8c\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\cortex_handlers.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\hooks.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\adc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\can.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\dacc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\efc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\emac.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\gpbr.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\interrupt_sam_nvic.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\pio.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\pio_it.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\pmc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\pwmc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\rstc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\rtc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\rtt.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\spi.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\ssc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\tc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\timetick.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\trng.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\twi.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\udp.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\udphs.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\uotghs_device.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\uotghs_host.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\usart.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\USB_device.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\USB_host.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\include\wdt.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\adc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\adc12_sam3u.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\can.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\dacc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\efc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\emac.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\gpbr.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\interrupt_sam_nvic.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\pio.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\pmc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\pwmc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\rstc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\rtc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\rtt.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\spi.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\ssc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\tc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\timetick.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\trng.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\twi.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\udp.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\udphs.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\uotghs.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\uotghs_device.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\uotghs_host.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\usart.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\libsam\source\wdt.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\Reset.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\Reset.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\syscalls.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\syscalls_sam3.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\UniqueId.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="platform\atmel_sam\UniqueId.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="pwm.cpp">
@@ -1389,33 +972,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="arduino\USB" />
     <Folder Include="board\" />
     <Folder Include="board\ArduinoDue\" />
     <Folder Include="board\g2ref\" />
     <Folder Include="board\G2v9\" />
     <Folder Include="board\sbv300\" />
-    <Folder Include="cmsis\" />
-    <Folder Include="cmsis\linkerScripts\" />
-    <Folder Include="cmsis\src\" />
-    <Folder Include="arduino" />
-    <Folder Include="motate" />
-    <Folder Include="motate\utility" />
-    <Folder Include="platform\atmel_sam\board\g2ref" />
-    <Folder Include="platform\atmel_sam\board\sbv300" />
     <Folder Include="tests" />
-    <Folder Include="platform\atmel_sam\board\" />
-    <Folder Include="platform\atmel_sam\board\due\" />
-    <Folder Include="platform\atmel_sam\board\v9_3x8c\" />
     <Folder Include="settings" />
-    <Folder Include="platform\arm" />
-    <Folder Include="platform\arm\lib" />
-    <Folder Include="platform\arm\include" />
-    <Folder Include="platform" />
-    <Folder Include="platform\atmel_sam" />
-    <Folder Include="platform\atmel_sam\libsam" />
-    <Folder Include="platform\atmel_sam\libsam\include" />
-    <Folder Include="platform\atmel_sam\libsam\source" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes">
@@ -1445,46 +1008,10 @@
     <None Include="board\G2v9.mk">
       <SubType>compile</SubType>
     </None>
-    <None Include="cmsis\linkerScripts\sam3x8c_flash.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="cmsis\linkerScripts\sam3x8c_sram.ld">
-      <SubType>compile</SubType>
-    </None>
     <None Include="LICENSE-gpl-2.0.txt">
       <SubType>compile</SubType>
     </None>
     <None Include="Makefile">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="motate\keywords.txt">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="openocd.cfg">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="openocd.cfg.example">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam\atmel_sam.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam\atmel_sam_series.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam\gcc_flash.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam\gcc_sram.ld">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\atmel_sam\make_utilities.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="platform\make_utilities.mk">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>
