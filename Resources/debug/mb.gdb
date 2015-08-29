@@ -1,11 +1,14 @@
-shell rm mb.txt
+#shell rm mb.txt || true
 set logging overwrite on
 set logging redirect on
 set logging file mb.txt
 set logging on
 print mb.r
 print mb.w
-print mb.q
+print mb.p
+print mb.c
+# generated with:
+# node -e 'for (i=0; i<48;i++) {console.log("print &mb.bf["+i+"]\nprint mb.bf["+i+"]");}'
 print &mb.bf[0]
 print mb.bf[0]
 print &mb.bf[1]
@@ -62,5 +65,45 @@ print &mb.bf[26]
 print mb.bf[26]
 print &mb.bf[27]
 print mb.bf[27]
+print &mb.bf[28]
+print mb.bf[28]
+print &mb.bf[29]
+print mb.bf[29]
+print &mb.bf[30]
+print mb.bf[30]
+print &mb.bf[31]
+print mb.bf[31]
+print &mb.bf[32]
+print mb.bf[32]
+print &mb.bf[33]
+print mb.bf[33]
+print &mb.bf[34]
+print mb.bf[34]
+print &mb.bf[35]
+print mb.bf[35]
+print &mb.bf[36]
+print mb.bf[36]
+print &mb.bf[37]
+print mb.bf[37]
+print &mb.bf[38]
+print mb.bf[38]
+print &mb.bf[39]
+print mb.bf[39]
+print &mb.bf[40]
+print mb.bf[40]
+print &mb.bf[41]
+print mb.bf[41]
+print &mb.bf[42]
+print mb.bf[42]
+print &mb.bf[43]
+print mb.bf[43]
+print &mb.bf[44]
+print mb.bf[44]
+print &mb.bf[45]
+print mb.bf[45]
+print &mb.bf[46]
+print mb.bf[46]
+print &mb.bf[47]
+print mb.bf[47]
 set logging off
-shell python ../Tools/debug/mb_analyze.py mb.txt
+shell python ../Resources/debug/mb_analyze.py mb.txt

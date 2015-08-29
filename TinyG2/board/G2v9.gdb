@@ -20,3 +20,7 @@ define flash
     load
     reset
 end
+
+define dump_mb
+    source ../Resources/debug/mb.gdb
+end

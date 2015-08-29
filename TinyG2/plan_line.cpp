@@ -284,7 +284,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     }
 
     // Set the cruise and entry velocities and calculate throttling (if needed)
-    bf->entry_velocity = bf->pv->exit_velocity;
+    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
     _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
     _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
@@ -354,7 +354,23 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             ASCII_ART("\\");
         }
     }
+    if (bf->entry_velocity > bf->cruise_velocity) {
+        while(1);
+    }
+    if (bf->exit_velocity > bf->cruise_velocity) {
+        while(1);
+    }
     mp_calculate_trapezoid(bf);
+    if (bf->entry_velocity > bf->cruise_velocity) {
+        while(1);
+    }
+    if (bf->exit_velocity > bf->cruise_velocity) {
+        while(1);
+    }
+    if (bf->head_length > 0.0 && bf->head_time < 0.000001) {
+        while(1);
+    }
+
     bf->buffer_state = MP_BUFFER_PLANNED;
     _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
     return (bf_ret);
