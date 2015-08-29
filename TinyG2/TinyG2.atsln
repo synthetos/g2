@@ -2,16 +2,22 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG2", "TinyG2.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
 EndProject
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Motate", "..\Motate\Motate.cppproj", "{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
 		g2ref-a|ARM = g2ref-a|ARM
 		G2v9k|ARM = G2v9k|ARM
 		gShield|ARM = gShield|ARM
 		PrintrbotPlus|ARM = PrintrbotPlus|ARM
+		Release|ARM = Release|ARM
 		sbv300|ARM = sbv300|ARM
 		shopbotShield|ARM = shopbotShield|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug|ARM.ActiveCfg = Debug|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug|ARM.Build.0 = Debug|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.g2ref-a|ARM.ActiveCfg = g2ref-a|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.g2ref-a|ARM.Build.0 = g2ref-a|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9k|ARM.ActiveCfg = G2v9k|ARM
@@ -20,10 +26,28 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.Build.0 = gShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotPlus|ARM.ActiveCfg = PrintrbotPlus|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotPlus|ARM.Build.0 = PrintrbotPlus|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release|ARM.ActiveCfg = PrintrbotPlus|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Release|ARM.Build.0 = PrintrbotPlus|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.sbv300|ARM.ActiveCfg = sbv300|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.sbv300|ARM.Build.0 = sbv300|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Debug|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Debug|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.G2v9k|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.G2v9k|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlus|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlus|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Release|ARM.ActiveCfg = Release|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Release|ARM.Build.0 = Release|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.Build.0 = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.Build.0 = Debug|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
