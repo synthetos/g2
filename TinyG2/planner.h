@@ -106,6 +106,20 @@ typedef enum {                      // planner operating state
     PLANNER_PESSIMISTIC             // plan by planning all blocks, including the tail
 } plannerState;
 
+typedef enum {
+    ZOID_EXIT_1a,
+    ZOID_EXIT_1c,
+    ZOID_EXIT_1d,
+    ZOID_EXIT_2a,
+    ZOID_EXIT_2c,
+    ZOID_EXIT_2d,
+    ZOID_EXIT_3c,
+    ZOID_EXIT_3s,
+    ZOID_EXIT_3s2,
+    ZOID_EXIT_3d2,
+    ZOID_EXIT_3a2
+} zoidExitState;
+
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE 48                     // Suggest 12 min. Limit is 255
@@ -187,6 +201,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint32_t linenum;               //+++++ DIAGNOSTIC for easier debugging
     uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
     float move_time_ms;             //+++++ DIAGNOSTIC for easier debugging
+    zoidExitState zoid_exit;        //+++++ DIAGNOSTIC for easier debugging
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
     moveType move_type;             // used to dispatch to run routine

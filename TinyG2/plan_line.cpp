@@ -288,6 +288,14 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
     _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
     _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
+
+    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
+        bf->cruise_velocity = bf->entry_velocity;
+    }
+    //+++++ TRAPS
+//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
+//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
+
     if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
         bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
     }
@@ -301,7 +309,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
                                             bf->nx->entry_vmax : bf->nx->entry_velocity);
 
     // Test for a perfect cruise. This allows skipping the delta_vmax computation
-    if (VELOCITY_EQ(bf->cruise_velocity, bf->entry_velocity) && // this test fails faster than...
+    if (VELOCITY_EQ(bf->cruise_velocity, bf->entry_velocity) && // this test fails more often than...
         VELOCITY_EQ(bf->cruise_velocity, bf->exit_velocity)) {  // ...this test
         bf->hint = PERFECT_CRUISE;
         ASCII_ART("-");
@@ -310,6 +318,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
          // Test acceleration cases  (Note: if Vx is decreased the nx block will be corrected in the next pass)
         if (bf->entry_velocity <= bf->exit_velocity) {
+
             bf->delta_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);  // dV is limited by jerk
             if (VELOCITY_LT(bf->delta_vmax, (bf->exit_velocity - bf->entry_velocity))) {  // accel would exceed jerk
                 bf->exit_velocity = bf->entry_velocity + bf->delta_vmax;                  // adjust Vx downward
@@ -342,6 +351,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
                 mb.backplan_return = bf->nx;            // return to the next buffer after start of backplan
             }
             bf->delta_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);   // dV is limited by jerk
+
             if (VELOCITY_LT(bf->delta_vmax, (bf->entry_velocity - bf->exit_velocity))) {  // decel would exceed jerk
                 bf->entry_velocity = bf->exit_velocity + bf->delta_vmax;                  // adjust Ve upward
                 bf_ret = mp_get_prev_buffer(bf);
@@ -354,22 +364,16 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             ASCII_ART("\\");
         }
     }
-    if (bf->entry_velocity > bf->cruise_velocity) {
-        while(1);
-    }
-    if (bf->exit_velocity > bf->cruise_velocity) {
-        while(1);
-    }
+    //+++++ TRAPS
+    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
+    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
+
     mp_calculate_trapezoid(bf);
-    if (bf->entry_velocity > bf->cruise_velocity) {
-        while(1);
-    }
-    if (bf->exit_velocity > bf->cruise_velocity) {
-        while(1);
-    }
-    if (bf->head_length > 0.0 && bf->head_time < 0.000001) {
-        while(1);
-    }
+
+    //+++++ TRAPS
+    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
+    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
+    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }
 
     bf->buffer_state = MP_BUFFER_PLANNED;
     _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
@@ -407,11 +411,25 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
                 bf->mfo_factor = mb.ramp_target;
                 mb.ramp_active = false;
             }
-            bf->cruise_velocity *= bf->mfo_factor;
+            bf->cruise_velocity *= bf->mfo_factor;      // +++++ this is probably wrong
+        //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,
+        //  bf->cruise_velocity = bf->entry_velocity;   //...either
         }
     } else {
         bf->cruise_velocity *= bf->mfo_factor;           // apply original or changed factor
     }
+    // Correction for velocity constraints
+    // In the case of a acceleration these conditions must hold:
+    //      Ve < Vc = Vx
+    // In the case of a deceleration:
+    //      Ve = Vc > Vx
+    // in the case of "lump":
+    //      Ve < Vc > Vx
+    // if (bf->cruise_velocity < bf->entry_velocity) { // deceleration case
+    //     bf->cruise_velocity = bf->entry_velocity;
+    // } else {                                        // acceleration case
+    //     ...
+    // }
 }
 
 /*
@@ -496,6 +514,12 @@ static void _calculate_throttle(mpBuf_t *bf)
         } else {
             bf->throttle = THROTTLE_MAX;    // set to 1.00 in case it's needed for backplanning
         }
+        // Correction for velocity constraints
+        // if (bf->cruise_velocity < bf->entry_velocity) { // deceleration case
+        //     bf->cruise_velocity = bf->entry_velocity;
+        // } else {                                        // acceleration case
+        //     ...
+        // }
     }
 }
 /* END NOTES:

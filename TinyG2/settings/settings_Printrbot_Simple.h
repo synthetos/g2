@@ -117,7 +117,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40.64
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 0
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
@@ -163,10 +163,9 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_VELOCITY_MAX              30000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
-#define X_TRAVEL_MAX                100                     // xtm  travel between switches or crashes
+#define X_TRAVEL_MAX                155                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
-//#define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
@@ -178,10 +177,9 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Y_VELOCITY_MAX              30000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                100
+#define Y_TRAVEL_MAX                120
 #define Y_JERK_MAX                  15000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
-//#define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                1
 #define Y_SEARCH_VELOCITY           3000
@@ -190,13 +188,12 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Y_ZERO_BACKOFF              100
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              800
+#define Z_VELOCITY_MAX              2000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                125
-#define Z_JERK_MAX                  50
+#define Z_TRAVEL_MAX                150
+#define Z_JERK_MAX                  200
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
-//#define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)

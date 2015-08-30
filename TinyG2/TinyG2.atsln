@@ -1,6 +1,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "TinyG2", "TinyG2.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0} = {D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}
+	EndProjectSection
 EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Motate", "..\Motate\Motate.cppproj", "{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}"
 EndProject
@@ -36,23 +39,17 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Debug|ARM.ActiveCfg = Debug|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Debug|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.G2v9k|ARM.ActiveCfg = Debug|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.G2v9k|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.ActiveCfg = Debug|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlus|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlus|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotSimple|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotSimple|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Release|ARM.ActiveCfg = Release|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Release|ARM.Build.0 = Release|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.ActiveCfg = Debug|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.Build.0 = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Debug|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.Build.0 = Debug|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

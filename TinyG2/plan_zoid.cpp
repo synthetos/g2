@@ -157,6 +157,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_length = bf->length;
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->move_time = bf->body_time;
+        bf->zoid_exit = ZOID_EXIT_1c;
         LOG_RETURN("1c");
         return;
 	}
@@ -167,6 +168,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->exit_velocity;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
+        bf->zoid_exit = ZOID_EXIT_1a;
     	LOG_RETURN("1a");
     	return;
     }
@@ -177,6 +179,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->entry_velocity;
     	bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->tail_time;
+        bf->zoid_exit = ZOID_EXIT_1d;
     	LOG_RETURN("1d");
     	return;
     }
@@ -198,6 +201,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
             bf->body_time = bf->body_length / bf->cruise_velocity;
     	    bf->move_time = bf->head_time + bf->body_time;
+            bf->zoid_exit = ZOID_EXIT_2a;
             LOG_RETURN("2a");
             return;
         }
@@ -211,6 +215,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->body_time = bf->body_length / bf->cruise_velocity;
             bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
             bf->move_time = bf->body_time + bf->tail_time;
+            bf->zoid_exit = ZOID_EXIT_2d;
             LOG_RETURN("2d");
             return;
         }
@@ -226,6 +231,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
+        bf->zoid_exit = ZOID_EXIT_2c;
         LOG_RETURN("2c");
         return;
     }
@@ -246,6 +252,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_length = 0;
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
+            bf->zoid_exit = ZOID_EXIT_3s2;
             LOG_RETURN("3s2");
             return;
         }
@@ -253,6 +260,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->tail_time;
+        bf->zoid_exit = ZOID_EXIT_3s;
         LOG_RETURN("3s");
         return;
     }
@@ -292,6 +300,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		bf->head_length = 0;
 		bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
 		bf->move_time = bf->tail_time;
+        bf->zoid_exit = ZOID_EXIT_3d2;
 		LOG_RETURN("3d2");
 		return;
     }
@@ -300,6 +309,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_length = 0;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
+        bf->zoid_exit = ZOID_EXIT_3a2;
         LOG_RETURN("3a2");
         return;
     }
@@ -319,6 +329,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
     }
     bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
+    bf->zoid_exit = ZOID_EXIT_3c;
     LOG_RETURN("3c");
     return;
 }
