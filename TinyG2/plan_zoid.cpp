@@ -39,9 +39,13 @@ inline T our_abs(const T number) {
 }
 
 //+++++ DIAGNOSTICS
+
+#define LOG_RETURN(msg)
+//#define LOG_RETURN(msg, retcode)
+//#define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; }
+
 /*
 static char logbuf[128];
-
 static void _logger(const char *msg, const mpBuf_t *bf)
 {
     sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
@@ -50,9 +54,8 @@ static void _logger(const char *msg, const mpBuf_t *bf)
                     bf->entry_velocity, bf->cruise_velocity, bf->exit_velocity);
     xio_writeline(logbuf);
 }
+#define LOG_RETURN(msg, retcode) _logger(msg, bf);
 */
-//#define LOG_RETURN(msg) _logger(msg, bf);
-#define LOG_RETURN(msg)
 
 //#define TRAP_ZERO(t,m) if (fp_ZERO(t)) { rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); _debug_trap(); }
 #define TRAP_ZERO(t,m)
@@ -150,7 +153,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->im_so_dirty = true;
     }
 
-    // *** Perfect-Fit Cases *** Cases where curve fitting has already been done
+    // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
 
     // PERFECT_CRUISE (1c) Velocities all match (or close enough), treat as body-only
     if (bf->hint == PERFECT_CRUISE) {
@@ -184,7 +187,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     	return;
     }
 
-    // *** Requested-Fit cases ***
+    // *** Requested-Fit cases (2) ***
 
 	// Prepare the head and tail lengths for evaluating cases (nb: zeros head / tail < min length)
     bf->head_length = _get_target_length_min(bf->entry_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH);
@@ -236,22 +239,25 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         return;
     }
 
-    // *** Rate-Limited-Fit cases ***
+    // *** Rate-Limited-Fit cases (3) ***
     // This means that bf->length < (bf->head_length + bf->tail_length)
 
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
+        bf->exit_velocity = bf->entry_velocity;         // make them actually equal so as not to violate velocity constraints
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
         bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid: Vc=0 symmetric case");
 
-        if (bf->head_length < MIN_HEAD_LENGTH) {    // revert it to a single segment move
+        if (bf->head_length < MIN_HEAD_LENGTH) {        // revert it to a single segment move
             bf->body_length = bf->length;
             bf->head_length = 0;
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
+            bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
+            bf->exit_velocity = bf->entry_velocity;
             bf->zoid_exit = ZOID_EXIT_3s2;
             LOG_RETURN("3s2");
             return;
