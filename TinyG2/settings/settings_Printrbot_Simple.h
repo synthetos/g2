@@ -160,39 +160,39 @@ constexpr float H1_DEFAULT_D = 100.0;
 //#define JUNCTION_DEVIATION_ABC      0.5                     // larger is faster
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              30000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              40000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                155                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  5000                    // xjm  yes, that's "5 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
-#define X_LATCH_BACKOFF             5                      // xlb  mm
+#define X_LATCH_BACKOFF             5                       // xlb  mm
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              30000
+#define Y_VELOCITY_MAX              40000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                120
-#define Y_JERK_MAX                  15000
+#define Y_JERK_MAX                  5000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
-#define Y_ZERO_BACKOFF              100
+#define Y_ZERO_BACKOFF              Y_TRAVEL_MAX
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              2000
+#define Z_VELOCITY_MAX              1200
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                150
-#define Z_JERK_MAX                  200
+#define Z_JERK_MAX                  100
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
