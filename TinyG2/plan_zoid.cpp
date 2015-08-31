@@ -31,7 +31,6 @@
 #include "planner.h"
 #include "report.h"
 #include "util.h"
-//#include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 template<typename T>
 inline T our_abs(const T number) {
@@ -39,10 +38,14 @@ inline T our_abs(const T number) {
 }
 
 //+++++ DIAGNOSTICS
-/*
-static char logbuf[128];
 
-static void _logger(const char *msg, const mpBuf_t *bf)
+#define LOG_RETURN(msg, retcode)                              // LOG_RETURN with no action (production)
+/*
+#define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; } // LOG_RETURN captures return codes to bf
+
+#include "xio.h"
+static char logbuf[128];
+static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
 {
     sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
                     bf->buffer_number, msg, bf->hint, (bf->move_time * 60000),
@@ -50,9 +53,8 @@ static void _logger(const char *msg, const mpBuf_t *bf)
                     bf->entry_velocity, bf->cruise_velocity, bf->exit_velocity);
     xio_writeline(logbuf);
 }
+#define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; _logger(msg, bf); }
 */
-//#define LOG_RETURN(msg) _logger(msg, bf);
-#define LOG_RETURN(msg)
 
 //#define TRAP_ZERO(t,m) if (fp_ZERO(t)) { rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); _debug_trap(); }
 #define TRAP_ZERO(t,m)
@@ -134,8 +136,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->hint = COMMAND_BLOCK;
         return;
     }
-//    TRAP_ZERO (bf->length, "zoid() got L=0");
-//    TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
+//  TRAP_ZERO (bf->length, "zoid() got L=0");
+//  TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
 
     // If the move has already been planned one or more times re-initialize the lengths
     // Otherwise you can end up with spurious lengths that kill accuracy
@@ -150,14 +152,14 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->im_so_dirty = true;
     }
 
-    // *** Perfect-Fit Cases *** Cases where curve fitting has already been done
+    // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
 
     // PERFECT_CRUISE (1c) Velocities all match (or close enough), treat as body-only
     if (bf->hint == PERFECT_CRUISE) {
         bf->body_length = bf->length;
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->move_time = bf->body_time;
-        LOG_RETURN("1c");
+        LOG_RETURN("1c", ZOID_EXIT_1c);
         return;
 	}
 
@@ -167,7 +169,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->exit_velocity;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
-    	LOG_RETURN("1a");
+    	LOG_RETURN("1a", ZOID_EXIT_1a);
     	return;
     }
 
@@ -177,11 +179,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->entry_velocity;
     	bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->tail_time;
-    	LOG_RETURN("1d");
+    	LOG_RETURN("1d", ZOID_EXIT_1d);
     	return;
     }
 
-    // *** Requested-Fit cases ***
+    // *** Requested-Fit cases (2) ***
 
 	// Prepare the head and tail lengths for evaluating cases (nb: zeros head / tail < min length)
     bf->head_length = _get_target_length_min(bf->entry_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH);
@@ -198,7 +200,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
             bf->body_time = bf->body_length / bf->cruise_velocity;
     	    bf->move_time = bf->head_time + bf->body_time;
-            LOG_RETURN("2a");
+            LOG_RETURN("2a", ZOID_EXIT_2a);
             return;
         }
 
@@ -211,7 +213,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->body_time = bf->body_length / bf->cruise_velocity;
             bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
             bf->move_time = bf->body_time + bf->tail_time;
-            LOG_RETURN("2d");
+            LOG_RETURN("2d", ZOID_EXIT_2d);
             return;
         }
 
@@ -226,34 +228,37 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
-        LOG_RETURN("2c");
+        LOG_RETURN("2c", ZOID_EXIT_2c);
         return;
     }
 
-    // *** Rate-Limited-Fit cases ***
+    // *** Rate-Limited-Fit cases (3) ***
     // This means that bf->length < (bf->head_length + bf->tail_length)
 
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
+        bf->exit_velocity = bf->entry_velocity;         // make them actually equal so as not to violate velocity constraints
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
         bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid: Vc=0 symmetric case");
 
-        if (bf->head_length < MIN_HEAD_LENGTH) {    // revert it to a single segment move
+        if (bf->head_length < MIN_HEAD_LENGTH) {        // revert it to a single segment move
             bf->body_length = bf->length;
             bf->head_length = 0;
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
-            LOG_RETURN("3s2");
+            bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
+            bf->exit_velocity = bf->entry_velocity;
+            LOG_RETURN("3s2", ZOID_EXIT_3s2);
             return;
         }
         // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->tail_time;
-        LOG_RETURN("3s");
+        LOG_RETURN("3s", ZOID_EXIT_3s);
         return;
     }
 
@@ -267,21 +272,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     } else if (bf->tail_length < MIN_TAIL_LENGTH) {     // asymmetric acceleration (head-only move) (3a)
         head_only = true;
     } else {
-/*
-        if (bf->tail_length <= bf->length) {
-            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: tail-only move (3d2)");
-        }
-        if (bf->head_length <= bf->length) {
-            rpt_exception(STAT_MINIMUM_LENGTH_MOVE, "zoid: head-only move (3a2)");
-        }
-*/
         // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
         bf->cruise_velocity = _get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
-//        if ((VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity)) && (bf->tail_length > bf->length)) {
         if (VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity)) {
             tail_only = true;
-//        } else if ((VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity)) && (bf->head_length > bf->length)) {
         } else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity)) {
             head_only = true;
         }
@@ -292,7 +287,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		bf->head_length = 0;
 		bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
 		bf->move_time = bf->tail_time;
-		LOG_RETURN("3d2");
+		LOG_RETURN("3d2", ZOID_EXIT_3d2);
 		return;
     }
     if (head_only) {
@@ -300,7 +295,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_length = 0;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
-        LOG_RETURN("3a2");
+        LOG_RETURN("3a2", ZOID_EXIT_3a2);
         return;
     }
 
@@ -319,7 +314,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
     }
     bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
-    LOG_RETURN("3c");
+    LOG_RETURN("3c", ZOID_EXIT_3c);
     return;
 }
 
@@ -489,14 +484,3 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     }
     return (v_1);
 }
-
-/* UNUSED
-float mp_estimate_braking_time(const float v_0, const float v_1, const mpBuf_t *bf)
-{
-    float len = mp_get_target_length(v_0, v_1, bf);
-    float time = len / (2 * fabs(v_0 - v_1));
-    return (time);
-
-//    return (mp_get_target_length(v_0, v_1, bf) / (2 * fabs(v_0 - v_1));
-}
-*/
