@@ -107,6 +107,7 @@ typedef enum {                      // planner operating state
 } plannerState;
 
 typedef enum {
+    ZOID_EXIT_NULL = 0,
     ZOID_EXIT_1a,
     ZOID_EXIT_1c,
     ZOID_EXIT_1d,

@@ -39,9 +39,9 @@ inline T our_abs(const T number) {
 
 //+++++ DIAGNOSTICS
 
-#define LOG_RETURN(msg, retcode)                              // LOG_RETURN with no action (production)
-/*
+//#define LOG_RETURN(msg, retcode)                              // LOG_RETURN with no action (production)
 #define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; } // LOG_RETURN captures return codes to bf
+/*
 
 #include "xio.h"
 static char logbuf[128];
@@ -238,7 +238,9 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
+        // +++++ NEW FIX
         bf->exit_velocity = bf->entry_velocity;         // make them actually equal so as not to violate velocity constraints
+
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
         bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
@@ -249,8 +251,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_length = 0;
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
+
+            // +++++ NEW FIX
             bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
             bf->exit_velocity = bf->entry_velocity;
+
             LOG_RETURN("3s2", ZOID_EXIT_3s2);
             return;
         }
