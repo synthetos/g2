@@ -54,13 +54,13 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 static void _calculate_junction_vmax(mpBuf_t *bf);
 
 //+++++DIAGNOSTICS
-#pragma GCC optimize ("O0")
+#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
 static void _set_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
     bf->move_time_ms = bf->move_time * 60000;
+    bf->time_in_plan_ms = mb.time_in_plan_ms;
     mb.move_time_ms = bf->move_time * 60000;
-//    mb.arrival_rate_avg_ms = mb.arrival_rate_avg * 60000;
 }
 #pragma GCC reset_options
 
@@ -511,17 +511,21 @@ static void _calculate_throttle(mpBuf_t *bf)
         if (mb.time_in_plan < PLANNER_THROTTLE_TIME) {
             bf->throttle = (THROTTLE_SLOPE * (mb.time_in_plan-PLANNER_CRITICAL_TIME) + THROTTLE_INTERCEPT);
             bf->cruise_velocity *= max(THROTTLE_MIN, bf->throttle);
-        } else {
-            bf->throttle = THROTTLE_MAX;    // set to 1.00 in case it's needed for backplanning
-        }
+//        } else {
+//            bf->throttle = THROTTLE_MAX;    // set to 1.00 in case it's needed for backplanning
+//        }
         // Correction for velocity constraints
         // if (bf->cruise_velocity < bf->entry_velocity) { // deceleration case
         //     bf->cruise_velocity = bf->entry_velocity;
         // } else {                                        // acceleration case
         //     ...
         // }
+        }
+    } else {
+        bf->throttle = THROTTLE_MAX;        // set to 1.00 in case it's needed for backplanning
     }
 }
+
 /* END NOTES:
  * It's also possible to perform throttling by tracking arrival and service rate directly, although
  * this is a predictor of starvation and not the actual starvation itself. The advantage is that

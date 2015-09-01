@@ -320,7 +320,8 @@ bool mp_is_phat_city_time()
 	if(cm.hold_state == FEEDHOLD_HOLD) {
     	return true;
 	}
-    return ((mb.time_in_plan <= 0) || (PHAT_CITY_TIME < mb.time_in_plan));
+//    return ((mb.time_in_plan <= 0) || (PHAT_CITY_TIME < mb.time_in_plan));
+    return ((mb.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
 }
 
 /**** Helper functions for mp_plan_buffer()
@@ -555,17 +556,18 @@ static void _planner_time_accounting()
     // get run buffer and see if anything is running
     if (mb.r->buffer_state == MP_BUFFER_EMPTY || mb.r->buffer_state == MP_BUFFER_NOT_PLANNED) {
         mb.time_in_plan = 0;
+        mb.time_total = 0;
         return;
     }
-    mpBuf_t *bf = mb.r;
 
-    // Step through the moves and add up the planner time
-    float time_in_plan = mb.time_in_run;            // initialize with time left in the runtime
+    mpBuf_t *bf = mb.r;
+    float time_in_plan = 0.0;
     bool in_critical = true;                        // used to look for transition to critical region
 
+    // Step through the moves and add up the planner time
     while ((bf = mp_get_next_buffer(bf)) != mb.r) {
         if (bf->buffer_state == MP_BUFFER_PLANNED) {
-            time_in_plan += bf->move_time;
+          time_in_plan += bf->move_time;
             if (in_critical && (time_in_plan >= PLANNER_CRITICAL_TIME)) {
                 in_critical = false;
                 mb.c = bf;                          // mark the first non-critical block
@@ -575,18 +577,12 @@ static void _planner_time_accounting()
         break;
     }
     mb.time_in_plan = time_in_plan;
-    mb.time_in_plan_ms = time_in_plan * 60000;  //+++++
-//    mb.time_in_run_ms = mb.time_in_run * 60000; //+++++
+    mb.time_total = time_in_plan + mb.time_in_run;
 
-/*
-    // +++++ DIAGNOSTIC
+    //+++++ DIAGNOSTIC
     mb.time_in_plan_ms = time_in_plan * 60000;
-    if (mb.time_in_plan < PLANNER_CRITICAL_TIME) {
-        char buf[24];
-        sprintf(buf, "critical %1.2f\n", mb.time_in_plan_ms);
-        xio_writeline(buf);
-    }
-*/
+    mb.time_total_ms = mb.time_total * 60000;
+    mb.time_in_run_ms = mb.time_in_run * 60000;
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
