@@ -39,10 +39,8 @@ inline T our_abs(const T number) {
 
 //+++++ DIAGNOSTICS
 
-//#define LOG_RETURN(msg, retcode)                              // LOG_RETURN with no action (production)
-#define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; } // LOG_RETURN captures return codes to bf
+#define LOG_RETURN(msg)                              // LOG_RETURN with no action (production)
 /*
-
 #include "xio.h"
 static char logbuf[128];
 static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
@@ -53,11 +51,11 @@ static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN wi
                     bf->entry_velocity, bf->cruise_velocity, bf->exit_velocity);
     xio_writeline(logbuf);
 }
-#define LOG_RETURN(msg, retcode) { bf->zoid_exit = retcode; _logger(msg, bf); }
+#define LOG_RETURN(msg) { _logger(msg, bf); }
 */
 
-//#define TRAP_ZERO(t,m) if (fp_ZERO(t)) { rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); _debug_trap(); }
-#define TRAP_ZERO(t,m)
+//#define TRAP_ZERO(t,m)
+#define TRAP_ZERO(t,m) if (fp_ZERO(t)) { rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); _debug_trap(); }
 
 //+++++ END DIAGNOSTICS
 
@@ -129,6 +127,12 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 //*************************************************************************************************
 //*************************************************************************************************
 
+void _zoid_exit (mpBuf_t *bf, zoidExitState retcode)
+{
+    bf->zoid_exit = retcode;
+    bf->hint = HINT_IS_STALE;
+}
+
 void mp_calculate_trapezoid(mpBuf_t *bf)
 {
     // *** Skip non-move commands ***
@@ -136,20 +140,18 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->hint = COMMAND_BLOCK;
         return;
     }
-//  TRAP_ZERO (bf->length, "zoid() got L=0");
-//  TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
+    TRAP_ZERO (bf->length, "zoid() got L=0");
+    TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
 
     // If the move has already been planned one or more times re-initialize the lengths
     // Otherwise you can end up with spurious lengths that kill accuracy
-    if (bf->im_so_dirty) {      // dirty bit to re-initialize parameters
+    if (bf->buffer_state == MP_BUFFER_PLANNED) {  // re-initialize parameters after 1st pass
         bf->head_time = 0;
         bf->body_time = 0;
         bf->tail_time = 0;
         bf->head_length = 0;
         bf->body_length = 0;
         bf->tail_length = 0;
-    } else {
-        bf->im_so_dirty = true;
     }
 
     // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
@@ -159,8 +161,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_length = bf->length;
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->move_time = bf->body_time;
-        LOG_RETURN("1c", ZOID_EXIT_1c);
-        return;
+        LOG_RETURN("1c");
+        return (_zoid_exit(bf, ZOID_EXIT_1c));
 	}
 
     // PERFECT_ACCEL (1a) single head segment (deltaV == delta_vmax)
@@ -169,8 +171,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->exit_velocity;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
-    	LOG_RETURN("1a", ZOID_EXIT_1a);
-    	return;
+    	LOG_RETURN("1a");
+        return (_zoid_exit(bf, ZOID_EXIT_1a));
     }
 
     // PERFECT_DECEL (1d) single tail segment (deltaV == delta_vmax)
@@ -179,8 +181,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->cruise_velocity = bf->entry_velocity;
     	bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->tail_time;
-    	LOG_RETURN("1d", ZOID_EXIT_1d);
-    	return;
+    	LOG_RETURN("1d");
+        return (_zoid_exit(bf, ZOID_EXIT_1d));
     }
 
     // *** Requested-Fit cases (2) ***
@@ -200,8 +202,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
             bf->body_time = bf->body_length / bf->cruise_velocity;
     	    bf->move_time = bf->head_time + bf->body_time;
-            LOG_RETURN("2a", ZOID_EXIT_2a);
-            return;
+            LOG_RETURN("2a");
+            return (_zoid_exit(bf, ZOID_EXIT_2a));
         }
 
         // 2 segment BT deceleration move (2d)
@@ -213,8 +215,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->body_time = bf->body_length / bf->cruise_velocity;
             bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
             bf->move_time = bf->body_time + bf->tail_time;
-            LOG_RETURN("2d", ZOID_EXIT_2d);
-            return;
+            LOG_RETURN("2d");
+            return (_zoid_exit(bf, ZOID_EXIT_2d));
         }
 
         // 3 segment HBT move (2c) - either with a body or just a symmetric bump
@@ -228,8 +230,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
-        LOG_RETURN("2c", ZOID_EXIT_2c);
-        return;
+        LOG_RETURN("2c");
+        return (_zoid_exit(bf, ZOID_EXIT_2c));
     }
 
     // *** Rate-Limited-Fit cases (3) ***
@@ -256,15 +258,15 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
             bf->exit_velocity = bf->entry_velocity;
 
-            LOG_RETURN("3s2", ZOID_EXIT_3s2);
-            return;
+            LOG_RETURN("3s2");
+            return (_zoid_exit(bf, ZOID_EXIT_3s2));
         }
         // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->tail_time;
-        LOG_RETURN("3s", ZOID_EXIT_3s);
-        return;
+        LOG_RETURN("3s");
+        return (_zoid_exit(bf, ZOID_EXIT_3s));
     }
 
 	// Rate-limited asymmetric cases (3)
@@ -292,16 +294,16 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 		bf->head_length = 0;
 		bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
 		bf->move_time = bf->tail_time;
-		LOG_RETURN("3d2", ZOID_EXIT_3d2);
-		return;
+		LOG_RETURN("3d2");
+        return (_zoid_exit(bf, ZOID_EXIT_3d2));
     }
     if (head_only) {
         bf->head_length = bf->length;
         bf->tail_length = 0;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
-        LOG_RETURN("3a2", ZOID_EXIT_3a2);
-        return;
+        LOG_RETURN("3a2");
+        return (_zoid_exit(bf, ZOID_EXIT_3a2));
     }
 
     // treat as a full up and down (head and tail)
@@ -319,8 +321,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
     }
     bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
-    LOG_RETURN("3c", ZOID_EXIT_3c);
-    return;
+    LOG_RETURN("3c");
+    return (_zoid_exit(bf, ZOID_EXIT_3c));
 }
 
 /**** Planner helpers ****

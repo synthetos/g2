@@ -55,7 +55,9 @@ typedef enum {                      // bf->buffer_state values
     MP_BUFFER_EMPTY = 0,            // struct is available for use (MUST BE 0)
     MP_BUFFER_NOT_PLANNED,          // just opened, or written to queue and ready for planning
     MP_BUFFER_PLANNED,              // planned at least once. May still be replanned
-    MP_BUFFER_RUNNING               // current running buffer
+    MP_BUFFER_RUNNING,              // current running buffer
+    MP_BUFFER_POLAND,
+    MP_BUFFER_UKRAINE
 } mpBufferState;
 
 typedef enum {				        // bf->move_type values
@@ -96,7 +98,8 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     PERFECT_CRUISE,                 // move is all body (B)
     MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
     MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
-    COMMAND_BLOCK                   // this block is a command
+    COMMAND_BLOCK,                  // this block is a command
+    HINT_IS_STALE                   // the hint may no longer be valid
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -199,17 +202,20 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;              // callback to canonical machine execution function
 
-    uint32_t linenum;               //+++++ DIAGNOSTIC for easier debugging
-    uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
-    float move_time_ms;             //+++++ DIAGNOSTIC for easier debugging
-    zoidExitState zoid_exit;        //+++++ DIAGNOSTIC for easier debugging
+    //+++++ DIAGNOSTICS for easier debugging
+    uint32_t linenum;
+    uint8_t buffer_number;
+    float move_time_ms;
+    float time_in_plan_ms;
+    zoidExitState zoid_exit;
+    //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
     moveType move_type;             // used to dispatch to run routine
     moveState move_state;           // move state machine sequence
     uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // block is coded for trapezoid planning
-    bool im_so_dirty;               // set true if the block has been written
+//    bool im_so_dirty;               // set true if the block has been written
 
     float mfo_factor;               // override factor for this block
     float throttle;                 // preserved for backplanning
@@ -253,14 +259,16 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	uint8_t buffers_available;		// running count of available buffers
 
     //+++++DIAGNOSTICS
-//    float time_in_run_ms;
+    float time_in_run_ms;
     float time_in_plan_ms;
+    float time_total_ms;
     float move_time_ms;
 
     // planner state variables
     plannerState planner_state;     // current state of planner
     float time_in_run;		        // time left in the buffer executed by the runtime
-    float time_in_plan;	            // total time planned in the run and planner
+    float time_in_plan;	            // time in the planner (exclusive of runtime)
+    float time_total;	            // total time planned in the run and planner
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
