@@ -151,7 +151,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
     virtual int16_t readchar() = 0;
     virtual void flushRead() = 0;       // This should call _flushLine() before flushing the device.
-    virtual int16_t write(const uint8_t *buffer, int16_t len) = 0;
+    virtual int16_t write(const char *buffer, int16_t len) = 0;
 
 
     // Readline and line flushing functions
@@ -288,7 +288,7 @@ struct xio_t {
     /*
      * write() - write a block to a device
      */
-    size_t write(const uint8_t *buffer, size_t size)
+    size_t write(const char *buffer, size_t size)
     {
         // There are a few issues with this function that I don't know how to resolve right now:
         // 1) If a device fails to write the data, or all the data, then it's ignored
@@ -323,7 +323,7 @@ struct xio_t {
 
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isCtrlAndActive()) {
-                written = DeviceWrappers[i]->write((const uint8_t *)buffer, len);
+                written = DeviceWrappers[i]->write(buffer, len);
             }
         }
         return written;
@@ -501,7 +501,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
         return _dev->flushRead();
     }
 
-    virtual int16_t write(const uint8_t *buffer, int16_t len) final {
+    virtual int16_t write(const char *buffer, int16_t len) final {
         return _dev->write(buffer, len);
     }
 };
@@ -556,7 +556,7 @@ stat_t xio_test_assertions()
  * write() - write a buffer to a device
  */
 
-size_t xio_write(const uint8_t *buffer, size_t size)
+size_t xio_write(const char *buffer, size_t size)
 {
     return xio.write(buffer, size);
 }
@@ -592,7 +592,7 @@ void xio_flush_read()
 
 int _write( int file, char *ptr, int len )
 {
-    return xio_write((const uint8_t *)ptr, len);
+    return xio_write(ptr, len);
 }
 
 

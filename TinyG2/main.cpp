@@ -94,8 +94,8 @@ const Motate::USBSettings_t Motate::USBSettings = {
 //Motate::USBDevice< Motate::USBCDC > usb;
 Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
-decltype(usb._mixin_0_type::Serial) &SerialUSB = usb._mixin_0_type::Serial;
-decltype(usb._mixin_1_type::Serial) &SerialUSB1 = usb._mixin_1_type::Serial;
+decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
+decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
