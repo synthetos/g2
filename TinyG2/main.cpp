@@ -79,9 +79,6 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 /******************** Application Code ************************/
 
 #ifdef __ARM
-// This is used by the USB system:
-void* __dso_handle = nullptr;
-
 const Motate::USBSettings_t Motate::USBSettings = {
 	/*gVendorID         = */ 0x1d50,
 	/*gProductID        = */ 0x606d,
