@@ -149,7 +149,7 @@ stat_t mp_exec_move()
 /*	Note:
  *	For a version of these routines that execute using the original equation-of-motion
  *	math (as opposed to the forward difference math) please refer to build 357.xx or earlier.
- *	Builds 358 onward have only forward difference code. ALso, the Kahan corrections for the 
+ *	Builds 358 onward have only forward difference code. ALso, the Kahan corrections for the
  *  forward differencing were also been removed shortly after as they were not needed.
  */
 
@@ -596,36 +596,6 @@ static stat_t _exec_aline_body()
     return(STAT_EAGAIN);
 }
 
-/*
-static stat_t _exec_aline_body()
-{
-	if (mr.section_state == SECTION_NEW) {
-		if (fp_ZERO(mr.body_length)) {
-			mr.section = SECTION_TAIL;
-			return(_exec_aline_tail());						// skip ahead to tail periods
-		}
-		mr.segments = ceil(uSec(mr.body_time) / NOM_SEGMENT_USEC);
-		mr.segment_time = mr.body_time / mr.segments;
-		mr.segment_velocity = mr.cruise_velocity;
-		mr.segment_count = (uint32_t)mr.segments;
-		if (mr.segment_time < MIN_SEGMENT_TIME) {
-            return(STAT_MINIMUM_TIME_MOVE);                 // exit without advancing position
-        }
-		mr.section = SECTION_BODY;
-		mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
-	}
-	if (mr.section_state == SECTION_2nd_HALF) {				// straight part (period 3)
-		if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
-			if (fp_ZERO(mr.tail_length)) {
-                return(STAT_OK);	                        // ends the move
-            }
-			mr.section = SECTION_TAIL;
-			mr.section_state = SECTION_NEW;
-		}
-	}
-	return(STAT_EAGAIN);
-}
-*/
 /*********************************************************************************************
  * _exec_aline_tail()
  */
