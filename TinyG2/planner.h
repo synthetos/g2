@@ -122,7 +122,7 @@ typedef enum {
     ZOID_EXIT_3s2,
     ZOID_EXIT_3d2,
     ZOID_EXIT_3a2
-} zoidExitState;
+} zoidExitPoint;
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
@@ -207,7 +207,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float time_in_plan_ms;
-    zoidExitState zoid_exit;
+    zoidExitPoint zoid_exit;
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
@@ -215,7 +215,6 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     moveState move_state;           // move state machine sequence
     uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // block is coded for trapezoid planning
-//    bool im_so_dirty;               // set true if the block has been written
 
     float mfo_factor;               // override factor for this block
     float throttle;                 // preserved for backplanning

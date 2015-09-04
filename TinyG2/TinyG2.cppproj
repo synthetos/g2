@@ -73,7 +73,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800021206</ToolNumber>
+      <ToolNumber>J41800005101</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -1103,7 +1103,6 @@
     <None Include="Makefile">
       <SubType>compile</SubType>
     </None>
->>>>>>> 01a2b8c3ee2f4756d595509c1e00fc03e147c864
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

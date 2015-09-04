@@ -127,10 +127,15 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 //*************************************************************************************************
 //*************************************************************************************************
 
-void _zoid_exit (mpBuf_t *bf, zoidExitState retcode)
+void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 {
-    bf->zoid_exit = retcode;
     bf->hint = HINT_IS_STALE;
+
+	//+++++ DIAGNOSTIC
+    bf->zoid_exit = exit_point;
+	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh
+		bf->time_in_plan_ms += bf->move_time_ms;
+	}
 }
 
 void mp_calculate_trapezoid(mpBuf_t *bf)
