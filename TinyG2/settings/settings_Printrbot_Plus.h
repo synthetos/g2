@@ -86,8 +86,8 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1p","he1i","he1d","he1op","he1tr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1tr","feed","vel","unit","coor","dist","admo","frmo","momo","stat","tick"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -101,7 +101,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL_XY        0.43                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY        0.48                    // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_Z         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_A         0.45                     // default motor power level 0.00 - 1.00 (ARM only)
 
@@ -173,11 +173,11 @@ constexpr float H1_DEFAULT_D = 100.0;
 //#define JUNCTION_DEVIATION_ABC      0.5                     // larger is faster
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              30000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  5000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 //#define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
@@ -188,11 +188,11 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              25000
+#define Y_VELOCITY_MAX              20000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                250
-#define Y_JERK_MAX                  15000
+#define Y_JERK_MAX                  5000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 //#define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              4

@@ -123,8 +123,8 @@ enum xioSPIMode {
 
 //extern Motate::USBDevice< Motate::USBCDC > usb;
 extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-extern decltype(usb._mixin_0_type::Serial) &SerialUSB;
-extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
+extern decltype(usb.mixin<0>::Serial) &SerialUSB;
+extern decltype(usb.mixin<1>::Serial) &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
