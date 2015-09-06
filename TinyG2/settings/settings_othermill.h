@@ -40,8 +40,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION		100000		// centripetal acceleration around corners
-#define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+#define JUNCTION_AGGRESSION         0.75	// cornering - between 0.05 and 1.00 (higher is faster)
+#define CHORDAL_TOLERANCE           0.01	// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -58,6 +58,10 @@
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
+
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
 
 // WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
 // new machines use a stepper which has the same config as the other axis.
@@ -91,7 +95,8 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 #define STATUS_REPORT_DEFAULTS      "mpox","mpoy","mpoz","ofsx","ofsy","ofsz","g55x","g55y","g55z",\
                                     "unit","stat","coor","momo","dist","home","mots","plan","line",\
-                                    "path","frmo","prbe","safe","spe","spd","hold","macs","cycs","sps"
+                                    "path","frmo","hold","macs","cycs"
+//                                    "path","frmo","prbe","safe","spe","spd","hold","macs","cycs","sps"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS			MILLIMETERS		// MILLIMETERS or INCHES

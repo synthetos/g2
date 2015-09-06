@@ -28,7 +28,15 @@ endif
 ifeq ("$(BOARD)","ShapeokoDualY")
 
     BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_shapeoko375_dual.h"
+    SETTINGS_FILE="settings_shapeoko2.h"
+    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
+ifeq ("$(BOARD)","Othermill")
+
+    BASE_BOARD=G2v9
+    SETTINGS_FILE="settings_othermill.h"
     DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
