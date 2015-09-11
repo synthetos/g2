@@ -27,7 +27,7 @@
  *
  */
 
-// SInce this is actually a exct copy of the g2ref file, we'll just use it:
+// Since this is actually a exact copy of the g2ref file, we'll just use it:
 #include "../g2ref/motate_pin_assignments.h"
 
 // motate_pin_assignments_h

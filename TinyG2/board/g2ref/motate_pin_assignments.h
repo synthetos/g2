@@ -85,9 +85,9 @@ namespace Motate {
     pin_number kSocket1_StepPinNumber           = 12;
     pin_number kSocket1_DirPinNumber            = 13;
     pin_number kSocket1_EnablePinNumber         = 14;
-    pin_number kSocket1_Microstep_0PinNumber    = -1;   // 15;
-    pin_number kSocket1_Microstep_1PinNumber    = -1;   // 16;
-    pin_number kSocket1_Microstep_2PinNumber    = -1;   // 17;
+    pin_number kSocket1_Microstep_0PinNumber    = 15;   // 15;
+    pin_number kSocket1_Microstep_1PinNumber    = 16;   // 16;
+    pin_number kSocket1_Microstep_2PinNumber    = 17;   // 17;
     pin_number kSocket1_VrefPinNumber           = 18;
 
     pin_number kSocket2_SPISlaveSelectPinNumber = 20;
@@ -95,9 +95,9 @@ namespace Motate {
     pin_number kSocket2_StepPinNumber           = 22;
     pin_number kSocket2_DirPinNumber            = 23;
     pin_number kSocket2_EnablePinNumber         = 24;
-    pin_number kSocket2_Microstep_0PinNumber    = -1;   // 25;
-    pin_number kSocket2_Microstep_1PinNumber    = -1;   // 26;
-    pin_number kSocket2_Microstep_2PinNumber    = -1;   // 27;
+    pin_number kSocket2_Microstep_0PinNumber    = 25;   // 25;
+    pin_number kSocket2_Microstep_1PinNumber    = 26;   // 26;
+    pin_number kSocket2_Microstep_2PinNumber    = 27;   // 27;
     pin_number kSocket2_VrefPinNumber           = 28;
 
     pin_number kSocket3_SPISlaveSelectPinNumber = 30;
@@ -105,9 +105,9 @@ namespace Motate {
     pin_number kSocket3_StepPinNumber           = 32;
     pin_number kSocket3_DirPinNumber            = 33;
     pin_number kSocket3_EnablePinNumber         = 34;
-    pin_number kSocket3_Microstep_0PinNumber    = -1;   // 35;
-    pin_number kSocket3_Microstep_1PinNumber    = -1;   // 36;
-    pin_number kSocket3_Microstep_2PinNumber    = -1;   // 37;
+    pin_number kSocket3_Microstep_0PinNumber    = 35;   // 35;
+    pin_number kSocket3_Microstep_1PinNumber    = 36;   // 36;
+    pin_number kSocket3_Microstep_2PinNumber    = 37;   // 37;
     pin_number kSocket3_VrefPinNumber           = 38;
 
     pin_number kSocket4_SPISlaveSelectPinNumber = 40;
@@ -115,9 +115,9 @@ namespace Motate {
     pin_number kSocket4_StepPinNumber           = 42;
     pin_number kSocket4_DirPinNumber            = 43;
     pin_number kSocket4_EnablePinNumber         = 44;
-    pin_number kSocket4_Microstep_0PinNumber    = -1;   // 45;
-    pin_number kSocket4_Microstep_1PinNumber    = -1;   // 46;
-    pin_number kSocket4_Microstep_2PinNumber    = -1;   // 47;
+    pin_number kSocket4_Microstep_0PinNumber    = 45;   // 45;
+    pin_number kSocket4_Microstep_1PinNumber    = 46;   // 46;
+    pin_number kSocket4_Microstep_2PinNumber    = 47;   // 47;
     pin_number kSocket4_VrefPinNumber           = 48;
 
     pin_number kSocket5_SPISlaveSelectPinNumber = 50;
@@ -125,9 +125,9 @@ namespace Motate {
     pin_number kSocket5_StepPinNumber           = 52;
     pin_number kSocket5_DirPinNumber            = 53;
     pin_number kSocket5_EnablePinNumber         = 54;
-    pin_number kSocket5_Microstep_0PinNumber    = -1;   // 55;
-    pin_number kSocket5_Microstep_1PinNumber    = -1;   // 56;
-    pin_number kSocket5_Microstep_2PinNumber    = -1;   // 57;
+    pin_number kSocket5_Microstep_0PinNumber    = 55;   // 55;
+    pin_number kSocket5_Microstep_1PinNumber    = 56;   // 56;
+    pin_number kSocket5_Microstep_2PinNumber    = 57;   // 57;
     pin_number kSocket5_VrefPinNumber           = 58;
 
     pin_number kSocket6_SPISlaveSelectPinNumber = -1;   // 60;
