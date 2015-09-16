@@ -168,10 +168,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 // *** axis settings **********************************************************************************
 
-//#define JUNCTION_DEVIATION_XY       0.5                     // larger is faster
-//#define JUNCTION_DEVIATION_Z        0.5                     // larger is faster
-//#define JUNCTION_DEVIATION_ABC      0.5                     // larger is faster
-
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
@@ -179,7 +175,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  5000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
-//#define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
@@ -194,7 +189,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Y_TRAVEL_MAX                250
 #define Y_JERK_MAX                  5000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
-//#define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              4
 #define Y_HOMING_DIR                1
 #define Y_SEARCH_VELOCITY           3000
@@ -209,7 +203,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Z_TRAVEL_MAX                196
 #define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
-//#define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              8
 #define Z_HOMING_DIR                0
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
@@ -247,7 +240,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define A_JERK_MAX 				324000 // 1,000 million mm/min^3
                                        // * a million IF it's over a million
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
-//#define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIR            0
 #define A_SEARCH_VELOCITY 		2000
@@ -262,9 +254,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define B_FEEDRATE_MAX			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			0
 #define B_TRAVEL_MAX			-1
-//#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
-//#define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_HOMING_INPUT          0
 #define B_HOMING_DIR            0
 #define B_SEARCH_VELOCITY 		600
@@ -279,9 +269,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define C_FEEDRATE_MAX			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			0
 #define C_TRAVEL_MAX			-1
-//#define C_JERK_MAX			20000000
 #define C_JERK_MAX				20
-//#define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_HOMING_INPUT          0
 #define C_HOMING_DIR            0
 #define C_SEARCH_VELOCITY 		600

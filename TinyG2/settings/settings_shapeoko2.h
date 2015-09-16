@@ -58,6 +58,10 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+constexpr float H1_DEFAULT_P = 22.2/255.0;
+constexpr float H1_DEFAULT_I = 1.08/255.0;
+constexpr float H1_DEFAULT_D = 114.0/255.0;
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
@@ -65,11 +69,10 @@
 
 #define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
 #define XIO_ENABLE_ECHO             false
-#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
-//#define JSON_SYNTAX_MODE            JSON_SYNTAX_RELAXED     // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
@@ -144,13 +147,14 @@
 
 // *** axis settings **********************************************************************************
 
+#define JERK_MAX                    500
+
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              50000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel for soft limits
 #define X_TRAVEL_MAX                420                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  10000                   // xjm  yes, that's "5 billion" mm/(min^3)
-//#define X_JERK_MAX                  500                   // xjm  yes, that's "5 billion" mm/(min^3)
+#define X_JERK_MAX                  JERK_MAX                // xjm  jerk * 1,000,000
 #define X_JERK_HIGH_SPEED           20000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
@@ -164,8 +168,7 @@
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                420
-#define Y_JERK_MAX                  10000
-//#define Y_JERK_MAX                  500
+#define Y_JERK_MAX                  JERK_MAX
 #define Y_JERK_HIGH_SPEED           20000
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0

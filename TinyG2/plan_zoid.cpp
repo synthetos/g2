@@ -134,7 +134,8 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 	//+++++ DIAGNOSTIC
     bf->zoid_exit = exit_point;
 	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh
-		bf->time_in_plan_ms += bf->move_time_ms;
+//		bf->time_in_plan_ms += bf->move_time_ms;
+		bf->plannable_time_ms += bf->move_time_ms;
 	}
 }
 

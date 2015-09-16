@@ -52,15 +52,19 @@ static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
 static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t *bf);
+static void _calculate_decel_time(mpBuf_t *bf, float v1, float v0);
 
 //+++++DIAGNOSTICS
 #pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
+//#pragma GCC reset_options
 static void _set_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
-    bf->move_time_ms = bf->move_time * 60000;
-    bf->time_in_plan_ms = mb.time_in_plan_ms;
     mb.move_time_ms = bf->move_time * 60000;
+    bf->move_time_ms = mb.move_time_ms;
+
+//    bf->time_in_plan_ms = mb.time_in_plan_ms;
+    bf->plannable_time_ms = mb.plannable_time_ms;
 }
 #pragma GCC reset_options
 
@@ -140,11 +144,11 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	for (uint8_t axis=0; axis<AXES; axis++) {
 		axis_length[axis] = gm_in->target[axis] - mm.position[axis];
-        if ((flags[axis] = fp_NOT_ZERO(axis_length[axis]))) {   // yes, this supposed to be = not ==
+        if ((flags[axis] = fp_NOT_ZERO(axis_length[axis]))) { // yes, this supposed to be = not ==
             axis_square[axis] = square(axis_length[axis]);
 		    length_square += axis_square[axis];
         } else {
-            axis_length[axis] = 0;  // make it truly zero if it was tiny
+            axis_length[axis] = 0;                          // make it truly zero if it was tiny
         }
 	}
 	length = sqrt(length_square);
@@ -197,7 +201,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 void mp_plan_block_list()
 {
-//    debug_pin1=1;      //+++++
+//    debug_pin1=1; //+++++
     mpBuf_t *bf = mb.p;
     bool planned_something = false;
 
@@ -216,17 +220,17 @@ void mp_plan_block_list()
         }
 
         // plan the block
-//        debug_pin2=1;               //+++++
+//        debug_pin2=1; //+++++
         bf = _plan_block(bf);
         planned_something = true;
-        mb.p = bf;                  //+++++ DIAGNOSTIC - put it here for debugging purposes
-//        debug_pin2=0;               //+++++
+        mb.p = bf;      //+++++ DIAGNOSTIC - set it here for debugging purposes
+//        debug_pin2=0; //+++++
     }
     if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
         st_request_exec_move();                     // start motion if runtime is not already busy
     }
     mb.p = bf;                                      // set planner pointer for exit
-//    debug_pin1=0;                   //+++++
+//    debug_pin1=0;     //+++++
 }
 
 /*
@@ -296,6 +300,15 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 //    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
 
+    // see if the planner requires cautious velocity
+    _calculate_decel_time(bf, bf->cruise_velocity, 0);
+    if (bf->decel_time > 0) {
+        if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_MS + PLANNER_ITERATION_MS)) {
+            _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
+//            while (true);   // trap for now
+//            mb.planner_state == PLANNER_PESSIMISTIC;
+        }
+    }    
     if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
         bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
     }
@@ -354,7 +367,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
             if (VELOCITY_LT(bf->delta_vmax, (bf->entry_velocity - bf->exit_velocity))) {  // decel would exceed jerk
                 bf->entry_velocity = bf->exit_velocity + bf->delta_vmax;                  // adjust Ve upward
-                bf_ret = mp_get_prev_buffer(bf);
+                bf_ret = mp_get_prev_buffer(bf); 
+                if (bf_ret->buffer_state == MP_BUFFER_RUNNING) { while(1);} //+++++ TRAP
                 bf->hint = PERFECT_DECEL;
             } else {
                 mb.backplanning = false;
@@ -386,6 +400,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
  * _calculate_jerk()
  * _calculate_vmaxes()
  * _calculate_junction_vmax()
+ * _calculate_decel_time()
  */
 
 static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruise velocity
@@ -507,10 +522,11 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
 
 static void _calculate_throttle(mpBuf_t *bf)
 {
-    if ((bf->move_type == MOVE_TYPE_ALINE) && (mb.time_in_plan > EPSILON)) {
-        if (mb.time_in_plan < PLANNER_THROTTLE_TIME) {
-            bf->throttle = (THROTTLE_SLOPE * (mb.time_in_plan-PLANNER_CRITICAL_TIME) + THROTTLE_INTERCEPT);
-            bf->cruise_velocity *= max(THROTTLE_MIN, bf->throttle);
+    if ((bf->move_type == MOVE_TYPE_ALINE) && (mb.plannable_time > EPSILON)) {
+    if (mb.plannable_time < PLANNER_THROTTLE_TIME) {
+        bf->throttle = (THROTTLE_SLOPE * (mb.plannable_time - PLANNER_CRITICAL_TIME) + THROTTLE_INTERCEPT);
+        bf->cruise_velocity *= max(THROTTLE_MIN, bf->throttle);
+
 //        } else {
 //            bf->throttle = THROTTLE_MAX;    // set to 1.00 in case it's needed for backplanning
 //        }
@@ -669,7 +685,7 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 		    if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
 			    tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
 //			    tmp_time = fabs(axis_length[axis]) * cm.a[axis].recip_velocity_max;     // remove this optimization once we have hw FPU
-		    } else{//gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
+		    } else { //gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
 			    tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
 //			    tmp_time = fabs(axis_length[axis]) * cm.a[axis].recip_feedrate_max;     // the same
 		    }
@@ -755,3 +771,30 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
     }
     bf->junction_vmax = velocity;
 }
+
+/*
+ * _calculate_decel_time() - calculate time to decelerate from one velocity to another
+ *
+ *  Basic equation is: 
+ *    T^2 = (v1-v0) * sqrt(3) * (10/(3j))
+ *    T^2 = (v1-v0) * sqrt(3) * (10/3) * (1/j)
+ *    T   = sqrt((v1-v0) * sqrt(3) * (10/3) * (1/j))
+ * if v0 = 0
+ *    T   = sqrt(v1 * sqrt(3) * (10/3) * (1/j))
+ *
+ *  Alternately, if you know the length the deceleration requires (given the jerk):
+ *    T^2 = (4*L^2)/((v0+v1)^2)     // where v0+v1 != 0
+ *    T   = ±(2 L)/(v0+v1)
+ */
+
+static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
+
+//#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
+static void _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
+{
+//    static float decel_const = sqrt(3) * (10/3);
+    bf->decel_time = sqrt((v1=v0) * decel_const * bf->recip_jerk);
+//    bf->decel_time2 = sqrt(velocity * decel_const * bf->recip_jerk) * 60000;
+//    bf->decel_time2 = (60000 * 2 * bf->length) / velocity;
+}
+//#pragma GCC reset_options

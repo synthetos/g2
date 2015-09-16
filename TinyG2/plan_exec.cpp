@@ -221,7 +221,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
 
         // Update the planner buffer times
-        mb.time_in_run = bf->move_time;    // initialize the time_in_run
+        mb.run_time_remaining = bf->move_time;   // initialize the run_time_remaining
     }
 
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
@@ -345,7 +345,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;
-        mb.time_in_run = 0.0;                           // it's done, so time goes to zero
+        mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
         if (bf->move_state == MOVE_RUN) {
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) {
@@ -697,10 +697,10 @@ static stat_t _exec_aline_segment()
         travel_steps[m] = mr.target_steps[m] - mr.position_steps[m];
     }
 
-    // Update the mb->time_in_run -- we know it's missing the current segment's time before it's loaded, that's ok.
-    mb.time_in_run -= mr.segment_time;
-    if (mb.time_in_run < 0) {
-        mb.time_in_run = 0.0;
+    // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
+    mb.run_time_remaining -= mr.segment_time;
+    if (mb.run_time_remaining < 0) {
+        mb.run_time_remaining = 0.0;
     }
 
 	// Call the stepper prep function

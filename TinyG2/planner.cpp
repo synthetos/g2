@@ -320,8 +320,8 @@ bool mp_is_phat_city_time()
 	if(cm.hold_state == FEEDHOLD_HOLD) {
     	return true;
 	}
-//    return ((mb.time_in_plan <= 0) || (PHAT_CITY_TIME < mb.time_in_plan));
-    return ((mb.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
+//    return ((mb.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
+    return ((mb.plannable_time <= 0) || (PHAT_CITY_TIME < mb.plannable_time));
 }
 
 /**** Helper functions for mp_plan_buffer()
@@ -356,7 +356,7 @@ static bool _new_block_timeout()
  *
  *  mp_plan_buffer()'s job is to invoke planning intelligently. Items to note:
  *
- *    - At the start of a job the planner should fill up with unplanned moves before
+ *    - At the start of a job the planner should fill up with unplanned blocks before
  *      motion starts. This eliminates an initial move that plans to zero and ensures
  *      the planner gets a "head start" on managing the time in the planner queue.
  *
@@ -371,6 +371,10 @@ static bool _new_block_timeout()
  *      times (particularly tails). This requires leaving one unplanned move at the
  *      end (N) of the buffer, so the N-1 block always has a valid exit velocity to
  *      plan to (the entry velocity of the Nth block).
+ *
+ *	  - An intermediate CAUTIOUS mode is also required if there is insufficient time in
+ *		the plan to decelerate from the target velocity to zero. Cautious mode limits the
+ *		target velocity so that deceleration is always possible
  *
  *    - It's important to distinguish between the case where the new block is actually a
  *      startup condition and where it's the first block after a stop or a stall. The
@@ -402,7 +406,7 @@ static bool _new_block_timeout()
  *    (2) time in planner is back in safe region and/or new blocks are arriving fast enough
  *
  *  CRITICAL can be entered in one 2 conditions, or both (sub-states):
- *    [P] time_in_plan < PLANNER_TIME_CRITICAL: planned time is dangerously low (about to starve)
+ *    [P] plannable_time < PLANNER_TIME_CRITICAL: planned time is dangerously low (about to starve)
  *    [N] new_block_timeout == true: buffer arrival rate is dangerously low (no new blocks)
  */
 /*  Has to accurately detect end conditions to go pessimistic:
@@ -415,7 +419,33 @@ static bool _new_block_timeout()
  *    Case 7: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan < critical
  *    Case 8: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan > critical
  */
-
+/*
+ *	CAUTIOUS PLANNING occurs when the time in the planner is insufficient to plan to zero
+ *	from the target velocity (Vt). Vt must be limited so that a deceleration to zero is 
+ *	possible in the available time. 
+ *
+ *	Terms
+ *	  - Head - blocks are removed from the head of the planner queue - inserted in the tail
+ *	  - Running block - the block that is currently running (at the head)
+ *    - Ondeck block - the next block to run. If nothing is running it's the head block N,
+ *                     otherwise it's the block behind the running (head) block, N+1
+ *
+ *  Factors influencing cautious mode include:
+ *	  - Vtarget (Vt) - the requested velocity of a block
+ *	  - Vrun (Vr)    - the velocity of the running block
+ *    - Vondeck (Vo) - the velocity of the ondeck block
+ *	  - To-plan      - time in the planner measured from the ondeck block
+ *    - Trun         - time remaining in the runtime (estimated)
+ *    - Ttimeout     - block timeout time - e.g. 30 ms
+ *    - Treplan      - time required to replan the queue (worst case, e.g. 10 ms) 
+ *	  - T_-decel     - time required to decelerate from a velocity to zero (Vt, Vr, Vo)
+ *    - L_-decel     - the distance (length) required to decelerate from Vt, Vr, Vo
+ *
+ *  Lemma1: The following equality must always be true: To-decel < (To-plan - Ttimeout - Treplan)
+ *          This requires Vo to be limited so this is always true.
+ *
+ *  Lemma2: Vo must equal the exit velocity of the run block
+ */
 stat_t mp_planner_callback()
 {
     if (!mb.request_planning) {
@@ -452,7 +482,7 @@ stat_t mp_planner_callback()
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     } else {                                            // set planner state for normal operation
-        if (_new_block_timeout() || mb.time_in_plan < PLANNER_CRITICAL_TIME) {
+        if (_new_block_timeout() || mb.plannable_time < PLANNER_CRITICAL_TIME) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
             mb.planner_state = PLANNER_OPTIMISTIC;
@@ -543,32 +573,30 @@ void mp_end_feed_override(const float ramp_time)
 }
 
 /*
- * _planner_time_accounting() - compute time in planner and lock buffers for runtime
+ * _planner_time_accounting() - gather time in planner and runtime
  *
- *  Examines move times in the runtime and planner to lock MIN_LOCKED_TIME of time
- *  in the planner buffer. Also interrogates the locked queue and unlocked planned
- *  blocks to see if a tail deceleration is about to start. Sets force_planning if
- *  this is true.
+ *  Record the move times in the runtime and planner for use in planning decisions
  */
 
 static void _planner_time_accounting()
 {
     // get run buffer and see if anything is running
     if (mb.r->buffer_state == MP_BUFFER_EMPTY || mb.r->buffer_state == MP_BUFFER_NOT_PLANNED) {
-        mb.time_in_plan = 0;
-        mb.time_total = 0;
+        mb.plannable_time = 0;
         return;
     }
 
     mpBuf_t *bf = mb.r;
-    float time_in_plan = 0.0;
+//    float time_in_plan = 0.0;
+    float plannable_time = 0;
     bool in_critical = true;                        // used to look for transition to critical region
 
     // Step through the moves and add up the planner time
     while ((bf = mp_get_next_buffer(bf)) != mb.r) {
+        plannable_time += bf->move_time;              // total planner time, w/est's for non-planned blocks
         if (bf->buffer_state == MP_BUFFER_PLANNED) {
-          time_in_plan += bf->move_time;
-            if (in_critical && (time_in_plan >= PLANNER_CRITICAL_TIME)) {
+          plannable_time += bf->move_time;
+            if (in_critical && (plannable_time >= PLANNER_CRITICAL_TIME)) {
                 in_critical = false;
                 mb.c = bf;                          // mark the first non-critical block
             }
@@ -576,13 +604,11 @@ static void _planner_time_accounting()
         }
         break;
     }
-    mb.time_in_plan = time_in_plan;
-    mb.time_total = time_in_plan + mb.time_in_run;
+    mb.plannable_time = plannable_time;
 
     //+++++ DIAGNOSTIC
-    mb.time_in_plan_ms = time_in_plan * 60000;
-    mb.time_total_ms = mb.time_total * 60000;
-    mb.time_in_run_ms = mb.time_in_run * 60000;
+    mb.plannable_time_ms = plannable_time * 60000;
+    mb.run_time_remaining_ms = mb.run_time_remaining_ms * 60000;
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -743,11 +769,12 @@ void mp_commit_write_buffer(const moveType move_type)
             st_request_exec_move();	 // requests an exec if the runtime is not busy
         }
     }
-    mb.new_block = true;                    // got a new block to plan
-    mb.w = mb.w->nx;                        // advance the write buffer pointer
-    qr_request_queue_report(+1);            // request a QR and add to the "added buffers" count
+    mb.new_block = true;				// got a new block to plan
+    mb.w = mb.w->nx;                    // advance the write buffer pointer
+    qr_request_queue_report(+1);        // request a QR and add to the "added buffers" count
 }
 
+// Note: mp_get_run_buffer() is only called by mp_exec_move(), which is within an interrupt  
 mpBuf_t * mp_get_run_buffer()
 {
     // CASE: fresh buffer; becomes running if buffer planned
@@ -756,34 +783,35 @@ mpBuf_t * mp_get_run_buffer()
     }
 
     // This is the one point where an accurate accounting of the total time in the
-    // run and the planner is established. _planner_time_accounting() also performs
+    // run and the planner is established. _plannable_time_accounting() also performs
     // the locking of planner buffers to ensure that sufficient "safe" time is reserved.
     _planner_time_accounting();
 
     // CASE: asking for the same run buffer for the Nth time
     if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
-        return (mb.r);                          // return same buffer
+        return (mb.r);					// return same buffer
     }
-    return (NULL);								// CASE: no queued buffers. fail it.
+    return (NULL);						// CASE: no queued buffers. fail it.
 }
 
+// Note: mp_free_run_buffer() is only called from mp_exec_XXX, which are within an interrupt
 bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
 {
     _audit_buffers();       // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     mpBuf_t *r = mb.r;
-    mb.r = mb.r->nx;                            // advance to next run buffer
-	_clear_buffer(r);                           // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
+    mb.r = mb.r->nx;					// advance to next run buffer
+	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
 	mb.buffers_available++;
-	qr_request_queue_report(-1);				// request a QR and add to the "removed buffers" count
-	return (mb.w == mb.r); 	                    // return true if the queue emptied
+	qr_request_queue_report(-1);			// request a QR and add to the "removed buffers" count
+	return (mb.w == mb.r); 	            // return true if the queue emptied
 }
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
 void mp_unget_write_buffer()
 {
-    mb.w = mb.w->pv;                            // queued --> write
-    mb.w->buffer_state = MP_BUFFER_EMPTY;       // not loading anymore
+    mb.w = mb.w->pv;						// queued --> write
+    mb.w->buffer_state = MP_BUFFER_EMPTY; // not loading anymore
     mb.buffers_available++;
 }
 

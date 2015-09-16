@@ -22,6 +22,9 @@
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
 /*
+ *  Build 095.00 Notes:
+ *    - working on cautious-mode planning
+ *
  *  Back-back-port to g2
  *    - changes in digital IO system
  *    - pwr indicator lights (pwr settings)

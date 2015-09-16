@@ -137,15 +137,16 @@ typedef enum {
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))    // DO NOT CHANGE - time in microseconds
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))   // DO NOT CHANGE - time in minutes
 
-#define NEW_BLOCK_TIMEOUT_MS    ((float)50.0)           // MS before deciding there are no new blocks arriving
+#define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
 #define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
 #define PLANNER_THROTTLE_MS     ((float)100.0)          // MS threshold to start planner throttling
-//#define PLANNER_JIT_MS          ((float)150.0)        // MS threshold for just-in-time planning
+#define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get throigh a planner callback loop
 #define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
+
 #define NEW_BLOCK_TIMEOUT_TIME  ((float)(NEW_BLOCK_TIMEOUT_MS / 60000)) // DO NOT CHANGE - time in minutes
 #define PLANNER_CRITICAL_TIME   ((float)(PLANNER_CRITICAL_MS / 60000))  // DO NOT CHANGE - time in minutes
 #define PLANNER_THROTTLE_TIME   ((float)(PLANNER_THROTTLE_MS / 60000))  // DO NOT CHANGE - time in minutes
-#define PLANNER_JIT_TIME        ((float)(PLANNER_JIT_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define PLANNER_ITERATION_TIME  ((float)(PLANNER_ITERATION_MS / 60000)) // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
 #define THROTTLE_MIN            ((float)0.10)           // minimum factor to slow down for planner throttling
@@ -206,7 +207,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint32_t linenum;
     uint8_t buffer_number;
     float move_time_ms;
-    float time_in_plan_ms;
+    float plannable_time_ms;
     zoidExitPoint zoid_exit;
     //+++++ to here
 
@@ -232,6 +233,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_time;                // ...body
     float tail_time;                // ...tail
     float move_time;                // ...entire move
+    float decel_time;
+    float decel_time2;
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -258,16 +261,15 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	uint8_t buffers_available;		// running count of available buffers
 
     //+++++DIAGNOSTICS
-    float time_in_run_ms;
-    float time_in_plan_ms;
-    float time_total_ms;
     float move_time_ms;
-
+    float run_time_remaining_ms;
+    float plannable_time_ms;
+    
     // planner state variables
     plannerState planner_state;     // current state of planner
-    float time_in_run;		        // time left in the buffer executed by the runtime
-    float time_in_plan;	            // time in the planner (exclusive of runtime)
-    float time_total;	            // total time planned in the run and planner
+    float run_time_remaining;       // time left in runtime (including running block)
+    float plannable_time;           // time in planner that can actually be planned
+
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
