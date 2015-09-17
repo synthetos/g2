@@ -41,6 +41,14 @@ ifeq ("$(BOARD)","Othermill")
 
 endif
 
+ifeq ("$(BOARD)","ProbotixV90")
+
+    BASE_BOARD=G2v9
+    SETTINGS_FILE="settings_probotixV90.h"
+    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
 
 ##########
 
