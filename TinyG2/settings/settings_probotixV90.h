@@ -43,7 +43,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         0.75	// cornering - between 0.05 and 1.00 (higher is faster)
+#define JUNCTION_AGGRESSION         1.50	// cornering - usually between 0.5 and 2.0 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01	// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on

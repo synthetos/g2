@@ -776,7 +776,7 @@ void mp_commit_write_buffer(const moveType move_type)
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is within an interrupt  
 mpBuf_t * mp_get_run_buffer()
-{
+{   
     // CASE: fresh buffer; becomes running if buffer planned
     if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
@@ -800,6 +800,15 @@ bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
     _audit_buffers();       // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     mpBuf_t *r = mb.r;
+/*
+    if (mb.r->nx->buffer_state == MP_BUFFER_EMPTY) {
+        while (1);
+    }
+    if (mb.r->nx->buffer_state == MP_BUFFER_NOT_PLANNED) {
+        while (1);
+    }
+*/
+
     mb.r = mb.r->nx;					// advance to next run buffer
 	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
 	mb.buffers_available++;

@@ -684,10 +684,8 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
         if (bf->axis_flags[axis]) {
 		    if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
 			    tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
-//			    tmp_time = fabs(axis_length[axis]) * cm.a[axis].recip_velocity_max;     // remove this optimization once we have hw FPU
 		    } else { //gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
 			    tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
-//			    tmp_time = fabs(axis_length[axis]) * cm.a[axis].recip_feedrate_max;     // the same
 		    }
 		    max_time = max(max_time, tmp_time);
 
@@ -754,7 +752,8 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t *bf)
 {
-    float velocity = bf->absolute_vmax;    // start with our maximum possible velocity
+//    float velocity = bf->absolute_vmax;    // start with our maximum possible velocity
+    float velocity = bf->cruise_vmax;    // start with our maximum possible velocity
 
     for (uint8_t axis=0; axis<AXES; axis++) {
         if (bf->axis_flags[axis] || bf->pv->axis_flags[axis]) {         // skip axes with no movement
@@ -769,6 +768,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             }
         }
     }
+    printf("%f\n", velocity);
     bf->junction_vmax = velocity;
 }
 
@@ -792,8 +792,7 @@ static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
 //#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
 static void _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
 {
-//    static float decel_const = sqrt(3) * (10/3);
-    bf->decel_time = sqrt((v1=v0) * decel_const * bf->recip_jerk);
+    bf->decel_time = sqrt((v1-v0) * decel_const * bf->recip_jerk);
 //    bf->decel_time2 = sqrt(velocity * decel_const * bf->recip_jerk) * 60000;
 //    bf->decel_time2 = (60000 * 2 * bf->length) / velocity;
 }
