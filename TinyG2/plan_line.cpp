@@ -308,7 +308,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 //            while (true);   // trap for now
 //            mb.planner_state == PLANNER_PESSIMISTIC;
         }
-    }    
+    }
     if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
         bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
     }
@@ -367,7 +367,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
             if (VELOCITY_LT(bf->delta_vmax, (bf->entry_velocity - bf->exit_velocity))) {  // decel would exceed jerk
                 bf->entry_velocity = bf->exit_velocity + bf->delta_vmax;                  // adjust Ve upward
-                bf_ret = mp_get_prev_buffer(bf); 
+                bf_ret = mp_get_prev_buffer(bf);
                 if (bf_ret->buffer_state == MP_BUFFER_RUNNING) { while(1);} //+++++ TRAP
                 bf->hint = PERFECT_DECEL;
             } else {
@@ -768,14 +768,14 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             }
         }
     }
-    printf("%f\n", velocity);
+//    printf("%f\n", velocity);
     bf->junction_vmax = velocity;
 }
 
 /*
  * _calculate_decel_time() - calculate time to decelerate from one velocity to another
  *
- *  Basic equation is: 
+ *  Basic equation is:
  *    T^2 = (v1-v0) * sqrt(3) * (10/(3j))
  *    T^2 = (v1-v0) * sqrt(3) * (10/3) * (1/j)
  *    T   = sqrt((v1-v0) * sqrt(3) * (10/3) * (1/j))

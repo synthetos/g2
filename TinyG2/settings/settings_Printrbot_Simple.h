@@ -78,16 +78,23 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define XIO_ENABLE_ECHO             false
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
-#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+//#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY              JV_VERBOSE             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY     SR_VERBOSE             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa"\
+                                ,"feed","vel","stat"\
+                                ,"_ts1","_es1","_xs1","_fe1"\
+                                ,"_ts2","_es2","_xs2","_fe2"\
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -101,18 +108,21 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL_XY        0.43                    // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_Z         0.25                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY        0.48                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_Z         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_A         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
 
+// 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           40.64                   // 1tr
+//#define M1_TRAVEL_PER_REV           40.64                   // 1tr
+#define M1_TRAVEL_PER_REV           40                   // 1tr
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
 #define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 1mp
 
+// 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40.64
@@ -121,14 +131,17 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
+// 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           1.5842
+//#define M3_TRAVEL_PER_REV           1.5842
+#define M3_TRAVEL_PER_REV           1.58416
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
 #define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
 
+// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360			// degrees moved per motor rev
@@ -155,10 +168,11 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX 1000
+#define JERK_MAX 5000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              40000 				    // xvm  G0 max velocity in mm/min
+//#define X_VELOCITY_MAX              40000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                155                     // xtm  travel between switches or crashes
@@ -172,7 +186,8 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              40000
+//#define Y_VELOCITY_MAX              40000
+#define Y_VELOCITY_MAX              20000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                120
@@ -186,11 +201,13 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Y_ZERO_BACKOFF              Y_TRAVEL_MAX
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              1200
+//#define Z_VELOCITY_MAX              1200
+#define Z_VELOCITY_MAX              400
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                150
-#define Z_JERK_MAX                  100
+//#define Z_JERK_MAX                  100
+#define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
@@ -241,9 +258,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define B_FEEDRATE_MAX			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			0
 #define B_TRAVEL_MAX			-1
-//#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
-//#define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_HOMING_INPUT          0
 #define B_HOMING_DIR            0
 #define B_SEARCH_VELOCITY 		600
@@ -258,9 +273,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define C_FEEDRATE_MAX			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			0
 #define C_TRAVEL_MAX			-1
-//#define C_JERK_MAX			20000000
 #define C_JERK_MAX				20
-//#define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_HOMING_INPUT          0
 #define C_HOMING_DIR            0
 #define C_SEARCH_VELOCITY 		600
