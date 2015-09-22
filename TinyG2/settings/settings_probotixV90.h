@@ -151,12 +151,14 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 // *** axis settings **********************************************************************************
 
+#define JERK_MAX    500
+
 #define X_AXIS_MODE			    	AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX		    	2000                    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX		    	1600                    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX		    	X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN		    	0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX 		    	400                     // xtm  maximum travel - used by soft limits and homing
-#define X_JERK_MAX			    	100			            // xjm
+#define X_JERK_MAX			    	JERK_MAX			    // xjm
 #define X_JERK_HIGH_SPEED	    	X_JERK_MAX              // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
@@ -166,11 +168,11 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_ZERO_BACKOFF		    	2                       // xzb  mm
 
 #define Y_AXIS_MODE			    	AXIS_STANDARD
-#define Y_VELOCITY_MAX		    	2000
+#define Y_VELOCITY_MAX		    	1600
 #define Y_FEEDRATE_MAX		        Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN			    0
 #define Y_TRAVEL_MAX		    	175
-#define Y_JERK_MAX			    	100
+#define Y_JERK_MAX			    	JERK_MAX
 #define Y_JERK_HIGH_SPEED       	Y_JERK_MAX
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
@@ -184,7 +186,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Z_FEEDRATE_MAX		    	Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN		    	0
 #define Z_TRAVEL_MAX		    	75
-#define Z_JERK_MAX			    	100
+#define Z_JERK_MAX			    	JERK_MAX
 #define Z_JERK_HIGH_SPEED       	Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1

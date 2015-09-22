@@ -304,8 +304,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     _calculate_decel_time(bf, bf->cruise_velocity, 0);
     if (bf->decel_time > 0) {
         if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_MS + PLANNER_ITERATION_MS)) {
-            _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
-//            while (true);   // trap for now
+//            _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
+//            while (1);   // trap for now
 //            mb.planner_state == PLANNER_PESSIMISTIC;
         }
     }
@@ -332,12 +332,12 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
          // Test acceleration cases  (Note: if Vx is decreased the nx block will be corrected in the next pass)
         if (bf->entry_velocity <= bf->exit_velocity) {
 
-            bf->delta_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);  // dV is limited by jerk
-            if (VELOCITY_LT(bf->delta_vmax, (bf->exit_velocity - bf->entry_velocity))) {  // accel would exceed jerk
-                bf->exit_velocity = bf->entry_velocity + bf->delta_vmax;                  // adjust Vx downward
-                bf->hint = PERFECT_ACCEL;
-            } else {
+            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            if (exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
                 bf->hint = MIXED_ACCEL;
+            } else {
+                bf->exit_velocity = exit_target;
+                bf->hint = PERFECT_ACCEL;
             }
             ASCII_ART("/");
 
@@ -345,30 +345,31 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
             // There are 3 cases:
             //  (1) decel is a natural slow-down or stop in an otherwise continuous movement
-            //  (2) decel is a stop at the end of the buffer (a tail) & this is first it's been seen
-            //  (3) decel is part of a tail (continuation of #2)
+            //  (2) decel is part of a tail (continuation of #3)
+            //  (3) decel is a stop at the end of the buffer (a tail) & this is first it's been seen
             //
-            //  Want to plan (1) and (3), but defer planning (2) in case it's not a real tail
-            //  Want to plan (2) to a tail if it's determined that it really is a tail
-            //  Case (2) can be detected if the nx buffer is EMPTY.
-            //  Case (3) can be treated the same as case (1) as a backplanning region
+            //  Cases (1) and (2) cause backplanning and are treated the same
+            //  Case (3) never reaches here as the calling routine will not attempt to plan the last optimistic block
 
-            // Case 2: skip backplanning
-            if ((bf->nx->buffer_state == MP_BUFFER_EMPTY) && (mb.planner_state == PLANNER_OPTIMISTIC)) {
-                ASCII_ART(".");
-                return (mp_get_next_buffer(bf));        // return the empty buffer (break; condition)
-            }
-            // Case 1 & 3: start or continue a backplanning region
+            // Start or continue a backplanning region
             if (!mb.backplanning) {
                 mb.backplanning = true;                 // signal that back planning is occurring
                 mb.backplan_return = bf->nx;            // return to the next buffer after start of backplan
             }
-            bf->delta_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);   // dV is limited by jerk
+            bf->entry_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);   // dV is limited by jerk
 
-            if (VELOCITY_LT(bf->delta_vmax, (bf->entry_velocity - bf->exit_velocity))) {  // decel would exceed jerk
-                bf->entry_velocity = bf->exit_velocity + bf->delta_vmax;                  // adjust Ve upward
+            if (bf->entry_vmax < bf->entry_velocity) {
+                bf->entry_velocity = bf->entry_vmax;                  // adjust Ventry downward
                 bf_ret = mp_get_prev_buffer(bf);
-                if (bf_ret->buffer_state == MP_BUFFER_RUNNING) { while(1);} //+++++ TRAP
+                
+                //++++ TRAP if a backplan hits the running buffer
+                if (bf_ret->buffer_state == MP_BUFFER_RUNNING) {
+                    char line[20];
+                    sprintf(line, "line: %lu", bf->linenum);
+                    rpt_exception(STAT_ERROR_37, line);
+//                    while(1);
+                }
+                
                 bf->hint = PERFECT_DECEL;
             } else {
                 mb.backplanning = false;
@@ -755,6 +756,8 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
 //    float velocity = bf->absolute_vmax;    // start with our maximum possible velocity
     float velocity = bf->cruise_vmax;    // start with our maximum possible velocity
 
+//    uint8_t jerk_axis = AXIS_X;
+
     for (uint8_t axis=0; axis<AXES; axis++) {
         if (bf->axis_flags[axis] || bf->pv->axis_flags[axis]) {         // skip axes with no movement
             float delta = fabs(bf->pv->unit[axis] - bf->unit[axis]);    // formula (1)
@@ -764,11 +767,29 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             //   In either case, division-by-zero is bad, m'kay?
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
-                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
+
+//                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
+                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
+                    velocity = (cm.a[axis].max_junction_accel / delta);
+                    bf->jerk_axis = axis;
+                }
             }
         }
     }
 //    printf("%f\n", velocity);
+
+//    if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
+        bf->velocity = velocity;
+        bf->deltaV_diff = fabs(velocity - bf->pv->cruise_vmax);
+//        bf->deltaV_jerk = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+//        bf->deltaV_jerk = mp_get_target_velocity(bf->pv->cruise_vmax, bf->length, bf);
+//        bf->deltaV_jerk = mp_get_target_velocity(bf->pv->cruise_vmax, bf->length, bf->jerk);
+        bf->deltaV_jerk = mp_get_target_velocity(bf->pv->cruise_vmax, bf->length, cm.a[bf->jerk_axis].jerk_max);
+        if (bf->deltaV_diff > bf->deltaV_jerk) {
+            printf("%f\n", bf->deltaV_jerk);
+//            while (1);  //+++++ trap
+        }
+//    }
     bf->junction_vmax = velocity;
 }
 

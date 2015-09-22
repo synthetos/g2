@@ -99,7 +99,14 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
     MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
     COMMAND_BLOCK,                  // this block is a command
-    HINT_IS_STALE                   // the hint may no longer be valid
+    HINT_IS_STALE,                   // the hint may no longer be valid
+
+    WAS_PERFECT_ACCEL,                  // straight line acceleration at jerk (H)
+    WAS_PERFECT_DECEL,                  // straight line deceleration at jerk (T)
+    WAS_PERFECT_CRUISE,                 // move is all body (B)
+    WAS_MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
+    WAS_MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
+    WAS_COMMAND_BLOCK,                  // this block is a command
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -247,6 +254,11 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the move can go through the junction
+
+    float velocity;
+    float deltaV_diff;
+    float deltaV_jerk;
+    uint8_t jerk_axis;
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
@@ -417,7 +429,8 @@ void mp_plan_block_list(void);
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
-float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+//float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+float mp_get_target_velocity(const float v_0, const float L, const float jerk);
 
 // plan_exec.c functions
 stat_t mp_exec_move(void);
