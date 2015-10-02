@@ -52,7 +52,7 @@ static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
 static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t *bf);
-static void _calculate_decel_time(mpBuf_t *bf, float v1, float v0);
+static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0);
 
 //+++++DIAGNOSTICS
 #pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
@@ -64,7 +64,7 @@ static void _set_diagnostics(mpBuf_t *bf)
     bf->move_time_ms = mb.move_time_ms;
 
 //    bf->time_in_plan_ms = mb.time_in_plan_ms;
-    bf->plannable_time_ms = mb.plannable_time_ms;
+//    bf->plannable_time_ms = mb.plannable_time_ms;
 }
 #pragma GCC reset_options
 
@@ -301,14 +301,17 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
 
     // see if the planner requires cautious velocity
-    _calculate_decel_time(bf, bf->cruise_velocity, 0);
+    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
+    mb.planner_critical_time = bf->decel_time;
+
     if (bf->decel_time > 0) {
-        if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_MS + PLANNER_ITERATION_MS)) {
+        if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_TIME + PLANNER_ITERATION_TIME)) {
 //            _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
 //            while (1);   // trap for now
-//            mb.planner_state == PLANNER_PESSIMISTIC;
+            mb.planner_state = PLANNER_PESSIMISTIC;
         }
     }
+
     if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
         bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
     }
@@ -811,10 +814,13 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
 static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
 
 //#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
-static void _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
+static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
 {
-    bf->decel_time = sqrt((v1-v0) * decel_const * bf->recip_jerk);
-//    bf->decel_time2 = sqrt(velocity * decel_const * bf->recip_jerk) * 60000;
-//    bf->decel_time2 = (60000 * 2 * bf->length) / velocity;
+//    bf->decel_time = sqrt((v1-v0) * decel_const * bf->recip_jerk);
+//    bf->decel_time_ms = bf->decel_time * 60000;
+
+    bf->decel_time_ms = (sqrt((v1-v0) * decel_const * bf->recip_jerk)) * 60000;
+    return (sqrt((v1-v0) * decel_const * bf->recip_jerk));
+
 }
 //#pragma GCC reset_options

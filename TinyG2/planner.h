@@ -145,7 +145,8 @@ typedef enum {
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))   // DO NOT CHANGE - time in minutes
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
-#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
+//#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
+#define PLANNER_CRITICAL_MS     ((float)100.0)           // MS threshold for planner critical state
 #define PLANNER_THROTTLE_MS     ((float)100.0)          // MS threshold to start planner throttling
 #define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get throigh a planner callback loop
 #define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
@@ -215,6 +216,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
+    float decel_time_ms;
     zoidExitPoint zoid_exit;
     //+++++ to here
 
@@ -281,7 +283,8 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     plannerState planner_state;     // current state of planner
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
-
+    float planner_critical_time;    // current value for critical time
+    
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
