@@ -107,7 +107,7 @@ char *get_status_message(stat_t status);
 #define	STAT_PERSISTENCE_ERROR 34
 #define	STAT_BAD_STATUS_REPORT_SETTING 35
 #define	STAT_FAILED_GET_PLANNER_BUFFER 36
-/*
+
 #define	STAT_ERROR_37 37
 #define	STAT_ERROR_38 38
 #define	STAT_ERROR_39 39
@@ -164,7 +164,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_85 85
 #define	STAT_ERROR_86 86
 #define	STAT_ERROR_87 87
-*/
+
 // Assertion failures - build down from 99 until they meet the system internal errors
 
 #define	STAT_BUFFER_FREE_ASSERTION_FAILURE 88
@@ -414,7 +414,12 @@ static const char stat_33[] PROGMEM = "Float is NAN";
 static const char stat_34[] PROGMEM = "Persistence error";
 static const char stat_35[] PROGMEM = "Bad status report setting";
 static const char stat_36[] PROGMEM = "Failed to get planner buffer";
-static const char stat_37[] PROGMEM = "37";
+
+//static const char stat_37[] PROGMEM = "37";
+//static const char stat_38[] PROGMEM = "38";
+//static const char stat_39[] PROGMEM = "39";
+
+static const char stat_37[] PROGMEM = "Backplan hit running buffer";
 static const char stat_38[] PROGMEM = "38";
 static const char stat_39[] PROGMEM = "39";
 

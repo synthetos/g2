@@ -94,6 +94,7 @@ void planner_init()
 
     // reasonable starting values
     mb.mfo_factor = 1.00;
+    mb.planner_critical_time = PLANNER_CRITICAL_TIME;
 }
 
 void planner_reset()
@@ -482,7 +483,8 @@ stat_t mp_planner_callback()
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     } else {                                            // set planner state for normal operation
-        if (_new_block_timeout() || mb.plannable_time < PLANNER_CRITICAL_TIME) {
+//        if (_new_block_timeout() || mb.plannable_time < PLANNER_CRITICAL_TIME) {
+        if (_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
             mb.planner_state = PLANNER_OPTIMISTIC;
@@ -586,20 +588,26 @@ static void _planner_time_accounting()
         return;
     }
 
-    mpBuf_t *bf = mb.r;
-//    float time_in_plan = 0.0;
     float plannable_time = 0;
     bool in_critical = true;                        // used to look for transition to critical region
 
+    mpBuf_t *bf = mb.r;
+    bf->plannable_time_ms = plannable_time;         // ++++++ which is 0 at this point
+    
     // Step through the moves and add up the planner time
     while ((bf = mp_get_next_buffer(bf)) != mb.r) {
+//        if (bf->buffer_state == MP_BUFFER_EMPTY) {
+//            break;
+//        }
         plannable_time += bf->move_time;              // total planner time, w/est's for non-planned blocks
         if (bf->buffer_state == MP_BUFFER_PLANNED) {
-          plannable_time += bf->move_time;
-            if (in_critical && (plannable_time >= PLANNER_CRITICAL_TIME)) {
+//          plannable_time += bf->move_time;
+//            if (in_critical && (plannable_time >= PLANNER_CRITICAL_TIME)) {
+            if (in_critical && (plannable_time >= mb.planner_critical_time)) {
                 in_critical = false;
                 mb.c = bf;                          // mark the first non-critical block
             }
+            bf->plannable_time_ms = plannable_time * 60000; //+++++ DIAGNOSTIC
             continue;
         }
         break;
@@ -800,17 +808,12 @@ bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
     _audit_buffers();       // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     mpBuf_t *r = mb.r;
-/*
-    if (mb.r->nx->buffer_state == MP_BUFFER_EMPTY) {
-        while (1);
-    }
-    if (mb.r->nx->buffer_state == MP_BUFFER_NOT_PLANNED) {
-        while (1);
-    }
-*/
-
     mb.r = mb.r->nx;					// advance to next run buffer
-	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
+
+//	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
+    r->buffer_state = MP_BUFFER_EMPTY;  // do a "light clear"
+    r->move_time = 0;
+
 	mb.buffers_available++;
 	qr_request_queue_report(-1);			// request a QR and add to the "removed buffers" count
 	return (mb.w == mb.r); 	            // return true if the queue emptied

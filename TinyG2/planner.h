@@ -99,7 +99,14 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
     MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
     COMMAND_BLOCK,                  // this block is a command
-    HINT_IS_STALE                   // the hint may no longer be valid
+    HINT_IS_STALE,                   // the hint may no longer be valid
+
+    WAS_PERFECT_ACCEL,                  // straight line acceleration at jerk (H)
+    WAS_PERFECT_DECEL,                  // straight line deceleration at jerk (T)
+    WAS_PERFECT_CRUISE,                 // move is all body (B)
+    WAS_MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
+    WAS_MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
+    WAS_COMMAND_BLOCK,                  // this block is a command
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -138,7 +145,8 @@ typedef enum {
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))   // DO NOT CHANGE - time in minutes
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
-#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
+//#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
+#define PLANNER_CRITICAL_MS     ((float)100.0)           // MS threshold for planner critical state
 #define PLANNER_THROTTLE_MS     ((float)100.0)          // MS threshold to start planner throttling
 #define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get throigh a planner callback loop
 #define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
@@ -208,6 +216,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
+    float decel_time_ms;
     zoidExitPoint zoid_exit;
     //+++++ to here
 
@@ -248,6 +257,11 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the move can go through the junction
 
+    float velocity;
+    float deltaV_diff;
+    float deltaV_jerk;
+    uint8_t jerk_axis;
+
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
     float recip_jerk;               // 1/Jm used for planning (computed and cached)
@@ -269,7 +283,8 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     plannerState planner_state;     // current state of planner
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
-
+    float planner_critical_time;    // current value for critical time
+    
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
@@ -417,7 +432,8 @@ void mp_plan_block_list(void);
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
-float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+//float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+float mp_get_target_velocity(const float v_0, const float L, const float jerk);
 
 // plan_exec.c functions
 stat_t mp_exec_move(void);
