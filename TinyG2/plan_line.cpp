@@ -282,7 +282,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     // the previous block. If this is true, reposition to the previous block so it can
     // be corrected. This should almost never happen.
     bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
-    if (VELOCITY_LT(bf->entry_vmax, bf->pv->exit_velocity)) {
+//    if (VELOCITY_LT(bf->entry_vmax, bf->pv->exit_velocity)) {
+    if (bf->entry_vmax < bf->pv->exit_velocity) {
         ASCII_ART("<");
         return (mp_get_prev_buffer(bf));                // back the planner up one
     }
@@ -335,11 +336,12 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
          // Test acceleration cases  (Note: if Vx is decreased the nx block will be corrected in the next pass)
         if (bf->entry_velocity <= bf->exit_velocity) {
 
-            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
-            if (exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
+//            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            bf->exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            if (bf->exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
                 bf->hint = MIXED_ACCEL;
             } else {
-                bf->exit_velocity = exit_target;
+                bf->exit_velocity = bf->exit_target;
                 bf->hint = PERFECT_ACCEL;
             }
             ASCII_ART("/");
@@ -367,9 +369,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
                 // detect if a backplan hits the run buffer and stop backplanning
                 if (bf_ret->buffer_state == MP_BUFFER_RUNNING) {
-//                    char line[20];
-//                    sprintf(line, "line: %lu", bf->linenum);
-//                    rpt_exception(STAT_ERROR_37, line);
+                    char line[20]; sprintf(line, "line: %lu", bf->linenum); rpt_exception(STAT_ERROR_37, line);
+                    printf ("Vx:%1.0f Ve:%1.0f\n", bf->pv->exit_velocity, bf->entry_velocity);
 //                    while(1);
                     mb.backplanning = false;
                     bf_ret = mb.backplan_return;

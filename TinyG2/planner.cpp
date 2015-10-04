@@ -476,7 +476,8 @@ stat_t mp_planner_callback()
     // set planner state
     if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
         if (mp_planner_is_full()) {
-            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
+//            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
+            mb.planner_state = PLANNER_PESSIMISTIC;      // start planning now
         } else if (_new_block_timeout()) {
             mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
         } else {
@@ -487,7 +488,8 @@ stat_t mp_planner_callback()
         if (_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
-            mb.planner_state = PLANNER_OPTIMISTIC;
+//            mb.planner_state = PLANNER_OPTIMISTIC;
+            mb.planner_state = PLANNER_PESSIMISTIC;
         }
     }
     if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic

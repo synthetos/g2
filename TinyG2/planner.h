@@ -242,8 +242,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_time;                // ...body
     float tail_time;                // ...tail
     float move_time;                // ...entire move
-    float decel_time;
-    float decel_time2;
+//    float decel_time;               //+++++ diagnostic
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -256,6 +255,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the move can go through the junction
+    float exit_target;              //+++++ diagnostic
 
     float velocity;
     float deltaV_diff;
