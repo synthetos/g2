@@ -73,7 +73,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800005101</ToolNumber>
+      <ToolNumber>J41800020360</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -956,6 +956,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\sbv300\sbv300-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tinyg2_info.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="canonical_machine.cpp">

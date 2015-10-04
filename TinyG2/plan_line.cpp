@@ -301,9 +301,9 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
 
     // see if the planner requires cautious velocity
-    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
-    mb.planner_critical_time = bf->decel_time;
-
+//    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
+//    mb.planner_critical_time = bf->decel_time;
+/*
     if (bf->decel_time > 0) {
         if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_TIME + PLANNER_ITERATION_TIME)) {
 //            _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
@@ -311,7 +311,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             mb.planner_state = PLANNER_PESSIMISTIC;
         }
     }
-
+*/
     if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
         bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
     }
@@ -364,15 +364,17 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             if (bf->entry_vmax < bf->entry_velocity) {
                 bf->entry_velocity = bf->entry_vmax;                  // adjust Ventry downward
                 bf_ret = mp_get_prev_buffer(bf);
-                
-                //++++ TRAP if a backplan hits the running buffer
+
+                // detect if a backplan hits the run buffer and stop backplanning
                 if (bf_ret->buffer_state == MP_BUFFER_RUNNING) {
-                    char line[20];
-                    sprintf(line, "line: %lu", bf->linenum);
-                    rpt_exception(STAT_ERROR_37, line);
+//                    char line[20];
+//                    sprintf(line, "line: %lu", bf->linenum);
+//                    rpt_exception(STAT_ERROR_37, line);
 //                    while(1);
+                    mb.backplanning = false;
+                    bf_ret = mb.backplan_return;
+                    bf->hint = MIXED_DECEL;
                 }
-                
                 bf->hint = PERFECT_DECEL;
             } else {
                 mb.backplanning = false;
@@ -756,7 +758,6 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t *bf)
 {
-//    float velocity = bf->absolute_vmax;    // start with our maximum possible velocity
     float velocity = bf->cruise_vmax;    // start with our maximum possible velocity
 
 //    uint8_t jerk_axis = AXIS_X;
@@ -779,8 +780,9 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             }
         }
     }
-//    printf("%f\n", velocity);
 
+/*+++++ Diagnostic tests
+//    printf("%f\n", velocity);
 //    if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
         bf->velocity = velocity;
         bf->deltaV_diff = fabs(velocity - bf->pv->cruise_vmax);
@@ -793,6 +795,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
 //            while (1);  //+++++ trap
         }
 //    }
+*/
     bf->junction_vmax = velocity;
 }
 
