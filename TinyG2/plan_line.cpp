@@ -201,18 +201,20 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 void mp_plan_block_list()
 {
-//    debug_pin1=1; //+++++
     mpBuf_t *bf = mb.p;
     bool planned_something = false;
 
     while (true) {
-        if ((mb.planner_state == PLANNER_OPTIMISTIC) &&         // skip last block if optimistic
-            (bf->nx->buffer_state == MP_BUFFER_EMPTY)) {
+        // skip last block if optimistic
+        if ((mb.planner_state == PLANNER_OPTIMISTIC) && (bf->nx->buffer_state == MP_BUFFER_EMPTY)) {
             break;
         }
-        if (bf->buffer_state == MP_BUFFER_EMPTY) {              // unconditional exit condition
+
+        // unconditional exit condition
+        if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
         }
+
         // OK to replan running buffer during feedhold, but no other times (not supposed to happen)
         if ((cm.hold_state == FEEDHOLD_OFF) &&  (bf->buffer_state == MP_BUFFER_RUNNING)) {
             mb.p = mb.p->nx;
@@ -220,17 +222,14 @@ void mp_plan_block_list()
         }
 
         // plan the block
-//        debug_pin2=1; //+++++
-        bf = _plan_block(bf);
+        bf = _plan_block(bf);                       // _plan_block() returns next block to plan
         planned_something = true;
-        mb.p = bf;      //+++++ DIAGNOSTIC - set it here for debugging purposes
-//        debug_pin2=0; //+++++
+        mb.p = bf;      //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
     if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
         st_request_exec_move();                     // start motion if runtime is not already busy
     }
-    mb.p = bf;                                      // set planner pointer for exit
-//    debug_pin1=0;     //+++++
+    mb.p = bf;                                      // update planner pointer
 }
 
 /*
@@ -282,27 +281,28 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     // the previous block. If this is true, reposition to the previous block so it can
     // be corrected. This should almost never happen.
     bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
-    if (VELOCITY_LT(bf->entry_vmax, bf->pv->exit_velocity)) {
+    if (bf->entry_vmax < bf->pv->exit_velocity) {
         ASCII_ART("<");
         return (mp_get_prev_buffer(bf));                // back the planner up one
     }
 
-    // Set the cruise and entry velocities and calculate throttling (if needed)
-    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
+    // Set the cruise velocity and calculate override or throttling (if needed)
+//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
     _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
     _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
 
-    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
-        bf->cruise_velocity = bf->entry_velocity;
-    }
-    //+++++ TRAPS
+//    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
+//        bf->cruise_velocity = bf->entry_velocity;
+//    }
+//+++++ TRAPS
 //    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
 
+/* ++++ testing cautious mode
     // see if the planner requires cautious velocity
-    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
-    mb.planner_critical_time = bf->decel_time;
+//    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
+//    mb.planner_critical_time = bf->decel_time;
 
     if (bf->decel_time > 0) {
         if (mb.plannable_time < (bf->decel_time + NEW_BLOCK_TIMEOUT_TIME + PLANNER_ITERATION_TIME)) {
@@ -311,18 +311,41 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             mb.planner_state = PLANNER_PESSIMISTIC;
         }
     }
+*/
 
-    if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
-        bf->nx->entry_velocity = bf->cruise_velocity;   // provisionally set next block w/resulting cruise velocity
+    // Set entry velocity
+//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
+
+    if (mb.planner_state == PLANNER_PESSIMISTIC) {
+        bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
+        bf->entry_velocity = min(bf->delta_vmax, bf->cruise_velocity);
+    } else {
+        bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_velocity);
+        // provisionally set next block w/resulting cruise velocity
+        if (!mb.backplanning) {
+            bf->nx->entry_velocity = bf->cruise_velocity;
+        }
     }
-    bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_velocity; // set for exact stops
 
-    // Set the exit velocity. Choose the minimum of the exit_vmax or the entry velocity of
-    // the nx block. If the nx block has already been planned use its actual entry_velocity,
+    //+++++ I think this next clause drops out now
+    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
+//        bf->cruise_velocity = bf->entry_velocity;
+        while (1);
+    }
+
+    // Provisionally set next block w/resulting cruise velocity
+//    if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
+//        bf->nx->entry_velocity = bf->cruise_velocity;
+//    }
+
+    // Set exit velocity. Choose the minimum of the exit_vmax or the entry velocity of the
+    // nx block. If the nx block has already been planned use its actual entry_velocity,
     // otherwise this is invalid and the entry_vmax should be used. If next block is EMPTY
     // this expression will set bf->exit_velocity to zero.
+    bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_velocity; // set for exact stops
     bf->exit_velocity = min(bf->exit_vmax, (bf->nx->buffer_state == MP_BUFFER_NOT_PLANNED) ?
-                                            bf->nx->entry_vmax : bf->nx->entry_velocity);
+                                            bf->nx->entry_vmax :
+                                            bf->nx->entry_velocity);
 
     // Test for a perfect cruise. This allows skipping the delta_vmax computation
     if (VELOCITY_EQ(bf->cruise_velocity, bf->entry_velocity) && // this test fails more often than...
@@ -335,11 +358,12 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
          // Test acceleration cases  (Note: if Vx is decreased the nx block will be corrected in the next pass)
         if (bf->entry_velocity <= bf->exit_velocity) {
 
-            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
-            if (exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
+//            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            bf->exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            if (bf->exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
                 bf->hint = MIXED_ACCEL;
             } else {
-                bf->exit_velocity = exit_target;
+                bf->exit_velocity = bf->exit_target;
                 bf->hint = PERFECT_ACCEL;
             }
             ASCII_ART("/");
@@ -362,17 +386,18 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             bf->entry_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);   // dV is limited by jerk
 
             if (bf->entry_vmax < bf->entry_velocity) {
-                bf->entry_velocity = bf->entry_vmax;                  // adjust Ventry downward
+                bf->entry_velocity = bf->entry_vmax;    // adjust Ventry downward
                 bf_ret = mp_get_prev_buffer(bf);
-                
-                //++++ TRAP if a backplan hits the running buffer
+
+                // detect if a backplan hits the run buffer and stop backplanning
                 if (bf_ret->buffer_state == MP_BUFFER_RUNNING) {
-                    char line[20];
-                    sprintf(line, "line: %lu", bf->linenum);
-                    rpt_exception(STAT_ERROR_37, line);
+                    char line[20]; sprintf(line, "line: %lu", bf->linenum); rpt_exception(STAT_ERROR_37, line);
+                    printf ("Vx:%1.0f Ve:%1.0f\n", bf->pv->exit_velocity, bf->entry_velocity);
 //                    while(1);
+                    mb.backplanning = false;
+                    bf_ret = mb.backplan_return;
+                    bf->hint = MIXED_DECEL;
                 }
-                
                 bf->hint = PERFECT_DECEL;
             } else {
                 mb.backplanning = false;
@@ -546,7 +571,7 @@ static void _calculate_throttle(mpBuf_t *bf)
     }
 }
 
-/* END NOTES:
+/* _calculate_throttle() END NOTES:
  * It's also possible to perform throttling by tracking arrival and service rate directly, although
  * this is a predictor of starvation and not the actual starvation itself. The advantage is that
  * you can tell earlier that starvation may occur, and apply a throttle earlier. Some useful code:
@@ -756,7 +781,6 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t *bf)
 {
-//    float velocity = bf->absolute_vmax;    // start with our maximum possible velocity
     float velocity = bf->cruise_vmax;    // start with our maximum possible velocity
 
 //    uint8_t jerk_axis = AXIS_X;
@@ -779,8 +803,9 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
             }
         }
     }
-//    printf("%f\n", velocity);
 
+/*+++++ Diagnostic tests
+//    printf("%f\n", velocity);
 //    if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
         bf->velocity = velocity;
         bf->deltaV_diff = fabs(velocity - bf->pv->cruise_vmax);
@@ -793,6 +818,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
 //            while (1);  //+++++ trap
         }
 //    }
+*/
     bf->junction_vmax = velocity;
 }
 

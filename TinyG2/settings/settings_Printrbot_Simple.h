@@ -47,7 +47,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
+//#define JUNCTION_AGGRESSION         0.75					// cornering jerk - typically 0.50 < ja < 1.5
+#define JUNCTION_AGGRESSION         1.00					// cornering jerk - typically 0.50 < ja < 1.5
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -76,7 +77,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
 #define XIO_ENABLE_ECHO             false
-#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
 //#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_VERBOSITY              JV_VERBOSE             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
@@ -84,17 +85,15 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY     SR_VERBOSE             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-//#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+//#define STATUS_REPORT_VERBOSITY     SR_VERBOSE             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa"\
-                                ,"feed","vel","stat"\
-                                ,"_ts1","_es1","_xs1","_fe1"\
-                                ,"_ts2","_es2","_xs2","_fe2"\
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS   "line","posx","posy","posz","posa","feed","vel","stat"
+//                                ,"_ts1","_es1","_xs1","_fe1"
+//                                ,"_ts2","_es2","_xs2","_fe2"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -168,11 +167,11 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX 5000
+#define JERK_MAX                    5000
+#define VELOCITY_MAX                40000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-//#define X_VELOCITY_MAX              40000 				    // xvm  G0 max velocity in mm/min
-#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              VELOCITY_MAX            // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                155                     // xtm  travel between switches or crashes
@@ -186,8 +185,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-//#define Y_VELOCITY_MAX              40000
-#define Y_VELOCITY_MAX              20000
+#define Y_VELOCITY_MAX              VELOCITY_MAX
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                120
@@ -201,13 +199,12 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Y_ZERO_BACKOFF              Y_TRAVEL_MAX
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-//#define Z_VELOCITY_MAX              1200
-#define Z_VELOCITY_MAX              400
+#define Z_VELOCITY_MAX              1200
+//#define Z_VELOCITY_MAX              400
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                150
-//#define Z_JERK_MAX                  100
-#define Z_JERK_MAX                  50
+#define Z_JERK_MAX                  100
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
@@ -304,8 +301,10 @@ constexpr float H1_DEFAULT_D = 100.0;
 // Inputs are defined for the g2ref(a) board
 // Xmn (board label)
 #define DI1_MODE                    INPUT_ACTIVE_HIGH
-#define DI1_ACTION                  INPUT_ACTION_STOP
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
+//#define DI1_ACTION                  INPUT_ACTION_STOP
+//#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI1_ACTION                  INPUT_ACTION_NONE
+#define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
 // Xmax
 #define DI2_MODE                    INPUT_MODE_DISABLED
@@ -319,8 +318,10 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 // Ymax
 #define DI4_MODE                    INPUT_ACTIVE_HIGH
-#define DI4_ACTION                  INPUT_ACTION_STOP
-#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
+//#define DI4_ACTION                  INPUT_ACTION_STOP
+//#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI4_ACTION                  INPUT_ACTION_NONE
+#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmin
 #define DI5_MODE                    INPUT_ACTIVE_LOW   // Z probe

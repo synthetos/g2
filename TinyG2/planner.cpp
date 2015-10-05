@@ -422,8 +422,8 @@ static bool _new_block_timeout()
  */
 /*
  *	CAUTIOUS PLANNING occurs when the time in the planner is insufficient to plan to zero
- *	from the target velocity (Vt). Vt must be limited so that a deceleration to zero is 
- *	possible in the available time. 
+ *	from the target velocity (Vt). Vt must be limited so that a deceleration to zero is
+ *	possible in the available time.
  *
  *	Terms
  *	  - Head - blocks are removed from the head of the planner queue - inserted in the tail
@@ -438,7 +438,7 @@ static bool _new_block_timeout()
  *	  - To-plan      - time in the planner measured from the ondeck block
  *    - Trun         - time remaining in the runtime (estimated)
  *    - Ttimeout     - block timeout time - e.g. 30 ms
- *    - Treplan      - time required to replan the queue (worst case, e.g. 10 ms) 
+ *    - Treplan      - time required to replan the queue (worst case, e.g. 10 ms)
  *	  - T_-decel     - time required to decelerate from a velocity to zero (Vt, Vr, Vo)
  *    - L_-decel     - the distance (length) required to decelerate from Vt, Vr, Vo
  *
@@ -476,7 +476,8 @@ stat_t mp_planner_callback()
     // set planner state
     if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
         if (mp_planner_is_full()) {
-            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
+//            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
+            mb.planner_state = PLANNER_PESSIMISTIC;      // start planning now
         } else if (_new_block_timeout()) {
             mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
         } else {
@@ -487,7 +488,8 @@ stat_t mp_planner_callback()
         if (_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
-            mb.planner_state = PLANNER_OPTIMISTIC;
+//            mb.planner_state = PLANNER_OPTIMISTIC;
+            mb.planner_state = PLANNER_PESSIMISTIC;
         }
     }
     if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic
@@ -593,7 +595,7 @@ static void _planner_time_accounting()
 
     mpBuf_t *bf = mb.r;
     bf->plannable_time_ms = plannable_time;         // ++++++ which is 0 at this point
-    
+
     // Step through the moves and add up the planner time
     while ((bf = mp_get_next_buffer(bf)) != mb.r) {
 //        if (bf->buffer_state == MP_BUFFER_EMPTY) {
@@ -782,9 +784,9 @@ void mp_commit_write_buffer(const moveType move_type)
     qr_request_queue_report(+1);        // request a QR and add to the "added buffers" count
 }
 
-// Note: mp_get_run_buffer() is only called by mp_exec_move(), which is within an interrupt  
+// Note: mp_get_run_buffer() is only called by mp_exec_move(), which is within an interrupt
 mpBuf_t * mp_get_run_buffer()
-{   
+{
     // CASE: fresh buffer; becomes running if buffer planned
     if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
@@ -810,9 +812,9 @@ bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;					// advance to next run buffer
 
-//	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
-    r->buffer_state = MP_BUFFER_EMPTY;  // do a "light clear"
-    r->move_time = 0;
+	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
+//    r->buffer_state = MP_BUFFER_EMPTY;  // do a "light clear"
+//    r->move_time = 0;
 
 	mb.buffers_available++;
 	qr_request_queue_report(-1);			// request a QR and add to the "removed buffers" count

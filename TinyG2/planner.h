@@ -146,9 +146,9 @@ typedef enum {
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
 //#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
-#define PLANNER_CRITICAL_MS     ((float)100.0)           // MS threshold for planner critical state
+#define PLANNER_CRITICAL_MS     ((float)50.0)           // MS threshold for planner critical state
 #define PLANNER_THROTTLE_MS     ((float)100.0)          // MS threshold to start planner throttling
-#define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get throigh a planner callback loop
+#define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get through a planner callback loop
 #define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
 
 #define NEW_BLOCK_TIMEOUT_TIME  ((float)(NEW_BLOCK_TIMEOUT_MS / 60000)) // DO NOT CHANGE - time in minutes
@@ -242,8 +242,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_time;                // ...body
     float tail_time;                // ...tail
     float move_time;                // ...entire move
-    float decel_time;
-    float decel_time2;
+//    float decel_time;               //+++++ diagnostic
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -256,6 +255,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the move can go through the junction
+    float exit_target;              //+++++ diagnostic
 
     float velocity;
     float deltaV_diff;
@@ -278,13 +278,13 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float move_time_ms;
     float run_time_remaining_ms;
     float plannable_time_ms;
-    
+
     // planner state variables
     plannerState planner_state;     // current state of planner
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time
-    
+
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
