@@ -176,7 +176,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     _calculate_jerk(bf);                                    // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);        // compute cruise_vmax and absolute_vmax
     _calculate_junction_vmax(bf);                           // compute maximum junction velocity constraint
-    bf->entry_vmax = bf->junction_vmax;                     // provisionally set entry value for optimistic planning
+//    bf->entry_vmax = bf->junction_vmax;                     // provisionally set entry value for optimistic planning
 
     _set_diagnostics(bf); //+++++DIAGNOSTIC
 
@@ -273,32 +273,6 @@ void mp_plan_block_list()
  *    bf->tail_time
  *    bf->move_time
  */
-static mpBuf_t *_plan_block(mpBuf_t *bf)
-{
-    mpBuf_t *bf_ret = mp_get_next_buffer(bf);           // buffer to return
-
-    // Set entry_vmax and test if entry velocity can't be met by the exit velocity of
-    // the previous block. If this is true, reposition to the previous block so it can
-    // be corrected. This should almost never happen.
-    bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
-    if (bf->entry_vmax < bf->pv->exit_velocity) {
-        ASCII_ART("<");
-        return (mp_get_prev_buffer(bf));                // back the planner up one
-    }
-
-    // Set the cruise velocity and calculate override or throttling (if needed)
-//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
-    bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
-    _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
-    _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
-
-//    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
-//        bf->cruise_velocity = bf->entry_velocity;
-//    }
-//+++++ TRAPS
-//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
-//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
-
 /* ++++ testing cautious mode
     // see if the planner requires cautious velocity
 //    bf->decel_time = _calculate_decel_time(bf, bf->cruise_velocity, 0);
@@ -313,30 +287,59 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     }
 */
 
-    // Set entry velocity
-//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
+static mpBuf_t *_plan_block(mpBuf_t *bf)
+{
+    mpBuf_t *bf_ret = mp_get_next_buffer(bf);           // buffer to return
 
+    // Set entry_vmax and test if entry velocity can't be met by the exit velocity of
+    // the previous block. If this is true, reposition to the previous block so it can
+    // be corrected. This should almost never happen.
+//    bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
+//    if (bf->entry_vmax < bf->pv->exit_velocity) {
+//        ASCII_ART("<");
+//        return (mp_get_prev_buffer(bf));                // back the planner up one
+//    }
+
+    // Set the cruise velocity and calculate override and throttling if applicable
+//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
+    bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
+    _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
+    _calculate_throttle(bf);                            // adjust cruise velocity for throttle factor
+
+//    if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
+//        bf->cruise_velocity = bf->entry_velocity;
+//    }
+//+++++ TRAPS
+//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
+//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
+
+    // Set entry_vmax and entry_velocity
+//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     if (mb.planner_state == PLANNER_PESSIMISTIC) {
+        bf->entry_vmax = (fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax);
         bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
-        bf->entry_velocity = min(bf->delta_vmax, bf->cruise_velocity);
-    } else {
+        bf->entry_velocity = min3(bf->delta_vmax, bf->cruise_velocity, bf->entry_vmax);
+
+    } else {    // PLANNER_OPTIMISTIC
+        bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
         bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_velocity);
-        // provisionally set next block w/resulting cruise velocity
-        if (!mb.backplanning) {
+        if (!mb.backplanning) {                             // provisionally set next block w/resulting cruise velocity
             bf->nx->entry_velocity = bf->cruise_velocity;
         }
     }
 
-    //+++++ I think this next clause drops out now
+    // Test if entry_vmax can't be met by the exit velocity of the previous block. If this is true, 
+    // reposition to the previous block so it can be corrected. This should almost never happen.
+    if (bf->entry_vmax < bf->pv->exit_velocity) {
+        ASCII_ART("<");
+        return (mp_get_prev_buffer(bf));                // back the planner up one
+    }
+
+    //+++++ I think this next clause drops out now. Trap it if it ever fires
     if (bf->cruise_velocity < bf->entry_velocity) {     // adjust for a case that can happen during override or throttle
 //        bf->cruise_velocity = bf->entry_velocity;
         while (1);
     }
-
-    // Provisionally set next block w/resulting cruise velocity
-//    if ((mb.planner_state == PLANNER_OPTIMISTIC) && !mb.backplanning) {
-//        bf->nx->entry_velocity = bf->cruise_velocity;
-//    }
 
     // Set exit velocity. Choose the minimum of the exit_vmax or the entry velocity of the
     // nx block. If the nx block has already been planned use its actual entry_velocity,
@@ -358,12 +361,11 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
          // Test acceleration cases  (Note: if Vx is decreased the nx block will be corrected in the next pass)
         if (bf->entry_velocity <= bf->exit_velocity) {
 
-//            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
-            bf->exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
-            if (bf->exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
+            float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);  // dV is limited by jerk
+            if (exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
                 bf->hint = MIXED_ACCEL;
             } else {
-                bf->exit_velocity = bf->exit_target;
+                bf->exit_velocity = exit_target;
                 bf->hint = PERFECT_ACCEL;
             }
             ASCII_ART("/");
@@ -784,6 +786,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
     float velocity = bf->cruise_vmax;    // start with our maximum possible velocity
 
 //    uint8_t jerk_axis = AXIS_X;
+//    cmAxes jerk_axis = AXIS_X;
 
     for (uint8_t axis=0; axis<AXES; axis++) {
         if (bf->axis_flags[axis] || bf->pv->axis_flags[axis]) {         // skip axes with no movement
@@ -798,7 +801,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
 //                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
                 if ((cm.a[axis].max_junction_accel / delta) < velocity) {
                     velocity = (cm.a[axis].max_junction_accel / delta);
-                    bf->jerk_axis = axis;
+//                    bf->jerk_axis = axis;
                 }
             }
         }
@@ -837,6 +840,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
  *    T   = ±(2 L)/(v0+v1)
  */
 
+/*
 static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
 
 //#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
@@ -850,3 +854,4 @@ static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
 
 }
 //#pragma GCC reset_options
+*/
