@@ -49,23 +49,12 @@
 #include <string.h>
 #include <math.h>
 
-#include "MotatePins.h"     // comment in if Motate / ARM
-#include "tinyg2_info.h"    // build number and other identifying information
+#include "MotatePins.h"             // comment in if Motate / ARM
 
 /****** REVISIONS ******/
 
-// You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
+#include "tinyg2_info.h"            // see this file for build number and other identifying information
 
-/*
-#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
-#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
-
-#define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
-#define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
-#define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
-#define TINYG_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
-#define TINYG_HARDWARE_VERSION_MAX      (TINYG_HARDWARE_VERSION)
-*/
 /****** COMPILE-TIME SETTINGS ******/
 
 #define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
