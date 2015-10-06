@@ -25,6 +25,14 @@ ifeq ("$(BOARD)","UltimakerTests")
 
 endif
 
+ifeq ("$(BOARD)","UltimakerV9h")
+
+    BASE_BOARD=G2v9
+    SETTINGS_FILE="settings_Ultimaker.h"
+    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
 ifeq ("$(BOARD)","ShapeokoDualY")
 
     BASE_BOARD=G2v9

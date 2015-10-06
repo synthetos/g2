@@ -155,6 +155,8 @@ void application_init_startup(void)
 
 /*
  * main()
+ *
+ * The actual main() is in the Motate main.cpp. It calls setup(), followed by loop()
  */
 
 void setup(void)
@@ -168,6 +170,9 @@ void setup(void)
 
 void loop() {
 	// main loop
+
+    while (SysTickTimer_getValue() < 500);  // wait for USB to come up
+
 	for (;;) {
 		controller_run( );			// single pass through the controller
 	}

@@ -141,7 +141,7 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
     if (bf->hint == COMMAND_BLOCK) { bf->hint = WAS_COMMAND_BLOCK; }
 
 	//+++++ DIAGNOSTIC
-    bf->zoid_exit = exit_point;
+//    bf->zoid_exit = exit_point;
 	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh
 //		bf->time_in_plan_ms += bf->move_time_ms;
 		bf->plannable_time_ms += bf->move_time_ms;
@@ -425,6 +425,10 @@ float mp_get_target_velocity(const float v_0, const float L, const float jerk)
     // Also, to ensure that it isn't accidentally changed once computed.
 //    const float j = bf->jerk;
 //    const float j_sq = bf->jerk_sq;                         //j^2
+
+    if (fp_ZERO(L)) {                                       // handle exception case
+        return (0);
+    }
 
     const float j = jerk;
     const float j_sq = j * j;                               //j^2

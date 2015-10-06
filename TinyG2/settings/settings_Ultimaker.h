@@ -63,6 +63,10 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE

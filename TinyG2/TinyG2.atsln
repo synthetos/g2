@@ -17,6 +17,7 @@ Global
 		Release|ARM = Release|ARM
 		sbv300|ARM = sbv300|ARM
 		shopbotShield|ARM = shopbotShield|ARM
+		UltimakerV9h|ARM = UltimakerV9h|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Debug|ARM.ActiveCfg = Debug|ARM
@@ -41,6 +42,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.sbv300|ARM.Build.0 = sbv300|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.UltimakerV9h|ARM.ActiveCfg = UltimakerV9h|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.UltimakerV9h|ARM.Build.0 = UltimakerV9h|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Debug|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.Build.0 = Debug|ARM
@@ -55,6 +58,7 @@ Global
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Release|ARM.ActiveCfg = Release|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.ActiveCfg = Debug|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Debug|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.UltimakerV9h|ARM.ActiveCfg = Debug|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -212,12 +212,19 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     cm_exec_t cm_func;              // callback to canonical machine execution function
 
     //+++++ DIAGNOSTICS for easier debugging
-    uint32_t linenum;
+    uint32_t linenum;               // mirror of bf->gm.linenum
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
     float decel_time_ms;
-    zoidExitPoint zoid_exit;
+//    zoidExitPoint zoid_exit;
+//    float decel_time;
+//    float exit_target; 
+//    float deltaV_diff;
+//    float deltaV_jerk;
+//    uint8_t jerk_axis;
+//    float velocity;
+
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
@@ -238,11 +245,10 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_length;
     float tail_length;
 
-    float head_time;                // computed move time for head
+    float move_time;                // computed move time for entire move
+    float head_time;                // ...head
     float body_time;                // ...body
     float tail_time;                // ...tail
-    float move_time;                // ...entire move
-//    float decel_time;               //+++++ diagnostic
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -255,12 +261,6 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the move can go through the junction
-    float exit_target;              //+++++ diagnostic
-
-    float velocity;
-    float deltaV_diff;
-    float deltaV_jerk;
-    uint8_t jerk_axis;
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
