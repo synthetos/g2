@@ -51,13 +51,14 @@
 
 typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine execution function
 
-typedef enum {                      // bf->buffer_state values
-    MP_BUFFER_EMPTY = 0,            // struct is available for use (MUST BE 0)
-    MP_BUFFER_NOT_PLANNED,          // just opened, or written to queue and ready for planning
-    MP_BUFFER_PLANNED,              // planned at least once. May still be replanned
+typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
+    MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
+    MP_BUFFER_NOT_PLANNED,          // buffer processed by aline() only
+    MP_BUFFER_PRIMED,               // buffer has initial data but not backplanned or zoided yet 
+    MP_BUFFER_PLANNED,              // buffer fully planned at least once. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
-    MP_BUFFER_POLAND,
-    MP_BUFFER_UKRAINE
+    MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
+    MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
 } mpBufferState;
 
 typedef enum {				        // bf->move_type values
@@ -99,14 +100,14 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
     MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
     COMMAND_BLOCK,                  // this block is a command
-    HINT_IS_STALE,                   // the hint may no longer be valid
+//    HINT_IS_STALE,                  // the hint may no longer be valid
 
-    WAS_PERFECT_ACCEL,                  // straight line acceleration at jerk (H)
-    WAS_PERFECT_DECEL,                  // straight line deceleration at jerk (T)
-    WAS_PERFECT_CRUISE,                 // move is all body (B)
-    WAS_MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
-    WAS_MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
-    WAS_COMMAND_BLOCK,                  // this block is a command
+    WAS_PERFECT_ACCEL,              // straight line acceleration at jerk (H)
+    WAS_PERFECT_DECEL,              // straight line deceleration at jerk (T)
+    WAS_PERFECT_CRUISE,             // move is all body (B)
+    WAS_MIXED_ACCEL,                // kinked acceleration reaches and holds cruise (HB)
+    WAS_MIXED_DECEL,                // kinked deceleration starts with a cruise region (BT)
+    WAS_COMMAND_BLOCK,              // this block is a command
 } blockHint;
 
 typedef enum {                      // planner operating state
