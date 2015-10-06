@@ -41,6 +41,12 @@
 #include "util.h"
 #include "MotateUniqueID.h"
 
+/***** NOTE: *****
+
+   The actual main.cpp for TInyG2 is in the Motate project.
+   It calls the setup() and loop() functions in this file
+
+*****/
 /******************** System Globals *************************/
 
 stat_t status_code;						    // allocate a variable for the ritorno macro
@@ -112,7 +118,7 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 void application_init_services(void)
 {
-	usb.attach();                   // USB setup
+	usb.attach();                   // USB setup. Runs in "background" as the rest of this executes
 
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
@@ -154,35 +160,32 @@ void application_init_startup(void)
 }
 
 /*
- * main()
- *
- * The actual main() is in the Motate main.cpp. It calls setup(), followed by loop()
+ * get_status_message() - global support for status messages.
+ */
+
+char *get_status_message(stat_t status)
+{
+    return ((char *)GET_TEXT_ITEM(stat_msg, status));
+}
+
+/*
+ * main() - See Motate main.cpp for the actual main()
  */
 
 void setup(void)
 {
 	// TinyG application setup
 	application_init_services();
+    while (SysTickTimer_getValue() < 400);  // delay 400 ms for USB to come up
+
 	application_init_machine();
 	application_init_startup();
-	run_canned_startup();			// run any pre-loaded commands
+	run_canned_startup();           // run any pre-loaded commands
 }
 
 void loop() {
 	// main loop
-
-    while (SysTickTimer_getValue() < 500);  // wait for USB to come up
-
 	for (;;) {
 		controller_run( );			// single pass through the controller
 	}
-}
-
-/*
- * get_status_message() - support for status messages.
- */
-
-char *get_status_message(stat_t status)
-{
-    return ((char *)GET_TEXT_ITEM(stat_msg, status));
 }
