@@ -298,47 +298,53 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 }
 
 /*
+    Use the fact that the newest block always plans to zero as the detection
+    of the last block. This splits the planner into "planning segments" that are
+    isolated by blocks with zero exit velocity
+
     state on entry:
       (1) bf is a new block. Always exits v0 = 0; backplanning = false
       (2) _plan_block is backplanning
       (3) _plan_block is forward planning from a previously planned block
-      
+
     Should always transition from 1 to 2 to 3. Cases:
       (a) Single block is present (as determined by an optimal Vx in the previous block
             transition from (1), then determine that (2) and (3) are not possible
-      (b) Two  blocks are present      
-
-    What is an optimally planned block?
-        - exit_velocity == exit_vmax
-        - exit_velocity == nx->entry_vmax
-        - exit_velocity == (entry_velocity + delta_vmax) --- PERFECT_ACCEL case
-        - entry_velocity == (exit_velocity + delta_vmax) --- PERFECT_DECEL case
-        - 
+      (b) Two  blocks are present
 
 if you are not backplanning already:
     //  set cruises
-    //  compute 
+    //  compute
     // back up if you are backplanning
     // What are the conditions for going backwards?
-    
+
     //  compute the deltaV for bf->exit_velocity
     //  is bf optimally satisfied by this value?
     //  if yes - backplanning = false; drop down to forward planning
-    //  if not -  
+    //  if not -
     //      back up if (pv->exit_velocity < bf->entry_velocity < pv->exit_vmax)
     //      set pv->exit_velocity = bf->entry_velocity
     //      return (pv)
-
-
  */
 
-static bool _is_optimally_planned(mpBuf_t *bf) 
+/* _is_optimally_planned() - helper to find "stop block" for backplanning
+ *
+ * One of:
+ *  - exit_velocity == exit_vmax                     // exit is perfectly planned
+ *  - exit_velocity == nx->entry_vmax                // it's a perfect cruise
+ *  - exit_velocity == (entry_velocity + delta_vmax) // PERFECT_ACCEL case
+ *  - entry_velocity == (exit_velocity + delta_vmax) // PERFECT_DECEL case
+ *  - entry_vmax == 0                                // the first block in this chain
+ *  - previous block is the running block - this also may be an error condition
+ */
+
+static bool _is_optimally_planned(mpBuf_t *bf)
 {
-    if (fp_EQ(bf->exit_velocity, bf->exit_vmax)) { 
-        return (true); 
+    if (fp_EQ(bf->exit_velocity, bf->exit_vmax)) {
+        return (true);
     }
-    if (fp_EQ(bf->exit_velocity, bf->nx->entry_vmax)) { 
-        return (true); 
+    if (fp_EQ(bf->exit_velocity, bf->nx->entry_vmax)) {
+        return (true);
     }
     if (bf->exit_velocity > bf->entry_velocity) {
         if (fp_EQ(bf->exit_velocity, (bf->entry_velocity + bf->delta_vmax))) {
@@ -351,6 +357,12 @@ static bool _is_optimally_planned(mpBuf_t *bf)
             return (true);
         }
     }
+    if (fp_EQ(bf->entry_vmax)) {    // first block in the chain, you have to stop
+        return (true);
+    }
+    if (bf->pv->buffer_state == MP_BUFFER_RUNNING) {    // oops.
+        return (true);
+    }
     return (false);
 }
 
@@ -362,20 +374,40 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             mb.backplanning = false;
             return (bf->nx);
         }
-        bf->exit_velocity = min(bf->nx->entry_vmax, bf->exit_vmax);
-        bf->delta_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);
-        if (bf->entry_velocity < (bf->delta_vmax + bf->exit_velocity)) {
-            bf->entry_velocity = min((bf->delta_vmax + bf->exit_velocity), bf->entry_vmax);
-            bf->hint = PERFECT_DECEL;
+        // Acceleration cases
+        if (bf->entry_vmax < bf->exit_vmax) {
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+            bf->delta_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf->jerk);
+            if (bf->exit_velocity > (bf->delta_vmax + bf->entry_velocity)) {
+                bf->exit_velocity = (bf->delta_vmax + bf->entry_velocity);
+                bf->hint = PERFECT_ACCEL;
+            } else {
+                bf->hint = MIXED_ACCEL;
+            }
+            if (_is_optimally_planned(bf->pv)) {
+                mb.backplanning = false;
+                return (bf);    // will cause forward planning to commence
+            }
             return (bf->pv);
-        } else {
-            mb.backplanning = false;
-            bf->hint = MIXED_DECEL;
-            return (bf->nx);
+        }
+
+        // Deceleration cases
+        else {
+            bf->exit_velocity = min(bf->nx->entry_vmax, bf->exit_vmax);
+            bf->delta_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);
+            if (bf->entry_velocity < (bf->delta_vmax + bf->exit_velocity)) {
+                bf->entry_velocity = min((bf->delta_vmax + bf->exit_velocity), bf->entry_vmax);
+                bf->hint = PERFECT_DECEL;
+                return (bf->pv);
+            } else {
+                mb.backplanning = false;
+                bf->hint = MIXED_DECEL;
+                return (bf->nx);
+            }
         }
     }
 
-    // Forward planning        
+    // Forward planning
     // Set cruise velocity and calculate override and throttling if applicable
     bf->cruise_velocity = bf->cruise_vmax;              // vmax was computed in _calculate_vmaxes()
     _calculate_override(bf);                            // adjust cruise velocity for feed/traverse override
@@ -383,27 +415,32 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
     bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
     bf->entry_vmax = (fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax);
-    bf->entry_velocity = min3(bf->delta_vmax, bf->cruise_velocity, bf->entry_vmax);
+
+//    bf->entry_velocity = min3(bf->delta_vmax, bf->cruise_velocity, bf->entry_vmax);
+    bf->entry_velocity = min(bf->cruise_velocity, bf->entry_vmax);
+    if (bf->delta_vmax < bf->entry_velocity) {
+        bf->entry_velocity = bf->delta_vmax;
+        bf->hint = PERFECT_DECEL;
+    } else {
+        bf->hint = MIXED_DECEL;
+    }
+
     bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_velocity; // set for exact stops
     bf->exit_velocity = min(bf->exit_vmax, bf->nx->entry_velocity);
 
-    //+++++ TRAPS
+    // If this is the newest block, test if you need to go into backplanning
+    if ((fp_ZERO(bf->exit_velocity)) && (!_is_optimally_planned(bf->pv))) {
+        mb.backplanning = true;
+        return (bf->pv);
+    }
+
 //    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
-
     mp_calculate_trapezoid(bf);
-
-    //+++++ TRAPS
 //    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }
 //    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }
 
-    // test if you need to go into backplanning, but only do this for the newest block
-    if (bf->nx->buffer_state == MP_BUFFER_EMPTY) {
-        if (!_is_optimally_planned(bf->pv)) {
-            mb.backplanning = true;
-        }
-    }
     bf->buffer_state = MP_BUFFER_PLANNED;
     _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
     return (bf->nx);
@@ -451,7 +488,7 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
         }
     }
 
-    // Test if entry_vmax can't be met by the exit velocity of the previous block. If this is true, 
+    // Test if entry_vmax can't be met by the exit velocity of the previous block. If this is true,
     // reposition to the previous block so it can be corrected. This should almost never happen.
     if (bf->entry_vmax < bf->pv->exit_velocity) {
         ASCII_ART("<");
