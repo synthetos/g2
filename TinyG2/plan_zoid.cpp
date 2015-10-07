@@ -257,12 +257,11 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
         // +++++ NEW FIX
-        bf->exit_velocity = bf->entry_velocity;         // make them actually equal so as not to violate velocity constraints
+        bf->exit_velocity = bf->entry_velocity; // make them actually equal so exit is never higher than entry, which blows up the exec
 
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
-//        bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
-        bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf->jerk);
+        bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid: Vc=0 symmetric case");
 
         if (bf->head_length < MIN_HEAD_LENGTH) {        // revert it to a single segment move
@@ -419,20 +418,18 @@ static const float f3_sqrt_3 = 5.196152422706631;           // 3*sqrt(3) = 5.196
 static const float f4_thirds_x_cbrt_5 = 2.279967928902263;  // 4/3*5^(1/3) = 2.279967928902263
 static const float f1_15th_x_2_3_rt_5 = 0.194934515880858;  // 1/15*5^(2/3) = 0.194934515880858
 
-//float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
-float mp_get_target_velocity(const float v_0, const float L, const float jerk)
+float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
+//float mp_get_target_velocity(const float v_0, const float L, const float jerk)
 {
-    // Why are these consts? So that the compiler knows they'll never change once it's computed.
-    // Also, to ensure that it isn't accidentally changed once computed.
-//    const float j = bf->jerk;
-//    const float j_sq = bf->jerk_sq;                         //j^2
-
     if (fp_ZERO(L)) {                                       // handle exception case
         return (0);
     }
 
-    const float j = jerk;
-    const float j_sq = j * j;                               //j^2
+    // Why are these consts? So that the compiler knows they'll never change once it's computed.
+    // Also, to ensure that it isn't accidentally changed once computed.
+
+    const float j = bf->jerk;
+    const float j_sq = bf->jerk_sq;                         //j^2
 
     const float v_0_sq = v_0 * v_0;                         //v_0^2
     const float v_0_cu = v_0 * v_0 * v_0;                   //v_0^3
@@ -486,8 +483,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
     // v_1 is our estimated return value.
     // We estimate with the speed obtained by L/2 traveled from the highest speed of v_0 or v_2.
-//    float v_1 = mp_get_target_velocity(max(v_0, v_2), L/2, bf);
-    float v_1 = mp_get_target_velocity(max(v_0, v_2), L/2, bf->jerk);
+    float v_1 = mp_get_target_velocity(max(v_0, v_2), L/2, bf);
     float last_v_1 = 0;
 
     // Per iteration: 2 sqrt, 2 abs, 6 -, 4 +, 12 *, 3 /

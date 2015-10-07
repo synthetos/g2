@@ -306,8 +306,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 } else if (available_length < mr.tail_length) { // (1b) the deceleration has to span multiple moves
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                     mr.tail_length = available_length;
-//                    mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
-                    mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf->jerk);
+                    mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
                 } else {                                        // (1a)the deceleration will fit into the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr.exit_velocity = 0;
