@@ -133,13 +133,14 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 //    switch (bf->hint) {
 //        case PERFECT_ACCEL: { bf->hint = WAS_PERFECT_ACCEL; break; }
 //    }
+/* Don't invalidate the hint
     if (bf->hint == PERFECT_ACCEL) { bf->hint = WAS_PERFECT_ACCEL; }
     if (bf->hint == PERFECT_DECEL) { bf->hint = WAS_PERFECT_DECEL; }
     if (bf->hint == PERFECT_CRUISE) { bf->hint = WAS_PERFECT_CRUISE; }
     if (bf->hint == MIXED_ACCEL) { bf->hint = WAS_MIXED_ACCEL; }
     if (bf->hint == MIXED_DECEL) { bf->hint = WAS_MIXED_DECEL; }
     if (bf->hint == COMMAND_BLOCK) { bf->hint = WAS_COMMAND_BLOCK; }
-
+*/
 	//+++++ DIAGNOSTIC
 //    bf->zoid_exit = exit_point;
 	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh

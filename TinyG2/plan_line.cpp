@@ -333,7 +333,8 @@ if you are not backplanning already:
  
  */
 
-/* _is_optimally_planned() - helper to find "stop block" for backplanning
+/* 
+ * _is_optimally_planned() - helper to find the "stop block" for backplanning
  *
  * One of:
  *  - exit_velocity == exit_vmax                     // exit is perfectly planned
@@ -346,43 +347,77 @@ if you are not backplanning already:
 
 static bool _is_optimally_planned(mpBuf_t *bf)
 {
-    if (fp_EQ(bf->exit_velocity, bf->exit_vmax)) { return (true); }
-//    if (fp_EQ(bf->exit_velocity, bf->nx->entry_vmax)) { return (true); }
-
-    if (bf->exit_velocity > bf->entry_velocity) {
-        if (fp_EQ(bf->exit_velocity, (bf->entry_velocity + bf->delta_vmax))) {
-            bf->hint = PERFECT_ACCEL;
-            return (true);
-        }
-    } else {
-        if (fp_EQ(bf->entry_velocity, (bf->exit_velocity + bf->delta_vmax))) {
-            bf->hint = PERFECT_DECEL;
-            return (true);
+    if (bf->optimal) {                              // don't flip it back
+        return (true);
+    }
+    if ((bf->buffer_state == MP_BUFFER_EMPTY) ||    // empty buffer cannot be planned
+        (bf->buffer_state == MP_BUFFER_RUNNING)) {  // oops. Not supposed to happen
+        return (bf->optimal = true);
+    }
+    if ((bf->move_type == MOVE_TYPE_COMMAND) &&     // It's a command with a STOP
+        (fp_ZERO(bf->exit_velocity))) {
+        return (bf->optimal = true);
+    }
+/* 
+    if (fp_ZERO(bf->entry_vmax)) {                  // the first block in the chain
+        if (bf->hint == PERFECT_ACCEL) {
+            return (bf->optimal = true);
         }
     }
+*/ 
 /*
-    if (fp_ZERO(bf->entry_vmax)) {    // first block in the chain, you have to stop
-        return (true);
-    }
-    if (bf->pv->buffer_state == MP_BUFFER_RUNNING) {    // oops.
-        return (true);
+    if ((fp_EQ(bf->entry_velocity, bf->cruise_velocity)) &&     // perfect cruises and zero velocity commands
+        (fp_EQ(bf->exit_velocity, bf->cruise_velocity))) {
+        return (bf->optimal = true);
     }
 */
+    if (bf->pv->optimal) {
+        if ((bf->hint == PERFECT_ACCEL) ||          // perfect acceleration - from zero or non-zero Ve
+            (bf->hint == PERFECT_CRUISE)) {         // perfect cruise
+            return (bf->optimal = true);
+        }
+        if (bf->hint == MIXED_ACCEL) {
+            if (fp_EQ(bf->exit_velocity, bf->cruise_vmax)) {
+                return (bf->optimal = true);
+            }
+        }
+    }    
     return (false);
 }
+
+/*
+        if (fp_EQ(bf->exit_velocity, bf->exit_vmax)) { 
+            return (bf->optimal = true);
+        }
+        if (fp_EQ(bf->exit_velocity, bf->nx->entry_vmax)) { 
+            return (bf->optimal = true);
+        }
+
+        if (bf->exit_velocity > bf->entry_velocity) {
+            if (fp_EQ(bf->exit_velocity, (bf->entry_velocity + bf->delta_vmax))) {
+                bf->hint = PERFECT_ACCEL;
+                return (bf->optimal = true);
+            }
+        } else {
+            if (fp_EQ(bf->entry_velocity, (bf->exit_velocity + bf->delta_vmax))) {
+                bf->hint = PERFECT_DECEL;
+                return (bf->optimal = true);
+            }
+        }
+*/
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
     // If backplanning set exit and entry velocities and see how far back you need to go
     if (mb.backplanning) {
-
+/*
         //+++++ see if this clause drops out
         if (_is_optimally_planned(bf)) {    // start forward planning again
             mb.backplanning = false;
             while (1);  //+++++ 
             return (bf->nx);
         }
-
+*/
         // Acceleration cases
         if (bf->entry_vmax < bf->exit_vmax) {
             bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
@@ -410,7 +445,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         }
         mb.backplanning = false;                // start forward planning on drop through
     }
-
+    
     // Forward planning
     // First time operations - prime the block
     if (bf->buffer_state == MP_BUFFER_NOT_PLANNED) {

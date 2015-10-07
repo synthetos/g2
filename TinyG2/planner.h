@@ -141,9 +141,9 @@ typedef enum {
 
 #define MIN_SEGMENT_MS          ((float)0.750)          // minimum segment milliseconds (also minimum move time)
 #define NOM_SEGMENT_MS          ((float)1.5)            // nominal segment ms
-#define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))   // DO NOT CHANGE - time in minutes
-#define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))    // DO NOT CHANGE - time in microseconds
-#define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))   // DO NOT CHANGE - time in minutes
+#define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
+#define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
 //#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
@@ -217,7 +217,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
-    float decel_time_ms;
+//    float decel_time_ms;
 //    zoidExitPoint zoid_exit;
 //    float decel_time;
 //    float exit_target; 
@@ -231,15 +231,16 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
     moveType move_type;             // used to dispatch to run routine
     moveState move_state;           // move state machine sequence
-    uint8_t move_code;              // byte that can be used by used exec functions
+//    uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // block is coded for trapezoid planning
-
-    float mfo_factor;               // override factor for this block
-    float throttle;                 // preserved for backplanning
+    bool optimal;                   // true if block is optimally planned
 
     // block parameters
     float unit[AXES];               // unit vector for axis scaling & planning
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
+
+    float mfo_factor;               // override factor for this block
+    float throttle;                 // preserved for backplanning
 
     float length;                   // total length of line or helix in mm
     float head_length;
@@ -256,12 +257,12 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
 
-    float entry_vmax;               // max junction velocity at entry of this move
-    float cruise_vmax;              // max cruise velocity requested for move
-    float exit_vmax;                // max exit velocity possible (redundant)
+    float entry_vmax;               // max entry velocity for this move
+    float cruise_vmax;              // cruise velocity requested for move
+    float exit_vmax;                // max exit velocity possible
     float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
-    float junction_vmax;            // maximum the move can go through the junction
+    float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
