@@ -75,12 +75,12 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
  *  We need velocities to be set even for zero-length sections (nb: sections, not moves)
  *  so plan_exec can compute entry and exits for adjacent sections.
  *
- *  bf variables used as constants:
+ *  bf values treated as constants:
  *    bf->length	            - actual block length (L)
  *	  bf->entry_velocity	    - requested Ve
  *	  bf->exit_velocity     - requested Vx
  *
- *	bf variables that may be changed by plan_zoid:
+ *	bf values that may be changed by plan_zoid:
  *	  bf->cruise_velocity   - requested target velocity (Vc)
  *	  bf->head_length       - bf->length allocated to head (Lh)
  *	  bf->body_length       - bf->length allocated to body (Lb)

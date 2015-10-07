@@ -374,25 +374,47 @@ static bool _is_optimally_planned(mpBuf_t *bf)
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
+    // First time operations - prime the block and drop through as first backplanned block
+    // cruise_vmax was computed in _calculate_vmaxes() in aline()
+    if ((!mb.backplanning) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
+        _calculate_override(bf);                // adjust cruise_vmax for feed/traverse override
+        _calculate_throttle(bf);                // adjust cruise_vmax for throttle factor
+//        bf->cruise_velocity = bf->cruise_vmax;  // set cruise velocity to vmax
+        bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
+        bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
+        bf->buffer_state = MP_BUFFER_PRIMED;
+        mb.backplanning = true;
+    }
+
     // If backplanning set exit and entry velocities and see how far back you need to go
-    // Compute deltaV, braking velocity and set exit, cruise and entry velocities
     // Assume vmax's are already set
     if (mb.backplanning) {
-/*
-        //+++++ see if this clause drops out
-        if (_is_optimally_planned(bf)) {    // start forward planning again
-            mb.backplanning = false;
-            while (1);  //+++++ 
-            return (bf->nx);
-        }
-*/
         bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
-        bf->delta_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);
-        bf->braking_velocity = bf->nx->braking_velocity + bf->delta_vmax;
-        bf->cruise_velocity = min3(bf->exit_velocity, bf->cruise_vmax, bf->braking_velocity);
+        bf->target_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf->jerk);
+        bf->cruise_velocity = min(bf->target_velocity, bf->cruise_vmax);
         bf->entry_velocity = min(bf->cruise_velocity, bf->entry_vmax);
-/*
 
+        // Decide what to do next
+        if (!_is_optimally_planned(bf->pv)) {
+            return (bf->pv);
+        }
+        mb.backplanning = false;                // start forward planning on drop through
+    }
+    
+//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }               // +++++ pre-zoid trap
+//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }                // +++++ pre-zoid trap
+    mp_calculate_trapezoid(bf);
+    _is_optimally_planned(bf);      // make the block if it's optimally planned
+//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }               // +++++ post-zoid trap
+//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }                // +++++ post-zoid trap
+//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
+
+    bf->buffer_state = MP_BUFFER_PLANNED;
+    _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
+    return (bf->nx);
+}
+
+/*
         // Acceleration cases
         if (bf->entry_vmax < bf->exit_vmax) {
             bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
@@ -416,23 +438,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = MIXED_DECEL;
             }
         }
- */
-        // Decide what to do next
-        if (!_is_optimally_planned(bf->pv)) {
-            return (bf->pv);
-        }
-        mb.backplanning = false;                // start forward planning on drop through
-    }
-    
+
     // Forward planning
     // First time operations - prime the block
     if (bf->buffer_state == MP_BUFFER_NOT_PLANNED) {
-        bf->cruise_velocity = bf->cruise_vmax;  // vmax was computed in _calculate_vmaxes() in aline()
-        _calculate_override(bf);                // adjust cruise velocity for feed/traverse override
-        _calculate_throttle(bf);                // adjust cruise velocity for throttle factor
+        // cruise_vmax was computed in _calculate_vmaxes() in aline()
+        _calculate_override(bf);                // adjust cruise_vmax for feed/traverse override
+        _calculate_throttle(bf);                // adjust cruise_vmax for throttle factor
+        bf->cruise_velocity = bf->cruise_vmax;  // set cruise velocity to vmax
 
-        bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
-        bf->braking_velocity = bf->delta_vmax;
+        bf->target_velocity = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
         bf->entry_velocity = min(bf->cruise_velocity, bf->entry_vmax);
         if (bf->delta_vmax < bf->entry_velocity) {
@@ -443,25 +458,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         }
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_velocity; // set for exact stops
         bf->exit_velocity = min(bf->exit_vmax, bf->nx->entry_velocity);
+
         bf->buffer_state = MP_BUFFER_PRIMED;
 
-        if (!_is_optimally_planned(bf->pv)) {   // test if you need to go into backplanning
+//        if (!_is_optimally_planned(bf->pv)) {   // test if you need to go into backplanning
             mb.backplanning = true;
-            return (bf->pv);
-        }
+            return (bf);
+//        }
     }
-//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }               // +++++ pre-zoid trap
-//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }                // +++++ pre-zoid trap
-    mp_calculate_trapezoid(bf);
-//    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }               // +++++ post-zoid trap
-//    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }                // +++++ post-zoid trap
-//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
 
-    bf->buffer_state = MP_BUFFER_PLANNED;
-    _set_diagnostics(bf);   //+++++ DIAGNOSTIC - need to call a function to get GCC pragmas right
-    return (bf->nx);
-}
-
+*/
 
 static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 {
@@ -493,8 +499,8 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 //    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     if (mb.planner_state == PLANNER_PESSIMISTIC) {
         bf->entry_vmax = (fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax);
-        bf->delta_vmax = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
-        bf->entry_velocity = min3(bf->delta_vmax, bf->cruise_velocity, bf->entry_vmax);
+        bf->target_velocity = mp_get_target_velocity(0, bf->length, bf->jerk);  // dV is limited by jerk
+        bf->entry_velocity = min3(bf->target_velocity, bf->cruise_velocity, bf->entry_vmax);
 
     } else {    // PLANNER_OPTIMISTIC
         bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax
@@ -602,8 +608,8 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 }
 
 /***** ALINE HELPERS *****
- * _calculate_override()
- * _calculate_throttle()
+ * _calculate_override() - calculate cruise_vmax given cruise_vset and feed rate factor
+ * _calculate_throttle() - adjust cruise_vmax for throttling
  * _calculate_jerk()
  * _calculate_vmaxes()
  * _calculate_junction_vmax()
@@ -733,7 +739,8 @@ static void _calculate_throttle(mpBuf_t *bf)
     if ((bf->move_type == MOVE_TYPE_ALINE) && (mb.plannable_time > EPSILON)) {
     if (mb.plannable_time < PLANNER_THROTTLE_TIME) {
         bf->throttle = (THROTTLE_SLOPE * (mb.plannable_time - PLANNER_CRITICAL_TIME) + THROTTLE_INTERCEPT);
-        bf->cruise_velocity *= max(THROTTLE_MIN, bf->throttle);
+//        bf->cruise_velocity *= max(THROTTLE_MIN, bf->throttle);
+        bf->cruise_vmax *= max(THROTTLE_MIN, bf->throttle);
 
 //        } else {
 //            bf->throttle = THROTTLE_MAX;    // set to 1.00 in case it's needed for backplanning

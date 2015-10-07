@@ -257,13 +257,14 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
 
+    float target_velocity;          // target velocity given the starting velocity of the move
     float entry_vmax;               // max entry velocity for this move
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible
 
-    float braking_velocity;         // accumulated delta_vmax's in backwards plan
-    float delta_vmax;               // velocity difference for this move //++++REMOVE LATER
+//    float braking_velocity;         // accumulated delta_vmax's in backwards plan
+//    float delta_vmax;               // velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
