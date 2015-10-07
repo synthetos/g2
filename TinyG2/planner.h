@@ -232,7 +232,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     moveType move_type;             // used to dispatch to run routine
     moveState move_state;           // move state machine sequence
 //    uint8_t move_code;              // byte that can be used by used exec functions
-    blockHint hint;                 // block is coded for trapezoid planning
+    blockHint hint;                 // code block for zoid and optimality. Must be accurate or NO_HINT
     bool optimal;                   // true if block is optimally planned
 
     // block parameters
@@ -258,9 +258,12 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float exit_velocity;            // exit velocity requested for the move
 
     float entry_vmax;               // max entry velocity for this move
-    float cruise_vmax;              // cruise velocity requested for move
+    float cruise_vset;              // cruise velocity requested for move - prior to overrides
+    float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible
-    float delta_vmax;               // max velocity difference for this move //++++REMOVE LATER
+
+    float braking_velocity;         // accumulated delta_vmax's in backwards plan
+    float delta_vmax;               // velocity difference for this move //++++REMOVE LATER
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
@@ -286,18 +289,18 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time
+    uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
 
+                                    // group booleans together for optimization
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
+    bool backplanning;              // true if planner is in a back-planning pass
     bool new_block;                 // marks the arrival of a new block for planning
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
-    uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
-    bool backplanning;              // true if planner is in a back-planning pass
-    mpBuf_t *backplan_return;       // buffer to return to once back-planning is complete
+    bool mfo_active;                // true if mfo override is in effect
+    bool ramp_active;               // true when a ramp is occurring
 
     // feed overrides and ramp variables (these extend the variables in cm.gmx)
-    bool mfo_active;                // true if mfo override is in effect
     float mfo_factor;               // runtime override factor
-    bool ramp_active;               // true when a ramp is occurring
     float ramp_target;
     float ramp_dvdt;
 
@@ -306,6 +309,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// write buffer pointer
 	mpBuf_t *p;						// planner buffer pointer
 	mpBuf_t *c;						// pointer to buffer immediately following critical region
+    mpBuf_t *backplan_return;       // buffer to return to once back-planning is complete
 
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
 	magic_t magic_end;
