@@ -354,7 +354,7 @@ static void _mark_hint_fwdplan(mpBuf_t *bf)
     }
     // acceleration
     if (bf->entry_velocity < bf->exit_velocity) {
-        if (fp_EQ(bf->exit_velocity, bf->target_velocity)) {    // assumes target velocity was computed for acceleration
+        if (fp_EQ(bf->exit_velocity, bf->accel_vmax)) {
             bf->hint = PERFECT_ACCEL;
             } else {
             bf->hint = MIXED_ACCEL;
@@ -373,7 +373,7 @@ static void _mark_hint_backplan(mpBuf_t *bf)
     }
     // deceleration
     if (bf->entry_velocity > bf->exit_velocity) {
-        if (fp_EQ(bf->entry_velocity, bf->target_velocity)) { // target velocity was computed for deceleration
+        if (fp_EQ(bf->entry_velocity, bf->decel_vmax)) {
             bf->hint = PERFECT_DECEL;
         } else {
             bf->hint = MIXED_DECEL;
@@ -411,9 +411,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     if (mb.backplanning) {
         bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
-        bf->target_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
-        bf->braking_velocity = bf->target_velocity;
-        bf->entry_velocity = min3(bf->cruise_vmax, bf->target_velocity, bf->entry_vmax);
+        bf->decel_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
+        bf->entry_velocity = min3(bf->cruise_vmax, bf->decel_vmax, bf->entry_vmax);
+//        bf->entry_velocity = min4(bf->cruise_vmax, bf->decel_vmax, bf->pv->accel_vmax, bf->entry_vmax);
 //        bf->cruise_velocity = min(bf->entry_velocity, bf->cruise_vmax);
         _mark_hint_backplan(bf);
 
@@ -426,10 +426,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Forward planning
     // Set entry and cruise velocities & call the trapezoid generator
     // Note: This part can be moved to a JIT planner triggered by the exec
-    bf->entry_velocity_tmp = min(bf->pv->exit_velocity, bf->braking_velocity); 
-    bf->entry_velocity = bf->entry_velocity_tmp;
-    bf->target_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-    bf->exit_velocity = min3(bf->target_velocity, bf->nx->braking_velocity, bf->exit_vmax);
+    bf->entry_velocity = min(bf->pv->exit_velocity, bf->decel_vmax); 
+    bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+    bf->exit_velocity = min3(bf->accel_vmax, bf->nx->decel_vmax, bf->exit_vmax);
     bf->cruise_velocity = bf->cruise_vmax;
     _mark_hint_fwdplan(bf);
     
@@ -531,8 +530,8 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 //    bf->entry_velocity = min(bf->pv->exit_velocity, bf->cruise_vmax);
     if (mb.planner_state == PLANNER_PESSIMISTIC) {
         bf->entry_vmax = (fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax);
-        bf->target_velocity = mp_get_target_velocity(0, bf->length, bf);
-        bf->entry_velocity = min3(bf->target_velocity, bf->cruise_velocity, bf->entry_vmax);
+        bf->decel_vmax = mp_get_target_velocity(0, bf->length, bf);
+        bf->entry_velocity = min3(bf->decel_vmax, bf->cruise_velocity, bf->entry_vmax);
 
     } else {    // PLANNER_OPTIMISTIC
         bf->entry_vmax = bf->junction_vmax;                 // initialize entry_vmax

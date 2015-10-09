@@ -253,17 +253,16 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float tail_time;                // ...tail
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
-    float entry_velocity_tmp;           // entry velocity requested for the move
     float entry_velocity;           // entry velocity requested for the move
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
 
-    float target_velocity;          // target velocity given the starting velocity of the move
-    float braking_velocity;         // maximum entry velocity from which this block can brake to zero
     float entry_vmax;               // max entry velocity for this move
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible
+    float decel_vmax;               // maximum entry velocity can be and still decelerate to zero
+    float accel_vmax;               // maximum exit velocity can achieve while accelerating up from head block Ve
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
