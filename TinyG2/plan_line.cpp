@@ -306,12 +306,11 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
  */
 
 /* 
- * _is_optimally_planned() - helper to find the "stop block" for backplanning
+ * _is_optimally_planned() - is bf block optimally planned? (find the "stop block" for backplanning)
  */
-
 static bool _is_optimally_planned(mpBuf_t *bf)
 {
-    if (bf->optimal) {                              // don't flip it back
+    if (bf->optimal) {                              // yes
         return (true);                              // return without setting
     }
     if ((bf->buffer_state == MP_BUFFER_EMPTY) ||    // empty buffer cannot be planned
@@ -340,35 +339,24 @@ static bool _is_optimally_planned(mpBuf_t *bf)
     return (false);
 }
 
-// Pass a block and it will label with the proper hint
-static void _mark_hint(mpBuf_t *bf)
+static void _mark_hint_fwdplan(mpBuf_t *bf)
 {
-    if (bf->move_type == MOVE_TYPE_COMMAND) {
-        bf->hint = COMMAND_BLOCK;
-    }
-
-    // cruise
-    if ((fp_EQ(bf->entry_velocity, bf->cruise_velocity)) &&
-        (fp_EQ(bf->cruise_velocity, bf->exit_velocity))) {
+    // if it's already a perfect decel don't mess with it
+//    if (bf->hint = PERFECT_DECEL) {
+//        return;
+//    }
+    
+    // cruise (this test must precede the acceleration test)
+    if ((fp_EQ(bf->entry_velocity, bf->cruise_vmax)) &&
+        (fp_EQ(bf->exit_velocity, bf->cruise_vmax))) {
         bf->hint = PERFECT_CRUISE;
         return;
     }
-    
-    // decelerations
-    if (bf->entry_velocity > bf->exit_velocity) {
-        if (fp_EQ(bf->entry_velocity, bf->target_velocity)) {   // assumes target velocity was computed for acceleration
-            bf->hint = PERFECT_DECEL;
-        } else {
-            bf->hint = MIXED_DECEL;
-        }
-        return;
-    }
-    
-    // accelerations
+    // acceleration
     if (bf->entry_velocity < bf->exit_velocity) {
         if (fp_EQ(bf->exit_velocity, bf->target_velocity)) {    // assumes target velocity was computed for acceleration
             bf->hint = PERFECT_ACCEL;
-        } else {
+            } else {
             bf->hint = MIXED_ACCEL;
         }
         return;
@@ -376,10 +364,37 @@ static void _mark_hint(mpBuf_t *bf)
     bf->hint = NO_HINT;
 }
 
+// Pass a block and it will label with the proper hint
+static void _mark_hint_backplan(mpBuf_t *bf)
+{
+    if (bf->move_type == MOVE_TYPE_COMMAND) {
+        bf->hint = COMMAND_BLOCK;
+        return;
+    }
+    // deceleration
+    if (bf->entry_velocity > bf->exit_velocity) {
+        if (fp_EQ(bf->entry_velocity, bf->target_velocity)) { // target velocity was computed for deceleration
+            bf->hint = PERFECT_DECEL;
+        } else {
+            bf->hint = MIXED_DECEL;
+        }
+        return;
+    }
+    // cruise
+    if (bf->entry_velocity > 0) {
+        if (fp_EQ(bf->entry_velocity, bf->exit_velocity)) {
+            bf->hint = PERFECT_CRUISE;
+            return;
+        }
+    }    
+    bf->hint = NO_HINT;
+}
+
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    // First time operations - prime the block and drop through as first backplanned block
-    // cruise_vmax was computed in _calculate_vmaxes() in aline()
+    // First time block (priming)
+    // Prime the block and drop through as first backplanned block
+    // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
     if ((!mb.backplanning) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
         _calculate_override(bf);                // adjust cruise_vmax for feed/traverse override
         _calculate_throttle(bf);                // adjust cruise_vmax for throttle factor
@@ -389,15 +404,18 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         mb.backplanning = true;
     }
 
-    // If backplanning set exit and entry velocities and see how far back you need to go
-    // Vmax's are already set
+    // Backplanning 
+    // Set exit, braking, and target velocities - assuming deceleration is occurring
+    // Set a provisional entry velocity (used for chaining decelerations)
+    // Find stop point at optimal block or head of block chain
+    // Note: Vmax's are already set by the time you get here
     if (mb.backplanning) {
         bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
         bf->target_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
-        bf->braking_velocity = bf->target_velocity + bf->nx->target_velocity;
+        bf->braking_velocity = bf->target_velocity;
         bf->entry_velocity = min3(bf->cruise_vmax, bf->target_velocity, bf->entry_vmax);
-        bf->cruise_velocity = min(bf->target_velocity, bf->cruise_vmax);
-        _mark_hint(bf);       
+//        bf->cruise_velocity = min(bf->entry_velocity, bf->cruise_vmax);
+        _mark_hint_backplan(bf);
 
         if (!_is_optimally_planned(bf->pv)) {   // see if you need to back up
             return (bf->pv);
@@ -405,11 +423,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         mb.backplanning = false;                // start forward planning on drop through
     }
     
-    // Final forward planning pass
-    // This part can be moved to a JIT planner triggered by the exec
+    // Forward planning
+    // Set entry and cruise velocities & call the trapezoid generator
+    // Note: This part can be moved to a JIT planner triggered by the exec
+    bf->entry_velocity_tmp = min(bf->pv->exit_velocity, bf->braking_velocity); 
+    bf->entry_velocity = bf->entry_velocity_tmp;
+    bf->target_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+    bf->exit_velocity = min3(bf->target_velocity, bf->nx->braking_velocity, bf->exit_vmax);
+    bf->cruise_velocity = bf->cruise_vmax;
+    _mark_hint_fwdplan(bf);
     
-    bf->entry_velocity = bf->pv->exit_velocity;
-        
 //    if (bf->entry_velocity > bf->cruise_velocity) { while(1); }               // +++++ pre-zoid trap
 //    if (bf->exit_velocity > bf->cruise_velocity) { while(1); }                // +++++ pre-zoid trap
     mp_calculate_trapezoid(bf);

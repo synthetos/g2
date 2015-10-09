@@ -256,8 +256,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
-        // +++++ NEW FIX
-        bf->exit_velocity = bf->entry_velocity; // make them actually equal so exit is never higher than entry, which blows up the exec
+        // Adjust exit velocity to be *exactly* the same to keep downstrean calculations from blowing up (exec) 
+        bf->exit_velocity = bf->entry_velocity; 
 
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
@@ -270,9 +270,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
 
-            // +++++ NEW FIX
             bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
-            bf->exit_velocity = bf->entry_velocity;
+            bf->exit_velocity = bf->entry_velocity;     // keep velocities the same for sanity
 
             LOG_RETURN("3s2");
             return (_zoid_exit(bf, ZOID_EXIT_3s2));
