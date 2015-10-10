@@ -54,7 +54,7 @@ typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine exe
 typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
     MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
     MP_BUFFER_NOT_PLANNED,          // buffer processed by aline() only
-    MP_BUFFER_PRIMED,               // buffer has initial data but not backplanned or zoided yet 
+    MP_BUFFER_PRIMED,               // buffer has initial data but not backplanned or zoided yet
     MP_BUFFER_PLANNED,              // buffer fully planned at least once. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
     MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
@@ -94,12 +94,17 @@ typedef enum {
 
 typedef enum {                      // code blocks for planning and trapezoid generation
     NO_HINT = 0,                    // block is not hinted
-    PERFECT_ACCEL,                  // straight line acceleration at jerk (H)
-    PERFECT_DECEL,                  // straight line deceleration at jerk (T)
-    PERFECT_CRUISE,                 // move is all body (B)
-    MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
-    MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
     COMMAND_BLOCK,                  // this block is a command
+    PERFECT_ACCEL,                  // straight line acceleration at jerk (head only)
+    MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
+    PERFECT_DECEL,                  // straight line deceleration at jerk (tail only)
+    MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
+    PERFECT_CRUISE,                 // Ve = Vc = Vx != 0 (move is all body, B)
+    ZERO_VELOCITY,                  // Ve = Vc = Vx = 0
+    ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
+    SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
+    ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
+
 //    HINT_IS_STALE,                  // the hint may no longer be valid
 
     WAS_PERFECT_ACCEL,              // straight line acceleration at jerk (H)
@@ -220,7 +225,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 //    float decel_time_ms;
 //    zoidExitPoint zoid_exit;
 //    float decel_time;
-//    float exit_target; 
+//    float exit_target;
 //    float deltaV_diff;
 //    float deltaV_jerk;
 //    uint8_t jerk_axis;

@@ -246,6 +246,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
+        bf->hint = SYMMETRIC_BUMP;
         LOG_RETURN("2c");
         return (_zoid_exit(bf, ZOID_EXIT_2c));
     }
@@ -256,8 +257,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
     if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
-        // Adjust exit velocity to be *exactly* the same to keep downstrean calculations from blowing up (exec) 
-        bf->exit_velocity = bf->entry_velocity; 
+        // Adjust exit velocity to be *exactly* the same to keep downstrean calculations from blowing up (exec)
+        bf->exit_velocity = bf->entry_velocity;
 
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
@@ -273,6 +274,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
             bf->exit_velocity = bf->entry_velocity;     // keep velocities the same for sanity
 
+            bf->hint = SYMMETRIC_BUMP;
             LOG_RETURN("3s2");
             return (_zoid_exit(bf, ZOID_EXIT_3s2));
         }
@@ -280,6 +282,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->tail_time;
+        bf->hint = SYMMETRIC_BUMP;  //+++++ Could also detect ZERO_BUMP here with more tests
         LOG_RETURN("3s");
         return (_zoid_exit(bf, ZOID_EXIT_3s));
     }
@@ -336,6 +339,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
     }
     bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
+    bf->hint = ASYMMETRIC_BUMP;
     LOG_RETURN("3c");
     return (_zoid_exit(bf, ZOID_EXIT_3c));
 }

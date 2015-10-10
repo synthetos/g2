@@ -392,6 +392,48 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Find stop point at optimal block or head of block chain
     // Note: Vmax's are already set by the time you get here
     if (mb.backplanning) {
+        // first set a provisional entry and exit velocities (may be changed later)
+        bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+        if (bf->pv->optimal) {
+            bf->entry_velocity = bf->pv->exit_velocity;
+        } else {
+            bf->entry_velocity = min(bf->cruise_vmax, bf->entry_vmax);  // set at max V - for now
+        }
+
+        // cutout for command blocks
+        if (bf->move_type == MOVE_TYPE_COMMAND) {
+            bf->hint = COMMAND_BLOCK;
+
+        // all other blocks
+        } else {
+            // accelerations
+            if (bf->entry_velocity < bf->exit_velocity) {
+                bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+                if (bf->exit_velocity > bf->accel_vmax) {
+                    bf->exit_velocity = bf->accel_vmax;
+                    bf->hint = PERFECT_ACCEL;
+                } else {
+                    if (bf->exit_velocity > (bf->accel_vmax * 0.90)) {  // fakeout to remove bumps
+                        bf->hint = PERFECT_ACCEL;
+                    } else {
+                        bf->hint = MIXED_ACCEL;
+                    }
+                }
+            // decelerations
+            } else {
+                bf->decel_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
+                if (bf->entry_velocity > bf->decel_vmax) {
+                    bf->entry_velocity = bf->decel_vmax;
+                    bf->hint = PERFECT_DECEL;
+                } else {
+                    bf->hint = MIXED_DECEL;
+                }
+            }
+        }
+        if (!_is_optimally_planned(bf->pv)) { return (bf->pv); }  // see if you need to back up
+        mb.backplanning = false;                // start forward planning on drop through
+
+/*
         bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
         bf->decel_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
         bf->entry_velocity = min3(bf->cruise_vmax, bf->decel_vmax, bf->entry_vmax);
@@ -400,16 +442,30 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         _mark_hint_backplan(bf);
         if (!_is_optimally_planned(bf->pv)) { return (bf->pv); }  // see if you need to back up
         mb.backplanning = false;                // start forward planning on drop through
+*/
     }
 
     // Forward planning
     // Set entry and cruise velocities & call the trapezoid generator
     // Note: This part can be moved to a JIT planner triggered by the exec
-    bf->entry_velocity = min(bf->pv->exit_velocity, bf->decel_vmax);
-    bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-    bf->exit_velocity = min3(bf->accel_vmax, bf->nx->decel_vmax, bf->exit_vmax);
+//    bf->entry_velocity = min(bf->pv->exit_velocity, bf->decel_vmax);
+//    bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+//    bf->exit_velocity = min3(bf->accel_vmax, bf->nx->decel_vmax, bf->exit_vmax);
+
+    // Apply entry velocity and acceleration corrections if required
+    if (bf->entry_velocity > bf->pv->exit_velocity) {
+        bf->entry_velocity = bf->pv->exit_velocity;
+        bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+        bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+        if (bf->exit_velocity > bf->accel_vmax) {
+            bf->exit_velocity = bf->accel_vmax;
+            bf->hint = PERFECT_ACCEL;
+        } else {
+            bf->hint = MIXED_ACCEL;
+        }
+    }
     bf->cruise_velocity = bf->cruise_vmax;
-    _mark_hint_fwdplan(bf);
+//    _mark_hint_fwdplan(bf);
 
     SANITY_TRAPS(bf);
     mp_calculate_trapezoid(bf);
