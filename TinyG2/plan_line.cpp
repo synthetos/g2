@@ -278,12 +278,7 @@ void mp_plan_block_list()
  *    bf->move_time
  */
 
-#define SANITY_TRAPS(bf) { if (bf->entry_velocity > bf->cruise_velocity) { while(1); } \
-                           if (bf->exit_velocity > bf->cruise_velocity) { while(1); } }
-
-//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
-
-/* 
+/*
  * _is_optimally_planned() - is bf block optimally planned? (find the "stop block" for backplanning)
  */
 static bool _is_optimally_planned(mpBuf_t *bf)
@@ -313,7 +308,7 @@ static bool _is_optimally_planned(mpBuf_t *bf)
                 return (bf->optimal = true);
             }
         }
-    } 
+    }
     return (false);
 }
 
@@ -323,7 +318,7 @@ static void _mark_hint_fwdplan(mpBuf_t *bf)
 //    if (bf->hint = PERFECT_DECEL) {
 //        return;
 //    }
-    
+
     // cruise (this test must precede the acceleration test)
     if ((fp_EQ(bf->entry_velocity, bf->cruise_vmax)) &&
         (fp_EQ(bf->exit_velocity, bf->cruise_vmax))) {
@@ -364,9 +359,18 @@ static void _mark_hint_backplan(mpBuf_t *bf)
             bf->hint = PERFECT_CRUISE;
             return;
         }
-    }    
+    }
     bf->hint = NO_HINT;
 }
+
+#define SANITY_TRAPS(bf) { \
+                            if (bf->buffer_state != MP_BUFFER_EMPTY) { \
+                                if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
+                                if (bf->exit_velocity > bf->cruise_velocity)  {while(1);} \
+                            } \
+                         }
+
+//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
@@ -382,7 +386,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         mb.backplanning = true;
     }
 
-    // Backplanning 
+    // Backplanning
     // Set exit, braking, and target velocities - assuming deceleration is occurring
     // Set a provisional entry velocity (used for chaining decelerations)
     // Find stop point at optimal block or head of block chain
@@ -397,16 +401,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         if (!_is_optimally_planned(bf->pv)) { return (bf->pv); }  // see if you need to back up
         mb.backplanning = false;                // start forward planning on drop through
     }
-    
+
     // Forward planning
     // Set entry and cruise velocities & call the trapezoid generator
     // Note: This part can be moved to a JIT planner triggered by the exec
-    bf->entry_velocity = min(bf->pv->exit_velocity, bf->decel_vmax); 
+    bf->entry_velocity = min(bf->pv->exit_velocity, bf->decel_vmax);
     bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
     bf->exit_velocity = min3(bf->accel_vmax, bf->nx->decel_vmax, bf->exit_vmax);
     bf->cruise_velocity = bf->cruise_vmax;
     _mark_hint_fwdplan(bf);
-    
+
     SANITY_TRAPS(bf);
     mp_calculate_trapezoid(bf);
     _is_optimally_planned(bf);      // make the block if it's optimally planned
@@ -569,7 +573,7 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
     // pull in override factor from previous block or seed initial value from the system setting
     bf->mfo_factor = fp_ZERO(bf->pv->mfo_factor) ? cm.gmx.mfo_factor : bf->pv->mfo_factor;
     bf->cruise_vmax = bf->mfo_factor * bf->cruise_vset;
-    
+
     // generate ramp term is a ramp is active
     if (mb.ramp_active) {
         bf->mfo_factor += mb.ramp_dvdt * bf->move_time;
