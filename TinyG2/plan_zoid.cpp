@@ -129,18 +129,6 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
 void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 {
-//    bf->hint = HINT_IS_STALE;
-//    switch (bf->hint) {
-//        case PERFECT_ACCEL: { bf->hint = WAS_PERFECT_ACCEL; break; }
-//    }
-/* Don't invalidate the hint
-    if (bf->hint == PERFECT_ACCEL) { bf->hint = WAS_PERFECT_ACCEL; }
-    if (bf->hint == PERFECT_DECEL) { bf->hint = WAS_PERFECT_DECEL; }
-    if (bf->hint == PERFECT_CRUISE) { bf->hint = WAS_PERFECT_CRUISE; }
-    if (bf->hint == MIXED_ACCEL) { bf->hint = WAS_MIXED_ACCEL; }
-    if (bf->hint == MIXED_DECEL) { bf->hint = WAS_MIXED_DECEL; }
-    if (bf->hint == COMMAND_BLOCK) { bf->hint = WAS_COMMAND_BLOCK; }
-*/
 	//+++++ DIAGNOSTIC
 //    bf->zoid_exit = exit_point;
 	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh
@@ -300,6 +288,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
         bf->cruise_velocity = _get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
+
         if (VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity)) {
             tail_only = true;
         } else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity)) {

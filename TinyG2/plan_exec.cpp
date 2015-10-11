@@ -202,13 +202,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.cruise_velocity = bf->cruise_velocity;
         mr.exit_velocity = bf->exit_velocity;
 
-        //+++++DIAGNOSTIC
-//        if (mr.exit_velocity < EPSILON) {
-//            char buf[24];
-//            sprintf(buf, "stopped [%d]\n", bf->buffer_number);
-//            xio_writeline(buf);
-//        }
-
         copy_vector(mr.unit, bf->unit);
         copy_vector(mr.target, bf->gm.target);          // save the final target of the move
         copy_vector(mr.axis_flags, bf->axis_flags);

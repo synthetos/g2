@@ -790,6 +790,7 @@ mpBuf_t * mp_get_run_buffer()
     // CASE: fresh buffer; becomes running if buffer planned
     if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
         mb.r->buffer_state = MP_BUFFER_RUNNING;
+        mb.r->optimal = true;
     }
 
     // This is the one point where an accurate accounting of the total time in the
