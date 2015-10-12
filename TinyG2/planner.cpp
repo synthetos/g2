@@ -450,7 +450,8 @@ static bool _new_block_timeout()
 stat_t mp_planner_callback()
 {
     if (!mb.request_planning) {
-        if ((cm.motion_state == MOTION_STOP) && (cm.hold_state == FEEDHOLD_OFF) &&
+        if ((cm.motion_state == MOTION_STOP) && 
+            (cm.hold_state == FEEDHOLD_OFF) &&
             (mb.buffers_available == PLANNER_BUFFER_POOL_SIZE)) {
             mb.planner_state = PLANNER_IDLE;
         }
@@ -476,15 +477,14 @@ stat_t mp_planner_callback()
     // set planner state
     if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
         if (mp_planner_is_full()) {
-//            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
             mb.planner_state = PLANNER_PESSIMISTIC;      // start planning now
+//            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
         } else if (_new_block_timeout()) {
             mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
         } else {
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     } else {                                            // set planner state for normal operation
-//        if (_new_block_timeout() || mb.plannable_time < PLANNER_CRITICAL_TIME) {
         if (_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
@@ -787,15 +787,15 @@ void mp_commit_write_buffer(const moveType move_type)
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
 mpBuf_t * mp_get_run_buffer()
 {
-    // CASE: fresh buffer; becomes running if buffer planned
-//    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
-//        mb.r->buffer_state = MP_BUFFER_RUNNING;
-//    }
-
     // This is the one point where an accurate accounting of the total time in the
-    // run and the planner is established. _plannable_time_accounting() also performs
-    // the locking of planner buffers to ensure that sufficient "safe" time is reserved.
+    // run and the planner is established. 
     _planner_time_accounting();
+
+    // CASE: fresh buffer; becomes running if buffer planned
+    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
+//        mb.r->buffer_state = MP_BUFFER_RUNNING;
+        return (mb.r);					// return same buffer
+    }
 
     // CASE: asking for the same run buffer for the Nth time
     if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
@@ -811,11 +811,7 @@ bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
 
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;					// advance to next run buffer
-
 	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
-//    r->buffer_state = MP_BUFFER_EMPTY;  // do a "light clear"
-//    r->move_time = 0;
-
 	mb.buffers_available++;
 	qr_request_queue_report(-1);			// request a QR and add to the "removed buffers" count
 	return (mb.w == mb.r); 	            // return true if the queue emptied

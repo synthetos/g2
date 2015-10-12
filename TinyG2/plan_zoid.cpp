@@ -170,7 +170,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 	}
 
     // PERFECT_ACCEL (1a) single head segment (deltaV == delta_vmax)
-    if (bf->hint == PERFECT_ACCEL) {
+    if (bf->hint == PERFECT_ACCELERATION) {
     	bf->head_length = bf->length;
         bf->cruise_velocity = bf->exit_velocity;
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
@@ -180,7 +180,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     }
 
     // PERFECT_DECEL (1d) single tail segment (deltaV == delta_vmax)
-    if (bf->hint == PERFECT_DECEL) {
+    if (bf->hint == PERFECT_DECELERATION) {
     	bf->tail_length = bf->length;
         bf->cruise_velocity = bf->entry_velocity;
     	bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
@@ -198,7 +198,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     if (bf->length + EPSILON > (bf->head_length + bf->tail_length)) {
 
         // 2 segment HB acceleration move (2a)
-        if (bf->hint == MIXED_ACCEL &&
+        if (bf->hint == MIXED_ACCELERATION &&
             VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity) &&
             VELOCITY_LT(bf->entry_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->head_length;
@@ -211,7 +211,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         }
 
         // 2 segment BT deceleration move (2d)
-        if (bf->hint == MIXED_DECEL &&
+        if (bf->hint == MIXED_DECELERATION &&
             VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity) &&
             VELOCITY_LT(bf->exit_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->tail_length;

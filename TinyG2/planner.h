@@ -95,24 +95,24 @@ typedef enum {
 typedef enum {                      // code blocks for planning and trapezoid generation
     NO_HINT = 0,                    // block is not hinted
     COMMAND_BLOCK,                  // this block is a command
-    PERFECT_ACCEL,                  // straight line acceleration at jerk (head only)
-    MIXED_ACCEL,                    // kinked acceleration reaches and holds cruise (HB)
-    PERFECT_DECEL,                  // straight line deceleration at jerk (tail only)
-    MIXED_DECEL,                    // kinked deceleration starts with a cruise region (BT)
-    PERFECT_CRUISE,                 // Ve = Vc = Vx != 0 (move is all body, B)
+    PERFECT_ACCELERATION,           // head-only acceleration at jerk or cannot be improved
+    PERFECT_DECELERATION,           // tail-only deceleration at jerk or cannot be improved
+    PERFECT_CRUISE,                 // body-only cruise: Ve = Vc = Vx != 0
+    MIXED_ACCELERATION,             // kinked acceleration reaches and holds cruise (HB)
+    MIXED_DECELERATION,             // kinked deceleration starts with a cruise region (BT)
     ZERO_VELOCITY,                  // Ve = Vc = Vx = 0
     ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
-
-//    HINT_IS_STALE,                  // the hint may no longer be valid
-
+/*
+    HINT_IS_STALE,                  // the hint may no longer be valid
     WAS_PERFECT_ACCEL,              // straight line acceleration at jerk (H)
     WAS_PERFECT_DECEL,              // straight line deceleration at jerk (T)
     WAS_PERFECT_CRUISE,             // move is all body (B)
     WAS_MIXED_ACCEL,                // kinked acceleration reaches and holds cruise (HB)
     WAS_MIXED_DECEL,                // kinked deceleration starts with a cruise region (BT)
     WAS_COMMAND_BLOCK,              // this block is a command
+*/
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -139,9 +139,10 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-#define PLANNER_BUFFER_POOL_SIZE 48                     // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM   4                     // Buffers to reserve in planner before processing new input line
 //#define JUNCTION_AGGRESSION     0.75                  // Actually this factor will be divided by 1 million
+
+#define PLANNER_BUFFER_POOL_SIZE 48                     // Suggest 12 min. Limit is 255
+#define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
 #define MIN_SEGMENT_MS          ((float)0.750)          // minimum segment milliseconds (also minimum move time)

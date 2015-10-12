@@ -314,33 +314,33 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // accelerations
             if (bf->entry_velocity < bf->exit_velocity) {
                 bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-if (false); // detailed acceleration form
+
+#if (false)     // simplified form that cheats on perfect accels
+                bf->exit_velocity = min(bf->exit_velocity, bf->accel_vmax);
+                bf->hint = PERFECT_ACCELERATION;   // always call it a perfect accel if it's less than max accel
+#else           // detailed acceleration form
                 if (bf->exit_velocity > bf->accel_vmax) {
                     bf->exit_velocity = bf->accel_vmax;
-                    if (bf->pv->optimal) { bf->optimal = true; }        // this is useful for accels, not decels
-                    bf->hint = PERFECT_ACCEL;
+                    bf->hint = PERFECT_ACCELERATION;
                 } else {
-                    if (bf->exit_velocity > (bf->accel_vmax * 0.90)) {  // fakeout to remove bumps
-                        if (bf->pv->optimal) { bf->optimal = true; }
-                        bf->hint = PERFECT_ACCEL;
+                    if (bf->exit_velocity > (bf->accel_vmax * 0.90)) {  // heuristic to remove bumps
+                        bf->hint = PERFECT_ACCELERATION;
                     } else {
-                        bf->hint = MIXED_ACCEL;
+                        bf->hint = MIXED_ACCELERATION;
                     }
                 }
-#else   // simplified form that cheats on perfect accels
-                bf->exit_velocity = min(bf->exit_velocity, bf->accel_vmax);
+#endif
                 bf->cruise_velocity = bf->exit_velocity;
                 if (bf->pv->optimal) { bf->optimal = true; }
-                bf->hint = PERFECT_ACCEL;   // always call it a perfect accel if it's less than max accel
-#endif
+
             // decelerations
             } else {
                 bf->decel_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
                 if (bf->entry_velocity > bf->decel_vmax) {
                     bf->entry_velocity = bf->decel_vmax;
-                    bf->hint = PERFECT_DECEL;
+                    bf->hint = PERFECT_DECELERATION;
                 } else {
-                    bf->hint = MIXED_DECEL;
+                    bf->hint = MIXED_DECELERATION;
                 }
                 bf->cruise_velocity = bf->entry_velocity;
             }
@@ -356,65 +356,6 @@ if (false); // detailed acceleration form
     }
     return (mb.backplan_return);
 }
-
-/*
-    // Forward planning
-    // Apply entry velocity and acceleration corrections if required
-
-    if (bf->entry_velocity > bf->pv->exit_velocity) {
-        bf->entry_velocity = bf->pv->exit_velocity;
-        bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
-        bf->accel_vmax = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-        if (bf->exit_velocity > bf->accel_vmax) {
-            bf->exit_velocity = bf->accel_vmax;
-            bf->hint = PERFECT_ACCEL;
-        } else {
-            bf->hint = MIXED_ACCEL;
-        }
-    }
-
-    bf->cruise_velocity = bf->cruise_vmax;
-    SANITY_TRAPS(bf);
-    mp_calculate_trapezoid(bf);
-    _set_if_optimal(bf);            // set as optimal if this is true
-    SANITY_TRAPS(bf);
-
-    bf->buffer_state = MP_BUFFER_PLANNED;
-*/
-
-/*
- * _set_optimal() - set optimial flag if bf is optimally planned (find the "stop block" for backplanning)
- */
-/*
-static void _set_optimal(mpBuf_t *bf)
-{
-    if (bf->optimal) {      // return without setting
-        return;
-    }
-    if ((bf->buffer_state == MP_BUFFER_EMPTY) ||    // empty buffer cannot be planned
-        (bf->buffer_state == MP_BUFFER_RUNNING)) {  // oops. Not supposed to happen
-        bf->optimal = true;
-
-    } else if ((bf->move_type == MOVE_TYPE_COMMAND) &&     // It's a command with a STOP
-        (fp_ZERO(bf->exit_velocity))) {
-        bf->optimal = true;
-
-    } else if ((fp_EQ(bf->exit_velocity, bf->cruise_vmax)) && // It hit cruise velocity
-        (fp_EQ(bf->entry_velocity, bf->cruise_vmax))) {
-        bf->optimal = true;
-
-    } else if (bf->pv->optimal) {
-        if ((bf->hint == PERFECT_ACCEL) ||          // perfect acceleration - from zero or non-zero Ve
-            (bf->hint == PERFECT_CRUISE)) {         // perfect cruise
-            bf->optimal = true;
-        } else if (bf->hint == MIXED_ACCEL) {
-            if (fp_EQ(bf->exit_velocity, bf->cruise_vmax)) {
-                bf->optimal = true;
-            }
-        }
-    }
-}
-*/
 
 /*
  * _plan_block_optimistic() - plan the current block using optimistic forward plannins
@@ -534,10 +475,10 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 
             float exit_target = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
             if (exit_target > bf->exit_velocity) {  // accel exceeds target end velocity
-                bf->hint = MIXED_ACCEL;
+                bf->hint = MIXED_ACCELERATION;
             } else {
                 bf->exit_velocity = exit_target;
-                bf->hint = PERFECT_ACCEL;
+                bf->hint = PERFECT_ACCELERATION;
             }
             ASCII_ART("/");
 
@@ -569,13 +510,13 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 //                    while(1);
                     mb.backplanning = false;
                     bf_ret = mb.backplan_return;
-                    bf->hint = MIXED_DECEL;
+                    bf->hint = MIXED_DECELERATION;
                 }
-                bf->hint = PERFECT_DECEL;
+                bf->hint = PERFECT_DECELERATION;
             } else {
                 mb.backplanning = false;
                 bf_ret = mb.backplan_return;
-                bf->hint = MIXED_DECEL;
+                bf->hint = MIXED_DECELERATION;
             }
             ASCII_ART("\\");
         }
