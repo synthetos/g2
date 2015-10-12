@@ -274,6 +274,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
         bf->buffer_state = MP_BUFFER_PRIMED;
+        if (bf->nx->buffer_state != MP_BUFFER_EMPTY) { // don't backplan yet if there are more forward moves
+            return (bf->nx);
+        }
         mb.backplan_return = bf->nx;            // where to return after backplanning is complete
         mb.backplanning = true;
     }
