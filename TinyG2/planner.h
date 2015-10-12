@@ -140,7 +140,7 @@ typedef enum {
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE 48                     // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM 4                       // Buffers to reserve in planner before processing new input line
+#define PLANNER_BUFFER_HEADROOM   4                     // Buffers to reserve in planner before processing new input line
 //#define JUNCTION_AGGRESSION     0.75                  // Actually this factor will be divided by 1 million
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
@@ -151,9 +151,8 @@ typedef enum {
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
-//#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
-#define PLANNER_CRITICAL_MS     ((float)50.0)           // MS threshold for planner critical state
-#define PLANNER_THROTTLE_MS     ((float)100.0)          // MS threshold to start planner throttling
+#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
+#define PLANNER_THROTTLE_MS     ((float)100.0)          // Width of throttle region - starts at Tcritical
 #define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get through a planner callback loop
 #define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
 
@@ -163,9 +162,10 @@ typedef enum {
 #define PLANNER_ITERATION_TIME  ((float)(PLANNER_ITERATION_MS / 60000)) // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
-#define THROTTLE_MIN            ((float)0.10)           // minimum factor to slow down for planner throttling
 #define THROTTLE_MAX            ((float)1.00)           // unity factor; must always = 1.00
-#define THROTTLE_SLOPE          ((float)(1-THROTTLE_MIN) / (PLANNER_THROTTLE_TIME - PLANNER_CRITICAL_TIME))
+#define THROTTLE_MIN            ((float)0.10)           // minimum factor to slow down for planner throttling
+//#define THROTTLE_SLOPE          ((float)(1-THROTTLE_MIN) / (PLANNER_THROTTLE_TIME - PLANNER_CRITICAL_TIME))
+#define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
 #define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
 
 #define FEED_OVERRIDE_MIN           0.05                // 5% minimum
@@ -193,8 +193,9 @@ typedef enum {
 // VELOCITY_NE  "If deltaV is greater than 1% of v1 then the velocities are effectively equal"
 // VELOCITY_LT  "If v1 is less than v2 by at least 1% then v1 is effectively less than than v2"
 
-#define VELOCITY_EQ(v1,v2)      (fabs(v1-v2)<v1*0.01 || (v1<0.1 && v2<0.1))
-#define VELOCITY_EQ2(v1,v2)     (fabs(v1-v2)<v1*0.01)
+#define VELOCITY_EQ(v1,v2)      (fabs(v1-v2)<v1*0.01 || (v1<0.1 && v2<0.1)) // finest equals
+#define VELOCITY_EQ2(v1,v2)     (fabs(v1-v2)<v1*0.01)   // roughly equals
+#define VELOCITY_EQ3(v1,v2)     (fabs(v1-v2)<0.1)       // coarsely equals - catches rounding errors
 #define VELOCITY_NE(v1,v2)      (fabs(v1-v2)>v1*0.01)
 #define VELOCITY_LT(v1,v2)      (v1<(v2-v2*0.01))
 
@@ -222,14 +223,6 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
-//    float decel_time_ms;
-//    zoidExitPoint zoid_exit;
-//    float decel_time;
-//    float exit_target;
-//    float deltaV_diff;
-//    float deltaV_jerk;
-//    uint8_t jerk_axis;
-//    float velocity;
 
     //+++++ to here
 
@@ -438,12 +431,12 @@ bool mp_runtime_is_idle(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(void);
+void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
 void mp_calculate_trapezoid(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
-//float mp_get_target_velocity(const float v_0, const float L, const float jerk);
 
 // plan_exec.c functions
 stat_t mp_exec_move(void);

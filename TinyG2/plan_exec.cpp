@@ -57,10 +57,19 @@ stat_t mp_exec_move()
 {
 	mpBuf_t *bf;
 
-	if ((bf = mp_get_run_buffer()) == NULL) {			// NULL means nothing's running
+    // NULL means nothing's running
+    if ((bf = mp_get_run_buffer()) == NULL) {
 		st_prep_null();
 		return (STAT_NOOP);
 	}
+
+    // Operations to perform the first time a new run buffer is retrieved
+    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
+        mb.r->buffer_state = MP_BUFFER_RUNNING;
+        bf->optimal = true;
+        mp_plan_block_forward(bf);                      // perform the forward planning
+    }
+
 	// Manage motion state transitions
     if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
         if ((cm.motion_state != MOTION_RUN) && (cm.motion_state != MOTION_HOLD)) {
