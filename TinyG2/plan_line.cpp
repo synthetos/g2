@@ -294,12 +294,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 rpt_exception(42, "hit run buffer");
                 break;
             }
-            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
-
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);  // if exit velocity changes but entry does not you can use 
+                                                                             // previously computed accel_velocity
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->entry_velocity = bf->exit_velocity;
-//                bf->buffer_state = MP_BUFFER_PLANNED;
+                bf->buffer_state = MP_BUFFER_PLANNED;   // required
                 bf->hint = COMMAND_BLOCK;
                 bf = bf->pv;
                 continue;

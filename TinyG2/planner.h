@@ -231,7 +231,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 //    uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // code block for zoid and optimality. Must be accurate or NO_HINT
     bool optimal;                   // this block is optimally planned
-    bool optimal_decel;             // this block is an optimal deceleration
+//    bool optimal_decel;             // this block is an optimal deceleration
 
     // block parameters
     float unit[AXES];               // unit vector for axis scaling & planning
