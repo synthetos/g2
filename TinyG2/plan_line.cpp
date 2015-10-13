@@ -64,7 +64,7 @@ static void _set_diagnostics(mpBuf_t *bf)
     bf->linenum = bf->gm.linenum;
     mb.move_time_ms = bf->move_time * 60000;
     bf->move_time_ms = mb.move_time_ms;
-
+    bf->length_total = bf->length + bf->pv->length_total;
 //    bf->time_in_plan_ms = mb.time_in_plan_ms;
 //    bf->plannable_time_ms = mb.plannable_time_ms;
 }
@@ -265,7 +265,7 @@ void mp_plan_block_forward(mpBuf_t *bf)
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    // First time blocks (forward loading priming blocks)
+    // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
 //    if ((mb.pessimistic_state = PESSIMISTIC_PRIMING) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
     if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
@@ -299,7 +299,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->entry_velocity = bf->exit_velocity;
-                bf->buffer_state = MP_BUFFER_PLANNED;
+//                bf->buffer_state = MP_BUFFER_PLANNED;
                 bf->hint = COMMAND_BLOCK;
                 bf = bf->pv;
                 continue;
@@ -311,10 +311,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (bf->entry_velocity > bf->braking_velocity) {
                 bf->entry_velocity = bf->braking_velocity;
                 bf->hint = PERFECT_DECELERATION;
-                bf->optimal_decel = true;
+//                bf->optimal_decel = true;
             } else {
                 bf->hint = MIXED_DECELERATION;
-                bf->optimal_decel = false;
+//                bf->optimal_decel = false;
             }
             bf->cruise_velocity = bf->entry_velocity;
             bf = bf->pv;
@@ -333,7 +333,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         while (bf->nx != mb.planning_return) {
             bf->buffer_state = MP_BUFFER_PLANNED;
             bf->entry_velocity = bf->pv->exit_velocity;
-            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+//            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax); //+++++ comment out?
            
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
@@ -342,19 +342,17 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf = bf->nx;
                 continue;
             }
-/*
+
             // decelerations can be skipped - they are already planned
             if (bf->entry_velocity > bf->exit_velocity) {
-                bf->optimal = true;
-//                break;
                 bf = bf->nx;
-                continue;
+                continue;           // need to keep scnaning to look for inflection points
             }
-*/
+
             // cruises
             if ((VELOCITY_EQ3(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
                 (VELOCITY_EQ3(bf->entry_velocity, bf->cruise_vmax))) {
-                bf->cruise_velocity = bf->cruise_vmax;
+                bf->cruise_velocity = bf->cruise_vmax;                  //+++++ Need to ensure correct velocities (avoid blow up)
                 bf->hint = PERFECT_CRUISE;
                 bf->optimal = true;
                 bf = bf->nx;
