@@ -122,6 +122,13 @@ typedef enum {                      // planner operating state
     PLANNER_PESSIMISTIC             // plan by planning all blocks, including the tail
 } plannerState;
 
+typedef enum {                      // state machine for driving pessimistic planning
+    PESSIMISTIC_PRIMING,            // loading in blocks to be primed
+    PESSIMISTIC_BACKWARD,           // in backward planning pass
+    PESSIMISTIC_FORWARD,            // in forward planning pass
+    PESSIMISTIC_FINAL               // finalization
+} pessimistic_t;
+
 typedef enum {
     ZOID_EXIT_NULL = 0,
     ZOID_EXIT_1a,
@@ -224,7 +231,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
-
+    float length_total;
+    
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
@@ -232,7 +240,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     moveState move_state;           // move state machine sequence
 //    uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // code block for zoid and optimality. Must be accurate or NO_HINT
-    bool optimal;                   // true if block is optimally planned
+    bool optimal;                   // this block is optimally planned
+    bool optimal_decel;             // this block is an optimal deceleration
 
     // block parameters
     float unit[AXES];               // unit vector for axis scaling & planning
@@ -260,8 +269,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible
-    float decel_vmax;               // maximum entry velocity can be and still decelerate to zero
-    float accel_vmax;               // maximum exit velocity can achieve while accelerating up from head block Ve
+    float braking_velocity;         // entry velocity required to decelerate to zero
+    float accel_velocity;           // exit velocity achieved while accelerating from head-block Ve
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
@@ -284,6 +293,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 
     // planner state variables
     plannerState planner_state;     // current state of planner
+    pessimistic_t pessimistic_state;// internal state machine for pessimistic planner
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time
@@ -307,7 +317,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// write buffer pointer
 	mpBuf_t *p;						// planner buffer pointer
 	mpBuf_t *c;						// pointer to buffer immediately following critical region
-    mpBuf_t *backplan_return;       // buffer to return to once back-planning is complete
+    mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
 
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
 	magic_t magic_end;

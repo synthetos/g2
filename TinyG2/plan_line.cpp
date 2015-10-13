@@ -265,7 +265,123 @@ void mp_plan_block_forward(mpBuf_t *bf)
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    // First time block (priming)
+    // First time blocks (forward loading priming blocks)
+    // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
+//    if ((mb.pessimistic_state = PESSIMISTIC_PRIMING) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
+    if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
+        _calculate_override(bf);                // adjust cruise_vmax for feed/traverse override
+        _calculate_throttle(bf);                // adjust cruise_vmax for throttle factor
+        bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
+        bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
+        bf->buffer_state = MP_BUFFER_PRIMED;
+        if (bf->nx->buffer_state != MP_BUFFER_EMPTY) { // don't backplan yet if there are more forward moves
+            return (bf->nx);
+        }
+        mb.planning_return = bf->nx;            // where to return after planning is complete
+        mb.pessimistic_state = PESSIMISTIC_BACKWARD;
+    }
+
+    // Backward Planning Pass
+    // Build an optimal deceleration ramp by setting entry and exit velocities based on the braking velocity
+    // You can stop computing braking velocity if it exceeds cruise_vmax
+    // Note: Vmax's are already set by the time you get here
+    if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
+
+        while (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))) {
+
+            // exception cases
+            if (bf->buffer_state == MP_BUFFER_RUNNING) {
+                rpt_exception(42, "hit run buffer");
+                break;
+            }
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+
+            // command blocks
+            if (bf->move_type == MOVE_TYPE_COMMAND) {
+                bf->hint = COMMAND_BLOCK;
+                bf->entry_velocity = bf->exit_velocity;
+                bf = bf->pv;
+                continue;
+            }
+            
+            // decelerations
+            bf->entry_velocity = min(bf->entry_vmax, bf->cruise_vmax);
+            bf->braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
+            if (bf->entry_velocity > bf->braking_velocity) {
+                bf->entry_velocity = bf->braking_velocity;
+                bf->hint = PERFECT_DECELERATION;
+                bf->optimal_decel = true;
+            } else {
+                bf->hint = MIXED_DECELERATION;
+                bf->optimal_decel = false;
+            }
+            bf->cruise_velocity = bf->entry_velocity;
+            bf = bf->pv;
+        }
+        mb.pessimistic_state = PESSIMISTIC_FORWARD;
+    }
+
+    // Forward Planning Pass
+    // Build an optimal acceleration ramp by setting entry and exit velocities based on the accel velocity
+    // You can stop computing the acceleration ramp when it crosses the deceleration ramp
+    // always starts with pv as an optimal block
+
+    bf = bf->nx;
+    if (mb.pessimistic_state == PESSIMISTIC_FORWARD) {
+
+        while (bf->nx != mb.planning_return) {
+            bf->buffer_state = MP_BUFFER_PLANNED;
+            bf->entry_velocity = bf->pv->exit_velocity;
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+           
+            // command blocks
+            if (bf->move_type == MOVE_TYPE_COMMAND) {
+                bf->hint = COMMAND_BLOCK;
+                bf->optimal = true;
+                bf = bf->nx;
+                continue;
+            }
+/*
+            // decelerations can be skipped - they are already planned
+            if (bf->entry_velocity > bf->exit_velocity) {
+                bf->optimal = true;
+//                break;
+                bf = bf->nx;
+                continue;
+            }
+*/
+            // cruises
+            if ((VELOCITY_EQ3(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
+                (VELOCITY_EQ3(bf->entry_velocity, bf->cruise_vmax))) {
+                bf->cruise_velocity = bf->cruise_vmax;
+                bf->hint = PERFECT_CRUISE;
+                bf->optimal = true;
+                bf = bf->nx;
+                continue;
+            }        
+
+            // accelerations
+            bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+            if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
+                bf->exit_velocity = bf->accel_velocity;
+                bf->hint = PERFECT_ACCELERATION;
+                bf->optimal = true;
+            } else {                                        // you've hit the cusp
+                bf->hint = MIXED_ACCELERATION;
+                bf->optimal = false;
+            }
+            bf->cruise_velocity = bf->exit_velocity;
+            bf = bf->nx;
+        }
+    }
+    mb.pessimistic_state = PESSIMISTIC_PRIMING;
+    return (mb.planning_return);
+}
+
+/*
+static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
+{
+    // First time blocks (forward loading priming blocks)
     // Prime the block and drop through as first backplanned block
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
     if ((!mb.backplanning) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
@@ -281,7 +397,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         mb.backplanning = true;
     }
 
-    // Backplanning
+    // Backplanning pass
     // Set exit, braking, and target velocities - assuming deceleration is occurring
     // Set a provisional entry velocity (used for chaining decelerations)
     // Find stop point at optimal block or head of block chain
@@ -359,6 +475,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     }
     return (mb.backplan_return);
 }
+*/
 
 /*
  * _plan_block_optimistic() - plan the current block using optimistic forward plannins
@@ -498,7 +615,7 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
             // Start or continue a backplanning region
             if (!mb.backplanning) {
                 mb.backplanning = true;                 // signal that back planning is occurring
-                mb.backplan_return = bf->nx;            // return to the next buffer after start of backplan
+                mb.planning_return = bf->nx;            // return to the next buffer after start of backplan
             }
             bf->entry_vmax = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
 
@@ -512,13 +629,13 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
                     printf ("Vx:%1.0f Ve:%1.0f\n", bf->pv->exit_velocity, bf->entry_velocity);
 //                    while(1);
                     mb.backplanning = false;
-                    bf_ret = mb.backplan_return;
+                    bf_ret = mb.planning_return;
                     bf->hint = MIXED_DECELERATION;
                 }
                 bf->hint = PERFECT_DECELERATION;
             } else {
                 mb.backplanning = false;
-                bf_ret = mb.backplan_return;
+                bf_ret = mb.planning_return;
                 bf->hint = MIXED_DECELERATION;
             }
             ASCII_ART("\\");
