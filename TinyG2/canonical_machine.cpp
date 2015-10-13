@@ -582,7 +582,7 @@ void canonical_machine_reset()
 {
 	// set gcode defaults
     cm_set_units_mode(cm.default_units_mode);
-    cm_set_coord_system(cm.default_coord_system);
+    cm_set_coord_system(cm.default_coord_system);   // NB: queues a block to the planner with the coordinates
     cm_select_plane(cm.default_select_plane);
     cm_set_path_control(MODEL, cm.default_path_control);
     cm_set_distance_mode(cm.default_distance_mode);

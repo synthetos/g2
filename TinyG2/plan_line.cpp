@@ -298,8 +298,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
-                bf->hint = COMMAND_BLOCK;
                 bf->entry_velocity = bf->exit_velocity;
+                bf->buffer_state = MP_BUFFER_PLANNED;
+                bf->hint = COMMAND_BLOCK;
                 bf = bf->pv;
                 continue;
             }

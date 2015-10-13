@@ -104,15 +104,6 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
-/*
-    HINT_IS_STALE,                  // the hint may no longer be valid
-    WAS_PERFECT_ACCEL,              // straight line acceleration at jerk (H)
-    WAS_PERFECT_DECEL,              // straight line deceleration at jerk (T)
-    WAS_PERFECT_CRUISE,             // move is all body (B)
-    WAS_MIXED_ACCEL,                // kinked acceleration reaches and holds cruise (HB)
-    WAS_MIXED_DECEL,                // kinked deceleration starts with a cruise region (BT)
-    WAS_COMMAND_BLOCK,              // this block is a command
-*/
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -123,10 +114,9 @@ typedef enum {                      // planner operating state
 } plannerState;
 
 typedef enum {                      // state machine for driving pessimistic planning
-    PESSIMISTIC_PRIMING,            // loading in blocks to be primed
+    PESSIMISTIC_PRIMING,            // idle or loading blocks into priming
     PESSIMISTIC_BACKWARD,           // in backward planning pass
-    PESSIMISTIC_FORWARD,            // in forward planning pass
-    PESSIMISTIC_FINAL               // finalization
+    PESSIMISTIC_FORWARD             // in forward planning pass
 } pessimistic_t;
 
 typedef enum {

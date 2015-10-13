@@ -328,24 +328,26 @@ bool mp_is_phat_city_time()
 /**** Helper functions for mp_plan_buffer()
  * _stop_new_block_timer() - used to disable timer if blocks are not arriving
  * _reset_new_block_timer() - restart new block timer
- * _new_block_timeout() - detect a timeout
+ * _get_new_block_timeout() - detect a timeout
  * _set_planner_state() - set planner state optimistic or pessimistic
  */
 static void _stop_new_block_timer()
 {
     mb.new_block_timer = 0;
+    mb.new_block_timeout = false;
 }
 
 static void _reset_new_block_timer()
 {
     mb.new_block_timer = SysTickTimer.getValue() + NEW_BLOCK_TIMEOUT_MS;
+    mb.new_block_timeout = false;
 }
 
-static bool _new_block_timeout()
+static bool _get_new_block_timeout()
 {
-    mb.new_block_timeout = false;
+//    mb.new_block_timeout = false;
     if ((mp_planner_is_full()) || (mb.new_block_timer == 0)) {
-        _reset_new_block_timer();
+        _reset_new_block_timer();       // sets mb.new_block_timeout = false;
     } else if (mb.new_block_timer < SysTickTimer.getValue()) {
         mb.new_block_timeout = true;
     }
@@ -450,9 +452,9 @@ static bool _new_block_timeout()
 stat_t mp_planner_callback()
 {
     if (!mb.request_planning) {
-        if ((cm.motion_state == MOTION_STOP) && 
-            (cm.hold_state == FEEDHOLD_OFF) &&
-            (mb.buffers_available == PLANNER_BUFFER_POOL_SIZE)) {
+        if ((mb.buffers_available == PLANNER_BUFFER_POOL_SIZE) &&
+            (cm.motion_state == MOTION_STOP) && 
+            (cm.hold_state == FEEDHOLD_OFF)) {
             mb.planner_state = PLANNER_IDLE;
         }
         if ((mb.planner_state == PLANNER_PESSIMISTIC) && (!mb.new_block)) { // shortcut out of here
@@ -479,13 +481,13 @@ stat_t mp_planner_callback()
         if (mp_planner_is_full()) {
             mb.planner_state = PLANNER_PESSIMISTIC;      // start planning now
 //            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
-        } else if (_new_block_timeout()) {
+        } else if (_get_new_block_timeout()) {
             mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
         } else {
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     } else {                                            // set planner state for normal operation
-        if (_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
+        if (_get_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
         } else {
 //            mb.planner_state = PLANNER_OPTIMISTIC;
@@ -776,7 +778,7 @@ void mp_commit_write_buffer(const moveType move_type)
         if ((mb.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_exec_move();	 // requests an exec if the runtime is not busy
+            st_request_exec_move();	    // requests an exec if the runtime is not busy
         }
     }
     mb.new_block = true;				// got a new block to plan
