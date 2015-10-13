@@ -160,7 +160,7 @@ typedef enum {
 #define PLANNER_ITERATION_TIME  ((float)(PLANNER_ITERATION_MS / 60000)) // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
-#define THROTTLE_MAX            ((float)1.00)           // unity factor; must always = 1.00
+#define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
 #define THROTTLE_MIN            ((float)0.10)           // minimum factor to slow down for planner throttling
 //#define THROTTLE_SLOPE          ((float)(1-THROTTLE_MIN) / (PLANNER_THROTTLE_TIME - PLANNER_CRITICAL_TIME))
 #define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
@@ -231,7 +231,6 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 //    uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // code block for zoid and optimality. Must be accurate or NO_HINT
     bool optimal;                   // this block is optimally planned
-//    bool optimal_decel;             // this block is an optimal deceleration
 
     // block parameters
     float unit[AXES];               // unit vector for axis scaling & planning
@@ -249,6 +248,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float head_time;                // ...head
     float body_time;                // ...body
     float tail_time;                // ...tail
+    float plannable_time;
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -280,6 +280,11 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float move_time_ms;
     float run_time_remaining_ms;
     float plannable_time_ms;
+
+    float throttle_planner_time;
+    float throttle_time;
+    float throttle_set_point;
+    float throttle_raw;
 
     // planner state variables
     plannerState planner_state;     // current state of planner
