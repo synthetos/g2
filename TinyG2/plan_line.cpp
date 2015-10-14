@@ -251,14 +251,16 @@ void mp_plan_block_list()
 //    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
 
 /*
- * mp_plan_block_forward() - plan the head block once it's been pulled by the runtime (exec)
+ * mp_plan_block_forward() - plan a block
  */
 
 void mp_plan_block_forward(mpBuf_t *bf)
 {
-//    bf->cruise_velocity = bf->cruise_vmax;
     SANITY_TRAPS(bf);
     mp_calculate_trapezoid(bf);
+    bf->plannable_time = bf->pv->plannable_time + bf->move_time;
+    bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
+    bf->move_time_ms = bf->move_time * 60000;           //+++++
     SANITY_TRAPS(bf);
 }
 
@@ -266,12 +268,13 @@ void mp_plan_block_forward(mpBuf_t *bf)
  * mp_plan_block_pessimistic() - the block chain using pessimistic assumptions
  */
 
+static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
+
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    
-    if (bf->linenum == 260) {
-        printf ("stop\n");        
-    }
+//    if (bf->linenum == 260) {
+//        printf ("stop\n");        
+//    }
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
 //    if ((mb.pessimistic_state = PESSIMISTIC_PRIMING) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
@@ -360,10 +363,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
                 // this is a bit of hack to ensure that neither the entry or the exit velocities 
                 // are greater than the cruise velocity even though there is slop in the comparison
-//                bf->cruise_velocity = bf->cruise_vmax;                  //+++++ Need to ensure correct velocities (avoid blow up)
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity to agree with pv buffer
                 bf->exit_velocity = bf->entry_velocity;
+                bf->cruise_velocity = bf->exit_velocity;
                 bf->hint = PERFECT_CRUISE;
+                mp_plan_block_forward(bf);
                 bf->optimal = true;
                 bf = bf->nx;
                 continue;
@@ -373,14 +377,21 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
             if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
                 bf->exit_velocity = bf->accel_velocity;
+                bf->cruise_velocity = bf->exit_velocity;
                 bf->hint = PERFECT_ACCELERATION;
+                
+                //++++ tests
+                bf->accel_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); //+++++ T = ±(2 L)/(v0+v1)
+                bf->accel_time2 = sqrt((bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
+
+                mp_plan_block_forward(bf);
                 bf->optimal = true;
             } else {                                        // you've hit the cusp
                 bf->hint = MIXED_ACCELERATION;
                 bf->optimal = false;
             }
-            bf->cruise_velocity = bf->exit_velocity;
             bf = bf->nx;
+            continue;
         }
     }
     mb.pessimistic_state = PESSIMISTIC_PRIMING;
@@ -719,6 +730,7 @@ static void _calculate_throttle(mpBuf_t *bf)
             bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
                               (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
             bf->cruise_vmax *= bf->throttle;
+            bf->move_time *= bf->throttle;
             printf ("%1.3f\n", bf->throttle);
         }
     } else {

@@ -161,7 +161,7 @@ typedef enum {
 #define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
 #define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
-#define THROTTLE_MIN            ((float)0.10)           // minimum factor to slow down for planner throttling
+#define THROTTLE_MIN            ((float)0.50)           // minimum factor to slow down for planner throttling
 //#define THROTTLE_SLOPE          ((float)(1-THROTTLE_MIN) / (PLANNER_THROTTLE_TIME - PLANNER_CRITICAL_TIME))
 #define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
 #define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
@@ -244,11 +244,13 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_length;
     float tail_length;
 
+    float accel_time;               //+++++
+    float accel_time2;               //+++++
+    float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
     float head_time;                // ...head
     float body_time;                // ...body
     float tail_time;                // ...tail
-    float plannable_time;
 
 									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float entry_velocity;           // entry velocity requested for the move
@@ -412,6 +414,7 @@ stat_t mp_planner_callback();
 void mp_replan_queue(mpBuf_t *bf);
 void mp_start_feed_override(const float ramp_time, const float override_factor);
 void mp_end_feed_override(const float ramp_time);
+void mp_planner_time_accounting(void);
 
 // planner buffer primitives
 void mp_init_buffers(void);

@@ -73,7 +73,7 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
 
-static void _planner_time_accounting();
+//static void _planner_time_accounting();
 static void _audit_buffers();
 
 // Execution routines (NB: These are called from the LO interrupt)
@@ -579,12 +579,12 @@ void mp_end_feed_override(const float ramp_time)
 }
 
 /*
- * _planner_time_accounting() - gather time in planner and runtime
+ * mp_planner_time_accounting() - gather time in planner and runtime
  *
  *  Record the move times in the runtime and planner for use in planning decisions
  */
 
-static void _planner_time_accounting()
+void mp_planner_time_accounting()
 {
     mpBuf_t *bf = mb.r;                 // get the run buffer
 
@@ -809,7 +809,7 @@ mpBuf_t * mp_get_run_buffer()
 {
     // This is the one point where an accurate accounting of the total time in the
     // run and the planner is established. 
-    _planner_time_accounting();
+//    _planner_time_accounting();
 
     // CASE: fresh buffer; becomes running if buffer planned
     if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
