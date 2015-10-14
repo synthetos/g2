@@ -180,7 +180,6 @@ stat_t mp_aline(GCodeState_t *gm_in)
     _calculate_jerk(bf);                                    // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);        // compute cruise_vmax and absolute_vmax
     _calculate_junction_vmax(bf);                           // compute maximum junction velocity constraint
-//    bf->plannable_time = bf->move_time + bf->pv->plannable_time; // an estimate until planner time accounting is run
     _set_diagnostics(bf);                                   //+++++DIAGNOSTIC
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
@@ -287,13 +286,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
+
+        bf->plannable_time = bf->pv->plannable_time;    // set planabble time - excluding current move
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
+        bf->plannable_time += bf->move_time;            // adjust plannable time
+        bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
+
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
-        bf->plannable_time = bf->move_time + bf->pv->plannable_time;
-        bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
         if (bf->nx->buffer_state != MP_BUFFER_EMPTY) {
-            return (bf->nx);                            // go get more INITIALIZED buffers if there are any
+            return (bf->nx);                            // read in more INITIALIZED buffers if there are any
         }
         mb.planning_return = bf->nx;                    // where to return after planning is complete
         mb.pessimistic_state = PESSIMISTIC_BACKWARD;    // start backplanning
