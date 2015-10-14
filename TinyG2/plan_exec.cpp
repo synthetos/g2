@@ -63,15 +63,22 @@ stat_t mp_exec_move()
 		return (STAT_NOOP);
 	}
 
-    // Operations to perform the first time a new run buffer is retrieved
-    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
-        mb.r->buffer_state = MP_BUFFER_RUNNING;
-//        mp_plan_block_forward(bf);                      // perform the forward planning
-//        mp_planner_time_accounting();   //+++++uncomment after test
+    // first-time operations
+    if (bf->buffer_state != MP_BUFFER_RUNNING) {
+        if (bf->buffer_state < MP_BUFFER_PREPPED) {
+            rpt_exception(42, "mp_exec_move() cannot get prepped buffer");
+            return (STAT_ERROR_42);
+        }
+        if (bf->buffer_state == MP_BUFFER_PREPPED) {
+            mp_plan_block_forward(bf);                      // complete planning if not already planned
+        }
+
+        mp_planner_time_accounting();   //+++++uncomment after test
+        bf->buffer_state = MP_BUFFER_RUNNING;
         bf->optimal = true;
     }
 
-    mp_planner_time_accounting();         //+++++ move up ^, do this only once
+//    mp_planner_time_accounting();         //+++++ move up ^, do this only once
 
 	// Manage motion state transitions
     if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only

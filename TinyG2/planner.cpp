@@ -522,7 +522,7 @@ void mp_replan_queue(mpBuf_t *bf)
         bf->head_time = 0;
         bf->body_time = 0;
         bf->tail_time = 0;
-        bf->buffer_state = MP_BUFFER_NOT_PLANNED;
+        bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
     } while ((bf = mp_get_next_buffer(bf)) != mb.p);
 
     mb.request_planning = true;
@@ -586,30 +586,23 @@ void mp_end_feed_override(const float ramp_time)
 
 void mp_planner_time_accounting()
 {
-    mpBuf_t *bf = mb.r;                 // get the run buffer
+    mpBuf_t *bf = mb.r;                 // start with run buffer
 
-    // check the run buffer to see if anything is running
-//    if (mb.r->buffer_state == MP_BUFFER_EMPTY || mb.r->buffer_state == MP_BUFFER_NOT_PLANNED) {
-    if (bf->buffer_state != MP_BUFFER_RUNNING) {
-        mb.plannable_time = 0;
+    // check the run buffer to see if anything is running. Might not be
+    if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
+        bf->plannable_time = 0;
         bf->plannable_time_ms = mb.plannable_time * 60000;         // ++++++ DIAGNOSTIC which is 0 at this point
         return;
     }
 
-    bf = bf->nx;                        // first buffer past the run buffer
     float plannable_time = 0;
-    if (bf->buffer_state > MP_BUFFER_NOT_PLANNED) {
-        plannable_time = bf->move_time;
+    while ((bf = bf->nx) != mb.r) {     // all non-empty buffers
+        if (bf->buffer_state == MP_BUFFER_EMPTY) {
+            return;
+        }
+        plannable_time += bf->move_time;
         bf->plannable_time = plannable_time;
         bf->plannable_time_ms = bf->plannable_time * 60000; //++++++
-    }
-
-    while ((bf = bf->nx) != mb.r) {     // 2 - N plannable buffers
-        if (bf->buffer_state > MP_BUFFER_NOT_PLANNED) {
-            plannable_time = bf->move_time + bf->pv->plannable_time;
-            bf->plannable_time = plannable_time;
-            bf->plannable_time_ms = bf->plannable_time * 60000; //++++++
-       }
     }
     mb.plannable_time = plannable_time; 
     mb.plannable_time_ms = plannable_time * 60000;
@@ -769,7 +762,7 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 {
     if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
         _clear_buffer(mb.w);
-        mb.w->buffer_state = MP_BUFFER_NOT_PLANNED;
+        mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
         return (mb.w);
     }
@@ -807,21 +800,14 @@ void mp_commit_write_buffer(const moveType move_type)
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
 mpBuf_t * mp_get_run_buffer()
 {
-    // This is the one point where an accurate accounting of the total time in the
-    // run and the planner is established. 
-//    _planner_time_accounting();
-
-    // CASE: fresh buffer; becomes running if buffer planned
-    if (mb.r->buffer_state == MP_BUFFER_PLANNED) {
-//        mb.r->buffer_state = MP_BUFFER_RUNNING;
-        return (mb.r);					// return same buffer
+    // EMPTY is the one case where nothing is returned. This is not an error 
+    if (mb.r->buffer_state == MP_BUFFER_EMPTY) {
+        return (NULL);
     }
-
-    // CASE: asking for the same run buffer for the Nth time
-    if (mb.r->buffer_state == MP_BUFFER_RUNNING) {
-        return (mb.r);					// return same buffer
-    }
-    return (NULL);						// CASE: no queued buffers. fail it.
+    // Otherwise return the buffer. Let mp_exec_move() manage the state machine to sort out:
+    //  (1) is the the first time the run buffer has been retrieved?
+    //  (2) is the buffer in error - i.e. not yet ready for running?
+    return (mb.r);
 }
 
 // Note: mp_free_run_buffer() is only called from mp_exec_XXX, which are within an interrupt

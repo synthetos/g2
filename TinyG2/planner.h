@@ -53,9 +53,10 @@ typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine exe
 
 typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
     MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
-    MP_BUFFER_NOT_PLANNED,          // buffer processed by aline() only
-    MP_BUFFER_PRIMED,               // buffer has initial data but not backplanned or zoided yet
-    MP_BUFFER_PLANNED,              // buffer fully planned at least once. May still be replanned
+    MP_BUFFER_INITIALIZING,         // buffer has been checked out and is being initialzed by aline() or a command
+    MP_BUFFER_IN_PROCESS,           // planning is in progress - at least vmaxes have been set
+    MP_BUFFER_PREPPED,              // buffer ready for final planning; velocities have been set
+    MP_BUFFER_PLANNED,              // buffer fully planned. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
     MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
     MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
@@ -244,8 +245,9 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_length;
     float tail_length;
 
-    float accel_time;               //+++++
-    float accel_time2;               //+++++
+    float accel_time;               //+++++ time tests
+    float accel_time_alt;           //+++++ time tests
+
     float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
     float head_time;                // ...head
@@ -279,14 +281,8 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	uint8_t buffers_available;		// running count of available buffers
 
     //+++++DIAGNOSTICS
-    float move_time_ms;
     float run_time_remaining_ms;
     float plannable_time_ms;
-
-    float throttle_planner_time;
-    float throttle_time;
-    float throttle_set_point;
-    float throttle_raw;
 
     // planner state variables
     plannerState planner_state;     // current state of planner

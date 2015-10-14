@@ -180,7 +180,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     _calculate_jerk(bf);                                    // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);        // compute cruise_vmax and absolute_vmax
     _calculate_junction_vmax(bf);                           // compute maximum junction velocity constraint
-    bf->plannable_time = bf->move_time + bf->pv->plannable_time; // an estimate until planner time accounting is run
+//    bf->plannable_time = bf->move_time + bf->pv->plannable_time; // an estimate until planner time accounting is run
     _set_diagnostics(bf);                                   //+++++DIAGNOSTIC
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
@@ -254,10 +254,19 @@ void mp_plan_block_list()
  * mp_plan_block_forward() - plan a block
  */
 
+static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
+
 void mp_plan_block_forward(mpBuf_t *bf)
 {
     SANITY_TRAPS(bf);
+
+//++++ time tests
+    bf->accel_time = sqrt(fabs(bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
+    bf->accel_time_alt = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); //+++++ T = ±(2 L)/(v0+v1)
+
     mp_calculate_trapezoid(bf);
+    bf->buffer_state = MP_BUFFER_PLANNED;
+
     bf->plannable_time = bf->pv->plannable_time + bf->move_time;
     bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
     bf->move_time_ms = bf->move_time * 60000;           //+++++
@@ -268,8 +277,6 @@ void mp_plan_block_forward(mpBuf_t *bf)
  * mp_plan_block_pessimistic() - the block chain using pessimistic assumptions
  */
 
-static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
-
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
 //    if (bf->linenum == 260) {
@@ -277,18 +284,19 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //    }
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
-//    if ((mb.pessimistic_state = PESSIMISTIC_PRIMING) && (bf->buffer_state == MP_BUFFER_NOT_PLANNED)) {
     if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
-        _calculate_override(bf);                // adjust cruise_vmax for feed/traverse override
-        _calculate_throttle(bf);                // adjust cruise_vmax for throttle factor
+        bf->buffer_state = MP_BUFFER_IN_PROCESS;
+        _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
+        _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
-        bf->buffer_state = MP_BUFFER_PRIMED;
-        if (bf->nx->buffer_state != MP_BUFFER_EMPTY) { // don't backplan yet if there are more forward moves
-            return (bf->nx);
+        bf->plannable_time = bf->move_time + bf->pv->plannable_time;
+        bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
+        if (bf->nx->buffer_state != MP_BUFFER_EMPTY) {
+            return (bf->nx);                            // go get more INITIALIZED buffers if there are any
         }
-        mb.planning_return = bf->nx;            // where to return after planning is complete
-        mb.pessimistic_state = PESSIMISTIC_BACKWARD;
+        mb.planning_return = bf->nx;                    // where to return after planning is complete
+        mb.pessimistic_state = PESSIMISTIC_BACKWARD;    // start backplanning
     }
 
     // Backward Planning Pass
@@ -297,21 +305,19 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
 
-        while (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))) {
+        for ( ; (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
 
             // exception cases
             if (bf->buffer_state == MP_BUFFER_RUNNING) {
                 rpt_exception(42, "hit run buffer");
                 break;
             }
-            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);  // if exit velocity changes but entry does not you can use 
-                                                                             // previously computed accel_velocity
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);  // if exit velocity changes but entry does not you can use
+            // previously computed accel_velocity
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->entry_velocity = bf->exit_velocity;
-                bf->buffer_state = MP_BUFFER_PLANNED;   // required
                 bf->hint = COMMAND_BLOCK;
-                bf = bf->pv;
                 continue;
             }
             
@@ -321,11 +327,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (bf->entry_velocity > bf->braking_velocity) {
                 bf->entry_velocity = bf->braking_velocity;
                 bf->hint = PERFECT_DECELERATION;
-            } else {
+                } else {
                 bf->hint = MIXED_DECELERATION;
             }
             bf->cruise_velocity = bf->entry_velocity;
-            bf = bf->pv;
         }
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
     }
@@ -335,25 +340,21 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // You can stop computing the acceleration ramp when it crosses the deceleration ramp
     // always starts with pv as an optimal block
 
-    bf = bf->nx;
     if (mb.pessimistic_state == PESSIMISTIC_FORWARD) {
 
-        while (bf->nx != mb.planning_return) {
-            bf->buffer_state = MP_BUFFER_PLANNED;
+        for (bf = bf->nx; bf != mb.planning_return; bf = bf->nx) {
             bf->entry_velocity = bf->pv->exit_velocity;
-//            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax); //+++++ comment out?
-           
+
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
+                bf->buffer_state = MP_BUFFER_PLANNED;
                 bf->optimal = true;
-                bf = bf->nx;
                 continue;
             }
 
-            // decelerations can be skipped - they are already planned
+            // decelerations can be skipped - they are already prepped
             if (bf->entry_velocity > bf->exit_velocity) {
-                bf = bf->nx;
                 continue;           // need to keep scanning to look for inflection points
             }
 
@@ -366,10 +367,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity to agree with pv buffer
                 bf->exit_velocity = bf->entry_velocity;
                 bf->cruise_velocity = bf->exit_velocity;
+                bf->buffer_state = MP_BUFFER_PREPPED;
                 bf->hint = PERFECT_CRUISE;
-                mp_plan_block_forward(bf);
                 bf->optimal = true;
-                bf = bf->nx;
                 continue;
             }        
 
@@ -379,19 +379,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->exit_velocity = bf->accel_velocity;
                 bf->cruise_velocity = bf->exit_velocity;
                 bf->hint = PERFECT_ACCELERATION;
-                
-                //++++ tests
-                bf->accel_time = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); //+++++ T = ±(2 L)/(v0+v1)
-                bf->accel_time2 = sqrt((bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
-
-                mp_plan_block_forward(bf);
                 bf->optimal = true;
             } else {                                        // you've hit the cusp
                 bf->hint = MIXED_ACCELERATION;
                 bf->optimal = false;
             }
-            bf = bf->nx;
-            continue;
+            bf->buffer_state = MP_BUFFER_PREPPED;
         }
     }
     mb.pessimistic_state = PESSIMISTIC_PRIMING;
@@ -495,11 +488,11 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
     }
 
     // Set exit velocity. Choose the minimum of the exit_vmax or the entry velocity of the
-    // nx block. If the nx block has already been planned use its actual entry_velocity,
+    // nx block. If the nx block has already been prepped use its actual entry_velocity,
     // otherwise this is invalid and the entry_vmax should be used. If next block is EMPTY
     // this expression will set bf->exit_velocity to zero.
     bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_velocity; // set for exact stops
-    bf->exit_velocity = min(bf->exit_vmax, (bf->nx->buffer_state == MP_BUFFER_NOT_PLANNED) ?
+    bf->exit_velocity = min(bf->exit_vmax, (bf->nx->buffer_state == MP_BUFFER_PREPPED) ?
                                             bf->nx->entry_vmax :
                                             bf->nx->entry_velocity);
 
@@ -707,31 +700,13 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
 
 static void _calculate_throttle(mpBuf_t *bf)
 {
-/* 
-    if ((bf->move_type == MOVE_TYPE_ALINE) && (mb.plannable_time > 0)) {
-        mb.throttle_planner_time = PLANNER_THROTTLE_TIME;
-        mb.throttle_time = (mb.planner_critical_time + mb.throttle_planner_time);
-        if (mb.plannable_time < mb.throttle_time) {
- 
-//            bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE * (mb.plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
-            mb.throttle_set_point = mb.plannable_time - mb.planner_critical_time;
-            mb.throttle_raw = THROTTLE_SLOPE * mb.throttle_set_point + THROTTLE_INTERCEPT;
-            bf->throttle = max(THROTTLE_MIN, mb.throttle_raw);
-            bf->cruise_vmax *= bf->throttle;
-            printf ("%1.3f\n", bf->throttle);
-        }
-    } else {
-        bf->throttle = THROTTLE_MAX;        // set to 1.00 in case it's needed for backplanning
-    }
-*/
-
     if ((bf->move_type == MOVE_TYPE_ALINE) && (bf->plannable_time > 0)) {
         if (bf->plannable_time < (mb.planner_critical_time + PLANNER_THROTTLE_TIME)) {
             bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
                               (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
-            bf->cruise_vmax *= bf->throttle;
-            bf->move_time *= bf->throttle;
-            printf ("%1.3f\n", bf->throttle);
+            bf->cruise_vmax *= bf->throttle;    // adjust the maximum achievable velocity
+            bf->move_time *= bf->throttle;      // adjust the estimated move time as well
+            printf ("%1.3f\n", bf->throttle);   //+++++
         }
     } else {
         bf->throttle = THROTTLE_MAX;        // set to 1.00 in case it's needed for backplanning
