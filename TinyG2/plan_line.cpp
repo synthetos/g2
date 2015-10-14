@@ -294,7 +294,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
 
-        bf->plannable_time = bf->pv->plannable_time;    // set planabble time - excluding current move
+        bf->plannable_time = bf->pv->plannable_time;    // set planable time - excluding current move
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
         bf->plannable_time += bf->move_time;            // adjust plannable time
 
@@ -337,21 +337,23 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             
             // decelerations    // Oprimization: Don;t compute braking velocity if you get to a cruise (how?)
             bf->entry_velocity = min(bf->entry_vmax, bf->cruise_vmax);
-/*
+
             bf->braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
             if (bf->entry_velocity > bf->braking_velocity) {
                 bf->entry_velocity = bf->braking_velocity;
+                bf->cruise_velocity = bf->entry_velocity;   // put this here to avoid a race condition with _exec()
                 bf->hint = PERFECT_DECELERATION;
-*/
+/*
             float braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
             if (bf->entry_velocity > braking_velocity) {
                 bf->entry_velocity = braking_velocity;
+                bf->cruise_velocity = bf->entry_velocity;   // put this here to avoid a race condition with _exec()
                 bf->hint = PERFECT_DECELERATION;
-
+*/
             } else {
+                bf->cruise_velocity = bf->entry_velocity;
                 bf->hint = MIXED_DECELERATION;
             }
-            bf->cruise_velocity = bf->entry_velocity;
         }
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
     }
@@ -375,13 +377,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 continue;
             }
 
-            // decelerations can be skipped - they are already prepped
-            if (bf->entry_velocity > bf->exit_velocity) {           // need to keep scanning to look for inflection points
-                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
- 
-           // cruises
-            } else if ((VELOCITY_EQ3(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
-                       (VELOCITY_EQ3(bf->entry_velocity, bf->cruise_vmax))) {
+            // cruises - must be tested first
+            if ((VELOCITY_EQ3(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
+                (VELOCITY_EQ3(bf->entry_velocity, bf->cruise_vmax))) {
 
                 // this is a bit of hack to ensure that neither the entry or the exit velocities 
                 // are greater than the cruise velocity even though there is slop in the comparison
@@ -392,22 +390,27 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = PERFECT_CRUISE;
                 bf->optimal = true;
 
+            // decelerations - already planned, but keep looking for inflection points, optimals, and compute move_time
+            } else if (bf->entry_velocity > bf->exit_velocity) {
+                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+                if (bf->pv->optimal) { bf->optimal = true; }
+
             // accelerations
             } else {
-/*
                 bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
                 if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
                     bf->exit_velocity = bf->accel_velocity;
-*/
+/*
                 float accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
                 if (bf->exit_velocity > accel_velocity) {       // still accelerating
                     bf->exit_velocity = accel_velocity;
-
+*/
                     bf->cruise_velocity = bf->exit_velocity;
                     bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
                     bf->optimal = true;
                 } else {                                        // you've hit the cusp
+                    bf->cruise_velocity = bf->exit_velocity;
                     bf->hint = MIXED_ACCELERATION;
                     bf->optimal = false;
                 }

@@ -222,7 +222,6 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     float move_time_ms;
     float plannable_time_ms;
-//    float length_total;
     
     //+++++ to here
 
@@ -245,12 +244,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_length;
     float tail_length;
 
-//    float accel_time;               //+++++ time tests
-//    float accel_time_alt;           //+++++ time tests
-
     float plannable_time;           // time in the planning queue including this block
-//    float move_time_alt;
-//    float move_time_alt2;
     float move_time;                // computed move time for entire move
     float head_time;                // ...head
     float body_time;                // ...body
@@ -265,8 +259,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible
-//    float braking_velocity;         // entry velocity required to decelerate to zero
-//    float accel_velocity;           // exit velocity achieved while accelerating from head-block Ve
+    float braking_velocity;         // entry velocity required to decelerate to zero
+    float accel_velocity;           // exit velocity achieved while accelerating from head-block Ve
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the entry velocity can be to go through the junction
 
