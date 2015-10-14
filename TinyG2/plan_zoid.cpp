@@ -144,8 +144,8 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         bf->hint = COMMAND_BLOCK;
         return;
     }
-    TRAP_ZERO (bf->length, "zoid() got L=0");
-    TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0");
+    TRAP_ZERO (bf->length, "zoid() got L=0");           //+++++ Move this outside of zoid
+    TRAP_ZERO (bf->cruise_velocity, "zoid() got Vc=0"); // move this outside
 
     // If the move has already been planned one or more times re-initialize the lengths
     // Otherwise you can end up with spurious lengths that kill accuracy

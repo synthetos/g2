@@ -72,13 +72,10 @@ stat_t mp_exec_move()
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
             mp_plan_block_forward(bf);                      // complete planning if not already planned
         }
-
-        mp_planner_time_accounting();   //+++++uncomment after test
-        bf->buffer_state = MP_BUFFER_RUNNING;
+        bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
+        mp_planner_time_accounting();
         bf->optimal = true;
     }
-
-//    mp_planner_time_accounting();         //+++++ move up ^, do this only once
 
 	// Manage motion state transitions
     if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
