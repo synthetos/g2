@@ -586,52 +586,32 @@ void mp_end_feed_override(const float ramp_time)
 
 void mp_planner_time_accounting()
 {
-    mpBuf_t *bf = mb.r;                 // start with run buffer
+    mpBuf_t *bf = mb.r;                             // start with run buffer
+//    bool in_critical = true;                        // used to look for transition to critical region
 
     // check the run buffer to see if anything is running. Might not be
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         bf->plannable_time = 0;
-        bf->plannable_time_ms = mb.plannable_time * 60000;         // ++++++ DIAGNOSTIC which is 0 at this point
+        bf->plannable_time_ms = 0;      // ++++++
         return;
     }
 
     float plannable_time = 0;
     while ((bf = bf->nx) != mb.r) {     // all non-empty buffers
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
-            return;
+            break;
         }
         plannable_time += bf->move_time;
         bf->plannable_time = plannable_time;
         bf->plannable_time_ms = bf->plannable_time * 60000; //++++++
+
+//        if (in_critical && (plannable_time >= mb.planner_critical_time)) {
+//            in_critical = false;
+//            mb.c = bf;                          // mark the first non-critical block
+//        }
     }
     mb.plannable_time = plannable_time; 
-    mb.plannable_time_ms = plannable_time * 60000;
-
-/*
-//    float plannable_time = 0;
-//    bf->plannable_time_ms = 0;         // ++++++ DIAGNOSTIC which is 0 at this point
-//    bool in_critical = true;                        // used to look for transition to critical region
-
-    // Step through the moves and add up the planner time
-    while ((bf = mp_get_next_buffer(bf)) != mb.r) {
-        plannable_time += bf->move_time;              // total planner time, w/est's for non-planned blocks
-        bf->plannable_time_ms = plannable_time * 60000; //+++++ DIAGNOSTIC
-        if (bf->buffer_state == MP_BUFFER_PLANNED) {
-//          plannable_time += bf->move_time;
-//            if (in_critical && (plannable_time >= PLANNER_CRITICAL_TIME)) {
-            if (in_critical && (plannable_time >= mb.planner_critical_time)) {
-                in_critical = false;
-                mb.c = bf;                          // mark the first non-critical block
-            }
-            continue;
-        }
-        break;
-    }
-    mb.plannable_time = plannable_time;
-    //+++++ DIAGNOSTIC
-    mb.plannable_time_ms = plannable_time * 60000;
-    mb.run_time_remaining_ms = mb.run_time_remaining_ms * 60000;
-*/
+    mb.plannable_time_ms = plannable_time * 60000;  //+++++
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************

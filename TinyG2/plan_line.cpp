@@ -46,7 +46,6 @@ extern OutputPin<kDebug2_PinNumber> debug_pin2;
 extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
-//static mpBuf_t *_plan_block(mpBuf_t *bf);
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf);
 static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
 static void _calculate_override(mpBuf_t *bf);
@@ -54,7 +53,6 @@ static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
 static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t *bf);
-//static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0);
 
 //+++++DIAGNOSTICS
 #pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
@@ -67,7 +65,6 @@ static void _set_diagnostics(mpBuf_t *bf)
 
 //    mb.move_time_ms = bf->move_time * 60000;
 //    mb.plannable_time_ms = mb.plannable_time * 60000;
-
 //    bf->length_total = bf->length + bf->pv->length_total;
 }
 #pragma GCC reset_options
@@ -98,19 +95,12 @@ float mp_get_runtime_work_position(uint8_t axis) { return (mr.position[axis] - m
  */
 bool mp_get_runtime_busy()
 {
-/*
-    if ((st_runtime_isbusy() == true) ||
-        (mr.move_state == MOVE_RUN) ||
-        (mb.planner_state != PLANNER_IDLE)) {
-        return (true);
-    }
-*/
     if (cm.cycle_state == CYCLE_OFF) {
         return (false);
     }
     if ((st_runtime_isbusy() == true) ||
         (mr.move_state == MOVE_RUN) ||
-        (mb.planner_state == PLANNER_STARTUP)) {
+        (mb.planner_state == PLANNER_STARTUP)) {    // could be != PLANNER_IDLE
         return (true);
     }
 	return (false);
@@ -253,16 +243,9 @@ void mp_plan_block_list()
  * mp_plan_block_forward() - plan a block
  */
 
-static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
-
 void mp_plan_block_forward(mpBuf_t *bf)
 {
     SANITY_TRAPS(bf);
-
-//++++ time tests
-//    bf->accel_time = sqrt(fabs(bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
-//    bf->accel_time_alt = 2 * bf->length / (bf->entry_velocity + bf->exit_velocity); //+++++ T = ±(2 L)/(v0+v1)
-
     mp_calculate_trapezoid(bf);
 //    bf->plannable_time = bf->pv->plannable_time + bf->move_time;
     bf->buffer_state = MP_BUFFER_PLANNED;
@@ -272,7 +255,8 @@ void mp_plan_block_forward(mpBuf_t *bf)
     SANITY_TRAPS(bf);
 }
 /*
-static void _adjust_move_time(mpBuf_t *bf)  // adjust move time now that we have entry and exit velocities
+static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
+static void _adjust_move_time(mpBuf_t *bf)      // adjust move time now that we have entry and exit velocities
 {
 //    bf->move_time_alt = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
     bf->move_time_alt2 = sqrt(fabs(bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
@@ -284,7 +268,7 @@ static void _adjust_move_time(mpBuf_t *bf)  // adjust move time now that we have
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    if (bf->linenum == 778) { // looking at crash on line 780 (buffer 5), executing line 737 in buffer 10
+    if (bf->linenum == 2400) { // looking at crash on line 780 (buffer 5), executing line 737 in buffer 10
         printf ("stop\n");        
     }
 
@@ -343,13 +327,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->entry_velocity = bf->braking_velocity;
                 bf->cruise_velocity = bf->entry_velocity;   // put this here to avoid a race condition with _exec()
                 bf->hint = PERFECT_DECELERATION;
-/*
-            float braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
-            if (bf->entry_velocity > braking_velocity) {
-                bf->entry_velocity = braking_velocity;
-                bf->cruise_velocity = bf->entry_velocity;   // put this here to avoid a race condition with _exec()
-                bf->hint = PERFECT_DECELERATION;
-*/
             } else {
                 bf->cruise_velocity = bf->entry_velocity;
                 bf->hint = MIXED_DECELERATION;
@@ -400,11 +377,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
                 if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
                     bf->exit_velocity = bf->accel_velocity;
-/*
-                float accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-                if (bf->exit_velocity > accel_velocity) {       // still accelerating
-                    bf->exit_velocity = accel_velocity;
-*/
                     bf->cruise_velocity = bf->exit_velocity;
                     bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
