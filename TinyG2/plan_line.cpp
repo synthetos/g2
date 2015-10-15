@@ -60,11 +60,13 @@ static void _calculate_junction_vmax(mpBuf_t *bf);
 static void _set_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
-    bf->move_time_ms = bf->move_time * 60000;
-    bf->plannable_time_ms = bf->plannable_time * 60000;
+    UPDATE_BF_MS(bf);   //+++++
+//    bf->move_time_ms = bf->move_time * 60000;
+//    bf->plannable_time_ms = bf->plannable_time * 60000;
 
-//    mb.move_time_ms = bf->move_time * 60000;
+//    UPDATE_MB_MS  //+++++
 //    mb.plannable_time_ms = mb.plannable_time * 60000;
+
 //    bf->length_total = bf->length + bf->pv->length_total;
 }
 #pragma GCC reset_options
@@ -230,8 +232,6 @@ void mp_plan_block_list()
     mb.p = bf;                                      // update planner pointer
 }
 
-#define TIME_DIAGNOSTIC(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-
 #define SANITY_TRAPS(bf) { \
                             if (bf->buffer_state != MP_BUFFER_EMPTY) { \
                                 if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
@@ -252,35 +252,28 @@ void mp_plan_block_forward(mpBuf_t *bf)
     bf->buffer_state = MP_BUFFER_PLANNED;
     SANITY_TRAPS(bf);
 }
-/*
-static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
-static void _adjust_move_time(mpBuf_t *bf)      // adjust move time now that we have entry and exit velocities
-{
-//    bf->move_time_alt = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
-    bf->move_time_alt2 = sqrt(fabs(bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
-}
-*/
+
 /*
  * mp_plan_block_pessimistic() - the block chain using pessimistic assumptions
  */
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    if (bf->linenum == 2400) { // looking at crash on line 780 (buffer 5), executing line 737 in buffer 10
-        printf ("stop\n");        
+    if (bf->linenum == 180) { // looking at start on line N - RUN is typically 45 blocks behind
+//        mp_dump_planner(bf);
+        printf ("stop\n");
     }
 
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
     if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
-        bf->buffer_state = MP_BUFFER_IN_PROCESS;
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
 
         bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
         bf->plannable_time += bf->move_time;            // adjust plannable time
-        TIME_DIAGNOSTIC(bf);
-
+        UPDATE_BF_MS(bf);  //+++++ 
+        
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
         if (bf->nx->buffer_state != MP_BUFFER_EMPTY) {
@@ -303,9 +296,15 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 rpt_exception(42, "hit run buffer");
                 break;
             }
+
             // Optimization: (worth it?)
             // if exit velocity changes but entry does not
             // you can use previously computed braking_velocity
+            bf->iterations++;
+//            if (bf->iterations> 1) {
+//                printf ("stop2\n");
+//            }
+            bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
             bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);  
 
             // command blocks
@@ -365,8 +364,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // decelerations - already planned, but keep looking for inflection points, optimals, and compute move_time
             } else if (bf->entry_velocity > bf->exit_velocity) {
-                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
-                if (bf->pv->optimal) { bf->optimal = true; }
+                bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
+//                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity); UPDATE_BF_MS(bf); //+++++
+//                if (bf->pv->optimal) { bf->optimal = true; }
 
             // accelerations
             } else {
@@ -386,6 +386,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             bf->buffer_state = MP_BUFFER_PREPPED;
         }
     }
+//    if (bf->hint == PERFECT_DECELERATION) {
+//        if (bf->cruise_velocity > bf->entry_velocity) {
+//            printf ("stop3\n");
+//        }
+//    }
+
     mb.pessimistic_state = PESSIMISTIC_PRIMING;
     return (mb.planning_return);
 }
@@ -973,11 +979,15 @@ static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
 static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
 {
 //    bf->decel_time = sqrt((v1-v0) * decel_const * bf->recip_jerk);
-//    bf->decel_time_ms = bf->decel_time * 60000;
-
-    bf->decel_time_ms = (sqrt((v1-v0) * decel_const * bf->recip_jerk)) * 60000;
     return (sqrt((v1-v0) * decel_const * bf->recip_jerk));
-
 }
 //#pragma GCC reset_options
+*/
+/*
+static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
+static void _adjust_move_time(mpBuf_t *bf)      // adjust move time now that we have entry and exit velocities
+{
+//    bf->move_time_alt = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+    bf->move_time_alt2 = sqrt(fabs(bf->exit_velocity - bf->entry_velocity) * accel_const * bf->recip_jerk);
+}
 */

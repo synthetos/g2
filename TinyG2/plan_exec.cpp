@@ -65,16 +65,26 @@ stat_t mp_exec_move()
 
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
+/*
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() cannot get prepped buffer");
             return (STAT_ERROR_42);
         }
+        if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
+            rpt_exception(42, "mp_exec_move() next buffer is empty");
+        }
+*/
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
             mp_plan_block_forward(bf);                      // complete planning if not already planned
         }
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
         bf->optimal = true;
+
+//+++++        if (bf->linenum == 138) {
+//            mp_dump_planner(bf);
+//            printf ("stop\n");
+//        }
     }
 
 	// Manage motion state transitions

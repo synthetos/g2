@@ -590,28 +590,25 @@ void mp_planner_time_accounting()
 //    bool in_critical = true;                        // used to look for transition to critical region
 
     // check the run buffer to see if anything is running. Might not be
+    bf->plannable_time = 0;                         // set to zero if running or not
+    bf->plannable_time_ms = 0;  // ++++++ leave move_time alone
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
-        bf->plannable_time = 0;
-        bf->plannable_time_ms = 0;      // ++++++
         return;
     }
-
     float plannable_time = 0;
     while ((bf = bf->nx) != mb.r) {     // all non-empty buffers
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
         }
         plannable_time += bf->move_time;
-        bf->plannable_time = plannable_time;
-        bf->plannable_time_ms = bf->plannable_time * 60000; //++++++
+        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
 
 //        if (in_critical && (plannable_time >= mb.planner_critical_time)) {
 //            in_critical = false;
 //            mb.c = bf;                          // mark the first non-critical block
 //        }
     }
-    mb.plannable_time = plannable_time; 
-    mb.plannable_time_ms = plannable_time * 60000;  //+++++
+    mb.plannable_time = plannable_time;  UPDATE_MB_MS //+++++
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -819,9 +816,44 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 */
 
 /************************************************************************************
+ * mp_dump_planner
  * _planner_report()
  * _audit_buffers() - a DEBUG diagnostic
  */
+
+void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
+{
+    mpBuf_t *bf = bf_start;
+
+    printf ("buf, line, Iter, Tmove, Tplan, State, Hint, Opt, Ovr, Thr, Length, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
+
+    do {
+        printf ("%d,",    (int)bf->buffer_number);
+        printf ("%d,",    (int)bf->linenum);
+        printf ("%d,",    (int)bf->iterations);
+        printf ("%1.2f,", bf->move_time_ms);
+        printf ("%1.2f,", bf->plannable_time_ms);
+        printf ("%d,",    (int)bf->buffer_state);
+        printf ("%d,",    (int)bf->hint);
+        printf ("%d,",    (int)bf->optimal);
+
+        printf ("%1.3f,", bf->override);
+        printf ("%1.3f,", bf->throttle);
+        printf ("%1.5f,", bf->length);
+        printf ("%1.0f,", bf->entry_velocity);
+        printf ("%1.0f,", bf->cruise_velocity);
+        printf ("%1.0f,", bf->exit_velocity);
+        printf ("%1.0f,", bf->entry_vmax);
+        printf ("%1.0f,", bf->cruise_vset);
+        printf ("%1.0f,", bf->cruise_vmax);
+        printf ("%1.0f,", bf->exit_vmax);
+        printf ("%1.0f,", bf->braking_velocity);
+        printf ("%1.0f,", bf->accel_velocity);
+        printf ("%1.0f\n", bf->junction_vmax);
+
+        bf = bf->nx;
+    } while (bf != bf_start);
+}
 
 #if 0
 #ifdef DEBUG
@@ -830,7 +862,6 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 
 
 #pragma GCC optimize ("O0")
-
 
 static void _planner_report(const char *msg)
 {

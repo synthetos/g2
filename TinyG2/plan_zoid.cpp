@@ -229,12 +229,13 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->head_length += bf->body_length/2;
             bf->tail_length += bf->body_length/2;
             bf->body_length = 0;
+            bf->hint = SYMMETRIC_BUMP;
         }
         bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
-        bf->hint = SYMMETRIC_BUMP;
+//        bf->hint = SYMMETRIC_BUMP;
         LOG_RETURN("2c");
         return (_zoid_exit(bf, ZOID_EXIT_2c));
     }

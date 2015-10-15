@@ -200,6 +200,8 @@ typedef enum {
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
+#define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
+#define UPDATE_MB_MS     { mb.plannable_time_ms = mb.plannable_time*60000; }
 
 /*
  *	Planner structures
@@ -220,6 +222,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     //+++++ DIAGNOSTICS for easier debugging
     uint32_t linenum;               // mirror of bf->gm.linenum
     uint8_t buffer_number;
+    int iterations;
     float move_time_ms;
     float plannable_time_ms;
     
@@ -443,5 +446,7 @@ float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 void mp_exit_hold_state(void);
+
+void mp_dump_planner(mpBuf_t *bf_start);
 
 #endif	// End of include Guard: PLANNER_H_ONCE
