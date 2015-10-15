@@ -550,20 +550,20 @@ void mp_replan_queue(mpBuf_t *bf)
  *
  */
 
-void mp_start_feed_override(const float ramp_time, const float mfo_factor)
+void mp_start_feed_override(const float ramp_time, const float override)
 {
     cm.mfo_state = MFO_REQUESTED;
 
     if (mb.planner_state == PLANNER_IDLE) {
-        mb.mfo_factor = mfo_factor;             // that was easy
+        mb.mfo_factor = override;             // that was easy
         return;
     }
 
     // Assume that the min and max values for override_factor have been validated upstream
     // SUVAT: V = U+AT ==> A = (V-U)/T
-    mb.ramp_target = mfo_factor;
-//    mb.ramp_dvdt = (mfo_factor - mb.current_mfo_factor) / ramp_time;
-    mb.ramp_dvdt = (mfo_factor - mb.c->mfo_factor) / ramp_time;
+    mb.ramp_target = override;
+//    mb.ramp_dvdt = (override - mb.current_mfo_factor) / ramp_time;
+    mb.ramp_dvdt = (override - mb.c->override) / ramp_time;
     mb.mfo_active = true;
 
     if (fp_NOT_ZERO(mb.ramp_dvdt)) {    // do these things only if you actually have a ramp to run

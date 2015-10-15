@@ -236,8 +236,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float unit[AXES];               // unit vector for axis scaling & planning
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
-    float mfo_factor;               // override factor for this block
-    float throttle;                 // preserved for backplanning
+    float override;                 // feed rate or rapid override factor for this block
+    float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
     float head_length;
@@ -404,7 +404,7 @@ bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();
 void mp_replan_queue(mpBuf_t *bf);
-void mp_start_feed_override(const float ramp_time, const float override_factor);
+void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 

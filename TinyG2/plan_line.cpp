@@ -230,6 +230,8 @@ void mp_plan_block_list()
     mb.p = bf;                                      // update planner pointer
 }
 
+#define TIME_DIAGNOSTIC(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
+
 #define SANITY_TRAPS(bf) { \
                             if (bf->buffer_state != MP_BUFFER_EMPTY) { \
                                 if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
@@ -247,11 +249,7 @@ void mp_plan_block_forward(mpBuf_t *bf)
 {
     SANITY_TRAPS(bf);
     mp_calculate_trapezoid(bf);
-//    bf->plannable_time = bf->pv->plannable_time + bf->move_time;
     bf->buffer_state = MP_BUFFER_PLANNED;
-  
-//    bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
-//    bf->move_time_ms = bf->move_time * 60000;           //+++++
     SANITY_TRAPS(bf);
 }
 /*
@@ -278,12 +276,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
 
-        bf->plannable_time = bf->pv->plannable_time;    // set planable time - excluding current move
+        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
         bf->plannable_time += bf->move_time;            // adjust plannable time
-
-        bf->move_time_ms = bf->move_time * 60000;           //+++++
-        bf->plannable_time_ms = bf->plannable_time * 60000; //+++++
+        TIME_DIAGNOSTIC(bf);
 
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
@@ -585,34 +581,36 @@ static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf)
 
 static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruise velocity
 {
+    // TODO: Account for rapid overrides as well as feed overrides
+
     // pull in override factor from previous block or seed initial value from the system setting
-    bf->mfo_factor = fp_ZERO(bf->pv->mfo_factor) ? cm.gmx.mfo_factor : bf->pv->mfo_factor;
-    bf->cruise_vmax = bf->mfo_factor * bf->cruise_vset;
+    bf->override = fp_ZERO(bf->pv->override) ? cm.gmx.mfo_factor : bf->pv->override;
+    bf->cruise_vmax = bf->override * bf->cruise_vset;
 
     // generate ramp term is a ramp is active
     if (mb.ramp_active) {
-        bf->mfo_factor += mb.ramp_dvdt * bf->move_time;
+        bf->override += mb.ramp_dvdt * bf->move_time;
         if (mb.ramp_dvdt > 0) {                             // positive is an acceleration ramp
-            if (bf->mfo_factor > mb.ramp_target) {
-                bf->mfo_factor = mb.ramp_target;
+            if (bf->override > mb.ramp_target) {
+                bf->override = mb.ramp_target;
                 mb.ramp_active = false;                     // detect end of ramp
             }
-            bf->cruise_velocity *= bf->mfo_factor;
+            bf->cruise_velocity *= bf->override;
             if (bf->cruise_velocity > bf->absolute_vmax) {  // test max cruise_velocity
                 bf->cruise_velocity = bf->absolute_vmax;
                 mb.ramp_active = false;                     // don't allow exceeding absolute_vmax
             }
       } else {                                              // negative is deceleration ramp
-            if (bf->mfo_factor < mb.ramp_target) {
-                bf->mfo_factor = mb.ramp_target;
+            if (bf->override < mb.ramp_target) {
+                bf->override = mb.ramp_target;
                 mb.ramp_active = false;
             }
-            bf->cruise_velocity *= bf->mfo_factor;      // +++++ this is probably wrong
+            bf->cruise_velocity *= bf->override;      // +++++ this is probably wrong
         //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,
         //  bf->cruise_velocity = bf->entry_velocity;   //...either
         }
     } else {
-        bf->cruise_velocity *= bf->mfo_factor;           // apply original or changed factor
+        bf->cruise_velocity *= bf->override;           // apply original or changed factor
     }
     // Correction for velocity constraints
     // In the case of a acceleration these conditions must hold:
