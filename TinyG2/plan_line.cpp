@@ -259,8 +259,8 @@ void mp_plan_block_forward(mpBuf_t *bf)
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
-    if (bf->linenum == 180) { // looking at start on line N - RUN is typically 45 blocks behind
-//        mp_dump_planner(bf);
+    if (bf->linenum == 2486) { // looking at start on line N - RUN is typically 45 blocks behind
+        mp_dump_planner(bf);
         printf ("stop\n");
     }
 
@@ -322,9 +322,22 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->entry_velocity = bf->braking_velocity;
                 bf->cruise_velocity = bf->entry_velocity;   // put this here to avoid a race condition with _exec()
                 bf->hint = PERFECT_DECELERATION;
-            } else {
-                bf->cruise_velocity = bf->entry_velocity;
-                bf->hint = MIXED_DECELERATION;
+            } else { // don't hint this as we don't know what it really is
+                bf->cruise_velocity = bf->cruise_vmax;
+                bf->hint = NO_HINT;
+/*                if (bf->entry_velocity > bf->exit_velocity) {
+                    bf->cruise_velocity = bf->cruise_vmax;
+//                    bf->cruise_velocity = bf->entry_velocity;
+//                    bf->hint = MIXED_DECELERATION;
+                } else { 
+//                    bf->cruise_velocity = bf->exit_velocity;
+                    bf->cruise_velocity = bf->cruise_vmax;
+//                    bf->hint = MIXED_ACCELERATION;
+//                    bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
+//                    if (bf->accel_velocity > bf->exit_velocity) {
+//                    }
+                }
+*/
             }
         }
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
@@ -362,8 +375,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = PERFECT_CRUISE;
                 bf->optimal = true;
 
-            // decelerations - already planned, but keep looking for inflection points, optimals, and compute move_time
+            // decelerations - block is already planned, but keep looking for inflection points, optimals, and compute move_time
             } else if (bf->entry_velocity > bf->exit_velocity) {
+//                if (VELOCITY_LT2(bf->entry_velocity, bf->nx->exit_velocity)) {  // detect discrepancy due to quintic "velocity inversion" effect
+//                    return (_pessimistic_forward_failsoft(bf));                 // perform error compensation / recovery
+//                }
                 bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
 //                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity); UPDATE_BF_MS(bf); //+++++
 //                if (bf->pv->optimal) { bf->optimal = true; }
@@ -377,21 +393,20 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
                     bf->optimal = true;
-                } else {                                        // you've hit the cusp
-                    bf->cruise_velocity = bf->exit_velocity;
-                    bf->hint = MIXED_ACCELERATION;
+                } else {                                          // it's hit the cusp
+                    if (bf->entry_velocity < bf->exit_velocity) { // it's an acceleration
+                        bf->cruise_velocity = bf->exit_velocity;
+                        bf->hint = MIXED_ACCELERATION;
+                    } else {                                      // it's unknown
+                        bf->cruise_velocity = bf->cruise_vmax;
+                        bf->hint = NO_HINT;
+                    }
                     bf->optimal = false;
                 }
             }
             bf->buffer_state = MP_BUFFER_PREPPED;
         }
     }
-//    if (bf->hint == PERFECT_DECELERATION) {
-//        if (bf->cruise_velocity > bf->entry_velocity) {
-//            printf ("stop3\n");
-//        }
-//    }
-
     mb.pessimistic_state = PESSIMISTIC_PRIMING;
     return (mb.planning_return);
 }

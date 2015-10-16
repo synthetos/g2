@@ -178,8 +178,8 @@ typedef enum {
 #define TRAVERSE_OVERRIDE_ENABLE    false               // initial value
 #define TRAVERSE_OVERRIDE_FACTOR    1.00                // initial value
 
-#define JUNCTION_AGGRESSION_MIN      0.001               // minimum allowable setting
-#define JUNCTION_AGGRESSION_MAX      10.00               // maximum allowable setting
+#define JUNCTION_AGGRESSION_MIN     0.001               // minimum allowable setting
+#define JUNCTION_AGGRESSION_MAX     10.00               // maximum allowable setting
 
 //#define MIN_MANUAL_FEEDRATE_OVERRIDE 0.05   // 5%
 //#define MAX_MANUAL_FEEDRATE_OVERRIDE 2.00   // 200%
@@ -196,7 +196,8 @@ typedef enum {
 #define VELOCITY_EQ2(v1,v2)     (fabs(v1-v2)<v1*0.01)   // roughly equals
 #define VELOCITY_EQ3(v1,v2)     (fabs(v1-v2)<0.1)       // coarsely equals - catches rounding errors
 #define VELOCITY_NE(v1,v2)      (fabs(v1-v2)>v1*0.01)
-#define VELOCITY_LT(v1,v2)      (v1<(v2-v2*0.01))
+#define VELOCITY_LT(v1,v2)      (v1<(v2-v2*0.01))       // less than within 1%
+#define VELOCITY_LT2(v1,v2)     (v1<(v2-v2*0.001))      // less than within 0.1%
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
