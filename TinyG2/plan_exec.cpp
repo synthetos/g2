@@ -80,11 +80,6 @@ stat_t mp_exec_move()
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
         bf->optimal = true;
-
-//+++++        if (bf->linenum == 138) {
-//            mp_dump_planner(bf);
-//            printf ("stop\n");
-//        }
     }
 
 	// Manage motion state transitions

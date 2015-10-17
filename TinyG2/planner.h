@@ -192,9 +192,10 @@ typedef enum {
 #define Veq_hi 1.0          // hi velocity is equal if less than this number
 #define Veq_lo 0.1          // lo velocity is equal if less than this number
 #define VELOCITY_EQ(v0,v1) ( (v0 > Vthr) ? fabs(v0-v1) < Veq_hi : fabs(v0-v1) < Veq_lo )
-#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? \
-                             (v0 < v1) || (v0 < (v1-v1*Veq_hi)) : \
-                             (v0 < v1) || (v0 < (v1-v1*Veq_lo)) ) // this form eliminates the multiply in many cases
+
+//      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least Veq_hi (or lo)"
+#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? (v1-v0 > Veq_hi) : (v1-v0 > Veq_lo) )
+
 #define Vthr2 300.0
 #define Veq2_hi 10.0
 #define Veq2_lo 1.0

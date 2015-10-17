@@ -298,6 +298,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             //  bf->exit_vmax = 0 if exact stop, otherwise bf->cruise_vmax
             //  bf->nx->entry_velocity is effectively:
             //    min(nx->cruise_vmax, nx->junction_vmax, nx->braking_velocity) or 0 if nx is EMPTY
+            // NB: if exit velocity has not changed you can use previously computed braking_velocity
             bf->exit_velocity = min(bf->exit_vmax, bf->nx->entry_velocity);
 
             // command blocks
@@ -311,14 +312,13 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
                 bf->exit_velocity = bf->cruise_vmax;    // set exactly to wash out EQ tolerances
                 bf->entry_velocity = bf->cruise_vmax;
+                bf->cruise_velocity = bf->cruise_vmax;
                 bf->hint = PERFECT_CRUISE;
                 continue;
             }
 
             // decelerations
-            // NB: if exit velocity changes but entry does not, you can use previously computed braking_velocity
             bf->entry_velocity = min(bf->entry_vmax, bf->cruise_vmax);
-
             bf->braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
             if (bf->entry_velocity > bf->braking_velocity) {
                 bf->entry_velocity = bf->braking_velocity;
@@ -341,32 +341,35 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
         // Initializes bf to the first block past the optimal block (i.e. bf->pv->optimal == true)
         for (bf = bf->nx; bf != mb.planning_return; bf = bf->nx) {
-//            bf->entry_velocity = bf->pv->exit_velocity;
 
-            // test for cases where no velocity changes are required
-            if ((bf->pv->optimal) && (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity))) {
-                if (bf->hint == PERFECT_DECELERATION) {
-                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
-                    bf->optimal = true;
+            if (bf->pv->buffer_state == MP_BUFFER_RUNNING) {
+                if (VELOCITY_LT(bf->entry_velocity, bf->pv->exit_velocity)) {
+                    rpt_exception(42, "velocity cliff after run buffer");
+                }
+            }
+
+            // cases where no velocity changes are required
+            if (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
+                if ((bf->hint == PERFECT_DECELERATION) ||
+                    (bf->hint == PERFECT_CRUISE) ||
+                    (bf->hint == COMMAND_BLOCK)) {
+//                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+                    if (bf->pv->optimal) { bf->optimal = true; }
                     bf->buffer_state = MP_BUFFER_PREPPED;
                     continue;
                 }
-                if (bf->hint == COMMAND_BLOCK) {
-                    bf->optimal = true;
-                    bf->buffer_state = MP_BUFFER_PLANNED;
-                    continue;
-                }
             }
-            // otherwise set the entry velocity to the previous exit velocity
-            bf->entry_velocity = bf->pv->exit_velocity;
 
+            // otherwise set entry velocity to previous exit velocity and forward plan the block.
+            // allow minor velocity discrepancies to exist to ease zoid generation
+//            if (!VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
+                bf->entry_velocity = bf->pv->exit_velocity;
+//            }
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
                 bf->buffer_state = MP_BUFFER_PLANNED;
-//                if (bf->pv->optimal) { bf->optimal = true; }  //+++++ Need to test this very carefully
-                bf->optimal = true;     //++++ and remove this one
                 continue;
             }
 
@@ -385,14 +388,13 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // decelerations
             } else if (bf->entry_velocity > bf->exit_velocity) {
-//                if (VELOCITY_LT2(bf->entry_velocity, bf->nx->exit_velocity)) {  // detect discrepancy due to quintic "velocity inversion" effect
+//                if (VELOCITY_LT(bf->entry_velocity, bf->nx->exit_velocity)) {  // detect discrepancy due to quintic "velocity inversion" effect
 //                    return (_pessimistic_forward_failsoft(bf));                 // perform error compensation / recovery
 //                }
-
-//                if (bf->hint == PERFECT_CRUISE) {
-//                    bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
-//                }
-                bf->hint = MIXED_DECELERATION;
+                if (bf->cruise_velocity < bf->entry_velocity) {  // correct for minor math discrepancies
+                    bf->cruise_velocity = bf->entry_velocity;
+                }
+                bf->hint = NO_HINT;
 
             // accelerations
             } else {
@@ -403,15 +405,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
                     bf->optimal = true;
-                } else {                                          // it's hit the cusp
-                    if (bf->entry_velocity < bf->exit_velocity) { // it's an acceleration
-                        bf->cruise_velocity = bf->exit_velocity;
-                        bf->hint = MIXED_ACCELERATION;
-                    } else {                                      // it's unknown
-                        bf->cruise_velocity = bf->cruise_vmax;
-                        bf->hint = NO_HINT;
-                    }
-                    bf->optimal = false;
+                } else {                    // it's hit the cusp
+                    bf->hint = NO_HINT;     // we don't know what this move actually is
                 }
             }
             bf->buffer_state = MP_BUFFER_PREPPED;
