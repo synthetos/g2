@@ -181,23 +181,30 @@ typedef enum {
 #define JUNCTION_AGGRESSION_MIN     0.001               // minimum allowable setting
 #define JUNCTION_AGGRESSION_MAX     10.00               // maximum allowable setting
 
-//#define MIN_MANUAL_FEEDRATE_OVERRIDE 0.05   // 5%
-//#define MAX_MANUAL_FEEDRATE_OVERRIDE 2.00   // 200%
-//#define MIN_MANUAL_TRAVERSE_OVERRIDE 0.05   // 5%
-//#define MAX_MANUAL_TRAVERSE_OVERRIDE 1.00   // 100%
+//#define MIN_FEEDRATE_OVERRIDE 0.05    // 5%
+//#define MAX_FEEDRATE_OVERRIDE 2.00    // 200%
+//#define MIN_RAPID_OVERRIDE 0.05       // 5%
+//#define MAX_RAPID_OVERRIDE 1.00       // 100%
 
-// Specialized equalities for comparing velocities with tolerances. Read as:
-// VELOCITY_EQ  "If deltaV is less than 1% of v1, or v1 and v2 are very close to zero then velocities are effectively equal"
-// VELOCITY_EQ2 "If deltaV is less than 1% of v1 then the velocities are effectively equal"
-// VELOCITY_NE  "If deltaV is greater than 1% of v1 then the velocities are effectively equal"
-// VELOCITY_LT  "If v1 is less than v2 by at least 1% then v1 is effectively less than than v2"
+// Specialized equalities for comparing velocities with tolerances
+#define Vthr 100.0          // threshold between hi and lo velocity (mm/min)
+#define Veq_hi 1.0          // hi velocity is equal if less than this number
+#define Veq_lo 0.1          // lo velocity is equal if less than this number
+#define VELOCITY_EQ(v0,v1) ( (v0 > Vthr) ? fabs(v0-v1) < Veq_hi : fabs(v0-v1) < Veq_lo )
+#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? \
+                             (v0 < v1) || (v0 < (v1-v1*Veq_hi)) : \
+                             (v0 < v1) || (v0 < (v1-v1*Veq_lo)) ) // this form eliminates the multiply in many cases
+#define Vthr2 300.0
+#define Veq2_hi 10.0
+#define Veq2_lo 1.0
+#define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
 
-#define VELOCITY_EQ(v1,v2)      (fabs(v1-v2)<v1*0.01 || (v1<0.1 && v2<0.1)) // finest equals
-#define VELOCITY_EQ2(v1,v2)     (fabs(v1-v2)<v1*0.01)   // roughly equals
-#define VELOCITY_EQ3(v1,v2)     (fabs(v1-v2)<0.1)       // coarsely equals - catches rounding errors
-#define VELOCITY_NE(v1,v2)      (fabs(v1-v2)>v1*0.01)
-#define VELOCITY_LT(v1,v2)      (v1<(v2-v2*0.01))       // less than within 1%
-#define VELOCITY_LT2(v1,v2)     (v1<(v2-v2*0.001))      // less than within 0.1%
+//#define VELOCITY_EQ(v0,v2)      (fabs(v0-v1)<v0*0.01 || (v0<0.1 && v1<0.1)) // finest equals
+//#define VELOCITY_EQ2(v0,v1)     (fabs(v0-v1)<v0*0.01)   // roughly equals
+//#define VELOCITY_EQ3(v0,v1)     (fabs(v0-v1)<0.1)       // coarsely equals - catches rounding errors
+//#define VELOCITY_NE(v0,v1)      (fabs(v0-v1)>v0*0.01)
+//#define VELOCITY_LT(v0,v1)      (v0<(v1-v1*0.01))       // less than within 1%
+//#define VELOCITY_LT2(v0,v1)     (v0<(v1-v1*0.001))      // less than within 0.1%
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
@@ -226,7 +233,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     int iterations;
     float move_time_ms;
     float plannable_time_ms;
-    
+
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing

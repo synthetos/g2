@@ -57,7 +57,7 @@ stat_t mp_exec_move()
 {
 	mpBuf_t *bf;
 
-    // NULL means nothing's running
+    // NULL means nothing's running - this is OK
     if ((bf = mp_get_run_buffer()) == NULL) {
 		st_prep_null();
 		return (STAT_NOOP);
@@ -65,15 +65,15 @@ stat_t mp_exec_move()
 
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
-/*
+
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
-            rpt_exception(42, "mp_exec_move() cannot get prepped buffer");
+            rpt_exception(42, "mp_exec_move() buffer is not prepped");
             return (STAT_ERROR_42);
         }
         if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() next buffer is empty");
         }
-*/
+
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
             mp_plan_block_forward(bf);                      // complete planning if not already planned
         }

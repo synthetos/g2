@@ -272,8 +272,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
         bf->plannable_time += bf->move_time;            // adjust plannable time
-        UPDATE_BF_MS(bf);  //+++++ 
-        
+        UPDATE_BF_MS(bf);  //+++++
+
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
         if (bf->nx->buffer_state != MP_BUFFER_EMPTY) {
@@ -291,21 +291,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
         for ( ; (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
 
-            // exception cases
-            if (bf->buffer_state == MP_BUFFER_RUNNING) {
-                rpt_exception(42, "hit run buffer");
-                break;
-            }
-
             // Optimization: (worth it?)
             // if exit velocity changes but entry does not
             // you can use previously computed braking_velocity
             bf->iterations++;
-//            if (bf->iterations> 1) {
-//                printf ("stop2\n");
-//            }
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
-            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);  
+            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
@@ -313,7 +304,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = COMMAND_BLOCK;
                 continue;
             }
-            
+
             // decelerations    // Oprimization: Don;t compute braking velocity if you get to a cruise (how?)
             bf->entry_velocity = min(bf->entry_vmax, bf->cruise_vmax);
 
@@ -325,48 +316,42 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             } else { // don't hint this as we don't know what it really is
                 bf->cruise_velocity = bf->cruise_vmax;
                 bf->hint = NO_HINT;
-/*                if (bf->entry_velocity > bf->exit_velocity) {
-                    bf->cruise_velocity = bf->cruise_vmax;
-//                    bf->cruise_velocity = bf->entry_velocity;
-//                    bf->hint = MIXED_DECELERATION;
-                } else { 
-//                    bf->cruise_velocity = bf->exit_velocity;
-                    bf->cruise_velocity = bf->cruise_vmax;
-//                    bf->hint = MIXED_ACCELERATION;
-//                    bf->accel_velocity = mp_get_target_velocity(bf->entry_velocity, bf->length, bf);
-//                    if (bf->accel_velocity > bf->exit_velocity) {
-//                    }
-                }
-*/
             }
         }
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
-    }
+    } // exits with bf pointing to an optimal or EMPTY block
 
     // Forward Planning Pass
-    // Always starts with pv as an optimal block
     // Build an optimal acceleration ramp by setting entry and exit velocities based on the accel velocity
     // You can stop computing the acceleration ramp when it crosses the deceleration ramp
     // Recompute the move times for PERFECT moves so time accounting is more accurate when it runs
 
     if (mb.pessimistic_state == PESSIMISTIC_FORWARD) {
 
+        // Initializes bf to the first block past the optimal block (i.e. bf->pv->optimal == true)
         for (bf = bf->nx; bf != mb.planning_return; bf = bf->nx) {
             bf->entry_velocity = bf->pv->exit_velocity;
+
+            // test for cases where no changes are required
+//            if (fabs(bf->entry_velocity - bf->pv->exit_velocity) < VELOCITY_MATCH_TOLERANCE) {
+//
+//            }
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
                 bf->buffer_state = MP_BUFFER_PLANNED;
-                bf->optimal = true;
+
+//                if (bf->pv->optimal) { bf->optimal = true; }  //+++++ Need to test this very carefully
+                bf->optimal = true;     //++++ and remove this one
                 continue;
             }
 
             // cruises - must be tested first
-            if ((VELOCITY_EQ3(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
-                (VELOCITY_EQ3(bf->entry_velocity, bf->cruise_vmax))) {
+            if ((VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
+                (VELOCITY_EQ(bf->entry_velocity, bf->cruise_vmax))) {
 
-                // this is a bit of hack to ensure that neither the entry or the exit velocities 
+                // this is a bit of hack to ensure that neither the entry or the exit velocities
                 // are greater than the cruise velocity even though there is slop in the comparison
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity to agree with pv buffer
                 bf->exit_velocity = bf->entry_velocity;
@@ -380,9 +365,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //                if (VELOCITY_LT2(bf->entry_velocity, bf->nx->exit_velocity)) {  // detect discrepancy due to quintic "velocity inversion" effect
 //                    return (_pessimistic_forward_failsoft(bf));                 // perform error compensation / recovery
 //                }
-                bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
-//                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity); UPDATE_BF_MS(bf); //+++++
-//                if (bf->pv->optimal) { bf->optimal = true; }
+
+//                if (bf->hint == PERFECT_CRUISE) {
+//                    bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
+//                }
 
             // accelerations
             } else {
