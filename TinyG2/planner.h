@@ -187,6 +187,7 @@ typedef enum {
 //#define MAX_RAPID_OVERRIDE 1.00       // 100%
 
 // Specialized equalities for comparing velocities with tolerances
+// These determine allowable velocity discontinuities between blocks (among other tests)
 #define Vthr 100.0          // threshold between hi and lo velocity (mm/min)
 #define Veq_hi 1.0          // hi velocity is equal if less than this number
 #define Veq_lo 0.1          // lo velocity is equal if less than this number
@@ -199,13 +200,6 @@ typedef enum {
 #define Veq2_lo 1.0
 #define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
 
-//#define VELOCITY_EQ(v0,v2)      (fabs(v0-v1)<v0*0.01 || (v0<0.1 && v1<0.1)) // finest equals
-//#define VELOCITY_EQ2(v0,v1)     (fabs(v0-v1)<v0*0.01)   // roughly equals
-//#define VELOCITY_EQ3(v0,v1)     (fabs(v0-v1)<0.1)       // coarsely equals - catches rounding errors
-//#define VELOCITY_NE(v0,v1)      (fabs(v0-v1)>v0*0.01)
-//#define VELOCITY_LT(v0,v1)      (v0<(v1-v1*0.01))       // less than within 1%
-//#define VELOCITY_LT2(v0,v1)     (v0<(v1-v1*0.001))      // less than within 0.1%
-
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
 #define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
@@ -214,8 +208,6 @@ typedef enum {
 /*
  *	Planner structures
  */
-
-//#define flag_vector axis_flags
 
 typedef struct mpBuffer {           // See Planning Velocity Notes for variable usage
 

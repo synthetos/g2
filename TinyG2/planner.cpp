@@ -453,7 +453,7 @@ stat_t mp_planner_callback()
 {
     if (!mb.request_planning) {
         if ((mb.buffers_available == PLANNER_BUFFER_POOL_SIZE) &&
-            (cm.motion_state == MOTION_STOP) && 
+            (cm.motion_state == MOTION_STOP) &&
             (cm.hold_state == FEEDHOLD_OFF)) {
             mb.planner_state = PLANNER_IDLE;
         }
@@ -777,7 +777,7 @@ void mp_commit_write_buffer(const moveType move_type)
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
 mpBuf_t * mp_get_run_buffer()
 {
-    // EMPTY is the one case where nothing is returned. This is not an error 
+    // EMPTY is the one case where nothing is returned. This is not an error
     if (mb.r->buffer_state == MP_BUFFER_EMPTY) {
         return (NULL);
     }
@@ -825,18 +825,18 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 {
     mpBuf_t *bf = bf_start;
 
-    printf ("buf, line, Iter, Tmove, Tplan, State, Hint, Opt, Ovr, Thr, Length, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
+    printf ("Buf, Line, State, Hint, Opt, Iter, Tmove, Tplan, Ovr, Thr, Len, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
 
     do {
         printf ("%d,",    (int)bf->buffer_number);
         printf ("%d,",    (int)bf->linenum);
-        printf ("%d,",    (int)bf->iterations);
-        printf ("%1.2f,", bf->move_time_ms);
-        printf ("%1.2f,", bf->plannable_time_ms);
         printf ("%d,",    (int)bf->buffer_state);
         printf ("%d,",    (int)bf->hint);
         printf ("%d,",    (int)bf->optimal);
+        printf ("%d,",    (int)bf->iterations);
 
+        printf ("%1.2f,", bf->move_time_ms);
+        printf ("%1.2f,", bf->plannable_time_ms);
         printf ("%1.3f,", bf->override);
         printf ("%1.3f,", bf->throttle);
         printf ("%1.5f,", bf->length);

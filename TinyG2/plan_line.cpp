@@ -284,19 +284,21 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     }
 
     // Backward Planning Pass
-    // Build an optimal deceleration ramp by setting entry and exit velocities based on the braking velocity
-    // You can stop computing braking velocity if it exceeds cruise_vmax
+    // Build a perfect deceleration ramp by setting entry and exit velocities based on the braking velocity
+    // If it reaches cruise_vmax generate perfect cruises instead
     // Note: Vmax's are already set by the time you get here
     if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
 
         for ( ; (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
 
-            // Optimization: (worth it?)
-            // if exit velocity changes but entry does not
-            // you can use previously computed braking_velocity
-            bf->iterations++;
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
-            bf->exit_velocity = min(bf->nx->entry_velocity, bf->exit_vmax);
+            bf->iterations++;
+
+            // Exit velocity notes:
+            //  bf->exit_vmax = 0 if exact stop, otherwise bf->cruise_vmax
+            //  bf->nx->entry_velocity is effectively:
+            //    min(nx->cruise_vmax, nx->junction_vmax, nx->braking_velocity) or 0 if nx is EMPTY
+            bf->exit_velocity = min(bf->exit_vmax, bf->nx->entry_velocity);
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
@@ -305,7 +307,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 continue;
             }
 
-            // decelerations    // Oprimization: Don;t compute braking velocity if you get to a cruise (how?)
+            // cruises - a perfect cruise is detected if exit_velocity == cruise_vmax
+            if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
+                bf->exit_velocity = bf->cruise_vmax;    // set exactly to wash out EQ tolerances
+                bf->entry_velocity = bf->cruise_vmax;
+                bf->hint = PERFECT_CRUISE;
+                continue;
+            }
+
+            // decelerations
+            // NB: if exit velocity changes but entry does not, you can use previously computed braking_velocity
             bf->entry_velocity = min(bf->entry_vmax, bf->cruise_vmax);
 
             bf->braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
@@ -330,26 +341,38 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
         // Initializes bf to the first block past the optimal block (i.e. bf->pv->optimal == true)
         for (bf = bf->nx; bf != mb.planning_return; bf = bf->nx) {
+//            bf->entry_velocity = bf->pv->exit_velocity;
+
+            // test for cases where no velocity changes are required
+            if ((bf->pv->optimal) && (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity))) {
+                if (bf->hint == PERFECT_DECELERATION) {
+                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+                    bf->optimal = true;
+                    bf->buffer_state = MP_BUFFER_PREPPED;
+                    continue;
+                }
+                if (bf->hint == COMMAND_BLOCK) {
+                    bf->optimal = true;
+                    bf->buffer_state = MP_BUFFER_PLANNED;
+                    continue;
+                }
+            }
+            // otherwise set the entry velocity to the previous exit velocity
             bf->entry_velocity = bf->pv->exit_velocity;
 
-            // test for cases where no changes are required
-//            if (fabs(bf->entry_velocity - bf->pv->exit_velocity) < VELOCITY_MATCH_TOLERANCE) {
-//
-//            }
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
                 bf->buffer_state = MP_BUFFER_PLANNED;
-
 //                if (bf->pv->optimal) { bf->optimal = true; }  //+++++ Need to test this very carefully
                 bf->optimal = true;     //++++ and remove this one
                 continue;
             }
 
             // cruises - must be tested first
-            if ((VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) &&   // this test fails faster
-                (VELOCITY_EQ(bf->entry_velocity, bf->cruise_vmax))) {
+            if ((VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) &&    // this term fails more often
+                (VELOCITY_EQ(bf->entry_velocity, bf->cruise_vmax))) {   //...than this term
 
                 // this is a bit of hack to ensure that neither the entry or the exit velocities
                 // are greater than the cruise velocity even though there is slop in the comparison
@@ -360,7 +383,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = PERFECT_CRUISE;
                 bf->optimal = true;
 
-            // decelerations - block is already planned, but keep looking for inflection points, optimals, and compute move_time
+            // decelerations
             } else if (bf->entry_velocity > bf->exit_velocity) {
 //                if (VELOCITY_LT2(bf->entry_velocity, bf->nx->exit_velocity)) {  // detect discrepancy due to quintic "velocity inversion" effect
 //                    return (_pessimistic_forward_failsoft(bf));                 // perform error compensation / recovery
@@ -369,6 +392,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //                if (bf->hint == PERFECT_CRUISE) {
 //                    bf->cruise_velocity = bf->entry_velocity;       // fix this in case of minor discrepancies
 //                }
+                bf->hint = MIXED_DECELERATION;
 
             // accelerations
             } else {
