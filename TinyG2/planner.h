@@ -225,7 +225,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     int iterations;
     float move_time_ms;
     float plannable_time_ms;        // time in planner
-    float theoretical_ms;           // time to brake to zero from this point in the queue
+//    float theoretical_ms;           // time to brake to zero from this point in the queue
     float plannable_length;         // length in planner
 
     //+++++ to here
@@ -235,7 +235,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     moveState move_state;           // move state machine sequence
 //    uint8_t move_code;              // byte that can be used by used exec functions
     blockHint hint;                 // code block for zoid and optimality. Must be accurate or NO_HINT
-    bool optimal;                   // this block is optimally planned
+    bool optimal;               // when false this block is optimally planned
 
     // block parameters
     float unit[AXES];               // unit vector for axis scaling & planning
@@ -284,6 +284,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     //+++++DIAGNOSTICS
     float run_time_remaining_ms;
     float plannable_time_ms;
+    float best_case_braking_time_ms;
 
     // planner state variables
     plannerState planner_state;     // current state of planner
@@ -291,6 +292,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time
+    float best_case_braking_time;   // time to brake to zero in the best case
     uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
 
                                     // group booleans together for optimization

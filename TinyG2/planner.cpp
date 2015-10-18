@@ -594,14 +594,18 @@ void mp_planner_time_accounting()
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
-    float plannable_time = 0;
-    while ((bf = bf->nx) != mb.r) {                 // scan all non-empty buffers
+    // set values in the running block / based on the running block
+    float plannable_time = 0; UPDATE_BF_MS(bf); //+++++
+    mb.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
+    mb.best_case_braking_time_ms = mb.best_case_braking_time * 60000; //+++++
+
+    // scan and set all non-empty buffers (plannable buffers)
+    while ((bf = bf->nx) != mb.r) {
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
         }
         plannable_time += bf->move_time;
         bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
-        bf->theoretical_ms = sqrt(bf->cruise_velocity * 5.773502692 * bf->recip_jerk) * 60000;
         bf->plannable_length = bf->length + bf->pv->plannable_length;
 
 //        if (in_critical && (plannable_time >= mb.planner_critical_time)) {

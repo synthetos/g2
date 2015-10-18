@@ -241,7 +241,7 @@ void mp_plan_block_list()
 
 //    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
 
-/*
+/* Planner Helpers
  * mp_plan_block_forward() - plan a block
  */
 
@@ -251,6 +251,15 @@ void mp_plan_block_forward(mpBuf_t *bf)
     mp_calculate_trapezoid(bf);
     bf->buffer_state = MP_BUFFER_PLANNED;
     SANITY_TRAPS(bf);
+}
+
+// Update move_time and plannable_time estimates
+// These are accurate for perfect accel, decel and cruise, approximate otherwise
+static void _update_move_times(mpBuf_t *bf)
+{
+    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+    bf->plannable_time = bf->pv->plannable_time + bf->move_time; UPDATE_BF_MS(bf); //+++++
+    bf->plannable_length = bf->length + bf->pv->plannable_length;
 }
 
 /*
@@ -348,27 +357,38 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 }
             }
 
-            // cases where no velocity changes are required
+            // Cases where no velocity changes are required
             if (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
-                if ((bf->hint == PERFECT_DECELERATION) ||
-                    (bf->hint == PERFECT_CRUISE) ||
-                    (bf->hint == COMMAND_BLOCK)) {
-//                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+                if ((bf->hint == PERFECT_DECELERATION) || (bf->hint == PERFECT_CRUISE)) {
+                    _update_move_times(bf);
                     if (bf->pv->optimal) { bf->optimal = true; }
                     bf->buffer_state = MP_BUFFER_PREPPED;
                     continue;
                 }
+                if (bf->hint == COMMAND_BLOCK) {
+                    if (bf->pv->optimal) { bf->optimal = true; }
+                    bf->buffer_state = MP_BUFFER_PLANNED;
+                    continue;
+                }
             }
 
-            // otherwise set entry velocity to previous exit velocity and forward plan the block.
-            // allow minor velocity discrepancies to exist to ease zoid generation
+            // Otherwise set entry velocity to previous exit velocity and forward plan the block.
+//            // allow minor velocity discrepancies to exist to ease zoid generation
 //            if (!VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
-                bf->entry_velocity = bf->pv->exit_velocity;
+//                bf->entry_velocity = bf->pv->exit_velocity;
 //            }
 
-            // command blocks
+            // It's possible that in the time planning has been running the run buffer
+            // has been freed, leaving an emprty buffer
+            if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
+                bf->entry_velocity = bf->pv->exit_velocity;
+            }
+
+            // Command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
+                bf->move_time = 0;
+                bf->plannable_time = bf->pv->plannable_time; UPDATE_BF_MS(bf);   //+++++ // carry forward - will need to change
                 if (bf->pv->optimal) { bf->optimal = true; }
                 bf->buffer_state = MP_BUFFER_PLANNED;
                 continue;
@@ -382,8 +402,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // greater than the cruise velocity even though there is tolerance in VELOCITY_EQ comparison
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity - use as the reference
                 bf->exit_velocity = bf->entry_velocity;
-//                bf->cruise_velocity = bf->exit_velocity;
-//                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                 bf->hint = PERFECT_CRUISE;
                 if (bf->pv->optimal) { bf->optimal = true; }
 
@@ -403,19 +421,17 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
                     bf->exit_velocity = bf->accel_velocity;
                     bf->cruise_velocity = bf->exit_velocity;
-//                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
                     bf->optimal = true;
-                } else {                    // it's hit the cusp
-                    bf->hint = NO_HINT;     // we don't know what this move actually is
+                } else {                        // it's hit the cusp
+                    bf->hint = NO_HINT;         // we don't know what this move actually is
                 }
             }
-            // update the estimate of move time. This is accurate for perfect accel, decel and cruise, approximate otherwise
-            bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+            _update_move_times(bf);
             bf->buffer_state = MP_BUFFER_PREPPED;
         }
     }
-    mb.pessimistic_state = PESSIMISTIC_PRIMING;
+    mb.pessimistic_state = PESSIMISTIC_PRIMING; // revert to initial state
     return (mb.planning_return);
 }
 

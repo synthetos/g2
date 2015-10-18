@@ -63,11 +63,16 @@ stat_t mp_exec_move()
 		return (STAT_NOOP);
 	}
 
+    if (bf->gm.linenum == 683) {    // Crashes on ln 685
+        printf("stop\n");
+    }
+
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
 
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() buffer is not prepped");
+    		st_prep_null();
             return (STAT_ERROR_42);
         }
         if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
