@@ -369,6 +369,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 bf->hint = COMMAND_BLOCK;
+                if (bf->pv->optimal) { bf->optimal = true; }
                 bf->buffer_state = MP_BUFFER_PLANNED;
                 continue;
             }
@@ -377,14 +378,14 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if ((VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) &&    // this term fails more often
                 (VELOCITY_EQ(bf->entry_velocity, bf->cruise_vmax))) {   //...than this term
 
-                // this is a bit of hack to ensure that neither the entry or the exit velocities
-                // are greater than the cruise velocity even though there is slop in the comparison
-                bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity to agree with pv buffer
+                // this is a bit of hack to ensure that neither the entry or the exit velocities are
+                // greater than the cruise velocity even though there is tolerance in VELOCITY_EQ comparison
+                bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity - use as the reference
                 bf->exit_velocity = bf->entry_velocity;
-                bf->cruise_velocity = bf->exit_velocity;
-                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+//                bf->cruise_velocity = bf->exit_velocity;
+//                bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                 bf->hint = PERFECT_CRUISE;
-                bf->optimal = true;
+                if (bf->pv->optimal) { bf->optimal = true; }
 
             // decelerations
             } else if (bf->entry_velocity > bf->exit_velocity) {
@@ -402,13 +403,15 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 if (bf->exit_velocity > bf->accel_velocity) {   // still accelerating
                     bf->exit_velocity = bf->accel_velocity;
                     bf->cruise_velocity = bf->exit_velocity;
-                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
+//                    bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
                     bf->hint = PERFECT_ACCELERATION;
                     bf->optimal = true;
                 } else {                    // it's hit the cusp
                     bf->hint = NO_HINT;     // we don't know what this move actually is
                 }
             }
+            // update the estimate of move time. This is accurate for perfect accel, decel and cruise, approximate otherwise
+            bf->move_time = (2 * bf->length) / (bf->entry_velocity + bf->exit_velocity);
             bf->buffer_state = MP_BUFFER_PREPPED;
         }
     }

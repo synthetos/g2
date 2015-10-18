@@ -163,7 +163,6 @@ typedef enum {
 
 #define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
 #define THROTTLE_MIN            ((float)0.50)           // minimum factor to slow down for planner throttling
-//#define THROTTLE_SLOPE          ((float)(1-THROTTLE_MIN) / (PLANNER_THROTTLE_TIME - PLANNER_CRITICAL_TIME))
 #define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
 #define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
 
@@ -225,7 +224,9 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     uint8_t buffer_number;
     int iterations;
     float move_time_ms;
-    float plannable_time_ms;
+    float plannable_time_ms;        // time in planner
+    float theoretical_ms;           // time to brake to zero from this point in the queue
+    float plannable_length;         // length in planner
 
     //+++++ to here
 

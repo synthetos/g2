@@ -579,9 +579,7 @@ void mp_end_feed_override(const float ramp_time)
 }
 
 /*
- * mp_planner_time_accounting() - gather time in planner and runtime
- *
- *  Record the move times in the runtime and planner for use in planning decisions
+ * mp_planner_time_accounting() - gather time in planner
  */
 
 void mp_planner_time_accounting()
@@ -591,17 +589,20 @@ void mp_planner_time_accounting()
 
     // check the run buffer to see if anything is running. Might not be
     bf->plannable_time = 0;                         // set to zero if running or not
-    bf->plannable_time_ms = 0;  // ++++++ leave move_time alone
+    bf->plannable_time_ms = 0;                      // ++++++ leaves move_time alone
+    bf->plannable_length = 0;                       //+++++
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
     float plannable_time = 0;
-    while ((bf = bf->nx) != mb.r) {     // all non-empty buffers
+    while ((bf = bf->nx) != mb.r) {                 // scan all non-empty buffers
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
         }
         plannable_time += bf->move_time;
         bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
+        bf->theoretical_ms = sqrt(bf->cruise_velocity * 5.773502692 * bf->recip_jerk) * 60000;
+        bf->plannable_length = bf->length + bf->pv->plannable_length;
 
 //        if (in_critical && (plannable_time >= mb.planner_critical_time)) {
 //            in_critical = false;
