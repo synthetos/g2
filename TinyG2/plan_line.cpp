@@ -61,16 +61,8 @@ static void _set_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
     UPDATE_BF_MS(bf);   //+++++
-//    bf->move_time_ms = bf->move_time * 60000;
-//    bf->plannable_time_ms = bf->plannable_time * 60000;
-
-//    UPDATE_MB_MS  //+++++
-//    mb.plannable_time_ms = mb.plannable_time * 60000;
-
-//    bf->length_total = bf->length + bf->pv->length_total;
 }
 #pragma GCC reset_options
-
 
 /* Runtime-specific setters and getters
  *
@@ -268,11 +260,12 @@ static void _update_move_times(mpBuf_t *bf)
 
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 {
+/*
     if (bf->linenum == 2486) { // looking at start on line N - RUN is typically 45 blocks behind
         mp_dump_planner(bf);
         printf ("stop\n");
     }
-
+*/
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
     if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
@@ -286,6 +279,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         bf->exit_vmax = (bf->gm.path_control == PATH_EXACT_STOP) ? 0 : bf->cruise_vmax;
         bf->entry_vmax = min((fp_ZERO(bf->pv->exit_vmax) ? 0 : bf->junction_vmax), bf->cruise_vmax);
         if (bf->nx->buffer_state != MP_BUFFER_EMPTY) {
+//        if (!bf->nx->plannable) {
             return (bf->nx);                            // read in more INITIALIZED buffers if there are any
         }
         mb.planning_return = bf->nx;                    // where to return after planning is complete
@@ -298,7 +292,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
 
-        for ( ; (!(bf->optimal || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
+//        for ( ; ((bf->plannable || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
+        for ( ; bf->plannable; bf = bf->pv) {
 
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
             bf->iterations++;
@@ -339,16 +334,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             }
         }
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
-    } // exits with bf pointing to an optimal or EMPTY block
+    } // exits with bf pointing to a locked or EMPTY block
 
     // Forward Planning Pass
-    // Build an optimal acceleration ramp by setting entry and exit velocities based on the accel velocity
+    // Build a perfect acceleration ramp by setting entry and exit velocities based on the accel velocity
     // You can stop computing the acceleration ramp when it crosses the deceleration ramp
     // Recompute the move times for PERFECT moves so time accounting is more accurate when it runs
 
     if (mb.pessimistic_state == PESSIMISTIC_FORWARD) {
 
-        // Initializes bf to the first block past the optimal block (i.e. bf->pv->optimal == true)
+        // Initializes bf to the first block past the earliest unlocked block
         for (bf = bf->nx; bf != mb.planning_return; bf = bf->nx) {
 
             if (bf->pv->buffer_state == MP_BUFFER_RUNNING) {
@@ -361,12 +356,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
                 if ((bf->hint == PERFECT_DECELERATION) || (bf->hint == PERFECT_CRUISE)) {
                     _update_move_times(bf);
-                    if (bf->pv->optimal) { bf->optimal = true; }
+                    if (!(bf->pv->plannable)) { bf->plannable = false; }
                     bf->buffer_state = MP_BUFFER_PREPPED;
                     continue;
                 }
                 if (bf->hint == COMMAND_BLOCK) {
-                    if (bf->pv->optimal) { bf->optimal = true; }
+                    if (!(bf->pv->plannable)) { bf->plannable = false; }
                     bf->buffer_state = MP_BUFFER_PLANNED;
                     continue;
                 }
@@ -379,8 +374,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //            }
 
             // It's possible that in the time planning has been running the run buffer
-            // has been freed, leaving an emprty buffer
-            if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
+            // has been freed, leaving an empty buffer
+            if (bf->pv->plannable) {
                 bf->entry_velocity = bf->pv->exit_velocity;
             }
 
@@ -389,7 +384,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = COMMAND_BLOCK;
                 bf->move_time = 0;
                 bf->plannable_time = bf->pv->plannable_time; UPDATE_BF_MS(bf);   //+++++ // carry forward - will need to change
-                if (bf->pv->optimal) { bf->optimal = true; }
+                if (!(bf->pv->plannable)) { bf->plannable = false; }
                 bf->buffer_state = MP_BUFFER_PLANNED;
                 continue;
             }
@@ -403,7 +398,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity - use as the reference
                 bf->exit_velocity = bf->entry_velocity;
                 bf->hint = PERFECT_CRUISE;
-                if (bf->pv->optimal) { bf->optimal = true; }
+                if (!(bf->pv->plannable)) { bf->plannable = false; }
 
             // decelerations
             } else if (bf->entry_velocity > bf->exit_velocity) {
@@ -422,7 +417,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     bf->exit_velocity = bf->accel_velocity;
                     bf->cruise_velocity = bf->exit_velocity;
                     bf->hint = PERFECT_ACCELERATION;
-                    bf->optimal = true;
+                    bf->plannable = false;
                 } else {                        // it's hit the cusp
                     bf->hint = NO_HINT;         // we don't know what this move actually is
                 }

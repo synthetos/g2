@@ -63,28 +63,27 @@ stat_t mp_exec_move()
 		return (STAT_NOOP);
 	}
 
-    if (bf->gm.linenum == 683) {    // Crashes on ln 685
-        printf("stop\n");
-    }
-
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
 
+        if (bf->gm.linenum == 683) {    // Crashes on ln 685
+            printf("stop\n");
+        }
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() buffer is not prepped");
     		st_prep_null();
             return (STAT_ERROR_42);
         }
-        if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
-            rpt_exception(42, "mp_exec_move() next buffer is empty");
-        }
+//        if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
+//            rpt_exception(42, "mp_exec_move() next buffer is empty");
+//        }
 
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
             mp_plan_block_forward(bf);                      // complete planning if not already planned
         }
+        bf->plannable = false;
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
-        bf->optimal = true;
     }
 
 	// Manage motion state transitions

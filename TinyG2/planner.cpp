@@ -691,6 +691,7 @@ void mp_planner_time_accounting()
  * mp_copy_buffer(bf,bp)	Copy the contents of bp into bf - preserves links.
  */
 
+// Also clears unlocked, so the buffer cannot be used
 static inline void _clear_buffer(mpBuf_t *bf)
 {
 	// Note: bf->bf_func is the first address we wish to clear as we must preserve
@@ -771,12 +772,13 @@ void mp_commit_write_buffer(const moveType move_type)
         if ((mb.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_exec_move();	    // requests an exec if the runtime is not busy
+            st_request_exec_move();	// requests an exec if the runtime is not busy
         }
     }
-    mb.new_block = true;				// got a new block to plan
-    mb.w = mb.w->nx;                    // advance the write buffer pointer
-    qr_request_queue_report(+1);        // request a QR and add to the "added buffers" count
+    mb.w->plannable = true;
+    mb.new_block = true;			// got a new block to plan
+    mb.w = mb.w->nx;                // advance the write buffer pointer
+    qr_request_queue_report(+1);    // request a QR and add to the "added buffers" count
 }
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
@@ -793,16 +795,16 @@ mpBuf_t * mp_get_run_buffer()
 }
 
 // Note: mp_free_run_buffer() is only called from mp_exec_XXX, which are within an interrupt
-bool mp_free_run_buffer()   // EMPTY current run buffer & advance to the next
+bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
-    _audit_buffers();       // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
+    _audit_buffers();               // diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     mpBuf_t *r = mb.r;
-    mb.r = mb.r->nx;					// advance to next run buffer
-	_clear_buffer(r);                   // clear it out (& reset plannable and set MP_BUFFER_EMPTY)
+    mb.r = mb.r->nx;                // advance to next run buffer
+	_clear_buffer(r);               // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
 	mb.buffers_available++;
-	qr_request_queue_report(-1);			// request a QR and add to the "removed buffers" count
-	return (mb.w == mb.r); 	            // return true if the queue emptied
+	qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
+	return (mb.w == mb.r);          // return true if the queue emptied
 }
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
@@ -830,14 +832,14 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 {
     mpBuf_t *bf = bf_start;
 
-    printf ("Buf, Line, State, Hint, Opt, Iter, Tmove, Tplan, Ovr, Thr, Len, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
+    printf ("Buf, Line, State, Hint, Planbl, Iter, Tmove, Tplan, Ovr, Thr, Len, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
 
     do {
         printf ("%d,",    (int)bf->buffer_number);
         printf ("%d,",    (int)bf->linenum);
         printf ("%d,",    (int)bf->buffer_state);
         printf ("%d,",    (int)bf->hint);
-        printf ("%d,",    (int)bf->optimal);
+        printf ("%d,",    (int)bf->plannable);
         printf ("%d,",    (int)bf->iterations);
 
         printf ("%1.2f,", bf->move_time_ms);
