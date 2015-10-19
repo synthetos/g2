@@ -205,6 +205,14 @@ typedef enum {
 #define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
 #define UPDATE_MB_MS     { mb.plannable_time_ms = mb.plannable_time*60000; }
 
+#define SANITY_TRAPS(bf) { \
+    if (bf->buffer_state != MP_BUFFER_EMPTY) { \
+        if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
+        if (bf->exit_velocity > bf->cruise_velocity)  {while(1);} \
+    } \
+}
+//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
+
 /*
  *	Planner structures
  */

@@ -775,7 +775,7 @@ void mp_commit_write_buffer(const moveType move_type)
             st_request_exec_move();	// requests an exec if the runtime is not busy
         }
     }
-    mb.w->plannable = true;
+    mb.w->plannable = true;         // enables the block for planning
     mb.new_block = true;			// got a new block to plan
     mb.w = mb.w->nx;                // advance the write buffer pointer
     qr_request_queue_report(+1);    // request a QR and add to the "added buffers" count

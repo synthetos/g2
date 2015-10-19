@@ -224,19 +224,10 @@ void mp_plan_block_list()
     mb.p = bf;                                      // update planner pointer
 }
 
-#define SANITY_TRAPS(bf) { \
-                            if (bf->buffer_state != MP_BUFFER_EMPTY) { \
-                                if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
-                                if (bf->exit_velocity > bf->cruise_velocity)  {while(1);} \
-                            } \
-                         }
-
-//    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
-
 /* Planner Helpers
  * mp_plan_block_forward() - plan a block
  */
-
+/*
 void mp_plan_block_forward(mpBuf_t *bf)
 {
     SANITY_TRAPS(bf);
@@ -244,7 +235,7 @@ void mp_plan_block_forward(mpBuf_t *bf)
     bf->buffer_state = MP_BUFFER_PLANNED;
     SANITY_TRAPS(bf);
 }
-
+*/
 // Update move_time and plannable_time estimates
 // These are accurate for perfect accel, decel and cruise, approximate otherwise
 static void _update_move_times(mpBuf_t *bf)
@@ -291,7 +282,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
 
-//        for ( ; ((bf->plannable || (bf->buffer_state == MP_BUFFER_EMPTY))); bf = bf->pv) {
         for ( ; bf->plannable; bf = bf->pv) {
 
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
@@ -355,12 +345,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (VELOCITY_EQ(bf->entry_velocity, bf->pv->exit_velocity)) {
                 if ((bf->hint == PERFECT_DECELERATION) || (bf->hint == PERFECT_CRUISE)) {
                     _update_move_times(bf);
-                    if (!(bf->pv->plannable)) { bf->plannable = false; }
+                    if (!bf->pv->plannable) { bf->plannable = false; }
                     bf->buffer_state = MP_BUFFER_PREPPED;
                     continue;
                 }
                 if (bf->hint == COMMAND_BLOCK) {
-                    if (!(bf->pv->plannable)) { bf->plannable = false; }
+                    if (!bf->pv->plannable) { bf->plannable = false; }
                     bf->buffer_state = MP_BUFFER_PLANNED;
                     continue;
                 }
@@ -372,9 +362,14 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //                bf->entry_velocity = bf->pv->exit_velocity;
 //            }
 
-            // It's possible that in the time planning has been running the run buffer
-            // has been freed, leaving an empty buffer
-            if (bf->pv->plannable) {
+            // At this point the following possibilities exist for the previous block:
+            //  (1) pv is a perfect accel, cruise, or command and is not plannable
+            //  (2) pv is not a perfect move and is plannable
+            //  (3) pv is set ~plannable by the exec; not been planned (PREPPED)
+            //  (4) pv is set ~plannable by the exec; has been planned (RUNNING)
+            //  (5) pv is an EMPTY block (exec has already released it)
+            // in all cases but (5) we set the entry velocity to pv Vx
+            if (bf->pv->buffer_state != MP_BUFFER_EMPTY) {
                 bf->entry_velocity = bf->pv->exit_velocity;
             }
 
@@ -383,7 +378,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->hint = COMMAND_BLOCK;
                 bf->move_time = 0;
                 bf->plannable_time = bf->pv->plannable_time; UPDATE_BF_MS(bf);   //+++++ // carry forward - will need to change
-                if (!(bf->pv->plannable)) { bf->plannable = false; }
+                if (!bf->pv->plannable) { bf->plannable = false; }
                 bf->buffer_state = MP_BUFFER_PLANNED;
                 continue;
             }
@@ -397,7 +392,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 bf->cruise_velocity = bf->entry_velocity;   // set to entry velocity - use as the reference
                 bf->exit_velocity = bf->entry_velocity;
                 bf->hint = PERFECT_CRUISE;
-                if (!(bf->pv->plannable)) { bf->plannable = false; }
+                if (!bf->pv->plannable) { bf->plannable = false; }
 
             // decelerations
             } else if (bf->entry_velocity > bf->exit_velocity) {

@@ -71,17 +71,22 @@ stat_t mp_exec_move()
         }
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() buffer is not prepped");
-    		st_prep_null();
-            return (STAT_ERROR_42);
+//    		st_prep_null();
+//            return (STAT_ERROR_42);
         }
-//        if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
-//            rpt_exception(42, "mp_exec_move() next buffer is empty");
-//        }
+        if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
+            rpt_exception(42, "mp_exec_move() next buffer is empty");
+        }
 
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
-            mp_plan_block_forward(bf);                      // complete planning if not already planned
+//            mp_plan_block_forward(bf);                      // complete planning if not already planned
+            SANITY_TRAPS(bf);
+            mp_calculate_trapezoid(bf);
+            bf->buffer_state = MP_BUFFER_PLANNED;
+            SANITY_TRAPS(bf);
         }
-        bf->plannable = false;
+        bf->plannable = false;                              // lock this buffer
+        bf->nx->plannable = false;                          // lock the next one, too
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
     }
