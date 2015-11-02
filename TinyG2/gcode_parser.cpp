@@ -305,7 +305,16 @@ static stat_t _parse_gcode_block(char *buf)
 					break;
 				}
 				case 40: break;	// ignore cancel cutter radius compensation
-				case 49: break;	// ignore cancel tool length offset comp.
+
+                        case 43: {
+                            switch (_point(value)) {
+                            case 0: SET_NON_MODAL (next_action, NEXT_ACTION_SET_TL_OFFSET);
+                            case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET);
+                            default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+                            }
+                            break;
+                        }
+				case 49: SET_NON_MODAL (next_action, NEXT_ACTION_CANCEL_TL_OFFSET);
 				case 53: SET_NON_MODAL (absolute_override, true);
 				case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
 				case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
@@ -390,6 +399,7 @@ static stat_t _parse_gcode_block(char *buf)
 		//	case 'U': SET_NON_MODAL (target[AXIS_U], value);		// reserved
 		//	case 'V': SET_NON_MODAL (target[AXIS_V], value);		// reserved
 		//	case 'W': SET_NON_MODAL (target[AXIS_W], value);		// reserved
+            case 'H': SET_NON_MODAL (H_word, value);
 			case 'I': SET_NON_MODAL (arc_offset[0], value);
 			case 'J': SET_NON_MODAL (arc_offset[1], value);
 			case 'K': SET_NON_MODAL (arc_offset[2], value);
@@ -480,7 +490,14 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_select_plane, select_plane);               // G17, G18, G19
 	EXEC_FUNC(cm_set_units_mode, units_mode);               // G20, G21
 	//--> cutter radius compensation goes here
-	//--> cutter length compensation goes here
+	switch (cm.gn.next_action) {
+        case NEXT_ACTION_SET_TL_OFFSET: { 			// G43
+            ritorno(cm_set_tl_offset(cm.gn.H_word, false)); break; }
+	case NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET: { // G43.2
+            ritorno(cm_set_tl_offset(cm.gn.H_word, true)); break; }
+        case NEXT_ACTION_CANCEL_TL_OFFSET: { // G49
+            ritorno(cm_cancel_tl_offset()); break; }
+	}
 	EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
 	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91

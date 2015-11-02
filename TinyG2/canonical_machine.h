@@ -167,7 +167,10 @@ typedef enum {						    // these are in order to optimized CASE statement
 	NEXT_ACTION_GOTO_G28_POSITION,		// G28 go to machine position
 	NEXT_ACTION_SET_G30_POSITION,		// G30.1
 	NEXT_ACTION_GOTO_G30_POSITION,		// G30
-	NEXT_ACTION_SET_COORD_DATA,			// G10
+	NEXT_ACTION_SET_COORD_DATA,		// G10
+	NEXT_ACTION_SET_TL_OFFSET,             // G43
+	NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET,  // G43.2
+	NEXT_ACTION_CANCEL_TL_OFFSET,          // G49
 	NEXT_ACTION_SET_ORIGIN_OFFSETS,		// G92
 	NEXT_ACTION_RESET_ORIGIN_OFFSETS,	// G92.1
 	NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS,	// G92.2
@@ -383,6 +386,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
     uint32_t linenum;					// N word
     float target[AXES]; 				// XYZABC where the move should go
 
+	uint8_t H_word;						// H word - used by G43s
 	uint8_t L_word;						// L word - used by G10s
 
     float feed_rate; 					// F - normalized to millimeters/minute
@@ -430,6 +434,7 @@ typedef struct GCodeFlags {             // Gcode model input flags
     bool linenum;
     bool target[AXES];
 
+    bool H_word;
     bool L_word;
     bool feed_rate;
     bool feed_rate_mode;
@@ -508,6 +513,8 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 
 	// coordinate systems and offsets
 	float offset[COORDS+1][AXES];		// persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
+	float tt_offset[TOOLS+1][AXES];		// persistent tool table offsets
+	float tl_offset[AXES];		// current tool length offset
 
 	// settings for axes X,Y,Z,A B,C
 	cfgAxis_t a[AXES];
@@ -637,6 +644,9 @@ stat_t cm_select_plane(const uint8_t plane);                    // G17, G18, G19
 stat_t cm_set_units_mode(const uint8_t mode);                   // G20, G21
 stat_t cm_set_distance_mode(const uint8_t mode);                // G90, G91
 stat_t cm_set_arc_distance_mode(const uint8_t mode);            // G90.1, G91.1
+stat_t cm_set_tl_offset(const uint8_t H_word,                   // G43, G43.2
+                        bool apply_additional);
+stat_t cm_cancel_tl_offset();                                   // G49
 stat_t cm_set_coord_offsets(const uint8_t coord_system,         // G10
                             const uint8_t L_word,
                             const float offset[], const bool flag[]);
@@ -756,6 +766,7 @@ stat_t cm_get_feed(nvObj_t *nv);		// get feed rate, converted to units
 stat_t cm_get_pos(nvObj_t *nv);			// get runtime work position...
 stat_t cm_get_mpo(nvObj_t *nv);			// get runtime machine position...
 stat_t cm_get_ofs(nvObj_t *nv);			// get runtime work offset...
+stat_t cm_get_tof(nvObj_t *nv);			// get runtime tool length offset...
 
 stat_t cm_run_qf(nvObj_t *nv);			// run queue flush
 stat_t cm_run_home(nvObj_t *nv);		// start homing cycle
@@ -813,6 +824,7 @@ stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 	void cm_print_pos(nvObj_t *nv);		// print runtime work position in prevailing units
 	void cm_print_mpo(nvObj_t *nv);		// print runtime work position always in MM uints
 	void cm_print_ofs(nvObj_t *nv);		// print runtime work offset always in MM uints
+	void cm_print_tof(nvObj_t *nv);		// print tool length offset
 
 	void cm_print_ja(nvObj_t *nv);		// global CM settings
 	void cm_print_ct(nvObj_t *nv);
