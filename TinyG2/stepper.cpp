@@ -506,31 +506,31 @@ stat_t st_motor_power_callback() 	// called by controller
         have_actually_stopped = true;
     }
 
-	// manage power for each motor individually
-	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+    // manage power for each motor individually
+    for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 
         if (have_actually_stopped && st_run.mot[motor].power_state == MOTOR_RUNNING)
             st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
 
-		// start timeouts initiated during a load so the loader does not need to burn these cycles
-		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START && st_cfg.mot[motor].power_mode != MOTOR_ALWAYS_POWERED) {
-			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-			if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
-				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-			} else if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
-			}
-		}
+        // start timeouts initiated during a load so the loader does not need to burn these cycles
+        if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START && st_cfg.mot[motor].power_mode != MOTOR_ALWAYS_POWERED) {
+            st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+            if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
+                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
+            } else if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
+            }
+        }
 
-		// count down and time out the motor
-		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
-			if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
-				st_run.mot[motor].power_state = MOTOR_IDLE;
-				_deenergize_motor(motor);
-			}
-		}
-	}
-	return (STAT_OK);
+        // count down and time out the motor
+        if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
+            if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
+                st_run.mot[motor].power_state = MOTOR_IDLE;
+                _deenergize_motor(motor);
+            }
+        }
+    }
+    return (STAT_OK);
 }
 
 /******************************
@@ -840,7 +840,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
 				st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
 				st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
-                motor_1.setDirection(st_pre.mot[MOTOR_1].direction);
+                                motor_1.setDirection(st_pre.mot[MOTOR_1].direction);
 			}
 
 			// Enable the stepper and start motor power management
@@ -849,7 +849,8 @@ static void _load_move()
 			SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
 
 		} else {  // Motor has 0 steps; might need to energize motor for power mode processing
-			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+			if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                            st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_IN_CYCLE) {
 				motor_1.enable();									// energize motor
 				st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
 			}
@@ -866,13 +867,16 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
 				st_pre.mot[MOTOR_2].prev_direction = st_pre.mot[MOTOR_2].direction;
 				st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
-                motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
+                                motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
 
 			}
-			motor_2.enable(); st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
+			motor_2.enable(); 
+                        st_run.mot[MOTOR_2].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_2, st_pre.mot[MOTOR_2].step_sign);
-		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_2.enable(); st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
+		} else if (st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                           st_cfg.mot[MOTOR_2].power_mode == MOTOR_POWERED_IN_CYCLE) {
+			motor_2.enable(); 
+                        st_run.mot[MOTOR_2].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_2);
 #endif
@@ -885,13 +889,16 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
 				st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
 				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
-                motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
+                                motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
 
 			}
-			motor_3.enable(); st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
+			motor_3.enable(); 
+                        st_run.mot[MOTOR_3].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
-		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_3.enable(); st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
+		} else if (st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                           st_cfg.mot[MOTOR_3].power_mode == MOTOR_POWERED_IN_CYCLE) {
+			motor_3.enable(); 
+                        st_run.mot[MOTOR_3].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_3);
 #endif
@@ -904,13 +911,16 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
 				st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
 				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
-                motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
+                                motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
 
 			}
-			motor_4.enable(); st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
+			motor_4.enable(); 
+                        st_run.mot[MOTOR_4].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
-		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_4.enable(); st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
+		} else if (st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                           st_cfg.mot[MOTOR_4].power_mode == MOTOR_POWERED_IN_CYCLE) {
+			motor_4.enable(); 
+                        st_run.mot[MOTOR_4].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_4);
 #endif
@@ -923,13 +933,16 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
 				st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
 				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
-                motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
+                                motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
 
 			}
-			motor_5.enable(); st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
+			motor_5.enable(); 
+                        st_run.mot[MOTOR_5].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
-		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_5.enable(); st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
+		} else if (st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                           st_cfg.mot[MOTOR_5].power_mode == MOTOR_POWERED_IN_CYCLE) {
+			motor_5.enable(); 
+                        st_run.mot[MOTOR_5].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_5);
 #endif
@@ -942,13 +955,16 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
 				st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
 				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
-                motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
+                                motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
 
 			}
-			motor_6.enable(); st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
+			motor_6.enable(); 
+                        st_run.mot[MOTOR_6].power_state = MOTOR_RUNNING;
 			SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
-		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-			motor_6.enable(); st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
+		} else if (st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING ||
+                           st_cfg.mot[MOTOR_6].power_mode == MOTOR_POWERED_IN_CYCLE) {
+			motor_6.enable(); 
+                        st_run.mot[MOTOR_6].power_state = MOTOR_POWER_TIMEOUT_START;
 		}
 		ACCUMULATE_ENCODER(MOTOR_6);
 #endif
