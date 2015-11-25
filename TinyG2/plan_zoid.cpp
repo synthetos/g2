@@ -32,11 +32,6 @@
 #include "report.h"
 #include "util.h"
 
-template<typename T>
-inline T our_abs(const T number) {
-    return number < 0 ? -number : number;
-}
-
 //+++++ DIAGNOSTICS
 
 #define LOG_RETURN(msg)                              // LOG_RETURN with no action (production)
@@ -372,7 +367,7 @@ static float _get_target_length_min(const float v_0, const float v_1, const mpBu
  *  'f' is added to the beginning when the first char would be a number.
  *
  *  Try 1 constants:
- *  L_c(v_0, v_1, j) = sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * (1/j)
+ *  L_c(v_0, v_1, j) = sqrt(5)/( sqrt(2)pow(3,4) ) * sqrt(j * abs(v_1-v_0)) * (v_0+v_1) * (1/j)
  *
  *  static const float sqrt_five = 2.23606797749979;                      // sqrt(5)
  *  static const float sqrt_two_x_fourthroot_three = 1.861209718204198;   // pow(3, 1/4) * sqrt(2)
@@ -381,23 +376,236 @@ static float _get_target_length_min(const float v_0, const float v_1, const mpBu
  *  L_c(v_0, v_1, j) = (sqrt(5) (v_0 + v_1) sqrt(j abs(v_1 - v_0))) / (sqrt(2) 3^(1 / 4) j)
  *
  *  Cost 6 uSec - 85 uSec - avg about 60
+ *
+ *  Try 3 constants:
+ *  Fundamental Jerk curve formula (t=[0...1])
+ *    J(t) = 60 (v_1 - v_0) (1 - t) (1 - 2t) t / T²
+ *  Peak jerk is at:
+ *   t = (3-sqrt(3))/6
+ *   n = (1 - t) (1 - 2t) t where t = (3-sqrt(3))/6
+ *   n = sqrt(3)/18
+ *
+ *  J(t) = 60 sqrt(3)/18 (v_1 - v_0) / T²
+ *  Solve for T:
+ *   T = ±(sqrt(10) sqrt(v_1-v_0))/(3^(1/4) sqrt(j)) and sqrt(j)!=0 and sqrt(v_1-v_0)!=0
+ *  
+ *  Define R = T², solve for R instead:
+ *    R = (10/sqrt(3))((v_1-v_0)/j) and j!=0 and v_0 !=v_1
+ *
+ *  Fundamental Length formula:
+ *    L = (sqrt(10) sqrt(v_1-v_0))/(3^(1/4) sqrt(j))( (v_1 - v_0) ((t-3) t+5/2) t⁴ + v_0 t)
+ *
+ *  Define m:
+ *    m = ((t-3) t+5/2) t⁴
+ *    L = (sqrt(10) sqrt(v_1-v_0))/(3^(1/4) sqrt(j))( (v_1 - v_0) m + v_0 t)
+ *
+ *  Common multiple q:
+ *    q = (sqrt(10)/(3^(1/4))) ~= 2.40281141413
+ *    L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 - v_0) m + v_0 t)
+ *
+ *  m where t = 1:
+ *    m = ½
+ *    t = 1
+ *    L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2 )
+ *
+ *  When j is guaranteed to be positive we can simplify some:
+ *    L = q (sqrt((v_1-v_0)/j))( (v_1 + v_0)/2 )
+ *    L = (q/2) (sqrt((v_1-v_0)/j)) (v_1 + v_0)
+ *
  */
 
 //Just calling this tl_constant. It's full name is:
-static const float tl_constant = 1.201405707067378;                     // sqrt(5)/( sqrt(2)pow(3,4) )
+//static const float tl_constant = 1.201405707067378;                     // sqrt(5)/( sqrt(2)pow(3,4) )
 
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
 {
-    const float j = bf->jerk;
+    //const float j = bf->jerk;
     const float recip_j = bf->recip_jerk;
 
     //Try 1 math:
-    //return (sqrt_five * (v_0 + v_1) * sqrt(our_abs(v_1 - v_0) * bf->jerk))/(sqrt_two_x_fourthroot_three * bf->jerk); // newer formula -- linear POP!
+    //return (sqrt_five * (v_0 + v_1) * sqrt(abs(v_1 - v_0) * bf->jerk))/(sqrt_two_x_fourthroot_three * bf->jerk); // newer formula -- linear POP!
 
     //Try 2 math (same, but rearranged):
-    float len = tl_constant * sqrt(j * our_abs(v_1-v_0)) * (v_0+v_1) * recip_j;
-    return (len);
+    //float len = tl_constant * sqrt(j * abs(v_1-v_0)) * (v_0+v_1) * recip_j;
+    //return (len);
+
+    //Try 3 math:
+    const float q_half = 1.2014057071; //2.40281141413/2;
+    float sqrt_delta_v_0_recip_j = sqrt(abs(v_1-v_0)*recip_j);
+    return (q_half * sqrt_delta_v_0_recip_j * (v_1+v_0));
+
 }
+
+#define NEW_TARGET_VELOCITY 1
+// NOTE: Get meet velocity is switched out too! They share contants.
+#if NEW_TARGET_VELOCITY == 1
+
+/*
+ *
+ * mp_get_target_velocity()
+ *
+ * Fundamental Jerk curve formula:
+ *   J(t) = 60 (v_1 - v_0) (1 - t) (1 - 2t) t / T^2
+ *
+ * Fundamental Length curve formula:
+ *   L(t) = T( (v_1 - v_0) ((t-3) t+5/2) t⁴ + v_0 t)
+ *
+ * Where t = 1;
+ *   L(1) = T( (v_1 - v_0) 1/2 + v_0)
+ *
+ * Solve for T:
+ *   T = (2 L)/(v_0 + v_1)
+ *
+ * Substitute T^2 = ((4L^2) / (v_0+v_1)^2) in J(t) formula
+ *   J(t) = (v_1 - v_0) 60 (1 - 2t) (1 - t) t / ((4L^2) / (v_0+v_1)^2)
+ *
+ * Rearranged to isolate t:
+ *   J(t) = (15 (1-2 t) (1-t) t (v_1-v_0) (v_0+v_1)^2)/L^2
+ * Define a = (1 - 2t) (1 - t) t:
+ *   J(t) = 60 (v_1 - v_0) a / T²
+ *
+ * At peak jerk ( where t=(3 sqrt(3))/6 ) a = 1-sqrt(3)/4
+
+ * J(t) = ((v_0+v_1)^2) (1/(4L^2)) (v_1 - v_0) 60 a
+ * Rearranged:
+ * J(t) = (15 a (v_1-v_0) (v_0+v_1)^2)/L²
+
+ * Solve for v_1:
+ * v_1 = 1/3 ((4 10^(1/3) a v_0^2)/
+            (80 a^3 v_0^3+9 a^2 j L^2+3 sqrt(160 a^5 j L^2 v_0^3+9 a^4 j^2 L^4))^(1/3)
+        +
+            (80 a^3 v_0^3+9 a^2 j L^2+3 sqrt(160 a^5 j L^2 v_0^3+9 a^4 j^2 L^4))^(1/3)
+                /(10^(1/3) a))-v_0/3
+        where a!=0 and L!=0
+
+ * Define b:
+ *   b = (80 a^3 v_0^3+9 a^2 j L^2+3 sqrt(160 a^5 j L^2 v_0^3+9 a^4 j^2 L^4))^(1/3)
+ * Rearranged:
+ *   b = (3 sqrt(a^4 j L^2 (160 a v_0^3+9 j L^2))+80 a^3 v_0^3+9 a^2 j L^2)^(1/3)
+ *   b^3 = 3 sqrt(a^4 j L^2 (160 a v_0^3+9 j L^2))+80 a^3 v_0^3+9 a^2 j L^2
+
+ * Pull out sqrt(a^4)=a^2 and sqrt(L^2)=L, and factor out a^2:
+ *   b^3 = a^2 (3 L sqrt(j (160 a v_0^3+9 j L^2)) + 80 a v_0^3 + 9 j L^2)
+
+ * Define b_part1 = 9 j L^2:
+ *   b^3 = a^2 (3 L sqrt(j (160 a v_0^3 + b_part1)) + 80 a v_0^3 + b_part1)
+ * Define b_part2 = 80 a v_0^3:
+ *   b^3 = a^2 (3 L sqrt(j (2 b_part2 + b_part1)) + b_part2 + b_part1)
+
+ * Using b:
+ *   v_1 = 1/3 ((4 10^(1/3) a v_0^2)/b+b/(10^(1/3) a))-v_0/3 and a!=0 and P!=0
+ * Rearranged:
+ *   v_1 = ((4 10^(1/3) a v_0^2)/b+b/(10^(1/3) a) - v_0)/3 and a!=0 and P!=0
+
+ * Using const1a = 4 10^(1/3) * a  and  const2a = 1/(10^(1/3) * a):
+ *   v_1 = 1/3 ((const1a v_0^2)/b + b const2a - v_0)
+ */
+
+// 14 *, 1 /, 1 sqrt, 1 cbrt
+float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
+{
+    if (fp_ZERO(L)) {                                       // handle exception case
+        return (0);
+    }
+
+    const float j = bf->jerk;
+
+    const float a80 = 7.698003589195;   // 80 * a
+    const float a_2 = 0.00925925925926; // a^2
+
+    const float v_0_2 = v_0 * v_0;      // v_0^2
+    const float v_0_3 = v_0_2 * v_0;    // v_0^3
+
+    const float L_2 = L * L;            // L^2
+
+    const float b_part1 = 9*j*L_2;      // 9 j L^2
+    const float b_part2 = a80*v_0_3;    // 80 a v_0^3
+
+    //              b^3 = a^2 (3 L sqrt(j (2 b_part2  +  b_part1))  +  b_part2  +  b_part1)
+    const float b_cubed = a_2*(3*L*sqrt(j*(2*b_part2  +  b_part1))  +  b_part2  +  b_part1);
+    const float b = cbrtf(b_cubed);
+
+    const float const1a = 0.8292422988276;    // 4 * 10^(1/3) * a
+    const float const2a = 4.823680612597;     // 1/(10^(1/3) * a)
+    const float const3  = 0.333333333333333;  // 1/3
+
+    //          v_1 =    1/3 ((const1a v_0^2)/b  +  b const2a  -  v_0)
+    const float v_1 = const3*((const1a*v_0_2)/b  +  b*const2a  -  v_0);
+    
+    return abs(v_1);
+}
+
+/*
+ * _get_meet_velocity() - find intersection velocity
+ *
+ * t = (3-sqrt(3))/6
+ * q = (sqrt(10)/(3^(1/4)))
+ * m = 4/27-1/(4 sqrt(3))
+ * r = (t-m)
+ * r = 85/72-2/(3 sqrt(3))
+ * L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2) + q (sqrt(v_1-v_2)/sqrt(j))( (v_1 + v_2)/2)
+ * L = (q/(2 sqrt(j))) (sqrt(v_1-v_0)(v_1 + v_0) + sqrt(v_1-v_2)(v_1 + v_2))
+ */
+
+static float _get_meet_velocity(const float v_0, const float v_2, const float L, const mpBuf_t *bf)
+{
+    const float j = bf->jerk;
+    //const float recip_j = bf->recip_jerk;
+
+    const float q =      2.40281141413; // (sqrt(10)/(3^(1/4)))
+    //const float q_half = 2.40281141413/2; // q/2
+
+    const float sqrt_j = sqrt(j);
+    //const float recip_sqrt_j = 1/sqrt_j;
+    const float q_recip_2_sqrt_j = q/(2*sqrt_j);
+
+    // v_1 can never be smaller than v_0 or v_2, so we keep track of this value
+    const float min_v_1 = max(v_0, v_2);
+
+    // v_1 is our estimated return value.
+    // We estimate with the speed obtained by L/2 traveled from the highest speed of v_0 or v_2.
+    float v_1 = mp_get_target_velocity(min_v_1, L/2.0, bf);
+    //var v_1 = min_v_1 + 100;
+
+    // Per iteration: 2 sqrt, 2 abs, 6 -, 4 +, 12 *, 3 /
+    int i = 0; // limit the iterations
+    while (i++ < 30) { // If it fails after 30, something's wrong
+        //v_1 = Math.max(min_v_1, v_1);
+
+        // Precompute some common chunks -- note that some attempts may have v_1 < v_0 or v_1 < v_2
+        const float sqrt_delta_v_0 = sqrt(abs(v_1-v_0));
+        const float sqrt_delta_v_2 = sqrt(abs(v_1-v_2));
+
+        // l_c is our total-length calculation with the current v_1 estimate, minus the expected length.
+        // This makes l_c == 0 when v_1 is the correct value.
+        //          l_c = ( q/(2 sqrt(j))) (sqrt(v_1-v_0)  (v_1 + v_0) + sqrt(v_1-v_2)  (v_1 + v_2)) - l
+        const float l_c = q_recip_2_sqrt_j*(sqrt_delta_v_0*(v_1 + v_0) + sqrt_delta_v_2*(v_1 + v_2)) - L;
+
+        // Early escape -- if we're within 2 of "root" then we can call it good.
+        // We need this level of precision, or out length computations fail to match the block length.
+        if (abs(l_c) < 0.00001) { break; }
+
+        // l_d is the derivative of l_c, and is used for the Newton-Raphson iteration.
+        // d = (q (sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)))/(4 sqrt(j) sqrt(v_1-v_0) sqrt(v_1-v_2))
+        // 1/d = (4 sqrt(j) sqrt(v_1-v_0) sqrt(v_1-v_2))/(q (sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)))
+        const float v_1x3 = 3*v_1;
+        const float recip_l_d = (4*sqrt_j*sqrt_delta_v_0*sqrt_delta_v_2)/(q*(sqrt_delta_v_0*(v_1x3-v_2)-(v_0-v_1x3)*sqrt_delta_v_2));
+
+        v_1 = v_1 - (l_c * recip_l_d);
+    }
+
+    v_1 = max(min_v_1, v_1);
+
+    return v_1;
+}
+
+
+#else // if !NEW_TARGET_VELOCITY
+
+
+// WARNING !!! OLD MATH !! //
+
+this won't compile on purpose'
 
 /*
  * mp_get_target_velocity()
@@ -450,7 +658,12 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
 
     float v_1 = (f4_thirds_x_cbrt_5 * v_0_sq) / chunk_1  +  f1_15th_x_2_3_rt_5 * chunk_1  -  third * v_0;
     return (v_1);
+
 }
+
+
+// WARNING !!! OLD MATH !! //
+
 
 /*
  * _get_meet_velocity() - find intersection velocity
@@ -481,12 +694,12 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
     // Per iteration: 2 sqrt, 2 abs, 6 -, 4 +, 12 *, 3 /
     int i = 0; // limit the iterations
-    while (i++ < 5 && our_abs(last_v_1 - v_1) < 2) {    // was 10
+    while (i++ < 5 && abs(last_v_1 - v_1) < 2) {    // was 10
         last_v_1 = v_1;
 
         // Precompute some common chunks
-        sqrt_j_delta_v_0 = sqrt(j * our_abs(v_1-v_0));
-        sqrt_j_delta_v_1 = sqrt(j * our_abs(v_1-v_2));
+        sqrt_j_delta_v_0 = sqrt(j * abs(v_1-v_0));
+        sqrt_j_delta_v_1 = sqrt(j * abs(v_1-v_2));
 
         l_c_head = tl_constant * sqrt_j_delta_v_0 * (v_0+v_1) * recip_j;
         l_c_tail = tl_constant * sqrt_j_delta_v_1 * (v_2+v_1) * recip_j;
@@ -496,7 +709,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         l_c = (l_c_head + l_c_tail) - L;
 
         // Early escape -- if we're within 2 of "root" then we can call it good.
-        if (our_abs(l_c) < 2) { break; }
+        if (abs(l_c) < 2) { break; }
 
         // l_d is the derivative of l_c, and is used for the Newton-Raphson iteration.
         l_d_head = (mv_constant * (v_0 - 3*v_1)) / sqrt_j_delta_v_0;
@@ -507,3 +720,5 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     }
     return (v_1);
 }
+
+#endif //NEW_TARGET_VELOCITY

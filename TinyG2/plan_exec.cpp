@@ -450,6 +450,24 @@ void mp_exit_hold_state()
  *		E = 0
  *		F = P_i
  *
+ *  UPDATE: We will now be accepting initial/final Accel/Jerk, which means we will have all six
+ *  control points. j_0, j_1 are the jerk, a_0, a_1 are the acceleration, and T is total move time.
+ *
+ *    P_0 = v_0
+ *    P_1 = v_0 + (1/5) T a_0
+ *    P_2 = v_0 + (2/5) T a_0 + (1/20) T^2 j_0
+ *    P_3 = v_1 - (2/5) T a_1 - (1/20) T^2 j_1
+ *    P_4 = v_1 - (1/5) T a_1
+ *    P_5 = v_1
+ *
+ * Simplified:
+ *    A =  5( P_1 - P_4 + 2(P_3 - P_2) ) + P_5 - P_0
+ *    B =  5( P_0 + P_4 - 4(P_3 + P_1) + 6 P_2 )
+ *    C = 10( P_3 - P_0 + 3(P_1 - P_2) )
+ *    D = 10( P_0 + P_2 - 2 P_1 )
+ *    E = 5 ( P_1 - P_0 )
+ *    F =     P_0
+ *
  *	Given an interval count of I to get from P_i to P_t, we get the parametric "step" size of h = 1/I.
  *	We need to calculate the initial value of forward differences (F_0 - F_5) such that the inital
  *	velocity V = P_i, then we iterate over the following I times:
@@ -499,39 +517,64 @@ void mp_exit_hold_state()
  *		F_2 = 300Ah^5 + 24Bh^4
  *		F_1 = 120Ah^5
  *
- *  Note that with our current control points, D and E are actually 0.
  */
 
-static void _init_forward_diffs(float Vi, float Vt)
+static void _init_forward_diffs(const float v_0, const float v_1, const float a_0 = 0, const float a_1 = 0, const float j_0 = 0, const float j_1 = 0, const float T = 0)
 {
-	float A =  -6.0*Vi +  6.0*Vt;
-	float B =  15.0*Vi - 15.0*Vt;
-	float C = -10.0*Vi + 10.0*Vt;
-	// D = 0
-	// E = 0
-	// F = Vi
+    const float fifth_T        = T * 0.2; //(1/5) T
+    const float two_fifths_T   = T * 0.4; //(1/5) T
+    const float twentienth_T_2 = T * T * 0.05; // (1/20) T^2
 
-	float h   = 1/(mr.segments);
-//	float h_3 = h * h * h;
-//	float h_4 = h_3 * h;
-//	float h_5 = h_4 * h;
+    const float P_0 = v_0;
+    const float P_1 = v_0 +      fifth_T*a_0;
+    const float P_2 = v_0 + two_fifths_T*a_0 + twentienth_T_2*j_0;
+    const float P_3 = v_1 - two_fifths_T*a_1 - twentienth_T_2*j_1;
+    const float P_4 = v_1 -      fifth_T*a_1;
+    const float P_5 = v_1;
 
-	float Ah_5 = A * h * h * h * h * h;
-	float Bh_4 = B * h * h * h * h;
-	float Ch_3 = C * h * h * h;
+    const float A =  5*( P_1 - P_4 + 2*(P_3 - P_2) ) +   P_5 - P_0;
+    const float B =  5*( P_0 + P_4 - 4*(P_3 + P_1)   + 6*P_2 );
+    const float C = 10*( P_3 - P_0 + 3*(P_1 - P_2) );
+    const float D = 10*( P_0 + P_2 - 2*P_1 );
+    const float E =  5*( P_1 - P_0 );
+    const float F =      P_0;
 
-	mr.forward_diff_5 = (121.0/16.0)*Ah_5 + 5.0*Bh_4 + (13.0/4.0)*Ch_3;
-	mr.forward_diff_4 = (165.0/2.0)*Ah_5 + 29.0*Bh_4 + 9.0*Ch_3;
-	mr.forward_diff_3 = 255.0*Ah_5 + 48.0*Bh_4 + 6.0*Ch_3;
-	mr.forward_diff_2 = 300.0*Ah_5 + 24.0*Bh_4;
-	mr.forward_diff_1 = 120.0*Ah_5;
+	const float h   = 1/(mr.segments);
+    const float h_2 = h   * h;
+	const float h_3 = h_2 * h;
+	const float h_4 = h_3 * h;
+	const float h_5 = h_4 * h;
+
+	const float Ah_5 = A * h_5;
+	const float Bh_4 = B * h_4;
+	const float Ch_3 = C * h_3;
+    const float Dh_2 = D * h_2;
+    const float Eh   = E * h;
+
+    const float const1 = 7.5625; // (121.0/16.0)
+    const float const2 = 3.25;   // ( 13.0/ 4.0)
+    const float const3 = 82.5;   // (165.0/ 2.0)
+
+	mr.forward_diff_5 = const1*Ah_5 +  5.0*Bh_4 + const2*Ch_3 + 2.0*Dh_2 + Eh;
+	mr.forward_diff_4 = const3*Ah_5 + 29.0*Bh_4 +    9.0*Ch_3 + 2.0*Dh_2;
+	mr.forward_diff_3 =  255.0*Ah_5 + 48.0*Bh_4 +    6.0*Ch_3;
+	mr.forward_diff_2 =  300.0*Ah_5 + 24.0*Bh_4;
+	mr.forward_diff_1 =  120.0*Ah_5;
 
 	// Calculate the initial velocity by calculating V(h/2)
-	float half_h = h/2.0;
-	float half_Ch_3 = C * half_h * half_h * half_h;
-	float half_Bh_4 = B * half_h * half_h * half_h * half_h;
-	float half_Ah_5 = A * half_h * half_h * half_h * half_h * half_h;
-	mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + Vi;
+	const float half_h   = h * 0.5; // h/2
+    const float half_h_2 = half_h   * half_h;
+    const float half_h_3 = half_h_2 * half_h;
+    const float half_h_4 = half_h_3 * half_h;
+    const float half_h_5 = half_h_4 * half_h;
+
+    const float half_Eh =   E * half_h;
+    const float half_Dh_2 = D * half_h_2;
+	const float half_Ch_3 = C * half_h_3;
+	const float half_Bh_4 = B * half_h_4;
+	const float half_Ah_5 = A * half_h_5;
+
+	mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + half_Dh_2 + half_Eh + v_0;
 }
 
 /*********************************************************************************************
