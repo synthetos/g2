@@ -29,3 +29,5 @@ end
 define dump_mb
     source ../Resources/debug/mb.gdb
 end
+
+source -s arm.gdb
