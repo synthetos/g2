@@ -106,4 +106,4 @@ print mb.bf[46]
 print &mb.bf[47]
 print mb.bf[47]
 set logging off
-shell python ../Resources/debug/mb_analyze.py mb.txt
+shell python ../Resources/debug/mb_analyze_tab.py mb.txt
