@@ -43,7 +43,7 @@ static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN wi
     sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
                     bf->buffer_number, msg, bf->hint, (bf->move_time * 60000),
                     bf->length, bf->head_length, bf->body_length, bf->tail_length,
-                    bf->entry_velocity, bf->cruise_velocity, bf->exit_velocity);
+                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
     xio_writeline(logbuf);
 }
 #define LOG_RETURN(msg) { _logger(msg, bf); }
@@ -72,7 +72,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
  *
  *  bf values treated as constants:
  *    bf->length	            - actual block length (L)
- *	  bf->entry_velocity	    - requested Ve
+ *	  mr.exit_velocity	    - RUNTIME Ve
  *	  bf->exit_velocity     - requested Vx
  *
  *	bf values that may be changed by plan_zoid:
@@ -83,10 +83,10 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
  *
  *	The following conditions MUST be met on entry (therefore must be validated upstream):
  *    bf->length > 0
- *    bf->entry_velocity >= 0
+ *    mr.exit_velocity >= 0
  *    bf->cruise_velocity >= 0
  *    bf->exit_velocity >= 0
- *    bf->entry_velocity <= bf->cruise_velocity >= bf->exit_velocity
+ *    mr.exit_velocity <= bf->cruise_velocity >= bf->exit_velocity
  *    bf->move_time >= MIN_SEGMENT_TIME (expressed as cruise_vmax must not yield a patholigical segment)
  *    bf->head_length = 0
  *    bf->body_length = 0
@@ -111,7 +111,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 // The minimum lengths are dynamic and depend on the velocity
 // These expressions evaluate to the minimum lengths for the current velocity settings
 // Note: The head and tail lengths are 2 minimum segments, the body is 1 min segment
-#define MIN_HEAD_LENGTH (MIN_SEGMENT_TIME * (bf->cruise_velocity + bf->entry_velocity))
+#define MIN_HEAD_LENGTH (MIN_SEGMENT_TIME * (bf->cruise_velocity + mr.exit_velocity))
 #define MIN_TAIL_LENGTH (MIN_SEGMENT_TIME * (bf->cruise_velocity + bf->exit_velocity))
 #define MIN_BODY_LENGTH (MIN_SEGMENT_TIME *  bf->cruise_velocity)
 
@@ -168,7 +168,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     if (bf->hint == PERFECT_ACCELERATION) {
     	bf->head_length = bf->length;
         bf->cruise_velocity = bf->exit_velocity;
-        bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+        bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
     	LOG_RETURN("1a");
         return (_zoid_exit(bf, ZOID_EXIT_1a));
@@ -177,7 +177,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // PERFECT_DECEL (1d) single tail segment (deltaV == delta_vmax)
     if (bf->hint == PERFECT_DECELERATION) {
     	bf->tail_length = bf->length;
-        bf->cruise_velocity = bf->entry_velocity;
+        bf->cruise_velocity = mr.exit_velocity;
     	bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->tail_time;
     	LOG_RETURN("1d");
@@ -187,7 +187,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     // *** Requested-Fit cases (2) ***
 
 	// Prepare the head and tail lengths for evaluating cases (nb: zeros head / tail < min length)
-    bf->head_length = _get_target_length_min(bf->entry_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH);
+    bf->head_length = _get_target_length_min(mr.exit_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH);
     bf->tail_length = _get_target_length_min(bf->exit_velocity, bf->cruise_velocity, bf, MIN_TAIL_LENGTH);
 
     if (bf->length + EPSILON > (bf->head_length + bf->tail_length)) {
@@ -195,10 +195,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         // 2 segment HB acceleration move (2a)
         if (bf->hint == MIXED_ACCELERATION &&
             VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity) &&
-            VELOCITY_LT(bf->entry_velocity, bf->cruise_velocity)) {
+            VELOCITY_LT(mr.exit_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->head_length;
             bf->tail_length = 0; // we just set it, now we unset it
-            bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+            bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
             bf->body_time = bf->body_length / bf->cruise_velocity;
     	    bf->move_time = bf->head_time + bf->body_time;
             LOG_RETURN("2a");
@@ -207,7 +207,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
         // 2 segment BT deceleration move (2d)
         if (bf->hint == MIXED_DECELERATION &&
-            VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity) &&
+            VELOCITY_EQ(mr.exit_velocity, bf->cruise_velocity) &&
             VELOCITY_LT(bf->exit_velocity, bf->cruise_velocity)) {
             bf->body_length = bf->length - bf->tail_length;
             bf->head_length = 0; // we just set it, now we unset it
@@ -226,7 +226,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->body_length = 0;
             bf->hint = SYMMETRIC_BUMP;
         }
-        bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+        bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
         bf->body_time = bf->body_length / bf->cruise_velocity;
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->body_time + bf->tail_time;
@@ -240,13 +240,13 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 
     // Rate-limited symmetric case (3s) - rare except for single isolated moves
     // or moves between similar entry / exit velocities (e.g. Z lifts)
-    if (VELOCITY_EQ(bf->entry_velocity, bf->exit_velocity)) {
+    if (VELOCITY_EQ(mr.exit_velocity, bf->exit_velocity)) {
         // Adjust exit velocity to be *exactly* the same to keep downstrean calculations from blowing up (exec)
-        bf->exit_velocity = bf->entry_velocity;
+        bf->exit_velocity = mr.exit_velocity;
 
         bf->head_length = bf->length/2;
         bf->tail_length = bf->head_length;
-        bf->cruise_velocity = mp_get_target_velocity(bf->entry_velocity, bf->head_length, bf);
+        bf->cruise_velocity = mp_get_target_velocity(mr.exit_velocity, bf->head_length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid: Vc=0 symmetric case");
 
         if (bf->head_length < MIN_HEAD_LENGTH) {        // revert it to a single segment move
@@ -255,15 +255,15 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
             bf->tail_length = 0;
             bf->body_time = bf->move_time;
 
-            bf->cruise_velocity = bf->entry_velocity;   // set to reflect a body-only move
-            bf->exit_velocity = bf->entry_velocity;     // keep velocities the same for sanity
+            bf->cruise_velocity = mr.exit_velocity;   // set to reflect a body-only move
+            bf->exit_velocity = mr.exit_velocity;     // keep velocities the same for sanity
 
             bf->hint = SYMMETRIC_BUMP;
             LOG_RETURN("3s2");
             return (_zoid_exit(bf, ZOID_EXIT_3s2));
         }
         // T = (2L_0) / (v_1 + v_0) + L_1 / v_1 + (2L_2) / (v_1 + v_2)
-        bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+        bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
         bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time + bf->tail_time;
         bf->hint = SYMMETRIC_BUMP;  //+++++ Could also detect ZERO_BUMP here with more tests
@@ -282,10 +282,10 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
         head_only = true;
     } else {
         // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
-        bf->cruise_velocity = _get_meet_velocity(bf->entry_velocity, bf->exit_velocity, bf->length, bf);
+        bf->cruise_velocity = _get_meet_velocity(mr.exit_velocity, bf->exit_velocity, bf->length, bf);
         TRAP_ZERO (bf->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
 
-        if (VELOCITY_EQ(bf->entry_velocity, bf->cruise_velocity)) {
+        if (VELOCITY_EQ(mr.exit_velocity, bf->cruise_velocity)) {
             tail_only = true;
         } else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_velocity)) {
             head_only = true;
@@ -303,19 +303,19 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
     if (head_only) {
         bf->head_length = bf->length;
         bf->tail_length = 0;
-        bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+        bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
         bf->move_time = bf->head_time;
         LOG_RETURN("3a2");
         return (_zoid_exit(bf, ZOID_EXIT_3a2));
     }
 
     // treat as a full up and down (head and tail)
-	bf->head_length = min(bf->length, _get_target_length_min(bf->entry_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH));
+	bf->head_length = min(bf->length, _get_target_length_min(mr.exit_velocity, bf->cruise_velocity, bf, MIN_HEAD_LENGTH));
 	bf->tail_length = max((float)0.0, (bf->length - bf->head_length));
 
     // save a few divides where we can
     if (fp_NOT_ZERO(bf->head_length)) {
-        bf->head_time = bf->head_length*2 / (bf->entry_velocity + bf->cruise_velocity);
+        bf->head_time = bf->head_length*2 / (mr.exit_velocity + bf->cruise_velocity);
     }
     if (fp_NOT_ZERO(bf->body_length)) {
         bf->body_time = bf->body_length / bf->cruise_velocity;
@@ -430,6 +430,7 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
     //return (len);
 
     //Try 3 math:
+    // time: 36 us
     const float q_half = 1.2014057071; //2.40281141413/2;
     float sqrt_delta_v_0_recip_j = sqrt(abs(v_1-v_0)*recip_j);
     return (q_half * sqrt_delta_v_0_recip_j * (v_1+v_0));
@@ -502,6 +503,7 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
  */
 
 // 14 *, 1 /, 1 sqrt, 1 cbrt
+// time: 68 us
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
 {
     if (fp_ZERO(L)) {                                       // handle exception case

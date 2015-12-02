@@ -550,20 +550,20 @@ void mp_replan_queue(mpBuf_t *bf)
  *
  */
 
-void mp_start_feed_override(const float ramp_time, const float override)
+void mp_start_feed_override(const float ramp_time, const float override_factor)
 {
     cm.mfo_state = MFO_REQUESTED;
 
     if (mb.planner_state == PLANNER_IDLE) {
-        mb.mfo_factor = override;             // that was easy
+        mb.mfo_factor = override_factor;             // that was easy
         return;
     }
 
     // Assume that the min and max values for override_factor have been validated upstream
     // SUVAT: V = U+AT ==> A = (V-U)/T
-    mb.ramp_target = override;
-//    mb.ramp_dvdt = (override - mb.current_mfo_factor) / ramp_time;
-    mb.ramp_dvdt = (override - mb.c->override) / ramp_time;
+    mb.ramp_target = override_factor;
+//    mb.ramp_dvdt = (override_factor - mb.current_mfo_factor) / ramp_time;
+    mb.ramp_dvdt = (override_factor - mb.c->override_factor) / ramp_time;
     mb.mfo_active = true;
 
     if (fp_NOT_ZERO(mb.ramp_dvdt)) {    // do these things only if you actually have a ramp to run
@@ -832,7 +832,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 {
     mpBuf_t *bf = bf_start;
 
-    printf ("Buf, Line, State, Hint, Planbl, Iter, Tmove, Tplan, Ovr, Thr, Len, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vbrake, Vaccel, Vjt\n");
+    printf ("Buf, Line, State, Hint, Planbl, Iter, Tmove, Tplan, Ovr, Thr, Len, Ve, Vc, Vx, Vemax, Vcset, Vcmax, Vxmax, Vjt\n");
 
     do {
         printf ("%d,",    (int)bf->buffer_number);
@@ -844,18 +844,16 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 
         printf ("%1.2f,", bf->move_time_ms);
         printf ("%1.2f,", bf->plannable_time_ms);
-        printf ("%1.3f,", bf->override);
+        printf ("%1.3f,", bf->override_factor);
         printf ("%1.3f,", bf->throttle);
         printf ("%1.5f,", bf->length);
-        printf ("%1.0f,", bf->entry_velocity);
+        printf ("%1.0f,", bf->pv->exit_velocity);
         printf ("%1.0f,", bf->cruise_velocity);
         printf ("%1.0f,", bf->exit_velocity);
-        printf ("%1.0f,", bf->entry_vmax);
+        printf ("%1.0f,", bf->pv->exit_vmax);
         printf ("%1.0f,", bf->cruise_vset);
         printf ("%1.0f,", bf->cruise_vmax);
         printf ("%1.0f,", bf->exit_vmax);
-        printf ("%1.0f,", bf->braking_velocity);
-        printf ("%1.0f,", bf->accel_velocity);
         printf ("%1.0f\n", bf->junction_vmax);
 
         bf = bf->nx;

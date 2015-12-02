@@ -44,7 +44,7 @@ static stat_t _exec_aline_body(void);
 static stat_t _exec_aline_tail(void);
 static stat_t _exec_aline_segment(void);
 
-static void _init_forward_diffs(float Vi, float Vt);
+static void _init_forward_diffs(float Vi, float Vt, const float a_0/* = 0*/, const float a_1/* = 0*/, const float j_0/* = 0*/, const float j_1/* = 0*/, const float T/* = 0*/);
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
@@ -228,7 +228,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.body_time = bf->body_time;
         mr.tail_time = bf->tail_time;
 
-        mr.entry_velocity = bf->entry_velocity;
+        mr.entry_velocity = bf->pv->exit_velocity;
         mr.cruise_velocity = bf->cruise_velocity;
         mr.exit_velocity = bf->exit_velocity;
 
@@ -290,7 +290,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mr.move_state = MOVE_OFF;	                                // invalidate mr buffer to reset the new move
             bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
-            bf->entry_vmax = 0;                                         // set bp+0 as hold point
+            //bf->entry_vmax = 0;                                         // set bp+0 as hold point
             mp_replan_queue(mb.r);                                      // make it replan all the blocks
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
@@ -519,6 +519,44 @@ void mp_exit_hold_state()
  *
  */
 
+#define USE_OLD_FORWARD_DIFFS 1
+
+#if USE_OLD_FORWARD_DIFFS==1
+
+static void _init_forward_diffs(float Vi, float Vt, const float a_0 = 0, const float a_1 = 0, const float j_0 = 0, const float j_1 = 0, const float T = 0)
+{
+    float A =  -6.0*Vi +  6.0*Vt;
+    float B =  15.0*Vi - 15.0*Vt;
+    float C = -10.0*Vi + 10.0*Vt;
+    // D = 0
+    // E = 0
+    // F = Vi
+
+    float h   = 1/(mr.segments);
+    //	float h_3 = h * h * h;
+    //	float h_4 = h_3 * h;
+    //	float h_5 = h_4 * h;
+
+    float Ah_5 = A * h * h * h * h * h;
+    float Bh_4 = B * h * h * h * h;
+    float Ch_3 = C * h * h * h;
+
+    mr.forward_diff_5 = (121.0/16.0)*Ah_5 + 5.0*Bh_4 + (13.0/4.0)*Ch_3;
+    mr.forward_diff_4 = (165.0/2.0)*Ah_5 + 29.0*Bh_4 + 9.0*Ch_3;
+    mr.forward_diff_3 = 255.0*Ah_5 + 48.0*Bh_4 + 6.0*Ch_3;
+    mr.forward_diff_2 = 300.0*Ah_5 + 24.0*Bh_4;
+    mr.forward_diff_1 = 120.0*Ah_5;
+
+    // Calculate the initial velocity by calculating V(h/2)
+    float half_h = h/2.0;
+    float half_Ch_3 = C * half_h * half_h * half_h;
+    float half_Bh_4 = B * half_h * half_h * half_h * half_h;
+    float half_Ah_5 = A * half_h * half_h * half_h * half_h * half_h;
+    mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + Vi;
+}
+
+#else
+
 static void _init_forward_diffs(const float v_0, const float v_1, const float a_0 = 0, const float a_1 = 0, const float j_0 = 0, const float j_1 = 0, const float T = 0)
 {
     const float fifth_T        = T * 0.2; //(1/5) T
@@ -537,7 +575,7 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
     const float C = 10*( P_3 - P_0 + 3*(P_1 - P_2) );
     const float D = 10*( P_0 + P_2 - 2*P_1 );
     const float E =  5*( P_1 - P_0 );
-    const float F =      P_0;
+    //const float F =      P_0;
 
 	const float h   = 1/(mr.segments);
     const float h_2 = h   * h;
@@ -576,6 +614,8 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
 
 	mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + half_Dh_2 + half_Eh + v_0;
 }
+
+#endif
 
 /*********************************************************************************************
  * _exec_aline_head()

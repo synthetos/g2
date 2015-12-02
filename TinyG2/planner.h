@@ -101,6 +101,8 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     PERFECT_CRUISE,                 // body-only cruise: Ve = Vc = Vx != 0
     MIXED_ACCELERATION,             // kinked acceleration reaches and holds cruise (HB)
     MIXED_DECELERATION,             // kinked deceleration starts with a cruise region (BT)
+
+    // The rest are for reporting from the zoid function what was selected.
     ZERO_VELOCITY,                  // Ve = Vc = Vx = 0
     ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
@@ -185,15 +187,21 @@ typedef enum {
 //#define MIN_RAPID_OVERRIDE 0.05       // 5%
 //#define MAX_RAPID_OVERRIDE 1.00       // 100%
 
-// Specialized equalities for comparing velocities with tolerances
-// These determine allowable velocity discontinuities between blocks (among other tests)
-#define Vthr 100.0          // threshold between hi and lo velocity (mm/min)
-#define Veq_hi 1.0          // hi velocity is equal if less than this number
-#define Veq_lo 0.1          // lo velocity is equal if less than this number
-#define VELOCITY_EQ(v0,v1) ( (v0 > Vthr) ? fabs(v0-v1) < Veq_hi : fabs(v0-v1) < Veq_lo )
+// ++++ RG I believe these tolerances are WAY too high. Simulation shows +-0.001 is about as mouch as we should allow.
 
-//      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least Veq_hi (or lo)"
-#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? (v1-v0 > Veq_hi) : (v1-v0 > Veq_lo) )
+//// Specialized equalities for comparing velocities with tolerances
+//// These determine allowable velocity discontinuities between blocks (among other tests)
+//#define Vthr 100.0          // threshold between hi and lo velocity (mm/min)
+//#define Veq_hi 1.0          // hi velocity is equal if less than this number
+//#define Veq_lo 0.1          // lo velocity is equal if less than this number
+//#define VELOCITY_EQ(v0,v1) ( (v0 > Vthr) ? fabs(v0-v1) < Veq_hi : fabs(v0-v1) < Veq_lo )
+//
+////      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least Veq_hi (or lo)"
+//#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? (v1-v0 > Veq_hi) : (v1-v0 > Veq_lo) )
+
+#define VELOCITY_EQ(v0,v1) ( fabs(v0-v1) < 0.0001 )
+//      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least 0.0001"
+#define VELOCITY_LT(v0,v1) ( (v1 - v0) > 0.0001 )
 
 #define Vthr2 300.0
 #define Veq2_hi 10.0
@@ -207,7 +215,6 @@ typedef enum {
 
 #define SANITY_TRAPS(bf) { \
     if (bf->buffer_state != MP_BUFFER_EMPTY) { \
-        if (bf->entry_velocity > bf->cruise_velocity) {while(1);} \
         if (bf->exit_velocity > bf->cruise_velocity)  {while(1);} \
     } \
 }
@@ -222,6 +229,9 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;            // static pointer to previous buffer
     struct mpBuffer *nx;            // static pointer to next buffer
+
+//    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
+//    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
 
     // Note: _clear_buffer() zeros all data from this point down
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
@@ -248,7 +258,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
     bool plannable;                 // set true when this block can be used for planning
-    float override;                 // feed rate or rapid override factor for this block
+    float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
@@ -262,19 +272,22 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float body_time;                // ...body
     float tail_time;                // ...tail
 
-									// *** SEE NOTES ON THESE VARIABLES, in aline() ***
-    float entry_velocity;           // entry velocity requested for the move
+    // We are switching from entry_*/exit_* to junction_*.
+    // Junction_* will effectively be the same as the old exit_*.
+
+    // *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
+                                    // is also the entry velocity of the *next* move
 
-    float entry_vmax;               // max entry velocity for this move
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
-    float exit_vmax;                // max exit velocity possible
-    float braking_velocity;         // entry velocity required to decelerate to zero
-    float accel_velocity;           // exit velocity achieved while accelerating from head-block Ve
+    float exit_vmax;                // max exit velocity possible for this move
+                                    // is also the maximum entry velocity of the next move
+
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
-    float junction_vmax;            // maximum the entry velocity can be to go through the junction
+    float junction_vmax;            // maximum the exit velocity can be to go through the junction
+                                    // between the PREVIOUS BLOCK AND THIS ONE
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
