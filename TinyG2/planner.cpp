@@ -726,6 +726,8 @@ void mp_init_buffers(void)
 		pv = &mb.bf[i];
 	}
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
+
+    mb.entry_changed = false;
 }
 
 /*

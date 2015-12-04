@@ -79,9 +79,7 @@ stat_t mp_exec_move()
         }
 
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
-//            mp_plan_block_forward(bf);                      // complete planning if not already planned
-            SANITY_TRAPS(bf);
-            mp_calculate_trapezoid(bf);
+            mp_calculate_ramps(bf);
             bf->buffer_state = MP_BUFFER_PLANNED;
             SANITY_TRAPS(bf);
         }
@@ -633,6 +631,7 @@ static stat_t _exec_aline_head()
         _init_forward_diffs(mr.entry_velocity, mr.cruise_velocity);
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
+            while(1);
             return(STAT_MINIMUM_TIME_MOVE);                         // exit without advancing position
         }
         mr.section = SECTION_HEAD;
@@ -644,7 +643,7 @@ static stat_t _exec_aline_head()
         if (_exec_aline_segment() == STAT_OK) { 					// set up for second half
             mr.section = SECTION_BODY;
             mr.section_state = SECTION_NEW;
-            } else {
+        } else {
             mr.section_state = SECTION_2nd_HALF;
         }
         return(STAT_EAGAIN);
@@ -657,7 +656,7 @@ static stat_t _exec_aline_head()
             }
             mr.section = SECTION_BODY;
             mr.section_state = SECTION_NEW;
-            } else {
+        } else {
             mr.forward_diff_5 += mr.forward_diff_4;
             mr.forward_diff_4 += mr.forward_diff_3;
             mr.forward_diff_3 += mr.forward_diff_2;
@@ -685,6 +684,7 @@ static stat_t _exec_aline_body()
         mr.segment_velocity = mr.cruise_velocity;
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
+            while(1);
             return(STAT_MINIMUM_TIME_MOVE);                 // exit without advancing position
         }
         mr.section = SECTION_BODY;
@@ -715,6 +715,7 @@ static stat_t _exec_aline_tail()
 		_init_forward_diffs(mr.cruise_velocity, mr.exit_velocity);
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
+            while(1);
             return(STAT_MINIMUM_TIME_MOVE);                         // exit without advancing position
         }
 		mr.section = SECTION_TAIL;

@@ -244,7 +244,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float move_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
-
+    uint8_t meet_iterations;         // iterations needed in _get_mmet_velocity
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
@@ -292,6 +292,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
     float recip_jerk;               // 1/Jm used for planning (computed and cached)
+    float sqrt_j;                   // sqrt(jM) used for planning (computed and cached)
+    float q_recip_2_sqrt_j;         // (q/(2 sqrt(jM))) where q = (sqrt(10)/(3^(1/4))), used in length computations (computed and cached)
 
     GCodeState_t gm;				// Gcode model state - passed from model, used by planner and runtime
 
@@ -322,6 +324,10 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
     bool mfo_active;                // true if mfo override is in effect
     bool ramp_active;               // true when a ramp is occurring
+
+    // state holding for forward planning in the exec
+    bool entry_changed;        // if we have to change the exit_velocity, we need to record it
+                                    // so that we know to invalidate the next block's hint
 
     // feed overrides and ramp variables (these extend the variables in cm.gmx)
     float mfo_factor;               // runtime override factor
@@ -462,7 +468,7 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_trapezoid(mpBuf_t *bf);
+void mp_calculate_ramps(mpBuf_t *bf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 

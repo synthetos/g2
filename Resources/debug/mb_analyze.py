@@ -79,6 +79,8 @@ def load_pool(filename):
                     pool[current_buffer]['move_time'] = val
                 elif key == 'plannable':
                     pool[current_buffer]['plannable'] = val
+                elif key == 'hint':
+                    pool[current_buffer]['hint'] = val
     return pool
 
 def check_integrity(pool):
@@ -115,7 +117,7 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            print '0x%08x [%02d] : N%04d %-22s %-8s Ti% 8.2f  J% 10.2f  C% 10.2f  X% 10.2f  H% 10.2f@% 10.2f  B% 10.2f@% 10.2f  T% 10.2f@% 10.2f %5s' % (
+            print '0x%08x [%02d] : N%04d %-22s %-8s Ti% 8.2f  J% 10.2f  C% 10.2f  X% 10.2f  H% 10.2f@% 10.2f  B% 10.2f@% 10.2f  T% 10.2f@% 10.2f %5s %10s' % (
                 key,
                 float(buffer['buffer_number']),
                 float(buffer['linenum']),
@@ -131,7 +133,8 @@ def print_pool(pool):
                 float(buffer['body_time']) * 60000,
                 float(buffer['tail_length']),
                 float(buffer['tail_time']) * 60000,
-                buffer['plannable']
+                buffer['plannable'],
+                buffer['hint']
                 )
 
 if __name__ == "__main__":
