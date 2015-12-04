@@ -218,17 +218,80 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section_state = SECTION_NEW;
         mr.jerk = bf->jerk;
 
+        // Assumptions that are required for this to work:
+        // entry velocity <= cruise velocity && cruise velocity >= exit velocity
+        // Even if the move is head or tail only, cruise velocity needs to be valid.
+
         mr.head_length = bf->head_length;
         mr.body_length = bf->body_length;
         mr.tail_length = bf->tail_length;
+
+        mr.entry_velocity = mr.exit_velocity; // feed the old exit into the entry.
+        mr.cruise_velocity = bf->cruise_velocity;
+        mr.exit_velocity = bf->exit_velocity;
 
         mr.head_time = bf->head_time;
         mr.body_time = bf->body_time;
         mr.tail_time = bf->tail_time;
 
-        mr.entry_velocity = bf->pv->exit_velocity;
-        mr.cruise_velocity = bf->cruise_velocity;
-        mr.exit_velocity = bf->exit_velocity;
+        // Here we will check to make sure that the sections are longer than MIN_SEGMENT_TIME
+
+        if (mr.head_time < MIN_SEGMENT_TIME) {
+            // head_time !== body_time
+            // We have to compute the new body time addition.
+            mr.body_time += mr.head_length/mr.cruise_velocity;
+            mr.head_time = 0;
+
+            mr.body_length += mr.head_length;
+            mr.head_length = 0;
+        }
+        if (mr.tail_time < MIN_SEGMENT_TIME) {
+            // tail_time !== body_time
+            // We have to compute the new body time addition.
+            mr.body_time += mr.tail_length/mr.cruise_velocity;
+            mr.tail_time = 0;
+
+            mr.body_length += mr.tail_length;
+            mr.tail_length = 0;
+        }
+
+        // At this point, we've already possibly merged heat and/or tail into the body.
+        // If the body is too "short" (brief) still, we *might* be able to add it to a head or tail.
+        // If there's still a head or a tail, we will add the body to whichever there is, maybe both.
+        // We saved it for last since it's the most expensive.
+        if (mr.body_time < MIN_SEGMENT_TIME) {
+            if (mr.tail_length > 0) {
+                if (mr.head_length > 0) {
+                    // We'll split the body of the head and tail
+                    float body_split = mr.body_length/2.0;
+                    mr.body_length = 0;
+
+                    mr.head_length += body_split;
+                    mr.tail_length += body_split;
+
+                    mr.head_time += (2.0 * body_split)/(mr.entry_velocity + mr.cruise_velocity);
+                    mr.tail_time += (2.0 * body_split)/(mr.cruise_velocity + mr.exit_velocity);
+                } else {
+                    // We'll put it all in the tail
+                    mr.tail_length += mr.body_length;
+                    mr.tail_time += (2.0 * mr.body_length)/(mr.cruise_velocity + mr.exit_velocity);
+
+                    mr.body_length = 0;
+                }
+            }
+            else if (mr.head_length > 0) {
+                // We'll put it all in the head
+                mr.head_length += mr.body_length;
+                mr.head_time += (2.0 * mr.body_length)/(mr.entry_velocity + mr.cruise_velocity);
+
+                mr.body_length = 0;
+            }
+            else {
+                // Uh oh! We have a move that's all body, and is still too short!!
+                // ++++ RG For now, we'll consider this impossible.
+                while (1);
+            }
+        }
 
         copy_vector(mr.unit, bf->unit);
         copy_vector(mr.target, bf->gm.target);          // save the final target of the move
@@ -517,12 +580,14 @@ void mp_exit_hold_state()
  *
  */
 
-#define USE_OLD_FORWARD_DIFFS 1
+#define USE_OLD_FORWARD_DIFFS 0
 
 #if USE_OLD_FORWARD_DIFFS==1
 
+// Total time: 147us
 static void _init_forward_diffs(float Vi, float Vt, const float a_0 = 0, const float a_1 = 0, const float j_0 = 0, const float j_1 = 0, const float T = 0)
 {
+    // Times from *here*
     float A =  -6.0*Vi +  6.0*Vt;
     float B =  15.0*Vi - 15.0*Vt;
     float C = -10.0*Vi + 10.0*Vt;
@@ -555,8 +620,10 @@ static void _init_forward_diffs(float Vi, float Vt, const float a_0 = 0, const f
 
 #else
 
+// Total time: 147us
 static void _init_forward_diffs(const float v_0, const float v_1, const float a_0 = 0, const float a_1 = 0, const float j_0 = 0, const float j_1 = 0, const float T = 0)
 {
+    // Times from *here*
     const float fifth_T        = T * 0.2; //(1/5) T
     const float two_fifths_T   = T * 0.4; //(1/5) T
     const float twentienth_T_2 = T * T * 0.05; // (1/20) T^2
