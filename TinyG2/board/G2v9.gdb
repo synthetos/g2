@@ -3,7 +3,7 @@ set width 0
 set height 0
 
 # Open and connect to openocd with the ATMEL-ICE
-target remote | /usr/local/bin/openocd -c "set CHIPNAME ${CHIP}" -f ${MOTATE_PATH}/openocd.cfg -f ${MOTATE_PATH}/platform/atmel_sam/atmel_sam.cfg -c "gdb_port pipe; log_output openocd.log"
+target remote | /usr/local/bin/openocd -c "set CHIPNAME ${CHIP}" -f ./openocd.cfg -f ${MOTATE_PATH}/platform/atmel_sam/atmel_sam.cfg
 
 # Turn on history saving
 set history save on
