@@ -213,9 +213,9 @@ typedef enum {
 #define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
 #define UPDATE_MB_MS     { mb.plannable_time_ms = mb.plannable_time*60000; }
 
-#define SANITY_TRAPS(bf) { \
+#define SANITY_TRAPS(bf, rbf) { \
     if (bf->buffer_state != MP_BUFFER_EMPTY) { \
-        if (bf->exit_velocity > bf->cruise_velocity)  {while(1);} \
+        if (rbf->exit_velocity > rbf->cruise_velocity)  {while(1);} \
     } \
 }
 //    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
@@ -262,18 +262,18 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
-    float head_length;
-    float body_length;
-    float tail_length;
+//    float head_length;
+//    float body_length;
+//    float tail_length;
 
     float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
-    float head_time;                // ...head
-    float body_time;                // ...body
-    float tail_time;                // ...tail
+//    float head_time;                // ...head
+//    float body_time;                // ...body
+//    float tail_time;                // ...tail
 
-    // We are switching from entry_*/exit_* to junction_*.
-    // Junction_* will effectively be the same as the old exit_*.
+    // We are removing all entry_* values.
+    // To get the entry_* values, look at pv->exit_* or mr.exit_*
 
     // *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float cruise_velocity;          // cruise velocity requested & achieved
@@ -287,7 +287,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the exit velocity can be to go through the junction
-                                    // between the PREVIOUS BLOCK AND THIS ONE
+                                    // between the NEXT BLOCK AND THIS ONE
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
@@ -351,6 +351,23 @@ typedef struct mpMoveMasterSingleton {  // common variables for planning (move m
 	magic_t magic_end;
 } mpMoveMasterSingleton_t;
 
+
+typedef struct mpMoveRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a move
+    struct mpMoveRuntimeBuf *nx;        // singly-linked-list
+
+    float head_length;                  // copies of bf variables of same name
+    float body_length;
+    float tail_length;
+
+    float head_time;                    // copies of bf variables of same name
+    float body_time;
+    float tail_time;
+
+    float entry_velocity;               // actual velocities for the move
+    float cruise_velocity;
+    float exit_velocity;
+} mpMoveRuntimeBuf_t;
+
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	magic_t magic_start;                // magic number to test memory integrity
@@ -370,17 +387,9 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float encoder_steps[MOTORS];        // encoder position in steps - ideally the same as commanded_steps
 	float following_error[MOTORS];      // difference between encoder_steps and commanded steps
 
-	float head_length;                  // copies of bf variables of same name
-	float body_length;
-	float tail_length;
-
-	float head_time;                    // copies of bf variables of same name
-	float body_time;
-	float tail_time;
-
-	float entry_velocity;               // actual velocities for the move
-	float cruise_velocity;
-	float exit_velocity;
+    mpMoveRuntimeBuf_t *r;         // what's running
+    mpMoveRuntimeBuf_t *p;         // what's being planned, p might == r
+    mpMoveRuntimeBuf_t bf[2];
 
 	float segments;                     // number of segments in line (also used by arc generation)
 	uint32_t segment_count;             // count of running segments
@@ -468,7 +477,7 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBuf_t *bf, const float entry_velocity);
+void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_velocity);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 

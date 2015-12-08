@@ -516,12 +516,12 @@ void mp_replan_queue(mpBuf_t *bf)
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
         }
-        bf->head_length = 0;
-        bf->body_length = 0;
-        bf->tail_length = 0;
-        bf->head_time = 0;
-        bf->body_time = 0;
-        bf->tail_time = 0;
+//        bf->head_length = 0;
+//        bf->body_length = 0;
+//        bf->tail_length = 0;
+//        bf->head_time = 0;
+//        bf->body_time = 0;
+//        bf->tail_time = 0;
         bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
     } while ((bf = mp_get_next_buffer(bf)) != mb.p);
 
@@ -728,6 +728,15 @@ void mp_init_buffers(void)
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
 
     mb.entry_changed = false;
+
+    // Now handle the two "stub buffers" in the runtime structure.
+
+    memset(&mr.bf[0], 0, sizeof(mr.bf[0]));                     // clear all values, pointers and status
+    memset(&mr.bf[1], 0, sizeof(mr.bf[1]));                     // clear all values, pointers and status
+    mr.bf[0].nx = &mr.bf[1];
+    mr.bf[1].nx = &mr.bf[0];
+    mr.r = &mr.bf[0];
+    mr.p = &mr.bf[0];
 }
 
 /*

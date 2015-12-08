@@ -62,18 +62,21 @@ stat_t mp_plan_move()
         return (STAT_NOOP);
     }
 
-    float entry_velocity = mr.exit_velocity;
+    float entry_velocity = mr.r->exit_velocity;
 
-    // We will plan one ahead if this one is already planned and running.
+    // We will plan one ahead if this one is already running.
     if (bf->buffer_state == MP_BUFFER_RUNNING) {
-        entry_velocity = bf->exit_velocity;
         bf = bf->nx;
     }
 
+    // Note that that can only be one PLANNED move at a time.
+    // This is to help sync mr.p to point to the next planned mr.bf
+    // mr.p is only advanced in mp_exec_aline, after mp.r = mr.p.
+
     if (bf->buffer_state == MP_BUFFER_PREPPED) {
-        mp_calculate_ramps(bf, entry_velocity);
+        mp_calculate_ramps(bf, mr.p, entry_velocity);
         bf->buffer_state = MP_BUFFER_PLANNED;
-        SANITY_TRAPS(bf);
+        SANITY_TRAPS(bf, mr.p);
 
         bf->plannable = false;                              // lock this buffer
         bf->nx->plannable = false;                          // lock the next one, too
@@ -124,12 +127,14 @@ stat_t mp_exec_move()
 
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
-        }
+    }
 
     if (bf->nx->buffer_state == MP_BUFFER_PREPPED) {
-        // We go ahead and ask for a forward planning of the next move.
+        // We go ahead and *ask* for a forward planning of the next move.
+        // This won't call mp_plan_move until we leave this function
+        // (and have called mp_exec_aline via bf->bf_func).
+        // This also allows mp_exec_aline to advance mr.p first.
         st_request_plan_move();
-        return (STAT_NOOP);
     }
 
 	// Manage motion state transitions
@@ -261,73 +266,76 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section_state = SECTION_NEW;
         mr.jerk = bf->jerk;
 
+        mr.r = mr.p;
+        mr.p = mr.p->nx;
+
         // Assumptions that are required for this to work:
         // entry velocity <= cruise velocity && cruise velocity >= exit velocity
         // Even if the move is head or tail only, cruise velocity needs to be valid.
 
-        mr.head_length = bf->head_length;
-        mr.body_length = bf->body_length;
-        mr.tail_length = bf->tail_length;
-
-        mr.entry_velocity = mr.exit_velocity; // feed the old exit into the entry.
-        mr.cruise_velocity = bf->cruise_velocity;
-        mr.exit_velocity = bf->exit_velocity;
-
-        mr.head_time = bf->head_time;
-        mr.body_time = bf->body_time;
-        mr.tail_time = bf->tail_time;
+//        mr.r.head_length = bf->head_length;
+//        mr.r->body_length = bf->body_length;
+//        mr.r->tail_length = bf->tail_length;
+//
+//        mr.r->entry_velocity = mr.r->exit_velocity; // feed the old exit into the entry.
+//        mr.r->cruise_velocity = bf->cruise_velocity;
+//        mr.r->exit_velocity = bf->exit_velocity;
+//
+//        mr.r->head_time = bf->head_time;
+//        mr.r->body_time = bf->body_time;
+//        mr.r->tail_time = bf->tail_time;
 
         // Here we will check to make sure that the sections are longer than MIN_SEGMENT_TIME
 
-        if (mr.head_time < MIN_SEGMENT_TIME) {
+        if (mr.r->head_time < MIN_SEGMENT_TIME) {
             // head_time !== body_time
             // We have to compute the new body time addition.
-            mr.body_time += mr.head_length/mr.cruise_velocity;
-            mr.head_time = 0;
+            mr.r->body_time += mr.r->head_length/mr.r->cruise_velocity;
+            mr.r->head_time = 0;
 
-            mr.body_length += mr.head_length;
-            mr.head_length = 0;
+            mr.r->body_length += mr.r->head_length;
+            mr.r->head_length = 0;
         }
-        if (mr.tail_time < MIN_SEGMENT_TIME) {
+        if (mr.r->tail_time < MIN_SEGMENT_TIME) {
             // tail_time !== body_time
             // We have to compute the new body time addition.
-            mr.body_time += mr.tail_length/mr.cruise_velocity;
-            mr.tail_time = 0;
+            mr.r->body_time += mr.r->tail_length/mr.r->cruise_velocity;
+            mr.r->tail_time = 0;
 
-            mr.body_length += mr.tail_length;
-            mr.tail_length = 0;
+            mr.r->body_length += mr.r->tail_length;
+            mr.r->tail_length = 0;
         }
 
         // At this point, we've already possibly merged heat and/or tail into the body.
         // If the body is too "short" (brief) still, we *might* be able to add it to a head or tail.
         // If there's still a head or a tail, we will add the body to whichever there is, maybe both.
         // We saved it for last since it's the most expensive.
-        if (mr.body_time < MIN_SEGMENT_TIME) {
-            if (mr.tail_length > 0) {
-                if (mr.head_length > 0) {
+        if (mr.r->body_time < MIN_SEGMENT_TIME) {
+            if (mr.r->tail_length > 0) {
+                if (mr.r->head_length > 0) {
                     // We'll split the body of the head and tail
-                    float body_split = mr.body_length/2.0;
-                    mr.body_length = 0;
+                    float body_split = mr.r->body_length/2.0;
+                    mr.r->body_length = 0;
 
-                    mr.head_length += body_split;
-                    mr.tail_length += body_split;
+                    mr.r->head_length += body_split;
+                    mr.r->tail_length += body_split;
 
-                    mr.head_time += (2.0 * body_split)/(mr.entry_velocity + mr.cruise_velocity);
-                    mr.tail_time += (2.0 * body_split)/(mr.cruise_velocity + mr.exit_velocity);
+                    mr.r->head_time += (2.0 * body_split)/(mr.r->entry_velocity + mr.r->cruise_velocity);
+                    mr.r->tail_time += (2.0 * body_split)/(mr.r->cruise_velocity + mr.r->exit_velocity);
                 } else {
                     // We'll put it all in the tail
-                    mr.tail_length += mr.body_length;
-                    mr.tail_time += (2.0 * mr.body_length)/(mr.cruise_velocity + mr.exit_velocity);
+                    mr.r->tail_length += mr.r->body_length;
+                    mr.r->tail_time += (2.0 * mr.r->body_length)/(mr.r->cruise_velocity + mr.r->exit_velocity);
 
-                    mr.body_length = 0;
+                    mr.r->body_length = 0;
                 }
             }
-            else if (mr.head_length > 0) {
+            else if (mr.r->head_length > 0) {
                 // We'll put it all in the head
-                mr.head_length += mr.body_length;
-                mr.head_time += (2.0 * mr.body_length)/(mr.entry_velocity + mr.cruise_velocity);
+                mr.r->head_length += mr.r->body_length;
+                mr.r->head_time += (2.0 * mr.r->body_length)/(mr.r->entry_velocity + mr.r->cruise_velocity);
 
-                mr.body_length = 0;
+                mr.r->body_length = 0;
             }
             else {
                 // Uh oh! We have a move that's all body, and is still too short!!
@@ -342,9 +350,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // generate the way points for position correction at section ends
         for (uint8_t axis=0; axis<AXES; axis++) {
-            mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.head_length;
-            mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length);
-            mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
+            mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.r->head_length;
+            mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.r->head_length + mr.r->body_length);
+            mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.r->head_length + mr.r->body_length + mr.r->tail_length);
         }
 
         // Update the planner buffer times
@@ -405,40 +413,40 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (fp_ZERO(mr.exit_velocity)) {
+                if (fp_ZERO(mr.r->exit_velocity)) {
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                 }
             } else {
-                mr.entry_velocity = mr.segment_velocity;
+                mr.r->entry_velocity = mr.segment_velocity;
                 if (mr.section == SECTION_HEAD) {
-                    mr.entry_velocity += mr.forward_diff_5; // compute velocity for next segment (this new one)
+                    mr.r->entry_velocity += mr.forward_diff_5; // compute velocity for next segment (this new one)
                 }
-                mr.cruise_velocity = mr.entry_velocity;
+                mr.r->cruise_velocity = mr.r->entry_velocity;
 
                 mr.section = SECTION_TAIL;
                 mr.section_state = SECTION_NEW;
                 mr.jerk = bf->jerk;
-                mr.head_length = 0;
-                mr.body_length = 0;
+                mr.r->head_length = 0;
+                mr.r->body_length = 0;
 
                 float available_length = get_axis_vector_length(mr.target, mr.position);
-                mr.tail_length = mp_get_target_length(mr.cruise_velocity, 0, bf);   // braking length
+                mr.r->tail_length = mp_get_target_length(mr.r->cruise_velocity, 0, bf);   // braking length
 
-                if (fp_ZERO(available_length - mr.tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
+                if (fp_ZERO(available_length - mr.r->tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr.exit_velocity = 0;
-                    mr.tail_length = available_length;
-                } else if (available_length < mr.tail_length) { // (1b) the deceleration has to span multiple moves
+                    mr.r->exit_velocity = 0;
+                    mr.r->tail_length = available_length;
+                } else if (available_length < mr.r->tail_length) { // (1b) the deceleration has to span multiple moves
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
-                    mr.tail_length = available_length;
-                    mr.exit_velocity = mr.cruise_velocity - mp_get_target_velocity(0, mr.tail_length, bf);
+                    mr.r->tail_length = available_length;
+                    mr.r->exit_velocity = mr.r->cruise_velocity - mp_get_target_velocity(0, mr.r->tail_length, bf);
                 } else {                                        // (1a)the deceleration will fit into the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr.exit_velocity = 0;
+                    mr.r->exit_velocity = 0;
                 }
-                mr.tail_time = mr.tail_length*2 / (mr.exit_velocity + mr.cruise_velocity);
+                mr.r->tail_time = mr.r->tail_length*2 / (mr.r->exit_velocity + mr.r->cruise_velocity);
             }
         }
     }
@@ -733,13 +741,13 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
 static stat_t _exec_aline_head()
 {
     if (mr.section_state == SECTION_NEW) {							// initialize the move singleton (mr)
-        if (fp_ZERO(mr.head_length)) {
+        if (fp_ZERO(mr.r->head_length)) {
             mr.section = SECTION_BODY;
             return(_exec_aline_body());								// skip ahead to the body generator
         }
-        mr.segments = ceil(uSec(mr.head_time) / NOM_SEGMENT_USEC);  // # of segments for the section
-        mr.segment_time = mr.head_time / mr.segments;
-        _init_forward_diffs(mr.entry_velocity, mr.cruise_velocity);
+        mr.segments = ceil(uSec(mr.r->head_time) / NOM_SEGMENT_USEC);  // # of segments for the section
+        mr.segment_time = mr.r->head_time / mr.segments;
+        _init_forward_diffs(mr.r->entry_velocity, mr.r->cruise_velocity);
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
             while(1);
@@ -762,7 +770,7 @@ static stat_t _exec_aline_head()
     if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF (convex part of accel curve)
         mr.segment_velocity += mr.forward_diff_5;
         if (_exec_aline_segment() == STAT_OK) { 					// set up for body
-            if ((fp_ZERO(mr.body_length)) && (fp_ZERO(mr.tail_length))) {
+            if ((fp_ZERO(mr.r->body_length)) && (fp_ZERO(mr.r->tail_length))) {
                 return(STAT_OK);                                    // ends the move
             }
             mr.section = SECTION_BODY;
@@ -786,13 +794,13 @@ static stat_t _exec_aline_head()
 static stat_t _exec_aline_body()
 {
     if (mr.section_state == SECTION_NEW) {
-        if (fp_ZERO(mr.body_length)) {
+        if (fp_ZERO(mr.r->body_length)) {
             mr.section = SECTION_TAIL;
             return(_exec_aline_tail());						// skip ahead to tail periods
         }
-        mr.segments = ceil(uSec(mr.body_time) / NOM_SEGMENT_USEC);
-        mr.segment_time = mr.body_time / mr.segments;
-        mr.segment_velocity = mr.cruise_velocity;
+        mr.segments = ceil(uSec(mr.r->body_time) / NOM_SEGMENT_USEC);
+        mr.segment_time = mr.r->body_time / mr.segments;
+        mr.segment_velocity = mr.r->cruise_velocity;
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
             while(1);
@@ -803,7 +811,7 @@ static stat_t _exec_aline_body()
     }
     if (mr.section_state == SECTION_2nd_HALF) {				// straight part (period 3)
         if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
-            if (fp_ZERO(mr.tail_length)) {
+            if (fp_ZERO(mr.r->tail_length)) {
                 return(STAT_OK);	                        // ends the move
             }
             mr.section = SECTION_TAIL;
@@ -820,10 +828,10 @@ static stat_t _exec_aline_body()
 static stat_t _exec_aline_tail()
 {
 	if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
-		if (fp_ZERO(mr.tail_length)) { return(STAT_OK);}			// end the move
-		mr.segments = ceil(uSec(mr.tail_time) / NOM_SEGMENT_USEC);  // # of segments for the section
-		mr.segment_time = mr.tail_time / mr.segments;			    // time to advance for each segment
-		_init_forward_diffs(mr.cruise_velocity, mr.exit_velocity);
+		if (fp_ZERO(mr.r->tail_length)) { return(STAT_OK);}			// end the move
+		mr.segments = ceil(uSec(mr.r->tail_time) / NOM_SEGMENT_USEC);  // # of segments for the section
+		mr.segment_time = mr.r->tail_time / mr.segments;			    // time to advance for each segment
+		_init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity);
 		mr.segment_count = (uint32_t)mr.segments;
 		if (mr.segment_time < MIN_SEGMENT_TIME) {
             while(1);
