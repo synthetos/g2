@@ -46,6 +46,46 @@ static stat_t _exec_aline_segment(void);
 
 static void _init_forward_diffs(float Vi, float Vt, const float a_0/* = 0*/, const float a_1/* = 0*/, const float j_0/* = 0*/, const float j_1/* = 0*/, const float T/* = 0*/);
 
+
+/*************************************************************************
+ * mp_plan_move() - call ramping function to plan moves ahead of the exec
+ *
+ */
+
+stat_t mp_plan_move()
+{
+    mpBuf_t *bf;
+
+    // NULL means nothing's running - this is OK
+    if ((bf = mp_get_run_buffer()) == NULL) {
+        st_prep_null();
+        return (STAT_NOOP);
+    }
+
+    float entry_velocity = mr.exit_velocity;
+
+    // We will plan one ahead if this one is already planned and running.
+    if (bf->buffer_state == MP_BUFFER_RUNNING) {
+        entry_velocity = bf->exit_velocity;
+        bf = bf->nx;
+    }
+
+    if (bf->buffer_state == MP_BUFFER_PREPPED) {
+        mp_calculate_ramps(bf, entry_velocity);
+        bf->buffer_state = MP_BUFFER_PLANNED;
+        SANITY_TRAPS(bf);
+
+        bf->plannable = false;                              // lock this buffer
+        bf->nx->plannable = false;                          // lock the next one, too
+
+        // report that we planned something...
+        return (STAT_OK);
+    }
+
+    // We did nothing
+    return (STAT_NOOP);
+}
+
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
  *
@@ -65,28 +105,31 @@ stat_t mp_exec_move()
 
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
-
-        if (bf->gm.linenum == 683) {    // Crashes on ln 685
-            printf("stop\n");
-        }
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() buffer is not prepped");
-//    		st_prep_null();
-//            return (STAT_ERROR_42);
+    		st_prep_null();
+
+            return (STAT_NOOP);
         }
         if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() next buffer is empty");
         }
 
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
-            mp_calculate_ramps(bf);
-            bf->buffer_state = MP_BUFFER_PLANNED;
-            SANITY_TRAPS(bf);
+            // We need to have it planned. We don't want to do this here, as it
+            // might already be happening in a lower interrupt.
+            st_request_plan_move();
+            return (STAT_NOOP);
         }
-        bf->plannable = false;                              // lock this buffer
-        bf->nx->plannable = false;                          // lock the next one, too
+
         bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
         mp_planner_time_accounting();
+        }
+
+    if (bf->nx->buffer_state == MP_BUFFER_PREPPED) {
+        // We go ahead and ask for a forward planning of the next move.
+        st_request_plan_move();
+        return (STAT_NOOP);
     }
 
 	// Manage motion state transitions
@@ -426,6 +469,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 	if (status == STAT_EAGAIN) {
 		sr_request_status_report(SR_REQUEST_TIMED);		// continue reporting mr buffer
+                                                        // Note that tha'll happen in a lower interrupt level.
 	} else {
 		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;

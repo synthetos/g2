@@ -468,12 +468,13 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBuf_t *bf);
+void mp_calculate_ramps(mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 
 // plan_exec.c functions
 stat_t mp_exec_move(void);
+stat_t mp_plan_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 void mp_exit_hold_state(void);
 

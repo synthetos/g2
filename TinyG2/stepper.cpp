@@ -74,6 +74,7 @@ dda_timer_type dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse gen
 dwell_timer_type dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
 load_timer_type load_timer;		// triggers load of next stepper segment
 exec_timer_type exec_timer;		// triggers calculation of next+1 stepper segment
+fwd_plan_timer_type fwd_plan_timer;		// triggers plannning of next block
 
 // Motor structures
 template<const uint8_t motor,
@@ -292,11 +293,14 @@ void stepper_init()
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
 	// setup software interrupt load timer
-	load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
+	load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
 
 	// setup software interrupt exec timer & initial condition
-	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
+	exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
+
+    // setup software interrupt forward plan timer & initial condition
+    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
 
 	// setup motor power levels and apply power level to stepper drivers
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -825,6 +829,22 @@ namespace Motate {	// Define timer inside Motate namespace
 			}
 		}
 	}
+} // namespace Motate
+
+void st_request_plan_move()
+{
+    fwd_plan_timer.setInterruptPending();
+}
+
+namespace Motate {	// Define timer inside Motate namespace
+    template<>
+    void fwd_plan_timer_type::interrupt()
+    {
+        fwd_plan_timer.getInterruptCause();	   // clears the interrupt condition
+        if (mp_plan_move() != STAT_NOOP) { // We now have a move to exec.
+            st_request_exec_move();
+        }
+    }
 } // namespace Motate
 
 #endif // __ARM

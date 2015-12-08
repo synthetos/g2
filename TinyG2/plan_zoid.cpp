@@ -340,7 +340,7 @@ void mp_calculate_trapezoid(mpBuf_t *bf)
 // Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
 // We are incorporating both the forward planning and ramp-planning into one function, since we use the same data.
 
-void mp_calculate_ramps(mpBuf_t *bf)
+void mp_calculate_ramps(mpBuf_t *bf, const float entry_velocity)
 {
     // *** Skip non-move commands ***
     if (bf->move_type == MOVE_TYPE_COMMAND) {
@@ -352,7 +352,7 @@ void mp_calculate_ramps(mpBuf_t *bf)
 
     // Timing from *here*
 
-    const float entry_velocity = mr.exit_velocity;
+    // const float entry_velocity = mr.exit_velocity;
 
     // If the move has already been planned one or more times re-initialize the lengths
     // Otherwise you can end up with spurious lengths that kill accuracy
@@ -372,7 +372,7 @@ void mp_calculate_ramps(mpBuf_t *bf)
     // Here we verify it moving forward, checking to make sure it still is true.
     // If so, we plan the "ramp" as flat, body-only.
     if (bf->hint == PERFECT_CRUISE) {
-        if ((mb.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
+        if ((!mb.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
 
             // We need to ensure that neither the entry or the exit velocities are
             // <= the cruise velocity even though there is tolerance in fp_EQ comparison.
@@ -411,8 +411,10 @@ void mp_calculate_ramps(mpBuf_t *bf)
         // MIXED_DECELERATION (2d) 2 segment BT deceleration move
         // Only possible if the entry has not changed since hinting.
         else if (bf->hint == MIXED_DECELERATION) {
+            bf->tail_length = mp_get_target_length(bf->exit_velocity, bf->cruise_velocity, bf);
             bf->body_length = bf->length - bf->tail_length;
-            bf->head_length = 0; // we just set it, now we unset it
+            bf->head_length = 0;
+
             bf->body_time = bf->body_length / bf->cruise_velocity;
             bf->tail_time = bf->tail_length*2 / (bf->exit_velocity + bf->cruise_velocity);
             bf->move_time = bf->body_time + bf->tail_time;
@@ -438,7 +440,7 @@ void mp_calculate_ramps(mpBuf_t *bf)
 
     // Since we are not generally decelerating, this is effectively all of forward planning that we need.
     } else {
-
+        // Note that the hints from back-planning are ignored in this section. since back-planing can only predict decel and cruise.
 
         float accel_velocity = mp_get_target_velocity(entry_velocity, bf->length, bf);
 

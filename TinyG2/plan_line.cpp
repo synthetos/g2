@@ -293,23 +293,36 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0; // we use this to stre the previous entry velocity, start at 0
+        bool optimal = false; // we use the optimal flag (as the opposite of plannable) to carry plan-ability backward.
         for ( ; bf->pv->plannable; bf = bf->pv) {
             // Timings from *here*
 
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
+            bf->pv->buffer_state = MP_BUFFER_IN_PROCESS;
             bf->iterations++;
 
             bf->exit_velocity = braking_velocity;
+            bf->plannable = !optimal;
+
+            // We have two places where it could be a mixed decel or an asymetric bump,
+            // dpending on if the pv->exit_vmax is the same as bf.cruise_vmax
+            bool test_decel_or_bump = false;
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
                 // ++++ RG We pass the exit velocity back, BUT,
                 // if we wanted to PTZ for this command, this is where we'd change
-                bf->pv->exit_velocity = bf->exit_velocity;
+                //bf->pv->exit_velocity = bf->exit_velocity;
+
+                // ++++ TEMPORARY force PTZ
+                bf->exit_velocity = 0;
+                bf->pv->exit_velocity = 0;
+                optimal = true;
 
                 // Update braking_velocity for use in the top of the loop
                 braking_velocity = bf->pv->exit_velocity;
-                bf->plannable = bf->pv->plannable;
+                // bf->plannable = !optimal && bf->pv->plannable;
+                bf->plannable = false;
 
                 bf->hint = COMMAND_BLOCK;
 
@@ -321,20 +334,29 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
 
                 bf->exit_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
-                bf->pv->exit_velocity = bf->exit_velocity;
                 bf->cruise_velocity = bf->exit_velocity;
 
                 // Update braking_velocity for use in the top of the loop
-                braking_velocity = bf->pv->exit_velocity;
+                braking_velocity = bf->exit_velocity;
+
+                //bf->pv->exit_velocity = bf->exit_velocity;
 
                 bf->hint = PERFECT_CRUISE;
 
-                // We can't improve this move more
-                bf->pv->plannable = false;
+                // We can't improve this entry more
+                optimal = true;
 
                 // Time: 21us-27us
-            // not a command or a cruise
             }
+
+            // not a command or a cruise
+            // test to see if we'll *have* to enter slower than we can exit
+            else if (bf->pv->exit_vmax < bf->exit_velocity) {
+
+                test_decel_or_bump = true;
+            }
+
+            // Ok, now we can test deceleration cases
             else {
 
                 // decelerations
@@ -342,7 +364,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // if we can decelerate from *lower* than pv->exit_vmax, we have a perfect decel that may be degraded to a bump
                 braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
                 if (bf->pv->exit_vmax > braking_velocity) { // remember, exit vmax already is min of pv->cruise_vmax, cruise_vmax, and pv->junction_vmax
-                    bf->pv->exit_velocity = braking_velocity;
+                    //bf->pv->exit_velocity = braking_velocity;
                     bf->cruise_velocity = braking_velocity;   // put this here to avoid a race condition with _exec()
                     bf->hint = PERFECT_DECELERATION;          // This is advisory, and may be altered by forward planning
 
@@ -350,24 +372,70 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 }
 
                 else {
-                    bf->pv->exit_velocity = bf->pv->exit_vmax;
-                    bf->cruise_velocity = min(bf->cruise_vmax, bf->pv->exit_vmax);
 
-                    // Update braking_velocity for use in the top of the loop
-                    braking_velocity = bf->pv->exit_velocity;
-
-                    bf->hint = MIXED_DECELERATION;
-
-                    // We can't improve this move more
-                    bf->pv->plannable = false;
-
+                    test_decel_or_bump = true;
                     // Time: 72us-79us
                 }
 
             } // end else not a cruise
 
+            if (test_decel_or_bump) {
+                // Update braking_velocity for use in the top of the loop
+                braking_velocity = bf->pv->exit_vmax;
+
+                if (bf->cruise_vmax > bf->pv->exit_vmax) {
+                    bf->cruise_velocity = bf->cruise_vmax;
+                    bf->hint = ASYMMETRIC_BUMP;
+                } else {
+                    bf->cruise_velocity = bf->pv->exit_vmax;
+                    bf->hint = MIXED_DECELERATION;
+                }
+
+                // We can't improve this entry more
+                optimal = true;
+            }
+
             bf->buffer_state = MP_BUFFER_PREPPED;
+        } // for loop
+
+        // bf now points to the first block who's pv->plannable is false
+        // This one might be plannable==false as well.
+
+        // In either case, the hint is likely invalid. If the exit_velocity isn't braking_velocity, then it needs changed.
+        // We have to be mindful that the exec may *TRY To* grab the block we're working on at any point now.
+        // W ehave bf->buffer_state = MP_BUFFER_PREPPED, so it won't be able to.
+        if (fp_NE(bf->exit_velocity, braking_velocity)) {
+            // QUICK! Set it to the new velocity.
+            bf->exit_velocity = braking_velocity;
+
+            // braking_velocity will always go up, if it changes.
+            // If the exit is higher than pv->exit_vmax, then we'll guess aymmetric bump
+            // If it was a PERFECT_CRUISE, it couldn't have changed, so it couldn't have been a PERFECT_CRUISE.
+            // If it was a MIXED_DECELERATION, it might have become a PERFECT_CRUISE, otherwise it would still be a MIXED_DECELERATION.
+            // If it was a PERFECT_DECELERATION, it might have become a PERFECT_CRUISE or MIXED_DECELERATION, otherwise it would still be a PERFECT_DECELERATION.
+            // We also don't have time to goof off here, trying to get it *just right*. So mp_get_target_velocity() is right out.
+
+
+            // Check to see if it might be able to accelerate, in which case we assume asymmetric bump
+            if (bf->pv->exit_vmax < bf->exit_velocity) {
+                // best we can assume at this point is an ASYMMETRIC_BUMP
+                bf->hint = ASYMMETRIC_BUMP;
+            }
+
+            // See if it's become a PERFECT_CRUISE.
+            else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
+                bf->hint = PERFECT_CRUISE;
+            }
+
+            else {
+                // We will call it a MIXED_DECELERATION. We don't want to spend the time to determine if it's a PERFECT_DECELERATION.
+                // The ramp function will cost a little more, but it'll be less overall.
+                bf->hint = MIXED_DECELERATION;
+            }
         }
+        bf->buffer_state = MP_BUFFER_PREPPED;
+
+
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
     } // exits with bf pointing to a locked or EMPTY block
 

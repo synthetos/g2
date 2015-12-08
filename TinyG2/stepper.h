@@ -445,6 +445,7 @@ void st_deenergize_motors(void);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
+void st_request_plan_move(void);
 void st_request_exec_move(void);
 void st_request_load_move(void);
 void st_prep_null(void);
