@@ -57,24 +57,12 @@ def load_pool(filename):
                     pool[current_buffer]['buffer_number'] = val
                 elif key == 'junction_vmax':
                     pool[current_buffer]['junction_vmax'] = val
-                elif key == 'entry_velocity':
-                    pool[current_buffer]['entry_velocity'] = val
                 elif key == 'cruise_velocity':
                     pool[current_buffer]['cruise_velocity'] = val
                 elif key == 'exit_velocity':
                     pool[current_buffer]['exit_velocity'] = val
-                elif key == 'head_length':
-                    pool[current_buffer]['head_length'] = val
-                elif key == 'body_length':
-                    pool[current_buffer]['body_length'] = val
-                elif key == 'tail_length':
-                    pool[current_buffer]['tail_length'] = val
-                elif key == 'head_time':
-                    pool[current_buffer]['head_time'] = val
-                elif key == 'body_time':
-                    pool[current_buffer]['body_time'] = val
-                elif key == 'tail_time':
-                    pool[current_buffer]['tail_time'] = val
+                elif key == 'length':
+                    pool[current_buffer]['length'] = val
                 elif key == 'move_time':
                     pool[current_buffer]['move_time'] = val
                 elif key == 'plannable':
@@ -86,7 +74,7 @@ def load_pool(filename):
 def check_integrity(pool):
     key = pool.keys()[0]
     buffers = set()
-    count = 0;
+    count = 0
     while True:
         if key in buffers:
             break
@@ -117,22 +105,17 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            print '0x%08x [%02d] : N%04d %-22s %-8s Ti% 8.2f  J% 10.2f  C% 10.2f  X% 10.2f  H% 10.2f@% 10.2f  B% 10.2f@% 10.2f  T% 10.2f@% 10.2f %5s %10s' % (
+            print '0x%08x [%02d] : N%04d %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %10s' % (
                 key,
                 float(buffer['buffer_number']),
                 float(buffer['linenum']),
                 buffer['buffer_state'].strip(),
                 pointer,
+                float(buffer['length']),
                 float(buffer['move_time']),
-                float(buffer['junction_vmax']),
                 float(buffer['cruise_velocity']),
                 float(buffer['exit_velocity']),
-                float(buffer['head_length']),
-                float(buffer['head_time']) * 60000,
-                float(buffer['body_length']),
-                float(buffer['body_time']) * 60000,
-                float(buffer['tail_length']),
-                float(buffer['tail_time']) * 60000,
+                float(buffer['junction_vmax']),
                 buffer['plannable'],
                 buffer['hint']
                 )
