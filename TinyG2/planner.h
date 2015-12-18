@@ -230,8 +230,8 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     struct mpBuffer *pv;            // static pointer to previous buffer
     struct mpBuffer *nx;            // static pointer to next buffer
 
-//    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
-//    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
+    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
+    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
 
     // Note: _clear_buffer() zeros all data from this point down
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
@@ -262,6 +262,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
+    float group_length;             // total length of the group
 //    float head_length;
 //    float body_length;
 //    float tail_length;
@@ -339,6 +340,7 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// write buffer pointer
 	mpBuf_t *p;						// planner buffer pointer
 	mpBuf_t *c;						// pointer to buffer immediately following critical region
+    mpBuf_t *g;						// pointer to buffer that is the first buffer of the last group
     mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
 
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
@@ -363,9 +365,13 @@ typedef struct mpMoveRuntimeBuf {  // Data structure for just the parts of RunTi
     float body_time;
     float tail_time;
 
-    float entry_velocity;               // actual velocities for the move
-    float cruise_velocity;
-    float exit_velocity;
+    float cruise_velocity;              // values for the hend of the head or thebeginning of the tail
+    float cruise_acceleration;
+    float cruise_jerk;
+
+    float exit_velocity;                // values for the end of the move
+    float exit_acceleration;
+    float exit_jerk;
 } mpMoveRuntimeBuf_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
@@ -387,9 +393,41 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float encoder_steps[MOTORS];        // encoder position in steps - ideally the same as commanded_steps
 	float following_error[MOTORS];      // difference between encoder_steps and commanded steps
 
-    mpMoveRuntimeBuf_t *r;         // what's running
-    mpMoveRuntimeBuf_t *p;         // what's being planned, p might == r
-    mpMoveRuntimeBuf_t bf[2];
+    mpMoveRuntimeBuf_t *r;              // what's running
+    mpMoveRuntimeBuf_t *p;              // what's being planned, p might == r
+    mpMoveRuntimeBuf_t bf[2];           // the buffer
+
+    float entry_velocity;               // entry values for the currently running block
+    float entry_acceleration;
+    float entry_jerk;
+
+
+    // These are for group planning, and should not be looked at from the block-exec context
+    moveSection group_section;          // what section of the whole group are we in
+    moveState group_move_state;         // state of the overall group
+    float group_length;                 // total length of the moves in the group
+    float length_into_section;          // distance into the current section we have planned
+    float t_into_section;               // value of the curve parameter t into the section
+    float group_head_length;            // lengths for the whole group
+    float group_body_length;
+    float group_tail_length;
+
+    float group_head_time;              // times for the whole group
+    float group_body_time;
+    float group_tail_time;
+
+    float group_entry_velocity;         // velocities for the group as a whole
+    float group_cruise_velocity;
+    float group_exit_velocity;
+
+    float executed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
+    float executed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
+
+
+    // These are *only* for the block-exec context, and shouldn't be modified anywhere else.
+
+    float executed_body_length;         // length of the currently executing body, to detect extensions
+    float executed_body_time;           // time of the currently executing body, to detect extensions
 
 	float segments;                     // number of segments in line (also used by arc generation)
 	uint32_t segment_count;             // count of running segments
@@ -477,9 +515,16 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_velocity);
+void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
+stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);
+
+float mp_calc_v(const float t, const float v_0, const float v_1);                // compute the velocity along the curve accelerating from v_0 to v_1, at position t=[0,1]
+float mp_calc_a(const float t, const float v_0, const float v_1, const float T); // compute acceleration over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
+float mp_calc_j(const float t, const float v_0, const float v_1, const float T); // compute jerk over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
+//float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
 // plan_exec.c functions
 stat_t mp_exec_move(void);

@@ -60,7 +60,8 @@ static float _get_target_length_min(const float v_0, const float v_1, const mpBu
 static float _get_meet_velocity(const float v_0, const float v_2, const float L, mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
 
 /****************************************************************************************
- * mp_calculate_trapezoid() - calculate trapezoid parameters
+ * mp_calculate_ramps() - calculate trapezoid-like ramp parameters for an entire group
+ * ++++ UPDATE DESCRIPTION
  *
  *  This long-ish function sets section lengths and velocities based on the move length
  *  and velocities requested. It modifies the incoming bf buffer and returns accurate
@@ -126,11 +127,12 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 }
 
 
-// Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
+// Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION, ASYMMETRIC_BUMP
 // We are incorporating both the forward planning and ramp-planning into one function, since we use the same data.
 
-void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_velocity)
+void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
 {
+    const float entry_velocity = mr.r->exit_velocity;
     // Quick cheat-sheet on which is in bf and whcih is in rbf:
     // bf:
     //  move_type
@@ -138,6 +140,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
     //  {cruise,exit}_vmax
     //  move_time
     //  length
+    //  group_length
     //  (start values of {cruise,exit}_velocity)
     //
     // rbf:
@@ -167,138 +170,204 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
     rbf->body_length = 0;
     rbf->tail_length = 0;
 
-    rbf->entry_velocity  = entry_velocity;
     rbf->cruise_velocity = bf->cruise_velocity;
     rbf->exit_velocity   = bf->exit_velocity;
 
 
+    // Note that we are lookig at the first group/block after the running block.
+    // So we can only merge *forward*.
+    // We want to see if we will merge *at all*, then we look forward at each block
+    // to see if it can merge into this one.
+    // We are looking to merge acceleration groups. We've already made deceleration groups.
+    //
+    // We WON'T merge forward if the current group is:
+    //   !entry_changed (still a deceleration group or limited by deceleration limits)
+    //   or entry_velocity > rbf->exit_velocity (is a deceleration),
+    //   or jerk >= nx_group->jerk (might degrade velocity),
+    //   or computed_exit >= exit.
+    //
+    // Merge, then re-assess.
 
-    // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
+    bool did_merge = false;
 
-    // PERFECT_CRUISE (1c) Velocities all match (or close enough), treat as body-only
-    // NOTE: PERFECT_CRUISE is set in back-planning without knowledge of pv->exit, since it can't see it yet.
-    // Here we verify it moving forward, checking to make sure it still is true.
-    // If so, we plan the "ramp" as flat, body-only.
-    if (bf->hint == PERFECT_CRUISE) {
-        if ((!mb.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
+    // We *might* do this exact computation later, so cache the value.
+    float test_velocity = 0;
+    bool test_velocity_valid = false; // record if we have a validly cached value
 
-            // We need to ensure that neither the entry or the exit velocities are
-            // <= the cruise velocity even though there is tolerance in fp_EQ comparison.
-            rbf->exit_velocity = entry_velocity;
-            rbf->cruise_velocity = entry_velocity;
+    do { // while did_merge
 
-            rbf->body_length = bf->length;
-            rbf->body_time = rbf->body_length / rbf->cruise_velocity;
-            bf->move_time = rbf->body_time;
+        did_merge = false;
 
-            LOG_RETURN("1c");
-            return (_zoid_exit(bf, ZOID_EXIT_1c));
-        } else {
-            // we need to degrade the hint to MIXED_ACCELERATION
-            bf->hint = MIXED_ACCELERATION;
-        }
-    }
+        // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
 
+        // PERFECT_CRUISE (1c) Velocities all match (or close enough), treat as body-only
+        // NOTE: PERFECT_CRUISE is set in back-planning without knowledge of pv->exit, since it can't see it yet.
+        // Here we verify it moving forward, checking to make sure it still is true.
+        // If so, we plan the "ramp" as flat, body-only.
+        if (bf->hint == PERFECT_CRUISE) {
+            if ((!mb.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
 
-    // Quick test to ensure we haven't violated the hint
-    if (entry_velocity > rbf->exit_velocity) {
-        // We're in a deceleration.
-        if (mb.entry_changed) {
-            // If entry_changed, then entry_velocity is lower than the hints expect.
-            // A deceleration will never become an acceleration (post-hinting).
-            // If it is marked as MIXED_DECELERATION, it means the entry was CRUISE_VMAX.
-            // If it is marked as PERFECT_DECELERATION, it means the entry was as <= CRUISE_VMAX,
-            //   but as high as possible.
-            // So, this move is and was a DECELERATION, meaning it *could* achieve the previous (higher)
-            //   entry safely, it will likely get a head section, so we will now degrade the hint to an
-            //   ASYMMETRIC_BUMP.
+                // We need to ensure that neither the entry or the exit velocities are
+                // <= the cruise velocity even though there is tolerance in fp_EQ comparison.
+                rbf->exit_velocity = entry_velocity;
+                rbf->cruise_velocity = entry_velocity;
 
-            bf->hint = ASYMMETRIC_BUMP;
-        }
-
-        // MIXED_DECELERATION (2d) 2 segment BT deceleration move
-        // Only possible if the entry has not changed since hinting.
-        else if (bf->hint == MIXED_DECELERATION) {
-            rbf->tail_length = mp_get_target_length(rbf->exit_velocity, rbf->cruise_velocity, bf);
-            rbf->body_length = bf->length - rbf->tail_length;
-            rbf->head_length = 0;
-
-            rbf->body_time = rbf->body_length / rbf->cruise_velocity;
-            rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
-            bf->move_time = rbf->body_time + rbf->tail_time;
-            LOG_RETURN("2d");
-            return (_zoid_exit(bf, ZOID_EXIT_2d));
-        }
-
-        // PERFECT_DECELERATION (1d) single tail segment (deltaV == delta_vmax)
-        // Only possible if the entry has not changed since hinting.
-        else if (bf->hint == PERFECT_DECELERATION) {
-            rbf->tail_length = bf->length;
-            rbf->cruise_velocity = entry_velocity;
-            rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
-            bf->move_time = rbf->tail_time;
-            LOG_RETURN("1d");
-            return (_zoid_exit(bf, ZOID_EXIT_1d));
-        }
-
-
-        // Reset entry_changed. We won't likely be changing the next block's entry velocity.
-        mb.entry_changed = false;
-
-
-    // Since we are not generally decelerating, this is effectively all of forward planning that we need.
-    } else {
-        // Note that the hints from back-planning are ignored in this section. since back-planing can only predict decel and cruise.
-
-        float accel_velocity = mp_get_target_velocity(entry_velocity, bf->length, bf);
-
-        if (accel_velocity < rbf->exit_velocity) {   // still accelerating
-
-            mb.entry_changed = true; // we are changing the *next* block's entry velocity
-
-            rbf->exit_velocity = accel_velocity;
-            rbf->cruise_velocity = accel_velocity;
-
-            bf->hint = PERFECT_ACCELERATION;
-
-            // PERFECT_ACCELERATION (1a) single head segment (deltaV == delta_vmax)
-            rbf->head_length = bf->length;
-            rbf->cruise_velocity = rbf->exit_velocity;
-            rbf->head_time = rbf->head_length*2 / (entry_velocity + rbf->cruise_velocity);
-            bf->move_time = rbf->head_time;
-            LOG_RETURN("1a");
-            return (_zoid_exit(bf, ZOID_EXIT_1a));
-
-        } else {                        // it's hit the cusp
-
-            mb.entry_changed = false; // we are NOT changing the next block's entry velocity
-
-            rbf->cruise_velocity = bf->cruise_vmax;
-
-            if (rbf->cruise_velocity > rbf->exit_velocity) {
-
-                // We will likely have a head section, so hint the move as an ASYMMETRIC_BUMP
-                bf->hint = ASYMMETRIC_BUMP;
-
-            } else {
-                // We know that exit_velocity is higher than cruise_vmax, so adjust it
-                rbf->exit_velocity = bf->cruise_vmax;
-
-                bf->hint = MIXED_ACCELERATION;
-
-                // MIXED_ACCELERATION (2a) 2 segment HB acceleration move
-                rbf->head_length = mp_get_target_length(entry_velocity, rbf->cruise_velocity, bf);
-                rbf->body_length = bf->length - rbf->head_length;
-                rbf->tail_length = 0; // we just set it, now we unset it
-                rbf->head_time = rbf->head_length*2 / (entry_velocity + rbf->cruise_velocity);
+                rbf->body_length = bf->group_length;
                 rbf->body_time = rbf->body_length / rbf->cruise_velocity;
-                bf->move_time = rbf->head_time + rbf->body_time;
-                LOG_RETURN("2a");
-                return (_zoid_exit(bf, ZOID_EXIT_2a));
+                bf->move_time = rbf->body_time;
 
+                LOG_RETURN("1c");
+                return (_zoid_exit(bf, ZOID_EXIT_1c));
+            } else {
+                // we need to degrade the hint to MIXED_ACCELERATION
+                bf->hint = MIXED_ACCELERATION;
             }
         }
-    }
+
+
+        // Quick test to ensure we haven't violated the hint
+        if (entry_velocity > rbf->exit_velocity) {
+            // We're in a deceleration.
+            if (mb.entry_changed) {
+                // If entry_changed, then entry_velocity is lower than the hints expect.
+                // A deceleration will never become an acceleration (post-hinting).
+                // If it is marked as MIXED_DECELERATION, it means the entry was CRUISE_VMAX.
+                // If it is marked as PERFECT_DECELERATION, it means the entry was as <= CRUISE_VMAX,
+                //   but as high as possible.
+                // So, this move is and was a DECELERATION, meaning it *could* achieve the previous (higher)
+                //   entry safely, it will likely get a head section, so we will now degrade the hint to an
+                //   ASYMMETRIC_BUMP.
+
+                bf->hint = ASYMMETRIC_BUMP;
+            }
+
+            // MIXED_DECELERATION (2d) 2 segment BT deceleration move
+            // Only possible if the entry has not changed since hinting.
+            else if (bf->hint == MIXED_DECELERATION) {
+                rbf->tail_length = mp_get_target_length(rbf->exit_velocity, rbf->cruise_velocity, bf);
+                rbf->body_length = bf->group_length - rbf->tail_length;
+                rbf->head_length = 0;
+
+                rbf->body_time = rbf->body_length / rbf->cruise_velocity;
+                rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
+                bf->move_time = rbf->body_time + rbf->tail_time;
+                LOG_RETURN("2d");
+                return (_zoid_exit(bf, ZOID_EXIT_2d));
+            }
+
+            // PERFECT_DECELERATION (1d) single tail segment (deltaV == delta_vmax)
+            // Only possible if the entry has not changed since hinting.
+            else if (bf->hint == PERFECT_DECELERATION) {
+                rbf->tail_length = bf->group_length;
+                rbf->cruise_velocity = entry_velocity;
+                rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
+                bf->move_time = rbf->tail_time;
+                LOG_RETURN("1d");
+                return (_zoid_exit(bf, ZOID_EXIT_1d));
+            }
+
+
+            // Reset entry_changed. We won't likely be changing the next block's entry velocity.
+            mb.entry_changed = false;
+
+
+        // Since we are not generally decelerating, this is effectively all of forward planning that we need.
+        } else {
+            // Note that the hints from back-planning are ignored in this section. since back-planing can only predict decel and cruise.
+
+            float accel_velocity;
+            if (test_velocity_valid) {
+                accel_velocity = test_velocity;
+                test_velocity_valid = false;
+            }
+            else {
+                accel_velocity = mp_get_target_velocity(entry_velocity, bf->group_length, bf);
+            }
+
+            if (accel_velocity < rbf->exit_velocity) {   // still accelerating
+
+                mb.entry_changed = true; // we are changing the *next* block's entry velocity
+
+                // We'll check to see if we can merge this block into the next one.
+                if (bf->nx_group->exit_vmax <= bf->exit_vmax) {
+                    if (bf->nx_group->jerk < bf->jerk) {
+                        test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+bf->group_length, bf->nx_group);
+
+                        if (test_velocity > rbf->exit_velocity) {
+                            test_velocity_valid = true; // note that this has been comuted, so it doesn't have to happen again.
+
+                            // We're going to merge with nx_group from us
+                            bf->group_length += bf->nx_group->group_length;
+
+                            // figure out the group jerk values
+                            if (bf->jerk < bf->nx_group->jerk) {
+                                // Copy the move jerk, and all of it's derived values over
+                                bf->jerk = bf->nx_group->jerk;
+                                bf->jerk_sq = bf->nx_group->jerk_sq;
+                                bf->recip_jerk = bf->nx_group->recip_jerk;
+                                bf->sqrt_j = bf->nx_group->sqrt_j;
+                                bf->q_recip_2_sqrt_j = bf->nx_group->q_recip_2_sqrt_j;
+                            }
+
+                            bf->exit_velocity = bf->nx_group->exit_velocity;
+                            rbf->exit_velocity = bf->exit_velocity;
+
+                            // Get the cruise velocity of the last block of the next group
+                            bf->cruise_velocity = bf->nx_group->nx_group->pv->cruise_velocity;
+                            rbf->cruise_velocity = bf->cruise_velocity;
+
+                            did_merge = true;
+                        }
+                    }
+                }
+
+                if (!did_merge) {
+
+                    rbf->exit_velocity = accel_velocity;
+                    rbf->cruise_velocity = accel_velocity;
+
+                    bf->hint = PERFECT_ACCELERATION;
+
+                    // PERFECT_ACCELERATION (1a) single head segment (deltaV == delta_vmax)
+                    rbf->head_length = bf->group_length;
+                    rbf->cruise_velocity = rbf->exit_velocity;
+                    rbf->head_time = rbf->head_length*2 / (entry_velocity + rbf->cruise_velocity);
+                    bf->move_time = rbf->head_time;
+                    LOG_RETURN("1a");
+                    return (_zoid_exit(bf, ZOID_EXIT_1a));
+                }
+            } else {                        // it's hit the cusp
+
+                mb.entry_changed = false; // we are NOT changing the next block's entry velocity
+
+                rbf->cruise_velocity = bf->cruise_vmax;
+
+                if (rbf->cruise_velocity > rbf->exit_velocity) {
+
+                    // We will likely have a head section, so hint the move as an ASYMMETRIC_BUMP
+                    bf->hint = ASYMMETRIC_BUMP;
+
+                } else {
+                    // We know that exit_velocity is higher than cruise_vmax, so adjust it
+                    rbf->exit_velocity = bf->cruise_vmax;
+
+                    bf->hint = MIXED_ACCELERATION;
+
+                    // MIXED_ACCELERATION (2a) 2 segment HB acceleration move
+                    rbf->head_length = mp_get_target_length(entry_velocity, rbf->cruise_velocity, bf);
+                    rbf->body_length = bf->group_length - rbf->head_length;
+                    rbf->tail_length = 0; // we just set it, now we unset it
+                    rbf->head_time = rbf->head_length*2 / (entry_velocity + rbf->cruise_velocity);
+                    rbf->body_time = rbf->body_length / rbf->cruise_velocity;
+                    bf->move_time = rbf->head_time + rbf->body_time;
+                    LOG_RETURN("2a");
+                    return (_zoid_exit(bf, ZOID_EXIT_2a));
+
+                }
+            }
+        }
+
+    } while (did_merge);
 
     // We've eliminated the following at this point:
 
@@ -321,17 +390,13 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
 
         // 3 segment HBT move (2c) - either with a body or just a symmetric bump
         rbf->body_length = bf->length - (rbf->head_length + rbf->tail_length); // body guaranteed to be positive
-//        if (bf->body_length < MIN_BODY_LENGTH) {                            // distribute to head and tail if so
-//            bf->head_length += bf->body_length/2;
-//            bf->tail_length += bf->body_length/2;
-//            bf->body_length = 0;
-//            bf->hint = SYMMETRIC_BUMP;
-//        }
+
         rbf->head_time = rbf->head_length*2 / (entry_velocity + rbf->cruise_velocity);
         rbf->body_time = rbf->body_length / rbf->cruise_velocity;
         rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
         bf->move_time = rbf->head_time + rbf->body_time + rbf->tail_time;
-        //        bf->hint = SYMMETRIC_BUMP;
+
+        bf->hint = ASYMMETRIC_BUMP;
 
         LOG_RETURN("2c");
         return (_zoid_exit(bf, ZOID_EXIT_2c));
@@ -348,8 +413,9 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
 
     // We now store the head/tail lengths we computed in _get_meet_velocity.
     // treat as a full up and down (head and tail)
-    //bf->head_length = mp_get_target_length(entry_velocity, bf->cruise_velocity, bf);
-    //bf->tail_length = max((float)0.0, (bf->length - bf->head_length)); // max(0.0, ...) to ensure sanity
+    bf->hint = ASYMMETRIC_BUMP;
+
+    // Compute move times
 
     // save a few divides where we can
     if (fp_NOT_ZERO(rbf->head_length)) {
@@ -362,12 +428,163 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
         rbf->tail_time = rbf->tail_length*2 / (rbf->exit_velocity + rbf->cruise_velocity);
     }
     bf->move_time = rbf->head_time + rbf->body_time + rbf->tail_time;
-    bf->hint = ASYMMETRIC_BUMP;
-    
+
     LOG_RETURN("3c");
     return (_zoid_exit(bf, ZOID_EXIT_3c)); // 550us worst case
 }
 
+/****************************************************************************************
+ * mp_calculate_block() - calculate the ramp parameters for a block
+ * ++++ FINISH DESCRIPTION
+ *
+ *  This long-ish function sets section lengths and velocities based on the values for the group
+ *  stored in mr, and applies them to this block. When a group is a single block, the is mostly a
+ *  copy function.
+ *
+ *  For blocks that are part of a larger group, this function is all that's needed for all blocks
+ *  but the first.
+ *
+ */
+
+stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
+{
+    // We look at head, then body, then tail, in order. It's possible to visit one, two, or all three in one call.
+    // Note that the vmax values of the block may have been set to zero to prevent back-planning from making adjustments.
+    // We MUST NOT pay attention to vmax values here.
+
+    if (mr.group_section == SECTION_HEAD) {
+        float head_left = mr.group_head_length - mr.length_into_section;
+        bool done_with_head = false;
+        if (head_left > 0) {
+            if (bf->length < head_left) {
+                rbf->head_length = bf->length;
+                mr.length_into_section += bf->length;
+
+                float t = mp_find_t(mr.group_entry_velocity, mr.group_cruise_velocity, rbf->head_length, mr.group_head_length, mr.t_into_section, mr.group_head_time);
+                rbf->cruise_velocity     = mp_calc_v(t, mr.group_entry_velocity, mr.group_cruise_velocity);
+                rbf->cruise_acceleration = mp_calc_a(t, mr.group_entry_velocity, mr.group_cruise_velocity, mr.group_head_time);
+                rbf->cruise_jerk         = mp_calc_j(t, mr.group_entry_velocity, mr.group_cruise_velocity, mr.group_head_time);
+
+                rbf->head_time = mr.group_head_time * (t - mr.t_into_section);
+                mr.t_into_section = t;
+            }
+            // We will use of the rest of the head in this block
+            else {
+                rbf->head_length = head_left;
+                rbf->head_time = mr.group_head_time * (1.0 - mr.t_into_section);
+
+                // In the unlikely case where there is no body or tail, and we ended a head section exactly on a block boundary:
+                rbf->cruise_velocity     = mr.group_cruise_velocity;
+                rbf->cruise_acceleration = 0;
+                rbf->cruise_jerk         = 0;
+
+                done_with_head = true;
+            }
+        }
+        else {
+            // Since there is no head section in this move, we will want to ensure the entry (runtime exit) is copied to the cruise
+            // If there's a body, then it should already be at cruise and with zero accel and jerk.
+            rbf->cruise_velocity     = mr.r->exit_velocity;
+            rbf->cruise_acceleration = mr.r->exit_acceleration;
+            rbf->cruise_jerk         = mr.r->exit_jerk;
+
+            done_with_head = true;
+        }
+
+        if (done_with_head) {
+            mr.group_section = SECTION_BODY;
+
+            // These are redundant, since they aren't used for the body, but it's noce to be thorough
+            mr.length_into_section = 0.0;
+            mr.t_into_section = 1.0;
+        }
+    }
+
+    if (mr.group_section == SECTION_BODY) {
+        float body_left = mr.group_body_length - mr.length_into_section;
+        bool done_with_body = false;
+        if (body_left > 0) {
+            float length_left = (bf->length - rbf->head_length);
+            if (length_left < body_left) {
+                rbf->body_length = length_left;
+                mr.length_into_section += length_left;
+            }
+            // We will use of the rest of the body in this block
+            else {
+                rbf->body_length = body_left;
+
+                done_with_body = true;
+            }
+
+            rbf->cruise_velocity   = mr.group_cruise_velocity;
+            rbf->cruise_acceleration = 0;
+            rbf->cruise_jerk         = 0;
+            rbf->exit_velocity     = mr.group_cruise_velocity;
+            rbf->exit_acceleration = 0;
+            rbf->exit_jerk         = 0;
+
+            mr.t_into_section = 0; // we won't maintain t for body, since we don't need it.
+
+            rbf->body_time = rbf->body_length / rbf->cruise_velocity;
+        }
+        else {
+            done_with_body = true;
+        }
+
+        if (done_with_body) {
+            mr.group_section = SECTION_TAIL;
+
+            mr.length_into_section = 0.0;
+            mr.t_into_section = 1.0; // for a tail, we start t at 1 and go backward
+        }
+    }
+
+    if (mr.group_section == SECTION_TAIL) {
+        float tail_left = mr.group_tail_length - mr.length_into_section;
+        bool done_with_tail = false;
+        if (tail_left > 0) {
+            float length_left = (bf->length - (rbf->head_length+rbf->body_length));
+            if (length_left < tail_left) {
+                rbf->tail_length = length_left;
+                mr.length_into_section += length_left;
+
+                float t = mp_find_t(mr.group_exit_velocity, mr.group_cruise_velocity, mr.length_into_section, mr.group_tail_length, mr.t_into_section, mr.group_tail_time);
+                rbf->exit_velocity     = mp_calc_v(t, mr.group_exit_velocity, mr.group_cruise_velocity);
+                rbf->exit_acceleration = mp_calc_a(t, mr.group_exit_velocity, mr.group_cruise_velocity, mr.group_tail_time);
+                rbf->exit_jerk         = mp_calc_j(t, mr.group_exit_velocity, mr.group_cruise_velocity, mr.group_tail_time);
+
+                rbf->tail_time = mr.group_tail_time * (mr.t_into_section - t); // Remember, t for the tail starts at 1 and goes to 0
+                mr.t_into_section = t;
+            }
+            // We will use of the rest of the tail in this block
+            else {
+                rbf->tail_length = tail_left;
+                rbf->tail_time = mr.group_tail_time * (mr.t_into_section); // Remember, t for the tail starts at 1 and goes to 0
+
+                rbf->exit_velocity     = mr.group_exit_velocity;
+                rbf->exit_acceleration = 0;
+                rbf->exit_jerk         = 0;
+
+                done_with_tail = true;
+            }
+        }
+        else {
+            done_with_tail = true;
+        }
+
+        if (done_with_tail) {
+            mr.group_section = SECTION_HEAD;
+
+            mr.length_into_section = 0.0;
+            mr.t_into_section = 0;
+
+            // We're officially done with this group
+            return STAT_OK;
+        }
+    }
+
+    return STAT_EAGAIN;
+}
 
 
 /**** Planner helpers ****
@@ -389,14 +606,14 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf, const float entry_
 /*
  * _get_target_length_min() - helper to get target length or return zero if length < minimum for this move
  */
-static float _get_target_length_min(const float v_0, const float v_1, const mpBuf_t *bf, const float min)
-{
-    float len = mp_get_target_length(v_0, v_1, bf);
-    if (len < min) {
-        len = 0;
-    }
-    return (len);
-}
+//static float _get_target_length_min(const float v_0, const float v_1, const mpBuf_t *bf, const float min)
+//{
+//    float len = mp_get_target_length(v_0, v_1, bf);
+//    if (len < min) {
+//        len = 0;
+//    }
+//    return (len);
+//}
 
 /*
  * mp_get_target_length()   - find accel/decel length from delta V and jerk
@@ -681,3 +898,95 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
     return v_1;
 }
+
+const float FIND_T_PRECISION = 0.0001;
+
+float mp_find_t(float v_0, float v_1, float L, float totalL, float initial_t, float T) {
+
+    if (fabs(L-totalL) < FIND_T_PRECISION) {
+        return 1.0;
+    }
+
+    // Comput LT = Length/Time
+    //const float LT = L/((2*totalL)/(v_0+v_1)); // (brute force)
+    const float LT = L/T; //  (given time as T)
+
+    const float deltaV = (v_1 - v_0);
+
+    // The initial guess dramatically effects how many iterations are needed.
+    // We'll let the caller pass in a guess, usually the previous found value.
+    // Note that it's usually better to guess high.
+
+    //var n = Math.max(0.65, L/totalL);
+    // x = (sqrt(v_0^2-2 T (v_0-v_1))+v_0)/(v_0-v_1)
+    //var n = (Math.sqrt(v_0*v_0-2*LT*(v_0-v_1))+v_0)/(v_1-v_0);
+    float t = initial_t;// || 0.5;
+
+    int count = 0;
+
+    while (++count < 10) { // we'll bail after 10 iterations .. hopefully that's enough!
+        float t2 = t*t;
+        float t4 = t2*t2;
+
+        // L(t) = T( (v_1 - v_0) (t² - 3 t + 5 / 2) t⁴ + v_0 t)
+        // L(t) = T( (v_1 - v_0) ((t-3) t+5/2) t⁴ + v_0 t)
+        float Lt = (deltaV*((t-3.0)*t+2.5)*t4 + v_0*t) - LT;
+        if (fabs(Lt) < FIND_T_PRECISION) {
+            break;
+        }
+
+        float t3 = t2*t;
+
+        // V(t) = (v_1 - v_0) (6t² - 15t + 10) t³ + v_0
+        // V(t) = (v_1 - v_0) (t (6 t-15)+10) t³ + v_0
+        float Vt = ((v_1 - v_0)*(t*(6.0*t - 15.0) + 10.0)*t3 + v_0);
+
+        t = t - Lt/Vt;
+    }
+    
+    return t;
+}
+
+float mp_calc_v(const float t, const float v_0, const float v_1) {
+    //V(t) = (v_1 - v_0) (6t² - 15t + 10) t³ + v_0
+    //V(t) = (v_1 - v_0) (t (6 t-15)+10) t³ + v_0
+
+    const float t3 = t * t * t;
+
+    return (v_1-v_0) * (t*(6.0*t-15.0)+10.0)*t3 + v_0;
+}
+
+float mp_calc_a(const float t, const float v_0, const float v_1, const float T) {
+    // A(t) = 30 (v_1 - v_0) (1 - t)² t² / T
+
+    if (fp_EQ(t, 0.0) || fp_EQ(true, 1.0)) {
+        return 0.0;
+    }
+
+    const float i_t    = (1.0 - t);
+    const float i_t_2  = i_t*i_t;
+    const float t_2    = t * t;
+//    const float T = (2*L)/(v_0+v_1); // if given L, get T
+    const float T_inv = 1/T;
+    
+    return (30.0 * (v_1 - v_0) * i_t_2 * t_2 * T_inv);
+}
+
+float mp_calc_j(const float t, const float v_0, const float v_1, const float T) {
+    //J(t) = 60 (v_1 - v_0) (1 - t) (1 - 2t) t / T²
+
+    const float i_t = (1.0 - t);
+    const float i2t = (1.0 - (2.0 * t));
+    const float T2_inv = 1/(T * T);
+
+    return (60.0 * (v_1 - v_0) * i_t * i2t * t * T2_inv);
+}
+
+//float mp_calc_l(const float t, const float v_0, const float v_1, const float T) {
+//    //L(t) = T( (v_1 - v_0) (t² - 3 t + 5 / 2) t⁴ + v_0 t)
+//    //L(t) = T( (v_1 - v_0) ((t-3) t+5/2) t⁴ + v_0 t)
+//    const float t2 = t * t;
+//    const float t4 = t2 * t2;
+//
+//    return T*( (v_1 - v_0)*((t-3)*t+5/2)*t4 + v_0*t);
+//}

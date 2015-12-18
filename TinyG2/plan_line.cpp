@@ -156,6 +156,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     // setup the buffer
     bf->bf_func = mp_exec_aline;                            // register the callback to the exec function
     bf->length = length;                                    // record the length
+    bf->group_length = length;                              // record the group_length as a group of one block
     for (uint8_t axis=0; axis<AXES; axis++) {               // compute the unit vector and set flags
         if ((bf->axis_flags[axis] = flags[axis])) {         // yes, this is supposed to be = and not ==
             bf->unit[axis] = axis_length[axis] / length;    // nb: bf-> unit was cleared by mp_get_write_buffer()
@@ -294,15 +295,97 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0; // we use this to stre the previous entry velocity, start at 0
         bool optimal = false; // we use the optimal flag (as the opposite of plannable) to carry plan-ability backward.
-        for ( ; bf->pv->plannable; bf = bf->pv) {
+
+        // Ensure that bf isn't at the end (or middle) of a group
+        bf = bf->nx_group->pv_group;
+
+        // And start group_end with the actual end block of the group (most likely the same as the first)
+        mpBuf_t *group_end = bf->nx_group->pv;
+        // Keep track of of we want to merge. We decide at the end of processing of one block, and and at the beginning of the next, then merge.
+        bool going_to_merge = false;
+        float group_length = 0; // keep track of the running group length
+
+        for ( ; bf->plannable; bf = bf->pv_group) {
             // Timings from *here*
 
             bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
-            bf->pv->buffer_state = MP_BUFFER_IN_PROCESS;
+//            bf->pv->buffer_state = MP_BUFFER_IN_PROCESS;
             bf->iterations++;
 
             bf->exit_velocity = braking_velocity;
             bf->plannable = !optimal;
+
+            // Don't merge group commands (for now)
+            if ((bf->move_type == MOVE_TYPE_COMMAND)
+                // We have to ensure that the exit_vmaxes generally *increase* forward along a group.
+                // IOW, looking at at backward along the deceleration, it has to stay the same or *decrease*.
+                || (bf->pv->exit_vmax > bf->exit_vmax)
+                ) {
+
+                going_to_merge = false;
+            }
+
+            // We *might* do this exact computation later, so cache the value.
+            float test_velocity = 0;
+            bool test_velocity_valid = false; // record if we have a validly cached value
+            // He we test to see if a merge would degrade the jerk value to the point of slowing the whole move
+            if (going_to_merge && (bf->jerk < bf->nx_group->jerk)) {
+                // Compute an acceleration from the ending exit velocity (which would be come the new group
+                // exit velocity of we merge) over the length of the entire group using this new block's (lower) jerk values.
+                test_velocity = mp_get_target_velocity(group_end->exit_velocity, group_length + bf->length, bf);
+
+                // If the new possible entry vlocity is lower than the un-merged possible entry of the next group,
+                // we will not merge, since it would degrade the speed.
+                if (test_velocity < bf->exit_velocity) {
+                    going_to_merge = false;
+                }
+                else {
+                    // cache the results for later, just in case
+                    test_velocity_valid = true;
+                }
+            }
+
+            // The new group end will be the previous block.
+            if (!going_to_merge) {
+                // We're not merging, change the group_end
+                group_end = bf->nx_group->pv;
+
+                // reset group length
+                group_length = bf->length;
+
+            }
+            else {
+                // we are merging with the nx_group from us in the buffer
+
+                group_length += bf->group_length;
+
+                // figure out the group jerk values
+                if (bf->jerk < bf->nx_group->jerk) {
+                    // Copy the move jerk, and all of it's derived values over
+                    bf->jerk = bf->nx_group->jerk;
+                    bf->jerk_sq = bf->nx_group->jerk_sq;
+                    bf->recip_jerk = bf->nx_group->recip_jerk;
+                    bf->sqrt_j = bf->nx_group->sqrt_j;
+                    bf->q_recip_2_sqrt_j = bf->nx_group->q_recip_2_sqrt_j;
+                }
+
+                // We will override some of the block values with group values
+                bf->exit_velocity = group_end->exit_velocity;
+
+                // Other values will become group values naturally:
+                // cruise_velocity
+                // ...
+
+                // manage the group pointers
+                bf->nx_group = group_end->nx; // would bf->nx_group = bf->nx_group->nx_group be more stable?
+                bf->nx_group->pv_group = bf;
+            }
+
+            bf->group_length = group_length;
+
+            // Assume yes until otherwise set to no, for the next round.
+            going_to_merge = true;
+
 
             // We have two places where it could be a mixed decel or an asymetric bump,
             // dpending on if the pv->exit_vmax is the same as bf.cruise_vmax
@@ -310,23 +393,33 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // command blocks
             if (bf->move_type == MOVE_TYPE_COMMAND) {
+
+                // ++++ RG for now, do not extend a group with a command block.
+                // We should be able to have a non-PTZ command in the middle of a group
+                going_to_merge = false;
+
                 // ++++ RG We pass the exit velocity back, BUT,
                 // if we wanted to PTZ for this command, this is where we'd change
                 //bf->pv->exit_velocity = bf->exit_velocity;
 
-                // ++++ TEMPORARY force PTZ
-                bf->exit_velocity = 0;
-                bf->pv->exit_velocity = 0;
+
+                // Nothing in the buffer before this will get any more optimal, so we'll call it
                 optimal = true;
 
                 // Update braking_velocity for use in the top of the loop
-                braking_velocity = bf->pv->exit_velocity;
+                // ++++ TEMPORARY force PTZ
+                bf->exit_velocity = 0;
+                // We just invalidated the next block's hint, but this should be fine
+
+                //braking_velocity = bf->pv->exit_velocity;
+                braking_velocity = 0;
+
                 // bf->plannable = !optimal && bf->pv->plannable;
                 bf->plannable = false;
 
                 bf->hint = COMMAND_BLOCK;
 
-                // Time: 7us
+                // Time: XXXus (was 7us)
             }
 
             // cruises - a *possible* perfect cruise is detected if exit_velocity == cruise_vmax
@@ -346,14 +439,16 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // We can't improve this entry more
                 optimal = true;
 
-                // Time: 21us-27us
+                // Time: XXXus (was 21us-27us)
             }
 
             // not a command or a cruise
             // test to see if we'll *have* to enter slower than we can exit
             else if (bf->pv->exit_vmax < bf->exit_velocity) {
-
                 test_decel_or_bump = true;
+
+                // We can't merge it
+                going_to_merge = false;
             }
 
             // Ok, now we can test deceleration cases
@@ -362,19 +457,25 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // decelerations
                 // if we can decelerate from *higher* than pv->exit_vmax, we have a mixed decel that may be degraded to a bump
                 // if we can decelerate from *lower* than pv->exit_vmax, we have a perfect decel that may be degraded to a bump
-                braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
+                if (test_velocity_valid) {
+                    // We already did this computation earlier, use it
+                    braking_velocity = test_velocity;
+                } else {
+                    braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->group_length, bf);
+                }
+
                 if (bf->pv->exit_vmax > braking_velocity) { // remember, exit vmax already is min of pv->cruise_vmax, cruise_vmax, and pv->junction_vmax
                     //bf->pv->exit_velocity = braking_velocity;
                     bf->cruise_velocity = braking_velocity;   // put this here to avoid a race condition with _exec()
                     bf->hint = PERFECT_DECELERATION;          // This is advisory, and may be altered by forward planning
 
-                    // Time: 71us-78us
+                    // Time: XXXus (was 71us-78us)
                 }
 
                 else {
 
                     test_decel_or_bump = true;
-                    // Time: 72us-79us
+                    // Time: XXXus (was 72us-79us)
                 }
 
             } // end else not a cruise
@@ -386,9 +487,15 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 if (bf->cruise_vmax > bf->pv->exit_vmax) {
                     bf->cruise_velocity = bf->cruise_vmax;
                     bf->hint = ASYMMETRIC_BUMP;
-                } else {
+
+                    // We can't merge it
+                    going_to_merge = false;
+                }
+                else {
                     bf->cruise_velocity = bf->pv->exit_vmax;
                     bf->hint = MIXED_DECELERATION;
+
+                    // We might still be able to merge this.
                 }
 
                 // We can't improve this entry more
@@ -398,168 +505,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             bf->buffer_state = MP_BUFFER_PREPPED;
         } // for loop
 
-        // bf now points to the first block who's pv->plannable is false
-        // This one might be plannable==false as well.
-
-        // In either case, the hint is likely invalid. If the exit_velocity isn't braking_velocity, then it needs changed.
-        // We have to be mindful that the exec may *TRY To* grab the block we're working on at any point now.
-        // W ehave bf->buffer_state = MP_BUFFER_PREPPED, so it won't be able to.
-        if (fp_NE(bf->exit_velocity, braking_velocity)) {
-            // QUICK! Set it to the new velocity.
-            bf->exit_velocity = braking_velocity;
-
-            // braking_velocity will always go up, if it changes.
-            // If the exit is higher than pv->exit_vmax, then we'll guess aymmetric bump
-            // If it was a PERFECT_CRUISE, it couldn't have changed, so it couldn't have been a PERFECT_CRUISE.
-            // If it was a MIXED_DECELERATION, it might have become a PERFECT_CRUISE, otherwise it would still be a MIXED_DECELERATION.
-            // If it was a PERFECT_DECELERATION, it might have become a PERFECT_CRUISE or MIXED_DECELERATION, otherwise it would still be a PERFECT_DECELERATION.
-            // We also don't have time to goof off here, trying to get it *just right*. So mp_get_target_velocity() is right out.
-
-
-            // Check to see if it might be able to accelerate, in which case we assume asymmetric bump
-            if (bf->pv->exit_vmax < bf->exit_velocity) {
-                // best we can assume at this point is an ASYMMETRIC_BUMP
-                bf->hint = ASYMMETRIC_BUMP;
-            }
-
-            // See if it's become a PERFECT_CRUISE.
-            else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
-                bf->hint = PERFECT_CRUISE;
-            }
-
-            else {
-                // We will call it a MIXED_DECELERATION. We don't want to spend the time to determine if it's a PERFECT_DECELERATION.
-                // The ramp function will cost a little more, but it'll be less overall.
-                bf->hint = MIXED_DECELERATION;
-            }
-        }
         bf->buffer_state = MP_BUFFER_PREPPED;
 
 
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
     } // exits with bf pointing to a locked or EMPTY block
-
-#if 0
-    // Forward Planning Pass
-    // Build a perfect acceleration ramp by setting entry and exit velocities based on the accel velocity
-    // You can stop computing the acceleration ramp when it crosses the deceleration ramp
-    // Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
-    // Recompute the move times for PERFECT moves so time accounting is more accurate when it runs
-
-    if (mb.pessimistic_state == PESSIMISTIC_FORWARD) {
-
-        float entry_velocity = bf->pv->exit_velocity; // we'll use this to save some lookups, and for readability
-        bool entry_changed = false; // if this is true, then entry_velocity != pv->exit_velocity
-
-        // Back-planning left bf at the first block past the earliest unlocked block
-        for (; bf != mb.planning_return; bf = bf->nx) {
-
-            // At this point in the loop, entry_velocity is the actual entry_velocity,
-            // and is different from pv->exit_velocity if entry_changed is true.
-
-            if (bf->pv->buffer_state == MP_BUFFER_RUNNING) {
-                while (1) {;} // ++++ RG -- all is lost!
-            }
-
-            // At this point the following possibilities exist for the previous block:
-            //  (1) pv is a perfect accel, cruise, or command and is not plannable
-            //  (2) pv is not a perfect move and is plannable
-            //  (3) pv is set ~plannable by the exec; not been planned (PREPPED)
-            //  (4) pv is set ~plannable by the exec; has been planned (RUNNING)
-            //  (5) pv is an EMPTY block (exec has already released it)
-            // in all cases (!!!) we set the entry velocity to pv Vx, which is zero in case (5)
-
-            // Command blocks
-            if (bf->move_type == MOVE_TYPE_COMMAND) {
-                bf->hint = COMMAND_BLOCK;
-                bf->move_time = 0;
-                bf->plannable_time = bf->pv->plannable_time; UPDATE_BF_MS(bf);   //+++++ // carry forward - will need to change
-                if (!bf->pv->plannable) { bf->plannable = false; }
-                bf->buffer_state = MP_BUFFER_PLANNED;
-
-                // we will carry the exit velocity forward. entry_changed will remain valid.
-                bf->exit_velocity = entry_velocity;
-
-                continue;
-            }
-
-            // cruises - must be tested first
-            // NOTE: PERFECT_CRUISE is set in back-planning without knowledge of pv->exit, since it can't see it yet.
-            // Here we verify it moving forward, checking to make sure it still is true.
-            if (!entry_changed && // least likely to be true
-                (bf->hint == PERFECT_CRUISE) &&    // slightly more likely
-                (VELOCITY_EQ(entry_velocity, bf->cruise_vmax))) {   // most likely
-
-                // this is a bit of hack to ensure that neither the entry or the exit velocities are
-                // greater than the cruise velocity even though there is tolerance in VELOCITY_EQ comparison
-                bf->exit_velocity = entry_velocity;
-                bf->cruise_velocity = entry_velocity;
-                bf->hint = PERFECT_CRUISE;
-
-                if (!bf->pv->plannable) { bf->plannable = false; }
-
-                // entry_changed is already false
-
-
-            // decelerations
-            }
-            else if (entry_velocity > bf->exit_velocity) {
-
-                // We won't modify a deceleration in forward planning, except to hint it
-
-                if (!entry_changed) {
-                    // At this point we have a hint of PERFECT_DECELERATION, or MIXED_DECELERATION, and we'll leave it alone.
-                }
-                else {
-                    // Entry_changed, meaning it will now be slower, but we've made sure it didn't invert to an acceleration,
-                    // and that entry > exit (asymetric). Since before it was a DECELERATION, meaning it could achieve the previous
-                    // entry safely, we will now degrade the hint to an ASYMMETRIC_BUMP.
-                    bf->hint = ASYMMETRIC_BUMP;
-                }
-
-                entry_changed = false;
-
-
-            // accelerations
-            }
-            else {
-
-                float accel_velocity = mp_get_target_velocity(entry_velocity, bf->length, bf);
-
-                if (accel_velocity < bf->exit_velocity) {   // still accelerating
-
-                    entry_changed = true; // we are changing the *next* block's entry velocity
-
-                    bf->exit_velocity = accel_velocity;
-                    bf->cruise_velocity = accel_velocity;
-                    bf->hint = PERFECT_ACCELERATION;
-
-                    bf->plannable = false;
-
-                } else {                        // it's hit the cusp
-
-                    entry_changed = false; // we are NOT changing the next block's entry velocity
-
-                    bf->cruise_velocity = bf->cruise_vmax;
-
-                    if (bf->cruise_velocity > bf->exit_velocity) {
-                        bf->hint = ASYMMETRIC_BUMP;
-                    } else {
-                        /// ++++ RG WHY!?!
-                        bf->exit_velocity = min(bf->exit_vmax, bf->cruise_vmax);
-                        bf->hint = MIXED_ACCELERATION;
-                    }
-                }
-            }
-            _update_move_times(bf);
-
-            bf->buffer_state = MP_BUFFER_PREPPED;
-
-            // Update this for the next time through the loop
-            entry_velocity = bf->exit_velocity;
-        }
-    }
-#endif
 
     bf->buffer_state = MP_BUFFER_PREPPED;
 

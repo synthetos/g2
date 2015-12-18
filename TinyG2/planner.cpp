@@ -703,6 +703,10 @@ static inline void _clear_buffer(mpBuf_t *bf)
     uint8_t buffer_number = bf->buffer_number;    //+++++ DIAGNOSTIC
 	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2));
     bf->buffer_number = buffer_number;            //+++++ DIAGNOSTIC
+
+    // Explicitly reset group pointers. We're no longer a member of a group...
+    bf->nx_group = bf->nx;
+    bf->pv_group = bf->pv;
 }
 
 void mp_init_buffers(void)
@@ -721,8 +725,13 @@ void mp_init_buffers(void)
 	pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
 	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
         mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
-		mb.bf[i].nx = &mb.bf[_bump(i)];
-		mb.bf[i].pv = pv;                           // setup ring pointers
+
+        mb.bf[i].nx = &mb.bf[_bump(i)];             // setup ring pointers
+		mb.bf[i].pv = pv;
+
+        mb.bf[i].nx_group = mb.bf[i].nx;            // setup group ring pointers
+        mb.bf[i].pv_group = pv;
+
 		pv = &mb.bf[i];
 	}
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
@@ -776,6 +785,8 @@ void mp_commit_write_buffer(const moveType move_type)
     mb.w->move_state = MOVE_NEW;
 
     if (move_type == MOVE_TYPE_ALINE) {
+        mb.w->pv_group = mb.g;
+        mb.g = mb.w;
         if (cm.motion_state == MOTION_STOP) {
             cm_set_motion_state(MOTION_PLANNING);
         }
