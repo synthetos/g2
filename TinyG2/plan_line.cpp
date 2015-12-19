@@ -47,7 +47,7 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf);
-static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
+//static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
 static void _calculate_override(mpBuf_t *bf);
 static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
@@ -60,7 +60,7 @@ static void _calculate_junction_vmax(mpBuf_t *bf);
 static void _set_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
-    UPDATE_BF_MS(bf);   //+++++
+//    UPDATE_BF_MS(bf);   //+++++
 }
 #pragma GCC reset_options
 
@@ -238,12 +238,12 @@ void mp_plan_block_forward(mpBuf_t *bf)
 */
 // Update move_time and plannable_time estimates
 // These are accurate for perfect accel, decel and cruise, approximate otherwise
-static void _update_move_times(mpBuf_t *bf)
-{
-    bf->move_time = (2 * bf->length) / (bf->pv->exit_velocity + bf->exit_velocity);
-    bf->plannable_time = bf->pv->plannable_time + bf->move_time; UPDATE_BF_MS(bf); //+++++
-    bf->plannable_length = bf->length + bf->pv->plannable_length;
-}
+//static void _update_move_times(mpBuf_t *bf)
+//{
+//    bf->move_time = (2 * bf->length) / (bf->pv->exit_velocity + bf->exit_velocity);
+//    bf->plannable_time = bf->pv->plannable_time + bf->move_time; UPDATE_BF_MS(bf); //+++++
+//    bf->plannable_length = bf->length + bf->pv->plannable_length;
+//}
 
 /*
  * mp_plan_block_pessimistic() - the block chain using pessimistic assumptions
@@ -268,12 +268,12 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
 
-        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
+//        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
 
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
 
-        bf->plannable_time += bf->move_time;            // adjust plannable time
-        UPDATE_BF_MS(bf);  //+++++
+//        bf->plannable_time += bf->move_time;            // adjust plannable time
+//        UPDATE_BF_MS(bf);  //+++++
 
         bf->hint = NO_HINT; // ensure we've cleared the hints
         // Time: 12us-41us
@@ -312,7 +312,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //            bf->pv->buffer_state = MP_BUFFER_IN_PROCESS;
             bf->iterations++;
 
-            bf->exit_velocity = braking_velocity;
             bf->plannable = !optimal;
 
             // Don't merge group commands (for now)
@@ -350,6 +349,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // We're not merging, change the group_end
                 group_end = bf->nx_group->pv;
 
+                // We need to use the last block of the group to hold the exit_velocity,
+                // to support replanning while a group is executing.
+                group_end->exit_velocity = braking_velocity;
+
                 // reset group length
                 group_length = bf->length;
 
@@ -369,8 +372,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     bf->q_recip_2_sqrt_j = bf->nx_group->q_recip_2_sqrt_j;
                 }
 
-                // We will override some of the block values with group values
-                bf->exit_velocity = group_end->exit_velocity;
+                //// We will override some of the block values with group values
+                // NOTE: Change of plans. We'll keep the exit velocity on the last block of the group.
+                //bf->exit_velocity = group_end->exit_velocity;
 
                 // Other values will become group values naturally:
                 // cruise_velocity
@@ -424,9 +428,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // cruises - a *possible* perfect cruise is detected if exit_velocity == cruise_vmax
             // forward planning may degrade this to a mixed accel
-            else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax)) {
+            else if (VELOCITY_EQ(group_end->exit_velocity, bf->cruise_vmax)) {
 
-                bf->exit_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
+                group_end->exit_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
                 bf->cruise_velocity = bf->exit_velocity;
 
                 // Update braking_velocity for use in the top of the loop
@@ -831,16 +835,16 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
 
 static void _calculate_throttle(mpBuf_t *bf)
 {
-    if ((bf->move_type == MOVE_TYPE_ALINE) && (bf->plannable_time > 0)) {
-        if (bf->plannable_time < (mb.planner_critical_time + PLANNER_THROTTLE_TIME)) {
-            bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
-                              (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
-            bf->cruise_vmax *= bf->throttle;    // adjust the maximum achievable velocity
-            bf->move_time *= bf->throttle;      // adjust the estimated move time as well
-            printf ("%1.3f\n", bf->throttle);   //+++++
-            return;
-        }
-    }
+//    if ((bf->move_type == MOVE_TYPE_ALINE) && (bf->plannable_time > 0)) {
+//        if (bf->plannable_time < (mb.planner_critical_time + PLANNER_THROTTLE_TIME)) {
+//            bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
+//                              (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
+//            bf->cruise_vmax *= bf->throttle;    // adjust the maximum achievable velocity
+//            bf->move_time *= bf->throttle;      // adjust the estimated move time as well
+//            printf ("%1.3f\n", bf->throttle);   //+++++
+//            return;
+//        }
+//    }
     bf->throttle = THROTTLE_MAX;                // set to 1.00 in case it's needed for backplanning
 }
 

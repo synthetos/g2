@@ -56,7 +56,7 @@ static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN wi
 
 /* local functions */
 
-static float _get_target_length_min(const float v_0, const float v_1, const mpBuf_t *bf, const float min);
+//static float _get_target_length_min(const float v_0, const float v_1, const mpBuf_t *bf, const float min);
 static float _get_meet_velocity(const float v_0, const float v_2, const float L, mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
 
 /****************************************************************************************
@@ -171,7 +171,9 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
     rbf->tail_length = 0;
 
     rbf->cruise_velocity = bf->cruise_velocity;
-    rbf->exit_velocity   = bf->exit_velocity;
+    // We need to use the last block of the group to hold the exit_velocity,
+    // to support replanning while a group is executing.
+    rbf->exit_velocity   = bf->nx_group->pv->exit_velocity;
 
 
     // Note that we are lookig at the first group/block after the running block.
@@ -386,7 +388,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
     rbf->head_length = mp_get_target_length(entry_velocity, rbf->cruise_velocity, bf);
     rbf->tail_length = mp_get_target_length(rbf->exit_velocity, rbf->cruise_velocity, bf);
 
-    if (bf->length > (rbf->head_length + rbf->tail_length)) {
+    if ((bf->length - 0.0001) > (rbf->head_length + rbf->tail_length)) {
 
         // 3 segment HBT move (2c) - either with a body or just a symmetric bump
         rbf->body_length = bf->length - (rbf->head_length + rbf->tail_length); // body guaranteed to be positive
@@ -456,7 +458,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
         float head_left = mr.group_head_length - mr.length_into_section;
         bool done_with_head = false;
         if (head_left > 0) {
-            if (bf->length < head_left) {
+            if ((bf->length + 0.0001) < head_left) {
                 rbf->head_length = bf->length;
                 mr.length_into_section += bf->length;
 
@@ -505,7 +507,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
         bool done_with_body = false;
         if (body_left > 0) {
             float length_left = (bf->length - rbf->head_length);
-            if (length_left < body_left) {
+            if ((length_left + 0.0001) < body_left) {
                 rbf->body_length = length_left;
                 mr.length_into_section += length_left;
             }
@@ -544,11 +546,11 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf)
         bool done_with_tail = false;
         if (tail_left > 0) {
             float length_left = (bf->length - (rbf->head_length+rbf->body_length));
-            if (length_left < tail_left) {
+            if ((length_left + 0.0001) < tail_left) {
                 rbf->tail_length = length_left;
                 mr.length_into_section += length_left;
 
-                float t = mp_find_t(mr.group_exit_velocity, mr.group_cruise_velocity, mr.length_into_section, mr.group_tail_length, mr.t_into_section, mr.group_tail_time);
+                float t = mp_find_t(mr.group_exit_velocity, mr.group_cruise_velocity, (mr.group_tail_length - mr.length_into_section), mr.group_tail_length, mr.t_into_section, mr.group_tail_time);
                 rbf->exit_velocity     = mp_calc_v(t, mr.group_exit_velocity, mr.group_cruise_velocity);
                 rbf->exit_acceleration = mp_calc_a(t, mr.group_exit_velocity, mr.group_cruise_velocity, mr.group_tail_time);
                 rbf->exit_jerk         = mp_calc_j(t, mr.group_exit_velocity, mr.group_cruise_velocity, mr.group_tail_time);
@@ -832,6 +834,19 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     float v_1 = mp_get_target_velocity(min_v_1, L/2.0, bf);
     //var v_1 = min_v_1 + 100;
 
+    if (fp_EQ(v_0, v_2)) {
+        // We can catch a symmetric case early and return now
+
+        // We'll have a head roughly equal to the tail, and no body
+        rbf->head_length = mp_get_target_length(v_0, v_1, bf);
+        rbf->body_length = 0;
+        rbf->tail_length = bf->length - rbf->head_length;
+
+        bf->meet_iterations = -1;
+
+        return v_1;
+    }
+
     // Per iteration: 2 sqrt, 2 abs, 6 -, 4 +, 12 *, 3 /
     int i = 0; // limit the iterations // 466us - 644us
     while (i++ < 30) { // If it fails after 30, something's wrong
@@ -846,12 +861,12 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
             if (v_0 < v_2) {
                 // acceleration - it'll be a head/body
                 rbf->head_length = mp_get_target_length(v_0, v_2, bf);
-                rbf->body_length = bf->length = rbf->head_length;
+                rbf->body_length = bf->length - rbf->head_length;
                 rbf->tail_length = 0;
             } else {
                 // deceleration - it'll be tail/body
                 rbf->tail_length = mp_get_target_length(v_2, v_0, bf);
-                rbf->body_length = bf->length = rbf->head_length;
+                rbf->body_length = bf->length - rbf->tail_length;
                 rbf->head_length = 0;
             }
 

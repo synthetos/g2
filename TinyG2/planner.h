@@ -112,7 +112,7 @@ typedef enum {                      // code blocks for planning and trapezoid ge
 typedef enum {                      // planner operating state
     PLANNER_IDLE = 0,               // planner and movement are idle
     PLANNER_STARTUP,                // ingesting blocks before movement is started
-    PLANNER_OPTIMISTIC,             // plan by leaving last block unplanned
+//    PLANNER_OPTIMISTIC,             // plan by leaving last block unplanned
     PLANNER_PESSIMISTIC             // plan by planning all blocks, including the tail
 } plannerState;
 
@@ -210,7 +210,7 @@ typedef enum {
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
-#define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
+//#define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
 #define UPDATE_MB_MS     { mb.plannable_time_ms = mb.plannable_time*60000; }
 
 #define SANITY_TRAPS(bf, rbf) { \
@@ -244,7 +244,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float move_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
-    uint8_t meet_iterations;         // iterations needed in _get_mmet_velocity
+    uint8_t meet_iterations;         // iterations needed in _get_meet_velocity
     //+++++ to here
 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
@@ -267,7 +267,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 //    float body_length;
 //    float tail_length;
 
-    float plannable_time;           // time in the planning queue including this block
+//    float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
 //    float head_time;                // ...head
 //    float body_time;                // ...body
@@ -304,10 +304,9 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	magic_t magic_start;			// magic number to test memory integrity
 	uint8_t buffers_available;		// running count of available buffers
 
-    //+++++DIAGNOSTICS
     float run_time_remaining_ms;
     float plannable_time_ms;
-    float best_case_braking_time_ms;
+//    float best_case_braking_time_ms;
 
     // planner state variables
     plannerState planner_state;     // current state of planner
@@ -340,7 +339,6 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 	mpBuf_t *w;						// write buffer pointer
 	mpBuf_t *p;						// planner buffer pointer
 	mpBuf_t *c;						// pointer to buffer immediately following critical region
-    mpBuf_t *g;						// pointer to buffer that is the first buffer of the last group
     mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
 
 	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage

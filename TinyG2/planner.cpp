@@ -69,7 +69,6 @@ mpMoveMasterSingleton_t mm;		// context for line planning
 mpMoveRuntimeSingleton_t mr;	// context for line runtime
 
 // Local Scope Data and Functions
-#define _bump(a) ((a<PLANNER_BUFFER_POOL_SIZE-1)?(a+1):0) // buffer incr & wrap
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
 
@@ -322,7 +321,7 @@ bool mp_is_phat_city_time()
     	return true;
 	}
 //    return ((mb.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
-    return ((mb.plannable_time <= 0) || (PHAT_CITY_TIME < mb.plannable_time));
+    return ((mb.plannable_time <= 0.0) || (PHAT_CITY_TIME < mb.plannable_time));
 }
 
 /**** Helper functions for mp_plan_buffer()
@@ -468,7 +467,8 @@ stat_t mp_planner_callback()
             mb.p = mb.r;                                // initialize planner pointer to run buffer
             mb.planner_state = PLANNER_STARTUP;
         }
-    } else {
+    }
+    else {
         mb.request_planning = false;
     }
     if (mb.new_block) {
@@ -486,18 +486,20 @@ stat_t mp_planner_callback()
         } else {
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
-    } else {                                            // set planner state for normal operation
+    }
+    else {                                            // set planner state for normal operation
         if (_get_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
             mb.planner_state = PLANNER_PESSIMISTIC;
-        } else {
-//            mb.planner_state = PLANNER_OPTIMISTIC;
-            mb.planner_state = PLANNER_PESSIMISTIC;
         }
+//        else {
+////            mb.planner_state = PLANNER_OPTIMISTIC;
+//            mb.planner_state = PLANNER_PESSIMISTIC;
+//        }
     }
-    if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic
-        (mb.p->nx->buffer_state == MP_BUFFER_EMPTY)) {
-        return (STAT_OK);
-    }
+//    if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic
+//        (mb.p->nx->buffer_state == MP_BUFFER_EMPTY)) {
+//        return (STAT_OK);
+//    }
     if (mb.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
         return (STAT_OK);
     }
@@ -588,25 +590,26 @@ void mp_planner_time_accounting()
 //    bool in_critical = true;                        // used to look for transition to critical region
 
     // check the run buffer to see if anything is running. Might not be
-    bf->plannable_time = 0;                         // set to zero if running or not
-    bf->plannable_time_ms = 0;                      // ++++++ leaves move_time alone
-    bf->plannable_length = 0;                       //+++++
+//    bf->plannable_time = 0;                         // set to zero if running or not
+//    bf->plannable_time_ms = 0;                      // leaves move_time alone
+//    bf->plannable_length = 0;                       //
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
+
     // set values in the running block / based on the running block
-    float plannable_time = 0; UPDATE_BF_MS(bf); //+++++
-    mb.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
-    mb.best_case_braking_time_ms = mb.best_case_braking_time * 60000; //+++++
+    float plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
+//    mb.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
+//    mb.best_case_braking_time_ms = mb.best_case_braking_time * 60000; //+++++
 
     // scan and set all non-empty buffers (plannable buffers)
     while ((bf = bf->nx) != mb.r) {
-        if (bf->buffer_state == MP_BUFFER_EMPTY) {
+        if (bf->buffer_state == MP_BUFFER_EMPTY || bf->plannable == true) {
             break;
         }
         plannable_time += bf->move_time;
-        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
-        bf->plannable_length = bf->length + bf->pv->plannable_length;
+//        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
+//        bf->plannable_length = bf->length + bf->pv->plannable_length;
 
 //        if (in_critical && (plannable_time >= mb.planner_critical_time)) {
 //            in_critical = false;
@@ -697,22 +700,25 @@ static inline void _clear_buffer(mpBuf_t *bf)
 	// Note: bf->bf_func is the first address we wish to clear as we must preserve
     // the pointers and buffer number during interrupts
 
-    // GCC did not like this line, so it's done differently
-//	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2) - sizeof(uint16_t));
-
     uint8_t buffer_number = bf->buffer_number;    //+++++ DIAGNOSTIC
-	memset((void *)(&bf->bf_func), 0, sizeof(mpBuf_t) - (sizeof(void *) * 2));
-    bf->buffer_number = buffer_number;            //+++++ DIAGNOSTIC
+    mpBuf_t *pv = bf->pv;
+    mpBuf_t *nx = bf->nx;
+    // preserve pv_group, in case it was set by planning
+    mpBuf_t *pv_group = bf->pv_group;
 
-    // Explicitly reset group pointers. We're no longer a member of a group...
-    bf->nx_group = bf->nx;
-    bf->pv_group = bf->pv;
+	memset((void *)(bf), 0, sizeof(mpBuf_t));
+
+    bf->buffer_number = buffer_number;            //+++++ DIAGNOSTIC
+    bf->pv = pv;
+    bf->nx = nx;
+    bf->pv_group = pv_group;
+    bf->nx_group = nx;
 }
 
 void mp_init_buffers(void)
 {
-	mpBuf_t *pv;
-	uint8_t i;
+	mpBuf_t *pv, *nx;
+	uint8_t i, nx_i;
 
 	memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
 	mb.magic_start = MAGICNUM;
@@ -726,10 +732,12 @@ void mp_init_buffers(void)
 	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
         mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
 
-        mb.bf[i].nx = &mb.bf[_bump(i)];             // setup ring pointers
+        nx_i = ((i<PLANNER_BUFFER_POOL_SIZE-1)?(i+1):0); // buffer incr & wrap
+        nx = &mb.bf[nx_i];
+        mb.bf[i].nx = nx;             // setup ring pointers
 		mb.bf[i].pv = pv;
 
-        mb.bf[i].nx_group = mb.bf[i].nx;            // setup group ring pointers
+        mb.bf[i].nx_group = nx;            // setup group ring pointers
         mb.bf[i].pv_group = pv;
 
 		pv = &mb.bf[i];
@@ -740,8 +748,6 @@ void mp_init_buffers(void)
 
     // Now handle the two "stub buffers" in the runtime structure.
 
-    memset(&mr.bf[0], 0, sizeof(mr.bf[0]));                     // clear all values, pointers and status
-    memset(&mr.bf[1], 0, sizeof(mr.bf[1]));                     // clear all values, pointers and status
     mr.bf[0].nx = &mr.bf[1];
     mr.bf[1].nx = &mr.bf[0];
     mr.r = &mr.bf[0];
@@ -764,9 +770,13 @@ mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf)
 mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 {
     if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
-        _clear_buffer(mb.w);
+        _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
         mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
+
+        mb.w->nx_group = mb.w->nx;      // makes sure nx_group is set corrrectly
+                                    // pv_group may already be setup from planning
+
         return (mb.w);
     }
     // The no buffer condition always causes a panic - invoked by the caller
@@ -785,8 +795,6 @@ void mp_commit_write_buffer(const moveType move_type)
     mb.w->move_state = MOVE_NEW;
 
     if (move_type == MOVE_TYPE_ALINE) {
-        mb.w->pv_group = mb.g;
-        mb.g = mb.w;
         if (cm.motion_state == MOTION_STOP) {
             cm_set_motion_state(MOTION_PLANNING);
         }
@@ -824,6 +832,8 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                // advance to next run buffer
 	_clear_buffer(r);               // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
+    r->pv_group = r->pv;             // reset the pv_group to point to pv
+
 	mb.buffers_available++;
 	qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
 	return (mb.w == mb.r);          // return true if the queue emptied

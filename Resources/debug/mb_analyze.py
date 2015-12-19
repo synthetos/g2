@@ -44,11 +44,17 @@ def load_pool(filename):
                 if key == 'pv':
                     pv = int(val, 16)
                     pool[current_buffer]['pv'] = pv
+                if key == 'pv_group':
+                    pv = int(val, 16)
+                    pool[current_buffer]['pv_group'] = pv
                 # if key == 'locked':
                 #     pool[current_buffer]['locked'] = True if val == 'true' else False
                 elif key == 'nx':
                     nv = int(val, 16)
                     pool[current_buffer]['nx'] = nv
+                elif key == 'nx_group':
+                    nv = int(val, 16)
+                    pool[current_buffer]['nx_group'] = nv
                 elif key == 'buffer_state':
                     pool[current_buffer]['buffer_state'] = val
                 elif key == 'linenum':
@@ -80,6 +86,11 @@ def check_integrity(pool):
             break
         buffers.add(key)
         key = pool[key]['nx']
+        if not pool[key]['nx_group'] in pool:
+            raise Exception("Buffer pool integrity is bad. nx_group is bad")
+        if not pool[key]['pv_group'] in pool:
+            raise Exception("Buffer pool integrity is bad. pv_group is bad")
+
         count += 1
 
     if count != 48:
@@ -105,9 +116,11 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            print '0x%08x [%02d] : N%04d %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %10s' % (
+            print '0x%08x [%02d] : g<%02d | %02d> N%04d %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %10s' % (
                 key,
                 float(buffer['buffer_number']),
+                int(pool[buffer['pv_group']]['buffer_number']),
+                int(pool[buffer['nx_group']]['buffer_number']),
                 float(buffer['linenum']),
                 buffer['buffer_state'].strip(),
                 pointer,
