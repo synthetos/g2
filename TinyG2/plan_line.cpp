@@ -280,6 +280,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         if (bf->nx->plannable) {                        // read in new buffers until EMPTY
             return (bf->nx);
         }
+
+        bf->buffer_state = MP_BUFFER_IN_PROCESS;
+
         mb.planning_return = bf->nx;                    // where to return after planning is complete
         mb.pessimistic_state = PESSIMISTIC_BACKWARD;    // start backplanning
     }
@@ -308,10 +311,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         for ( ; bf->plannable; bf = bf->pv_group) {
             // Timings from *here*
 
-            bf->buffer_state = MP_BUFFER_IN_PROCESS;    // sets it first time an for any replans
-//            bf->pv->buffer_state = MP_BUFFER_IN_PROCESS;
             bf->iterations++;
-
             bf->plannable = !optimal;
 
             // Don't merge group commands (for now)
@@ -506,16 +506,14 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 optimal = true;
             }
 
-            bf->buffer_state = MP_BUFFER_PREPPED;
+            // We might back plan into the running bufferl. Don't mark that one as PREPPED
+            if (bf->buffer_state != MP_BUFFER_RUNNING) {
+                bf->buffer_state = MP_BUFFER_PREPPED;
+            }
         } // for loop
-
-        bf->buffer_state = MP_BUFFER_PREPPED;
-
 
         mb.pessimistic_state = PESSIMISTIC_FORWARD;
     } // exits with bf pointing to a locked or EMPTY block
-
-    bf->buffer_state = MP_BUFFER_PREPPED;
 
     mb.pessimistic_state = PESSIMISTIC_PRIMING; // revert to initial state
     return (mb.planning_return);

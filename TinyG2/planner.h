@@ -145,7 +145,7 @@ typedef enum {
 #define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
-#define MIN_SEGMENT_MS          ((float)0.750)          // minimum segment milliseconds (also minimum move time)
+#define MIN_SEGMENT_MS          ((float)0.250)          // minimum segment milliseconds (also minimum move time)
 #define NOM_SEGMENT_MS          ((float)1.5)            // nominal segment ms
 #define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
@@ -224,22 +224,14 @@ typedef enum {
  *	Planner structures
  */
 
-typedef struct mpBuffer {           // See Planning Velocity Notes for variable usage
-
-    // *** CAUTION *** These two pointers are not reset by _clear_buffer()
-    struct mpBuffer *pv;            // static pointer to previous buffer
-    struct mpBuffer *nx;            // static pointer to next buffer
-
-    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
-    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
-
+struct mpBuffer_to_clear {
     // Note: _clear_buffer() zeros all data from this point down
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;              // callback to canonical machine execution function
 
     //+++++ DIAGNOSTICS for easier debugging
     uint32_t linenum;               // mirror of bf->gm.linenum
-    uint8_t buffer_number;
+//    uint8_t buffer_number;
     int iterations;
     float move_time_ms;
     float plannable_time_ms;        // time in planner
@@ -250,7 +242,7 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
     moveType move_type;             // used to dispatch to run routine
     moveState move_state;           // move state machine sequence
-//    uint8_t move_code;            // byte that can be used by used exec functions
+    //    uint8_t move_code;            // byte that can be used by used exec functions
     blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
     // block parameters
@@ -263,15 +255,15 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
 
     float length;                   // total length of line or helix in mm
     float group_length;             // total length of the group
-//    float head_length;
-//    float body_length;
-//    float tail_length;
+    //    float head_length;
+    //    float body_length;
+    //    float tail_length;
 
-//    float plannable_time;           // time in the planning queue including this block
+    //    float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
-//    float head_time;                // ...head
-//    float body_time;                // ...body
-//    float tail_time;                // ...tail
+    //    float head_time;                // ...head
+    //    float body_time;                // ...body
+    //    float tail_time;                // ...tail
 
     // We are removing all entry_* values.
     // To get the entry_* values, look at pv->exit_* or mr.exit_*
@@ -279,16 +271,16 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     // *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
-                                    // is also the entry velocity of the *next* move
+    // is also the entry velocity of the *next* move
 
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible for this move
-                                    // is also the maximum entry velocity of the next move
+    // is also the maximum entry velocity of the next move
 
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the exit velocity can be to go through the junction
-                                    // between the NEXT BLOCK AND THIS ONE
+    // between the NEXT BLOCK AND THIS ONE
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
@@ -297,6 +289,24 @@ typedef struct mpBuffer {           // See Planning Velocity Notes for variable 
     float q_recip_2_sqrt_j;         // (q/(2 sqrt(jM))) where q = (sqrt(10)/(3^(1/4))), used in length computations (computed and cached)
 
     GCodeState_t gm;				// Gcode model state - passed from model, used by planner and runtime
+
+    void clear() {
+        memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
+    }
+};
+
+typedef struct mpBuffer : mpBuffer_to_clear {           // See Planning Velocity Notes for variable usage
+
+    // *** CAUTION *** These two pointers are not reset by _clear_buffer()
+    struct mpBuffer *pv;            // static pointer to previous buffer
+    struct mpBuffer *nx;            // static pointer to next buffer
+
+    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
+    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
+
+    //+++++ DIAGNOSTICS for easier debugging
+    uint8_t buffer_number;
+    //+++++
 
 } mpBuf_t;
 
@@ -352,8 +362,8 @@ typedef struct mpMoveMasterSingleton {  // common variables for planning (move m
 } mpMoveMasterSingleton_t;
 
 
-typedef struct mpMoveRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a move
-    struct mpMoveRuntimeBuf *nx;        // singly-linked-list
+typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
+    struct mpBlockRuntimeBuf *nx;        // singly-linked-list
 
     float head_length;                  // copies of bf variables of same name
     float body_length;
@@ -370,7 +380,36 @@ typedef struct mpMoveRuntimeBuf {  // Data structure for just the parts of RunTi
     float exit_velocity;                // values for the end of the move
     float exit_acceleration;
     float exit_jerk;
-} mpMoveRuntimeBuf_t;
+
+//    float t;
+} mpBlockRuntimeBuf_t;
+
+typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a GROUP
+    struct mpGroupRuntimeBuf *nx;       // singly-linked-list
+
+    // These are for group planning, and should not be looked at from the block-exec context
+    moveSection group_section;          // what section of the whole group are we in
+    moveState group_move_state;         // state of the overall group
+
+    float length;                       // total length of the moves in the group
+
+    float head_length;                  // copies of bf variables of same name
+    float body_length;
+    float tail_length;
+
+    float head_time;                    // copies of bf variables of same name
+    float body_time;
+    float tail_time;
+
+    float length_into_section;          // distance into the current section we have planned
+    float t_into_section;               // value of the curve parameter t into the section
+
+    float cruise_velocity;              // velocities for the group as a whole
+    float exit_velocity;
+
+    float executed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
+    float executed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
+} mpGroupRuntimeBuf_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
@@ -391,36 +430,19 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float encoder_steps[MOTORS];        // encoder position in steps - ideally the same as commanded_steps
 	float following_error[MOTORS];      // difference between encoder_steps and commanded steps
 
-    mpMoveRuntimeBuf_t *r;              // what's running
-    mpMoveRuntimeBuf_t *p;              // what's being planned, p might == r
-    mpMoveRuntimeBuf_t bf[2];           // the buffer
+    mpBlockRuntimeBuf_t *r;              // what's running
+    mpBlockRuntimeBuf_t *p;              // what's being planned, p might == r
+    mpBlockRuntimeBuf_t bf[2];           // the buffer
 
     float entry_velocity;               // entry values for the currently running block
     float entry_acceleration;
     float entry_jerk;
 
+    mpGroupRuntimeBuf_t *r_group;       // group that's running
+    mpGroupRuntimeBuf_t *p_group;       // group that's being planned, p_group might == r_group
+    mpGroupRuntimeBuf_t bf_group[2];    // the buffer of group buffers
 
-    // These are for group planning, and should not be looked at from the block-exec context
-    moveSection group_section;          // what section of the whole group are we in
-    moveState group_move_state;         // state of the overall group
-    float group_length;                 // total length of the moves in the group
-    float length_into_section;          // distance into the current section we have planned
-    float t_into_section;               // value of the curve parameter t into the section
-    float group_head_length;            // lengths for the whole group
-    float group_body_length;
-    float group_tail_length;
-
-    float group_head_time;              // times for the whole group
-    float group_body_time;
-    float group_tail_time;
-
-    float group_entry_velocity;         // velocities for the group as a whole
-    float group_cruise_velocity;
-    float group_exit_velocity;
-
-    float executed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
-    float executed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
-
+    float group_entry_velocity;         // entry velocity of the group, which may be several blocks back
 
     // These are *only* for the block-exec context, and shouldn't be modified anywhere else.
 
@@ -513,8 +535,8 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
-stat_t mp_calculate_block(mpBuf_t *bf, mpMoveRuntimeBuf_t *rbf);
+void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, const float entry_velocity);
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);

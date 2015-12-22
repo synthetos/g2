@@ -700,19 +700,8 @@ static inline void _clear_buffer(mpBuf_t *bf)
 	// Note: bf->bf_func is the first address we wish to clear as we must preserve
     // the pointers and buffer number during interrupts
 
-    uint8_t buffer_number = bf->buffer_number;    //+++++ DIAGNOSTIC
-    mpBuf_t *pv = bf->pv;
-    mpBuf_t *nx = bf->nx;
-    // preserve pv_group, in case it was set by planning
-    mpBuf_t *pv_group = bf->pv_group;
-
-	memset((void *)(bf), 0, sizeof(mpBuf_t));
-
-    bf->buffer_number = buffer_number;            //+++++ DIAGNOSTIC
-    bf->pv = pv;
-    bf->nx = nx;
-    bf->pv_group = pv_group;
-    bf->nx_group = nx;
+    // We'll have to figure something else out for C, sorry.
+    bf->clear();
 }
 
 void mp_init_buffers(void)
@@ -752,6 +741,12 @@ void mp_init_buffers(void)
     mr.bf[1].nx = &mr.bf[0];
     mr.r = &mr.bf[0];
     mr.p = &mr.bf[0];
+
+    mr.bf_group[0].nx = &mr.bf_group[1];
+    mr.bf_group[1].nx = &mr.bf_group[0];
+    mr.r_group = &mr.bf_group[0];
+    mr.p_group = &mr.bf_group[0];
+
 }
 
 /*
@@ -833,6 +828,7 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
     mb.r = mb.r->nx;                // advance to next run buffer
 	_clear_buffer(r);               // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
     r->pv_group = r->pv;             // reset the pv_group to point to pv
+    mb.w->nx_group = mb.w->nx;      // makes sure nx_group is set corrrectly
 
 	mb.buffers_available++;
 	qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
