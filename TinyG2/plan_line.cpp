@@ -331,7 +331,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (going_to_merge && (bf->jerk < bf->nx_group->jerk)) {
                 // Compute an acceleration from the ending exit velocity (which would be come the new group
                 // exit velocity of we merge) over the length of the entire group using this new block's (lower) jerk values.
-                test_velocity = mp_get_target_velocity(group_end->exit_velocity, group_length + bf->length, bf);
+                test_velocity = mp_get_target_velocity(bf->exit_velocity, group_length + bf->length, bf);
 
                 // If the new possible entry vlocity is lower than the un-merged possible entry of the next group,
                 // we will not merge, since it would degrade the speed.
@@ -349,9 +349,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // We're not merging, change the group_end
                 group_end = bf->nx_group->pv;
 
-                // We need to use the last block of the group to hold the exit_velocity,
-                // to support replanning while a group is executing.
-                group_end->exit_velocity = braking_velocity;
+                bf->exit_velocity = braking_velocity;
 
                 // reset group length
                 group_length = bf->length;
@@ -430,7 +428,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // forward planning may degrade this to a mixed accel
             else if (VELOCITY_EQ(group_end->exit_velocity, bf->cruise_vmax)) {
 
-                group_end->exit_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
+                bf->exit_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
                 bf->cruise_velocity = bf->exit_velocity;
 
                 // Update braking_velocity for use in the top of the loop

@@ -80,6 +80,15 @@ typedef enum {
 } moveState;
 
 typedef enum {
+    GROUP_OFF = 0,                   // group unplanned (MUST BE ZERO)
+    GROUP_RAMPED,                    // ramp planning has been run, and needs to be dispersed to moves
+    GROUP_HEAD,                      // head length has started dispersing to blocks
+    GROUP_BODY,                      // body length has started dispersing to blocks
+    GROUP_TAIL,                      // tail length has started dispersing to blocks
+    GROUP_DONE                       // group length is completely dispersed to blocks
+} groupState;
+
+typedef enum {
     SECTION_HEAD = 0,               // acceleration
     SECTION_BODY,                   // cruise
     SECTION_TAIL                    // deceleration
@@ -145,8 +154,8 @@ typedef enum {
 #define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
-#define MIN_SEGMENT_MS          ((float)0.250)          // minimum segment milliseconds (also minimum move time)
-#define NOM_SEGMENT_MS          ((float)1.5)            // nominal segment ms
+#define MIN_SEGMENT_MS          ((float)0.750)          // minimum segment milliseconds (also minimum move time)
+#define NOM_SEGMENT_MS          ((float)1.0)            // nominal segment ms
 #define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
@@ -387,9 +396,9 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
 typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a GROUP
     struct mpGroupRuntimeBuf *nx;       // singly-linked-list
 
-    // These are for group planning, and should not be looked at from the block-exec context
-    moveSection group_section;          // what section of the whole group are we in
-    moveState group_move_state;         // state of the overall group
+    mpBuf_t *first_block;				// first-block-of-group buffer pointer
+
+    groupState group_state;             // keep track of what state is the group planning/dispersal
 
     float length;                       // total length of the moves in the group
 
@@ -407,8 +416,8 @@ typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunT
     float cruise_velocity;              // velocities for the group as a whole
     float exit_velocity;
 
-    float executed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
-    float executed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
+    float completed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
+    float completed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
 } mpGroupRuntimeBuf_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
