@@ -314,12 +314,14 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             bf->iterations++;
             bf->plannable = !optimal;
 
-            // Don't merge group commands (for now)
-            if ((bf->move_type == MOVE_TYPE_COMMAND)
+            // Check for reasons NOT to merge (if we still are going to)
+            if (going_to_merge && (
+                // Don't merge group commands (for now)
+                ( bf->move_type == MOVE_TYPE_COMMAND)
                 // We have to ensure that the exit_vmaxes generally *increase* forward along a group.
                 // IOW, looking at at backward along the deceleration, it has to stay the same or *decrease*.
-                || (bf->pv->exit_vmax > bf->exit_vmax)
-                ) {
+                  || (bf->pv->exit_vmax > bf->exit_vmax)
+                )) {
 
                 going_to_merge = false;
             }
@@ -379,7 +381,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // ...
 
                 // manage the group pointers
-                bf->nx_group = group_end->nx; // would bf->nx_group = bf->nx_group->nx_group be more stable?
+                bf->nx_group = bf->nx_group->nx_group; // would bf->nx_group = bf->nx_group->nx_group be more stable?
                 bf->nx_group->pv_group = bf;
             }
 

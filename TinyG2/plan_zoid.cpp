@@ -278,7 +278,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
 
         // Since we are not generally decelerating, this is effectively all of forward planning that we need.
         } else {
-            // Note that the hints from back-planning are ignored in this section. since back-planing can only predict decel and cruise.
+            // Note that the hints from back-planning are ignored in this section, since back-planing can only predict decel and cruise.
 
             float accel_velocity;
             if (test_velocity_valid) {
@@ -294,12 +294,12 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                 mb.entry_changed = true; // we are changing the *next* block's entry velocity
 
                 // We'll check to see if we can merge this block into the next one.
-                if (bf->nx_group->exit_vmax <= bf->exit_vmax) {
+                if ((bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
                     if (bf->nx_group->jerk < bf->jerk) {
                         test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+bf->group_length, bf->nx_group);
 
                         if (test_velocity > group->exit_velocity) {
-                            test_velocity_valid = true; // note that this has been comuted, so it doesn't have to happen again.
+                            test_velocity_valid = true; // revord that this has been computed, so it doesn't have to happen again.
 
                             // We're going to merge with nx_group from us
                             bf->group_length += bf->nx_group->group_length;
@@ -318,8 +318,11 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                             group->exit_velocity = bf->exit_velocity;
 
                             // Get the cruise velocity of the last block of the next group
-                            bf->cruise_velocity = bf->nx_group->nx_group->pv->cruise_velocity;
+                            bf->cruise_velocity = bf->nx_group->cruise_velocity;
                             group->cruise_velocity = bf->cruise_velocity;
+
+                            bf->nx_group = bf->nx_group->nx_group;
+                            bf->nx_group->pv_group = bf;
 
                             did_merge = true;
                         }

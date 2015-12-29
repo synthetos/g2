@@ -124,7 +124,11 @@ stat_t mp_plan_move()
 
             } else {
 
-                mr.r_group->length = bf_first_block->group_length;
+                bool extended = false;
+                if (!fp_GE(mr.r_group->length, bf_first_block->group_length)) {
+                    mr.r_group->length = bf_first_block->group_length;
+                    extended = true;
+                }
 
                 // We'll extend the body.
                 if (!fp_GE(bf_first_block->exit_velocity, group->cruise_velocity)) {
@@ -133,7 +137,8 @@ stat_t mp_plan_move()
 
                     float tail_length = mp_get_target_length(bf_first_block->exit_velocity, group->cruise_velocity, bf_first_block);
 
-                    if (tail_length < group->tail_length) {
+                    // If we extended the move, we don't care if the tail gets longer.
+                    if (extended || (tail_length < group->tail_length)) {
                         // we will have a tail
                         group->exit_velocity = bf_first_block->exit_velocity;
 
@@ -145,6 +150,9 @@ stat_t mp_plan_move()
                         group->tail_time = (group->tail_length * 2.0) / (group->exit_velocity + group->cruise_velocity);
                     } else {
                         // We don't want to change this, we would have to shorten the body.
+
+                        while (1);
+
                         skip = true;
                     }
 
@@ -159,13 +167,15 @@ stat_t mp_plan_move()
                     group->tail_time = 0;
                 }
 
-                group->group_state = GROUP_RAMPED;
-                group->length_into_section = 0;
+                if (!skip) {
+                    group->group_state = GROUP_RAMPED;
+                    group->length_into_section = 0;
 
-                // if the next move is planned already, we'll force it to be replanned
-                if (bf->nx->buffer_state == MP_BUFFER_PLANNED) {
-                    bf->nx->buffer_state = MP_BUFFER_PREPPED;
-                    mr.p_group->group_state = GROUP_RAMPED;
+                    // if the next move is planned already, we'll force it to be replanned
+                    if (bf->nx->buffer_state == MP_BUFFER_PLANNED) {
+                        bf->nx->buffer_state = MP_BUFFER_PREPPED;
+                        mr.p_group->group_state = GROUP_RAMPED;
+                    }
                 }
             }
         } else {
@@ -179,6 +189,10 @@ stat_t mp_plan_move()
         // If the running group is still dispersing, we'll use it
         if ((mr.r_group->group_state != GROUP_OFF) && (mr.r_group->group_state != GROUP_DONE)) {
             group = mr.r_group;
+        } else if (mr.p_group->group_state == GROUP_DONE) {
+            // There's nothing we can do here...
+            // We did nothing
+            return (STAT_NOOP);
         }
     }
 
@@ -294,7 +308,7 @@ stat_t mp_plan_move()
     //   if buffer_state is MP_BUFFER_RUNNING, we have requested that the mb.r be updated.
     //   if buffer_state is MP_BUFFER_PREPPED, we need to finish settung mb.p for this block
     //   otherwise, it'll be MP_BUFFER_PLANNED, and we have nothing to do here until the next block
-    if ((group->group_state > GROUP_RAMPED) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
+    if ((group->group_state > GROUP_RAMPED) && (group->group_state != GROUP_DONE) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
         stat_t status = STAT_OK; // default it
         status =  mp_calculate_block(bf, group, block);
         SANITY_TRAPS(bf, block);

@@ -226,6 +226,7 @@ typedef enum {
     if (bf->buffer_state != MP_BUFFER_EMPTY) { \
         if (rbf->exit_velocity > rbf->cruise_velocity)  {while(1);} \
     } \
+    if (rbf->head_length < 0.001 && rbf->body_length < 0.001 && rbf->tail_length < 0.001)  {while(1);} \
 }
 //    if (bf->head_length > 0.0 && bf->head_time < 0.000001) { while(1); }      // +++++ post-zoid trap
 
