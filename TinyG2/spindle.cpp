@@ -84,10 +84,18 @@ stat_t cm_set_spindle_speed(float speed)
 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
-    spindle.speed = value[0];
-    spindle.direction = (cmSpindleDir)value[1];
+    if (flag[0])
+    {
+        spindle.speed = value[0];
+    }
+
+    if (flag[1])
+    {
+        spindle.direction = (cmSpindleDir)value[1];
+    }
+
     // update spindle speed if we're running
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
@@ -140,10 +148,11 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
             spindle.direction = SPINDLE_CCW;
         }
     }
-	float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
-    bool flags[] =  { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, flags);
-	return(STAT_OK);
+
+    float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
+    bool flags[] =  { 1,1,0,0,0,0 };
+    mp_queue_command(_exec_spindle_control, value, flags);
+    return(STAT_OK);
 }
 
 #ifdef __ARM
@@ -162,21 +171,28 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
 static void _exec_spindle_control(float *value, bool *flag)
 {
     // set the direction first
-    spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
-    if (spindle.direction ^ spindle.dir_polarity) {
-        _set_spindle_direction_bit_hi();
-    } else {
-        _set_spindle_direction_bit_lo();
+    if (flag[1])
+    {
+        spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
+        if (spindle.direction ^ spindle.dir_polarity) {
+            _set_spindle_direction_bit_hi();
+        } else {
+            _set_spindle_direction_bit_lo();
+        }
     }
 
-    // set on/off. Mask out PAUSE and consider it OFF
-    spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
-    if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
-        _set_spindle_enable_bit_lo();
-    } else {
-        _set_spindle_enable_bit_hi();
+    if (flag[0])
+    {
+        // set on/off. Mask out PAUSE and consider it OFF
+        spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
+        if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
+            _set_spindle_enable_bit_lo();
+        } else {
+            _set_spindle_enable_bit_hi();
+        }
     }
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
+
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
