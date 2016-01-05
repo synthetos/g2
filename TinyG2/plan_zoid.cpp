@@ -454,7 +454,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
  *
  */
 
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block)
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block, const float entry_velocity)
 {
     // We look at head, then body, then tail, in order. It's possible to visit one, two, or all three in one call.
     // Note that the vmax values of the block may have been set to zero to prevent back-planning from making adjustments.
@@ -471,24 +471,32 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
     block->tail_time = 0;
 
 
+    bool no_head = true;
     if (group->group_state == GROUP_HEAD) {
-        float head_left = group->head_length - (group->length_into_section + group->completed_group_head_length);
         bool done_with_head = false;
+
+        float head_left = group->head_length - (group->length_into_section + group->completed_group_head_length);
         if (head_left > 0) {
+            no_head = false;
 
             if ((bf->length + 0.0001) < head_left) {
                 block->head_length = bf->length;
                 group->length_into_section += bf->length;
 
-                float t = mp_find_t(mr.group_entry_velocity,
+                float t = mp_find_t(entry_velocity,
                                     group->cruise_velocity,
-                                    block->head_length,
+                                    group->length_into_section,
                                     group->head_length,
                                     group->t_into_section,
                                     group->head_time);
                 block->cruise_velocity     = mp_calc_v(t, mr.group_entry_velocity, group->cruise_velocity);
                 block->cruise_acceleration = mp_calc_a(t, mr.group_entry_velocity, group->cruise_velocity, group->head_time);
                 block->cruise_jerk         = mp_calc_j(t, mr.group_entry_velocity, group->cruise_velocity, group->head_time);
+
+                // We won't enter the body or tail assignment sections, assign the exit velocities
+                block->exit_velocity     = block->cruise_velocity;
+                block->exit_acceleration = block->cruise_acceleration;
+                block->exit_jerk         = block->cruise_jerk;
 
                 block->head_time = group->head_time * (t - group->t_into_section);
                 group->t_into_section = t;
@@ -507,20 +515,6 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             }
         }
         else {
-            // Since there is no head section in this move, we will want to ensure the entry (runtime exit) is copied to the cruise
-            // If there's a body, then it should already be at cruise and with zero accel and jerk.
-            if (block != mr.r) {
-                // We're not adding to the runtime, so we want to use the runtime's exit as entry
-                block->cruise_velocity     = mr.r->exit_velocity;
-                block->cruise_acceleration = mr.r->exit_acceleration;
-                block->cruise_jerk         = mr.r->exit_jerk;
-            } else {
-                // Otherwise we copy the runtime entry
-                block->cruise_velocity     = mr.entry_velocity;
-                block->cruise_acceleration = mr.entry_acceleration;
-                block->cruise_jerk         = mr.entry_jerk;
-            }
-
             done_with_head = true;
         }
 
@@ -529,13 +523,32 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
 
             // These are redundant, since they aren't used for the body, but it's noce to be thorough
             group->length_into_section = 0.0;
-            group->t_into_section = 0.99;
+            group->t_into_section = 1.0; // initial position for tail is 1, going down to 0
         }
     }
 
+    if (no_head) {
+        // Since there is no head section in this move, we will want to ensure the entry (runtime exit) is copied to the cruise
+        // If there's a body, then it should already be at cruise and with zero accel and jerk.
+        if (block != mr.r) {
+            // We're not adding to the runtime, so we want to use the runtime's exit as entry
+            block->cruise_velocity     = mr.r->exit_velocity;
+            block->cruise_acceleration = mr.r->exit_acceleration;
+            block->cruise_jerk         = mr.r->exit_jerk;
+        } else {
+            // Otherwise we copy the runtime entry
+            block->cruise_velocity     = mr.entry_velocity;
+            block->cruise_acceleration = mr.entry_acceleration;
+            block->cruise_jerk         = mr.entry_jerk;
+        }
+    }
+
+
+
     if (group->group_state == GROUP_BODY) {
-        float body_left = group->body_length - (group->length_into_section + group->completed_group_body_length);
         bool done_with_body = false;
+
+        float body_left = group->body_length - (group->length_into_section + group->completed_group_body_length);
         if (body_left > 0) {
             float length_left = (bf->length - block->head_length);
 
@@ -546,6 +559,11 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
                 // We have no tail in this block, enforce it
                 block->tail_length = 0;
                 block->tail_time = 0;
+
+                // We won't enter the tail assignment section, assign the exit velocities
+                block->exit_velocity     = group->cruise_velocity;
+                block->exit_acceleration = 0;
+                block->exit_jerk         = 0;
             }
             // We will use of the rest of the body in this block
             else {
@@ -557,34 +575,31 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             block->cruise_velocity   = group->cruise_velocity;
             block->cruise_acceleration = 0;
             block->cruise_jerk         = 0;
-            block->exit_velocity     = group->cruise_velocity;
-            block->exit_acceleration = 0;
-            block->exit_jerk         = 0;
-
-            group->t_into_section = 0; // we won't maintain t for body, since we don't need it.
 
             block->body_time = block->body_length / block->cruise_velocity;
         }
         else {
-            // We have no body, enforce it
-            block->body_length = 0;
-            block->body_time = 0;
-
             done_with_body = true;
         }
 
         if (done_with_body) {
-           group->group_state = GROUP_TAIL;
-
+            group->group_state = GROUP_TAIL;
+            
             group->length_into_section = 0.0;
-            group->t_into_section = 0.99; // for a tail, we start t at 1 and go backward
+            group->t_into_section = 1.0; // initial position for tail is 1, going down to 0
         }
     }
 
+
+
+    bool no_tail = true;
     if (group->group_state == GROUP_TAIL) {
-        float tail_left = group->tail_length - group->length_into_section;
         bool done_with_tail = false;
+
+        float tail_left = group->tail_length - group->length_into_section;
         if (tail_left > 0) {
+            no_tail = false;
+
             float length_left = (bf->length - (block->head_length+block->body_length));
             if ((length_left + 0.0001) < tail_left) {
                 block->tail_length = length_left;
@@ -616,10 +631,6 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             }
         }
         else {
-            // We have no tail, enforce it
-            block->tail_length = 0;
-            block->tail_time = 0;
-
             done_with_tail = true;
         }
 
@@ -627,11 +638,19 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             group->group_state = GROUP_DONE;
 
             group->length_into_section = 0.0;
-            group->t_into_section = 0;
-
-            // We're officially done with this group
-            return STAT_OK;
+            group->t_into_section = 0.0; // initial position for head is 0, going up to 0
         }
+    }
+
+    if (no_tail) {
+        block->exit_velocity     = block->cruise_velocity;
+        block->exit_acceleration = block->cruise_acceleration;
+        block->exit_jerk         = block->cruise_jerk;
+    }
+
+    if (group->group_state == GROUP_DONE) {
+        // We're officially done with this group
+        return STAT_OK;
     }
 
     return STAT_EAGAIN;
@@ -972,6 +991,14 @@ float mp_find_t(float v_0, float v_1, float L, float totalL, float initial_t, fl
 
     if (fabs(L-totalL) < FIND_T_PRECISION) {
         return 1.0;
+    }
+
+    if (L < FIND_T_PRECISION) {
+        return 0.0;
+    }
+
+    if (fp_ZERO(initial_t) || fp_EQ(1.0, initial_t)) {
+        initial_t = 0.5;
     }
 
     // Comput LT = Length/Time

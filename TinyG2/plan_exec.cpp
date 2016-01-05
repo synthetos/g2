@@ -293,7 +293,7 @@ stat_t mp_plan_move()
 
             group->length = bf->group_length;
             group->length_into_section = 0;
-            group->t_into_section = 0; // inital guess for a head.
+            group->t_into_section = 0.0; // inital guess for the head is 0.0 going to 1.0
 
             group->group_state = GROUP_RAMPED;
 
@@ -368,7 +368,13 @@ stat_t mp_plan_move()
     //   otherwise, it'll be MP_BUFFER_PLANNED, and we have nothing to do here until the next block
     if ((group->group_state > GROUP_RAMPED) && (group->group_state != GROUP_DONE) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
         stat_t status = STAT_OK; // default it
-        status =  mp_calculate_block(bf, group, block);
+        float entry_velocity;
+        if (group == mr.r_group) {
+            entry_velocity = mr.entry_velocity;
+        } else {
+            entry_velocity = mr.r_group->exit_velocity;
+        }
+        status =  mp_calculate_block(bf, group, block, entry_velocity);
         SANITY_TRAPS(bf, block);
 
         // status will be STAT_EAGAIN if there are more blocks in this group,
