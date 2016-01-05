@@ -4,7 +4,7 @@ import json
 codes = {}
 with open('../TinyG2/tinyg2.h') as fp:
     for line in fp.readlines():
-        match = re.match('\s*#define\s*(\w+)\s*([0-9]+)\s*(?://([\w\s]*))?', line)
+        match = re.match('\s*#define\s*(\w+)\s*([0-9]+)\s*(?://([\w\s\'0-9]*))?', line)
         if match:
             name, value, description = match.groups()
             description = description.strip() if description else ''
