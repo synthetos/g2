@@ -506,7 +506,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 optimal = true;
             }
 
-            // We might back plan into the running bufferl. Don't mark that one as PREPPED
+            // We might back plan into the running buffer. Don't mark that one as PREPPED
             if (bf->buffer_state != MP_BUFFER_RUNNING) {
                 bf->buffer_state = MP_BUFFER_PREPPED;
             }
