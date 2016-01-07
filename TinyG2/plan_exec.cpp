@@ -956,7 +956,7 @@ void mp_exit_hold_state()
  *    B =  5( P_0 + P_4 - 4(P_3 + P_1) + 6 P_2 )
  *    C = 10( P_3 - P_0 + 3(P_1 - P_2) )
  *    D = 10( P_0 + P_2 - 2 P_1 )
- *    E = 5 ( P_1 - P_0 )
+ *    E =  5( P_1 - P_0 )
  *    F =     P_0
  *
  *	Given an interval count of I to get from P_i to P_t, we get the parametric "step" size of h = 1/I.
@@ -997,11 +997,17 @@ void mp_exit_hold_state()
  *      E_1 = A h^5 + B h^4 + C h^3 + D h^2 + E h
  *
  *                 with t = h/2:
- *                      =  (121 A h^5)/16
- *                       + (5 B h^4)
- *                       + (13 C h^3)/4
- *                       + (2 D h^2)
- *                       + (E h)
+ *                      =  (5/16) A h^5
+ *                       +  (5/4) A h^5 + (1/2) B h^4
+ *                       +  (5/2) A h^5 + (3/2) B h^4 + (3/4) C h^3
+ *                       +  (5/2) A h^5 +     2 B h^4 + (3/2) C h^3 + D h^2
+ *                       +        A h^5 +       B h^4 +       C h^3 + D h^2 + E h
+
+ *                      =  (121/16) A h^5
+ *                       +       5  B h^4
+ *                       +   (13/4) C h^3
+ *                       +       2  D h^2
+ *                       +            E h
  *
 
  *      F_4(t+h)-F_4(t) = A_1 (t+h)^4 + B_1 (t+h)^3 + C_1 (t+h)^2 + D_1 (t+h) + E_1 - (A_1 t^4 + B_1 t^3 + C_1 t^2 + D_1 t + E_1)
@@ -1010,26 +1016,33 @@ void mp_exit_hold_state()
  *                       + (4 A_1 h^3 + 3 B_1 h^2 + 2 C_1 h) t
  *                       + (A_1 h^4 + B_1 h^3 + C_1 h^2 + D_1 h)
  *
- *                      =  (20 A h) t^3
+
+ *                      =  (20 A h^2) t^3
  *                       + (60 A h^3 + 12 B h^2) t^2
  *                       + (70 A h^4 + 24 B h^3 + 6 C h^2) t
  *                       + ((5 A h) h^4 + (10 A h^2 + 4 B h) h^3 + (10 A h^3 + 6 B h^2 + 3 C h) h^2 + (5 A h^4 + 4 B h^3 + 3 C h^2 + 2 D h) h)
  *
- *                      =  (20 A h) t^3
+ *                      =  (20 A h^2) t^3
  *                       + (60 A h^3 + 12 B h^2) t^2
  *                       + (70 A h^4 + 24 B h^3 + 6 C h^2) t
- *                       + (30 A h^5+14 B h^4+6 C h^3+2 D h^2)
+ *                       + (30 A h^5 + 14 B h^4 + 6 C h^3 + 2 D h^2)
  *
- *      A_2 = 20 A h
+ *      A_2 = 20 A h^2
  *      B_2 = 60 A h^3 + 12 B h^2
  *      C_2 = 70 A h^4 + 24 B h^3 + 6 C h^2
- *      D_2 = 30 A h^5+14 B h^4+6 C h^3+2 D h^2
+ *      D_2 = 30 A h^5 + 14 B h^4 + 6 C h^3 + 2 D h^2
  *
  *                 with t = h/2:
- *                      =  80 A h^5
- *                       + ((5/2 A) + 29 B) h^4
- *                       + 9 C h^3
- *                       + 2 D h^2
+ *
+ *                      =  (5/2) A h^5
+ *                       +    15 A h^5 +  3 B h^4
+ *                       +    35 A h^5 + 12 B h^4 + 3 C h^3
+ *                       +    30 A h^5 + 14 B h^4 + 6 C h^3 + 2 D h^2
+
+ *                      =  (165/2) A h^5
+ *                       +      29 B h^4
+ *                       +         9 C h^3
+ *                       +         2 D h^2
  *
 
  *      F_3(t+h)-F_3(t) = A_2 (t+h)^3 + B_2 (t+h)^2 + C_2 (t+h) + D_2 - (A_2 t^3 + B_2 t^2 + C_2 t + D_2)
@@ -1037,48 +1050,66 @@ void mp_exit_hold_state()
  *                       + (3 A_2 h^2 + 2 B_2 h) t
  *                       + (A_2 h^3 + B_2 h^2 + C_2 h)
  *
- *                      =  (60 A h^2) t^2
- *                       + (120 A h^4 + 60 A h^3 + 24 B h^3) t
- *                       + (130 A h^5 + 20 A h^4 + 36 B h^4 + 6 C h^3)
+ *                      =  (3 (20 A h^2) h) t^2
+ *                       + (3 (20 A h^2) h^2 + 2 (60 A h^3 + 12 B h^2) h) t
+ *                       + (20 A h^2) h^3
+ *                       + (60 A h^3 + 12 B h^2) h^2
+ *                       + (70 A h^4 + 24 B h^3 + 6 C h^2) h
  *
- *      A_3 = 60 A h^2
- *      B_3 = 120 A h^4 + 60 A h^3 + 24 B h^3
- *      C_3 = 130 A h^5 + 20 A h^4 + 36 B h^4 + 6 C h^3
+ *                      =   (60 A h^3) t^2
+ *                       + (180 A h^4 + 24 B h^3) t
+ *                       +   20 A h^5
+ *                       +   60 A h^5 + 12 B h^4
+ *                       +   70 A h^5 + 24 B h^4 + 6 C h^3
+ *
+ *                      =   (60 A h^3) t^2
+ *                       + (180 A h^4 + 24 B h^3) t
+ *                       +  150 A h^5 + 36 B h^4 + 6 C h^3
+ *
+ *      A_3 = 60 A h^3
+ *      B_3 = 180 A h^4 + 24 B h^3
+ *      C_3 = 150 A h^5 + 36 B h^4 + 6 C h^3
  *
  *                 with t = h/2:
- *                      =  190 A h^5
- *                       + (65 A+48 B) h^4
- *                       + 6 C h^3
+ *                      =   15 A h^5
+ *                       +  90 A h^5 +  12 B h^4
+ *                       + 150 A h^5 +  36 B h^4 + 6 C h^3
+
+ *                      =  255 A h^5
+ *                       +  48 B h^4
+ *                       +   6 C h^3
  *
 
  *      F_2(t+h)-F_2(t) = A_3 (t+h)^2 + B_3 (t+h) + C_3 - (A_3 t^2 + B_3 t + C_3)
  *                      =  (2 A_3 h) t
  *                       + (A_3 h^2 + B_3 h)
  *
- *                      =  (120 A h^3) t
- *                       + (120 A h^5 + 120 A h^4 + 24 B h^4)
+ *                      =  (2 (60 A h^3) h) t
+ *                       + ((60 A h^3) h^2 + (180 A h^4 +  24 B h^3) h)
  *
- *      A_4 = 120 A h^3
- *      B_4 = 120 A h^5 + 120 A h^4 + 24 B h^4
+ *                      =  (120 A h^4) t
+ *                       +  240 A h^5 + 24 B h^4
+ *
+ *      A_4 = 120 A h^4
+ *      B_4 = 240 A h^5 + 24 B h^4
  *
  *                 with t = h/2:
- *                      =  120 A h^5
- *                       + (180 A + 24 B) h^4
+ *                      =   300 A h^5+24 B h^4
 
  *      F_1(t+h)-F_1(t) = A_4 (t+h) + B_4 - (A_4 t + B_4)
  *                      = A_4 h
  *
- *                      = 120 A h^4
+ *                      = 120 A h^5
 
  *  Normally, we could then assign t = 0, use the A-F values from above, and get out initial F_* values.
  *  However, for the sake of "averaging" the velocity of each segment, we actually want to have the initial
  *  V be be at t = h/2 and iterate I-1 times. So, the resulting F_* values are (steps not shown):
  *
- *		F_5 = (121Ah^5)/16 + 5Bh^4 + (13Ch^3)/4 + 2Dh^2 + Eh
- *		F_4 = 80 A h^5 + ((5/2 A) + 29 B) h^4 + 9 C h^3 + 2 D h^2
- *		F_3 = 190 A h^5 + (65 A + 48 B) h^4 + 6 C h^3
- *		F_2 = 120 A h^5 + (180 A + 24 B) h^4
- *		F_1 = 120Ah^5
+ *		F_5 = (121/16)A h^5 +  5 B h^4 + (13/4) C h^3 + 2 D h^2 + Eh
+ *		F_4 =  (165/2)A h^5 + 29 B h^4 +     9  C h^3 + 2 D h^2
+ *		F_3 =     255 A h^5 + 48 B h^4 +     6  C h^3
+ *		F_2 =     300 A h^5 + 24 B h^4
+ *		F_1 =     120 A h^5
  *
  */
 
@@ -1161,19 +1192,20 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
     const float const2 = 3.25;   // ( 13.0/ 4.0)
     const float const3 = 82.5;   // (165.0/ 2.0)
 
+    /*
+     *		F_5 = (121/16)A h^5 +  5 B h^4 + (13/4) C h^3 + 2 D h^2 + Eh
+     *		F_4 =  (165/2)A h^5 + 29 B h^4 +     9  C h^3 + 2 D h^2
+     *		F_3 =     255 A h^5 + 48 B h^4 +     6  C h^3
+     *		F_2 =     300 A h^5 + 24 B h^4
+     *		F_1 =     120 A h^5
+     */
+
 	mr.forward_diff_5 = const1*Ah_5 +  5.0*Bh_4 + const2*Ch_3 + 2.0*Dh_2 + Eh;
 	mr.forward_diff_4 = const3*Ah_5 + 29.0*Bh_4 +    9.0*Ch_3 + 2.0*Dh_2;
 	mr.forward_diff_3 =  255.0*Ah_5 + 48.0*Bh_4 +    6.0*Ch_3;
 	mr.forward_diff_2 =  300.0*Ah_5 + 24.0*Bh_4;
 	mr.forward_diff_1 =  120.0*Ah_5;
 
-
-/*    mr.forward_diff_5 = (121.0*Ah_5)/16.0      +    5.0*Bh_4 +  (13.0*Ch_3)/4.0 + 2.0*Dh_2 + Eh;
-    mr.forward_diff_4 =   80.0*Ah_5 + (  2.5*A + 29.0*B)*h_4 +    9.0*Ch_3      + 2.0*Dh_2;
-    mr.forward_diff_3 =  190.0*Ah_5 + ( 65.0*A + 48.0*B)*h_4 +    6.0*Ch_3;
-    mr.forward_diff_2 =  120.0*Ah_5 + (180.0*A + 24.0*B)*h_4;
-    mr.forward_diff_1 =  120.0*Ah_5;
-*/
 	// Calculate the initial velocity by calculating V(h/2)
 	const float half_h   = h * 0.5; // h/2
     const float half_h_2 = half_h   * half_h;
