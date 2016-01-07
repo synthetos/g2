@@ -228,6 +228,7 @@ stat_t mp_plan_move()
             if (!skip) {
                 group->group_state = GROUP_RAMPED;
                 group->length_into_section = 0;
+                group->t_into_section = 0;
 
                 // if the next move is planned already, we'll force it to be replanned
                 if (bf->nx->buffer_state == MP_BUFFER_PLANNED) {
@@ -297,17 +298,17 @@ stat_t mp_plan_move()
 
             group->group_state = GROUP_RAMPED;
 
-            // copy the jerk values to the last block of the group, so we have them all the way through
-            // +++++ we need to do this when merging, not here!!!
-            mpBuf_t *bf_last = bf->nx_group->pv;
-            if (!fp_EQ(bf_last->jerk, bf->jerk)) { // check to see if they're the same. bf_last could = bf!
-                // Copy the move jerk, and all of it's derived values over
-                bf_last->jerk = bf->jerk;
-                bf_last->jerk_sq = bf->jerk_sq;
-                bf_last->recip_jerk = bf->recip_jerk;
-                bf_last->sqrt_j = bf->sqrt_j;
-                bf_last->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
-            }
+//            // copy the jerk values to the last block of the group, so we have them all the way through
+//            // +++++ we need to do this when merging, not here!!!
+//            mpBuf_t *bf_last = bf->nx_group->pv;
+//            if (!fp_EQ(bf_last->jerk, bf->jerk)) { // check to see if they're the same. bf_last could = bf!
+//                // Copy the move jerk, and all of it's derived values over
+//                bf_last->jerk = bf->jerk;
+//                bf_last->jerk_sq = bf->jerk_sq;
+//                bf_last->recip_jerk = bf->recip_jerk;
+//                bf_last->sqrt_j = bf->sqrt_j;
+//                bf_last->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
+//            }
         }
     }
 
@@ -319,11 +320,11 @@ stat_t mp_plan_move()
         // as fasr as back-planning is concerned.
         float lock_length_left = (group->head_length - group->completed_group_head_length) + (group->body_length - group->completed_group_body_length);
         mpBuf_t *bf_lookahead = bf;
-        for (; bf_lookahead->length < lock_length_left; bf_lookahead = bf_lookahead->nx) {
+        for (; (bf_lookahead->length + 0.0001) < lock_length_left; bf_lookahead = bf_lookahead->nx) {
             lock_length_left -= bf_lookahead->length;
         }
 
-        // bf_lookahead is now pointing at the firsr block of the tail, if any.
+        // bf_lookahead is now pointing at the first block of the tail, if any.
 
         // We want the planner to see this as the first block of the group
         bf->nx_group->pv_group = bf_lookahead;
@@ -331,16 +332,14 @@ stat_t mp_plan_move()
         // And the group buffer as well, since this is what back-planning would update.
         group->first_block = bf_lookahead;
 
-        // We want to lock in the entry and cruise velocities if the block is still plannable
-        if (bf_lookahead->plannable) {
+//        // We want to lock in the entry and cruise velocities if the block is still plannable
+//        if (bf_lookahead->plannable) {
             // Set the nx_group so that we can find it from any of these blocks
             bf_lookahead->nx_group = bf->nx_group;
 
-            // We want need to push our exit_velocity back to the last block, so we can see if it changed.
-            bf->nx_group->pv->exit_velocity = group->exit_velocity;
-
-            // WARNING: We're setting the exits to zero. We're assuming that back-planning won't care, as
-            // long as the possible entry it finds is higher than what we set, and forward planning is already done.
+            // WARNING: We're setting the entry values (pv->exit values) to zero. We're assuming that back-planning
+            // won't care, as long as the possible entry it finds is higher than what we set, and forward planning
+            // is already done.
             // mp_calculate_block() MUST not pay attention to vmax values.
             bf_lookahead->pv->exit_vmax     = 0.0;
             bf_lookahead->pv->exit_velocity = 0.0;
@@ -352,7 +351,7 @@ stat_t mp_plan_move()
 
             // push the group length into there so it gets extended properly
             bf_lookahead->group_length = group->length;
-        }
+//        }
 
         group->group_state = GROUP_HEAD;
     }
@@ -576,8 +575,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             // store the group_entry_velocity
             mr.group_entry_velocity = mr.r_group->exit_velocity;
 
-            mr.r_group->group_state = GROUP_OFF;
-
             // Now update the running group to the previously planned group
             mr.r_group = mr.p_group;
             mr.p_group = mr.p_group->nx;
@@ -591,6 +588,34 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         mr.r = mr.p;
         mr.p = mr.p->nx;
+
+
+        // Mantain the bf group pointers
+        if (bf->nx_group != bf->nx) {
+            // This is not the last block of the group
+            bf->nx->nx_group = bf->nx_group;
+
+            // Copy vital group-data
+            bf->nx->group_length = bf->group_length;
+            bf->nx->cruise_velocity = bf->cruise_velocity;
+            bf->nx->exit_velocity = bf->exit_velocity;
+
+            if (!fp_EQ(bf->nx->jerk, bf->jerk)) { // check to see if they're the same.
+                // Copy the move jerk, and all of it's derived values.
+                bf->nx->jerk = bf->jerk;
+                bf->nx->jerk_sq = bf->jerk_sq;
+                bf->nx->recip_jerk = bf->recip_jerk;
+                bf->nx->sqrt_j = bf->sqrt_j;
+                bf->nx->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
+            }
+        }
+
+        bf->nx_group->pv_group = bf;
+        bf->pv_group = bf->pv;
+
+        // reset the previous block's nx_group
+        bf->pv->nx_group = bf;
+
 
         // reset the executed values
         mr.executed_body_length = 0.0;
@@ -656,6 +681,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 } else {
                     // We'll put it all in the tail
                     mr.r->tail_length += mr.r->body_length;
+                    
                     // TODO: ++++ RG This is more complicated than this.
                     mr.r->tail_time += (2.0 * mr.r->body_length)/(mr.r->cruise_velocity + mr.r->exit_velocity);
 
@@ -710,6 +736,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm.motion_state == MOTION_HOLD) {
+
+
+
+        // +++++ FEEDHOLD IS DISABLED AND BROKEN
+        while(1);
+
+
+
 
         // Case (3) is a no-op and is not trapped. It just continues the deceleration.
 
@@ -819,10 +853,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		sr_request_status_report(SR_REQUEST_TIMED);		// continue reporting mr buffer
                                                         // Note that tha'll happen in a lower interrupt level.
 	} else {
-        // Mark the running group as GROUP_OFF so it can be reused.
-        // Note that this appplies even if the group doesn't have a tail
-        mr.r_group->group_state = GROUP_OFF;
-
 		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;
         mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
@@ -917,7 +947,7 @@ void mp_exit_hold_state()
  *    P_0 = v_0
  *    P_1 = v_0 + (1/5) T a_0
  *    P_2 = v_0 + (2/5) T a_0 + (1/20) T^2 j_0
- *    P_3 = v_1 - (2/5) T a_1 - (1/20) T^2 j_1
+ *    P_3 = v_1 - (2/5) T a_1 + (1/20) T^2 j_1
  *    P_4 = v_1 - (1/5) T a_1
  *    P_5 = v_1
  *
@@ -945,37 +975,109 @@ void mp_exit_hold_state()
  *	but it gives the resulting formulas:
  *
  *		a = A, b = B, c = C, d = D, e = E, f = F
- *		F_5(t+h)-F_5(t) = (5ah)t^4 + (10ah^2 + 4bh)t^3 + (10ah^3 + 6bh^2 + 3ch)t^2 +
- *			(5ah^4 + 4bh^3 + 3ch^2 + 2dh)t + ah^5 + bh^4 + ch^3 + dh^2 + eh
+ 
+ *      F_5(t+h)-F_5(t) = A (t+h)^5 + B (t+h)^4 + C (t+h)^3 + D (t+h)^2 + E (t+h) + F - (A t^5 + B t^4 + C t^3 + D t^2 + E t + F)
  *
- *		a = 5ah
- *		b = 10ah^2 + 4bh
- *		c = 10ah^3 + 6bh^2 + 3ch
- *		d = 5ah^4 + 4bh^3 + 3ch^2 + 2dh
+ *                      =  5 A h t^4
+ *                       + 10 A h^2 t^3 + 4 B h t^3
+ *                       + 10 A h^3 t^2 + 6 B h^2 t^2 + 3 C h t^2
+ *                       + 5 A h^4 t + 4 B h^3 t + 3 C h^2 t + 2 D h t
+ *                       + A h^5 + B h^4 + C h^3 + D h^2 + E h
  *
- *  (After substitution, simplification, and rearranging):
- *		F_4(t+h)-F_4(t) = (20ah^2)t^3 + (60ah^3 + 12bh^2)t^2 + (70ah^4 + 24bh^3 + 6ch^2)t +
- *			30ah^5 + 14bh^4 + 6ch^3 + 2dh^2
+ *                      =  (5 A h) t^4
+ *                       + (10 A h^2 + 4 B h) t^3
+ *                       + (10 A h^3 + 6 B h^2 + 3 C h ) t^2
+ *                       + (5 A h^4 + 4 B h^3  + 3 C h^2 + 2 D h) t
+ *                       + (A h^5 + B h^4 + C h^3 + D h^2 + E h)
  *
- *		a = (20ah^2)
- *		b = (60ah^3 + 12bh^2)
- *		c = (70ah^4 + 24bh^3 + 6ch^2)
+ *		A_1 = 5 A h
+ *		B_1 = 10 A h^2 + 4 B h
+ *		C_1 = 10 A h^3 + 6 B h^2 + 3 C h
+ *		D_1 = 5 A h^4 + 4 B h^3 + 3 C h^2 + 2 D h
+ *      E_1 = A h^5 + B h^4 + C h^3 + D h^2 + E h
  *
- *  (After substitution, simplification, and rearranging):
- *		F_3(t+h)-F_3(t) = (60ah^3)t^2 + (180ah^4 + 24bh^3)t + 150ah^5 + 36bh^4 + 6ch^3
+ *                 with t = h/2:
+ *                      =  (121 A h^5)/16
+ *                       + (5 B h^4)
+ *                       + (13 C h^3)/4
+ *                       + (2 D h^2)
+ *                       + (E h)
  *
- *  (You get the picture...)
- *		F_2(t+h)-F_2(t) = (120ah^4)t + 240ah^5 + 24bh^4
- *		F_1(t+h)-F_1(t) = 120ah^5
+
+ *      F_4(t+h)-F_4(t) = A_1 (t+h)^4 + B_1 (t+h)^3 + C_1 (t+h)^2 + D_1 (t+h) + E_1 - (A_1 t^4 + B_1 t^3 + C_1 t^2 + D_1 t + E_1)
+ *                      =  (4 A_1 h) t^3
+ *                       + (6 A_1 h^2 + 3 B_1 h) t^2
+ *                       + (4 A_1 h^3 + 3 B_1 h^2 + 2 C_1 h) t
+ *                       + (A_1 h^4 + B_1 h^3 + C_1 h^2 + D_1 h)
  *
+ *                      =  (20 A h) t^3
+ *                       + (60 A h^3 + 12 B h^2) t^2
+ *                       + (70 A h^4 + 24 B h^3 + 6 C h^2) t
+ *                       + ((5 A h) h^4 + (10 A h^2 + 4 B h) h^3 + (10 A h^3 + 6 B h^2 + 3 C h) h^2 + (5 A h^4 + 4 B h^3 + 3 C h^2 + 2 D h) h)
+ *
+ *                      =  (20 A h) t^3
+ *                       + (60 A h^3 + 12 B h^2) t^2
+ *                       + (70 A h^4 + 24 B h^3 + 6 C h^2) t
+ *                       + (30 A h^5+14 B h^4+6 C h^3+2 D h^2)
+ *
+ *      A_2 = 20 A h
+ *      B_2 = 60 A h^3 + 12 B h^2
+ *      C_2 = 70 A h^4 + 24 B h^3 + 6 C h^2
+ *      D_2 = 30 A h^5+14 B h^4+6 C h^3+2 D h^2
+ *
+ *                 with t = h/2:
+ *                      =  80 A h^5
+ *                       + ((5/2 A) + 29 B) h^4
+ *                       + 9 C h^3
+ *                       + 2 D h^2
+ *
+
+ *      F_3(t+h)-F_3(t) = A_2 (t+h)^3 + B_2 (t+h)^2 + C_2 (t+h) + D_2 - (A_2 t^3 + B_2 t^2 + C_2 t + D_2)
+ *                      =  (3 A_2 h) t^2
+ *                       + (3 A_2 h^2 + 2 B_2 h) t
+ *                       + (A_2 h^3 + B_2 h^2 + C_2 h)
+ *
+ *                      =  (60 A h^2) t^2
+ *                       + (120 A h^4 + 60 A h^3 + 24 B h^3) t
+ *                       + (130 A h^5 + 20 A h^4 + 36 B h^4 + 6 C h^3)
+ *
+ *      A_3 = 60 A h^2
+ *      B_3 = 120 A h^4 + 60 A h^3 + 24 B h^3
+ *      C_3 = 130 A h^5 + 20 A h^4 + 36 B h^4 + 6 C h^3
+ *
+ *                 with t = h/2:
+ *                      =  190 A h^5
+ *                       + (65 A+48 B) h^4
+ *                       + 6 C h^3
+ *
+
+ *      F_2(t+h)-F_2(t) = A_3 (t+h)^2 + B_3 (t+h) + C_3 - (A_3 t^2 + B_3 t + C_3)
+ *                      =  (2 A_3 h) t
+ *                       + (A_3 h^2 + B_3 h)
+ *
+ *                      =  (120 A h^3) t
+ *                       + (120 A h^5 + 120 A h^4 + 24 B h^4)
+ *
+ *      A_4 = 120 A h^3
+ *      B_4 = 120 A h^5 + 120 A h^4 + 24 B h^4
+ *
+ *                 with t = h/2:
+ *                      =  120 A h^5
+ *                       + (180 A + 24 B) h^4
+
+ *      F_1(t+h)-F_1(t) = A_4 (t+h) + B_4 - (A_4 t + B_4)
+ *                      = A_4 h
+ *
+ *                      = 120 A h^4
+
  *  Normally, we could then assign t = 0, use the A-F values from above, and get out initial F_* values.
  *  However, for the sake of "averaging" the velocity of each segment, we actually want to have the initial
  *  V be be at t = h/2 and iterate I-1 times. So, the resulting F_* values are (steps not shown):
  *
  *		F_5 = (121Ah^5)/16 + 5Bh^4 + (13Ch^3)/4 + 2Dh^2 + Eh
- *		F_4 = (165Ah^5)/2 + 29Bh^4 + 9Ch^3 + 2Dh^2
- *		F_3 = 255Ah^5 + 48Bh^4 + 6Ch^3
- *		F_2 = 300Ah^5 + 24Bh^4
+ *		F_4 = 80 A h^5 + ((5/2 A) + 29 B) h^4 + 9 C h^3 + 2 D h^2
+ *		F_3 = 190 A h^5 + (65 A + 48 B) h^4 + 6 C h^3
+ *		F_2 = 120 A h^5 + (180 A + 24 B) h^4
  *		F_1 = 120Ah^5
  *
  */
@@ -1054,6 +1156,7 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
     const float Dh_2 = D * h_2;
     const float Eh   = E * h;
 
+
     const float const1 = 7.5625; // (121.0/16.0)
     const float const2 = 3.25;   // ( 13.0/ 4.0)
     const float const3 = 82.5;   // (165.0/ 2.0)
@@ -1064,6 +1167,13 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
 	mr.forward_diff_2 =  300.0*Ah_5 + 24.0*Bh_4;
 	mr.forward_diff_1 =  120.0*Ah_5;
 
+
+/*    mr.forward_diff_5 = (121.0*Ah_5)/16.0      +    5.0*Bh_4 +  (13.0*Ch_3)/4.0 + 2.0*Dh_2 + Eh;
+    mr.forward_diff_4 =   80.0*Ah_5 + (  2.5*A + 29.0*B)*h_4 +    9.0*Ch_3      + 2.0*Dh_2;
+    mr.forward_diff_3 =  190.0*Ah_5 + ( 65.0*A + 48.0*B)*h_4 +    6.0*Ch_3;
+    mr.forward_diff_2 =  120.0*Ah_5 + (180.0*A + 24.0*B)*h_4;
+    mr.forward_diff_1 =  120.0*Ah_5;
+*/
 	// Calculate the initial velocity by calculating V(h/2)
 	const float half_h   = h * 0.5; // h/2
     const float half_h_2 = half_h   * half_h;
@@ -1155,6 +1265,12 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
  */
 static stat_t _exec_aline_body(mpBuf_t *bf)
 {
+
+    // +++++ RG trap invalid segment velocities
+    if (mr.segment_velocity < 0) {
+        while(1);
+    }
+
     if (mr.section_state == SECTION_NEW) {
         float remaining_body_length = mr.r->body_length - mr.executed_body_length;
         if (fp_ZERO(remaining_body_length)) {
@@ -1213,9 +1329,13 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         // Mark the block as unplannable
         bf->plannable = false;
 
-//        // Mark the running group as GROUP_OFF so it can be reused.
-//        // Note that this appplies even if the group doesn't have a tail
-//        mr.r_group->group_state = GROUP_OFF;
+        // Mark the running group as GROUP_OFF so it can be reused.
+        // Note that this appplies even if the group doesn't have a tail
+
+        // If the group's not DONE, then it's still handing out tail section to blocks.
+        if (mr.r_group->group_state == GROUP_DONE) {
+            mr.r_group->group_state = GROUP_OFF;
+        }
 
 		if (fp_ZERO(mr.r->tail_length)) { return(STAT_OK);}			// end the move
 		mr.segments = ceil(uSec(mr.r->tail_time) / NOM_SEGMENT_USEC);  // # of segments for the section
