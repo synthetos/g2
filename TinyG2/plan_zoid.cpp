@@ -174,10 +174,12 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
     group->tail_length = 0;
 
     group->cruise_velocity = bf->cruise_velocity;
-    // We need to use the last block of the group to hold the exit_velocity,
-    // to support replanning while a group is executing.
-    group->exit_velocity   = bf->nx_group->pv->exit_velocity;
+    group->exit_velocity   = bf->exit_velocity;
 
+    // +++++ RG trap
+    if ((group->cruise_velocity < entry_velocity) || (group->cruise_velocity < group->exit_velocity)) {
+        while(1);
+    }
 
     // Note that we are lookig at the first group/block after the running block.
     // So we can only merge *forward*.
@@ -523,7 +525,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
 
             // These are redundant, since they aren't used for the body, but it's noce to be thorough
             group->length_into_section = 0.0;
-            group->t_into_section = 1.0; // initial position for tail is 1, going down to 0
+            group->t_into_section = 0.0;
         }
     }
 
@@ -586,7 +588,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             group->group_state = GROUP_TAIL;
             
             group->length_into_section = 0.0;
-            group->t_into_section = 1.0; // initial position for tail is 1, going down to 0
+            group->t_into_section = 0.0;
         }
     }
 
@@ -605,23 +607,24 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
                 block->tail_length = length_left;
                 group->length_into_section += length_left;
 
-                float t = mp_find_t(group->exit_velocity,
-                                    group->cruise_velocity,
-                                    (group->tail_length - group->length_into_section),
+                // mp_find_t works for decelrations as well, so we don't need to invert everything here.
+                float t = mp_find_t(group->cruise_velocity,
+                                    group->exit_velocity,
+                                    group->length_into_section,
                                     group->tail_length,
                                     group->t_into_section,
                                     group->tail_time);
-                block->exit_velocity     = mp_calc_v(t, group->exit_velocity, group->cruise_velocity);
-                block->exit_acceleration = mp_calc_a(t, group->exit_velocity, group->cruise_velocity, group->tail_time);
-                block->exit_jerk         = mp_calc_j(t, group->exit_velocity, group->cruise_velocity, group->tail_time);
+                block->exit_velocity     = mp_calc_v(t, group->cruise_velocity, group->exit_velocity);
+                block->exit_acceleration = mp_calc_a(t, group->cruise_velocity, group->exit_velocity, group->tail_time);
+                block->exit_jerk         = mp_calc_j(t, group->cruise_velocity, group->exit_velocity, group->tail_time);
 
-                block->tail_time = group->tail_time * (group->t_into_section - t); // Remember, t for the tail starts at 1 and goes to 0
+                block->tail_time = group->tail_time * (t - group->t_into_section);
                 group->t_into_section = t;
             }
             // We will use of the rest of the tail in this block
             else {
                 block->tail_length = tail_left;
-                block->tail_time = group->tail_time * (group->t_into_section); // Remember, t for the tail starts at 1 and goes to 0
+                block->tail_time = group->tail_time * (1.0 - group->t_into_section);
 
                 block->exit_velocity     = group->exit_velocity;
                 block->exit_acceleration = 0;

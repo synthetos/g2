@@ -275,13 +275,13 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 //        bf->plannable_time += bf->move_time;            // adjust plannable time
 //        UPDATE_BF_MS(bf);  //+++++
 
+        bf->buffer_state = MP_BUFFER_IN_PROCESS;
+
         bf->hint = NO_HINT; // ensure we've cleared the hints
         // Time: 12us-41us
         if (bf->nx->plannable) {                        // read in new buffers until EMPTY
             return (bf->nx);
         }
-
-        bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
         mb.planning_return = bf->nx;                    // where to return after planning is complete
         mb.pessimistic_state = PESSIMISTIC_BACKWARD;    // start backplanning
@@ -381,7 +381,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 // ...
 
                 // manage the group pointers
-                bf->nx_group = bf->nx_group->nx_group; // would bf->nx_group = bf->nx_group->nx_group be more stable?
+                bf->nx_group = bf->nx_group->nx_group;
                 bf->nx_group->pv_group = bf;
             }
 
@@ -506,8 +506,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 optimal = true;
             }
 
-            // We might back plan into the running buffer. Don't mark that one as PREPPED
-            if (bf->buffer_state != MP_BUFFER_RUNNING) {
+            // We might back plan into the running or planned buffer, so we have to check.
+            if (bf->buffer_state < MP_BUFFER_PREPPED) {
                 bf->buffer_state = MP_BUFFER_PREPPED;
             }
         } // for loop
