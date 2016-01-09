@@ -246,6 +246,10 @@ stat_t mp_plan_move()
                         skip = true;
                     }
                 }
+
+                if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
+                    __asm__("BKPT");
+                }
             }
         }
     } else {
@@ -279,12 +283,22 @@ stat_t mp_plan_move()
         // group_state of GROUP_OFF means we need to run ramps for the next group
         if (group->group_state == GROUP_OFF) {
             float entry_velocity;
-            if (group == mr.r_group) {
+
+            if (!skip) {
+                // We're computing the running block
                 entry_velocity = mr.entry_velocity;
-            } else {
+            }
+            else if (mr.r_group->group_state == GROUP_OFF) {
+                entry_velocity = mr.r->exit_velocity;
+            }
+            else {
                 entry_velocity = mr.r_group->exit_velocity;
             }
             mp_calculate_ramps(bf, group, entry_velocity);
+
+            if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
+                __asm__("BKPT");
+            }
 
             // reset the planning group
             group->completed_group_body_length = 0;
@@ -345,9 +359,12 @@ stat_t mp_plan_move()
             bf_lookahead->pv->exit_velocity = 0.0;
 
             // We also ensure that the cruise can't be adjusted.
-            bf_lookahead->cruise_vmax     = mr.r->cruise_velocity;
+            bf_lookahead->cruise_vmax     = group->cruise_velocity;
+            bf_lookahead->exit_vmax       = group->cruise_velocity;
+            bf_lookahead->exit_velocity   = group->exit_velocity;
+
             // The actual cruise that ends up being used will be set by mp_calculate_block(), from mr.group_cruise_velocity.
-            bf_lookahead->cruise_velocity = mr.r->cruise_velocity;
+            bf_lookahead->cruise_velocity = group->cruise_velocity;
 
             // push the group length into there so it gets extended properly
             bf_lookahead->group_length = group->length;
@@ -368,13 +385,37 @@ stat_t mp_plan_move()
     if ((group->group_state > GROUP_RAMPED) && (group->group_state != GROUP_DONE) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
         stat_t status = STAT_OK; // default it
         float entry_velocity;
-        if (group == mr.r_group) {
+        if (bf->buffer_state == MP_BUFFER_RUNNING) {
             entry_velocity = mr.entry_velocity;
         } else {
             entry_velocity = mr.r_group->exit_velocity;
         }
+
+
+        if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
+            __asm__("BKPT");
+        }
+
         status =  mp_calculate_block(bf, group, block, entry_velocity);
-        SANITY_TRAPS(bf, block);
+
+        // ++++ We shouldn't see any grouping right now
+        if (group->group_state != GROUP_DONE) {
+            __asm__("BKPT");
+        }
+
+        if (bf->buffer_state != MP_BUFFER_EMPTY) {
+            if (block->exit_velocity > block->cruise_velocity)  {
+                __asm__("BKPT");
+            }
+        }
+
+        if (block->head_length < 0.001 && block->body_length < 0.001 && block->tail_length < 0.001)  {
+            __asm__("BKPT");
+        }
+
+        if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
+            __asm__("BKPT");
+        }
 
         // status will be STAT_EAGAIN if there are more blocks in this group,
         // or STAT_OK if the group is done.
@@ -616,6 +657,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // reset the previous block's nx_group
         bf->pv->nx_group = bf;
 
+        if (mr.r_group->first_block == bf->pv) {
+            mr.r_group->first_block = bf;
+        }
 
         // reset the executed values
         mr.executed_body_length = 0.0;
@@ -856,6 +900,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 		mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
 		mr.section_state = SECTION_OFF;
         mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
+
+        if (mr.r_group->group_state == GROUP_DONE) {
+            mr.r_group->group_state = GROUP_OFF;
+        }
 
         mr.entry_velocity     = mr.r->exit_velocity;     // feed the old exit into the entry.
         mr.entry_acceleration = mr.r->exit_acceleration;

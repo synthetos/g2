@@ -178,7 +178,8 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
 
     // +++++ RG trap
     if ((group->cruise_velocity < entry_velocity) || (group->cruise_velocity < group->exit_velocity)) {
-        while(1);
+        __asm__("BKPT");
+//        while(1);
     }
 
     // Note that we are lookig at the first group/block after the running block.
@@ -301,7 +302,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                         test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+bf->group_length, bf->nx_group);
 
                         if (test_velocity > group->exit_velocity) {
-                            test_velocity_valid = true; // revord that this has been computed, so it doesn't have to happen again.
+                            test_velocity_valid = true; // record that this has been computed, so it doesn't have to happen again.
 
                             // We're going to merge with nx_group from us
                             bf->group_length += bf->nx_group->group_length;
@@ -933,15 +934,31 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
             v_1 = min_v_1;
 
             if (v_0 < v_2) {
+
                 // acceleration - it'll be a head/body
                 group->head_length = mp_get_target_length(v_0, v_2, bf);
-                group->body_length = L - group->head_length;
+                if (group->head_length > L) {
+                    group->head_length = L;
+                    group->body_length = 0;
+                    v_1 = mp_get_target_velocity(v_0, L, bf);
+                } else {
+                    group->body_length = L - group->head_length;
+                }
                 group->tail_length = 0;
+
             } else {
+
                 // deceleration - it'll be tail/body
                 group->tail_length = mp_get_target_length(v_2, v_0, bf);
-                group->body_length = L - group->tail_length;
+                if (group->tail_length > L) {
+                    group->tail_length = L;
+                    group->body_length = 0;
+                    v_1 = mp_get_target_velocity(v_2, L, bf);
+                } else {
+                    group->body_length = L - group->tail_length;
+                }
                 group->head_length = 0;
+
             }
 
             break;
@@ -983,7 +1000,8 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
     bf->meet_iterations = i; // 509/3, 585/4, 650/5, 846/6
 
-    v_1 = max(min_v_1, v_1);
+    //v_1 = max(min_v_1, v_1);
+    // We're going to allow it to return a v_1 < (min(v_0, v_2)).
 
     return v_1;
 }

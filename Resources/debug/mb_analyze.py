@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 import sys
 
@@ -38,7 +39,7 @@ def load_pool(filename):
             if current_buffer == pool['c']:
                 pool[current_buffer]['is_c'] = True
         else:
-            match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9.]+|[A-Z_]+)|true|false)', line)
+            match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9.]+(?:e[-+][0-9]+)?|[A-Z_]+)|true|false)', line)
             if match:
                 key, val = match.groups()
                 if key == 'pv':
@@ -57,6 +58,8 @@ def load_pool(filename):
                     pool[current_buffer]['nx_group'] = nv
                 elif key == 'buffer_state':
                     pool[current_buffer]['buffer_state'] = val
+                elif key == 'jerk':
+                    pool[current_buffer]['jerk'] = val
                 elif key == 'linenum':
                     pool[current_buffer]['linenum'] = val
                 elif key == 'buffer_number':
@@ -69,12 +72,16 @@ def load_pool(filename):
                     pool[current_buffer]['exit_velocity'] = val
                 elif key == 'length':
                     pool[current_buffer]['length'] = val
+                elif key == 'group_length':
+                    pool[current_buffer]['group_length'] = val
                 elif key == 'move_time':
                     pool[current_buffer]['move_time'] = val
                 elif key == 'plannable':
                     pool[current_buffer]['plannable'] = val
                 elif key == 'hint':
                     pool[current_buffer]['hint'] = val
+                elif key == 'iterations':
+                    pool[current_buffer]['iterations'] = val
     return pool
 
 def check_integrity(pool):
@@ -116,21 +123,35 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            print '0x%08x [%02d] : g<%02d | %02d> N%04d %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %10s' % (
+            if buffer['pv_group'] != buffer['pv']:
+                if buffer['nx_group'] != buffer['nx']:
+                    group_str = "↕︎"
+                else:
+                    group_str = "↑"
+            elif buffer['nx_group'] != buffer['nx']:
+                group_str = "↓"
+            else:
+                group_str = "|"
+
+            print '0x%08x [%02d] : g<%02d %s %02d> N%04d (%02dx) %-22s %-8s GL% 8.2f L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %20s (%5.2f)' % (
                 key,
                 float(buffer['buffer_number']),
                 int(pool[buffer['pv_group']]['buffer_number']),
+                group_str,
                 int(pool[buffer['nx_group']]['buffer_number']),
                 float(buffer['linenum']),
+                int(buffer['iterations']),
                 buffer['buffer_state'].strip(),
                 pointer,
+                float(buffer['group_length']),
                 float(buffer['length']),
                 float(buffer['move_time']),
                 float(buffer['cruise_velocity']),
                 float(buffer['exit_velocity']),
                 float(buffer['junction_vmax']),
                 buffer['plannable'],
-                buffer['hint']
+                buffer['hint'],
+                float(buffer['jerk'])/1000000.0
                 )
 
 if __name__ == "__main__":
