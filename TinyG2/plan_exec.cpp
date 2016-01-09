@@ -110,24 +110,35 @@ stat_t mp_plan_move()
     //  rg is done dispersing. There might be a redispersal (of the body extends), so we keep it around.
     //  However, we can skip to the planning group (rg = mr.p_group), and ramp the next group.
 
+
+    // To keep track of when to use the mr.r_group and when to use the mr.p_group:
+    //  Try in order of top-to-bottom: (-- means "doesn't matter" or "what's left")
+    //
+    //   Group   State  Extended  Use
+    //   -----   -----  --------  ---
+    //   r_group OFF    --        p_group
+    //   r_group DONE   No        p_group
+    //   r_group DONE   Yes       r_group (Note that extended may be deselected after further testing.)
+    //   r_group --     --        r_group
+    //
+    //   p_group OFF    --        p_group
+    //   p_group DONE   No        exit
+    //   p_group --     --        p_group (Note: We shouldn't see this state. p_group should have become r_group first.)
+
+
     // These store reason to alter a group
     bool velocity_changed = false;
     bool group_extended = false;
-    mpBuf_t *bf_first_block = nullptr;
 
-    if (group->group_state == GROUP_DONE) {
-        bf_first_block = group->first_block;
+    mpBuf_t *bf_first_block = nullptr;
+    if (mr.r_group->group_state != GROUP_OFF) {
+        bf_first_block = mr.r_group->first_block;
 
         if (!fp_GE(group->length, bf_first_block->group_length)) {
             group_extended = true;
         }
         if (!fp_GE(group->exit_velocity, bf_first_block->exit_velocity)) {
             velocity_changed = true;
-        }
-
-        if (group_extended || velocity_changed) {
-            // We want to modify the running block
-            block = mr.r;
         }
     }
 
@@ -139,7 +150,7 @@ stat_t mp_plan_move()
     } else {
         group = mr.p_group;
 
-        if (group->group_state == GROUP_DONE) {
+        if (group->group_state != GROUP_OFF) {
             bf_first_block = group->first_block;
 
             if (!fp_GE(group->length, bf_first_block->group_length)) {
@@ -151,8 +162,9 @@ stat_t mp_plan_move()
         }
     }
 
-    bool skip = false;
-    // We will plan one ahead if this one is already running.
+
+    // We chack to see if we're really going to extend, and do the extension if possible.
+    // NOTE: We *DO NOT* have the block or proper bf set yet!!
     if (group_extended || velocity_changed) {
         // If we're running, we've already called ramps
 
@@ -164,20 +176,19 @@ stat_t mp_plan_move()
 
         // Check to see if we're extending the runnning group and that we're in the tail
         if ((group == mr.r_group) && (mr.section == SECTION_TAIL)) {
-            // Check to see if we extended the group.
+
             if (group_extended) {
-                // Well this is a pickle.
-                while (1);
+                // Well this is a pickle. We can't extend the move now...
+                // +++++ We need to split the move, somehow. For now, we lock up.
+                __asm__("BKPT");
+
+                //while (1);
             } else {
-                // We have to play this out as a deceleration, so we'll continue without changes
-                skip = true;
+                // We have to play this out as planned, so we'll continue without changes
+                velocity_changed = false;
             }
 
         } else {
-
-            if (group_extended) {
-                group->length = bf_first_block->group_length;
-            }
 
             // If the velocity didn't max out to cruise velocity...
             if (fp_NE(bf_first_block->exit_velocity, group->cruise_velocity)) {
@@ -188,9 +199,20 @@ stat_t mp_plan_move()
 
                 float tail_length = mp_get_target_length(bf_first_block->exit_velocity, group->cruise_velocity, bf_first_block);
 
-                // If we extended the move, we don't care if the tail gets longer.
-                // +++++ RG Actualy, we might. If it extends less than it shrinks....
+                if (group_extended && ((group->length - group->tail_length) <= (bf_first_block->group_length - tail_length))) {
+                    if ((group == mr.r_group) && (mr.section == SECTION_BODY)) {
+                        // +++++ This is another ugly sitauation. We actually extended the group,
+                        // but now the tail will eat into the body that we have already started.
+                        __asm__("BKPT");
+                    }
+                }
+
+                // If we extended the move (and passed the above test), we don't care if the tail gets longer.
                 if (group_extended || (group == mr.p_group) || (tail_length < group->tail_length)) {
+                    if (group_extended) {
+                        group->length = bf_first_block->group_length;
+                    }
+
                     // we will have a tail
                     group->exit_velocity = bf_first_block->exit_velocity;
 
@@ -203,15 +225,13 @@ stat_t mp_plan_move()
                 } else {
                     // We don't want to change this, we would have to shorten the body.
 
-                    //while (1);
-
                     // We know this isn't an extension, so it has to be an exit_velocity upgrade.
                     // But it hits the inversion zone (where a lower velocity change does NOT result in a shorter acc/deceleration)
                     // and would require a longer exit velocity.
                     // Let's set the exit_velocity back to prevent coming back in here repeatedly.
                     bf_first_block->exit_velocity = group->exit_velocity;
 
-                    skip = true;
+                    velocity_changed = false;
                 }
 
             } else {
@@ -225,7 +245,8 @@ stat_t mp_plan_move()
                 group->tail_time = 0;
             }
 
-            if (!skip) {
+            // If we are still going to extend or change velocity...
+            if (group_extended || velocity_changed) {
                 group->group_state = GROUP_RAMPED;
                 group->length_into_section = 0;
                 group->t_into_section = 0;
@@ -241,9 +262,8 @@ stat_t mp_plan_move()
                         // If we're here, group == p_group
 
                         // This is important, but odd.
-                        // Basically, we just changes the planning group, so we want to skip to the next
+                        // Basically, we just changed the planning group, so we want to skip to the next
                         // buffer to modify.
-                        skip = true;
                     }
                 }
 
@@ -252,19 +272,45 @@ stat_t mp_plan_move()
                 }
             }
         }
-    } else {
-        skip = true;
     }
 
+    // Then, to chose which buffer to use (bf or bf->nx):
+    //
+    //   Extended  bf->buffer_state     Group Used  Use bf  Use block  Use entry_v
+    //   --------  ----------------     ----------  ------  ---------  -----------
+    //   --        < MP_BUFFER_RUNNING  --          bf      mr.p       mr.entry_velocity
+    //   No        = MP_BUFFER_RUNNING  --          bf->nx  mr.p       mr.r->exit_velocity
+    //   Yes       = MP_BUFFER_RUNNING  r_group     bf      mr.r       mr.entry_velocity
+    //   Yes       = MP_BUFFER_RUNNING  p_group     bf->nx  mr.p       mr.r->exit_velocity
 
-    if ((skip || (group == mr.p_group)) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
-        bf = bf->nx;
+    // Default to the planning buffer
+    block = mr.p;
+    float entry_velocity     = mr.entry_velocity;
+    float entry_acceleration = mr.entry_acceleration;
+    float entry_jerk         = mr.entry_jerk;
 
-        if ((group == mr.p_group) && (group->group_state == GROUP_DONE)) {
+    if (bf->buffer_state == MP_BUFFER_RUNNING) {
+        if ((group_extended || velocity_changed) && (group == mr.r_group)) {
+
+            // We want bf to stay the same, and entry_* is still from mr directly,
+            // but we want block to be mr.r.
+            block = mr.r;
+
+        }
+        else if ((group == mr.p_group) && (group->group_state == GROUP_DONE)) {
             // There's nothing left we can do, for now.
 
             // We did nothing
             return (STAT_NOOP);
+        }
+        else {
+
+            // Update bf to bf->nx, set entry_* to mr.r->exit_*.
+            bf = bf->nx;
+
+            entry_velocity     = mr.r->exit_velocity;
+            entry_acceleration = mr.r->exit_acceleration;
+            entry_jerk         = mr.r->exit_jerk;
         }
     }
 
@@ -282,18 +328,6 @@ stat_t mp_plan_move()
     if (bf->buffer_state == MP_BUFFER_PREPPED) {
         // group_state of GROUP_OFF means we need to run ramps for the next group
         if (group->group_state == GROUP_OFF) {
-            float entry_velocity;
-
-            if (!skip) {
-                // We're computing the running block
-                entry_velocity = mr.entry_velocity;
-            }
-            else if (mr.r_group->group_state == GROUP_OFF) {
-                entry_velocity = mr.r->exit_velocity;
-            }
-            else {
-                entry_velocity = mr.r_group->exit_velocity;
-            }
             mp_calculate_ramps(bf, group, entry_velocity);
 
             if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
@@ -384,24 +418,24 @@ stat_t mp_plan_move()
     //   otherwise, it'll be MP_BUFFER_PLANNED, and we have nothing to do here until the next block
     if ((group->group_state > GROUP_RAMPED) && (group->group_state != GROUP_DONE) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
         stat_t status = STAT_OK; // default it
-        float entry_velocity;
-        if (bf->buffer_state == MP_BUFFER_RUNNING) {
-            entry_velocity = mr.entry_velocity;
-        } else {
-            entry_velocity = mr.r_group->exit_velocity;
-        }
+//        float entry_velocity;
+//        if (bf->buffer_state == MP_BUFFER_RUNNING) {
+//            entry_velocity = mr.entry_velocity;
+//        } else {
+//            entry_velocity = mr.r_group->exit_velocity;
+//        }
 
 
         if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
             __asm__("BKPT");
         }
 
-        status =  mp_calculate_block(bf, group, block, entry_velocity);
+        status =  mp_calculate_block(bf, group, block, entry_velocity, entry_acceleration, entry_jerk);
 
         // ++++ We shouldn't see any grouping right now
-        if (group->group_state != GROUP_DONE) {
-            __asm__("BKPT");
-        }
+//        if (group->group_state != GROUP_DONE) {
+//            __asm__("BKPT");
+//        }
 
         if (bf->buffer_state != MP_BUFFER_EMPTY) {
             if (block->exit_velocity > block->cruise_velocity)  {

@@ -538,7 +538,7 @@ void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
 void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, const float entry_velocity);
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float entry_velocity);
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float entry_velocity, const float entry_acceleration, const float entry_jerk);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);

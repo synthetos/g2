@@ -457,7 +457,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
  *
  */
 
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block, const float entry_velocity)
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block, const float entry_velocity, const float entry_acceleration, const float entry_jerk)
 {
     // We look at head, then body, then tail, in order. It's possible to visit one, two, or all three in one call.
     // Note that the vmax values of the block may have been set to zero to prevent back-planning from making adjustments.
@@ -533,17 +533,9 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
     if (no_head) {
         // Since there is no head section in this move, we will want to ensure the entry (runtime exit) is copied to the cruise
         // If there's a body, then it should already be at cruise and with zero accel and jerk.
-        if (block != mr.r) {
-            // We're not adding to the runtime, so we want to use the runtime's exit as entry
-            block->cruise_velocity     = mr.r->exit_velocity;
-            block->cruise_acceleration = mr.r->exit_acceleration;
-            block->cruise_jerk         = mr.r->exit_jerk;
-        } else {
-            // Otherwise we copy the runtime entry
-            block->cruise_velocity     = mr.entry_velocity;
-            block->cruise_acceleration = mr.entry_acceleration;
-            block->cruise_jerk         = mr.entry_jerk;
-        }
+        block->cruise_velocity     = entry_velocity;
+        block->cruise_acceleration = entry_acceleration;
+        block->cruise_jerk         = entry_jerk;
     }
 
 
