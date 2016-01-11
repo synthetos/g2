@@ -137,6 +137,16 @@ stat_t mp_plan_move()
         if (!fp_GE(group->length, bf_first_block->group_length)) {
             group_extended = true;
         }
+
+        // We have a race condition where the back-planner may be interrupted by exec.
+        // The result is that the exit_value is actually higher than the exit_vmax and
+        // cruise_vmax set by exec.
+        // Here we'll correct that case before continuing.
+
+        if (bf_first_block->exit_velocity > bf_first_block->exit_vmax) {
+            bf_first_block->exit_velocity = bf_first_block->exit_vmax;
+        }
+
         if (!fp_GE(group->exit_velocity, bf_first_block->exit_velocity)) {
             velocity_changed = true;
         }
@@ -156,6 +166,12 @@ stat_t mp_plan_move()
             if (!fp_GE(group->length, bf_first_block->group_length)) {
                 group_extended = true;
             }
+
+
+            if (bf_first_block->exit_velocity > bf_first_block->exit_vmax) {
+                bf_first_block->exit_velocity = bf_first_block->exit_vmax;
+            }
+
             if (!fp_GE(group->exit_velocity, bf_first_block->exit_velocity)) {
                 velocity_changed = true;
             }
