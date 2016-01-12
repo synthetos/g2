@@ -7,17 +7,10 @@ ifeq ("$(BOARD)","g2ref-a")
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 endif
 
-ifeq ("$(BOARD)","PrintrbotPlus")
-    BASE_BOARD=g2-g2ref
-    SETTINGS_FILE="settings_Printrbot_Plus.h"
-    DEVICE_DEFINES += MOTATE_BOARD="g2ref-a" SETTINGS_FILE=${SETTINGS_FILE}
-endif
-
-ifeq ("$(BOARD)","PrintrbotSimple")
-    BASE_BOARD=g2-g2ref
-    SETTINGS_FILE="settings_Printrbot_Simple.h"
-    DEVICE_DEFINES += MOTATE_BOARD="g2ref-a" SETTINGS_FILE=${SETTINGS_FILE}
-endif
+# MOVED: PrintrbotPlus and PrintrbotSimple are defined in pBoard.mk now,
+#        and have changed from BOARD= to CONFIG=
+#
+# To compile for example: make CONFIG=PrintrbotPlus BOARD=g2ref-a
 
 # We call it g2-g2ref here to distinguish between the "g2Ref" in Motate
 ifeq ("$(BASE_BOARD)","g2-g2ref")
