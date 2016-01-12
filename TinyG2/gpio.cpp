@@ -223,18 +223,42 @@ static bool _read_raw_pin(const uint8_t input_num_ext)
  */
 
 #ifdef __ARM
+#ifdef INPUT1_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput1_PinNumber) { _dispatch_pin(_condition_pin(1, (input_1_pin.get() != 0))); }
+#endif
+#ifdef INPUT2_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput2_PinNumber) { _dispatch_pin(_condition_pin(2, (input_2_pin.get() != 0))); }
+#endif
+#ifdef INPUT3_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput3_PinNumber) { _dispatch_pin(_condition_pin(3, (input_3_pin.get() != 0))); }
+#endif
+#ifdef INPUT4_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput4_PinNumber) { _dispatch_pin(_condition_pin(4, (input_4_pin.get() != 0))); }
+#endif
+#ifdef INPUT5_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput5_PinNumber) { _dispatch_pin(_condition_pin(5, (input_5_pin.get() != 0))); }
+#endif
+#ifdef INPUT6_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput6_PinNumber) { _dispatch_pin(_condition_pin(6, (input_6_pin.get() != 0))); }
+#endif
+#ifdef INPUT7_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput7_PinNumber) { _dispatch_pin(_condition_pin(7, (input_7_pin.get() != 0))); }
+#endif
+#ifdef INPUT8_AVAILABLE
 MOTATE_PIN_INTERRUPT(kInput8_PinNumber) { _dispatch_pin(_condition_pin(8, (input_8_pin.get() != 0))); }
-//MOTATE_PIN_INTERRUPT(kInput9_PinNumber) { _dispatch_pin(_condition_pin(9, (input_9_pin.get() != 0))); }
-//MOTATE_PIN_INTERRUPT(kInput10_PinNumber) { _dispatch_pin(_condition_pin(9, (input_10_pin.get() != 0))); }
-//MOTATE_PIN_INTERRUPT(kInput11_PinNumber) { _dispatch_pin(_condition_pin(10, (input_11_pin.get() != 0))); }
-//MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _dispatch_pin(_condition_pin(11, (input_12_pin.get() != 0))); }
+#endif
+#ifdef INPUT9_AVAILABLE
+MOTATE_PIN_INTERRUPT(kInput9_PinNumber) { _dispatch_pin(_condition_pin(9, (input_9_pin.get() != 0))); }
+#endif
+#ifdef INPUT10_AVAILABLE
+MOTATE_PIN_INTERRUPT(kInput10_PinNumber) { _dispatch_pin(_condition_pin(9, (input_10_pin.get() != 0))); }
+#endif
+#ifdef INPUT11_AVAILABLE
+MOTATE_PIN_INTERRUPT(kInput11_PinNumber) { _dispatch_pin(_condition_pin(10, (input_11_pin.get() != 0))); }
+#endif
+#ifdef INPUT13_AVAILABLE
+MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _dispatch_pin(_condition_pin(11, (input_12_pin.get() != 0))); }
+#endif
 #endif
 
 #ifdef __AVR
