@@ -129,19 +129,24 @@ namespace Motate {
     pin_number kSocket6_Microstep_2PinNumber    = -1;   // 67;
     pin_number kSocket6_VrefPinNumber           = -1;   // 68;
 
+    // We also have to defin INPUTx_AVAILABLE so we know if we can make the interrupts
+    #define INPUT1_AVAILABLE 1
     pin_number kInput1_PinNumber                = 100;
-    pin_number kInput2_PinNumber                = 101;
-    pin_number kInput3_PinNumber                = 102;
+    pin_number kInput2_PinNumber                = -1; // 101;
+    pin_number kInput3_PinNumber                = -1; // 102;
+    #define INPUT4_AVAILABLE 1
     pin_number kInput4_PinNumber                = 103;
+    #define INPUT5_AVAILABLE 1
     pin_number kInput5_PinNumber                = 104;
-    pin_number kInput6_PinNumber                = 105;
+    pin_number kInput6_PinNumber                = -1; // 105;
 
-    pin_number kInput7_PinNumber                = 106;
+    pin_number kInput7_PinNumber                = -1; // 106;
+    #define INPUT8_AVAILABLE 1
     pin_number kInput8_PinNumber                = 107;
-    pin_number kInput9_PinNumber                = 108;
-    pin_number kInput10_PinNumber               = 109;
-    pin_number kInput11_PinNumber               = 110;
-    pin_number kInput12_PinNumber               = 111;
+    pin_number kInput9_PinNumber                = -1; // 108;
+    pin_number kInput10_PinNumber               = -1; // 109;
+    pin_number kInput11_PinNumber               = -1; // 110;
+    pin_number kInput12_PinNumber               = -1; // 111;
 
     // START DEBUG PINS - Convenient pins to hijack for hardware debugging
     // To reuse a pin for debug change the original pin number to -1
