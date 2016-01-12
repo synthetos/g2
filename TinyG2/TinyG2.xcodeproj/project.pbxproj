@@ -65,6 +65,10 @@
 		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
 		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D43C7AE71B155D0A007440D6 /* G2v9 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = G2v9; sourceTree = "<group>"; };
+		D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "pboard-a-pinout.h"; sourceTree = "<group>"; };
+		D4522DC61C455F660086AAE6 /* pboard.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.gdb; sourceTree = "<group>"; };
+		D4522DC71C455F660086AAE6 /* pboard.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.mk; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canonical_machine.cpp; sourceTree = "<group>"; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config_app.cpp; sourceTree = "<group>"; };
@@ -159,6 +163,9 @@
 				D49367C11B824EA1000BB759 /* g2ref */,
 				D49367CA1B827706000BB759 /* g2ref.gdb */,
 				D49367CB1B827706000BB759 /* g2ref.mk */,
+				D4522DC31C455F660086AAE6 /* pboard */,
+				D4522DC61C455F660086AAE6 /* pboard.gdb */,
+				D4522DC71C455F660086AAE6 /* pboard.mk */,
 				D43C7AE71B155D0A007440D6 /* G2v9 */,
 				D4EB789B1B7BF2F70001B355 /* G2v9.gdb */,
 				D49367D21B82C990000BB759 /* G2v9.mk */,
@@ -202,6 +209,15 @@
 				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
 			);
 			path = settings;
+			sourceTree = "<group>";
+		};
+		D4522DC31C455F660086AAE6 /* pboard */ = {
+			isa = PBXGroup;
+			children = (
+				D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */,
+				D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */,
+			);
+			path = pboard;
 			sourceTree = "<group>";
 		};
 		D45710B7170532AC00EA19A8 = {
@@ -295,6 +311,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pBoard-a DEBUG=2";
+			buildConfigurationList = D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG pBoard PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D45710C21705330C00EA19A8 /* TinyG2 gShield */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield";
@@ -325,7 +355,7 @@
 		};
 		D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=PrintrbotPlus DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=g2ref-a CONFIG=PrintrbotPlus DEBUG=2";
 			buildConfigurationList = D49367CF1B82C8D2000BB759 /* Build configuration list for PBXLegacyTarget "TinyG G2Ref PrintrbotPlus" */;
 			buildPhases = (
 			);
@@ -427,6 +457,7 @@
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
+				D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -487,6 +518,22 @@
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Release;
+		};
+		D4522DBF1C4558C70086AAE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4522DC01C4558C70086AAE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -691,6 +738,15 @@
 			buildConfigurations = (
 				D43C7AE51B155C33007440D6 /* Debug */,
 				D43C7AE61B155C33007440D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4522DBF1C4558C70086AAE6 /* Debug */,
+				D4522DC01C4558C70086AAE6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
