@@ -112,23 +112,23 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define MOTOR_POWER_LEVEL_A         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M1_MOTOR_MAP                AXIS_X                  // 1ma
-#define M1_STEP_ANGLE               1.8                     // 1sa
-//#define M1_TRAVEL_PER_REV           40.64                   // 1tr
-#define M1_TRAVEL_PER_REV           40                   // 1tr
-#define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
-#define M1_POLARITY                 0                       // 1po		0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 1mp
+#define M5_MOTOR_MAP                AXIS_X                  // 1ma
+#define M5_STEP_ANGLE               1.8                     // 1sa
+//#define M5_TRAVEL_PER_REV           40.64                   // 1tr
+#define M5_TRAVEL_PER_REV           40                   // 1tr
+#define M5_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
+#define M5_POLARITY                 0                       // 1po		0=normal, 1=reversed
+#define M5_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
+#define M5_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M2_MOTOR_MAP                AXIS_Y
-#define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           40.64
-#define M2_MICROSTEPS               32
-#define M2_POLARITY                 1
-#define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
+#define M4_MOTOR_MAP                AXIS_Y
+#define M4_STEP_ANGLE               1.8
+#define M4_TRAVEL_PER_REV           40.64
+#define M4_MICROSTEPS               32
+#define M4_POLARITY                 1
+#define M4_POWER_MODE               MOTOR_POWER_MODE
+#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
@@ -141,21 +141,21 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
-#define M4_MOTOR_MAP                AXIS_A
-#define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           360			// degrees moved per motor rev
-#define M4_MICROSTEPS               32
-#define M4_POLARITY                 0
-#define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_A
+#define M2_MOTOR_MAP                AXIS_A
+#define M2_STEP_ANGLE               1.8
+#define M2_TRAVEL_PER_REV           360			// degrees moved per motor rev
+#define M2_MICROSTEPS               32
+#define M2_POLARITY                 0
+#define M2_POWER_MODE               MOTOR_POWER_MODE
+#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_A
 
-#define M5_MOTOR_MAP                AXIS_B
-#define M5_STEP_ANGLE               1.8
-#define M5_TRAVEL_PER_REV           360			// degrees moved per motor rev
-#define M5_MICROSTEPS               32
-#define M5_POLARITY                 0
-#define M5_POWER_MODE               MOTOR_POWER_MODE
-#define M5_POWER_LEVEL              0.35
+#define M1_MOTOR_MAP                AXIS_B
+#define M1_STEP_ANGLE               1.8
+#define M1_TRAVEL_PER_REV           360			// degrees moved per motor rev
+#define M1_MICROSTEPS               32
+#define M1_POLARITY                 0
+#define M1_POWER_MODE               MOTOR_POWER_MODE
+#define M1_POWER_LEVEL              0.35
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
@@ -168,7 +168,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX                    5000
-#define VELOCITY_MAX                40000
+#define VELOCITY_MAX                30000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              VELOCITY_MAX            // xvm  G0 max velocity in mm/min
@@ -233,13 +233,13 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				5.30516476972984
-#define A_VELOCITY_MAX          25920.0 // ~40 mm/s, 2,400 mm/min
+#define A_VELOCITY_MAX          25920.0     // ~40 mm/s, 2,400 mm/min
 #define A_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				324000 // 1,000 million mm/min^3
-                                       // * a million IF it's over a million
-                                       // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
+#define A_JERK_MAX 				324000  // 1,000 million mm/min^3
+                                        // * a million IF it's over a million
+                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 //#define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIR            0
@@ -249,13 +249,15 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HIGH_SPEED       A_JERK_MAX
 
-#define B_AXIS_MODE				AXIS_DISABLED
-#define B_RADIUS				1
-#define B_VELOCITY_MAX			3600
-#define B_FEEDRATE_MAX			B_VELOCITY_MAX
+#define B_AXIS_MODE 			AXIS_RADIUS
+#define B_RADIUS 				5.30516476972984
+#define B_VELOCITY_MAX          25920.0     // ~40 mm/s, 2,400 mm/min
+#define B_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
 #define B_TRAVEL_MIN 			0
-#define B_TRAVEL_MAX			-1
-#define B_JERK_MAX				20
+#define B_TRAVEL_MAX 			10
+#define B_JERK_MAX 				324000  // 1,000 million mm/min^3
+                                        // * a million IF it's over a million
+                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define B_HOMING_INPUT          0
 #define B_HOMING_DIR            0
 #define B_SEARCH_VELOCITY 		600

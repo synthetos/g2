@@ -65,7 +65,7 @@ stat_t mp_exec_move()
 
     // first-time operations
     if (bf->buffer_state != MP_BUFFER_RUNNING) {
-
+/*
         if (bf->gm.linenum == 683) {    // Crashes on ln 685
             printf("stop\n");
         }
@@ -77,7 +77,7 @@ stat_t mp_exec_move()
         if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
             rpt_exception(42, "mp_exec_move() next buffer is empty");
         }
-
+*/
         if (bf->buffer_state == MP_BUFFER_PREPPED) {
 //            mp_plan_block_forward(bf);                      // complete planning if not already planned
             SANITY_TRAPS(bf);
