@@ -313,7 +313,7 @@
 		};
 		D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pBoard-a DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pboard-a DEBUG=2";
 			buildConfigurationList = D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard PrintrbotPlus" */;
 			buildPhases = (
 			);
