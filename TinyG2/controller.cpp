@@ -75,6 +75,8 @@ static stat_t _dispatch_control(void);
 static void _dispatch_kernel(void);
 static stat_t _controller_state(void);          // manage controller state transitions
 
+static OutputPin<kOutputSAFE_PinNumber> safe_pin;
+
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -392,6 +394,8 @@ static stat_t _shutdown_handler(void)
 
 static stat_t _limit_switch_handler(void)
 {
+    safe_pin.toggle();
+
     if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
 	    char msg[10];
 	    sprintf_P(msg, PSTR("input %d"), (int)cm.limit_requested);

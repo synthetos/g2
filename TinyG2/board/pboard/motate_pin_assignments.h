@@ -198,6 +198,8 @@ namespace Motate {
     pin_number kOutput15_PinNumber              =  -1;   // 144;
     pin_number kOutput16_PinNumber              =  -1;   // 145;
 
+    pin_number kOutputSAFE_PinNumber            = 149;              // SAFE signal
+
     pin_number kADC0_PinNumber                  = 150;   // Heated bed thermistor ADC
     pin_number kADC1_PinNumber                  = 151;   // Extruder1_ADC
     pin_number kADC2_PinNumber                  = 152;   // Extruder2_ADC
