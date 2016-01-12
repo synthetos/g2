@@ -323,10 +323,21 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // Timings from *here*
 
             bf->iterations++;
-            bf->plannable = !optimal;
+            bf->plannable = bf->plannable && !optimal; // Don't accidentally enable plannable!
 
             // Let's be mindful that for ward planning may change exit_vmax, and our exit velocity may be lowered
             braking_velocity = min(braking_velocity, bf->exit_vmax);
+
+            if ((bf->buffer_state == MP_BUFFER_RUNNING) || (bf->pv->buffer_state == MP_BUFFER_EMPTY)) {
+                // We can't merge or improve the entry velocity of the running (or first, about-to-run) buffer,
+                // so we might as well skedattle...
+
+                // We *must* set cruise before exit, and keep it at least as high as exit.
+                bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
+                bf->exit_velocity = braking_velocity;
+
+                break;
+            }
 
             // Check for reasons NOT to merge (if we still are going to)
             if (going_to_merge && (
@@ -372,7 +383,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                 group_end = bf->nx_group->pv;
 
                 // We *must* set cruise before exit, and keep it at least as high as exit.
-                bf->cruise_velocity = max(braking_velocity, bf->exit_velocity);
+                bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
                 bf->exit_velocity = braking_velocity;
 
                 // reset group length
@@ -527,6 +538,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
                 // We can't improve this entry more
                 optimal = true;
+            }
+
+            // +++++
+            if (bf->buffer_state == MP_BUFFER_EMPTY) {
+                _debug_trap();
             }
 
             // We might back plan into the running or planned buffer, so we have to check.
@@ -1026,8 +1042,8 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 		    }
         }
 	}
-    move_time = max3(feed_time, max_time, MIN_SEGMENT_TIME);
-    min_time = max(min_time, MIN_SEGMENT_TIME);
+    move_time = max3(feed_time, max_time, MIN_BLOCK_TIME);
+    min_time = max(min_time, MIN_BLOCK_TIME);
     bf->cruise_vset = bf->length / move_time;       // target velocity requested
     bf->cruise_vmax = bf->cruise_vset;              // starting value for cruise vmax
     bf->absolute_vmax = bf->length / min_time;      // absolute velocity limit

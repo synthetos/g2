@@ -154,11 +154,13 @@ typedef enum {
 #define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
-#define MIN_SEGMENT_MS          ((float)0.750)          // minimum segment milliseconds (also minimum move time)
-#define NOM_SEGMENT_MS          ((float)1.0)            // nominal segment ms
+#define MIN_SEGMENT_MS          ((float)2.0)          // minimum segment milliseconds
+#define NOM_SEGMENT_MS          ((float)4.0)          // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_BLOCK_MS            ((float)10.0)          // minimum block (whole move) milliseconds
 #define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define MIN_BLOCK_TIME          ((float)(MIN_BLOCK_MS / 60000))       // DO NOT CHANGE - time in minutes
 
 #define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
 #define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
@@ -365,7 +367,9 @@ typedef struct mpMoveMasterSingleton {  // common variables for planning (move m
 
 
 typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
-    struct mpBlockRuntimeBuf *nx;        // singly-linked-list
+    struct mpBlockRuntimeBuf *nx;       // singly-linked-list
+
+    bool planned;                       // Record if it's been planned against a buufer
 
     float head_length;                  // copies of bf variables of same name
     float body_length;

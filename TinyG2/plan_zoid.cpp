@@ -173,8 +173,8 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
     group->body_length = 0;
     group->tail_length = 0;
 
-    group->cruise_velocity = bf->cruise_velocity;
-    group->exit_velocity   = bf->exit_velocity;
+    group->cruise_velocity = min(bf->cruise_velocity, bf->cruise_vmax);
+    group->exit_velocity   = min(bf->exit_velocity, bf->exit_vmax);
 
     // +++++ RG trap
     if ((group->cruise_velocity < entry_velocity) || (group->cruise_velocity < group->exit_velocity)) {
@@ -297,6 +297,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                 mb.entry_changed = true; // we are changing the *next* block's entry velocity
 
                 // We'll check to see if we can merge this block into the next one.
+                /*
                 if ((bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
                     if (bf->nx_group->jerk < bf->jerk) {
                         test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+bf->group_length, bf->nx_group);
@@ -331,6 +332,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                         }
                     }
                 }
+                */
 
                 if (!did_merge) {
 
@@ -642,6 +644,9 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
         block->exit_velocity     = block->cruise_velocity;
         block->exit_acceleration = block->cruise_acceleration;
         block->exit_jerk         = block->cruise_jerk;
+
+        // Also, BONUS: We can't improve this group anymore!
+        group->first_block->plannable = false;
     }
 
     if (group->group_state == GROUP_DONE) {

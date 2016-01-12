@@ -888,7 +888,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
     } while (bf != bf_start);
 }
 
-#if 0
+#if 1
 #ifdef DEBUG
 
 #warning DEBUG TRAPS ENABLED
@@ -896,23 +896,23 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 
 #pragma GCC optimize ("O0")
 
-static void _planner_report(const char *msg)
-{
-    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
-
-    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
-        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
-                mb.bf[i].buffer_state,
-                mb.bf[i].move_type,
-                mb.bf[i].locked,
-                mb.bf[i].plannable);
-        if (&mb.bf[i] == mb.r) {
-            printf(", \"RUN\":t");}
-        if (&mb.bf[i] == mb.w) {
-            printf(", \"WRT\":t");}
-        printf("}}\n");
-    }
-}
+//static void _planner_report(const char *msg)
+//{
+//    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
+//
+//    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+//        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
+//                mb.bf[i].buffer_state,
+//                mb.bf[i].move_type,
+//                mb.bf[i].locked,
+//                mb.bf[i].plannable);
+//        if (&mb.bf[i] == mb.r) {
+//            printf(", \"RUN\":t");}
+//        if (&mb.bf[i] == mb.w) {
+//            printf(", \"WRT\":t");}
+//        printf("}}\n");
+//    }
+//}
 
 /*
  * _audit_buffers() - diagnostic to determine if buffers are sane
@@ -924,13 +924,14 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
-        _planner_report("buffer audit1");
-        _debug_trap();
+//        _planner_report("buffer audit1");
+        __NOP();
+//        _debug_trap();
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
-        _planner_report("buffer audit2");
+//        _planner_report("buffer audit2");
         _debug_trap();
     }
 
@@ -939,7 +940,7 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
-            _planner_report("buffer audit3");
+//            _planner_report("buffer audit3");
             _debug_trap();
         }
 
@@ -950,40 +951,45 @@ static void _audit_buffers()
         //  - MP_BUFFER_EMPTY (zero or more up until mb.r)
         //  - no more
 
-        // After RUNNING, we can see anything but PENDING, but prefer not to find PLANNING
+        // After RUNNING, we can PREPPED, PLANNED, INITED, IN_PROCESS, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_RUNNING &&
-                                    bf->buffer_state != MP_BUFFER_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_EMPTY) {
-            // Exception: PLANNING is allowed, but we may want to watch for it:
-            if (bf->buffer_state == MP_BUFFER_NOT_PLANNED) {
+            bf->buffer_state != MP_BUFFER_PREPPED &&
+            bf->buffer_state != MP_BUFFER_PLANNED &&
+            bf->buffer_state != MP_BUFFER_INITIALIZING &&
+            bf->buffer_state != MP_BUFFER_IN_PROCESS &&
+            bf->buffer_state != MP_BUFFER_EMPTY) {
+            // Exception: MP_BUFFER_INITIALIZING and MP_BUFFER_IN_PROCESS are allowed, but we may want to watch for it:
+            if ((bf->buffer_state == MP_BUFFER_INITIALIZING) || (bf->buffer_state == MP_BUFFER_IN_PROCESS)) {
                 __NOP();
             } else {
-                _planner_report("buffer audit4");
+//                _planner_report("buffer audit4");
                 _debug_trap();
             }
         }
 
-        // After QUEUED, we can see QUEUED, PLANNING, or EMPTY
+        // After PLANNED, we can see PREPPED, INITED, IN_PROCESS, or EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_NOT_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_EMPTY) {
-            _planner_report("buffer audit5");
+            bf->buffer_state != MP_BUFFER_PREPPED &&
+            bf->buffer_state != MP_BUFFER_INITIALIZING &&
+            bf->buffer_state != MP_BUFFER_IN_PROCESS &&
+            bf->buffer_state != MP_BUFFER_EMPTY) {
+//            _planner_report("buffer audit5");
             _debug_trap();
         }
 
-        // After PLANNING, we can see PLANNING, or EMPTY
-        if (bf->pv->buffer_state == MP_BUFFER_NOT_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_NOT_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_PLANNED &&
-                                    bf->buffer_state != MP_BUFFER_EMPTY) {
-            _planner_report("buffer audit6");
+        // After PREPPED, we can see PREPPED, INITED, IN_PROCESS, or EMPTY
+        if (bf->pv->buffer_state == MP_BUFFER_PREPPED &&
+            bf->buffer_state != MP_BUFFER_PREPPED &&
+            bf->buffer_state != MP_BUFFER_INITIALIZING &&
+            bf->buffer_state != MP_BUFFER_IN_PROCESS &&
+            bf->buffer_state != MP_BUFFER_EMPTY) {
+//            _planner_report("buffer audit6");
             _debug_trap();
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
-            _planner_report("buffer audit7");
+//            _planner_report("buffer audit7");
             _debug_trap();
         }
         // Now look at the next one.
