@@ -325,7 +325,7 @@
 		};
 		D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=PrintrbotPlus";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=PrintrbotPlus DEBUG=2";
 			buildConfigurationList = D49367CF1B82C8D2000BB759 /* Build configuration list for PBXLegacyTarget "TinyG G2Ref PrintrbotPlus" */;
 			buildPhases = (
 			);
