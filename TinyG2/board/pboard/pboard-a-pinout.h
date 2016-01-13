@@ -119,6 +119,21 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kInput1_PinNumber       , B, 'B', 26);  // DI_1: XMin
     _MAKE_MOTATE_PIN(kOutput3_PinNumber      , B, 'B', 27);  // DO_3: kOutput3_PinNumber (Fan1A_PWM)
 
+// We don't have all of the inputs, so we have to indicate as much:
+#define INPUT1_AVAILABLE 1
+#define INPUT2_AVAILABLE 0
+#define INPUT3_AVAILABLE 0
+#define INPUT4_AVAILABLE 1
+#define INPUT5_AVAILABLE 1
+#define INPUT6_AVAILABLE 0
+#define INPUT7_AVAILABLE 0
+#define INPUT8_AVAILABLE 1
+#define INPUT9_AVAILABLE 0
+#define INPUT10_AVAILABLE 0
+#define INPUT11_AVAILABLE 0
+#define INPUT12_AVAILABLE 0
+#define INPUT13_AVAILABLE 0
+
 
     // We are using 200+ to mean "unused"
     _MAKE_MOTATE_PIN(kUnused_3, B, 'B', 28);  // JTAG_CLK / SWD_CLK
