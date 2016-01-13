@@ -328,13 +328,18 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // Let's be mindful that for ward planning may change exit_vmax, and our exit velocity may be lowered
             braking_velocity = min(braking_velocity, bf->exit_vmax);
 
-            if ((bf->buffer_state == MP_BUFFER_RUNNING) || (bf->pv->buffer_state == MP_BUFFER_EMPTY)) {
+            if ((bf->buffer_state == MP_BUFFER_RUNNING) || ((bf->buffer_state == MP_BUFFER_PLANNED) && (bf->pv->buffer_state == MP_BUFFER_EMPTY))) {
                 // We can't merge or improve the entry velocity of the running (or first, about-to-run) buffer,
                 // so we might as well skedattle...
 
                 // We *must* set cruise before exit, and keep it at least as high as exit.
                 bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
                 bf->exit_velocity = braking_velocity;
+
+                // We might back plan into the running or planned buffer, so we have to check.
+                if (bf->buffer_state < MP_BUFFER_PREPPED) {
+                    bf->buffer_state = MP_BUFFER_PREPPED;
+                }
 
                 break;
             }
@@ -542,7 +547,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // +++++
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
-                _debug_trap();
+                _debug_trap(); // Exec apparently cleared this block while we were planning it.
             }
 
             // We might back plan into the running or planned buffer, so we have to check.

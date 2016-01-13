@@ -188,6 +188,11 @@ stat_t mp_plan_move()
         return (STAT_NOOP);
     }
 
+    if (bf->buffer_state < MP_BUFFER_PREPPED) {
+        // Get outta here.
+        // We did nothing
+        return (STAT_NOOP);
+    }
 
     if (bf->move_type != MOVE_TYPE_ALINE) {
         // Nothing to see here...
@@ -341,6 +346,12 @@ stat_t mp_plan_move()
             // Update bf to bf->nx, set entry_* to mr.r->exit_*.
             bf = bf->nx;
 
+            if (bf->buffer_state < MP_BUFFER_PREPPED) {
+                // Get outta here.
+                // We did nothing
+                return (STAT_NOOP);
+            }
+
             if (bf->move_type != MOVE_TYPE_ALINE) {
                 // Nothing to see here...
 
@@ -354,13 +365,6 @@ stat_t mp_plan_move()
             entry_acceleration = mr.r->exit_acceleration;
             entry_jerk         = mr.r->exit_jerk;
         }
-    }
-
-
-    if (bf->buffer_state < MP_BUFFER_PREPPED) {
-        // Get outta here.
-        // We did nothing
-        return (STAT_NOOP);
     }
 
     // Note that that can only be one PLANNED move at a time.
@@ -532,7 +536,7 @@ stat_t mp_exec_move()
     if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
-            if (bf->buffer_state < MP_BUFFER_PREPPED) {
+            if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
                 __asm__("BKPT");
                 rpt_exception(42, "mp_exec_move() buffer is not prepped");
                 st_prep_null();
@@ -540,7 +544,7 @@ stat_t mp_exec_move()
                 return (STAT_NOOP);
             }
             if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
-                __asm__("BKPT");
+                // This detects buffer starvation, but also can be a single-line "jog" or command
                 rpt_exception(42, "mp_exec_move() next buffer is empty");
             }
 
@@ -555,7 +559,11 @@ stat_t mp_exec_move()
                 return (STAT_NOOP);
             }
 
-            bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
+            if (bf->buffer_state == MP_BUFFER_PLANNED) {
+                bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
+            } else {
+                return (STAT_NOOP);
+            }
             mp_planner_time_accounting();
         }
 

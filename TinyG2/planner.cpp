@@ -888,8 +888,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
     } while (bf != bf_start);
 }
 
-#if 1
-#ifdef DEBUG
+#if 1 && defined(DEBUG)
 
 #warning DEBUG TRAPS ENABLED
 
@@ -999,8 +998,6 @@ static void _audit_buffers()
 }
 
 #pragma GCC reset_options
-
-#endif // DEBUG
 
 #else
 

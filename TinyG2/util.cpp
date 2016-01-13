@@ -58,7 +58,7 @@ void _debug_trap() {
     // We might be able to put a print here, but it MIGHT interrupt other output
     // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
     __NOP();
-//    __asm__("BKPT");
+    __asm__("BKPT");
 }
 #endif
 
