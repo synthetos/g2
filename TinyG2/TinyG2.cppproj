@@ -21,8 +21,7 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>
-    </avrtoolinterface>
+    <avrtoolinterface>SWD</avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
@@ -74,7 +73,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800020360</ToolNumber>
+      <ToolNumber>J41800019583</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -1092,8 +1091,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=pboard-a CONFIG=PrintrbotPlus COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=pboard-a MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=pboard-a CONFIG=PrintrbotSimple COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
+    <CleanTarget>clean BOARD=pboard-a CONFIG=PrintrbotSimple MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\pboard-a\</OutputPath>
   </PropertyGroup>
