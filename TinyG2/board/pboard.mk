@@ -5,7 +5,8 @@
 
 ifeq ("$(CONFIG)","PrintrbotPlus")
     ifeq ("$(BOARD)","NONE")
-        BOARD = pboard-a
+        BOARD=$(CONFIG)
+        BASE_BOARD=pboard-a
     endif
     SETTINGS_FILE="settings_Printrbot_Plus.h"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
@@ -13,7 +14,8 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotSimple")
     ifeq ("$(BOARD)","NONE")
-        BOARD = pboard-a
+        BOARD=$(CONFIG)
+        BASE_BOARD=pboard-a
     endif
     SETTINGS_FILE="settings_Printrbot_Simple.h"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
@@ -22,11 +24,12 @@ endif
 
 ifeq ("$(BOARD)","pboard-a")
     BASE_BOARD=pboard-a
-    DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
-    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 endif
 
+
 ifeq ("$(BASE_BOARD)","pboard-a")
+    DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
+    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
     _BOARD_FOUND = 1
 
     FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
