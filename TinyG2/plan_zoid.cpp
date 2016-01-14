@@ -129,8 +129,8 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 
 // Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION, ASYMMETRIC_BUMP
 // We are incorporating both the forward planning and ramp-planning into one function, since we use the same data.
-
-void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float entry_velocity)
+// IMPORTANT: Expects group->primary_bf to be correctly assigned.
+void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 {
 
     // WARNING! WARNING! WARNING!
@@ -150,7 +150,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
     //  {head,body,tail}_length
     //  {head,body,tail}_time
 
-
+    mpBuf_t *bf = group->primary_bf;
 
     // *** Skip non-move commands ***
     if (bf->move_type == MOVE_TYPE_COMMAND) {
@@ -178,7 +178,7 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
 
     // +++++ RG trap
     if ((group->cruise_velocity < entry_velocity) || (group->cruise_velocity < group->exit_velocity)) {
-        __asm__("BKPT");
+        __asm__("BKPT"); // entry < cruise or exit
 //        while(1);
     }
 
@@ -306,27 +306,28 @@ void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, const float ent
                             test_velocity_valid = true; // record that this has been computed, so it doesn't have to happen again.
 
                             // We're going to merge with nx_group from us
-                            bf->group_length += bf->nx_group->group_length;
+                            // And store the results *there*, not here.
+                            bf->nx_group->group_length += bf->group_length;
 
                             // figure out the group jerk values
-                            if (bf->jerk < bf->nx_group->jerk) {
+                            if (bf->nx_group->jerk < bf->jerk) {
                                 // Copy the move jerk, and all of it's derived values over
-                                bf->jerk = bf->nx_group->jerk;
-                                bf->jerk_sq = bf->nx_group->jerk_sq;
-                                bf->recip_jerk = bf->nx_group->recip_jerk;
-                                bf->sqrt_j = bf->nx_group->sqrt_j;
-                                bf->q_recip_2_sqrt_j = bf->nx_group->q_recip_2_sqrt_j;
+                                bf->nx_group->jerk = bf->jerk;
+                                bf->nx_group->jerk_sq = bf->jerk_sq;
+                                bf->nx_group->recip_jerk = bf->recip_jerk;
+                                bf->nx_group->sqrt_j = bf->sqrt_j;
+                                bf->nx_group->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
                             }
 
-                            bf->exit_velocity = bf->nx_group->exit_velocity;
-                            group->exit_velocity = bf->exit_velocity;
+                            group->exit_velocity = bf->nx_group->exit_velocity;
+                            group->cruise_velocity = bf->nx_group->cruise_velocity;
 
-                            // Get the cruise velocity of the last block of the next group
-                            bf->cruise_velocity = bf->nx_group->cruise_velocity;
-                            group->cruise_velocity = bf->cruise_velocity;
+                            bf->hint = PART_OF_A_GROUP;
 
-                            bf->nx_group = bf->nx_group->nx_group;
-                            bf->nx_group->pv_group = bf;
+                            // We make bf now what was the nx_group, then correct the group pointers
+                            bf = bf->nx_group;
+                            bf->pv_group = bf->pv_group->pv_group;
+                            bf->pv_group->nx_group = bf;
 
                             did_merge = true;
                         }
@@ -646,7 +647,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
         block->exit_jerk         = block->cruise_jerk;
 
         // Also, BONUS: We can't improve this group anymore!
-        group->first_block->plannable = false;
+        bf->plannable = false;
     }
 
     if (group->group_state == GROUP_DONE) {

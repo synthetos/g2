@@ -116,6 +116,9 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
+
+    // And this one helps us tell when some of a blocks values are no longer valid
+    PART_OF_A_GROUP,                // (Ve != Vx) < Vc
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -393,7 +396,7 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
 typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a GROUP
     struct mpGroupRuntimeBuf *nx;       // singly-linked-list
 
-    mpBuf_t *first_block;				// first-block-of-group buffer pointer
+    mpBuf_t *primary_bf;				// primary-block-of-group (with all the data of the group) buffer pointer
 
     groupState group_state;             // keep track of what state is the group planning/dispersal
 
@@ -459,7 +462,7 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	uint32_t segment_count;             // count of running segments
 	float segment_velocity;             // computed velocity for aline segment
 	float segment_time;                 // actual time increment per aline segment
-	float jerk;                         // max linear jerk
+	//float jerk;                         // max linear jerk
 
 	float forward_diff_1;               // forward difference level 1
 	float forward_diff_2;               // forward difference level 2
@@ -541,7 +544,7 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, const float entry_velocity);
+void mp_calculate_ramps(mpGroupRuntimeBuf_t *rg, const float entry_velocity);
 stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float entry_velocity, const float entry_acceleration, const float entry_jerk);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);

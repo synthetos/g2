@@ -272,13 +272,10 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
         _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
 
-//        bf->plannable_time += bf->move_time;            // adjust plannable time
-//        UPDATE_BF_MS(bf);  //+++++
-
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
         // +++++ Why do we have to do this here?
-        bf->pv_group = bf->pv;
+        //bf->pv_group = bf->pv;
 
         bf->hint = NO_HINT; // ensure we've cleared the hints
         // Time: 12us-41us
@@ -302,15 +299,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         float braking_velocity = 0; // we use this to stre the previous entry velocity, start at 0
         bool optimal = false; // we use the optimal flag (as the opposite of plannable) to carry plan-ability backward.
 
-        // Ensure that bf isn't at the end (or middle) of a group
-        bf = bf->nx_group->pv_group;
-
-        // And start group_end with the actual end block of the group (most likely the same as the first)
-        mpBuf_t *group_end = bf->nx_group->pv;
         // Keep track of of we want to merge. We decide at the end of processing of one block, and and at the beginning of the next, then merge.
         bool going_to_merge = false;
         float group_length = 0; // keep track of the running group length
-
 
         // ** WARNING **
         // We want to keep in mind that this area *will* be interrupted, and the integrity of already PLANNED
@@ -345,12 +336,13 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             }
 
             // Check for reasons NOT to merge (if we still are going to)
+            // REMEMBER: We're talking about maybe merging *the nx_group* into this one!
             if (going_to_merge && (
                 // Don't merge group commands (for now)
                 ( bf->move_type == MOVE_TYPE_COMMAND)
                 // We have to ensure that the exit_vmaxes generally *increase* forward along a group.
                 // IOW, looking at at backward along the deceleration, it has to stay the same or *decrease*.
-                  || (bf->pv->exit_vmax > bf->exit_vmax)
+                  || (bf->exit_vmax > bf->nx_group->exit_vmax)
                 )) {
 
                 going_to_merge = false;
@@ -378,49 +370,46 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
 
             // ++++ prevent grouping
-            going_to_merge = false;
-            test_velocity_valid = false;
+            //going_to_merge = false;
+            //test_velocity_valid = false;
 
 
             // The new group end will be the previous block.
             if (!going_to_merge) {
-                // We're not merging, change the group_end
-                group_end = bf->nx_group->pv;
-
                 // We *must* set cruise before exit, and keep it at least as high as exit.
                 bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
                 bf->exit_velocity = braking_velocity;
 
                 // reset group length
-                group_length = bf->length;
+                group_length = bf->group_length;
 
             }
             else {
                 // we are merging with the nx_group from us in the buffer
+                // and storing the values THERE
 
                 group_length += bf->group_length;
+
+                bf->hint = PART_OF_A_GROUP;
+                bf->buffer_state = MP_BUFFER_PREPPED;
 
                 // figure out the group jerk values
                 if (bf->jerk < bf->nx_group->jerk) {
                     // Copy the move jerk, and all of it's derived values over
-                    bf->jerk = bf->nx_group->jerk;
-                    bf->jerk_sq = bf->nx_group->jerk_sq;
-                    bf->recip_jerk = bf->nx_group->recip_jerk;
-                    bf->sqrt_j = bf->nx_group->sqrt_j;
-                    bf->q_recip_2_sqrt_j = bf->nx_group->q_recip_2_sqrt_j;
+                    bf->nx_group->jerk = bf->jerk;
+                    bf->nx_group->jerk_sq = bf->jerk_sq;
+                    bf->nx_group->recip_jerk = bf->recip_jerk;
+                    bf->nx_group->sqrt_j = bf->sqrt_j;
+                    bf->nx_group->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
                 }
 
-                //// We will override some of the block values with group values
-                // NOTE: Change of plans. We'll keep the exit velocity on the last block of the group.
-                //bf->exit_velocity = group_end->exit_velocity;
-
-                // Other values will become group values naturally:
-                // cruise_velocity
-                // ...
+                // When merging, we want the block pointed to by groups to be the LAST one in the group
+                // Switch bf to the last block of the new group.
+                bf = bf->nx_group;
 
                 // manage the group pointers
-                bf->nx_group = bf->nx_group->nx_group;
-                bf->nx_group->pv_group = bf;
+                bf->pv_group = bf->pv_group->pv_group;
+                bf->pv_group->nx_group = bf;
             }
 
             bf->group_length = group_length;
@@ -466,7 +455,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // cruises - a *possible* perfect cruise is detected if exit_velocity == cruise_vmax
             // forward planning may degrade this to a mixed accel
-            else if (VELOCITY_EQ(group_end->exit_velocity, bf->cruise_vmax)) {
+            else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax) && VELOCITY_EQ(bf->pv_group->exit_vmax, bf->cruise_vmax)) {
 
                 // Remember: Set cruise FIRST
                 bf->cruise_velocity = min(bf->cruise_vmax, bf->exit_vmax);    // set exactly to wash out EQ tolerances
@@ -474,8 +463,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
                 // Update braking_velocity for use in the top of the loop
                 braking_velocity = bf->exit_velocity;
-
-                //bf->pv->exit_velocity = bf->exit_velocity;
 
                 bf->hint = PERFECT_CRUISE;
 
@@ -487,7 +474,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             // not a command or a cruise
             // test to see if we'll *have* to enter slower than we can exit
-            else if (bf->pv->exit_vmax < bf->exit_velocity) {
+            else if (bf->pv_group->exit_vmax < bf->exit_velocity) {
                 test_decel_or_bump = true;
 
                 // We can't merge it
@@ -507,8 +494,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->group_length, bf);
                 }
 
-                if (bf->pv->exit_vmax > braking_velocity) { // remember, exit vmax already is min of pv->cruise_vmax, cruise_vmax, and pv->junction_vmax
-                    //bf->pv->exit_velocity = braking_velocity;
+                if (bf->pv_group->exit_vmax > braking_velocity) { // remember, exit vmax already is min of pv_group->cruise_vmax, cruise_vmax, and pv_group->junction_vmax
                     bf->cruise_velocity = braking_velocity;   // put this here to avoid a race condition with _exec()
                     bf->hint = PERFECT_DECELERATION;          // This is advisory, and may be altered by forward planning
 
@@ -525,9 +511,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
             if (test_decel_or_bump) {
                 // Update braking_velocity for use in the top of the loop
-                braking_velocity = bf->pv->exit_vmax;
+                braking_velocity = bf->pv_group->exit_vmax;
 
-                if (bf->cruise_vmax > bf->pv->exit_vmax) {
+                if (bf->cruise_vmax > bf->pv_group->exit_vmax) {
                     bf->cruise_velocity = bf->cruise_vmax;
                     bf->hint = ASYMMETRIC_BUMP;
 
@@ -535,7 +521,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     going_to_merge = false;
                 }
                 else {
-                    bf->cruise_velocity = bf->pv->exit_vmax;
+                    bf->cruise_velocity = bf->pv_group->exit_vmax;
                     bf->hint = MIXED_DECELERATION;
 
                     // We might still be able to merge this.
@@ -549,6 +535,9 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
                 _debug_trap(); // Exec apparently cleared this block while we were planning it.
             }
+//            if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
+//                _debug_trap(); // why zero?
+//            }
 
             // We might back plan into the running or planned buffer, so we have to check.
             if (bf->buffer_state < MP_BUFFER_PREPPED) {

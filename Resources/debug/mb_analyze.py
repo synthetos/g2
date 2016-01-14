@@ -65,17 +65,21 @@ def load_pool(filename):
                 elif key == 'buffer_number':
                     pool[current_buffer]['buffer_number'] = val
                 elif key == 'junction_vmax':
-                    pool[current_buffer]['junction_vmax'] = val
+                    pool[current_buffer]['junction_vmax'] = float(val)
                 elif key == 'cruise_velocity':
-                    pool[current_buffer]['cruise_velocity'] = val
+                    pool[current_buffer]['cruise_velocity'] = float(val)
+                elif key == 'cruise_vmax':
+                    pool[current_buffer]['cruise_vmax'] = float(val)
+                elif key == 'exit_vmax':
+                    pool[current_buffer]['exit_vmax'] = float(val)
                 elif key == 'exit_velocity':
-                    pool[current_buffer]['exit_velocity'] = val
+                    pool[current_buffer]['exit_velocity'] = float(val)
                 elif key == 'length':
-                    pool[current_buffer]['length'] = val
+                    pool[current_buffer]['length'] = float(val)
                 elif key == 'group_length':
-                    pool[current_buffer]['group_length'] = val
+                    pool[current_buffer]['group_length'] = float(val)
                 elif key == 'move_time':
-                    pool[current_buffer]['move_time'] = val
+                    pool[current_buffer]['move_time'] = float(val)
                 elif key == 'plannable':
                     pool[current_buffer]['plannable'] = val
                 elif key == 'hint':
@@ -133,7 +137,28 @@ def print_pool(pool):
             else:
                 group_str = "|"
 
-            print '0x%08x [%02d] : g<%02d %s %02d> N%04d (%02dx) %-22s %-8s GL% 8.2f L% 8.2f Ti% 8.2f C% 10.2f X% 10.2f J% 10.2f %5s %20s (%5.2f)' % (
+            if buffer['cruise_velocity'] == buffer['cruise_vmax']:
+                cruise_str = "="
+            elif buffer['cruise_velocity'] < buffer['cruise_vmax']:
+                cruise_str = "<"
+            else:
+                cruise_str = "!"
+
+            if buffer['exit_velocity'] == buffer['exit_vmax']:
+                exit_str = "="
+            elif buffer['exit_velocity'] < buffer['exit_vmax']:
+                exit_str = "<"
+            else:
+                exit_str = "!"
+
+            if buffer['junction_vmax'] == buffer['exit_vmax']:
+                junction_str = "="
+            elif buffer['junction_vmax'] > buffer['exit_vmax']:
+                junction_str = ">"
+            else:
+                junction_str = "!"
+
+            print '0x%08x [%02d] : g<%02d %s %02d> N%04d (%02dx) %-22s %-8s GL% 8.2f L% 8.2f Ti% 8.2f C% 10.2f %1s[% 10.2f] X% 10.2f %1s[% 10.2f] J%1s% 10.2f %5s %20s (%5.2f)' % (
                 key,
                 float(buffer['buffer_number']),
                 int(pool[buffer['pv_group']]['buffer_number']),
@@ -147,7 +172,12 @@ def print_pool(pool):
                 float(buffer['length']),
                 float(buffer['move_time']),
                 float(buffer['cruise_velocity']),
+                cruise_str,
+                float(buffer['cruise_vmax']),
                 float(buffer['exit_velocity']),
+                exit_str,
+                float(buffer['exit_vmax']),
+                junction_str,
                 float(buffer['junction_vmax']),
                 buffer['plannable'],
                 buffer['hint'],
