@@ -157,8 +157,8 @@ typedef enum {
 #define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
 
-#define MIN_SEGMENT_MS          ((float)2.0)          // minimum segment milliseconds
-#define NOM_SEGMENT_MS          ((float)4.0)          // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_SEGMENT_MS          ((float)3.0)          // minimum segment milliseconds
+#define NOM_SEGMENT_MS          ((float)6.0)          // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
 #define MIN_BLOCK_MS            ((float)10.0)          // minimum block (whole move) milliseconds
 #define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
@@ -257,6 +257,7 @@ struct mpBuffer_to_clear {
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
     bool plannable;                 // set true when this block can be used for planning
+    volatile bool mergable;         // set to true when the block's group can be merged into other groups
     float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
     float throttle;                 // throttle factor - preserved for backplanning
 
@@ -390,6 +391,9 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
     float exit_acceleration;
     float exit_jerk;
 
+    float head_t;                       // record the t value into the head the block ENDs with
+    float tail_t;                       // record the t value into the tail that the block ENDs with
+
 //    float t;
 } mpBlockRuntimeBuf_t;
 
@@ -417,6 +421,7 @@ typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunT
     float exit_velocity;
 
     float completed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
+    float completed_t_into_head;
     float completed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
 } mpGroupRuntimeBuf_t;
 
@@ -545,7 +550,7 @@ void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
 void mp_calculate_ramps(mpGroupRuntimeBuf_t *rg, const float entry_velocity);
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float entry_velocity, const float entry_acceleration, const float entry_jerk);
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float group_entry_velocity, const float entry_velocity, const float entry_acceleration, const float entry_jerk);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);

@@ -220,7 +220,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
                 group->exit_velocity = entry_velocity;
                 group->cruise_velocity = entry_velocity;
 
-                group->body_length = bf->group_length;
+                group->body_length = group->length;
                 group->body_time = group->body_length / group->cruise_velocity;
                 bf->move_time = group->body_time;
 
@@ -253,7 +253,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
             // Only possible if the entry has not changed since hinting.
             else if (bf->hint == MIXED_DECELERATION) {
                 group->tail_length = mp_get_target_length(group->exit_velocity, group->cruise_velocity, bf);
-                group->body_length = bf->group_length - group->tail_length;
+                group->body_length = group->length - group->tail_length;
                 group->head_length = 0;
 
                 group->body_time = group->body_length / group->cruise_velocity;
@@ -266,7 +266,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
             // PERFECT_DECELERATION (1d) single tail segment (deltaV == delta_vmax)
             // Only possible if the entry has not changed since hinting.
             else if (bf->hint == PERFECT_DECELERATION) {
-                group->tail_length = bf->group_length;
+                group->tail_length = group->length;
                 group->cruise_velocity = entry_velocity;
                 group->tail_time = group->tail_length*2 / (group->exit_velocity + group->cruise_velocity);
                 bf->move_time = group->tail_time;
@@ -289,7 +289,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
                 test_velocity_valid = false;
             }
             else {
-                accel_velocity = mp_get_target_velocity(entry_velocity, bf->group_length, bf);
+                accel_velocity = mp_get_target_velocity(entry_velocity, group->length, bf);
             }
 
             if (accel_velocity < group->exit_velocity) {   // still accelerating
@@ -298,19 +298,20 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 
                 // We'll check to see if we can merge this block into the next one.
                 /*
-                if ((bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
+                if (bf->mergable && (bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
                     if (bf->nx_group->jerk < bf->jerk) {
-                        test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+bf->group_length, bf->nx_group);
+                        test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+group->length, bf->nx_group);
 
                         if (test_velocity > group->exit_velocity) {
                             test_velocity_valid = true; // record that this has been computed, so it doesn't have to happen again.
 
                             // We're going to merge with nx_group from us
                             // And store the results *there*, not here.
-                            bf->nx_group->group_length += bf->group_length;
+                            bf->nx_group->group_length += group->length;
+                            group->length = bf->nx_group->group_length;
 
                             // figure out the group jerk values
-                            if (bf->nx_group->jerk < bf->jerk) {
+                            if (bf->jerk < bf->nx_group->jerk) {
                                 // Copy the move jerk, and all of it's derived values over
                                 bf->nx_group->jerk = bf->jerk;
                                 bf->nx_group->jerk_sq = bf->jerk_sq;
@@ -343,9 +344,9 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
                     bf->hint = PERFECT_ACCELERATION;
 
                     // PERFECT_ACCELERATION (1a) single head segment (deltaV == delta_vmax)
-                    group->head_length = bf->group_length;
+                    group->head_length = group->length;
                     group->cruise_velocity = group->exit_velocity;
-                    group->head_time = group->head_length*2 / (entry_velocity + group->cruise_velocity);
+                    group->head_time = (group->head_length*2.0) / (entry_velocity + group->cruise_velocity);
                     bf->move_time = group->head_time;
                     LOG_RETURN("1a");
                     return (_zoid_exit(bf, ZOID_EXIT_1a));
@@ -369,9 +370,9 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 
                     // MIXED_ACCELERATION (2a) 2 segment HB acceleration move
                     group->head_length = mp_get_target_length(entry_velocity, group->cruise_velocity, bf);
-                    group->body_length = bf->group_length - group->head_length;
+                    group->body_length = group->length - group->head_length;
                     group->tail_length = 0; // we just set it, now we unset it
-                    group->head_time = group->head_length*2 / (entry_velocity + group->cruise_velocity);
+                    group->head_time = (group->head_length*2.0) / (entry_velocity + group->cruise_velocity);
                     group->body_time = group->body_length / group->cruise_velocity;
                     bf->move_time = group->head_time + group->body_time;
                     LOG_RETURN("2a");
@@ -400,14 +401,14 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
     group->head_length = mp_get_target_length(entry_velocity, group->cruise_velocity, bf);
     group->tail_length = mp_get_target_length(group->exit_velocity, group->cruise_velocity, bf);
 
-    if ((bf->group_length - 0.0001) > (group->head_length + group->tail_length)) {
+    if ((group->length - 0.0001) > (group->head_length + group->tail_length)) {
 
         // 3 segment HBT move (2c) - either with a body or just a symmetric bump
-        group->body_length = bf->length - (group->head_length + group->tail_length); // body guaranteed to be positive
+        group->body_length = group->length - (group->head_length + group->tail_length); // body guaranteed to be positive
 
-        group->head_time = group->head_length*2 / (entry_velocity + group->cruise_velocity);
+        group->head_time = (group->head_length*2.0) / (entry_velocity + group->cruise_velocity);
         group->body_time = group->body_length / group->cruise_velocity;
-        group->tail_time = group->tail_length*2 / (group->exit_velocity + group->cruise_velocity);
+        group->tail_time = (group->tail_length*2.0) / (group->exit_velocity + group->cruise_velocity);
         bf->move_time = group->head_time + group->body_time + group->tail_time;
 
         bf->hint = ASYMMETRIC_BUMP;
@@ -422,7 +423,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 
     // Rate-limited asymmetric cases (3)
     // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
-    group->cruise_velocity = _get_meet_velocity(entry_velocity, group->exit_velocity, bf->group_length, bf, group);
+    group->cruise_velocity = _get_meet_velocity(entry_velocity, group->exit_velocity, group->length, bf, group);
     TRAP_ZERO (group->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
 
     // We now store the head/tail lengths we computed in _get_meet_velocity.
@@ -433,13 +434,13 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 
     // save a few divides where we can
     if (fp_NOT_ZERO(group->head_length)) {
-        group->head_time = group->head_length*2 / (entry_velocity + group->cruise_velocity);
+        group->head_time = (group->head_length*2.0) / (entry_velocity + group->cruise_velocity);
     }
     if (fp_NOT_ZERO(group->body_length)) {
         group->body_time = group->body_length / group->cruise_velocity;
     }
     if (fp_NOT_ZERO(group->tail_length)) {
-        group->tail_time = group->tail_length*2 / (group->exit_velocity + group->cruise_velocity);
+        group->tail_time = (group->tail_length*2.0) / (group->exit_velocity + group->cruise_velocity);
     }
     bf->move_time = group->head_time + group->body_time + group->tail_time;
 
@@ -460,7 +461,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
  *
  */
 
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block, const float entry_velocity, const float entry_acceleration, const float entry_jerk)
+stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntimeBuf_t *block, const float group_entry_velocity, const float entry_velocity, const float entry_acceleration, const float entry_jerk)
 {
     // We look at head, then body, then tail, in order. It's possible to visit one, two, or all three in one call.
     // Note that the vmax values of the block may have been set to zero to prevent back-planning from making adjustments.
@@ -469,19 +470,21 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
     // Reset the values of this block
     block->head_length = 0;
     block->head_time = 0;
+    block->head_t = 0;
 
     block->body_length = 0;
     block->body_time = 0;
 
     block->tail_length = 0;
     block->tail_time = 0;
+    block->tail_t = 0;
 
 
     bool no_head = true;
     if (group->group_state == GROUP_HEAD) {
         bool done_with_head = false;
 
-        float head_left = group->head_length - (group->length_into_section + group->completed_group_head_length);
+        float head_left = group->head_length - group->length_into_section;
         if (head_left > 0) {
             no_head = false;
 
@@ -489,15 +492,15 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
                 block->head_length = bf->length;
                 group->length_into_section += bf->length;
 
-                float t = mp_find_t(entry_velocity,
+                float t = mp_find_t(group_entry_velocity,
                                     group->cruise_velocity,
                                     group->length_into_section,
                                     group->head_length,
                                     group->t_into_section,
                                     group->head_time);
-                block->cruise_velocity     = mp_calc_v(t, mr.group_entry_velocity, group->cruise_velocity);
-                block->cruise_acceleration = mp_calc_a(t, mr.group_entry_velocity, group->cruise_velocity, group->head_time);
-                block->cruise_jerk         = mp_calc_j(t, mr.group_entry_velocity, group->cruise_velocity, group->head_time);
+                block->cruise_velocity     = mp_calc_v(t, group_entry_velocity, group->cruise_velocity);
+                block->cruise_acceleration = mp_calc_a(t, group_entry_velocity, group->cruise_velocity, group->head_time);
+                block->cruise_jerk         = mp_calc_j(t, group_entry_velocity, group->cruise_velocity, group->head_time);
 
                 // We won't enter the body or tail assignment sections, assign the exit velocities
                 block->exit_velocity     = block->cruise_velocity;
@@ -505,6 +508,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
                 block->exit_jerk         = block->cruise_jerk;
 
                 block->head_time = group->head_time * (t - group->t_into_section);
+                block->head_t = t;
                 group->t_into_section = t;
             }
             // We will use of the rest of the head in this block
@@ -528,8 +532,10 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             group->group_state = GROUP_BODY;
 
             // These are redundant, since they aren't used for the body, but it's noce to be thorough
-            group->length_into_section = 0.0;
+            group->length_into_section = group->completed_group_body_length;
             group->t_into_section = 0.0;
+
+            block->head_t = 1.0;
         }
     }
 
@@ -546,7 +552,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
     if (group->group_state == GROUP_BODY) {
         bool done_with_body = false;
 
-        float body_left = group->body_length - (group->length_into_section + group->completed_group_body_length);
+        float body_left = group->body_length - group->length_into_section;
         if (body_left > 0) {
             float length_left = (bf->length - block->head_length);
 
@@ -615,6 +621,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
                 block->exit_jerk         = mp_calc_j(t, group->cruise_velocity, group->exit_velocity, group->tail_time);
 
                 block->tail_time = group->tail_time * (t - group->t_into_section);
+                block->tail_t = t;
                 group->t_into_section = t;
             }
             // We will use of the rest of the tail in this block
@@ -638,6 +645,8 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
 
             group->length_into_section = 0.0;
             group->t_into_section = 0.0; // initial position for head is 0, going up to 0
+
+            block->tail_t = 1.0;
         }
     }
 
