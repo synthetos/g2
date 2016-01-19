@@ -501,7 +501,7 @@ stat_t mp_exec_move()
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
                 if (cm.motion_state == MOTION_RUN) {
-                    //                    __asm__("BKPT"); // we are running but don't have a block planned
+//                    __asm__("BKPT"); // we are running but don't have a block planned
                 }
 
                 // We need to have it planned. We don't want to do this here, as it
