@@ -299,44 +299,48 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
                 mb.entry_changed = true; // we are changing the *next* block's entry velocity
 
                 // We'll check to see if we can merge this block into the next one.
-                /*
                 if (bf->mergable && (bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
+                    bool will_merge = false;
                     if (bf->nx_group->jerk < bf->jerk) {
                         test_velocity = mp_get_target_velocity(entry_velocity, bf->nx_group->group_length+group->length, bf->nx_group);
 
                         if (test_velocity > group->exit_velocity) {
                             test_velocity_valid = true; // record that this has been computed, so it doesn't have to happen again.
-
-                            // We're going to merge with nx_group from us
-                            // And store the results *there*, not here.
-                            bf->nx_group->group_length += group->length;
-                            group->length = bf->nx_group->group_length;
-
-                            // figure out the group jerk values
-                            if (bf->jerk < bf->nx_group->jerk) {
-                                // Copy the move jerk, and all of it's derived values over
-                                bf->nx_group->jerk = bf->jerk;
-                                bf->nx_group->jerk_sq = bf->jerk_sq;
-                                bf->nx_group->recip_jerk = bf->recip_jerk;
-                                bf->nx_group->sqrt_j = bf->sqrt_j;
-                                bf->nx_group->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
-                            }
-
-                            group->exit_velocity = bf->nx_group->exit_velocity;
-                            group->cruise_velocity = bf->nx_group->cruise_velocity;
-
-                            bf->hint = PART_OF_A_GROUP;
-
-                            // We make bf now what was the nx_group, then correct the group pointers
-                            bf = bf->nx_group;
-                            bf->pv_group = bf->pv_group->pv_group;
-                            bf->pv_group->nx_group = bf;
-
-                            did_merge = true;
+                            will_merge = true;
                         }
+                    } else {
+                        will_merge = true;
+                    }
+
+                    if (will_merge) {
+                        // We're going to merge with nx_group from us
+                        // And store the results *there*, not here.
+                        bf->nx_group->group_length += group->length;
+                        group->length = bf->nx_group->group_length;
+
+                        // figure out the group jerk values
+                        if (bf->jerk < bf->nx_group->jerk) {
+                            // Copy the move jerk, and all of it's derived values over
+                            bf->nx_group->jerk = bf->jerk;
+                            bf->nx_group->jerk_sq = bf->jerk_sq;
+                            bf->nx_group->recip_jerk = bf->recip_jerk;
+                            bf->nx_group->sqrt_j = bf->sqrt_j;
+                            bf->nx_group->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
+                        }
+
+                        group->exit_velocity = bf->nx_group->exit_velocity;
+                        group->cruise_velocity = bf->nx_group->cruise_velocity;
+
+                        bf->hint = PART_OF_A_GROUP;
+
+                        // We make bf now what was the nx_group, then correct the group pointers
+                        bf = bf->nx_group;
+                        bf->pv_group = bf->pv_group->pv_group;
+                        bf->pv_group->nx_group = bf;
+
+                        did_merge = true;
                     }
                 }
-                */
 
                 if (!did_merge) {
 
