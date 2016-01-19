@@ -726,12 +726,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         if ((!fp_ZERO(mr.r->head_length)) && (mr.r->head_time < MIN_SEGMENT_TIME)) {
             if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-                __asm__("BKPT"); // too short of move during multi-block head/tail
+//                __asm__("BKPT"); // too short of move during multi-block head/tail
 
                 // WHOA, we really can't do this!
                 // We'll rely on the encoders to catch this position back up
-                mr.r->body_length = 0;
-                mr.r->body_time = 0;
+                mr.r->head_length = 0;
+                mr.r->head_time = 0;
             } else {
 
                 // head_time !== body_time
@@ -745,12 +745,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
         if ((!fp_ZERO(mr.r->tail_length)) && (mr.r->tail_time < MIN_SEGMENT_TIME)) {
             if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-                __asm__("BKPT"); // too short of move during multi-block head/tail
+//                __asm__("BKPT"); // too short of move during multi-block head/tail
 
                 // WHOA, we really can't do this!
                 // We'll rely on the encoders to catch this position back up
-                mr.r->body_length = 0;
-                mr.r->body_time = 0;
+                mr.r->tail_length = 0;
+                mr.r->tail_time = 0;
             } else {
                 // tail_time !== body_time
                 // We have to compute the new body time addition.
@@ -771,7 +771,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             // If we have a part of a head or tail (we can tell by checkt the cruise jerk), then we can't easily add to them.
             // So, we'll hope that the body is so small that we can recove the position over the next section.
             if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-                __asm__("BKPT"); // too short of move durin multi-block head/tail
+//                __asm__("BKPT"); // too short of move durin multi-block head/tail
 
                 // WHOA, we really can't do this!
                 // We'll rely on the encoders to catch this position back up
