@@ -86,7 +86,8 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
+// _cs5, _*5 is X, and _*4 is Y
+#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs5","_es5","_xs5","_fe5","_cs4","_es4","_xs4","_fe4","unit","path","stat"
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1tr","feed","vel","unit","coor","dist","admo","frmo","momo","stat","tick"
 
 // Gcode startup defaults
