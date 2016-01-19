@@ -1603,7 +1603,7 @@ void cm_end_hold()
 		    cm_cycle_start();
             cm_spindle_resume(spindle.dwell_seconds);
             cm_coolant_resume();
-            st_request_exec_move();
+            st_request_plan_move();
         }
     }
 }

@@ -769,7 +769,7 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
 
-        mb.w->nx_group = mb.w->nx;      // makes sure nx_group is set corrrectly
+        mb.w->nx_group = mb.w->nx;  // makes sure nx_group is set corrrectly
                                     // pv_group may already be setup from planning
 
         return (mb.w);
@@ -797,7 +797,7 @@ void mp_commit_write_buffer(const moveType move_type)
         if ((mb.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_exec_move();	// requests an exec if the runtime is not busy
+            st_request_plan_move();	// requests an exec if the runtime is not busy
         }
     }
     mb.w->plannable = true;         // enables the block for planning
@@ -827,8 +827,13 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                // advance to next run buffer
 	_clear_buffer(r);               // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
-    r->pv_group = r->pv;             // reset the pv_group to point to pv
-    mb.w->nx_group = mb.w->nx;      // makes sure nx_group is set corrrectly
+
+    mb.r->pv_group = r;            // reset the pv_group to point to pv
+    if (r->nx_group != mb.r) {      // if the nx_group is the new mb.r, we have nothing to do.
+        mb.r->nx_group = r->nx_group; // We are setting the "nx_group" to point to the primary buffer of this one
+                                      // so that when we free mb.r, we'll have it to probogate.
+        mb.r->nx_group->pv_group = r; // the newly cleared buffer is now the "previous group"
+    }
 
 	mb.buffers_available++;
 	qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
