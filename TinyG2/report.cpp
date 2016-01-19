@@ -56,13 +56,13 @@ qrSingleton_t qr;
 stat_t rpt_exception(stat_t status, const char *msg)
 {
 	if (status != STAT_OK) { // makes it possible to call exception reports w/o checking status value
-        if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-            sprintf(global_string_buf, "{er:{fb:%0.2f,st:%d,msg:\"%s - %s\"}}\n",
-                    TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-        } else {
+//        if (js.json_syntax == JSON_SYNTAX_RELAXED) {
+//            sprintf(global_string_buf, "{er:{fb:%0.2f,st:%d,msg:\"%s - %s\"}}\n",
+//                    TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
+//        } else {
             sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
                     TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-        }
+//        }
         xio_writeline(global_string_buf);
     }
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));

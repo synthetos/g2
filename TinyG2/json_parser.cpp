@@ -371,16 +371,16 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
 		if (nv->valuetype != TYPE_EMPTY) {
 			if (need_a_comma) { *str++ = ',';}
 			need_a_comma = true;
-			if (js.json_syntax == JSON_SYNTAX_RELAXED) {    // write name
-                // much faster then sprintf(str, "%s:", nv->token);
-                strcpy(str, nv->token); str += strlen(nv->token);
-                strcpy(str++, ":");
-			} else {
+//			if (js.json_syntax == JSON_SYNTAX_RELAXED) {    // write name
+//                // much faster then sprintf(str, "%s:", nv->token);
+//                strcpy(str, nv->token); str += strlen(nv->token);
+//                strcpy(str++, ":");
+//			} else {
                 // much faster then sprintf(str, "\"%s\":", nv->token); Was about 15 uSec
                 strcpy(str++, "\"");
                 strcpy(str, nv->token); str += strlen(nv->token);
                 strcpy(str++, "\":"); str++;
-			}
+//			}
 
             switch (nv->valuetype)  {
                 case (TYPE_EMPTY):  {   break; }
@@ -399,8 +399,10 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                 case (TYPE_INT):    {   str += inttoa(str, (int)nv->value);
                                         break;
                                     }
-                case (TYPE_STRING): {   strcpy(str, *nv->stringp);
+                case (TYPE_STRING): {   *str++ = '"';
+                                        strcpy(str, *nv->stringp);
                                         str += strlen(*nv->stringp);
+                                        *str++ = '"';
                                         break;
                                     }
                 case (TYPE_BOOL):   {   if (fp_FALSE(nv->value)) {
