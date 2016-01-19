@@ -349,6 +349,20 @@
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
 
+
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
+
+
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
 #define G54_X_OFFSET 0			// G54 is traditionally set to all zeros

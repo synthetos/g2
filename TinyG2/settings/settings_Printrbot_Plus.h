@@ -65,10 +65,6 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.2;
-constexpr float H1_DEFAULT_D = 100.0;
-
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
@@ -87,7 +83,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 //#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","feed","vel","unit","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he2t","he2st","he3t","he3st","feed","vel","unit","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -356,6 +352,20 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define P1_CCW_PHASE_LO			    0.1
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
+
+
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
+
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

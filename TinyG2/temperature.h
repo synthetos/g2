@@ -2,8 +2,8 @@
  * temperature.h - temperature control module - drives heaters or coolers
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Robert Giseburt
- * Copyright (c) 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -43,8 +43,6 @@ void temperature_init();
 void temperature_reset();
 stat_t temperature_callback();
 
-stat_t cm_set_temperature_setpoint(float temperature);
-
 stat_t cm_get_heater_p(nvObj_t *nv);
 stat_t cm_set_heater_p(nvObj_t *nv);
 stat_t cm_get_heater_i(nvObj_t *nv);
@@ -58,7 +56,7 @@ stat_t cm_get_set_temperature(nvObj_t *nv);
 stat_t cm_set_set_temperature(nvObj_t *nv);
 stat_t cm_get_heater_output(nvObj_t *nv);
 stat_t cm_get_temperature(nvObj_t *nv);
-stat_t cm_get_thermocouple_resistance(nvObj_t *nv);
+stat_t cm_get_thermistor_resistance(nvObj_t *nv);
 
 
 /*--- text_mode support functions ---*/
