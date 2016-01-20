@@ -125,10 +125,10 @@ void gpio_init(void)
     input_6_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     input_7_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     input_8_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    input_9_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-//    input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_9_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+    input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
 	return(gpio_reset());
 #endif
 

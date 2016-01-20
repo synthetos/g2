@@ -204,6 +204,7 @@ const int16_t fet_pin2_freq = 100;
 PWMOutputPin<kOutput2_PinNumber> fet_pin2;// {kPWMPinInverted};
 
 // DO_11: Heted Bed FET
+// Warning, HeatBED is likely NOT a PWM pin, so it'll be binary output (duty cucle >= 50%).
 const int16_t fet_pin3_freq = 100;
 PWMOutputPin<kOutput11_PinNumber> fet_pin3;// {kPWMPinInverted};
 

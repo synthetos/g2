@@ -127,12 +127,12 @@ namespace Motate {
     pin_number kSocket6_Microstep_2PinNumber    = -1;   // 67;
     pin_number kSocket6_VrefPinNumber           = -1;   // 68;
 
-    pin_number kInput1_PinNumber                = 100;
-    pin_number kInput2_PinNumber                = 101;
-    pin_number kInput3_PinNumber                = 102;
-    pin_number kInput4_PinNumber                = 103;
-    pin_number kInput5_PinNumber                = 104;
-    pin_number kInput6_PinNumber                = 105;
+    pin_number kInput1_PinNumber                = 100;  // X-Min
+    pin_number kInput2_PinNumber                = 101;  // X-Max
+    pin_number kInput3_PinNumber                = 102;  // Y-Min
+    pin_number kInput4_PinNumber                = 103;  // Y-Max
+    pin_number kInput5_PinNumber                = 104;  // Z-Min
+    pin_number kInput6_PinNumber                = 105;  // Z-Max
 
     pin_number kInput7_PinNumber                = 106;
     pin_number kInput8_PinNumber                = 107;
