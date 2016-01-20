@@ -828,8 +828,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
     // +8 = 39
     { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 1 group
+    { "","he2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 2 group
+    { "","he3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 3 group
     { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 1 group
-    // +2 = 41
+    { "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 2 group
+    { "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 3 group
+    // +6 = 45
 
 #ifdef __USER_DATA
     { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
@@ -886,7 +890,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 #define DIAGNOSTIC_GROUPS 		0
 #endif
 
-#define TEMPERATURE_GROUPS 		2
+#define TEMPERATURE_GROUPS 		6
 #define NV_COUNT_GROUPS (FIXED_GROUPS + MOTOR_GROUP_5 + MOTOR_GROUP_6 + USER_DATA_GROUPS + DIAGNOSTIC_GROUPS + TEMPERATURE_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
