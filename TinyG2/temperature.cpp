@@ -2,8 +2,8 @@
  * temperature.cpp - temperature control module - drives heaters or coolers
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Robert Giseburt
- * Copyright (c) 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -161,25 +161,62 @@ struct Thermistor {
 };
 
 
-
+// Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700};
+    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    };
 void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
 };
 
-float last_reported_temp = 0; // keep track of what we've reported for SR generation
+// Extruder 2
+Thermistor<kADC2_PinNumber> thermistor2 {
+    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
+    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    };
+void ADCPin<kADC2_PinNumber>::interrupt() {
+    thermistor2.adc_has_new_value();
+};
+
+// Heated bed
+Thermistor<kADC0_PinNumber> thermistor3 {
+    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
+    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    };
+void ADCPin<kADC0_PinNumber>::interrupt() {
+    thermistor3.adc_has_new_value();
+};
+
+
+float last_reported_temp1 = 0; // keep track of what we've reported for SR generation
+float last_reported_temp2 = 0;
+float last_reported_temp3 = 0;
 
 
 // Output 1 FET info
+// DO_1: Extruder1_PWM
 const int16_t fet_pin1_freq = 100;
 PWMOutputPin<kOutput1_PinNumber> fet_pin1;// {kPWMPinInverted};
 
-PWMOutputPin<kOutput3_PinNumber> fan_pin1;
-//PWMOutputPin<kOutput4_PinNumber> fan_pin2;
+// DO_2: Extruder2_PWM
+const int16_t fet_pin2_freq = 100;
+PWMOutputPin<kOutput2_PinNumber> fet_pin2;// {kPWMPinInverted};
 
-// We're going to utilize the PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
+// DO_11: Heted Bed FET
+const int16_t fet_pin3_freq = 100;
+PWMOutputPin<kOutput11_PinNumber> fet_pin3;// {kPWMPinInverted};
+
+
+// DO_3: Fan1A_PWM
+PWMOutputPin<kOutput3_PinNumber> fan_pin1;
+// DO_4: Fan1B_PWM
+//PWMOutputPin<kOutput4_PinNumber> fan_pin2;
+// DO_5: Fan2A_PWM
+//PWMOutputPin<kOutput5_PinNumber> fan_pin3;
+
+
+// We're going to utilize the fet_pin1 PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
 const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
 int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
 namespace Motate {
@@ -249,6 +286,8 @@ struct PID {
 };
 
 PID pid1 { 0.087, 0.0042, 0.447 }; // default values
+PID pid2 { 0.087, 0.0042, 0.447 }; // default values
+PID pid3 { 0.087, 0.0042, 0.447 }; // default values
 Timeout pid_timeout;
 
 /**** Static functions ****/
@@ -262,10 +301,14 @@ void temperature_init()
 {
     // setup heater PWM
     fet_pin1.setFrequency(fet_pin1_freq);
-    fet_pin1.setInterrupts(kInterruptOnOverflow|kInterruptPriorityLow);
+    fet_pin1.setInterrupts(kInterruptOnOverflow|kInterruptPriorityLowest);
+
+    fet_pin2.setFrequency(fet_pin2_freq);
+    fet_pin3.setFrequency(fet_pin3_freq);
 
     fan_pin1 = 0;
 //    fan_pin2 = 1;
+//    fan_pin3 = 1;
 
     temperature_reset();
 }
@@ -275,28 +318,52 @@ void temperature_reset()
     // make setpoint 0
     fet_pin1 = 0.0f;
     pid1._set_point = 0.0;
-    
+
+    fet_pin2 = 0.0f;
+    pid2._set_point = 0.0;
+
+    fet_pin3 = 0.0f;
+    pid3._set_point = 0.0;
+
     pid_timeout.set(100);
 }
+
+// Minimum difference in temp before it'll trigger an SR
+const float kTempDiffSRTrigger = 0.25;
 
 stat_t temperature_callback()
 {
     if (pid_timeout.isPast()) {
-        float temp = thermistor1.temperature_exact();
-        fet_pin1 = pid1.getNewOutput(temp);
         pid_timeout.set(100);
 
-        if (fabs(temp - last_reported_temp) > 1.0) {
+        float temp = 0.0;
+        bool sr_requested = false;
+
+        temp = thermistor1.temperature_exact();
+        fet_pin1 = pid1.getNewOutput(temp);
+        if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+            last_reported_temp1 = temp;
+            sr_requested = true;
+        }
+
+        temp = thermistor2.temperature_exact();
+        fet_pin2 = pid2.getNewOutput(temp);
+        if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+            last_reported_temp2 = temp;
+            sr_requested = true;
+        }
+
+        temp = thermistor3.temperature_exact();
+        fet_pin3 = pid3.getNewOutput(temp);
+        if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+            last_reported_temp3 = temp;
+            sr_requested = true;
+        }
+
+        if (sr_requested) {
             sr_request_status_report(SR_REQUEST_TIMED);
-            last_reported_temp = temp;
         }
     }
-    return (STAT_OK);
-}
-
-stat_t cm_set_temperature_setpoint(float temperature)
-{
-    pid1._set_point = 0.0;
     return (STAT_OK);
 }
 
@@ -310,12 +377,28 @@ stat_t cm_set_temperature_setpoint(float temperature)
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
 
+// In these functions, nv->group == "he1", "he2", or "he3"
+char _get_heater_number(nvObj_t *nv) {
+    if (!nv->group[0]) {
+        return nv->token[2];
+    }
+    return nv->group[2];
+}
+
 /*
  * cm_get_heater_p()/cm_set_heater_p() - get/set the P parameter of the PID
  */
 stat_t cm_get_heater_p(nvObj_t *nv)
 {
-    nv->value = pid1._p_factor * 100.0;
+    // there are three of them, so we can use a simple switch
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._p_factor * 100.0; break; }
+        case '2': { nv->value = pid2._p_factor * 100.0; break; }
+        case '3': { nv->value = pid3._p_factor * 100.0; break; }
+
+        // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -323,7 +406,15 @@ stat_t cm_get_heater_p(nvObj_t *nv)
 }
 stat_t cm_set_heater_p(nvObj_t *nv)
 {
-    pid1._p_factor = nv->value / 100.0;
+    switch(_get_heater_number(nv)) {
+        case '1': { pid1._p_factor = nv->value / 100.0; break; }
+        case '2': { pid2._p_factor = nv->value / 100.0; break; }
+        case '3': { pid3._p_factor = nv->value / 100.0; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+
     return (STAT_OK);
 }
 
@@ -332,7 +423,16 @@ stat_t cm_set_heater_p(nvObj_t *nv)
  */
 stat_t cm_get_heater_i(nvObj_t *nv)
 {
-    nv->value = pid1._i_factor * 100.0;
+    // there are three of them, so we can use a simple switch
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._i_factor * 100.0; break; }
+        case '2': { nv->value = pid2._i_factor * 100.0; break; }
+        case '3': { nv->value = pid3._i_factor * 100.0; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -340,7 +440,15 @@ stat_t cm_get_heater_i(nvObj_t *nv)
 }
 stat_t cm_set_heater_i(nvObj_t *nv)
 {
-    pid1._i_factor = nv->value / 100.0;
+    switch(_get_heater_number(nv)) {
+        case '1': { pid1._i_factor = nv->value / 100.0; break; }
+        case '2': { pid2._i_factor = nv->value / 100.0; break; }
+        case '3': { pid3._i_factor = nv->value / 100.0; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+
     return (STAT_OK);
 }
 
@@ -349,7 +457,14 @@ stat_t cm_set_heater_i(nvObj_t *nv)
  */
 stat_t cm_get_heater_d(nvObj_t *nv)
 {
-    nv->value = pid1._d_factor * 100.0;
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._d_factor * 100.0; break; }
+        case '2': { nv->value = pid2._d_factor * 100.0; break; }
+        case '3': { nv->value = pid3._d_factor * 100.0; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -357,43 +472,14 @@ stat_t cm_get_heater_d(nvObj_t *nv)
 }
 stat_t cm_set_heater_d(nvObj_t *nv)
 {
-    pid1._d_factor = nv->value / 100.0;
-    return (STAT_OK);
-}
+    switch(_get_heater_number(nv)) {
+        case '1': { pid1._d_factor = nv->value / 100.0; break; }
+        case '2': { pid2._d_factor = nv->value / 100.0; break; }
+        case '3': { pid3._d_factor = nv->value / 100.0; break; }
 
-/*
- * cm_get_pid_p() - get the active P of the PID (read-only)
- */
-stat_t cm_get_pid_p(nvObj_t *nv)
-{
-    nv->value = pid1._proportional;
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-
-    return (STAT_OK);
-}
-
-/*
- * cm_get_pid_i() - get the active I of the PID (read-only)
- */
-stat_t cm_get_pid_i(nvObj_t *nv)
-{
-    nv->value = pid1._integral;
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-
-    return (STAT_OK);
-}
-
-/*
- * cm_get_pid_d() - get the active D of the PID (read-only)
- */
-stat_t cm_get_pid_d(nvObj_t *nv)
-{
-    nv->value = pid1._derivative;
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
     return (STAT_OK);
 }
 
@@ -402,7 +488,15 @@ stat_t cm_get_pid_d(nvObj_t *nv)
  */
 stat_t cm_get_set_temperature(nvObj_t *nv)
 {
-    nv->value = pid1._set_point;
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._set_point; break; }
+        case '2': { nv->value = pid2._set_point; break; }
+        case '3': { nv->value = pid3._set_point; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -410,7 +504,15 @@ stat_t cm_get_set_temperature(nvObj_t *nv)
 }
 stat_t cm_set_set_temperature(nvObj_t *nv)
 {
-    pid1._set_point = nv->value;
+    switch(_get_heater_number(nv)) {
+        case '1': { pid1._set_point = nv->value; break; }
+        case '2': { pid2._set_point = nv->value; break; }
+        case '3': { pid3._set_point = nv->value; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+
     return (STAT_OK);
 }
 
@@ -420,7 +522,14 @@ stat_t cm_set_set_temperature(nvObj_t *nv)
  */
 stat_t cm_get_heater_output(nvObj_t *nv)
 {
-    nv->value = (float)fet_pin1;
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = (float)fet_pin1; break; }
+        case '2': { nv->value = (float)fet_pin2; break; }
+        case '3': { nv->value = (float)fet_pin3; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -432,9 +541,15 @@ stat_t cm_get_heater_output(nvObj_t *nv)
  */
 stat_t cm_get_temperature(nvObj_t *nv)
 {
-    float temp = thermistor1.temperature_exact();
-    last_reported_temp = temp;
-    nv->value = temp;
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = last_reported_temp1 = thermistor1.temperature_exact(); break; }
+        case '2': { nv->value = last_reported_temp2 = thermistor2.temperature_exact(); break; }
+        case '3': { nv->value = last_reported_temp3 = thermistor3.temperature_exact(); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
@@ -442,17 +557,91 @@ stat_t cm_get_temperature(nvObj_t *nv)
 }
 
 /*
- * cm_get_thermocouple_resistance() - get the current temperature
+ * cm_get_thermistor_resistance() - get the current temperature
  */
-stat_t cm_get_thermocouple_resistance(nvObj_t *nv)
+stat_t cm_get_thermistor_resistance(nvObj_t *nv)
 {
-    nv->value = thermistor1.get_resistance();
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = thermistor1.get_resistance(); break; }
+        case '2': { nv->value = thermistor2.get_resistance(); break; }
+        case '3': { nv->value = thermistor3.get_resistance(); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 
     return (STAT_OK);
 }
 
+
+
+// In these functions, nv->group == "pid1", "pid2", or "pid3"
+char _get_pid_number(nvObj_t *nv) {
+    if (!nv->group[0]) {
+        return nv->token[3];
+    }
+    return nv->group[3];
+}
+
+
+/*
+ * cm_get_pid_p() - get the active P of the PID (read-only)
+ */
+stat_t cm_get_pid_p(nvObj_t *nv)
+{
+    switch(_get_pid_number(nv)) {
+        case '1': { nv->value = pid1._proportional; break; }
+        case '2': { nv->value = pid2._proportional; break; }
+        case '3': { nv->value = pid3._proportional; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_pid_i() - get the active I of the PID (read-only)
+ */
+stat_t cm_get_pid_i(nvObj_t *nv)
+{
+    switch(_get_pid_number(nv)) {
+        case '1': { nv->value = pid1._integral; break; }
+        case '2': { nv->value = pid2._integral; break; }
+        case '3': { nv->value = pid3._integral; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_pid_d() - get the active D of the PID (read-only)
+ */
+stat_t cm_get_pid_d(nvObj_t *nv)
+{
+    switch(_get_pid_number(nv)) {
+        case '1': { nv->value = pid1._derivative; break; }
+        case '2': { nv->value = pid2._derivative; break; }
+        case '3': { nv->value = pid3._derivative; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+    
+    return (STAT_OK);
+}
 
 
 /***********************************************************************************

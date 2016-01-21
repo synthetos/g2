@@ -59,9 +59,17 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
-constexpr float H1_DEFAULT_P = 22.2/255.0;
-constexpr float H1_DEFAULT_I = 1.08/255.0;
-constexpr float H1_DEFAULT_D = 114.0/255.0;
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
 
 // Communications and reporting settings
 
