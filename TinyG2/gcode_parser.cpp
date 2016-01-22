@@ -27,7 +27,7 @@
 #include "xio.h"			// for char definitions
 
 // local helper functions and macros
-static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag);
+static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
 static stat_t _validate_gcode_block(void);
@@ -52,7 +52,7 @@ stat_t gcode_parser(char *block)
     char *msg = &none;                      // gcode message or NUL string
     uint8_t block_delete_flag;
 
-	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
+	_normalize_gcode_block(str, &com, &block_delete_flag);
 
 	// queue a "(MSG" response
 	if (*msg != NUL) {
@@ -80,6 +80,10 @@ stat_t gcode_parser(char *block)
  * _normalize_gcode_block() - normalize a block (line) of gcode in place
  *
  *	Normalization functions:
+ *   - Isolate "active comments"
+ *     - Many of the folowing are performed in active comments as well
+ *     - Strings are handled special (TODO)
+ *     - Active comments are moved to the end of the string, and multiple active comments are merged into one
  *   - convert all letters to upper case
  *	 - remove white space, control and other invalid characters
  *	 - remove (erroneous) leading zeros that might be taken to mean Octal
@@ -90,29 +94,27 @@ stat_t gcode_parser(char *block)
  *	So this: "g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *	Comment and message handling:
+ *   - Active comments start with exacly "({" and end with "})" (no relaxing, invalid is invalid)
  *	 - Comments field start with a '(' char or alternately a semicolon ';'
- *	 - Comments and messages are not normalized - they are left alone
- *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
- *	 - Normalization returns true if there was a message to display, false otherwise
- *	 - Comments always terminate the block - i.e. leading or embedded comments are not supported
- *	 	- Valid cases (examples)			Notes:
- *		    G0X10							 - command only - no comment
- *		    (comment text)                   - There is no command on this line
- *		    G0X10 (comment text)
- *		    G0X10 (comment text				 - It's OK to drop the trailing paren
- *		    G0X10 ;comment text				 - It's OK to drop the trailing paren
- *
- *	 	- Invalid cases (examples)			Notes:
- *		    G0X10 comment text				 - Comment with no separator
- *		    N10 (comment) G0X10 			 - embedded comment. G0X10 will be ignored
- *		    (comment) G0X10 				 - leading comment. G0X10 will be ignored
- * 			G0X10 # comment					 - invalid separator
+ *	 - Active comments are moved to the end of the string and merged.
+ *   - Messages are converted to ({msg:"blah"}) active comments.
+ *	   - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
+ *   - Other "plain" comments will be discarded.
+ *   - Multiple embedded comments are acceptable.
+ *     - Multiple active comments will be merged.
+ *     - Only ONE MSG comment will be accepted.
  *
  *	Returns:
  *	 - com points to comment string or to NUL if no comment
  *	 - msg points to message string or to NUL if no comment
  *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
+#define USE_OLD_NORMALIZE 0
+
+#if USE_OLD_NORMALIZE == 1
+
+// WARNING: This is the OLD code, left for reference. The new code is below.
+
 static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag)
 {
 	char *rd = str;				// read pointer
@@ -163,6 +165,234 @@ static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *b
 		}
 	}
 }
+
+#else // USE_OLD_NORMALIZE
+
+static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+
+static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_flag)
+{
+    _normalize_scratch[0] = 0;
+
+    char *gc_rd = str;				  // read pointer
+    char *gc_wr = _normalize_scratch; // write pointer
+
+    char *ac_rd = str;				  // read pointer
+    char *ac_wr = _normalize_scratch; // Active Comment write pointer
+
+    bool last_char_was_digit = false; // used for octal stripping
+
+    /* Active comment notes:
+     
+     We will convert as follows:
+        FROM: G0 ({blah: t}) x10 (comment)
+        TO  : g0x10\0{blah:t}
+        NOTES: Active comments moved to the end, stripped of (), everything lowercased, and plain comment removed.
+     
+        FROM: M100 ({a:t}) (comment) ({b:f}) (comment)
+        TO  : m100\0{a:t,b:f}
+        NOTES: multiple active comments merged, stripped of (), and actual comments ignored.
+      */
+
+    // Move the ac_wr point forward one for every non-AC character we KEEP (plus one for a NULL in between)
+    ac_wr++; // account for the in-between NULL
+
+
+    // mark block deletes
+    if (*gc_rd == '/') {
+        *block_delete_flag = true;
+        gc_rd++;
+    } else {
+        *block_delete_flag = false;
+    }
+
+    while (*gc_rd != 0) {
+        // check for ';' or '%' comments that end the line.
+        if ((*gc_rd == ';') || (*gc_rd == '%')) {
+            // go ahead and snap the string off cleanly here
+            *gc_rd = 0;
+            break;
+        }
+
+        // check for comment '('
+        else if (*gc_rd == '(') {
+            // We only care if it's a "({" in order to handle string-skipping properly
+            gc_rd++;
+            if ((*gc_rd == '{') || (((* gc_rd    == 'm') || (* gc_rd    == 'M')) &&
+                                    ((*(gc_rd+1) == 's') || (*(gc_rd+1) == 'S')) &&
+                                    ((*(gc_rd+2) == 'g') || (*(gc_rd+2) == 'G'))
+                )) {
+                if (ac_rd == nullptr) {
+                    ac_rd = gc_rd; // note the start of the first AC
+                }
+
+                // skip the comment, handling strings carefully
+                bool in_string = false;
+                while (*(++gc_rd) != 0) {
+                    if (*gc_rd=='"') {
+                        in_string = true;
+                    } else if (in_string) {
+                        if ((*gc_rd == '\\') && (*(gc_rd+1) != 0)) {
+                            gc_rd++; // Skip it, it's escaped.
+                        }
+
+                    } else if ((*gc_rd == ')')) {
+                        break;
+                    }
+                }
+
+                // We don't want the rd++ later to skip the NULL if we're at one
+                if (*gc_rd == 0) {
+                    break;
+                }
+
+            } else {
+                // Change the '(' to a space to simplify the comment copy later
+                *(gc_rd-1) = ' ';
+
+                // skip ahead until we find a ')' (or NULL)
+                while ((*gc_rd != 0) && (*gc_rd != ')')) {
+                    gc_rd++;
+                }
+            }
+
+        } else if (!isspace(*gc_rd)) {
+            bool do_copy = false;
+
+            // Perform Octal stripping - remove invalid leading zeros in number strings
+            // Change 0123.004 to 123.004, or -0234.003 to -234.003
+            if (isdigit(*gc_rd) || (*gc_rd != '.')) { // treat '.' as a digit so we don't strip after one
+                if (last_char_was_digit || (*gc_rd != '0')) {
+                    do_copy = true;
+                }
+                last_char_was_digit = true;
+            }
+            else if ((isalnum((char)*gc_rd)) || (strchr("-.", *gc_rd))) { // all valid characters
+                last_char_was_digit = false;
+                do_copy = true;
+            }
+
+            if (do_copy) {
+                *(gc_wr++) = toupper(*gc_rd);
+                ac_wr++; // move the ac start position
+            }
+        }
+
+        gc_rd++;
+    }
+
+    // Enforce null termination
+    *gc_wr = 0;
+
+    // note the beginning of the comments
+    *com = ac_wr;
+
+    if (ac_rd != nullptr) {
+
+        // Now we'll copy the comments to the scratch
+        while (*ac_rd != 0) {
+            // check for comment '('
+            // Remember: we're only "counting characters" at this point, no more.
+            if (*ac_rd == '(') {
+                // We only care if it's a "({" in order to handle string-skipping properly
+                ac_rd++;
+
+                bool do_copy = false;
+                bool in_msg = false;
+                if (((* ac_rd    == 'm') || (* ac_rd    == 'M')) &&
+                    ((*(ac_rd+1) == 's') || (*(ac_rd+1) == 'S')) &&
+                    ((*(ac_rd+2) == 'g') || (*(ac_rd+2) == 'G'))
+                    ) {
+
+                    ac_rd += 3;
+                    if (*ac_rd == ' ') {
+                        ac_rd++; // skip the first space.
+                    }
+
+                    if (*(ac_wr-1) == '}') {
+                        *(ac_wr-1) = ',';
+                    } else {
+                        *(ac_wr++) = '{';
+                    }
+                    *(ac_wr++) = 'm';
+                    *(ac_wr++) = 's';
+                    *(ac_wr++) = 'g';
+                    *(ac_wr++) = ':';
+                    *(ac_wr++) = '"';
+
+                    // TODO - FIX BUFFER OVERFLOW POTENTIAL
+                    // "(msg)" is four characters. "{msg:" is five. If the write buffer is full, we'll overflow.
+
+                    in_msg = true;
+                    do_copy = true;
+                }
+
+                else if (*ac_rd == '{') {
+                    // merge json comments
+                    if (*(ac_wr-1) == '}') {
+                        *(ac_wr-1) = ',';
+
+                        // don't copy the '{'
+                        ac_rd++;
+                    }
+
+                    do_copy = true;
+                }
+
+                if (do_copy) {
+                    // skip the comment, handling strings carefully
+                    bool in_string = false;
+                    bool escaped = false;
+                    while (*ac_rd != 0) {
+                        if (in_string && (*ac_rd == '\\')) {
+                            escaped = true;
+                        } else if (!escaped && (*ac_rd == '"')) {
+                            // In msg comments, we have to escape "
+                            if (in_msg) {
+                                *(ac_wr++) = '\\';
+                            } else {
+                                in_string = !in_string;
+                            }
+                        } else if (!in_string && (*ac_rd == ')')) {
+                            ac_rd++;
+                            if (in_msg) {
+                                *(ac_wr++) = '"';
+                                *(ac_wr++) = '}';
+                            }
+                            break;
+                        } else {
+                            escaped = false;
+                        }
+
+                        // Skip spaces if we're not in a string or msg (implicit string)
+                        if (in_string || in_msg || (*ac_rd != ' ')) {
+                            *ac_wr = *ac_rd;
+                            ac_wr++;
+                        }
+
+                        ac_rd++;
+                    }
+                }
+
+                // We don't want the rd++ later to skip the NULL if we're at one
+                if (*ac_rd == 0) {
+                    break;
+                }
+            }
+
+            ac_rd++;
+        }
+    }
+
+    // Enforce null termination
+    *ac_wr = 0;
+
+    // Now copy it all back
+    memcpy(str, _normalize_scratch, (ac_wr-_normalize_scratch)+1);
+}
+
+#endif // USE_OLD_NORMALIZE
+
 
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value

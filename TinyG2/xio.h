@@ -128,6 +128,11 @@ extern decltype(usb.mixin<1>::Serial) &SerialUSB1;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
+
+/**** readline stuff -- TODO *****/
+
+#define RX_BUFFER_MIN_SIZE       256        // minimum requested buffer size (they are usually larger)
+
 /**** function prototypes ****/
 
 void xio_init(void);
