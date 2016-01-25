@@ -2,8 +2,8 @@
  * planner.cpp - Cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2015 Rob Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -61,12 +61,63 @@
 #include "encoder.h"
 #include "report.h"
 #include "util.h"
+#include "json_parser.h"
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
 mpBufferPool_t mb;				// move buffer queue
 mpMoveMasterSingleton_t mm;		// context for line planning
 mpMoveRuntimeSingleton_t mr;	// context for line runtime
+
+#define JSON_COMMAND_BUFFER_SIZE 3
+
+struct json_command_buffer_t {
+    char buf[RX_BUFFER_MIN_SIZE];
+    json_command_buffer_t *pv;
+    json_command_buffer_t *nx;
+};
+
+struct _json_commands_t {
+    json_command_buffer_t _json_bf[JSON_COMMAND_BUFFER_SIZE]; // storage of all buffers
+    json_command_buffer_t *_json_r;   // pointer to the next "run" buffer
+    json_command_buffer_t *_json_w;   // pointer tot he next "write" buffer
+
+    int8_t available;
+
+    // Constructor (intializer)
+    // Note, reset routines handle zeroing out all of the above
+    _json_commands_t() {
+        json_command_buffer_t *js_pv = &_json_bf[JSON_COMMAND_BUFFER_SIZE - 1];
+        for (uint8_t i=0; i < JSON_COMMAND_BUFFER_SIZE; i++) {
+            _json_bf[i].nx = &_json_bf[((i+1 == JSON_COMMAND_BUFFER_SIZE) ? 0 : i+1)];
+            _json_bf[i].pv = js_pv;
+            js_pv = &_json_bf[i];
+        }
+        _json_r = &_json_bf[0];
+        _json_w = _json_r;
+        available = JSON_COMMAND_BUFFER_SIZE;
+    };
+
+    // Write a json command to the buffer, using up one slot
+    void write_buffer(char * new_json) {
+        strcpy(_json_w->buf, new_json);
+        available--;
+        _json_w = _json_w->nx;
+    };
+
+    // Read a buffer out, but do NOT free it (so it can be used directly)
+    char *read_buffer() {
+        return _json_r->buf;
+    };
+
+    // Free the last read buffer.
+    void free_buffer() {
+        _json_r = _json_r->nx;
+        available++;
+    }
+};
+
+_json_commands_t jc;
 
 // Local Scope Data and Functions
 #define spindle_speed move_time	// local alias for spindle_speed to the time variable
@@ -76,6 +127,7 @@ mpMoveRuntimeSingleton_t mr;	// context for line runtime
 static void _audit_buffers();
 
 // Execution routines (NB: These are called from the LO interrupt)
+static void _exec_json_command(float *value, bool *flag);
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
 
@@ -249,6 +301,37 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 	return (STAT_OK);
 }
 
+
+/*************************************************************************
+ * mp_json_command() 	 - queue a json command
+ * _exec_json_command() - execute json string
+ *
+ *
+ */
+stat_t mp_json_command(char *json_string)
+{
+    // Never supposed to fail, since we stopped parsing when we were full
+    jc.write_buffer(json_string);
+
+    // We don't actually use these...
+    float value[] = { 0,0,0,0,0,0 };
+    bool flags[]  = { 0,0,0,0,0,0 };
+
+    mp_queue_command(_exec_json_command, value, flags);
+    return (STAT_OK);
+}
+
+static void _exec_json_command(float *value, bool *flag)
+{
+    char *json_string = jc.read_buffer();
+
+    // process it
+    json_parser(json_string, false); // don't allow a response
+
+    jc.free_buffer();
+}
+
+
 /*************************************************************************
  * mp_dwell() 	 - queue a dwell
  * _exec_dwell() - dwell execution
@@ -307,7 +390,8 @@ uint8_t mp_get_planner_buffers()
 
 bool mp_planner_is_full()
 {
-    return (mb.buffers_available < PLANNER_BUFFER_HEADROOM);
+    // We also need to ensure we have room for another JSON command
+    return ((mb.buffers_available < PLANNER_BUFFER_HEADROOM) && (jc.available != 0));
 }
 
 bool mp_has_runnable_buffer()

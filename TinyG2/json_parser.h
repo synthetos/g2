@@ -2,7 +2,8 @@
  * json_parser.h - JSON parser and JSON support for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -83,7 +84,7 @@ extern jsSingleton_t js;
 
 /**** Function Prototypes ****/
 
-void json_parser(char *str);
+void json_parser(char *str, bool allow_response);
 uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size);
 void json_print_object(nvObj_t *nv);
 void json_print_response(uint8_t status);
