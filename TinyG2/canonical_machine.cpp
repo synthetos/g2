@@ -3,7 +3,7 @@
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2015 Alden S Hart, Jr.
- * Copyright (c) 2014 - 2015 Robert Giseburt
+ * Copyright (c) 2014 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -1208,6 +1208,7 @@ stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
  * cm_arc_feed() - SEE plan_arc.cpp
  */
 
+
 /*
  * cm_dwell() - G4, P parameter (seconds)
  */
@@ -1753,6 +1754,16 @@ void cm_program_end()
     bool flags[]  = { 1,0,0,0,0,0 };
 	mp_queue_command(_exec_program_finalize, value, flags);
 }
+
+
+/*
+ * cm_json_command() - M100
+ */
+stat_t cm_json_command(char *json_string)
+{
+    return mp_json_command(json_string);
+}
+
 
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *

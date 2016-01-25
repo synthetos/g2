@@ -405,6 +405,8 @@ void mp_set_steps_to_runtime_position(void);
 void mp_queue_command(void(*cm_exec_t)(float[], bool[]), float *value, bool *flag);
 stat_t mp_runtime_command(mpBuf_t *bf);
 
+stat_t mp_json_command(char *json_string);
+
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 void mp_request_out_of_band_dwell(float seconds);

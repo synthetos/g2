@@ -2,7 +2,8 @@
  * json_parser.cpp - JSON parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -84,13 +85,15 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
  *		in an application agnostic way. It should work for other apps than TinyG
  */
 
-void json_parser(char *str)
+void json_parser(char *str, bool allow_response)
 {
 	stat_t status = _json_parser_kernal(str);
     if (status == STAT_COMPLETE) {  // skip the print if returning from something that already did it.
         return;
     }
-	nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
+    if (allow_response) {
+        nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
+    }
 	sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 

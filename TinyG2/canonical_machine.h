@@ -3,6 +3,7 @@
  * This file is part of the TinyG project
  *
  * Copyright (c) 2010 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2016 Rob Giseburt
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
@@ -162,7 +163,10 @@ typedef enum {						    // these are in order to optimized CASE statement
 	NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS,	// G92.2
 	NEXT_ACTION_RESUME_ORIGIN_OFFSETS,	// G92.3
 	NEXT_ACTION_DWELL,					// G4
-	NEXT_ACTION_STRAIGHT_PROBE			// G38.2
+	NEXT_ACTION_STRAIGHT_PROBE,			// G38.2
+    NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
+    NEXT_ACTION_JSON_COMMAND_IMMEDIATE, // M101
+    NEXT_ACTION_JSON_WAIT               // M102
 } cmNextAction;
 
 typedef enum {						    // G Modal Group 1
@@ -698,6 +702,8 @@ void cm_canned_cycle_end(void);                                 // end of canned
 void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2
+
+stat_t cm_json_command(char *json_string);
 
 /*--- Cycles ---*/
 

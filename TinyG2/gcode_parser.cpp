@@ -2,7 +2,8 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,12 +28,12 @@
 #include "xio.h"			// for char definitions
 
 // local helper functions and macros
-static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_flag);
+static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
-static stat_t _validate_gcode_block(void);
-static stat_t _parse_gcode_block(char *line);   // Parse the block into the GN/GF structs
-static stat_t _execute_gcode_block(void);       // Execute the gcode block
+static stat_t _validate_gcode_block(char *active_comment);
+static stat_t _parse_gcode_block(char *line, char *active_comment);   // Parse the block into the GN/GF structs
+static stat_t _execute_gcode_block(char *active_comment);       // Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
@@ -48,22 +49,24 @@ stat_t gcode_parser(char *block)
 {
     char *str = block;                      // gcode command or NUL string
     char none = NUL;
-    char *com = &none;                      // gcode comment or NUL string
-    char *msg = &none;                      // gcode message or NUL string
+    char *active_comment = &none;                      // gcode comment or NUL string
+//    char *msg = &none;                      // gcode message or NUL string
     uint8_t block_delete_flag;
 
-	_normalize_gcode_block(str, &com, &block_delete_flag);
+	_normalize_gcode_block(str, &active_comment, &block_delete_flag);
 
 	// queue a "(MSG" response
-	if (*msg != NUL) {
-		(void)cm_message(msg);				// queue the message
-	}
+//	if (*msg != NUL) {
+//		(void)cm_message(msg);				// queue the message
+//	}
+
+    // TODO, now MSG is put in the active comment, handle that.
 
     if (str[0] == NUL) {                    // normalization returned null string
         return (STAT_OK);                   // most likely a comment line
     }
 
-    // Trap M30 and M2 as $clear conditions. This has no effect it not in ALARM or SHUTDOWN
+    // Trap M30 and M2 as $clear conditions. This has no effect if not in ALARM or SHUTDOWN
     cm_parse_clear(str);                    // parse Gcode and clear alarms if M30 or M2 is found
     ritorno(cm_is_alarmed());               // return error status if in alarm, shutdown or panic
 
@@ -73,7 +76,7 @@ stat_t gcode_parser(char *block)
 	if (block_delete_flag == true) {
 		return (STAT_NOOP);
 	}
-	return(_parse_gcode_block(block));
+	return(_parse_gcode_block(block, active_comment));
 }
 
 /*
@@ -170,7 +173,7 @@ static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *b
 
 static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
 
-static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_flag)
+static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {
     _normalize_scratch[0] = 0;
 
@@ -285,7 +288,7 @@ static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_
     *gc_wr = 0;
 
     // note the beginning of the comments
-    *com = ac_wr;
+    char *comment_start = ac_wr;
 
     if (ac_rd != nullptr) {
 
@@ -322,6 +325,7 @@ static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_
 
                     // TODO - FIX BUFFER OVERFLOW POTENTIAL
                     // "(msg)" is four characters. "{msg:" is five. If the write buffer is full, we'll overflow.
+                    // Also " is MSG will be quoted, making one character into two.
 
                     in_msg = true;
                     do_copy = true;
@@ -389,6 +393,8 @@ static void _normalize_gcode_block(char *str, char **com, uint8_t *block_delete_
 
     // Now copy it all back
     memcpy(str, _normalize_scratch, (ac_wr-_normalize_scratch)+1);
+
+    *active_comment = str + (comment_start - _normalize_scratch);
 }
 
 #endif // USE_OLD_NORMALIZE
@@ -443,7 +449,7 @@ static uint8_t _point(float value)
  * _validate_gcode_block() - check for some gross Gcode block semantic violations
  */
 
-static stat_t _validate_gcode_block()
+static stat_t _validate_gcode_block(char *active_comment)
 {
 	//	Check for modal group violations. From NIST, section 3.4 "It is an error to put
 	//	a G-code from group 1 and a G-code from group 0 on the same line if both of them
@@ -472,7 +478,7 @@ static stat_t _validate_gcode_block()
  *	contain only uppercase characters and signed floats (no whitespace).
  */
 
-static stat_t _parse_gcode_block(char *buf)
+static stat_t _parse_gcode_block(char *buf, char *active_comment)
 {
     char *pstr = (char *)buf;       // persistent pointer into gcode block for parsing words
     char letter;                    // parsed letter, eg.g. G or X or Y
@@ -603,6 +609,9 @@ static stat_t _parse_gcode_block(char *buf)
 				case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
 				case 50: SET_MODAL (MODAL_GROUP_M9, mfo_enable, true);
 				case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
+                case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
+                case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
+                case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
 				default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
 			}
 			break;
@@ -631,8 +640,8 @@ static stat_t _parse_gcode_block(char *buf)
 		if(status != STAT_OK) break;
 	}
 	if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
-	ritorno(_validate_gcode_block());
-	return (_execute_gcode_block());		// if successful execute the block
+	ritorno(_validate_gcode_block(active_comment));
+	return (_execute_gcode_block(active_comment));		// if successful execute the block
 }
 
 /*
@@ -675,7 +684,7 @@ static stat_t _parse_gcode_block(char *buf)
  *	to calling the canonical functions (which do the unit conversions)
  */
 
-static stat_t _execute_gcode_block()
+static stat_t _execute_gcode_block(char *active_comment)
 {
 	stat_t status = STAT_OK;
 
@@ -733,6 +742,10 @@ static stat_t _execute_gcode_block()
 		case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                     // G92.3
+
+        case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}                     // M100
+//        case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(); break;}          // M101
+//        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(); break;}                       // M102
 
 		case NEXT_ACTION_DEFAULT: {
     		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply absolute override
