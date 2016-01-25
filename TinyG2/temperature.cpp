@@ -230,6 +230,15 @@ namespace Motate {
     };
 }
 
+// These could be moved to settings
+// If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp"
+#ifndef TEMP_SETPOINT_HYSTERESIS
+#define TEMP_SETPOINT_HYSTERESIS 2.0 // +- 2 degrees C
+#endif
+#ifndef TEMP_SETPOINT_HOLD_TIME
+#define TEMP_SETPOINT_HOLD_TIME 500 // half a second
+#endif
+
 struct PID {
     static constexpr float output_max = 1.0;
     static constexpr float derivative_contribution = 0.05;
@@ -245,11 +254,25 @@ struct PID {
 
     float _set_point;
 
-    constexpr PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint} {};
+    Timeout _set_point_timeout; // used to keep track of if we are at set temp and stay there
+    bool _at_set_point;
+
+    PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint}, _at_set_point{false} {};
 
     float getNewOutput(float input) {
         // Calculate the e (error)
         float e = _set_point - input;
+
+        if (fabs(e) < TEMP_SETPOINT_HYSTERESIS) {
+            if (!_set_point_timeout.isSet()) {
+                _set_point_timeout.set(TEMP_SETPOINT_HOLD_TIME);
+            } else if (_set_point_timeout.isPast()) {
+                _at_set_point = true;
+                _set_point_timeout.clear();
+            }
+        } else if (_at_set_point == true) {
+            _at_set_point = false;
+        }
 
         float p = _p_factor * e;
         // For output's sake, we'll store this, otherwise we don't need it:
@@ -274,6 +297,10 @@ struct PID {
 
         return std::min(output_max, p + i - _derivative);
     };
+
+    bool atSetPoint() {
+        return _at_set_point;
+    }
 
 // //New-style JSON bindins. DISABLED FOR NOW.
 //    auto json_bindings(const char *object_name) {
@@ -513,6 +540,25 @@ stat_t cm_set_set_temperature(nvObj_t *nv)
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { break; }
     }
+
+    return (STAT_OK);
+}
+/*
+ * cm_get_at_temperature() - get a boolean if the heater has reaced the set value of the PID
+ */
+stat_t cm_get_at_temperature(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._at_set_point; break; }
+        case '2': { nv->value = pid2._at_set_point; break; }
+        case '3': { nv->value = pid3._at_set_point; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_BOOL;
 
     return (STAT_OK);
 }
