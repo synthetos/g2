@@ -553,26 +553,44 @@ nvObj_t *nv_reset_nv(nvObj_t *nv)			// clear a single nvObj structure
 	return (nv);							// return pointer to nv as a convenience to callers
 }
 
+void _nv_reset_a_list(nvObj_t *nv, uint8_t length)	// clear some nv list (called from below)
+{
+    for (uint8_t i=0; i<length; i++, nv++) {
+        nv->pv = (nv-1);					// the ends are bogus & corrected later
+        nv->nx = (nv+1);
+        nv->index = 0;
+        nv->depth = 1;						// header and footer are corrected later
+        nv->precision = 0;
+        nv->valuetype = TYPE_EMPTY;
+        nv->token[0] = NUL;
+    }
+    (--nv)->nx = NULL;
+}
+
 nvObj_t *nv_reset_nv_list()					// clear the header and response body
 {
 	nvStr.wp = 0;							// reset the shared string
 	nvObj_t *nv = nvl.list;					// set up linked list and initialize elements
-	for (uint8_t i=0; i<NV_LIST_LEN; i++, nv++) {
-		nv->pv = (nv-1);					// the ends are bogus & corrected later
-		nv->nx = (nv+1);
-		nv->index = 0;
-		nv->depth = 1;						// header and footer are corrected later
-		nv->precision = 0;
-		nv->valuetype = TYPE_EMPTY;
-		nv->token[0] = NUL;
-	}
-	(--nv)->nx = NULL;
-	nv = nvl.list;							// setup response header element ('r')
+
+    _nv_reset_a_list(nv, NV_LIST_LEN);
+
+    nv = nvl.list;							// setup response header element ('r')
 	nv->pv = NULL;
 	nv->depth = 0;
 	nv->valuetype = TYPE_PARENT;
 	strcpy(nv->token, "r");
-	return (nv_body);						// this is a convenience for calling routines
+
+    return (nv_body);						// this is a convenience for calling routines
+}
+
+
+nvObj_t *nv_reset_exec_nv_list()				// clear the exec body
+{
+    nvObj_t *nv = nv_exec;
+
+    _nv_reset_a_list(nv, NV_EXEC_LEN);
+    
+    return (nv_exec);   						// this is a convenience for calling routines
 }
 
 stat_t nv_copy_string(nvObj_t *nv, const char *src)

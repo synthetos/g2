@@ -130,6 +130,7 @@ static void _audit_buffers();
 static void _exec_json_command(float *value, bool *flag);
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
+static stat_t _exec_json_wait(mpBuf_t *bf);
 
 /*
  * planner_init()
@@ -326,9 +327,72 @@ static void _exec_json_command(float *value, bool *flag)
     char *json_string = jc.read_buffer();
 
     // process it
-    json_parser(json_string, false); // don't allow a response
+    json_parse_for_exec(json_string, true); // do execute
 
     jc.free_buffer();
+}
+
+
+
+/*************************************************************************
+ * mp_json_wait() 	 - queue a json wait command
+ * _exec_json_wait() - execute json wait string
+ *
+ *
+ */
+stat_t mp_json_wait(char *json_string)
+{
+    // Never supposed to fail, since we stopped parsing when we were full
+    jc.write_buffer(json_string);
+
+    mpBuf_t *bf;
+
+    // Never supposed to fail as buffer availability was checked upstream in the controller
+    if ((bf = mp_get_write_buffer()) == NULL) {
+        cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_json_wait()");
+        return STAT_ERROR;
+    }
+
+    bf->move_type = MOVE_TYPE_COMMAND;
+    bf->bf_func = _exec_json_wait;      // callback to planner queue exec function
+
+    mp_commit_write_buffer(MOVE_TYPE_COMMAND);			// must be final operation before exit
+
+    return (STAT_OK);
+}
+
+static stat_t _exec_json_wait(mpBuf_t *bf)
+{
+    char *json_string = jc.read_buffer();
+
+    // process it
+    json_parse_for_exec(json_string, false); // do execute
+
+    nvObj_t *nv = nv_exec;
+    while ((nv != NULL) && (nv->valuetype != TYPE_EMPTY)) {
+        // For now we ignore non-BOOL
+        if (nv->valuetype == TYPE_BOOL) {
+            bool old_value = (bool)nv->value; // force it to bool
+
+            nv_get_nvObj(nv);
+
+            bool new_value = (bool)nv->value;
+            if (old_value != new_value) {
+                st_prep_dwell((uint32_t)(0.1 * 1000000.0));// 1ms converted to uSec
+                return STAT_OK;
+            }
+        }
+
+        nv = nv->nx;
+    }
+
+    jc.free_buffer();
+
+    if (mp_free_run_buffer()) {
+        cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
+    }
+
+    return (STAT_OK);
 }
 
 

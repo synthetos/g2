@@ -42,7 +42,8 @@ jsSingleton_t js;
 
 /**** local scope stuff ****/
 
-static stat_t _json_parser_kernal(char *str);
+static stat_t _json_parser_kernal(nvObj_t *nv, char *str);
+static stat_t _json_parser_execute(nvObj_t *nv);
 static stat_t _normalize_json_string(char *str, uint16_t size);
 static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
 //static stat_t _get_nv_pair_strict(nvObj_t *nv, char **pstr, int8_t *depth);
@@ -81,27 +82,43 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
  *	Separation of concerns
  *	  json_parser() is the only exposed part. It does parsing, display, and status reports.
  *	  _get_nv_pair() only does parsing and syntax; no semantic validation or group handling
- *	  _json_parser_kernal() does index validation and group handling and executes sets and gets
- *		in an application agnostic way. It should work for other apps than TinyG
+ *	  _json_parser_kernal() does index validation and group handling
+ *	  _json_parser_execute() executes sets and gets in an application agnostic way. It should work for other apps than TinyG
  */
 
-void json_parser(char *str, bool allow_response)
+void json_parser(char *str)
 {
-	stat_t status = _json_parser_kernal(str);
+    nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
+	stat_t status = _json_parser_kernal(nv, str);
+    if (status == STAT_OK) {
+        // execute the command
+        nv = nv_body;
+        status = _json_parser_execute(nv);
+    }
     if (status == STAT_COMPLETE) {  // skip the print if returning from something that already did it.
         return;
     }
-    if (allow_response) {
-        nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-    }
-	sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
+    nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
+
+    sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 
-static stat_t _json_parser_kernal(char *str)
+// This is almost the same as json_parser, except it doesn't *always* execute the parsed out list, and it never returns a reponse
+void json_parse_for_exec(char *str, bool execute)
+{
+    nvObj_t *nv = nv_reset_exec_nv_list();               // get a fresh nvObj list
+    stat_t status = _json_parser_kernal(nv, str);
+    if ((status == STAT_OK) && (execute)) {
+        // execute the command
+        nv = nv_exec;
+        status = _json_parser_execute(nv);
+    }
+}
+
+static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
 {
 	stat_t status;
 	int8_t depth;
-	nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
 	char group[GROUP_LEN+1] = {""};                 // group identifier - starts as NUL
 	int8_t i = NV_BODY_LEN;
 
@@ -134,17 +151,21 @@ static stat_t _json_parser_kernal(char *str)
         }
 	} while (status != STAT_OK);					// breaks when parsing is complete
 
-	// execute the command
-	nv = nv_body;
-	if (nv->valuetype == TYPE_NULL) {				// means GET the value
-		ritorno(nv_get(nv));						// ritorno returns w/status on any errors
-	} else {
+	return (STAT_OK);								// only successful commands exit through this point
+}
+
+static stat_t _json_parser_execute(nvObj_t *nv) {
+
+    if (nv->valuetype == TYPE_NULL) {				// means GET the value
+        ritorno(nv_get(nv));						// ritorno returns w/status on any errors
+    } else {
         cm_parse_clear(*nv->stringp);               // parse Gcode and clear alarms if M30 or M2 is found
         ritorno(cm_is_alarmed());                   // return error status if in alarm, shutdown or panic
-		ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
-		nv_persist(nv);
-	}
-	return (STAT_OK);								// only successful commands exit through this point
+        ritorno(nv_set(nv));						// set value or call a function (e.g. gcode)
+        nv_persist(nv);
+    }
+
+    return (STAT_OK);								// only successful commands exit through this point
 }
 
 /*

@@ -1766,6 +1766,14 @@ stat_t cm_json_command(char *json_string)
     return mp_json_command(json_string);
 }
 
+/*
+ * cm_json_wait() - M102
+ */
+stat_t cm_json_wait(char *json_string)
+{
+    return mp_json_wait(json_string);
+}
+
 
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *
