@@ -264,8 +264,8 @@ static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *bl
 
             // Perform Octal stripping - remove invalid leading zeros in number strings
             // Change 0123.004 to 123.004, or -0234.003 to -234.003
-            if (isdigit(*gc_rd) || (*gc_rd != '.')) { // treat '.' as a digit so we don't strip after one
-                if (last_char_was_digit || (*gc_rd != '0')) {
+            if (isdigit(*gc_rd) || (*gc_rd == '.')) { // treat '.' as a digit so we don't strip after one
+                if (last_char_was_digit || (*gc_rd != '0') || !isdigit(*(gc_rd+1))) {
                     do_copy = true;
                 }
                 last_char_was_digit = true;
