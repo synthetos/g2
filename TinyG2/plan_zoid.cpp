@@ -298,6 +298,7 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
 
                 mb.entry_changed = true; // we are changing the *next* block's entry velocity
 
+#if GROUPING_ENABLED == 1
                 // We'll check to see if we can merge this block into the next one.
                 if (bf->mergable && (bf->nx_group->buffer_state == MP_BUFFER_PREPPED) && (bf->nx_group->exit_vmax <= bf->exit_vmax)) {
                     bool will_merge = false;
@@ -341,9 +342,9 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
                         did_merge = true;
                     }
                 }
+#endif //GROUPING_ENABLED
 
                 if (!did_merge) {
-
                     group->exit_velocity = accel_velocity;
                     group->cruise_velocity = accel_velocity;
 
@@ -653,6 +654,7 @@ stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *group, mpBlockRuntim
             group->t_into_section = 0.0; // initial position for head is 0, going up to 0
 
             block->tail_t = 1.0;
+            block->completes_group = true;
         }
     }
 

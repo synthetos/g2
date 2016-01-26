@@ -234,6 +234,7 @@ stat_t mp_plan_move()
     //   p_group DONE   No        exit
     //   p_group --     --        p_group (Note: We shouldn't see this state. p_group should have become r_group first.)
 
+#define ALLOW_EXTENSIONS 0
 
     // If the velocity changed, we'll note it
     bool velocity_changed = false;
@@ -251,17 +252,19 @@ stat_t mp_plan_move()
             primary_bf->exit_velocity = primary_bf->exit_vmax;
         }
 
-        //        if (!fp_GE(mr.r_group->exit_velocity, primary_bf->exit_velocity)) {
-        //            velocity_changed = true;
-        //            _attempt_extension(mr.r_group, velocity_changed);
-        //        }
+#if ALLOW_EXTENSIONS == 1
+        if (!fp_GE(mr.r_group->exit_velocity, primary_bf->exit_velocity)) {
+            velocity_changed = true;
+            _attempt_extension(mr.r_group, velocity_changed);
+        }
+#endif
     }
 
     float group_entry_velocity = mr.group_entry_velocity;
 
     // If the running group is still dispersing, we'll use it
     // But if it's OFF then exec will skip to planning anyway
-    if (velocity_changed || ((mr.r_group->group_state != GROUP_OFF) && (mr.r_group->group_state != GROUP_DONE))) {
+    if ((mr.r_group->group_state != GROUP_OFF) && (velocity_changed || (mr.r_group->group_state != GROUP_DONE))) {
         group = mr.r_group;
 
     } else {
@@ -272,6 +275,7 @@ stat_t mp_plan_move()
             group_entry_velocity = mr.r_group->exit_velocity;
         }
 
+#if ALLOW_EXTENSIONS == 1
         if (group->group_state != GROUP_OFF) {
             mpBuf_t *primary_bf = group->primary_bf;
 
@@ -279,21 +283,22 @@ stat_t mp_plan_move()
                 primary_bf->exit_velocity = primary_bf->exit_vmax;
             }
 
-            //            if ((primary_bf->hint == PART_OF_A_GROUP) || ((group->tail_length > 0.0) && !fp_GE(group->exit_velocity, primary_bf->exit_velocity))) {
-            //                // The group was either extended (in spite of or lock on it!), or the velocity was changed.
-            //                // We have to invalidate the group and buffer plan state and re-run ramps.
-            //
-            //                group->group_state = GROUP_OFF;
-            //
-            //                // If we already planned out a block or two, fix them back to PREPPED
-            //                if (primary_bf->buffer_state == MP_BUFFER_PLANNED) {
-            //                    primary_bf->buffer_state = MP_BUFFER_PREPPED;
-            //                    if (primary_bf->nx->buffer_state == MP_BUFFER_PLANNED) {
-            //                        primary_bf->nx->buffer_state = MP_BUFFER_PREPPED;
-            //                    }
-            //                }
-            //            }
+            if ((primary_bf->hint == PART_OF_A_GROUP) || ((group->tail_length > 0.0) && !fp_GE(group->exit_velocity, primary_bf->exit_velocity))) {
+                // The group was either extended (in spite of or lock on it!), or the velocity was changed.
+                // We have to invalidate the group and buffer plan state and re-run ramps.
+
+                group->group_state = GROUP_OFF;
+
+                // If we already planned out a block or two, fix them back to PREPPED
+                if (primary_bf->buffer_state == MP_BUFFER_PLANNED) {
+                    primary_bf->buffer_state = MP_BUFFER_PREPPED;
+                    if (primary_bf->nx->buffer_state == MP_BUFFER_PLANNED) {
+                        primary_bf->nx->buffer_state = MP_BUFFER_PREPPED;
+                    }
+                }
+            }
         }
+#endif
     }
 
     // Then, to chose which buffer to use (bf or bf->nx):
@@ -851,8 +856,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 
 
-        // +++++ FEEDHOLD IS DISABLED AND BROKEN
-        while(1);
+
+
+        __asm__("BKPT"); // FEEDHOLD IS NOT FIXED YET
+
+
 
 
 
@@ -891,18 +899,24 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
+
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (fp_ZERO(mr.r->exit_velocity)) {
+                if (fp_ZERO(mr.r_group->exit_velocity)) {
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                 }
-            } else {
+
+            // we can't decel from the middle of a head, we'll invoke at worst 2x jerk
+            } else if ((mr.section != SECTION_HEAD) ||
+                       ((mr.section_state == SECTION_NEW) && fp_ZERO(mr.entry_jerk) && fp_ZERO(mr.entry_acceleration))) {
                 mr.entry_velocity = mr.segment_velocity;
-                if (mr.section == SECTION_HEAD) {
-                    mr.entry_velocity += mr.forward_diff_5; // compute velocity for next segment (this new one)
-                }
-                mr.r->cruise_velocity = mr.entry_velocity;
+                mr.entry_acceleration = 0.0;
+                mr.entry_jerk = 0.0;
+
+                mr.group_entry_velocity = mr.segment_velocity;
+                mr.r_group->cruise_velocity = mr.segment_velocity;
+
 
                 mr.section = SECTION_TAIL;
                 mr.section_state = SECTION_NEW;
@@ -970,7 +984,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section_state = SECTION_OFF;
         mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
-        if (mr.r_group->group_state == GROUP_DONE) {
+        if (mr.r->completes_group) {
             mr.r_group->group_state = GROUP_OFF;
             mr.group_entry_velocity = mr.r_group->exit_velocity;
         }
@@ -1485,15 +1499,6 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
     if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
         // Mark the block as unplannable
         bf->plannable = false;
-
-        // Mark the running group as GROUP_OFF so it can be reused.
-        // Note that this appplies even if the group doesn't have a tail
-
-        // If the group's not DONE, then it's still handing out tail section to blocks.
-        if (mr.r_group->group_state == GROUP_DONE) {
-            mr.r_group->group_state = GROUP_OFF;
-            mr.group_entry_velocity = mr.r_group->exit_velocity;
-        }
 
         if (fp_ZERO(mr.r->tail_length)) { return(STAT_OK);}			// end the move
         mr.segments = ceil(uSec(mr.r->tail_time) / NOM_SEGMENT_USEC);  // # of segments for the section

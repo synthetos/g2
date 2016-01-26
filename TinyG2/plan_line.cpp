@@ -309,7 +309,8 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         // groups is **VITAL*.
         // We must *always* change cruise BEFORE exit, for example, to keep cruise higher than exit.
 
-        for ( ; bf->plannable; bf = bf->pv_group) {
+        // We test for (braking_velocity < bf->exit_velocity) in case of an inversion, and plannable is then violated.
+        for ( ; bf->plannable || (braking_velocity < bf->exit_velocity); bf = bf->pv_group) {
             // Timings from *here*
 
             bf->iterations++;
@@ -318,22 +319,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
             // Let's be mindful that for ward planning may change exit_vmax, and our exit velocity may be lowered
             braking_velocity = min(braking_velocity, bf->exit_vmax);
 
-//            if ((bf->buffer_state == MP_BUFFER_RUNNING) || ((bf->buffer_state == MP_BUFFER_PLANNED) && (bf->pv->buffer_state == MP_BUFFER_EMPTY))) {
-//                // We can't merge or improve the entry velocity of the running (or first, about-to-run) buffer,
-//                // so we might as well skedattle...
-//
-//                // We *must* set cruise before exit, and keep it at least as high as exit.
-//                bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
-//                bf->exit_velocity = braking_velocity;
-//
-//                // We might back plan into the running or planned buffer, so we have to check.
-//                if (bf->buffer_state < MP_BUFFER_PREPPED) {
-//                    bf->buffer_state = MP_BUFFER_PREPPED;
-//                }
-//
-//                break;
-//            }
+            // We *might* do this exact computation later, so cache the value.
+            float test_velocity = 0;
+            bool test_velocity_valid = false; // record if we have a validly cached value
 
+#if GROUPING_ENABLED == 1
             // Exec can swoop in and change mergable at any time, so we'll check it repeatedly
             going_to_merge = going_to_merge & bf->mergable;
 
@@ -349,10 +339,6 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
 
                 going_to_merge = false;
             }
-
-            // We *might* do this exact computation later, so cache the value.
-            float test_velocity = 0;
-            bool test_velocity_valid = false; // record if we have a validly cached value
 
             going_to_merge = going_to_merge & bf->mergable;
 
@@ -372,11 +358,11 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
                     test_velocity_valid = true;
                 }
             }
-
+#else //GROUPING_ENABLED
             // ++++ prevent grouping
-            //going_to_merge = false;
-            //test_velocity_valid = false;
-
+            going_to_merge = false;
+            test_velocity_valid = false;
+#endif
 
             // The new group end will be the previous block. (One last peek at bf->mergable.)
             if (!going_to_merge || !bf->mergable) {

@@ -662,16 +662,20 @@ void mp_replan_queue(mpBuf_t *bf)
 {
     mb.p = bf;    // reset planner pointer to start replan from here
 
+    bf->pv->nx_group = bf;
+
     do {
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
+            bf->pv_group = bf->pv;
             break;
         }
-//        bf->head_length = 0;
-//        bf->body_length = 0;
-//        bf->tail_length = 0;
-//        bf->head_time = 0;
-//        bf->body_time = 0;
-//        bf->tail_time = 0;
+
+        // Split the groups for re-grouping
+        bf->nx_group = bf->nx;
+        bf->pv_group = bf->pv;
+
+        bf->group_length = bf->length;
+
         bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
     } while ((bf = mp_get_next_buffer(bf)) != mb.p);
 

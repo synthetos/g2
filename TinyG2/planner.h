@@ -43,6 +43,8 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
+#define GROUPING_ENABLED 1
+
 /*
  * Enums and other type definitions
  *
@@ -374,6 +376,7 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
     struct mpBlockRuntimeBuf *nx;       // singly-linked-list
 
     bool planned;                       // Record if it's been planned against a buufer
+    bool completes_group;               // Group planner sets this to indicate that this is the last block of the group
 
     float head_length;                  // copies of bf variables of same name
     float body_length;
