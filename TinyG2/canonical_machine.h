@@ -703,7 +703,8 @@ void cm_program_stop(void);										// M0
 void cm_optional_program_stop(void);							// M1
 void cm_program_end(void);										// M2
 
-stat_t cm_json_command(char *json_string);
+stat_t cm_json_command(char *json_string);                      // M100
+stat_t cm_json_wait(char *json_string);                         // M102
 
 /*--- Cycles ---*/
 

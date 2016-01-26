@@ -239,7 +239,7 @@ static void _dispatch_kernel()
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode
 		cs.comm_mode = JSON_MODE;                           // switch to JSON mode
-		json_parser(cs.bufp, true);
+		json_parser(cs.bufp);
     }
 #ifdef __TEXT_MODE
     else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
