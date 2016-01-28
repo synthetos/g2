@@ -161,7 +161,7 @@ typedef enum {
 
 #define MIN_SEGMENT_MS          ((float)0.75)          // minimum segment milliseconds
 #define NOM_SEGMENT_MS          ((float)1.5)          // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
-#define MIN_BLOCK_MS            ((float)10.0)          // minimum block (whole move) milliseconds
+#define MIN_BLOCK_MS            ((float)1.5)          // minimum block (whole move) milliseconds
 #define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
 #define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
