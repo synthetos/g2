@@ -177,8 +177,8 @@ void mp_calculate_ramps(mpGroupRuntimeBuf_t *group, const float entry_velocity)
     group->exit_velocity   = min(bf->exit_velocity, bf->exit_vmax);
 
     // +++++ RG trap
-    if ((group->cruise_velocity < entry_velocity)) {
-        __asm__("BKPT"); // entry > cruise
+    if ((group->cruise_velocity < (entry_velocity-5))) {
+        __asm__("BKPT"); // entry > cruise + 5
     }
     if ((group->cruise_velocity < group->exit_velocity)) {
         __asm__("BKPT"); // exit > cruise
