@@ -43,7 +43,7 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
-#define GROUPING_ENABLED 1
+#define GROUPING_ENABLED 0
 
 /*
  * Enums and other type definitions
