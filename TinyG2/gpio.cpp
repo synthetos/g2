@@ -80,18 +80,32 @@ static void _dispatch_pin(const uint8_t input_num_ext);
 
 // WARNING: These return raw pin values, NOT corrected for NO/NC Active high/low
 //          Also, these take EXTERNAL pin numbers -- 1-based
-static InputPin<kInput1_PinNumber> input_1_pin(kPullUp);
-static InputPin<kInput2_PinNumber> input_2_pin(kPullUp);
-static InputPin<kInput3_PinNumber> input_3_pin(kPullUp);
-static InputPin<kInput4_PinNumber> input_4_pin(kPullUp);
-static InputPin<kInput5_PinNumber> input_5_pin(kPullUp);
-static InputPin<kInput6_PinNumber> input_6_pin(kPullUp);
-static InputPin<kInput7_PinNumber> input_7_pin(kPullUp);
-static InputPin<kInput8_PinNumber> input_8_pin(kPullUp);
-static InputPin<kInput9_PinNumber> input_9_pin(kPullUp);
+static InputPin<kInput1_PinNumber>  input_1_pin(kPullUp);
+static InputPin<kInput2_PinNumber>  input_2_pin(kPullUp);
+static InputPin<kInput3_PinNumber>  input_3_pin(kPullUp);
+static InputPin<kInput4_PinNumber>  input_4_pin(kPullUp);
+static InputPin<kInput5_PinNumber>  input_5_pin(kPullUp);
+static InputPin<kInput6_PinNumber>  input_6_pin(kPullUp);
+static InputPin<kInput7_PinNumber>  input_7_pin(kPullUp);
+static InputPin<kInput8_PinNumber>  input_8_pin(kPullUp);
+static InputPin<kInput9_PinNumber>  input_9_pin(kPullUp);
 static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
 static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
 static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
+
+static OutputPin<kOutput1_PinNumber>  output_1_pin;
+static OutputPin<kOutput2_PinNumber>  output_2_pin;
+static OutputPin<kOutput3_PinNumber>  output_3_pin;
+static OutputPin<kOutput4_PinNumber>  output_4_pin;
+static OutputPin<kOutput5_PinNumber>  output_5_pin;
+static OutputPin<kOutput6_PinNumber>  output_6_pin;
+static OutputPin<kOutput7_PinNumber>  output_7_pin;
+static OutputPin<kOutput8_PinNumber>  output_8_pin;
+static OutputPin<kOutput9_PinNumber>  output_9_pin;
+static OutputPin<kOutput10_PinNumber> output_10_pin;
+static OutputPin<kOutput11_PinNumber> output_11_pin;
+static OutputPin<kOutput12_PinNumber> output_12_pin;
+static OutputPin<kOutput13_PinNumber> output_13_pin;
 #endif //__ARM
 
 /************************************************************************************
@@ -137,14 +151,14 @@ void gpio_init(void)
     for (uint8_t i=0; i<D_IN_PAIRS; i++) {
         // Setup input bits and interrupts
         // Must have been previously set to inputs by stepper_init()
-        if (d_in[i].mode == INPUT_MODE_DISABLED) {
+        if (d_in[i].mode == IO_MODE_DISABLED) {
             hw.sw_port[i]->INT0MASK = 0;                    // disable interrupts
         } else {
             hw.sw_port[i]->DIRCLR = SW_MIN_BIT_bm;          // set min input
             hw.sw_port[i]->PIN6CTRL = (PIN_MODE | PORT_ISC_BOTHEDGES_gc);
             hw.sw_port[i]->INT0MASK = SW_MIN_BIT_bm;	 	// interrupt on min switch
         }
-        if (d_in[i+1].mode == INPUT_MODE_DISABLED) {
+        if (d_in[i+1].mode == IO_MODE_DISABLED) {
             hw.sw_port[i]->INT1MASK = 0;
         } else {
             hw.sw_port[i]->DIRCLR = SW_MAX_BIT_bm;          // set max input
@@ -164,11 +178,11 @@ void gpio_reset(void)
 
     for (uint8_t i=0; i<D_IN_CHANNELS; i++) {
         in = &d_in[i];
-        if (in->mode == INPUT_MODE_DISABLED) {
+        if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
             continue;
         }
-        in->state = (inputState)(_read_raw_pin(i+1) ^ (in->mode ^ 1));    // correct for NO or NC mode
+        in->state = (ioState)(_read_raw_pin(i+1) ^ (in->mode ^ 1));    // correct for NO or NC mode
         in->lockout_ms = INPUT_LOCKOUT_MS;
         in->lockout_timer = SysTickTimer_getValue();
 	}
@@ -283,7 +297,7 @@ static uint8_t _condition_pin(const uint8_t input_num_ext, const int8_t pin_valu
     d_in_t *in = &d_in[input_num_ext-1];  // array index is one less than input number
 
     // return if input is disabled (not supposed to happen)
-    if (in->mode == INPUT_MODE_DISABLED) {
+    if (in->mode == IO_MODE_DISABLED) {
         in->state = INPUT_DISABLED;
         return (0);
     }
@@ -292,12 +306,12 @@ static uint8_t _condition_pin(const uint8_t input_num_ext, const int8_t pin_valu
     if (SysTickTimer_getValue() < in->lockout_timer) { return (0); }
     // return if no change in state
     int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
-    if (in->state == (inputState)pin_value_corrected) {
+    if (in->state == (ioState)pin_value_corrected) {
         return (0);
     }
 
     // record the changed state
-    in->state = (inputState)pin_value_corrected;
+    in->state = (ioState)pin_value_corrected;
     in->lockout_timer = SysTickTimer_getValue() + in->lockout_ms;
     if (pin_value_corrected == INPUT_ACTIVE) {
         in->edge = INPUT_EDGE_LEADING;
@@ -404,7 +418,7 @@ static void _dispatch_pin(const uint8_t input_num_ext)
 //    io_di_t *in = &io.in[input_num_ext-1];  // array index is one less than input number
 //
 //    // return if input is disabled (not supposed to happen)
-//	if (in->mode == INPUT_MODE_DISABLED) {
+//	if (in->mode == IO_MODE_DISABLED) {
 //    	in->state = INPUT_DISABLED;
 //        return;
 //    }
@@ -630,12 +644,7 @@ static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t
 
 stat_t io_set_mo(nvObj_t *nv)			// input type or disabled
 {
-	if ((nv->value < INPUT_MODE_DISABLED) || (nv->value >= INPUT_MODE_MAX)) {
-		return (STAT_INPUT_VALUE_UNSUPPORTED);
-	}
-	set_int8(nv);
-	gpio_reset();
-	return (STAT_OK);
+    return (_io_set_helper(nv, IO_MODE_DISABLED, IO_MODE_MAX));
 }
 
 stat_t io_set_ac(nvObj_t *nv)			// input action
@@ -653,9 +662,140 @@ stat_t io_set_fn(nvObj_t *nv)			// input function
  */
 stat_t io_get_input(nvObj_t *nv)
 {
+    char *num_start = nv->token;
+    if (*(nv->group) == 0) {
+        // if we don't have a group, then the group name is in the token
+        // skip over "in"
+        num_start+=2;
+    }
+    nv->value = d_in[strtol(num_start, NULL, 10)-1].state;
+
+    nv->valuetype = TYPE_BOOL;
+    return (STAT_OK);
+}
+
+
+
+stat_t io_set_st(nvObj_t *nv)			// output function
+{
+    char *num_start = nv->token;
+    if (*(nv->group) == 0) {
+        // if we don't have a group, then the group name is in the token
+        // skip over "out"
+        num_start+=3;
+    }
     // the token has been stripped down to an ASCII digit string - use it as an index
-    nv->value = d_in[strtol(nv->token, NULL, 10)-1].state;
-    nv->valuetype = TYPE_INT;
+    uint8_t output_num = strtol(num_start, NULL, 10);
+
+    // Force pins that aren't available to be "disabled"
+    switch (output_num) {
+        case 1:  if (output_1_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 2:  if (output_2_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 3:  if (output_3_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 4:  if (output_4_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 5:  if (output_5_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 6:  if (output_6_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 7:  if (output_7_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 8:  if (output_8_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 9:  if (output_9_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+        case 10: if (output_10_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+        case 11: if (output_11_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+        case 12: if (output_12_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+        case 13: if (output_13_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+
+        default:
+            break;
+    }
+
+    return (_io_set_helper(nv, IO_MODE_DISABLED, IO_MODE_MAX));
+}
+
+/*
+ *  io_get_output() - return output state given an nv object
+ */
+stat_t io_get_output(nvObj_t *nv)
+{
+    char *num_start = nv->token;
+    if (*(nv->group) == 0) {
+        // if we don't have a group, then the group name is in the token
+        // skip over "out"
+        num_start+=3;
+    }
+    // the token has been stripped down to an ASCII digit string - use it as an index
+    uint8_t output_num = strtol(num_start, NULL, 10);
+
+    ioMode outMode = d_out[output_num-1].mode;
+    if (outMode == IO_MODE_DISABLED) {
+        nv->value = 0; // Inactive
+    } else {
+        bool invert = (outMode == 1);
+        // Note: !! forces a value to boolean 0 or 1
+        switch (output_num) {
+            case 1:  { nv->value = (!!output_1_pin.getOutputValue()) ^ invert; } break;
+            case 2:  { nv->value = (!!output_2_pin.getOutputValue()) ^ invert; } break;
+            case 3:  { nv->value = (!!output_3_pin.getOutputValue()) ^ invert; } break;
+            case 4:  { nv->value = (!!output_4_pin.getOutputValue()) ^ invert; } break;
+            case 5:  { nv->value = (!!output_5_pin.getOutputValue()) ^ invert; } break;
+            case 6:  { nv->value = (!!output_6_pin.getOutputValue()) ^ invert; } break;
+            case 7:  { nv->value = (!!output_7_pin.getOutputValue()) ^ invert; } break;
+            case 8:  { nv->value = (!!output_8_pin.getOutputValue()) ^ invert; } break;
+            case 9:  { nv->value = (!!output_9_pin.getOutputValue()) ^ invert; } break;
+            case 10: { nv->value = (!!output_10_pin.getOutputValue()) ^ invert; } break;
+            case 11: { nv->value = (!!output_11_pin.getOutputValue()) ^ invert; } break;
+            case 12: { nv->value = (!!output_12_pin.getOutputValue()) ^ invert; } break;
+            case 13: { nv->value = (!!output_13_pin.getOutputValue()) ^ invert; } break;
+
+            default:
+                {
+                    nv->value = 0; // inactive
+                }
+        }
+    }
+
+    nv->valuetype = TYPE_BOOL;
+    return (STAT_OK);
+}
+
+/*
+ *  io_set_output() - return input state given an nv object
+ */
+stat_t io_set_output(nvObj_t *nv)
+{
+    char *num_start = nv->token;
+    if (*(nv->group) == 0) {
+        // if we don't have a group, then the group name is in the token
+        // skip over "out"
+        num_start+=3;
+    }
+    // the token has been stripped down to an ASCII digit string - use it as an index
+    uint8_t output_num = strtol(num_start, NULL, 10);
+
+    ioMode outMode = d_out[output_num-1].mode;
+    if (outMode == IO_MODE_DISABLED) {
+        nv->value = 0; // Inactive
+    } else {
+        bool invert = (outMode == 1);
+        switch (output_num) {
+            case 1:  { output_1_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 2:  { output_2_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 3:  { output_3_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 4:  { output_4_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 5:  { output_5_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 6:  { output_6_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 7:  { output_7_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 8:  { output_8_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 9:  { output_9_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 10: { output_10_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 11: { output_11_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 12: { output_12_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 13: { output_13_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+
+            default:
+                {
+                    nv->value = 0; // inactive
+                }
+        }
+    }
     return (STAT_OK);
 }
 
@@ -666,10 +806,13 @@ stat_t io_get_input(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15d [-1=disabled, 0=NO,1=NC]\n";
+	static const char fmt_gpio_mo[] PROGMEM = "[%smo] input mode%15d [-1=disabled,0=NO,1=NC]\n";
 	static const char fmt_gpio_ac[] PROGMEM = "[%sac] input action%13d [0=none,1=stop,2=halt,3=stop_steps,4=panic,5=reset]\n";
 	static const char fmt_gpio_fn[] PROGMEM = "[%sfn] input function%11d [0=none,1=limit,2=interlock,3=shutdown]\n";
 	static const char fmt_gpio_in[] PROGMEM = "Input %s state: %5d\n";
+
+    static const char fmt_gpio_st[] PROGMEM = "[%sst] output mode%15d [-1=disabled,0=active low,1=active high]\n";
+    static const char fmt_gpio_out[] PROGMEM = "Output %s state: %5d\n";
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
@@ -680,5 +823,10 @@ stat_t io_get_input(nvObj_t *nv)
 	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
 	void io_print_in(nvObj_t *nv) {
         printf_P(fmt_gpio_in, nv->token, (int)nv->value);
+    }
+
+    void io_print_st(nvObj_t *nv) {_print_di(nv, fmt_gpio_st);}
+    void io_print_out(nvObj_t *nv) {
+        printf_P(fmt_gpio_out, nv->token, (int)nv->value);
     }
 #endif

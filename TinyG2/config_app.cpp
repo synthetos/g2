@@ -414,6 +414,35 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "in","in9", _f0, 0, io_print_in, io_get_input, set_nul, (float *)&cs.null, 0 },
 #endif
 
+	// digital output configs
+	{ "do1", "do1st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[0].mode,     DO1_MODE },
+	{ "do2", "do2st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[1].mode,     DO2_MODE },
+	{ "do3", "do3st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[2].mode,     DO3_MODE },
+	{ "do4", "do4st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[3].mode,     DO4_MODE },
+	{ "do5", "do5st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[4].mode,     DO5_MODE },
+	{ "do6", "do6st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[5].mode,     DO6_MODE },
+	{ "do7", "do7st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[6].mode,     DO7_MODE },
+	{ "do8", "do8st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[7].mode,     DO8_MODE },
+	{ "do9", "do9st", _fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[8].mode,     DO9_MODE },
+	{ "do10","do10st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[9].mode,     DO10_MODE },
+	{ "do11","do11st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[10].mode,    DO11_MODE },
+	{ "do12","do12st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[11].mode,    DO12_MODE },
+	{ "do13","do13st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[12].mode,    DO13_MODE },
+
+	// Digital input state readers
+	{ "out","out1",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out2",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out3",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out4",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out5",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out6",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out7",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out8",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out9",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out10", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out11", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out12", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },
 	{ "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_lo,   P1_CW_SPEED_LO },
@@ -811,7 +840,22 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","di8", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","di9", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     // +10 = 22
-	{ "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
+    { "","out", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // output state
+    { "","do1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // output configs
+    { "","do2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do4", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do5", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do6", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do7", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do8", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do9", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do10", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do11", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do12", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","do13", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    // +14 = 36
+    { "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// coord offset groups
 	{ "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g56",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g57",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -820,7 +864,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","g92",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// origin offsets
 	{ "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// g28 home position
 	{ "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// g30 home position
-    // +9 = 31
+    // +9 = 45
 	{ "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// machine position group
 	{ "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work position group
 	{ "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work offset group
@@ -829,14 +873,14 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// motor power enagled group
 	{ "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
 	{ "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// job ID group
-    // +8 = 39
+    // +8 = 53
     { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 1 group
     { "","he2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 2 group
     { "","he3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// heater 3 group
     { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 1 group
     { "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 2 group
     { "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// PID 3 group
-    // +6 = 45
+    // +6 = 59
 
 #ifdef __USER_DATA
     { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
@@ -867,7 +911,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	5 		// count of uber-groups, above
-#define FIXED_GROUPS 		    39		// count of fixed groups, excluding optional groups
+#define FIXED_GROUPS 		    59		// count of fixed groups, excluding optional groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

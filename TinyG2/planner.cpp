@@ -372,11 +372,11 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
     while ((nv != NULL) && (nv->valuetype != TYPE_EMPTY)) {
         // For now we ignore non-BOOL
         if (nv->valuetype == TYPE_BOOL) {
-            bool old_value = (bool)nv->value; // force it to bool
+            bool old_value = !fp_ZERO(nv->value); // force it to bool
 
             nv_get_nvObj(nv);
 
-            bool new_value = (bool)nv->value;
+            bool new_value = !fp_ZERO(nv->value);
             if (old_value != new_value) {
                 st_prep_dwell((uint32_t)(0.1 * 1000000.0));// 1ms converted to uSec
                 return STAT_OK;

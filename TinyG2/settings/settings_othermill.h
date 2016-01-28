@@ -294,9 +294,9 @@ constexpr float H1_DEFAULT_D = 100.0;
     Homing and probing settings are independent of ACTION and FUNCTION settings
     but rely on proper switch MODE setting (i.e. NC or NO)
 
-    INPUT_MODE_DISABLED
-    INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
-    INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
+    IO_MODE_DISABLED
+    IO_ACTIVE_LOW    aka NORMALLY_OPEN
+    IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
     INPUT_ACTION_NONE
     INPUT_ACTION_STOP
@@ -317,7 +317,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
 // Xmax                             // External ESTOP
-#define DI2_MODE                    INPUT_ACTIVE_HIGH
+#define DI2_MODE                    IO_ACTIVE_HIGH
 #define DI2_ACTION                  INPUT_ACTION_HALT
 #define DI2_FUNCTION                INPUT_FUNCTION_SHUTDOWN
 
@@ -327,12 +327,12 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymax                             // Safety interlock
-#define DI4_MODE                    INPUT_ACTIVE_HIGH
+#define DI4_MODE                    IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_NONE   // (hold is performed by Interlock function)
 #define DI4_FUNCTION                INPUT_FUNCTION_INTERLOCK
 
 // Zmin                             // Z probe
-#define DI5_MODE                    INPUT_ACTIVE_LOW
+#define DI5_MODE                    IO_ACTIVE_LOW
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
@@ -342,19 +342,41 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define DI6_FUNCTION                INPUT_FUNCTION_NONE
 
 // Amin                             // Unused
-#define DI7_MODE                    INPUT_MODE_DISABLED
+#define DI7_MODE                    IO_MODE_DISABLED
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // Amax                             // Unused
-#define DI8_MODE                    INPUT_MODE_DISABLED
+#define DI8_MODE                    IO_MODE_DISABLED
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
 // Safety line w/HW timer           // Unused
-#define DI9_MODE                    INPUT_MODE_DISABLED
+#define DI9_MODE                    IO_MODE_DISABLED
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
+
+
+//Extruder1_PWM
+#define DO1_MODE                    IO_ACTIVE_HIGH
+//Extruder2_PWM
+#define DO2_MODE                    IO_ACTIVE_HIGH
+//Fan1A_PWM
+#define DO3_MODE                    IO_ACTIVE_HIGH
+//Fan1B_PWM
+#define DO4_MODE                    IO_ACTIVE_HIGH
+#define DO5_MODE                    IO_ACTIVE_HIGH
+#define DO6_MODE                    IO_ACTIVE_HIGH
+#define DO7_MODE                    IO_ACTIVE_HIGH
+#define DO8_MODE                    IO_ACTIVE_HIGH
+//SAFEin (Output) signal
+#define DO9_MODE                    IO_ACTIVE_HIGH
+#define DO10_MODE                   IO_ACTIVE_HIGH
+//Header Bed FET
+#define DO11_MODE                   IO_ACTIVE_HIGH
+//Indicator_LED
+#define DO12_MODE                   IO_ACTIVE_HIGH
+#define DO13_MODE                   IO_ACTIVE_HIGH
 
 // *** PWM SPINDLE CONTROL ***
 

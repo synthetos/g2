@@ -40,7 +40,7 @@
 #define D_IN_PAIRS (D_IN_CHANNELS/2)
 #endif
 
-#define D_OUT_CHANNELS	    4           // number of digital outputs supported
+#define D_OUT_CHANNELS	    13          // number of digital outputs supported
 #define A_IN_CHANNELS	    0           // number of analog inputs supported
 #define A_OUT_CHANNELS	    0           // number of analog outputs supported
 
@@ -49,13 +49,13 @@
 //--- do not change from here down ---//
 
 typedef enum {
-    INPUT_MODE_DISABLED = -1,           // input is disabled
-    INPUT_ACTIVE_LOW = 0,               // input is active low (aka normally open)
-    INPUT_ACTIVE_HIGH = 1,              // input is active high (aka normally closed)
-    INPUT_MODE_MAX                      // unused. Just for range checking
-} inputMode;
-#define NORMALLY_OPEN   INPUT_ACTIVE_LOW    // equivalent
-#define NORMALLY_CLOSED INPUT_ACTIVE_HIGH   // equivalent
+    IO_MODE_DISABLED = -1,           // input is disabled
+    IO_ACTIVE_LOW = 0,               // input is active low (aka normally open)
+    IO_ACTIVE_HIGH = 1,              // input is active high (aka normally closed)
+    IO_MODE_MAX                      // unused. Just for range checking
+} ioMode;
+#define NORMALLY_OPEN   IO_ACTIVE_LOW    // equivalent
+#define NORMALLY_CLOSED IO_ACTIVE_HIGH   // equivalent
 
 typedef enum {                          // actions are initiated from within the input's ISR
     INPUT_ACTION_NONE = 0,
@@ -80,7 +80,7 @@ typedef enum {
     INPUT_DISABLED = -1,                // value returned if input is disabled
     INPUT_INACTIVE = 0,                 // aka switch open, also read as 'false'
     INPUT_ACTIVE = 1                    // aka switch closed, also read as 'true'
-} inputState;
+} ioState;
 
 typedef enum {
     INPUT_EDGE_NONE = 0,                // no edge detected or edge flag reset (must be zero)
@@ -92,10 +92,10 @@ typedef enum {
  * GPIO structures
  */
 typedef struct ioDigitalInput {		    // one struct per digital input
-	inputMode mode;					    // -1=disabled, 0=active low (NO), 1= active high (NC)
+	ioMode mode;					    // -1=disabled, 0=active low (NO), 1= active high (NC)
 	inputAction action;                 // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
 	inputFunc function;                 // function to perform when activated / deactivated
-    inputState state;                   // input state 0=inactive, 1=active, -1=disabled
+    ioState state;                      // input state 0=inactive, 1=active, -1=disabled
     inputEdgeFlag edge;                 // keeps a transient record of edges for immediate inquiry
     bool homing_mode;                   // set true when input is in homing mode.
     bool probing_mode;                  // set true when input is in probing mode.
@@ -104,15 +104,15 @@ typedef struct ioDigitalInput {		    // one struct per digital input
 } d_in_t;
 
 typedef struct gpioDigitalOutput {      // one struct per digital output
-    inputMode mode;
+    ioMode mode;
 } d_out_t;
 
 typedef struct gpioAnalogInput {        // one struct per analog input
-    inputMode mode;
+    ioMode mode;
 } a_in_t;
 
 typedef struct gpioAnalogOutput {       // one struct per analog output
-    inputMode mode;
+    ioMode mode;
 } a_out_t;
 
 extern d_in_t   d_in[D_IN_CHANNELS];
@@ -137,16 +137,25 @@ stat_t io_set_fn(nvObj_t *nv);
 
 stat_t io_get_input(nvObj_t *nv);
 
+
+stat_t io_set_st(nvObj_t *nv);			// output function
+stat_t io_get_output(nvObj_t *nv);
+stat_t io_set_output(nvObj_t *nv);
+
 #ifdef __TEXT_MODE
 	void io_print_mo(nvObj_t *nv);
 	void io_print_ac(nvObj_t *nv);
 	void io_print_fn(nvObj_t *nv);
 	void io_print_in(nvObj_t *nv);
+    void io_print_st(nvObj_t *nv);
+    void io_print_out(nvObj_t *nv);
 #else
 	#define io_print_mo tx_print_stub
 	#define io_print_ac tx_print_stub
 	#define io_print_fn tx_print_stub
 	#define io_print_in tx_print_stub
+    #define io_print_st tx_print_stub
+    #define io_print_out tx_print_stub
 #endif // __TEXT_MODE
 
 #endif // End of include guard: GPIO_H_ONCE
