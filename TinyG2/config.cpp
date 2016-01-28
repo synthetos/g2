@@ -213,7 +213,7 @@ stat_t config_test_assertions()
 
 /* Generic gets()
  *	get_nul()  - get nothing (returns STAT_NOOP)
- *	get_ui8()  - get value as 8 bit uint8_t
+ *	get_ui8()  - get value as 8 bit uint8_t (use uint8 for booleans)
  *	get_int()  - get value as 32 bit integer
  *	get_data() - get value as 32 bit integer blind cast
  *	get_flt()  - get value as float
@@ -241,10 +241,9 @@ stat_t get_int8(nvObj_t *nv)
 
 stat_t get_int(nvObj_t *nv)
 {
-//	nv->value = (float)*((uint32_t *)GET_TABLE_WORD(target));
-	nv->value = *((uint32_t *)GET_TABLE_WORD(target));
-	nv->valuetype = TYPE_INT;
-	return (STAT_OK);
+    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
 }
 
 stat_t get_data(nvObj_t *nv)

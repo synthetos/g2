@@ -137,11 +137,6 @@ namespace Motate {
     pin_number kSocket6_Microstep_2PinNumber    =  -1;
     pin_number kSocket6_VrefPinNumber           =  -1;//67; //PWMTimer<0>
 
-    pin_number kSpindle_EnablePinNumber         =  52;
-    pin_number kSpindle_DirPinNumber            =  51;//13;
-    pin_number kSpindle_PwmPinNumber            =  11;
-    pin_number kSpindle_Pwm2PinNumber           =   9;
-    pin_number kCoolant_EnablePinNumber         =  -1;
 
 	pin_number kXAxis_MinPinNumber              =  25;
 	pin_number kXAxis_MaxPinNumber              =  -1;
@@ -163,6 +158,26 @@ namespace Motate {
     pin_number kLED_USBTXPinNumber              =  73;
 
 
+    pin_number kInput1_PinNumber              =  14;
+    pin_number kInput2_PinNumber              =  15;
+    pin_number kInput3_PinNumber              =  16;
+    pin_number kInput4_PinNumber              =  17;
+    pin_number kInput5_PinNumber              =  18;
+    pin_number kInput6_PinNumber              =  19;
+
+    pin_number kInput7_PinNumber              =  58;
+    pin_number kInput8_PinNumber              =  59;
+    pin_number kInput9_PinNumber              =  60;
+    pin_number kInput10_PinNumber              =  61;
+    pin_number kInput11_PinNumber              =  65;
+    pin_number kInput12_PinNumber              =  51;
+
+    pin_number kSpindle_EnablePinNumber         =  52;
+    pin_number kSpindle_DirPinNumber            =  51;//13;
+    pin_number kSpindle_PwmPinNumber            =  11;
+    pin_number kSpindle_Pwm2PinNumber           =   9;
+    pin_number kCoolant_EnablePinNumber         =  -1;
+    
     // GRBL / gShield compatibility pins -- Due board ONLY
 
     pin_number kGRBL_ResetPinNumber             =  54;

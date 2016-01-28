@@ -45,6 +45,11 @@
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
 
+#define MIN_MANUAL_FEEDRATE_OVERRIDE 0.05   // 5%
+#define MAX_MANUAL_FEEDRATE_OVERRIDE 2.00   // 200%
+#define MIN_MANUAL_TRAVERSE_OVERRIDE 0.05   // 5%
+#define MAX_MANUAL_TRAVERSE_OVERRIDE 1.00   // 100%
+
 /*****************************************************************************
  * MACHINE STATE MODEL
  *
@@ -351,13 +356,14 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
     float g28_position[AXES];			// XYZABC stored machine position for G28
     float g30_position[AXES];			// XYZABC stored machine position for G30
 
-    float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
-    float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
-    uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
-    uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
+    bool m48_enable;                    // master feedrate / spindle speed override enable
+	bool mfo_enable;                    // feedrate override enable
+	float mfo_parameter;                // 1.0000 x F feed rate. Go up or down from there
+	bool mto_enable;                    // traverse override enable
+	float mto_parameter;                // valid from 0.05 to 1.00
 
-    uint8_t origin_offset_enable;		// G92 offsets enabled/disabled. 0=disabled, 1=enabled
-    uint8_t block_delete_switch;		// set true to enable block deletes (true is default)
+	bool origin_offset_enable;          // G92 offsets enabled/disabled.  0=disabled, 1=enabled
+	bool block_delete_switch;           // set true to enable block deletes (true is default)
 
 // unimplemented gcode parameters
 //	float cutter_radius;				// D - cutter radius compensation (0 is off)
@@ -368,22 +374,25 @@ typedef struct GCodeStateExtended {		// Gcode dynamic state extensions - used by
 } GCodeStateX_t;
 
 typedef struct GCodeInput {				// Gcode model inputs - meaning depends on context
-    uint8_t next_action;				// handles G modal group 1 moves & non-modals
-    uint8_t motion_mode;				// Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
-										//         G83 G84, G85, G86, G87, G88, G89
+
+    uint8_t next_action;                // handles G modal group 1 moves & non-modals
+    uint8_t motion_mode;                // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
+                                        //         G83 G84, G85, G86, G87, G88, G89
+
     uint8_t program_flow;				// used only by the gcode_parser
     uint32_t linenum;					// N word
     float target[AXES]; 				// XYZABC where the move should go
 
-    float feed_rate; 					// F - normalized to millimeters/minute
-    float feed_rate_override_factor;	// 1.0000 x F feed rate. Go up or down from there
-    float traverse_override_factor;		// 1.0000 x traverse rate. Go down from there
-    uint8_t	feed_rate_override_enable;	// TRUE = overrides enabled (M48), F=(M49)
-    uint8_t	traverse_override_enable;	// TRUE = traverse override enabled
-    uint8_t override_enables;			// enables for feed and spindle (GN/GF only)
-    uint8_t L_word;						// L word - used by G10s
+	uint8_t L_word;						// L word - used by G10s
 
-    uint8_t feed_rate_mode;	        	// See cmFeedRateMode for settings
+    float feed_rate; 					// F - normalized to millimeters/minute
+	uint8_t feed_rate_mode;	        	// See cmFeedRateMode for settings
+
+	bool m48_enable;			        // M48/M49 input (enables for feed and spindle)
+	bool mfo_enable;                    // M50 feedrate override enable
+	bool mto_enable;                    // Mxx traverse override enable
+	bool sso_enable;                    // M51 spindle speed override enable
+
     uint8_t select_plane;	        	// G17,G18,G19 - values to set plane to
     uint8_t units_mode;		    		// G20,G21 - 0=inches (G20), 1 = mm (G21)
     uint8_t coord_system;	    		// G54-G59 - select coordinate system 1-9
@@ -420,15 +429,16 @@ typedef struct GCodeFlags {             // Gcode model input flags
     bool program_flow;
     bool linenum;
     bool target[AXES];
-    bool feed_rate;
-    bool feed_rate_override_factor;
-    bool traverse_override_factor;
-    bool feed_rate_override_enable;
-    bool traverse_override_enable;
-    bool override_enables;
-    bool L_word;
 
+    bool L_word;
+    bool feed_rate;
     bool feed_rate_mode;
+
+	bool m48_enable;
+	bool mfo_enable;
+	bool mto_enable;
+	bool sso_enable;
+
     bool select_plane;
     bool units_mode;
     bool coord_system;
@@ -666,20 +676,19 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],             // G
 
 // Spindle Functions (4.3.7)
 // see spindle.h for spindle functions - which would go right here
+//stat_t sp_sso_enable(uint8_t flag);                           // M51
 
 // Tool Functions (4.3.8)
-stat_t cm_select_tool(const uint8_t tool);                                  // T parameter
-stat_t cm_change_tool(const uint8_t tool);                                  // M6
+stat_t cm_select_tool(const uint8_t tool);                      // T parameter
+stat_t cm_change_tool(const uint8_t tool);                      // M6
 
 // Miscellaneous Functions (4.3.9)
 // see coolant.h for coolant functions - which would go right here
-/*
-stat_t cm_override_enables(uint8_t flag);                       // M48, M49
-stat_t cm_feed_rate_override_enable(uint8_t flag);              // M50
-stat_t cm_feed_rate_override_factor(uint8_t flag);              // M50.1
-stat_t cm_traverse_override_enable(uint8_t flag);               // M50.2
-stat_t cm_traverse_override_factor(uint8_t flag);               // M50.3
-*/
+
+void cm_reset_overrides(void);
+stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
+stat_t cm_mfo_enable(uint8_t enable);                           // M50
+
 void cm_message(const char *message);                           // msg to console (e.g. Gcode comments)
 
 // Program Functions (4.3.10)
@@ -766,6 +775,9 @@ stat_t cm_set_ja(nvObj_t *nv);			// set junction aggression with 1,000,000 corre
 stat_t cm_set_jm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
+stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
+stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE
@@ -789,8 +801,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_admo(nvObj_t *nv);
 	void cm_print_frmo(nvObj_t *nv);
 	void cm_print_tool(nvObj_t *nv);
-	void cm_print_ilck(nvObj_t *nv);
-	void cm_print_estp(nvObj_t *nv);
+	void cm_print_g92e(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -808,9 +819,12 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_sl(nvObj_t *nv);
 	void cm_print_lim(nvObj_t *nv);
 	void cm_print_saf(nvObj_t *nv);
-	void cm_print_ml(nvObj_t *nv);
-	void cm_print_ma(nvObj_t *nv);
-	void cm_print_ms(nvObj_t *nv);
+
+	void cm_print_m48e(nvObj_t *nv);
+	void cm_print_mfoe(nvObj_t *nv);
+	void cm_print_mfo(nvObj_t *nv);
+	void cm_print_mtoe(nvObj_t *nv);
+	void cm_print_mto(nvObj_t *nv);
 	void cm_print_st(nvObj_t *nv);
 
 	void cm_print_am(nvObj_t *nv);		// axis print functions
@@ -853,8 +867,7 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_admo tx_print_stub
 	#define cm_print_frmo tx_print_stub
 	#define cm_print_tool tx_print_stub
-	#define cm_print_ilck tx_print_stub
-	#define cm_print_estp tx_print_stub
+	#define cm_print_g92e tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub
@@ -872,9 +885,12 @@ stat_t cm_set_jh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub
 	#define cm_print_saf tx_print_stub
-	#define cm_print_ml tx_print_stub
-	#define cm_print_ma tx_print_stub
-	#define cm_print_ms tx_print_stub
+
+	#define cm_print_m48e tx_print_stub
+	#define cm_print_mfoe tx_print_stub
+	#define cm_print_mfo tx_print_stub
+	#define cm_print_mtoe tx_print_stub
+	#define cm_print_mto tx_print_stub
 	#define cm_print_st tx_print_stub
 
 	#define cm_print_am tx_print_stub		// axis print functions

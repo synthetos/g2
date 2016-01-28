@@ -84,10 +84,18 @@ stat_t cm_set_spindle_speed(float speed)
 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
-    spindle.speed = value[0];
-    spindle.direction = (cmSpindleDir)value[1];
+    if (flag[0])
+    {
+        spindle.speed = value[0];
+    }
+
+    if (flag[1])
+    {
+        spindle.direction = (cmSpindleDir)value[1];
+    }
+
     // update spindle speed if we're running
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
@@ -140,10 +148,11 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
             spindle.direction = SPINDLE_CCW;
         }
     }
-	float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
-    bool flags[] =  { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, flags);
-	return(STAT_OK);
+
+    float value[] = { (float)spindle.enable, (float)spindle.direction, 0,0,0,0 };
+    bool flags[] =  { 1,1,0,0,0,0 };
+    mp_queue_command(_exec_spindle_control, value, flags);
+    return(STAT_OK);
 }
 
 #ifdef __ARM
@@ -162,21 +171,28 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
 static void _exec_spindle_control(float *value, bool *flag)
 {
     // set the direction first
-    spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
-    if (spindle.direction ^ spindle.dir_polarity) {
-        _set_spindle_direction_bit_hi();
-    } else {
-        _set_spindle_direction_bit_lo();
+    if (flag[1])
+    {
+        spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
+        if (spindle.direction ^ spindle.dir_polarity) {
+            _set_spindle_direction_bit_hi();
+        } else {
+            _set_spindle_direction_bit_lo();
+        }
     }
 
-    // set on/off. Mask out PAUSE and consider it OFF
-    spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
-    if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
-        _set_spindle_enable_bit_lo();
-    } else {
-        _set_spindle_enable_bit_hi();
+    if (flag[0])
+    {
+        // set on/off. Mask out PAUSE and consider it OFF
+        spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
+        if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
+            _set_spindle_enable_bit_lo();
+        } else {
+            _set_spindle_enable_bit_hi();
+        }
     }
-	pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
+
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.enable, spindle.direction));
 }
 
 /*
@@ -213,6 +229,7 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 		return pwm.c[PWM_1].phase_off;
 	}
 }
+
 
 /*
  * cm_spindle_override_enable()
@@ -263,6 +280,24 @@ stat_t cm_set_dir(nvObj_t *nv)
 }
 
 
+/*
+ * cm_set_sso() - set spindle speed feedrate override factor
+ */
+
+stat_t cm_set_sso(nvObj_t *nv)
+{
+    if (nv->value < MIN_SPINDLE_SPEED_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_SMALL);
+    }
+    if (nv->value > MAX_SPINDLE_SPEED_OVERRIDE) {
+        return (STAT_INPUT_VALUE_TOO_LARGE);
+    }
+    set_flt(nv);
+    return(STAT_OK);
+}
+
+
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -274,6 +309,8 @@ const char fmt_spep[] PROGMEM = "[spep] spindle enable polarity%5d [0=active_low
 const char fmt_spdp[] PROGMEM = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] PROGMEM = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_spdw[] PROGMEM = "[spdw] spindle dwell time%12.1f seconds\n";
+const char fmt_ssoe[] PROGMEM ="[ssoe] spindle speed override ena%2d [0=disable,1=enable]\n";
+const char fmt_sso[] PROGMEM ="[sso] spindle speed override%11.3f [0.050 < sso < 2.000]\n";
 const char fmt_spe[] PROGMEM = "Spindle Enable:%7d [0=OFF,1=ON,2=PAUSE]\n";
 const char fmt_spd[] PROGMEM = "Spindle Direction:%4d [0=CW,1=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %7.0f rpm\n";
@@ -282,6 +319,8 @@ void cm_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void cm_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
 void cm_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
+void cm_print_ssoe(nvObj_t *nv){ text_print(nv, fmt_ssoe);}     // TYPE INT
+void cm_print_sso(nvObj_t *nv) { text_print(nv, fmt_sso);}      // TYPE FLOAT
 void cm_print_spe(nvObj_t *nv)  { text_print(nv, fmt_spe);}     // TYPE_INT
 void cm_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
 void cm_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT

@@ -58,6 +58,9 @@ typedef enum {
     ESC_LOCKOUT_AND_REBOOTING,
 } cmESCState;
 
+#define MIN_SPINDLE_SPEED_OVERRIDE 0.05 // 5%
+#define MAX_SPINDLE_SPEED_OVERRIDE 2.00 // 200%
+
 /*
  * Spindle control structure
  */
@@ -73,8 +76,8 @@ typedef struct cmSpindleSingleton {
     cmSpindlePolarity dir_polarity;     // 0=clockwise low, 1=clockwise high
     float dwell_seconds;                // dwell on spindle resume
 
-//    float override_factor;            // 1.0000 x S spindle speed. Go up or down from there
-//    uint8_t override_enable;          // TRUE = override enabled
+    bool sso_enable;                    // 1.0000 x S spindle speed. Go up or down from there
+    float sso_parameter;                // TRUE = override enabled (see also m38_enable)
 
     cmESCState esc_state;               // state management for ESC controller
     uint32_t esc_boot_timer;            // When the ESC last booted up
@@ -108,6 +111,8 @@ stat_t cm_set_dir(nvObj_t *nv);
     void cm_print_spdp(nvObj_t *nv);
     void cm_print_spph(nvObj_t *nv);
     void cm_print_spdw(nvObj_t *nv);
+	void cm_print_ssoe(nvObj_t *nv);
+	void cm_print_sso(nvObj_t *nv);
     void cm_print_spe(nvObj_t *nv);
     void cm_print_spd(nvObj_t *nv);
     void cm_print_sps(nvObj_t *nv);
@@ -118,7 +123,9 @@ stat_t cm_set_dir(nvObj_t *nv);
     #define cm_print_spdp tx_print_stub
     #define cm_print_spph tx_print_stub
     #define cm_print_spdw tx_print_stub
+    #define cm_print_ssoe tx_print_stub
     #define cm_print_spe tx_print_stub
+    #define cm_print_sso tx_print_stub
     #define cm_print_spd tx_print_stub
     #define cm_print_sps tx_print_stub
 
