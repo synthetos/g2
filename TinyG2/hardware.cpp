@@ -102,7 +102,8 @@ void _get_id(char *id)
 stat_t hw_get_fbs(nvObj_t *nv)
 {
     nv->valuetype = TYPE_STRING;
-    ritorno(nv_copy_string(nv, TINYG_FIRMWARE_BUILD_STRING));
+//    ritorno(nv_copy_string(nv, TINYG_FIRMWARE_BUILD_STRING));
+    ritorno(nv_copy_string(nv, "build"));
     return (STAT_OK);
 }
 

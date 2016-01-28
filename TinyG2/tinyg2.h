@@ -39,9 +39,9 @@
 
 // You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
 
-//#define TINYG_FIRMWARE_BUILD            089.02 // labeled as a compile w/o a build number
-#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
-#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
+#define TINYG_FIRMWARE_BUILD            089.02 // labeled as a compile w/o a build number
+//#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
+//#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
 
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
