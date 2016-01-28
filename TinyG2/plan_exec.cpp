@@ -857,10 +857,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 
 
-
+#if GROUPING_ENABLED == 1
         __asm__("BKPT"); // FEEDHOLD IS NOT FIXED YET
-
-
+#endif
 
 
 
@@ -879,6 +878,15 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mp_zero_segment_velocity();                             // for reporting purposes
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);         // was SR_REQUEST_TIMED
                 cs.controller_state = CONTROLLER_READY;                 // remove controller readline() PAUSE
+
+                // No point bothering with the rest of this move...
+                if (cm.cycle_state == CYCLE_HOMING) {
+                    mp_free_run_buffer();
+                }
+
+                mp_replan_queue(mb.r);                                      // make it replan all the blocks
+                mr.r_group->group_state = GROUP_OFF;                        // force it to replan the groups
+                mr.p_group->group_state = GROUP_OFF;
             }
             return (STAT_OK);                                           // hold here. No more movement
         }
@@ -890,7 +898,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
             //bf->entry_vmax = 0;                                         // set bp+0 as hold point
-            mp_replan_queue(mb.r);                                      // make it replan all the blocks
+
             cm.hold_state = FEEDHOLD_PENDING;
             return (STAT_OK);
         }
