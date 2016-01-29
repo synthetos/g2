@@ -135,6 +135,11 @@ namespace Motate {
 #define INPUT13_AVAILABLE 0
 
 
+#define ADC0_AVAILABLE 1
+#define ADC1_AVAILABLE 1
+#define ADC2_AVAILABLE 1
+#define ADC3_AVAILABLE 1
+
     // We are using 200+ to mean "unused"
     _MAKE_MOTATE_PIN(kUnused_3, B, 'B', 28);  // JTAG_CLK / SWD_CLK
     _MAKE_MOTATE_PIN(kUnused_4, B, 'B', 29);  // JTAG_TDI

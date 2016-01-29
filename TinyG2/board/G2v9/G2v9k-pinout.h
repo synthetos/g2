@@ -162,6 +162,11 @@ namespace Motate {
     _MAKE_MOTATE_PIN(208, B, 'B', 30);	//
     _MAKE_MOTATE_PIN(209, B, 'B', 31);	//
 
+#define ADC0_AVAILABLE 1
+#define ADC1_AVAILABLE 1
+#define ADC2_AVAILABLE 0
+#define ADC3_AVAILABLE 0
+
 } // namespace Motate
 
 

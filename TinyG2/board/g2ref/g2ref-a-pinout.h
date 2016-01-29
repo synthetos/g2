@@ -63,7 +63,7 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kCoolant_EnablePinNumber          , A, 'A',  1);  // kCoolant_EnablePinNumber
     _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber            , A, 'A',  2);  // Socket4_VrefPinNumber
     _MAKE_MOTATE_PIN(kSocket5_VrefPinNumber            , A, 'A',  3);  // Socket5_VrefPinNumber
-    _MAKE_MOTATE_PIN(kADC0_PinNumber                   , A, 'A',  4);  // ADC2: kADC2_PinNumber (Heated bed thermistor ADC)
+    _MAKE_MOTATE_PIN(kADC0_PinNumber                   , A, 'A',  4);  // Heated bed thermistor ADC
     _MAKE_MOTATE_PIN(kOutput1_PinNumber                , A, 'A',  5);  // D0_1: kOutput6_PinNumber (Extruder1_PWM)
     _MAKE_MOTATE_PIN(kOutput4_PinNumber                , A, 'A',  6);  // D0_4: kOutput4_PinNumber (Fan1B_PWM)
     _MAKE_MOTATE_PIN(kOutput9_PinNumber                , A, 'A',  7);  // <unassigned, available out>
@@ -81,8 +81,8 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kInput6_PinNumber                 , A, 'A', 19);  // DI_6: kInput6_PinNumber
     _MAKE_MOTATE_PIN(kInput7_PinNumber                 , A, 'A', 20);  // DI_7: kInput7_PinNumber
     _MAKE_MOTATE_PIN(kInput8_PinNumber                 , A, 'A', 21);  // DI_8: kInput8_PinNumber
-    _MAKE_MOTATE_PIN(kADC2_PinNumber                   , A, 'A', 22);  // kADC4_PinNumber (Extruder2_ADC)
-    _MAKE_MOTATE_PIN(kADC1_PinNumber                   , A, 'A', 23);  // kADC5_PinNumber (Extruder1_ADC)
+    _MAKE_MOTATE_PIN(kADC2_PinNumber                   , A, 'A', 22);  // Extruder2_ADC
+    _MAKE_MOTATE_PIN(kADC1_PinNumber                   , A, 'A', 23);  // Extruder1_ADC
     _MAKE_MOTATE_PIN(kSocket1_DirPinNumber             , A, 'A', 24);  // Socket1_DirPinNumber
     _MAKE_MOTATE_PIN(kSPI_MISOPinNumber                , A, 'A', 25);  // SPI0_MISOPinNumber
     _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber               , A, 'A', 26);  // SPI0_MOSIPinNumber
@@ -133,6 +133,12 @@ namespace Motate {
 #define INPUT11_AVAILABLE 0
 #define INPUT12_AVAILABLE 0
 #define INPUT13_AVAILABLE 0
+
+
+#define ADC0_AVAILABLE 1
+#define ADC1_AVAILABLE 1
+#define ADC2_AVAILABLE 1
+#define ADC3_AVAILABLE 0
 
     // We are using 200+ to mean "unused"
     _MAKE_MOTATE_PIN(200, B, 'B', 28);  // JTAG_CLK / SWD_CLK

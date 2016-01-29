@@ -175,9 +175,11 @@ Thermistor<kADC2_PinNumber> thermistor2 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
     };
+#if ADC2_AVAILABLE == 1
 void ADCPin<kADC2_PinNumber>::interrupt() {
     thermistor2.adc_has_new_value();
 };
+#endif
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
