@@ -1,14 +1,27 @@
 # ----------------------------------------------------------------------------
-# This file is part of the Motate project.
+# This file is part of the Synthetos G2 project.
 
+
+# To compile:
+#   make BOARD=gShield
+# Or:
+#   make BOARD=shopbotShield
+
+# You can also choose a CONFIG from g2-configs.mk:
+#   make CONFIG=ShapeokoDualY BOARD=gShield
+
+
+
+# Backward compatibility with old projects that use PLATFORM instead, but with a warning:
 ifneq ("$(PLATFORM)","")
     $(warning Using PLATFORM value of $(PLATFORM) as BOARD.)
     $(warning Please swich to using BOARD on the command line.)
     BOARD = $(PLATFORM)
 endif
 
-BOARD ?= gShield
 
+##########
+# BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
 ifeq ("$(BOARD)","gShield")
     # This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
@@ -18,7 +31,6 @@ ifeq ("$(BOARD)","gShield")
     # a "due" BASE_BOARD.
     BASE_BOARD = tinyg-due
     DEVICE_DEFINES += MOTATE_BOARD="gShield"
-    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
@@ -28,15 +40,18 @@ ifeq ("$(BOARD)","shopbotShield")
 
     BASE_BOARD = tinyg-due
     DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
-    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
 
+##########
+# The general tinyg-due BASE_BOARD.
 
 ifeq ("$(BASE_BOARD)","tinyg-due")
     _BOARD_FOUND = 1
+
+    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 
     FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
 

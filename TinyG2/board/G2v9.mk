@@ -1,64 +1,33 @@
 # ----------------------------------------------------------------------------
-# This file is part of the Motate project.
+# This file is part of the Synthetos G2 project.
+
+
+# To compile:
+#   make BOARD=G2v9k
+
+# You can also choose a CONFIG from g2-configs.mk:
+#   make CONFIG=ShapeokoDualY BOARD=G2v9k
+
+
+
+##########
+# BOARDs for use directly from the make command line (with default settings) or by the CONFIGS above.
 
 ifeq ("$(BOARD)","G2v9i")
-
     BASE_BOARD=G2v9
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
-
+    DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 ifeq ("$(BOARD)","G2v9k")
-
     BASE_BOARD=G2v9
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-#### Example config-specific additions:
-
-ifeq ("$(BOARD)","UltimakerTests")
-
-    BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_Ultimaker_Rob_v9h.h"
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(BOARD)","UltimakerV9h")
-
-    BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_Ultimaker.h"
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(BOARD)","ShapeokoDualY")
-
-    BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_shapeoko2.h"
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(BOARD)","Othermill")
-
-    BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_othermill.h"
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
-endif
-
-ifeq ("$(BOARD)","ProbotixV90")
-
-    BASE_BOARD=G2v9
-    SETTINGS_FILE="settings_probotixV90.h"
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k" SETTINGS_FILE=${SETTINGS_FILE}
-
+    DEVICE_DEFINES += MOTATE_BOARD="G2v9k"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
 ##########
+# The general G2v9 BASE_BOARD.
 
 ifeq ("$(BASE_BOARD)","G2v9")
     _BOARD_FOUND = 1

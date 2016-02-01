@@ -1,36 +1,30 @@
 # ----------------------------------------------------------------------------
-# This file is part of the Motate project.
+# This file is part of the Synthetos G2 project.
 
-# These two Printrbot default BOARD to pBoard.
 
-ifeq ("$(CONFIG)","PrintrbotPlus")
-    ifeq ("$(BOARD)","NONE")
-        BOARD=$(CONFIG)
-        BASE_BOARD=pboard-a
-    endif
-    SETTINGS_FILE="settings_Printrbot_Plus.h"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
+# To compile:
+#   make BOARD=pboard-a
 
-ifeq ("$(CONFIG)","PrintrbotSimple")
-    ifeq ("$(BOARD)","NONE")
-        BOARD=$(CONFIG)
-        BASE_BOARD=pboard-a
-    endif
-    SETTINGS_FILE="settings_Printrbot_Simple.h"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
+# You can also choose a CONFIG from g2-configs.mk:
+#   make CONFIG=PrintrbotPlus BOARD=pboard-a
 
+
+##########
+# BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
 ifeq ("$(BOARD)","pboard-a")
     BASE_BOARD=pboard-a
+    DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
+##########
+# The general pboard-a BASE_BOARD.
 
 ifeq ("$(BASE_BOARD)","pboard-a")
-    DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
-    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
     _BOARD_FOUND = 1
+
+    DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 
     FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
 
