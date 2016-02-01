@@ -375,9 +375,6 @@ typedef struct mpMoveMasterSingleton {  // common variables for planning (move m
 typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
     struct mpBlockRuntimeBuf *nx;       // singly-linked-list
 
-    bool planned;                       // Record if it's been planned against a buufer
-    bool completes_group;               // Group planner sets this to indicate that this is the last block of the group
-
     float head_length;                  // copies of bf variables of same name
     float body_length;
     float tail_length;
@@ -386,47 +383,9 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
     float body_time;
     float tail_time;
 
-    float cruise_velocity;              // values for the hend of the head or thebeginning of the tail
-    float cruise_acceleration;
-    float cruise_jerk;
-
-    float exit_velocity;                // values for the end of the move
-    float exit_acceleration;
-    float exit_jerk;
-
-    float head_t;                       // record the t value into the head the block ENDs with
-    float tail_t;                       // record the t value into the tail that the block ENDs with
-
-//    float t;
+    float cruise_velocity;              // velocity at the end of the head and the beginning of the tail
+    float exit_velocity;                // velocity at the end of the move
 } mpBlockRuntimeBuf_t;
-
-typedef struct mpGroupRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a GROUP
-    struct mpGroupRuntimeBuf *nx;       // singly-linked-list
-
-    mpBuf_t *primary_bf;				// primary-block-of-group (with all the data of the group) buffer pointer
-
-    groupState group_state;             // keep track of what state is the group planning/dispersal
-
-    float length;                       // total length of the moves in the group
-
-    float head_length;                  // copies of bf variables of same name
-    float body_length;
-    float tail_length;
-
-    float head_time;                    // copies of bf variables of same name
-    float body_time;
-    float tail_time;
-
-    float length_into_section;          // distance into the current section we have planned
-    float t_into_section;               // value of the curve parameter t into the section
-
-    float cruise_velocity;              // velocities for the group as a whole
-    float exit_velocity;
-
-    float completed_group_head_length;   // length of body completed by previous blocks, so we can extend a multi-block body (yes, body)
-    float completed_t_into_head;
-    float completed_group_body_length;   // length of body completed by previous blocks, so we can extend a multi-block body
-} mpGroupRuntimeBuf_t;
 
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
@@ -452,14 +411,6 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
     mpBlockRuntimeBuf_t bf[2];           // the buffer
 
     float entry_velocity;               // entry values for the currently running block
-    float entry_acceleration;
-    float entry_jerk;
-
-    mpGroupRuntimeBuf_t *r_group;       // group that's running
-    mpGroupRuntimeBuf_t *p_group;       // group that's being planned, p_group might == r_group
-    mpGroupRuntimeBuf_t bf_group[2];    // the buffer of group buffers
-
-    float group_entry_velocity;         // entry velocity of the group, which may be several blocks back
 
     // These are *only* for the block-exec context, and shouldn't be modified anywhere else.
 
@@ -555,8 +506,7 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpGroupRuntimeBuf_t *rg, const float entry_velocity);
-stat_t mp_calculate_block(mpBuf_t *bf, mpGroupRuntimeBuf_t *rg, mpBlockRuntimeBuf_t *rb, const float group_entry_velocity, const float entry_velocity, const float entry_acceleration, const float entry_jerk);
+void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
 float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);

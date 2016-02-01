@@ -46,111 +46,6 @@ static stat_t _exec_aline_segment(void);
 
 static void _init_forward_diffs(float Vi, float Vt, const float a_0/* = 0*/, const float a_1/* = 0*/, const float j_0/* = 0*/, const float j_1/* = 0*/, const float T/* = 0*/);
 
-
-/*************************************************************************
- * _attempt_extension() - called in mp_plan_move to attempt a group extension
- * Upon failure velocity_changed will be set to false.
- */
-
-void _attempt_extension(mpGroupRuntimeBuf_t* group, bool &velocity_changed) {
-
-    // We check to see if we're really going to extend, and do the extension if possible.
-    // NOTE: We *DO NOT* have the block or proper bf set yet!!
-    if (velocity_changed) {
-        mpBuf_t *primary_bf = group->primary_bf;
-
-        // If we're running, we've already called ramps
-
-        // Check to see if we need to extend the body
-        // We could be in a few states right now:
-        // (1) mr.group_section == head, so we can wait for it to start getting handed out
-        // (2) mr.group_section == body, in which case we partially reset
-        // (3) mr.group_section == tail, in which case we shouldn't even attempt to make changes.
-
-        // Check to see if we're extending the runnning group and that we're in the tail
-        if ((group == mr.r_group) && (mr.section == SECTION_TAIL)) {
-
-            // We have to play this out as planned, so we'll continue without changes
-            velocity_changed = false;
-
-        } else {
-
-            // If the velocity didn't max out to cruise velocity...
-            if (primary_bf->exit_velocity < group->cruise_velocity) {
-                // ... we'll have a tail.
-
-                // We need to watch for "the inversion case", where it will sometimes take longer
-                // to decelerate over a lower velocity change. Quintics are weird.
-
-                float new_tail_length = mp_get_target_length(primary_bf->exit_velocity, group->cruise_velocity, primary_bf);
-
-                bool updated = false;
-                if (new_tail_length < group->tail_length) {
-                    // Quick check that we're adding at least MIN_SGMENT_TIME to the body
-                    float new_body_length = group->length - (new_tail_length + group->head_length);
-                    float new_body_time = new_body_length / group->cruise_velocity;
-
-                    if ((new_body_time - group->body_time) > MIN_SEGMENT_TIME) {
-                        // we will have a tail
-                        group->exit_velocity = primary_bf->exit_velocity;
-
-                        // bf passed to get_target_length needs to have valid jerk (and derived values) for the group
-                        group->tail_length = new_tail_length;
-                        group->body_length = new_body_length;
-
-                        group->body_time = new_body_time;
-                        group->tail_time = (group->tail_length * 2.0) / (group->exit_velocity + group->cruise_velocity);
-
-                        updated = true;
-                    }
-                }
-
-                if (!updated) {
-                    // We don't want to change this, we would have to shorten the body.
-
-                    // We know this isn't an extension, so it has to be an exit_velocity upgrade.
-                    // But it hits the inversion zone (where a lower velocity change does NOT result in a shorter acc/deceleration)
-                    // and would require a longer exit velocity.
-                    // Let's set the exit_velocity back to prevent coming back in here repeatedly.
-                    primary_bf->exit_velocity = group->exit_velocity;
-
-                    velocity_changed = false;
-                }
-
-            } else {
-                // we will cruise until the end of the group
-                group->exit_velocity = group->cruise_velocity;
-
-                group->body_length = group->length - group->head_length;
-                group->body_time   = group->body_length / group->cruise_velocity;
-
-                group->tail_length = 0;
-                group->tail_time = 0;
-            }
-
-            // If we are still going to change velocity...
-            if (velocity_changed) {
-                group->group_state = GROUP_RAMPED;
-                group->length_into_section = 0;
-                group->t_into_section = 0;
-
-                // We will impliciltly replan RUNNING buffers, but PLANNED ones must be marked as PREPPED
-                if (primary_bf->buffer_state == MP_BUFFER_PLANNED) {
-                    primary_bf->buffer_state = MP_BUFFER_PREPPED;
-
-                    if (primary_bf->nx->buffer_state == MP_BUFFER_PLANNED) {
-                        primary_bf->nx->buffer_state = MP_BUFFER_PREPPED;
-                    }
-                }
-
-                if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
-                    __asm__("BKPT");
-                }
-            }
-        }
-    }
-}
-
 /*************************************************************************
  * mp_plan_move() - call ramping function to plan moves ahead of the exec
  *
@@ -181,295 +76,52 @@ stat_t mp_plan_move()
         return (STAT_OK);
     }
 
-    // We want group to be r_group when:
-    //  * r_group is NOT DONE, but is more than OFF
-    //  * OR r_group extends
-
-    // We want block to be r when:
-    //  * bf is PREPPRED
-    //  * r_group extends
-
-    // We default to the running group
-    mpGroupRuntimeBuf_t* group = mr.r_group;
-
     // We default to the planning block
     mpBlockRuntimeBuf_t* block = mr.p;
 
-
-    // The state machines get complicated, so here's a cheat sheet:
-    // if the bf->move_type != MOVE_TYPE_ALINE, we skip most of this and just let it run.
-    //
-    // rg->group_state = GROUP_OFF
-    //   This group needs ramped (planned).
-    //
-    // rg->group_state = GROUP_RAMPED
-    //   This group has been ramped (planned), but the blocks haven't been scanned forward,
-    //   and head/body/tail dispersal hasn't started.
-    //
-    // rg->group_state = GROUP_HEAD/GROUP_BODY/GROUP_TAIL
-    //   We are currently dispersing had/body/tail length out to blocks. They could all go nto one block, or have many
-    //     blocks for each, depending on the grouping.
-    //
-    //     if bf->buffer_state == MP_BUFFER_RUNNING, and we can't improve it, we skip to the next block (bf = bf->nx).
-    //     if bf->buffer_state == MP_BUFFER_PLANNED, (skipped or not), then we have planned mr.p already, and must wait
-    //       for mp_exec_aline to mp.r = mp.p; mp.p = mp.p->nx. (We'll know by bf->buffer_state == MP_BUFFER_RUNNING.)
-    //     if bf->buffer_state == MP_BUFFER_PREPPED, we can plan bf and rg into mr.p.
-    //
-    // rg->group_state = GROUP_DONE
-    //  rg is done dispersing. There might be a redispersal (of the body extends), so we keep it around.
-    //  However, we can skip to the planning group (rg = mr.p_group), and ramp the next group.
-
-
-    // To keep track of when to use the mr.r_group and when to use the mr.p_group:
-    //  Try in order of top-to-bottom: (-- means "doesn't matter" or "what's left")
-    //
-    //   Group   State  Extended  Use
-    //   -----   -----  --------  ---
-    //   r_group OFF    --        p_group
-    //   r_group DONE   No        p_group
-    //   r_group DONE   Yes       r_group (Note that extended may be deselected after further testing.)
-    //   r_group --     --        r_group
-    //
-    //   p_group OFF    --        p_group
-    //   p_group DONE   No        exit
-    //   p_group --     --        p_group (Note: We shouldn't see this state. p_group should have become r_group first.)
-
-#define ALLOW_EXTENSIONS 0
-
-    // If the velocity changed, we'll note it
-    bool velocity_changed = false;
-
-    // Technically, we can check for extensions anytime after GROUP_OFF, but we don't want to interfere with head
-    // planning, so we'll wait unti the head has been planned.
-    if (mr.r_group->group_state > GROUP_HEAD) { // was: != GROUP_OFF
-        mpBuf_t *primary_bf = mr.r_group->primary_bf;
-
-        // We have a race condition where the back-planner may be interrupted by exec.
-        // The result is that the exit_value is actually higher than the exit_vmax and
-        // cruise_vmax set by exec.
-        // Here we'll correct that case before continuing.
-        if (primary_bf->exit_velocity > primary_bf->exit_vmax) {
-            primary_bf->exit_velocity = primary_bf->exit_vmax;
-        }
-
-#if ALLOW_EXTENSIONS == 1
-        if (!fp_GE(mr.r_group->exit_velocity, primary_bf->exit_velocity)) {
-            velocity_changed = true;
-            _attempt_extension(mr.r_group, velocity_changed);
-        }
-#endif
-    }
-
-    float group_entry_velocity = mr.group_entry_velocity;
-
-    // If the running group is still dispersing, we'll use it
-    // But if it's OFF then exec will skip to planning anyway
-    if ((mr.r_group->group_state != GROUP_OFF) && (velocity_changed || (mr.r_group->group_state != GROUP_DONE))) {
-        group = mr.r_group;
-
-    } else {
-        group = mr.p_group;
-
-        // The r_group is OFF, then we want mr.group_entry_velocity (already set above)
-        if (mr.r_group->group_state != GROUP_OFF) {
-            group_entry_velocity = mr.r_group->exit_velocity;
-        }
-
-#if ALLOW_EXTENSIONS == 1
-        if (group->group_state != GROUP_OFF) {
-            mpBuf_t *primary_bf = group->primary_bf;
-
-            if (primary_bf->exit_velocity > primary_bf->exit_vmax) {
-                primary_bf->exit_velocity = primary_bf->exit_vmax;
-            }
-
-            if ((primary_bf->hint == PART_OF_A_GROUP) || ((group->tail_length > 0.0) && !fp_GE(group->exit_velocity, primary_bf->exit_velocity))) {
-                // The group was either extended (in spite of or lock on it!), or the velocity was changed.
-                // We have to invalidate the group and buffer plan state and re-run ramps.
-
-                group->group_state = GROUP_OFF;
-
-                // If we already planned out a block or two, fix them back to PREPPED
-                if (primary_bf->buffer_state == MP_BUFFER_PLANNED) {
-                    primary_bf->buffer_state = MP_BUFFER_PREPPED;
-                    if (primary_bf->nx->buffer_state == MP_BUFFER_PLANNED) {
-                        primary_bf->nx->buffer_state = MP_BUFFER_PREPPED;
-                    }
-                }
-            }
-        }
-#endif
-    }
-
-    // Then, to chose which buffer to use (bf or bf->nx):
-    //
-    //   Extended  bf->buffer_state     Group Used  Use bf  Use block  Use entry_v
-    //   --------  ----------------     ----------  ------  ---------  -----------
-    //   --        < MP_BUFFER_RUNNING  --          bf      mr.p       mr.entry_velocity
-    //   No        = MP_BUFFER_RUNNING  --          bf->nx  mr.p       mr.r->exit_velocity
-    //   Yes       = MP_BUFFER_RUNNING  r_group     bf      mr.r       mr.entry_velocity
-    //   Yes       = MP_BUFFER_RUNNING  p_group     bf->nx  mr.p       mr.r->exit_velocity
-
     // Default to the planning buffer
-    block = mr.p;
     float entry_velocity     = mr.entry_velocity;
-    float entry_acceleration = mr.entry_acceleration;
-    float entry_jerk         = mr.entry_jerk;
 
     // At this point, bf == bf.r
     if (bf->buffer_state == MP_BUFFER_RUNNING) {
-        if ((velocity_changed) && (group == mr.r_group)) {
+        // Update bf to bf->nx, set entry_* to mr.r->exit_*.
+        bf = bf->nx;
 
-            // We want bf to stay the same, and entry_* is still from mr directly,
-            // but we want block to be mr.r.
-            block = mr.r;
-
-        }
-        else if ((group == mr.p_group) && (group->group_state == GROUP_DONE)) {
-            // There's nothing left we can do, for now.
-
+        if (bf->buffer_state < MP_BUFFER_PREPPED) {
+            // Get outta here.
             // We did nothing
             return (STAT_NOOP);
         }
-        else {
 
-            // Update bf to bf->nx, set entry_* to mr.r->exit_*.
-            bf = bf->nx;
+        if (bf->move_type != MOVE_TYPE_ALINE) {
+            // Nothing to see here...
 
-            if (bf->buffer_state < MP_BUFFER_PREPPED) {
-                // Get outta here.
-                // We did nothing
-                return (STAT_NOOP);
-            }
-
-            if (bf->move_type != MOVE_TYPE_ALINE) {
-                // Nothing to see here...
-
-                bf->buffer_state = MP_BUFFER_PLANNED;
-
-                // report that we "planned" something...
-                return (STAT_OK);
-            }
-
-            entry_velocity     = mr.r->exit_velocity;
-            entry_acceleration = mr.r->exit_acceleration;
-            entry_jerk         = mr.r->exit_jerk;
+            bf->buffer_state = MP_BUFFER_PLANNED;
+            // report that we "planned" something...
+            return (STAT_OK);
         }
+
+        entry_velocity     = mr.r->exit_velocity;
     }
 
     // Note that that can only be one PLANNED move at a time.
     // This is to help sync mr.p to point to the next planned mr.bf
     // mr.p is only advanced in mp_exec_aline, after mp.r = mr.p.
 
-    // group_state of GROUP_OFF means we need to run ramps for the next group
-    if ((group->group_state == GROUP_OFF)) {
-        // The primary block is the LAST block of a group.
-        // bf should right now be the FIRST block of a group.
-        // So we do a jig to get the primary block...
-        group->primary_bf = bf->pv->nx_group;
+    mp_calculate_ramps(block, bf, entry_velocity);
 
-        if (group->primary_bf->buffer_state != MP_BUFFER_PREPPED) {
-            // we can't plan it yet
-            return (STAT_NOOP);
-        }
-
-        mp_calculate_ramps(group, group_entry_velocity);
-
-        // We want to set this as early as possible, since there'll be a delay before back-planning sees it.
-        group->primary_bf->mergable = false;
-
-        if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
-            __asm__("BKPT");
-        }
-
-        // reset the planning group
-        group->completed_group_body_length = 0;
-        group->completed_group_head_length = 0;
-
-        group->length_into_section = 0;
-        group->t_into_section = 0.0; // inital guess for the head is 0.0 going to 1.0
-
-        group->group_state = GROUP_RAMPED;
+    if (block->exit_velocity > block->cruise_velocity)  {
+        __asm__("BKPT"); // exit > cruise after calculate_block
     }
 
-    if (group->group_state == GROUP_RAMPED) {
-        if (group == mr.r_group) {
-            // WARNING: We're setting the entry values (pv->exit values) to zero. We're assuming that back-planning
-            // won't care, as long as the possible entry it finds is higher than what we set, and forward planning
-            // is already done.
-            // mp_calculate_block() MUST not pay attention to vmax values.
-            //group->primary_bf->pv_group->exit_vmax     = 0.0;
-            //group->primary_bf->pv_group->exit_velocity = 0.0;
-
-            // We also ensure that the cruise can't be adjusted.
-
-            group->primary_bf->cruise_vmax     = min(group->cruise_velocity, group->primary_bf->cruise_vmax);
-            //            group->primary_bf->cruise_velocity = group->primary_bf->cruise_vmax;
-            group->primary_bf->exit_vmax       = min(group->cruise_velocity, group->primary_bf->exit_vmax);
-            //            group->primary_bf->exit_velocity   = group->primary_bf->exit_vmax;
-        }
-
-        // In case or re-plan, we start off with what we've executed
-        group->length_into_section = group->completed_group_head_length;
-        group->t_into_section = group->completed_t_into_head;
-        group->group_state = GROUP_HEAD;
+    if (block->head_length < 0.001 && block->body_length < 0.001 && block->tail_length < 0.001)  {
+        __asm__("BKPT"); // zero or negaitve length block
     }
 
-    // group_state > GROUP_RAMPED (GROUP_HEAD/GROUP_BODY/GROUP_TAIL/GROUP_DONE) means we need to
-    // compute the head/body/tail for this block, except GROUP_DONE.
-    //
-    // We shouldn't see GROUP_DONE when the block isn't MP_BUFFER_PLANNED.
-    //
-    // When the group is one block long, this is basically a copy, plus time computation.
-    //   if buffer_state is MP_BUFFER_RUNNING, we have requested that the mb.r be updated.
-    //   if buffer_state is MP_BUFFER_PREPPED, we need to finish settung mb.p for this block
-    //   otherwise, it'll be MP_BUFFER_PLANNED, and we have nothing to do here until the next block
-    if ((group->group_state > GROUP_RAMPED) && (group->group_state != GROUP_DONE) && (bf->buffer_state != MP_BUFFER_PLANNED)) {
-        stat_t status = STAT_OK; // default it
+    bf->buffer_state = MP_BUFFER_PLANNED;
 
-
-        if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
-            __asm__("BKPT");
-        }
-
-        status =  mp_calculate_block(bf, group, block, group_entry_velocity, entry_velocity, entry_acceleration, entry_jerk);
-
-        // ++++ We shouldn't see any grouping right now
-        //        if (group->group_state != GROUP_DONE) {
-        //            __asm__("BKPT");
-        //        }
-
-        if (bf->buffer_state != MP_BUFFER_EMPTY) {
-            if (block->exit_velocity > block->cruise_velocity)  {
-                __asm__("BKPT"); // exit > cruise after calculate_block
-            }
-        }
-
-        if (block->head_length < 0.001 && block->body_length < 0.001 && block->tail_length < 0.001)  {
-            __asm__("BKPT"); // zero length block
-        }
-
-        if ((group->head_length < 0) || (group->body_length < 0) || (group->tail_length < 0)) {
-            __asm__("BKPT"); // negative length in a block
-        }
-
-        block->planned = true;
-
-        // status will be STAT_EAGAIN if there are more blocks in this group,
-        // or STAT_OK if the group is done.
-
-        if (status == STAT_OK) {
-            group->group_state = GROUP_DONE;
-        }
-
-        bf->buffer_state = MP_BUFFER_PLANNED;
-
-        // report that we planned something...
-        return (STAT_OK);
-    }
-
-    // We did nothing
-    return (STAT_NOOP);
+    // report that we planned something...
+    return (STAT_OK);
 }
 
 /*************************************************************************
@@ -576,7 +228,7 @@ stat_t mp_exec_move()
  * 		   new move has not started because the previous move is still being run
  *		   by the steppers. Planning can overwrite the new move.
  */
-/* OPERATION:
+/* OPERATION (!!!OUT OF DATE!!!):
  *	Aline generates jerk-controlled S-curves as per Ed Red's course notes:
  *	  http://www.et.byu.edu/~ered/ME537/Notes/Ch5.pdf
  *	  http://www.scribd.com/doc/63521608/Ed-Red-Ch5-537-Jerk-Equations
@@ -656,65 +308,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.move_state = MOVE_NEW;
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
-        //mr.jerk = bf->jerk;
-
-
-        // Handle the group pointers. Do this *before* the run and plan buffers are switched.
-        if (mr.r_group->group_state == GROUP_OFF) {
-            // store the group_entry_velocity
-            //mr.group_entry_velocity = mr.r_group->exit_velocity;
-
-            // Now update the running group to the previously planned group
-            mr.r_group = mr.p_group;
-            mr.p_group = mr.p_group->nx;
-
-            // Update the planner buffer times
-            mb.run_time_remaining = mr.r_group->head_time + mr.r_group->body_time + mr.r_group->tail_time;   // initialize the run_time_remaining
-        }
-        else {
-            // Update the group data, in case we're in a block that's all body, and part of a larger body.
-            // This allows us to extend a multi-block body.
-            mr.r_group->completed_group_body_length += mr.r->body_length;
-            mr.r_group->completed_t_into_head = mr.r->head_t;
-            mr.r_group->completed_group_head_length += mr.r->head_length;
-        }
 
         mr.r = mr.p;
         mr.p = mr.p->nx;
-        mr.p->planned = false;
+//        mr.p->planned = false;
 
         // Request now (to be done later) that the next block be planned.
-        st_request_plan_move();
-
-        //        // Mantain the bf group pointers
-        //        if (bf->nx_group != bf->nx) {
-        //            // This is not the last block of the group
-        //            bf->nx->nx_group = bf->nx_group;
-        //
-        //            // Copy vital group-data
-        //            bf->nx->plannable = bf->plannable;
-        //            bf->nx->group_length = bf->group_length;
-        //            bf->nx->cruise_vmax = bf->cruise_vmax;
-        //            bf->nx->cruise_velocity = bf->cruise_velocity;
-        //            bf->nx->exit_vmax = bf->exit_vmax;
-        //            bf->nx->exit_velocity = bf->exit_velocity;
-        //
-        //            if (!fp_EQ(bf->nx->jerk, bf->jerk)) { // check to see if they're the same.
-        //                // Copy the move jerk, and all of it's derived values.
-        //                bf->nx->jerk = bf->jerk;
-        //                bf->nx->jerk_sq = bf->jerk_sq;
-        //                bf->nx->recip_jerk = bf->recip_jerk;
-        //                bf->nx->sqrt_j = bf->sqrt_j;
-        //                bf->nx->q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
-        //            }
-        //        }
-        //
-        //        bf->nx_group->pv_group = bf;
-        //        bf->pv_group = bf->pv;
-
-        // reset the previous block's nx_group
-        //bf->pv->nx_group = mr.r_group->primary_bf;
-        //mr.r_group->primary_bf->pv_group = bf->pv;
+//        st_request_plan_move();
 
         // reset the executed values
         mr.executed_body_length = 0.0;
@@ -726,19 +326,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // This is because a "head" is *always* entry->cruise, and a "tail" is *always* cruise->exit,
         // even if there are not other sections int he move. (This is a significant time savings.)
 
-
         // Here we will check to make sure that the sections are longer than MIN_SEGMENT_TIME
 
         if ((!fp_ZERO(mr.r->head_length)) && (mr.r->head_time < MIN_SEGMENT_TIME)) {
-            if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-//                __asm__("BKPT"); // too short of move during multi-block head/tail
-
-                // WHOA, we really can't do this!
-                // We'll rely on the encoders to catch this position back up
-                mr.r->head_length = 0;
-                mr.r->head_time = 0;
-            } else {
-
                 // head_time !== body_time
                 // We have to compute the new body time addition.
                 mr.r->body_length += mr.r->head_length;
@@ -746,25 +336,15 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
                 mr.r->head_length = 0;
                 mr.r->head_time = 0;
-            }
         }
         if ((!fp_ZERO(mr.r->tail_length)) && (mr.r->tail_time < MIN_SEGMENT_TIME)) {
-            if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-//                __asm__("BKPT"); // too short of move during multi-block head/tail
+            // tail_time !== body_time
+            // We have to compute the new body time addition.
+            mr.r->body_length += mr.r->tail_length;
+            mr.r->body_time = mr.r->body_length/mr.r->cruise_velocity;
 
-                // WHOA, we really can't do this!
-                // We'll rely on the encoders to catch this position back up
-                mr.r->tail_length = 0;
-                mr.r->tail_time = 0;
-            } else {
-                // tail_time !== body_time
-                // We have to compute the new body time addition.
-                mr.r->body_length += mr.r->tail_length;
-                mr.r->body_time = mr.r->body_length/mr.r->cruise_velocity;
-
-                mr.r->tail_length = 0;
-                mr.r->tail_time = 0;
-            }
+            mr.r->tail_length = 0;
+            mr.r->tail_time = 0;
         }
 
         // At this point, we've already possibly merged heat and/or tail into the body.
@@ -773,20 +353,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // We saved it for last since it's the most expensive.
         if ((!fp_ZERO(mr.r->body_length)) && (mr.r->body_time < MIN_SEGMENT_TIME)) {
 
-            // If we have a part of a head or tail (we can tell by checkt the cruise jerk), then we can't easily add to them.
-            // So, we'll hope that the body is so small that we can recove the position over the next section.
-            if (!fp_ZERO(mr.r->cruise_jerk) || !fp_ZERO(mr.entry_jerk)) {
-//                __asm__("BKPT"); // too short of move durin multi-block head/tail
-
-                // WHOA, we really can't do this!
-                // We'll rely on the encoders to catch this position back up
-                mr.r->body_length = 0;
-                mr.r->body_time = 0;
-            }
-
             // We'll add the time to either the head or the tail or split it
-
-            else if (mr.r->tail_length > 0) {
+            if (mr.r->tail_length > 0) {
                 if (mr.r->head_length > 0) {
                     // We'll split the body of the head and tail
                     float body_split = mr.r->body_length/2.0;
@@ -853,17 +421,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm.motion_state == MOTION_HOLD) {
-
-
-
-
-#if GROUPING_ENABLED == 1
-        __asm__("BKPT"); // FEEDHOLD IS NOT FIXED YET
-#endif
-
-
-
-
         // Case (3) is a no-op and is not trapped. It just continues the deceleration.
 
         // Case (7) - all motion has ceased
@@ -885,8 +442,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 }
 
                 mp_replan_queue(mb.r);                                      // make it replan all the blocks
-                mr.r_group->group_state = GROUP_OFF;                        // force it to replan the groups
-                mr.p_group->group_state = GROUP_OFF;
             }
             return (STAT_OK);                                           // hold here. No more movement
         }
@@ -909,7 +464,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
 
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (fp_ZERO(mr.r_group->exit_velocity)) {
+                if (fp_ZERO(mr.r->exit_velocity)) {
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
@@ -917,23 +472,17 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
             // we can't decel from the middle of a head, we'll invoke at worst 2x jerk
             } else if ((mr.section != SECTION_HEAD) ||
-                       ((mr.section_state == SECTION_NEW) && fp_ZERO(mr.entry_jerk) && fp_ZERO(mr.entry_acceleration))) {
+                       ((mr.section_state == SECTION_NEW))) {
                 mr.entry_velocity = mr.segment_velocity;
-                mr.entry_acceleration = 0.0;
-                mr.entry_jerk = 0.0;
-
-                mr.group_entry_velocity = mr.segment_velocity;
-                mr.r_group->cruise_velocity = mr.segment_velocity;
-
 
                 mr.section = SECTION_TAIL;
                 mr.section_state = SECTION_NEW;
-                //mr.jerk = bf->jerk;
+
                 mr.r->head_length = 0;
                 mr.r->body_length = 0;
 
                 float available_length = get_axis_vector_length(mr.target, mr.position);
-                mr.r->tail_length = mp_get_target_length(0, mr.r->cruise_velocity, mr.r_group->primary_bf);   // braking length
+                mr.r->tail_length = mp_get_target_length(0, mr.r->cruise_velocity, bf);   // braking length
 
                 if (fp_ZERO(available_length - mr.r->tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
@@ -958,10 +507,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     //**** main dispatcher to process segments ***
     stat_t status = STAT_OK;
-    if (mr.section == SECTION_HEAD) { status = _exec_aline_head(bf);} else
-        if (mr.section == SECTION_BODY) { status = _exec_aline_body(bf);} else
-            if (mr.section == SECTION_TAIL) { status = _exec_aline_tail(bf);} else
-            { return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline()"));}	// never supposed to get here
+         if (mr.section == SECTION_HEAD) { status = _exec_aline_head(bf);}
+    else if (mr.section == SECTION_BODY) { status = _exec_aline_body(bf);}
+    else if (mr.section == SECTION_TAIL) { status = _exec_aline_tail(bf);}
+    else    { return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline()"));}	// never supposed to get here
 
     // We can't use the if/else block above, since the head may call body, and body call tail, so we wait till after
     if ((mr.section == SECTION_TAIL) // Once we're in the tail, we can't plan the block anymore
@@ -992,14 +541,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section_state = SECTION_OFF;
         mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
-        if (mr.r->completes_group) {
-            mr.r_group->group_state = GROUP_OFF;
-            mr.group_entry_velocity = mr.r_group->exit_velocity;
-        }
-
         mr.entry_velocity     = mr.r->exit_velocity;     // feed the old exit into the entry.
-        mr.entry_acceleration = mr.r->exit_acceleration;
-        mr.entry_jerk         = mr.r->exit_jerk;
 
         if (bf->move_state == MOVE_RUN) {
             if (mp_free_run_buffer()) { // returns true of the buffer is empty
@@ -1389,14 +931,12 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
             mr.forward_diff_5 = 0; // prevent the velocity from being adjusted
             mr.section_state = SECTION_2nd_HALF;
         } else {
-            _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity, mr.entry_acceleration, mr.r->cruise_acceleration, mr.entry_jerk, mr.r->cruise_jerk, mr.r->head_time);
+            _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity, 0, 0, 0, 0, mr.r->head_time);
             mr.section_state = SECTION_1st_HALF;
         }
         if (mr.segment_time < MIN_SEGMENT_TIME) {
             _debug_trap();
             return(STAT_OK);                                        // exit without advancing position, say we're done
-            //            while(1);
-            //            return(STAT_MINIMUM_TIME_MOVE);                         // exit without advancing position
         }
         mr.section = SECTION_HEAD;
     }
@@ -1475,8 +1015,6 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
         if (mr.segment_time < MIN_SEGMENT_TIME) {
             _debug_trap();
             return(STAT_OK);                                        // exit without advancing position, say we're done
-            //            while(1);
-            //            return(STAT_MINIMUM_TIME_MOVE);                 // exit without advancing position
         }
 
         mr.executed_body_length = mr.r->body_length;
@@ -1519,7 +1057,7 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
             mr.forward_diff_5 = 0; // prevent the velocity from being adjusted
             mr.section_state = SECTION_2nd_HALF;
         } else {
-            _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity, mr.r->cruise_acceleration, mr.r->exit_acceleration, mr.r->cruise_jerk, mr.r->exit_jerk, mr.r->tail_time);
+            _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity, 0, 0, 0, 0, mr.r->tail_time);
             mr.section_state = SECTION_1st_HALF;
         }
         if (mr.segment_time < MIN_SEGMENT_TIME) {

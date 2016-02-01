@@ -893,12 +893,6 @@ void mp_init_buffers(void)
     mr.bf[1].nx = &mr.bf[0];
     mr.r = &mr.bf[0];
     mr.p = &mr.bf[1];
-
-    mr.bf_group[0].nx = &mr.bf_group[1];
-    mr.bf_group[1].nx = &mr.bf_group[0];
-    mr.r_group = &mr.bf_group[0];
-    mr.p_group = &mr.bf_group[1];
-
 }
 
 /*
