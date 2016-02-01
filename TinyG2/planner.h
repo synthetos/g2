@@ -25,18 +25,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*  PLANNER OPERATION:
- *
- *  The planner plans in "forward mode" - it starts close to the running block and plans
- *  towards the new block (bf->nx). Planning accelerations and cruises comes easy with
- *  forward planning, decelerations do not. When the planner detects that a deceleration
- *  is required - such as for the final deceleration to zero at the end of a sequence of
- *  moves (the tail) - it backtracks to plan the deceleration.
- *
- *  The planner operates in either optimistic or pessimistic mode. In optimistic mode it
- *  assumes that new blocks will continue to arrive so it does not plan the last block.
- *  Blocks are (which would...
- */
 
 #ifndef PLANNER_H_ONCE
 #define PLANNER_H_ONCE
@@ -126,15 +114,9 @@ typedef enum {                      // code blocks for planning and trapezoid ge
 typedef enum {                      // planner operating state
     PLANNER_IDLE = 0,               // planner and movement are idle
     PLANNER_STARTUP,                // ingesting blocks before movement is started
-//    PLANNER_OPTIMISTIC,             // plan by leaving last block unplanned
-    PLANNER_PESSIMISTIC             // plan by planning all blocks, including the tail
+    PLANNER_PRIMING,                // preparing new moves for planning ("stitching")
+    PLANNER_BACK_PLANNING           // plan by planning all blocks, from the newest added to the running block
 } plannerState;
-
-typedef enum {                      // state machine for driving pessimistic planning
-    PESSIMISTIC_PRIMING,            // idle or loading blocks into priming
-    PESSIMISTIC_BACKWARD,           // in backward planning pass
-    PESSIMISTIC_FORWARD             // in forward planning pass
-} pessimistic_t;
 
 typedef enum {
     ZOID_EXIT_NULL = 0,
@@ -330,7 +312,6 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 
     // planner state variables
     plannerState planner_state;     // current state of planner
-    pessimistic_t pessimistic_state;// internal state machine for pessimistic planner
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time

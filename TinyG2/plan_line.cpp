@@ -46,7 +46,7 @@ extern OutputPin<kDebug2_PinNumber> debug_pin2;
 extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
-static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf);
+static mpBuf_t *_plan_block(mpBuf_t *bf);
 //static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
 static void _calculate_override(mpBuf_t *bf);
 static void _calculate_throttle(mpBuf_t *bf);
@@ -191,11 +191,6 @@ void mp_plan_block_list()
     bool planned_something = false;
 
     while (true) {
-        // skip last block if optimistic
-//        if ((mb.planner_state == PLANNER_OPTIMISTIC) && (bf->nx->buffer_state == MP_BUFFER_EMPTY)) {
-//            break;
-//        }
-
         // unconditional exit condition
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
             break;
@@ -207,12 +202,8 @@ void mp_plan_block_list()
             return;
         }
 
-        // plan the block
-//        if (mb.planner_state == PLANNER_PESSIMISTIC) {
-            bf = _plan_block_pessimistic(bf);           // returns next block to plan
-//        } else {
-//            bf = _plan_block_optimistic(bf);            // "" ""
-//        }
+        bf = _plan_block(bf);           // returns next block to plan
+
         planned_something = true;
         mb.p = bf;      //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
@@ -224,36 +215,15 @@ void mp_plan_block_list()
     mb.p = bf;                                      // update planner pointer
 }
 
-/* Planner Helpers
- * mp_plan_block_forward() - plan a block
- */
 /*
-void mp_plan_block_forward(mpBuf_t *bf)
-{
-    SANITY_TRAPS(bf);
-    mp_calculate_trapezoid(bf);
-    bf->buffer_state = MP_BUFFER_PLANNED;
-    SANITY_TRAPS(bf);
-}
-*/
-// Update move_time and plannable_time estimates
-// These are accurate for perfect accel, decel and cruise, approximate otherwise
-//static void _update_move_times(mpBuf_t *bf)
-//{
-//    bf->move_time = (2 * bf->length) / (bf->pv->exit_velocity + bf->exit_velocity);
-//    bf->plannable_time = bf->pv->plannable_time + bf->move_time; UPDATE_BF_MS(bf); //+++++
-//    bf->plannable_length = bf->length + bf->pv->plannable_length;
-//}
-
-/*
- * mp_plan_block_pessimistic() - the block chain using pessimistic assumptions
+ * _plan_block() - the block chain using pessimistic assumptions
  */
 
-static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
+static mpBuf_t *_plan_block(mpBuf_t *bf)
 {
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
-    if (mb.pessimistic_state == PESSIMISTIC_PRIMING) {
+    if (mb.planner_state == PLANNER_PRIMING) {
         // Timings from *here*
 
         if (bf->pv->plannable) {
@@ -285,7 +255,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         }
 
         mb.planning_return = bf->nx;                    // where to return after planning is complete
-        mb.pessimistic_state = PESSIMISTIC_BACKWARD;    // start backplanning
+        mb.planner_state = PLANNER_BACK_PLANNING;    // start backplanning
     }
 
     // Backward Planning Pass
@@ -294,7 +264,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     // Hint options from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
 
-    if (mb.pessimistic_state == PESSIMISTIC_BACKWARD) {
+    if (mb.planner_state == PLANNER_BACK_PLANNING) {
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0; // we use this to stre the previous entry velocity, start at 0
@@ -538,7 +508,7 @@ static mpBuf_t *_plan_block_pessimistic(mpBuf_t *bf)
         } // for loop
     } // exits with bf pointing to a locked or EMPTY block
 
-    mb.pessimistic_state = PESSIMISTIC_PRIMING; // revert to initial state
+    mb.planner_state = PLANNER_PRIMING; // revert to initial state
     return (mb.planning_return);
 }
 

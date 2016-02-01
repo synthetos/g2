@@ -604,7 +604,7 @@ stat_t mp_planner_callback()
             (cm.hold_state == FEEDHOLD_OFF)) {
             mb.planner_state = PLANNER_IDLE;
         }
-        if ((mb.planner_state == PLANNER_PESSIMISTIC) && (!mb.new_block)) { // shortcut out of here
+        if ((mb.planner_state == PLANNER_PRIMING) && (!mb.new_block)) { // shortcut out of here
             return (STAT_NOOP);
         }
         if (mb.planner_state == PLANNER_IDLE) {
@@ -626,28 +626,16 @@ stat_t mp_planner_callback()
 
     // set planner state
     if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
-        if (mp_planner_is_full()) {
-            mb.planner_state = PLANNER_PESSIMISTIC;      // start planning now
-//            mb.planner_state = PLANNER_OPTIMISTIC;      // start planning now
-        } else if (_get_new_block_timeout()) {
-            mb.planner_state = PLANNER_PESSIMISTIC;     // start planning now
+        if (mp_planner_is_full() || _get_new_block_timeout()) {
+            mb.planner_state = PLANNER_PRIMING;     // start planning now
         } else {
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     }
-    else {                                            // set planner state for normal operation
-        if (_get_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
-            mb.planner_state = PLANNER_PESSIMISTIC;
-        }
-//        else {
-////            mb.planner_state = PLANNER_OPTIMISTIC;
-//            mb.planner_state = PLANNER_PESSIMISTIC;
-//        }
+    else if (_get_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
+        mb.planner_state = PLANNER_PRIMING;
     }
-//    if ((mb.planner_state == PLANNER_OPTIMISTIC) &&     // skip last block if optimistic
-//        (mb.p->nx->buffer_state == MP_BUFFER_EMPTY)) {
-//        return (STAT_OK);
-//    }
+
     if (mb.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
         return (STAT_OK);
     }
