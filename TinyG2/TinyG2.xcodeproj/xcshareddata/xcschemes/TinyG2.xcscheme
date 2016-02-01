@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D4CBBAD01A0D51FE00150DE2"
-               BuildableName = "TinyG2 G2Ultimaker"
-               BlueprintName = "TinyG2 G2Ultimaker"
+               BuildableName = "TinyG2 G2V9k Ultimaker"
+               BlueprintName = "TinyG2 G2V9k Ultimaker"
                ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

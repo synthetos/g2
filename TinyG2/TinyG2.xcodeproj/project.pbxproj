@@ -327,6 +327,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4522DCF1C5FC8ED0086AAE6 /* TinyG2 G2Ref Ultimaker */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s CONFIG=UltimakerTests";
+			buildConfigurationList = D4522DD01C5FC8ED0086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ref Ultimaker" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 G2Ref Ultimaker";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D45710C21705330C00EA19A8 /* TinyG2 gShield */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield";
@@ -371,7 +385,7 @@
 		};
 		D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=ShapeokoDualY";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ShapeokoDualY";
 			buildConfigurationList = D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "TinyG2 V9 Shapeoko Dual-Y" */;
 			buildPhases = (
 			);
@@ -383,17 +397,17 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */ = {
+		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=UltimakerTests";
-			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s CONFIG=UltimakerTests BOARD=G2v9k";
+			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k Ultimaker" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = .;
 			dependencies = (
 			);
-			name = "TinyG2 G2Ultimaker";
+			name = "TinyG2 G2V9k Ultimaker";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -456,7 +470,8 @@
 				D4E9135D1AC46B8B0042A16C /* TinyG2 gShield Debugger */,
 				D49367C61B827608000BB759 /* TinyG g2ref-a */,
 				D43C7AE31B155C33007440D6 /* TinyG2 G2V9k */,
-				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2Ultimaker */,
+				D4522DCF1C5FC8ED0086AAE6 /* TinyG2 G2Ref Ultimaker */,
+				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
 				D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */,
@@ -532,6 +547,22 @@
 			name = Debug;
 		};
 		D4522DC01C4558C70086AAE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4522DD11C5FC8ED0086AAE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4522DD21C5FC8ED0086AAE6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
@@ -704,7 +735,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 gShield copy";
+				PRODUCT_NAME = "TinyG2 G2V9k Ultimaker";
 			};
 			name = Debug;
 		};
@@ -712,7 +743,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 gShield copy";
+				PRODUCT_NAME = "TinyG2 G2V9k Ultimaker";
 			};
 			name = Release;
 		};
@@ -749,6 +780,15 @@
 			buildConfigurations = (
 				D4522DBF1C4558C70086AAE6 /* Debug */,
 				D4522DC01C4558C70086AAE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4522DD01C5FC8ED0086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ref Ultimaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4522DD11C5FC8ED0086AAE6 /* Debug */,
+				D4522DD21C5FC8ED0086AAE6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -807,7 +847,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ultimaker" */ = {
+		D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k Ultimaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D4CBBAD21A0D51FE00150DE2 /* Debug */,

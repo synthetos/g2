@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION       400000					// centripetal acceleration around corners - larger is faster
+#define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
@@ -335,23 +335,33 @@
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 
+
 //Extruder1_PWM
 #define DO1_MODE                    IO_ACTIVE_HIGH
+
 //Extruder2_PWM
 #define DO2_MODE                    IO_ACTIVE_HIGH
+
 //Fan1A_PWM
 #define DO3_MODE                    IO_ACTIVE_HIGH
+
 //Fan1B_PWM
 #define DO4_MODE                    IO_ACTIVE_HIGH
+
+//Fan2A_PWM
 #define DO5_MODE                    IO_ACTIVE_HIGH
+
 #define DO6_MODE                    IO_ACTIVE_HIGH
 #define DO7_MODE                    IO_ACTIVE_HIGH
 #define DO8_MODE                    IO_ACTIVE_HIGH
+
 //SAFEin (Output) signal
 #define DO9_MODE                    IO_ACTIVE_HIGH
 #define DO10_MODE                   IO_ACTIVE_HIGH
+
 //Header Bed FET
 #define DO11_MODE                   IO_ACTIVE_HIGH
+
 //Indicator_LED
 #define DO12_MODE                   IO_ACTIVE_HIGH
 #define DO13_MODE                   IO_ACTIVE_HIGH
@@ -369,6 +379,19 @@
 #define P1_CCW_PHASE_LO			    0.1
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
+
+
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.1;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.1;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.1;
+constexpr float H3_DEFAULT_D = 100.0;
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
