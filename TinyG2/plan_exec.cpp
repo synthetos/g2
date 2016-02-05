@@ -44,7 +44,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf); // passing bf so that body can exte
 static stat_t _exec_aline_tail(mpBuf_t *bf);
 static stat_t _exec_aline_segment(void);
 
-static void _init_forward_diffs(float Vi, float Vt, const float a_0/* = 0*/, const float a_1/* = 0*/, const float j_0/* = 0*/, const float j_1/* = 0*/, const float T/* = 0*/);
+static void _init_forward_diffs(float v_0, float v_1);
 
 /*************************************************************************
  * mp_plan_move() - call ramping function to plan moves ahead of the exec
@@ -86,6 +86,7 @@ stat_t mp_plan_move()
     if (bf->buffer_state == MP_BUFFER_RUNNING) {
         // Update bf to bf->nx, set entry_* to mr.r->exit_*.
         bf = bf->nx;
+        entry_velocity = mr.r->exit_velocity;
 
         if (bf->buffer_state < MP_BUFFER_PREPPED) {
             // Get outta here.
@@ -100,8 +101,12 @@ stat_t mp_plan_move()
             // report that we "planned" something...
             return (STAT_OK);
         }
+    }
 
-        entry_velocity     = mr.r->exit_velocity;
+    if (bf->buffer_state == MP_BUFFER_PLANNED) {
+        // Get outta here.
+        // We did nothing
+        return (STAT_NOOP);
     }
 
     // Note that that can only be one PLANNED move at a time.
@@ -119,6 +124,7 @@ stat_t mp_plan_move()
     }
 
     bf->buffer_state = MP_BUFFER_PLANNED;
+    bf->plannable = false;
 
     // report that we planned something...
     return (STAT_OK);
@@ -311,14 +317,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         mr.r = mr.p;
         mr.p = mr.p->nx;
-//        mr.p->planned = false;
-
-        // Request now (to be done later) that the next block be planned.
-//        st_request_plan_move();
-
-        // reset the executed values
-        mr.executed_body_length = 0.0;
-        mr.executed_body_time   = 0.0;
 
         // Assumptions that are required for this to work:
         // entry velocity <= cruise velocity && cruise velocity >= exit velocity
@@ -799,67 +797,36 @@ void mp_exit_hold_state()
  *
  */
 
-#define USE_OLD_FORWARD_DIFFS 0
-
-#if USE_OLD_FORWARD_DIFFS==1
-
 // Total time: 147us
-static void _init_forward_diffs(const float Vi, const float Vt, const float a_0, const float a_1, const float j_0, const float j_1, const float T)
+static void _init_forward_diffs(const float v_0, const float v_1)
 {
     // Times from *here*
-    float A =  -6.0*Vi +  6.0*Vt;
-    float B =  15.0*Vi - 15.0*Vt;
-    float C = -10.0*Vi + 10.0*Vt;
+/* Full formulation:
+ const float fifth_T        = T * 0.2; //(1/5) T
+ const float two_fifths_T   = T * 0.4; //(2/5) T
+ const float twentienth_T_2 = T * T * 0.05; // (1/20) T^2
+
+ const float P_0 = v_0;
+ const float P_1 = v_0 +      fifth_T*a_0;
+ const float P_2 = v_0 + two_fifths_T*a_0 + twentienth_T_2*j_0;
+ const float P_3 = v_1 - two_fifths_T*a_1 + twentienth_T_2*j_1;
+ const float P_4 = v_1 -      fifth_T*a_1;
+ const float P_5 = v_1;
+
+ const float A =  5*( P_1 - P_4 + 2*(P_3 - P_2) ) +   P_5 - P_0;
+ const float B =  5*( P_0 + P_4 - 4*(P_3 + P_1)   + 6*P_2 );
+ const float C = 10*( P_3 - P_0 + 3*(P_1 - P_2) );
+ const float D = 10*( P_0 + P_2 - 2*P_1 );
+ const float E =  5*( P_1 - P_0 );
+ //const float F =      P_0;
+*/
+    float A =  -6.0*v_0 +  6.0*v_1;
+    float B =  15.0*v_0 - 15.0*v_1;
+    float C = -10.0*v_0 + 10.0*v_1;
     // D = 0
     // E = 0
     // F = Vi
 
-    float h   = 1/(mr.segments);
-    //	float h_3 = h * h * h;
-    //	float h_4 = h_3 * h;
-    //	float h_5 = h_4 * h;
-
-    float Ah_5 = A * h * h * h * h * h;
-    float Bh_4 = B * h * h * h * h;
-    float Ch_3 = C * h * h * h;
-
-    mr.forward_diff_5 = (121.0/16.0)*Ah_5 + 5.0*Bh_4 + (13.0/4.0)*Ch_3;
-    mr.forward_diff_4 = (165.0/2.0)*Ah_5 + 29.0*Bh_4 + 9.0*Ch_3;
-    mr.forward_diff_3 = 255.0*Ah_5 + 48.0*Bh_4 + 6.0*Ch_3;
-    mr.forward_diff_2 = 300.0*Ah_5 + 24.0*Bh_4;
-    mr.forward_diff_1 = 120.0*Ah_5;
-
-    // Calculate the initial velocity by calculating V(h/2)
-    float half_h = h/2.0;
-    float half_Ch_3 = C * half_h * half_h * half_h;
-    float half_Bh_4 = B * half_h * half_h * half_h * half_h;
-    float half_Ah_5 = A * half_h * half_h * half_h * half_h * half_h;
-    mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + Vi;
-}
-
-#else
-
-// Total time: 147us
-static void _init_forward_diffs(const float v_0, const float v_1, const float a_0, const float a_1, const float j_0, const float j_1, const float T)
-{
-    // Times from *here*
-    const float fifth_T        = T * 0.2; //(1/5) T
-    const float two_fifths_T   = T * 0.4; //(2/5) T
-    const float twentienth_T_2 = T * T * 0.05; // (1/20) T^2
-
-    const float P_0 = v_0;
-    const float P_1 = v_0 +      fifth_T*a_0;
-    const float P_2 = v_0 + two_fifths_T*a_0 + twentienth_T_2*j_0;
-    const float P_3 = v_1 - two_fifths_T*a_1 + twentienth_T_2*j_1;
-    const float P_4 = v_1 -      fifth_T*a_1;
-    const float P_5 = v_1;
-
-    const float A =  5*( P_1 - P_4 + 2*(P_3 - P_2) ) +   P_5 - P_0;
-    const float B =  5*( P_0 + P_4 - 4*(P_3 + P_1)   + 6*P_2 );
-    const float C = 10*( P_3 - P_0 + 3*(P_1 - P_2) );
-    const float D = 10*( P_0 + P_2 - 2*P_1 );
-    const float E =  5*( P_1 - P_0 );
-    //const float F =      P_0;
 
     const float h   = 1/(mr.segments);
     const float h_2 = h   * h;
@@ -870,9 +837,6 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
     const float Ah_5 = A * h_5;
     const float Bh_4 = B * h_4;
     const float Ch_3 = C * h_3;
-    const float Dh_2 = D * h_2;
-    const float Eh   = E * h;
-
 
     const float const1 = 7.5625; // (121.0/16.0)
     const float const2 = 3.25;   // ( 13.0/ 4.0)
@@ -886,29 +850,24 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
      *		F_1 =     120 A h^5
      */
 
-    mr.forward_diff_5 = const1*Ah_5 +  5.0*Bh_4 + const2*Ch_3 + 2.0*Dh_2 + Eh;
-    mr.forward_diff_4 = const3*Ah_5 + 29.0*Bh_4 +    9.0*Ch_3 + 2.0*Dh_2;
+    mr.forward_diff_5 = const1*Ah_5 +  5.0*Bh_4 + const2*Ch_3;
+    mr.forward_diff_4 = const3*Ah_5 + 29.0*Bh_4 +    9.0*Ch_3;
     mr.forward_diff_3 =  255.0*Ah_5 + 48.0*Bh_4 +    6.0*Ch_3;
     mr.forward_diff_2 =  300.0*Ah_5 + 24.0*Bh_4;
     mr.forward_diff_1 =  120.0*Ah_5;
 
     // Calculate the initial velocity by calculating V(h/2)
     const float half_h   = h * 0.5; // h/2
-    const float half_h_2 = half_h   * half_h;
-    const float half_h_3 = half_h_2 * half_h;
+    const float half_h_3 = half_h   * half_h * half_h;
     const float half_h_4 = half_h_3 * half_h;
     const float half_h_5 = half_h_4 * half_h;
 
-    const float half_Eh =   E * half_h;
-    const float half_Dh_2 = D * half_h_2;
     const float half_Ch_3 = C * half_h_3;
     const float half_Bh_4 = B * half_h_4;
     const float half_Ah_5 = A * half_h_5;
 
-    mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + half_Dh_2 + half_Eh + v_0;
+    mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + v_0;
 }
-
-#endif
 
 /*********************************************************************************************
  * _exec_aline_head()
@@ -916,60 +875,45 @@ static void _init_forward_diffs(const float v_0, const float v_1, const float a_
 
 static stat_t _exec_aline_head(mpBuf_t *bf)
 {
-    if (mr.section_state == SECTION_NEW) {							// initialize the move singleton (mr)
+    bool first_pass = false;
+    if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
+        first_pass = true;
         if (fp_ZERO(mr.r->head_length)) {
             mr.section = SECTION_BODY;
             return(_exec_aline_body(bf));								// skip ahead to the body generator
         }
         mr.segments = ceil(uSec(mr.r->head_time) / NOM_SEGMENT_USEC);  // # of segments for the section
-        mr.segment_time = mr.r->head_time / mr.segments;
         mr.segment_count = (uint32_t)mr.segments;
+        mr.segment_time = mr.r->head_time / mr.segments;               // time to advance for each segment
 
         if (mr.segment_count == 1) {
-            // We will only have one section, simply average the velocities, and skip to the second half
-            mr.segment_velocity = (mr.entry_velocity + mr.r->cruise_velocity) / 2;
-            mr.forward_diff_5 = 0; // prevent the velocity from being adjusted
-            mr.section_state = SECTION_2nd_HALF;
+            // We will only have one segment, simply average the velocities
+            mr.segment_velocity = mr.r->head_length / mr.segment_time;
         } else {
-            _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity, 0, 0, 0, 0, mr.r->head_time);
-            mr.section_state = SECTION_1st_HALF;
+            _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity); // <-- sets inital segment_velocity
         }
         if (mr.segment_time < MIN_SEGMENT_TIME) {
-            _debug_trap();
+            _debug_trap("mr.segment_time < MIN_SEGMENT_TIME");
             return(STAT_OK);                                        // exit without advancing position, say we're done
         }
         mr.section = SECTION_HEAD;
-    }
-    // For forward differencing we should have the first segment in SECTION_1st_HALF
-    // However, if there was only one segment in this section it will skip the first half.
-    if (mr.section_state == SECTION_1st_HALF) {						// FIRST HALF (concave part of accel curve)
-        // TODO clean this up
-        if (_exec_aline_segment() == STAT_OK) { 					// set up for second half
-            mr.section = SECTION_BODY;
-            mr.section_state = SECTION_NEW;
-        } else {
-            mr.section_state = SECTION_2nd_HALF;
-        }
-        return(STAT_EAGAIN);
-    }
-    if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF (convex part of accel curve)
+        mr.section_state = SECTION_RUNNING;
+    } else {
         mr.segment_velocity += mr.forward_diff_5;
-        if (_exec_aline_segment() == STAT_OK) { 					// set up for body
-            if ((fp_ZERO(mr.r->body_length)) && (fp_ZERO(mr.r->tail_length))) {
-                return(STAT_OK);                                    // ends the move
-            }
+    }
 
-            mr.section = SECTION_BODY;
-            mr.section_state = SECTION_NEW;
-        } else {
-
-            // TODO - check for body extensions
-
-            mr.forward_diff_5 += mr.forward_diff_4;
-            mr.forward_diff_4 += mr.forward_diff_3;
-            mr.forward_diff_3 += mr.forward_diff_2;
-            mr.forward_diff_2 += mr.forward_diff_1;
+    if (_exec_aline_segment() == STAT_OK) { 					// set up for second half
+        if ((fp_ZERO(mr.r->body_length)) && (fp_ZERO(mr.r->tail_length))) {
+            return(STAT_OK);                                    // ends the move
         }
+
+        mr.section = SECTION_BODY;
+        mr.section_state = SECTION_NEW;
+    } else if (!first_pass) {
+        mr.forward_diff_5 += mr.forward_diff_4;
+        mr.forward_diff_4 += mr.forward_diff_3;
+        mr.forward_diff_3 += mr.forward_diff_2;
+        mr.forward_diff_2 += mr.forward_diff_1;
     }
     return(STAT_EAGAIN);
 }
@@ -982,56 +926,28 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
  */
 static stat_t _exec_aline_body(mpBuf_t *bf)
 {
-
-    // +++++ RG trap invalid segment velocities
-    if (mr.segment_velocity < 0) {
-        _debug_trap();
-        while(1);
-    }
-
     if (mr.section_state == SECTION_NEW) {
-        float remaining_body_length = mr.r->body_length - mr.executed_body_length;
-        if (fp_ZERO(remaining_body_length)) {
-            // We will always go from *here* to the tail.
-
+        if (fp_ZERO(mr.r->body_length)) {
             mr.section = SECTION_TAIL;
             return(_exec_aline_tail(bf));						// skip ahead to tail periods
         }
 
-        if (!fp_ZERO(mr.executed_body_length)) {
-            // Update the way points for position correction at section ends
-            // mr.position is where we are, currently at the end of the previous body length
-            for (uint8_t axis=0; axis<AXES; axis++) {
-                mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (remaining_body_length);
-                mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (remaining_body_length + mr.r->tail_length);
-            }
-        }
-
-        float body_time = mr.r->body_time - mr.executed_body_time;
+        float body_time = mr.r->body_time;
         mr.segments = ceil(uSec(body_time) / NOM_SEGMENT_USEC);
         mr.segment_time = body_time / mr.segments;
         mr.segment_velocity = mr.r->cruise_velocity;
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
-            _debug_trap();
+            _debug_trap("mr.segment_time < MIN_SEGMENT_TIME");
             return(STAT_OK);                                        // exit without advancing position, say we're done
         }
 
-        mr.executed_body_length = mr.r->body_length;
-        mr.executed_body_time   = mr.r->body_time;
-
         mr.section = SECTION_BODY;
-        mr.section_state = SECTION_2nd_HALF;				// uses PERIOD_2 so last segment detection works
+        mr.section_state = SECTION_RUNNING;				// uses PERIOD_2 so last segment detection works
     }
-    if (mr.section_state == SECTION_2nd_HALF) {				// straight part (period 3)
-
-        // TODO - check for body extensions
-
-        if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
-            // Try the body again, in case it's extended -- it'll jump to the tail if needed.
-            //mr.section = SECTION_BODY;
-            mr.section_state = SECTION_NEW;
-        }
+    if (_exec_aline_segment() == STAT_OK) {				// OK means this section is done
+        mr.section = SECTION_TAIL;
+        mr.section_state = SECTION_NEW;
     }
     return(STAT_EAGAIN);
 }
@@ -1042,56 +958,41 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
 
 static stat_t _exec_aline_tail(mpBuf_t *bf)
 {
+    bool first_pass = false;
     if (mr.section_state == SECTION_NEW) {							// INITIALIZATION
+        first_pass = true;
+
         // Mark the block as unplannable
         bf->plannable = false;
 
         if (fp_ZERO(mr.r->tail_length)) { return(STAT_OK);}			// end the move
         mr.segments = ceil(uSec(mr.r->tail_time) / NOM_SEGMENT_USEC);  // # of segments for the section
-        mr.segment_time = mr.r->tail_time / mr.segments;			    // time to advance for each segment
         mr.segment_count = (uint32_t)mr.segments;
+        mr.segment_time = mr.r->tail_time / mr.segments;			     // time to advance for each segment
 
         if (mr.segment_count == 1) {
-            // We will only have one section, simply average the velocities, and skip to the second half
-            mr.segment_velocity = (mr.r->cruise_velocity + mr.r->exit_velocity) / 2;
-            mr.forward_diff_5 = 0; // prevent the velocity from being adjusted
-            mr.section_state = SECTION_2nd_HALF;
+            mr.segment_velocity = mr.r->tail_length / mr.segment_time;
         } else {
-            _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity, 0, 0, 0, 0, mr.r->tail_time);
-            mr.section_state = SECTION_1st_HALF;
+            _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity); // <-- sets inital segment_velocity
         }
         if (mr.segment_time < MIN_SEGMENT_TIME) {
-            _debug_trap();
+            _debug_trap("mr.segment_time < MIN_SEGMENT_TIME");
             return(STAT_OK);                                        // exit without advancing position, say we're done
             //            return(STAT_MINIMUM_TIME_MOVE);                         // exit without advancing position
         }
         mr.section = SECTION_TAIL;
-    }
-    // For forward differencing we should have the first segment in SECTION_1st_HALF
-    // However, if there was only one segment in this section it will skip the first half.
-    if (mr.section_state == SECTION_1st_HALF) {						// FIRST HALF - convex part (period 4)
-        // TODO Clean this up
-        if (_exec_aline_segment() == STAT_OK) {
-            // For forward differencing we should have one segment in SECTION_1st_HALF.
-            // However, if it returns from that as STAT_OK, then there was only one segment in this section.
-            // Show that we did complete section 2 ... effectively.
-            mr.section_state = SECTION_2nd_HALF;
-            return(STAT_OK);                                        // STAT_OK completes the move
-        } else {
-            mr.section_state = SECTION_2nd_HALF;
-        }
-        return(STAT_EAGAIN);
-    }
-    if (mr.section_state == SECTION_2nd_HALF) {						// SECOND HALF - concave part (period 5)
+        mr.section_state = SECTION_RUNNING;
+    } else {
         mr.segment_velocity += mr.forward_diff_5;
-        if (_exec_aline_segment() == STAT_OK) {
-            return(STAT_OK);                                        // STAT_OK completes the move
-        } else {
-            mr.forward_diff_5 += mr.forward_diff_4;
-            mr.forward_diff_4 += mr.forward_diff_3;
-            mr.forward_diff_3 += mr.forward_diff_2;
-            mr.forward_diff_2 += mr.forward_diff_1;
-        }
+    }
+
+    if (_exec_aline_segment() == STAT_OK) {
+        return(STAT_OK);                                        // STAT_OK completes the move
+    } else if (!first_pass) {
+        mr.forward_diff_5 += mr.forward_diff_4;
+        mr.forward_diff_4 += mr.forward_diff_3;
+        mr.forward_diff_3 += mr.forward_diff_2;
+        mr.forward_diff_2 += mr.forward_diff_1;
     }
     return(STAT_EAGAIN);
 }
@@ -1125,8 +1026,7 @@ static stat_t _exec_aline_segment()
     // Otherwise if not at a section waypoint compute target from segment time and velocity
     // Don't do waypoint correction if you are going into a hold.
     
-    if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
-        (cm.motion_state != MOTION_HOLD)) {
+    if ((--mr.segment_count == 0) && (cm.motion_state != MOTION_HOLD)) {
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
     } else {
         float segment_length = mr.segment_velocity * mr.segment_time;

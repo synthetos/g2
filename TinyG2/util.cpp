@@ -43,26 +43,6 @@ bool FLAGS_ALL[AXES]  = { true, true, true, true, true, true };
 
 //*** debug utilities ***
 
-#ifdef IN_DEBUGGER
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-void _debug_trap() {
-    __asm__("BKPT");
-//    while (1) {
-//        __NOP();
-//    }
-}
-#pragma GCC reset_options
-#else
-void _debug_trap() {
-    // We might be able to put a print here, but it MIGHT interrupt other output
-    // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
-    __NOP();
-    __asm__("BKPT");
-}
-#endif
-
-
 /**** Vector utilities ****
  * copy_vector()			- copy vector of arbitrary length
  * vector_equal()			- test if vectors are equal
