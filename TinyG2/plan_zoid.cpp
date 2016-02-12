@@ -631,7 +631,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         // We can catch a symmetric case early and return now
 
         // We'll have a head roughly equal to the tail, and no body
-        block->head_length = mp_get_target_length(v_0, v_1, bf);
+        block->head_length = L/2.0;
         block->body_length = 0;
         block->tail_length = L - block->head_length;
 
@@ -645,7 +645,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     while (i++ < 30) { // If it fails after 30, something's wrong
         if (v_1 < min_v_1) {
             // We have caught a rather nasty problem. There is no meet velocity.
-            // This is does to an inversion in the velocities of very short moves.
+            // This is due to an inversion in the velocities of very short moves.
             // We need to compute the head OR tail length, and the body will be the rest.
             // Yes, that means we're computing a cruise in here.
 
@@ -701,9 +701,18 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         block->tail_length = l_t;
         block->body_length = 0;
 
-        // Early escape -- if we're within 2 of "root" then we can call it good.
-        // We need this level of precision, or out length computations fail to match the block length. // 989us
-        if (fabs(l_c) < 0.00001) {
+        // We need this level of precision, or our length computations fail to match the block length.
+        // What we really want to ensure is that the two lengths down add up to be too much.
+        // We can be a little under (and have a small body).
+        // 989us
+        // TODO: make these tunable
+        if ((l_c < 0.00001) && (l_c > -1.0)) { // allow 0.00001 overlap, OR up to a 1mm gap
+            if (l_c < 0.0) {
+                block->body_length = -l_c;
+            } else {
+                // fix the overlap
+                block->tail_length = L - block->head_length;
+            }
             break;
         }
 

@@ -119,7 +119,7 @@ stat_t mp_plan_move()
         __asm__("BKPT"); // exit > cruise after calculate_block
     }
 
-    if (block->head_length < 0.001 && block->body_length < 0.001 && block->tail_length < 0.001)  {
+    if (block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001)  {
         __asm__("BKPT"); // zero or negaitve length block
     }
 
@@ -345,7 +345,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mr.r->tail_time = 0;
         }
 
-        // At this point, we've already possibly merged heat and/or tail into the body.
+        // At this point, we've already possibly merged head and/or tail into the body.
         // If the body is too "short" (brief) still, we *might* be able to add it to a head or tail.
         // If there's still a head or a tail, we will add the body to whichever there is, maybe both.
         // We saved it for last since it's the most expensive.
@@ -354,7 +354,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             // We'll add the time to either the head or the tail or split it
             if (mr.r->tail_length > 0) {
                 if (mr.r->head_length > 0) {
-                    // We'll split the body of the head and tail
+                    // We'll split the body to the head and tail
                     float body_split = mr.r->body_length/2.0;
                     mr.r->body_length = 0;
                     mr.r->body_time = 0;
@@ -362,7 +362,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     mr.r->head_length += body_split;
                     mr.r->tail_length += body_split;
 
-                    // TODO: ++++ RG This is more complicated than this.
                     mr.r->head_time = (2.0 * mr.r->head_length)/(mr.entry_velocity + mr.r->cruise_velocity);
                     mr.r->tail_time = (2.0 * mr.r->tail_length)/(mr.r->cruise_velocity + mr.r->exit_velocity);
                 } else {
