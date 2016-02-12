@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
+#define JUNCTION_AGGRESSION         0.85					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -98,7 +98,7 @@
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL_XY        0.48                    // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY        0.6                    // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_Z         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_A         0.45                     // default motor power level 0.00 - 1.00 (ARM only)
 
@@ -166,7 +166,8 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
+// The machine can handle 20000 in open air, but dropping back to 10000 for times when it hits obstacles (small bits of filament, etc).
+#define X_VELOCITY_MAX              10000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
@@ -180,7 +181,7 @@
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              20000
+#define Y_VELOCITY_MAX              10000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                250
@@ -230,8 +231,8 @@
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				5.30516476972984
-#define A_VELOCITY_MAX          25920.0 // ~40 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
+#define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
+#define A_FEEDRATE_MAX 			9720.0 // G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
 #define A_JERK_MAX 				324000 // 1,000 million mm/min^3
@@ -398,6 +399,8 @@ constexpr float H3_DEFAULT_P = 7.0;
 constexpr float H3_DEFAULT_I = 0.1;
 constexpr float H3_DEFAULT_D = 100.0;
 
+constexpr float MIN_FAN_TEMP = 40.0;
+constexpr float MAX_FAN_TEMP = 150.0;
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
