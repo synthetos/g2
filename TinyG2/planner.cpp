@@ -650,19 +650,10 @@ void mp_replan_queue(mpBuf_t *bf)
 {
     mb.p = bf;    // reset planner pointer to start replan from here
 
-    bf->pv->nx_group = bf;
-
     do {
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
-            bf->pv_group = bf->pv;
             break;
         }
-
-        // Split the groups for re-grouping
-        bf->nx_group = bf->nx;
-        bf->pv_group = bf->pv;
-
-        bf->group_length = bf->length;
 
         bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
     } while ((bf = mp_get_next_buffer(bf)) != mb.p);
@@ -866,9 +857,6 @@ void mp_init_buffers(void)
         mb.bf[i].nx = nx;             // setup ring pointers
 		mb.bf[i].pv = pv;
 
-        mb.bf[i].nx_group = nx;            // setup group ring pointers
-        mb.bf[i].pv_group = pv;
-
 		pv = &mb.bf[i];
 	}
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
@@ -902,9 +890,6 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
         mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
-
-        mb.w->nx_group = mb.w->nx;  // makes sure nx_group is set corrrectly
-                                    // pv_group may already be setup from planning
 
         return (mb.w);
     }
@@ -961,13 +946,6 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
     mpBuf_t *r = mb.r;
     mb.r = mb.r->nx;                // advance to next run buffer
 	_clear_buffer(r);               // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
-
-    mb.r->pv_group = r;            // reset the pv_group to point to pv
-    if (r->nx_group != mb.r) {      // if the nx_group is the new mb.r, we have nothing to do.
-        mb.r->nx_group = r->nx_group; // We are setting the "nx_group" to point to the primary buffer of this one
-                                      // so that when we free mb.r, we'll have it to probogate.
-        mb.r->nx_group->pv_group = r; // the newly cleared buffer is now the "previous group"
-    }
 
 	mb.buffers_available++;
 	qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
@@ -1027,7 +1005,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
     } while (bf != bf_start);
 }
 
-#if 1 && defined(DEBUG)
+#if 0 && defined(DEBUG)
 
 #warning DEBUG TRAPS ENABLED
 
@@ -1070,7 +1048,7 @@ static void _audit_buffers()
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
 //        _planner_report("buffer audit2");
-        _debug_trap();
+        _debug_trap("buffer audit2");
     }
 
     // Now check every buffer, in order we would execute them.
@@ -1079,7 +1057,7 @@ static void _audit_buffers()
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
 //            _planner_report("buffer audit3");
-            _debug_trap();
+            _debug_trap("buffer audit3");
         }
 
         // Order should be:
@@ -1101,7 +1079,7 @@ static void _audit_buffers()
                 __NOP();
             } else {
 //                _planner_report("buffer audit4");
-                _debug_trap();
+                _debug_trap("buffer audit4");
             }
         }
 
@@ -1112,7 +1090,7 @@ static void _audit_buffers()
             bf->buffer_state != MP_BUFFER_IN_PROCESS &&
             bf->buffer_state != MP_BUFFER_EMPTY) {
 //            _planner_report("buffer audit5");
-            _debug_trap();
+            _debug_trap("buffer audit5");
         }
 
         // After PREPPED, we can see PREPPED, INITED, IN_PROCESS, or EMPTY
@@ -1122,13 +1100,13 @@ static void _audit_buffers()
             bf->buffer_state != MP_BUFFER_IN_PROCESS &&
             bf->buffer_state != MP_BUFFER_EMPTY) {
 //            _planner_report("buffer audit6");
-            _debug_trap();
+            _debug_trap("buffer audit6");
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
 //            _planner_report("buffer audit7");
-            _debug_trap();
+            _debug_trap("buffer audit7");
         }
         // Now look at the next one.
         bf = bf->nx;

@@ -31,8 +31,6 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
-#define GROUPING_ENABLED 0
-
 /*
  * Enums and other type definitions
  *
@@ -70,15 +68,6 @@ typedef enum {
 } moveState;
 
 typedef enum {
-    GROUP_OFF = 0,                   // group unplanned (MUST BE ZERO)
-    GROUP_RAMPED,                    // ramp planning has been run, and needs to be dispersed to moves
-    GROUP_HEAD,                      // head length has started dispersing to blocks
-    GROUP_BODY,                      // body length has started dispersing to blocks
-    GROUP_TAIL,                      // tail length has started dispersing to blocks
-    GROUP_DONE                       // group length is completely dispersed to blocks
-} groupState;
-
-typedef enum {
     SECTION_HEAD = 0,               // acceleration
     SECTION_BODY,                   // cruise
     SECTION_TAIL                    // deceleration
@@ -88,8 +77,7 @@ typedef enum {
 typedef enum {
     SECTION_OFF = 0,                // section inactive
     SECTION_NEW,                    // uninitialized section
-    SECTION_1st_HALF,               // first half of S curve
-    SECTION_2nd_HALF                // second half of S curve or running a BODY (cruise)
+    SECTION_RUNNING                 // initilized and running
 } sectionState;
 
 typedef enum {                      // code blocks for planning and trapezoid generation
@@ -106,9 +94,6 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ZERO_BUMP,                      // Ve = Vx = 0, Vc != 0
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
-
-    // And this one helps us tell when some of a blocks values are no longer valid
-    PART_OF_A_GROUP,                // (Ve != Vx) < Vc
 } blockHint;
 
 typedef enum {                      // planner operating state
@@ -233,7 +218,6 @@ struct mpBuffer_to_clear {
     mpBufferState buffer_state;     // used to manage queuing/dequeuing
     moveType move_type;             // used to dispatch to run routine
     moveState move_state;           // move state machine sequence
-    //    uint8_t move_code;            // byte that can be used by used exec functions
     blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
     // block parameters
@@ -241,21 +225,12 @@ struct mpBuffer_to_clear {
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
     bool plannable;                 // set true when this block can be used for planning
-    volatile bool mergable;         // set to true when the block's group can be merged into other groups
     float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
-    float group_length;             // total length of the group
-    //    float head_length;
-    //    float body_length;
-    //    float tail_length;
 
-    //    float plannable_time;           // time in the planning queue including this block
     float move_time;                // computed move time for entire move
-    //    float head_time;                // ...head
-    //    float body_time;                // ...body
-    //    float tail_time;                // ...tail
 
     // We are removing all entry_* values.
     // To get the entry_* values, look at pv->exit_* or mr.exit_*
@@ -292,9 +267,6 @@ typedef struct mpBuffer : mpBuffer_to_clear {           // See Planning Velocity
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;            // static pointer to previous buffer
     struct mpBuffer *nx;            // static pointer to next buffer
-
-    struct mpBuffer *pv_group;      // pointer to first buffer of the previous group
-    struct mpBuffer *nx_group;      // pointer to first buffer of the next group
 
     //+++++ DIAGNOSTICS for easier debugging
     uint8_t buffer_number;
@@ -393,16 +365,10 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 
     float entry_velocity;               // entry values for the currently running block
 
-    // These are *only* for the block-exec context, and shouldn't be modified anywhere else.
-
-    float executed_body_length;         // length of the currently executing body, to detect extensions
-    float executed_body_time;           // time of the currently executing body, to detect extensions
-
 	float segments;                     // number of segments in line (also used by arc generation)
 	uint32_t segment_count;             // count of running segments
 	float segment_velocity;             // computed velocity for aline segment
 	float segment_time;                 // actual time increment per aline segment
-	//float jerk;                         // max linear jerk
 
 	float forward_diff_1;               // forward difference level 1
 	float forward_diff_2;               // forward difference level 2

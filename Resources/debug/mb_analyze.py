@@ -45,17 +45,9 @@ def load_pool(filename):
                 if key == 'pv':
                     pv = int(val, 16)
                     pool[current_buffer]['pv'] = pv
-                if key == 'pv_group':
-                    pv = int(val, 16)
-                    pool[current_buffer]['pv_group'] = pv
-                # if key == 'locked':
-                #     pool[current_buffer]['locked'] = True if val == 'true' else False
                 elif key == 'nx':
                     nv = int(val, 16)
                     pool[current_buffer]['nx'] = nv
-                elif key == 'nx_group':
-                    nv = int(val, 16)
-                    pool[current_buffer]['nx_group'] = nv
                 elif key == 'buffer_state':
                     pool[current_buffer]['buffer_state'] = val
                 elif key == 'jerk':
@@ -76,8 +68,6 @@ def load_pool(filename):
                     pool[current_buffer]['exit_velocity'] = float(val)
                 elif key == 'length':
                     pool[current_buffer]['length'] = float(val)
-                elif key == 'group_length':
-                    pool[current_buffer]['group_length'] = float(val)
                 elif key == 'move_time':
                     pool[current_buffer]['move_time'] = float(val)
                 elif key == 'plannable':
@@ -97,10 +87,6 @@ def check_integrity(pool):
             break
         buffers.add(key)
         key = pool[key]['nx']
-        if not pool[key]['nx_group'] in pool:
-            raise Exception("Buffer pool integrity is bad. nx_group is bad")
-        if not pool[key]['pv_group'] in pool:
-            raise Exception("Buffer pool integrity is bad. pv_group is bad")
 
         count += 1
 
@@ -127,16 +113,6 @@ def print_pool(pool):
             else:
                 pointer = ''
 
-            if buffer['pv_group'] != buffer['pv']:
-                if buffer['nx_group'] != buffer['nx']:
-                    group_str = "↕︎"
-                else:
-                    group_str = "↑"
-            elif buffer['nx_group'] != buffer['nx']:
-                group_str = "↓"
-            else:
-                group_str = "|"
-
             if buffer['cruise_velocity'] == buffer['cruise_vmax']:
                 cruise_str = "="
             elif buffer['cruise_velocity'] < buffer['cruise_vmax']:
@@ -158,17 +134,13 @@ def print_pool(pool):
             else:
                 junction_str = "!"
 
-            print '0x%08x [%02d] : g<%02d %s %02d> N%04d (%02dx) %-22s %-8s GL% 8.2f L% 8.2f Ti% 8.2f C% 10.2f %1s[% 10.2f] X% 10.2f %1s[% 10.2f] J%1s% 10.2f %5s %20s (%5.2f)' % (
+            print '0x%08x [%02d] : N%04d (%02dx) %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f %1s[% 10.2f] X% 10.2f %1s[% 10.2f] J%1s% 10.2f %5s %20s (%5.2f)' % (
                 key,
                 float(buffer['buffer_number']),
-                int(pool[buffer['pv_group']]['buffer_number']),
-                group_str,
-                int(pool[buffer['nx_group']]['buffer_number']),
                 float(buffer['linenum']),
                 int(buffer['iterations']),
                 buffer['buffer_state'].strip(),
                 pointer,
-                float(buffer['group_length']),
                 float(buffer['length']),
                 float(buffer['move_time']),
                 float(buffer['cruise_velocity']),
