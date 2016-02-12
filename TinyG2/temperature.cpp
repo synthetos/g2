@@ -37,6 +37,7 @@
 #include "pwm.h"
 #include "report.h"
 #include "util.h"
+#include "settings.h"
 
 /**** Allocate structures ****/
 
@@ -337,8 +338,11 @@ void temperature_init()
     fet_pin3.setFrequency(fet_pin3_freq);
 
     fan_pin1 = 0;
+    fan_pin1.setFrequency(200000);
 //    fan_pin2 = 1;
+//    fan_pin2.setFrequency(200000);
 //    fan_pin3 = 1;
+//    fan_pin3.setFrequency(200000);
 
     temperature_reset();
 }
@@ -374,6 +378,14 @@ stat_t temperature_callback()
         if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
             last_reported_temp1 = temp;
             sr_requested = true;
+        }
+
+        if ((temp > MIN_FAN_TEMP) && (temp < MAX_FAN_TEMP)) {
+            fan_pin1 = (temp - MIN_FAN_TEMP)/(MAX_FAN_TEMP - MIN_FAN_TEMP);
+        } else if (temp > MAX_FAN_TEMP) {
+            fan_pin1 = 1.0;
+        } else {
+            fan_pin1 = 0.0;
         }
 
         temp = thermistor2.temperature_exact();
