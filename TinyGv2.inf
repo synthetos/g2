@@ -31,21 +31,21 @@ DefaultDestDir=12
 %due.bossa.name%=DriverInstall, USB\VID_03EB&PID_6124
 %due.programming_port.name%=DriverInstall, USB\VID_2341&PID_003D
 %due.sketch01.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_00
-%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_01
+%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_02
 %due.original.name%=DriverInstall, USB\VID_2341&PID_003E&MI_00
 
 [DeviceList.NTamd64]
 %due.bossa.name%=DriverInstall, USB\VID_03EB&PID_6124
 %due.programming_port.name%=DriverInstall, USB\VID_2341&PID_003D
 %due.sketch01.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_00
-%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_01
+%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_02
 %due.original.name%=DriverInstall, USB\VID_2341&PID_003E&MI_00
 
 [DeviceList.NTia64]
 %due.bossa.name%=DriverInstall, USB\VID_03EB&PID_6124
 %due.programming_port.name%=DriverInstall, USB\VID_2341&PID_003D
 %due.sketch01.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_00
-%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_01
+%due.sketch02.name%=DriverInstall, USB\VID_1D50&PID_606D&MI_02
 %due.original.name%=DriverInstall, USB\VID_2341&PID_003E&MI_00
 
 [DriverInstall]

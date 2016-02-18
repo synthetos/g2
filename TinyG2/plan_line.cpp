@@ -458,6 +458,14 @@ static void _calculate_move_times(GCodeState_t *gms, const float axis_length[], 
 		}
 	}
 	gms->move_time = max4(inv_time, max_time, xyz_time, abc_time);
+
+    // adjust move times for planner constraints
+    if (gms->minimum_time < MIN_SEGMENT_TIME) {
+        gms->minimum_time = MIN_SEGMENT_TIME;
+	    if (gms->move_time < MIN_SEGMENT_TIME) {
+            gms->move_time = MIN_SEGMENT_TIME;
+        }
+    }
 }
 
 /*

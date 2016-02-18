@@ -65,8 +65,19 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(15, D, 'D', 7);	// SPINDLE "ALLOW" (OUTPUT 4)
 	
 	// INPUTS
-	_MAKE_MOTATE_PIN(18, C, 'C', 10);	// PROX SWITCH INPUT
-	
+	_MAKE_MOTATE_PIN( 16, B, 'B', 4 );
+	_MAKE_MOTATE_PIN( 17, B, 'B', 5 );
+	_MAKE_MOTATE_PIN( 18, C, 'C', 10 );
+	_MAKE_MOTATE_PIN( 19, B, 'B', 3 );
+	_MAKE_MOTATE_PIN( 20, B, 'B', 8 );
+	_MAKE_MOTATE_PIN( 21, B, 'B', 9 );
+	_MAKE_MOTATE_PIN( 22, B, 'B', 6 );
+	_MAKE_MOTATE_PIN( 23, B, 'B', 7 );
+	_MAKE_MOTATE_PIN( 24, D, 'D', 2 );
+	_MAKE_MOTATE_PIN( 25, A, 'A', 9 );
+	_MAKE_MOTATE_PIN( 26, D, 'D', 1 );
+	_MAKE_MOTATE_PIN( 27, A, 'A', 17 );
+
 	// OUTPUTS
 	// (NONE YET)
 	
