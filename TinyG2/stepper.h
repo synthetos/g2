@@ -415,10 +415,10 @@ typedef struct stPrepMotor {
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-    magic_t magic_start;                   // magic number to test memory integrity
+    magic_t magic_start;                    // magic number to test memory integrity
     volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
     struct mpBuffer *bf;                    // static pointer to relevant buffer
-    moveType move_type;                     // move type (requires planner.h)
+    blockType block_type;                   // move type (requires planner.h)
 
     uint16_t dda_period;                    // DDA or dwell clock period setting
     uint32_t dda_ticks;                     // DDA or dwell ticks for the move

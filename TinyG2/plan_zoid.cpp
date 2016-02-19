@@ -135,7 +135,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
     // Quick cheat-sheet on which is in bf and whcih is in block:
     // bf:
-    //  move_type
+    //  block_type
     //  hint
     //  {cruise,exit}_vmax
     //  move_time
@@ -148,7 +148,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     //  {head,body,tail}_time
 
     // *** Skip non-move commands ***
-    if (bf->move_type == MOVE_TYPE_COMMAND) {
+    if (bf->block_type == BLOCK_TYPE_COMMAND) {
         bf->hint = COMMAND_BLOCK;
         return;
     }

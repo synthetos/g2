@@ -39,6 +39,13 @@
 
 typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine execution function
 
+typedef enum {                      // planner operating state
+    PLANNER_IDLE = 0,               // planner and movement are idle
+    PLANNER_STARTUP,                // ingesting blocks before movement is started
+    PLANNER_PRIMING,                // preparing new moves for planning ("stitching")
+    PLANNER_BACK_PLANNING           // plan by planning all blocks, from the newest added to the running block
+} plannerState;
+
 typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
     MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
     MP_BUFFER_INITIALIZING,         // buffer has been checked out and is being initialzed by aline() or a command
@@ -48,24 +55,25 @@ typedef enum {                      // bf->buffer_state values in incresing orde
     MP_BUFFER_RUNNING,              // current running buffer
     MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
     MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
-} mpBufferState;
+} bufferState;
 
-typedef enum {				        // bf->move_type values
-    MOVE_TYPE_NULL = 0,		        // null move - does a no-op
-    MOVE_TYPE_ALINE,		        // acceleration planned line
-    MOVE_TYPE_DWELL,                // delay with no movement
-    MOVE_TYPE_COMMAND,              // general command
-    MOVE_TYPE_TOOL,                 // T command
-    MOVE_TYPE_SPINDLE_SPEED,        // S command
-    MOVE_TYPE_STOP,                 // program stop
-    MOVE_TYPE_END                   // program end
-} moveType;
+typedef enum {				        // bf->block_type values
+    BLOCK_TYPE_NULL = 0,            // null move - does a no-op
+    BLOCK_TYPE_ALINE,		        // acceleration planned line
+    BLOCK_TYPE_DWELL,               // delay with no movement
+    BLOCK_TYPE_COMMAND,             // general command
+    BLOCK_TYPE_JSON_WAIT,           // general command
+    BLOCK_TYPE_TOOL,                // T command
+    BLOCK_TYPE_SPINDLE_SPEED,       // S command
+    BLOCK_TYPE_STOP,                // program stop
+    BLOCK_TYPE_END                  // program end
+} blockType;
 
 typedef enum {
-    MOVE_OFF = 0,                   // move inactive (MUST BE ZERO)
-    MOVE_NEW,                       // general value if you need an initialization
-    MOVE_RUN                        // general run state (for non-acceleration moves)
-} moveState;
+    BLOCK_INACTIVE = 0,             // block is inactive (MUST BE ZERO)
+    BLOCK_INITIAL_ACTION,           // initial value if you need an initialization
+    BLOCK_ACTIVE                    // run state
+} blockState;
 
 typedef enum {
     SECTION_HEAD = 0,               // acceleration
@@ -95,13 +103,6 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     SYMMETRIC_BUMP,                 // (Ve = Vx) < Vc
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
 } blockHint;
-
-typedef enum {                      // planner operating state
-    PLANNER_IDLE = 0,               // planner and movement are idle
-    PLANNER_STARTUP,                // ingesting blocks before movement is started
-    PLANNER_PRIMING,                // preparing new moves for planning ("stitching")
-    PLANNER_BACK_PLANNING           // plan by planning all blocks, from the newest added to the running block
-} plannerState;
 
 typedef enum {
     ZOID_EXIT_NULL = 0,
@@ -207,17 +208,16 @@ struct mpBuffer_to_clear {
 
     //+++++ DIAGNOSTICS for easier debugging
     uint32_t linenum;               // mirror of bf->gm.linenum
-//    uint8_t buffer_number;
     int iterations;
     float move_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
-    uint8_t meet_iterations;         // iterations needed in _get_meet_velocity
+    uint8_t meet_iterations;        // iterations needed in _get_meet_velocity
     //+++++ to here
 
-    mpBufferState buffer_state;     // used to manage queuing/dequeuing
-    moveType move_type;             // used to dispatch to run routine
-    moveState move_state;           // move state machine sequence
+    bufferState buffer_state;       // used to manage queuing/dequeuing
+    blockType block_type;            // used to dispatch to run routine
+    blockState block_state;         // move state machine sequence
     blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
     // block parameters
@@ -267,11 +267,7 @@ typedef struct mpBuffer : mpBuffer_to_clear {           // See Planning Velocity
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;            // static pointer to previous buffer
     struct mpBuffer *nx;            // static pointer to next buffer
-
-    //+++++ DIAGNOSTICS for easier debugging
-    uint8_t buffer_number;
-    //+++++
-
+    uint8_t buffer_number;          //+++++ DIAGNOSTICS for easier debugging
 } mpBuf_t;
 
 typedef struct mpBufferPool {		// ring buffer for sub-moves
@@ -280,7 +276,6 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 
     float run_time_remaining_ms;
     float plannable_time_ms;
-//    float best_case_braking_time_ms;
 
     // planner state variables
     plannerState planner_state;     // current state of planner
@@ -343,7 +338,7 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
 typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	magic_t magic_start;                // magic number to test memory integrity
-	moveState move_state;               // state of the overall move
+	blockState block_state;             // state of the overall move
 	moveSection section;                // what section is the move in?
 	sectionState section_state;         // state within a move section
 
@@ -435,7 +430,7 @@ void mp_init_buffers(void);
 #define mp_get_next_buffer(b) ((mpBuf_t *)(b->nx))
 
 mpBuf_t * mp_get_write_buffer(void);
-void mp_commit_write_buffer(const moveType move_type);
+void mp_commit_write_buffer(const blockType block_type);
 mpBuf_t * mp_get_run_buffer(void);
 bool mp_free_run_buffer(void);
 

@@ -1,9 +1,9 @@
 /*
- * settings_Printrbot_play.h
+ * settings_Printrbot_plus.h
  * This file is part of the the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Printrbot profile"
+#define INIT_MESSAGE "Initializing configs to Printrbot Plus profile"
 
 #ifndef PI
 #define PI 3.14159628
@@ -96,12 +96,6 @@
 
 // *** motor settings ************************************************************************************
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
-#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL_XY        0.6                    // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_Z         0.45                    // default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_A         0.45                     // default motor power level 0.00 - 1.00 (ARM only)
-
 // steps/mm -> mm/rev calculations
 // s: steps/mm
 // a: degress/FULL step (1.8)
@@ -110,14 +104,16 @@
 // Example entry to wolframalpha.com:
 // s=80, a=1.8, M=16, R=(M*(360/a))/s
 
+#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M5_MOTOR_MAP                AXIS_X                  // 1ma
 #define M5_STEP_ANGLE               1.8                     // 1sa
-#define M5_TRAVEL_PER_REV           40                   // 1tr
+#define M5_TRAVEL_PER_REV           40                      // 1tr
 #define M5_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M5_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M5_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M5_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 1mp
+#define M5_POWER_LEVEL              0.6                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M4_MOTOR_MAP                AXIS_Y
@@ -126,7 +122,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 1
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
+#define M4_POWER_LEVEL              0.6
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
@@ -135,7 +131,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
+#define M3_POWER_LEVEL              0.45
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M2_MOTOR_MAP                AXIS_A
@@ -144,7 +140,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_A
+#define M2_POWER_LEVEL              0.45
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M1_MOTOR_MAP                AXIS_B
@@ -248,37 +244,6 @@
 #define A_ZERO_BACKOFF 			2
 #define A_JERK_HIGH_SPEED       A_JERK_MAX
 
-#define B_AXIS_MODE				AXIS_RADIUS
-#define B_RADIUS				1
-#define B_VELOCITY_MAX			3600
-#define B_FEEDRATE_MAX			B_VELOCITY_MAX
-#define B_TRAVEL_MIN 			0
-#define B_TRAVEL_MAX			-1
-#define B_JERK_MAX				20
-#define B_HOMING_INPUT          0
-#define B_HOMING_DIR            0
-#define B_SEARCH_VELOCITY 		600
-#define B_LATCH_VELOCITY 		100
-#define B_LATCH_BACKOFF			10
-#define B_ZERO_BACKOFF			2
-#define B_JERK_HIGH_SPEED		A_JERK_MAX
-
-#define C_AXIS_MODE				AXIS_DISABLED
-#define C_RADIUS				1
-#define C_VELOCITY_MAX			3600
-#define C_FEEDRATE_MAX			C_VELOCITY_MAX
-#define C_TRAVEL_MIN 			0
-#define C_TRAVEL_MAX			-1
-#define C_JERK_MAX				20
-#define C_HOMING_INPUT          0
-#define C_HOMING_DIR            0
-#define C_SEARCH_VELOCITY 		600
-#define C_LATCH_VELOCITY 		100
-#define C_LATCH_BACKOFF			10
-#define C_ZERO_BACKOFF			2
-#define C_JERK_HIGH_SPEED		A_JERK_MAX
-
-
 //*** Input / output settings ***
 /*
     IO_MODE_DISABLED
@@ -374,95 +339,22 @@
 #define DO12_MODE                   IO_ACTIVE_HIGH
 #define DO13_MODE                   IO_ACTIVE_HIGH
 
+/*** Extruders / Heaters ***/
 
-/*** Handle optional modules that may not be in every machine ***/
+#define H1_DEFAULT_ENABLE           true
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.1
+#define H1_DEFAULT_D                100.0
 
-#define P1_PWM_FREQUENCY		    100					// in Hz
-#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			    12800
-#define P1_CW_PHASE_LO			    0.13				// phase [0..1]
-#define P1_CW_PHASE_HI			    0.17
-#define P1_CCW_SPEED_LO			    0
-#define P1_CCW_SPEED_HI			    0
-#define P1_CCW_PHASE_LO			    0.1
-#define P1_CCW_PHASE_HI			    0.1
-#define P1_PWM_PHASE_OFF		    0.1
+#define H2_DEFAULT_ENABLE           true
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.1
+#define H2_DEFAULT_D                100.0
 
-
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.1;
-constexpr float H1_DEFAULT_D = 100.0;
-
-constexpr float H2_DEFAULT_P = 7.0;
-constexpr float H2_DEFAULT_I = 0.1;
-constexpr float H2_DEFAULT_D = 100.0;
-
-constexpr float H3_DEFAULT_P = 7.0;
-constexpr float H3_DEFAULT_I = 0.1;
-constexpr float H3_DEFAULT_D = 100.0;
+#define H3_DEFAULT_ENABLE           true
+#define H3_DEFAULT_P                7.0
+#define H3_DEFAULT_I                0.1
+#define H3_DEFAULT_D                100.0
 
 constexpr float MIN_FAN_TEMP = 40.0;
 constexpr float MAX_FAN_TEMP = 150.0;
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
-
-/*** User-Defined Data Defaults ***/
-
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0

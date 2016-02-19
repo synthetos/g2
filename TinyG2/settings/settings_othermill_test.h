@@ -63,6 +63,14 @@ constexpr float H1_DEFAULT_P = 7.0;
 constexpr float H1_DEFAULT_I = 0.2;
 constexpr float H1_DEFAULT_D = 100.0;
 
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
+
 // WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
 // new machines use a stepper which has the same config as the other axis.
 #define HAS_CANSTACK_Z_AXIS 0

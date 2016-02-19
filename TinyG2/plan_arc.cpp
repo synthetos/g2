@@ -61,7 +61,7 @@ void cm_arc_init()
 
 void cm_abort_arc()
 {
-	arc.run_state = MOVE_OFF;
+	arc.run_state = BLOCK_INACTIVE;
 }
 
 /*
@@ -75,7 +75,7 @@ void cm_abort_arc()
 
 stat_t cm_arc_callback()
 {
-	if (arc.run_state == MOVE_OFF) {
+	if (arc.run_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
 	if (mp_planner_is_full()) {
@@ -92,7 +92,7 @@ stat_t cm_arc_callback()
 	if (--arc.segment_count > 0) {
         return (STAT_EAGAIN);
     }
-	arc.run_state = MOVE_OFF;
+	arc.run_state = BLOCK_INACTIVE;
 	return (STAT_OK);
 }
 
@@ -240,7 +240,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 	}
 
 	cm_cycle_start();						        // if not already started
-	arc.run_state = MOVE_RUN;				        // enable arc to be run from the callback
+	arc.run_state = BLOCK_ACTIVE;				        // enable arc to be run from the callback
 	cm_finalize_move();
 	return (STAT_OK);
 }

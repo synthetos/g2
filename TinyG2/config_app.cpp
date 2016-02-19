@@ -118,7 +118,7 @@ static stat_t get_tick(nvObj_t *nv);		// get system tick count
 const cfgItem_t cfgArray[] PROGMEM = {
 	// group token flags p, print_func,	 get_func,  set_func, target for get/set,       default value
 	{ "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,    TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
+//    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
 	{ "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version,  TINYG_FIRMWARE_VERSION },
 	{ "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform, TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version,  TINYG_HARDWARE_VERSION },
@@ -275,7 +275,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,	    X_JERK_HIGH_SPEED },
 	{ "x","xjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
-	{ "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIR },
+	{ "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIRECTION },
 	{ "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
 	{ "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity,	X_LATCH_VELOCITY },
 	{ "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,	X_LATCH_BACKOFF },
@@ -290,7 +290,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "y","yjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,	    Y_JERK_HIGH_SPEED },
 	{ "y","yjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
-	{ "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIR },
+	{ "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
 	{ "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
 	{ "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity,	Y_LATCH_VELOCITY },
 	{ "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,	Y_LATCH_BACKOFF },
@@ -305,7 +305,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "z","zjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high, 	    Z_JERK_HIGH_SPEED },
 	{ "z","zjd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
-	{ "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIR },
+	{ "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIRECTION },
     { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
 	{ "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity,	Z_LATCH_VELOCITY },
 	{ "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,	Z_LATCH_BACKOFF },
@@ -321,7 +321,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "a","ajd",_fipc, 4, cm_print_jd, get_nul,   set_nul,   (float *)&cs.null, 0 },                // DEPRECATED
 	{ "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,			A_RADIUS},
 	{ "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
-	{ "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIR },
+	{ "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
     { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
 	{ "a","alv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_velocity,	A_LATCH_VELOCITY },
 	{ "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_backoff,	A_LATCH_BACKOFF },
@@ -338,7 +338,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,			B_RADIUS },
 #ifdef __ARM	// B axis extended parameters
 	{ "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
-	{ "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIR },
+	{ "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIRECTION },
     { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
 	{ "b","blv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity,	B_LATCH_VELOCITY },
 	{ "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,	B_LATCH_BACKOFF },
@@ -356,7 +356,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,			C_RADIUS },
 #ifdef __ARM	// C axis extended parameters
 	{ "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
-	{ "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIR },
+	{ "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIRECTION },
     { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
 	{ "c","clv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity,	C_LATCH_VELOCITY },
 	{ "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,	C_LATCH_BACKOFF },
