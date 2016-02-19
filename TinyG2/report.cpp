@@ -2,7 +2,7 @@
  * report.cpp - TinyG status report and other reporting functions.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -56,14 +56,15 @@ qrSingleton_t qr;
 stat_t rpt_exception(stat_t status, const char *msg)
 {
 	if (status != STAT_OK) { // makes it possible to call exception reports w/o checking status value
-//        if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-//            sprintf(global_string_buf, "{er:{fb:%0.2f,st:%d,msg:\"%s - %s\"}}\n",
-//                    TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-//        } else {
-            sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
-                    TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
-//        }
-        xio_writeline(global_string_buf);
+
+        // you cannot send an exception report if the USB has not been set up. Causes a processor exception.
+        if (cs.controller_state >= CONTROLLER_READY) {
+
+            // always sends a strict string regardless of JS setting
+           sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
+                                        TINYG_FIRMWARE_BUILD, status, get_status_message(status), msg);
+           xio_writeline(global_string_buf);
+        }
     }
 	return (status);			// makes it possible to inline, e.g: return(rpt_exception(status));
 }
