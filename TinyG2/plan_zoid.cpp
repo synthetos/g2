@@ -170,12 +170,12 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     block->exit_velocity   = min(bf->exit_velocity, bf->exit_vmax);
 
     // +++++ RG trap
-    if ((block->cruise_velocity < (entry_velocity-5))) {
-        __asm__("BKPT"); // entry > cruise + 5
-    }
-    if ((block->cruise_velocity < block->exit_velocity)) {
-        __asm__("BKPT"); // exit > cruise
-    }
+//    if ((block->cruise_velocity < (entry_velocity-5))) {
+//        __asm__("BKPT"); // entry > cruise + 5
+//    }
+//    if ((block->cruise_velocity < block->exit_velocity)) {
+//        __asm__("BKPT"); // exit > cruise
+//    }
 
     // We *might* do this exact computation later, so cache the value.
     float test_velocity = 0;
@@ -603,9 +603,6 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
 
 static float _get_meet_velocity(const float v_0, const float v_2, const float L, mpBuf_t *bf, mpBlockRuntimeBuf_t *block)
 {
-
-    // NOTE!! Do NOT use bf->lenght in here, we may be running against a group, and we'll want to use L to be safe.
-
     //const float j = bf->jerk;
     //const float recip_j = bf->recip_jerk;
 
