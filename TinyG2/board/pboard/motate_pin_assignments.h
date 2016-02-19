@@ -32,7 +32,7 @@
 
 #include <MotateTimers.h>
 
-// MOVED: Board pinout is now pulled in after naming, sowe can use the naming there.
+// Board pinout is pulled in after naming, so we can use the naming there.
 
 namespace Motate {
 
@@ -213,13 +213,18 @@ namespace Motate {
 
     // start next sequence at 170
 
-    pin_number kUnused_0                        = 200;
-    pin_number kUnused_1                        = 201;
-    pin_number kUnused_2                        = 202;
-    pin_number kUnused_3                        = 203;
-    pin_number kUnused_4                        = 204;
-    pin_number kUnused_5                        = 205;
-    pin_number kUnused_6                        = 206;
+    // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
+
+    pin_number kUnassigned10                    = 245;
+    pin_number kUnassigned9                     = 246;
+    pin_number kUnassigned8                     = 247;
+    pin_number kUnassigned7                     = 248;
+    pin_number kUnassigned6                     = 249;
+    pin_number kUnassigned5                     = 250;
+    pin_number kUnassigned4                     = 251;
+    pin_number kUnassigned3                     = 252;
+    pin_number kUnassigned2                     = 253;
+    pin_number kUnassigned1                     = 254;   // 254 is the max.. Do not exceed this number
 
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if

@@ -2,8 +2,8 @@
  * settings_Ultimaker.h - Ultimaker motion demo
  * This file is part of the the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -211,7 +211,7 @@
  *
  * It will return s= as the value you want to enter.
  *
- * If the value is over 1 million, the code will divide it by 1 million, 
+ * If the value is over 1 million, the code will divide it by 1 million,
  * so you have to pre-multiply it by 1000000.0. (The value is in millions, btw.)
  *
  * Note that you need these to be floating point values, so always have a .0 at the end!
@@ -272,7 +272,7 @@
 
 
 //*** Input / output settings ***
-/*  
+/*
     IO_MODE_DISABLED
     IO_ACTIVE_LOW    aka NORMALLY_OPEN
     IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
@@ -335,7 +335,6 @@
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 
-
 //Extruder1_PWM
 #define DO1_MODE                    IO_ACTIVE_HIGH
 
@@ -381,17 +380,17 @@
 #define P1_PWM_PHASE_OFF		    0.1
 
 
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.1;
-constexpr float H1_DEFAULT_D = 100.0;
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.1
+#define H1_DEFAULT_D                100.0
 
-constexpr float H2_DEFAULT_P = 7.0;
-constexpr float H2_DEFAULT_I = 0.1;
-constexpr float H2_DEFAULT_D = 100.0;
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.1
+#define H2_DEFAULT_D                100.0
 
-constexpr float H3_DEFAULT_P = 7.0;
-constexpr float H3_DEFAULT_I = 0.1;
-constexpr float H3_DEFAULT_D = 100.0;
+#define H3_DEFAULT_P                7.0
+#define H3_DEFAULT_I                0.1
+#define H3_DEFAULT_D                100.0
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 

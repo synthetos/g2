@@ -70,6 +70,14 @@ constexpr float H1_DEFAULT_P = 7.0;
 constexpr float H1_DEFAULT_I = 0.2;
 constexpr float H1_DEFAULT_D = 100.0;
 
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
+
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
@@ -302,54 +310,72 @@ constexpr float H1_DEFAULT_D = 100.0;
 */
 // Inputs are defined for the g2ref(a) board
 // Xmn (board label)
-#define DI1_MODE                    INPUT_ACTIVE_HIGH
-//#define DI1_ACTION                  INPUT_ACTION_STOP
-//#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
-#define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
+#define DI1_MODE                    IO_ACTIVE_HIGH
+#define DI1_ACTION                  INPUT_ACTION_STOP
+#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Xmax
-#define DI2_MODE                    INPUT_MODE_DISABLED
+#define DI2_MODE                    IO_MODE_DISABLED
 #define DI2_ACTION                  INPUT_ACTION_NONE
 #define DI2_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymin
-#define DI3_MODE                    INPUT_MODE_DISABLED
+#define DI3_MODE                    IO_MODE_DISABLED
 #define DI3_ACTION                  INPUT_ACTION_NONE
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymax
-#define DI4_MODE                    INPUT_ACTIVE_HIGH
-//#define DI4_ACTION                  INPUT_ACTION_STOP
-//#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
-#define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_NONE
+#define DI4_MODE                    IO_ACTIVE_HIGH
+#define DI4_ACTION                  INPUT_ACTION_STOP
+#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Zmin
-#define DI5_MODE                    INPUT_ACTIVE_LOW   // Z probe
+#define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmax
-#define DI6_MODE                    INPUT_MODE_DISABLED
+#define DI6_MODE                    IO_MODE_DISABLED
 #define DI6_ACTION                  INPUT_ACTION_STOP
 #define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Shutdown (Amin on v9 board)
-#define DI7_MODE                    INPUT_MODE_DISABLED
+#define DI7_MODE                    IO_MODE_DISABLED
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // High Voltage Z Probe In (Amax on v9 board)
-#define DI8_MODE                    INPUT_MODE_DISABLED
+#define DI8_MODE                    IO_MODE_DISABLED
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
 // Hardware interlock input
-#define DI9_MODE                    INPUT_MODE_DISABLED
+#define DI9_MODE                    IO_MODE_DISABLED
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
+
+
+//Extruder1_PWM
+#define DO1_MODE                    IO_ACTIVE_HIGH
+//Extruder2_PWM
+#define DO2_MODE                    IO_ACTIVE_HIGH
+//Fan1A_PWM
+#define DO3_MODE                    IO_ACTIVE_HIGH
+//Fan1B_PWM
+#define DO4_MODE                    IO_ACTIVE_HIGH
+#define DO5_MODE                    IO_ACTIVE_HIGH
+#define DO6_MODE                    IO_ACTIVE_HIGH
+#define DO7_MODE                    IO_ACTIVE_HIGH
+#define DO8_MODE                    IO_ACTIVE_HIGH
+//SAFEin (Output) signal
+#define DO9_MODE                    IO_ACTIVE_HIGH
+#define DO10_MODE                   IO_ACTIVE_HIGH
+//Header Bed FET
+#define DO11_MODE                   IO_ACTIVE_HIGH
+//Indicator_LED
+#define DO12_MODE                   IO_ACTIVE_HIGH
+#define DO13_MODE                   IO_ACTIVE_HIGH
 
 /*** Handle optional modules that may not be in every machine ***/
 

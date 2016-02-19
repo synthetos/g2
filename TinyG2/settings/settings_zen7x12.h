@@ -2,7 +2,7 @@
  * settings_zen7x12.h - Zen Toolworks 7x12 machine profile
  * This file is part of the TinyG project
  *
- * Copyright (c) 2011 - 2014 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -57,7 +57,7 @@
 #define M1_MICROSTEPS			8						// 1mi		1,2,4,8
 #define M1_POLARITY				1						// REVERSE// 1po		0=normal, 1=reverse
 #define M1_POWER_MODE			MOTOR_POWERED_IN_CYCLE	// 1pm		standard
-#define M1_POWER_LEVEL			MOTOR_POWER_LEVEL		// 1mp
+#define M1_POWER_LEVEL			0.5		                // 1mp
 
 #define M2_MOTOR_MAP	 		AXIS_Y
 #define M2_STEP_ANGLE			1.8
@@ -65,7 +65,7 @@
 #define M2_MICROSTEPS			8
 #define M2_POLARITY				0
 #define M2_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M2_POWER_LEVEL			0.5
 
 #define M3_MOTOR_MAP			AXIS_Z
 #define M3_STEP_ANGLE			1.8
@@ -73,31 +73,7 @@
 #define M3_MICROSTEPS			8
 #define M3_POLARITY				1			// REVERSE
 #define M3_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL			MOTOR_POWER_LEVEL
-
-#define M4_MOTOR_MAP			AXIS_A
-#define M4_STEP_ANGLE			1.8
-#define M4_TRAVEL_PER_REV		360			// degrees moved per motor rev
-#define M4_MICROSTEPS			8
-#define M4_POLARITY				0
-#define M4_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M4_POWER_LEVEL			MOTOR_POWER_LEVEL
-
-#define M5_MOTOR_MAP			AXIS_B
-#define M5_STEP_ANGLE			1.8
-#define M5_TRAVEL_PER_REV		360
-#define M5_MICROSTEPS			8
-#define M5_POLARITY				0
-#define M5_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M5_POWER_LEVEL			MOTOR_POWER_LEVEL
-
-#define M6_MOTOR_MAP			AXIS_C
-#define M6_STEP_ANGLE			1.8
-#define M6_TRAVEL_PER_REV		360
-#define M6_MICROSTEPS			8
-#define M6_POLARITY				0
-#define M6_POWER_MODE			MOTOR_POWERED_IN_CYCLE
-#define M6_POWER_LEVEL			MOTOR_POWER_LEVEL
+#define M3_POWER_LEVEL			0.5
 
 // *** axis settings ***
 
@@ -153,102 +129,3 @@
 #define Z_LATCH_VELOCITY 		100
 #define Z_LATCH_BACKOFF 		2
 #define Z_ZERO_BACKOFF 			1
-
-// Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE 			AXIS_RADIUS
-#define A_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
-#define A_FEEDRATE_MAX 			A_VELOCITY_MAX
-#define A_TRAVEL_MIN			-1										// min/max the same means infinite, no limit
-#define A_TRAVEL_MAX 			-1
-#define A_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define A_JERK_HIGH_SPEED       A_JERK_MAX
-#define A_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define A_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define A_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define A_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define A_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define A_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
-#define A_SEARCH_VELOCITY 		600
-#define A_LATCH_VELOCITY 		100
-#define A_LATCH_BACKOFF 		5
-#define A_ZERO_BACKOFF 			2
-
-#define B_AXIS_MODE 			AXIS_RADIUS
-#define B_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define B_FEEDRATE_MAX 			B_VELOCITY_MAX
-#define B_TRAVEL_MIN			-1
-#define B_TRAVEL_MAX 			-1
-#define B_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define B_JERK_HIGH_SPEED       B_JERK_MAX
-#define B_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
-#define B_RADIUS 				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define B_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define B_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define B_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define B_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
-#define B_SEARCH_VELOCITY 		600
-#define B_LATCH_VELOCITY 		100
-#define B_LATCH_BACKOFF 		5
-#define B_ZERO_BACKOFF 			2
-
-#define C_AXIS_MODE 			AXIS_RADIUS
-#define C_VELOCITY_MAX 			((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define C_FEEDRATE_MAX 			C_VELOCITY_MAX
-#define C_TRAVEL_MIN			-1
-#define C_TRAVEL_MAX 			-1
-#define C_JERK_MAX 				(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define C_JERK_HIGH_SPEED       C_JERK_MAX
-#define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
-#define C_RADIUS				(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define C_SWITCH_MODE_MIN 		SW_MODE_HOMING
-#define C_SWITCH_MODE_MAX 		SW_MODE_DISABLED
-#define C_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
-#define C_SWITCH_TYPE_MAX       SW_TYPE_NORMALLY_OPEN
-#define C_SEARCH_VELOCITY 		600
-#define C_LATCH_VELOCITY 		100
-#define C_LATCH_BACKOFF 		5
-#define C_ZERO_BACKOFF 			2
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET (X_TRAVEL_MAX/2)	// set to middle of table
-#define G55_Y_OFFSET (Y_TRAVEL_MAX/2)
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0

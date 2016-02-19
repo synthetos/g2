@@ -2,8 +2,8 @@
  * G2v9k-pinout.h - tinyg2 board pinout specification
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Robert Giseburt
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,145 +27,119 @@
  *
  */
 
-#ifndef G2v9_pinout_h
-#define G2v9_pinout_h
+#ifndef g2v9_pinout_h
+#define g2v9_pinout_h
+
+/*
+ * USAGE NOTES
+ *
+ * Read this first:
+ * https://github.com/synthetos/g2/wiki/Adding-a-new-G2-board-(or-revision)-to-G2#making-a-new-pin-assignment
+ *
+ *  USAGE:
+ *
+ *  This file is lays out all the pin capabilities of the SAM3X8C organized by pin number.
+ *  Each pin has its associated functions listed at the bottom of the file, and is essentially
+ *  immutable for each processor.
+ *
+ *  To use, assign Motate pin numbers to the first value in the _MAKE_MOTATE_PIN() macro.
+ *  ALL PINS MUST BE ASSIGNED A NUMBER, even if they are not used. There will NOT be a 
+ *  code-size or speed penalty for unused pins, but the WILL be a compiler-failure for
+ *  unassigned pins. This new restriction allows for simplification of linkages deep in
+ *  Motate.
+ *
+ *  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
+ *  See Endnotes in this file for examples
+ */
 
 #include <MotatePins.h>
 
-namespace Motate {
-    
-    // v9_3x8c - The SAM3X8C is a 100-pin sister to the SAM3X8E that is on the Due
-    // The SAM3X8C is missing port C and D.
-
-    /*** Pins that are signals and are *not* fin-specific:
-
-    * 0 - Serial RX0 (not on a fin)
-    * 1 - Serial TX0 (not on a fin)
-
-    * 2 - I2C SDA
-    * 3 - I2C SCL
-
-    * 4 - SPI SCK
-    * 5 - SPI MISO
-    * 6 - SPI MOSI
-
-    * 7 - ~Sync
-
-    * (8-9 reserved)
-
-    ***/
-
-
-    /*** Pins that *are* a kinen fin:
-
-    * (Number ralative to 10*x)
-
-    * (smart header)
-    * +0 - Sx_SS
-    * +1 - Sx_Interrupt
-
-    * (dumb header)
-    * +2 - Sx_Step        Sx_D0
-    * +3 - Sx_Direction   Sx_D1
-    * +4 - Sx_Enable      Sx_D2
-    * +5 - Sx_MS0         Sx_D3
-    * +6 - Sx_MS1         Sx_D4
-    * +7 - Sx_MS2         Sx_D5
-    * +8 - Sx_VREF        Sx_A0
-
-    * (9 is reserved)
-
-    ***/
-
-    
-    /*** Pins 100+ are board specific functions.
-    * Second (+) SPI or I2C would be here.
-    * Special non-kinen devices, LEDs, etc.
-    **/
-    
-    
-    // First we define Motate::Pin<> object templates,
-    // then we define the pin_number aliases.
-    
-    
-    // All-Fin pins
-    
-    // Pin 0 - Serial RX - missing!
-    // Pin 1 - Serial TX - missing!
-    
-    _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
-    _MAKE_MOTATE_PIN(5, A, 'A', 25);	// SPI0_MISOPinNumber
-    _MAKE_MOTATE_PIN(6, A, 'A', 26);	// SPI0_MOSIPinNumber
-    _MAKE_MOTATE_PIN(10, A, 'A', 28);	// Socket1_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_PIN(12, A, 'A', 23);	// Socket1_StepPinNumber
-    _MAKE_MOTATE_PIN(13, A, 'A', 6);	// Socket1_DirPinNumber
-    _MAKE_MOTATE_PIN(14, A, 'A', 22);	// Socket1_EnablePinNumber
-    _MAKE_MOTATE_PIN(15, A, 'A', 24);	// Socket1_Microstep_0PinNumber
-    _MAKE_MOTATE_PIN(16, A, 'A', 16);	// Socket1_Microstep_1PinNumber
-    _MAKE_MOTATE_PIN(17, B, 'B', 16);	// Socket1_Microstep_2PinNumber
-    _MAKE_MOTATE_PIN(18, B, 'B', 17);	// Socket1_VrefPinNumber
-    _MAKE_MOTATE_PIN(22, B, 'B', 0);	// Socket2_StepPinNumber
-    _MAKE_MOTATE_PIN(23, B, 'B', 2);	// Socket2_DirPinNumber
-    _MAKE_MOTATE_PIN(24, B, 'B', 1);	// Socket2_EnablePinNumber
-    _MAKE_MOTATE_PIN(25, A, 'A', 29);	// Socket2_Microstep_0PinNumber
-    _MAKE_MOTATE_PIN(26, A, 'A', 21);	// Socket2_Microstep_1PinNumber
-    _MAKE_MOTATE_PIN(27, A, 'A', 4);	// Socket2_Microstep_2PinNumber
-    _MAKE_MOTATE_PIN(28, B, 'B', 18);	// Socket2_VrefPinNumber
-    _MAKE_MOTATE_PIN(32, B, 'B', 6);	// Socket3_StepPinNumber
-    _MAKE_MOTATE_PIN(33, B, 'B', 8);	// Socket3_DirPinNumber
-    _MAKE_MOTATE_PIN(34, B, 'B', 7);	// Socket3_EnablePinNumber
-    _MAKE_MOTATE_PIN(35, B, 'B', 5);	// Socket3_Microstep_0PinNumber
-    _MAKE_MOTATE_PIN(36, B, 'B', 4);	// Socket3_Microstep_1PinNumber
-    _MAKE_MOTATE_PIN(37, B, 'B', 3);	// Socket3_Microstep_2PinNumber
-    _MAKE_MOTATE_PIN(38, B, 'B', 19);	// Socket3_VrefPinNumber
-    _MAKE_MOTATE_PIN(40, B, 'B', 23);	// Socket4_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_PIN(42, B, 'B', 14);	// Socket4_StepPinNumber
-    _MAKE_MOTATE_PIN(43, B, 'B', 24);	// Socket4_DirPinNumber
-    _MAKE_MOTATE_PIN(44, B, 'B', 22);	// Socket4_EnablePinNumber
-    _MAKE_MOTATE_PIN(45, B, 'B', 11);	// Socket4_Microstep_0PinNumber
-    _MAKE_MOTATE_PIN(46, B, 'B', 10);	// Socket4_Microstep_1PinNumber
-    _MAKE_MOTATE_PIN(47, B, 'B', 9);	// Socket4_Microstep_2PinNumber
-    _MAKE_MOTATE_PIN(48, A, 'A', 2);	// Socket4_VrefPinNumber
-    _MAKE_MOTATE_PIN(58, A, 'A', 3);	// Socket5_VrefPinNumber
-    _MAKE_MOTATE_PIN(100, B, 'B', 26);	// XAxis_MinPinNumber
-    _MAKE_MOTATE_PIN(101, A, 'A', 9);	// XAxis_MaxPinNumber
-    _MAKE_MOTATE_PIN(102, A, 'A', 10);	// YAxis_MinPinNumber
-    _MAKE_MOTATE_PIN(103, A, 'A', 11);	// YAxis_MaxPinNumber
-    _MAKE_MOTATE_PIN(104, A, 'A', 12);	// ZAxis_MinPinNumber
-    _MAKE_MOTATE_PIN(105, A, 'A', 13);	// ZAxis_MaxPinNumber
-    _MAKE_MOTATE_PIN(106, A, 'A', 14);	// AAxis_MinPinNumber
-    _MAKE_MOTATE_PIN(107, A, 'A', 15);	// AAxis_MaxPinNumber
-    _MAKE_MOTATE_PIN(113, A, 'A', 7);	// Spindle_DirPinNumber
-    _MAKE_MOTATE_PIN(116, A, 'A', 1);	// Coolant_EnablePinNumber
-    _MAKE_MOTATE_PIN(117, A, 'A', 18);	// LED_USBRXPinNumber
-    _MAKE_MOTATE_PIN(118, A, 'A', 19);	// LED_USBTXPinNumber
-    _MAKE_MOTATE_PIN(119, B, 'B', 15);	// SD_CardDetect
-    _MAKE_MOTATE_PIN(120, A, 'A', 17);	// Interlock_In
-
-    // PWM Output Pins
-    _MAKE_MOTATE_PIN(130, A, 'A', 8);	// Spindle_PwmPinNumber -- now used for Extruder 1
-    _MAKE_MOTATE_PIN(132, A, 'A', 5);	// Spindle_EnablePinNumber -- now used for Fan 1
-
-    // ADC pins (for now, were SPI CS1 and CS2
-    _MAKE_MOTATE_PIN(150, B, 'B', 20);	// Socket2_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_PIN(151, B, 'B', 21);	// Socket3_SPISlaveSelectPinNumber
-
-    //UNASSIGNED, and disconnected:
-    _MAKE_MOTATE_PIN(200, A, 'A', 0);	//
-    _MAKE_MOTATE_PIN(201, B, 'B', 25);	//
-    _MAKE_MOTATE_PIN(202, B, 'B', 13);	//
-    _MAKE_MOTATE_PIN(203, B, 'B', 27);	//
-    _MAKE_MOTATE_PIN(204, A, 'A', 20);	//
-    _MAKE_MOTATE_PIN(205, B, 'B', 12);	//
-    _MAKE_MOTATE_PIN(206, B, 'B', 28);	//
-    _MAKE_MOTATE_PIN(207, B, 'B', 29);	//
-    _MAKE_MOTATE_PIN(208, B, 'B', 30);	//
-    _MAKE_MOTATE_PIN(209, B, 'B', 31);	//
+// We don't have all of the inputs, so we don't define them.
+#define INPUT1_AVAILABLE 1
+#define INPUT2_AVAILABLE 1
+#define INPUT3_AVAILABLE 1
+#define INPUT4_AVAILABLE 1
+#define INPUT5_AVAILABLE 1
+#define INPUT6_AVAILABLE 1
+#define INPUT7_AVAILABLE 1
+#define INPUT8_AVAILABLE 1
+#define INPUT9_AVAILABLE 0
+#define INPUT10_AVAILABLE 0
+#define INPUT11_AVAILABLE 0
+#define INPUT12_AVAILABLE 0
+#define INPUT13_AVAILABLE 0
 
 #define ADC0_AVAILABLE 1
 #define ADC1_AVAILABLE 1
 #define ADC2_AVAILABLE 0
 #define ADC3_AVAILABLE 0
+
+namespace Motate {
+        
+    // Pin name and function        
+    _MAKE_MOTATE_PIN(kUnassigned1                       , A, 'A', 0);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kCoolant_EnablePinNumber           , A, 'A', 1);	// Coolant_EnablePinNumber
+    _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber             , A, 'A', 2);	// Socket4_VrefPinNumber
+    _MAKE_MOTATE_PIN(kSocket5_VrefPinNumber             , A, 'A', 3);	// Socket5_VrefPinNumber
+    _MAKE_MOTATE_PIN(kSocket2_Microstep_2PinNumber      , A, 'A', 4);	// Socket2_Microstep_2PinNumber
+    _MAKE_MOTATE_PIN(kOutput3_PinNumber                 , A, 'A', 5);	// Spindle_EnablePinNumber -- now used for Fan 1
+    _MAKE_MOTATE_PIN(kSocket1_DirPinNumber              , A, 'A', 6);	// Socket1_DirPinNumber
+    _MAKE_MOTATE_PIN(kSpindle_DirPinNumber              , A, 'A', 7);	// Spindle_DirPinNumber
+    _MAKE_MOTATE_PIN(kOutput1_PinNumber                 , A, 'A', 8);	// Spindle_PwmPinNumber -- now used for Extruder 1
+    _MAKE_MOTATE_PIN(kInput2_PinNumber                  , A, 'A', 9);	// XAxis_MaxPinNumber
+    _MAKE_MOTATE_PIN(kInput3_PinNumber                  , A, 'A', 10);	// YAxis_MinPinNumber
+    _MAKE_MOTATE_PIN(kInput4_PinNumber                  , A, 'A', 11);	// YAxis_MaxPinNumber
+    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 12);	// ZAxis_MinPinNumber
+    _MAKE_MOTATE_PIN(kInput6_PinNumber                  , A, 'A', 13);	// ZAxis_MaxPinNumber
+    _MAKE_MOTATE_PIN(kInput7_PinNumber                  , A, 'A', 14);	// AAxis_MinPinNumber
+    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 15);	// AAxis_MaxPinNumber
+    _MAKE_MOTATE_PIN(kSocket1_Microstep_1PinNumber      , A, 'A', 16);	// Socket1_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(kSD_ChipSelectPinNumber            , A, 'A', 17);	// Interlock_In
+    _MAKE_MOTATE_PIN(kLED_USBRXPinNumber                , A, 'A', 18);	// LED_USBRXPinNumber
+    _MAKE_MOTATE_PIN(kLED_USBTXPinNumber                , A, 'A', 19);	// LED_USBTXPinNumber
+    _MAKE_MOTATE_PIN(kUnassigned2                       , A, 'A', 20);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kSocket2_Microstep_1PinNumber      , A, 'A', 21);	// Socket2_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , A, 'A', 22);	// Socket1_EnablePinNumber
+    _MAKE_MOTATE_PIN(kSocket1_StepPinNumber             , A, 'A', 23);	// Socket1_StepPinNumber
+    _MAKE_MOTATE_PIN(kSocket1_Microstep_0PinNumber      , A, 'A', 24);	// Socket1_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber                , A, 'A', 25);	// SPI0_MISOPinNumber
+    _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber                , A, 'A', 26);	// SPI0_MOSIPinNumber
+    _MAKE_MOTATE_PIN(kSPI0_SCKPinNumber                 , A, 'A', 27);	// SPI0_SCKPinNumber
+    _MAKE_MOTATE_PIN(kSocket1_SPISlaveSelectPinNumber   , A, 'A', 28);	// Socket1_SPISlaveSelectPinNumber
+    _MAKE_MOTATE_PIN(kSocket2_Microstep_0PinNumber      , A, 'A', 29);	// Socket2_Microstep_0PinNumber
+
+    _MAKE_MOTATE_PIN(kSocket2_StepPinNumber             , B, 'B', 0);	// Socket2_StepPinNumber
+    _MAKE_MOTATE_PIN(kSocket2_EnablePinNumber           , B, 'B', 1);	// Socket2_EnablePinNumber
+    _MAKE_MOTATE_PIN(kSocket2_DirPinNumber              , B, 'B', 2);	// Socket2_DirPinNumber
+    _MAKE_MOTATE_PIN(kSocket3_Microstep_2PinNumber      , B, 'B', 3);	// Socket3_Microstep_2PinNumber
+    _MAKE_MOTATE_PIN(kSocket3_Microstep_1PinNumber      , B, 'B', 4);	// Socket3_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(kSocket3_Microstep_0PinNumber      , B, 'B', 5);	// Socket3_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(kSocket3_StepPinNumber             , B, 'B', 6);	// Socket3_StepPinNumber
+    _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber           , B, 'B', 7);	// Socket3_EnablePinNumber
+    _MAKE_MOTATE_PIN(kSocket3_DirPinNumber              , B, 'B', 8);	// Socket3_DirPinNumber
+    _MAKE_MOTATE_PIN(kSocket4_Microstep_2PinNumber      , B, 'B', 9);	// Socket4_Microstep_2PinNumber
+    _MAKE_MOTATE_PIN(kSocket4_Microstep_1PinNumber      , B, 'B', 10);	// Socket4_Microstep_1PinNumber
+    _MAKE_MOTATE_PIN(kSocket4_Microstep_0PinNumber      , B, 'B', 11);	// Socket4_Microstep_0PinNumber
+    _MAKE_MOTATE_PIN(kUnassigned3                       , B, 'B', 12);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kUnassigned4                       , B, 'B', 13);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kSocket4_StepPinNumber             , B, 'B', 14);	// Socket4_StepPinNumber
+    _MAKE_MOTATE_PIN(kSD_CardDetectPinNumber            , B, 'B', 15);	// SD_CardDetect
+    _MAKE_MOTATE_PIN(kSocket1_Microstep_2PinNumber      , B, 'B', 16);	// Socket1_Microstep_2PinNumber
+    _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber             , B, 'B', 17);	// Socket1_VrefPinNumber
+    _MAKE_MOTATE_PIN(kSocket2_VrefPinNumber             , B, 'B', 18);	// Socket2_VrefPinNumber
+    _MAKE_MOTATE_PIN(kSocket3_VrefPinNumber             , B, 'B', 19);	// Socket3_VrefPinNumber
+    _MAKE_MOTATE_PIN(kADC0_PinNumber                    , B, 'B', 20);	// Socket2_SPISlaveSelectPinNumber
+    _MAKE_MOTATE_PIN(kADC1_PinNumber                    , B, 'B', 21);	// Socket3_SPISlaveSelectPinNumber
+    _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber           , B, 'B', 22);	// Socket4_EnablePinNumber
+    _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber   , B, 'B', 23);	// Socket4_SPISlaveSelectPinNumber
+    _MAKE_MOTATE_PIN(kSocket4_DirPinNumber              , B, 'B', 24);	// Socket4_DirPinNumber
+    _MAKE_MOTATE_PIN(kUnassigned5                       , B, 'B', 25);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kInput1_PinNumber                  , B, 'B', 26);	// XAxis_MinPinNumber
+    _MAKE_MOTATE_PIN(kUnassigned6                       , B, 'B', 27);	// unassigned and disconnected
+    _MAKE_MOTATE_PIN(kUnassigned7                       , B, 'B', 28);	// JTAG_CLK / SWD_CLK (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned8                       , B, 'B', 29);	// JTAG_TDI (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned9                       , B, 'B', 30);	// JTAG_TDO (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned10                      , B, 'B', 31);	// JTAG_TMS / SWD_DIO (unassigned)
 
 } // namespace Motate
 
@@ -173,5 +147,19 @@ namespace Motate {
 // We then allow each chip-type to have it's onw function definitions
 // that will refer to these pin assignments.
 #include "motate_chip_pin_functions.h"
+
+/*  END NOTES - EXAMPLES:
+ *
+ *  *** Vanilla pin example ***
+ *
+ *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
+ *
+ *      This assigns Motate pin 4 to Port A, pin 27 (A27)
+ *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
+ *
+ *  ** Other pin functions ***
+ *
+ *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
+ */
 
 #endif

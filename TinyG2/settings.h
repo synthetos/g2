@@ -2,7 +2,7 @@
  * settings.h - default runtime settings
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -37,16 +37,20 @@
 
 /**** MACHINE PROFILES ******************************************************
  *
- * Provide a SETTINGS_FILE in the makefile or compiler command line, e.g:
- *	SETTINGS_FILE="settings_shopbot_test.h"
+ * Provide an optional SETTINGS_FILE in the makefile or compiler command line:
+ *  SETTINGS_FILE="settings_shopbot_test.h"
  *
- * If no file is specified the default settings file will be used
+ * settings_default.h provides values if no SETTINGS_FILE is selected,
+ * or if any values are missing from the SETTINGS_FILE file
  */
+
+// This file sets up the compile-time defaults
 #ifdef SETTINGS_FILE
 #define SETTINGS_FILE_PATH <settings/SETTINGS_FILE>
 #include SETTINGS_FILE_PATH
-#else
-#include "settings/settings_default.h"				// Default settings for release
 #endif
+
+// Anything not set by the above file is set by this one:
+#include "settings/settings_default.h"
 
 #endif // End of include guard: SETTINGS_H_ONCE
