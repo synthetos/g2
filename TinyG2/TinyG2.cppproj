@@ -21,7 +21,8 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>SWD</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
@@ -510,8 +511,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=G2v9k COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=G2v9k MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=ShapeokoDualY BOARD=G2v9k COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
+    <CleanTarget>clean CONFIG=ShapeokoDualY BOARD=G2v9k MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9k\</OutputPath>
   </PropertyGroup>
