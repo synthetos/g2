@@ -43,14 +43,26 @@
  *  immutable for each processor.
  *
  *  To use, assign Motate pin numbers to the first value in the _MAKE_MOTATE_PIN() macro.
- *  ALL PINS MUST BE ASSIGNED A NUMBER, even if they are not used. There will NOT be a 
+ *  ALL PINS MUST BE ASSIGNED A NUMBER, even if they are not used. There will NOT be a
  *  code-size or speed penalty for unused pins, but the WILL be a compiler-failure for
  *  unassigned pins. This new restriction allows for simplification of linkages deep in
  *  Motate.
- *
- *  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
- *  See Endnotes in this file for examples
  */
+/*  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
+ *  EXAMPLES:
+ *
+ *  *** Vanilla pin example ***
+ *
+ *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
+ *
+ *      This assigns Motate pin 4 to Port A, pin 27 (A27)
+ *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
+ *
+ *  ** Other pin functions ***
+ *
+ *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
+ */
+
 
 #include <MotatePins.h>
 
@@ -147,19 +159,5 @@ namespace Motate {
 // We then allow each chip-type to have it's onw function definitions
 // that will refer to these pin assignments.
 #include "motate_chip_pin_functions.h"
-
-/*  END NOTES - EXAMPLES:
- *
- *  *** Vanilla pin example ***
- *
- *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
- *
- *      This assigns Motate pin 4 to Port A, pin 27 (A27)
- *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
- *
- *  ** Other pin functions ***
- *
- *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
- */
 
 #endif

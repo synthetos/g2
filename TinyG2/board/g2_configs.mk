@@ -30,28 +30,28 @@
 
 ifeq ("$(CONFIG)","ShapeokoDualY")
     ifeq ("$(BOARD)","NONE")
-        BOARD=G2v9k
+        BOARD=g2v9k
     endif
     SETTINGS_FILE="settings_shapeoko2.h"
 endif
 
 ifeq ("$(CONFIG)","Othermill")
     ifeq ("$(BOARD)","NONE")
-        BOARD=G2v9k
+        BOARD=g2v9k
     endif
     SETTINGS_FILE="settings_othermill.h"
 endif
 
 ifeq ("$(CONFIG)","ProbotixV90")
     ifeq ("$(BOARD)","NONE")
-        BOARD=G2v9k
+        BOARD=g2v9k
     endif
     SETTINGS_FILE="settings_probotixV90.h"
 endif
 
 ifeq ("$(CONFIG)","Zen7x12")
     ifeq ("$(BOARD)","NONE")
-        BOARD=G2v9k
+        BOARD=g2v9k
     endif
     SETTINGS_FILE="settings_zen7x12.h"
 endif
@@ -82,38 +82,31 @@ ifeq ("$(CONFIG)","PrintrbotPlus")
     ifeq ("$(BOARD)","NONE")
         BOARD=pboard-a
     endif
-    SETTINGS_FILE="settings_Printrbot_Plus.h"
+    SETTINGS_FILE="settings_printrbot_plus.h"
 endif
 
 ifeq ("$(CONFIG)","PrintrbotSimple")
     ifeq ("$(BOARD)","NONE")
         BOARD=pboard-a
     endif
-    SETTINGS_FILE="settings_Printrbot_Simple.h"
+    SETTINGS_FILE="settings_printrbot_simple.h"
 endif
 
 ifeq ("$(CONFIG)","PrintrbotPlay")
     ifeq ("$(BOARD)","NONE")
         BOARD=pboard-a
     endif
-    SETTINGS_FILE="settings_Printrbot_Play.h"
+    SETTINGS_FILE="settings_printrbot_play.h"
 endif
 
 
 ##########
 # Ultimaker configs:
 
-ifeq ("$(CONFIG)","UltimakerTests")
-    ifeq ("$(BOARD)","NONE")
-        BOARD=g2ref-a
-    endif
-    SETTINGS_FILE="settings_Ultimaker_Rob_v9h.h"
-endif
-
 ifeq ("$(CONFIG)","UltimakerV9h")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2ref-a
     endif
-    SETTINGS_FILE="settings_Ultimaker.h"
+    SETTINGS_FILE="settings_ultimaker.h"
 endif
 

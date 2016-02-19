@@ -2,8 +2,8 @@
  * motate_pin_assignments.h - pin assignments for the TinyG g2ref boards
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Robert Giseburt
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -33,7 +33,6 @@
 #include <MotateTimers.h>
 
 // MOVED: Board pinout is now pulled in after naming, so we can use the naming there.
-
 
 namespace Motate {
 
@@ -161,7 +160,7 @@ namespace Motate {
     pin_number kSD_ChipSelectPinNumber          = 120;
     pin_number kInterlock_InPinNumber           = 121;
     pin_number kOutputSAFE_PinNumber            = 122;  // SAFE signal
-    pin_number kLEDPWM_PinNumber                = 122;
+    pin_number kLEDPWM_PinNumber                = 123;
 
     // GRBL / gShield compatibility pins -- Due board ONLY
 

@@ -2,8 +2,8 @@
  * g2ref_revA-pinout.h - tinyg2 board pinout specification
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013-2015 Robert Giseburt
- * Copyright (c) 2013-2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -49,9 +49,20 @@
  *  code-size or speed penalty for unused pins, but the WILL be a compiler-failure for
  *  unassigned pins. This new restriction allows for simplification of linkages deep in
  *  Motate.
+ */
+/*  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
+ *  EXAMPLES:
  *
- *  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
- *  See Endnotes in this file for examples
+ *  *** Vanilla pin example ***
+ *
+ *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
+ *
+ *      This assigns Motate pin 4 to Port A, pin 27 (A27)
+ *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
+ *
+ *  ** Other pin functions ***
+ *
+ *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
  */
 
 #include <MotateTimers.h>
@@ -149,19 +160,6 @@ namespace Motate {
 // that will refer to these pin assignments.
 #include "motate_chip_pin_functions.h"
 
-/*  END NOTES - EXAMPLES:
- *
- *  *** Vanilla pin example ***
- *
- *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
- *
- *      This assigns Motate pin 4 to Port A, pin 27 (A27)
- *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
- *
- *  ** Other pin functions ***
- *
- *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
- */
 #endif
 
 // g2ref_pinout_h

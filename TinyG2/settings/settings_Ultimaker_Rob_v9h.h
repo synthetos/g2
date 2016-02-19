@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Ultimaker profile"
+#define INIT_MESSAGE "Initializing configs to Ultimaker v9h TEST profile"
 
 #ifndef PI
 #define PI 3.14159628
@@ -242,7 +242,6 @@
 #define B_FEEDRATE_MAX			B_VELOCITY_MAX
 #define B_TRAVEL_MIN 			0
 #define B_TRAVEL_MAX			-1
-//#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
 #define B_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define B_HOMING_INPUT          0
@@ -259,7 +258,6 @@
 #define C_FEEDRATE_MAX			C_VELOCITY_MAX
 #define C_TRAVEL_MIN 			0
 #define C_TRAVEL_MAX			-1
-//#define C_JERK_MAX			20000000
 #define C_JERK_MAX				20
 #define C_JUNCTION_DEVIATION	JUNCTION_DEVIATION
 #define C_HOMING_INPUT          0
@@ -366,91 +364,19 @@
 #define DO13_MODE                   IO_ACTIVE_HIGH
 
 
-/*** Handle optional modules that may not be in every machine ***/
+/*** Extruder / Heater settings  ***/
 
-#define P1_PWM_FREQUENCY		    100					// in Hz
-#define P1_CW_SPEED_LO			    7900				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			    12800
-#define P1_CW_PHASE_LO			    0.13				// phase [0..1]
-#define P1_CW_PHASE_HI			    0.17
-#define P1_CCW_SPEED_LO			    0
-#define P1_CCW_SPEED_HI			    0
-#define P1_CCW_PHASE_LO			    0.1
-#define P1_CCW_PHASE_HI			    0.1
-#define P1_PWM_PHASE_OFF		    0.1
-
-
+#define H1_DEFAULT_ENABLE           true
 #define H1_DEFAULT_P                7.0
-#define H1_DEFAULT_I                0.1
+#define H1_DEFAULT_I                0.2
 #define H1_DEFAULT_D                100.0
 
+#define H2_DEFAULT_ENABLE           true
 #define H2_DEFAULT_P                7.0
-#define H2_DEFAULT_I                0.1
+#define H2_DEFAULT_I                0.2
 #define H2_DEFAULT_D                100.0
 
+#define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                7.0
-#define H3_DEFAULT_I                0.1
+#define H3_DEFAULT_I                0.2
 #define H3_DEFAULT_D                100.0
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
-
-/*** User-Defined Data Defaults ***/
-
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0
