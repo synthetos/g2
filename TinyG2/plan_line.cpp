@@ -93,7 +93,7 @@ bool mp_get_runtime_busy()
         return (false);
     }
     if ((st_runtime_isbusy() == true) ||
-        (mr.move_state == MOVE_RUN) ||
+        (mr.block_state == BLOCK_ACTIVE) ||
         (mb.planner_state == PLANNER_STARTUP)) {    // could be != PLANNER_IDLE
         return (true);
     }
@@ -167,7 +167,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
 	copy_vector(mm.position, bf->gm.target);                // set the planner position
-	mp_commit_write_buffer(MOVE_TYPE_ALINE);                // commit current block (must follow the position update)
+	mp_commit_write_buffer(BLOCK_TYPE_ALINE);                // commit current block (must follow the position update)
 	return (STAT_OK);
 }
 
@@ -287,7 +287,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             bool test_decel_or_bump = false;
 
             // command blocks
-            if (bf->move_type == MOVE_TYPE_COMMAND) {
+            if (bf->block_type == BLOCK_TYPE_COMMAND) {
                 // Nothing in the buffer before this will get any more optimal, so we'll call it
                 optimal = true;
 
@@ -520,7 +520,7 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
 
 static void _calculate_throttle(mpBuf_t *bf)
 {
-//    if ((bf->move_type == MOVE_TYPE_ALINE) && (bf->plannable_time > 0)) {
+//    if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->plannable_time > 0)) {
 //        if (bf->plannable_time < (mb.planner_critical_time + PLANNER_THROTTLE_TIME)) {
 //            bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
 //                              (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));

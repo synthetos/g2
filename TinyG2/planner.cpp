@@ -197,7 +197,7 @@ void mp_flush_planner()
 {
 	cm_abort_arc();
 	mp_init_buffers();
-    mr.move_state = MOVE_OFF;   // invalidate mr buffer to prevent subsequent motion
+    mr.block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
 }
 
 /*
@@ -276,7 +276,7 @@ void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 		return;
 	}
 
-	bf->move_type = MOVE_TYPE_COMMAND;
+	bf->block_type = BLOCK_TYPE_COMMAND;
 	bf->bf_func = _exec_command;      // callback to planner queue exec function
 	bf->cm_func = cm_exec;            // callback to canonical machine exec function
 
@@ -284,7 +284,7 @@ void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 		bf->value_vector[axis] = value[axis];
 		bf->axis_flags[axis] = flag[axis];
 	}
-	mp_commit_write_buffer(MOVE_TYPE_COMMAND);			// must be final operation before exit
+	mp_commit_write_buffer(BLOCK_TYPE_COMMAND);			// must be final operation before exit
 }
 
 static stat_t _exec_command(mpBuf_t *bf)
@@ -353,10 +353,10 @@ stat_t mp_json_wait(char *json_string)
         return STAT_ERROR;
     }
 
-    bf->move_type = MOVE_TYPE_COMMAND;
+    bf->block_type = BLOCK_TYPE_COMMAND;
     bf->bf_func = _exec_json_wait;      // callback to planner queue exec function
 
-    mp_commit_write_buffer(MOVE_TYPE_COMMAND);			// must be final operation before exit
+    mp_commit_write_buffer(BLOCK_TYPE_COMMAND);			// must be final operation before exit
 
     return (STAT_OK);
 }
@@ -413,8 +413,8 @@ stat_t mp_dwell(float seconds)
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
 	bf->move_time = seconds;					        // in seconds, not minutes
-	bf->move_state = MOVE_NEW;
-	mp_commit_write_buffer(MOVE_TYPE_DWELL);			// must be final operation before exit
+	bf->block_state = BLOCK_INITIAL_ACTION;
+	mp_commit_write_buffer(BLOCK_TYPE_DWELL);			// must be final operation before exit
 	return (STAT_OK);
 }
 
@@ -903,12 +903,12 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 * been committed. Interrupts may use the buffer immediately, invalidating its contents.
 */
 
-void mp_commit_write_buffer(const moveType move_type)
+void mp_commit_write_buffer(const blockType block_type)
 {
-    mb.w->move_type = move_type;
-    mb.w->move_state = MOVE_NEW;
+    mb.w->block_type = block_type;
+    mb.w->block_state = BLOCK_INITIAL_ACTION;
 
-    if (move_type == MOVE_TYPE_ALINE) {
+    if (block_type == BLOCK_TYPE_ALINE) {
         if (cm.motion_state == MOTION_STOP) {
             cm_set_motion_state(MOTION_PLANNING);
         }
@@ -1019,7 +1019,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 //    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
 //        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
 //                mb.bf[i].buffer_state,
-//                mb.bf[i].move_type,
+//                mb.bf[i].block_type,
 //                mb.bf[i].locked,
 //                mb.bf[i].plannable);
 //        if (&mb.bf[i] == mb.r) {

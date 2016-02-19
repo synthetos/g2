@@ -67,7 +67,7 @@ stat_t mp_plan_move()
         return (STAT_NOOP);
     }
 
-    if (bf->move_type != MOVE_TYPE_ALINE) {
+    if (bf->block_type != BLOCK_TYPE_ALINE) {
         // Nothing to see here...
 
         bf->buffer_state = MP_BUFFER_PLANNED;
@@ -94,7 +94,7 @@ stat_t mp_plan_move()
             return (STAT_NOOP);
         }
 
-        if (bf->move_type != MOVE_TYPE_ALINE) {
+        if (bf->block_type != BLOCK_TYPE_ALINE) {
             // Nothing to see here...
 
             bf->buffer_state = MP_BUFFER_PLANNED;
@@ -147,7 +147,7 @@ stat_t mp_exec_move()
         return (STAT_NOOP);
     }
 
-    if (bf->move_type == MOVE_TYPE_ALINE) { 			// cycle auto-start for lines only
+    if (bf->block_type == BLOCK_TYPE_ALINE) { 			// cycle auto-start for lines only
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
@@ -262,12 +262,12 @@ stat_t mp_exec_move()
  */
 /* --- State transitions - hierarchical state machine ---
  *
- *	bf->move_state transitions:
+ *	bf->block_state transitions:
  *	 from _NEW to _RUN on first call (sub_state set to _OFF)
  *	 from _RUN to _OFF on final call
  * 	 or just remains _OFF
  *
- *	mr.move_state transitions on first call from _OFF to one of _HEAD, _BODY, _TAIL
+ *	mr.block_state transitions on first call from _OFF to one of _HEAD, _BODY, _TAIL
  *	Within each section state may be
  *	 _NEW - trigger initialization
  *	 _RUN1 - run the first part
@@ -294,12 +294,12 @@ stat_t mp_exec_move()
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
-    if (bf->move_state == MOVE_OFF) {
+    if (bf->block_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
 
     // Initialize all new blocks, regardless of normal or feedhold operation
-    if (mr.move_state == MOVE_OFF) {
+    if (mr.block_state == BLOCK_INACTIVE) {
 
         // too short lines have already been removed...
         // so is the following code is no longer needed ++++ ash
@@ -310,8 +310,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t)); // copy in the gcode model state
-        bf->move_state = MOVE_RUN;                      // note that this buffer is running -- note the planner doesn't look at move_state
-        mr.move_state = MOVE_NEW;
+        bf->block_state = BLOCK_ACTIVE;                      // note that this buffer is running -- note the planner doesn't look at block_state
+        mr.block_state = BLOCK_INITIAL_ACTION;
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
 
@@ -447,8 +447,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (5) - decelerated to zero
         // Update the run buffer then force a replan of the whole planner queue
         if (cm.hold_state == FEEDHOLD_DECEL_END) {
-            mr.move_state = MOVE_OFF;	                                // invalidate mr buffer to reset the new move
-            bf->move_state = MOVE_NEW;                                  // tell _exec to re-use the bf buffer
+            mr.block_state = BLOCK_INACTIVE;	                                // invalidate mr buffer to reset the new move
+            bf->block_state = BLOCK_INITIAL_ACTION;                                  // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
             //bf->entry_vmax = 0;                                         // set bp+0 as hold point
 
@@ -459,7 +459,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Cases (1a, 1b), Case (2), Case (4)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
-            ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.move_state == MOVE_NEW))) {
+            ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.block_state == BLOCK_INITIAL_ACTION))) {
 
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
                 if (fp_ZERO(mr.r->exit_velocity)) {
@@ -499,7 +499,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
     }
 
-    mr.move_state = MOVE_RUN;
+    mr.block_state = BLOCK_ACTIVE;
 
     // NB: from this point on the contents of the bf buffer do not affect execution
 
@@ -520,28 +520,28 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Case (5): Look for the end of the deceleration to go into HOLD state
     if ((cm.hold_state == FEEDHOLD_DECEL_TO_ZERO) && (status == STAT_OK)) {
         cm.hold_state = FEEDHOLD_DECEL_END;
-        bf->move_state = MOVE_NEW;                      // reset bf so it can restart the rest of the move
+        bf->block_state = BLOCK_INITIAL_ACTION;                      // reset bf so it can restart the rest of the move
     }
 
     // There are 4 things that can happen here depending on return conditions:
-    //  status       bf->move_state   Description
+    //  status       bf->block_state   Description
     //  -----------	 --------------   ----------------------------------------
     //  STAT_EAGAIN  <don't care>     mr buffer has more segments to run
-    //  STAT_OK       MOVE_RUN        mr and bf buffers are done
-    //  STAT_OK       MOVE_NEW        mr done; bf must be run again (it's been reused)
+    //  STAT_OK       BLOCK_ACTIVE        mr and bf buffers are done
+    //  STAT_OK       BLOCK_INITIAL_ACTION        mr done; bf must be run again (it's been reused)
     //  There is no fourth thing. Nobody expects the Spanish Inquisition
 
     if (status == STAT_EAGAIN) {
         sr_request_status_report(SR_REQUEST_TIMED);		// continue reporting mr buffer
         // Note that tha'll happen in a lower interrupt level.
     } else {
-        mr.move_state = MOVE_OFF;						// invalidate mr buffer (reset)
+        mr.block_state = BLOCK_INACTIVE;						// invalidate mr buffer (reset)
         mr.section_state = SECTION_OFF;
         mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
         mr.entry_velocity     = mr.r->exit_velocity;     // feed the old exit into the entry.
 
-        if (bf->move_state == MOVE_RUN) {
+        if (bf->block_state == BLOCK_ACTIVE) {
             if (mp_free_run_buffer()) { // returns true of the buffer is empty
                 if (cm.hold_state == FEEDHOLD_OFF) {
                     cm_cycle_end();	// free buffer & end cycle if planner is empty
