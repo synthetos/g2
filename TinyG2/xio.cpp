@@ -496,7 +496,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     };
 
     virtual void flushRead() final {
-        // FLush out any partially or wholly read lines being stored:
+        // Flush out any partially or wholly read lines being stored:
         _flushLine();
         return _dev->flushRead();
     }
