@@ -120,7 +120,7 @@ struct _json_commands_t {
 _json_commands_t jc;
 
 // Local Scope Data and Functions
-#define spindle_speed move_time	// local alias for spindle_speed to the time variable
+#define spindle_speed block_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
 
 //static void _planner_time_accounting();
@@ -143,10 +143,7 @@ void planner_init()
 	memset(&mr, 0, sizeof(mr));	            // clear all values, pointers and status
 	planner_init_assertions();
 	mp_init_buffers();
-
-    // reasonable starting values
     mp.mfo_factor = 1.00;
-    mp.planner_critical_time = PLANNER_CRITICAL_TIME;
 }
 
 void planner_reset()
@@ -158,6 +155,7 @@ void planner_reset()
  * planner_init_assertions()
  * planner_test_assertions() - test assertions, PANIC if violation exists
  */
+
 void planner_init_assertions()
 {
     // Note: mb magic numbers set up by mp_init_buffers()
@@ -276,7 +274,6 @@ void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
 		cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_queue_command()");
 		return;
 	}
-
 	bf->block_type = BLOCK_TYPE_COMMAND;
 	bf->bf_func = _exec_command;      // callback to planner queue exec function
 	bf->cm_func = cm_exec;            // callback to canonical machine exec function
@@ -307,9 +304,8 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 /*************************************************************************
  * mp_json_command() 	 - queue a json command
  * _exec_json_command() - execute json string
- *
- *
  */
+
 stat_t mp_json_command(char *json_string)
 {
     // Never supposed to fail, since we stopped parsing when we were full
@@ -326,21 +322,16 @@ stat_t mp_json_command(char *json_string)
 static void _exec_json_command(float *value, bool *flag)
 {
     char *json_string = jc.read_buffer();
-
-    // process it
-    json_parse_for_exec(json_string, true); // do execute
-
+    json_parse_for_exec(json_string, true); // process it
     jc.free_buffer();
 }
-
 
 
 /*************************************************************************
  * mp_json_wait() 	 - queue a json wait command
  * _exec_json_wait() - execute json wait string
- *
- *
  */
+
 stat_t mp_json_wait(char *json_string)
 {
     // Never supposed to fail, since we stopped parsing when we were full
@@ -353,12 +344,9 @@ stat_t mp_json_wait(char *json_string)
         cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_json_wait()");
         return STAT_ERROR;
     }
-
     bf->block_type = BLOCK_TYPE_COMMAND;
     bf->bf_func = _exec_json_wait;      // callback to planner queue exec function
-
     mp_commit_write_buffer(BLOCK_TYPE_COMMAND);			// must be final operation before exit
-
     return (STAT_OK);
 }
 
@@ -376,23 +364,19 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
             bool old_value = !fp_ZERO(nv->value); // force it to bool
 
             nv_get_nvObj(nv);
-
             bool new_value = !fp_ZERO(nv->value);
             if (old_value != new_value) {
                 st_prep_dwell((uint32_t)(0.1 * 1000000.0));// 1ms converted to uSec
                 return STAT_OK;
             }
         }
-
         nv = nv->nx;
     }
-
     jc.free_buffer();
 
     if (mp_free_run_buffer()) {
         cm_cycle_end();									// free buffer & perform cycle_end if planner is empty
     }
-
     return (STAT_OK);
 }
 
@@ -413,7 +397,7 @@ stat_t mp_dwell(float seconds)
 		return(cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_dwell()")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
-	bf->move_time = seconds;					        // in seconds, not minutes
+	bf->block_time = seconds;					        // in seconds, not minutes
 	bf->block_state = BLOCK_INITIAL_ACTION;
 	mp_commit_write_buffer(BLOCK_TYPE_DWELL);			// must be final operation before exit
 	return (STAT_OK);
@@ -421,7 +405,7 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->move_time * 1000000.0));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->block_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
     }
@@ -473,174 +457,73 @@ bool mp_is_phat_city_time()
     return ((mp.plannable_time <= 0.0) || (PHAT_CITY_TIME < mp.plannable_time));
 }
 
-/**** Helper functions for mp_plan_buffer()
- * _stop_new_block_timer() - used to disable timer if blocks are not arriving
- * _reset_new_block_timer() - restart new block timer
- * _get_new_block_timeout() - detect a timeout
- * _set_planner_state() - set planner state optimistic or pessimistic
- */
-static void _stop_new_block_timer()
-{
-    mp.new_block_timer = 0;
-    mp.new_block_timeout = false;
-}
-
-static void _reset_new_block_timer()
-{
-    mp.new_block_timer = SysTickTimer.getValue() + NEW_BLOCK_TIMEOUT_MS;
-    mp.new_block_timeout = false;
-}
-
-static bool _get_new_block_timeout()
-{
-//    mp.new_block_timeout = false;
-    if ((mp_planner_is_full()) || (mp.new_block_timer == 0)) {
-        _reset_new_block_timer();       // sets mp.new_block_timeout = false;
-    } else if (mp.new_block_timer < SysTickTimer.getValue()) {
-        mp.new_block_timeout = true;
-    }
-    return (mp.new_block_timeout);
-}
-
 /*
- * mp_plan_buffer()
+ * mp_planner_callback()
  *
- *  mp_plan_buffer()'s job is to invoke planning intelligently. Items to note:
+ *  mp_planner_callback()'s job is to invoke backward planning intelligently. 
+ *  The flow of control and division of responsibilities for planning is:
  *
- *    - At the start of a job the planner should fill up with unplanned blocks before
- *      motion starts. This eliminates an initial move that plans to zero and ensures
- *      the planner gets a "head start" on managing the time in the planner queue.
+ *  - mp_aline() receives new Gcode blocks and initializes the local variables 
+ *    for the new block. It also manages block merges that sometimes result in 
+ *    no actual increase in the number of blocks in the planner queue, as the 
+ *    new block is consumed by a block merge.
  *
- *    - The planner should attempt to operate in OPTIMISTIC mode whenever possible, i.e.
- *      It should not plan the last block and assume that the next block will arrive in
- *      time and be a continuation of the movement. When this case is no longer true the
- *      planner switches to PESSIMISTIC mode where all blocks are planned, and the last
- *      block is always planned to zero (the tail). This handles the "last line" case
- *      of a legitimate tail.
+ *  - mp_planner_callback() is called regularly from the main loop. 
+ *    It's job is to determine whether or not to call mp_plan_block_list(),
+ *    which will back-plan as many blocks as are ready for processing.
+ * 
+ *    mp_planner_callback() also manages planner state - whether the planner
+ *    is IDLE, in STARTUP or in one of the running states. 
  *
- *      Planning optimistically minimizes "overplanning" - i.e. moves planned multiple
- *      times (particularly tails). This requires leaving one unplanned move at the
- *      end (N) of the buffer, so the N-1 block always has a valid exit velocity to
- *      plan to (the entry velocity of the Nth block).
+ *  - _plan_block_list() / _planblock() is the backward planning function. 
  *
- *	  - An intermediate CAUTIOUS mode is also required if there is insufficient time in
- *		the plan to decelerate from the target velocity to zero. Cautious mode limits the
- *		target velocity so that deceleration is always possible
+ *  - Forward planning is just-in-time by the execution runtime
  *
- *    - It's important to distinguish between the case where the new block is actually a
- *      startup condition and where it's the first block after a stop or a stall. The
- *      planner wants to perform a STARTUP in the first case, but start planning
- *      immediately in the latter cases.
+ *  Some Items to note:
  *
-     - A hard case is where a long block is immediately followed by a very short block
- *      at the same velocity, with no more blocks behind them. In this case the first block
- *      will run and  lock, and the second block may have insufficient distance to get to zero.
+ *  - At the start of a job the planner should fill up with unplanned blocks before
+ *    motion starts. This eliminates an initial move that plans to zero and ensures
+ *    the planner gets a "head start" on managing the time in the planner queue.
  *
- *  State Machine (See planner.h/ plannerState)
+ *  - It's important to distinguish between the case where the new block is actually
+ *    a startup condition and where it's the first block after a stop or a stall.
+ *    The planner wants to perform a STARTUP in the first case, but start planning
+ *    immediately in the latter cases.
  *
- *         -------------                 --------------
- *        |             |  all stopped  |              |
- *        |     IDLE    |<--------------| PESSIMISTIC  |
- *        |             |       ------->|   [P]  [N]   |
- *         -------------       /         --------------
- *               |  new       /               ^  |
- *               | block     / timeout    (1) |  | (2)
- *               V          /                 |  V
- *         -------------   /             --------------
- *        |             |--             |              |
- *        |   STARTUP   |-------------->|  OPTIMISTIC  |
- *        |             | planner full  |              |
- *         -------------                 --------------
- *
- *  TRANSITIONS
- *    (1) time in planner is down to critical level or new blocks are not arriving fast enough
- *    (2) time in planner is back in safe region and/or new blocks are arriving fast enough
- *
- *  CRITICAL can be entered in one 2 conditions, or both (sub-states):
- *    [P] plannable_time < PLANNER_TIME_CRITICAL: planned time is dangerously low (about to starve)
- *    [N] new_block_timeout == true: buffer arrival rate is dangerously low (no new blocks)
+ *  - Feedholds require replanning to occur
  */
-/*  Has to accurately detect end conditions to go pessimistic:
- *    Case 1: Single block arrives, followed by timeout
- *    Case 2: Two blocks arrive - both short, followed by timeout
- *    Case 3: Two blocks arrive - long followed by a short - w/o timeout
- *    Case 4: Two blocks arrive - long followed by a short - w timeout in between
- *    Case 5: Three blocks arrive - first 2 starts running, then a third block arrives after timeout, Tplan < critical on arrival of #3
- *    Case 6: Three blocks arrive - first 2 starts running, then a third block arrives after timeout, Tplan > critical on arrival of #3
- *    Case 7: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan < critical
- *    Case 8: Sequence of blocks plans optimistically, timeout, followed by a Nth block. Tplan > critical
- */
-/*
- *	CAUTIOUS PLANNING occurs when the time in the planner is insufficient to plan to zero
- *	from the target velocity (Vt). Vt must be limited so that a deceleration to zero is
- *	possible in the available time.
- *
- *	Terms
- *	  - Head - blocks are removed from the head of the planner queue - inserted in the tail
- *	  - Running block - the block that is currently running (at the head)
- *    - Ondeck block - the next block to run. If nothing is running it's the head block N,
- *                     otherwise it's the block behind the running (head) block, N+1
- *
- *  Factors influencing cautious mode include:
- *	  - Vtarget (Vt) - the requested velocity of a block
- *	  - Vrun (Vr)    - the velocity of the running block
- *    - Vondeck (Vo) - the velocity of the ondeck block
- *	  - To-plan      - time in the planner measured from the ondeck block
- *    - Trun         - time remaining in the runtime (estimated)
- *    - Ttimeout     - block timeout time - e.g. 30 ms
- *    - Treplan      - time required to replan the queue (worst case, e.g. 10 ms)
- *	  - T_-decel     - time required to decelerate from a velocity to zero (Vt, Vr, Vo)
- *    - L_-decel     - the distance (length) required to decelerate from Vt, Vr, Vo
- *
- *  Lemma1: The following equality must always be true: To-decel < (To-plan - Ttimeout - Treplan)
- *          This requires Vo to be limited so this is always true.
- *
- *  Lemma2: Vo must equal the exit velocity of the run block
- */
+
 stat_t mp_planner_callback()
 {
-    if (!mp.request_planning) {
-        if ((mb.buffers_available == PLANNER_BUFFER_POOL_SIZE) &&
-            (cm.motion_state == MOTION_STOP) &&
-            (cm.hold_state == FEEDHOLD_OFF)) {
-            mp.planner_state = PLANNER_IDLE;
-        }
-        if ((mp.planner_state == PLANNER_PRIMING) && (!mp.new_block)) { // shortcut out of here
-            return (STAT_NOOP);
-        }
-        if (mp.planner_state == PLANNER_IDLE) {
-            if (!mp.new_block) {
-                _stop_new_block_timer();
-                return (STAT_NOOP);
-            }
-            mp.p = mb.r;                                // initialize planner pointer to run buffer
-            mp.planner_state = PLANNER_STARTUP;
-        }
-    }
-    else {
-        mp.request_planning = false;
-    }
-    if (mp.new_block) {
-        _reset_new_block_timer();
-        mp.new_block = false;
-    }
-
-    // set planner state
-    if (mp.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
-        if (mp_planner_is_full() || _get_new_block_timeout()) {
-            mp.planner_state = PLANNER_PRIMING;     // start planning now
-        } else {
-            return (STAT_OK);                           // accumulate new blocks until it's time to plan
-        }
-    }
-    else if (_get_new_block_timeout() || mp.plannable_time < mp.planner_critical_time) {
-        mp.planner_state = PLANNER_PRIMING;
-    }
-
-    if (mp.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
+    // Test if the planner has transitioned to an IDLE state
+    if ((mb.buffers_available == PLANNER_BUFFER_POOL_SIZE) &&   // detect and set IDLE state
+        (cm.motion_state == MOTION_STOP) &&
+        (cm.hold_state == FEEDHOLD_OFF)) {
+        mp.planner_state = PLANNER_IDLE;
         return (STAT_OK);
     }
-    mp_plan_block_list();                               // plan blocks optimistically or pessimistically
+
+    bool _timed_out = mp.block_timeout.isPast();
+    if (_timed_out) {
+        mp.block_timeout.clear();                   // timer is set on commit_write_buffer()
+    }
+
+    if (!mp.request_planning && !_timed_out) {      // Exit if no request or timeout
+        return (STAT_OK);
+    }
+
+    // Process a planner request or timeout
+    if (mp.planner_state == PLANNER_IDLE) {
+        mp.p = mb.r;                                // initialize planner pointer to run buffer
+        mp.planner_state = PLANNER_STARTUP;
+    }
+    if (mp.planner_state == PLANNER_STARTUP) {
+        if (!mp_planner_is_full() && !_timed_out) {
+            return (STAT_OK);                       // remain in STARTUP
+        }
+        mp.planner_state = PLANNER_PRIMING;
+    }
+    mp_plan_block_list();
     return (STAT_OK);
 }
 
@@ -719,36 +602,19 @@ void mp_end_feed_override(const float ramp_time)
 void mp_planner_time_accounting()
 {
     mpBuf_t *bf = mb.r;                             // start with run buffer
-//    bool in_critical = true;                        // used to look for transition to critical region
 
     // check the run buffer to see if anything is running. Might not be
-//    bf->plannable_time = 0;                         // set to zero if running or not
-//    bf->plannable_time_ms = 0;                      // leaves move_time alone
-//    bf->plannable_length = 0;                       //
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
-
-    // set values in the running block / based on the running block
-    float plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
-//    mp.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
-//    mp.best_case_braking_time_ms = mp.best_case_braking_time * 60000; //+++++
-
-    // scan and set all non-empty buffers (plannable buffers)
+    mp.plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
     while ((bf = bf->nx) != mb.r) {
         if (bf->buffer_state == MP_BUFFER_EMPTY || bf->plannable == true) {
             break;
         }
-        plannable_time += bf->move_time;
-//        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
-//        bf->plannable_length = bf->length + bf->pv->plannable_length;
-
-//        if (in_critical && (plannable_time >= mp.planner_critical_time)) {
-//            in_critical = false;
-//            mp.c = bf;                          // mark the first non-critical block
-//        }
+        mp.plannable_time += bf->block_time;
     }
-    mp.plannable_time = plannable_time;  UPDATE_MB_MS //+++++
+    UPDATE_MP_DIAGNOSTICS //+++++
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -924,13 +790,14 @@ void mp_commit_write_buffer(const blockType block_type)
         if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_plan_move();	// requests an exec if the runtime is not busy
+            st_request_plan_move();	            // request an exec if the runtime is not busy
         }
     }
-    mb.w->plannable = true;         // enables the block for planning
-    mp.new_block = true;			// got a new block to plan
-    mb.w = mb.w->nx;                // advance the write buffer pointer
-    qr_request_queue_report(+1);    // request a QR and add to the "added buffers" count
+    mb.w->plannable = true;                     // enable block for planning
+    mp.request_planning = true;
+    mb.w = mb.w->nx;                            // advance write buffer pointer
+    mp.block_timeout.set(BLOCK_TIMEOUT_MS);     // reset the block timer
+    qr_request_queue_report(+1);                // request QR and add to "added buffers" count
 }
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
@@ -991,7 +858,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
         printf ("%d,",    (int)bf->plannable);
         printf ("%d,",    (int)bf->iterations);
 
-        printf ("%1.2f,", bf->move_time_ms);
+        printf ("%1.2f,", bf->block_time_ms);
         printf ("%1.2f,", bf->plannable_time_ms);
         printf ("%1.3f,", bf->override_factor);
         printf ("%1.3f,", bf->throttle);

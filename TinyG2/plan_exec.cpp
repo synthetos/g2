@@ -2,8 +2,8 @@
  * plan_exec.cpp - execution function for acceleration managed lines
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2015 Rob Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -256,9 +256,9 @@ stat_t mp_exec_move()
  *	  Period 4	  V = Vh + As*T + Jm*(T^2)/2
  *
  * 	These routines play some games with the acceleration and move timing
- *	to make sure this actually all works out. move_time is the actual time of the
- *	move, accel_time is the time valaue needed to compute the velocity - which
- *	takes the initial velocity into account (move_time does not need to).
+ *	to make sure this actually all works out. block_time is the actual time of the
+ *	move, accel_time is the time value needed to compute the velocity - which
+ *	takes the initial velocity into account (block_time does not need to).
  */
 /* --- State transitions - hierarchical state machine ---
  *

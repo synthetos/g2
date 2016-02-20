@@ -38,6 +38,8 @@
 
 #include "xio.h"
 
+//using Motate::Timeout;
+
 // Using motate pins for profiling (see main.cpp)
 // see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
 using namespace Motate;
@@ -55,10 +57,10 @@ static void _calculate_junction_vmax(mpBuf_t *bf);
 //+++++DIAGNOSTICS
 #pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
 //#pragma GCC reset_options
-static void _set_diagnostics(mpBuf_t *bf)
+static void _set_bf_diagnostics(mpBuf_t *bf)
 {
     bf->linenum = bf->gm.linenum;
-//    UPDATE_BF_MS(bf);   //+++++
+//    UPDATE_BF_DIAGNOSTICS(bf);   //+++++
 }
 #pragma GCC reset_options
 
@@ -161,11 +163,11 @@ stat_t mp_aline(GCodeState_t *gm_in)
     }
     _calculate_jerk(bf);                                    // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);        // compute cruise_vmax and absolute_vmax
-    _set_diagnostics(bf);                                   //+++++DIAGNOSTIC
+    _set_bf_diagnostics(bf);                                //+++++DIAGNOSTIC
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
 	copy_vector(mp.position, bf->gm.target);                // set the planner position
-	mp_commit_write_buffer(BLOCK_TYPE_ALINE);                // commit current block (must follow the position update)
+	mp_commit_write_buffer(BLOCK_TYPE_ALINE);               // commit current block (must follow the position update)
 	return (STAT_OK);
 }
 
@@ -232,10 +234,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
                 bf->pv->exit_vmax = min3(bf->pv->junction_vmax, bf->pv->cruise_vmax, bf->cruise_vmax);
             }
         }
-
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
 //        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
-
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
         // +++++ Why do we have to do this here?
@@ -246,7 +246,6 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
         if (bf->nx->plannable) {                        // read in new buffers until EMPTY
             return (bf->nx);
         }
-
         mp.planning_return = bf->nx;                    // where to return after planning is complete
         mp.planner_state = PLANNER_BACK_PLANNING;    // start backplanning
     }
@@ -402,7 +401,7 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
 
     // generate ramp term is a ramp is active
     if (mp.ramp_active) {
-        bf->override_factor += mp.ramp_dvdt * bf->move_time;
+        bf->override_factor += mp.ramp_dvdt * bf->block_time;
         if (mp.ramp_dvdt > 0) {                             // positive is an acceleration ramp
             if (bf->override_factor > mp.ramp_target) {
                 bf->override_factor = mp.ramp_target;
@@ -482,7 +481,7 @@ static void _calculate_jerk(mpBuf_t *bf)
  *	  -	time for coordinated move at requested feed rate
  *	  -	time that the slowest axis would require for the move
  *
- *	bf->move_time corresponds to bf->cruise_vmax and is either the velocity resulting from
+ *	bf->block_time corresponds to bf->cruise_vmax and is either the velocity resulting from
  *  the requested feed rate or the fastest possible (minimum time) if the requested feed
  *  rate is not achievable. Move times for traverses are always the minimum time.
  *
@@ -539,7 +538,7 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 	float max_time=0;				// time required for the rate-limiting axis
 	float tmp_time=0;				// temp value used in computation
 	float min_time=8675309;	        // looking for fastest possible execution (seed w/arbitrarily large number)
-    float move_time;                // resulting move time
+    float block_time;                // resulting move time
 
 	// compute feed time for feeds and probe motion
 	if (bf->gm.motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
@@ -570,12 +569,12 @@ static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const floa
 		    }
         }
 	}
-    move_time = max3(feed_time, max_time, MIN_BLOCK_TIME);
+    block_time = max3(feed_time, max_time, MIN_BLOCK_TIME);
     min_time = max(min_time, MIN_BLOCK_TIME);
-    bf->cruise_vset = bf->length / move_time;       // target velocity requested
+    bf->cruise_vset = bf->length / block_time;       // target velocity requested
     bf->cruise_vmax = bf->cruise_vset;              // starting value for cruise vmax
     bf->absolute_vmax = bf->length / min_time;      // absolute velocity limit
-    bf->move_time = move_time;                      // initial estimate - used for ramp computations
+    bf->block_time = block_time;                     // initial estimate - used for ramp computations
 }
 
 /*
