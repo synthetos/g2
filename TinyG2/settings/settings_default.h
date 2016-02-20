@@ -841,6 +841,12 @@
 
 // *** Heater Settings - relevant to 3dp machines *** //
 
+#ifndef MIN_FAN_TEMP
+#define MIN_FAN_TEMP                40.0
+#endif
+#ifndef MAX_FAN_TEMP
+#define MAX_FAN_TEMP                150.0
+#endif
 #ifndef H1_DEFAULT_ENABLE
 #define H1_DEFAULT_ENABLE           false
 #endif

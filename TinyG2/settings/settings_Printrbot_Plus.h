@@ -341,6 +341,9 @@
 
 /*** Extruders / Heaters ***/
 
+#define MIN_FAN_TEMP                40.0
+#define MAX_FAN_TEMP                150.0
+
 #define H1_DEFAULT_ENABLE           true
 #define H1_DEFAULT_P                7.0
 #define H1_DEFAULT_I                0.1
@@ -356,5 +359,3 @@
 #define H3_DEFAULT_I                0.1
 #define H3_DEFAULT_D                100.0
 
-constexpr float MIN_FAN_TEMP = 40.0;
-constexpr float MAX_FAN_TEMP = 150.0;
