@@ -47,9 +47,7 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t *_plan_block(mpBuf_t *bf);
-//static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
 static void _calculate_override(mpBuf_t *bf);
-static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
 static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t *bf);
@@ -94,7 +92,7 @@ bool mp_get_runtime_busy()
     }
     if ((st_runtime_isbusy() == true) ||
         (mr.block_state == BLOCK_ACTIVE) ||
-        (mb.planner_state == PLANNER_STARTUP)) {    // could be != PLANNER_IDLE
+        (mp.planner_state == PLANNER_STARTUP)) {    // could be != PLANNER_IDLE
         return (true);
     }
 	return (false);
@@ -131,7 +129,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     float length;
 
 	for (uint8_t axis=0; axis<AXES; axis++) {
-		axis_length[axis] = gm_in->target[axis] - mm.position[axis];
+		axis_length[axis] = gm_in->target[axis] - mp.position[axis];
         if ((flags[axis] = fp_NOT_ZERO(axis_length[axis]))) { // yes, this supposed to be = not ==
             axis_square[axis] = square(axis_length[axis]);
 		    length_square += axis_square[axis];
@@ -166,7 +164,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
     _set_diagnostics(bf);                                   //+++++DIAGNOSTIC
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
-	copy_vector(mm.position, bf->gm.target);                // set the planner position
+	copy_vector(mp.position, bf->gm.target);                // set the planner position
 	mp_commit_write_buffer(BLOCK_TYPE_ALINE);                // commit current block (must follow the position update)
 	return (STAT_OK);
 }
@@ -186,7 +184,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 void mp_plan_block_list()
 {
-    mpBuf_t *bf = mb.p;
+    mpBuf_t *bf = mp.p;
     bool planned_something = false;
 
     while (true) {
@@ -197,21 +195,21 @@ void mp_plan_block_list()
 
         // OK to replan running buffer during feedhold, but no other times (not supposed to happen)
         if ((cm.hold_state == FEEDHOLD_OFF) &&  (bf->buffer_state == MP_BUFFER_RUNNING)) {
-            mb.p = mb.p->nx;
+            mp.p = mp.p->nx;
             return;
         }
 
         bf = _plan_block(bf);           // returns next block to plan
 
         planned_something = true;
-        mb.p = bf;      //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
+        mp.p = bf;      //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
-    if (mb.planner_state > PLANNER_STARTUP) {
+    if (mp.planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
             st_request_plan_move();                     // start motion if runtime is not already busy
         }
     }
-    mb.p = bf;                                      // update planner pointer
+    mp.p = bf;                                      // update planner pointer
 }
 
 /*
@@ -222,7 +220,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 {
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
-    if (mb.planner_state == PLANNER_PRIMING) {
+    if (mp.planner_state == PLANNER_PRIMING) {
         // Timings from *here*
 
         if (bf->pv->plannable) {
@@ -236,10 +234,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
         }
 
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
-
 //        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
-
-        _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
 
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
@@ -252,8 +247,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
             return (bf->nx);
         }
 
-        mb.planning_return = bf->nx;                    // where to return after planning is complete
-        mb.planner_state = PLANNER_BACK_PLANNING;    // start backplanning
+        mp.planning_return = bf->nx;                    // where to return after planning is complete
+        mp.planner_state = PLANNER_BACK_PLANNING;    // start backplanning
     }
 
     // Backward Planning Pass
@@ -262,7 +257,7 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
     // Note: Vmax's are already set by the time you get here
     // Hint options from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
 
-    if (mb.planner_state == PLANNER_BACK_PLANNING) {
+    if (mp.planner_state == PLANNER_BACK_PLANNING) {
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0; // we use this to stre the previous entry velocity, start at 0
@@ -385,13 +380,12 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
         } // for loop
     } // exits with bf pointing to a locked or EMPTY block
 
-    mb.planner_state = PLANNER_PRIMING; // revert to initial state
-    return (mb.planning_return);
+    mp.planner_state = PLANNER_PRIMING; // revert to initial state
+    return (mp.planning_return);
 }
 
 /***** ALINE HELPERS *****
  * _calculate_override() - calculate cruise_vmax given cruise_vset and feed rate factor
- * _calculate_throttle() - adjust cruise_vmax for throttling
  * _calculate_jerk()
  * _calculate_vmaxes()
  * _calculate_junction_vmax()
@@ -407,22 +401,22 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
     bf->cruise_vmax = bf->override_factor * bf->cruise_vset;
 
     // generate ramp term is a ramp is active
-    if (mb.ramp_active) {
-        bf->override_factor += mb.ramp_dvdt * bf->move_time;
-        if (mb.ramp_dvdt > 0) {                             // positive is an acceleration ramp
-            if (bf->override_factor > mb.ramp_target) {
-                bf->override_factor = mb.ramp_target;
-                mb.ramp_active = false;                     // detect end of ramp
+    if (mp.ramp_active) {
+        bf->override_factor += mp.ramp_dvdt * bf->move_time;
+        if (mp.ramp_dvdt > 0) {                             // positive is an acceleration ramp
+            if (bf->override_factor > mp.ramp_target) {
+                bf->override_factor = mp.ramp_target;
+                mp.ramp_active = false;                     // detect end of ramp
             }
             bf->cruise_velocity *= bf->override_factor;
             if (bf->cruise_velocity > bf->absolute_vmax) {  // test max cruise_velocity
                 bf->cruise_velocity = bf->absolute_vmax;
-                mb.ramp_active = false;                     // don't allow exceeding absolute_vmax
+                mp.ramp_active = false;                     // don't allow exceeding absolute_vmax
             }
       } else {                                              // negative is deceleration ramp
-            if (bf->override_factor < mb.ramp_target) {
-                bf->override_factor = mb.ramp_target;
-                mb.ramp_active = false;
+            if (bf->override_factor < mp.ramp_target) {
+                bf->override_factor = mp.ramp_target;
+                mp.ramp_active = false;
             }
             bf->cruise_velocity *= bf->override_factor;      // +++++ this is probably wrong
         //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,
@@ -444,120 +438,6 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
     //     ...
     // }
 }
-
-/*
- * _calculate_throttle() - perform pro-active velocity throttling to prevent planner starvation
- *
- *  Planner throttling is needed when the arrival rate of new blocks (moves) cannot keep up
- *  with the service rate of the blocks (i.e. how fast they are removed by the runtime).
- *  For example, it is possible to receive a series of blocks that take only the minimum
- *  block time to execute; i.e. they represent about 0.75 milliseconds of machine motion each.
- *  If the average arrival and processing time for new blocks is about 4 ms (as is typical),
- *  the planner will starve. The solution is to preemptively slow down the "fast" blocks so
- *  that the service rate and arrival rate are matched and the planner does not starve.
- *  This necessarily limits the top speed the planner can achieve, but is far preferable to
- *  "stuttering". This rate-limiting is what throttling does. Looked at another way, throttling
- *  is an "automatic gain control" circuit (AGC) for the planner, and the AGC literature offers
- *  some insight as to how throttling should work.
- *
- *  These three cases illustrate the main scenarios encountered in common Gcode files:
- *
- *  Case 1: A single block arrives that is less than the minimum block time. I.e. at the
- *          requested speed it would take less than 0.75 ms to execute. This is dealt with
- *          during calculate_vmaxes() by setting the block to minimum to ensure no blocks
- *          are unplannable.
- *
- *  Case 2: A burst of blocks arrive that are less than the average arrival rate, causing
- *          the planner queue to empty faster than it can be supplied with new blocks.
- *          However, since the burst is not sustained the planner queue can compensate
- *          because averaged over time will not get to critically low levels (or starve).
- *
- *  Case 3: A prolonged series of blocks arrive that are less than the average arrival rate,
- *          causing the planner queue to starve. (Cases 2 and 3 are really just a matter of
- *          degree, but are worth examining separately.)
- *
- *  Algorithm:
- *
- *  Blocks are labeled with their expected execution time (move_time), and the entire queue
- *  is divided into regions by summing these times to get time-in-plan (Tplan).
- *  In the ASCII-art below the block that is currently running is on the left
- *  and new blocks are added to the right:
- *
- *    RUN |-------------|------------------------------------|---------------------> NEW_BLOCK
- *        Tplan (~0)    Tcritical (eg. 20ms)                 Tthrottle (eg. 100ms)
- *
- *    - Tplan is 0 at the running block. Actually, the time in the runtime is also accounted
- *      for, so Tplan at the run block is usually a few ms > 0 (and sometimes way larger).
- *
- *    - If Tplan is less than Tcritical then the planner is in imminent danger of starving.
- *      It's worth noting that this case will always occur at the end of normal motion,
- *      (during pessimistic planning) and may occur normally in other cases. If the planner
- *      is pessimistic it's required to move through the throttle and critical regions
- *      without throttling, as you may actually be stopping.
- *
- *    - If Tplan is between Tcritical and Tthrottle the planner should slow down the moves
- *      (and the resulting Tplan) to prevent the end of the queue from entering the critical
- *      region. It does this by applying an adaptive throttle_factor based on the value of
- *      Tplan, computed as so:
- *
- *                                                      -------(Y=1, no throttling)---------
- *                                                 -----
- *                                            -----
- *                                       -----          (this is actually a straight line)
- *                                  -----
- *                             -----
- *                       -----
- *     -----------------     throttle minimum factor B, e.g. B = 0.15
- *    RUN |-------------|-----------------------------------|---------------------> NEW_BLOCK
- *        Tplan (~0)    Tcritical (eg. 20ms)                 Tthrottle (eg. 80ms)
- *
- *    Y = MX + B. where:
- *      M = slope = (1-B)/(Tcritical - Tthrottle)  (NB: this is a constant)
- *      X = time_in_throttle_region = Tplan - Tcritical
- *      B = intercept = minimum throttle factor
- *      Y = the resulting override factor to adjust move velocity
- */
-
-static void _calculate_throttle(mpBuf_t *bf)
-{
-//    if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->plannable_time > 0)) {
-//        if (bf->plannable_time < (mb.planner_critical_time + PLANNER_THROTTLE_TIME)) {
-//            bf->throttle = max(THROTTLE_MIN, ((THROTTLE_SLOPE *
-//                              (bf->plannable_time - mb.planner_critical_time)) + THROTTLE_INTERCEPT));
-//            bf->cruise_vmax *= bf->throttle;    // adjust the maximum achievable velocity
-//            bf->move_time *= bf->throttle;      // adjust the estimated move time as well
-//            printf ("%1.3f\n", bf->throttle);   //+++++
-//            return;
-//        }
-//    }
-    bf->throttle = THROTTLE_MAX;                // set to 1.00 in case it's needed for backplanning
-}
-
-/* _calculate_throttle() END NOTES:
- * It's also possible to perform throttling by tracking arrival and service rate directly, although
- * this is a predictor of starvation and not the actual starvation itself. The advantage is that
- * you can tell earlier that starvation may occur, and apply a throttle earlier. Some useful code:
-
- * _estimate_arrival_rate()
- *  This is pretty straightforward except for handling new_block timeouts, which you don't
- *  want to average as they are not representative of the normal incoming flow rate.
-
-static void _estimate_arrival_rate()
-{
-    float arrival_time = (float)SysTickTimer_getValue() * (1/60000.0);           // convert to minutes
-
-    // throw away samples if the buffer is blocked or blocks are not arriving (timing out)
-    if (mp_planner_is_full() || (arrival_time > (mb.prev_arrival_time + NEW_BLOCK_TIMEOUT_TIME))) {
-        mb.prev_arrival_time = arrival_time;
-        return;
-    }
-    // accumulate arrival time statistics. #define ARRIVAL_RATE_SAMPLES 4, for example
-    // (note: move_time_avg can be computed similarly)
-    mb.arrival_rate_avg = (mb.arrival_rate_avg * ((ARRIVAL_RATE_SAMPLES-1) / ARRIVAL_RATE_SAMPLES)) +
-                          ((arrival_time - mb.prev_arrival_time) * (1/ARRIVAL_RATE_SAMPLES));
-    mb.prev_arrival_time = arrival_time;
-}
-*/
 
 /*
  * _calculate_jerk() - calculate jerk given the dynamic state
@@ -777,38 +657,3 @@ static void _calculate_junction_vmax(mpBuf_t *bf)
     }
     bf->junction_vmax = velocity;
 }
-
-/*
- * _calculate_decel_time() - calculate time to decelerate from one velocity to another
- *
- *  Basic equation is:
- *    T^2 = (v1-v0) * sqrt(3) * (10/(3j))
- *    T^2 = (v1-v0) * sqrt(3) * (10/3) * (1/j)
- *    T   = sqrt((v1-v0) * sqrt(3) * (10/3) * (1/j))
- * if v0 = 0
- *    T   = sqrt(v1 * sqrt(3) * (10/3) * (1/j))
- *
- *  Alternately, if you know the length the deceleration requires (given the jerk):
- *    T^2 = (4*L^2)/((v0+v1)^2)     // where v0+v1 != 0
- *    T   = ±(2 L)/(v0+v1)
- */
-
-/*
-static const float decel_const = 5.773502692;   // sqrt(3) * (10/3);
-
-//#pragma GCC optimize ("O0") // this pragma is required to force the planner to actually set these unused values
-static float _calculate_decel_time(mpBuf_t *bf, float v1, float v0)
-{
-//    bf->decel_time = sqrt((v1-v0) * decel_const * bf->recip_jerk);
-    return (sqrt((v1-v0) * decel_const * bf->recip_jerk));
-}
-//#pragma GCC reset_options
-*/
-/*
-static const float accel_const = 5.773502692;   // sqrt(3) * (10/3);
-static void _adjust_move_time(mpBuf_t *bf)      // adjust move time now that we have entry and exit velocities
-{
-//    bf->move_time_alt = (2 * bf->length) / (bf->pv->exit_velocity + bf->exit_velocity);
-    bf->move_time_alt2 = sqrt(fabs(bf->exit_velocity - bf->pv->exit_velocity) * accel_const * bf->recip_jerk);
-}
-*/

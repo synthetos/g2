@@ -816,12 +816,17 @@ stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 	void cm_print_lim(nvObj_t *nv);
 	void cm_print_saf(nvObj_t *nv);
 
+    void cm_print_bme(nvObj_t *nv);
+    void cm_print_bmr(nvObj_t *nv);
+    void cm_print_bmv(nvObj_t *nv);
+    void cm_print_bml(nvObj_t *nv);
+    void cm_print_bmc(nvObj_t *nv);
+
 	void cm_print_m48e(nvObj_t *nv);
 	void cm_print_mfoe(nvObj_t *nv);
 	void cm_print_mfo(nvObj_t *nv);
 	void cm_print_mtoe(nvObj_t *nv);
 	void cm_print_mto(nvObj_t *nv);
-//	void cm_print_st(nvObj_t *nv);
 
 	void cm_print_am(nvObj_t *nv);		// axis print functions
 	void cm_print_fr(nvObj_t *nv);
@@ -882,12 +887,17 @@ stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 	#define cm_print_lim tx_print_stub
 	#define cm_print_saf tx_print_stub
 
+	#define cm_print_bme tx_print_stub
+	#define cm_print_bmr tx_print_stub
+	#define cm_print_bmv tx_print_stub
+	#define cm_print_bml tx_print_stub
+	#define cm_print_bmc tx_print_stub
+
 	#define cm_print_m48e tx_print_stub
 	#define cm_print_mfoe tx_print_stub
 	#define cm_print_mfo tx_print_stub
 	#define cm_print_mtoe tx_print_stub
 	#define cm_print_mto tx_print_stub
-//	#define cm_print_st tx_print_stub
 
 	#define cm_print_am tx_print_stub		// axis print functions
 	#define cm_print_fr tx_print_stub

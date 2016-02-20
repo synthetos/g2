@@ -536,7 +536,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     } else {
         mr.block_state = BLOCK_INACTIVE;						// invalidate mr buffer (reset)
         mr.section_state = SECTION_OFF;
-        mb.run_time_remaining = 0.0;                    // it's done, so time goes to zero
+        mp.run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
         mr.entry_velocity     = mr.r->exit_velocity;     // feed the old exit into the entry.
 
@@ -1053,9 +1053,9 @@ static stat_t _exec_aline_segment()
     }
     
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
-    mb.run_time_remaining -= mr.segment_time;
-    if (mb.run_time_remaining < 0) {
-        mb.run_time_remaining = 0.0;
+    mp.run_time_remaining -= mr.segment_time;
+    if (mp.run_time_remaining < 0) {
+        mp.run_time_remaining = 0.0;
     }
     
     // Call the stepper prep function

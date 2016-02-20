@@ -65,9 +65,9 @@
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-mpBufferPool_t mb;				// move buffer queue
-mpMoveMasterSingleton_t mm;		// context for line planning
-mpMoveRuntimeSingleton_t mr;	// context for line runtime
+mpBufferPool_t mb;				// buffer pool management
+mpMotionPlannerSingleton_t mp;  // context for block planning
+mpMotionRuntimeSingleton_t mr;	// context for block runtime
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -139,14 +139,14 @@ static stat_t _exec_json_wait(mpBuf_t *bf);
 void planner_init()
 {
 // If you know all memory has been zeroed by a hard reset you don't need these next 2 lines
+	memset(&mp, 0, sizeof(mp));	            // clear all values, pointers and status
 	memset(&mr, 0, sizeof(mr));	            // clear all values, pointers and status
-	memset(&mm, 0, sizeof(mm));	            // clear all values, pointers and status
 	planner_init_assertions();
 	mp_init_buffers();
 
     // reasonable starting values
-    mb.mfo_factor = 1.00;
-    mb.planner_critical_time = PLANNER_CRITICAL_TIME;
+    mp.mfo_factor = 1.00;
+    mp.planner_critical_time = PLANNER_CRITICAL_TIME;
 }
 
 void planner_reset()
@@ -160,16 +160,17 @@ void planner_reset()
  */
 void planner_init_assertions()
 {
-	mm.magic_start = MAGICNUM;      // Note: mb magic numbers set up by mp_init_buffers()
-	mm.magic_end = MAGICNUM;
+    // Note: mb magic numbers set up by mp_init_buffers()
+	mp.magic_start = MAGICNUM;      
+	mp.magic_end = MAGICNUM;
 	mr.magic_start = MAGICNUM;
 	mr.magic_end = MAGICNUM;
 }
 
 stat_t planner_test_assertions()
 {
-    if ((BAD_MAGIC(mm.magic_start)) || (BAD_MAGIC(mm.magic_end)) ||
-        (BAD_MAGIC(mb.magic_start)) || (BAD_MAGIC(mb.magic_end)) ||
+    if ((BAD_MAGIC(mb.magic_start)) || (BAD_MAGIC(mb.magic_end)) ||
+        (BAD_MAGIC(mp.magic_start)) || (BAD_MAGIC(mp.magic_end)) ||
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
@@ -225,7 +226,7 @@ void mp_flush_planner()
  *	still close to the starting point.
  */
 
-void mp_set_planner_position(uint8_t axis, const float position) { mm.position[axis] = position; }
+void mp_set_planner_position(uint8_t axis, const float position) { mp.position[axis] = position; }
 void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[axis] = position; }
 
 void mp_set_steps_to_runtime_position()
@@ -468,8 +469,8 @@ bool mp_is_phat_city_time()
 	if(cm.hold_state == FEEDHOLD_HOLD) {
     	return true;
 	}
-//    return ((mb.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
-    return ((mb.plannable_time <= 0.0) || (PHAT_CITY_TIME < mb.plannable_time));
+//    return ((mp.time_total <= 0) || (PHAT_CITY_TIME < mb.time_total));
+    return ((mp.plannable_time <= 0.0) || (PHAT_CITY_TIME < mp.plannable_time));
 }
 
 /**** Helper functions for mp_plan_buffer()
@@ -480,25 +481,25 @@ bool mp_is_phat_city_time()
  */
 static void _stop_new_block_timer()
 {
-    mb.new_block_timer = 0;
-    mb.new_block_timeout = false;
+    mp.new_block_timer = 0;
+    mp.new_block_timeout = false;
 }
 
 static void _reset_new_block_timer()
 {
-    mb.new_block_timer = SysTickTimer.getValue() + NEW_BLOCK_TIMEOUT_MS;
-    mb.new_block_timeout = false;
+    mp.new_block_timer = SysTickTimer.getValue() + NEW_BLOCK_TIMEOUT_MS;
+    mp.new_block_timeout = false;
 }
 
 static bool _get_new_block_timeout()
 {
-//    mb.new_block_timeout = false;
-    if ((mp_planner_is_full()) || (mb.new_block_timer == 0)) {
-        _reset_new_block_timer();       // sets mb.new_block_timeout = false;
-    } else if (mb.new_block_timer < SysTickTimer.getValue()) {
-        mb.new_block_timeout = true;
+//    mp.new_block_timeout = false;
+    if ((mp_planner_is_full()) || (mp.new_block_timer == 0)) {
+        _reset_new_block_timer();       // sets mp.new_block_timeout = false;
+    } else if (mp.new_block_timer < SysTickTimer.getValue()) {
+        mp.new_block_timeout = true;
     }
-    return (mb.new_block_timeout);
+    return (mp.new_block_timeout);
 }
 
 /*
@@ -598,45 +599,45 @@ static bool _get_new_block_timeout()
  */
 stat_t mp_planner_callback()
 {
-    if (!mb.request_planning) {
+    if (!mp.request_planning) {
         if ((mb.buffers_available == PLANNER_BUFFER_POOL_SIZE) &&
             (cm.motion_state == MOTION_STOP) &&
             (cm.hold_state == FEEDHOLD_OFF)) {
-            mb.planner_state = PLANNER_IDLE;
+            mp.planner_state = PLANNER_IDLE;
         }
-        if ((mb.planner_state == PLANNER_PRIMING) && (!mb.new_block)) { // shortcut out of here
+        if ((mp.planner_state == PLANNER_PRIMING) && (!mp.new_block)) { // shortcut out of here
             return (STAT_NOOP);
         }
-        if (mb.planner_state == PLANNER_IDLE) {
-            if (!mb.new_block) {
+        if (mp.planner_state == PLANNER_IDLE) {
+            if (!mp.new_block) {
                 _stop_new_block_timer();
                 return (STAT_NOOP);
             }
-            mb.p = mb.r;                                // initialize planner pointer to run buffer
-            mb.planner_state = PLANNER_STARTUP;
+            mp.p = mb.r;                                // initialize planner pointer to run buffer
+            mp.planner_state = PLANNER_STARTUP;
         }
     }
     else {
-        mb.request_planning = false;
+        mp.request_planning = false;
     }
-    if (mb.new_block) {
+    if (mp.new_block) {
         _reset_new_block_timer();
-        mb.new_block = false;
+        mp.new_block = false;
     }
 
     // set planner state
-    if (mb.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
+    if (mp.planner_state == PLANNER_STARTUP) {          // set planner state for startup operation
         if (mp_planner_is_full() || _get_new_block_timeout()) {
-            mb.planner_state = PLANNER_PRIMING;     // start planning now
+            mp.planner_state = PLANNER_PRIMING;     // start planning now
         } else {
             return (STAT_OK);                           // accumulate new blocks until it's time to plan
         }
     }
-    else if (_get_new_block_timeout() || mb.plannable_time < mb.planner_critical_time) {
-        mb.planner_state = PLANNER_PRIMING;
+    else if (_get_new_block_timeout() || mp.plannable_time < mp.planner_critical_time) {
+        mp.planner_state = PLANNER_PRIMING;
     }
 
-    if (mb.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
+    if (mp.p->buffer_state == MP_BUFFER_EMPTY) {          // unconditional exit condition
         return (STAT_OK);
     }
     mp_plan_block_list();                               // plan blocks optimistically or pessimistically
@@ -648,7 +649,7 @@ stat_t mp_planner_callback()
  */
 void mp_replan_queue(mpBuf_t *bf)
 {
-    mb.p = bf;    // reset planner pointer to start replan from here
+    mp.p = bf;    // reset planner pointer to start replan from here
 
     do {
         if (bf->buffer_state == MP_BUFFER_EMPTY) {
@@ -656,9 +657,9 @@ void mp_replan_queue(mpBuf_t *bf)
         }
 
         bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
-    } while ((bf = mp_get_next_buffer(bf)) != mb.p);
+    } while ((bf = mp_get_next_buffer(bf)) != mp.p);
 
-    mb.request_planning = true;
+    mp.request_planning = true;
 }
 
 /*
@@ -687,22 +688,22 @@ void mp_start_feed_override(const float ramp_time, const float override_factor)
 {
     cm.mfo_state = MFO_REQUESTED;
 
-    if (mb.planner_state == PLANNER_IDLE) {
-        mb.mfo_factor = override_factor;             // that was easy
+    if (mp.planner_state == PLANNER_IDLE) {
+        mp.mfo_factor = override_factor;             // that was easy
         return;
     }
 
     // Assume that the min and max values for override_factor have been validated upstream
     // SUVAT: V = U+AT ==> A = (V-U)/T
-    mb.ramp_target = override_factor;
-//    mb.ramp_dvdt = (override_factor - mb.current_mfo_factor) / ramp_time;
-    mb.ramp_dvdt = (override_factor - mb.c->override_factor) / ramp_time;
-    mb.mfo_active = true;
+    mp.ramp_target = override_factor;
+//    mp.ramp_dvdt = (override_factor - mp.current_mfo_factor) / ramp_time;
+    mp.ramp_dvdt = (override_factor - mp.c->override_factor) / ramp_time;
+    mp.mfo_active = true;
 
-    if (fp_NOT_ZERO(mb.ramp_dvdt)) {    // do these things only if you actually have a ramp to run
-        mb.p = mb.c;                    // re-position the planner pointer
-        mb.ramp_active = true;
-        mb.request_planning = true;
+    if (fp_NOT_ZERO(mp.ramp_dvdt)) {    // do these things only if you actually have a ramp to run
+        mp.p = mp.c;                    // re-position the planner pointer
+        mp.ramp_active = true;
+        mp.request_planning = true;
     }
 }
 
@@ -730,8 +731,8 @@ void mp_planner_time_accounting()
 
     // set values in the running block / based on the running block
     float plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
-//    mb.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
-//    mb.best_case_braking_time_ms = mb.best_case_braking_time * 60000; //+++++
+//    mp.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
+//    mp.best_case_braking_time_ms = mp.best_case_braking_time * 60000; //+++++
 
     // scan and set all non-empty buffers (plannable buffers)
     while ((bf = bf->nx) != mb.r) {
@@ -742,12 +743,12 @@ void mp_planner_time_accounting()
 //        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
 //        bf->plannable_length = bf->length + bf->pv->plannable_length;
 
-//        if (in_critical && (plannable_time >= mb.planner_critical_time)) {
+//        if (in_critical && (plannable_time >= mp.planner_critical_time)) {
 //            in_critical = false;
-//            mb.c = bf;                          // mark the first non-critical block
+//            mp.c = bf;                          // mark the first non-critical block
 //        }
     }
-    mb.plannable_time = plannable_time;  UPDATE_MB_MS //+++++
+    mp.plannable_time = plannable_time;  UPDATE_MB_MS //+++++
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -803,6 +804,8 @@ void mp_planner_time_accounting()
  * mp_get_write_buffer()    Get pointer to next available write buffer
  *                          Return pointer or NULL if no buffer available.
  *
+ * mp_unget_write_buffer()  Free write buffer if you decide not to commit it.
+ *
  * mp_commit_write_buffer()	Commit the write buffer to the queue.
  *                          Advance write pointer & changes buffer state.
  *
@@ -821,7 +824,6 @@ void mp_planner_time_accounting()
  *                          This is useful for doing queue empty / end move functions.
  * *
  * UNUSED BUT PROVIDED FOR REFERENCE:
- * mp_unget_write_buffer()  Free write buffer if you decide not to commit it.
  * mp_copy_buffer(bf,bp)	Copy the contents of bp into bf - preserves links.
  */
 
@@ -846,22 +848,20 @@ void mp_init_buffers(void)
 
 	mb.w = &mb.bf[0];                               // init all buffer pointers
 	mb.r = &mb.bf[0];
-	mb.p = &mb.bf[0];
-	mb.c = &mb.bf[0];
 	pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
 	for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
         mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
 
         nx_i = ((i<PLANNER_BUFFER_POOL_SIZE-1)?(i+1):0); // buffer incr & wrap
         nx = &mb.bf[nx_i];
-        mb.bf[i].nx = nx;             // setup ring pointers
+        mb.bf[i].nx = nx;                           // setup ring pointers
 		mb.bf[i].pv = pv;
 
 		pv = &mb.bf[i];
 	}
 	mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
 
-    mb.entry_changed = false;
+//    mb.entry_changed = false;
 
     // Now handle the two "stub buffers" in the runtime structure.
 
@@ -898,6 +898,14 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 	return (NULL);
 }
 
+void mp_unget_write_buffer()        // mark buffer as empty and adjust free buffer count
+{
+    if (mb.w->buffer_state != MP_BUFFER_EMPTY) {  // safety. Can't unget an empty buffer
+        mb.w->buffer_state = MP_BUFFER_EMPTY;
+        mb.buffers_available++;
+    }
+}
+
 /*** WARNING ***
 * The function calling mp_commit_write_buffer() must NOT use the write buffer once it has
 * been committed. Interrupts may use the buffer immediately, invalidating its contents.
@@ -913,14 +921,14 @@ void mp_commit_write_buffer(const blockType block_type)
             cm_set_motion_state(MOTION_PLANNING);
         }
     } else {
-        if ((mb.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
+        if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
             st_request_plan_move();	// requests an exec if the runtime is not busy
         }
     }
     mb.w->plannable = true;         // enables the block for planning
-    mb.new_block = true;			// got a new block to plan
+    mp.new_block = true;			// got a new block to plan
     mb.w = mb.w->nx;                // advance the write buffer pointer
     qr_request_queue_report(+1);    // request a QR and add to the "added buffers" count
 }
@@ -953,13 +961,6 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
 }
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
-void mp_unget_write_buffer()
-{
-    mb.w = mb.w->pv;						// queued --> write
-    mb.w->buffer_state = MP_BUFFER_EMPTY; // not loading anymore
-    mb.buffers_available++;
-}
-
 void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 {
     // copy contents of bp to by while preserving pointers in bp
@@ -973,6 +974,9 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
  * _audit_buffers() - a DEBUG diagnostic
  */
 
+//#define __DUMP_PLANNER
+
+#ifdef __DUMP_PLANNER
 void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 {
     mpBuf_t *bf = bf_start;
@@ -1004,11 +1008,11 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
         bf = bf->nx;
     } while (bf != bf_start);
 }
+#endif // __DUMP_PLANNER
 
 #if 0 && defined(DEBUG)
 
 #warning DEBUG TRAPS ENABLED
-
 
 #pragma GCC optimize ("O0")
 

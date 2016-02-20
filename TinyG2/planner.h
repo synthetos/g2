@@ -2,8 +2,8 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -121,70 +121,44 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-//#define JUNCTION_AGGRESSION     0.75                  // Actually this factor will be divided by 1 million
+#define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
+#define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
+#define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
-#define PLANNER_BUFFER_POOL_SIZE 48                     // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM ((uint8_t)4)             // Buffers to reserve in planner before processing new input line
-#define JERK_MULTIPLIER         ((float)1000000)        // DO NOT CHANGE - must always be 1 million
+#define JUNCTION_AGGRESSION_MIN     (0.001)             // minimum allowable setting
+#define JUNCTION_AGGRESSION_MAX     (10.00)             // maximum allowable setting
 
-#define MIN_SEGMENT_MS          ((float)0.75)          // minimum segment milliseconds
-#define NOM_SEGMENT_MS          ((float)1.5)          // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
-#define MIN_BLOCK_MS            ((float)1.5)          // minimum block (whole move) milliseconds
-#define NOM_SEGMENT_TIME        ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
-#define NOM_SEGMENT_USEC        ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
-#define MIN_SEGMENT_TIME        ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
-#define MIN_BLOCK_TIME          ((float)(MIN_BLOCK_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
+#define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
+#define NEW_BLOCK_TIMEOUT_MS        ((float)30.0)       // MS before deciding there are no new blocks arriving
+#define PLANNER_CRITICAL_MS         ((float)20.0)       // threshold for planner critical state
+#define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 
-#define NEW_BLOCK_TIMEOUT_MS    ((float)30.0)           // MS before deciding there are no new blocks arriving
-#define PLANNER_CRITICAL_MS     ((float)20.0)           // MS threshold for planner critical state
-#define PLANNER_THROTTLE_MS     ((float)100.0)          // Width of throttle region - starts at Tcritical
-#define PLANNER_ITERATION_MS    ((float)10.0)           // MS to get through a planner callback loop
-#define PHAT_CITY_MS            PLANNER_THROTTLE_MS     // if you have at least this much time in the planner
+#define NOM_SEGMENT_TIME            ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define NOM_SEGMENT_USEC            ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
+#define MIN_SEGMENT_TIME            ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
+#define MIN_BLOCK_TIME              ((float)(MIN_BLOCK_MS / 60000))         // DO NOT CHANGE - time in minutes
+#define PLANNER_CRITICAL_TIME       ((float)(PLANNER_CRITICAL_MS / 60000))  // DO NOT CHANGE - time in minutes
+#define PHAT_CITY_TIME              ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
-#define NEW_BLOCK_TIMEOUT_TIME  ((float)(NEW_BLOCK_TIMEOUT_MS / 60000)) // DO NOT CHANGE - time in minutes
-#define PLANNER_CRITICAL_TIME   ((float)(PLANNER_CRITICAL_MS / 60000))  // DO NOT CHANGE - time in minutes
-#define PLANNER_THROTTLE_TIME   ((float)(PLANNER_THROTTLE_MS / 60000))  // DO NOT CHANGE - time in minutes
-#define PLANNER_ITERATION_TIME  ((float)(PLANNER_ITERATION_MS / 60000)) // DO NOT CHANGE - time in minutes
-#define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
-
-#define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
-#define THROTTLE_MIN            ((float)0.50)           // minimum factor to slow down for planner throttling
-#define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
-#define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
-
-#define FEED_OVERRIDE_MIN           0.05                // 5% minimum
-#define FEED_OVERRIDE_MAX           2.00                // 200% maximum
-#define FEED_OVERRIDE_RAMP_TIME     (0.500/60)          // ramp time for feed overrides
 #define FEED_OVERRIDE_ENABLE        false               // initial value
-#define FEED_OVERRIDE_FACTOR        1.00                // initial value
+#define FEED_OVERRIDE_MIN           (0.05)              // 5% minimum
+#define FEED_OVERRIDE_MAX           (2.00)              // 200% maximum
+#define FEED_OVERRIDE_RAMP_TIME     (0.500/60)          // ramp time for feed overrides
+#define FEED_OVERRIDE_FACTOR        (1.00)              // initial value
 
-#define TRAVERSE_OVERRIDE_MIN       0.05                // 5% minimum
-#define TRAVERSE_OVERRIDE_MAX       1.00                // 100% maximum
 #define TRAVERSE_OVERRIDE_ENABLE    false               // initial value
-#define TRAVERSE_OVERRIDE_FACTOR    1.00                // initial value
-
-#define JUNCTION_AGGRESSION_MIN     0.001               // minimum allowable setting
-#define JUNCTION_AGGRESSION_MAX     10.00               // maximum allowable setting
-
-//#define MIN_FEEDRATE_OVERRIDE 0.05    // 5%
-//#define MAX_FEEDRATE_OVERRIDE 2.00    // 200%
-//#define MIN_RAPID_OVERRIDE 0.05       // 5%
-//#define MAX_RAPID_OVERRIDE 1.00       // 100%
-
-// ++++ RG I believe these tolerances are WAY too high. Simulation shows +-0.001 is about as mouch as we should allow.
+#define TRAVERSE_OVERRIDE_MIN       (0.05)              // 5% minimum
+#define TRAVERSE_OVERRIDE_MAX       (1.00)              // 100% maximum
+#define TRAVERSE_OVERRIDE_FACTOR    (1.00)              // initial value
 
 //// Specialized equalities for comparing velocities with tolerances
 //// These determine allowable velocity discontinuities between blocks (among other tests)
-//#define Vthr 100.0          // threshold between hi and lo velocity (mm/min)
-//#define Veq_hi 1.0          // hi velocity is equal if less than this number
-//#define Veq_lo 0.1          // lo velocity is equal if less than this number
-//#define VELOCITY_EQ(v0,v1) ( (v0 > Vthr) ? fabs(v0-v1) < Veq_hi : fabs(v0-v1) < Veq_lo )
-//
-////      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least Veq_hi (or lo)"
-//#define VELOCITY_LT(v0,v1) ( (v0 > Vthr) ? (v1-v0 > Veq_hi) : (v1-v0 > Veq_lo) )
-
-#define VELOCITY_EQ(v0,v1) ( fabs(v0-v1) < 0.0001 )
+//// RG: Simulation shows +-0.001 is about as much as we should allow.
+//      VELOCITY_EQ(v0,v1) reads: "True if v0 is within 0.0001 of v1"
 //      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least 0.0001"
+#define VELOCITY_EQ(v0,v1) ( fabs(v0-v1) < 0.0001 )
 #define VELOCITY_LT(v0,v1) ( (v1 - v0) > 0.0001 )
 
 #define Vthr2 300.0
@@ -195,7 +169,7 @@ typedef enum {
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
 //#define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-#define UPDATE_MB_MS     { mb.plannable_time_ms = mb.plannable_time*60000; }
+#define UPDATE_MB_MS     { mp.plannable_time_ms = mp.plannable_time*60000; }
 
 /*
  *	Planner structures
@@ -229,8 +203,8 @@ struct mpBuffer_to_clear {
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
-
     float move_time;                // computed move time for entire move
+//    float block_time;               // computed move time for entire move
 
     // We are removing all entry_* values.
     // To get the entry_* values, look at pv->exit_* or mr.exit_*
@@ -262,7 +236,7 @@ struct mpBuffer_to_clear {
     }
 };
 
-typedef struct mpBuffer : mpBuffer_to_clear {           // See Planning Velocity Notes for variable usage
+typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for variable usage
 
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;            // static pointer to previous buffer
@@ -272,8 +246,20 @@ typedef struct mpBuffer : mpBuffer_to_clear {           // See Planning Velocity
 
 typedef struct mpBufferPool {		// ring buffer for sub-moves
 	magic_t magic_start;			// magic number to test memory integrity
-	uint8_t buffers_available;		// running count of available buffers
 
+	mpBuf_t *r;						// run buffer pointer
+	mpBuf_t *w;						// write buffer pointer
+	uint8_t buffers_available;		// running count of available buffers
+	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
+
+	magic_t magic_end;
+} mpBufferPool_t;
+
+typedef struct mpMotionPlannerSingleton {  // common variables for planning (move master)
+	magic_t magic_start;                // magic number to test memory integrity
+	float position[AXES];               // final move position for planning purposes
+
+    //+++++ DIAGNOSTICS
     float run_time_remaining_ms;
     float plannable_time_ms;
 
@@ -285,6 +271,11 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float best_case_braking_time;   // time to brake to zero in the best case
     uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
 
+    bool block_merge_enable;
+    float block_merge_ratio;
+    float block_merge_velocity_max;
+    float block_merge_length_max;
+    float block_merge_cosine_min;
                                     // group booleans together for optimization
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool backplanning;              // true if planner is in a back-planning pass
@@ -295,30 +286,20 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 
     // state holding for forward planning in the exec
     bool entry_changed;        // if we have to change the exit_velocity, we need to record it
-                                    // so that we know to invalidate the next block's hint
+    // so that we know to invalidate the next block's hint
 
     // feed overrides and ramp variables (these extend the variables in cm.gmx)
     float mfo_factor;               // runtime override factor
     float ramp_target;
     float ramp_dvdt;
 
-    // pointers and buffers
-	mpBuf_t *r;						// run buffer pointer
-	mpBuf_t *w;						// write buffer pointer
+    // planner pointers
 	mpBuf_t *p;						// planner buffer pointer
 	mpBuf_t *c;						// pointer to buffer immediately following critical region
-    mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
+	mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
 
-	mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
 	magic_t magic_end;
-} mpBufferPool_t;
-
-typedef struct mpMoveMasterSingleton {  // common variables for planning (move master)
-	magic_t magic_start;                // magic number to test memory integrity
-	float position[AXES];               // final move position for planning purposes
-	magic_t magic_end;
-} mpMoveMasterSingleton_t;
-
+} mpMotionPlannerSingleton_t;
 
 typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
     struct mpBlockRuntimeBuf *nx;       // singly-linked-list
@@ -335,7 +316,7 @@ typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunT
     float exit_velocity;                // velocity at the end of the move
 } mpBlockRuntimeBuf_t;
 
-typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
+typedef struct mpMotionRuntimeSingleton {	// persistent runtime variables
 //	uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
 	magic_t magic_start;                // magic number to test memory integrity
 	blockState block_state;             // state of the overall move
@@ -374,12 +355,12 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	GCodeState_t gm;                    // gcode model state currently executing
 
 	magic_t magic_end;
-} mpMoveRuntimeSingleton_t;
+} mpMotionRuntimeSingleton_t;
 
 // Reference global scope structures
-extern mpBufferPool_t mb;               // move buffer queue
-extern mpMoveMasterSingleton_t mm;      // context for line planning
-extern mpMoveRuntimeSingleton_t mr;     // context for line runtime
+extern mpBufferPool_t mb;               // buffer pool management
+extern mpMotionPlannerSingleton_t mp;   // context for block planning
+extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
 
 /*
  * Global Scope Functions
