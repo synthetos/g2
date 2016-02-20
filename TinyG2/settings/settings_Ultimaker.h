@@ -2,8 +2,8 @@
  * settings_Ultimaker.h - Ultimaker motion demo
  * This file is part of the the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Ultimaker profile"
+#define INIT_MESSAGE "Initializing configs to Ultimaker v9h profile"
 
 #ifndef PI
 #define PI 3.14159628
@@ -62,10 +62,6 @@
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
-
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.2;
-constexpr float H1_DEFAULT_D = 100.0;
 
 // Communications and reporting settings
 
@@ -101,7 +97,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
 
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
@@ -109,7 +104,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M1_MICROSTEPS               8                       // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL       // 1mp
+#define M1_POWER_LEVEL              0.375                   // 1mp
 
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
@@ -117,7 +112,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M2_MICROSTEPS               8
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M2_POWER_LEVEL              0.375
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -125,7 +120,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M3_MICROSTEPS               8
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M3_POWER_LEVEL              0.375
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
@@ -133,7 +128,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M4_MICROSTEPS               8
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M4_POWER_LEVEL              0.375
 
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
@@ -141,7 +136,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M5_MICROSTEPS               8
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
-#define M5_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M5_POWER_LEVEL              0.375
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
@@ -149,7 +144,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M6_MICROSTEPS               8
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
-#define M6_POWER_LEVEL              MOTOR_POWER_LEVEL
+#define M6_POWER_LEVEL              0.375
 
 // *** axis settings **********************************************************************************
 
@@ -314,8 +309,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
-
-
 //Extruder1_PWM
 #define DO1_MODE                    IO_ACTIVE_HIGH
 
@@ -360,79 +353,19 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define P1_CCW_PHASE_HI			    0.1
 #define P1_PWM_PHASE_OFF		    0.1
 
+/*** Extruder / Heater settings  ***/
 
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.1;
-constexpr float H1_DEFAULT_D = 100.0;
+#define H1_DEFAULT_ENABLE           true
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.2
+#define H1_DEFAULT_D                100.0
 
-constexpr float H2_DEFAULT_P = 7.0;
-constexpr float H2_DEFAULT_I = 0.1;
-constexpr float H2_DEFAULT_D = 100.0;
+#define H2_DEFAULT_ENABLE           true
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.2
+#define H2_DEFAULT_D                100.0
 
-constexpr float H3_DEFAULT_P = 7.0;
-constexpr float H3_DEFAULT_I = 0.1;
-constexpr float H3_DEFAULT_D = 100.0;
-
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
-
-/*** User-Defined Data Defaults ***/
-
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0
+#define H3_DEFAULT_ENABLE           true
+#define H3_DEFAULT_P                7.0
+#define H3_DEFAULT_I                0.2
+#define H3_DEFAULT_D                100.0

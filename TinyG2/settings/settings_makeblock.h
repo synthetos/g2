@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko2.h - Shapeoko2 500mm table
+ * settings_makeblock.h - makeblock engraving table
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,27 +25,25 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* Note: The values in this file are the default settings that are loaded
- * 		 into a virgin EEPROM, and can be changed using the config commands.
- *		 After initial load the EEPROM values (or changed values) are used.
+ *       into a virgin EEPROM, and can be changed using the config commands.
+ *       After initial load the EEPROM values (or changed values) are used.
  *
- *		 System and hardware settings that you shouldn't need to change
- *		 are in system.h  Application settings that also shouldn't need
- *		 to be changed are in tinyg.h
+ *       System and hardware settings that you shouldn't need to change
+ *       are in system.h  Application settings that also shouldn't need
+ *       to be changed are in tinyg.h
  */
 
 /***********************************************************************/
-/**** Shapeoko2 500mm profile ******************************************/
+/**** Makeblock XY Plotter profile *************************************/
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Shapeoko2 500mm profile"
-
-//**** GLOBAL / GENERAL SETTINGS ******************************************************
+#define INIT_MESSAGE "Initializing configs to Makeblock profile"
 
 // Machine configuration settings
 
 #define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (higher is faster)
-#define CHORDAL_TOLERANCE           0.01					// chordal tolerance for arcs and block compression (in mm)
+#define CHORDAL_TOLERANCE           0.1                     // chordal tolerance for arcs and block compression (in mm)
 #define BLOCK_COMPRESSION_ENABLE    1                       // 0=off, 1=on
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
@@ -66,24 +64,17 @@
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 
-#define XIO_EXPAND_CR               false                   // serial IO settings (AVR only)
-#define XIO_ENABLE_ECHO             false
-#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
-
 #define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-//#define JSON_VERBOSITY              JV_SILENT             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
-
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-//#define STATUS_REPORT_VERBOSITY     SR_VERBOSE             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","bcr","feed","vel","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat"
 
 // Alternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
@@ -101,37 +92,29 @@
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
-#define M1_MOTOR_MAP                AXIS_X				    // 1ma
-#define M1_STEP_ANGLE               1.8					    // 1sa
-#define M1_TRAVEL_PER_REV           40.00                   // 1tr
-#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
-#define M1_POLARITY                 0                       // 1po  0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  TRUE=low power idle enabled
-#define M1_POWER_LEVEL              0.500
+#define M1_MOTOR_MAP                AXIS_X                  // 1ma
+#define M1_STEP_ANGLE               1.8                     // 1sa
+#define M1_TRAVEL_PER_REV           36.576                  // 1tr        2.032mm pitch * 18 teeth per revolution
+#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
+#define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
+#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        TRUE=low power idle enabled
+#define M1_POWER_LEVEL              0.45
 
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           40.00
-#define M2_MICROSTEPS               8
+#define M2_TRAVEL_PER_REV           36.576
+#define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.500
+#define M2_POWER_LEVEL              0.45
 
-#define M3_MOTOR_MAP                AXIS_Y
+#define M3_MOTOR_MAP                AXIS_Z                  // Imaginary Z axis. FOr testing
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           40.00
-#define M3_MICROSTEPS               8
-#define M3_POLARITY                 1
+#define M3_TRAVEL_PER_REV           1.25
+#define M3_MICROSTEPS               32
+#define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.500
-
-#define M4_MOTOR_MAP                AXIS_Z
-#define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           1.25
-#define M4_MICROSTEPS               8
-#define M4_POLARITY                 0
-#define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.750
+#define M3_POWER_LEVEL              0.45
 
 // *** axis settings **********************************************************************************
 
@@ -178,71 +161,3 @@
 #define Z_LATCH_VELOCITY            25
 #define Z_LATCH_BACKOFF             4
 #define Z_ZERO_BACKOFF              2
-
-//*** Input / output settings ***
-/*
-    IO_MODE_DISABLED
-    IO_ACTIVE_LOW    aka NORMALLY_OPEN
-    IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
-
-    INPUT_ACTION_NONE
-    INPUT_ACTION_STOP
-    INPUT_ACTION_FAST_STOP
-    INPUT_ACTION_HALT
-    INPUT_ACTION_RESET
-
-    INPUT_FUNCTION_NONE
-    INPUT_FUNCTION_LIMIT
-    INPUT_FUNCTION_INTERLOCK
-    INPUT_FUNCTION_SHUTDOWN
-    INPUT_FUNCTION_PANIC
-*/
-// Xmin on v9 board
-#define DI1_MODE                    NORMALLY_CLOSED
-//#define DI1_ACTION                  INPUT_ACTION_STOP
-#define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
-
-// Xmax
-#define DI2_MODE                    NORMALLY_CLOSED
-//#define DI2_ACTION                  INPUT_ACTION_STOP
-#define DI2_ACTION                  INPUT_ACTION_NONE
-#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
-
-// Ymin
-#define DI3_MODE                    NORMALLY_CLOSED
-//#define DI3_ACTION                  INPUT_ACTION_STOP
-#define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
-
-// Ymax
-#define DI4_MODE                    NORMALLY_CLOSED
-//#define DI4_ACTION                  INPUT_ACTION_STOP
-#define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
-
-// Zmin
-#define DI5_MODE                    IO_ACTIVE_HIGH   // Z probe
-#define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
-
-// Zmax
-#define DI6_MODE                    NORMALLY_CLOSED
-//#define DI6_ACTION                  INPUT_ACTION_STOP
-#define DI6_ACTION                  INPUT_ACTION_NONE
-#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
-
-// Amin
-#define DI7_MODE                    IO_MODE_DISABLED
-#define DI7_ACTION                  INPUT_ACTION_NONE
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
-
-// Amax
-#define DI8_MODE                    IO_MODE_DISABLED
-#define DI8_ACTION                  INPUT_ACTION_NONE
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
-
-// Hardware interlock input
-#define DI9_MODE                    IO_MODE_DISABLED
-#define DI9_ACTION                  INPUT_ACTION_NONE
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE

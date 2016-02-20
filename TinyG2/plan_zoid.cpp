@@ -135,7 +135,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
     // Quick cheat-sheet on which is in bf and whcih is in block:
     // bf:
-    //  move_type
+    //  block_type
     //  hint
     //  {cruise,exit}_vmax
     //  move_time
@@ -148,7 +148,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     //  {head,body,tail}_time
 
     // *** Skip non-move commands ***
-    if (bf->move_type == MOVE_TYPE_COMMAND) {
+    if (bf->block_type == BLOCK_TYPE_COMMAND) {
         bf->hint = COMMAND_BLOCK;
         return;
     }
@@ -170,12 +170,12 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     block->exit_velocity   = min(bf->exit_velocity, bf->exit_vmax);
 
     // +++++ RG trap
-    if ((block->cruise_velocity < (entry_velocity-5))) {
-        __asm__("BKPT"); // entry > cruise + 5
-    }
-    if ((block->cruise_velocity < block->exit_velocity)) {
-        __asm__("BKPT"); // exit > cruise
-    }
+//    if ((block->cruise_velocity < (entry_velocity-5))) {
+//        __asm__("BKPT"); // entry > cruise + 5
+//    }
+//    if ((block->cruise_velocity < block->exit_velocity)) {
+//        __asm__("BKPT"); // exit > cruise
+//    }
 
     // We *might* do this exact computation later, so cache the value.
     float test_velocity = 0;
@@ -603,9 +603,6 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
 
 static float _get_meet_velocity(const float v_0, const float v_2, const float L, mpBuf_t *bf, mpBlockRuntimeBuf_t *block)
 {
-
-    // NOTE!! Do NOT use bf->lenght in here, we may be running against a group, and we'll want to use L to be safe.
-
     //const float j = bf->jerk;
     //const float recip_j = bf->recip_jerk;
 
@@ -631,7 +628,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         // We can catch a symmetric case early and return now
 
         // We'll have a head roughly equal to the tail, and no body
-        block->head_length = mp_get_target_length(v_0, v_1, bf);
+        block->head_length = L/2.0;
         block->body_length = 0;
         block->tail_length = L - block->head_length;
 
@@ -645,7 +642,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     while (i++ < 30) { // If it fails after 30, something's wrong
         if (v_1 < min_v_1) {
             // We have caught a rather nasty problem. There is no meet velocity.
-            // This is does to an inversion in the velocities of very short moves.
+            // This is due to an inversion in the velocities of very short moves.
             // We need to compute the head OR tail length, and the body will be the rest.
             // Yes, that means we're computing a cruise in here.
 
@@ -701,9 +698,18 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         block->tail_length = l_t;
         block->body_length = 0;
 
-        // Early escape -- if we're within 2 of "root" then we can call it good.
-        // We need this level of precision, or out length computations fail to match the block length. // 989us
-        if (fabs(l_c) < 0.00001) {
+        // We need this level of precision, or our length computations fail to match the block length.
+        // What we really want to ensure is that the two lengths down add up to be too much.
+        // We can be a little under (and have a small body).
+        // 989us
+        // TODO: make these tunable
+        if ((l_c < 0.00001) && (l_c > -1.0)) { // allow 0.00001 overlap, OR up to a 1mm gap
+            if (l_c < 0.0) {
+                block->body_length = -l_c;
+            } else {
+                // fix the overlap
+                block->tail_length = L - block->head_length;
+            }
             break;
         }
 

@@ -1,8 +1,8 @@
 /*
  * http://tinkerin.gs/
  *
- * Copyright (c) 2013 Robert Giseburt
- * Copyright (c) 2013 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *

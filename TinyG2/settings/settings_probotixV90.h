@@ -2,7 +2,7 @@
  * settings_probotix.h - Probotix Fireball V90 machine profile
  * This file is part the TinyG project
  *
- * Copyright (c) 2011 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -62,11 +62,6 @@
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.2;
-constexpr float H1_DEFAULT_D = 100.0;
-
-
 // Communications and reporting settings
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
@@ -107,8 +102,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M1_MICROSTEPS		    	8						// 1mi		1,2,4,8
 #define M1_POLARITY			    	1						// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE		    	MOTOR_POWER_MODE		// 1pm		standard
-//#define M1_POWER_LEVEL		    	0.75		            // 1pl
-#define M1_POWER_LEVEL		    	0.10
+#define M1_POWER_LEVEL		    	0.75
 
 #define M2_MOTOR_MAP	 	    	AXIS_Y
 #define M2_STEP_ANGLE		    	1.8
@@ -116,8 +110,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M2_MICROSTEPS		    	8
 #define M2_POLARITY			    	0
 #define M2_POWER_MODE		    	MOTOR_POWER_MODE
-//#define M2_POWER_LEVEL		    	0.75
-#define M2_POWER_LEVEL		    	0.10
+#define M2_POWER_LEVEL		    	0.75
 
 #define M3_MOTOR_MAP		    	AXIS_Z
 #define M3_STEP_ANGLE		    	1.8
@@ -125,32 +118,7 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define M3_MICROSTEPS		    	8
 #define M3_POLARITY			    	1
 #define M3_POWER_MODE		    	MOTOR_POWER_MODE
-//#define M3_POWER_LEVEL		    	0.50
-#define M3_POWER_LEVEL		    	0.10
-
-#define M4_MOTOR_MAP		    	AXIS_A
-#define M4_STEP_ANGLE		    	1.8
-#define M4_TRAVEL_PER_REV	    	360			// degrees moved per motor rev
-#define M4_MICROSTEPS		    	8
-#define M4_POLARITY			    	0
-#define M4_POWER_MODE		    	MOTOR_POWER_MODE
-#define M4_POWER_LEVEL		    	0.0
-
-#define M5_MOTOR_MAP		    	AXIS_B
-#define M5_STEP_ANGLE		    	1.8
-#define M5_TRAVEL_PER_REV	    	360			// degrees moved per motor rev
-#define M5_MICROSTEPS		    	8
-#define M5_POLARITY			    	0
-#define M5_POWER_MODE		    	MOTOR_POWER_MODE
-#define M5_POWER_LEVEL		    	0.0
-
-#define M6_MOTOR_MAP		    	AXIS_C
-#define M6_STEP_ANGLE		    	1.8
-#define M6_TRAVEL_PER_REV	    	360			// degrees moved per motor rev
-#define M6_MICROSTEPS		    	8
-#define M6_POLARITY			    	0
-#define M6_POWER_MODE		    	MOTOR_POWER_MODE
-#define M6_POWER_LEVEL		    	0.0
+#define M3_POWER_LEVEL		    	0.50
 
 // *** axis settings **********************************************************************************
 
@@ -197,52 +165,6 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define Z_LATCH_VELOCITY	    	100
 #define Z_LATCH_BACKOFF		    	10
 #define Z_ZERO_BACKOFF		    	2
-
-// Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE 		    	AXIS_RADIUS
-#define A_VELOCITY_MAX 		    	((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
-#define A_FEEDRATE_MAX 		    	A_VELOCITY_MAX
-#define A_TRAVEL_MIN		    	-1										// min/max the same means infinite, no limit
-#define A_TRAVEL_MAX 		    	-1
-#define A_JERK_MAX 			    	(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define A_JERK_HIGH_SPEED       	A_JERK_MAX
-#define A_RADIUS 			    	(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define A_HOMING_INPUT              0
-#define A_HOMING_DIR                0
-#define A_SEARCH_VELOCITY 	    	600
-#define A_LATCH_VELOCITY 	    	100
-#define A_LATCH_BACKOFF 	    	5
-#define A_ZERO_BACKOFF 		    	2
-
-#define B_AXIS_MODE 		    	AXIS_RADIUS
-#define B_VELOCITY_MAX 		    	((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define B_FEEDRATE_MAX 		    	B_VELOCITY_MAX
-#define B_TRAVEL_MIN		    	-1
-#define B_TRAVEL_MAX 		    	-1
-#define B_JERK_MAX 			    	(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define B_JERK_HIGH_SPEED       	B_JERK_MAX
-#define B_RADIUS 			    	(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define B_HOMING_INPUT              0
-#define B_HOMING_DIR                0
-#define B_SEARCH_VELOCITY 	    	600
-#define B_LATCH_VELOCITY 	    	100
-#define B_LATCH_BACKOFF 	    	5
-#define B_ZERO_BACKOFF 		    	2
-
-#define C_AXIS_MODE 		    	AXIS_RADIUS
-#define C_VELOCITY_MAX 		    	((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
-#define C_FEEDRATE_MAX 		    	C_VELOCITY_MAX
-#define C_TRAVEL_MIN		    	-1
-#define C_TRAVEL_MAX 		    	-1
-#define C_JERK_MAX 			    	(X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
-#define C_JERK_HIGH_SPEED       	C_JERK_MAX
-#define C_RADIUS			    	(M1_TRAVEL_PER_REV/(2*3.14159628))
-#define C_HOMING_INPUT              0
-#define C_HOMING_DIR                0
-#define C_SEARCH_VELOCITY 	    	600
-#define C_LATCH_VELOCITY 	    	100
-#define C_LATCH_BACKOFF 	    	5
-#define C_ZERO_BACKOFF 		    	2
 
 //*** Input / output settings ***
 
@@ -308,109 +230,4 @@ constexpr float H1_DEFAULT_D = 100.0;
 #define DI9_MODE                    IO_MODE_DISABLED
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
-
-
-//Extruder1_PWM
-#define DO1_MODE                    IO_ACTIVE_HIGH
-//Extruder2_PWM
-#define DO2_MODE                    IO_ACTIVE_HIGH
-//Fan1A_PWM
-#define DO3_MODE                    IO_ACTIVE_HIGH
-//Fan1B_PWM
-#define DO4_MODE                    IO_ACTIVE_HIGH
-#define DO5_MODE                    IO_ACTIVE_HIGH
-#define DO6_MODE                    IO_ACTIVE_HIGH
-#define DO7_MODE                    IO_ACTIVE_HIGH
-#define DO8_MODE                    IO_ACTIVE_HIGH
-//SAFEin (Output) signal
-#define DO9_MODE                    IO_ACTIVE_HIGH
-#define DO10_MODE                   IO_ACTIVE_HIGH
-//Header Bed FET
-#define DO11_MODE                   IO_ACTIVE_HIGH
-//Indicator_LED
-#define DO12_MODE                   IO_ACTIVE_HIGH
-#define DO13_MODE                   IO_ACTIVE_HIGH
-
-
-/*** Handle optional modules that may not be in every machine ***/
-
-#define P1_PWM_FREQUENCY            100                     // in Hz
-#define P1_CW_SPEED_LO              7900                    // in RPM (arbitrary units)
-#define P1_CW_SPEED_HI              12800
-#define P1_CW_PHASE_LO              0.13                   // phase [0..1]
-#define P1_CW_PHASE_HI              0.17
-#define P1_CCW_SPEED_LO             0
-#define P1_CCW_SPEED_HI             0
-#define P1_CCW_PHASE_LO             0.1
-#define P1_CCW_PHASE_HI             0.1
-#define P1_PWM_PHASE_OFF            0.1
-
-#define P1_USE_MAPPING_CUBIC
-#define P1_MAPPING_CUBIC_X3         2.1225328766717546e-013
-#define P1_MAPPING_CUBIC_X2        -7.2900167282605129e-009
-#define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
-#define P1_MAPPING_CUBIC_X0        -2.1301489219406905e-001
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0			// G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET 0	// use (X_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Y_OFFSET 0  // use (Y_TRAVEL_MAX/2) to set g55 to middle of table
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
-
-/*** User-Defined Data Defaults ***/
-
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0
 

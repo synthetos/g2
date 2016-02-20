@@ -2,8 +2,8 @@
  * motate_pin_assugnments.h - pin assignments for the TinyGv9 boards
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Robert Giseburt
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -168,6 +168,8 @@ namespace Motate {
 
     pin_number kLED_USBRXPinNumber              =  72;
     pin_number kLED_USBTXPinNumber              =  73;
+
+//    pin_number kOutputSAFE_PinNumber            = 69;  // SAFE signal assigned to CANTX line
 
 
     // GRBL / gShield compatibility pins -- Due board ONLY

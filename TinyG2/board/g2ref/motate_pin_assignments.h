@@ -2,8 +2,8 @@
  * motate_pin_assignments.h - pin assignments for the TinyG g2ref boards
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Robert Giseburt
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -34,12 +34,10 @@
 
 // MOVED: Board pinout is now pulled in after naming, so we can use the naming there.
 
-
 namespace Motate {
 
     // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
     // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
-
 
     pin_number kSerial_RX                       =  0;
     pin_number kSerial_TX                       =  1;
@@ -162,7 +160,7 @@ namespace Motate {
     pin_number kSD_ChipSelectPinNumber          = 120;
     pin_number kInterlock_InPinNumber           = 121;
     pin_number kOutputSAFE_PinNumber            = 122;  // SAFE signal
-    pin_number kLEDPWM_PinNumber                = 122;
+    pin_number kLEDPWM_PinNumber                = 123;
 
     // GRBL / gShield compatibility pins -- Due board ONLY
 
@@ -209,6 +207,19 @@ namespace Motate {
     pin_number kADC14_PinNumber                 = 164;   // Not physially pinned out
 
     // start next sequence at 170
+
+    // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
+
+    pin_number kUnassigned10                    = 245;
+    pin_number kUnassigned9                     = 246;
+    pin_number kUnassigned8                     = 247;
+    pin_number kUnassigned7                     = 248;
+    pin_number kUnassigned6                     = 249;
+    pin_number kUnassigned5                     = 250;
+    pin_number kUnassigned4                     = 251;
+    pin_number kUnassigned3                     = 252;
+    pin_number kUnassigned2                     = 253;
+    pin_number kUnassigned1                     = 254;   // 254 is the max.. Do not exceed this number
 
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if

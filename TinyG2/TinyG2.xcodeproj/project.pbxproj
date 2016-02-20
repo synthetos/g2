@@ -60,10 +60,6 @@
 		D40A241F1AD5B9A600406A3A /* shopbotShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "shopbotShield-pinout.h"; sourceTree = "<group>"; };
 		D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D40A24211AD5B9A600406A3A /* ArduinoDue.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.mk; sourceTree = "<group>"; };
-		D41D13F717374B7D00D522D9 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
-		D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_probotixV90.h; sourceTree = "<group>"; };
-		D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
-		D41D140017374B7D00D522D9 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D43C7AE71B155D0A007440D6 /* G2v9 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = G2v9; sourceTree = "<group>"; };
 		D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "pboard-a-pinout.h"; sourceTree = "<group>"; };
@@ -116,12 +112,24 @@
 		D49367C31B824EA1000BB759 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
 		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
-		D49367CC1B82C865000BB759 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Play.h; sourceTree = "<group>"; };
-		D49367CD1B82C8CD000BB759 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; };
 		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
 		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = temperature.cpp; sourceTree = "<group>"; };
 		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		D49367DB1B8E0AF1000BB759 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		D4AC39081C77C1F20098D685 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_default.h; sourceTree = "<group>"; };
+		D4AC39091C77C1F20098D685 /* settings_makeblock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_makeblock.h; sourceTree = "<group>"; };
+		D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill_test.h; sourceTree = "<group>"; };
+		D4AC390B1C77C1F20098D685 /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
+		D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Play.h; sourceTree = "<group>"; };
+		D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; };
+		D4AC390E1C77C1F20098D685 /* settings_Printrbot_Simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple.h; sourceTree = "<group>"; };
+		D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_probotixV90.h; sourceTree = "<group>"; };
+		D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko2.h; sourceTree = "<group>"; };
+		D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; };
+		D4AC39121C77C1F20098D685 /* settings_shopbot_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shopbot_test.h; sourceTree = "<group>"; };
+		D4AC39131C77C1F20098D685 /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
+		D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker.h; sourceTree = "<group>"; };
+		D4AC39151C77C1F20098D685 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -129,17 +137,11 @@
 		D4B657A118B5C21500F8616C /* encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = encoder.h; sourceTree = "<group>"; };
 		D4B657A518B5C23C00F8616C /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pwm.cpp; sourceTree = "<group>"; };
 		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
-		D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Ultimaker_Rob_v9h.h; sourceTree = "<group>"; };
-		D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko375_dual.h; sourceTree = "<group>"; };
-		D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; };
 		D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gpio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
-		D4E913611AC4759F0042A16C /* settings_shapeoko2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_shapeoko2.h; sourceTree = "<group>"; };
 		D4EB789B1B7BF2F70001B355 /* G2v9.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.gdb; sourceTree = "<group>"; };
-		D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill.h; sourceTree = "<group>"; };
-		D4EC69FB18CA2C1900DF8E4F /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -196,18 +198,20 @@
 		D41D13F617374B7D00D522D9 /* settings */ = {
 			isa = PBXGroup;
 			children = (
-				D41D13F717374B7D00D522D9 /* settings_default.h */,
-				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
-				D49367CD1B82C8CD000BB759 /* settings_Printrbot_Plus.h */,
-				D49367CC1B82C865000BB759 /* settings_Printrbot_Play.h */,
-				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
-				D4E913611AC4759F0042A16C /* settings_shapeoko2.h */,
-				D4B93DED1AA7681200632FAB /* settings_shapeoko375_dual.h */,
-				D4B93DEE1AAA1F5F00632FAB /* settings_shopbot_sbv300.h */,
-				D4EC69FB18CA2C1900DF8E4F /* settings_test.h */,
-				D41D13FF17374B7D00D522D9 /* settings_Ultimaker.h */,
-				D4B7325E19292858002861F1 /* settings_Ultimaker_Rob_v9h.h */,
-				D41D140017374B7D00D522D9 /* settings_zen7x12.h */,
+				D4AC39081C77C1F20098D685 /* settings_default.h */,
+				D4AC39091C77C1F20098D685 /* settings_makeblock.h */,
+				D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */,
+				D4AC390B1C77C1F20098D685 /* settings_othermill.h */,
+				D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */,
+				D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */,
+				D4AC390E1C77C1F20098D685 /* settings_Printrbot_Simple.h */,
+				D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */,
+				D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */,
+				D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */,
+				D4AC39121C77C1F20098D685 /* settings_shopbot_test.h */,
+				D4AC39131C77C1F20098D685 /* settings_test.h */,
+				D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */,
+				D4AC39151C77C1F20098D685 /* settings_zen7x12.h */,
 			);
 			path = settings;
 			sourceTree = "<group>";
