@@ -21,11 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-// You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
-//#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
-//#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
-
-#define TINYG_FIRMWARE_BUILD            098.17 // prep for merge code; roughed in merge parameter settings; removed throttle code
+#define TINYG_FIRMWARE_BUILD            098.18 // prep for merge code; moved most planner variables to mp struct; unget_write_buffer(); thinned out unused defines and code
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)

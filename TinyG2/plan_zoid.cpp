@@ -188,7 +188,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     // Here we verify it moving forward, checking to make sure it still is true.
     // If so, we plan the "ramp" as flat, body-only.
     if (bf->hint == PERFECT_CRUISE) {
-        if ((!mb.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
+        if ((!mp.entry_changed) && fp_EQ(entry_velocity, bf->cruise_vmax)) {
 
             // We need to ensure that neither the entry or the exit velocities are
             // <= the cruise velocity even though there is tolerance in fp_EQ comparison.
@@ -211,7 +211,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     // Quick test to ensure we haven't violated the hint
     if (entry_velocity > block->exit_velocity) {
         // We're in a deceleration.
-        if (mb.entry_changed) {
+        if (mp.entry_changed) {
             // If entry_changed, then entry_velocity is lower than the hints expect.
             // A deceleration will never become an acceleration (post-hinting).
             // If it is marked as MIXED_DECELERATION, it means the entry was CRUISE_VMAX.
@@ -251,7 +251,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
 
         // Reset entry_changed. We won't likely be changing the next block's entry velocity.
-        mb.entry_changed = false;
+        mp.entry_changed = false;
 
 
         // Since we are not generally decelerating, this is effectively all of forward planning that we need.
@@ -269,7 +269,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
         if (accel_velocity < block->exit_velocity) {   // still accelerating
 
-            mb.entry_changed = true; // we are changing the *next* block's entry velocity
+            mp.entry_changed = true; // we are changing the *next* block's entry velocity
 
             block->exit_velocity = accel_velocity;
             block->cruise_velocity = accel_velocity;
@@ -285,7 +285,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
             return (_zoid_exit(bf, ZOID_EXIT_1a));
         } else {                        // it's hit the cusp
 
-            mb.entry_changed = false; // we are NOT changing the next block's entry velocity
+            mp.entry_changed = false; // we are NOT changing the next block's entry velocity
 
             block->cruise_velocity = bf->cruise_vmax;
 
