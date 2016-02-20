@@ -2,7 +2,7 @@
  * plan_arc.h - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -62,7 +62,7 @@ typedef struct arArcSingleton {	// persistent planner and runtime variables
 //	uint32_t linenum;			// line number of the arc feed move - same for each segment
 //	float target[AXES];			// arc segment target
 //	float work_offset[AXES];	// offset from machine coord system for reporting (same for each segment)
-//	float move_time;			// segment_time: constant time per aline segment
+//	float block_time;			// segment_time: constant time per aline segment
 
     magic_t magic_end;
 } arc_t;

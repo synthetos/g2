@@ -134,14 +134,12 @@ typedef enum {
 #define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
 #define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
 #define BLOCK_TIMEOUT_MS            ((float)30.0)       // MS before deciding there are no new blocks arriving
-#define PLANNER_CRITICAL_MS         ((float)20.0)       // threshold for planner critical state
 #define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 
 #define NOM_SEGMENT_TIME            ((float)(NOM_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define NOM_SEGMENT_USEC            ((float)(NOM_SEGMENT_MS * 1000))        // DO NOT CHANGE - time in microseconds
 #define MIN_SEGMENT_TIME            ((float)(MIN_SEGMENT_MS / 60000))       // DO NOT CHANGE - time in minutes
 #define MIN_BLOCK_TIME              ((float)(MIN_BLOCK_MS / 60000))         // DO NOT CHANGE - time in minutes
-#define PLANNER_CRITICAL_TIME       ((float)(PLANNER_CRITICAL_MS / 60000))  // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME              ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
 #define FEED_OVERRIDE_ENABLE        false               // initial value
@@ -170,8 +168,8 @@ typedef enum {
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
-//#define UPDATE_BF_MS(bf) { bf->move_time_ms = bf->move_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-#define UPDATE_MB_MS     { mp.plannable_time_ms = mp.plannable_time*60000; }
+//#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
+#define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
 
 /*
  *	Planner structures
@@ -185,7 +183,7 @@ struct mpBuffer_to_clear {
     //+++++ DIAGNOSTICS for easier debugging
     uint32_t linenum;               // mirror of bf->gm.linenum
     int iterations;
-    float move_time_ms;
+    float block_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
     uint8_t meet_iterations;        // iterations needed in _get_meet_velocity
@@ -202,12 +200,10 @@ struct mpBuffer_to_clear {
 
     bool plannable;                 // set true when this block can be used for planning
     bool mergeable;                 // set true when this block can be merged into
-    float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
-//    float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
-    float move_time;                // computed move time for entire move
-//    float block_time;               // computed move time for entire move
+    float block_time;               // computed move time for entire block (move)
+    float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
 
     // We are removing all entry_* values.
     // To get the entry_* values, look at pv->exit_* or mr.exit_*
@@ -215,16 +211,16 @@ struct mpBuffer_to_clear {
     // *** SEE NOTES ON THESE VARIABLES, in aline() ***
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
-    // is also the entry velocity of the *next* move
+                                    // is also the entry velocity of the *next* move
 
     float cruise_vset;              // cruise velocity requested for move - prior to overrides
     float cruise_vmax;              // cruise max velocity adjusted for overrides
     float exit_vmax;                // max exit velocity possible for this move
-    // is also the maximum entry velocity of the next move
+                                    // is also the maximum entry velocity of the next move
 
     float absolute_vmax;            // fastest this block can move w/o exceeding constraints
     float junction_vmax;            // maximum the exit velocity can be to go through the junction
-    // between the NEXT BLOCK AND THIS ONE
+                                    // between the NEXT BLOCK AND THIS ONE
 
     float jerk;                     // maximum linear jerk term for this move
     float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
@@ -271,7 +267,6 @@ typedef struct mpMotionPlannerSingleton {  // common variables for planning (mov
     // timing variables
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
-    float planner_critical_time;    // current value for critical time
 
     // planner state variables
     plannerState planner_state;     // current state of planner

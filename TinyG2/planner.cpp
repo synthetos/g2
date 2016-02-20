@@ -120,7 +120,7 @@ struct _json_commands_t {
 _json_commands_t jc;
 
 // Local Scope Data and Functions
-#define spindle_speed move_time	// local alias for spindle_speed to the time variable
+#define spindle_speed block_time	// local alias for spindle_speed to the time variable
 #define value_vector gm.target	// alias for vector of values
 
 //static void _planner_time_accounting();
@@ -143,10 +143,7 @@ void planner_init()
 	memset(&mr, 0, sizeof(mr));	            // clear all values, pointers and status
 	planner_init_assertions();
 	mp_init_buffers();
-
-    // reasonable starting values
     mp.mfo_factor = 1.00;
-    mp.planner_critical_time = PLANNER_CRITICAL_TIME;
 }
 
 void planner_reset()
@@ -158,6 +155,7 @@ void planner_reset()
  * planner_init_assertions()
  * planner_test_assertions() - test assertions, PANIC if violation exists
  */
+
 void planner_init_assertions()
 {
     // Note: mb magic numbers set up by mp_init_buffers()
@@ -399,7 +397,7 @@ stat_t mp_dwell(float seconds)
 		return(cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_dwell()")); // not ever supposed to fail
 	}
 	bf->bf_func = _exec_dwell;							// register callback to dwell start
-	bf->move_time = seconds;					        // in seconds, not minutes
+	bf->block_time = seconds;					        // in seconds, not minutes
 	bf->block_state = BLOCK_INITIAL_ACTION;
 	mp_commit_write_buffer(BLOCK_TYPE_DWELL);			// must be final operation before exit
 	return (STAT_OK);
@@ -407,7 +405,7 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-	st_prep_dwell((uint32_t)(bf->move_time * 1000000.0));// convert seconds to uSec
+	st_prep_dwell((uint32_t)(bf->block_time * 1000000.0));// convert seconds to uSec
 	if (mp_free_run_buffer()) {
         cm_cycle_end();			     // free buffer & perform cycle_end if planner is empty
     }
@@ -604,36 +602,19 @@ void mp_end_feed_override(const float ramp_time)
 void mp_planner_time_accounting()
 {
     mpBuf_t *bf = mb.r;                             // start with run buffer
-//    bool in_critical = true;                        // used to look for transition to critical region
 
     // check the run buffer to see if anything is running. Might not be
-//    bf->plannable_time = 0;                         // set to zero if running or not
-//    bf->plannable_time_ms = 0;                      // leaves move_time alone
-//    bf->plannable_length = 0;                       //
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
-
-    // set values in the running block / based on the running block
-    float plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
-//    mp.best_case_braking_time = sqrt(bf->exit_velocity * 5.773502692 * bf->recip_jerk);
-//    mp.best_case_braking_time_ms = mp.best_case_braking_time * 60000; //+++++
-
-    // scan and set all non-empty buffers (plannable buffers)
+    mp.plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
     while ((bf = bf->nx) != mb.r) {
         if (bf->buffer_state == MP_BUFFER_EMPTY || bf->plannable == true) {
             break;
         }
-        plannable_time += bf->move_time;
-//        bf->plannable_time = plannable_time; UPDATE_BF_MS(bf); //+++++
-//        bf->plannable_length = bf->length + bf->pv->plannable_length;
-
-//        if (in_critical && (plannable_time >= mp.planner_critical_time)) {
-//            in_critical = false;
-//            mp.c = bf;                          // mark the first non-critical block
-//        }
+        mp.plannable_time += bf->block_time;
     }
-    mp.plannable_time = plannable_time;  UPDATE_MB_MS //+++++
+    UPDATE_MP_DIAGNOSTICS //+++++
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
@@ -877,7 +858,7 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
         printf ("%d,",    (int)bf->plannable);
         printf ("%d,",    (int)bf->iterations);
 
-        printf ("%1.2f,", bf->move_time_ms);
+        printf ("%1.2f,", bf->block_time_ms);
         printf ("%1.2f,", bf->plannable_time_ms);
         printf ("%1.3f,", bf->override_factor);
         printf ("%1.3f,", bf->throttle);

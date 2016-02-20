@@ -2,8 +2,8 @@
  * plan_zoid.cpp - acceleration managed line planning and motion execution - trapezoid planner
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2015 Rob Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -41,7 +41,7 @@ static char logbuf[128];
 static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
 {
     sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
-                    bf->buffer_number, msg, bf->hint, (bf->move_time * 60000),
+                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
                     bf->length, bf->head_length, bf->body_length, bf->tail_length,
                     bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
     xio_writeline(logbuf);
@@ -88,7 +88,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
  *    bf->cruise_velocity >= 0
  *    bf->exit_velocity >= 0
  *    mr.exit_velocity <= bf->cruise_velocity >= bf->exit_velocity
- *    bf->move_time >= MIN_SEGMENT_TIME (expressed as cruise_vmax must not yield a patholigical segment)
+ *    bf->block_time >= MIN_SEGMENT_TIME (expressed as cruise_vmax must not yield a patholigical segment)
  *    bf->head_length = 0
  *    bf->body_length = 0
  *    bf->tail_length = 0
@@ -121,8 +121,8 @@ void _zoid_exit (mpBuf_t *bf, zoidExitPoint exit_point)
 	//+++++ DIAGNOSTIC
 //    bf->zoid_exit = exit_point;
 	if (mp_runtime_is_idle()) {		// normally the runtime keeps this value fresh
-//		bf->time_in_plan_ms += bf->move_time_ms;
-		bf->plannable_time_ms += bf->move_time_ms;
+//		bf->time_in_plan_ms += bf->block_time_ms;
+		bf->plannable_time_ms += bf->block_time_ms;
 	}
 }
 
@@ -138,7 +138,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     //  block_type
     //  hint
     //  {cruise,exit}_vmax
-    //  move_time
+    //  block_time
     //  length
     //  (start values of {cruise,exit}_velocity)
     //
@@ -197,7 +197,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
             block->body_length = bf->length;
             block->body_time = block->body_length / block->cruise_velocity;
-            bf->move_time = block->body_time;
+            bf->block_time = block->body_time;
 
             LOG_RETURN("1c");
             return (_zoid_exit(bf, ZOID_EXIT_1c));
@@ -233,7 +233,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
 
             block->body_time = block->body_length / block->cruise_velocity;
             block->tail_time = block->tail_length*2 / (block->exit_velocity + block->cruise_velocity);
-            bf->move_time = block->body_time + block->tail_time;
+            bf->block_time = block->body_time + block->tail_time;
             LOG_RETURN("2d");
             return (_zoid_exit(bf, ZOID_EXIT_2d));
         }
@@ -244,7 +244,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
             block->tail_length = bf->length;
             block->cruise_velocity = entry_velocity;
             block->tail_time = block->tail_length*2 / (block->exit_velocity + block->cruise_velocity);
-            bf->move_time = block->tail_time;
+            bf->block_time = block->tail_time;
             LOG_RETURN("1d");
             return (_zoid_exit(bf, ZOID_EXIT_1d));
         }
@@ -280,7 +280,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
             block->head_length = bf->length;
             block->cruise_velocity = block->exit_velocity;
             block->head_time = (block->head_length*2.0) / (entry_velocity + block->cruise_velocity);
-            bf->move_time = block->head_time;
+            bf->block_time = block->head_time;
             LOG_RETURN("1a");
             return (_zoid_exit(bf, ZOID_EXIT_1a));
         } else {                        // it's hit the cusp
@@ -306,7 +306,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
                 block->tail_length = 0; // we just set it, now we unset it
                 block->head_time = (block->head_length*2.0) / (entry_velocity + block->cruise_velocity);
                 block->body_time = block->body_length / block->cruise_velocity;
-                bf->move_time = block->head_time + block->body_time;
+                bf->block_time = block->head_time + block->body_time;
                 LOG_RETURN("2a");
                 return (_zoid_exit(bf, ZOID_EXIT_2a));
 
@@ -339,7 +339,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
         block->head_time = (block->head_length*2.0) / (entry_velocity + block->cruise_velocity);
         block->body_time = block->body_length / block->cruise_velocity;
         block->tail_time = (block->tail_length*2.0) / (block->exit_velocity + block->cruise_velocity);
-        bf->move_time = block->head_time + block->body_time + block->tail_time;
+        bf->block_time = block->head_time + block->body_time + block->tail_time;
 
         bf->hint = ASYMMETRIC_BUMP;
 
@@ -372,7 +372,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float ent
     if (fp_NOT_ZERO(block->tail_length)) {
         block->tail_time = (block->tail_length*2.0) / (block->exit_velocity + block->cruise_velocity);
     }
-    bf->move_time = block->head_time + block->body_time + block->tail_time;
+    bf->block_time = block->head_time + block->body_time + block->tail_time;
 
     LOG_RETURN("3c");
     return (_zoid_exit(bf, ZOID_EXIT_3c)); // 550us worst case
