@@ -25,7 +25,7 @@
 //#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
 //#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
 
-#define TINYG_FIRMWARE_BUILD            098.14 // added test to ensure exception reports are not sent if USB is not set up
+#define TINYG_FIRMWARE_BUILD            098.15 // fixed MIN_FAN_TEMP and MAX_FAN_TEMP definitions
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
