@@ -2363,44 +2363,31 @@ stat_t cm_run_joga(nvObj_t *nv)
 
 /* model state print functions */
 
-const char fmt_vel[]  PROGMEM = "Velocity:%17.3f%s/min\n";
-const char fmt_feed[] PROGMEM = "Feed rate:%16.3f%s/min\n";
-const char fmt_line[] PROGMEM = "Line number:%10.0f\n";
-const char fmt_stat[] PROGMEM = "Machine state:       %s\n"; // combined machine state
-const char fmt_macs[] PROGMEM = "Raw machine state:   %s\n"; // raw machine state
-const char fmt_cycs[] PROGMEM = "Cycle state:         %s\n";
-const char fmt_mots[] PROGMEM = "Motion state:        %s\n";
-const char fmt_hold[] PROGMEM = "Feedhold state:      %s\n";
-const char fmt_home[] PROGMEM = "Homing state:        %s\n";
-const char fmt_unit[] PROGMEM = "Units:               %s\n"; // units mode as ASCII string
-const char fmt_coor[] PROGMEM = "Coordinate system:   %s\n";
-const char fmt_momo[] PROGMEM = "Motion mode:         %s\n";
-const char fmt_plan[] PROGMEM = "Plane:               %s\n";
-const char fmt_path[] PROGMEM = "Path Mode:           %s\n";
-const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
-const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
-const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
-const char fmt_tool[] PROGMEM = "Tool number          %d\n";
-const char fmt_g92e[] PROGMEM = "G92 enabled          %d\n";
-
-const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
-const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
-const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
-const char fmt_hom[] PROGMEM = "%c axis homing state:%2.0f\n";
-
-const char fmt_gpl[] PROGMEM = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
-const char fmt_gun[] PROGMEM = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
-const char fmt_gco[] PROGMEM = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
-const char fmt_gpa[] PROGMEM = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
-const char fmt_gdi[] PROGMEM = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
+static const char fmt_vel[]  PROGMEM = "Velocity:%17.3f%s/min\n";
+static const char fmt_feed[] PROGMEM = "Feed rate:%16.3f%s/min\n";
+static const char fmt_line[] PROGMEM = "Line number:%10.0f\n";
+static const char fmt_stat[] PROGMEM = "Machine state:       %s\n"; // combined machine state
+static const char fmt_macs[] PROGMEM = "Raw machine state:   %s\n"; // raw machine state
+static const char fmt_cycs[] PROGMEM = "Cycle state:         %s\n";
+static const char fmt_mots[] PROGMEM = "Motion state:        %s\n";
+static const char fmt_hold[] PROGMEM = "Feedhold state:      %s\n";
+static const char fmt_home[] PROGMEM = "Homing state:        %s\n";
+static const char fmt_unit[] PROGMEM = "Units:               %s\n"; // units mode as ASCII string
+static const char fmt_coor[] PROGMEM = "Coordinate system:   %s\n";
+static const char fmt_momo[] PROGMEM = "Motion mode:         %s\n";
+static const char fmt_plan[] PROGMEM = "Plane:               %s\n";
+static const char fmt_path[] PROGMEM = "Path Mode:           %s\n";
+static const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
+static const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
+static const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
+static const char fmt_tool[] PROGMEM = "Tool number          %d\n";
+static const char fmt_g92e[] PROGMEM = "G92 enabled          %d\n";
 
 void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(ACTIVE_MODEL));}
-
 void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line);}     // TYPE_INT
 void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool);}     // TYPE_INT
 void cm_print_g92e(nvObj_t *nv) { text_print(nv, fmt_g92e);}     // TYPE_INT
-
 void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);} // print all these as TYPE_STRING
 void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs);} // See _get_msg_helper() for details
 void cm_print_cycs(nvObj_t *nv) { text_print_str(nv, fmt_cycs);}
@@ -2416,6 +2403,12 @@ void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 
+static const char fmt_gpl[] PROGMEM = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
+static const char fmt_gun[] PROGMEM = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
+static const char fmt_gco[] PROGMEM = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
+static const char fmt_gpa[] PROGMEM = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
+static const char fmt_gdi[] PROGMEM = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
+
 void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl);}  // TYPE_INT
 void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun);}  // TYPE_INT
 void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
@@ -2424,23 +2417,37 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system parameter print functions */
 
-const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
-const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
-const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
-const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
-const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
-
-const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled %10d [0=disable,1=enable]\n";
-const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab %2d [0=disable,1=enable]\n";
-const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
-const char fmt_mtoe[] PROGMEM ="[mtoe] manual traverse over enab%2d [0=disable,1=enable]\n";
-const char fmt_mto[] PROGMEM ="[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
+static const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
+static const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
+static const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
+static const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
+static const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}        // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
+
+
+static const char fmt_bme[] PROGMEM = "[bme] block merge enable%11d [0=disable,1=enable]\n";
+static const char fmt_bmr[] PROGMEM = "[bmr] block merge ratio%12d\n";
+static const char fmt_bmv[] PROGMEM = "[bmv] block merge velocity max%8f\n";
+static const char fmt_bml[] PROGMEM = "[bml] block merge length max%10.2f\n";
+static const char fmt_bmc[] PROGMEM = "[bmc] block merge cosine min%10.2f\n";
+
+void cm_print_bme(nvObj_t *nv){ text_print(nv, fmt_bme);}       // TYPE_INT
+void cm_print_bmr(nvObj_t *nv){ text_print(nv, fmt_bmr);}       // TYPE_FLOAT
+void cm_print_bmv(nvObj_t *nv){ text_print(nv, fmt_bmv);}       // TYPE_FLOAT
+void cm_print_bml(nvObj_t *nv){ text_print(nv, fmt_bml);}       // TYPE_FLOAT
+void cm_print_bmc(nvObj_t *nv){ text_print(nv, fmt_bmc);}       // TYPE_FLOAT
+
+
+static const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
+static const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab%3d [0=disable,1=enable]\n";
+static const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
+static const char fmt_mtoe[] PROGMEM ="[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
+static const char fmt_mto[] PROGMEM ="[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
 
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
 void cm_print_mfoe(nvObj_t *nv){ text_print(nv, fmt_mfoe);}     // TYPE INT
@@ -2490,6 +2497,11 @@ static const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
 static const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
 static const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";
 static const char fmt_cpos[] PROGMEM = "[%s%s] %s %s position%18.3f%s\n";
+
+static const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
+static const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
+static const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
+static const char fmt_hom[] PROGMEM = "%c axis homing state:%2.0f\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
 {

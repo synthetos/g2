@@ -2,8 +2,8 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -147,10 +147,10 @@ typedef enum {
 #define PLANNER_ITERATION_TIME  ((float)(PLANNER_ITERATION_MS / 60000)) // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME          ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
-#define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
-#define THROTTLE_MIN            ((float)0.50)           // minimum factor to slow down for planner throttling
-#define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
-#define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
+//#define THROTTLE_MAX            ((float)1.00)           // must always = 1.00 - no change in cruise velocity
+//#define THROTTLE_MIN            ((float)0.50)           // minimum factor to slow down for planner throttling
+//#define THROTTLE_SLOPE          ((float)(THROTTLE_MAX-THROTTLE_MIN) / PLANNER_THROTTLE_TIME)
+//#define THROTTLE_INTERCEPT      ((float)THROTTLE_MIN)
 
 #define FEED_OVERRIDE_MIN           0.05                // 5% minimum
 #define FEED_OVERRIDE_MAX           2.00                // 200% maximum
@@ -229,8 +229,8 @@ struct mpBuffer_to_clear {
     float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
-
     float move_time;                // computed move time for entire move
+//    float block_time;               // computed move time for entire move
 
     // We are removing all entry_* values.
     // To get the entry_* values, look at pv->exit_* or mr.exit_*
@@ -285,6 +285,11 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
     float best_case_braking_time;   // time to brake to zero in the best case
     uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
 
+    bool block_merge_enable;
+    float block_merge_ratio;
+    float block_merge_velocity_max;
+    float block_merge_length_max;
+    float block_merge_cosine_min;
                                     // group booleans together for optimization
     bool request_planning;          // a process has requested unconditional planning (used by feedhold)
     bool backplanning;              // true if planner is in a back-planning pass

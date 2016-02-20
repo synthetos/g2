@@ -47,9 +47,8 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t *_plan_block(mpBuf_t *bf);
-//static mpBuf_t *_plan_block_optimistic(mpBuf_t *bf);
 static void _calculate_override(mpBuf_t *bf);
-static void _calculate_throttle(mpBuf_t *bf);
+//static void _calculate_throttle(mpBuf_t *bf);
 static void _calculate_jerk(mpBuf_t *bf);
 static void _calculate_vmaxes(mpBuf_t *bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t *bf);
@@ -236,10 +235,8 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
         }
 
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
-
 //        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
-
-        _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
+//        _calculate_throttle(bf);                        // adjust cruise_vmax for throttle factor
 
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
@@ -391,7 +388,6 @@ static mpBuf_t *_plan_block(mpBuf_t *bf)
 
 /***** ALINE HELPERS *****
  * _calculate_override() - calculate cruise_vmax given cruise_vset and feed rate factor
- * _calculate_throttle() - adjust cruise_vmax for throttling
  * _calculate_jerk()
  * _calculate_vmaxes()
  * _calculate_junction_vmax()
@@ -517,7 +513,7 @@ static void _calculate_override(mpBuf_t *bf)     // execute ramp to adjust cruis
  *      B = intercept = minimum throttle factor
  *      Y = the resulting override factor to adjust move velocity
  */
-
+/*
 static void _calculate_throttle(mpBuf_t *bf)
 {
 //    if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->plannable_time > 0)) {
@@ -532,7 +528,7 @@ static void _calculate_throttle(mpBuf_t *bf)
 //    }
     bf->throttle = THROTTLE_MAX;                // set to 1.00 in case it's needed for backplanning
 }
-
+*/
 /* _calculate_throttle() END NOTES:
  * It's also possible to perform throttling by tracking arrival and service rate directly, although
  * this is a predictor of starvation and not the actual starvation itself. The advantage is that

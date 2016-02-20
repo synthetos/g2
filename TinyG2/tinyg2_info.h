@@ -2,8 +2,8 @@
  * tinyg2_info.h - tinyg2 build information
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,7 +25,7 @@
 //#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
 //#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
 
-#define TINYG_FIRMWARE_BUILD            098.16 // added enables for heaters
+#define TINYG_FIRMWARE_BUILD            098.17 // prep for merge code; roughed in merge parameter settings; removed throttle code
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
