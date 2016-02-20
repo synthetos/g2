@@ -31,6 +31,8 @@
 
 #include "canonical_machine.h"	// used for GCodeState_t
 
+using Motate::Timeout;
+
 /*
  * Enums and other type definitions
  *
@@ -131,7 +133,7 @@ typedef enum {
 #define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
 #define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
 #define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
-#define NEW_BLOCK_TIMEOUT_MS        ((float)30.0)       // MS before deciding there are no new blocks arriving
+#define BLOCK_TIMEOUT_MS            ((float)30.0)       // MS before deciding there are no new blocks arriving
 #define PLANNER_CRITICAL_MS         ((float)20.0)       // threshold for planner critical state
 #define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 
@@ -190,7 +192,7 @@ struct mpBuffer_to_clear {
     //+++++ to here
 
     bufferState buffer_state;       // used to manage queuing/dequeuing
-    blockType block_type;            // used to dispatch to run routine
+    blockType block_type;           // used to dispatch to run routine
     blockState block_state;         // move state machine sequence
     blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
@@ -199,8 +201,9 @@ struct mpBuffer_to_clear {
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
     bool plannable;                 // set true when this block can be used for planning
+    bool mergeable;                 // set true when this block can be merged into
     float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
-    float throttle;                 // throttle factor - preserved for backplanning
+//    float throttle;                 // throttle factor - preserved for backplanning
 
     float length;                   // total length of line or helix in mm
     float move_time;                // computed move time for entire move
@@ -257,41 +260,41 @@ typedef struct mpBufferPool {		// ring buffer for sub-moves
 
 typedef struct mpMotionPlannerSingleton {  // common variables for planning (move master)
 	magic_t magic_start;                // magic number to test memory integrity
-	float position[AXES];               // final move position for planning purposes
 
     //+++++ DIAGNOSTICS
     float run_time_remaining_ms;
     float plannable_time_ms;
 
-    // planner state variables
-    plannerState planner_state;     // current state of planner
+    // planner position
+	float position[AXES];               // final move position for planning purposes
+
+    // timing variables
     float run_time_remaining;       // time left in runtime (including running block)
     float plannable_time;           // time in planner that can actually be planned
     float planner_critical_time;    // current value for critical time
-    float best_case_braking_time;   // time to brake to zero in the best case
-    uint32_t new_block_timer;       // timeout if no new block received N ms after last block committed
 
+    // planner state variables
+    plannerState planner_state;     // current state of planner
+    bool request_planning;          // set true to request backplanning
+    bool backplanning;              // true if planner is in a back-planning pass
+    bool mfo_active;                // true if mfo override is in effect
+    bool ramp_active;               // true when a ramp is occurring
+    bool entry_changed;             // mark if exit_velocity changed to invalidate next block's hint
+
+    // block merge controls
     bool block_merge_enable;
     float block_merge_ratio;
     float block_merge_velocity_max;
     float block_merge_length_max;
     float block_merge_cosine_min;
-                                    // group booleans together for optimization
-    bool request_planning;          // a process has requested unconditional planning (used by feedhold)
-    bool backplanning;              // true if planner is in a back-planning pass
-    bool new_block;                 // marks the arrival of a new block for planning
-    bool new_block_timeout;         // block arrival rate is timing out (no new blocks arriving)
-    bool mfo_active;                // true if mfo override is in effect
-    bool ramp_active;               // true when a ramp is occurring
-
-    // state holding for forward planning in the exec
-    bool entry_changed;        // if we have to change the exit_velocity, we need to record it
-    // so that we know to invalidate the next block's hint
 
     // feed overrides and ramp variables (these extend the variables in cm.gmx)
     float mfo_factor;               // runtime override factor
     float ramp_target;
     float ramp_dvdt;
+
+    // objects
+    Timeout block_timeout;          // Timeout object used to time out blocks emerging form the annealer
 
     // planner pointers
 	mpBuf_t *p;						// planner buffer pointer

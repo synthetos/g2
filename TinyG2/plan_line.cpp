@@ -38,6 +38,8 @@
 
 #include "xio.h"
 
+//using Motate::Timeout;
+
 // Using motate pins for profiling (see main.cpp)
 // see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
 using namespace Motate;
@@ -165,7 +167,7 @@ stat_t mp_aline(GCodeState_t *gm_in)
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
 	copy_vector(mp.position, bf->gm.target);                // set the planner position
-	mp_commit_write_buffer(BLOCK_TYPE_ALINE);                // commit current block (must follow the position update)
+	mp_commit_write_buffer(BLOCK_TYPE_ALINE);               // commit current block (must follow the position update)
 	return (STAT_OK);
 }
 
