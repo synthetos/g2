@@ -43,6 +43,9 @@ void temperature_init();
 void temperature_reset();
 stat_t temperature_callback();
 
+stat_t cm_get_heater_enable(nvObj_t *nv);
+stat_t cm_set_heater_enable(nvObj_t *nv);
+
 stat_t cm_get_heater_p(nvObj_t *nv);
 stat_t cm_set_heater_p(nvObj_t *nv);
 stat_t cm_get_heater_i(nvObj_t *nv);
