@@ -246,19 +246,21 @@ struct PID {
     static constexpr float output_max = 1.0;
     static constexpr float derivative_contribution = 0.05;
 
-    float _p_factor; // the scale for P values
-    float _i_factor; // the scale for I values
-    float _d_factor; // the scale for D values
+    float _p_factor;                // the scale for P values
+    float _i_factor;                // the scale for I values
+    float _d_factor;                // the scale for D values
 
-    float _proportional = 0.0;   // _proportional storage
-    float _integral = 0.0;       // _integral storage
-    float _derivative = 0.0;     // _derivative storage
-    float _previous_input = 0.0; // _derivative storage
+    float _proportional = 0.0;      // _proportional storage
+    float _integral = 0.0;          // _integral storage
+    float _derivative = 0.0;        // _derivative storage
+    float _previous_input = 0.0;    // _derivative storage
 
     float _set_point;
 
-    Timeout _set_point_timeout; // used to keep track of if we are at set temp and stay there
+    Timeout _set_point_timeout;     // used to keep track of if we are at set temp and stay there
     bool _at_set_point;
+
+    bool _enable;                   // set true to enable this heater
 
     PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint}, _at_set_point{false} {};
 
@@ -373,11 +375,13 @@ stat_t temperature_callback()
         float temp = 0.0;
         bool sr_requested = false;
 
-        temp = thermistor1.temperature_exact();
-        fet_pin1 = pid1.getNewOutput(temp);
-        if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
-            last_reported_temp1 = temp;
-            sr_requested = true;
+        if (pid1._enable) {
+            temp = thermistor1.temperature_exact();
+            fet_pin1 = pid1.getNewOutput(temp);
+            if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+                last_reported_temp1 = temp;
+                sr_requested = true;
+            }
         }
 
         if ((temp > MIN_FAN_TEMP) && (temp < MAX_FAN_TEMP)) {
@@ -388,20 +392,23 @@ stat_t temperature_callback()
             fan_pin1 = 0.0;
         }
 
-        temp = thermistor2.temperature_exact();
-        fet_pin2 = pid2.getNewOutput(temp);
-        if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
-            last_reported_temp2 = temp;
-            sr_requested = true;
+        if (pid2._enable) {
+            temp = thermistor2.temperature_exact();
+            fet_pin2 = pid2.getNewOutput(temp);
+            if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+                last_reported_temp2 = temp;
+                sr_requested = true;
+            }
         }
 
-        temp = thermistor3.temperature_exact();
-        fet_pin3 = pid3.getNewOutput(temp);
-        if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
-            last_reported_temp3 = temp;
-            sr_requested = true;
+        if (pid3._enable) {
+            temp = thermistor3.temperature_exact();
+            fet_pin3 = pid3.getNewOutput(temp);
+            if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+                last_reported_temp3 = temp;
+                sr_requested = true;
+            }
         }
-
         if (sr_requested) {
             sr_request_status_report(SR_REQUEST_TIMED);
         }
@@ -425,6 +432,43 @@ char _get_heater_number(nvObj_t *nv) {
         return nv->token[2];
     }
     return nv->group[2];
+}
+
+stat_t cm_get_heater_enable(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._enable; break; }
+        case '2': { nv->value = pid2._enable; break; }
+        case '3': { nv->value = pid3._enable; break; }
+        // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { return(STAT_INPUT_VALUE_UNSUPPORTED); break; }
+    }
+    nv->valuetype = TYPE_BOOL;
+    return (STAT_OK);
+}
+
+stat_t cm_set_heater_enable(nvObj_t *nv)
+{
+    bool enable = false;
+    if (nv->value > 1) {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }
+    if (nv->value > 0.1) {
+        enable = true;
+    }
+    // The above manipulation of 'enable' was necessary because the compiler won't accept this cast:
+    // pid1._enable = (bool)nv->value;   // says it's unsafe to compare ==, != an FP number
+
+    switch(_get_heater_number(nv)) {
+        //        case '1': { pid1._enable = (bool)nv->value; break; }
+        //        case '2': { pid2._enable = (bool)nv->value; break; }
+        //        case '3': { pid3._enable = (bool)nv->value; break; }
+        case '1': { pid1._enable = enable; break; }
+        case '2': { pid2._enable = enable; break; }
+        case '3': { pid3._enable = enable; break; }
+        default: { return(STAT_INPUT_VALUE_UNSUPPORTED); break; } // Failsafe. We can only get here if we set it up in config_app, but not here.
+    }
+    return (STAT_OK);
 }
 
 /*
