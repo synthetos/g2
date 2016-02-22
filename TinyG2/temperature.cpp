@@ -167,9 +167,11 @@ Thermistor<kADC1_PinNumber> thermistor1 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
     };
+#if ADC1_AVAILABLE == 1
 void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
 };
+#endif
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
@@ -187,10 +189,11 @@ Thermistor<kADC0_PinNumber> thermistor3 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
     };
+#if ADC0_AVAILABLE == 1
 void ADCPin<kADC0_PinNumber>::interrupt() {
     thermistor3.adc_has_new_value();
 };
-
+#endif
 
 float last_reported_temp1 = 0; // keep track of what we've reported for SR generation
 float last_reported_temp2 = 0;
@@ -223,6 +226,7 @@ PWMOutputPin<kOutput3_PinNumber> fan_pin1;
 // We're going to utilize the fet_pin1 PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
 const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
 int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
+#if TEMPERATURE_OUTPUT_ON == 1
 namespace Motate {
     template<>
     void PWMOutputPin<kOutput1_PinNumber>::parentTimerType::interrupt() {
@@ -232,6 +236,7 @@ namespace Motate {
         }
     };
 }
+#endif
 
 // These could be moved to settings
 // If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp"
