@@ -230,6 +230,12 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
          arc.offset[OFS_K] -= cm.gmx.position[AXIS_Z];
     }
 
+    if ((fp_ZERO(arc.offset[OFS_I])) &&             // it's an error if no offsets are provided
+        (fp_ZERO(arc.offset[OFS_J])) &&
+        (fp_ZERO(arc.offset[OFS_K]))) {
+        return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
+    }
+
 	// compute arc runtime values
 	ritorno(_compute_arc(radius_f));
 

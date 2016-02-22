@@ -37,8 +37,6 @@
 
 /****** REVISIONS ******/
 
-// You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
-
 #define TINYG_FIRMWARE_BUILD            090.01 // installed shopbot_test.h settings file
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
