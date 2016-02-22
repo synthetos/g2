@@ -87,6 +87,8 @@
 #define ADC2_AVAILABLE 1
 #define ADC3_AVAILABLE 0
 
+#define TEMPERATURE_OUTPUT_ON 1
+
 namespace Motate {
 
     // Arduino pin name & function

@@ -31,176 +31,139 @@
 #ifndef sbv300_pinout_h
 #define sbv300_pinout_h
 
-/*
- * USAGE NOTES
- *
- * Read this first:
- * https://github.com/synthetos/g2/wiki/Adding-a-new-G2-board-(or-revision)-to-G2#making-a-new-pin-assignment
- *
- *  USAGE:
- *
- *  This file is lays out all the pin capabilities of the SAM3X8C organized by pin number.
- *  Each pin has its associated functions listed at the bottom of the file, and is essentially
- *  immutable for each processor.
- *
- *  To use, assign Motate pin numbers to the first value in the _MAKE_MOTATE_PIN() macro.
- *  ALL PINS MUST BE ASSIGNED A NUMBER, even if they are not used. There will NOT be a
- *  code-size or speed penalty for unused pins, but the WILL be a compiler-failure for
- *  unassigned pins. This new restriction allows for simplification of linkages deep in
- *  Motate.
- */
-/*  See motate_pin_assignments.h for pin names to be used int he rest of the G2 code.
- *  EXAMPLES:
- *
- *  *** Vanilla pin example ***
- *
- *      _MAKE_MOTATE_PIN(4, A, 'A', 27);	// SPI0_SCKPinNumber
- *
- *      This assigns Motate pin 4 to Port A, pin 27 (A27)
- *      Look in motate_pin_assignments.h to see that this is kSPI_SCKPinNumber
- *
- *  ** Other pin functions ***
- *
- *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
- */
-
 #include <MotatePins.h>
+
+// We don't have all of the inputs, so we don't define them.
+#define INPUT1_AVAILABLE 1
+#define INPUT2_AVAILABLE 0
+#define INPUT3_AVAILABLE 0
+#define INPUT4_AVAILABLE 0
+#define INPUT5_AVAILABLE 0
+#define INPUT6_AVAILABLE 0
+#define INPUT7_AVAILABLE 0
+#define INPUT8_AVAILABLE 0
+#define INPUT9_AVAILABLE 0
+#define INPUT10_AVAILABLE 0
+#define INPUT11_AVAILABLE 0
+#define INPUT12_AVAILABLE 0
+#define INPUT13_AVAILABLE 0
+
+#define ADC0_AVAILABLE 0
+#define ADC1_AVAILABLE 0
+#define ADC2_AVAILABLE 0
+#define ADC3_AVAILABLE 0
+
+#define TEMPERATURE_OUTPUT_ON 0
 
 namespace Motate {
 
-    // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
-    // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
+    // NEED ASSIGNED: kSpindle_PwmPinNumber
 
-    pin_number kSerial_RX                       =   -1;
-    pin_number kSerial_TX                       =   -1;
+    _MAKE_MOTATE_PIN(kSpindle_EnablePinNumber   , A, 'A',  0);
+    _MAKE_MOTATE_PIN(kUnassigned1               , A, 'A',  1);
+    _MAKE_MOTATE_PIN(kUnassigned2               , A, 'A',  2);
+    _MAKE_MOTATE_PIN(kUnassigned3               , A, 'A',  3);
+    _MAKE_MOTATE_PIN(kUnassigned4               , A, 'A',  4);
+    _MAKE_MOTATE_PIN(kUnassigned5               , A, 'A',  5);
+    _MAKE_MOTATE_PIN(kUnassigned6               , A, 'A',  6);
+    _MAKE_MOTATE_PIN(kUnassigned7               , A, 'A',  7);
+    _MAKE_MOTATE_PIN(kUnassigned8               , A, 'A',  8);
+    _MAKE_MOTATE_PIN(kUnassigned9               , A, 'A',  9);
+    _MAKE_MOTATE_PIN(kUnassigned10              , A, 'A', 10);
+    _MAKE_MOTATE_PIN(kUnassigned11              , A, 'A', 11);
+    _MAKE_MOTATE_PIN(kUnassigned12              , A, 'A', 12);
+    _MAKE_MOTATE_PIN(kUnassigned13              , A, 'A', 13);
+    _MAKE_MOTATE_PIN(kUnassigned14              , A, 'A', 14);
+    _MAKE_MOTATE_PIN(kUnassigned15              , A, 'A', 15);
+    _MAKE_MOTATE_PIN(kUnassigned16              , A, 'A', 16);
+    _MAKE_MOTATE_PIN(kUnassigned17              , A, 'A', 17);
+    _MAKE_MOTATE_PIN(kUnassigned18              , A, 'A', 18);
+    _MAKE_MOTATE_PIN(kUnassigned19              , A, 'A', 19);
+    _MAKE_MOTATE_PIN(kUnassigned20              , A, 'A', 20);
+    _MAKE_MOTATE_PIN(kUnassigned21              , A, 'A', 21);
+    _MAKE_MOTATE_PIN(kUnassigned22              , A, 'A', 22);
+    _MAKE_MOTATE_PIN(kUnassigned23              , A, 'A', 23);
+    _MAKE_MOTATE_PIN(kUnassigned24              , A, 'A', 24);
+    _MAKE_MOTATE_PIN(kUnassigned25              , A, 'A', 25);
+    _MAKE_MOTATE_PIN(kUnassigned26              , A, 'A', 26);
+    _MAKE_MOTATE_PIN(kUnassigned27              , A, 'A', 27);
+    _MAKE_MOTATE_PIN(kUnassigned28              , A, 'A', 28);
+    _MAKE_MOTATE_PIN(kUnassigned29              , A, 'A', 29);
 
-    pin_number kSerial0_RX                      =   -1;
-    pin_number kSerial0_TX                      =   -1;
-
-    pin_number kI2C_SDAPinNumber                =  -1;
-    pin_number kI2C_SCLPinNumber                =  -1;
-
-    pin_number kI2C0_SDAPinNumber               =  -1;
-    pin_number kI2C0_SCLPinNumber               =  -1;
-
-    pin_number kSPI_SCKPinNumber                =  -1;
-    pin_number kSPI_MISOPinNumber               =  -1;
-    pin_number kSPI_MOSIPinNumber               =  -1;
-
-    pin_number kSPI0_SCKPinNumber               =  -1;
-    pin_number kSPI0_MISOPinNumber              =  -1;
-    pin_number kSPI0_MOSIPinNumber              =  -1;
-
-    pin_number kDebug1_PinNumber                =  -1;
-    pin_number kDebug2_PinNumber                =  49;
-    pin_number kDebug3_PinNumber                =  50;
-    pin_number kDebug4_PinNumber                =  -1;
-
-    pin_number kKinen_SyncPinNumber             =  -1;
-
-    pin_number kSocket1_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket1_InterruptPinNumber      =  -1;
-    pin_number kSocket1_StepPinNumber           =   0;
-    pin_number kSocket1_DirPinNumber            =   6;
-    pin_number kSocket1_EnablePinNumber         =  -1;  // TODO Global Enable
-    pin_number kSocket1_Microstep_0PinNumber    =  -1;
-    pin_number kSocket1_Microstep_1PinNumber    =  -1;
-    pin_number kSocket1_Microstep_2PinNumber    =  -1;
-    pin_number kSocket1_VrefPinNumber           =  -1;
-
-    pin_number kSocket2_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket2_InterruptPinNumber      =  -1;
-    pin_number kSocket2_StepPinNumber           =   1;
-    pin_number kSocket2_DirPinNumber            =   7;
-    pin_number kSocket2_EnablePinNumber         =  -1;  // TODO Global Enable
-    pin_number kSocket2_Microstep_0PinNumber    =  -1;
-    pin_number kSocket2_Microstep_1PinNumber    =  -1;
-    pin_number kSocket2_Microstep_2PinNumber    =  -1;
-    pin_number kSocket2_VrefPinNumber           =  -1;
-
-    pin_number kSocket3_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket3_InterruptPinNumber      =  -1;
-    pin_number kSocket3_StepPinNumber           =   2;
-    pin_number kSocket3_DirPinNumber            =   8;
-    pin_number kSocket3_EnablePinNumber         =  -1;  // TODO Global Enable
-    pin_number kSocket3_Microstep_0PinNumber    =  -1;
-    pin_number kSocket3_Microstep_1PinNumber    =  -1;
-    pin_number kSocket3_Microstep_2PinNumber    =  -1;
-    pin_number kSocket3_VrefPinNumber           =  -1;
-
-    pin_number kSocket4_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket4_InterruptPinNumber      =  -1;
-    pin_number kSocket4_StepPinNumber           =  3;
-    pin_number kSocket4_DirPinNumber            =  9;
-    pin_number kSocket4_EnablePinNumber         =  -1;
-    pin_number kSocket4_Microstep_0PinNumber    =  -1;
-    pin_number kSocket4_Microstep_1PinNumber    =  -1;
-    pin_number kSocket4_Microstep_2PinNumber    =  -1;
-    pin_number kSocket4_VrefPinNumber           =  -1;
-
-    pin_number kSocket5_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket5_InterruptPinNumber      =  -1;
-    pin_number kSocket5_StepPinNumber           =  4;
-    pin_number kSocket5_DirPinNumber            =  10;
-    pin_number kSocket5_EnablePinNumber         =  -1;
-    pin_number kSocket5_Microstep_0PinNumber    =  -1;
-    pin_number kSocket5_Microstep_1PinNumber    =  -1;
-    pin_number kSocket5_Microstep_2PinNumber    =  -1;
-    pin_number kSocket5_VrefPinNumber           =  -1;
-
-    pin_number kSocket6_SPISlaveSelectPinNumber =  -1;
-    pin_number kSocket6_InterruptPinNumber      =  -1;
-    pin_number kSocket6_StepPinNumber           =  5;
-    pin_number kSocket6_DirPinNumber            =  11;
-    pin_number kSocket6_EnablePinNumber         =  -1;
-    pin_number kSocket6_Microstep_0PinNumber    =  -1;
-    pin_number kSocket6_Microstep_1PinNumber    =  -1;
-    pin_number kSocket6_Microstep_2PinNumber    =  -1;
-    pin_number kSocket6_VrefPinNumber           =  -1;
-
-    // SPINDLE ON 1 = B 15
-    // PERMISSIVE 4 = D 7
-    pin_number kSpindle_EnablePinNumber         =  14;  // TODO enable spindle
-    pin_number kSpindle_DirPinNumber            =  15;
-
-    pin_number kCoolant_EnablePinNumber         =  -1;
-
-    pin_number kSpindle_PwmPinNumber            =  -1;
-    pin_number kSpindle_Pwm2PinNumber           =  -1;
-
-	pin_number kXAxis_MinPinNumber              =  18;
-	pin_number kXAxis_MaxPinNumber              =  -1;
-	pin_number kYAxis_MinPinNumber              =  18;
-	pin_number kYAxis_MaxPinNumber              =  -1;
-	pin_number kZAxis_MinPinNumber              =  -1;
-	pin_number kZAxis_MaxPinNumber              =  18;
-	pin_number kAAxis_MinPinNumber              =  -1;
-	pin_number kAAxis_MaxPinNumber              =  -1;
-	pin_number kBAxis_MinPinNumber              =  -1;
-	pin_number kBAxis_MaxPinNumber              =  -1;
-	pin_number kCAxis_MinPinNumber              =  -1;
-	pin_number kCAxis_MaxPinNumber              =  -1;
-
-    pin_number kSD_CardDetect                   =  -1;
-    pin_number kInterlock_In                    =  -1;
-
-    pin_number kLED_USBRXPinNumber              =  12;
-    pin_number kLED_USBTXPinNumber              =  13;
+    _MAKE_MOTATE_PIN(kSocket6_DirPinNumber      , B, 'B',  0);
+    _MAKE_MOTATE_PIN(kSocket6_StepPinNumber     , B, 'B',  1);
+    _MAKE_MOTATE_PIN(kUnassigned30              , B, 'B',  2);
+    _MAKE_MOTATE_PIN(kUnassigned31              , B, 'B',  3);
+    _MAKE_MOTATE_PIN(kUnassigned32              , B, 'B',  4);
+    _MAKE_MOTATE_PIN(kUnassigned33              , B, 'B',  5);
+    _MAKE_MOTATE_PIN(kUnassigned34              , B, 'B',  6);
+    _MAKE_MOTATE_PIN(kUnassigned35              , B, 'B',  7);
+    _MAKE_MOTATE_PIN(kUnassigned36              , B, 'B',  8);
+    _MAKE_MOTATE_PIN(kUnassigned37              , B, 'B',  9);
+    _MAKE_MOTATE_PIN(kUnassigned38              , B, 'B', 10);
+    _MAKE_MOTATE_PIN(kUnassigned39              , B, 'B', 11);
+    _MAKE_MOTATE_PIN(kUnassigned40              , B, 'B', 12);
+    _MAKE_MOTATE_PIN(kUnassigned41              , B, 'B', 13);
+    _MAKE_MOTATE_PIN(kSocket3_DirPinNumber      , B, 'B', 14);
+    _MAKE_MOTATE_PIN(kUnassigned42              , B, 'B', 15);
+    _MAKE_MOTATE_PIN(kUnassigned43              , B, 'B', 16);
+    _MAKE_MOTATE_PIN(kUnassigned44              , B, 'B', 17);
+    _MAKE_MOTATE_PIN(kUnassigned45              , B, 'B', 18);
+    _MAKE_MOTATE_PIN(kUnassigned46              , B, 'B', 19);
+    _MAKE_MOTATE_PIN(kUnassigned47              , B, 'B', 20);
+    _MAKE_MOTATE_PIN(kUnassigned48              , B, 'B', 21);
+    _MAKE_MOTATE_PIN(kSocket4_DirPinNumber      , B, 'B', 22);
+    _MAKE_MOTATE_PIN(kSocket1_DirPinNumber      , B, 'B', 23);
+    _MAKE_MOTATE_PIN(kSocket2_DirPinNumber      , B, 'B', 24);
+    _MAKE_MOTATE_PIN(kUnassigned49              , B, 'B', 25);
+    _MAKE_MOTATE_PIN(kUnassigned50              , B, 'B', 26);
+    _MAKE_MOTATE_PIN(kLED_USBTXPinNumber        , B, 'B', 27);
+    _MAKE_MOTATE_PIN(kUnassigned51              , B, 'B', 28);
+    _MAKE_MOTATE_PIN(kUnassigned52              , B, 'B', 29);
+    _MAKE_MOTATE_PIN(kUnassigned53              , B, 'B', 30);
+    _MAKE_MOTATE_PIN(kUnassigned54              , B, 'B', 31);
 
 
-    // GRBL / gShield compatibility pins -- Due board ONLY
+    _MAKE_MOTATE_PIN(kLED_USBRXPinNumber        , C, 'C',  0);
+    _MAKE_MOTATE_PIN(kUnassigned55              , C, 'C',  1);
+    _MAKE_MOTATE_PIN(kUnassigned56              , C, 'C',  2);
+    _MAKE_MOTATE_PIN(kUnassigned57              , C, 'C',  3);
+    _MAKE_MOTATE_PIN(kUnassigned58              , C, 'C',  4);
+    _MAKE_MOTATE_PIN(kUnassigned59              , C, 'C',  5);
+    _MAKE_MOTATE_PIN(kUnassigned60              , C, 'C',  6);
+    _MAKE_MOTATE_PIN(kUnassigned61              , C, 'C',  7);
+    _MAKE_MOTATE_PIN(kUnassigned62              , C, 'C',  8);
+    _MAKE_MOTATE_PIN(kUnassigned63              , C, 'C',  9);
+    _MAKE_MOTATE_PIN(kInput1_PinNumber          , C, 'C', 10);
+    _MAKE_MOTATE_PIN(kUnassigned64              , C, 'C', 11);
+    _MAKE_MOTATE_PIN(kUnassigned65              , C, 'C', 12);
+    _MAKE_MOTATE_PIN(kUnassigned66              , C, 'C', 13);
+    _MAKE_MOTATE_PIN(kUnassigned67              , C, 'C', 14);
+    _MAKE_MOTATE_PIN(kUnassigned68              , C, 'C', 15);
+    _MAKE_MOTATE_PIN(kUnassigned69              , C, 'C', 16);
+    _MAKE_MOTATE_PIN(kUnassigned70              , C, 'C', 17);
+    _MAKE_MOTATE_PIN(kUnassigned71              , C, 'C', 18);
+    _MAKE_MOTATE_PIN(kUnassigned72              , C, 'C', 19);
+    _MAKE_MOTATE_PIN(kUnassigned73              , C, 'C', 20);
+    _MAKE_MOTATE_PIN(kUnassigned74              , C, 'C', 21);
+    _MAKE_MOTATE_PIN(kUnassigned75              , C, 'C', 22);
+    _MAKE_MOTATE_PIN(kSocket4_StepPinNumber     , C, 'C', 23);
+    _MAKE_MOTATE_PIN(kSocket5_StepPinNumber     , C, 'C', 24);
+    _MAKE_MOTATE_PIN(kSocket2_StepPinNumber     , C, 'C', 25);
+    _MAKE_MOTATE_PIN(kSocket3_StepPinNumber     , C, 'C', 26);
+    _MAKE_MOTATE_PIN(kSocket5_DirPinNumber      , C, 'C', 27);
+    _MAKE_MOTATE_PIN(kSocket1_StepPinNumber     , C, 'C', 28);
+    _MAKE_MOTATE_PIN(kUnassigned76              , C, 'C', 29);
+    _MAKE_MOTATE_PIN(kUnassigned77              , C, 'C', 30);
+    _MAKE_MOTATE_PIN(kUnassigned78              , C, 'C', 31);
 
-    pin_number kGRBL_ResetPinNumber             =  -1;
-    pin_number kGRBL_FeedHoldPinNumber          =  -1;
-    pin_number kGRBL_CycleStartPinNumber        =  -1;
-
-    pin_number kGRBL_CommonEnablePinNumber      =  -1;
-    
-    /** NOTE: When adding pin definitions here, they must be
-     *        added to ALL board pin assignment files, even if
-     *        they are defined as -1.
-     **/
+    _MAKE_MOTATE_PIN(kSpindle_DirPinNumber      , D, 'D',  7);
+    _MAKE_MOTATE_PIN(kUnassigned79              , D, 'D',  8);
 
 } // namespace Motate
+
+// We then allow each chip-type to have it's own function definitions
+// that will refer to these pin assignments.
+#include "motate_chip_pin_functions.h"
 
 #endif

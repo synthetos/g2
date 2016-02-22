@@ -33,6 +33,28 @@
 
 #include <MotatePins.h>
 
+// We don't have all of the inputs, so we don't define them.
+#define INPUT1_AVAILABLE 0
+#define INPUT2_AVAILABLE 0
+#define INPUT3_AVAILABLE 0
+#define INPUT4_AVAILABLE 0
+#define INPUT5_AVAILABLE 0
+#define INPUT6_AVAILABLE 0
+#define INPUT7_AVAILABLE 0
+#define INPUT8_AVAILABLE 0
+#define INPUT9_AVAILABLE 0
+#define INPUT10_AVAILABLE 0
+#define INPUT11_AVAILABLE 0
+#define INPUT12_AVAILABLE 0
+#define INPUT13_AVAILABLE 0
+
+#define ADC0_AVAILABLE 0
+#define ADC1_AVAILABLE 0
+#define ADC2_AVAILABLE 0
+#define ADC3_AVAILABLE 0
+
+#define TEMPERATURE_OUTPUT_ON 0
+
 namespace Motate {
 
     // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
@@ -157,10 +179,46 @@ namespace Motate {
 	pin_number kCAxis_MaxPinNumber              =  -1;
 
     pin_number kSD_CardDetect                   =  -1;
-    pin_number kInterlock_In                    =  -1;
+    pin_number kInterlock_InPinNumber           =  -1;
+    pin_number kOutputSAFE_PinNumber            =  -1;  // SAFE signal
 
     pin_number kLED_USBRXPinNumber              =  72;
     pin_number kLED_USBTXPinNumber              =  73;
+
+    pin_number kOutput1_PinNumber               =  -1;   // DO_1: Extruder1_PWM
+    pin_number kOutput2_PinNumber               =  -1;   // DO_2: Extruder2_PWM
+    pin_number kOutput3_PinNumber               =  -1;   // DO_3: Fan1A_PWM
+    pin_number kOutput4_PinNumber               =  -1;   // DO_4: Fan1B_PWM
+    pin_number kOutput5_PinNumber               =  -1;   // DO_5: Fan2A_PWM
+
+    pin_number kOutput6_PinNumber               =  -1;   // 135;     // See Spindle Enable
+    pin_number kOutput7_PinNumber               =  -1;   // 136;     // See Spindle Direction
+    pin_number kOutput8_PinNumber               =  -1;   // 137;     // See Coolant Enable
+    pin_number kOutput9_PinNumber               =  -1;               // <unassigned, available out>
+    pin_number kOutput10_PinNumber              =  -1;               // DO_10: Fan2B_PWM
+
+    pin_number kOutput11_PinNumber              =  -1;   // DO_11: Heted Bed FET
+    pin_number kOutput12_PinNumber              =  -1;   // DO_12: Indicator_LED
+    pin_number kOutput13_PinNumber              =  -1;   // 142;
+    pin_number kOutput14_PinNumber              =  -1;   // 143;
+    pin_number kOutput15_PinNumber              =  -1;   // 144;
+    pin_number kOutput16_PinNumber              =  -1;   // 145;
+
+    pin_number kADC0_PinNumber                  =  -1;   // Heated bed thermistor ADC
+    pin_number kADC1_PinNumber                  =  -1;   // Extruder1_ADC
+    pin_number kADC2_PinNumber                  =  -1;   // Extruder2_ADC
+    pin_number kADC3_PinNumber                  =  -1;   // 153;
+    pin_number kADC4_PinNumber                  =  -1;   // 154;
+    pin_number kADC5_PinNumber                  =  -1;   // 155;
+    pin_number kADC6_PinNumber                  =  -1;   // 156;
+    pin_number kADC7_PinNumber                  =  -1;   // 157;
+    pin_number kADC8_PinNumber                  =  -1;   // 158;
+    pin_number kADC9_PinNumber                  =  -1;   // 159;
+    pin_number kADC10_PinNumber                 =  -1;   // 160;
+    pin_number kADC11_PinNumber                 =  -1;   // 161;
+    pin_number kADC12_PinNumber                 =  -1;   // 162;
+    pin_number kADC13_PinNumber                 =  -1;   // Not physially pinned out
+    pin_number kADC14_PinNumber                 =  -1;   // Not physially pinned out
 
 
     // GRBL / gShield compatibility pins -- Due board ONLY
