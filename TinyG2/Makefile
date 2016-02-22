@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2013 Robert Giseburt
-# Copyright (c) 2013 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2016 Robert Giseburt
+# Copyright (c) 2013 - 2016 Alden S. Hart Jr.
 #
 # This file is part of the TinyG2 project.
 #
@@ -73,9 +73,9 @@ USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 #	SETTINGS_FILE="settings_default.h"
 #	SETTINGS_FILE="settings_othermill.h"
 #	SETTINGS_FILE="settings_probotixV90.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
-#	SETTINGS_FILE="settings_shopbot_sbv300.h"
-#	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_shapeoko2.h"
+#    SETTINGS_FILE="settings_shopbot_sbv300.h"
+	SETTINGS_FILE="settings_shopbot_test.h"
 #	SETTINGS_FILE="settings_Ultimaker.h"
 
 # ---------------------------------------------------------------------------------------
