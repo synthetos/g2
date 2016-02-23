@@ -86,6 +86,8 @@
 #define ADC2_AVAILABLE 0
 #define ADC3_AVAILABLE 0
 
+#define TEMPERATURE_OUTPUT_ON 0
+
 namespace Motate {
         
     // Pin name and function        
