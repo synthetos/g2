@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shopbot Test
+ * settings_sbopbot_sbv300 - Shopbot sbv300 config
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -48,6 +48,9 @@
 
 #define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+
+#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
+#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
@@ -144,8 +147,6 @@
 #define M6_POWER_LEVEL		    	MOTOR_POWER_LEVEL
 #endif
 
-#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
-#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
 // *** axis settings *********************************************************************************
 
 #define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
@@ -157,15 +158,13 @@
 #define X_TRAVEL_MAX		    	(25 * 25.4)				// xtm	travel between switches or crashes
 #define X_JERK_MAX			    	(2 * 25.4)				// xjm	jerk is multipled by 1,000,000 internally
 #define X_JERK_HIGH_SPEED		    10000					// xjh
-#define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
+//#define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY	    	(60 * 25.4)				// xsv	minus means move to minimum switch
 #define X_LATCH_VELOCITY	    	(30 * 25.4)				// xlv	mm/min
 #define X_LATCH_BACKOFF		    	(0.125 * 25.4)			// xlb	mm
 #define X_ZERO_BACKOFF		    	(0.375 * 25.4)			// xzb	mm
-#define X_HOMING_INPUT				0
-#define X_HOMING_DIR				0
 
 #define Y_AXIS_MODE			    	AXIS_STANDARD
 #define Y_VELOCITY_MAX		    	(360 * 25.4)
@@ -174,16 +173,13 @@
 #define Y_TRAVEL_MAX		    	(19 * 25.4)
 #define Y_JERK_MAX			    	(2 * 25.4)
 #define Y_JERK_HIGH_SPEED		    10000
-#define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
+//#define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Y_LATCH_VELOCITY	    	(30 * 25.4)
 #define Y_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define Y_ZERO_BACKOFF		    	(0.375 * 25.4)
-#define Y_HOMING_INPUT				0
-#define Y_HOMING_DIR				0
-
 
 #define Z_AXIS_MODE			       	AXIS_STANDARD
 #define Z_VELOCITY_MAX		    	(360 * 25.4)
@@ -192,16 +188,13 @@
 #define Z_TRAVEL_MIN		    	0
 #define Z_JERK_MAX			    	(2 * 25.4)
 #define Z_JERK_HIGH_SPEED		    1000
-#define Z_JUNCTION_DEVIATION    	0.05
+//#define Z_JUNCTION_DEVIATION    	0.05
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Z_LATCH_VELOCITY	    	(30 * 25.4)
 #define Z_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define Z_ZERO_BACKOFF		    	(0.375 * 25.4)
-#define Z_HOMING_INPUT				0
-#define Z_HOMING_DIR				0
-
 
 #define A_AXIS_MODE			    	AXIS_STANDARD
 #define A_VELOCITY_MAX		    	(360 * 25.4)
@@ -210,7 +203,7 @@
 #define A_TRAVEL_MAX 		    	-1					// same value means infinite, no limit
 #define A_JERK_MAX			    	(2 * 25.4)
 #define A_JERK_HIGH_SPEED		    A_JERK_MAX
-#define A_JUNCTION_DEVIATION    	0.1
+//#define A_JUNCTION_DEVIATION    	0.1
 #define A_RADIUS			    	1.0
 #define A_HOMING_INPUT              0
 #define A_HOMING_DIR                0
@@ -218,8 +211,6 @@
 #define A_LATCH_VELOCITY	    	(30 * 25.4)
 #define A_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define A_ZERO_BACKOFF		    	(0.375 * 25.4)
-#define A_HOMING_INPUT				0
-#define A_HOMING_DIR				0
 
 #define B_AXIS_MODE			    	AXIS_DISABLED
 #define B_VELOCITY_MAX		    	(360 * 25.4)
@@ -228,7 +219,7 @@
 #define B_TRAVEL_MIN		    	-1
 #define B_JERK_MAX			    	(2 * 25.4)
 #define B_JERK_HIGH_SPEED		    B_JERK_MAX
-#define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
+//#define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
 #define B_HOMING_INPUT              0
 #define B_HOMING_DIR                0
@@ -236,9 +227,6 @@
 #define B_LATCH_VELOCITY	    	(30 * 25.4)
 #define B_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define B_ZERO_BACKOFF		    	(0.375 * 25.4)
-#define B_HOMING_INPUT				0
-#define B_HOMING_DIR				0
-
 
 #define C_AXIS_MODE			    	AXIS_DISABLED
 #define C_VELOCITY_MAX		    	(360 * 25.4)
@@ -247,7 +235,7 @@
 #define C_TRAVEL_MIN		    	-1
 #define C_JERK_MAX			    	(2 * 25.4)
 #define C_JERK_HIGH_SPEED		    C_JERK_MAX
-#define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
+//#define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
 #define C_HOMING_INPUT              0
 #define C_HOMING_DIR                0
@@ -255,8 +243,6 @@
 #define C_LATCH_VELOCITY	    	(30 * 25.4)
 #define C_LATCH_BACKOFF		    	(0.125 * 25.4)
 #define C_ZERO_BACKOFF		    	(0.375 * 25.4)
-#define C_HOMING_INPUT				0
-#define C_HOMING_DIR				0
 
 //*** Input / output settings ***
 

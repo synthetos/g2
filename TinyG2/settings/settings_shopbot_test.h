@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shopbot Test
+ * settings_shopbot_test.h - Shopbot Test
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -47,8 +47,11 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION       (5000 * 25.4)           // centripetal acceleration around corners
+#define JUNCTION_AGGRESSION         0.75                    // Actually this # divided by 1 million
 #define CHORDAL_TOLERANCE           0.001					// chordal accuracy for arc drawing (in mm)
+
+#define MANUAL_FEEDRATE_OVERRIDE_ENABLE     false
+#define MANUAL_FEEDRATE_OVERRIDE_PARAMETER  1.00
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1						// 0=off, 1=on
@@ -99,7 +102,7 @@
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
-#define MOTOR_POWER_LEVEL           0.375                   // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL           0.5                     // default motor power level 0.00 - 1.00 (ARM only)
 
 #define M1_MOTOR_MAP 			    AXIS_X				    // 1ma
 #define M1_STEP_ANGLE		    	1.8		    			// 1sa
@@ -153,8 +156,6 @@
 
 // *** axis settings *********************************************************************************
 
-#define JUNCTION_DEVIATION          0.1                     // default value, in mm - larger is faster
-
 #define X_AXIS_MODE		    		AXIS_STANDARD			// xam	see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX			    (360 * 25.4) 			// xvm	G0 max velocity in mm/min
 #define X_FEEDRATE_MAX		    	X_VELOCITY_MAX			// xfr 	G1 max feed rate in mm/min
@@ -162,7 +163,6 @@
 #define X_TRAVEL_MAX		    	(25 * 25.4)				// xtm	travel between switches or crashes
 #define X_JERK_MAX			    	(2 * 25.4)				// xjm	jerk is multipled by 1,000,000 internally
 #define X_JERK_HIGH_SPEED		    10000					// xjh
-#define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY	    	(60 * 25.4)				// xsv	minus means move to minimum switch
@@ -177,7 +177,6 @@
 #define Y_TRAVEL_MAX		    	(19 * 25.4)
 #define Y_JERK_MAX			    	(2 * 25.4)
 #define Y_JERK_HIGH_SPEED		    10000
-#define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIR                0
 #define Y_SEARCH_VELOCITY	    	(60 * 25.4)
@@ -192,7 +191,6 @@
 #define Z_TRAVEL_MIN		    	0
 #define Z_JERK_MAX			    	(2 * 25.4)
 #define Z_JERK_HIGH_SPEED		    1000
-#define Z_JUNCTION_DEVIATION    	0.05
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIR                1
 #define Z_SEARCH_VELOCITY	    	(60 * 25.4)
@@ -207,7 +205,6 @@
 #define A_TRAVEL_MAX 		    	-1					// same value means infinite, no limit
 #define A_JERK_MAX			    	(2 * 25.4)
 #define A_JERK_HIGH_SPEED		    A_JERK_MAX
-#define A_JUNCTION_DEVIATION    	0.1
 #define A_RADIUS			    	1.0
 #define A_HOMING_INPUT              0
 #define A_HOMING_DIR                0
@@ -223,7 +220,6 @@
 #define B_TRAVEL_MIN		    	-1
 #define B_JERK_MAX			    	(2 * 25.4)
 #define B_JERK_HIGH_SPEED		    B_JERK_MAX
-#define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
 #define B_HOMING_INPUT              0
 #define B_HOMING_DIR                0
@@ -239,7 +235,6 @@
 #define C_TRAVEL_MIN		    	-1
 #define C_JERK_MAX			    	(2 * 25.4)
 #define C_JERK_HIGH_SPEED		    C_JERK_MAX
-#define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
 #define C_HOMING_INPUT              0
 #define C_HOMING_DIR                0

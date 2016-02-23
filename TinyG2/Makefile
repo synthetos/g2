@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2013 Robert Giseburt
-# Copyright (c) 2013 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2016 Robert Giseburt
+# Copyright (c) 2013 - 2016 Alden S. Hart Jr.
 #
 # This file is part of the TinyG2 project.
 #
@@ -73,9 +73,9 @@ USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 #	SETTINGS_FILE="settings_default.h"
 #	SETTINGS_FILE="settings_othermill.h"
 #	SETTINGS_FILE="settings_probotixV90.h"
-	SETTINGS_FILE="settings_shapeoko2.h"
-#	SETTINGS_FILE="settings_shopbot_sbv300.h"
-#	SETTINGS_FILE="settings_shopbot_test.h"
+#	SETTINGS_FILE="settings_shapeoko2.h"
+#    SETTINGS_FILE="settings_shopbot_sbv300.h"
+	SETTINGS_FILE="settings_shopbot_test.h"
 #	SETTINGS_FILE="settings_Ultimaker.h"
 
 # ---------------------------------------------------------------------------------------
@@ -506,10 +506,10 @@ MKTOOLS:
 	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
 
 $(info Make: $(PATH))
-GIT_LOCATED = $(GIT)
-$(info Git: $(GIT_LOCATED))
-GIT_VERSION = $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
-GIT_EXACT_VERSION = $(shell $(GIT) describe --abbrev=0 --tags)
+# GIT_LOCATED = $(GIT)
+# $(info Git: $(GIT_LOCATED))
+# GIT_VERSION = $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
+# GIT_EXACT_VERSION = $(shell $(GIT) describe --abbrev=0 --tags)
 
 # Push the git version into the code -- the ""s must be escaped and make it into the code intact
 DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)

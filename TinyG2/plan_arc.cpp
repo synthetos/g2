@@ -210,7 +210,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         if ((fp_EQ(cm.gmx.position[AXIS_X], cm.gm.target[AXIS_X])) &&
             (fp_EQ(cm.gmx.position[AXIS_Y], cm.gm.target[AXIS_Y])) &&
             (fp_EQ(cm.gmx.position[AXIS_Z], cm.gm.target[AXIS_Z]))) {
-            return (STAT_ARC_ENDPOINT_IS_STARTING_POINT);
+            return (cm_alarm(STAT_ARC_ENDPOINT_IS_STARTING_POINT, "arc start end end point cannot be the same in a radius arc"));
         }
     }
 
@@ -228,6 +228,12 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
          arc.offset[OFS_I] -= cm.gmx.position[AXIS_X];
          arc.offset[OFS_J] -= cm.gmx.position[AXIS_Y];
          arc.offset[OFS_K] -= cm.gmx.position[AXIS_Z];
+    }
+
+    if ((fp_ZERO(arc.offset[OFS_I])) &&             // it's an error if no offsets are provided
+        (fp_ZERO(arc.offset[OFS_J])) &&
+        (fp_ZERO(arc.offset[OFS_K]))) {
+        return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
     }
 
 	// compute arc runtime values
@@ -286,7 +292,7 @@ static stat_t _compute_arc(const bool radius_f)
     float err = fabs(hypotf(end_0, end_1) - arc.radius);   // end radius - start radius
     if ((err > ARC_RADIUS_ERROR_MAX) ||
        ((err > ARC_RADIUS_ERROR_MIN) && (err > arc.radius * ARC_RADIUS_TOLERANCE))) {
-        return (STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT);
+        return (cm_alarm(STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT, "arc center point error exceeds limits"));
     }
 
     // Compute the angular travel
@@ -322,7 +328,7 @@ static stat_t _compute_arc(const bool radius_f)
 
     // Trap zero movement arcs
     if (fp_ZERO(arc.angular_travel)) {
-        return (STAT_ARC_ENDPOINT_IS_STARTING_POINT);
+        return (cm_alarm(STAT_ARC_ENDPOINT_IS_STARTING_POINT, "arc has no movement - identical start and end points"));
     }
 
     // Calculate travel in the plane and the depth axis of the helix
