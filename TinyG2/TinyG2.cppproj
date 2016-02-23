@@ -101,89 +101,6 @@
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <UsesExternalMakeFile>False</UsesExternalMakeFile>
-    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
-    <ToolchainSettings>
-      <ArmGccCpp>
-        <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
-        <armgcc.common.outputfiles.lss>True</armgcc.common.outputfiles.lss>
-        <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
-        <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
-        <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
-        <armgcc.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-          </ListValues>
-        </armgcc.compiler.directories.IncludePaths>
-        <armgcc.compiler.optimization.level>Optimize (-O1)</armgcc.compiler.optimization.level>
-        <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
-        <armgcc.compiler.optimization.DebugLevel>Maximum (-g3)</armgcc.compiler.optimization.DebugLevel>
-        <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
-        <armgcccpp.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\CMSIS\Include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL</Value>
-            <Value>C:\Program Files\Atmel\Atmel Studio 6.0\extensions\Atmel\ARMGCC\3.3.1.128\ARMSupportFiles\Device\ATMEL\sam3xa\include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-          </ListValues>
-        </armgcccpp.compiler.directories.IncludePaths>
-        <armgcccpp.compiler.optimization.level>Optimize (-O1)</armgcccpp.compiler.optimization.level>
-        <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
-        <armgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</armgcccpp.compiler.optimization.DebugLevel>
-        <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
-        <armgcccpp.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </armgcccpp.linker.libraries.Libraries>
-        <armgcccpp.linker.libraries.LibrarySearchPaths>
-          <ListValues>
-            <Value>../cmsis/linkerScripts</Value>
-          </ListValues>
-        </armgcccpp.linker.libraries.LibrarySearchPaths>
-        <armgcccpp.linker.optimization.GarbageCollectUnusedSections>True</armgcccpp.linker.optimization.GarbageCollectUnusedSections>
-        <armgcccpp.linker.miscellaneous.LinkerFlags>-Tsam3x8c_flash.ld</armgcccpp.linker.miscellaneous.LinkerFlags>
-        <armgcccpp.assembler.debugging.DebugLevel>Default (-g)</armgcccpp.assembler.debugging.DebugLevel>
-        <armgcccpp.preprocessingassembler.general.IncludePaths>
-          <ListValues>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-            <Value>C:\Program Files\Atmel\Atmel Toolchain\ARM GCC\Native\4.7.2.87\arm-gnu-toolchain\bin\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
-            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
-          </ListValues>
-        </armgcccpp.preprocessingassembler.general.IncludePaths>
-        <armgcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</armgcccpp.preprocessingassembler.debugging.DebugLevel>
-      </ArmGccCpp>
-    </ToolchainSettings>
-    <BuildTarget>TinyG2.elf COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir</BuildTarget>
-    <CleanTarget>clean MKDIR=gmkdir</CleanTarget>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'gShield' ">
     <ToolchainSettings>
       <ArmGccCpp>
@@ -261,8 +178,8 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <BuildTarget>BOARD=gShield SETTINGS_FILE=settings_shapeoko2.h COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=gShield MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=gShield CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=gShield CONFIG=ShapeokoDualY </CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
   </PropertyGroup>
@@ -270,8 +187,8 @@
     <OutputPath>bin\shopbotShield\</OutputPath>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=shopbotShield COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map </BuildTarget>
-    <CleanTarget>clean BOARD=shopbotShield MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=shopbotShield COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=shopbotShield</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <ToolchainSettings>
       <ArmGccCpp>
@@ -352,8 +269,8 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'sbv300' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=sbv300 COLOR=0 VERBOSE=1 OPTIMIZATION=s MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=sbv300 MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=sbv300 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=sbv300</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\sbv300\</OutputPath>
     <ToolchainSettings>
@@ -510,8 +427,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=ShapeokoDualY MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=g2v9k CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=g2v9k CONFIG=ShapeokoDualY</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9k\</OutputPath>
   </PropertyGroup>
@@ -593,12 +510,12 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=g2ref-a COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=g2ref-a MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>BOARD=g2ref-a COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=g2ref-a</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\g2refa\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotPlus' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotPlus-g2refa' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
         <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
@@ -676,12 +593,12 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=PrintrbotPlus BOARD=g2ref-a COLOR=0 VERBOSE=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=PrintrbotPlus BOARD=g2ref-a MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=PrintrbotPlus BOARD=g2ref-a COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=PrintrbotPlus BOARD=g2ref-a</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\PrintrbotPlay\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotSimple' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotSimple-g2refa' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
         <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
@@ -759,8 +676,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=PrintrbotSimple COLOR=0 VERBOSE=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=PrintrbotSimple MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=PrintrbotSimple COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=PrintrbotSimple</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\PrintrbotSimple\</OutputPath>
   </PropertyGroup>
@@ -842,8 +759,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=Othermill COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=Othermill MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=Othermill COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=Othermill</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Othermachine\</OutputPath>
   </PropertyGroup>
@@ -925,8 +842,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=ProbotixV90 COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=ProbotixV90 MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=ProbotixV90 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=ProbotixV90</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\ProbotixV90\</OutputPath>
   </PropertyGroup>
@@ -1008,8 +925,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=UltimakerV9h COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean BOARD=UltimakerV9h MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=UltimakerV9h COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=UltimakerV9h</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\UltimakerV9h\</OutputPath>
   </PropertyGroup>
@@ -1091,8 +1008,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=PrintrbotSimple COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=PrintrbotSimple MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=PrintrbotSimple COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=PrintrbotSimple</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\pboard-a\</OutputPath>
   </PropertyGroup>
@@ -1174,8 +1091,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=Zen7x12 COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=Zen7x12 MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=Zen7x12 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=Zen7x12</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Zen7x12\</OutputPath>
   </PropertyGroup>
@@ -1257,12 +1174,12 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=ShapeokoDualY MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=ShapeokoDualY</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Shapeoko2\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotPlay' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotPlay-g2refa' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
         <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
@@ -1340,12 +1257,12 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=PrintrbotPlay BOARD=g2ref-a COLOR=0 VERBOSE=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
-    <CleanTarget>clean CONFIG=PrintrbotPlay BOARD=g2ref-a MKDIR=gmkdir</CleanTarget>
+    <BuildTarget>CONFIG=PrintrbotPlay BOARD=g2ref-a COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=PrintrbotPlay BOARD=g2ref-a</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\PrintrbotPlay\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Makeblock' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Makeblock-v9h' ">
     <ToolchainSettings>
       <ArmGccCpp xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
         <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
@@ -1423,7 +1340,7 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1 OPTIMIZATION=1 MKDIR=gmkdir TinyG2.elf TinyG2.map</BuildTarget>
+    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1</BuildTarget>
     <CleanTarget>clean CONFIG=Makeblock MKDIR=gmkdir</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Makeblock\</OutputPath>
