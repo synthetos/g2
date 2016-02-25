@@ -128,7 +128,7 @@
 #define X_JERK_MAX                  JERK_MAX                // xjm  jerk * 1,000,000
 #define X_JERK_HIGH_SPEED           20000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  minus means move to minimum switch
 #define X_LATCH_VELOCITY            100                     // xlv  mm/min
 #define X_LATCH_BACKOFF             4                       // xlb  mm
@@ -142,7 +142,7 @@
 #define Y_JERK_MAX                  JERK_MAX
 #define Y_JERK_HIGH_SPEED           20000
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                0
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            100
 #define Y_LATCH_BACKOFF             4
@@ -156,7 +156,7 @@
 #define Z_JERK_MAX                  500
 #define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            25
 #define Z_LATCH_BACKOFF             4

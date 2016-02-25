@@ -167,7 +167,7 @@
 #define X_JERK_HIGH_SPEED			JERK_HIGH_SPEED         // xjh
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY 	    	SEARCH_VELOCITY         // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
 #define X_LATCH_BACKOFF 	    	1                       // xlb  mm
@@ -182,7 +182,7 @@
 #define Y_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                0
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY 	    	SEARCH_VELOCITY
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 	    	1
@@ -201,7 +201,7 @@
 #define Z_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 #define Z_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY 	    	SEARCH_VELOCITY
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 	    	1
