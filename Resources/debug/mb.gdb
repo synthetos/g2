@@ -5,8 +5,8 @@ set logging file mb.txt
 set logging on
 print mb.r
 print mb.w
-print mb.p
-print mb.c
+print mp.p
+print mp.c
 # generated with:
 # node -e 'for (i=0; i<48;i++) {console.log("print &mb.bf["+i+"]\nprint mb.bf["+i+"]");}'
 print &mb.bf[0]

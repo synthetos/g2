@@ -42,8 +42,8 @@
 /**** Homing singleton structure ****/
 
 struct hmHomingSingleton {              // persistent homing runtime variables
-
 	// controls for homing cycle
+    bool waiting_for_motion_end;        // true when waiting for motion to complete.
 	int8_t axis;                        // axis currently being homed
 	int8_t homing_input;                // homing input for current axis
     bool set_coordinates;               // G28.4 flag. true = set coords to zero at the end of homing cycle
@@ -83,6 +83,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity);
 static stat_t _homing_error_exit(int8_t axis, stat_t status);
 static stat_t _homing_finalize_exit(int8_t axis);
 static int8_t _get_next_axis(int8_t axis);
+static void _homing_axis_move_callback(float *vect, bool *flag);
 
 /**** HELPERS ***************************************************************************
  * _set_homing_func() - a convenience for setting the next dispatch vector and exiting
@@ -191,7 +192,7 @@ stat_t cm_homing_cycle_callback(void)
     if (cm.cycle_state != CYCLE_HOMING) {   // exit if not in a homing cycle
         return (STAT_NOOP);
     }
-    if (cm_get_runtime_busy()) {            // sync to planner move ends
+    if (hm.waiting_for_motion_end) {            // sync to planner move ends (using callback)
         return (STAT_EAGAIN);
     }
     return (hm.func(hm.axis));                                  // execute the current homing move
@@ -292,7 +293,6 @@ static stat_t _homing_axis_search(int8_t axis)				// drive to switch
 
 static stat_t _homing_axis_clear(int8_t axis)		        // drive away from switch at search speed
 {
-    mp_flush_planner();                                     // clear out the remaining search move
     _homing_axis_move(axis, -hm.latch_backoff, hm.search_velocity);
     return (_set_homing_func(_homing_axis_latch));
 }
@@ -305,7 +305,6 @@ static stat_t _homing_axis_latch(int8_t axis)				// drive to switch at low speed
 
 static stat_t _homing_axis_setpoint_backoff(int8_t axis)    // backoff to zero or max setpoint position
 {
-    mp_flush_planner();                                     // clear out the remaining latch move
 	_homing_axis_move(axis, hm.zero_backoff, hm.search_velocity);
 	return (_set_homing_func(_homing_axis_set_position));
 }
@@ -317,7 +316,6 @@ static stat_t _homing_axis_set_position(int8_t axis)        // set axis zero / m
 		cm.homed[axis] = true;
 
 	} else { // handle G28.4 cycle - set position to the point of switch closure
-        cm_queue_flush();                                   // flush queue & end feedhold
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
         _homing_axis_move(axis, contact_position[AXIS_Z], hm.search_velocity);
@@ -333,18 +331,28 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
 	float vect[] = {0,0,0,0,0,0};
 	bool flags[] = {false, false, false, false, false, false};
 
+    hm.waiting_for_motion_end = true;
+
 	vect[axis] = target;
 	flags[axis] = true;
 	cm_set_feed_rate(velocity);
-    cm_queue_flush();                                     // flush queue and end hold (if applicable)
-//	ritorno(cm_straight_feed(vect, flags));
+
     stat_t status = cm_straight_feed(vect, flags);
     if (status != STAT_OK) {
         rpt_exception(status, "Homing move failed. Check min/max settings");
         return (_homing_error_exit(axis, STAT_HOMING_CYCLE_FAILED));
     }
-	return (STAT_EAGAIN);
+
+    // we blindly reuse flags and vect, since they are ignored anyway
+    mp_queue_command(_homing_axis_move_callback, vect, flags);
+
+    return (STAT_EAGAIN);
 }
+
+static void _homing_axis_move_callback(float *vect, bool *flag) {
+    hm.waiting_for_motion_end = false;
+}
+
 
 /*
  * _homing_error_exit()
@@ -375,7 +383,6 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 
 static stat_t _homing_finalize_exit(int8_t axis)			// third part of return to home
 {
-    cm_queue_flush();                                       // flush queue and end hold (if applicable)
 	cm_set_coord_system(hm.saved_coord_system);				// restore to work coordinate system
 	cm_set_units_mode(hm.saved_units_mode);
 	cm_set_distance_mode(hm.saved_distance_mode);
