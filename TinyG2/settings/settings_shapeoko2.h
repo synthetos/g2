@@ -2,7 +2,7 @@
  * settings_shapeoko2.h - Shapeoko2 500mm table
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -42,7 +42,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION       2000000					// centripetal acceleration around corners - larger is faster
+//#define JUNCTION_ACCELERATION       2000000					// centripetal acceleration around corners - larger is faster
+#define JUNCTION_AGGRESSION         0.75
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on
