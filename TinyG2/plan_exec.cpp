@@ -430,7 +430,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (6) - wait for the steppers to stop
         if (cm.hold_state == FEEDHOLD_PENDING) {
             if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
-                if (cm.cycle_state == CYCLE_HOMING) {
+                if ((cm.cycle_state == CYCLE_HOMING) || (cm.cycle_state == CYCLE_PROBE)) {
                     // when homing, we don't need to stay in HOLD
                     cm.hold_state = FEEDHOLD_OFF;
                 } else {
@@ -453,8 +453,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
             cm.hold_state = FEEDHOLD_PENDING;
 
-            // No point bothering with the rest of this move...
-            if (cm.cycle_state == CYCLE_HOMING) {
+            // No point bothering with the rest of this move if homing or probing
+            if ((cm.cycle_state == CYCLE_HOMING) || (cm.cycle_state == CYCLE_PROBE)) {
                 mp_free_run_buffer();
             }
 

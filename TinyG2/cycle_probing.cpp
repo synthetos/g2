@@ -43,6 +43,8 @@
 #define MINIMUM_PROBE_TRAVEL 0.254
 
 struct pbProbingSingleton {						// persistent probing runtime variables
+    bool waiting_for_motion_end;                // flag to use to now when the motion has ended
+
 	stat_t (*func)();							// binding for callback function state machine
 
 	// controls for probing cycle
@@ -67,6 +69,8 @@ static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
+static stat_t _probe_axis_move(const float target[]);
+static void _probe_axis_move_callback(float *vect, bool *flag);
 
 /**** HELPERS ***************************************************************************
  * _set_pb_func() - a convenience for setting the next dispatch vector and exiting
@@ -189,7 +193,11 @@ static uint8_t _probing_init()
 	}
 
 	// initialize the probe switch
-    pb.probe_input = 5;     // TODO -- for now we hard code it to zmin
+    // TODO -- for now we hard code it to z homing switch
+    if (fp_ZERO(cm.a[AXIS_Z].homing_input))   {
+        return (_probing_error_exit(-2));
+    }
+    pb.probe_input = cm.a[AXIS_Z].homing_input;
     gpio_set_probing_mode(pb.probe_input, true);
 
     // turn off spindle and start the move
@@ -208,7 +216,7 @@ static stat_t _probing_start()
 
     // INPUT_INACTIVE means switch is OPEN
 	if ( probe == INPUT_INACTIVE ) {
-		cm_straight_feed(pb.target, pb.flags);
+		_probe_axis_move(pb.target);
         return (_set_pb_func(_probing_backoff));
 
 	} else {
@@ -240,10 +248,28 @@ static stat_t _probing_backoff()
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
 
-        cm_queue_flush();                               // flush queue & end feedhold
-        cm_straight_feed(contact_position, pb.flags);   // NB: feed rate is the same as the probe move
+        _probe_axis_move(contact_position);   // NB: feed rate is the same as the probe move
     }
     return (_set_pb_func(_probing_finish));
+}
+
+static stat_t _probe_axis_move(const float target[])
+{
+    pb.waiting_for_motion_end = true;
+
+    // stat_t status =
+    // We ignore status for now
+    cm_straight_feed(target, pb.flags);
+
+    // the last two arguments are ignored anyway
+    mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);
+
+    return (STAT_EAGAIN);
+}
+
+static void _probe_axis_move_callback(float *vect, bool *flag)
+{
+    pb.waiting_for_motion_end = false;
 }
 
 /*
@@ -283,9 +309,6 @@ static stat_t _probing_finish()
 
 static void _probe_restore_settings()
 {
-    // flush queue and end feedhold (if any)
-    cm_queue_flush();
-
     // set input back to normal operation
     gpio_set_probing_mode(pb.probe_input, false);
 

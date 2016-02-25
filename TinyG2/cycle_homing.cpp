@@ -343,8 +343,8 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity)
         return (_homing_error_exit(axis, STAT_HOMING_CYCLE_FAILED));
     }
 
-    // we blindly reuse flags and vect, since they are ignored anyway
-    mp_queue_command(_homing_axis_move_callback, vect, flags);
+    // the last two arguments are ignored anyway
+    mp_queue_command(_homing_axis_move_callback, nullptr, nullptr);
 
     return (STAT_EAGAIN);
 }
