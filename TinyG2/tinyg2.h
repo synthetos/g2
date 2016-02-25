@@ -37,7 +37,7 @@
 
 /****** REVISIONS ******/
 
-#define TINYG_FIRMWARE_BUILD            090.02 // added alarms to arc error conditions
+#define TINYG_FIRMWARE_BUILD            090.03 // relaxed LinuxCNC arc radius error checks to accommodate some CAM packages
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)

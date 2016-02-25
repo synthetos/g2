@@ -2,7 +2,7 @@
  * plan_arc.h - arc planning and motion execution
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,11 +24,21 @@
 #define MIN_ARC_SEGMENT_LENGTH  ((float)0.05)       // Arc segment size (mm).(0.03)
 #define MIN_ARC_SEGMENT_USEC    ((float)10000)      // minimum arc segment time
 
-// Arc radius tests. See http://linuxcnc.org/docs/html/gcode/gcode.html#sec:G2-G3-Arc
-//#define ARC_RADIUS_ERROR_MAX    ((float)0.5)        // max allowable mm between start and end radius
+// Arc radius tests. See http://linuxcnc.org/docs/html/gcode/g-code.html#gcode:g2-g3
+// which reads: "When the arc is projected on the selected plane, the distance from
+//               the current point to the center differs from the distance from the 
+//               end point to the center by more than (.05 inch/.5 mm) 
+//               OR ((.0005 inch/.005mm) AND .1% of radius)."
+//
+// LinuxCNC values
+//#define ARC_RADIUS_ERROR_MAX    ((float)0.5)      // max allowable mm between start and end radius
+//#define ARC_RADIUS_ERROR_MIN    ((float)0.005)    // min mm where 1% rule applies
+//#define ARC_RADIUS_TOLERANCE    ((float)0.001)    // 0.1% radius variance test
+//
+// Relaxed values - some CAM packages to not meet the LinuxCNC tests
 #define ARC_RADIUS_ERROR_MAX    ((float)1.0)        // max allowable mm between start and end radius
 #define ARC_RADIUS_ERROR_MIN    ((float)0.005)      // min mm where 1% rule applies
-#define ARC_RADIUS_TOLERANCE    ((float)0.001)      // 0.1% radius variance test
+#define ARC_RADIUS_TOLERANCE    ((float)0.05)       // 0.1% radius variance test
 
 typedef struct arArcSingleton {	// persistent planner and runtime variables
     magic_t magic_start;
