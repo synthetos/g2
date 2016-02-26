@@ -52,6 +52,8 @@ void kn_inverse_kinematics(const float travel[], float steps[])
 
 	_inverse_kinematics(travel, joint);				// insert inverse kinematics transformations here
 
+// We'll time-test each and see if unrolling is worth it.
+#if 0
 	// Map motors to axes and convert length units to steps
 	// Most of the conversion math has already been done in during config in steps_per_unit()
 	// which takes axis travel, step angle and microsteps into account.
@@ -81,15 +83,20 @@ void kn_inverse_kinematics(const float travel[], float steps[])
 #endif
 	}
 
-/* The above is a loop unrolled version of this:
+#else
+
 	for (uint8_t axis=0; axis<AXES; axis++) {
+        if (cm.a[axis].axis_mode == AXIS_INHIBITED) {
+            joint[axis] = 0;
+            continue;
+        }
 		for (uint8_t motor=0; motor<MOTORS; motor++) {
 			if (st_cfg.mot[motor].motor_map == axis) {
 				steps[motor] = joint[axis] * st_cfg.mot[motor].steps_per_unit;
 			}
 		}
 	}
-    I'm really not sure it it's worth manually loop unrolling this sort of thing */
+#endif
 }
 
 /*
@@ -117,14 +124,42 @@ static void _inverse_kinematics(const float travel[], float joint[])
 
 /*
  * kn_forward_kinematics() - forward kinematics for a cartesian machine
+ *
+ * This is designed for PRECISION, not PERFORMANCE!
+ *
+ * This function is NOT to be used where high-speed is important. If that becomes the case,
+ * there are many opportunities for caching and optimization for performance here.
+ *
  */
 
 void kn_forward_kinematics(const float steps[], float travel[])
 {
-    travel[AXIS_X] = steps[MOTOR_1] * st_cfg.mot[MOTOR_1].units_per_step;
-    travel[AXIS_Y] = steps[MOTOR_2] * st_cfg.mot[MOTOR_2].units_per_step;
-    travel[AXIS_Z] = steps[MOTOR_3] * st_cfg.mot[MOTOR_3].units_per_step;
-    travel[AXIS_A] = steps[MOTOR_4] * st_cfg.mot[MOTOR_4].units_per_step;
-    travel[AXIS_B] = steps[MOTOR_5] * st_cfg.mot[MOTOR_5].units_per_step;
-    travel[AXIS_C] = steps[MOTOR_6] * st_cfg.mot[MOTOR_6].units_per_step;
+    float best_steps_per_unit[AXES];
+
+    // Setup
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        travel[axis] = 0.0;
+        best_steps_per_unit[axis] = -1.0;
+    }
+
+    // Scan through each axis, and then through each motor
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        if (cm.a[axis].axis_mode == AXIS_INHIBITED) {
+            travel[axis] = 0.0;
+            continue;
+        }
+        for (uint8_t motor=0; motor<MOTORS; motor++) {
+            if (st_cfg.mot[motor].motor_map == axis) {
+                // If this motor has a better (or the only) resolution, then we use this motor's value
+                if (best_steps_per_unit[axis] < st_cfg.mot[motor].steps_per_unit) {
+                    best_steps_per_unit[axis] = st_cfg.mot[motor].steps_per_unit;
+                    travel[axis] = steps[motor] * st_cfg.mot[motor].units_per_step;
+
+                // If a econd motor has the same reolution for the same axis, we'll average their values
+                } else if (fp_EQ(best_steps_per_unit[axis], st_cfg.mot[motor].steps_per_unit)) {
+                    travel[axis] = (travel[axis] + (steps[motor] * st_cfg.mot[motor].units_per_step)) / 2.0;
+                }
+            }
+        }
+    }
 }

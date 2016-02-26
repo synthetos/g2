@@ -69,7 +69,7 @@ static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
-static stat_t _probe_axis_move(const float target[]);
+static stat_t _probe_axis_move(const float target[], bool exact_position);
 static void _probe_axis_move_callback(float *vect, bool *flag);
 
 /**** HELPERS ***************************************************************************
@@ -216,7 +216,7 @@ static stat_t _probing_start()
 
     // INPUT_INACTIVE means switch is OPEN
 	if ( probe == INPUT_INACTIVE ) {
-		_probe_axis_move(pb.target);
+		_probe_axis_move(pb.target, false);
         return (_set_pb_func(_probing_backoff));
 
 	} else {
@@ -248,22 +248,35 @@ static stat_t _probing_backoff()
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
 
-        _probe_axis_move(contact_position);   // NB: feed rate is the same as the probe move
+        _probe_axis_move(contact_position, true);   // NB: feed rate is the same as the probe move
     }
     return (_set_pb_func(_probing_finish));
 }
 
-static stat_t _probe_axis_move(const float target[])
+static stat_t _probe_axis_move(const float target[], bool exact_position)
 {
-    pb.waiting_for_motion_end = true;
+    auto stored_units_mode = cm.gm.units_mode;
+    auto stored_distance_mode = cm.gm.distance_mode;
+    if (exact_position) {
+        cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
+        cm.gm.units_mode = MILLIMETERS;
+        cm.gm.distance_mode = ABSOLUTE_MODE;
+    }
 
-    // stat_t status =
-    // We ignore status for now
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
+        cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+    }
     cm_straight_feed(target, pb.flags);
+
+    if (exact_position) {
+        cm.gm.units_mode = stored_units_mode;
+        cm.gm.distance_mode = stored_distance_mode;
+    }
 
     // the last two arguments are ignored anyway
     mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);
 
+    pb.waiting_for_motion_end = true;
     return (STAT_EAGAIN);
 }
 
