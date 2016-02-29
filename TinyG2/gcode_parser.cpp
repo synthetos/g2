@@ -2,7 +2,7 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -21,6 +21,7 @@
 #include "controller.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
+#include "plan_arc.h"
 #include "spindle.h"
 #include "coolant.h"
 #include "util.h"
@@ -521,9 +522,10 @@ static stat_t _execute_gcode_block()
                                                                  break;
                                           }
     		}
-            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);	 // un-set absolute override once the move is planned
+//            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);	 // un-set absolute override once the move is planned
 		}
     }
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);	 // un-set absolute override once the move is planned
 
 	// do the program stops and ends : M0, M1, M2, M30, M60
 	if (cm.gf.program_flow == true) {

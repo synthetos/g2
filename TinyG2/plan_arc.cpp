@@ -16,6 +16,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/* This module actually contains some parts that belong in the canonical machine,
+ * and other parts that belong at the motion planner level, but the whole thing is
+ * treated as if it were part of the motion planner.
+ */
 
 #include "tinyg2.h"
 #include "config.h"
@@ -175,9 +179,8 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         if (fabs(arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
             return (STAT_ARC_RADIUS_OUT_OF_TOLERANCE);
         }
-
-    // test that center format absolute distance mode arcs have both offsets specified
-    } else {
+    }
+    else {  // test that center format absolute distance mode arcs have both offsets specified
         if (cm.gm.arc_distance_mode == ABSOLUTE_MODE) {
             if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
                 return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
@@ -225,9 +228,9 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
     if (arc.gm.arc_distance_mode == ABSOLUTE_MODE) {    // adjust offsets if in absolute mode
-         arc.offset[OFS_I] -= cm.gmx.position[AXIS_X];
-         arc.offset[OFS_J] -= cm.gmx.position[AXIS_Y];
-         arc.offset[OFS_K] -= cm.gmx.position[AXIS_Z];
+         arc.offset[OFS_I] -= arc.position[AXIS_X];
+         arc.offset[OFS_J] -= arc.position[AXIS_Y];
+         arc.offset[OFS_K] -= arc.position[AXIS_Z];
     }
 
     if ((fp_ZERO(arc.offset[OFS_I])) &&             // it's an error if no offsets are provided
@@ -243,7 +246,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 	stat_t status = _test_arc_soft_limits();
 	if (status != STAT_OK) {
     	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-    	copy_vector(cm.gm.target, cm.gmx.position);		// reset model position
+    	copy_vector(cm.gm.target, arc.position);		// reset model position
 	    return (cm_alarm(status, "arc soft_limits"));   // throw an alarm
 	}
 
@@ -310,19 +313,13 @@ static stat_t _compute_arc(const bool radius_f)
         } else {
             if (arc.angular_travel > 0)  { arc.angular_travel -= 2*M_PI; }
         }
-        // apply XZ plane (G18) correction
-        if (arc.gm.select_plane == CANON_PLANE_XZ) {
-            if (arc.angular_travel >= 0) { arc.angular_travel -= 2*M_PI; }
-            else                         { arc.angular_travel += 2*M_PI; }
-        }
         // add in travel for rotations
         if (arc.angular_travel >= 0) { arc.angular_travel += 2*M_PI * arc.rotations; }
         else                         { arc.angular_travel -= 2*M_PI * arc.rotations; }
-
+    }
     // Compute full-circle arcs
-    } else {
-        if (cm.gm.motion_mode == MOTION_MODE_CCW_ARC) { arc.rotations *= -1; }
-        if (arc.gm.select_plane == CANON_PLANE_XZ)    { arc.rotations *= -1; }
+    else {
+        if (arc.gm.motion_mode == MOTION_MODE_CCW_ARC) { arc.rotations *= -1; }
         arc.angular_travel = 2 * M_PI * arc.rotations;
     }
 
@@ -436,8 +433,8 @@ static stat_t _compute_arc(const bool radius_f)
 static void _compute_arc_offsets_from_radius()
 {
 	// Calculate the change in position along each selected axis
-	float x = cm.gm.target[arc.plane_axis_0] - cm.gmx.position[arc.plane_axis_0];
-	float y = cm.gm.target[arc.plane_axis_1] - cm.gmx.position[arc.plane_axis_1];
+	float x = arc.gm.target[arc.plane_axis_0] - arc.position[arc.plane_axis_0];
+	float y = arc.gm.target[arc.plane_axis_1] - arc.position[arc.plane_axis_1];
 
 	// *** From Forrest Green - Other Machine Co, 3/27/14
 	// If the distance between endpoints is greater than the arc diameter, disc will be
@@ -454,7 +451,7 @@ static void _compute_arc_offsets_from_radius()
 	float h_x2_div_d = (disc > 0) ? -sqrt(disc) / hypotf(x,y) : 0;
 
 	// Invert the sign of h_x2_div_d if circle is counter clockwise (see header notes)
-	if (cm.gm.motion_mode == MOTION_MODE_CCW_ARC) {
+	if (arc.gm.motion_mode == MOTION_MODE_CCW_ARC) {
         h_x2_div_d = -h_x2_div_d;
     }
 

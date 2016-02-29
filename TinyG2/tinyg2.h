@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -37,7 +37,7 @@
 
 /****** REVISIONS ******/
 
-#define TINYG_FIRMWARE_BUILD            090.03 // relaxed LinuxCNC arc radius error checks to accommodate some CAM packages
+#define TINYG_FIRMWARE_BUILD            090.04 // G18 arc changes brought in from v8 fb 448.01
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)

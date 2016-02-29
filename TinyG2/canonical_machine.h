@@ -2,7 +2,7 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart Jr.
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
@@ -666,13 +666,7 @@ stat_t cm_set_path_control(const uint8_t mode);                             // G
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(const float target[], const bool flags[]);          // G1
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
-
-stat_t cm_arc_feed(const float target[], const bool target_f[],             // G2/G3 - target endpoint
-                   const float offset[], const bool offset_f[],             // IJK offsets
-                   const float radius, const bool radius_f,                 // radius if radius mode                // non-zero radius implies radius mode
-                   const float P_word, const bool P_word_f,                 // parameter
-                   const bool modal_g1_f,                                   // modal group flag for motion group
-                   const uint8_t motion_mode);                              // defined motion mode
+// see plan_arc.h for cm_arc_feed()                                         // G2/G3 arc feeds
 
 // Spindle Functions (4.3.7)
 // see spindle.h for spindle functions - which would go right here
