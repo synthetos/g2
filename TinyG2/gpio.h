@@ -2,8 +2,8 @@
  * gpio.h - Digital IO  handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Alden S. Hart, Jr.
- * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -87,11 +87,11 @@ typedef enum {
  */
 typedef struct ioDigitalInput {		// one struct per digital input
 	inputMode mode;					// -1=disabled, 0=active low (NO), 1= active high (NC)
-	inputAction action;                // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-	inputFunc function;                // function to perform when activated / deactivated
+	inputAction action;             // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
+	inputFunc function;             // function to perform when activated / deactivated
 
     int8_t state;                   // input state 0=inactive, 1=active, -1=disabled
-    inputEdgeFlag edge;                // keeps a transient record of edges for immediate inquiry
+    inputEdgeFlag edge;             // keeps a transient record of edges for immediate inquiry
     bool homing_mode;               // set true when input is in homing mode.
     bool probing_mode;              // set true when input is in probing mode.
 

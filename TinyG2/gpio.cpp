@@ -2,8 +2,8 @@
  * gpio.cpp - digital IO handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Alden S. Hart, Jr.
- * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,19 +25,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* Switch Modes
+/* Switch / Input Modes
  *
- *	The switches are considered to be homing switches when cycle_state is
- *	CYCLE_HOMING. At all other times they are treated as limit switches:
+ * Normally closed and normally open switches can be wired in ether active hi or low
+ * modes, so we can't use NO or NC definitively. instead we use the following definitions:
+ *
+ *  - ACTIVE_HI - meaning that when the switch is activated (hit) the input goes HI
+ *  - ACTIVE_LOW - meaning that when the switch is activated (hit) the input goes LOW
+ *  - LEADING_EDGE - meaning the transition that occurs once the switch is hit
+ *  - TRAILING_EDGE - meaning the transition that occurs when the switch is released (unhit?)
+ *
+ * 	For ACTIVE_LOW inputs the falling edge is the LEADING_EDGE. For ACTIVE_HI the
+ *  rising edge is the LEADING_EDGE. In both cases either transition fires an input
+ *  interrupt. When an interrupt is fired the input is disabled for short lockout period
+ *  that should be set to the length of the debounce (this is a compile time option) -
+ *  typically about 30 ms. This approach beats using integration for debouncing as
+ *  switches fire immediately without the delay introduced by an integration approach.
+ *
+ *	Switches are considered to be homing switches when cycle_state is CYCLE_HOMING.
+ *  At all other times they are treated as limit switches:
  *	  - Hitting a homing switch puts the current move into feedhold
  *	  - Hitting a limit switch causes the machine to shut down and go into lockdown until reset
- *
- * 	The normally open switch modes (NO) trigger an interrupt on the falling edge
- *	and lockout subsequent interrupts for the defined lockout period. This approach
- *	beats doing debouncing as an integration as switches fire immediately.
- *
- * 	The normally closed switch modes (NC) trigger an interrupt on the rising edge
- *	and lockout subsequent interrupts for the defined lockout period. Ditto on the method.
  */
 
 #include "tinyg2.h"
@@ -225,9 +233,8 @@ void static _handle_pin_changed(const uint8_t input_num_ext, const int8_t pin_va
     }
 
 	// return if no change in state
-	int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
-	if ( in->state == pin_value_corrected ) {
-//    	in->edge = INPUT_EDGE_NONE;        // edge should only be reset by function or opposite edge
+	int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for input mode
+	if (in->state == pin_value_corrected) {
     	return;
 	}
 
