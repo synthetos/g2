@@ -154,14 +154,16 @@ stat_t mp_exec_move()
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
                 __asm__("BKPT");
-                rpt_exception(42, "mp_exec_move() buffer is not prepped");
+                // rpt_exception(42, "mp_exec_move() buffer is not prepped");
+                // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
                 st_prep_null();
 
                 return (STAT_NOOP);
             }
             if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
                 // This detects buffer starvation, but also can be a single-line "jog" or command
-                rpt_exception(42, "mp_exec_move() next buffer is empty");
+                // rpt_exception(42, "mp_exec_move() next buffer is empty");
+                // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
             }
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
