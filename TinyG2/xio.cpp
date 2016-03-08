@@ -297,14 +297,20 @@ struct xio_t {
         // In the current environment, these are not foreseen to cause trouble,
         // since these are blocking writes and we expect to only really be writing to one device.
 
-        size_t written = -1;
-
+        size_t total_written = -1;
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isCtrlAndActive()) {
-                written = DeviceWrappers[i]->write(buffer, size);
+                const char *buf = buffer;
+                int16_t to_write = size;
+                while (to_write > 0) {
+                    size_t written = DeviceWrappers[i]->write(buf, to_write);
+                    buf += written;
+                    to_write -= written;
+                    total_written += written;
+                }
             }
         }
-        return written;
+        return total_written;
     }
 
     /*
@@ -316,17 +322,7 @@ struct xio_t {
     int16_t writeline(const char *buffer)
     {
         int16_t len = strlen(buffer);
-//        return xio_write(buffer, len);
-//        return DeviceWrappers[DEV_USB0]->write((const uint8_t *)buffer, len);
-
-        size_t written = -1;
-
-        for (int8_t i = 0; i < _dev_count; ++i) {
-            if (DeviceWrappers[i]->isCtrlAndActive()) {
-                written = DeviceWrappers[i]->write(buffer, len);
-            }
-        }
-        return written;
+        return write(buffer, len);
     };
 
     /*
