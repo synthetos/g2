@@ -93,19 +93,19 @@ static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
 static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
 static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
 
-static OutputPin<kOutput1_PinNumber>  output_1_pin;
-static OutputPin<kOutput2_PinNumber>  output_2_pin;
-static OutputPin<kOutput3_PinNumber>  output_3_pin;
-static OutputPin<kOutput4_PinNumber>  output_4_pin;
-static OutputPin<kOutput5_PinNumber>  output_5_pin;
-static OutputPin<kOutput6_PinNumber>  output_6_pin;
-static OutputPin<kOutput7_PinNumber>  output_7_pin;
-static OutputPin<kOutput8_PinNumber>  output_8_pin;
-static OutputPin<kOutput9_PinNumber>  output_9_pin;
-static OutputPin<kOutput10_PinNumber> output_10_pin;
-static OutputPin<kOutput11_PinNumber> output_11_pin;
-static OutputPin<kOutput12_PinNumber> output_12_pin;
-static OutputPin<kOutput13_PinNumber> output_13_pin;
+static PWMOutputPin<kOutput1_PinNumber>  output_1_pin;
+static PWMOutputPin<kOutput2_PinNumber>  output_2_pin;
+static PWMOutputPin<kOutput3_PinNumber>  output_3_pin;
+static PWMOutputPin<kOutput4_PinNumber>  output_4_pin;
+static PWMOutputPin<kOutput5_PinNumber>  output_5_pin;
+static PWMOutputPin<kOutput6_PinNumber>  output_6_pin;
+static PWMOutputPin<kOutput7_PinNumber>  output_7_pin;
+static PWMOutputPin<kOutput8_PinNumber>  output_8_pin;
+static PWMOutputPin<kOutput9_PinNumber>  output_9_pin;
+static PWMOutputPin<kOutput10_PinNumber> output_10_pin;
+static PWMOutputPin<kOutput11_PinNumber> output_11_pin;
+static PWMOutputPin<kOutput12_PinNumber> output_12_pin;
+static PWMOutputPin<kOutput13_PinNumber> output_13_pin;
 #endif //__ARM
 
 /************************************************************************************
@@ -143,7 +143,22 @@ void gpio_init(void)
     input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-	return(gpio_reset());
+
+    output_1_pin.setFrequency(200000);
+    output_2_pin.setFrequency(200000);
+    output_3_pin.setFrequency(200000);
+    output_4_pin.setFrequency(200000);
+    output_5_pin.setFrequency(200000);
+    output_6_pin.setFrequency(200000);
+    output_7_pin.setFrequency(200000);
+    output_8_pin.setFrequency(200000);
+    output_9_pin.setFrequency(200000);
+    output_10_pin.setFrequency(200000);
+    output_11_pin.setFrequency(200000);
+    output_12_pin.setFrequency(200000);
+    output_13_pin.setFrequency(200000);
+
+    return(gpio_reset());
 #endif
 
 #ifdef __AVR
@@ -186,6 +201,22 @@ void gpio_reset(void)
         in->lockout_ms = INPUT_LOCKOUT_MS;
         in->lockout_timer = SysTickTimer_getValue();
 	}
+
+    // If the output is ACTIVE_LOW set it to 1. ACTIVE_HIGH gets set to 0.
+    if (d_out[1-1].mode  != IO_MODE_DISABLED) { (output_1_pin    = (d_out[1-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[2-1].mode  != IO_MODE_DISABLED) { (output_2_pin    = (d_out[2-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[3-1].mode  != IO_MODE_DISABLED) { (output_3_pin    = (d_out[3-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[4-1].mode  != IO_MODE_DISABLED) { (output_4_pin    = (d_out[4-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[5-1].mode  != IO_MODE_DISABLED) { (output_5_pin    = (d_out[5-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[6-1].mode  != IO_MODE_DISABLED) { (output_6_pin    = (d_out[6-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[7-1].mode  != IO_MODE_DISABLED) { (output_7_pin    = (d_out[7-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[8-1].mode  != IO_MODE_DISABLED) { (output_8_pin    = (d_out[8-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[9-1].mode  != IO_MODE_DISABLED) { (output_9_pin    = (d_out[9-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[10-1].mode != IO_MODE_DISABLED) { (output_10_pin   = (d_out[10-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[11-1].mode != IO_MODE_DISABLED) { (output_11_pin   = (d_out[11-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[12-1].mode != IO_MODE_DISABLED) { (output_12_pin   = (d_out[12-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+    if (d_out[13-1].mode != IO_MODE_DISABLED) { (output_13_pin   = (d_out[13-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+
 }
 
 /*
@@ -728,31 +759,34 @@ stat_t io_get_output(nvObj_t *nv)
     if (outMode == IO_MODE_DISABLED) {
         nv->value = 0; // Inactive
     } else {
-        bool invert = (outMode == 1);
+        bool invert = (outMode == 0);
         // Note: !! forces a value to boolean 0 or 1
         switch (output_num) {
-            case 1:  { nv->value = (!!output_1_pin.getOutputValue()) ^ invert; } break;
-            case 2:  { nv->value = (!!output_2_pin.getOutputValue()) ^ invert; } break;
-            case 3:  { nv->value = (!!output_3_pin.getOutputValue()) ^ invert; } break;
-            case 4:  { nv->value = (!!output_4_pin.getOutputValue()) ^ invert; } break;
-            case 5:  { nv->value = (!!output_5_pin.getOutputValue()) ^ invert; } break;
-            case 6:  { nv->value = (!!output_6_pin.getOutputValue()) ^ invert; } break;
-            case 7:  { nv->value = (!!output_7_pin.getOutputValue()) ^ invert; } break;
-            case 8:  { nv->value = (!!output_8_pin.getOutputValue()) ^ invert; } break;
-            case 9:  { nv->value = (!!output_9_pin.getOutputValue()) ^ invert; } break;
-            case 10: { nv->value = (!!output_10_pin.getOutputValue()) ^ invert; } break;
-            case 11: { nv->value = (!!output_11_pin.getOutputValue()) ^ invert; } break;
-            case 12: { nv->value = (!!output_12_pin.getOutputValue()) ^ invert; } break;
-            case 13: { nv->value = (!!output_13_pin.getOutputValue()) ^ invert; } break;
+            case 1:  { nv->value = (float)output_1_pin; } break;
+            case 2:  { nv->value = (float)output_2_pin; } break;
+            case 3:  { nv->value = (float)output_3_pin; } break;
+            case 4:  { nv->value = (float)output_4_pin; } break;
+            case 5:  { nv->value = (float)output_5_pin; } break;
+            case 6:  { nv->value = (float)output_6_pin; } break;
+            case 7:  { nv->value = (float)output_7_pin; } break;
+            case 8:  { nv->value = (float)output_8_pin; } break;
+            case 9:  { nv->value = (float)output_9_pin; } break;
+            case 10: { nv->value = (float)output_10_pin; } break;
+            case 11: { nv->value = (float)output_11_pin; } break;
+            case 12: { nv->value = (float)output_12_pin; } break;
+            case 13: { nv->value = (float)output_13_pin; } break;
 
             default:
                 {
                     nv->value = 0; // inactive
                 }
         }
+        if (invert) {
+            nv->value = 1.0 - nv->value;
+        }
     }
 
-    nv->valuetype = TYPE_BOOL;
+    nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
 
@@ -772,23 +806,27 @@ stat_t io_set_output(nvObj_t *nv)
 
     ioMode outMode = d_out[output_num-1].mode;
     if (outMode == IO_MODE_DISABLED) {
-        nv->value = 0; // Inactive
+        nv->value = 0; // Inactive?
     } else {
-        bool invert = (outMode == 1);
+        bool invert = (outMode == 0);
+        float value = nv->value;
+        if (invert) {
+            value = 1.0 - value;
+        }
         switch (output_num) {
-            case 1:  { output_1_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 2:  { output_2_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 3:  { output_3_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 4:  { output_4_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 5:  { output_5_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 6:  { output_6_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 7:  { output_7_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 8:  { output_8_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 9:  { output_9_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 10: { output_10_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 11: { output_11_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 12: { output_12_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
-            case 13: { output_13_pin = ((!fp_ZERO(nv->value)) ^ invert); } break;
+            case 1:  { output_1_pin = value; } break;
+            case 2:  { output_2_pin = value; } break;
+            case 3:  { output_3_pin = value; } break;
+            case 4:  { output_4_pin = value; } break;
+            case 5:  { output_5_pin = value; } break;
+            case 6:  { output_6_pin = value; } break;
+            case 7:  { output_7_pin = value; } break;
+            case 8:  { output_8_pin = value; } break;
+            case 9:  { output_9_pin = value; } break;
+            case 10: { output_10_pin = value; } break;
+            case 11: { output_11_pin = value; } break;
+            case 12: { output_12_pin = value; } break;
+            case 13: { output_13_pin = value; } break;
 
             default:
                 {
