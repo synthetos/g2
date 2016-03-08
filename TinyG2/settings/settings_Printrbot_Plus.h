@@ -322,7 +322,7 @@
 #define DO4_MODE                    IO_ACTIVE_HIGH
 
 //Fan2A_PWM
-#define DO5_MODE                    IO_ACTIVE_HIGH
+#define DO5_MODE                    IO_ACTIVE_LOW
 
 #define DO6_MODE                    IO_ACTIVE_HIGH
 #define DO7_MODE                    IO_ACTIVE_HIGH
