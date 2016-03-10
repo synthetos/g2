@@ -112,64 +112,6 @@ stat_t gcode_parser(char *block)
  *	 - msg points to message string or to NUL if no comment
  *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
-#define USE_OLD_NORMALIZE 0
-
-#if USE_OLD_NORMALIZE == 1
-
-// WARNING: This is the OLD code, left for reference. The new code is below.
-
-static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag)
-{
-	char *rd = str;				// read pointer
-	char *wr = str;				// write pointer
-
-	// Preset comments and messages to NUL string
-	// Not required if com and msg already point to NUL on entry
-//	for (rd = str; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = str;} }
-
-	// mark block deletes
-	if (*rd == '/') {
-        *block_delete_flag = true;
-    } else {
-        *block_delete_flag = false;
-    }
-
-	// normalize the command block & find the comment (if any)
-    // Gcode comments start with '(', Inkscape with '%', and random comments with ';'
-	for (; *wr != NUL; rd++) {
-		if (*rd == NUL) { *wr = NUL; }
-		else if ((*rd == '(') || (*rd == ';')  || (*rd == '%')) { *wr = NUL; *com = rd+1; }
-		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
-			*(wr++) = toupper(*(rd));
-		}
-	}
-
-	// Perform Octal stripping - remove invalid leading zeros in number strings
-	rd = str;
-	while (*rd != NUL) {
-		if (*rd == '.') break;							// don't strip past a decimal point
-		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
-			wr = rd+1;
-			while (*wr != NUL) { *wr = *(wr+1); wr++;}	// copy forward w/overwrite
-			continue;
-		}
-		rd++;
-	}
-
-	// process comments and messages
-	if (**com != NUL) {
-		rd = *com;
-		while (isspace(*rd)) { rd++; }		// skip any leading spaces before "msg"
-		if ((tolower(*rd) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
-			*msg = rd+3;
-		}
-		for (; *rd != NUL; rd++) {
-			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
-		}
-	}
-}
-
-#else // USE_OLD_NORMALIZE
 
 static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
 
@@ -397,8 +339,6 @@ static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *bl
     *active_comment = str + (comment_start - _normalize_scratch);
 }
 
-#endif // USE_OLD_NORMALIZE
-
 
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value
@@ -610,8 +550,8 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
 				case 50: SET_MODAL (MODAL_GROUP_M9, mfo_enable, true);
 				case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
-                case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
-                case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
+                case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
+//                case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
 				default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
 			}
 			break;

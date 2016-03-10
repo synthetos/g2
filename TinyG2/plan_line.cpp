@@ -94,7 +94,7 @@ bool mp_get_runtime_busy()
     }
     if ((st_runtime_isbusy() == true) ||
         (mr.block_state == BLOCK_ACTIVE) ||
-        (mp.planner_state == PLANNER_STARTUP)) {    // could be != PLANNER_IDLE
+        (mb.r->buffer_state > MP_BUFFER_EMPTY)) {
         return (true);
     }
 	return (false);

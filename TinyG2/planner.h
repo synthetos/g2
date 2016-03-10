@@ -428,8 +428,9 @@ void mp_plan_block_forward(mpBuf_t *bf);
 
 // plan_zoid.c functions
 void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
-float mp_get_target_length(const float Vi, const float Vf, const mpBuf_t *bf);
-float mp_get_target_velocity(const float Vi, const float L, const mpBuf_t *bf);
+float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
+float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
+float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf); // decelleration ONLY
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);
 
 float mp_calc_v(const float t, const float v_0, const float v_1);                // compute the velocity along the curve accelerating from v_0 to v_1, at position t=[0,1]

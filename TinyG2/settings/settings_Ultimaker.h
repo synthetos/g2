@@ -161,7 +161,7 @@
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 #define X_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
 #define X_LATCH_BACKOFF             10                      // xlb  mm
@@ -177,7 +177,7 @@
 #define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_JUNCTION_DEVIATION        JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                0
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             10
@@ -192,7 +192,7 @@
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_JUNCTION_DEVIATION        JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            200
 #define Z_LATCH_BACKOFF             3
@@ -208,7 +208,7 @@
 #define A_JERK_HIGH_SPEED           A_JERK_MAX
 #define A_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define A_HOMING_INPUT              0
-#define A_HOMING_DIR                0
+#define A_HOMING_DIRECTION          0
 #define A_SEARCH_VELOCITY           2000
 #define A_LATCH_VELOCITY            2000
 #define A_LATCH_BACKOFF             5
@@ -224,7 +224,7 @@
 #define B_JERK_HIGH_SPEED           B_JERK_MAX
 #define B_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define B_HOMING_INPUT              0
-#define B_HOMING_DIR                0
+#define B_HOMING_DIRECTION          0
 #define B_SEARCH_VELOCITY           2000
 #define B_LATCH_VELOCITY            2000
 #define B_LATCH_BACKOFF             5
@@ -240,7 +240,7 @@
 #define C_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define C_RADIUS                    1
 #define C_HOMING_INPUT              0
-#define C_HOMING_DIR                0
+#define C_HOMING_DIRECTION          0
 #define C_SEARCH_VELOCITY           600
 #define C_LATCH_VELOCITY            100
 #define C_LATCH_BACKOFF             10

@@ -49,6 +49,8 @@ static void _init_forward_diffs(float v_0, float v_1);
 /*************************************************************************
  * mp_plan_move() - call ramping function to plan moves ahead of the exec
  *
+ * This should NOT normally be called directly! Instead call st_request_plan_move().
+ *
  */
 
 stat_t mp_plan_move()
@@ -152,14 +154,16 @@ stat_t mp_exec_move()
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
                 __asm__("BKPT");
-                rpt_exception(42, "mp_exec_move() buffer is not prepped");
+                // rpt_exception(42, "mp_exec_move() buffer is not prepped");
+                // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
                 st_prep_null();
 
                 return (STAT_NOOP);
             }
             if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
                 // This detects buffer starvation, but also can be a single-line "jog" or command
-                rpt_exception(42, "mp_exec_move() next buffer is empty");
+                // rpt_exception(42, "mp_exec_move() next buffer is empty");
+                // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
             }
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
@@ -409,7 +413,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //   (1b) - The deceleration will not fit in the running block
     //   (1c) - 1a, except the remaining length would be zero or EPSILON close to zero (unlikely)
     //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
-    //  (3) - We are in the middle of a block that is currently decelerating
+    //  (3) - We are in the middle of a block
+    //   (3a) - The block is currently accelerating (we wait for the body to start)
+    //   (3b) - The block is currently in the tail (we wait until the end of the block)
     //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
     //  (5) - We have decelerated a block to zero velocity
     //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
@@ -418,8 +424,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm.motion_state == MOTION_HOLD) {
-        // Case (3) is a no-op and is not trapped. It just continues the deceleration.
-
         // Case (7) - all motion has ceased
         if (cm.hold_state == FEEDHOLD_HOLD) {
             return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. No more movement
@@ -428,17 +432,15 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (6) - wait for the steppers to stop
         if (cm.hold_state == FEEDHOLD_PENDING) {
             if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
-                cm.hold_state = FEEDHOLD_HOLD;
+                if ((cm.cycle_state == CYCLE_HOMING) || (cm.cycle_state == CYCLE_PROBE)) {
+                    // when homing, we don't need to stay in HOLD
+                    cm.hold_state = FEEDHOLD_OFF;
+                } else {
+                    cm.hold_state = FEEDHOLD_HOLD;
+                }
                 mp_zero_segment_velocity();                             // for reporting purposes
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);         // was SR_REQUEST_TIMED
                 cs.controller_state = CONTROLLER_READY;                 // remove controller readline() PAUSE
-
-                // No point bothering with the rest of this move...
-                if (cm.cycle_state == CYCLE_HOMING) {
-                    mp_free_run_buffer();
-                }
-
-                mp_replan_queue(mb.r);                                      // make it replan all the blocks
             }
             return (STAT_OK);                                           // hold here. No more movement
         }
@@ -452,6 +454,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             //bf->entry_vmax = 0;                                         // set bp+0 as hold point
 
             cm.hold_state = FEEDHOLD_PENDING;
+
+            // No point bothering with the rest of this move if homing or probing
+            if ((cm.cycle_state == CYCLE_HOMING) || (cm.cycle_state == CYCLE_PROBE)) {
+                mp_free_run_buffer();
+            }
+
+            mp_replan_queue(mb.r);                                      // make it replan all the blocks
+
             return (STAT_OK);
         }
 
@@ -460,6 +470,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((cm.hold_state == FEEDHOLD_SYNC) ||
             ((cm.hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr.block_state == BLOCK_INITIAL_ACTION))) {
 
+            // Case (3a) - already decelerating, continue the deceleration.
             if (mr.section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
                 if (fp_ZERO(mr.r->exit_velocity)) {
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
@@ -467,9 +478,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                 }
 
-            // we can't decel from the middle of a head, we'll invoke at worst 2x jerk
-            } else if ((mr.section != SECTION_HEAD) ||
-                       ((mr.section_state == SECTION_NEW))) {
+            // Case (3b) - currently accelerating - is simply skipped and waited for
+            // Small exception, if we *just started* the head, then we're not actually accelerating yet.
+            } else if ((mr.section != SECTION_HEAD) || (mr.section_state == SECTION_NEW)) {
                 mr.entry_velocity = mr.segment_velocity;
 
                 mr.section = SECTION_TAIL;
@@ -479,17 +490,19 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mr.r->body_length = 0;
 
                 float available_length = get_axis_vector_length(mr.target, mr.position);
-                mr.r->tail_length = mp_get_target_length(0, mr.r->cruise_velocity, bf);   // braking length
+                mr.r->tail_length = mp_get_target_length(0, mr.r->cruise_velocity, bf);  // braking length
 
                 if (fp_ZERO(available_length - mr.r->tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr.r->exit_velocity = 0;
                     mr.r->tail_length = available_length;
-                } else if (available_length < mr.r->tail_length) { // (1b) the deceleration has to span multiple moves
+                    mr.r->exit_velocity = 0;
+
+                } else if (available_length < mr.r->tail_length) {      // (1b) the deceleration has to span multiple moves
                     cm.hold_state = FEEDHOLD_DECEL_CONTINUE;
                     mr.r->tail_length = available_length;
-                    mr.r->exit_velocity = mr.r->cruise_velocity - mp_get_target_velocity(0, mr.r->tail_length, bf);
-                } else {                                        // (1a)the deceleration will fit into the current move
+                    mr.r->exit_velocity = mp_get_decel_velocity(mr.r->cruise_velocity, mr.r->tail_length, bf);
+
+                } else {                                                // (1a)the deceleration will fit into the current move
                     cm.hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr.r->exit_velocity = 0;
                 }
@@ -567,7 +580,6 @@ void mp_exit_hold_state()
     cm.hold_state = FEEDHOLD_OFF;
     if (mp_has_runnable_buffer()) {
         cm_set_motion_state(MOTION_RUN);
-        st_request_plan_move();
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
     } else {
         cm_set_motion_state(MOTION_STOP);

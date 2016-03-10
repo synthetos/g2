@@ -147,7 +147,7 @@
 #define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
 #define X_LATCH_BACKOFF             5                      // xlb  mm
@@ -161,7 +161,7 @@
 #define Y_JERK_MAX                  15000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                1
+#define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
@@ -175,7 +175,7 @@
 #define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             5
@@ -209,7 +209,7 @@
                                        // * a million IF it's over a million
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define A_HOMING_INPUT          0
-#define A_HOMING_DIR            0
+#define A_HOMING_DIRECTION      0
 #define A_SEARCH_VELOCITY 		2000
 #define A_LATCH_VELOCITY 		2000
 #define A_LATCH_BACKOFF 		5
@@ -225,7 +225,7 @@
 //#define B_JERK_MAX			20000000
 #define B_JERK_MAX				20
 #define B_HOMING_INPUT          0
-#define B_HOMING_DIR            0
+#define B_HOMING_DIRECTION      0
 #define B_SEARCH_VELOCITY 		600
 #define B_LATCH_VELOCITY 		100
 #define B_LATCH_BACKOFF			10

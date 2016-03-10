@@ -429,19 +429,19 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "do12","do12st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[11].mode,    DO12_MODE },
 	{ "do13","do13st",_fip, 0, io_print_st, get_int8, io_set_st, (float *)&d_out[12].mode,    DO13_MODE },
 
-	// Digital input state readers
-	{ "out","out1",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out2",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out3",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out4",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out5",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out6",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out7",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out8",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out9",  _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out10", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out11", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-	{ "out","out12", _f0, 0, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	// Digital input state readers (default to non-active)
+	{ "out","out1",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out2",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out3",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out4",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out5",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out6",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out7",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out8",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out9",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out10", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out11", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+	{ "out","out12", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
 
 	// PWM settings
 	{ "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },

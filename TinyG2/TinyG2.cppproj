@@ -1341,7 +1341,7 @@
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
     <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean CONFIG=Makeblock MKDIR=gmkdir</CleanTarget>
+    <CleanTarget>clean CONFIG=Makeblock</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\Makeblock\</OutputPath>
   </PropertyGroup>

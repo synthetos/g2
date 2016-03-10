@@ -494,7 +494,10 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
 
 /*
  *
- * mp_get_target_velocity()
+ * mp_get_target_velocity() - find the velocity we would achieve if we *accelerated* from v_0
+ *
+ * Get "the vlocity" that we would end up at if we *accelerated* from v_0
+ * over the provided L (length) and J (jerk, provided in the bf structure).
  *
  * Fundamental Jerk curve formula:
  *   J(t) = 60 (v_1 - v_0) (1 - t) (1 - 2t) t / T^2
@@ -516,7 +519,7 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf)
  * Define a = (1 - 2t) (1 - t) t:
  *   J(t) = 60 (v_1 - v_0) a / T²
  *
- * At peak jerk ( where t=(3 sqrt(3))/6 ) a = 1-sqrt(3)/4
+ * At peak jerk ( where t=(3-sqrt(3))/6 ) a = 1-sqrt(3)/4
 
  * J(t) = ((v_0+v_1)^2) (1/(4L^2)) (v_1 - v_0) 60 a
  * Rearranged:
@@ -588,32 +591,163 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf)
     return fabs(v_1);
 }
 
+
+/*
+ *
+ * mp_get_decel_velocity() - mp_get_target_velocity but ONLY for deceleration
+ *
+ * Get "the vlocity" that we would end up at if we *decelerated* from v_0,
+ * over the provided L (length) and J (jerk, provided in the bf structure).
+ *
+ * We have to use a root finding solution, since there is actually three possible
+ * solutions. We can eliminate one quickly, since it's the acceleration case.
+ *
+ * The other two cases are occasionally the same value, but this is rare.
+ * Otherwise there is a "high" value and a "low" value. The low value can be
+ * negative and then eliminated.
+ *
+ * To find the velocity, we use a Newton–Raphson iteration over the Length function
+ * much like we do for _get_meet_velocity.
+ *
+ * We use the same length function:
+ * Length of move from v_0 to v_1 formula is:
+ *   L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2)
+ *   NOTE: We will flip sqrt(v_1-v_0) to sqrt(v_0-v_1), since v_1 < v_0 in this case.
+ *
+ * Simplifaction to isolate the parts that don't change per iteration:
+ *   L = (q/(2 sqrt(j)))  sqrt(v_0-v_1) (v_1+v_0)
+ *   NOTE: (q/(2 sqrt(j))) is already cached in bf->q_recip_2_sqrt_j
+ *
+ * We know the resulting length L, so we subtarct it out to get out root function.
+ *   0 = q (sqrt(v_0-v_1)/sqrt(j))( (v_1 + v_0)/2) - L
+ *
+ * For the iteration, we need the derivative of that function:
+ *     d =  (q / (4 sqrt(J))) (v_0 - 3 v_1) / sqrt(v_0 - v_1)
+ *     d =  (q / (2 sqrt(J))) (v_0 - 3 v_1) / (2 sqrt(v_0 - v_1))
+ *   1/d =  (2 sqrt(v_0 - v_1)) / ( (v_0 - 3 v_1) (q / (2 sqrt(J))) )
+ *
+ * Note that portions that don't change per iteration have already been isolated.
+ *
+ * Since there are two solutions, and occasionally we will find one that's negative,
+ * having a good start value is important. Our intent in this function (for now)
+ * is to *always* return the *lowest* v_1 possible. This may yield a slower
+ * deceleration (time), but will get us closer to stoped over the shortest length.
+ 
+ * To that end of getting the lower v_1, we will run the first iteration guess
+ * at v_1 = 0. If we get a value > 0, then there is NOT a root near zero, and we
+ * adjust our guess to v_0 - 0.1.
+ *
+ * (See <project root>/Resources/Documentation/images/l_t_0_greater_than_zero.png )
+ *
+ * If we get a value < 0, then we will continue iterating from 0, since there is
+ * a root near zero, and we will find it.
+ *
+ * (See <project root>/Resources/Documentation/images/l_t_0_less_than_zero.png )
+ *
+ * Of note, but not obvious value, is that the peak of the length curve is at
+ * v_0/3, and that v_1 will either be above or below that value. It's not of much
+ * use since, as you approach v_0/3, the derivative vanishes, making it and around
+ * it a terrible inital guess.
+ *
+ * Related note: When the lower value is not avaialable, you *must* have the inital
+ * guess above the resulting value.
+ *
+ */
+
+float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf)
+{
+    const float q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
+
+    float v_1 = 0; // start the guess at zero
+    bool first_pass = true; // We may invert our guess based on the first pass results.
+
+    int i = 0; // limit the iterations
+    while (i++ < 10) { // If it fails after 10, something's wrong
+        const float sqrt_delta_v_0 = sqrt(v_0-v_1);
+        const float l_t = q_recip_2_sqrt_j*(sqrt_delta_v_0*(v_1 + v_0)) - L;
+
+        if (fabs(l_t) < 0.00001) {
+            break;
+        }
+        // For the first pass, we tested velocity 0.
+        // If velocity 0 yields a l_t > zero, then we need to start searching
+        // at v_1 instead. (We can't start AT v_1, so we start at v_1 - 0.1.)
+        if (first_pass && (l_t > 0)) {
+            v_1 = v_1 - 0.001;
+
+            // We don't even check before we iterate, since we know we'll need
+            // at least one iteration.
+        }
+
+        // l_d is the derivative of l_t, and is used for the Newton-Raphson iteration.
+        // recip_l_t = 1/l_d.
+        // 1/d =  (2 sqrt(v_0 - v_1)) / ( (v_0 - 3 v_1) (q/(2 sqrt(J))) )
+        const float v_1x3 = 3*v_1;
+        const float recip_l_t = (2*sqrt_delta_v_0) / ((v_0-v_1x3) * q_recip_2_sqrt_j);
+
+        v_1 = v_1 - (l_t * recip_l_t);
+    }
+
+    return v_1;
+}
+
 /*
  * _get_meet_velocity() - find intersection velocity
  *
+ * This function, when given two velocities (v_0 and v_2) along with a length (L)
+ * and jerk (J), will locate the velocity v_1 that will allow acceleration from v_0
+ * at jerk J to v_1 and then deceleration at jerk J to v_2, all over total length L.
+ *
+ * We cannot solve this directly, but we can use an iteration to solve it. Given
+ * a guess v_1, we can compute the length from v_0 and backward from v_2, add those
+ * together and compare it to L. We then iterate until we find an appropriate value.
+ *
+ * For our purposes, we need a value that is either "exactly right" (within a small
+ * margin over the exact value), or within a higher margin of error below exactly
+ * right. If we are under, we then can use a small body move to cover the gap.
+ *
+ * Since we also have to compute the lengths, we also return the head/body/tail
+ * lengths, saving that computation from later.
+ *
+ * We also have to cover a few edge cases.
+ *
+ *   (1) v_0 and v_1 are (roughly) the same. This is simpler to compute, v_1 from
+ *       v_0 over L/2. This may not have a valid result, putting us in case 2.
+ *
+ *   (2) There simply is not a meet velocity. In this case we return the higher
+ *       of v_0 or v_2, making a head-body or body-tail move.
+ *
+ *   (3a) We have found a velocity that is within a margin of error below the
+ *        exact meet velocity. We then return a head-body-tail with the body being
+ *        the length of the gap.
+ *
+ *   (3b) We have found a velocity that is within a *very small* margin of error
+ *        above the meet velocity. This would cause an overlap of head and tail.
+ *        We then return the tail length as L - head length to remove the overlap.
+
+ *
  * t = (3-sqrt(3))/6
  * q = (sqrt(10)/(3^(1/4)))
- * m = 4/27-1/(4 sqrt(3))
- * r = (t-m)
- * r = 85/72-2/(3 sqrt(3))
- * L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2) + q (sqrt(v_1-v_2)/sqrt(j))( (v_1 + v_2)/2)
- * L = (q/(2 sqrt(j))) sqrt(v_1-v_0)(v_1 + v_0) + (q/(2 sqrt(j))) sqrt(v_1-v_2)(v_1 + v_2)
- * L = (q/(2 sqrt(j))) (sqrt(v_1-v_0)(v_1 + v_0) + sqrt(v_1-v_2)(v_1 + v_2))
+ *
+ * Length of move from v_0 to v_1 formula is:
+ *   L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2)
+ *
+ * Total length L of a move from v_0 to v_1, and from v_1 to v_2:
+ *   L = q (sqrt(v_1-v_0)/sqrt(j))( (v_1 + v_0)/2) + q (sqrt(v_1-v_2)/sqrt(j))( (v_1 + v_2)/2)
+ *
+ * Simplification so to isolate changed variables , allowing us to precompute q/(2 sqrt(j)):
+ *   L = (q/(2 sqrt(j))) sqrt(v_1-v_0)(v_1 + v_0) + (q/(2 sqrt(j))) sqrt(v_1-v_2)(v_1 + v_2)
+ *
+ * Further simplification that loses head and tail length (we don't use this):
+ *   L = (q/(2 sqrt(j))) (sqrt(v_1-v_0)(v_1 + v_0) + sqrt(v_1-v_2)(v_1 + v_2))
  */
 
 static float _get_meet_velocity(const float v_0, const float v_2, const float L, mpBuf_t *bf, mpBlockRuntimeBuf_t *block)
 {
     //const float j = bf->jerk;
     //const float recip_j = bf->recip_jerk;
+    //const float q =      2.40281141413; // (sqrt(10)/(3^(1/4)))
 
-    const float q =      2.40281141413; // (sqrt(10)/(3^(1/4)))
-//    //const float q_half = 2.40281141413/2; // q/2
-//
-//    const float sqrt_j = sqrt(j); // 110us
-//    //const float recip_sqrt_j = 1/sqrt_j;
-//    const float q_recip_2_sqrt_j = q/(2*sqrt_j); // 183us
-
-    const float sqrt_j = bf->sqrt_j;
     const float q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
 
     // v_1 can never be smaller than v_0 or v_2, so we keep track of this value
@@ -625,6 +759,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     //var v_1 = min_v_1 + 100;
 
     if (fp_EQ(v_0, v_2)) {
+        // Case (1)
         // We can catch a symmetric case early and return now
 
         // We'll have a head roughly equal to the tail, and no body
@@ -641,6 +776,7 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
     int i = 0; // limit the iterations // 466us - 644us
     while (i++ < 30) { // If it fails after 30, something's wrong
         if (v_1 < min_v_1) {
+            // Case (2)
             // We have caught a rather nasty problem. There is no meet velocity.
             // This is due to an inversion in the velocities of very short moves.
             // We need to compute the head OR tail length, and the body will be the rest.
@@ -705,8 +841,10 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
         // TODO: make these tunable
         if ((l_c < 0.00001) && (l_c > -1.0)) { // allow 0.00001 overlap, OR up to a 1mm gap
             if (l_c < 0.0) {
+                // Case (3a)
                 block->body_length = -l_c;
             } else {
+                // Case (3b)
                 // fix the overlap
                 block->tail_length = L - block->head_length;
             }
@@ -715,9 +853,10 @@ static float _get_meet_velocity(const float v_0, const float v_2, const float L,
 
         // l_d is the derivative of l_c, and is used for the Newton-Raphson iteration.
         // d = (q (sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)))/(4 sqrt(j) sqrt(v_1-v_0) sqrt(v_1-v_2))
-        // 1/d = (4 sqrt(j) sqrt(v_1-v_0) sqrt(v_1-v_2))/(q (sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)))
+        // d = (q/(2 sqrt(j))) ((sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)))/(2 sqrt(v_1-v_0) sqrt(v_1-v_2))
+        // 1/d = (2 sqrt(v_1-v_0) sqrt(v_1-v_2)) / ((sqrt(v_1-v_0) (3 v_1-v_2)-(v_0-3 v_1) sqrt(v_1-v_2)) (q/(2 sqrt(j))) )
         const float v_1x3 = 3*v_1;
-        const float recip_l_d = (4*sqrt_j*sqrt_delta_v_0*sqrt_delta_v_2)/(q*(sqrt_delta_v_0*(v_1x3-v_2)-(v_0-v_1x3)*sqrt_delta_v_2));
+        const float recip_l_d = (2*sqrt_delta_v_0*sqrt_delta_v_2) / ((sqrt_delta_v_0*(v_1x3-v_2)-(v_0-v_1x3)*sqrt_delta_v_2)*q_recip_2_sqrt_j);
 
         v_1 = v_1 - (l_c * recip_l_d);
     }

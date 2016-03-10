@@ -529,18 +529,22 @@ stat_t mp_planner_callback()
 
 /*
  *  mp_replan_queue() - reset the blocks in the planner queue and request a planner run
+ *
+ *    We don't actually need to invalidate back-planning. Only forward plannning.
+ *
  */
 void mp_replan_queue(mpBuf_t *bf)
 {
-    mp.p = bf;    // reset planner pointer to start replan from here
-
     do {
-        if (bf->buffer_state == MP_BUFFER_EMPTY) {
+        if (bf->buffer_state >= MP_BUFFER_PLANNED) {
+            // revert from PLANNED state
+            bf->buffer_state = MP_BUFFER_PREPPED;
+        } else {
+            // If it's not "planned" then it's either PREPPED or earlier.
+            // We don't need to adjust it.
             break;
         }
-
-        bf->buffer_state = MP_BUFFER_PREPPED;  // revert from PLANNED state
-    } while ((bf = mp_get_next_buffer(bf)) != mp.p);
+    } while ((bf = mp_get_next_buffer(bf)) != mb.r);
 
     mp.request_planning = true;
 }
