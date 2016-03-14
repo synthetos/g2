@@ -40,6 +40,7 @@
 #include "report.h"
 #include "controller.h"
 #include "util.h"
+#include "MotateBuffer.h"
 
 #ifdef __TEXT_MODE
 #include "text_parser.h"
@@ -100,7 +101,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
     // line reader functions
     uint16_t read_index;					// index into line being read
-    uint16_t read_buf_size;					// static variable set at init time
+    const uint16_t read_buf_size;					// static variable set at init time
     char read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 
     // Internal use only:
@@ -419,80 +420,27 @@ extern xio_t xio;
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
-    xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}
+    Motate::RXBuffer<2048, Device> _rx_buffer;
+
+    xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}
     {
         _dev->setConnectionCallback([&](bool connected) {	// lambda function
-            if (connected) {
-                if (isNotConnected()) {
-                    //USB0 has just connected
-                    //Case 1: This is the first channel to connect -
-                    //  set it as CTRL+DATA+PRIMARY channel
-                    //Case 2: This is the second (or later) channel to connect -
-                    //  set it as DATA channel, remove DATA flag from PRIMARY channel
-                    //... inactive channels are counted as closed
-
-                    setAsConnectedAndReady();
-
-                    if(!xio.others_connected(this)) {
-                        // Case 1
-                        setAsPrimaryActiveDualRole();
-                        // report that we now have a connection (only for the first one)
-                        controller_set_connected(true);
-                    } else {
-                        // Case 2
-                        xio.remove_data_from_primary();
-                        setAsActiveData();
-                    }
-                } // flags & DEV_IS_DISCONNECTED
-
-            } else { // disconnected
-                if (isConnected()) {
-
-                    //USB0 has just disconnected
-                    //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
-                    //  finalize this channel
-                    //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, deactivate other channels
-                    //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, leave other channels alone
-                    //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
-                    //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
-                    //Case 5: This channel disconnected while it was inactive -
-                    //  don't need to do anything!
-                    //... inactive channels are counted as closed
-
-                    devflags_t oldflags = flags;
-                    clearFlags();
-                    flushRead();
-
-                    if(checkForNotActive(oldflags)) {
-                        // Case 5
-                    } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
-                        // Case 1
-                        if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev() assertion error"); // where is this supposed to go!?
-                        }
-                        controller_set_connected(false);
-                    } else if(checkForCtrlAndPrimary(oldflags)) {
-                        // Case 2
-                        xio.deactivate_all_channels();
-                    } else if(checkForCtrl(oldflags)) {
-                        // Case 3
-                    } else if(checkForData(oldflags)) {
-                        // Case 4
-                        xio.remove_data_from_primary();
-                    }
-                } // flags & DEV_IS_CONNECTED
-            }
+            connectedStateChanged(connected);
         });
+
+//        _dev->setDataAvailableCallback([&](const size_t &length) {
+//            
+//        });
     };
 
     virtual int16_t readchar() final {
-        return _dev->readByte();					// readByte calls the USB endpoint's read function
+        return _rx_buffer.read();
+//        return _dev->readByte();					// readByte calls the USB endpoint's read function
     };
 
     virtual void flushRead() final {
         // Flush out any partially or wholly read lines being stored:
+        _rx_buffer.flush();
         _flushLine();
         return _dev->flushRead();
     }
@@ -500,6 +448,71 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     virtual int16_t write(const char *buffer, int16_t len) final {
         return _dev->write(buffer, len);
     }
+
+    void connectedStateChanged(bool connected) {
+        if (connected) {
+            if (isNotConnected()) {
+                //USB0 has just connected
+                //Case 1: This is the first channel to connect -
+                //  set it as CTRL+DATA+PRIMARY channel
+                //Case 2: This is the second (or later) channel to connect -
+                //  set it as DATA channel, remove DATA flag from PRIMARY channel
+                //... inactive channels are counted as closed
+
+                setAsConnectedAndReady();
+
+                if(!xio.others_connected(this)) {
+                    // Case 1
+                    setAsPrimaryActiveDualRole();
+                    // report that we now have a connection (only for the first one)
+                    controller_set_connected(true);
+                } else {
+                    // Case 2
+                    xio.remove_data_from_primary();
+                    setAsActiveData();
+                }
+            } // flags & DEV_IS_DISCONNECTED
+
+        } else { // disconnected
+            if (isConnected()) {
+
+                //USB0 has just disconnected
+                //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
+                //  finalize this channel
+                //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
+                //  finalize this channel, deactivate other channels
+                //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
+                //  finalize this channel, leave other channels alone
+                //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
+                //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
+                //Case 5: This channel disconnected while it was inactive -
+                //  don't need to do anything!
+                //... inactive channels are counted as closed
+
+                devflags_t oldflags = flags;
+                clearFlags();
+                flushRead();
+
+                if(checkForNotActive(oldflags)) {
+                    // Case 5
+                } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
+                    // Case 1
+                    if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
+                        rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev() assertion error"); // where is this supposed to go!?
+                    }
+                    controller_set_connected(false);
+                } else if(checkForCtrlAndPrimary(oldflags)) {
+                    // Case 2
+                    xio.deactivate_all_channels();
+                } else if(checkForCtrl(oldflags)) {
+                    // Case 3
+                } else if(checkForData(oldflags)) {
+                    // Case 4
+                    xio.remove_data_from_primary();
+                }
+            } // flags & DEV_IS_CONNECTED
+        }
+    };
 };
 
 // ALLOCATIONS
