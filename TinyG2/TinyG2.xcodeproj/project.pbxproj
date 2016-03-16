@@ -3207,6 +3207,8 @@
 		D49EC3F817054FDF00F2BF9B /* SAM4S8B.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8B.svd; sourceTree = "<group>"; };
 		D49EC3F917054FDF00F2BF9B /* SAM4S8C.svd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SAM4S8C.svd; sourceTree = "<group>"; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
+		D4AC39221C9745780098D685 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		D4AC39231C97517F0098D685 /* settings_printrbot_simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_printrbot_simple.h; sourceTree = "<group>"; };
 		D4B57631170737730070CCAE /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4B57632170737870070CCAE /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
 		D4B57633170737870070CCAE /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
@@ -3269,6 +3271,7 @@
 		D41D13F617374B7D00D522D9 /* settings */ = {
 			isa = PBXGroup;
 			children = (
+				D4AC39231C97517F0098D685 /* settings_printrbot_simple.h */,
 				D41D13F717374B7D00D522D9 /* settings_default.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
@@ -3312,6 +3315,7 @@
 				D4B6579F18B5C21500F8616C /* cycle_probing.cpp */,
 				D4B657A018B5C21500F8616C /* encoder.cpp */,
 				D4B657A118B5C21500F8616C /* encoder.h */,
+				D4AC39221C9745780098D685 /* error.h */,
 				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
 				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
 				D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */,
