@@ -307,11 +307,15 @@ static void _dispatch_kernel()
  * _controller_state() - manage controller connection, startup, and other state changes
  */
 
+Motate::Timeout _connection_timeout;
 static stat_t _controller_state()
 {
 	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
+        cs.controller_state = CONTROLLER_STARTUP;
+        // This is here just to put a small delay in before the startup message.
+        _connection_timeout.set(10);
+    } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {		// first time through after reset
 		cs.controller_state = CONTROLLER_READY;
-        // Oops, we just skipped CONTROLLER_STARTUP. Do we still need it? -r
 		rpt_print_system_ready_message();
 	}
 	return (STAT_OK);
