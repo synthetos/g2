@@ -39,7 +39,7 @@
 
 // You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
 
-#define TINYG_FIRMWARE_BUILD            089.02 // labeled as a compile w/o a build number
+#define TINYG_FIRMWARE_BUILD            089.03 // fixes for "startup banner" (new connection)
 //#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
 //#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
 
