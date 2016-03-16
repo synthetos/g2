@@ -429,8 +429,11 @@ namespace Motate {
                     _line_state = setup.valueLow();
 
                     // If the DTR changed, call connectionStateChanged (if it's defined)
-                    if (connection_state_changed_callback && ((_old_line_state & kCDCControlState_DTR) != (_line_state & kCDCControlState_DTR))) {
-                        connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+                    if (((_old_line_state & kCDCControlState_DTR) != (_line_state & kCDCControlState_DTR))) {
+                        flush();
+                        if (connection_state_changed_callback) {
+                            connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+                        }
                     }
 
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.

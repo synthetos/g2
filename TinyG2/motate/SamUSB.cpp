@@ -501,10 +501,10 @@ namespace Motate {
 	}
 
 	// Flush an endpoint after sending data.
-	void _flushEndpoint(uint8_t endpoint) {
-    _clearFIFOControl(endpoint);
-    _resetEndpointBuffer(endpoint);
-	}
+    void _flushEndpoint(uint8_t endpoint) {
+        _clearFIFOControl(endpoint);
+        _resetEndpointBuffer(endpoint);
+    }
 
 	// Send the data in a buffer to an endpoint.
 	// Does not automatically flush UNLESS it fills an endpoint buffer exactly.
