@@ -100,12 +100,12 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     devflags_t next_flags;					// bitfield for next-state transitions
 
     // line reader functions
-    uint16_t read_index;					// index into line being read
-    const uint16_t read_buf_size;					// static variable set at init time
-    char read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
+//    uint16_t read_index;					// index into line being read
+//    const uint16_t read_buf_size;					// static variable set at init time
+//    char read_buf[USB_LINE_BUFFER_SIZE];	// buffer for reading lines
 
     // Internal use only:
-    bool _ready_to_send;
+//    bool _ready_to_send;
 
     // Checks against calss flags variable:
 //	bool canRead() { return caps & DEV_CAN_READ; }
@@ -143,10 +143,11 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 
     xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
                                           flags(DEV_FLAGS_CLEAR),
-                                          next_flags(DEV_FLAGS_CLEAR),
-                                          read_index(0),
-                                          read_buf_size(USB_LINE_BUFFER_SIZE),
-                                          _ready_to_send(false) {
+                                          next_flags(DEV_FLAGS_CLEAR)//,
+//                                          read_index(0),
+//                                          read_buf_size(USB_LINE_BUFFER_SIZE),
+//                                          _ready_to_send(false)
+    {
     };
 
     // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
@@ -154,7 +155,9 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     virtual void flushRead() = 0;       // This should call _flushLine() before flushing the device.
     virtual int16_t write(const char *buffer, int16_t len) = 0;
 
+    virtual char *readline(devflags_t limit_flags, uint16_t &size) = 0;
 
+#if 0
     // Readline and line flushing functions
     char *readline(devflags_t limit_flags, uint16_t &size) {
         if (!(limit_flags & flags)) {
@@ -237,6 +240,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
         _ready_to_send = false;
         read_index = 0;
     };
+#endif
 };
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
@@ -417,10 +421,375 @@ extern xio_t xio;
 // See here for a discussion of what this means if you are not familiar with C++
 // https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
 
+
+// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
+// semantics to it.
+template <uint16_t _size, typename owner_type, uint8_t _header_count = 8>
+struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size of 128bytes
+    typedef RXBuffer<_size, owner_type, 128, char> parent_type;
+
+    // SUPPORTING STRUCTURES
+    enum _LinesHeaderStatus_t {
+        FREE,
+        PREPPED,
+        FILLING,
+        FULL
+    };
+
+    struct _LinesHeader {
+        _LinesHeaderStatus_t _status    : 3; // use only three bits
+        bool _is_command                : 1; // use a single bit
+        bool _is_processing             : 1; // use a single bit
+
+        bool : 0; // reset the bit field for proper alignment
+
+        int16_t _line_count;   // number of lines in this group of lines
+        int16_t _lines_read;   // number of lines that have been read
+        int16_t _read_offset;  // start of the next line to read (first char past PROCESSING line)
+
+        uint8_t _get_next_read_offset() { return ((_read_offset + 1) & (_size-1)); };
+
+
+        // Convenience function for reset
+        void reset() {
+            _status = FREE;
+            _is_command = false;
+            _line_count = 0;
+            _lines_read = 0;
+            _read_offset = 0;
+        };
+    };
+
+
+    // Let's help the compiler clarify what we mean by a few things:
+    // (This is because of the templating, it needs a little extra clarification.)
+    using parent_type::_data;
+    using parent_type::_getWriteOffset;
+    using parent_type::_last_known_write_offset;
+    using parent_type::_read_offset;
+    using parent_type::_reserve_size;
+    using parent_type::isEmpty;
+    using parent_type::_restartTransfer;
+    using parent_type::_canBeRead;
+
+
+    // START OF LineRXBuffer PROPER
+    static_assert(((_header_count-1)&_header_count)==0, "_header_count must be 2^N");
+
+
+    // General term usage:
+    // * "index" indicates it's in to _headers array
+    // * "offset" means it's a character in the _data array
+
+
+    _LinesHeader _headers[_header_count];   // and array that we'll use as a ring buffer of _LinesHeaders
+    uint8_t _first_header_index;            // index into the array of the (current) first item of _headers
+    uint8_t _write_header_index;            // index into the array of the item of _headers we are writing too (unless it's FULL)
+
+    uint16_t _scan_offset;      // offset into data of the last character scanned
+    bool     _at_start_of_line; // true if the last character scanned was the end of a line
+
+    LineRXBuffer(owner_type owner) : parent_type{owner} {};
+
+    uint8_t _get_next_write_header_index() { return ((_write_header_index + 1) & (_header_count-1)); };
+    uint8_t _get_next_first_header_index() { return ((_first_header_index + 1) & (_header_count-1)); };
+
+    void _free_unused_space() {
+        // headers that were processing are now safe to clear.
+        while (_headers[_first_header_index]._is_processing) {
+            auto _first_header = &_headers[_first_header_index];
+            _read_offset = _first_header->_read_offset;
+            if ((_first_header->_status == FULL) && ((_first_header->_line_count - _first_header->_lines_read) == 0)) {
+                _first_header->reset();
+                _first_header_index = _get_next_first_header_index();
+            } else {
+                _first_header->_is_processing = false;
+            }
+        }
+
+        if ((_write_header_index == _first_header_index) && (_headers[_first_header_index]._status == FREE)) {
+            auto _first_header = &_headers[_first_header_index];
+            // PREP it
+            _first_header->_status = PREPPED;
+            _at_start_of_line = true;
+            _first_header->_read_offset = _scan_offset;
+        }
+    };
+
+    bool _check_write_header() {
+        // _status cannot be PROCESSING, since we already cleared those in _free_unused_space()
+        if (_headers[_write_header_index]._status == FULL) {
+            uint8_t _next_write_header_index = _get_next_write_header_index();
+            if (_next_write_header_index == _first_header_index) { // we're full full
+                return false;
+            }
+            _write_header_index = _next_write_header_index;
+
+            auto _write_header = &_headers[_write_header_index];
+            _write_header->_status = PREPPED;
+            _at_start_of_line = true;
+            _write_header->_read_offset = _scan_offset;
+        }
+        return true;
+    };
+
+    uint16_t _get_next_scan_offset() {
+        return ((_scan_offset + 1) & (_size-1));
+    }
+
+    bool _is_more_to_scan() {
+        return _canBeRead(_scan_offset);
+    };
+
+    // This function skips the "whitespace" at the BEGINNING of a line.
+    // This assumes we've already located the end of a line.
+    void _scan_past_line_start() {
+        while (_is_more_to_scan()) {
+            char c = _data[_scan_offset];
+            if (c == '\r' ||
+                c == '\n' ||
+                c == '\t' ||
+                c == ' ') {
+                _scan_offset = _get_next_scan_offset();
+            } else {
+                break;
+            }
+        } // end _skipping whitespace
+    };
+
+
+    // Make a pass through the buffer to create headers for what has been read.
+
+    // This function is designed to be able to exit from almost any point, and
+    // come back in and resume where it left off. This allows it to scan to the
+    // end of the buffer, then exit.
+    void _scan_buffer() {
+        _free_unused_space();
+
+        if (!_check_write_header()) { return; }
+
+        // scan until we find the start of a line of a different type
+        while (_is_more_to_scan()) {
+            auto _write_header = &_headers[_write_header_index];
+
+            if (_at_start_of_line) {
+                _scan_past_line_start();
+                if (!_is_more_to_scan()) {
+                    return;
+                }
+
+                // If we were PREPPED, we mark the first characters to read as the current offset.
+                if (_write_header->_status == PREPPED) {
+                    _write_header->_read_offset = _scan_offset;
+                }
+            }
+
+            bool _is_command = _write_header->_is_command;
+            bool _ends_line  = false; // single-char commands are their own line
+
+            // Look for line endings
+            // Classify the line
+            char c = _data[_scan_offset];
+            if (_at_start_of_line &&
+                c == '{'
+                ) {
+                // start of JSON command
+                _is_command = true;
+                _at_start_of_line = false;
+            }
+            else if (c == '\0' || // if we encounter a null, we'll treat it like a line ending
+                     c == '\r' ||
+                     c == '\n'
+                     ) {
+                _at_start_of_line = true;
+                _ends_line  = true;
+            }
+            else if (c == '!'         ||
+                     c == '~'         ||
+                     c == CHAR_RESET  ||          // ^X
+                     c == CHAR_ALARM  ||          // ^D
+                     (cm_has_hold() && c == '%')  // flush (only in feedhold)
+                     ) {
+                // single-character control
+                _is_command = true;
+                _at_start_of_line = true;
+                _ends_line  = true;
+            } else {
+                _at_start_of_line = false;
+            }
+
+
+            if (_write_header->_status == PREPPED) {
+                _write_header->_is_command = _is_command;
+                _write_header->_status = FILLING;
+            }
+            else if (_write_header->_is_command != _is_command)
+            {
+                // Now we have to end this _write_header and grab another.
+
+                _write_header->_status = FULL;
+                if (!_check_write_header()) {
+                    return; // We just bail if there's not another header available
+                }
+
+                // Update the pointer
+                _write_header = &_headers[_write_header_index];
+                _write_header->_is_command = _is_command;
+                _write_header->_status = FILLING;
+            }
+
+
+            if (_ends_line) {
+                _write_header->_line_count++;
+            }
+
+            _scan_offset = _get_next_scan_offset();
+        } //while (_is_more_to_scan())
+    };
+
+
+
+    // This is the ONLY external interface in this class
+    char *readline(uint16_t &line_size) {
+        _scan_buffer();
+
+
+        uint8_t search_header_index = _first_header_index;
+        auto search_header = &_headers[search_header_index];
+        bool found_command = false;
+        do {
+            if (search_header->_is_command && ((search_header->_line_count - search_header->_lines_read) > 0)) {
+                found_command = true;
+                break;
+            }
+            if (search_header_index == _write_header_index)
+            {
+                break;
+            }
+
+            search_header_index++;
+            search_header = &_headers[search_header_index];
+        } while (1);
+
+        if (found_command) {
+            if (search_header->_status < FILLING) {
+                line_size = 0;
+                return nullptr;
+            }
+
+            char c = _data[search_header->_read_offset];
+            char *ptr = _data + search_header->_read_offset;
+            if (c == '!'         ||
+                c == '~'         ||
+                c == CHAR_RESET  ||          // ^X
+                c == CHAR_ALARM  ||          // ^D
+                (cm_has_hold() && c == '%')  // flush (only in feedhold)
+                ) {
+                line_size = 1;
+
+                search_header->_read_offset = search_header->_get_next_read_offset();
+                search_header->_lines_read++;
+                search_header->_is_processing = true;
+
+                return ptr;
+            }
+
+            // fall through to finding the end of the line in search_header
+
+
+        } else if (search_header_index != _first_header_index) {
+            // Find another search_header
+            search_header_index = _first_header_index;
+            search_header = &_headers[search_header_index];
+        }
+
+        if ((search_header->_status < FILLING) || ((search_header->_line_count - search_header->_lines_read) < 1)) {
+            line_size = 0;
+            return nullptr;
+        }
+
+        // We know we have at least one line in the _data buffer, starting at search_header->_read_offset
+        // The line might "wrap" to the beginning of the ring buffer, however, and we don't want to pass
+        // back a pointer to *that*, so we detect a wrapped line and copy the characters that are on the
+        // other side of the "fold" to the extra space at the end of the buffer (which is there for just
+        // this reason.)
+
+        uint16_t read_offset = search_header->_read_offset;
+        char *ptr = _data + read_offset;
+        char *end_ptr = ptr;   // keep track of where to write -- does not wrap
+        bool copying = false;  // if we are copying from _data[read_offset] to *end_ptr
+        bool line_done = false;
+        uint16_t reserve_used = 0; // keep track of how much of the reserve buffer is being used during copying
+
+        while (_canBeRead(read_offset)) {
+            char c = _data[read_offset];
+
+            if ((reserve_used < (_reserve_size-1) ) &&
+                (
+                 c == '\0' ||
+                 c == '\r' ||
+                 c == '\n'
+                )
+                ) {
+                line_done = true;
+                copying = false;
+                // We can't terminate HERE -- sometimes it appears the DMA will still write to memory again. :/
+            }
+            else if (line_done) {
+                break;
+            }
+            else if (reserve_used == (_reserve_size-1)) {
+                // if we fill up the reserve, we truncate the line, then deal with the results later.
+                // but we cannot keep scribbling on memory past the scratch.
+                line_done = true;
+                break;
+            }
+
+            if (copying) {
+                *end_ptr = c;
+                reserve_used++;
+            }
+
+            // update read/write positions
+            end_ptr++;
+            uint16_t new_read_offset = (read_offset+1)&(_size -1);
+
+            // NOTE: "_size" is the total buffer size, "line_size" is the size of the string we're building and returning.
+
+            // if we wrapped around, then start copying
+            if (new_read_offset < read_offset) {
+                copying = true;
+            }
+
+            read_offset = new_read_offset;
+        }
+
+        if (line_done) {
+            // previous character was last one of the line
+            // update the header's next read position
+            search_header->_read_offset = read_offset;
+            // and line count
+            search_header->_lines_read++;
+            // and processing flag
+            search_header->_is_processing = true;
+
+            *(end_ptr-1) = 0;
+
+            line_size = end_ptr - ptr;
+            return ptr;
+        }
+
+        // We shouldn't get here
+        line_size = 0;
+        return nullptr;
+    };
+};
+
+
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
-    Motate::RXBuffer<2048, Device> _rx_buffer;
+    LineRXBuffer<2048, Device> _rx_buffer;
 
     xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}
     {
@@ -448,6 +817,19 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     virtual int16_t write(const char *buffer, int16_t len) final {
         return _dev->write(buffer, len);
     }
+
+    virtual char *readline(devflags_t limit_flags, uint16_t &size) final {
+        if (!(limit_flags & flags)) {
+            size = 0;
+            return NULL;
+        }
+
+        return _rx_buffer.readline(size);
+    };
+
+    void _flushLine() {
+
+    };
 
     void connectedStateChanged(bool connected) {
         if (connected) {
