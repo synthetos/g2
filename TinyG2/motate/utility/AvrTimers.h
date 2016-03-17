@@ -43,7 +43,7 @@ namespace Motate {
 	
 	enum TimerChannelOutputOptions {
 		kOutputDisconnected = 0,
-		kToggleOnMatch      = 1
+		kToggleOnMatch      = 1,
 		kClearOnMatch       = 2,
 		kSetOnMatch         = 3,
 	};
@@ -51,7 +51,7 @@ namespace Motate {
 	enum TimerChannelInterruptOptions {
 		kInterruptsOff       = 0,
 		kInterruptOnMatchA   = 1<<0,
-		kInterruptOnMatchB   = 1<<1;
+		kInterruptOnMatchB   = 1<<1,
 		kInterruptOnOverflow = 1<<2,
 		kSetOnMatch          = 1<<3,
 	};
