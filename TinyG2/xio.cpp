@@ -444,7 +444,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         bool : 0; // reset the bit field for proper alignment
 
         int16_t _line_count;   // number of lines in this group of lines
-        int16_t _lines_read;   // number of lines that have been read
         int16_t _read_offset;  // start of the next line to read (first char past PROCESSING line)
 
         uint8_t _get_next_read_offset() { return ((_read_offset + 1) & (_size-1)); };
@@ -455,7 +454,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
             _status = FREE;
             _is_command = false;
             _line_count = 0;
-            _lines_read = 0;
             _read_offset = 0;
         };
     };
@@ -499,7 +497,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         while (_headers[_first_header_index]._is_processing) {
             auto _first_header = &_headers[_first_header_index];
             _read_offset = _first_header->_read_offset;
-            if ((_first_header->_status == FULL) && ((_first_header->_line_count - _first_header->_lines_read) == 0)) {
+            if ((_first_header->_status == FULL) && (_first_header->_line_count == 0)) {
                 _first_header->reset();
                 _first_header_index = _get_next_first_header_index();
             } else {
@@ -572,17 +570,17 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         while (_is_more_to_scan()) {
             auto _write_header = &_headers[_write_header_index];
 
-            if (_at_start_of_line) {
-                _scan_past_line_start();
-                if (!_is_more_to_scan()) {
-                    return;
-                }
-
-                // If we were PREPPED, we mark the first characters to read as the current offset.
-                if (_write_header->_status == PREPPED) {
-                    _write_header->_read_offset = _scan_offset;
-                }
-            }
+//            if (_at_start_of_line) {
+//                _scan_past_line_start();
+//                if (!_is_more_to_scan()) {
+//                    return;
+//                }
+//
+//                // If we were PREPPED, we mark the first characters to read as the current offset.
+//                if (_write_header->_status == PREPPED) {
+//                    _write_header->_read_offset = _scan_offset;
+//                }
+//            }
 
             bool _is_command = _write_header->_is_command;
             bool _ends_line  = false; // single-char commands are their own line
@@ -597,8 +595,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
                 _is_command = true;
                 _at_start_of_line = false;
             }
-            else if (c == '\0' || // if we encounter a null, we'll treat it like a line ending
-                     c == '\r' ||
+            else if (c == '\0' // if we encounter a null, we screwed up
+                     ) {
+                return;
+            }
+            else if (c == '\r' ||
                      c == '\n'
                      ) {
                 _at_start_of_line = true;
@@ -658,7 +659,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         auto search_header = &_headers[search_header_index];
         bool found_command = false;
         do {
-            if (search_header->_is_command && ((search_header->_line_count - search_header->_lines_read) > 0)) {
+            if (search_header->_is_command && (search_header->_line_count > 0)) {
                 found_command = true;
                 break;
             }
@@ -688,7 +689,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
                 line_size = 1;
 
                 search_header->_read_offset = search_header->_get_next_read_offset();
-                search_header->_lines_read++;
+                search_header->_line_count--;
                 search_header->_is_processing = true;
 
                 return ptr;
@@ -703,7 +704,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
             search_header = &_headers[search_header_index];
         }
 
-        if ((search_header->_status < FILLING) || ((search_header->_line_count - search_header->_lines_read) < 1)) {
+        if ((search_header->_status < FILLING) || (search_header->_line_count < 1)) {
             line_size = 0;
             return nullptr;
         }
@@ -726,7 +727,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
 
             if ((reserve_used < (_reserve_size-1) ) &&
                 (
-                 c == '\0' ||
+//                 c == '\0' ||
                  c == '\r' ||
                  c == '\n'
                 )
@@ -769,7 +770,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
             // update the header's next read position
             search_header->_read_offset = read_offset;
             // and line count
-            search_header->_lines_read++;
+            search_header->_line_count--;
             // and processing flag
             search_header->_is_processing = true;
 
