@@ -424,9 +424,9 @@ extern xio_t xio;
 
 // LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
 // semantics to it.
-template <uint16_t _size, typename owner_type, uint8_t _header_count = 8>
-struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size of 128bytes
-    typedef RXBuffer<_size, owner_type, 128, char> parent_type;
+template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = 255>
+struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128bytes
+    typedef RXBuffer<_size, owner_type, char> parent_type;
 
     // SUPPORTING STRUCTURES
     enum _LinesHeaderStatus_t {
@@ -446,7 +446,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         int16_t _line_count;   // number of lines in this group of lines
         int16_t _read_offset;  // start of the next line to read (first char past PROCESSING line)
 
-        uint8_t _get_next_read_offset() { return ((_read_offset + 1) & (_size-1)); };
+        uint16_t _get_next_read_offset() { return ((_read_offset + 1) & (_size-1)); };
 
 
         // Convenience function for reset
@@ -465,7 +465,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
     using parent_type::_getWriteOffset;
     using parent_type::_last_known_write_offset;
     using parent_type::_read_offset;
-    using parent_type::_reserve_size;
     using parent_type::isEmpty;
     using parent_type::_restartTransfer;
     using parent_type::_canBeRead;
@@ -474,6 +473,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
     // START OF LineRXBuffer PROPER
     static_assert(((_header_count-1)&_header_count)==0, "_header_count must be 2^N");
 
+    char _line_buffer[_line_buffer_size]; // hold excatly one line to return
 
     // General term usage:
     // * "index" indicates it's in to _headers array
@@ -484,33 +484,42 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
     uint8_t _first_header_index;            // index into the array of the (current) first item of _headers
     uint8_t _write_header_index;            // index into the array of the item of _headers we are writing too (unless it's FULL)
 
-    uint16_t _scan_offset;      // offset into data of the last character scanned
-    bool     _at_start_of_line; // true if the last character scanned was the end of a line
+    uint16_t _scan_offset;          // offset into data of the last character scanned
+    uint16_t _line_start_offset;    // offset into first character of the line
+    bool     _at_start_of_line;     // true if the last character scanned was the end of a line
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
     uint8_t _get_next_write_header_index() { return ((_write_header_index + 1) & (_header_count-1)); };
     uint8_t _get_next_first_header_index() { return ((_first_header_index + 1) & (_header_count-1)); };
+    uint8_t _get_next_header_index(uint8_t indx) { return ((indx + 1) & (_header_count-1)); };
 
     void _free_unused_space() {
-        // headers that were processing are now safe to clear.
-        while (_headers[_first_header_index]._is_processing) {
-            auto _first_header = &_headers[_first_header_index];
+        // Headers that were processing OR are now completely empty are now safe to clear,m
+        // but only in order.
+        auto _first_header = &_headers[_first_header_index];
+        while ((_first_header->_is_processing) || ((_first_header->_status == FULL) && (_first_header->_line_count == 0))) {
             _read_offset = _first_header->_read_offset;
+            _first_header->_is_processing = false;
+
             if ((_first_header->_status == FULL) && (_first_header->_line_count == 0)) {
                 _first_header->reset();
                 _first_header_index = _get_next_first_header_index();
+
+                // Point _first_header to the new first header
+                _first_header = &_headers[_first_header_index];
             } else {
-                _first_header->_is_processing = false;
+                // We can only clear into the next one if we completely clear this one
+                break;
             }
         }
 
-        if ((_write_header_index == _first_header_index) && (_headers[_first_header_index]._status == FREE)) {
-            auto _first_header = &_headers[_first_header_index];
+        if ((_write_header_index == _first_header_index) && (_first_header->_status == FREE)) {
             // PREP it
             _first_header->_status = PREPPED;
+
             _at_start_of_line = true;
-            _first_header->_read_offset = _scan_offset;
+            _first_header->_read_offset = _line_start_offset;
         }
     };
 
@@ -526,7 +535,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
             auto _write_header = &_headers[_write_header_index];
             _write_header->_status = PREPPED;
             _at_start_of_line = true;
-            _write_header->_read_offset = _scan_offset;
+            _write_header->_read_offset = _line_start_offset;
         }
         return true;
     };
@@ -566,84 +575,140 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
 
         if (!_check_write_header()) { return; }
 
-        // scan until we find the start of a line of a different type
+        /* Explanation of cases and how we handle it.
+         *
+         * Our first task in this loop is two fold:
+         *  A) Scan for the next complete line, then classify the line.
+         *  B) Scan for a single-character command (!~% ^D, etc), then classify that as a line.
+         *
+         * Out next task is to then to manage the headers with this new information. We either:
+         *  1) Add the line to the header, if the write header is FILLING and has the same classification.
+         *  2) Add the line to the header, and classify it, if the write header is PENDING.
+         *  3) Mark the current write header as FULL, and then (2) on the next one.
+         *
+         * We also have a constraint that we may run out of character at any time. This is okay, and enough 
+         * state is kept that we can enter the function at any point with new characters and get the same results.
+         *
+         * Another constraint is that lines MAY have single character commands embedded in them. In this case,
+         * we need to un-embed them. Since we may not have the end of the line yet, we need to move the command
+         * to the beginning of the line.
+         *
+         * Note that _at_start_of_line means that we *just* parsed a character that is *at* the end of the line.
+         * So, for a \r\n sequence, _at_start_of_line will go true of the \r, and we'll see the \n and it'll stay 
+         * true, then the first non \r or \n char will set it to false, and *then* start the next line.
+         *
+         */
         while (_is_more_to_scan()) {
-            auto _write_header = &_headers[_write_header_index];
+            auto write_header = &_headers[_write_header_index];
 
-//            if (_at_start_of_line) {
-//                _scan_past_line_start();
-//                if (!_is_more_to_scan()) {
-//                    return;
-//                }
-//
-//                // If we were PREPPED, we mark the first characters to read as the current offset.
-//                if (_write_header->_status == PREPPED) {
-//                    _write_header->_read_offset = _scan_offset;
-//                }
-//            }
-
-            bool _is_command = _write_header->_is_command;
-            bool _ends_line  = false; // single-char commands are their own line
+            bool ends_line  = false;
+            bool is_command = false;
 
             // Look for line endings
             // Classify the line
             char c = _data[_scan_offset];
-            if (_at_start_of_line &&
-                c == '{'
+//            if (_at_start_of_line &&
+//                c == '{'
+//                ) {
+//                // start of JSON command
+//                _is_command = true;
+//                _at_start_of_line = false;
+//            }
+//            else
+
+//            if (c == '\0' // if we encounter a null, we screwed up
+//                     ) {
+//                return;
+//            }
+//            else
+            if (c == '\r' ||
+                c == '\n'
                 ) {
-                // start of JSON command
-                _is_command = true;
-                _at_start_of_line = false;
-            }
-            else if (c == '\0' // if we encounter a null, we screwed up
-                     ) {
-                return;
-            }
-            else if (c == '\r' ||
-                     c == '\n'
-                     ) {
-                _at_start_of_line = true;
-                _ends_line  = true;
-            }
-            else if (c == '!'         ||
-                     c == '~'         ||
-                     c == CHAR_RESET  ||          // ^X
-                     c == CHAR_ALARM  ||          // ^D
-                     (cm_has_hold() && c == '%')  // flush (only in feedhold)
-                     ) {
-                // single-character control
-                _is_command = true;
-                _at_start_of_line = true;
-                _ends_line  = true;
-            } else {
-                _at_start_of_line = false;
-            }
 
-
-            if (_write_header->_status == PREPPED) {
-                _write_header->_is_command = _is_command;
-                _write_header->_status = FILLING;
+                // We only mark ends_line for the first end-line char, and if
+                // _at_start_of_line is already true, this is not the first.
+                if (!_at_start_of_line) {
+                    ends_line  = true;
+                }
             }
-            else if (_write_header->_is_command != _is_command)
-            {
-                // Now we have to end this _write_header and grab another.
+            else
+            if (c == '!'         ||
+                c == '~'         ||
+                c == CHAR_RESET  ||          // ^X
+                c == CHAR_ALARM  ||          // ^D
+                (cm_has_hold() && c == '%')  // flush (only in feedhold)
+                ) {
 
-                _write_header->_status = FULL;
-                if (!_check_write_header()) {
-                    return; // We just bail if there's not another header available
+                // Special case: if we're NOT _at_start_of_line, we need to move the
+                // character to _line_start_offset. That means moving every character
+                // forward one. THEN we back-track _scan_offset to this new start of line.
+                if (!_at_start_of_line) {
+                    uint16_t copy_offset = _line_start_offset;
+                    while (copy_offset != _scan_offset) {
+                        uint16_t next_copy_offset = (copy_offset+1)&(_size-1);
+                        _data[next_copy_offset] = _data[copy_offset];
+                        copy_offset = next_copy_offset;
+                    }
+                    // Copy the single character to the first character
+                    _data[_line_start_offset] = c;
                 }
 
-                // Update the pointer
-                _write_header = &_headers[_write_header_index];
-                _write_header->_is_command = _is_command;
-                _write_header->_status = FILLING;
+                _line_start_offset = _scan_offset;
+
+                // single-character control
+                is_command = true;
+                ends_line  = true;
+            }
+            else {
+                if (_at_start_of_line) {
+                    // This is the first character at the beginning of the line.
+                    _line_start_offset = _scan_offset;
+                }
+                _at_start_of_line = false;
             }
 
+            if (ends_line) {
+                // Here we classify the line.
+                // If we are is_command is already true, it's an already classified
+                // single-character command.
+                if (!is_command) {
+                    // TODO --- Call a function to do this
 
-            if (_ends_line) {
-                _write_header->_line_count++;
+                    if (_data[_line_start_offset] == '{') {
+                        is_command = true;
+                    }
+
+                    // TODO ---
+                }
+
+
+                if (write_header->_status == PREPPED) {
+                    write_header->_is_command = is_command;
+                    write_header->_status = FILLING;
+                }
+                else if (write_header->_is_command != is_command)
+                {
+                    // This line goes into the next header.
+                    // Now we have to end this _write_header and grab another.
+
+                    write_header->_status = FULL;
+                    if (!_check_write_header()) {
+                        // We just bail if there's not another header available.
+                        return;
+                    }
+
+                    // Update the pointer
+                    write_header = &_headers[_write_header_index];
+                    write_header->_is_command = is_command;
+                    write_header->_status = FILLING;
+                }
+
+                write_header->_line_count++;
+                _at_start_of_line = true;
             }
 
+            // We do this LAST. If we had to exit before this point,
+            // we will evaluate the same character again.
             _scan_offset = _get_next_scan_offset();
         } //while (_is_more_to_scan())
     };
@@ -659,7 +724,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         auto search_header = &_headers[search_header_index];
         bool found_command = false;
         do {
-            if (search_header->_is_command && (search_header->_line_count > 0)) {
+            if ((search_header->_status >= FILLING) &&
+                search_header->_is_command &&
+                (search_header->_line_count > 0)) {
+
                 found_command = true;
                 break;
             }
@@ -668,18 +736,22 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
                 break;
             }
 
-            search_header_index++;
+            search_header_index = _get_next_header_index(search_header_index);
             search_header = &_headers[search_header_index];
         } while (1);
 
+
         if (found_command) {
-            if (search_header->_status < FILLING) {
-                line_size = 0;
-                return nullptr;
-            }
+
+            // When we get here, search_header points to a valid header that we want to either:
+            // A) Get a single-character command from and return it, OR
+            // B) Get a full line from and return it.
+
+            // For B, we handle that like any line. But the single chars have to have special
+            // attention.
+
 
             char c = _data[search_header->_read_offset];
-            char *ptr = _data + search_header->_read_offset;
             if (c == '!'         ||
                 c == '~'         ||
                 c == CHAR_RESET  ||          // ^X
@@ -692,22 +764,47 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
                 search_header->_line_count--;
                 search_header->_is_processing = true;
 
-                return ptr;
+                single_char_buffer[0] = c;
+                single_char_buffer[1] = 0;
+
+                return single_char_buffer;
             }
 
             // fall through to finding the end of the line in search_header
 
 
-        } else if (search_header_index != _first_header_index) {
-            // Find another search_header
+        } // end if (found_command)
+        else {
+
+            // Find another search_header that's NOT a command header
             search_header_index = _first_header_index;
             search_header = &_headers[search_header_index];
-        }
 
-        if ((search_header->_status < FILLING) || (search_header->_line_count < 1)) {
-            line_size = 0;
-            return nullptr;
-        }
+            do {
+                if ((search_header->_status >= FILLING) &&
+                    (!search_header->_is_command) &&
+                    (search_header->_line_count > 0)) {
+
+                    break;
+                }
+                if (search_header_index == _write_header_index)
+                {
+                    // We don't have anything (yet), return blank
+                    line_size = 0;
+                    return nullptr;
+                }
+
+                search_header_index = _get_next_header_index(search_header_index);
+                search_header = &_headers[search_header_index];
+            } while (1);
+
+        } // end if (!found_command)
+
+
+
+        // By the time we get here, search_header points to a valid header that we want to pull the first
+        // full line from and return it.
+
 
         // We know we have at least one line in the _data buffer, starting at search_header->_read_offset
         // The line might "wrap" to the beginning of the ring buffer, however, and we don't want to pass
@@ -716,73 +813,46 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, 128, char> { // reserve size o
         // this reason.)
 
         uint16_t read_offset = search_header->_read_offset;
-        char *ptr = _data + read_offset;
-        char *end_ptr = ptr;   // keep track of where to write -- does not wrap
-        bool copying = false;  // if we are copying from _data[read_offset] to *end_ptr
-        bool line_done = false;
-        uint16_t reserve_used = 0; // keep track of how much of the reserve buffer is being used during copying
+        char *dst_ptr = _line_buffer;
+        line_size = 0;
 
-        while (_canBeRead(read_offset)) {
+        // scan past any leftover CR or LF from the previous line
+        while ((_data[read_offset] == '\n') || (_data[read_offset] == '\r')) {
+            read_offset = (read_offset+1)&(_size-1);
+        }
+
+        while (line_size < (_line_buffer_size - 2)) {
+            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
+                _debug_trap("readline hit unreadable and shouldn't have!");
+            }
             char c = _data[read_offset];
 
-            if ((reserve_used < (_reserve_size-1) ) &&
-                (
-//                 c == '\0' ||
+            if (
                  c == '\r' ||
                  c == '\n'
-                )
                 ) {
-                line_done = true;
-                copying = false;
-                // We can't terminate HERE -- sometimes it appears the DMA will still write to memory again. :/
-            }
-            else if (line_done) {
-                break;
-            }
-            else if (reserve_used == (_reserve_size-1)) {
-                // if we fill up the reserve, we truncate the line, then deal with the results later.
-                // but we cannot keep scribbling on memory past the scratch.
-                line_done = true;
+
                 break;
             }
 
-            if (copying) {
-                *end_ptr = c;
-                reserve_used++;
-            }
+            line_size++;
+            *dst_ptr = c;
 
             // update read/write positions
-            end_ptr++;
-            uint16_t new_read_offset = (read_offset+1)&(_size -1);
-
-            // NOTE: "_size" is the total buffer size, "line_size" is the size of the string we're building and returning.
-
-            // if we wrapped around, then start copying
-            if (new_read_offset < read_offset) {
-                copying = true;
-            }
-
-            read_offset = new_read_offset;
+            dst_ptr++;
+            read_offset = (read_offset+1)&(_size-1);
         }
 
-        if (line_done) {
-            // previous character was last one of the line
-            // update the header's next read position
-            search_header->_read_offset = read_offset;
-            // and line count
-            search_header->_line_count--;
-            // and processing flag
-            search_header->_is_processing = true;
+        // previous character was last one of the line
+        // update the header's next read position
+        search_header->_read_offset = (read_offset+1)&(_size-1);
+        // and line count
+        search_header->_line_count--;
+        // and processing flag
+        search_header->_is_processing = true;
 
-            *(end_ptr-1) = 0;
-
-            line_size = end_ptr - ptr;
-            return ptr;
-        }
-
-        // We shouldn't get here
-        line_size = 0;
-        return nullptr;
+        *dst_ptr = 0;
+        return _line_buffer;
     };
 };
 
