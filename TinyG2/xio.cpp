@@ -438,7 +438,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
     struct _LinesHeader {
         _LinesHeaderStatus_t _status    : 3; // use only three bits
-        bool _is_command                : 1; // use a single bit
+        bool _is_control                : 1; // use a single bit
         bool _is_processing             : 1; // use a single bit
 
         bool : 0; // reset the bit field for proper alignment
@@ -452,7 +452,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         // Convenience function for reset
         void reset() {
             _status = FREE;
-            _is_command = false;
+            _is_control = false;
             _line_count = 0;
             _read_offset = 0;
         };
@@ -602,25 +602,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             auto write_header = &_headers[_write_header_index];
 
             bool ends_line  = false;
-            bool is_command = false;
+            bool is_control = false;
 
             // Look for line endings
             // Classify the line
             char c = _data[_scan_offset];
-//            if (_at_start_of_line &&
-//                c == '{'
-//                ) {
-//                // start of JSON command
-//                _is_command = true;
-//                _at_start_of_line = false;
-//            }
-//            else
-
-//            if (c == '\0' // if we encounter a null, we screwed up
-//                     ) {
-//                return;
-//            }
-//            else
             if (c == '\r' ||
                 c == '\n'
                 ) {
@@ -656,7 +642,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                 _line_start_offset = _scan_offset;
 
                 // single-character control
-                is_command = true;
+                is_control = true;
                 ends_line  = true;
             }
             else {
@@ -669,13 +655,13 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
             if (ends_line) {
                 // Here we classify the line.
-                // If we are is_command is already true, it's an already classified
+                // If we are is_control is already true, it's an already classified
                 // single-character command.
-                if (!is_command) {
+                if (!is_control) {
                     // TODO --- Call a function to do this
 
                     if (_data[_line_start_offset] == '{') {
-                        is_command = true;
+                        is_control = true;
                     }
 
                     // TODO ---
@@ -683,10 +669,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
 
                 if (write_header->_status == PREPPED) {
-                    write_header->_is_command = is_command;
+                    write_header->_is_control = is_control;
                     write_header->_status = FILLING;
                 }
-                else if (write_header->_is_command != is_command)
+                else if (write_header->_is_control != is_control)
                 {
                     // This line goes into the next header.
                     // Now we have to end this _write_header and grab another.
@@ -699,7 +685,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
                     // Update the pointer
                     write_header = &_headers[_write_header_index];
-                    write_header->_is_command = is_command;
+                    write_header->_is_control = is_control;
                     write_header->_status = FILLING;
                 }
 
@@ -716,19 +702,19 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
 
     // This is the ONLY external interface in this class
-    char *readline(uint16_t &line_size) {
+    char *readline(bool control_only, uint16_t &line_size) {
         _scan_buffer();
 
 
         uint8_t search_header_index = _first_header_index;
         auto search_header = &_headers[search_header_index];
-        bool found_command = false;
+        bool found_control = false;
         do {
             if ((search_header->_status >= FILLING) &&
-                search_header->_is_command &&
+                search_header->_is_control &&
                 (search_header->_line_count > 0)) {
 
-                found_command = true;
+                found_control = true;
                 break;
             }
             if (search_header_index == _write_header_index)
@@ -741,7 +727,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         } while (1);
 
 
-        if (found_command) {
+        if (found_control) {
 
             // When we get here, search_header points to a valid header that we want to either:
             // A) Get a single-character command from and return it, OR
@@ -776,27 +762,17 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         } // end if (found_command)
         else {
 
-            // Find another search_header that's NOT a command header
+            // Logic to determine that we can safely look at ONLY the first header:
+            // • We always read all of the command lines first.
+            // • We have already called _free_unused_space().
+
             search_header_index = _first_header_index;
             search_header = &_headers[search_header_index];
 
-            do {
-                if ((search_header->_status >= FILLING) &&
-                    (!search_header->_is_command) &&
-                    (search_header->_line_count > 0)) {
-
-                    break;
-                }
-                if (search_header_index == _write_header_index)
-                {
-                    // We don't have anything (yet), return blank
-                    line_size = 0;
-                    return nullptr;
-                }
-
-                search_header_index = _get_next_header_index(search_header_index);
-                search_header = &_headers[search_header_index];
-            } while (1);
+            if (control_only || search_header->_is_control || (search_header->_line_count == 0)) {
+                line_size = 0;
+                return nullptr;
+            }
 
         } // end if (!found_command)
 
@@ -895,7 +871,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
             return NULL;
         }
 
-        return _rx_buffer.readline(size);
+        return _rx_buffer.readline(!(limit_flags & DEV_IS_DATA), size);
     };
 
     void _flushLine() {
