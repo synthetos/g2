@@ -836,7 +836,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
-    LineRXBuffer<2048, Device> _rx_buffer;
+    LineRXBuffer<512, Device> _rx_buffer;
 
     xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}
     {
