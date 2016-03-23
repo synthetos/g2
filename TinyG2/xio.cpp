@@ -156,91 +156,6 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     virtual int16_t write(const char *buffer, int16_t len) = 0;
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) = 0;
-
-#if 0
-    // Readline and line flushing functions
-    char *readline(devflags_t limit_flags, uint16_t &size) {
-        if (!(limit_flags & flags)) {
-        	size = 0;
-        	return NULL;
-        }
-
-        // If _ready_to_send is true, we captured a line previously but couldn't return it yet (one of various reasons),
-        // and we don't actually need to read from the channel. We just need to try to return it again.
-        if (!_ready_to_send) {
-            while (read_index < read_buf_size) {
-                int c;
-
-                if ((c = readchar()) == _FDEV_ERR) {
-                    break;
-                }
-                read_buf[read_index] = (char)c;
-
-                // special handling for flush character
-                // if not in a feedhold substitute % with ; so it's treated as a comment and ignored.
-                // if in a feedhold request a queue flush by passing the % back as a single character.
-                if (c == '%') {
-                    if (!cm_has_hold()) {
-                        read_buf[read_index++] = ';';
-                        continue;
-                    } else {
-                        single_char_buffer[0] = '%';    // send queue flush request
-                        size = 1;
-                        return single_char_buffer;
-                    }
-                }
-
-                // trap other special characters
-                if ((c == '!') ||                       // request feedhold
-                    (c == '~') ||                       // request end feedhold
-                    (c == EOT) ||                       // request job kill (end of transmission)
-                    (c == CAN)) {                       // reset (aka cancel, terminate)
-                    single_char_buffer[0] = c;
-                    size = 1;
-                    return single_char_buffer;
-
-                } else if ((c == LF) || (c == CR)) {
-//                } else if ((c == LF) || (c == CR) || (c == TAB)) {  // use this to add TAB as a line terminator
-                    _ready_to_send = true;
-                    break;
-                }
-                read_index++;
-            }
-        }
-
-        // Now we have a complete line to send, check it and (maybe) return it.
-        if (_ready_to_send) {
-            if (!(limit_flags & DEV_IS_DATA)) {
-                // This is a control-only read.
-                // We need to ensure that we only get JSON-lines.
-                // CHEAT: We don't properly ignore spaces here!!
-                if ((read_buf[0] != '{') && (read_buf[0] != CR) && (read_buf[0] != LF)) {
-                    // we'll just leave _ready_to_send set, and next time it can be read.
-                    size = 0;
-                    return NULL;
-                }
-            }
-
-            // Here is where we would do more checks to make sure we're allowing the correct data through the correct channel.
-            // For now, we only do that one test.
-
-            read_buf[read_index] = NUL;
-            size = read_index;						// how long is the string?
-            read_index = 0;							// reset for next readline
-
-            _ready_to_send = false;
-
-            return (read_buf);
-        }
-        size = 0;
-        return NULL;
-    };
-
-    void _flushLine() {
-        _ready_to_send = false;
-        read_index = 0;
-    };
-#endif
 };
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
@@ -837,8 +752,9 @@ template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for reading and writing
     Device _dev;
     LineRXBuffer<512, Device> _rx_buffer;
+    TXBuffer<512, Device> _tx_buffer;
 
-    xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}
+    xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}, _tx_buffer{_dev}
     {
         _dev->setConnectionCallback([&](bool connected) {	// lambda function
             connectedStateChanged(connected);
@@ -862,7 +778,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     }
 
     virtual int16_t write(const char *buffer, int16_t len) final {
-        return _dev->write(buffer, len);
+        return _tx_buffer.write(buffer, len);
     }
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) final {
