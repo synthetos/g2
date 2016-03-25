@@ -673,10 +673,9 @@ float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf)
         // If velocity 0 yields a l_t > zero, then we need to start searching
         // at v_1 instead. (We can't start AT v_1, so we start at v_1 - 0.1.)
         if (first_pass && (l_t > 0)) {
-            v_1 = v_1 - 0.001;
+            v_1 = v_0 - 0.001;
 
-            // We don't even check before we iterate, since we know we'll need
-            // at least one iteration.
+            continue;
         }
 
         // l_d is the derivative of l_t, and is used for the Newton-Raphson iteration.
