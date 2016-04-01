@@ -48,7 +48,7 @@ typedef enum {                      // used to index the value and flag vectors 
  * Coolant control structure
  */
 
-typedef struct cmCoolatSingleton {
+typedef struct cmCoolantSingleton {
 
     bool pause_on_hold;                 // true to pause coolant on feedhold
 
