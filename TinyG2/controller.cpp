@@ -75,7 +75,7 @@ static stat_t _dispatch_control(void);
 static void _dispatch_kernel(void);
 static stat_t _controller_state(void);          // manage controller state transitions
 
-static OutputPin<kOutputSAFE_PinNumber> safe_pin;
+static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -398,7 +398,12 @@ static stat_t _shutdown_handler(void)
 
 static stat_t _limit_switch_handler(void)
 {
-    safe_pin.toggle();
+    auto machine_state = cm_get_machine_state();
+    if ((machine_state != MACHINE_ALARM) && (machine_state != MACHINE_PANIC) && (machine_state != MACHINE_SHUTDOWN)) {
+        safe_pin.toggle();
+    }
+    
+//    safe_pin = 1;
 
     if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
 	    char msg[10];

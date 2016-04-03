@@ -191,13 +191,13 @@
 #define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              400
+#define Z_VELOCITY_MAX              200
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                196
 #define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
-#define Z_HOMING_INPUT              8
+#define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          0
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            100
@@ -349,12 +349,12 @@
 #define H1_DEFAULT_I                0.1
 #define H1_DEFAULT_D                100.0
 
-#define H2_DEFAULT_ENABLE           true
+#define H2_DEFAULT_ENABLE           false
 #define H2_DEFAULT_P                7.0
 #define H2_DEFAULT_I                0.1
 #define H2_DEFAULT_D                100.0
 
-#define H3_DEFAULT_ENABLE           true
+#define H3_DEFAULT_ENABLE           false
 #define H3_DEFAULT_P                7.0
 #define H3_DEFAULT_I                0.1
 #define H3_DEFAULT_D                100.0
