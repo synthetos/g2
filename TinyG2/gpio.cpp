@@ -57,7 +57,7 @@
     #include <avr/interrupt.h>
 #else
     #include "MotateTimers.h"
-    using Motate::SysTickTimer;
+    using namespace Motate;
 #endif
 
 /**** Allocate structures ****/

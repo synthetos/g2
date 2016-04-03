@@ -131,42 +131,20 @@ struct Thermistor {
         return (pullup_resistance * v) / (kSystemVoltage - v);   // resistance of thermistor
     }
 
-//    New-JSON style structes. DISABLED FOR NOW.
-//    struct ResistanceProperty_t {
-//        type &parent;
-//
-//        operator float() {
-//            return parent.resistance();
-//        };
-//
-//        void operator=(float) {;};
-//    };
-//    ResistanceProperty_t resistance_property {*this};
-//
-//    auto json_bindings(const char *object_name) {
-//        return JSON::bind_object(object_name,
-//                                 JSON::bind("temp", *this, /*print precision:*/2),
-//                                 JSON::bind_typed<float>("res", resistance_property, /*print precision:*/2)
-//                                 );
-//    }
-//    operator float() {
-//        return temperature_exact();
-//    };
-//
-//    void operator=(float) {;};
-
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
         raw_adc_value = (adc_pin.getRaw() + (9 * raw_adc_value))/10;
     };
 };
 
+// Testing SR line: {sr:{"he1st":t,"he1t":t,"he1tr":t,"he1at":t,"he1op":t,"stat":t}}
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/    25, /*T2:*/    80, /*T3:*/  210,
+    /*R1:*/ 93500, /*R2:*/ 14300, /*R3:*/ 4975, /*pullup_resistance:*/ 4700
     };
+
 #if ADC1_AVAILABLE == 1
 void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();

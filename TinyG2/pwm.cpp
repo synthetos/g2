@@ -43,8 +43,8 @@ pwmSingleton_t pwm;
 
 // Setup motate PWM pins
 #ifdef __ARM
-static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
-static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;
+static Motate::PWMOutputPin<Motate::kSpindle_PwmPinNumber> spindle_pwm_pin;
+static Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 #endif
 
 // defines common to all PWM channels

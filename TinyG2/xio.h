@@ -68,6 +68,7 @@
 #include "config.h"					// required for nvObj typedef
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
+#include "MotateUART.h"
 #include "MotateSPI.h"
 
 
@@ -112,6 +113,7 @@ enum xioDeviceEnum {                        // reconfigure this enum as you add 
 	DEV_NONE=-1,	                            // no device is bound
 	DEV_USB0=0,                             // must be 0
 	DEV_USB1,                               // must be 1
+//    DEV_UART1,                              // must be 2
 //	DEV_SPI0,                               // We can't have it here until we actually define it
 	DEV_MAX
 };
@@ -125,6 +127,8 @@ enum xioSPIMode {
 extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 extern decltype(usb.mixin<0>::Serial) &SerialUSB;
 extern decltype(usb.mixin<1>::Serial) &SerialUSB1;
+
+extern Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial;
 
 extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 
