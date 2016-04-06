@@ -59,6 +59,7 @@ stat_t cm_get_set_temperature(nvObj_t *nv);
 stat_t cm_set_set_temperature(nvObj_t *nv);
 stat_t cm_get_at_temperature(nvObj_t *nv);
 stat_t cm_get_heater_output(nvObj_t *nv);
+stat_t cm_get_heater_adc(nvObj_t *nv);
 stat_t cm_get_temperature(nvObj_t *nv);
 stat_t cm_get_thermistor_resistance(nvObj_t *nv);
 
