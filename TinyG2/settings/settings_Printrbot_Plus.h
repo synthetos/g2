@@ -131,7 +131,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.45
+#define M3_POWER_LEVEL              0.6
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M2_MOTOR_MAP                AXIS_A
@@ -266,7 +266,7 @@
 // Xmn (board label)
 #define DI1_MODE                    IO_ACTIVE_HIGH
 #define DI1_ACTION                  INPUT_ACTION_STOP
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
 // Xmax
 #define DI2_MODE                    IO_MODE_DISABLED
@@ -281,7 +281,7 @@
 // Ymax
 #define DI4_MODE                    IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_STOP
-#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmin
 #define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
@@ -291,7 +291,7 @@
 // Zmax
 #define DI6_MODE                    IO_MODE_DISABLED
 #define DI6_ACTION                  INPUT_ACTION_STOP
-#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI6_FUNCTION                INPUT_FUNCTION_NONE
 
 // Shutdown (Amin on v9 board)
 #define DI7_MODE                    IO_MODE_DISABLED
@@ -349,7 +349,7 @@
 #define H1_DEFAULT_I                0.1
 #define H1_DEFAULT_D                100.0
 
-#define H2_DEFAULT_ENABLE           false
+#define H2_DEFAULT_ENABLE           true
 #define H2_DEFAULT_P                7.0
 #define H2_DEFAULT_I                0.1
 #define H2_DEFAULT_D                100.0
