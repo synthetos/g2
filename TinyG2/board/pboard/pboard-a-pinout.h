@@ -89,7 +89,7 @@
 #define ADC2_AVAILABLE 1
 #define ADC3_AVAILABLE 1
 
-#define TEMPERATURE_OUTPUT_ON 0
+#define TEMPERATURE_OUTPUT_ON 1
 
 
 namespace Motate {
@@ -102,7 +102,7 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kADC0_PinNumber                    , A, 'A',  4); // Heated bed thermistor ADC
     _MAKE_MOTATE_PIN(kOutput1_PinNumber                 , A, 'A',  5); // DO_1: Extruder1_PWM
     _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , A, 'A',  6); // DO_4: Fan1B_PWM
-    _MAKE_MOTATE_PIN(kOutput9_PinNumber                 , A, 'A',  7); // DO_9: SAFEin (Output) signal
+    _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber              , A, 'A',  7); // DO_9: SAFEin (Output) signal
     _MAKE_MOTATE_PIN(kOutput2_PinNumber                 , A, 'A',  8); // DO_2: Extruder2_PWM
     _MAKE_MOTATE_PIN(kInput4_PinNumber                  , A, 'A',  9); // DI_4: YMax
     _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 10); // DI_5: ZMin

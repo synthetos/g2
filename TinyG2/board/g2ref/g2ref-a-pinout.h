@@ -110,10 +110,10 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kSerial_CTS                        , A, 'A', 15);  // kSerial_CTS
     _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , A, 'A', 16);  // Socket1_EnablePinNumber
     _MAKE_MOTATE_PIN(kSpindle_EnablePinNumber           , A, 'A', 17);  // kSpindle_EnablePinNumber
-    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 18);  // DI_5: kInput5_PinNumber
+    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 18);  // DI_8: kInput8_PinNumber
     _MAKE_MOTATE_PIN(kInput6_PinNumber                  , A, 'A', 19);  // DI_6: kInput6_PinNumber
     _MAKE_MOTATE_PIN(kInput7_PinNumber                  , A, 'A', 20);  // DI_7: kInput7_PinNumber
-    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 21);  // DI_8: kInput8_PinNumber
+    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 21);  // DI_5: kInput5_PinNumber
     _MAKE_MOTATE_PIN(kADC2_PinNumber                    , A, 'A', 22);  // Extruder2_ADC
     _MAKE_MOTATE_PIN(kADC1_PinNumber                    , A, 'A', 23);  // Extruder1_ADC
     _MAKE_MOTATE_PIN(kSocket1_DirPinNumber              , A, 'A', 24);  // Socket1_DirPinNumber
