@@ -171,7 +171,7 @@ struct Thermistor {
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
     /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
-    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 298.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 
 // 190 = 399
@@ -184,8 +184,8 @@ void ADCPin<kADC1_PinNumber>::interrupt() {
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
-    /*T1:*/    25.0, /*T2:*/  165.0, /*T3:*/ 235.0,
-    /*R1:*/ 99823.9, /*R2:*/  725.0, /*R3:*/ 298.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC2_AVAILABLE == 1
 void ADCPin<kADC2_PinNumber>::interrupt() {
@@ -195,8 +195,8 @@ void ADCPin<kADC2_PinNumber>::interrupt() {
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
-    /*T1:*/    25.0, /*T2:*/  165.0, /*T3:*/ 235.0,
-    /*R1:*/ 99823.9, /*R2:*/  725.0, /*R3:*/ 298.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC0_AVAILABLE == 1
 void ADCPin<kADC0_PinNumber>::interrupt() {
