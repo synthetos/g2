@@ -138,7 +138,7 @@
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           360			// degrees moved per motor rev
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 0
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.45
 
