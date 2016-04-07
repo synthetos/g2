@@ -52,7 +52,7 @@ const float kSystemVoltage = 3.3;
 
 template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300, uint32_t table_size=64>
 struct Thermistor {
-    float c1, c2, c3, pullup_resistance;
+    float c1, c2, c3, pullup_resistance, inline_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
     ADCPin<adc_pin_num> adc_pin;
@@ -64,8 +64,8 @@ struct Thermistor {
     //  http://assets.newport.com/webDocuments-EN/images/AN04_Thermistor_Calibration_IX.PDF
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
-    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
-    : pullup_resistance{ pullup_resistance_ }    {
+    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, const float inline_resistance_ = 0)
+    : pullup_resistance{ pullup_resistance_ }, inline_resistance { inline_resistance_ }    {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
     }
@@ -102,12 +102,12 @@ struct Thermistor {
         //        }
     };
 
-    uint16_t adc_value_(int16_t temp) {
-        float y = (c1 - (1/(temp+273.15))) / (2*c3);
-        float x = sqrt(pow(c2 / (3*c3),3) + pow(y,2));
-        float r = exp((x-y) - (x+y)); // resistance of thermistor
-        return (r / (pullup_resistance + r)) * (adc_pin.getTop());
-    };
+//    uint16_t adc_value_(int16_t temp) {
+//        float y = (c1 - (1/(temp+273.15))) / (2*c3);
+//        float x = sqrt(pow(c2 / (3*c3),3) + pow(y,2));
+//        float r = exp((x-y) - (x+y)); // resistance of thermistor
+//        return (r / (pullup_resistance + r)) * (adc_pin.getTop());
+//    };
 
     float temperature_exact() {
         // Sanity check:
@@ -116,7 +116,12 @@ struct Thermistor {
         }
 
         float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        float r = (pullup_resistance * v) / (kSystemVoltage - v);   // resistance of thermistor
+        float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+
+        if (r < 0) {
+            return -1;
+        }
+
         float lnr = log(r);
         float Tinv = c1 + (c2*lnr) + (c3*pow(lnr,3));
         return (1/Tinv) - 273.15; // final temperature
@@ -128,7 +133,7 @@ struct Thermistor {
         }
 
         float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        return (pullup_resistance * v) / (kSystemVoltage - v);   // resistance of thermistor
+        return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
     }
 
 //    New-JSON style structes. DISABLED FOR NOW.
@@ -161,12 +166,16 @@ struct Thermistor {
     };
 };
 
+// Temperature debug string: {sr:{"he1t":t,"he1st":t,"he1at":t, "he1tr":t, "he1op":t}}
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
+
+// 190 = 399
+
 #if ADC1_AVAILABLE == 1
 void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
@@ -175,8 +184,8 @@ void ADCPin<kADC1_PinNumber>::interrupt() {
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC2_AVAILABLE == 1
 void ADCPin<kADC2_PinNumber>::interrupt() {
@@ -186,8 +195,8 @@ void ADCPin<kADC2_PinNumber>::interrupt() {
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 235.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 165.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC0_AVAILABLE == 1
 void ADCPin<kADC0_PinNumber>::interrupt() {
@@ -241,10 +250,21 @@ namespace Motate {
 // These could be moved to settings
 // If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp"
 #ifndef TEMP_SETPOINT_HYSTERESIS
-#define TEMP_SETPOINT_HYSTERESIS 2.0 // +- 2 degrees C
+#define TEMP_SETPOINT_HYSTERESIS (float)1.0 // +- 1 degrees C
 #endif
 #ifndef TEMP_SETPOINT_HOLD_TIME
-#define TEMP_SETPOINT_HOLD_TIME 500 // half a second
+#define TEMP_SETPOINT_HOLD_TIME 1000 // a full second
+#endif
+#ifndef TEMP_OFF_BELOW
+#define TEMP_OFF_BELOW (float)30.0 // "room temperature"
+#endif
+#ifndef TEMP_FULL_ON_DIFFERENCE
+// if the temp is more than TEMP_FULL_ON_DIFFERENCE les than set, just turn the heater full-on
+#define TEMP_FULL_ON_DIFFERENCE (float)50.0
+#endif
+#ifndef TEMP_MAX_SETPOINT
+// if the temp is more than TEMP_FULL_ON_DIFFERENCE les than set, just turn the heater full-on
+#define TEMP_MAX_SETPOINT (float)300.0
 #endif
 
 struct PID {
@@ -304,6 +324,17 @@ struct PID {
 
         _derivative = (_d_factor * (input - _previous_input))*(derivative_contribution) + (_derivative * (1.0-derivative_contribution));
         _previous_input = input;
+
+        // Now that we've computed all that, we'll decide when to ignore it
+
+        // If the setpoint is "off" or the temperature is higher than MAX, always return OFF
+        if ((_set_point < TEMP_OFF_BELOW) || (input > TEMP_MAX_SETPOINT)) {
+            return 0; // "off"
+
+        // If we are too far from the set point, turn the heater full on
+        } else if (e > TEMP_FULL_ON_DIFFERENCE) {
+            return 1; //"on"
+        }
 
         return std::min(output_max, p + i - _derivative);
     };
@@ -382,10 +413,15 @@ stat_t temperature_callback()
 
         if (pid1._enable) {
             temp = thermistor1.temperature_exact();
-            fet_pin1 = pid1.getNewOutput(temp);
-            if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
-                last_reported_temp1 = temp;
-                sr_requested = true;
+            if (temp > 0) {
+                fet_pin1 = pid1.getNewOutput(temp);
+                if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+                    last_reported_temp1 = temp;
+                    sr_requested = true;
+                }
+            } else {
+                fet_pin1 = 0;
+                // REPORT AN ERROR
             }
         }
 
@@ -399,19 +435,29 @@ stat_t temperature_callback()
 
         if (pid2._enable) {
             temp = thermistor2.temperature_exact();
-            fet_pin2 = pid2.getNewOutput(temp);
-            if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
-                last_reported_temp2 = temp;
-                sr_requested = true;
+            if (temp > 0) {
+                fet_pin2 = pid2.getNewOutput(temp);
+                if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+                    last_reported_temp2 = temp;
+                    sr_requested = true;
+                }
+            } else {
+                fet_pin2 = 0;
+                // REPORT AN ERROR
             }
         }
 
         if (pid3._enable) {
             temp = thermistor3.temperature_exact();
-            fet_pin3 = pid3.getNewOutput(temp);
-            if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
-                last_reported_temp3 = temp;
-                sr_requested = true;
+            if (temp > 0) {
+                fet_pin3 = pid3.getNewOutput(temp);
+                if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+                    last_reported_temp3 = temp;
+                    sr_requested = true;
+                }
+            } else {
+                fet_pin3 = 0;
+                // REPORT AN ERROR
             }
         }
         if (sr_requested) {
@@ -596,9 +642,9 @@ stat_t cm_get_set_temperature(nvObj_t *nv)
 stat_t cm_set_set_temperature(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._set_point = nv->value; break; }
-        case '2': { pid2._set_point = nv->value; break; }
-        case '3': { pid3._set_point = nv->value; break; }
+        case '1': { pid1._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
+        case '2': { pid2._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
+        case '3': { pid3._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { break; }
@@ -636,6 +682,25 @@ stat_t cm_get_heater_output(nvObj_t *nv)
         case '1': { nv->value = (float)fet_pin1; break; }
         case '2': { nv->value = (float)fet_pin2; break; }
         case '3': { nv->value = (float)fet_pin3; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_heater_adc() - get the raw adc value of the PID
+ */
+stat_t cm_get_heater_adc(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = (float)thermistor1.raw_adc_value; break; }
+        case '2': { nv->value = (float)thermistor2.raw_adc_value; break; }
+        case '3': { nv->value = (float)thermistor3.raw_adc_value; break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { nv->value = 0.0; break; }
