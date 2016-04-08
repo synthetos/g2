@@ -93,19 +93,76 @@ static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
 static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
 static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
 
+// Generated with:
+// perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic OutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
+// BEGIN generated
+#if OUTPUT1_PWM == 1
 static PWMOutputPin<kOutput1_PinNumber>  output_1_pin;
+#else
+static OutputPin<kOutput1_PinNumber>  output_1_pin;
+#endif
+#if OUTPUT2_PWM == 1
 static PWMOutputPin<kOutput2_PinNumber>  output_2_pin;
+#else
+static OutputPin<kOutput2_PinNumber>  output_2_pin;
+#endif
+#if OUTPUT3_PWM == 1
 static PWMOutputPin<kOutput3_PinNumber>  output_3_pin;
+#else
+static OutputPin<kOutput3_PinNumber>  output_3_pin;
+#endif
+#if OUTPUT4_PWM == 1
 static PWMOutputPin<kOutput4_PinNumber>  output_4_pin;
+#else
+static OutputPin<kOutput4_PinNumber>  output_4_pin;
+#endif
+#if OUTPUT5_PWM == 1
 static PWMOutputPin<kOutput5_PinNumber>  output_5_pin;
+#else
+static OutputPin<kOutput5_PinNumber>  output_5_pin;
+#endif
+#if OUTPUT6_PWM == 1
 static PWMOutputPin<kOutput6_PinNumber>  output_6_pin;
+#else
+static OutputPin<kOutput6_PinNumber>  output_6_pin;
+#endif
+#if OUTPUT7_PWM == 1
 static PWMOutputPin<kOutput7_PinNumber>  output_7_pin;
+#else
+static OutputPin<kOutput7_PinNumber>  output_7_pin;
+#endif
+#if OUTPUT8_PWM == 1
 static PWMOutputPin<kOutput8_PinNumber>  output_8_pin;
+#else
+static OutputPin<kOutput8_PinNumber>  output_8_pin;
+#endif
+#if OUTPUT9_PWM == 1
 static PWMOutputPin<kOutput9_PinNumber>  output_9_pin;
-static PWMOutputPin<kOutput10_PinNumber> output_10_pin;
-static PWMOutputPin<kOutput11_PinNumber> output_11_pin;
-static PWMOutputPin<kOutput12_PinNumber> output_12_pin;
-static PWMOutputPin<kOutput13_PinNumber> output_13_pin;
+#else
+static OutputPin<kOutput9_PinNumber>  output_9_pin;
+#endif
+#if OUTPUT10_PWM == 1
+static PWMOutputPin<kOutput10_PinNumber>  output_10_pin;
+#else
+static OutputPin<kOutput10_PinNumber>  output_10_pin;
+#endif
+#if OUTPUT11_PWM == 1
+static PWMOutputPin<kOutput11_PinNumber>  output_11_pin;
+#else
+static OutputPin<kOutput11_PinNumber>  output_11_pin;
+#endif
+#if OUTPUT12_PWM == 1
+static PWMOutputPin<kOutput12_PinNumber>  output_12_pin;
+#else
+static OutputPin<kOutput12_PinNumber>  output_12_pin;
+#endif
+#if OUTPUT13_PWM == 1
+static PWMOutputPin<kOutput13_PinNumber>  output_13_pin;
+#else
+static OutputPin<kOutput13_PinNumber>  output_13_pin;
+#endif
+// END generated
+
 #endif //__ARM
 
 /************************************************************************************
@@ -144,19 +201,49 @@ void gpio_init(void)
     input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
     input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
 
+    // Generated with:
+    // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\noutput_${i}_pin.setFrequency(200000);\n#endif\n";}'
+    // BEGIN generated
+#if OUTPUT1_PWM == 1
     output_1_pin.setFrequency(200000);
+#endif
+#if OUTPUT2_PWM == 1
     output_2_pin.setFrequency(200000);
+#endif
+#if OUTPUT3_PWM == 1
     output_3_pin.setFrequency(200000);
+#endif
+#if OUTPUT4_PWM == 1
     output_4_pin.setFrequency(200000);
+#endif
+#if OUTPUT5_PWM == 1
     output_5_pin.setFrequency(200000);
+#endif
+#if OUTPUT6_PWM == 1
     output_6_pin.setFrequency(200000);
+#endif
+#if OUTPUT7_PWM == 1
     output_7_pin.setFrequency(200000);
+#endif
+#if OUTPUT8_PWM == 1
     output_8_pin.setFrequency(200000);
+#endif
+#if OUTPUT9_PWM == 1
     output_9_pin.setFrequency(200000);
+#endif
+#if OUTPUT10_PWM == 1
     output_10_pin.setFrequency(200000);
+#endif
+#if OUTPUT11_PWM == 1
     output_11_pin.setFrequency(200000);
+#endif
+#if OUTPUT12_PWM == 1
     output_12_pin.setFrequency(200000);
+#endif
+#if OUTPUT13_PWM == 1
     output_13_pin.setFrequency(200000);
+#endif
+    // END generated
 
     return(gpio_reset());
 #endif
@@ -814,20 +901,76 @@ stat_t io_set_output(nvObj_t *nv)
             value = 1.0 - value;
         }
         switch (output_num) {
+                // Generated with:
+                // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\ncase ${i}:  { output_${i}_pin = value; } break;\n#else\ncase ${i}:  { output_${i}_pin = (value < 0.5 ? 0 : 1); } break;\n#endif\n";}'
+                // BEGIN generated
+#if OUTPUT1_PWM == 1
             case 1:  { output_1_pin = value; } break;
+#else
+            case 1:  { output_1_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT2_PWM == 1
             case 2:  { output_2_pin = value; } break;
+#else
+            case 2:  { output_2_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT3_PWM == 1
             case 3:  { output_3_pin = value; } break;
+#else
+            case 3:  { output_3_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT4_PWM == 1
             case 4:  { output_4_pin = value; } break;
+#else
+            case 4:  { output_4_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT5_PWM == 1
             case 5:  { output_5_pin = value; } break;
+#else
+            case 5:  { output_5_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT6_PWM == 1
             case 6:  { output_6_pin = value; } break;
+#else
+            case 6:  { output_6_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT7_PWM == 1
             case 7:  { output_7_pin = value; } break;
+#else
+            case 7:  { output_7_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT8_PWM == 1
             case 8:  { output_8_pin = value; } break;
+#else
+            case 8:  { output_8_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT9_PWM == 1
             case 9:  { output_9_pin = value; } break;
-            case 10: { output_10_pin = value; } break;
-            case 11: { output_11_pin = value; } break;
-            case 12: { output_12_pin = value; } break;
-            case 13: { output_13_pin = value; } break;
-
+#else
+            case 9:  { output_9_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT10_PWM == 1
+            case 10:  { output_10_pin = value; } break;
+#else
+            case 10:  { output_10_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT11_PWM == 1
+            case 11:  { output_11_pin = value; } break;
+#else
+            case 11:  { output_11_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT12_PWM == 1
+            case 12:  { output_12_pin = value; } break;
+#else
+            case 12:  { output_12_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+#if OUTPUT13_PWM == 1
+            case 13:  { output_13_pin = value; } break;
+#else
+            case 13:  { output_13_pin = (value < 0.5 ? 0 : 1); } break;
+#endif
+            // END generated
+                
             default:
                 {
                     nv->value = 0; // inactive
