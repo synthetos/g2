@@ -110,3 +110,5 @@ ifeq ("$(CONFIG)","UltimakerV9h")
     SETTINGS_FILE="settings_ultimaker.h"
 endif
 
+include $(wildcard ./board/$(STAR).mk)
+

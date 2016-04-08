@@ -91,6 +91,23 @@
 
 #define TEMPERATURE_OUTPUT_ON 1
 
+// Some pins, if the PWM capability is turned on, it will cause timer conflicts.
+// So we have to explicity enable them as PWM pins.
+// Generated with:
+// perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
+#define OUTPUT1_PWM 1
+#define OUTPUT2_PWM 1
+#define OUTPUT3_PWM 1
+#define OUTPUT4_PWM 1
+#define OUTPUT5_PWM 1
+#define OUTPUT6_PWM 0 // Can't PWM anyway
+#define OUTPUT7_PWM 0 // Conflicts with kSocket3_VrefPinNumber
+#define OUTPUT8_PWM 0 // Can't PWM anyway
+#define OUTPUT9_PWM 0 // Unused
+#define OUTPUT10_PWM 0 // Can't PWM anyway
+#define OUTPUT11_PWM 0 // Can't PWM anyway
+#define OUTPUT12_PWM 0 // Conflicts with kSocket2_VrefPinNumber
+#define OUTPUT13_PWM 0 // Unused
 
 namespace Motate {
 

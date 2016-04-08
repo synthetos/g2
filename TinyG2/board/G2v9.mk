@@ -5,7 +5,7 @@
 # To compile:
 #   make BOARD=g2v9k
 
-# You can also choose a CONFIG from g2-configs.mk:
+# You can also choose a CONFIG from boards.mk:
 #   make CONFIG=ShapeokoDualY BOARD=G2v9k
 
 
