@@ -5,7 +5,7 @@
 # To compile:
 #   make BOARD=sbv300
 
-# You can also choose a CONFIG from g2-configs.mk:
+# You can also choose a CONFIG from boards.mk:
 #   make CONFIG=sbv300
 
 
