@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,7 +30,7 @@
  * the USB, SPI and file IO sub-systems, as well as providing low level character functions
  * used by stdio (printf()).
  *
- * NOTE: This file is specific to TinyG2/C++/ARM. The TinyG/C/Xmega file is completely different
+ * NOTE: This file is specific to TinyG2/C++/ARM. The TinyG/C/Xmega xio file is completely different
  */
 #include "tinyg2.h"
 #include "config.h"
@@ -190,6 +190,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
                 if ((c == '!') ||                       // request feedhold
                     (c == '~') ||                       // request end feedhold
                     (c == EOT) ||                       // request job kill (end of transmission)
+                    (c == ENQ) ||                       // request ENQ/ack
                     (c == CAN)) {                       // reset (aka cancel, terminate)
                     single_char_buffer[0] = c;
                     size = 1;
