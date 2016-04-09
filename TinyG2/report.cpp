@@ -667,9 +667,13 @@ uint8_t job_report_callback()
     }
 
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-		printf("{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+//		printf("{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+		sprintf(cs.out_buf, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+        xio_writeline(cs.out_buf);
 	} else {
-		printf("{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+//		printf("{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+		sprintf(cs.out_buf, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+        xio_writeline(cs.out_buf);
 		//job_clear_report();
 	}
 	return (STAT_OK);

@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -742,6 +742,7 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 
 void nv_dump_nv(nvObj_t *nv)
 {
+/*
 	printf ("i:%d, d:%d, t:%d, p:%d, v:%f, g:%s, t:%s, s:%s\n",
 			 nv->index,
 			 nv->depth,
@@ -751,4 +752,15 @@ void nv_dump_nv(nvObj_t *nv)
 			 nv->group,
 			 nv->token,
 			 (char *)nv->stringp);
+*/
+	sprintf (cs.out_buf, "i:%d, d:%d, t:%d, p:%d, v:%f, g:%s, t:%s, s:%s\n",
+	        nv->index,
+	        nv->depth,
+	        nv->valuetype,
+	        nv->precision,
+	        (double)nv->value,
+	        nv->group,
+	        nv->token,
+	        (char *)nv->stringp);
+    xio_writeline(cs.out_buf);
 }

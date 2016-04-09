@@ -31,6 +31,7 @@
 #include "canonical_machine.h"
 #include "planner.h"
 #include "util.h"
+#include "xio.h"
 
 /**** Jogging singleton structure ****/
 
@@ -191,7 +192,7 @@ static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 {
-//    cm_end_hold();                                  // ends hold if one is in effect
+//    cm_end_hold();                                // ends hold if one is in effect
 
     cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system
     cm_set_units_mode(jog.saved_units_mode);
@@ -200,7 +201,8 @@ static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
     (MODEL)->feed_rate = jog.saved_feed_rate;
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
     cm_canned_cycle_end();
-    printf("{\"jog\":0}\n");						// needed by OMC jogging function
+//    printf("{\"jog\":0}\n");						// needed by OMC jogging function
+    xio_writeline("{\"jog\":0}\n");                 // needed by OMC jogging function
     return (STAT_OK);
 }
 

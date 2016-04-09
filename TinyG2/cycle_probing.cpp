@@ -2,7 +2,7 @@
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * Part of TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
  * With contributions from Other Machine Company.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -37,6 +37,7 @@
 #include "gpio.h"
 #include "planner.h"
 #include "util.h"
+#include "xio.h"
 
 /**** Probe singleton structure ****/
 
@@ -300,16 +301,25 @@ static stat_t _probing_finish()
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
-	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
+//	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
+//	if (pb.flags[AXIS_X]) { printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]); }
+//	if (pb.flags[AXIS_Y]) { printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]); }
+//	if (pb.flags[AXIS_Z]) { printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]); }
+//	if (pb.flags[AXIS_A]) { printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]); }
+//	if (pb.flags[AXIS_B]) { printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]); }
+//	if (pb.flags[AXIS_C]) { printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]); }
+//	printf_P(PSTR("}}\n"));
 
-	if (pb.flags[AXIS_X]) { printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]); }
-	if (pb.flags[AXIS_Y]) { printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]); }
-	if (pb.flags[AXIS_Z]) { printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]); }
-	if (pb.flags[AXIS_A]) { printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]); }
-	if (pb.flags[AXIS_B]) { printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]); }
-	if (pb.flags[AXIS_C]) { printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]); }
-
-	printf_P(PSTR("}}\n"));
+    char buf[32];
+    char *bufp = buf;
+	bufp += sprintf_P(bufp, PSTR("{\"prb\":{\"e\":%i, \""), (int)cm.probe_state);
+    if (pb.flags[AXIS_X]) { sprintf_P(bufp, PSTR("x\":%0.3f}}\n"), cm.probe_results[AXIS_X]); }
+    if (pb.flags[AXIS_Y]) { sprintf_P(bufp, PSTR("y\":%0.3f}}\n"), cm.probe_results[AXIS_Y]); }
+    if (pb.flags[AXIS_Z]) { sprintf_P(bufp, PSTR("z\":%0.3f}}\n"), cm.probe_results[AXIS_Z]); }
+    if (pb.flags[AXIS_A]) { sprintf_P(bufp, PSTR("a\":%0.3f}}\n"), cm.probe_results[AXIS_A]); }
+    if (pb.flags[AXIS_B]) { sprintf_P(bufp, PSTR("b\":%0.3f}}\n"), cm.probe_results[AXIS_B]); }
+    if (pb.flags[AXIS_C]) { sprintf_P(bufp, PSTR("c\":%0.3f}}\n"), cm.probe_results[AXIS_C]); }
+    xio_writeline(buf);
 
 	return (_set_pb_func(_probing_finalize_exit));
 }

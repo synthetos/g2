@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,6 +28,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
+#include "controller.h"
 #include "text_parser.h"
 #include "json_parser.h"
 #include "report.h"
@@ -276,14 +277,42 @@ void tx_print(nvObj_t *nv) {
  *
  *	NOTE: format's are passed in as flash strings (PROGMEM)
  */
-void text_print_nul(nvObj_t *nv, const char *format) { printf_P(format);}	// just print the format string
-void text_print_str(nvObj_t *nv, const char *format) { printf_P(format, *nv->stringp);}
-void text_print_int(nvObj_t *nv, const char *format) { printf_P(format, (uint32_t)nv->value);}
-void text_print_flt(nvObj_t *nv, const char *format) { printf_P(format, nv->value);}
+//void text_print_nul(nvObj_t *nv, const char *format) { printf_P(format);}	// just print the format string
+//void text_print_str(nvObj_t *nv, const char *format) { printf_P(format, *nv->stringp);}
+//void text_print_int(nvObj_t *nv, const char *format) { printf_P(format, (uint32_t)nv->value);}
+//void text_print_flt(nvObj_t *nv, const char *format) { printf_P(format, nv->value);}
+//void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
+//{
+//    printf_P(format, nv->value, units);
+//}
+
+void text_print_nul(nvObj_t *nv, const char *string) 
+{ 
+    xio_writeline(string);
+}
+
+void text_print_str(nvObj_t *nv, const char *format) 
+{
+    sprintf(cs.out_buf, format, *nv->stringp);
+    xio_writeline(cs.out_buf);
+}
+
+void text_print_int(nvObj_t *nv, const char *format) 
+{ 
+    sprintf_P(cs.out_buf, format, (uint32_t)nv->value);
+    xio_writeline(cs.out_buf);
+}
+
+void text_print_flt(nvObj_t *nv, const char *format) 
+{ 
+    sprintf_P(cs.out_buf, format, nv->value);
+    xio_writeline(cs.out_buf);
+}
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
-	printf_P(format, nv->value, units);
+	sprintf_P(cs.out_buf, format, nv->value, units);
+    xio_writeline(cs.out_buf);
 }
 
 void text_print(nvObj_t *nv, const char *format) {

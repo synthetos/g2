@@ -2,8 +2,8 @@
  * gpio.cpp - digital IO handling functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2015 Alden S. Hart, Jr.
- * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2015 - 2106 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -52,6 +52,7 @@
 #include "controller.h"
 #include "util.h"
 #include "report.h"
+#include "xio.h"
 
 #ifdef __AVR
     #include <avr/interrupt.h>
@@ -997,17 +998,23 @@ stat_t io_set_output(nvObj_t *nv)
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
-        printf_P(format, nv->group, (int)nv->value);
+//        printf_P(format, nv->group, (int)nv->value);
+        sprintf_P(cs.out_buf, format, nv->group, (int)nv->value);
+        xio_writeline(cs.out_buf);
     }
 	void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
 	void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
 	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
 	void io_print_in(nvObj_t *nv) {
-        printf_P(fmt_gpio_in, nv->token, (int)nv->value);
+//        printf_P(fmt_gpio_in, nv->token, (int)nv->value);
+        sprintf_P(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value);
+        xio_writeline(cs.out_buf);
     }
 
     void io_print_st(nvObj_t *nv) {_print_di(nv, fmt_gpio_st);}
     void io_print_out(nvObj_t *nv) {
-        printf_P(fmt_gpio_out, nv->token, (int)nv->value);
+//        printf_P(fmt_gpio_out, nv->token, (int)nv->value);
+        sprintf_P(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
+        xio_writeline(cs.out_buf);
     }
 #endif
