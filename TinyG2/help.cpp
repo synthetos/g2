@@ -31,9 +31,6 @@ stat_t help_stub(nvObj_t *nv) {return (STAT_OK);}
 
 static void _status_report_advisory()
 {
-/*
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\
 Note: TinyG generates automatic status reports by default\n\
 This can be disabled by entering $sv=0\n\
@@ -43,9 +40,6 @@ See the wiki below for more details.\n\
 
 static void _postscript()
 {
-/*
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\
 For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki\n\
 For the latest firmware see: https://github.com/synthetos/TinyG\n\
@@ -58,10 +52,6 @@ Have fun\n"));
  */
 uint8_t help_general(nvObj_t *nv)
 {
-/*
-printf_P(PSTR("\n\n\n### TinyG Help ###\n"));
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\n\n### TinyG Help ###\n"));
 xio_writeline(PSTR("\n\
 These commands are active from the command line:\n\
@@ -88,10 +78,6 @@ return(STAT_OK);
  */
 stat_t help_config(nvObj_t *nv)
 {
-/*
-printf_P(PSTR("\n\n\n### TinyG CONFIGURATION Help ###\n"));
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\n\n### TinyG CONFIGURATION Help ###\n"));
 xio_writeline(PSTR("\n\
 These commands are active for configuration:\n\
@@ -104,9 +90,6 @@ These commands are active for configuration:\n\
   $$   Show all settings\n\
   $h   Show this help screen\n\n\
 "));
-/*
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\
 Each $ command above also displays the token for each setting in [ ] brackets\n\
 To view settings enter a token:\n\n\
@@ -127,10 +110,6 @@ return(STAT_OK);
  */
 stat_t help_test(nvObj_t *nv)
 {
-/*
-printf_P(PSTR("\n\n\n### TinyG SELF TEST Help ###\n"));
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\n\n### TinyG SELF TEST Help ###\n"));
 xio_writeline(PSTR("\n\
 Invoke self test by entering $test=N where N is one of:\n\
@@ -162,10 +141,6 @@ return(STAT_OK);
  */
 stat_t help_defa(nvObj_t *nv)
 {
-/*
-printf_P(PSTR("\n\n\n### TinyG RESTORE DEFAULTS Help ###\n"));
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\n\n### TinyG RESTORE DEFAULTS Help ###\n"));
 xio_writeline(PSTR("\n\
 Enter $defa=1 to reset the system to the factory default values.\n\
@@ -179,10 +154,6 @@ return(STAT_OK);
  */
 stat_t help_flash(nvObj_t *nv)
 {
-/*
-printf_P(PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
-printf_P(PSTR("\n\
-*/
 xio_writeline(PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
 xio_writeline(PSTR("\n\
 Enter $flash=1 to enter the flash loader.\n"));

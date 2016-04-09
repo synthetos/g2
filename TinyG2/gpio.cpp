@@ -998,7 +998,6 @@ stat_t io_set_output(nvObj_t *nv)
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
-//        printf_P(format, nv->group, (int)nv->value);
         sprintf_P(cs.out_buf, format, nv->group, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
@@ -1006,14 +1005,12 @@ stat_t io_set_output(nvObj_t *nv)
 	void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
 	void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
 	void io_print_in(nvObj_t *nv) {
-//        printf_P(fmt_gpio_in, nv->token, (int)nv->value);
         sprintf_P(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
 
     void io_print_st(nvObj_t *nv) {_print_di(nv, fmt_gpio_st);}
     void io_print_out(nvObj_t *nv) {
-//        printf_P(fmt_gpio_out, nv->token, (int)nv->value);
         sprintf_P(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }

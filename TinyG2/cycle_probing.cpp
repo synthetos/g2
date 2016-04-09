@@ -301,15 +301,6 @@ static stat_t _probing_finish()
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
-//	printf_P(PSTR("{\"prb\":{\"e\":%i"), (int)cm.probe_state);
-//	if (pb.flags[AXIS_X]) { printf_P(PSTR(",\"x\":%0.3f"), cm.probe_results[AXIS_X]); }
-//	if (pb.flags[AXIS_Y]) { printf_P(PSTR(",\"y\":%0.3f"), cm.probe_results[AXIS_Y]); }
-//	if (pb.flags[AXIS_Z]) { printf_P(PSTR(",\"z\":%0.3f"), cm.probe_results[AXIS_Z]); }
-//	if (pb.flags[AXIS_A]) { printf_P(PSTR(",\"a\":%0.3f"), cm.probe_results[AXIS_A]); }
-//	if (pb.flags[AXIS_B]) { printf_P(PSTR(",\"b\":%0.3f"), cm.probe_results[AXIS_B]); }
-//	if (pb.flags[AXIS_C]) { printf_P(PSTR(",\"c\":%0.3f"), cm.probe_results[AXIS_C]); }
-//	printf_P(PSTR("}}\n"));
-
     char buf[32];
     char *bufp = buf;
 	bufp += sprintf_P(bufp, PSTR("{\"prb\":{\"e\":%i, \""), (int)cm.probe_state);
@@ -370,7 +361,7 @@ static stat_t _probing_error_exit(int8_t axis)
 		sprintf_P(msg, PSTR("Probing error - %c axis cannot move during probing"), cm_get_axis_char(axis));
 		nv_add_conditional_message(msg);
 	}
-	nv_print_list(STAT_PROBE_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
+	nv_print_list(STAT_PROBE_CYCLE_FAILED, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
 	// clean up and exit
 	_probe_restore_settings();

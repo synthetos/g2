@@ -78,13 +78,11 @@ uint8_t run_test(nvObj_t *nv)
 */
 #endif
 		default: {
-//			printf_P(PSTR("Test #%d not found\n"),(uint8_t)nv->value);
 			sprintf_P(cs.out_buf, PSTR("Test #%d not found\n"),(uint8_t)nv->value);
             xio_writeline(cs.out_buf);
 			return (STAT_ERROR);
 		}
 	}
-//	tg_set_primary_source(XIO_DEV_PGM);
 	return (STAT_OK);
 }
 

@@ -304,7 +304,7 @@ stat_t sr_status_report_callback() 		// called by controller dispatcher
 			return (STAT_OK);
 		}
 	}
-	nv_print_list(STAT_OK, TEXT_INLINE_PAIRS, JSON_OBJECT_FORMAT);
+	nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_OBJECT_FORMAT);
     return (STAT_OK);
 }
 
@@ -667,11 +667,9 @@ uint8_t job_report_callback()
     }
 
 	if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-//		printf("{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
 		sprintf(cs.out_buf, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
         xio_writeline(cs.out_buf);
 	} else {
-//		printf("{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
 		sprintf(cs.out_buf, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
         xio_writeline(cs.out_buf);
 		//job_clear_report();

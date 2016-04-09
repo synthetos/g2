@@ -742,17 +742,6 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 
 void nv_dump_nv(nvObj_t *nv)
 {
-/*
-	printf ("i:%d, d:%d, t:%d, p:%d, v:%f, g:%s, t:%s, s:%s\n",
-			 nv->index,
-			 nv->depth,
-			 nv->valuetype,
-			 nv->precision,
-			 (double)nv->value,
-			 nv->group,
-			 nv->token,
-			 (char *)nv->stringp);
-*/
 	sprintf (cs.out_buf, "i:%d, d:%d, t:%d, p:%d, v:%f, g:%s, t:%s, s:%s\n",
 	        nv->index,
 	        nv->depth,

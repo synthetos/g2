@@ -35,8 +35,6 @@ enum textVerbosity {
 
 enum textFormats {					// text output print modes
 	TEXT_NO_PRINT = 0,				// don't print anything if you find yourself in TEXT mode
-	TEXT_INLINE_PAIRS,				// print key:value pairs as comma separated pairs
-	TEXT_INLINE_VALUES,				// print values as commas separated values
 	TEXT_MULTILINE_FORMATTED		// print formatted values on separate lines with formatted print per line
 };
 
@@ -55,8 +53,8 @@ extern txtSingleton_t txt;
 	stat_t text_parser(char *str);
 	void text_response(const stat_t status, char *buf);
 	void text_print_list(stat_t status, uint8_t flags);
-	void text_print_inline_pairs(nvObj_t *nv);
-	void text_print_inline_values(nvObj_t *nv);
+//	void text_print_inline_pairs(nvObj_t *nv);
+//	void text_print_inline_values(nvObj_t *nv);
 	void text_print_multiline_formatted(nvObj_t *nv);
 
 	void tx_print(nvObj_t *nv);         // does all formats

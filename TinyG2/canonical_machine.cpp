@@ -2295,7 +2295,6 @@ stat_t cm_run_home(nvObj_t *nv)
 
 stat_t cm_dam(nvObj_t *nv)
 {
-//	printf("Active model:\n");
 	xio_writeline("Active model:\n");
 	cm_print_vel(nv);
 	cm_print_feed(nv);
@@ -2506,7 +2505,6 @@ static const char fmt_hom[] PROGMEM = "%c axis homing state:%2.0f\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
 {
-//	printf_P(format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
 	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
     xio_writeline(cs.out_buf);
 }
@@ -2519,7 +2517,6 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-//	printf_P(format, nv->group, nv->token, nv->group, nv->value, units);
 	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value, units);
     xio_writeline(cs.out_buf);
 }
@@ -2532,7 +2529,6 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-//	printf_P(format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
 	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
     xio_writeline(cs.out_buf);
 }
@@ -2542,7 +2538,6 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
 	if (axis >= AXIS_A) { units = DEGREES;}
-//	printf_P(format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
 	sprintf_P(cs.out_buf, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
 }
@@ -2551,15 +2546,12 @@ static void _print_hom(nvObj_t *nv, const char *format)
 {
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
-//	printf_P(format, axes[axis], nv->value);
 	sprintf_P(cs.out_buf, format, axes[axis], nv->value);
     xio_writeline(cs.out_buf);
 }
 
 void cm_print_am(nvObj_t *nv)	// print axis mode with enumeration string
 {
-//	printf_P(fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
-//	    GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
 	sprintf_P(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
 	    GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
     xio_writeline(cs.out_buf);

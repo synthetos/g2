@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -199,8 +199,8 @@ inline char* strcpy_P(char* d, const char* s) { return (char *)strcpy((char *)d,
 inline char* strncpy_P(char* d, const char* s, size_t l) { return (char *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
-#define printf_P printf
-#define fprintf_P fprintf
+//#define printf_P printf
+//#define fprintf_P fprintf
 #define sprintf_P sprintf
 
 #endif // __ARM

@@ -1454,21 +1454,18 @@ void st_print_mt(nvObj_t *nv) { text_print(nv, fmt_mt);}    // TYPE_FLOAT
 
 static void _print_motor_int(nvObj_t *nv, const char *format)
 {
-//	printf_P(format, nv->group, nv->token, nv->group, (int)nv->value);
 	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, (int)nv->value);
     xio_writeline(cs.out_buf);
 }
 
 static void _print_motor_flt(nvObj_t *nv, const char *format)
 {
-//	printf_P(format, nv->group, nv->token, nv->group, nv->value);
 	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value);
     xio_writeline(cs.out_buf);
 }
 
 static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t units)
 {
-//    printf_P(format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
     sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
 }
