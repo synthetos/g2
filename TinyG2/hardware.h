@@ -170,7 +170,7 @@ void hardware_init(void);			// master hardware init
 void hw_hard_reset(void);
 stat_t hw_flash(nvObj_t *nv);
 
-//stat_t hw_get_fbs(nvObj_t *nv);
+stat_t hw_get_fbs(nvObj_t *nv);
 stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 

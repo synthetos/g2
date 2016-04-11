@@ -21,7 +21,12 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            098.27 // temperature safety, cleanup GPIO
+#define TINYG_FIRMWARE_BUILD            098.28 // put fbs back in so we can see "dirty" state
+#ifdef GIT_VERSION
+#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
+#else
+#define TINYG_FIRMWARE_BUILD_STRING     "unknown"
+#endif
 #define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
 #define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
 #define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
