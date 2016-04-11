@@ -39,6 +39,56 @@
 #include "util.h"
 #include "settings.h"
 
+
+/**** Local safety/limit settings ****/
+
+
+// These could be moved to settings
+// If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more
+// than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp".
+#ifndef TEMP_SETPOINT_HYSTERESIS
+#define TEMP_SETPOINT_HYSTERESIS (float)1.0 // +- 1 degrees C
+#endif
+#ifndef TEMP_SETPOINT_HOLD_TIME
+#define TEMP_SETPOINT_HOLD_TIME 1000 // a full second
+#endif
+
+// Below TEMP_OFF_BELOW is considered "off".
+// With a set temp of < TEMP_OFF_BELOW, and a measured temp of < TEMP_OFF_BELOW,
+// we are "at temp".
+#ifndef TEMP_OFF_BELOW
+#define TEMP_OFF_BELOW (float)30.0 // "room temperature"
+#endif
+
+// If the read temp is more than TEMP_FULL_ON_DIFFERENCE less than set temp,
+// just turn the heater full-on.
+#ifndef TEMP_FULL_ON_DIFFERENCE
+#define TEMP_FULL_ON_DIFFERENCE (float)50.0
+#endif
+
+// If the temp is more than TEMP_MAX_SETPOINT, just turn the heater off,
+// reguardless of set temp.
+#ifndef TEMP_MAX_SETPOINT
+#define TEMP_MAX_SETPOINT (float)300.0
+#endif
+
+// If the resistance reads higher than TEMP_MIN_DISCONNECTED_RESISTANCE, the
+// thermistor is considered disconnected.
+#ifndef TEMP_MIN_DISCONNECTED_RESISTANCE
+#define TEMP_MIN_DISCONNECTED_RESISTANCE (float)1000000.0
+#endif
+
+// If the temperature doesn't rise more than TEMP_MIN_RISE_DEGREES_OVER_TIME in
+// TEMP_MIN_RISE_TIME milliseconds, then it's a failure (the sensor is likely
+// physically dislocated.)
+#ifndef TEMP_MIN_RISE_DEGREES_OVER_TIME
+#define TEMP_MIN_RISE_DEGREES_OVER_TIME (float)2.0
+#endif
+#ifndef TEMP_MIN_RISE_TIME
+#define TEMP_MIN_RISE_TIME (float)(20.0 * 1000.0) // 20 seconds
+#endif
+
+
 /**** Allocate structures ****/
 
 // This makes the Motate:: prefix unnecessary.
@@ -49,6 +99,7 @@ using namespace Motate;
 // The should be set in hardware.h for each board.
 // Luckily, we only use boards that are 3.3V logic at the moment.
 const float kSystemVoltage = 3.3;
+
 
 template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300, uint32_t table_size=64>
 struct Thermistor {
@@ -118,7 +169,7 @@ struct Thermistor {
         float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
         float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
 
-        if (r < 0) {
+        if ((r < 0) || (r > TEMP_MIN_DISCONNECTED_RESISTANCE)) {
             return -1;
         }
 
@@ -248,26 +299,6 @@ namespace Motate {
 }
 #endif
 
-// These could be moved to settings
-// If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp"
-#ifndef TEMP_SETPOINT_HYSTERESIS
-#define TEMP_SETPOINT_HYSTERESIS (float)1.0 // +- 1 degrees C
-#endif
-#ifndef TEMP_SETPOINT_HOLD_TIME
-#define TEMP_SETPOINT_HOLD_TIME 1000 // a full second
-#endif
-#ifndef TEMP_OFF_BELOW
-#define TEMP_OFF_BELOW (float)30.0 // "room temperature"
-#endif
-#ifndef TEMP_FULL_ON_DIFFERENCE
-// if the temp is more than TEMP_FULL_ON_DIFFERENCE les than set, just turn the heater full-on
-#define TEMP_FULL_ON_DIFFERENCE (float)50.0
-#endif
-#ifndef TEMP_MAX_SETPOINT
-// if the temp is more than TEMP_FULL_ON_DIFFERENCE les than set, just turn the heater full-on
-#define TEMP_MAX_SETPOINT (float)300.0
-#endif
-
 struct PID {
     static constexpr float output_max = 1.0;
     static constexpr float derivative_contribution = 0.05;
@@ -286,11 +317,23 @@ struct PID {
     Timeout _set_point_timeout;     // used to keep track of if we are at set temp and stay there
     bool _at_set_point;
 
+    Timeout _rise_time_timeout;     // used to keep track of if we are increasing temperature fast enough
+    float _rise_time_checkpoint;    // when we start the timer, we set _rise_time_checkpoint to the minimum goal
+
     bool _enable;                   // set true to enable this heater
 
     PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint}, _at_set_point{false} {};
 
     float getNewOutput(float input) {
+        // If the input is < 0, the sensor failed
+        if (input < 0) {
+            if (_set_point > TEMP_OFF_BELOW) {
+                cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Heater set, but sensor read failed.");
+            }
+
+            return 0;
+        }
+
         // Calculate the e (error)
         float e = _set_point - input;
 
@@ -301,8 +344,28 @@ struct PID {
                 _at_set_point = true;
                 _set_point_timeout.clear();
             }
-        } else if (_at_set_point == true) {
+        } else {
             _at_set_point = false;
+
+            // Check to see if we already have the rise_time timeout set
+            if (_rise_time_timeout.isSet()) {
+                if (_rise_time_timeout.isPast()) {
+                    if (input < _rise_time_checkpoint) {
+                        // FAILURE!!
+                        cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Heater temperature failed to rise fast enough.");
+                        _set_point = 0;
+                        _rise_time_timeout.clear();
+                        return -1;
+                    }
+
+                    _rise_time_timeout.clear();
+                }
+            }
+
+            if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_OVER_TIME))) {
+                _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
+                _rise_time_checkpoint = input + TEMP_MIN_RISE_DEGREES_OVER_TIME;
+            }
         }
 
         float p = _p_factor * e;
@@ -406,6 +469,20 @@ const float kTempDiffSRTrigger = 0.25;
 
 stat_t temperature_callback()
 {
+    if (cm.machine_state == MACHINE_ALARM) {
+        // Force the heaters off (redundant with the safety circuit)
+        fet_pin1 = 0.0;
+        fet_pin2 = 0.0;
+        fet_pin3 = 0.0;
+
+        // Force all PIDs to off too
+        pid1._set_point = 0.0;
+        pid2._set_point = 0.0;
+        pid3._set_point = 0.0;
+
+        return (STAT_OK);
+    }
+
     if (pid_timeout.isPast()) {
         pid_timeout.set(100);
 
@@ -414,15 +491,11 @@ stat_t temperature_callback()
 
         if (pid1._enable) {
             temp = thermistor1.temperature_exact();
-            if (temp > 0) {
-                fet_pin1 = pid1.getNewOutput(temp);
-                if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
-                    last_reported_temp1 = temp;
-                    sr_requested = true;
-                }
-            } else {
-                fet_pin1 = 0;
-                // REPORT AN ERROR
+            fet_pin1 = pid1.getNewOutput(temp);
+
+            if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+                last_reported_temp1 = temp;
+                sr_requested = true;
             }
         }
 
@@ -436,31 +509,24 @@ stat_t temperature_callback()
 
         if (pid2._enable) {
             temp = thermistor2.temperature_exact();
-            if (temp > 0) {
-                fet_pin2 = pid2.getNewOutput(temp);
-                if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
-                    last_reported_temp2 = temp;
-                    sr_requested = true;
-                }
-            } else {
-                fet_pin2 = 0;
-                // REPORT AN ERROR
+            fet_pin2 = pid2.getNewOutput(temp);
+
+            if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+                last_reported_temp2 = temp;
+                sr_requested = true;
             }
         }
 
         if (pid3._enable) {
             temp = thermistor3.temperature_exact();
-            if (temp > 0) {
-                fet_pin3 = pid3.getNewOutput(temp);
-                if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
-                    last_reported_temp3 = temp;
-                    sr_requested = true;
-                }
-            } else {
-                fet_pin3 = 0;
-                // REPORT AN ERROR
+            fet_pin3 = pid3.getNewOutput(temp);
+
+            if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+                last_reported_temp3 = temp;
+                sr_requested = true;
             }
         }
+
         if (sr_requested) {
             sr_request_status_report(SR_REQUEST_TIMED);
         }

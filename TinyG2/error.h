@@ -163,10 +163,10 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_84 84
 #define	STAT_ERROR_85 85
 #define	STAT_ERROR_86 86
-#define	STAT_ERROR_87 87
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
+#define	STAT_TEMPERATURE_CONTROL_ERROR 87
 #define	STAT_BUFFER_FREE_ASSERTION_FAILURE 88
 #define	STAT_STATE_MANAGEMENT_ASSERTION_FAILURE 89
 #define	STAT_CONFIG_ASSERTION_FAILURE 90

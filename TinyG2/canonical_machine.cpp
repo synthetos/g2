@@ -777,6 +777,9 @@ stat_t cm_alarm(const stat_t status, const char *msg)
 //	cm_spindle_optional_pause(spindle.pause_on_hold);
 //	cm_coolant_optional_pause(coolant.pause_on_hold);
 	rpt_exception(status, msg);	                // send alarm message
+
+    // If "stat" is in the status report, we need to poke it to send.
+    sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
 }
 /*
