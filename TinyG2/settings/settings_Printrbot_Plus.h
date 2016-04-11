@@ -354,7 +354,7 @@
 #define H2_DEFAULT_I                0.1
 #define H2_DEFAULT_D                100.0
 
-#define H3_DEFAULT_ENABLE           false
+#define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                7.0
 #define H3_DEFAULT_I                0.1
 #define H3_DEFAULT_D                100.0
