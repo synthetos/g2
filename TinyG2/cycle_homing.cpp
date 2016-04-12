@@ -2,8 +2,8 @@
  * cycle_homing.cpp - homing cycle extension to canonical_machine
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -371,7 +371,7 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 		sprintf_P(msg, PSTR("%c axis %s"), cm_get_axis_char(axis), get_status_message(status));
 		nv_add_conditional_message(msg);
 	}
-	nv_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_INLINE_VALUES, JSON_RESPONSE_FORMAT);
+	nv_print_list(STAT_HOMING_CYCLE_FAILED, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
 	_homing_finalize_exit(axis);
 	return (STAT_HOMING_CYCLE_FAILED);						// homing state remains HOMING_NOT_HOMED

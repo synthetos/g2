@@ -108,6 +108,7 @@
 		D48F5A7F172CB21100D0E055 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
+		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
 		D49367C21B824EA1000BB759 /* g2ref-a-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "g2ref-a-pinout.h"; sourceTree = "<group>"; };
 		D49367C31B824EA1000BB759 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
@@ -131,7 +132,6 @@
 		D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Ultimaker.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC39151C77C1F20098D685 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D4AC39161C7BA71B0098D685 /* sbv300.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sbv300.mk; sourceTree = "<group>"; };
-		D4AC39171C7BA7C30098D685 /* g2_configs.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2_configs.mk; sourceTree = "<group>"; };
 		D4AC39181C7BA84D0098D685 /* g2_default.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2_default.gdb; sourceTree = "<group>"; };
 		D4AC39191C7BA9240098D685 /* sbv300.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = sbv300.gdb; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -164,7 +164,6 @@
 			isa = PBXGroup;
 			children = (
 				D4AC39181C7BA84D0098D685 /* g2_default.gdb */,
-				D4AC39171C7BA7C30098D685 /* g2_configs.mk */,
 				D40A241C1AD5B9A600406A3A /* ArduinoDue */,
 				D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */,
 				D40A24211AD5B9A600406A3A /* ArduinoDue.mk */,
@@ -293,6 +292,7 @@
 				D48F5A80172CB21100D0E055 /* util.h */,
 				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
 				D48F5A81172CB21100D0E055 /* xio.h */,
+				D4922F3F1CB8361B00A565FF /* boards.mk */,
 				D40A240D1AD5B7C200406A3A /* board */,
 				D41D13F617374B7D00D522D9 /* settings */,
 				D4FEBFF81B0A65E30042EA32 /* index */,
@@ -313,7 +313,7 @@
 /* Begin PBXLegacyTarget section */
 		D43C7AE31B155C33007440D6 /* TinyG2 G2V9k */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=G2v9k";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=g2v9k";
 			buildConfigurationList = D43C7AE41B155C33007440D6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */;
 			buildPhases = (
 			);
@@ -425,7 +425,7 @@
 		};
 		D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s CONFIG=UltimakerTests BOARD=G2v9k";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s CONFIG=UltimakerTests BOARD=g2v9k";
 			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k Ultimaker" */;
 			buildPhases = (
 			);

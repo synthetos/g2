@@ -118,7 +118,7 @@ static stat_t get_tick(nvObj_t *nv);		// get system tick count
 const cfgItem_t cfgArray[] PROGMEM = {
 	// group token flags p, print_func,	 get_func,  set_func, target for get/set,       default value
 	{ "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,    TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
-//    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
 	{ "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version,  TINYG_FIRMWARE_VERSION },
 	{ "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform, TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version,  TINYG_HARDWARE_VERSION },
@@ -480,6 +480,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "he1","he1op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_nul,                (float *)&cs.null, 0 },
     { "he1","he1tr",_f0,  3, tx_print_nul, cm_get_thermistor_resistance,   set_nul,        (float *)&cs.null, 0 },
     { "he1","he1at",_f0,  0, tx_print_nul, cm_get_at_temperature,  set_nul,                (float *)&cs.null, 0 },
+    { "he1","he1an",_f0,  0, tx_print_nul, cm_get_heater_adc,      set_nul,                (float *)&cs.null, 0 },
 
     { "he2","he2e", _fip, 0, tx_print_nul, cm_get_heater_enable,   cm_set_heater_enable,   (float *)&cs.null, H2_DEFAULT_ENABLE },
 	{ "he2","he2p", _fi,  3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H2_DEFAULT_P },
@@ -490,6 +491,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "he2","he2op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_nul,                (float *)&cs.null, 0 },
     { "he2","he2tr",_f0,  3, tx_print_nul, cm_get_thermistor_resistance,   set_nul,        (float *)&cs.null, 0 },
     { "he2","he2at",_f0,  0, tx_print_nul, cm_get_at_temperature,  set_nul,                (float *)&cs.null, 0 },
+    { "he2","he2an",_f0,  0, tx_print_nul, cm_get_heater_adc,      set_nul,                (float *)&cs.null, 0 },
 
     { "he3","he3e", _fip, 0, tx_print_nul, cm_get_heater_enable,   cm_set_heater_enable,   (float *)&cs.null, H3_DEFAULT_ENABLE },
 	{ "he3","he3p", _fi,  3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H3_DEFAULT_P },
@@ -500,6 +502,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
     { "he3","he3op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_nul,                (float *)&cs.null, 0 },
     { "he3","he3tr",_f0,  3, tx_print_nul, cm_get_thermistor_resistance,   set_nul,        (float *)&cs.null, 0 },
     { "he3","he3at",_f0,  0, tx_print_nul, cm_get_at_temperature,  set_nul,                (float *)&cs.null, 0 },
+    { "he3","he3an",_f0,  0, tx_print_nul, cm_get_heater_adc,      set_nul,                (float *)&cs.null, 0 },
 
 	// Coordinate system offsets (G54-G59 and G92)
 	{ "g54","g54x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },

@@ -2,8 +2,8 @@
  * stepper.cpp - stepper motor controls
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -37,6 +37,9 @@
 #include "hardware.h"
 #include "text_parser.h"
 #include "util.h"
+#include "controller.h"
+#include "xio.h"
+
 
 /**** Allocate structures ****/
 
@@ -1451,17 +1454,20 @@ void st_print_mt(nvObj_t *nv) { text_print(nv, fmt_mt);}    // TYPE_FLOAT
 
 static void _print_motor_int(nvObj_t *nv, const char *format)
 {
-	printf_P(format, nv->group, nv->token, nv->group, (int)nv->value);
+	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, (int)nv->value);
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_motor_flt(nvObj_t *nv, const char *format)
 {
-	printf_P(format, nv->group, nv->token, nv->group, nv->value);
+	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value);
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t units)
 {
-    printf_P(format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
+    sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value, GET_TEXT_ITEM(msg_units, units));
+    xio_writeline(cs.out_buf);
 }
 
 void st_print_ma(nvObj_t *nv) { _print_motor_int(nv, fmt_0ma);}

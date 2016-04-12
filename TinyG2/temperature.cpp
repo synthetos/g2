@@ -39,6 +39,56 @@
 #include "util.h"
 #include "settings.h"
 
+
+/**** Local safety/limit settings ****/
+
+
+// These could be moved to settings
+// If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more
+// than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp".
+#ifndef TEMP_SETPOINT_HYSTERESIS
+#define TEMP_SETPOINT_HYSTERESIS (float)1.0 // +- 1 degrees C
+#endif
+#ifndef TEMP_SETPOINT_HOLD_TIME
+#define TEMP_SETPOINT_HOLD_TIME 1000 // a full second
+#endif
+
+// Below TEMP_OFF_BELOW is considered "off".
+// With a set temp of < TEMP_OFF_BELOW, and a measured temp of < TEMP_OFF_BELOW,
+// we are "at temp".
+#ifndef TEMP_OFF_BELOW
+#define TEMP_OFF_BELOW (float)30.0 // "room temperature"
+#endif
+
+// If the read temp is more than TEMP_FULL_ON_DIFFERENCE less than set temp,
+// just turn the heater full-on.
+#ifndef TEMP_FULL_ON_DIFFERENCE
+#define TEMP_FULL_ON_DIFFERENCE (float)50.0
+#endif
+
+// If the temp is more than TEMP_MAX_SETPOINT, just turn the heater off,
+// reguardless of set temp.
+#ifndef TEMP_MAX_SETPOINT
+#define TEMP_MAX_SETPOINT (float)300.0
+#endif
+
+// If the resistance reads higher than TEMP_MIN_DISCONNECTED_RESISTANCE, the
+// thermistor is considered disconnected.
+#ifndef TEMP_MIN_DISCONNECTED_RESISTANCE
+#define TEMP_MIN_DISCONNECTED_RESISTANCE (float)1000000.0
+#endif
+
+// If the temperature doesn't rise more than TEMP_MIN_RISE_DEGREES_OVER_TIME in
+// TEMP_MIN_RISE_TIME milliseconds, then it's a failure (the sensor is likely
+// physically dislocated.)
+#ifndef TEMP_MIN_RISE_DEGREES_OVER_TIME
+#define TEMP_MIN_RISE_DEGREES_OVER_TIME (float)2.0
+#endif
+#ifndef TEMP_MIN_RISE_TIME
+#define TEMP_MIN_RISE_TIME (float)(20.0 * 1000.0) // 20 seconds
+#endif
+
+
 /**** Allocate structures ****/
 
 // This makes the Motate:: prefix unnecessary.
@@ -50,9 +100,10 @@ using namespace Motate;
 // Luckily, we only use boards that are 3.3V logic at the moment.
 const float kSystemVoltage = 3.3;
 
+
 template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300, uint32_t table_size=64>
 struct Thermistor {
-    float c1, c2, c3, pullup_resistance;
+    float c1, c2, c3, pullup_resistance, inline_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
     ADCPin<adc_pin_num> adc_pin;
@@ -64,8 +115,8 @@ struct Thermistor {
     //  http://assets.newport.com/webDocuments-EN/images/AN04_Thermistor_Calibration_IX.PDF
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
-    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
-    : pullup_resistance{ pullup_resistance_ }    {
+    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, const float inline_resistance_ = 0)
+    : pullup_resistance{ pullup_resistance_ }, inline_resistance { inline_resistance_ }    {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
     }
@@ -102,12 +153,12 @@ struct Thermistor {
         //        }
     };
 
-    uint16_t adc_value_(int16_t temp) {
-        float y = (c1 - (1/(temp+273.15))) / (2*c3);
-        float x = sqrt(pow(c2 / (3*c3),3) + pow(y,2));
-        float r = exp((x-y) - (x+y)); // resistance of thermistor
-        return (r / (pullup_resistance + r)) * (adc_pin.getTop());
-    };
+//    uint16_t adc_value_(int16_t temp) {
+//        float y = (c1 - (1/(temp+273.15))) / (2*c3);
+//        float x = sqrt(pow(c2 / (3*c3),3) + pow(y,2));
+//        float r = exp((x-y) - (x+y)); // resistance of thermistor
+//        return (r / (pullup_resistance + r)) * (adc_pin.getTop());
+//    };
 
     float temperature_exact() {
         // Sanity check:
@@ -116,7 +167,12 @@ struct Thermistor {
         }
 
         float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        float r = (pullup_resistance * v) / (kSystemVoltage - v);   // resistance of thermistor
+        float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+
+        if ((r < 0) || (r > TEMP_MIN_DISCONNECTED_RESISTANCE)) {
+            return -1;
+        }
+
         float lnr = log(r);
         float Tinv = c1 + (c2*lnr) + (c3*pow(lnr,3));
         return (1/Tinv) - 273.15; // final temperature
@@ -128,7 +184,7 @@ struct Thermistor {
         }
 
         float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        return (pullup_resistance * v) / (kSystemVoltage - v);   // resistance of thermistor
+        return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
     }
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
@@ -137,12 +193,13 @@ struct Thermistor {
     };
 };
 
-// Testing SR line: {sr:{"he1st":t,"he1t":t,"he1tr":t,"he1at":t,"he1op":t,"stat":t}}
+// Temperature debug string: {sr:{"he1t":t,"he1st":t,"he1at":t, "he1tr":t, "he1op":t}}
+// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "he1op":t}}
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/    25, /*T2:*/    80, /*T3:*/  210,
-    /*R1:*/ 93500, /*R2:*/ 14300, /*R3:*/ 4975, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 
 #if ADC1_AVAILABLE == 1
@@ -153,8 +210,8 @@ void ADCPin<kADC1_PinNumber>::interrupt() {
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC2_AVAILABLE == 1
 void ADCPin<kADC2_PinNumber>::interrupt() {
@@ -164,8 +221,8 @@ void ADCPin<kADC2_PinNumber>::interrupt() {
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
-    /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
-    /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC0_AVAILABLE == 1
 void ADCPin<kADC0_PinNumber>::interrupt() {
@@ -216,15 +273,6 @@ namespace Motate {
 }
 #endif
 
-// These could be moved to settings
-// If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more than TEMP_SETPOINT_HOLD_TIME ms, it's "at temp"
-#ifndef TEMP_SETPOINT_HYSTERESIS
-#define TEMP_SETPOINT_HYSTERESIS 2.0 // +- 2 degrees C
-#endif
-#ifndef TEMP_SETPOINT_HOLD_TIME
-#define TEMP_SETPOINT_HOLD_TIME 500 // half a second
-#endif
-
 struct PID {
     static constexpr float output_max = 1.0;
     static constexpr float derivative_contribution = 0.05;
@@ -243,11 +291,23 @@ struct PID {
     Timeout _set_point_timeout;     // used to keep track of if we are at set temp and stay there
     bool _at_set_point;
 
+    Timeout _rise_time_timeout;     // used to keep track of if we are increasing temperature fast enough
+    float _rise_time_checkpoint;    // when we start the timer, we set _rise_time_checkpoint to the minimum goal
+
     bool _enable;                   // set true to enable this heater
 
     PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint}, _at_set_point{false} {};
 
     float getNewOutput(float input) {
+        // If the input is < 0, the sensor failed
+        if (input < 0) {
+            if (_set_point > TEMP_OFF_BELOW) {
+                cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Heater set, but sensor read failed.");
+            }
+
+            return 0;
+        }
+
         // Calculate the e (error)
         float e = _set_point - input;
 
@@ -258,8 +318,28 @@ struct PID {
                 _at_set_point = true;
                 _set_point_timeout.clear();
             }
-        } else if (_at_set_point == true) {
+        } else {
             _at_set_point = false;
+
+            // Check to see if we already have the rise_time timeout set
+            if (_rise_time_timeout.isSet()) {
+                if (_rise_time_timeout.isPast()) {
+                    if (input < _rise_time_checkpoint) {
+                        // FAILURE!!
+                        cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Heater temperature failed to rise fast enough.");
+                        _set_point = 0;
+                        _rise_time_timeout.clear();
+                        return -1;
+                    }
+
+                    _rise_time_timeout.clear();
+                }
+            }
+
+            if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_OVER_TIME))) {
+                _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
+                _rise_time_checkpoint = input + TEMP_MIN_RISE_DEGREES_OVER_TIME;
+            }
         }
 
         float p = _p_factor * e;
@@ -282,6 +362,17 @@ struct PID {
 
         _derivative = (_d_factor * (input - _previous_input))*(derivative_contribution) + (_derivative * (1.0-derivative_contribution));
         _previous_input = input;
+
+        // Now that we've computed all that, we'll decide when to ignore it
+
+        // If the setpoint is "off" or the temperature is higher than MAX, always return OFF
+        if ((_set_point < TEMP_OFF_BELOW) || (input > TEMP_MAX_SETPOINT)) {
+            return 0; // "off"
+
+        // If we are too far from the set point, turn the heater full on
+        } else if (e > TEMP_FULL_ON_DIFFERENCE) {
+            return 1; //"on"
+        }
 
         return std::min(output_max, p + i - _derivative);
     };
@@ -352,6 +443,20 @@ const float kTempDiffSRTrigger = 0.25;
 
 stat_t temperature_callback()
 {
+    if (cm.machine_state == MACHINE_ALARM) {
+        // Force the heaters off (redundant with the safety circuit)
+        fet_pin1 = 0.0;
+        fet_pin2 = 0.0;
+        fet_pin3 = 0.0;
+
+        // Force all PIDs to off too
+        pid1._set_point = 0.0;
+        pid2._set_point = 0.0;
+        pid3._set_point = 0.0;
+
+        return (STAT_OK);
+    }
+
     if (pid_timeout.isPast()) {
         pid_timeout.set(100);
 
@@ -361,6 +466,7 @@ stat_t temperature_callback()
         if (pid1._enable) {
             temp = thermistor1.temperature_exact();
             fet_pin1 = pid1.getNewOutput(temp);
+
             if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
                 last_reported_temp1 = temp;
                 sr_requested = true;
@@ -378,6 +484,7 @@ stat_t temperature_callback()
         if (pid2._enable) {
             temp = thermistor2.temperature_exact();
             fet_pin2 = pid2.getNewOutput(temp);
+
             if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
                 last_reported_temp2 = temp;
                 sr_requested = true;
@@ -387,11 +494,13 @@ stat_t temperature_callback()
         if (pid3._enable) {
             temp = thermistor3.temperature_exact();
             fet_pin3 = pid3.getNewOutput(temp);
+
             if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
                 last_reported_temp3 = temp;
                 sr_requested = true;
             }
         }
+
         if (sr_requested) {
             sr_request_status_report(SR_REQUEST_TIMED);
         }
@@ -574,9 +683,9 @@ stat_t cm_get_set_temperature(nvObj_t *nv)
 stat_t cm_set_set_temperature(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._set_point = nv->value; break; }
-        case '2': { pid2._set_point = nv->value; break; }
-        case '3': { pid3._set_point = nv->value; break; }
+        case '1': { pid1._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
+        case '2': { pid2._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
+        case '3': { pid3._set_point = min(TEMP_MAX_SETPOINT, nv->value); break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { break; }
@@ -614,6 +723,25 @@ stat_t cm_get_heater_output(nvObj_t *nv)
         case '1': { nv->value = (float)fet_pin1; break; }
         case '2': { nv->value = (float)fet_pin2; break; }
         case '3': { nv->value = (float)fet_pin3; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_heater_adc() - get the raw adc value of the PID
+ */
+stat_t cm_get_heater_adc(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = (float)thermistor1.raw_adc_value; break; }
+        case '2': { nv->value = (float)thermistor2.raw_adc_value; break; }
+        case '3': { nv->value = (float)thermistor3.raw_adc_value; break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { nv->value = 0.0; break; }

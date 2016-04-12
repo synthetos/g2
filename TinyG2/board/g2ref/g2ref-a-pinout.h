@@ -89,6 +89,24 @@
 
 #define TEMPERATURE_OUTPUT_ON 1
 
+// Some pins, if the PWM capability is turned on, it will cause timer conflicts.
+// So we have to explicity enable them as PWM pins.
+// Generated with:
+// perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
+#define OUTPUT1_PWM 0
+#define OUTPUT2_PWM 0
+#define OUTPUT3_PWM 0
+#define OUTPUT4_PWM 0
+#define OUTPUT5_PWM 0
+#define OUTPUT6_PWM 0
+#define OUTPUT7_PWM 0
+#define OUTPUT8_PWM 0
+#define OUTPUT9_PWM 0
+#define OUTPUT10_PWM 0
+#define OUTPUT11_PWM 0
+#define OUTPUT12_PWM 0
+#define OUTPUT13_PWM 0
+
 namespace Motate {
 
     // Arduino pin name & function
@@ -110,10 +128,10 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kSerial_CTS                        , A, 'A', 15);  // kSerial_CTS
     _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , A, 'A', 16);  // Socket1_EnablePinNumber
     _MAKE_MOTATE_PIN(kSpindle_EnablePinNumber           , A, 'A', 17);  // kSpindle_EnablePinNumber
-    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 18);  // DI_5: kInput5_PinNumber
+    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 18);  // DI_8: kInput8_PinNumber
     _MAKE_MOTATE_PIN(kInput6_PinNumber                  , A, 'A', 19);  // DI_6: kInput6_PinNumber
     _MAKE_MOTATE_PIN(kInput7_PinNumber                  , A, 'A', 20);  // DI_7: kInput7_PinNumber
-    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 21);  // DI_8: kInput8_PinNumber
+    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 21);  // DI_5: kInput5_PinNumber
     _MAKE_MOTATE_PIN(kADC2_PinNumber                    , A, 'A', 22);  // Extruder2_ADC
     _MAKE_MOTATE_PIN(kADC1_PinNumber                    , A, 'A', 23);  // Extruder1_ADC
     _MAKE_MOTATE_PIN(kSocket1_DirPinNumber              , A, 'A', 24);  // Socket1_DirPinNumber

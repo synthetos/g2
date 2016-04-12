@@ -395,16 +395,9 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
 		if (nv->valuetype != TYPE_EMPTY) {
 			if (need_a_comma) { *str++ = ',';}
 			need_a_comma = true;
-//			if (js.json_syntax == JSON_SYNTAX_RELAXED) {    // write name
-//                // much faster then sprintf(str, "%s:", nv->token);
-//                strcpy(str, nv->token); str += strlen(nv->token);
-//                strcpy(str++, ":");
-//			} else {
-                // much faster then sprintf(str, "\"%s\":", nv->token); Was about 15 uSec
-                strcpy(str++, "\"");
-                strcpy(str, nv->token); str += strlen(nv->token);
-                strcpy(str++, "\":"); str++;
-//			}
+            strcpy(str++, "\"");
+            strcpy(str, nv->token); str += strlen(nv->token);
+            strcpy(str++, "\":"); str++;
 
             switch (nv->valuetype)  {
                 case (TYPE_EMPTY):  {   break; }
@@ -579,7 +572,6 @@ void json_print_response(uint8_t status)
 	char footer_string[NV_FOOTER_LEN];
 	char *str = footer_string;
 
-//    sprintf((char *)footer_string, "%d,%d,%d", 1, status, cs.linelen + 1);
     strcpy(str, "1,"); str += 2;                            // '1' is the footer revision hard coded
     str += inttoa(str, status);                             // nb: inttoa() works differently than itoa(). See util.cpp
     strcpy(str++, ",");

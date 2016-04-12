@@ -115,6 +115,12 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 }
 
+void controller_request_enquiry() 
+{
+    sprintf_P(cs.out_buf, PSTR("{\"ack\":true}\n")); 
+    xio_writeline(cs.out_buf);
+}
+
 /*
  * controller_run() - MAIN LOOP - top-level controller
  *
@@ -235,6 +241,7 @@ static void _dispatch_kernel()
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, NULL); }
+	else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode

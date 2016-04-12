@@ -8,7 +8,7 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		g2ref-a|ARM = g2ref-a|ARM
 		gShield|ARM = gShield|ARM
-		Makeblock-v9k|ARM = Makeblock-v9k|ARM
+		Makeblock-v9|ARM = Makeblock-v9|ARM
 		Othermill|ARM = Othermill|ARM
 		pboard-a|ARM = pboard-a|ARM
 		PrintrbotPlay-g2refa|ARM = PrintrbotPlay-g2refa|ARM
@@ -19,7 +19,7 @@ Global
 		Shapeoko2|ARM = Shapeoko2|ARM
 		shopbotShield|ARM = shopbotShield|ARM
 		TestV9|ARM = TestV9|ARM
-		UltimakerV9h|ARM = UltimakerV9h|ARM
+		Ultimakerv9k|ARM = Ultimakerv9k|ARM
 		Zen7x12|ARM = Zen7x12|ARM
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -27,8 +27,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.g2ref-a|ARM.Build.0 = g2ref-a|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.ActiveCfg = gShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.Build.0 = gShield|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9k|ARM.ActiveCfg = Makeblock-v9k|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9k|ARM.Build.0 = Makeblock-v9k|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9|ARM.ActiveCfg = Makeblock-v9|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9|ARM.Build.0 = Makeblock-v9|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Othermill|ARM.ActiveCfg = Othermill|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Othermill|ARM.Build.0 = Othermill|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.pboard-a|ARM.ActiveCfg = pboard-a|ARM
@@ -49,13 +49,13 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestV9|ARM.ActiveCfg = TestV9|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestV9|ARM.Build.0 = TestV9|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.UltimakerV9h|ARM.ActiveCfg = UltimakerV9h|ARM
-		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.UltimakerV9h|ARM.Build.0 = UltimakerV9h|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Ultimakerv9k|ARM.ActiveCfg = Ultimakerv9k|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Ultimakerv9k|ARM.Build.0 = Ultimakerv9k|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Zen7x12|ARM.ActiveCfg = Zen7x12|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Zen7x12|ARM.Build.0 = Zen7x12|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.g2ref-a|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.ActiveCfg = Stub|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Makeblock-v9k|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Makeblock-v9|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Othermill|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.pboard-a|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlay-g2refa|ARM.ActiveCfg = Stub|ARM
@@ -66,7 +66,7 @@ Global
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Shapeoko2|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestV9|ARM.ActiveCfg = Stub|ARM
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.UltimakerV9h|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Ultimakerv9k|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Zen7x12|ARM.ActiveCfg = Stub|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

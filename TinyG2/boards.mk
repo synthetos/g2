@@ -103,10 +103,12 @@ endif
 ##########
 # Ultimaker configs:
 
-ifeq ("$(CONFIG)","UltimakerV9h")
+ifeq ("$(CONFIG)","Ultimakerv9k")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2ref-a
     endif
     SETTINGS_FILE="settings_ultimaker.h"
 endif
+
+include $(wildcard ./board/$(STAR).mk)
 
