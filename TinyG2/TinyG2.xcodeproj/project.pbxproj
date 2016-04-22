@@ -425,6 +425,7 @@
 		26B1C80A1A5F783B00BAF0A1 /* ccsbcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ccsbcs.c; sourceTree = "<group>"; };
 		26B1C80B1A5F783B00BAF0A1 /* syscall.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = syscall.c; sourceTree = "<group>"; };
 		26B1C80C1A5F783B00BAF0A1 /* unicode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unicode.c; sourceTree = "<group>"; };
+		26B9D6521CCAC3B9009D64B7 /* settings_othermill_pro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_othermill_pro.h; sourceTree = "<group>"; };
 		D4021F9A175DA4610099576C /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
 		D4021F9C175DA4690099576C /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
 		D4021F9E175E37BF0099576C /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
@@ -3327,6 +3328,7 @@
 				D4EC69F818CA2C1900DF8E4F /* settings_openpnp.h */,
 				D41D13F917374B7D00D522D9 /* settings_othercutter.h */,
 				D4EC69F918CA2C1900DF8E4F /* settings_othermill.h */,
+				26B9D6521CCAC3B9009D64B7 /* settings_othermill_pro.h */,
 				D4EC69FA18CA2C1900DF8E4F /* settings_pendulum.h */,
 				D4B6577218A562B300F8616C /* settings_pocketnc.h */,
 				D41D13FD17374B7D00D522D9 /* settings_probotixV90.h */,
