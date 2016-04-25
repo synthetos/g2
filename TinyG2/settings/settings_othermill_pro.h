@@ -41,3 +41,11 @@
 // enable the detection of a jumper on AMAX
 #undef  A_SWITCH_MODE_MAX
 #define A_SWITCH_MODE_MAX 		SW_MODE_CUSTOM
+
+// interim max values for testing
+#undef X_VELOCITY_MAX
+#undef Y_VELOCITY_MAX
+#undef P1_CW_SPEED_HI
+#define X_VELOCITY_MAX 1650
+#define Y_VELOCITY_MAX 1650
+#define P1_CW_SPEED_HI 27500
