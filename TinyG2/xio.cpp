@@ -875,17 +875,17 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
     &SerialUSB1,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
-//xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
-//    &Serial,
-//    (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
-//};
+xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
+    &Serial,
+    (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
+};
 
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
     &serialUSB0Wrapper,
-    &serialUSB1Wrapper//,
-//    &serial0Wrapper
+    &serialUSB1Wrapper,
+    &serial0Wrapper
 };
 
 /**** CODE ****/

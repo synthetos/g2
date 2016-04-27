@@ -113,7 +113,7 @@ enum xioDeviceEnum {                        // reconfigure this enum as you add 
 	DEV_NONE=-1,	                            // no device is bound
 	DEV_USB0=0,                             // must be 0
 	DEV_USB1,                               // must be 1
-//    DEV_UART1,                              // must be 2
+    DEV_UART1,                              // must be 2
 //	DEV_SPI0,                               // We can't have it here until we actually define it
 	DEV_MAX
 };
