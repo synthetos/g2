@@ -134,6 +134,7 @@
 		D4AC39161C7BA71B0098D685 /* sbv300.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sbv300.mk; sourceTree = "<group>"; };
 		D4AC39181C7BA84D0098D685 /* g2_default.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2_default.gdb; sourceTree = "<group>"; };
 		D4AC39191C7BA9240098D685 /* sbv300.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = sbv300.gdb; sourceTree = "<group>"; };
+		D4AF97B51CC3BB6700107DF0 /* pboard-c-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "pboard-c-pinout.h"; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -227,6 +228,7 @@
 			isa = PBXGroup;
 			children = (
 				D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */,
+				D4AF97B51CC3BB6700107DF0 /* pboard-c-pinout.h */,
 				D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */,
 			);
 			path = pboard;
