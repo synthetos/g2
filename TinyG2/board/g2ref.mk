@@ -34,7 +34,7 @@ ifeq ("$(BASE_BOARD)","g2-g2ref")
     CHIP_LOWERCASE = sam3x8c
 
     BOARD_PATH = ./board/g2ref
-    DEVICE_INCLUDE_DIRS += ${BOARD_PATH}
+    SOURCE_DIRS += ${BOARD_PATH}
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk

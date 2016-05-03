@@ -62,7 +62,7 @@ ifeq ("$(BASE_BOARD)","tinyg-due")
     # Note: we call it "tinyg-due" instead of "due" since the Motate built-in provides
     # a "due" BASE_BOARD.
     BOARD_PATH = ./board/ArduinoDue
-    DEVICE_INCLUDE_DIRS += $(BOARD_PATH)
+    SOURCE_DIRS += ${BOARD_PATH}
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
 

@@ -84,33 +84,6 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 /******************** Application Code ************************/
 
-#ifdef __ARM
-const Motate::USBSettings_t Motate::USBSettings = {
-	/*gVendorID         = */ 0x1d50,
-	/*gProductID        = */ 0x606d,
-	/*gProductVersion   = */ TINYG_FIRMWARE_VERSION,
-	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
-	/*gPowerConsumption = */ 500
-};
-	/*gProductVersion   = */ //0.1,
-
-//Motate::USBDevice< Motate::USBCDC > usb;
-Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-
-decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
-decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
-
-// 115200 is the default, as well.
-UART<kSerial_RX, kSerial_TX, kSerial_RTS, kSerial_CTS> Serial {115200, UARTMode::RTSCTSFlowControl};
-
-
-MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
-MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
-
-//Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
-#endif
-
 /*
  * _application_init_services()
  * _application_init_machine()
@@ -122,8 +95,6 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 void application_init_services(void)
 {
-	usb.attach();                   // USB setup. Runs in "background" as the rest of this executes
-
 	hardware_init();				// system hardware setup 			- must be first
 	persistence_init();				// set up EEPROM or other NVM		- must be second
 	xio_init();						// xtended io subsystem				- must be third

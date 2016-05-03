@@ -41,6 +41,8 @@
 #include "controller.h"
 #include "util.h"
 
+#include "board_xio.h"
+
 #include "MotateBuffer.h"
 using Motate::RXBuffer;
 using Motate::TXBuffer;
@@ -153,13 +155,14 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     {
     };
 
-    // Pure virtuals. MUST be subclassed for every device -- even if they don't apply.
-    virtual int16_t readchar() = 0;
-    virtual void flushRead() = 0;       // This should call _flushLine() before flushing the device.
-    virtual int16_t write(const char *buffer, int16_t len) = 0;
+    // Don't use pure virtuals! They massively slow down the calls.
+    // But these MUST be overridden!
+    virtual int16_t readchar() { return -1; };
+    virtual void flushRead() {};       // This should call _flushLine() before flushing the device.
+    virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
-    virtual char *readline(devflags_t limit_flags, uint16_t &size) = 0;
-    };
+    virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
+};
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
 struct xio_t {
@@ -406,7 +409,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
     uint16_t _line_start_offset;    // offset into first character of the line
     bool     _at_start_of_line;     // true if the last character scanned was the end of a line
 
-    LineRXBuffer(owner_type owner) : parent_type{owner} {};
+    LineRXBuffer(owner_type owner) : parent_type{owner} {parent_type::init();};
+
+    void init() { ; };
 
     uint8_t _get_next_write_header_index() { return ((_write_header_index + 1) & (_header_count-1)); };
     uint8_t _get_next_first_header_index() { return ((_first_header_index + 1) & (_header_count-1)); };
@@ -770,6 +775,11 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
 //        });
     };
 
+    void init() {
+        _rx_buffer.init();
+        _tx_buffer.init();
+    };
+
     virtual int16_t readchar() final {
         return _rx_buffer.read();
 //        return _dev->readByte();					// readByte calls the USB endpoint's read function
@@ -905,7 +915,11 @@ xio_t xio = {
 
 void xio_init()
 {
-    // Nothing left to do here, move along...
+    board_xio_init();
+
+    serialUSB0Wrapper.init();
+    serialUSB1Wrapper.init();
+    serial0Wrapper.init();
 }
 
 stat_t xio_test_assertions()

@@ -33,7 +33,7 @@ ifeq ("$(BASE_BOARD)","pboard-a")
     CHIP_LOWERCASE = sam3x8c
 
     BOARD_PATH = ./board/pboard
-    DEVICE_INCLUDE_DIRS += ${BOARD_PATH}
+    SOURCE_DIRS += ${BOARD_PATH}
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk
