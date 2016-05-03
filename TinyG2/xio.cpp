@@ -409,9 +409,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
     uint16_t _line_start_offset;    // offset into first character of the line
     bool     _at_start_of_line;     // true if the last character scanned was the end of a line
 
-    LineRXBuffer(owner_type owner) : parent_type{owner} {parent_type::init();};
+    LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
-    void init() { ; };
+    void init() { parent_type::init(); };
 
     uint8_t _get_next_write_header_index() { return ((_write_header_index + 1) & (_header_count-1)); };
     uint8_t _get_next_first_header_index() { return ((_first_header_index + 1) & (_header_count-1)); };
