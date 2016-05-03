@@ -885,17 +885,21 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
     &SerialUSB1,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
+#if XIO_HAS_UART==1
 xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
     &Serial,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
+#endif // XIO_HAS_UART
 
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
     &serialUSB0Wrapper,
     &serialUSB1Wrapper,
+#if XIO_HAS_UART == 1
     &serial0Wrapper
+#endif
 };
 
 /**** CODE ****/
@@ -919,7 +923,9 @@ void xio_init()
 
     serialUSB0Wrapper.init();
     serialUSB1Wrapper.init();
+#if XIO_HAS_UART == 1
     serial0Wrapper.init();
+#endif
 }
 
 stat_t xio_test_assertions()

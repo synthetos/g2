@@ -63,7 +63,7 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 
 //******** UART ********
-Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial {115200, Motate::UARTMode::RTSCTSFlowControl};
+//Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial {115200, Motate::UARTMode::RTSCTSFlowControl};
 
 
 
@@ -76,5 +76,5 @@ void board_xio_init(void)
     // Init SPI (handled internally for now)
 
     // Init UART
-    Serial.init();
+//    Serial.init();
 }
