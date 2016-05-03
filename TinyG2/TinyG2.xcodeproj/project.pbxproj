@@ -14,7 +14,6 @@
 		D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A43172CB1F900D0E055 /* controller.cpp */; };
 		D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */; };
 		D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */; };
-		D48F5A5D172CB1FA00D0E055 /* hardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A47172CB1F900D0E055 /* hardware.cpp */; };
 		D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A48172CB1FA00D0E055 /* help.cpp */; };
 		D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A49172CB1FA00D0E055 /* json_parser.cpp */; };
 		D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */; };
@@ -53,16 +52,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D40A24131AD5B7C200406A3A /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
-		D40A24141AD5B7C200406A3A /* sbv300-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbv300-pinout.h"; sourceTree = "<group>"; };
-		D40A241D1AD5B9A600406A3A /* gShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "gShield-pinout.h"; sourceTree = "<group>"; };
-		D40A241E1AD5B9A600406A3A /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
-		D40A241F1AD5B9A600406A3A /* shopbotShield-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "shopbotShield-pinout.h"; sourceTree = "<group>"; };
+		D4037C051CD920A800BC72AD /* ArduinoDue */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ArduinoDue; sourceTree = "<group>"; };
+		D4037C061CD920B700BC72AD /* sbv300 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = sbv300; sourceTree = "<group>"; };
+		D4037C071CD920CA00BC72AD /* g2ref */ = {isa = PBXFileReference; lastKnownFileType = folder; path = g2ref; sourceTree = "<group>"; };
+		D4037C081CD920DB00BC72AD /* pboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = pboard; sourceTree = "<group>"; };
 		D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D40A24211AD5B9A600406A3A /* ArduinoDue.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.mk; sourceTree = "<group>"; };
 		D43C7AE71B155D0A007440D6 /* G2v9 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = G2v9; sourceTree = "<group>"; };
-		D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
-		D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "pboard-a-pinout.h"; sourceTree = "<group>"; };
 		D4522DC61C455F660086AAE6 /* pboard.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.gdb; sourceTree = "<group>"; };
 		D4522DC71C455F660086AAE6 /* pboard.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.mk; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* tinyg2_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2_info.h; sourceTree = "<group>"; };
@@ -73,7 +69,6 @@
 		D48F5A43172CB1F900D0E055 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
 		D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_homing.cpp; sourceTree = "<group>"; };
 		D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gcode_parser.cpp; sourceTree = "<group>"; };
-		D48F5A47172CB1F900D0E055 /* hardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hardware.cpp; sourceTree = "<group>"; };
 		D48F5A48172CB1FA00D0E055 /* help.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = help.cpp; sourceTree = "<group>"; };
 		D48F5A49172CB1FA00D0E055 /* json_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = json_parser.cpp; sourceTree = "<group>"; };
 		D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kinematics.cpp; sourceTree = "<group>"; };
@@ -93,7 +88,6 @@
 		D48F5A6E172CB21100D0E055 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		D48F5A6F172CB21100D0E055 /* controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = controller.h; sourceTree = "<group>"; };
 		D48F5A70172CB21100D0E055 /* gcode_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gcode_parser.h; sourceTree = "<group>"; };
-		D48F5A72172CB21100D0E055 /* hardware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hardware.h; sourceTree = "<group>"; };
 		D48F5A73172CB21100D0E055 /* help.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = help.h; sourceTree = "<group>"; };
 		D48F5A74172CB21100D0E055 /* json_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json_parser.h; sourceTree = "<group>"; };
 		D48F5A75172CB21100D0E055 /* kinematics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kinematics.h; sourceTree = "<group>"; };
@@ -109,8 +103,6 @@
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
-		D49367C21B824EA1000BB759 /* g2ref-a-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "g2ref-a-pinout.h"; sourceTree = "<group>"; };
-		D49367C31B824EA1000BB759 /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
 		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
 		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
@@ -134,7 +126,6 @@
 		D4AC39161C7BA71B0098D685 /* sbv300.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sbv300.mk; sourceTree = "<group>"; };
 		D4AC39181C7BA84D0098D685 /* g2_default.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2_default.gdb; sourceTree = "<group>"; };
 		D4AC39191C7BA9240098D685 /* sbv300.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = sbv300.gdb; sourceTree = "<group>"; };
-		D4AF97B51CC3BB6700107DF0 /* pboard-c-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "pboard-c-pinout.h"; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -165,16 +156,16 @@
 			isa = PBXGroup;
 			children = (
 				D4AC39181C7BA84D0098D685 /* g2_default.gdb */,
-				D40A241C1AD5B9A600406A3A /* ArduinoDue */,
+				D4037C051CD920A800BC72AD /* ArduinoDue */,
 				D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */,
 				D40A24211AD5B9A600406A3A /* ArduinoDue.mk */,
-				D40A24121AD5B7C200406A3A /* sbv300 */,
+				D4037C061CD920B700BC72AD /* sbv300 */,
 				D4AC39191C7BA9240098D685 /* sbv300.gdb */,
 				D4AC39161C7BA71B0098D685 /* sbv300.mk */,
-				D49367C11B824EA1000BB759 /* g2ref */,
+				D4037C071CD920CA00BC72AD /* g2ref */,
 				D49367CA1B827706000BB759 /* g2ref.gdb */,
 				D49367CB1B827706000BB759 /* g2ref.mk */,
-				D4522DC31C455F660086AAE6 /* pboard */,
+				D4037C081CD920DB00BC72AD /* pboard */,
 				D4522DC61C455F660086AAE6 /* pboard.gdb */,
 				D4522DC71C455F660086AAE6 /* pboard.mk */,
 				D43C7AE71B155D0A007440D6 /* G2v9 */,
@@ -182,25 +173,6 @@
 				D49367D21B82C990000BB759 /* G2v9.mk */,
 			);
 			path = board;
-			sourceTree = "<group>";
-		};
-		D40A24121AD5B7C200406A3A /* sbv300 */ = {
-			isa = PBXGroup;
-			children = (
-				D40A24141AD5B7C200406A3A /* sbv300-pinout.h */,
-				D40A24131AD5B7C200406A3A /* motate_pin_assignments.h */,
-			);
-			path = sbv300;
-			sourceTree = "<group>";
-		};
-		D40A241C1AD5B9A600406A3A /* ArduinoDue */ = {
-			isa = PBXGroup;
-			children = (
-				D40A241D1AD5B9A600406A3A /* gShield-pinout.h */,
-				D40A241F1AD5B9A600406A3A /* shopbotShield-pinout.h */,
-				D40A241E1AD5B9A600406A3A /* motate_pin_assignments.h */,
-			);
-			path = ArduinoDue;
 			sourceTree = "<group>";
 		};
 		D41D13F617374B7D00D522D9 /* settings */ = {
@@ -222,16 +194,6 @@
 				D4AC39151C77C1F20098D685 /* settings_zen7x12.h */,
 			);
 			path = settings;
-			sourceTree = "<group>";
-		};
-		D4522DC31C455F660086AAE6 /* pboard */ = {
-			isa = PBXGroup;
-			children = (
-				D4522DC51C455F660086AAE6 /* pboard-a-pinout.h */,
-				D4AF97B51CC3BB6700107DF0 /* pboard-c-pinout.h */,
-				D4522DC41C455F660086AAE6 /* motate_pin_assignments.h */,
-			);
-			path = pboard;
 			sourceTree = "<group>";
 		};
 		D45710B7170532AC00EA19A8 = {
@@ -258,8 +220,6 @@
 				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
 				D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */,
 				D4B93DF01AAA9DFE00632FAB /* gpio.h */,
-				D48F5A47172CB1F900D0E055 /* hardware.cpp */,
-				D48F5A72172CB21100D0E055 /* hardware.h */,
 				D48F5A48172CB1FA00D0E055 /* help.cpp */,
 				D48F5A73172CB21100D0E055 /* help.h */,
 				D48F5A49172CB1FA00D0E055 /* json_parser.cpp */,
@@ -299,15 +259,6 @@
 				D41D13F617374B7D00D522D9 /* settings */,
 				D4FEBFF81B0A65E30042EA32 /* index */,
 			);
-			sourceTree = "<group>";
-		};
-		D49367C11B824EA1000BB759 /* g2ref */ = {
-			isa = PBXGroup;
-			children = (
-				D49367C21B824EA1000BB759 /* g2ref-a-pinout.h */,
-				D49367C31B824EA1000BB759 /* motate_pin_assignments.h */,
-			);
-			path = g2ref;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -530,7 +481,6 @@
 				D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */,
 				D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */,
 				D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */,
-				D48F5A5D172CB1FA00D0E055 /* hardware.cpp in Sources */,
 				D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */,
 				D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */,
 				D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */,
