@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         0.83					// cornering - between 0.05 and 1.00 (max)
+#define JUNCTION_AGGRESSION         0.9					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -83,8 +83,12 @@
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
+// Defaults for 3DP
 //#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs5","_es5","_xs5","_fe5","_cs4","_es4","_xs4","_fe4","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","unit","path","stat"
+// Defaults for motion debugging
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","unit","path","stat"
+// Defaults for PID tuning
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -138,9 +142,9 @@
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           360			// degrees moved per motor rev
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 1
+#define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.45
+#define M2_POWER_LEVEL              0.6
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M1_MOTOR_MAP                AXIS_B
@@ -163,11 +167,11 @@
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 // The machine can handle 20000 in open air, but dropping back to 10000 for times when it hits obstacles (small bits of filament, etc).
-#define X_VELOCITY_MAX              10000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  5000                   // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  6000                    // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
@@ -177,11 +181,11 @@
 #define X_ZERO_BACKOFF              3                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              10000
+#define Y_VELOCITY_MAX              15000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                250
-#define Y_JERK_MAX                  5000
+#define Y_JERK_MAX                  6000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 #define Y_HOMING_INPUT              4
 #define Y_HOMING_DIRECTION          1
@@ -191,11 +195,11 @@
 #define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              200
+#define Z_VELOCITY_MAX              300
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                196
-#define Z_JERK_MAX                  50
+#define Z_JERK_MAX                  60
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          0
@@ -228,13 +232,17 @@
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				5.30516476972984
 #define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
-//#define A_FEEDRATE_MAX 			9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
-#define A_FEEDRATE_MAX 			19440.0 // 19440.0 = G1 rate ~30 mm/s, 900 mm/min
+#define A_FEEDRATE_MAX 			9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
+//#define A_FEEDRATE_MAX 			19440.0 // 19440.0 = G1 rate ~30 mm/s, 900 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
+//#define A_JERK_MAX                 16200 //   25 million mm/min^3 = 16200
+//#define A_JERK_MAX                 81000 //   125 million mm/min^3 = 81000
+//#define A_JERK_MAX 				162000 //   250 million mm/min^3 = 162000
+//#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
 //#define A_JERK_MAX 				648000 // 1,000 million mm/min^3 = 648000
-                                       // * a million IF it's over a million
+//#define A_JERK_MAX              1296000 // 2,000 million mm/min^3 = 1296000
+//#define A_JERK_MAX              2592000 // 4,000 million mm/min^3 = 2592000
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIRECTION      0
@@ -345,17 +353,17 @@
 #define MAX_FAN_TEMP                150.0
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                7.0
-#define H1_DEFAULT_I                0.1
-#define H1_DEFAULT_D                100.0
+#define H1_DEFAULT_P                9.0
+#define H1_DEFAULT_I                0.12
+#define H1_DEFAULT_D                400.0
 
 #define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                7.0
-#define H2_DEFAULT_I                0.1
-#define H2_DEFAULT_D                100.0
+#define H2_DEFAULT_P                9.0
+#define H2_DEFAULT_I                0.12
+#define H2_DEFAULT_D                400.0
 
 #define H3_DEFAULT_ENABLE           false
-#define H3_DEFAULT_P                7.0
-#define H3_DEFAULT_I                0.1
-#define H3_DEFAULT_D                100.0
+#define H3_DEFAULT_P                9.0
+#define H3_DEFAULT_I                0.12
+#define H3_DEFAULT_D                400.0
 

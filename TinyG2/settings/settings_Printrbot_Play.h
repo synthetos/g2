@@ -330,17 +330,20 @@
 
 /*** Extruders / Heaters ***/
 
+#define MIN_FAN_TEMP                40.0
+#define MAX_FAN_TEMP                150.0
+
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                7.0
-#define H1_DEFAULT_I                0.2
-#define H1_DEFAULT_D                100.0
+#define H1_DEFAULT_P                9.0
+#define H1_DEFAULT_I                0.12
+#define H1_DEFAULT_D                400.0
 
-#define H2_DEFAULT_ENABLE           true
-#define H2_DEFAULT_P                7.0
-#define H2_DEFAULT_I                0.2
-#define H2_DEFAULT_D                100.0
+#define H2_DEFAULT_ENABLE           false
+#define H2_DEFAULT_P                9.0
+#define H2_DEFAULT_I                0.12
+#define H2_DEFAULT_D                400.0
 
-#define H3_DEFAULT_ENABLE           true
-#define H3_DEFAULT_P                7.0
-#define H3_DEFAULT_I                0.2
-#define H3_DEFAULT_D                100.0
+#define H3_DEFAULT_ENABLE           false
+#define H3_DEFAULT_P                9.0
+#define H3_DEFAULT_I                0.12
+#define H3_DEFAULT_D                400.0

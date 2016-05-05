@@ -194,7 +194,7 @@ struct Thermistor {
 };
 
 // Temperature debug string: {sr:{"he1t":t,"he1st":t,"he1at":t, "he1tr":t, "he1op":t}}
-// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "he1op":t}}
+// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "he1op":t, "line":t, "stat":t}}
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
@@ -296,7 +296,7 @@ struct PID {
 
     bool _enable;                   // set true to enable this heater
 
-    PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P}, _i_factor{I}, _d_factor{D}, _set_point{startSetPoint}, _at_set_point{false} {};
+    PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P/100.0f}, _i_factor{I/100.0f}, _d_factor{D/100.0f}, _set_point{startSetPoint}, _at_set_point{false} {};
 
     float getNewOutput(float input) {
         // If the input is < 0, the sensor failed
@@ -338,7 +338,7 @@ struct PID {
 
             if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_OVER_TIME))) {
                 _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
-                _rise_time_checkpoint = input + TEMP_MIN_RISE_DEGREES_OVER_TIME;
+                _rise_time_checkpoint = min(input + TEMP_MIN_RISE_DEGREES_OVER_TIME, _set_point + TEMP_SETPOINT_HYSTERESIS);
             }
         }
 
@@ -392,9 +392,12 @@ struct PID {
 //    }
 };
 
-PID pid1 { 0.087, 0.0042, 0.447 }; // default values
-PID pid2 { 0.087, 0.0042, 0.447 }; // default values
-PID pid3 { 0.087, 0.0042, 0.447 }; // default values
+// NOTICE, the JSON alters incoming values for these!
+// {he1p:9} == 9.0/100.0 here
+
+PID pid1 { 9.0, 0.11, 400.0 }; // default values
+PID pid2 { 7.5, 0.12, 400.0 }; // default values
+PID pid3 { 7.5, 0.12, 400.0 }; // default values
 Timeout pid_timeout;
 
 /**** Static functions ****/

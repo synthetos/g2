@@ -863,39 +863,39 @@
 #define H1_DEFAULT_ENABLE           false
 #endif
 #ifndef H1_DEFAULT_P
-#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_P                9.0
 #endif
 #ifndef H1_DEFAULT_I
-#define H1_DEFAULT_I                0.2
+#define H1_DEFAULT_I                0.12
 #endif
 #ifndef H1_DEFAULT_D
-#define H1_DEFAULT_D                100.0
+#define H1_DEFAULT_D                400.0
 #endif
 
 #ifndef H2_DEFAULT_ENABLE
 #define H2_DEFAULT_ENABLE           false
 #endif
 #ifndef H2_DEFAULT_P
-#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_P                9.0
 #endif
 #ifndef H2_DEFAULT_I
-#define H2_DEFAULT_I                0.2
+#define H2_DEFAULT_I                0.12
 #endif
 #ifndef H2_DEFAULT_D
-#define H2_DEFAULT_D                100.0
+#define H2_DEFAULT_D                400.0
 #endif
 
 #ifndef H3_DEFAULT_ENABLE
 #define H3_DEFAULT_ENABLE           false
 #endif
 #ifndef H3_DEFAULT_P
-#define H3_DEFAULT_P                7.0
+#define H3_DEFAULT_P                9.0
 #endif
 #ifndef H3_DEFAULT_I
-#define H3_DEFAULT_I                0.2
+#define H3_DEFAULT_I                0.12
 #endif
 #ifndef H3_DEFAULT_D
-#define H3_DEFAULT_D                100.0
+#define H3_DEFAULT_D                400.0
 #endif
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
