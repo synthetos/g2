@@ -2202,7 +2202,7 @@ stat_t cm_set_fr(nvObj_t *nv)
 
 stat_t cm_set_jm(nvObj_t *nv)
 {
-	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+//	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	cm_set_axis_jerk(_get_axis(nv->index), nv->value);
 	return(STAT_OK);
@@ -2210,7 +2210,7 @@ stat_t cm_set_jm(nvObj_t *nv)
 
 stat_t cm_set_jh(nvObj_t *nv)
 {
-	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+//	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	return(STAT_OK);
 }
