@@ -169,7 +169,7 @@
 #define Y_TRAVEL_MAX                100
 #define Y_JERK_MAX                  6000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
-#define Y_HOMING_INPUT              3
+#define Y_HOMING_INPUT              4
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
@@ -183,8 +183,8 @@
 #define Z_TRAVEL_MAX                125
 #define Z_JERK_MAX                  50
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
-#define Z_HOMING_INPUT              6
-#define Z_HOMING_DIRECTION          1
+#define Z_HOMING_INPUT              5
+#define Z_HOMING_DIRECTION          0
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.66666)
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             5
