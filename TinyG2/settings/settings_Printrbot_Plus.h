@@ -195,11 +195,11 @@
 #define Y_ZERO_BACKOFF              3
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              300
+#define Z_VELOCITY_MAX              400
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                196
-#define Z_JERK_MAX                  60
+#define Z_JERK_MAX                  800
 #define Z_JERK_HIGH_SPEED			Z_JERK_MAX
 #define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          0
