@@ -84,11 +84,11 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs5","_es5","_xs5","_fe5","_cs4","_es4","_xs4","_fe4","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","feed","vel","unit","path","stat"
 // Defaults for motion debugging
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
 // Defaults for PID tuning
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES

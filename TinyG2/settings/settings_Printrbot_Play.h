@@ -82,8 +82,13 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","vel","_cs1","_es1","_xs1","_fe1","_cs2","_es2","_xs2","_fe2","unit","path","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+
+// Defaults for 3DP
+#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","feed","vel","unit","path","stat"
+// Defaults for motion debugging
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
+// Defaults for PID tuning
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -99,7 +104,7 @@
 
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           40.64                   // 1tr
+#define M1_TRAVEL_PER_REV           40                   // 1tr
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
@@ -107,7 +112,7 @@
 
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           40.64
+#define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
@@ -144,7 +149,7 @@
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                100                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  15000                   // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  6000                   // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			X_JERK_MAX              // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
@@ -158,7 +163,7 @@
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                100
-#define Y_JERK_MAX                  15000
+#define Y_JERK_MAX                  6000
 #define Y_JERK_HIGH_SPEED			Y_JERK_MAX
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          1
@@ -201,8 +206,10 @@
 
 #define A_AXIS_MODE 			AXIS_RADIUS
 #define A_RADIUS 				5.30516476972984
-#define A_VELOCITY_MAX          25920.0 // ~40 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
+//#define A_VELOCITY_MAX          25920.0 // ~40 mm/s, 2,400 mm/min
+//#define A_FEEDRATE_MAX 			25920.0/2.0 // ~20 mm/s, 1,200 mm/min
+#define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
+#define A_FEEDRATE_MAX 			9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
 #define A_JERK_MAX 				324000 // 1,000 million mm/min^3
