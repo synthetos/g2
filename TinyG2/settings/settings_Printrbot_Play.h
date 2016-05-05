@@ -266,7 +266,7 @@
 // Xmn (board label)
 #define DI1_MODE                    IO_ACTIVE_HIGH
 #define DI1_ACTION                  INPUT_ACTION_STOP
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
 // Xmax
 #define DI2_MODE                    IO_MODE_DISABLED
@@ -281,7 +281,7 @@
 // Ymax
 #define DI4_MODE                    IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_STOP
-#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmin
 #define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
@@ -291,7 +291,7 @@
 // Zmax
 #define DI6_MODE                    IO_MODE_DISABLED
 #define DI6_ACTION                  INPUT_ACTION_STOP
-#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI6_FUNCTION                INPUT_FUNCTION_NONE
 
 // Shutdown (Amin on v9 board)
 #define DI7_MODE                    IO_MODE_DISABLED
@@ -299,7 +299,7 @@
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // High Voltage Z Probe In (Amax on v9 board)
-#define DI8_MODE                    IO_MODE_DISABLED
+#define DI8_MODE                    IO_ACTIVE_LOW
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
