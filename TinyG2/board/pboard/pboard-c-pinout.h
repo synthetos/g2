@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef pboard_a_pinout_h
-#define pboard_a_pinout_h
+#ifndef pboard_c_pinout_h
+#define pboard_c_pinout_h
 
 /*
  * USAGE NOTES
@@ -183,6 +183,5 @@ namespace Motate {
 #include "motate_chip_pin_functions.h"
 
 #endif
-
-// pboard_a_pinout_h
+// pboard_c_pinout_h
 

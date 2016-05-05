@@ -13,15 +13,21 @@
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
 ifeq ("$(BOARD)","pboard-a")
-    BASE_BOARD=pboard-a
+    BASE_BOARD=pboard
     DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+endif
+
+ifeq ("$(BOARD)","pboard-c")
+    BASE_BOARD=pboard
+    DEVICE_DEFINES += MOTATE_BOARD="pboard-c"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 ##########
 # The general pboard-a BASE_BOARD.
 
-ifeq ("$(BASE_BOARD)","pboard-a")
+ifeq ("$(BASE_BOARD)","pboard")
     _BOARD_FOUND = 1
 
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
