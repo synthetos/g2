@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D4522DBD1C4558C70086AAE6"
-               BuildableName = "TinyG pBoard PrintrbotPlus"
-               BlueprintName = "TinyG pBoard PrintrbotPlus"
+               BuildableName = "TinyG pBoard-a PrintrbotPlus"
+               BlueprintName = "TinyG pBoard-a PrintrbotPlus"
                ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,8 +46,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4522DBD1C4558C70086AAE6"
-            BuildableName = "TinyG pBoard PrintrbotPlus"
-            BlueprintName = "TinyG pBoard PrintrbotPlus"
+            BuildableName = "TinyG pBoard-a PrintrbotPlus"
+            BlueprintName = "TinyG pBoard-a PrintrbotPlus"
             ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -64,8 +64,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4522DBD1C4558C70086AAE6"
-            BuildableName = "TinyG pBoard PrintrbotPlus"
-            BlueprintName = "TinyG pBoard PrintrbotPlus"
+            BuildableName = "TinyG pBoard-a PrintrbotPlus"
+            BlueprintName = "TinyG pBoard-a PrintrbotPlus"
             ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

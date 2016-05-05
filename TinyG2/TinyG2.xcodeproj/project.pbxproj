@@ -264,6 +264,20 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
+		D4037C091CDA42F300BC72AD /* TinyG pBoard-c PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pboard-c DEBUG=2";
+			buildConfigurationList = D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "TinyG pBoard-c PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG pBoard-c PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D43C7AE31B155C33007440D6 /* TinyG2 G2V9k */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=g2v9k";
@@ -278,17 +292,17 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */ = {
+		D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pboard-a DEBUG=2";
-			buildConfigurationList = D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard PrintrbotPlus" */;
+			buildConfigurationList = D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard-a PrintrbotPlus" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = .;
 			dependencies = (
 			);
-			name = "TinyG pBoard PrintrbotPlus";
+			name = "TinyG pBoard-a PrintrbotPlus";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -453,7 +467,8 @@
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
-				D4522DBD1C4558C70086AAE6 /* TinyG pBoard PrintrbotPlus */,
+				D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */,
+				D4037C091CDA42F300BC72AD /* TinyG pBoard-c PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
@@ -501,6 +516,22 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		D4037C0B1CDA42F300BC72AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4037C0C1CDA42F300BC72AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D43C7AE51B155C33007440D6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -761,6 +792,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "TinyG pBoard-c PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4037C0B1CDA42F300BC72AD /* Debug */,
+				D4037C0C1CDA42F300BC72AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D43C7AE41B155C33007440D6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2V9k" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -770,7 +810,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard PrintrbotPlus" */ = {
+		D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard-a PrintrbotPlus" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D4522DBF1C4558C70086AAE6 /* Debug */,
