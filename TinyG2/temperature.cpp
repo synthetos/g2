@@ -82,10 +82,10 @@
 // TEMP_MIN_RISE_TIME milliseconds, then it's a failure (the sensor is likely
 // physically dislocated.)
 #ifndef TEMP_MIN_RISE_DEGREES_OVER_TIME
-#define TEMP_MIN_RISE_DEGREES_OVER_TIME (float)2.0
+#define TEMP_MIN_RISE_DEGREES_OVER_TIME (float)5.0
 #endif
 #ifndef TEMP_MIN_RISE_TIME
-#define TEMP_MIN_RISE_TIME (float)(20.0 * 1000.0) // 20 seconds
+#define TEMP_MIN_RISE_TIME (float)(60.0 * 1000.0) // 20 seconds
 #endif
 
 
