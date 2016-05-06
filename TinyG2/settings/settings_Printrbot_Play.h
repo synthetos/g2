@@ -104,7 +104,7 @@
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M5_MOTOR_MAP                AXIS_X                  // 1ma
 #define M5_STEP_ANGLE               1.8                     // 1sa
-#define M5_TRAVEL_PER_REV           40                      // 1tr
+#define M5_TRAVEL_PER_REV           40.64                      // 1tr
 #define M5_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M5_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M5_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
@@ -113,7 +113,7 @@
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M4_MOTOR_MAP                AXIS_Y
 #define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           40
+#define M4_TRAVEL_PER_REV           40.64
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 1
 #define M4_POWER_MODE               MOTOR_POWER_MODE
