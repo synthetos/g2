@@ -766,16 +766,16 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
 
     xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}, _tx_buffer{_dev}
     {
-        _dev->setConnectionCallback([&](bool connected) {	// lambda function
-            connectedStateChanged(connected);
-        });
-
 //        _dev->setDataAvailableCallback([&](const size_t &length) {
 //            
 //        });
     };
 
     void init() {
+        _dev->setConnectionCallback([&](bool connected) {	// lambda function
+            connectedStateChanged(connected);
+        });
+
         _rx_buffer.init();
         _tx_buffer.init();
     };
