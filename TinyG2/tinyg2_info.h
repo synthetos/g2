@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            098.28 // put fbs back in so we can see "dirty" state
+#define TINYG_FIRMWARE_BUILD            099.01 // linemode PB adjustments
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
