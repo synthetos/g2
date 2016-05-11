@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (max)
+#define JUNCTION_AGGRESSION         1.5 					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -239,7 +239,7 @@
 //#define A_JERK_MAX                 16200 //   25 million mm/min^3 = 16200
 //#define A_JERK_MAX                 81000 //   125 million mm/min^3 = 81000
 //#define A_JERK_MAX 				162000 //   250 million mm/min^3 = 162000
-//#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
+#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
 //#define A_JERK_MAX 				648000 // 1,000 million mm/min^3 = 648000
 //#define A_JERK_MAX              1296000 // 2,000 million mm/min^3 = 1296000
 //#define A_JERK_MAX              2592000 // 4,000 million mm/min^3 = 2592000
