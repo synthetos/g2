@@ -440,7 +440,7 @@ uint8_t mp_get_planner_buffers()
 bool mp_planner_is_full()
 {
     // We also need to ensure we have room for another JSON command
-    return ((mb.buffers_available < PLANNER_BUFFER_HEADROOM) && (jc.available != 0));
+    return ((mb.buffers_available < PLANNER_BUFFER_HEADROOM) || (jc.available == 0));
 }
 
 bool mp_has_runnable_buffer()
