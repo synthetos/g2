@@ -160,7 +160,7 @@
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
 #define X_LATCH_BACKOFF             5                       // xlb  mm
-#define X_ZERO_BACKOFF              0                       // xzb  mm
+#define X_ZERO_BACKOFF              0.5                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
 #define Y_VELOCITY_MAX              30000
@@ -174,7 +174,7 @@
 #define Y_SEARCH_VELOCITY           1500
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
-#define Y_ZERO_BACKOFF              0
+#define Y_ZERO_BACKOFF              0.5
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #define Z_VELOCITY_MAX              400
@@ -216,7 +216,8 @@
 #define A_FEEDRATE_MAX 			9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
+#define A_JERK_MAX 				162000 //   250 million mm/min^3 = 162000
+//#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
                                        // * a million IF it's over a million
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define A_HOMING_INPUT          0
