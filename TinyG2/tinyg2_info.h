@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            099.02 // PB settings adjustments
+#define TINYG_FIRMWARE_BUILD            099.03 // Planner Fixes, PB settings adjustments
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
