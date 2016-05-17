@@ -117,6 +117,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
 //	bool canWrite() { return caps & DEV_CAN_WRITE; }
 //	bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
 //	bool canBeData() { return caps & DEV_CAN_BE_DATA; }
+   	bool isAlwaysDataAndCtrl() { return caps & DEV_IS_ALWAYS_BOTH; }
     bool isCtrl() { return flags & DEV_IS_CTRL; }    // called externally:      DeviceWrappers[i]->isCtrl()
     bool isData() { return flags & DEV_IS_DATA; }    // subclasses can call directly (no pointer): isCtrl()
     bool isPrimary() { return flags & DEV_IS_PRIMARY; }
@@ -180,7 +181,7 @@ struct xio_t {
 
     bool others_connected(xioDeviceWrapperBase* except) {
         for (int8_t i = 0; i < _dev_count; ++i) {
-            if((DeviceWrappers[i] != except) && DeviceWrappers[i]->isConnected()) {
+            if((DeviceWrappers[i] != except) && !DeviceWrappers[i]->isAlwaysDataAndCtrl() && DeviceWrappers[i]->isConnected()) {
                 return true;
             }
         }
@@ -812,7 +813,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     void connectedStateChanged(bool connected) {
             if (connected) {
                 if (isNotConnected()) {
-                    //USB0 has just connected
+                    //USB0 or UART has just connected
                     //Case 1: This is the first channel to connect -
                     //  set it as CTRL+DATA+PRIMARY channel
                     //Case 2: This is the second (or later) channel to connect -
@@ -888,7 +889,7 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
 #if XIO_HAS_UART==1
 xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
     &Serial,
-    (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
+    (DEV_CAN_READ | DEV_CAN_WRITE | DEV_IS_ALWAYS_BOTH)
 };
 #endif // XIO_HAS_UART
 

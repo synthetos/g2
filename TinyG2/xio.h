@@ -83,6 +83,7 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 // device capabilities flags
 #define DEV_CAN_BE_CTRL		(0x0001)		// device can be a control channel
 #define DEV_CAN_BE_DATA		(0x0002)		// device can be a data channel
+#define DEV_IS_ALWAYS_BOTH	(0x0004)		// device is always a control and a data channel
 #define DEV_CAN_READ		(0x0010)
 #define DEV_CAN_WRITE		(0x0020)
 
