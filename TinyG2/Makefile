@@ -196,6 +196,22 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
 
 endif
 
+ifeq ("$(PLATFORM)", "Othermill")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+SETTINGS_FILE="settings_othermill.h"
+
+endif
+
+ifeq ("$(PLATFORM)", "OthermillPro")
+
+BASE_PLATFORM=v9_3x8c
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+SETTINGS_FILE="settings_othermill_pro.h"
+
+endif
+
 #ifeq ("$(PLATFORM)","G2v9j")
 #
 #BASE_PLATFORM=v9_3x8c

@@ -103,12 +103,19 @@
 
 // machine default profiles - choose only one:
 
+#ifdef SETTINGS_FILE
+#define SETTINGS_FILE_PATH <settings/SETTINGS_FILE>
+#include SETTINGS_FILE_PATH
+#else
+#include "settings/settings_othermill_pro.h"				// Default settings for release
+#endif
+
 //#include "settings/settings_default.h"				// Default settings for release
 //#include "settings/settings_test.h"					// Settings for testing - not for release
 //#include "settings/settings_hammer.h"					// Hammer torque demo
 //#include "settings/settings_pendulum.h"				// Pendulum motion demo
 //#include "settings/settings_othermill.h"				// OMC OtherMill
-#include "settings/settings_othermill_pro.h"            // OMC OtherMill Pro
+//#include "settings/settings_othermill_pro.h"            // OMC OtherMill Pro
 //#include "settings/settings_pocketnc.h"				// PocketNC 5 axis machining center
 //#include "settings/settings_probotixV90.h"			// Probotix FireballV90
 //#include "settings/settings_shapeoko375.h"			// Shapeoko 375mm kit
