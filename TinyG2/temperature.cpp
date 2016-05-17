@@ -87,6 +87,9 @@
 #ifndef TEMP_MIN_RISE_TIME
 #define TEMP_MIN_RISE_TIME (float)(60.0 * 1000.0) // 20 seconds
 #endif
+#ifndef TEMP_MIN_RISE_DEGREES_FROM_TARGET
+#define TEMP_MIN_RISE_DEGREES_FROM_TARGET (float)10.0
+#endif
 
 
 /**** Allocate structures ****/
@@ -336,7 +339,7 @@ struct PID {
                 }
             }
 
-            if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_OVER_TIME))) {
+            if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_FROM_TARGET))) {
                 _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
                 _rise_time_checkpoint = min(input + TEMP_MIN_RISE_DEGREES_OVER_TIME, _set_point + TEMP_SETPOINT_HYSTERESIS);
             }
@@ -477,7 +480,7 @@ stat_t temperature_callback()
         }
 
         if ((temp > MIN_FAN_TEMP) && (temp < MAX_FAN_TEMP)) {
-            fan_pin1 = (temp - MIN_FAN_TEMP)/(MAX_FAN_TEMP - MIN_FAN_TEMP);
+            fan_pin1 = ((temp - MIN_FAN_TEMP)/(MAX_FAN_TEMP - MIN_FAN_TEMP))*(1.0 - MIN_FAN_VALUE) + MIN_FAN_VALUE;
         } else if (temp > MAX_FAN_TEMP) {
             fan_pin1 = 1.0;
         } else {

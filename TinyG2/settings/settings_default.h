@@ -853,11 +853,15 @@
 
 // *** Heater Settings - relevant to 3dp machines *** //
 
+
 #ifndef MIN_FAN_TEMP
-#define MIN_FAN_TEMP                40.0
+#define MIN_FAN_TEMP                40.0     // Temperature that the upper-extruder fan starts
+#endif
+#ifndef MIN_FAN_VALUE
+#define MIN_FAN_VALUE               0.4      // Minimum output value (0.0-1.0) of the upper-extrruder fan
 #endif
 #ifndef MAX_FAN_TEMP
-#define MAX_FAN_TEMP                150.0
+#define MAX_FAN_TEMP                150.0    // Temperature at and above which the upper-extruder fan is at 1.0
 #endif
 #ifndef H1_DEFAULT_ENABLE
 #define H1_DEFAULT_ENABLE           false
