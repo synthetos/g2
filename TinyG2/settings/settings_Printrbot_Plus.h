@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         1.5 					// cornering - between 0.05 and 1.00 (max)
+#define JUNCTION_AGGRESSION         1.3 					// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -131,7 +131,7 @@
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           1.58416
+#define M3_TRAVEL_PER_REV           1.5875
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
@@ -172,13 +172,13 @@
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                250                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  6000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED			12000              // xjh
+#define X_JERK_HIGH_SPEED			12000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
-#define X_LATCH_BACKOFF             5                      // xlb  mm
-#define X_ZERO_BACKOFF              0                       // xzb  mm
+#define X_LATCH_BACKOFF             5                       // xlb  mm
+#define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
 #define Y_VELOCITY_MAX              15000
@@ -192,7 +192,7 @@
 #define Y_SEARCH_VELOCITY           1500
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
-#define Y_ZERO_BACKOFF              0
+#define Y_ZERO_BACKOFF              0.5
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #define Z_VELOCITY_MAX              400
@@ -239,8 +239,8 @@
 //#define A_JERK_MAX                 16200 //   25 million mm/min^3 = 16200
 //#define A_JERK_MAX                 81000 //   125 million mm/min^3 = 81000
 //#define A_JERK_MAX 				162000 //   250 million mm/min^3 = 162000
-#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
-//#define A_JERK_MAX 				648000 // 1,000 million mm/min^3 = 648000
+//#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
+#define A_JERK_MAX 				648000 // 1,000 million mm/min^3 = 648000
 //#define A_JERK_MAX              1296000 // 2,000 million mm/min^3 = 1296000
 //#define A_JERK_MAX              2592000 // 4,000 million mm/min^3 = 2592000
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
@@ -273,7 +273,7 @@
 // Inputs are defined for the g2ref(a) board
 // Xmn (board label)
 #define DI1_MODE                    IO_ACTIVE_HIGH
-#define DI1_ACTION                  INPUT_ACTION_STOP
+#define DI1_ACTION                  INPUT_ACTION_NONE
 #define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
 // Xmax
@@ -288,7 +288,7 @@
 
 // Ymax
 #define DI4_MODE                    IO_ACTIVE_HIGH
-#define DI4_ACTION                  INPUT_ACTION_STOP
+#define DI4_ACTION                  INPUT_ACTION_NONE
 #define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmin
