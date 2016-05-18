@@ -215,10 +215,7 @@
 #define A_FEEDRATE_MAX 			9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN 			0
 #define A_TRAVEL_MAX 			10
-//#define A_JERK_MAX 				162000 //   250 million mm/min^3 = 162000
-//#define A_JERK_MAX 				324000 //   500 million mm/min^3 = 324000
 #define A_JERK_MAX 				648000 // 1,000 million mm/min^3 = 648000
-//#define A_JERK_MAX              1296000 // 2,000 million mm/min^3 = 1296000
                                        // * a million IF it's over a million
                                        // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
 #define A_HOMING_INPUT          0
