@@ -731,7 +731,9 @@ static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);		// will this work in -1 is a valid value?
-	gpio_reset();
+    if (cm_get_machine_state() != MACHINE_INITIALIZING) {
+        gpio_reset();
+    }
 	return (STAT_OK);
 }
 

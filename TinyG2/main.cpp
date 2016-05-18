@@ -43,7 +43,7 @@
 
 /***** NOTE: *****
 
-   The actual main.cpp for TInyG2 is in the Motate project.
+   The actual main.cpp for TinyG2 is in the Motate project.
    It calls the setup() and loop() functions in this file
 
 *****/
@@ -132,6 +132,7 @@ void application_init_startup(void)
     spindle_reset();
     temperature_init();
     // MOVED: report the system is ready is now in xio
+    gpio_reset();
 }
 
 /*

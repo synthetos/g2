@@ -94,7 +94,7 @@ struct Stepper {
 
 	OutputPin<step_num> step;
 	OutputPin<dir_num> _dir;
-	OutputPin<enable_num> _enable;
+    OutputPin<enable_num> _enable {kStartHigh};
 	OutputPin<ms0_num> ms0;
 	OutputPin<ms1_num> ms1;
 	OutputPin<ms2_num> ms2;
@@ -1356,11 +1356,8 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
 	if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) return (STAT_INPUT_VALUE_UNSUPPORTED);
 	set_ui8(nv);
 
-	if (fp_ZERO(nv->value)) {			// people asked this setting take effect immediately, hence:
-		_energize_motor(_get_motor(nv->index), st_cfg.motor_power_timeout);
-	} else {
-		_deenergize_motor(_get_motor(nv->index));
-	}
+    // We do this *here* in order for this to take effect immediately.
+    _deenergize_motor(_get_motor(nv->index));
 	return (STAT_OK);
 }
 
