@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            099.04 // Fixes to USB+UART, startup sequence
+#define TINYG_FIRMWARE_BUILD            099.05 // Fixes to debouncing
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
