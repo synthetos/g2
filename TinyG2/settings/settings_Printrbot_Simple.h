@@ -149,11 +149,11 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              35000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                200                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  20000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  18000                    // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			30000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
@@ -163,11 +163,11 @@
 #define X_ZERO_BACKOFF              0.5                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              35000
+#define Y_VELOCITY_MAX              20000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                150
-#define Y_JERK_MAX                  20000
+#define Y_JERK_MAX                  18000
 #define Y_JERK_HIGH_SPEED			30000
 #define Y_HOMING_INPUT              4
 #define Y_HOMING_DIRECTION          1
@@ -185,10 +185,10 @@
 #define Z_JERK_HIGH_SPEED			3000
 #define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          0
-#define Z_SEARCH_VELOCITY           2000
+#define Z_SEARCH_VELOCITY           300
 #define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             1
-#define Z_ZERO_BACKOFF              -0.5
+#define Z_LATCH_BACKOFF             2
+#define Z_ZERO_BACKOFF              0.5
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
