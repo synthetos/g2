@@ -143,7 +143,13 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void clearPrimary() { flags &= ~DEV_IS_PRIMARY; }
 
     void setAsConnectedAndReady() { flags |= ( DEV_IS_CONNECTED | DEV_IS_READY); };
-    void setAsPrimaryActiveDualRole() { flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_PRIMARY | DEV_IS_ACTIVE); };
+    void setAsPrimaryActiveDualRole() {
+        if (isAlwaysDataAndCtrl()) {
+            flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_ACTIVE);
+        } else {
+            flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_PRIMARY | DEV_IS_ACTIVE);
+        }
+    };
     void setAsActiveData() { flags |= ( DEV_IS_DATA | DEV_IS_ACTIVE); };
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
@@ -724,9 +730,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         }
 
         while (line_size < (_line_buffer_size - 2)) {
-            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-                _debug_trap("readline hit unreadable and shouldn't have!");
-            }
+//            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
+//                _debug_trap("readline hit unreadable and shouldn't have!");
+//            }
             char c = _data[read_offset];
 
             if (
@@ -827,7 +833,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                         setAsPrimaryActiveDualRole();
                         // report that we now have a connection (only for the first one)
                         controller_set_connected(true);
-                    } else {
+                    } else if (!isAlwaysDataAndCtrl()) {
                         // Case 2
                         xio.remove_data_from_primary();
                         setAsActiveData();
@@ -846,7 +852,8 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     //  finalize this channel, leave other channels alone
                     //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
                     //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
-                    //Case 5: This channel disconnected while it was inactive -
+                    //Case 5a: This channel disconnected while it was inactive
+                    //Case 5b: This channel disconnected when it's always present
                     //  don't need to do anything!
                     //... inactive channels are counted as closed
 
@@ -854,8 +861,8 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     clearFlags();
                     flushRead();
 
-                    if(checkForNotActive(oldflags)) {
-                        // Case 5
+                    if(checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
+                        // Case 5a, 5b
                     } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
                         if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {

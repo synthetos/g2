@@ -54,6 +54,7 @@ extern Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS,
 
 
 //******* Generic Functions *******
-void board_xio_init(void);
+void board_hardware_init(void); // called 1st
+void board_xio_init(void); // called later
 
 #endif // board_xio_h

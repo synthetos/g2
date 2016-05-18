@@ -34,6 +34,7 @@
 #include "hardware.h"
 #include "controller.h"
 #include "text_parser.h"
+#include "board_xio.h"
 
 
 #ifdef __ARM
@@ -52,7 +53,7 @@
 
 void hardware_init()
 {
-	return;
+    board_hardware_init();
 }
 
 /*
