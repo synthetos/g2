@@ -44,7 +44,8 @@
 #define A_IN_CHANNELS	    0           // number of analog inputs supported
 #define A_OUT_CHANNELS	    0           // number of analog outputs supported
 
-#define INPUT_LOCKOUT_MS    50          // milliseconds to go dead after input firing
+//#define INPUT_LOCKOUT_MS    50          // milliseconds to go dead after input firing
+#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
 
 //--- do not change from here down ---//
 

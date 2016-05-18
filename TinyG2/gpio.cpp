@@ -81,18 +81,18 @@ static void _dispatch_pin(const uint8_t input_num_ext);
 
 // WARNING: These return raw pin values, NOT corrected for NO/NC Active high/low
 //          Also, these take EXTERNAL pin numbers -- 1-based
-static InputPin<kInput1_PinNumber>  input_1_pin(kPullUp);
-static InputPin<kInput2_PinNumber>  input_2_pin(kPullUp);
-static InputPin<kInput3_PinNumber>  input_3_pin(kPullUp);
-static InputPin<kInput4_PinNumber>  input_4_pin(kPullUp);
-static InputPin<kInput5_PinNumber>  input_5_pin(kPullUp);
-static InputPin<kInput6_PinNumber>  input_6_pin(kPullUp);
-static InputPin<kInput7_PinNumber>  input_7_pin(kPullUp);
-static InputPin<kInput8_PinNumber>  input_8_pin(kPullUp);
-static InputPin<kInput9_PinNumber>  input_9_pin(kPullUp);
-static InputPin<kInput10_PinNumber> input_10_pin(kPullUp);
-static InputPin<kInput11_PinNumber> input_11_pin(kPullUp);
-static InputPin<kInput12_PinNumber> input_12_pin(kPullUp);
+static InputPin<kInput1_PinNumber>  input_1_pin {kPullUp|kDebounce};
+static InputPin<kInput2_PinNumber>  input_2_pin {kPullUp|kDebounce};
+static InputPin<kInput3_PinNumber>  input_3_pin {kPullUp|kDebounce};
+static InputPin<kInput4_PinNumber>  input_4_pin {kPullUp|kDebounce};
+static InputPin<kInput5_PinNumber>  input_5_pin {kPullUp|kDebounce};
+static InputPin<kInput6_PinNumber>  input_6_pin {kPullUp|kDebounce};
+static InputPin<kInput7_PinNumber>  input_7_pin {kPullUp|kDebounce};
+static InputPin<kInput8_PinNumber>  input_8_pin {kPullUp|kDebounce};
+static InputPin<kInput9_PinNumber>  input_9_pin {kPullUp|kDebounce};
+static InputPin<kInput10_PinNumber> input_10_pin {kPullUp|kDebounce};
+static InputPin<kInput11_PinNumber> input_11_pin {kPullUp|kDebounce};
+static InputPin<kInput12_PinNumber> input_12_pin {kPullUp|kDebounce};
 
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
@@ -396,7 +396,9 @@ static uint8_t _condition_pin(const uint8_t input_num_ext, const int8_t pin_valu
     }
 
     // return if the input is in lockout period (take no action)
-    if (SysTickTimer_getValue() < in->lockout_timer) { return (0); }
+    if (SysTickTimer_getValue() < in->lockout_timer) {
+        return (0);
+    }
     // return if no change in state
     int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));	// correct for NO or NC mode
     if (in->state == (ioState)pin_value_corrected) {
@@ -731,9 +733,9 @@ static stat_t _io_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t
 		return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);		// will this work in -1 is a valid value?
-    if (cm_get_machine_state() != MACHINE_INITIALIZING) {
+//    if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         gpio_reset();
-    }
+//    }
 	return (STAT_OK);
 }
 
@@ -895,7 +897,7 @@ stat_t io_set_output(nvObj_t *nv)
             case 12:  { output_12_pin = value; } break;
             case 13:  { output_13_pin = value; } break;
             // END generated
-                
+
             default:
                 {
                     nv->value = 0; // inactive
