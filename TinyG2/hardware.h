@@ -154,7 +154,9 @@ static OutputPin<kGRBL_FeedHoldPinNumber> grbl_feedhold_pin;
 static OutputPin<kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
 static OutputPin<kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
-static OutputPin<kSpindle_EnablePinNumber> spindle_enable_pin;
+
+//Delay driving spindle output enable until we get the polarity setting
+static OutputPin<kSpindle_EnablePinNumber> spindle_enable_pin(kNoInit);
 static OutputPin<kSpindle_DirPinNumber> spindle_dir_pin;
 static PWMOutputPin<kSpindle_PwmPinNumber> spindle_pwm_pin;
 static PWMOutputPin<kSpindle_Pwm2PinNumber> secondary_pwm_pin;

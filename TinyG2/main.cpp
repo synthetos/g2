@@ -159,6 +159,8 @@ void application_init_startup(void)
     canonical_machine_reset();
     spindle_init();                 // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
+    // We delayed driving spindle enable until we know the enable polarity
+    spindle_enable_pin.init();
     // MOVED: report the system is ready is now in xio
 }
 

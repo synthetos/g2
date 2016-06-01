@@ -70,6 +70,9 @@ namespace Motate {
 
         // For use on PWM pins only!
         kPWMPinInverted    = 1<<7,
+
+        // Delay calling init()
+        kNoInit = 0xffff,
     };
 
     enum PinInterruptOptions {
@@ -201,7 +204,7 @@ namespace Motate {
     template<int8_t pinNum>
     struct OutputPin : Pin<pinNum> {
         OutputPin() : Pin<pinNum>(kOutput) {};
-        OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+        OutputPin(const PinOptions options) { if(options!=kNoInit) Pin<pinNum>::init(kOutput, options, true);};
         void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
         uint32_t get() {
             return Pin<pinNum>::getOutputValue();
