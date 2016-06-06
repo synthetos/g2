@@ -2,8 +2,8 @@
  * tinyg2.h - tinyg2 main header
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -21,6 +21,22 @@
  * We try to follow this (at least we are evolving to it). It's worth a read.
  * ftp://ftp.idsoftware.com/idstuff/doom3/source/CodeStyleConventions.doc
  */
+/*
+ *  Build 095.00 Notes:
+ *    - working on cautious-mode planning
+ *
+ *  Back-back-port to g2
+ *    - changes in digital IO system
+ *    - pwr indicator lights (pwr settings)
+ *    - controller assertions in controller.cpp should be same style as .c file
+ *
+ *  New features (so they might have to wait)
+ *    - update firmware build number for FBS values (not sure how this will work)
+ *    - add control to invert enable line (motor enable polarity)
+ *    - incremental SR build
+ *    - install JH in halts
+ */
+
 #ifndef TINYG_H_ONCE
 #define TINYG_H_ONCE
 
@@ -33,34 +49,23 @@
 #include <string.h>
 #include <math.h>
 
-#include "MotatePins.h"
+#include "MotatePins.h"             // comment in if Motate / ARM
 
 /****** REVISIONS ******/
 
-// You must tag the build first using "git tag ###.##" (you chose the build number for the tag, obviously)
-
-#define TINYG_FIRMWARE_BUILD            089.03 // fixes for "startup banner" (new connection)
-//#define TINYG_FIRMWARE_BUILD            GIT_EXACT_VERSION           // extract build number from tag
-//#define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION                 // extract extended build info from git
-
-#define TINYG_FIRMWARE_VERSION		    0.98						// firmware major version
-#define TINYG_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
-#define TINYG_HARDWARE_PLATFORM		    HW_PLATFORM_TINYG_V9		// hardware platform indicator (2 = Native Arduino Due)
-#define TINYG_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
-#define TINYG_HARDWARE_VERSION_MAX      (TINYG_HARDWARE_VERSION)
+#include "tinyg2_info.h"            // see this file for build number and other identifying information
 
 /****** COMPILE-TIME SETTINGS ******/
 
 #define __TEXT_MODE                 // enable text mode support (~14Kb) (also disables help screens)
 #define __HELP_SCREENS              // enable help screens      (~3.5Kb)
-#define __CANNED_TESTS              // enable $tests            (~12Kb)
 #define __USER_DATA                 // enable user defined data groups
+#define __STEP_CORRECTION           // enable virtual encoder step correction
 
 /****** DEVELOPMENT SETTINGS ******/
 
 #define __DIAGNOSTICS               // enables various debug functions
 #define __DIAGNOSTIC_PARAMETERS     // enables system diagnostic parameters (_xx) in config_app
-#define __CANNED_STARTUP            // run any canned startup moves
 
 /******************************************************************************
  ***** TINYG APPLICATION DEFINITIONS ******************************************
@@ -128,13 +133,11 @@ typedef enum {
 #ifdef __AVR
 
 #include <avr/pgmspace.h>		// defines PROGMEM and PSTR
-
-//typedef char char_t;			// ARM/C++ version uses uint8_t as char_t
 																	// gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  pgm_read_word(&cfgArray[nv->index].a)	// get word value from cfgArray
 #define GET_TABLE_BYTE(a)  pgm_read_byte(&cfgArray[nv->index].a)	// get byte value from cfgArray
 #define GET_TABLE_FLOAT(a) pgm_read_float(&cfgArray[nv->index].a)	// get float value from cfgArray
-#define GET_TOKEN_BYTE(a)  (char_t)pgm_read_byte(&cfgArray[i].a)	// get token byte value from cfgArray
+#define GET_TOKEN_BYTE(a)  pgm_read_byte(&cfgArray[i].a)	        // get token byte value from cfgArray
 
 // populate the shared buffer with the token string given the index
 #define GET_TOKEN_STRING(i,a) strcpy_P(a, (char *)&cfgArray[(index_t)i].token);
@@ -196,8 +199,8 @@ inline char* strcpy_P(char* d, const char* s) { return (char *)strcpy((char *)d,
 inline char* strncpy_P(char* d, const char* s, size_t l) { return (char *)strncpy((char *)d, (const char *)s, l); }
 
 // These we'll allow for the sake of not having to pass the variadic variables...
-#define printf_P printf		// these functions want char * as inputs, not char_t *
-#define fprintf_P fprintf
+//#define printf_P printf
+//#define fprintf_P fprintf
 #define sprintf_P sprintf
 
 #endif // __ARM

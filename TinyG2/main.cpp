@@ -32,73 +32,59 @@
 #include "stepper.h"
 #include "encoder.h"
 #include "spindle.h"
+#include "temperature.h"
 #include "gpio.h"
 #include "test.h"
 #include "pwm.h"
 #include "xio.h"
 
-#ifdef __AVR
-#include <avr/interrupt.h>
-#include "xmega/xmega_interrupts.h"
-#endif // __AVR
+#include "util.h"
+#include "MotateUniqueID.h"
 
-#ifdef __ARM
-#include "UniqueId.h"
-#include "MotateTimers.h"
-using Motate::delay;
+/***** NOTE: *****
 
-/**************************
- *** C++ specific stuff ***
- **************************/
-#ifdef __cplusplus
-extern "C"{
-#endif // __cplusplus
+   The actual main.cpp for TinyG2 is in the Motate project.
+   It calls the setup() and loop() functions in this file
 
-void _init() __attribute__ ((weak));
-void _init() {;}
-void __libc_init_array(void);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-/************************** to here ***************************/
-
-void* __dso_handle = nullptr;
-
-#endif // __ARM
-
+*****/
 /******************** System Globals *************************/
 
-stat_t status_code;						// allocate a variable for the ritorno macro
-char global_string_buf[MESSAGE_LEN];	// allocate a string for global message use
+stat_t status_code;						    // allocate a variable for the ritorno macro
+char global_string_buf[GLOBAL_STRING_LEN];	// allocate a string for global message use
+
+/************* System Globals For Diagnostics ****************/
+
+// Using motate pins for profiling
+// see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
+
+using namespace Motate;
+OutputPin<kDebug1_PinNumber> debug_pin1;
+OutputPin<kDebug2_PinNumber> debug_pin2;
+OutputPin<kDebug3_PinNumber> debug_pin3;
+//OutputPin<kDebug4_PinNumber> debug_pin4;
+
+//OutputPin<-1> debug_pin1;
+//OutputPin<-1> debug_pin2;
+//OutputPin<-1> debug_pin3;
+//OutputPin<-1> debug_pin4;
+
+// Put these lines in the .cpp file where you are using the debug pins (appropriately commented / uncommented)
+/*
+using namespace Motate;
+extern OutputPin<kDebug1_PinNumber> debug_pin1;
+extern OutputPin<kDebug2_PinNumber> debug_pin2;
+extern OutputPin<kDebug3_PinNumber> debug_pin3;
+//extern OutputPin<kDebug4_PinNumber> debug_pin4;
+
+//extern OutputPin<-1> debug_pin1;
+//extern OutputPin<-1> debug_pin2;
+//extern OutputPin<-1> debug_pin3;
+//extern OutputPin<-1> debug_pin4;
+*/
 
 /******************** Application Code ************************/
 
-#ifdef __ARM
-const Motate::USBSettings_t Motate::USBSettings = {
-	/*gVendorID         = */ 0x1d50,
-	/*gProductID        = */ 0x606d,
-	/*gProductVersion   = */ TINYG_FIRMWARE_VERSION,
-	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
-	/*gPowerConsumption = */ 500
-};
-	/*gProductVersion   = */ //0.1,
-
-//Motate::USBDevice< Motate::USBCDC > usb;
-Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-
-decltype(usb._mixin_0_type::Serial) &SerialUSB = usb._mixin_0_type::Serial;
-decltype(usb._mixin_1_type::Serial) &SerialUSB1 = usb._mixin_1_type::Serial;
-
-MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
-MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
-
-//Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
-#endif
-
 /*
- * _system_init()
  * _application_init_services()
  * _application_init_machine()
  * _application_init_startup()
@@ -106,21 +92,6 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
  * There are a lot of dependencies in the order of these inits.
  * Don't change the ordering unless you understand this.
  */
-
-void _system_init(void)
-{
-#ifdef __ARM
-	SystemInit();
-	WDT->WDT_MR = WDT_MR_WDDIS;     // Disable watchdog
-	__libc_init_array();            // Initialize C library
-    cacheUniqueId();                // Store the flash UUID
-	usb.attach();                   // USB setup
-	delay(1000);
-#endif
-#ifdef __AVR
-    cli();
-#endif
-}
 
 void application_init_services(void)
 {
@@ -159,36 +130,38 @@ void application_init_startup(void)
     canonical_machine_reset();
     spindle_init();                 // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
+    temperature_init();
     // MOVED: report the system is ready is now in xio
+    gpio_reset();
 }
 
 /*
- * main()
- */
-
-int main(void)
-{
-	// system initialization
-	_system_init();
-
-	// TinyG application setup
-	application_init_services();
-	application_init_machine();
-	application_init_startup();
-	run_canned_startup();			// run any pre-loaded commands
-
-	// main loop
-	for (;;) {
-		controller_run( );			// single pass through the controller
-	}
-	return 0;
-}
-
-/*
- * get_status_message() - support for status messages.
+ * get_status_message() - global support for status messages.
  */
 
 char *get_status_message(stat_t status)
 {
     return ((char *)GET_TEXT_ITEM(stat_msg, status));
+}
+
+/*
+ * main() - See Motate main.cpp for the actual main()
+ */
+
+void setup(void)
+{
+	// TinyG application setup
+	application_init_services();
+    while (SysTickTimer_getValue() < 400);  // delay 400 ms for USB to come up
+
+	application_init_machine();
+	application_init_startup();
+	run_canned_startup();           // run any pre-loaded commands
+}
+
+void loop() {
+	// main loop
+	for (;;) {
+		controller_run( );			// single pass through the controller
+	}
 }

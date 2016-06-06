@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser for TinyG
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -28,6 +28,7 @@
 #include "tinyg2.h"
 #include "config.h"
 #include "canonical_machine.h"
+#include "controller.h"
 #include "text_parser.h"
 #include "json_parser.h"
 #include "report.h"
@@ -150,26 +151,34 @@ static const char prompt_err[] PROGMEM = "tinyg [%s] err[%d]: %s: %s ";
 
 void text_response(const stat_t status, char *buf)
 {
-	if (txt.text_verbosity == TV_SILENT) return;	// skip all this
+	if (txt.text_verbosity == TV_SILENT) {	// skip all this
+         return;
+    }
+
+    char buffer[128];
+    char *p = buffer;
 
 	char units[] = "inch";
-	if (cm_get_units_mode(MODEL) != INCHES) { strcpy(units, "mm"); }
+	if (cm_get_units_mode(MODEL) != INCHES) {
+        strcpy(units, "mm");
+    }
 
 	if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-		fprintf_P(stderr, prompt_ok, units);
+		p += sprintf_P(p, prompt_ok, (char *)units);
 	} else {
-		fprintf_P(stderr, prompt_err, units, (int)status, get_status_message(status), buf);
+		p += sprintf_P(p, prompt_err, (char *)units, (int)status, get_status_message(status), buf);
 	}
 	nvObj_t *nv = nv_body+1;
 
 	if (nv_get_type(nv) == NV_TYPE_MESSAGE) {
-		fprintf(stderr, (char *)*nv->stringp);
+		p += sprintf(p, (char *)*nv->stringp);
 	}
-	fprintf(stderr, "\n");
+	sprintf(p, "\n");
+    xio_writeline(buffer);
 }
 
 /***** PRINT FUNCTIONS ********************************************************
- * json_print_list() - command to select and produce a JSON formatted output
+ * text_print_list() - command to select and produce a JSON formatted output
  * text_print_inline_pairs()
  * text_print_inline_values()
  * text_print_multiline_formatted()
@@ -179,51 +188,7 @@ void text_print_list(stat_t status, uint8_t flags)
 {
 	switch (flags) {
 		case TEXT_NO_PRINT: { break; }
-		case TEXT_INLINE_PAIRS: { text_print_inline_pairs(nv_body); break; }
-		case TEXT_INLINE_VALUES: { text_print_inline_values(nv_body); break; }
 		case TEXT_MULTILINE_FORMATTED: { text_print_multiline_formatted(nv_body);}
-	}
-}
-
-void text_print_inline_pairs(nvObj_t *nv)
-{
-	uint32_t *v = (uint32_t*)&nv->value;
-	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch ((int8_t)nv->valuetype) {  // line up ordering to agree with valueType for execution efficiency
-			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
-			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:    { preprocess_float(nv);
-								  fntoa(global_string_buf, nv->value, nv->precision);
-								  fprintf_P(stderr,PSTR("%s:%s"), nv->token, global_string_buf) ; break;
-								}
-			case TYPE_INT:      { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;}
-			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s:%s"), nv->token, *nv->stringp); break;}
-			case TYPE_BOOL:     { fprintf_P(stderr,PSTR("%s:%1.0f"), nv->token, nv->value); break;} // print as 0 or 1, do t & f later
-			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%s:%lu"), nv->token, *v); break;}
-//			case TYPE_ARRAY:    { <not implemented> ; break;}
-		}
-		if ((nv = nv->nx) == NULL) return;
-		if (nv->valuetype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
-	}
-}
-
-void text_print_inline_values(nvObj_t *nv)
-{
-	uint32_t *v = (uint32_t*)&nv->value;
-	for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
-		switch ((int8_t)nv->valuetype) {
-			case TYPE_PARENT:   { if ((nv = nv->nx) == NULL) return; continue;} // NULL means parent with no child
-			case TYPE_FLOAT:    { preprocess_float(nv);
-								  fntoa(global_string_buf, nv->value, nv->precision);
-								  fprintf_P(stderr,PSTR("%s"), global_string_buf) ; break;
-								}
-			case TYPE_INT:     { fprintf_P(stderr,PSTR("%1.0f"), nv->value); break;}
-			case TYPE_DATA:     { fprintf_P(stderr,PSTR("%lu"), *v); break;}
-			case TYPE_STRING:   { fprintf_P(stderr,PSTR("%s"), *nv->stringp); break;}
-			case TYPE_EMPTY:    { fprintf_P(stderr,PSTR("\n")); return; }
-		}
-		if ((nv = nv->nx) == NULL) return;
-		if (nv->valuetype != TYPE_EMPTY) { fprintf_P(stderr,PSTR(","));}
 	}
 }
 
@@ -266,14 +231,39 @@ void tx_print(nvObj_t *nv) {
  *	NOTE: format's are passed in as flash strings (PROGMEM)
  */
 
-void text_print_nul(nvObj_t *nv, const char *format) { fprintf_P(stderr, format);}	// just print the format string
-void text_print_str(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, *nv->stringp);}
-void text_print_int(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, (uint32_t)nv->value);}
-void text_print_flt(nvObj_t *nv, const char *format) { fprintf_P(stderr, format, nv->value);}
+void text_print_nul(nvObj_t *nv, const char *string) 
+{ 
+    xio_writeline(string);
+}
+
+void text_print_str(nvObj_t *nv, const char *format) 
+{
+    sprintf(cs.out_buf, format, *nv->stringp);
+    xio_writeline(cs.out_buf);
+}
+
+void text_print_int(nvObj_t *nv, const char *format) 
+{ 
+    sprintf_P(cs.out_buf, format, (uint32_t)nv->value);
+    xio_writeline(cs.out_buf);
+}
+
+void text_print_flt(nvObj_t *nv, const char *format) 
+{ 
+    sprintf_P(cs.out_buf, format, nv->value);
+    xio_writeline(cs.out_buf);
+}
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
-	fprintf_P(stderr, format, nv->value, units);
+	sprintf_P(cs.out_buf, format, nv->value, units);
+    xio_writeline(cs.out_buf);
+}
+
+void text_print_bool(nvObj_t *nv, const char *format)
+{
+    sprintf(cs.out_buf, format, !!((uint32_t)nv->value)?"True":"False");
+    xio_writeline(cs.out_buf);
 }
 
 void text_print(nvObj_t *nv, const char *format) {
@@ -282,6 +272,7 @@ void text_print(nvObj_t *nv, const char *format) {
         case TYPE_FLOAT: { text_print_flt(nv, format); break;}
         case TYPE_INT:   { text_print_int(nv, format); break;}
         case TYPE_STRING:{ text_print_str(nv, format); break;}
+        case TYPE_BOOL:  { text_print_bool(nv, format); break;}
     }
 }
 

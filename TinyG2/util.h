@@ -52,7 +52,17 @@ using Motate::SysTickTimer;
 
 //*** debug utilities ***
 
-void _debug_trap();
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+inline void _debug_trap(const char *reason) {
+    // We might be able to put a print here, but it MIGHT interrupt other output
+    // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
+    __NOP();
+#ifdef IN_DEBUGGER
+    __asm__("BKPT");
+#endif
+}
+#pragma GCC reset_options
 
 //*** vector utilities ***
 
@@ -83,8 +93,10 @@ float max4(float x1, float x2, float x3, float x4);
 uint8_t isnumber(char c);
 char *escape_string(char *dst, char *src);
 const char *pstr2str(const char *pgm_string);
-//int fntoa(char_t *str, float n, uint8_t precision);
-char fntoa(char *str, float n, uint8_t precision);
+char inttoa(char *str, int n);
+char floattoa(char *buffer, float in, int precision, int maxlen = 16);
+//char fntoa(char *str, float n, uint8_t precision);
+
 uint16_t compute_checksum(char const *string, const uint16_t length);
 
 //*** other utilities ***
@@ -105,6 +117,8 @@ using std::max;
 template <typename T>
 inline T square(const T x) { return (x)*(x); }		/* UNSAFE */
 
+inline float abs(const float a) { return fabs(a); }
+
 #ifndef avg
 template <typename T>
 inline T avg(const T a,const T b) {return (a+b)/2; }
@@ -117,23 +131,27 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 #define EPSILON2 	((float)0.01)		    // reduced precision epsilon
 #endif
 
+// These functions all require math.h to be included in each file that uses them
 #ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)	// requires math.h to be included in each file used
+#define fp_EQ(a,b) (fabs(a-b) < EPSILON)
 #endif
 #ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)	// requires math.h to be included in each file used
+#define fp_NE(a,b) (fabs(a-b) > EPSILON)
+#endif
+#ifndef fp_GE
+#define fp_GE(a,b) (fabs(a-b) < EPSILON || a-b > EPSILON)
 #endif
 #ifndef fp_ZERO
-#define fp_ZERO(a) (fabs(a) < EPSILON)		// requires math.h to be included in each file used
+#define fp_ZERO(a) (fabs(a) < EPSILON)
 #endif
 #ifndef fp_NOT_ZERO
-#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)	// requires math.h to be included in each file used
+#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)
 #endif
 #ifndef fp_FALSE
-#define fp_FALSE(a) (a < EPSILON)			// float is interpreted as FALSE (equals zero)
+#define fp_FALSE(a) (a < EPSILON)
 #endif
 #ifndef fp_TRUE
-#define fp_TRUE(a) (a > EPSILON)			// float is interpreted as TRUE (not equal to zero)
+#define fp_TRUE(a) (a > EPSILON)
 #endif
 
 // Constants
@@ -142,6 +160,7 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 #define MM_PER_INCH (25.4)
 #define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
+#define MINUTES_PER_MICROSECOND ((float)1/MICROSECONDS_PER_MINUTE)
 #define uSec(a) ((float)(a * MICROSECONDS_PER_MINUTE))
 
 #define RADIAN (57.2957795)
@@ -157,5 +176,11 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 #ifndef M_SQRT3
 #define M_SQRT3 (1.73205080756888)
 #endif
+
+
+// It's assumed that the string buffer contains at lest count_ non-\0 chars
+//constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
+//    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
+//}
 
 #endif	// End of include guard: UTIL_H_ONCE

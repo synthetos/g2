@@ -2,8 +2,8 @@
  * controller.cpp - tinyg controller and top level parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -36,6 +36,7 @@
 #include "plan_arc.h"
 #include "planner.h"
 #include "stepper.h"
+#include "temperature.h"
 #include "encoder.h"
 #include "hardware.h"
 #include "gpio.h"
@@ -45,9 +46,7 @@
 #include "xio.h"
 #include "settings.h"
 
-#ifdef __ARM
-#include "Reset.h"
-#endif
+#include "MotatePower.h"
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
@@ -76,6 +75,8 @@ static stat_t _dispatch_control(void);
 static void _dispatch_kernel(void);
 static stat_t _controller_state(void);          // manage controller state transitions
 
+static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
+
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -97,7 +98,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 
 	cs.fw_build = TINYG_FIRMWARE_BUILD;             // set up identification
 	cs.fw_version = TINYG_FIRMWARE_VERSION;
-	cs.config_version = TINYG_CONFIG_VERSION;
+//	cs.config_version = TINYG_CONFIG_VERSION;
 	cs.hw_platform = TINYG_HARDWARE_PLATFORM;       // NB: HW version is set from EEPROM
 	cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
 
@@ -105,13 +106,19 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 	xio_set_stdin(std_in);
 	xio_set_stdout(std_out);
 	xio_set_stderr(std_err);
-	xio.default_src = std_in;
-	controller_set_primary_source(xio.default_src);
+	cs.default_src = std_in;
+	cs_set_primary_source(cs.default_src);
 #endif
 
 #ifdef __ARM
 	IndicatorLed.setFrequency(100000);
 #endif
+}
+
+void controller_request_enquiry() 
+{
+    sprintf_P(cs.out_buf, PSTR("{\"ack\":true}\n")); 
+    xio_writeline(cs.out_buf);
 }
 
 /*
@@ -148,31 +155,27 @@ static void _controller_HSM()
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
                                                 // Order is important:
-	DISPATCH(_led_indicator());				    // blink LEDs at the current rate
+    DISPATCH(_led_indicator());				    // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
- 	DISPATCH(_interlock_handler());             // invoke / remove safety interlock
-	DISPATCH(_limit_switch_handler());          // invoke limit switch
+    DISPATCH(_interlock_handler());             // invoke / remove safety interlock
+    DISPATCH(temperature_callback());           // makes sure temperatures are under control
+    DISPATCH(_limit_switch_handler());          // invoke limit switch
     DISPATCH(_controller_state());              // controller state management
-	DISPATCH(_test_system_assertions());        // system integrity assertions
-	DISPATCH(_dispatch_control());              // read any control messages prior to executing cycles
+    DISPATCH(_test_system_assertions());        // system integrity assertions
+    DISPATCH(_dispatch_control());              // read any control messages prior to executing cycles
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
     DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
-#ifdef __AVR
-    DISPATCH(switch_debounce_callback());       // debounce switches
-#endif
     DISPATCH(sr_status_report_callback());      // conditionally send status report
     DISPATCH(qr_queue_report_callback());       // conditionally send queue report
-    DISPATCH(rx_report_callback());             // conditionally send rx report
 
     DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
-    DISPATCH(mp_plan_buffer());		            // attempt to plan unplanned moves (conditionally)
+    DISPATCH(mp_planner_callback());		    // motion planner
     DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
-//    DISPATCH(st_motor_power_callback());        // stepper motor power sequencing
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
 //----- command readers and parsers --------------------------------------------------//
@@ -184,46 +187,6 @@ static void _controller_HSM()
 #endif
     DISPATCH(_dispatch_command());              // MUST BE LAST - read and execute next command
 }
-
-/*
- * controller_set_connected(bool) - hook for xio to tell the controller that we
- * have/don't have a connection.
- */
-
-void controller_set_connected(bool is_connected) {
-    if (is_connected) {
-        cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
-    } else {  // we just disconnected from the last device, we'll expect a banner again
-        cs.controller_state = CONTROLLER_NOT_CONNECTED;
-    }
-}
-
-/*
- * controller_parse_control() - return true if command is a control (versus data)
- * Note: parsing for control is somewhat naiive. This will need to get better
- */
-
-bool controller_parse_control(char *p) {
-    if (strchr("{$?!~%Hh", *p) != NULL) {		    // a match indicates control line
-        return (true);
-    }
-    return (false);
-}
-
-/*
- * controller_reset_source() 		 - reset source to default input device (see note)
- * controller_set_primary_source() 	 - set current primary input source
- * controller_set_secondary_source() - set current primary input source
- *
- * Note: Once multiple serial devices are supported reset_source() should be expanded to
- * also set the stdout/stderr console device so the prompt and other messages are sent
- * to the active device.
- */
-#ifdef __AVR
-void controller_reset_source() { controller_set_primary_source(xio.default_src);}
-void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
-void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
-#endif
 
 /*****************************************************************************
  * command dispatchers
@@ -252,10 +215,8 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH;
-        if ((mp_get_planner_buffers_available() > PLANNER_BUFFER_HEADROOM) &&
-            (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+        if ((!mp_planner_is_full()) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
-            mp_plan_buffer();   // +++ removed for test. This is called from the main loop
         }
     }
 	return (STAT_OK);
@@ -280,6 +241,7 @@ static void _dispatch_kernel()
     else if (*cs.bufp == '%') { cm_request_queue_flush(); }
 	else if (*cs.bufp == '~') { cm_request_end_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, NULL); }
+	else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
 	else if (*cs.bufp == '{') {                             // process as JSON mode
@@ -296,34 +258,66 @@ static void _dispatch_kernel()
     }
 #endif
 	else {  // anything else is interpreted as Gcode
-        strncpy(cs.out_buf, cs.bufp, (USB_LINE_BUFFER_SIZE-11)); // use out_buf as temp; '-11' is buffer for JSON chars
-        sprintf((char *)cs.bufp,"{\"gc\":\"%s\"}\n", (char *)cs.out_buf);  // Read and toss if machine is alarmed
-        json_parser(cs.bufp);
+
+        // this optimization bypasses the standard JSON parser and does what it needs directly
+        nvObj_t *nv = nv_reset_nv_list();                   // get a fresh nvObj list
+        strcpy(nv->token, "gc");                            // label is as a Gcode block (do not get an index - not necessary)
+        nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
+        nv->valuetype = TYPE_STRING;
+        float status = gcode_parser(cs.bufp);
+	    nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
+	    sr_request_status_report(SR_REQUEST_TIMED);         // generate incremental status report to show any changes
 	}
 }
 
 /**** Local Functions ********************************************************/
-/*
+/* CONTROLLER STATE MANAGEMENT
  * _controller_state() - manage controller connection, startup, and other state changes
  */
 
 Motate::Timeout _connection_timeout;
 static stat_t _controller_state()
 {
-	if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
+    if (cs.controller_state == CONTROLLER_CONNECTED) {		// first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
         // This is here just to put a small delay in before the startup message.
         _connection_timeout.set(10);
     } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {		// first time through after reset
-		cs.controller_state = CONTROLLER_READY;
-		rpt_print_system_ready_message();
-	}
-	return (STAT_OK);
+        cs.controller_state = CONTROLLER_READY;
+        rpt_print_system_ready_message();
+    }
+    return (STAT_OK);
+}
+
+/*
+ * controller_set_connected(bool) - hook for xio to tell the controller that we
+ * have/don't have a connection.
+ */
+
+void controller_set_connected(bool is_connected) {
+    if (is_connected) {
+        cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
+    } else {  // we just disconnected from the last device, we'll expect a banner again
+        cs.controller_state = CONTROLLER_NOT_CONNECTED;
+    }
+}
+
+/*
+ * controller_parse_control() - return true if command is a control (versus data)
+ * Note: parsing for control is somewhat naiive. This will need to get better
+ */
+
+bool controller_parse_control(char *p) {
+    if (strchr("{$?!~%Hh", *p) != NULL) {		    // a match indicates control line
+        return (true);
+    }
+    return (false);
 }
 
 /*
  * _led_indicator() - blink an LED to show it we are normal, alarmed, or shut down
  */
+
 static stat_t _led_indicator()
 {
     uint32_t blink_rate;
@@ -364,11 +358,26 @@ static stat_t _sync_to_tx_buffer()
 
 static stat_t _sync_to_planner()
 {
-	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) { // allow up to N planner buffers for this line
+	if (mp_planner_is_full()) {   // allow up to N planner buffers for this line
 		return (STAT_EAGAIN);
 	}
 	return (STAT_OK);
 }
+
+/*
+ * controller_reset_source() 		 - reset source to default input device (see note)
+ * controller_set_primary_source() 	 - set current primary input source
+ * controller_set_secondary_source() - set current primary input source
+ *
+ * Note: Once multiple serial devices are supported reset_source() should be expanded to
+ * also set the stdout/stderr console device so the prompt and other messages are sent
+ * to the active device.
+ */
+#ifdef __AVR
+void controller_reset_source() { controller_set_primary_source(xio.default_src);}
+void controller_set_primary_source(uint8_t dev) { xio.primary_src = dev;}
+void controller_set_secondary_source(uint8_t dev) { xio.secondary_src = dev;}
+#endif
 
 /* ALARM STATE HANDLERS
  *
@@ -396,6 +405,13 @@ static stat_t _shutdown_handler(void)
 
 static stat_t _limit_switch_handler(void)
 {
+    auto machine_state = cm_get_machine_state();
+    if ((machine_state != MACHINE_ALARM) && (machine_state != MACHINE_PANIC) && (machine_state != MACHINE_SHUTDOWN)) {
+        safe_pin.toggle();
+    }
+    
+//    safe_pin = 1;
+
     if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
 	    char msg[10];
 	    sprintf_P(msg, PSTR("input %d"), (int)cm.limit_requested);
@@ -445,14 +461,15 @@ static void _init_assertions()
 static stat_t _test_assertions()
 {
 	if ((cs.magic_start != MAGICNUM) || (cs.magic_end != MAGICNUM)) {
-        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, "cs magic numbers"));
+        return(cm_panic(STAT_CONTROLLER_ASSERTION_FAILURE, "controller_test_assertions()"));
     }
 	return (STAT_OK);
 }
 
 stat_t _test_system_assertions()
 {
-	_test_assertions();         // these functions will panic if an assertion fails
+    // these functions will panic if an assertion fails
+    _test_assertions();                     // controller assertions (local)
     config_test_assertions();
     canonical_machine_test_assertions();
     planner_test_assertions();

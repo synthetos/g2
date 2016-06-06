@@ -2,8 +2,8 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S Hart, Jr.
- * Copyright (c) 2014 - 2015 Robert Giseburt
+ * Copyright (c) 2010 - 2016 Alden S Hart, Jr.
+ * Copyright (c) 2014 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -130,21 +130,42 @@ static int8_t _get_axis_type(const index_t index);
  **** CODE *************************************************************************
  ***********************************************************************************/
 
-/********************************
- * Internal getters and setters *
- ********************************/
+/*************************************
+ * Internal getters and setters      *
+ * Canonical Machine State functions *
+ *************************************/
 /*
- * Canonical Machine State functions
- *
- * cm_get_combined_state() - combines raw states into something a user might want to see
+ * cm_set_motion_state() - adjusts active model pointer as well
+ */
+void cm_set_motion_state(const cmMotionState motion_state)
+{
+    cm.motion_state = motion_state;
+
+    switch (motion_state) {
+        case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
+        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
+        case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
+        case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
+    }
+}
+
+/*
  * cm_get_machine_state()
  * cm_get_motion_state()
  * cm_get_cycle_state()
  * cm_get_hold_state()
  * cm_get_homing_state()
- * cm_set_motion_state() - adjusts active model pointer as well
+ */
+cmMachineState  cm_get_machine_state() { return cm.machine_state;}
+cmCycleState    cm_get_cycle_state()   { return cm.cycle_state;}
+cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
+cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
+cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
+
+/*
+ * cm_get_combined_state() - combines raw states into something a user might want to see
  *
- * NOTE_1:
+ *  Note:
  *  On issuing a gcode command we call cm_cycle_start() before the motion gets queued. We don't go
  *  to MOTION_RUN until the command is executed by mp_exec_aline(), planned, queued, and started.
  *  So MOTION_STOP must actually return COMBINED_RUN to address this case, even though under some
@@ -173,39 +194,21 @@ cmCombinedState cm_get_combined_state()
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots bad");    // "mots has impossible value"
+                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");    // "mots has impossible value"
                             return (COMBINED_PANIC);
                         }
                     }
                 }
                 default: {
-                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cycs bad");    // "cycs has impossible value"
+                    cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() cycs bad");    // "cycs has impossible value"
                     return (COMBINED_PANIC);
                 }
             }
         }
         default: {
-            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "macs bad");    // "macs has impossible value"
+            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() macs bad");    // "macs has impossible value"
             return (COMBINED_PANIC);
         }
-    }
-}
-
-cmMachineState  cm_get_machine_state() { return cm.machine_state;}
-cmCycleState    cm_get_cycle_state()   { return cm.cycle_state;}
-cmMotionState   cm_get_motion_state()  { return cm.motion_state;}
-cmFeedholdState cm_get_hold_state()    { return cm.hold_state;}
-cmHomingState   cm_get_homing_state()  { return cm.homing_state;}
-
-void cm_set_motion_state(const cmMotionState motion_state)
-{
-    cm.motion_state = motion_state;
-
-    switch (motion_state) {
-        case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
-        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
-        case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
-        case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
     }
 }
 
@@ -245,14 +248,14 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
-	gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-	cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
+    gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
+    cm_set_work_offsets(MODEL);				// must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
 {
-	cm.gm.linenum = linenum;				// you must first set the model line number,
-	nv_add_object((const char *)"n");	// then add the line number to the nv list
+    cm.gm.linenum = linenum;				// you must first set the model line number,
+    nv_add_object((const char *)"n");	// then add the line number to the nv list
 }
 
 /***********************************************************************************
@@ -370,19 +373,19 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
 
 float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
-	float position;
+    float position;
 
-	if (gcode_state == MODEL) {
-		position = cm.gmx.position[axis] - cm_get_active_coord_offset(axis);
-	} else {
-		position = mp_get_runtime_work_position(axis);
-	}
+    if (gcode_state == MODEL) {
+        position = cm.gmx.position[axis] - cm_get_active_coord_offset(axis);
+    } else {
+        position = mp_get_runtime_work_position(axis);
+    }
     if (axis <= AXIS_Z) {
-	    if (gcode_state->units_mode == INCHES) {
+        if (gcode_state->units_mode == INCHES) {
             position /= MM_PER_INCH;
         }
     }
-	return (position);
+    return (position);
 }
 
 /***********************************************************************************
@@ -440,6 +443,139 @@ stat_t cm_deferred_write_callback()
 }
 
 /*
+ * cm_set_tram() - JSON command to trigger computing the rotation matrix
+ * cm_get_tram() - JSON query to determine if the rotation matrix is set (non-identity)
+ *
+ * There MUST be three valid probes stored.
+ */
+
+stat_t cm_set_tram(nvObj_t *nv)
+{
+    if ((nv->valuetype == TYPE_BOOL) ||
+        (nv->valuetype == TYPE_INT) ||
+        (nv->valuetype == TYPE_FLOAT))
+    {
+        bool do_set = !!((uint32_t)nv->value);
+
+        // if passed false/0, we will clear the rotation matrix
+        if (!do_set) {
+            canonical_machine_reset_rotation();
+            return (STAT_OK);
+        }
+
+        // check to make sure we have three valid probes in a row
+        if ((cm.probe_state[0] == PROBE_SUCCEEDED) &&
+            (cm.probe_state[1] == PROBE_SUCCEEDED) &&
+            (cm.probe_state[2] == PROBE_SUCCEEDED))
+        {
+
+            // Step 1: Get the normal of the plane formed by the three probes
+            // naming:
+            //  d0_{xyz} is the delta between point 0 and point 1
+            //  d2_{xyz} is the delta between point 2 and point 1
+            //  n_{xyz} is the unit normal
+
+            // Step 1a: get the deltas
+            float d0_x = cm.probe_results[0][0] - cm.probe_results[1][0];
+            float d0_y = cm.probe_results[0][1] - cm.probe_results[1][1];
+            float d0_z = cm.probe_results[0][2] - cm.probe_results[1][2];
+            float d2_x = cm.probe_results[2][0] - cm.probe_results[1][0];
+            float d2_y = cm.probe_results[2][1] - cm.probe_results[1][1];
+            float d2_z = cm.probe_results[2][2] - cm.probe_results[1][2];
+
+            // Step 1b: compute the combined magnitde
+            // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
+            float combined_magnitude_inv = 1.0/sqrt(
+                                            (d0_x*d0_x + d0_y*d0_y + d0_z*d0_z)*
+                                            (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z)
+                                            );
+
+            // Step 1c: compute the cross product and normalize
+            float n_x = (d0_z*d2_y - d0_y*d2_z)*combined_magnitude_inv;
+            float n_y = (d0_x*d2_z - d0_z*d2_x)*combined_magnitude_inv;
+            float n_z = (d0_y*d2_x - d0_x*d2_y)*combined_magnitude_inv;
+
+            // Step 1d: flip the nromal if it's negative
+            if (n_z < 0.0) {
+                n_x = -n_x;
+                n_y = -n_y;
+                n_z = -n_z;
+            }
+
+            // Step 2: make the quaternion for the rotation to {0,0,1}
+            float p = sqrt(n_x*n_x + n_y*n_y + n_z*n_z);
+            float m = sqrt(2.0)*sqrt(p*(p+n_z));
+            float q_w = (n_z + p) / m;
+            float q_x = -n_y / m;
+            float q_y = n_x / m;
+            //float q_z = 0; // already optimized out
+
+            // Step 3: compute the rotation matrix
+            float q_wx_2 = q_w * q_x * 2.0;
+            float q_wy_2 = q_w * q_y * 2.0;
+            float q_xx_2 = q_x * q_x * 2.0;
+            float q_xy_2 = q_x * q_y * 2.0;
+            float q_yy_2 = q_y * q_y * 2.0;
+
+            /*
+             matrix = {
+                {1 - q_yy_2, q_xy_2,      q_wy_2,             0},
+                {q_xy_2,     1 - q_xx_2, -q_wx_2,             0},
+                {-q_wy_2,    q_wx_2,     1 - q_xx_2 - q_yy_2, i},
+                {0,          0,          0,                   1}
+             }
+            */
+            cm.rotation_matrix[0][0] = 1 - q_yy_2;
+            cm.rotation_matrix[0][1] = q_xy_2;
+            cm.rotation_matrix[0][2] = q_wy_2;
+
+            cm.rotation_matrix[1][0] = q_xy_2;
+            cm.rotation_matrix[1][1] = 1 - q_xx_2;
+            cm.rotation_matrix[1][2] = -q_wx_2;
+
+            cm.rotation_matrix[2][0] = -q_wy_2;
+            cm.rotation_matrix[2][1] = q_wx_2;
+            cm.rotation_matrix[2][2] = 1 - q_xx_2 - q_yy_2;
+
+            // Step 4: compute the z-offset
+            cm.rotation_z_offset = (n_x*cm.probe_results[1][0] + n_y*cm.probe_results[1][1]) / n_z + cm.probe_results[1][2];
+        } else {
+            return (STAT_COMMAND_NOT_ACCEPTED);
+        }
+
+
+    } else {
+        return (STAT_INPUT_VALUE_UNSUPPORTED);
+    }
+
+    return (STAT_OK);
+}
+
+stat_t cm_get_tram(nvObj_t *nv)
+{
+    nv->value = true;
+
+    if (fp_NOT_ZERO(cm.rotation_z_offset) ||
+        fp_NOT_ZERO(cm.rotation_matrix[0][1]) ||
+        fp_NOT_ZERO(cm.rotation_matrix[0][2]) ||
+        fp_NOT_ZERO(cm.rotation_matrix[1][0]) ||
+        fp_NOT_ZERO(cm.rotation_matrix[1][2]) ||
+        fp_NOT_ZERO(cm.rotation_matrix[2][0]) ||
+        fp_NOT_ZERO(cm.rotation_matrix[2][1]) ||
+        fp_NE(1.0,  cm.rotation_matrix[0][0]) ||
+        fp_NE(1.0,  cm.rotation_matrix[1][1]) ||
+        fp_NE(1.0,  cm.rotation_matrix[2][2]))
+    {
+
+        nv->value = false;
+    }
+
+    nv->valuetype = TYPE_BOOL;
+    return (STAT_OK);
+}
+
+
+/*
  * cm_set_model_target() - set target vector in GM model
  *
  * This is a core routine. It handles:
@@ -463,7 +599,7 @@ stat_t cm_deferred_write_callback()
 //        registers we moved this block into its own function so that we get a fresh stack push
 // ALDEN: This shows up in avr-gcc 4.7.0 and avr-libc 1.8.0
 
-static float _calc_ABC(const uint8_t axis, const float target[], const bool flag[])
+static float _calc_ABC(const uint8_t axis, const float target[])
 {
 	if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
 		return(target[axis]);	// no mm conversion - it's in degrees
@@ -471,7 +607,7 @@ static float _calc_ABC(const uint8_t axis, const float target[], const bool flag
 	return(_to_millimeters(target[axis]) * 360 / (2 * M_PI * cm.a[axis].radius));
 }
 
-void cm_set_model_target(const float target[], const bool flag[])
+void cm_set_model_target(const float target[], const bool flags[])
 {
 	uint8_t axis;
 	float tmp = 0;
@@ -481,7 +617,7 @@ void cm_set_model_target(const float target[], const bool flag[])
 
 	// process XYZABC for lower modes
 	for (axis=AXIS_X; axis<=AXIS_Z; axis++) {
-		if (!flag[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
+		if (!flags[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
 			continue;		// skip axis if not flagged for update or its disabled
 		} else if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
 			if (cm.gm.distance_mode == ABSOLUTE_MODE) {
@@ -493,10 +629,10 @@ void cm_set_model_target(const float target[], const bool flag[])
 	}
 	// FYI: The ABC loop below relies on the XYZ loop having been run first
 	for (axis=AXIS_A; axis<=AXIS_C; axis++) {
-		if (!flag[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
+		if (!flags[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
 			continue;		// skip axis if not flagged for update or its disabled
 		} else {
-			tmp = _calc_ABC(axis, target, flag);
+			tmp = _calc_ABC(axis, target);
 		}
 		if (cm.gm.distance_mode == ABSOLUTE_MODE) {
 			cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis); // sacidu93's fix to Issue #22
@@ -519,29 +655,29 @@ void cm_set_model_target(const float target[], const bool flag[])
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {
-	cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
-	copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
-	return (cm_alarm(status, "soft_limits"));               // throw an alarm
+    cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
+    copy_vector(cm.gm.target, cm.gmx.position);             // reset model target
+    return (cm_alarm(status, "soft_limits"));               // throw an alarm
 }
 
 stat_t cm_test_soft_limits(const float target[])
 {
-	if (cm.soft_limit_enable == true) {
-		for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-			if (cm.homed[axis] != true) continue;								// skip axis if not homed
-			if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) continue;	// skip axis if identical
-			if (fabs(cm.a[axis].travel_min) > DISABLE_SOFT_LIMIT) continue;		// skip min test if disabled
-			if (fabs(cm.a[axis].travel_max) > DISABLE_SOFT_LIMIT) continue;		// skip max test if disabled
+    if (cm.soft_limit_enable == true) {
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            if (cm.homed[axis] != true) { continue; }                               // skip axis if not homed
+            if (fp_EQ(cm.a[axis].travel_min, cm.a[axis].travel_max)) { continue; }  // skip axis if identical
+            if (fabs(cm.a[axis].travel_min) > DISABLE_SOFT_LIMIT) { continue; }     // skip min test if disabled
+            if (fabs(cm.a[axis].travel_max) > DISABLE_SOFT_LIMIT) { continue; }     // skip max test if disabled
 
-			if (target[axis] < cm.a[axis].travel_min) {
-				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
-			}
-			if (target[axis] > cm.a[axis].travel_max) {
-				return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
-			}
-		}
-	}
-	return (STAT_OK);
+            if (target[axis] < cm.a[axis].travel_min) {
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
+            }
+            if (target[axis] > cm.a[axis].travel_max) {
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
+            }
+        }
+    }
+    return (STAT_OK);
 }
 
 /*************************************************************************
@@ -565,39 +701,48 @@ stat_t cm_test_soft_limits(const float target[])
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-	memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
-	memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
-	memset(&cm.gn, 0, sizeof(GCodeInput_t));
-	memset(&cm.gf, 0, sizeof(GCodeFlags_t));
+    memset(&cm, 0, sizeof(cm));					// do not reset canonicalMachineSingleton once it's been initialized
+    memset(&cm.gm, 0, sizeof(GCodeState_t));	// clear all values, pointers and status
+    memset(&cm.gn, 0, sizeof(GCodeInput_t));
+    memset(&cm.gf, 0, sizeof(GCodeFlags_t));
 
-	canonical_machine_init_assertions();		// establish assertions
-	ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
-	cm_arc_init();                              // Note: spindle and coolant inits are independent
+    canonical_machine_init_assertions();		// establish assertions
+    ACTIVE_MODEL = MODEL;						// setup initial Gcode model pointer
+    cm_arc_init();                              // Note: spindle and coolant inits are independent
+}
+
+void canonical_machine_reset_rotation() {
+    memset(&cm.rotation_matrix, 0, sizeof(float)*3*3);
+    // We must make it an identity matrix for no rotation
+    cm.rotation_matrix[0][0] = 1.0;
+    cm.rotation_matrix[1][1] = 1.0;
+    cm.rotation_matrix[2][2] = 1.0;
+    cm.rotation_z_offset = 0.0;
 }
 
 void canonical_machine_reset()
 {
 	// set gcode defaults
-	cm_set_units_mode(cm.default_units_mode);
-	cm_set_coord_system(cm.default_coord_system);
-	cm_select_plane(cm.default_select_plane);
-	cm_set_path_control(cm.default_path_control);
-	cm_set_distance_mode(cm.default_distance_mode);
-	cm_set_arc_distance_mode(INCREMENTAL_MODE);  // always the default
-	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
-    cm_reset_overrides();                       // setup overrides to initial conditions
+    cm_set_units_mode(cm.default_units_mode);
+    cm_set_coord_system(cm.default_coord_system);   // NB: queues a block to the planner with the coordinates
+    cm_select_plane(cm.default_select_plane);
+    cm_set_path_control(MODEL, cm.default_path_control);
+    cm_set_distance_mode(cm.default_distance_mode);
+    cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
+    cm_reset_overrides();                           // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
 
-	// reset request flags
-	cm.queue_flush_state = FLUSH_OFF;
-	cm.end_hold_requested = false;
-    cm.limit_requested = 0;                 // resets switch closures that occurred during initialization
-    cm.safety_interlock_disengaged = 0;     // ditto
-    cm.safety_interlock_reengaged = 0;      // ditto
-    cm.shutdown_requested = 0;              // ditto
+    // reset request flags
+    cm.queue_flush_state = FLUSH_OFF;
+    cm.end_hold_requested = false;
+    cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
+    cm.safety_interlock_disengaged = 0;         // ditto
+    cm.safety_interlock_reengaged = 0;          // ditto
+    cm.shutdown_requested = 0;                  // ditto
 
-	// set initial state and signal that the machine is ready for action
+    // set initial state and signal that the machine is ready for action
     cm.cycle_state = CYCLE_OFF;
     cm.motion_state = MOTION_STOP;
     cm.hold_state = FEEDHOLD_OFF;
@@ -605,6 +750,11 @@ void canonical_machine_reset()
     cm.gmx.block_delete_switch = true;
     cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
     cm.machine_state = MACHINE_READY;
+
+    canonical_machine_reset_rotation();
+
+    memset(&cm.probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
+    memset(&cm.probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
 }
 
 /*
@@ -627,7 +777,7 @@ stat_t canonical_machine_test_assertions(void)
     if ((BAD_MAGIC(cm.magic_start)) || (BAD_MAGIC(cm.magic_end)) ||
         (BAD_MAGIC(cm.gmx.magic_start)) || (BAD_MAGIC(cm.gmx.magic_end)) ||
         (BAD_MAGIC(arc.magic_start)) || (BAD_MAGIC(arc.magic_end))) {
-        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "cm magic numbers"));
+        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
     }
     return (STAT_OK);
 }
@@ -774,6 +924,9 @@ stat_t cm_alarm(const stat_t status, const char *msg)
 //	cm_spindle_optional_pause(spindle.pause_on_hold);
 //	cm_coolant_optional_pause(coolant.pause_on_hold);
 	rpt_exception(status, msg);	                // send alarm message
+
+    // If "stat" is in the status report, we need to poke it to send.
+    sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
 }
 /*
@@ -825,6 +978,8 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
 
 stat_t cm_panic(const stat_t status, const char *msg)
 {
+    _debug_trap(msg);
+    
     if (cm.machine_state == MACHINE_PANIC) {    // only do this once
         return (STAT_OK);
     }
@@ -926,10 +1081,10 @@ stat_t cm_set_coord_system(const uint8_t coord_system)
 {
     cm.gm.coord_system = (cmCoordSystem)coord_system;
 
-	float value[] = { (float)coord_system,0,0,0,0,0 };	    // pass coordinate system in value[0] element
+    float value[] = { (float)coord_system,0,0,0,0,0 };	    // pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
-	return (STAT_OK);
+    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    return (STAT_OK);
 }
 
 static void _exec_offset(float *value, bool *flag)
@@ -1031,13 +1186,13 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 		if (flag[axis]) {
 			cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-	            cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
+                                         cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
 		}
 	}
 	// now pass the offset to the callback - setting the coordinate system also applies the offsets
 	float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 }; // pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
-	mp_queue_command(_exec_offset, value, flags);				  // second vector is not used
+	mp_queue_command(_exec_offset, value, flags);
 	return (STAT_OK);
 }
 
@@ -1089,10 +1244,10 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     }
 
 	cm_set_model_target(target, flags);
-	ritorno (cm_test_soft_limits(cm.gm.target)); 	// test soft limits; exit if thrown
-	cm_set_work_offsets(&cm.gm);					// capture the fully resolved offsets to the state
-	cm_cycle_start();								// required for homing & other cycles
-	stat_t status = mp_aline(&cm.gm);				// send the move to the planner
+	ritorno (cm_test_soft_limits(cm.gm.target));    // test soft limits; exit if thrown
+	cm_set_work_offsets(&cm.gm);                    // capture the fully resolved offsets to the state
+	cm_cycle_start();                               // required for homing & other cycles
+	stat_t status = mp_aline(&cm.gm);               // send the move to the planner
 	cm_finalize_move();
 	if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
 		cm_cycle_end();
@@ -1123,7 +1278,8 @@ stat_t _goto_stored_position(float target2[], const float target[], const bool f
             target2[i] -= target[i];
         }
     }
-    while (mp_get_planner_buffers_available() == 0);// Make sure you have an available buffer
+    while (mp_planner_is_full());                   // Make sure you have available buffers
+
     bool flags2[] = { 1,1,1,1,1,1 };
     return (cm_straight_traverse(target2, flags2)); // Go to programmed endpoint
 }
@@ -1187,14 +1343,15 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode)
 }
 
 /*
- * cm_set_path_control() - G61, G61.1, G64 (affects MODEL only)
+ * cm_set_path_control() - G61, G61.1, G64
  */
 
-stat_t cm_set_path_control(const uint8_t mode)
+stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
 {
-	cm.gm.path_control = (cmPathControl)mode;
+	gcode_state->path_control = (cmPathControl)mode;
 	return (STAT_OK);
 }
+
 
 /*******************************
  * Machining Functions (4.3.6) *
@@ -1202,6 +1359,7 @@ stat_t cm_set_path_control(const uint8_t mode)
 /*
  * cm_arc_feed() - SEE plan_arc.cpp
  */
+
 
 /*
  * cm_dwell() - G4, P parameter (seconds)
@@ -1227,7 +1385,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     // it's legal for a G1 to have no axis words but we don't want to process it
     if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
           flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-        return(STAT_OK);
+          return(STAT_OK);
     }
 
 	cm_set_model_target(target, flags);
@@ -1312,59 +1470,121 @@ void cm_message(const char *message)
 void cm_reset_overrides()
 {
     cm.gmx.m48_enable = true;
-    cm.gmx.mfo_enable = false;
-    cm.gmx.mfo_parameter = 1.0;
+    cm.gmx.mfo_enable = false;  // feed rate overrides
+    cm.gmx.mfo_factor = 1.0;
+    cm.gmx.mto_enable = false;  // traverse overrides
+    cm.gmx.mto_factor = 1.0;
 }
 
+
+/*
+static void _exec_feed_override(const bool m48_enable, const bool m50_enable, const float override_factor)
+{
+
+}
+*/
 /*
  * cm_m48_enable() - M48, M49
  *
  * M48 is the master enable for manual feedrate override and spindle override
- * If M48 is asserted M50 (mfo) and M51 (sso) settings are in effect
- * If M49 is asserted M50 (mfo) and M51 (sso) settings are in ignored
+ * If M48 is asserted M50 (mfo), M50.1 (mto) and M51 (sso) settings are in effect
+ * If M49 is asserted M50 (mfo), M501. (mto) and M51 (sso) settings are in ignored
  *
  * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
  */
-
+/*  M48state    M48new      M50state                action (notes):
+ *  disable     disable     disable                 no action, no state change
+ *  disable     disable     ENABLE                  no action, no state change
+ *
+ *  disable     ENABLE      disable                 no action, no state change
+ *  disable     ENABLE      ENABLE                  start ramp w/stored P value
+ *
+ *  ENABLE      disable     disable                 no action, no state change
+ *  ENABLE      disable     ENABLE                  end ramp
+ *
+ *  ENABLE      ENABLE      disable                 no action, no state change
+ *  ENABLE      ENABLE      ENABLE                  no action, no state change
+ */
 stat_t cm_m48_enable(uint8_t enable)			// M48, M49
 {
-	cm.gmx.m48_enable = enable;
+    // handle changes to feed override given new state of m48/m49
+
+	cm.gmx.m48_enable = enable;                 // update state
 	return (STAT_OK);
 }
 
 /*
  * cm_feed_rate_override_enable() - M50
  *
- * M50 enables manual feedrate override and optionally sets the P override parameter.
- * P is expressed as 10% to N% of programmed feedrate, as a value from 0.100 to N.000
+ *  M50 enables manual feedrate override and the optional P override parameter.
+ *  P is expressed as M% to N% of programmed feedrate, typically a value from 0.05 to 2.000.
+ *  P may also be zero or missing. Behaviors:
  *
- *  - P = 0. Turn off feedrate override. Do not change stored P value
- *  - P < minimum or P > maximum parameter. Error is returned. No action taken
- *  - M50 has no feedrate parameter. Turn on feedrate override to current P value
- *
- *  M50 is set OFF on initialization and program end
- *  P value is set to 1.000 on initialization and program end
- *
+ *    P < minimum or P > maximum parameter, and not zero. Return error, no state change or action
+ *    P omitted. Turn on feedrate override to current stored P value
+ *    P = 0. Turn off feedrate override. (Do not change stored P value
+ *    P = N. Turn on feedrate override to value of N, preserve new P value
  * See http://www.linuxcnc.org/docs/2.4/html/gcode_main.html#sec:M50:-Feed-Override
+ *
+ *  M48 is set ON on initialization and program end
+ *  M50 is set OFF on initialization and program end
+ *  P is set to 1.000 on initialization and program end (there is always a valid value)
  */
-
+/* Implementation Notes:
+ *
+ * To do this correctly need to look not just at new values, but at current state
+ * and transitions. See m48 for M48 transitions
+ *
+ *  M48state    M50enable   M50new   M50 endstate:  action (notes):
+ *  disable     disable     M50 P0    disable       no action or state change
+ *  disable     disable     M50       ENABLE        no action (m48 is disabled)
+ *  disable     disable     M50 Pn    ENABLE        store new P value (no other action)
+ *
+ *  disable     ENABLE      M50 P0    disable       no action
+ *  disable     ENABLE      M50       ENABLE        no action (m48 is disabled)
+ *  disable     ENABLE      M50 Pn    ENABLE        store new P value (no other action)
+ *
+ *  ENABLE      disable     M50 P0    disable       no action or state change
+ *  ENABLE      disable     M50       ENABLE        start ramp w/stored P value
+ *  ENABLE      disable     M50 Pn    ENABLE        start ramp w/new P value; store P value
+ *
+ *  ENABLE      ENABLE      M50 P0    disable       end ramp
+ *  ENABLE      ENABLE      M50       ENABLE        no action
+ *  ENABLE      ENABLE      M50 Pn    ENABLE        start ramp w/new P value; store P value
+ *                                                  (Note: new ramp will supercede any existing ramp)
+ */
 stat_t cm_mfo_enable(uint8_t enable)	        // M50
 {
-	if (fp_NOT_ZERO(cm.gf.parameter)) {         // parameter is not present in Gcode block
-        cm.gmx.mfo_enable = false;
-
-    } else {
-        if (cm.gn.parameter < MIN_MANUAL_FEEDRATE_OVERRIDE) {
-            return (STAT_INPUT_VALUE_TOO_SMALL);
+    bool new_enable = true;
+    bool new_override = false;
+    if (cm.gf.parameter) {                      // if parameter is present in Gcode block
+        if (fp_ZERO(cm.gn.parameter)) {
+            new_enable = false;                 // P0 disables override
+        } else {
+            if (cm.gn.parameter < FEED_OVERRIDE_MIN) {
+                return (STAT_INPUT_VALUE_TOO_SMALL);
+            }
+            if (cm.gn.parameter > FEED_OVERRIDE_MAX) {
+                return (STAT_INPUT_VALUE_TOO_LARGE);
+            }
+		    cm.gmx.mfo_factor = cm.gn.parameter; // it validates - store it.
+            new_override = true;
         }
-        if (cm.gn.parameter > MAX_MANUAL_FEEDRATE_OVERRIDE) {
-            return (STAT_INPUT_VALUE_TOO_LARGE);
+    }
+    if (cm.gmx.m48_enable) {                    // if master enable is ON
+        if (new_enable && (new_override || !cm.gmx.mfo_enable)) {   // 3 cases to start a ramp
+            mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm.gmx.mfo_factor);
+        } else if (cm.gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
+            mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
         }
-        cm.gmx.mfo_enable = true;
-		cm.gmx.mfo_parameter = cm.gn.parameter;
-	}
+    }
+    cm.gmx.mfo_enable = new_enable;             // always update the enable state
 	return (STAT_OK);
 }
+
+//    if ((new_enable && new_override) || (new_enable && !cm.gmx.mfo_enable)) {
+//        if (!(cm.gmx.mfo_enable && new_override)) {
+
 
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *
@@ -1611,8 +1831,9 @@ static void _exec_program_finalize(float *value, bool *flag)
 	cm_set_motion_state(MOTION_STOP);
 
 	// Allow update in the alarm state, to accommodate queue flush (RAS)
-	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) /*&&
-	    (cm.machine_state != MACHINE_ALARM)*/ && (cm.machine_state != MACHINE_SHUTDOWN)) { // OMC
+	if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
+//        (cm.machine_state != MACHINE_ALARM) &&        // omitted by OMC (RAS)
+        (cm.machine_state != MACHINE_SHUTDOWN)) {
 		cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
 		cm.cycle_state = CYCLE_OFF;						// or if we're in machine alarm/shutdown mode
 	}
@@ -1686,6 +1907,24 @@ void cm_program_end()
 	mp_queue_command(_exec_program_finalize, value, flags);
 }
 
+
+/*
+ * cm_json_command() - M100
+ */
+stat_t cm_json_command(char *json_string)
+{
+    return mp_json_command(json_string);
+}
+
+/*
+ * cm_json_wait() - M102
+ */
+stat_t cm_json_wait(char *json_string)
+{
+    return mp_json_wait(json_string);
+}
+
+
 /**************************************
  * END OF CANONICAL MACHINE FUNCTIONS *
  **************************************/
@@ -1751,8 +1990,8 @@ static const char *const msg_macs[] PROGMEM = { msg_macs0, msg_macs1, msg_macs2,
 
 static const char msg_cycs0[] PROGMEM = "Off";
 static const char msg_cycs1[] PROGMEM = "Machining";
-static const char msg_cycs2[] PROGMEM = "Probe";
-static const char msg_cycs3[] PROGMEM = "Homing";
+static const char msg_cycs2[] PROGMEM = "Homing";
+static const char msg_cycs3[] PROGMEM = "Probe";
 static const char msg_cycs4[] PROGMEM = "Jog";
 static const char *const msg_cycs[] PROGMEM = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
 
@@ -1787,7 +2026,7 @@ static const char msg_g58[] PROGMEM = "G58 - coordinate system 5";
 static const char msg_g59[] PROGMEM = "G59 - coordinate system 6";
 static const char *const msg_coor[] PROGMEM = { msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59 };
 
-static const char msg_g00[] PROGMEM = "G0  - linear traverse (seek)";
+static const char msg_g00[] PROGMEM = "G0  - linear traverse";
 static const char msg_g01[] PROGMEM = "G1  - linear feed";
 static const char msg_g02[] PROGMEM = "G2  - clockwise arc feed";
 static const char msg_g03[] PROGMEM = "G3  - counter clockwise arc feed";
@@ -2030,19 +2269,21 @@ stat_t cm_set_am(nvObj_t *nv)		// axis mode
 
 stat_t cm_set_hi(nvObj_t *nv)
 {
-	if ((nv->value < 0) || (nv->value > DI_CHANNELS)) {
+	if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
     	return (STAT_INPUT_VALUE_UNSUPPORTED);
 	}
 	set_ui8(nv);
 	return (STAT_OK);
 }
 
-/**** Jerk functions
+/**** Velocity and Jerk functions
  * cm_get_axis_jerk() - returns jerk for an axis
  * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
  *
- * cm_set_xjm()		  - set jerk max value - called from dispatch table
- * cm_set_xjh()		  - set jerk homing value - called from dispatch table
+ * cm_set_vm()		  - set velocity max value - called from dispatch table
+ * cm_set_fr()		  - set feedrate max value - called from dispatch table
+ * cm_set_jm()		  - set jerk max value - called from dispatch table
+ * cm_set_jh()		  - set jerk homing value - called from dispatch table
  *
  *	Jerk values can be rather large, often in the billions. This makes for some pretty big
  *	numbers for people to deal with. Jerk values are stored in the system in truncated format;
@@ -2059,15 +2300,56 @@ float cm_get_axis_jerk(const uint8_t axis)
 	return (cm.a[axis].jerk_max);
 }
 
+// Precompute sqrt(3)/10 for the max_junction_accel.
+// See plan_line.cpp -> _calculate_junction_vmax() notes for details.
+static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
+
+
+// Important note: Actual jerk is stored jerk * JERK_MULTIPLIER, and
+// Time Quanta is junction_aggression / 1000.
+void _cm_recalc_max_junction_accel(const uint8_t axis) {
+    float T = cm.junction_aggression / 1000.0;
+    float T2 = T*T;
+
+    cm.a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm.a[axis].jerk_max * JERK_MULTIPLIER);
+}
+
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
 	cm.a[axis].jerk_max = jerk;
 	cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+
+    // Must reclculate the max_junction_accel now that the jerk has changed.
+    _cm_recalc_max_junction_accel(axis);
+}
+
+stat_t cm_set_vm(nvObj_t *nv)
+{
+    uint8_t axis = _get_axis(nv->index);
+    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
+    	set_flt(nv);
+    } else {
+    	set_flu(nv);
+    }
+	cm.a[axis].recip_velocity_max = 1/nv->value;
+	return(STAT_OK);
+}
+
+stat_t cm_set_fr(nvObj_t *nv)
+{
+    uint8_t axis = _get_axis(nv->index);
+    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
+    	set_flt(nv);
+    } else {
+    	set_flu(nv);
+    }
+    cm.a[axis].recip_feedrate_max = 1/nv->value;
+    return(STAT_OK);
 }
 
 stat_t cm_set_jm(nvObj_t *nv)
 {
-	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+//	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	cm_set_axis_jerk(_get_axis(nv->index), nv->value);
 	return(STAT_OK);
@@ -2075,16 +2357,34 @@ stat_t cm_set_jm(nvObj_t *nv)
 
 stat_t cm_set_jh(nvObj_t *nv)
 {
-	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+//	if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
 	set_flu(nv);
 	return(STAT_OK);
 }
 
 stat_t cm_set_ja(nvObj_t *nv)
 {
-    if (nv->value > 1000) nv->value /= 1000000;
+//    // Prescale it. Mostly for backwards compatibility with Junction Acceleration settings
+//    if (nv->value > 10) nv->value /= 100;
+
+    stat_t status = STAT_OK;
+
+    if (nv->value < JUNCTION_AGGRESSION_MIN) {
+        nv->value = JUNCTION_AGGRESSION_MIN;
+        status = STAT_INPUT_VALUE_TOO_SMALL;
+    }
+    if (nv->value > JUNCTION_AGGRESSION_MAX) {
+        nv->value = JUNCTION_AGGRESSION_MAX;
+        status = STAT_INPUT_VALUE_TOO_LARGE;
+    }
     set_flt(nv);
-    return(STAT_OK);
+
+    // Must reclculate the max_junction_accel now that the time quanta has changed.
+    for (uint8_t axis=0; axis<AXES; axis++) {
+        _cm_recalc_max_junction_accel(axis);
+    }
+
+    return(status);
 }
 
 /*
@@ -2094,10 +2394,10 @@ stat_t cm_set_ja(nvObj_t *nv)
 
 stat_t cm_set_mfo(nvObj_t *nv)
 {
-    if (nv->value < MIN_MANUAL_FEEDRATE_OVERRIDE) {
+    if (nv->value < FEED_OVERRIDE_MIN) {
         return (STAT_INPUT_VALUE_TOO_SMALL);
     }
-    if (nv->value > MAX_MANUAL_FEEDRATE_OVERRIDE) {
+    if (nv->value > FEED_OVERRIDE_MAX) {
         return (STAT_INPUT_VALUE_TOO_LARGE);
     }
     set_flt(nv);
@@ -2106,10 +2406,10 @@ stat_t cm_set_mfo(nvObj_t *nv)
 
 stat_t cm_set_mto(nvObj_t *nv)
 {
-    if (nv->value < MIN_MANUAL_TRAVERSE_OVERRIDE) {
+    if (nv->value < TRAVERSE_OVERRIDE_MIN) {
         return (STAT_INPUT_VALUE_TOO_SMALL);
     }
-    if (nv->value > MAX_MANUAL_TRAVERSE_OVERRIDE) {
+    if (nv->value > TRAVERSE_OVERRIDE_MAX) {
         return (STAT_INPUT_VALUE_TOO_LARGE);
     }
     set_flt(nv);
@@ -2145,7 +2445,7 @@ stat_t cm_run_home(nvObj_t *nv)
 
 stat_t cm_dam(nvObj_t *nv)
 {
-	printf("Active model:\n");
+	xio_writeline("Active model:\n");
 	cm_print_vel(nv);
 	cm_print_feed(nv);
 	cm_print_line(nv);
@@ -2213,44 +2513,31 @@ stat_t cm_run_joga(nvObj_t *nv)
 
 /* model state print functions */
 
-const char fmt_vel[]  PROGMEM = "Velocity:%17.3f%s/min\n";
-const char fmt_feed[] PROGMEM = "Feed rate:%16.3f%s/min\n";
-const char fmt_line[] PROGMEM = "Line number:%10.0f\n";
-const char fmt_stat[] PROGMEM = "Machine state:       %s\n"; // combined machine state
-const char fmt_macs[] PROGMEM = "Raw machine state:   %s\n"; // raw machine state
-const char fmt_cycs[] PROGMEM = "Cycle state:         %s\n";
-const char fmt_mots[] PROGMEM = "Motion state:        %s\n";
-const char fmt_hold[] PROGMEM = "Feedhold state:      %s\n";
-const char fmt_home[] PROGMEM = "Homing state:        %s\n";
-const char fmt_unit[] PROGMEM = "Units:               %s\n"; // units mode as ASCII string
-const char fmt_coor[] PROGMEM = "Coordinate system:   %s\n";
-const char fmt_momo[] PROGMEM = "Motion mode:         %s\n";
-const char fmt_plan[] PROGMEM = "Plane:               %s\n";
-const char fmt_path[] PROGMEM = "Path Mode:           %s\n";
-const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
-const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
-const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
-const char fmt_tool[] PROGMEM = "Tool number          %d\n";
-const char fmt_g92e[] PROGMEM = "G92 enabled          %d\n";
-
-const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
-const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
-const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
-const char fmt_hom[] PROGMEM = "%c axis homing state:%2.0f\n";
-
-const char fmt_gpl[] PROGMEM = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
-const char fmt_gun[] PROGMEM = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
-const char fmt_gco[] PROGMEM = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
-const char fmt_gpa[] PROGMEM = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
-const char fmt_gdi[] PROGMEM = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
+static const char fmt_vel[]  PROGMEM = "Velocity:%17.3f%s/min\n";
+static const char fmt_feed[] PROGMEM = "Feed rate:%16.3f%s/min\n";
+static const char fmt_line[] PROGMEM = "Line number:%10.0f\n";
+static const char fmt_stat[] PROGMEM = "Machine state:       %s\n"; // combined machine state
+static const char fmt_macs[] PROGMEM = "Raw machine state:   %s\n"; // raw machine state
+static const char fmt_cycs[] PROGMEM = "Cycle state:         %s\n";
+static const char fmt_mots[] PROGMEM = "Motion state:        %s\n";
+static const char fmt_hold[] PROGMEM = "Feedhold state:      %s\n";
+static const char fmt_home[] PROGMEM = "Homing state:        %s\n";
+static const char fmt_unit[] PROGMEM = "Units:               %s\n"; // units mode as ASCII string
+static const char fmt_coor[] PROGMEM = "Coordinate system:   %s\n";
+static const char fmt_momo[] PROGMEM = "Motion mode:         %s\n";
+static const char fmt_plan[] PROGMEM = "Plane:               %s\n";
+static const char fmt_path[] PROGMEM = "Path Mode:           %s\n";
+static const char fmt_dist[] PROGMEM = "Distance mode:       %s\n";
+static const char fmt_admo[] PROGMEM = "Arc Distance mode:   %s\n";
+static const char fmt_frmo[] PROGMEM = "Feed rate mode:      %s\n";
+static const char fmt_tool[] PROGMEM = "Tool number          %d\n";
+static const char fmt_g92e[] PROGMEM = "G92 enabled          %d\n";
 
 void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(ACTIVE_MODEL));}
-
 void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line);}     // TYPE_INT
 void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool);}     // TYPE_INT
 void cm_print_g92e(nvObj_t *nv) { text_print(nv, fmt_g92e);}     // TYPE_INT
-
 void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);} // print all these as TYPE_STRING
 void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs);} // See _get_msg_helper() for details
 void cm_print_cycs(nvObj_t *nv) { text_print_str(nv, fmt_cycs);}
@@ -2266,6 +2553,12 @@ void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
 
+static const char fmt_gpl[] PROGMEM = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
+static const char fmt_gun[] PROGMEM = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
+static const char fmt_gco[] PROGMEM = "[gco] default gcode coord system%3d [1-6 (G54-G59)]\n";
+static const char fmt_gpa[] PROGMEM = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
+static const char fmt_gdi[] PROGMEM = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
+
 void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl);}  // TYPE_INT
 void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun);}  // TYPE_INT
 void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
@@ -2274,27 +2567,45 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system parameter print functions */
 
-const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
-const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
-const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
-const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
-const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
-const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled %10d [0=disable,1=enable]\n";
-const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab %2d [0=disable,1=enable]\n";
-const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
-const char fmt_mtoe[] PROGMEM ="[mtoe] manual traverse over enab%2d [0=disable,1=enable]\n";
-const char fmt_mto[] PROGMEM ="[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
+static const char fmt_ja[] PROGMEM = "[ja]  junction aggression%13.2f\n";
+static const char fmt_ct[] PROGMEM = "[ct]  chordal tolerance%17.4f%s\n";
+static const char fmt_sl[] PROGMEM = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
+static const char fmt_lim[] PROGMEM ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
+static const char fmt_saf[] PROGMEM ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
 
 void cm_print_ja(nvObj_t *nv) { text_print(nv, fmt_ja);}        // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
+
+
+static const char fmt_bme[] PROGMEM = "[bme] block merge enable%11d [0=disable,1=enable]\n";
+static const char fmt_bmr[] PROGMEM = "[bmr] block merge ratio%12d\n";
+static const char fmt_bmv[] PROGMEM = "[bmv] block merge velocity max%8f\n";
+static const char fmt_bml[] PROGMEM = "[bml] block merge length max%10.2f\n";
+static const char fmt_bmc[] PROGMEM = "[bmc] block merge cosine min%10.2f\n";
+
+void cm_print_bme(nvObj_t *nv){ text_print(nv, fmt_bme);}       // TYPE_INT
+void cm_print_bmr(nvObj_t *nv){ text_print(nv, fmt_bmr);}       // TYPE_FLOAT
+void cm_print_bmv(nvObj_t *nv){ text_print(nv, fmt_bmv);}       // TYPE_FLOAT
+void cm_print_bml(nvObj_t *nv){ text_print(nv, fmt_bml);}       // TYPE_FLOAT
+void cm_print_bmc(nvObj_t *nv){ text_print(nv, fmt_bmc);}       // TYPE_FLOAT
+
+
+static const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
+static const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab%3d [0=disable,1=enable]\n";
+static const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
+static const char fmt_mtoe[] PROGMEM ="[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
+static const char fmt_mto[] PROGMEM ="[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
+static const char fmt_tram[] PROGMEM ="[tram]  is coordinate space rotated to be tram %s\n";
+
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
 void cm_print_mfoe(nvObj_t *nv){ text_print(nv, fmt_mfoe);}     // TYPE INT
 void cm_print_mfo(nvObj_t *nv) { text_print(nv, fmt_mfo);}      // TYPE FLOAT
 void cm_print_mtoe(nvObj_t *nv){ text_print(nv, fmt_mtoe);}     // TYPE INT
 void cm_print_mto(nvObj_t *nv) { text_print(nv, fmt_mto);}      // TYPE FLOAT
+void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
 
 /*
  * axis print functions
@@ -2319,29 +2630,36 @@ void cm_print_mto(nvObj_t *nv) { text_print(nv, fmt_mto);}      // TYPE FLOAT
  *
  *	cm_print_pos() - print position with unit displays for MM or Inches
  * 	cm_print_mpo() - print position with fixed unit display - always in Degrees or MM
+ * 	cm_print_tram() - print if the coordinate system is rotated
  */
 
-const char fmt_Xam[] PROGMEM = "[%s%s] %s axis mode%18d %s\n";
-const char fmt_Xfr[] PROGMEM = "[%s%s] %s feedrate maximum%11.0f%s/min\n";
-const char fmt_Xvm[] PROGMEM = "[%s%s] %s velocity maximum%11.0f%s/min\n";
-const char fmt_Xtm[] PROGMEM = "[%s%s] %s travel maximum%17.3f%s\n";
-const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
-const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
-const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
-const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
-const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
-const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
-const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
-const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
-const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.2f%s/min\n";
-const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
-const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
-const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";
-const char fmt_cpos[] PROGMEM = "[%s%s] %s %s position%18.3f%s\n";
+static const char fmt_Xam[] PROGMEM = "[%s%s] %s axis mode%18d %s\n";
+static const char fmt_Xfr[] PROGMEM = "[%s%s] %s feedrate maximum%11.0f%s/min\n";
+static const char fmt_Xvm[] PROGMEM = "[%s%s] %s velocity maximum%11.0f%s/min\n";
+static const char fmt_Xtm[] PROGMEM = "[%s%s] %s travel maximum%17.3f%s\n";
+static const char fmt_Xtn[] PROGMEM = "[%s%s] %s travel minimum%17.3f%s\n";
+static const char fmt_Xjm[] PROGMEM = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
+static const char fmt_Xjh[] PROGMEM = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
+static const char fmt_Xjd[] PROGMEM = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
+static const char fmt_Xra[] PROGMEM = "[%s%s] %s radius value%20.4f%s\n";
+static const char fmt_Xhi[] PROGMEM = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
+static const char fmt_Xhd[] PROGMEM = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
+static const char fmt_Xsv[] PROGMEM = "[%s%s] %s search velocity%12.0f%s/min\n";
+static const char fmt_Xlv[] PROGMEM = "[%s%s] %s latch velocity%13.2f%s/min\n";
+static const char fmt_Xlb[] PROGMEM = "[%s%s] %s latch backoff%18.3f%s\n";
+static const char fmt_Xzb[] PROGMEM = "[%s%s] %s zero backoff%19.3f%s\n";
+static const char fmt_cofs[] PROGMEM = "[%s%s] %s %s offset%20.3f%s\n";
+static const char fmt_cpos[] PROGMEM = "[%s%s] %s %s position%18.3f%s\n";
+
+static const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
+static const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
+static const char fmt_ofs[] PROGMEM = "%c work offset:%12.3f%s\n";
+static const char fmt_hom[] PROGMEM = "%c axis homing state:%2.0f\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
 {
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
+	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_axis_flt(nvObj_t *nv, const char *format)
@@ -2352,7 +2670,8 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->value, units);
+	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value, units);
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
@@ -2363,7 +2682,8 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 	} else {
 		units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
 	}
-	fprintf_P(stderr, format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
+	sprintf_P(cs.out_buf, format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
@@ -2371,20 +2691,23 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
 	if (axis >= AXIS_A) { units = DEGREES;}
-	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
+	sprintf_P(cs.out_buf, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
+    xio_writeline(cs.out_buf);
 }
 
 static void _print_hom(nvObj_t *nv, const char *format)
 {
 	char axes[] = {"XYZABC"};
 	uint8_t axis = _get_axis(nv->index);
-	fprintf_P(stderr, format, axes[axis], nv->value);
+	sprintf_P(cs.out_buf, format, axes[axis], nv->value);
+    xio_writeline(cs.out_buf);
 }
 
 void cm_print_am(nvObj_t *nv)	// print axis mode with enumeration string
 {
-	fprintf_P(stderr, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
-	GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
+	sprintf_P(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
+	    GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
+    xio_writeline(cs.out_buf);
 }
 
 void cm_print_fr(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xfr);}

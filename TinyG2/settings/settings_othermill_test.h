@@ -40,8 +40,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_ACCELERATION		100000  // centripetal acceleration around corners
-#define CHORDAL_TOLERANCE           0.001   // chordal accuracy for arc drawing (in mm)
+#define JUNCTION_AGGRESSION         0.75	// cornering - between 0.05 and 1.00 (higher is faster)
+#define CHORDAL_TOLERANCE           0.01	// chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -58,6 +58,18 @@
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
+
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
 
 // WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
 // new machines use a stepper which has the same config as the other axis.
@@ -191,7 +203,7 @@
 #define X_JERK_HIGH_SPEED			JERK_HIGH_SPEED         // xjh
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY   // xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY 	    	(X_FEEDRATE_MAX/3)      // xsv
 #define X_LATCH_VELOCITY 	    	LATCH_VELOCITY          // xlv  mm/min
 #define X_LATCH_BACKOFF 	    	5                       // xlb  mm
@@ -206,7 +218,7 @@
 #define Y_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                0
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY 	    	(Y_FEEDRATE_MAX/3)
 #define Y_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Y_LATCH_BACKOFF 	    	5
@@ -225,7 +237,7 @@
 #define Z_JERK_HIGH_SPEED			JERK_HIGH_SPEED
 #define Z_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY 	    	(Z_FEEDRATE_MAX/3)
 #define Z_LATCH_VELOCITY 	    	LATCH_VELOCITY
 #define Z_LATCH_BACKOFF 	    	5
@@ -242,7 +254,7 @@
 #define A_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_ABC
 #define A_RADIUS 			    	(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define A_HOMING_INPUT              0
-#define A_HOMING_DIR                0
+#define A_HOMING_DIRECTION          0
 #define A_SEARCH_VELOCITY 	    	600
 #define A_LATCH_VELOCITY 	    	100
 #define A_LATCH_BACKOFF 	    	5
@@ -258,7 +270,7 @@
 #define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION_ABC
 #define B_RADIUS 				    (M1_TRAVEL_PER_REV/(2*3.14159628))
 #define B_HOMING_INPUT              0
-#define B_HOMING_DIR                0
+#define B_HOMING_DIRECTION          0
 #define B_SEARCH_VELOCITY 		    600
 #define B_LATCH_VELOCITY 	    	100
 #define B_LATCH_BACKOFF 	    	5
@@ -274,7 +286,7 @@
 #define C_JUNCTION_DEVIATION	    JUNCTION_DEVIATION_ABC
 #define C_RADIUS			    	(M1_TRAVEL_PER_REV/(2*3.14159628))
 #define C_HOMING_INPUT              0
-#define C_HOMING_DIR                0
+#define C_HOMING_DIRECTION          0
 #define C_SEARCH_VELOCITY 	    	600
 #define C_LATCH_VELOCITY 	    	100
 #define C_LATCH_BACKOFF 	    	5

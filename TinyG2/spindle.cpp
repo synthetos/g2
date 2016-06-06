@@ -286,17 +286,15 @@ stat_t cm_set_dir(nvObj_t *nv)
 
 stat_t cm_set_sso(nvObj_t *nv)
 {
-    if (nv->value < MIN_SPINDLE_SPEED_OVERRIDE) {
+    if (nv->value < SPINDLE_OVERRIDE_MIN) {
         return (STAT_INPUT_VALUE_TOO_SMALL);
     }
-    if (nv->value > MAX_SPINDLE_SPEED_OVERRIDE) {
+    if (nv->value > SPINDLE_OVERRIDE_MAX) {
         return (STAT_INPUT_VALUE_TOO_LARGE);
     }
     set_flt(nv);
     return(STAT_OK);
 }
-
-
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
@@ -319,8 +317,8 @@ void cm_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void cm_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void cm_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
 void cm_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
-void cm_print_ssoe(nvObj_t *nv){ text_print(nv, fmt_ssoe);}     // TYPE INT
-void cm_print_sso(nvObj_t *nv) { text_print(nv, fmt_sso);}      // TYPE FLOAT
+void cm_print_ssoe(nvObj_t *nv) { text_print(nv, fmt_ssoe);}    // TYPE INT
+void cm_print_sso(nvObj_t *nv)  { text_print(nv, fmt_sso);}     // TYPE FLOAT
 void cm_print_spe(nvObj_t *nv)  { text_print(nv, fmt_spe);}     // TYPE_INT
 void cm_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
 void cm_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT

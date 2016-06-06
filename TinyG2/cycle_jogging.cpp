@@ -31,6 +31,7 @@
 #include "canonical_machine.h"
 #include "planner.h"
 #include "util.h"
+#include "xio.h"
 
 /**** Jogging singleton structure ****/
 
@@ -130,7 +131,8 @@ stat_t cm_jogging_cycle_callback(void)
 	if (jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true) {
 	    return (STAT_EAGAIN);	                                    // sync to planner move ends
     }
-	if (jog.func == _jogging_axis_ramp_jog && mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+//	if (jog.func == _jogging_axis_ramp_jog && mp_get_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+	if (jog.func == _jogging_axis_ramp_jog && mp_planner_is_full()) {
 	    return (STAT_EAGAIN);                                       // prevent flooding the queue with jog moves
     }
 	return (jog.func(jog.axis));									// execute the current jogging move
@@ -190,7 +192,7 @@ static stat_t _jogging_axis_move(int8_t axis, float target, float velocity)
 
 static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
 {
-//    cm_end_hold();                                  // ends hold if one is in effect
+//    cm_end_hold();                                // ends hold if one is in effect
 
     cm_set_coord_system(jog.saved_coord_system);	// restore to work coordinate system
     cm_set_units_mode(jog.saved_units_mode);
@@ -199,7 +201,7 @@ static stat_t _jogging_finalize_exit(int8_t axis)	// finish a jog
     (MODEL)->feed_rate = jog.saved_feed_rate;
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
     cm_canned_cycle_end();
-    printf("{\"jog\":0}\n");						// needed by OMC jogging function
+    xio_writeline(PSTR("{\"jog\":0}\n"));           // needed by OMC jogging function
     return (STAT_OK);
 }
 

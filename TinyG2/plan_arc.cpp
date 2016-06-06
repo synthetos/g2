@@ -24,8 +24,6 @@
 #include "planner.h"
 #include "util.h"
 
-#include "controller.h"//+++++
-
 // Allocate arc planner singleton structure
 
 arc_t arc;
@@ -63,7 +61,7 @@ void cm_arc_init()
 
 void cm_abort_arc()
 {
-	arc.run_state = MOVE_OFF;
+	arc.run_state = BLOCK_INACTIVE;
 }
 
 /*
@@ -77,10 +75,10 @@ void cm_abort_arc()
 
 stat_t cm_arc_callback()
 {
-	if (arc.run_state == MOVE_OFF) {
+	if (arc.run_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
-	if (mp_get_planner_buffers_available() < PLANNER_BUFFER_HEADROOM) {
+	if (mp_planner_is_full()) {
         return (STAT_EAGAIN);
     }
 	arc.theta += arc.segment_theta;
@@ -94,7 +92,7 @@ stat_t cm_arc_callback()
 	if (--arc.segment_count > 0) {
         return (STAT_EAGAIN);
     }
-	arc.run_state = MOVE_OFF;
+	arc.run_state = BLOCK_INACTIVE;
 	return (STAT_OK);
 }
 
@@ -120,7 +118,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // simple as "I25" if CW or CCW motion mode was already set by a previous block.
     // Here are 2 cases to handle if CW or CCW motion mode was set by a previous block:
     //
-    // Case 1: F, P or other non modal is specified but no movement is specified 
+    // Case 1: F, P or other non modal is specified but no movement is specified
     //         (no offsets or radius). This is OK: return STAT_OK
     //
     // Case 2: Movement is specified w/o a new G2 or G3 word in the (new) block.
@@ -156,7 +154,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         arc.plane_axis_1 = AXIS_Z;
         arc.linear_axis  = AXIS_X;
     } else {
-        return(cm_panic(STAT_GCODE_ACTIVE_PLANE_IS_MISSING, "no plane axis")); // plane axis has impossible value
+        return(cm_panic(STAT_GCODE_ACTIVE_PLANE_IS_MISSING, "cm_arc_feed() impossible value")); // plane axis has impossible value
     }
 
     // test if no endpoints are specified in the selected plane
@@ -242,7 +240,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 	}
 
 	cm_cycle_start();						        // if not already started
-	arc.run_state = MOVE_RUN;				        // enable arc to be run from the callback
+	arc.run_state = BLOCK_ACTIVE;				        // enable arc to be run from the callback
 	cm_finalize_move();
 	return (STAT_OK);
 }
@@ -340,8 +338,8 @@ static stat_t _compute_arc(const bool radius_f)
     arc.segments = max(arc.segments, (float)1.0);		//...but is at least 1 segment
 
     if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-        arc.gm.feed_rate /= arc.segments; 
-    }    
+        arc.gm.feed_rate /= arc.segments;
+    }
     // setup the rest of the arc parameters
     arc.segment_count = (int32_t)arc.segments;
     arc.segment_theta = arc.angular_travel / arc.segments;
@@ -435,12 +433,12 @@ static void _compute_arc_offsets_from_radius()
 
 	// *** From Forrest Green - Other Machine Co, 3/27/14
 	// If the distance between endpoints is greater than the arc diameter, disc will be
-	// negative indicating that the arc is offset into the complex plane beyond the reach 
+	// negative indicating that the arc is offset into the complex plane beyond the reach
     // of any real CNC. However, numerical errors can flip the sign of disc as it approaches
-    // zero (which happens as the arc angle approaches 180 degrees). To avoid mishandling 
-    // these arcs we use the closest real solution (which will be 0 when disc <= 0). This 
-    // risks obscuring g-code errors where the radius is actually too small (they will be 
-    // treated as half circles), but ensures that all valid arcs end up reasonably close 
+    // zero (which happens as the arc angle approaches 180 degrees). To avoid mishandling
+    // these arcs we use the closest real solution (which will be 0 when disc <= 0). This
+    // risks obscuring g-code errors where the radius is actually too small (they will be
+    // treated as half circles), but ensures that all valid arcs end up reasonably close
     // to their intended paths regardless of any numerical issues.
 	float disc = 4 * square(arc.radius) - (square(x) + square(y));
 
@@ -452,10 +450,10 @@ static void _compute_arc_offsets_from_radius()
         h_x2_div_d = -h_x2_div_d;
     }
 
-	// Negative R is g-code-alese for "I want a circle with more than 180 degrees of travel" 
-    // (go figure!), even though it is advised against ever generating such circles in a 
-    // single Gcode block. By inverting the sign of h_x2_div_d the center of the circles is 
-    // placed on the opposite side of the line of travel and thus we get the inadvisably 
+	// Negative R is g-code-alese for "I want a circle with more than 180 degrees of travel"
+    // (go figure!), even though it is advised against ever generating such circles in a
+    // single Gcode block. By inverting the sign of h_x2_div_d the center of the circles is
+    // placed on the opposite side of the line of travel and thus we get the inadvisably
     // long arcs as prescribed.
 	if (arc.radius < 0) {
         h_x2_div_d = -h_x2_div_d;

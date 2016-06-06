@@ -2,8 +2,8 @@
  * xio.h - extended IO functions
  * Part of TinyG project
  *
- * Copyright (c) 2013 - 2015 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2015 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -42,7 +42,7 @@
  *	(possibly more)
  */
 /*
- * CAVEAT EMPTOR: File under "watch your ass":
+ * CAVEAT EMPTOR: File under "watch out!":
  *
  * 	  - Short story: Do not call ANYTHING that can print (i.e. send chars to the TX
  *		buffer) from a medium or hi interrupt. This obviously includes any printf()
@@ -57,7 +57,7 @@
  *		is used. Everything else in TinyG is non-blocking. Sleep is woken (exited) whenever
  *		any interrupt fires. So there must always be a viable interrupt source running when
  *		you enter a sleep or the system will hang (lock up). In the IO functions this is the
- *		TX interupts, which fire when space becomes available in the USART for a TX char. This
+ *		TX interrupts, which fire when space becomes available in the USART for a TX char. This
  *		Means you cannot call a print function at or above the level of the TX interrupts,
  *		which are set to medium.
  */
@@ -66,10 +66,6 @@
 
 //#include "tinyg2.h"				// not required if used in tinyg project
 #include "config.h"					// required for nvObj typedef
-#include "MotateUSB.h"
-#include "MotateUSBCDC.h"
-#include "MotateSPI.h"
-
 
 /**** Defines, Macros, and  Assorted Parameters ****/
 
@@ -87,6 +83,7 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 // device capabilities flags
 #define DEV_CAN_BE_CTRL		(0x0001)		// device can be a control channel
 #define DEV_CAN_BE_DATA		(0x0002)		// device can be a data channel
+#define DEV_IS_ALWAYS_BOTH	(0x0004)		// device is always a control and a data channel
 #define DEV_CAN_READ		(0x0010)
 #define DEV_CAN_WRITE		(0x0020)
 
@@ -108,10 +105,11 @@ typedef uint16_t devflags_t;				// might need to bump to 32 be 16 or 32
 #define DEV_IS_BOTH			(DEV_IS_CTRL | DEV_IS_DATA)
 #define DEV_FLAGS_CLEAR		(0x0000)		// Apply as flags = DEV_FLAGS_CLEAR;
 
-enum xioDeviceEnum {						// reconfigure this enum as you add more physical devices
-	DEV_NONE=-1,							// no device is bound
-	DEV_USB0=0,								// must be 0
-	DEV_USB1,								// must be 1
+enum xioDeviceEnum {                        // reconfigure this enum as you add more physical devices
+	DEV_NONE=-1,	                            // no device is bound
+	DEV_USB0=0,                             // must be 0
+	DEV_USB1,                               // must be 1
+    DEV_UART1,                              // must be 2
 //	DEV_SPI0,                               // We can't have it here until we actually define it
 	DEV_MAX
 };
@@ -121,23 +119,27 @@ enum xioSPIMode {
 	SPI_ENABLE								// enable SPI lines for output
 };
 
-//extern Motate::USBDevice< Motate::USBCDC > usb;
-extern Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-extern decltype(usb._mixin_0_type::Serial) &SerialUSB;
-extern decltype(usb._mixin_1_type::Serial) &SerialUSB1;
 
-extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+/**** readline stuff -- TODO *****/
+
+#define RX_BUFFER_MIN_SIZE       256        // minimum requested buffer size (they are usually larger)
 
 /**** function prototypes ****/
 
 void xio_init(void);
 stat_t xio_test_assertions(void);
 
-char *xio_readline(devflags_t &flags, uint16_t &size);
 void xio_flush_read();
 size_t xio_write(const uint8_t *buffer, size_t size);
+char *xio_readline(devflags_t &flags, uint16_t &size);
+int16_t xio_writeline(const char *buffer);
 
 stat_t xio_set_spi(nvObj_t *nv);
+
+/**** newlib-nano support function(s) ****/
+extern "C" {
+    int _write( int file, char *ptr, int len );
+}
 
 /* Some useful ASCII definitions */
 

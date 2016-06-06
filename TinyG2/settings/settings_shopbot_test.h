@@ -95,6 +95,18 @@
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
+constexpr float H1_DEFAULT_P = 7.0;
+constexpr float H1_DEFAULT_I = 0.2;
+constexpr float H1_DEFAULT_D = 100.0;
+
+constexpr float H2_DEFAULT_P = 7.0;
+constexpr float H2_DEFAULT_I = 0.2;
+constexpr float H2_DEFAULT_D = 100.0;
+
+constexpr float H3_DEFAULT_P = 7.0;
+constexpr float H3_DEFAULT_I = 0.2;
+constexpr float H3_DEFAULT_D = 100.0;
+
 // *** motor settings ************************************************************************************
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
@@ -164,7 +176,7 @@
 #define X_JERK_HIGH_SPEED		    10000					// xjh
 #define X_JUNCTION_DEVIATION    	JUNCTION_DEVIATION		// xjd
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIR                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY	    	(60 * 25.4)				// xsv	minus means move to minimum switch
 #define X_LATCH_VELOCITY	    	(30 * 25.4)				// xlv	mm/min
 #define X_LATCH_BACKOFF		    	(0.125 * 25.4)			// xlb	mm
@@ -179,7 +191,7 @@
 #define Y_JERK_HIGH_SPEED		    10000
 #define Y_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIR                0
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Y_LATCH_VELOCITY	    	(30 * 25.4)
 #define Y_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -194,7 +206,7 @@
 #define Z_JERK_HIGH_SPEED		    1000
 #define Z_JUNCTION_DEVIATION    	0.05
 #define Z_HOMING_INPUT              6
-#define Z_HOMING_DIR                1
+#define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY	    	(60 * 25.4)
 #define Z_LATCH_VELOCITY	    	(30 * 25.4)
 #define Z_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -210,7 +222,7 @@
 #define A_JUNCTION_DEVIATION    	0.1
 #define A_RADIUS			    	1.0
 #define A_HOMING_INPUT              0
-#define A_HOMING_DIR                0
+#define A_HOMING_DIRECTION          0
 #define A_SEARCH_VELOCITY	    	(60 * 25.4)
 #define A_LATCH_VELOCITY	    	(30 * 25.4)
 #define A_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -226,7 +238,7 @@
 #define B_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define B_RADIUS			    	1
 #define B_HOMING_INPUT              0
-#define B_HOMING_DIR                0
+#define B_HOMING_DIRECTION          0
 #define B_SEARCH_VELOCITY	    	(60 * 25.4)
 #define B_LATCH_VELOCITY	    	(30 * 25.4)
 #define B_LATCH_BACKOFF		    	(0.125 * 25.4)
@@ -242,7 +254,7 @@
 #define C_JUNCTION_DEVIATION    	JUNCTION_DEVIATION
 #define C_RADIUS			    	1
 #define C_HOMING_INPUT              0
-#define C_HOMING_DIR                0
+#define C_HOMING_DIRECTION          0
 #define C_SEARCH_VELOCITY	    	(60 * 25.4)
 #define C_LATCH_VELOCITY	    	(30 * 25.4)
 #define C_LATCH_BACKOFF		    	(0.125 * 25.4)

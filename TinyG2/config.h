@@ -2,7 +2,7 @@
  * config.h - configuration sub-system generic part (see config_app for application part)
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -180,6 +180,8 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 #define NV_SHARED_STRING_LEN 512		// shared string for string values
 #define NV_BODY_LEN 40					// body elements - allow for 1 parent + N children
 										// (each body element takes about 30 bytes of RAM)
+#define NV_EXEC_LEN 10					// elements reserved for exec, which won't directly respond
+// (each body element takes about 30 bytes of RAM)
 
 // Stuff you probably don't want to change
 
@@ -187,6 +189,7 @@ typedef uint16_t index_t;				// use this if there are > 255 indexed objects
 #define TOKEN_LEN 6						// mnemonic token string: group prefix + short token
 #define NV_FOOTER_LEN 18				// sufficient space to contain a JSON footer array
 #define NV_LIST_LEN (NV_BODY_LEN+2)		// +2 allows for a header and a footer
+#define NV_EXEC_FIRST (NV_BODY_LEN+2)		// index of the first EXEC nv
 #define NV_MAX_OBJECTS (NV_BODY_LEN-1)	// maximum number of objects in a body string
 #define NO_MATCH (index_t)0xFFFF
 
@@ -203,7 +206,7 @@ typedef enum {
 } flowControl;
 
 typedef enum {						    // value typing for config and JSON
-	TYPE_EMPTY = -1,					// value struct is empty (which is not the same as "NULL")
+	TYPE_EMPTY = -1,					    // value struct is empty (which is not the same as "NULL")
 	TYPE_NULL = 0,						// value is 'null' (meaning the JSON null value)
 	TYPE_PARENT,						// object is a parent to a sub-object
 	TYPE_FLOAT,							// value is a floating point number
@@ -255,7 +258,7 @@ typedef struct nvObject {				// depending on use, not all elements may be popula
 	float value;						// numeric value
 	char group[GROUP_LEN+1];			// group prefix or NUL if not in a group
 	char token[TOKEN_LEN+1];			// full mnemonic token for lookup
-	char (*stringp)[];				// pointer to array of characters from shared character array
+	char (*stringp)[];				    // pointer to array of characters from shared character array
 } nvObj_t; 								// OK, so it's not REALLY an object
 
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access
@@ -263,7 +266,7 @@ typedef void (*fptrPrint)(nvObj_t *nv);	// required for PROGMEM access
 
 typedef struct nvList {
 	uint16_t magic_start;
-	nvObj_t list[NV_LIST_LEN];			// list of nv objects, including space for a JSON header element
+	nvObj_t list[NV_LIST_LEN+NV_EXEC_LEN];			// list of nv objects, including space for a JSON header element
 	uint16_t magic_end;
 } nvList_t;
 
@@ -288,6 +291,7 @@ extern const cfgItem_t cfgArray[];
 //#define nv_header nv.list
 #define nv_header (&nvl.list[0])
 #define nv_body   (&nvl.list[1])
+#define nv_exec   (&nvl.list[NV_EXEC_FIRST])
 
 /**** Prototypes for generic config functions - see individual modules for application-specific functions  ****/
 
@@ -337,6 +341,7 @@ stat_t get_grp(nvObj_t *nv);				// get data for a group
 void nv_get_nvObj(nvObj_t *nv);
 nvObj_t *nv_reset_nv(nvObj_t *nv);
 nvObj_t *nv_reset_nv_list(void);
+nvObj_t *nv_reset_exec_nv_list();
 stat_t nv_copy_string(nvObj_t *nv, const char *src);
 nvObj_t *nv_add_object(const char *token);
 nvObj_t *nv_add_integer(const char *token, const uint32_t value);

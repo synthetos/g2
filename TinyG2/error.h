@@ -53,7 +53,7 @@
 typedef uint8_t stat_t;
 extern stat_t status_code;
 
-#define MESSAGE_LEN 80                  // global message string storage allocation
+#define GLOBAL_STRING_LEN 256  // allow sufficient space for JSON responses and message strings
 extern char global_string_buf[];
 
 char *get_status_message(stat_t status);
@@ -106,8 +106,8 @@ char *get_status_message(stat_t status);
 #define	STAT_FLOAT_IS_NAN 33
 #define	STAT_PERSISTENCE_ERROR 34
 #define	STAT_BAD_STATUS_REPORT_SETTING 35
-/*
-#define	STAT_ERROR_36 36
+#define	STAT_FAILED_GET_PLANNER_BUFFER 36
+
 #define	STAT_ERROR_37 37
 #define	STAT_ERROR_38 38
 #define	STAT_ERROR_39 39
@@ -163,10 +163,10 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_84 84
 #define	STAT_ERROR_85 85
 #define	STAT_ERROR_86 86
-#define	STAT_ERROR_87 87
-*/
+
 // Assertion failures - build down from 99 until they meet the system internal errors
 
+#define	STAT_TEMPERATURE_CONTROL_ERROR 87
 #define	STAT_BUFFER_FREE_ASSERTION_FAILURE 88
 #define	STAT_STATE_MANAGEMENT_ASSERTION_FAILURE 89
 #define	STAT_CONFIG_ASSERTION_FAILURE 90
@@ -197,7 +197,7 @@ char *get_status_message(stat_t status);
 #define	STAT_JSON_TOO_LONG 110					// JSON output exceeds buffer size
 #define	STAT_CONFIG_NOT_TAKEN 111				// configuration value not taken while in machining cycle
 #define	STAT_COMMAND_NOT_ACCEPTED 112			// command cannot be accepted at this time
-/*
+
 #define	STAT_ERROR_113 113
 #define	STAT_ERROR_114 114
 #define	STAT_ERROR_115 115
@@ -216,7 +216,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_127 127
 #define	STAT_ERROR_128 128
 #define	STAT_ERROR_129 129
-*/
+
 // Gcode errors and warnings (Most originate from NIST - by concept, not number)
 // Fascinating: http://www.cncalarms.com/
 
@@ -278,7 +278,7 @@ char *get_status_message(stat_t status);
 #define STAT_T_WORD_IS_MISSING 180
 #define STAT_T_WORD_IS_INVALID 181
 
-/* reserved for Gcode or other program errors
+/* reserved for Gcode or other program errors */
 
 #define	STAT_ERROR_183 183
 #define	STAT_ERROR_184 184
@@ -298,7 +298,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_197 197
 #define	STAT_ERROR_198 198
 #define	STAT_ERROR_199 199
-*/
+
 // TinyG errors and warnings
 
 #define STAT_GENERIC_ERROR 200
@@ -309,7 +309,7 @@ char *get_status_message(stat_t status);
 #define	STAT_COMMAND_REJECTED_BY_SHUTDOWN 205           // command was not processed because machine is shutdown
 #define	STAT_COMMAND_REJECTED_BY_PANIC 206              // command was not processed because machine is paniced
 #define	STAT_KILL_JOB 207                               // ^d received (job kill)
-/*
+
 #define	STAT_ERROR_208 208
 #define	STAT_ERROR_209 209
 
@@ -323,7 +323,7 @@ char *get_status_message(stat_t status);
 #define	STAT_ERROR_217 217
 #define	STAT_ERROR_218 218
 #define	STAT_ERROR_219 219
-*/
+
 #define	STAT_SOFT_LIMIT_EXCEEDED 220					// soft limit error - axis unspecified
 #define	STAT_SOFT_LIMIT_EXCEEDED_XMIN 221				// soft limit error - X minimum
 #define	STAT_SOFT_LIMIT_EXCEEDED_XMAX 222				// soft limit error - X maximum
@@ -339,14 +339,14 @@ char *get_status_message(stat_t status);
 #define	STAT_SOFT_LIMIT_EXCEEDED_CMIN 231				// soft limit error - C minimum
 #define	STAT_SOFT_LIMIT_EXCEEDED_CMAX 232				// soft limit error - C maximum
 #define	STAT_SOFT_LIMIT_EXCEEDED_ARC 233				// soft limit err on arc
-/*
+
 #define	STAT_ERROR_234 234
 #define	STAT_ERROR_235 235
 #define	STAT_ERROR_236 236
 #define	STAT_ERROR_237 237
 #define	STAT_ERROR_238 238
 #define	STAT_ERROR_239 239
-*/
+
 #define	STAT_HOMING_CYCLE_FAILED 240					// homing cycle did not complete
 #define	STAT_HOMING_ERROR_BAD_OR_NO_AXIS 241
 #define	STAT_HOMING_ERROR_ZERO_SEARCH_VELOCITY 242
@@ -361,11 +361,11 @@ char *get_status_message(stat_t status);
 #define	STAT_PROBE_CYCLE_FAILED 250						// probing cycle did not complete
 #define STAT_PROBE_ENDPOINT_IS_STARTING_POINT 251
 #define	STAT_JOGGING_CYCLE_FAILED 252					// jogging cycle did not complete
-/*
+
 #define	STAT_ERROR_253 253
 #define	STAT_ERROR_254 254
 #define	STAT_ERROR_255 255
-*/
+
 // ****** !!! Do not exceed 255 without also changing stat_t typedef ******
 
 
@@ -413,8 +413,13 @@ static const char stat_32[] PROGMEM = "Float is infinite";
 static const char stat_33[] PROGMEM = "Float is NAN";
 static const char stat_34[] PROGMEM = "Persistence error";
 static const char stat_35[] PROGMEM = "Bad status report setting";
-static const char stat_36[] PROGMEM = "36";
-static const char stat_37[] PROGMEM = "37";
+static const char stat_36[] PROGMEM = "Failed to get planner buffer";
+
+//static const char stat_37[] PROGMEM = "37";
+//static const char stat_38[] PROGMEM = "38";
+//static const char stat_39[] PROGMEM = "39";
+
+static const char stat_37[] PROGMEM = "Backplan hit running buffer";
 static const char stat_38[] PROGMEM = "38";
 static const char stat_39[] PROGMEM = "39";
 

@@ -2,7 +2,8 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -27,12 +28,12 @@
 #include "xio.h"			// for char definitions
 
 // local helper functions and macros
-static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag);
+static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
 static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
 static stat_t _point(float value);
-static stat_t _validate_gcode_block(void);
-static stat_t _parse_gcode_block(char *line);   // Parse the block into the GN/GF structs
-static stat_t _execute_gcode_block(void);       // Execute the gcode block
+static stat_t _validate_gcode_block(char *active_comment);
+static stat_t _parse_gcode_block(char *line, char *active_comment);   // Parse the block into the GN/GF structs
+static stat_t _execute_gcode_block(char *active_comment);       // Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
@@ -48,22 +49,24 @@ stat_t gcode_parser(char *block)
 {
     char *str = block;                      // gcode command or NUL string
     char none = NUL;
-    char *com = &none;                      // gcode comment or NUL string
-    char *msg = &none;                      // gcode message or NUL string
+    char *active_comment = &none;                      // gcode comment or NUL string
+//    char *msg = &none;                      // gcode message or NUL string
     uint8_t block_delete_flag;
 
-	_normalize_gcode_block(str, &com, &msg, &block_delete_flag);
+	_normalize_gcode_block(str, &active_comment, &block_delete_flag);
 
 	// queue a "(MSG" response
-	if (*msg != NUL) {
-		(void)cm_message(msg);				// queue the message
-	}
+//	if (*msg != NUL) {
+//		(void)cm_message(msg);				// queue the message
+//	}
+
+    // TODO, now MSG is put in the active comment, handle that.
 
     if (str[0] == NUL) {                    // normalization returned null string
         return (STAT_OK);                   // most likely a comment line
     }
 
-    // Trap M30 and M2 as $clear conditions. This has no effect it not in ALARM or SHUTDOWN
+    // Trap M30 and M2 as $clear conditions. This has no effect if not in ALARM or SHUTDOWN
     cm_parse_clear(str);                    // parse Gcode and clear alarms if M30 or M2 is found
     ritorno(cm_is_alarmed());               // return error status if in alarm, shutdown or panic
 
@@ -73,13 +76,17 @@ stat_t gcode_parser(char *block)
 	if (block_delete_flag == true) {
 		return (STAT_NOOP);
 	}
-	return(_parse_gcode_block(block));
+	return(_parse_gcode_block(block, active_comment));
 }
 
 /*
  * _normalize_gcode_block() - normalize a block (line) of gcode in place
  *
  *	Normalization functions:
+ *   - Isolate "active comments"
+ *     - Many of the folowing are performed in active comments as well
+ *     - Strings are handled special (TODO)
+ *     - Active comments are moved to the end of the string, and multiple active comments are merged into one
  *   - convert all letters to upper case
  *	 - remove white space, control and other invalid characters
  *	 - remove (erroneous) leading zeros that might be taken to mean Octal
@@ -90,79 +97,248 @@ stat_t gcode_parser(char *block)
  *	So this: "g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *	Comment and message handling:
+ *   - Active comments start with exacly "({" and end with "})" (no relaxing, invalid is invalid)
  *	 - Comments field start with a '(' char or alternately a semicolon ';'
- *	 - Comments and messages are not normalized - they are left alone
- *	 - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
- *	 - Normalization returns true if there was a message to display, false otherwise
- *	 - Comments always terminate the block - i.e. leading or embedded comments are not supported
- *	 	- Valid cases (examples)			Notes:
- *		    G0X10							 - command only - no comment
- *		    (comment text)                   - There is no command on this line
- *		    G0X10 (comment text)
- *		    G0X10 (comment text				 - It's OK to drop the trailing paren
- *		    G0X10 ;comment text				 - It's OK to drop the trailing paren
- *
- *	 	- Invalid cases (examples)			Notes:
- *		    G0X10 comment text				 - Comment with no separator
- *		    N10 (comment) G0X10 			 - embedded comment. G0X10 will be ignored
- *		    (comment) G0X10 				 - leading comment. G0X10 will be ignored
- * 			G0X10 # comment					 - invalid separator
+ *	 - Active comments are moved to the end of the string and merged.
+ *   - Messages are converted to ({msg:"blah"}) active comments.
+ *	   - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
+ *   - Other "plain" comments will be discarded.
+ *   - Multiple embedded comments are acceptable.
+ *     - Multiple active comments will be merged.
+ *     - Only ONE MSG comment will be accepted.
  *
  *	Returns:
  *	 - com points to comment string or to NUL if no comment
  *	 - msg points to message string or to NUL if no comment
  *	 - block_delete_flag is set true if block delete encountered, false otherwise
  */
-static void _normalize_gcode_block(char *str, char **com, char **msg, uint8_t *block_delete_flag)
+
+static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+
+static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {
-	char *rd = str;				// read pointer
-	char *wr = str;				// write pointer
+    _normalize_scratch[0] = 0;
 
-	// Preset comments and messages to NUL string
-	// Not required if com and msg already point to NUL on entry
-//	for (rd = str; *rd != NUL; rd++) { if (*rd == NUL) { *com = rd; *msg = rd; rd = str;} }
+    char *gc_rd = str;				  // read pointer
+    char *gc_wr = _normalize_scratch; // write pointer
 
-	// mark block deletes
-	if (*rd == '/') {
+    char *ac_rd = str;				  // read pointer
+    char *ac_wr = _normalize_scratch; // Active Comment write pointer
+
+    bool last_char_was_digit = false; // used for octal stripping
+
+    /* Active comment notes:
+     
+     We will convert as follows:
+        FROM: G0 ({blah: t}) x10 (comment)
+        TO  : g0x10\0{blah:t}
+        NOTES: Active comments moved to the end, stripped of (), everything lowercased, and plain comment removed.
+     
+        FROM: M100 ({a:t}) (comment) ({b:f}) (comment)
+        TO  : m100\0{a:t,b:f}
+        NOTES: multiple active comments merged, stripped of (), and actual comments ignored.
+      */
+
+    // Move the ac_wr point forward one for every non-AC character we KEEP (plus one for a NULL in between)
+    ac_wr++; // account for the in-between NULL
+
+
+    // mark block deletes
+    if (*gc_rd == '/') {
         *block_delete_flag = true;
+        gc_rd++;
     } else {
         *block_delete_flag = false;
     }
 
-	// normalize the command block & find the comment (if any)
-    // Gcode comments start with '(', Inkscape with '%', and random comments with ';'
-	for (; *wr != NUL; rd++) {
-		if (*rd == NUL) { *wr = NUL; }
-		else if ((*rd == '(') || (*rd == ';')  || (*rd == '%')) { *wr = NUL; *com = rd+1; }
-		else if ((isalnum((char)*rd)) || (strchr("-.", *rd))) { // all valid characters
-			*(wr++) = toupper(*(rd));
-		}
-	}
+    while (*gc_rd != 0) {
+        // check for ';' or '%' comments that end the line.
+        if ((*gc_rd == ';') || (*gc_rd == '%')) {
+            // go ahead and snap the string off cleanly here
+            *gc_rd = 0;
+            break;
+        }
 
-	// Perform Octal stripping - remove invalid leading zeros in number strings
-	rd = str;
-	while (*rd != NUL) {
-		if (*rd == '.') break;							// don't strip past a decimal point
-		if ((!isdigit(*rd)) && (*(rd+1) == '0') && (isdigit(*(rd+2)))) {
-			wr = rd+1;
-			while (*wr != NUL) { *wr = *(wr+1); wr++;}	// copy forward w/overwrite
-			continue;
-		}
-		rd++;
-	}
+        // check for comment '('
+        else if (*gc_rd == '(') {
+            // We only care if it's a "({" in order to handle string-skipping properly
+            gc_rd++;
+            if ((*gc_rd == '{') || (((* gc_rd    == 'm') || (* gc_rd    == 'M')) &&
+                                    ((*(gc_rd+1) == 's') || (*(gc_rd+1) == 'S')) &&
+                                    ((*(gc_rd+2) == 'g') || (*(gc_rd+2) == 'G'))
+                )) {
+                if (ac_rd == nullptr) {
+                    ac_rd = gc_rd; // note the start of the first AC
+                }
 
-	// process comments and messages
-	if (**com != NUL) {
-		rd = *com;
-		while (isspace(*rd)) { rd++; }		// skip any leading spaces before "msg"
-		if ((tolower(*rd) == 'm') && (tolower(*(rd+1)) == 's') && (tolower(*(rd+2)) == 'g')) {
-			*msg = rd+3;
-		}
-		for (; *rd != NUL; rd++) {
-			if (*rd == ')') *rd = NUL;		// NUL terminate on trailing parenthesis, if any
-		}
-	}
+                // skip the comment, handling strings carefully
+                bool in_string = false;
+                while (*(++gc_rd) != 0) {
+                    if (*gc_rd=='"') {
+                        in_string = true;
+                    } else if (in_string) {
+                        if ((*gc_rd == '\\') && (*(gc_rd+1) != 0)) {
+                            gc_rd++; // Skip it, it's escaped.
+                        }
+
+                    } else if ((*gc_rd == ')')) {
+                        break;
+                    }
+                }
+
+                // We don't want the rd++ later to skip the NULL if we're at one
+                if (*gc_rd == 0) {
+                    break;
+                }
+
+            } else {
+                // Change the '(' to a space to simplify the comment copy later
+                *(gc_rd-1) = ' ';
+
+                // skip ahead until we find a ')' (or NULL)
+                while ((*gc_rd != 0) && (*gc_rd != ')')) {
+                    gc_rd++;
+                }
+            }
+
+        } else if (!isspace(*gc_rd)) {
+            bool do_copy = false;
+
+            // Perform Octal stripping - remove invalid leading zeros in number strings
+            // Change 0123.004 to 123.004, or -0234.003 to -234.003
+            if (isdigit(*gc_rd) || (*gc_rd == '.')) { // treat '.' as a digit so we don't strip after one
+                if (last_char_was_digit || (*gc_rd != '0') || !isdigit(*(gc_rd+1))) {
+                    do_copy = true;
+                }
+                last_char_was_digit = true;
+            }
+            else if ((isalnum((char)*gc_rd)) || (strchr("-.", *gc_rd))) { // all valid characters
+                last_char_was_digit = false;
+                do_copy = true;
+            }
+
+            if (do_copy) {
+                *(gc_wr++) = toupper(*gc_rd);
+                ac_wr++; // move the ac start position
+            }
+        }
+
+        gc_rd++;
+    }
+
+    // Enforce null termination
+    *gc_wr = 0;
+
+    // note the beginning of the comments
+    char *comment_start = ac_wr;
+
+    if (ac_rd != nullptr) {
+
+        // Now we'll copy the comments to the scratch
+        while (*ac_rd != 0) {
+            // check for comment '('
+            // Remember: we're only "counting characters" at this point, no more.
+            if (*ac_rd == '(') {
+                // We only care if it's a "({" in order to handle string-skipping properly
+                ac_rd++;
+
+                bool do_copy = false;
+                bool in_msg = false;
+                if (((* ac_rd    == 'm') || (* ac_rd    == 'M')) &&
+                    ((*(ac_rd+1) == 's') || (*(ac_rd+1) == 'S')) &&
+                    ((*(ac_rd+2) == 'g') || (*(ac_rd+2) == 'G'))
+                    ) {
+
+                    ac_rd += 3;
+                    if (*ac_rd == ' ') {
+                        ac_rd++; // skip the first space.
+                    }
+
+                    if (*(ac_wr-1) == '}') {
+                        *(ac_wr-1) = ',';
+                    } else {
+                        *(ac_wr++) = '{';
+                    }
+                    *(ac_wr++) = 'm';
+                    *(ac_wr++) = 's';
+                    *(ac_wr++) = 'g';
+                    *(ac_wr++) = ':';
+                    *(ac_wr++) = '"';
+
+                    // TODO - FIX BUFFER OVERFLOW POTENTIAL
+                    // "(msg)" is four characters. "{msg:" is five. If the write buffer is full, we'll overflow.
+                    // Also " is MSG will be quoted, making one character into two.
+
+                    in_msg = true;
+                    do_copy = true;
+                }
+
+                else if (*ac_rd == '{') {
+                    // merge json comments
+                    if (*(ac_wr-1) == '}') {
+                        *(ac_wr-1) = ',';
+
+                        // don't copy the '{'
+                        ac_rd++;
+                    }
+
+                    do_copy = true;
+                }
+
+                if (do_copy) {
+                    // skip the comment, handling strings carefully
+                    bool in_string = false;
+                    bool escaped = false;
+                    while (*ac_rd != 0) {
+                        if (in_string && (*ac_rd == '\\')) {
+                            escaped = true;
+                        } else if (!escaped && (*ac_rd == '"')) {
+                            // In msg comments, we have to escape "
+                            if (in_msg) {
+                                *(ac_wr++) = '\\';
+                            } else {
+                                in_string = !in_string;
+                            }
+                        } else if (!in_string && (*ac_rd == ')')) {
+                            ac_rd++;
+                            if (in_msg) {
+                                *(ac_wr++) = '"';
+                                *(ac_wr++) = '}';
+                            }
+                            break;
+                        } else {
+                            escaped = false;
+                        }
+
+                        // Skip spaces if we're not in a string or msg (implicit string)
+                        if (in_string || in_msg || (*ac_rd != ' ')) {
+                            *ac_wr = *ac_rd;
+                            ac_wr++;
+                        }
+
+                        ac_rd++;
+                    }
+                }
+
+                // We don't want the rd++ later to skip the NULL if we're at one
+                if (*ac_rd == 0) {
+                    break;
+                }
+            }
+
+            ac_rd++;
+        }
+    }
+
+    // Enforce null termination
+    *ac_wr = 0;
+
+    // Now copy it all back
+    memcpy(str, _normalize_scratch, (ac_wr-_normalize_scratch)+1);
+
+    *active_comment = str + (comment_start - _normalize_scratch);
 }
+
 
 /*
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value
@@ -213,7 +389,7 @@ static uint8_t _point(float value)
  * _validate_gcode_block() - check for some gross Gcode block semantic violations
  */
 
-static stat_t _validate_gcode_block()
+static stat_t _validate_gcode_block(char *active_comment)
 {
 	//	Check for modal group violations. From NIST, section 3.4 "It is an error to put
 	//	a G-code from group 1 and a G-code from group 0 on the same line if both of them
@@ -242,7 +418,7 @@ static stat_t _validate_gcode_block()
  *	contain only uppercase characters and signed floats (no whitespace).
  */
 
-static stat_t _parse_gcode_block(char *buf)
+static stat_t _parse_gcode_block(char *buf, char *active_comment)
 {
     char *pstr = (char *)buf;       // persistent pointer into gcode block for parsing words
     char letter;                    // parsed letter, eg.g. G or X or Y
@@ -299,7 +475,10 @@ static stat_t _parse_gcode_block(char *buf)
 				}
 				case 38: {
 					switch (_point(value)) {
-						case 2: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE);
+                        case 2: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE_ERR);
+                        case 3: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE);
+                        case 4: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR);
+                        case 5: SET_NON_MODAL (next_action, NEXT_ACTION_STRAIGHT_PROBE_AWAY);
 						default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
 					}
 					break;
@@ -373,6 +552,9 @@ static stat_t _parse_gcode_block(char *buf)
 				case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
 				case 50: SET_MODAL (MODAL_GROUP_M9, mfo_enable, true);
 				case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
+                case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
+                case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
+//                case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
 				default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
 			}
 			break;
@@ -401,8 +583,8 @@ static stat_t _parse_gcode_block(char *buf)
 		if(status != STAT_OK) break;
 	}
 	if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
-	ritorno(_validate_gcode_block());
-	return (_execute_gcode_block());		// if successful execute the block
+	ritorno(_validate_gcode_block(active_comment));
+	return (_execute_gcode_block(active_comment));		// if successful execute the block
 }
 
 /*
@@ -445,15 +627,13 @@ static stat_t _parse_gcode_block(char *buf)
  *	to calling the canonical functions (which do the unit conversions)
  */
 
-static stat_t _execute_gcode_block()
+static stat_t _execute_gcode_block(char *active_comment)
 {
 	stat_t status = STAT_OK;
 
 	cm_set_model_linenum(cm.gn.linenum);
 	EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
 	EXEC_FUNC(cm_set_feed_rate, feed_rate);                 // F
-//	EXEC_FUNC(cm_feed_rate_override_factor, feed_rate_override_factor);
-//	EXEC_FUNC(cm_traverse_override_factor, traverse_override_factor);
 	EXEC_FUNC(cm_set_spindle_speed, spindle_speed);         // S
 //	EXEC_FUNC(cm_spindle_override_factor, spindle_override_factor);
 	EXEC_FUNC(cm_select_tool, tool_select);					// tool_select is where it's written
@@ -461,17 +641,16 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_spindle_control, spindle_control); 		// spindle CW, CCW, OFF
 
 /*
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// M8, M9 also disables mist coolant if OFF
 //	EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
 //	EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
 //	EXEC_FUNC(cm_spindle_override_enable, spindle_override_enable);
 //	EXEC_FUNC(cm_override_enables, override_enables);
 */
-	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);
-	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// also disables mist coolant if OFF
+	EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
+	EXEC_FUNC(cm_flood_coolant_control, flood_coolant);		// M8, M9 also disables mist coolant if OFF
 	EXEC_FUNC(cm_m48_enable, m48_enable);
 	EXEC_FUNC(cm_mfo_enable, mfo_enable);
+//	EXEC_FUNC(cm_mfo_enable, feed_rate_override_factor);
 //	EXEC_FUNC(cm_sso_enable, sso_enable);
 
 	if (cm.gn.next_action == NEXT_ACTION_DWELL) { 			// G4 - dwell
@@ -482,7 +661,9 @@ static stat_t _execute_gcode_block()
 	//--> cutter radius compensation goes here
 	//--> cutter length compensation goes here
 	EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
-	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
+//	EXEC_FUNC(cm_set_path_control, path_control);           // G61, G61.1, G64
+    if(cm.gf.path_control) { status = cm_set_path_control(MODEL, cm.gn.path_control); }
+   
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
 	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
 	//--> set retract mode goes here
@@ -497,13 +678,20 @@ static stat_t _execute_gcode_block()
         case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm.gn.target, cm.gf.target); break;}// G28.3
         case NEXT_ACTION_HOMING_NO_SET:       { status = cm_homing_cycle_start_no_set(); break;}                    // G28.4
 
-		case NEXT_ACTION_STRAIGHT_PROBE:      { status = cm_straight_probe(cm.gn.target, cm.gf.target); break;}     // G38.2
+		case NEXT_ACTION_STRAIGHT_PROBE_ERR:      { status = cm_straight_probe(cm.gn.target, cm.gf.target, true, true); break;}  // G38.2
+        case NEXT_ACTION_STRAIGHT_PROBE:          { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, true); break;} // G38.3
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:     { status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;}   // G38.4
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY: { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}  // G38.5
 
 		case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
 		case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
 		case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
 		case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2
 		case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                     // G92.3
+
+        case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}               // M100
+//        case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;}   // M101
+        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}                  // M102
 
 		case NEXT_ACTION_DEFAULT: {
     		cm_set_absolute_override(MODEL, cm.gn.absolute_override);	// apply absolute override

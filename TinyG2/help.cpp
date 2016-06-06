@@ -2,7 +2,7 @@
  * help.cpp - collected help routines
  * This file is part of the TinyG2 project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -21,6 +21,7 @@
 #include "config.h"		// #2
 #include "report.h"
 #include "help.h"
+#include "xio.h"
 
 // help helper functions (snicker)
 
@@ -30,7 +31,7 @@ stat_t help_stub(nvObj_t *nv) {return (STAT_OK);}
 
 static void _status_report_advisory()
 {
-fprintf_P(stderr, PSTR("\n\
+xio_writeline(PSTR("\n\
 Note: TinyG generates automatic status reports by default\n\
 This can be disabled by entering $sv=0\n\
 See the wiki below for more details.\n\
@@ -39,7 +40,7 @@ See the wiki below for more details.\n\
 
 static void _postscript()
 {
-fprintf_P(stderr, PSTR("\n\
+xio_writeline(PSTR("\n\
 For detailed TinyG info see: https://github.com/synthetos/TinyG/wiki\n\
 For the latest firmware see: https://github.com/synthetos/TinyG\n\
 Please log any issues at https://github.com/synthetos/TinyG/issues\n\
@@ -51,8 +52,8 @@ Have fun\n"));
  */
 uint8_t help_general(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG Help ###\n"));
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\n\n### TinyG Help ###\n"));
+xio_writeline(PSTR("\n\
 These commands are active from the command line:\n\
  ^x             Reset (control x) - software reset\n\
   ?             Machine position and gcode model state\n\
@@ -77,8 +78,8 @@ return(STAT_OK);
  */
 stat_t help_config(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG CONFIGURATION Help ###\n"));
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\n\n### TinyG CONFIGURATION Help ###\n"));
+xio_writeline(PSTR("\n\
 These commands are active for configuration:\n\
   $sys Show system (general) settings\n\
   $1   Show motor 1 settings (or whatever motor you want 1,2,3,4)\n\
@@ -89,8 +90,7 @@ These commands are active for configuration:\n\
   $$   Show all settings\n\
   $h   Show this help screen\n\n\
 "));
-
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\
 Each $ command above also displays the token for each setting in [ ] brackets\n\
 To view settings enter a token:\n\n\
   $<token>\n\n\
@@ -110,8 +110,8 @@ return(STAT_OK);
  */
 stat_t help_test(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG SELF TEST Help ###\n"));
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\n\n### TinyG SELF TEST Help ###\n"));
+xio_writeline(PSTR("\n\
 Invoke self test by entering $test=N where N is one of:\n\
   $test=1  smoke test\n\
   $test=2  homing test   (you must trip homing switches)\n\
@@ -141,8 +141,8 @@ return(STAT_OK);
  */
 stat_t help_defa(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG RESTORE DEFAULTS Help ###\n"));
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\n\n### TinyG RESTORE DEFAULTS Help ###\n"));
+xio_writeline(PSTR("\n\
 Enter $defa=1 to reset the system to the factory default values.\n\
 This will overwrite any changes you have made.\n"));
 _postscript();
@@ -154,8 +154,8 @@ return(STAT_OK);
  */
 stat_t help_flash(nvObj_t *nv)
 {
-fprintf_P(stderr, PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
-fprintf_P(stderr, PSTR("\
+xio_writeline(PSTR("\n\n\n### TinyG FLASH LOADER Help ###\n"));
+xio_writeline(PSTR("\n\
 Enter $flash=1 to enter the flash loader.\n"));
 _postscript();
 return(STAT_OK);

@@ -378,13 +378,14 @@ typedef struct stConfig {               // stepper configs
 typedef struct stRunMotor {             // one per controlled motor
     uint32_t substep_increment;         // total steps in axis times substeps factor
     int32_t substep_accumulator;        // DDA phase angle accumulator
+    bool motor_flag;                    // true if motor is participating in this move
     stPowerState power_state;           // state machine for managing motor power
     uint32_t power_systick;             // sys_tick for next motor power state transition
     float power_level_dynamic;          // power level for this segment of idle (ARM only)
 } stRunMotor_t;
 
 typedef struct stRunSingleton {         // Stepper static values and axis parameters
-    magic_t magic_start;               // magic number to test memory integrity
+    magic_t magic_start;                // magic number to test memory integrity
     uint32_t dda_ticks_downcount;       // tick down-counter (unscaled)
     uint32_t dda_ticks_X_substeps;      // ticks multiplied by scaling factor
     stRunMotor_t mot[MOTORS];           // runtime motor structures
@@ -396,6 +397,7 @@ typedef struct stRunSingleton {         // Stepper static values and axis parame
 
 typedef struct stPrepMotor {
     uint32_t substep_increment;             // total steps in axis times substep factor
+    bool motor_flag;                        // true if motor is participating in this move
 
     // direction and direction change
     uint8_t direction;                      // travel direction corrected for polarity (CW==0. CCW==1)
@@ -413,10 +415,10 @@ typedef struct stPrepMotor {
 } stPrepMotor_t;
 
 typedef struct stPrepSingleton {
-    magic_t magic_start;                   // magic number to test memory integrity
+    magic_t magic_start;                    // magic number to test memory integrity
     volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
     struct mpBuffer *bf;                    // static pointer to relevant buffer
-    moveType move_type;                     // move type (requires planner.h)
+    blockType block_type;                   // move type (requires planner.h)
 
     uint16_t dda_period;                    // DDA or dwell clock period setting
     uint32_t dda_ticks;                     // DDA or dwell ticks for the move
@@ -443,12 +445,14 @@ void st_deenergize_motors(void);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
+void st_request_plan_move(void);
 void st_request_exec_move(void);
 void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);		// use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
 void st_request_out_of_band_dwell(float microseconds);
+//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
 stat_t st_set_sa(nvObj_t *nv);
