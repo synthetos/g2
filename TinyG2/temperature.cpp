@@ -206,9 +206,12 @@ Thermistor<kADC1_PinNumber> thermistor1 {
     };
 
 #if ADC1_AVAILABLE == 1
+namespace Motate {
+template<>
 void ADCPin<kADC1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
 };
+}
 #endif
 
 // Extruder 2
@@ -217,9 +220,12 @@ Thermistor<kADC2_PinNumber> thermistor2 {
     /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC2_AVAILABLE == 1
+namespace Motate {
+template<>
 void ADCPin<kADC2_PinNumber>::interrupt() {
     thermistor2.adc_has_new_value();
 };
+}
 #endif
 
 // Heated bed
@@ -228,9 +234,12 @@ Thermistor<kADC0_PinNumber> thermistor3 {
     /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC0_AVAILABLE == 1
+namespace Motate {
+template<>
 void ADCPin<kADC0_PinNumber>::interrupt() {
     thermistor3.adc_has_new_value();
 };
+}
 #endif
 
 float last_reported_temp1 = 0; // keep track of what we've reported for SR generation
@@ -419,8 +428,8 @@ void temperature_init()
     fet_pin2.setFrequency(fet_pin2_freq);
     fet_pin3.setFrequency(fet_pin3_freq);
 
-    fan_pin1 = 0;
-    fan_pin1.setFrequency(200000);
+//    fan_pin1 = 0;
+//    fan_pin1.setFrequency(200000);
 //    fan_pin2 = 1;
 //    fan_pin2.setFrequency(200000);
 //    fan_pin3 = 1;

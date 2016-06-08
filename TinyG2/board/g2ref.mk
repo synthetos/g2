@@ -27,7 +27,7 @@ ifeq ("$(BASE_BOARD)","g2-g2ref")
 
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
 
     CHIP = SAM3X8C
     export CHIP
