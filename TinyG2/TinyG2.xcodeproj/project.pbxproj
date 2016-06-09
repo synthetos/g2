@@ -138,6 +138,9 @@
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
 		D4EB789B1B7BF2F70001B355 /* G2v9.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.gdb; sourceTree = "<group>"; };
+		D4F226F01D088860008ED57C /* gquintic */ = {isa = PBXFileReference; lastKnownFileType = folder; path = gquintic; sourceTree = "<group>"; };
+		D4F226F11D088860008ED57C /* gquintic.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = gquintic.gdb; sourceTree = "<group>"; };
+		D4F226F21D088860008ED57C /* gquintic.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = gquintic.mk; sourceTree = "<group>"; };
 		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -165,6 +168,9 @@
 				D4037C071CD920CA00BC72AD /* g2ref */,
 				D49367CA1B827706000BB759 /* g2ref.gdb */,
 				D49367CB1B827706000BB759 /* g2ref.mk */,
+				D4F226F01D088860008ED57C /* gquintic */,
+				D4F226F11D088860008ED57C /* gquintic.gdb */,
+				D4F226F21D088860008ED57C /* gquintic.mk */,
 				D4037C081CD920DB00BC72AD /* pboard */,
 				D4522DC61C455F660086AAE6 /* pboard.gdb */,
 				D4522DC71C455F660086AAE6 /* pboard.mk */,
@@ -418,6 +424,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-a DEBUG=2";
+			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG gQuintic PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG gQuintic PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -470,6 +490,7 @@
 				D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */,
 				D4037C091CDA42F300BC72AD /* TinyG printrboardG2v3 PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
+				D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -789,6 +810,22 @@
 			};
 			name = Release;
 		};
+		D4F226F51D088A48008ED57C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4F226F61D088A48008ED57C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -905,6 +942,15 @@
 			buildConfigurations = (
 				D4E9135F1AC46B8B0042A16C /* Debug */,
 				D4E913601AC46B8B0042A16C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG gQuintic PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4F226F51D088A48008ED57C /* Debug */,
+				D4F226F61D088A48008ED57C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

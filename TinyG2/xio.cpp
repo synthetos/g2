@@ -889,6 +889,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
 
 // ALLOCATIONS
 // Declare a device wrapper class for SerialUSB and SerialUSB1
+#if XIO_HAS_USB == 1
 xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {
     &SerialUSB,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
@@ -897,6 +898,7 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
     &SerialUSB1,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
+#endif // XIO_HAS_USB
 #if XIO_HAS_UART==1
 xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
     &Serial,
@@ -907,8 +909,10 @@ xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
+#if XIO_HAS_USB == 1
     &serialUSB0Wrapper,
     &serialUSB1Wrapper,
+#endif // XIO_HAS_USB
 #if XIO_HAS_UART == 1
     &serial0Wrapper
 #endif
@@ -933,8 +937,10 @@ void xio_init()
 {
     board_xio_init();
 
+#if XIO_HAS_USB == 1
     serialUSB0Wrapper.init();
     serialUSB1Wrapper.init();
+#endif
 #if XIO_HAS_UART == 1
     serial0Wrapper.init();
 #endif

@@ -70,6 +70,13 @@ ifeq ("$(CONFIG)","TestV9")
     SETTINGS_FILE="settings_test.h"
 endif
 
+ifeq ("$(CONFIG)","TestQuintic")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-a
+    endif
+    SETTINGS_FILE="settings_test.h"
+endif
+
 
 ##########
 # Shopbot configs:
