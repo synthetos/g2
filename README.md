@@ -1,12 +1,7 @@
-This branch is for feature development.
+# TinyG 2
 
-Do NOT use it in production.
+Other Machine Co production fork of Synthetos's g2 firmware.
 
-You have been warned.
+To build firmware for a V2 Othermill: `cd TinyG2 && make PLATFORM=Othermill`
 
-Thank you,
-  -Rob
-
-========================
-
-[![Build Status](https://travis-ci.org/synthetos/g2.svg)](https://travis-ci.org/synthetos/g2)
+To build firmware for an Othermill Pro: `cd TinyG2 && make PLATFORM=OthermillPro`
