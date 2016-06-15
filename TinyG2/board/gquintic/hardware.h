@@ -136,7 +136,7 @@ typedef ServiceCall<2> fwd_plan_timer_type;	// request exec timer in stepper.cpp
 // Pin assignments
 
 pin_number indicator_led_pin_num = Motate::kLED_USBRXPinNumber;
-static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
+static OutputPin<indicator_led_pin_num> IndicatorLed;
 
 // Init these to input to keep them high-z
 static Pin<Motate::kSPI0_MISOPinNumber> spi_miso_pin(Motate::kInput);

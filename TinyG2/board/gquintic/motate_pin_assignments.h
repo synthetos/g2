@@ -159,7 +159,7 @@ namespace Motate {
     pin_number kDebug4_PinNumber                =  -1;  // 114;
     // END DEBUG PINS
 
-    pin_number kLED_USBRXPinNumber              =  -1;  // 117;
+    pin_number kLED_USBRXPinNumber              = 117;
     pin_number kLED_USBTXPinNumber              = 118;
     pin_number kSD_CardDetectPinNumber          = 119;
     pin_number kSD_ChipSelectPinNumber          = 120;

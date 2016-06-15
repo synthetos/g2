@@ -100,18 +100,18 @@
 // So we have to explicitly enable them as PWM pins.
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
-#define OUTPUT1_PWM 1
-#define OUTPUT2_PWM 1
-#define OUTPUT3_PWM 1
-#define OUTPUT4_PWM 1
-#define OUTPUT5_PWM 1
-#define OUTPUT6_PWM 0 // Can't PWM anyway
-#define OUTPUT7_PWM 0 // Conflicts with kSocket3_VrefPinNumber
-#define OUTPUT8_PWM 0 // Can't PWM anyway
-#define OUTPUT9_PWM 0 // Unused
-#define OUTPUT10_PWM 0 // Can't PWM anyway
-#define OUTPUT11_PWM 0 // Can't PWM anyway
-#define OUTPUT12_PWM 0 // Conflicts with kSocket2_VrefPinNumber
+#define OUTPUT1_PWM 1 // PWM1 - Fet 1
+#define OUTPUT2_PWM 1 // PWM2 - Fet 2
+#define OUTPUT3_PWM 1 // PWM3 - Fan 1
+#define OUTPUT4_PWM 0 // PWM2 - Fan 2
+#define OUTPUT5_PWM 1 // Timer2ch0 - Fan 3
+#define OUTPUT6_PWM 1 // Timer2ch1
+#define OUTPUT7_PWM 0 // PWM2
+#define OUTPUT8_PWM 1 // PWM0
+#define OUTPUT9_PWM 0 // PWM3 or Timer1ch0
+#define OUTPUT10_PWM 0 // PWM1
+#define OUTPUT11_PWM 0 // Can't PWM - Fet 3
+#define OUTPUT12_PWM 0 // Unused
 #define OUTPUT13_PWM 0 // Unused
 
 namespace Motate {
@@ -163,7 +163,7 @@ namespace Motate {
     //_MAKE_MOTATE_PIN(                                 , 'B', 10); // USB_D-
     //_MAKE_MOTATE_PIN(                                 , 'B', 11); // USB_D+
     //_MAKE_MOTATE_PIN(                                 , 'B', 12); // ERASE
-    _MAKE_MOTATE_PIN(kUnassigned12                      , 'B', 13); // LED_1 (Heartbeat)
+    _MAKE_MOTATE_PIN(kLED_USBRXPinNumber                , 'B', 13); // LED_1 (Heartbeat) - PWM2
     _MAKE_MOTATE_PIN(kUnassigned4
 , 'B', 14); //
 
