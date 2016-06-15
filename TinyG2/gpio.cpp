@@ -81,18 +81,28 @@ static void _dispatch_pin(const uint8_t input_num_ext);
 
 // WARNING: These return raw pin values, NOT corrected for NO/NC Active high/low
 //          Also, these take EXTERNAL pin numbers -- 1-based
-static InputPin<kInput1_PinNumber>  input_1_pin {kPullUp|kDebounce};
-static InputPin<kInput2_PinNumber>  input_2_pin {kPullUp|kDebounce};
-static InputPin<kInput3_PinNumber>  input_3_pin {kPullUp|kDebounce};
-static InputPin<kInput4_PinNumber>  input_4_pin {kPullUp|kDebounce};
-static InputPin<kInput5_PinNumber>  input_5_pin {kPullUp|kDebounce};
-static InputPin<kInput6_PinNumber>  input_6_pin {kPullUp|kDebounce};
-static InputPin<kInput7_PinNumber>  input_7_pin {kPullUp|kDebounce};
-static InputPin<kInput8_PinNumber>  input_8_pin {kPullUp|kDebounce};
-static InputPin<kInput9_PinNumber>  input_9_pin {kPullUp|kDebounce};
-static InputPin<kInput10_PinNumber> input_10_pin {kPullUp|kDebounce};
-static InputPin<kInput11_PinNumber> input_11_pin {kPullUp|kDebounce};
-static InputPin<kInput12_PinNumber> input_12_pin {kPullUp|kDebounce};
+/* Priority only needs set once in the system during startup.
+ * However, if we wish to switch the interrupt trigger, here are other options:
+ *  kPinInterruptOnRisingEdge
+ *  kPinInterruptOnFallingEdge
+ *
+ * To change the trigger, just call pin.setInterrupts(value) at any point.
+ * Note that it may cause an interrupt to fire *immediately*!
+ * vale defaults to kPinInterruptOnChange|kPinInterruptPriorityMedium is not specified.
+ */
+
+static IRQPin<kInput1_PinNumber>  input_1_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(1,  (input_1_pin.get()  != 0)));}};
+static IRQPin<kInput2_PinNumber>  input_2_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(2,  (input_2_pin.get()  != 0)));}};
+static IRQPin<kInput3_PinNumber>  input_3_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(3,  (input_3_pin.get()  != 0)));}};
+static IRQPin<kInput4_PinNumber>  input_4_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(4,  (input_4_pin.get()  != 0)));}};
+static IRQPin<kInput5_PinNumber>  input_5_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(5,  (input_5_pin.get()  != 0)));}};
+static IRQPin<kInput6_PinNumber>  input_6_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(6,  (input_6_pin.get()  != 0)));}};
+static IRQPin<kInput7_PinNumber>  input_7_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(7,  (input_7_pin.get()  != 0)));}};
+static IRQPin<kInput8_PinNumber>  input_8_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(8,  (input_8_pin.get()  != 0)));}};
+static IRQPin<kInput9_PinNumber>  input_9_pin  {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(9,  (input_9_pin.get()  != 0)));}};
+static IRQPin<kInput10_PinNumber> input_10_pin {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(10, (input_10_pin.get() != 0)));}};
+static IRQPin<kInput11_PinNumber> input_11_pin {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(11, (input_11_pin.get() != 0)));}};
+static IRQPin<kInput12_PinNumber> input_12_pin {kPullUp|kDebounce, []{_dispatch_pin(_condition_pin(12, (input_12_pin.get() != 0)));}};
 
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
@@ -189,18 +199,18 @@ void gpio_init(void)
      * To change the trigger, just call pin.setInterrupts(value) at any point.
      * Note that it may cause an interrupt to fire *immediately*!
      */
-    input_1_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_2_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_3_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_4_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_5_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_6_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_7_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_8_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_9_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
-    input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_1_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_2_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_3_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_4_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_5_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_6_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_7_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_8_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_9_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_10_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_11_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+//    input_12_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
 
     // Generated with:
     // perl -e 'for($i=1;$i<14;$i++) { print "output_${i}_pin.setFrequency(200000);\n";}'
@@ -329,44 +339,47 @@ static bool _read_raw_pin(const uint8_t input_num_ext)
  * The actual values will be the pin's port mask or 0, so you must check for non-zero.
  */
 
-#ifdef __ARM
-#if INPUT1_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput1_PinNumber) { _dispatch_pin(_condition_pin(1, (input_1_pin.get() != 0))); }
-#endif
-#if INPUT2_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput2_PinNumber) { _dispatch_pin(_condition_pin(2, (input_2_pin.get() != 0))); }
-#endif
-#if INPUT3_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput3_PinNumber) { _dispatch_pin(_condition_pin(3, (input_3_pin.get() != 0))); }
-#endif
-#if INPUT4_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput4_PinNumber) { _dispatch_pin(_condition_pin(4, (input_4_pin.get() != 0))); }
-#endif
-#if INPUT5_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput5_PinNumber) { _dispatch_pin(_condition_pin(5, (input_5_pin.get() != 0))); }
-#endif
-#if INPUT6_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput6_PinNumber) { _dispatch_pin(_condition_pin(6, (input_6_pin.get() != 0))); }
-#endif
-#if INPUT7_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput7_PinNumber) { _dispatch_pin(_condition_pin(7, (input_7_pin.get() != 0))); }
-#endif
-#if INPUT8_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput8_PinNumber) { _dispatch_pin(_condition_pin(8, (input_8_pin.get() != 0))); }
-#endif
-#if INPUT9_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput9_PinNumber) { _dispatch_pin(_condition_pin(9, (input_9_pin.get() != 0))); }
-#endif
-#if INPUT10_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput10_PinNumber) { _dispatch_pin(_condition_pin(9, (input_10_pin.get() != 0))); }
-#endif
-#if INPUT11_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput11_PinNumber) { _dispatch_pin(_condition_pin(10, (input_11_pin.get() != 0))); }
-#endif
-#if INPUT13_AVAILABLE == 1
-MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _dispatch_pin(_condition_pin(11, (input_12_pin.get() != 0))); }
-#endif
-#endif
+
+//#ifdef __ARM
+//namespace Motate {
+//    #if INPUT1_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput1_PinNumber) { _dispatch_pin(_condition_pin(1, (input_1_pin.get() != 0))); }
+//    #endif
+//    #if INPUT2_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput2_PinNumber) { _dispatch_pin(_condition_pin(2, (input_2_pin.get() != 0))); }
+//    #endif
+//    #if INPUT3_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput3_PinNumber) { _dispatch_pin(_condition_pin(3, (input_3_pin.get() != 0))); }
+//    #endif
+//    #if INPUT4_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput4_PinNumber) { _dispatch_pin(_condition_pin(4, (input_4_pin.get() != 0))); }
+//    #endif
+//    #if INPUT5_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput5_PinNumber) { _dispatch_pin(_condition_pin(5, (input_5_pin.get() != 0))); }
+//    #endif
+//    #if INPUT6_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput6_PinNumber) { _dispatch_pin(_condition_pin(6, (input_6_pin.get() != 0))); }
+//    #endif
+//    #if INPUT7_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput7_PinNumber) { _dispatch_pin(_condition_pin(7, (input_7_pin.get() != 0))); }
+//    #endif
+//    #if INPUT8_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput8_PinNumber) { _dispatch_pin(_condition_pin(8, (input_8_pin.get() != 0))); }
+//    #endif
+//    #if INPUT9_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput9_PinNumber) { _dispatch_pin(_condition_pin(9, (input_9_pin.get() != 0))); }
+//    #endif
+//    #if INPUT10_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput10_PinNumber) { _dispatch_pin(_condition_pin(9, (input_10_pin.get() != 0))); }
+//    #endif
+//    #if INPUT11_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput11_PinNumber) { _dispatch_pin(_condition_pin(10, (input_11_pin.get() != 0))); }
+//    #endif
+//    #if INPUT13_AVAILABLE == 1
+//    MOTATE_PIN_INTERRUPT(kInput12_PinNumber) { _dispatch_pin(_condition_pin(11, (input_12_pin.get() != 0))); }
+//    #endif
+//} // namespace Motate
+//#endif
 
 #ifdef __AVR
 ISR(X_MIN_ISR_vect)	{ _dispatch_pin(_condition_pin(1, (hw.sw_port[AXIS_X]->IN & SW_MIN_BIT_bm) != 0)); }

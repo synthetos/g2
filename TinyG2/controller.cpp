@@ -114,7 +114,7 @@ void controller_init(uint8_t std_in, uint8_t std_out, uint8_t std_err)
 #endif
 
 #ifdef __ARM
-	IndicatorLed.setFrequency(100000);
+//	IndicatorLed.setFrequency(100000);
 #endif
 }
 
