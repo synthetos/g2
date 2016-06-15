@@ -133,6 +133,7 @@ void xio_flush_read();
 size_t xio_write(const uint8_t *buffer, size_t size);
 char *xio_readline(devflags_t &flags, uint16_t &size);
 int16_t xio_writeline(const char *buffer);
+bool xio_connected();
 
 stat_t xio_set_spi(nvObj_t *nv);
 

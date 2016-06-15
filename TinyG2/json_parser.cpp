@@ -528,7 +528,7 @@ void json_print_response(uint8_t status)
 		nv_reset_nv_list();
 		nv_add_string((const char *)"err", escape_string(cs.bufp, cs.saved_buf));
 
-	} else if (cm.machine_state != MACHINE_INITIALIZING) {	// always do full echo during startup
+	} else if ((cm.machine_state != MACHINE_INITIALIZING) || (status == STAT_INITIALIZING)) {	// always do full echo during startup
 		uint8_t nv_type;
 		do {
 			if ((nv_type = nv_get_type(nv)) == NV_TYPE_NULL) break;

@@ -154,11 +154,8 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
     xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
-                                          flags(DEV_FLAGS_CLEAR),
-                                          next_flags(DEV_FLAGS_CLEAR)//,
-//                                          read_index(0),
-//                                          read_buf_size(USB_LINE_BUFFER_SIZE),
-//                                          _ready_to_send(false)
+    flags((_caps & DEV_IS_ALWAYS_BOTH) ? (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_ACTIVE) : DEV_FLAGS_CLEAR),
+                                          next_flags(DEV_FLAGS_CLEAR)
     {
     };
 
@@ -184,6 +181,17 @@ struct xio_t {
     };
 
     // ##### Connection management functions
+
+
+    bool connected() {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            if(DeviceWrappers[i]->isConnected()) {
+                return true;
+            }
+        }
+
+        return false;
+    };
 
     bool others_connected(xioDeviceWrapperBase* except) {
         for (int8_t i = 0; i < _dev_count; ++i) {
@@ -829,6 +837,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     setAsConnectedAndReady();
 
                     if (isAlwaysDataAndCtrl()) {
+                        controller_set_connected(true);
                         return;
                     }
 
@@ -984,6 +993,11 @@ int16_t xio_writeline(const char *buffer)
 void xio_flush_read()
 {
     return xio.flushRead();
+}
+
+bool xio_connected()
+{
+    return xio.connected();
 }
 
 
