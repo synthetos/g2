@@ -60,7 +60,7 @@ typedef struct controllerSingleton {	// main TG controller struct
 
 	// system state variables
 	csControllerState controller_state;
-	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
+//	uint8_t network_mode;				// 0=master, 1=repeater, 2=slave
 	uint32_t led_timer;                 // used to flash indicator LED
 	uint32_t led_blink_rate;            // used to flash indicator LED
 
@@ -68,8 +68,8 @@ typedef struct controllerSingleton {	// main TG controller struct
 	uint8_t comm_mode;					// 0=text mode, 1=JSON mode
 
 #ifdef __ARM
-    uint8_t state_usb0;
-    uint8_t state_usb1;
+//    uint8_t state_usb0;
+//    uint8_t state_usb1;
 //	bool shared_buf_overrun;            // flag for shared string buffer overrun condition
 #endif
 
