@@ -366,18 +366,16 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
     // SUPPORTING STRUCTURES
     enum _LinesHeaderStatus_t {
-        FREE,
-        PREPPED,
-        FILLING,
-        FULL
+        HEADER_FREE,
+        HEADER_PREPPED,
+        HEADER_FILLING,
+        HEADER_FULL
     };
 
     struct _LinesHeader {
-        _LinesHeaderStatus_t _status    : 3; // use only three bits
-        bool _is_control                : 1; // use a single bit
-        bool _is_processing             : 1; // use a single bit
-
-        bool : 0; // reset the bit field for proper alignment
+        _LinesHeaderStatus_t _status;
+        bool _is_control;
+        bool _is_processing;
 
         int16_t _line_count;   // number of lines in this group of lines
         int16_t _read_offset;  // start of the next line to read (first char past PROCESSING line)
@@ -387,7 +385,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
         // Convenience function for reset
         void reset() {
-            _status = FREE;
+            _status = HEADER_FREE;
             _is_control = false;
             _line_count = 0;
             _read_offset = 0;
@@ -436,11 +434,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         // Headers that were processing OR are now completely empty are now safe to clear,m
         // but only in order.
         auto _first_header = &_headers[_first_header_index];
-        while ((_first_header->_is_processing) || ((_first_header->_status == FULL) && (_first_header->_line_count == 0))) {
+        while ((_first_header->_is_processing) || ((_first_header->_status == HEADER_FULL) && (_first_header->_line_count == 0))) {
             _read_offset = _first_header->_read_offset;
             _first_header->_is_processing = false;
 
-            if ((_first_header->_status == FULL) && (_first_header->_line_count == 0)) {
+            if ((_first_header->_status == HEADER_FULL) && (_first_header->_line_count == 0)) {
                 _first_header->reset();
                 _first_header_index = _get_next_first_header_index();
 
@@ -452,9 +450,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             }
         }
 
-        if ((_write_header_index == _first_header_index) && (_first_header->_status == FREE)) {
+        if ((_write_header_index == _first_header_index) && (_first_header->_status == HEADER_FREE)) {
             // PREP it
-            _first_header->_status = PREPPED;
+            _first_header->_status = HEADER_PREPPED;
 
             _at_start_of_line = true;
             _first_header->_read_offset = _line_start_offset;
@@ -463,7 +461,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
     bool _check_write_header() {
         // _status cannot be PROCESSING, since we already cleared those in _free_unused_space()
-        if (_headers[_write_header_index]._status == FULL) {
+        if (_headers[_write_header_index]._status == HEADER_FULL) {
             uint8_t _next_write_header_index = _get_next_write_header_index();
             if (_next_write_header_index == _first_header_index) { // we're full full
                 return false;
@@ -471,7 +469,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             _write_header_index = _next_write_header_index;
 
             auto _write_header = &_headers[_write_header_index];
-            _write_header->_status = PREPPED;
+            _write_header->_status = HEADER_PREPPED;
             _at_start_of_line = true;
             _write_header->_read_offset = _line_start_offset;
         }
@@ -607,16 +605,16 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                 }
 
 
-                if (write_header->_status == PREPPED) {
+                if (write_header->_status == HEADER_PREPPED) {
                     write_header->_is_control = is_control;
-                    write_header->_status = FILLING;
+                    write_header->_status = HEADER_FILLING;
                 }
                 else if (write_header->_is_control != is_control)
                 {
                     // This line goes into the next header.
                     // Now we have to end this _write_header and grab another.
 
-                    write_header->_status = FULL;
+                    write_header->_status = HEADER_FULL;
                     if (!_check_write_header()) {
                         // We just bail if there's not another header available.
                         return;
@@ -625,7 +623,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                     // Update the pointer
                     write_header = &_headers[_write_header_index];
                     write_header->_is_control = is_control;
-                    write_header->_status = FILLING;
+                    write_header->_status = HEADER_FILLING;
                 }
 
                 write_header->_line_count++;
@@ -649,7 +647,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         auto search_header = &_headers[search_header_index];
         bool found_control = false;
         do {
-            if ((search_header->_status >= FILLING) &&
+            if ((search_header->_status >= HEADER_FILLING) &&
                 search_header->_is_control &&
                 (search_header->_line_count > 0)) {
 
@@ -699,7 +697,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             // fall through to finding the end of the line in search_header
 
 
-        } // end if (found_command)
+        } // end if (found_control)
         else {
 
             // Logic to determine that we can safely look at ONLY the first header:
@@ -710,23 +708,20 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             search_header = &_headers[search_header_index];
 
             if (control_only || search_header->_is_control || (search_header->_line_count == 0)) {
+                if ((search_header->_line_count == 0)) {
+                    _restartTransfer();
+                }
                 line_size = 0;
                 return nullptr;
             }
 
-        } // end if (!found_command)
+        } // end if (!found_control)
 
 
 
         // By the time we get here, search_header points to a valid header that we want to pull the first
         // full line from and return it.
 
-
-        // We know we have at least one line in the _data buffer, starting at search_header->_read_offset
-        // The line might "wrap" to the beginning of the ring buffer, however, and we don't want to pass
-        // back a pointer to *that*, so we detect a wrapped line and copy the characters that are on the
-        // other side of the "fold" to the extra space at the end of the buffer (which is there for just
-        // this reason.)
 
         uint16_t read_offset = search_header->_read_offset;
         char *dst_ptr = _line_buffer;
@@ -738,9 +733,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         }
 
         while (line_size < (_line_buffer_size - 2)) {
-//            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-//                _debug_trap("readline hit unreadable and shouldn't have!");
-//            }
+            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
+                _debug_trap("readline hit unreadable and shouldn't have!");
+            }
             char c = _data[read_offset];
 
             if (
