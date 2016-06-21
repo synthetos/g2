@@ -582,7 +582,7 @@ float cm_get_work_position(GCodeState_t *gcode_state, uint8_t axis);
 void cm_update_model_position_from_runtime(void);
 void cm_finalize_move(void);
 stat_t cm_deferred_write_callback(void);
-void cm_set_model_target(float target[], float flag[]);
+void cm_set_model_target(const float target[], const float flag[]);
 stat_t cm_test_soft_limits(float target[]);
 
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
@@ -626,9 +626,13 @@ stat_t cm_set_path_control(uint8_t mode);						// G61, G61.1, G64
 
 // Machining Functions (4.3.6)
 stat_t cm_straight_feed(float target[], float flags[]);			// G1
-stat_t cm_arc_feed(	float target[], float flags[], 				// G2, G3
-					float i, float j, float k,
-					float radius, float radius_flag, uint8_t motion_mode);
+stat_t cm_arc_feed(const float target[], const float target_f[],             // G2/G3 - target endpoint
+                   const float offset[], const float offset_f[],             // IJK offsets
+                   const float radius, const bool radius_f,                 // radius if radius mode                // non-zero radius implies radius mode
+                   const float P_word, const bool P_word_f,                 // parameter
+                   const bool modal_g1_f,                                   // modal group flag for motion group
+                   const uint8_t motion_mode);                              // defined motion mode
+
 stat_t cm_dwell(float seconds);									// G4, P parameter
 
 // Spindle Functions (4.3.7)

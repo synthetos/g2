@@ -107,7 +107,7 @@
 #define SETTINGS_FILE_PATH <settings/SETTINGS_FILE>
 #include SETTINGS_FILE_PATH
 #else
-#include "settings/settings_othermill_pro.h"				// Default settings for release
+#include "settings/settings_othermill.h"				// Default settings for release
 #endif
 
 //#include "settings/settings_default.h"				// Default settings for release

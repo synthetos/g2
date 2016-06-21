@@ -221,15 +221,23 @@ typedef uint16_t magic_t;		// magic number size
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
-#define AXIS_X		0
-#define AXIS_Y		1
-#define AXIS_Z		2
-#define AXIS_A		3
-#define AXIS_B		4
-#define AXIS_C		5
-#define AXIS_U		6			// reserved
-#define AXIS_V		7			// reserved
-#define AXIS_W		8			// reserved
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z,
+    AXIS_A,
+    AXIS_B,
+    AXIS_C,
+    AXIS_U,                     // reserved
+    AXIS_V,                     // reserved
+    AXIS_W                      // reserved
+} cmAxes;
+
+typedef enum {
+    OFS_I = 0,
+    OFS_J,
+    OFS_K
+} cmIJKOffsets;
 
 #define MOTOR_1		0 			// define motor numbers and array indexes
 #define MOTOR_2		1			// must be defines. enums don't work
@@ -460,8 +468,8 @@ char *get_status_message(stat_t status);
 #define	STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
 #define	STAT_S_WORD_IS_MISSING 151
 #define	STAT_S_WORD_IS_INVALID 152
-#define	STAT_SPINDLE_MUST_BE_OFF 153
-#define	STAT_SPINDLE_MUST_BE_TURNING 154				// some canned cycles require spindle to be turning when called
+#define	STAT_ARC_ERROR_RESERVED 153                     // RESERVED
+#define	STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154        // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
 #define	STAT_ARC_SPECIFICATION_ERROR 155				// generic arc specification error
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156	// arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified

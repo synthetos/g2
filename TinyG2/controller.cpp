@@ -183,7 +183,7 @@ static void _controller_HSM()
 	DISPATCH(rx_report_callback());             // conditionally send rx report
 
 	DISPATCH(_dispatch_control());				// read any control messages prior to executing cycles
-	DISPATCH(cm_arc_cycle_callback());			// arc generation runs as a cycle above lines
+	DISPATCH(cm_arc_callback());			// arc generation runs as a cycle above lines
 	DISPATCH(cm_homing_cycle_callback());		// homing cycle operation (G28.2)
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation

@@ -526,25 +526,15 @@ static stat_t _execute_gcode_block()
                     if(lineCoords) { status = cm_straight_traverse(cm.gn.target, cm.gf.target); } break;
                 case MOTION_MODE_STRAIGHT_FEED:
                     if(lineCoords) { status = cm_straight_feed(cm.gn.target, cm.gf.target); } break;
-                case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:
-                    //      -for IJK, it's an error to specify an irrelevant axis (e.g. K while you're on the XZ plane)
-                    //      -it's an error to specify both IJK and R
-                    //      -if IJK are specified, no axis coordinates need to be specified, but if R is specified at least one axis coordinate needs to be specified (e.g. X while you're on the XZ plane)
-                    if(fp_NOT_ZERO(cm.gf.arc_radius) && (fp_NOT_ZERO(cm.gf.arc_offset[0]) || fp_NOT_ZERO(cm.gf.arc_offset[1]) || fp_NOT_ZERO(cm.gf.arc_offset[2])))
-                        status = STAT_ARC_SPECIFICATION_ERROR;
-                    else if(fp_NOT_ZERO(cm.gf.arc_radius) && (
-                            (cm.gm.select_plane == CANON_PLANE_XY && fp_ZERO(cm.gf.target[AXIS_X]) && fp_ZERO(cm.gf.target[AXIS_Y])) ||
-                            (cm.gm.select_plane == CANON_PLANE_XZ && fp_ZERO(cm.gf.target[AXIS_X]) && fp_ZERO(cm.gf.target[AXIS_Z])) ||
-                            (cm.gm.select_plane == CANON_PLANE_YZ && fp_ZERO(cm.gf.target[AXIS_Y]) && fp_ZERO(cm.gf.target[AXIS_Z]))))
-                        status = STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE;
-                    else if(fp_ZERO(cm.gf.arc_radius) && (
-                            (cm.gm.select_plane == CANON_PLANE_XY && fp_ZERO(cm.gf.arc_offset[0]) && fp_ZERO(cm.gf.arc_offset[1])) ||
-                            (cm.gm.select_plane == CANON_PLANE_XZ && fp_ZERO(cm.gf.arc_offset[0]) && fp_ZERO(cm.gf.arc_offset[2])) ||
-                            (cm.gm.select_plane == CANON_PLANE_YZ && fp_ZERO(cm.gf.arc_offset[1]) && fp_ZERO(cm.gf.arc_offset[2]))))
-                        status = STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE;
-                    else
-                        status = cm_arc_feed(cm.gn.target, cm.gf.target, cm.gn.arc_offset[0], cm.gn.arc_offset[1], cm.gn.arc_offset[2], cm.gn.arc_radius, cm.gf.arc_radius, cm.gn.motion_mode);
+                case MOTION_MODE_CW_ARC:                                                                            // G2
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,                    // G3
+                                                                 cm.gn.arc_offset, cm.gf.arc_offset,
+                                                                 cm.gn.arc_radius, cm.gf.arc_radius,
+                                                                 cm.gn.parameter,  cm.gf.parameter,
+                                                                 gp.modals[MODAL_GROUP_G1],
+                                                                 cm.gn.motion_mode);
                     break;
+                }
                 default: break;
             }
             cm_set_absolute_override(MODEL, false);	 // un-set absolute override once the move is planned
