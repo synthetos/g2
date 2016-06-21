@@ -154,7 +154,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
     xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
-    flags((_caps & DEV_IS_ALWAYS_BOTH) ? (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_ACTIVE) : DEV_FLAGS_CLEAR),
+    flags((_caps & DEV_IS_ALWAYS_BOTH) ? (DEV_IS_CTRL | DEV_IS_DATA) : DEV_FLAGS_CLEAR),
                                           next_flags(DEV_FLAGS_CLEAR)
     {
     };
@@ -408,6 +408,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
     static_assert(((_header_count-1)&_header_count)==0, "_header_count must be 2^N");
 
     char _line_buffer[_line_buffer_size]; // hold excatly one line to return
+    uint32_t _line_end_guard = 0xBEEF;
 
     // General term usage:
     // * "index" indicates it's in to _headers array
@@ -421,6 +422,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
     uint16_t _scan_offset;          // offset into data of the last character scanned
     uint16_t _line_start_offset;    // offset into first character of the line
     bool     _at_start_of_line;     // true if the last character scanned was the end of a line
+
+    volatile uint16_t _last_scan_offset;  // DEBUGGING
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
@@ -456,6 +459,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
             _at_start_of_line = true;
             _first_header->_read_offset = _line_start_offset;
+
+            _restartTransfer();
         }
     };
 
@@ -484,21 +489,21 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         return _canBeRead(_scan_offset);
     };
 
-    // This function skips the "whitespace" at the BEGINNING of a line.
-    // This assumes we've already located the end of a line.
-    void _scan_past_line_start() {
-        while (_is_more_to_scan()) {
-            char c = _data[_scan_offset];
-            if (c == '\r' ||
-                c == '\n' ||
-                c == '\t' ||
-                c == ' ') {
-                _scan_offset = _get_next_scan_offset();
-            } else {
-                break;
-            }
-        } // end _skipping whitespace
-    };
+//    // This function skips the "whitespace" at the BEGINNING of a line.
+//    // This assumes we've already located the end of a line.
+//    void _scan_past_line_start() {
+//        while (_is_more_to_scan()) {
+//            char c = _data[_scan_offset];
+//            if (c == '\r' ||
+//                c == '\n' ||
+//                c == '\t' ||
+//                c == ' ') {
+//                _scan_offset = _get_next_scan_offset();
+//            } else {
+//                break;
+//            }
+//        } // end _skipping whitespace
+//    };
 
 
     // Make a pass through the buffer to create headers for what has been read.
@@ -534,6 +539,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
          * true, then the first non \r or \n char will set it to false, and *then* start the next line.
          *
          */
+        _last_scan_offset = _scan_offset;
         while (_is_more_to_scan()) {
             auto write_header = &_headers[_write_header_index];
 
@@ -730,6 +736,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         // scan past any leftover CR or LF from the previous line
         while ((_data[read_offset] == '\n') || (_data[read_offset] == '\r')) {
             read_offset = (read_offset+1)&(_size-1);
+            if (_scan_offset == read_offset) {
+                _debug_trap("read ran into scan (1)");
+            }
         }
 
         while (line_size < (_line_buffer_size - 2)) {
@@ -752,6 +761,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             // update read/write positions
             dst_ptr++;
             read_offset = (read_offset+1)&(_size-1);
+            if (_scan_offset == read_offset) {
+                _debug_trap("read ran into scan (2)");
+            }
         }
 
         // previous character was last one of the line
@@ -832,6 +844,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
                     setAsConnectedAndReady();
 
                     if (isAlwaysDataAndCtrl()) {
+                        setActive();
                         controller_set_connected(true);
                         return;
                     }
