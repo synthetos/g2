@@ -116,69 +116,69 @@
 namespace Motate {
 
     // Arduino pin name & function
-    _MAKE_MOTATE_PIN(kOutput7_PinNumber                 , A, 'A',  0); // Conditioned digital output, 3.3v, 5v
-    _MAKE_MOTATE_PIN(kOutput8_PinNumber                 , A, 'A',  1); // Conditioned digital output, 3.3v, 5v
+    _MAKE_MOTATE_PIN(kUnassigned1                       , A, 'A',  0);
+    _MAKE_MOTATE_PIN(kUnassigned2                       , A, 'A',  1);
     _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber             , A, 'A',  2);
-    _MAKE_MOTATE_PIN(kSocket5_VrefPinNumber             , A, 'A',  3);
-    _MAKE_MOTATE_PIN(kADC0_PinNumber                    , A, 'A',  4); // Heated bed thermistor ADC
-    _MAKE_MOTATE_PIN(kOutput1_PinNumber                 , A, 'A',  5); // DO_1: Extruder1_PWM
-    _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , A, 'A',  6); // DO_4: Fan1B_PWM
-    _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber              , A, 'A',  7); // DO_9: SAFE_PULSES (output from MCU)
-    _MAKE_MOTATE_PIN(kSerial_RX                         , A, 'A',  8); // kSerial_RX
-    _MAKE_MOTATE_PIN(kSerial_TX                         , A, 'A',  9); // kSerial_TX
-    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 10); // DI_5: ZMin
-    _MAKE_MOTATE_PIN(kInput4_PinNumber                  , A, 'A', 11); // DI_4: YMax
-    _MAKE_MOTATE_PIN(kUnassigned1                       , A, 'A', 12); // ???
-    _MAKE_MOTATE_PIN(kUnassigned3                       , A, 'A', 13); // ???
-    _MAKE_MOTATE_PIN(kSerial_RTS                        , A, 'A', 14); // kSerial_RTS
-    _MAKE_MOTATE_PIN(kSerial_CTS                        , A, 'A', 15); // kSerial_CTS
-    _MAKE_MOTATE_PIN(kSocket1_DirPinNumber              , A, 'A', 16); //
-    _MAKE_MOTATE_PIN(kOutput6_PinNumber                 , A, 'A', 17); // Conditioned digital output, 3.3v, 5v
-    _MAKE_MOTATE_PIN(kUnassigned2                       , A, 'A', 18); // ???
-    _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , A, 'A', 19); //
-    _MAKE_MOTATE_PIN(kSD_CardDetectPinNumber            , A, 'A', 20); //
-    _MAKE_MOTATE_PIN(kInput8_PinNumber                  , A, 'A', 21); // DI_8: kInput8_PinNumber
-    _MAKE_MOTATE_PIN(kADC2_PinNumber                    , A, 'A', 22); // Extruder2_ADC
-    _MAKE_MOTATE_PIN(kADC1_PinNumber                    , A, 'A', 23); // Extruder1_ADC
-    _MAKE_MOTATE_PIN(kADC3_PinNumber                    , A, 'A', 24); // Aux ADC
-    _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber                , A, 'A', 25); // SPI0_MISOPinNumber
-    _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber                , A, 'A', 26); // SPI0_MOSIPinNumber
-    _MAKE_MOTATE_PIN(kSPI0_SCKPinNumber                 , A, 'A', 27); // SPI0_SCKPinNumber
-    _MAKE_MOTATE_PIN(kSD_ChipSelectPinNumber            , A, 'A', 28); // SPI-CS0 (SD card)
-    _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber   , A, 'A', 29); // <reserved - SPI-CS4>
+    _MAKE_MOTATE_PIN(kUnassigned3                       , A, 'A',  3);
+    _MAKE_MOTATE_PIN(kADC0_PinNumber                    , A, 'A',  4); // HeatBed ADC
+    _MAKE_MOTATE_PIN(kOutput1_PinNumber                 , A, 'A',  5);
+    _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , A, 'A',  6);
+    _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber              , A, 'A',  7);
+    _MAKE_MOTATE_PIN(kSerial_RX                         , A, 'A',  8);
+    _MAKE_MOTATE_PIN(kSerial_TX                         , A, 'A',  9);
+    _MAKE_MOTATE_PIN(kInput5_PinNumber                  , A, 'A', 10);
+    _MAKE_MOTATE_PIN(kInput4_PinNumber                  , A, 'A', 11);
+    _MAKE_MOTATE_PIN(kUnassigned4                       , A, 'A', 12); // USART_RX -- unused
+    _MAKE_MOTATE_PIN(kUnassigned5                       , A, 'A', 13); // USART_TX -- unused
+    _MAKE_MOTATE_PIN(kSerial_RTS                        , A, 'A', 14);
+    _MAKE_MOTATE_PIN(kSerial_CTS                        , A, 'A', 15);
+    _MAKE_MOTATE_PIN(kSocket1_DirPinNumber              , A, 'A', 16);
+    _MAKE_MOTATE_PIN(kUnassigned6                       , A, 'A', 17);
+    _MAKE_MOTATE_PIN(kOutputInterrupt_PinNumber         , A, 'A', 18);
+    _MAKE_MOTATE_PIN(kSocket1_Microstep_2PinNumber      , A, 'A', 19);
+    _MAKE_MOTATE_PIN(kSocket1_Microstep_0PinNumber      , A, 'A', 20);
+    _MAKE_MOTATE_PIN(kSocket2_StepPinNumber             , A, 'A', 21);
+    _MAKE_MOTATE_PIN(kADC2_PinNumber                    , A, 'A', 22); // FS ADC
+    _MAKE_MOTATE_PIN(kADC1_PinNumber                    , A, 'A', 23); // Extruder ADC
+    _MAKE_MOTATE_PIN(kUnassigned7                       , A, 'A', 24);
+    _MAKE_MOTATE_PIN(kSocket2_EnablePinNumber           , A, 'A', 25);
+    _MAKE_MOTATE_PIN(kSocket2_DirPinNumber              , A, 'A', 26);
+    _MAKE_MOTATE_PIN(kSocket3_Microstep_2PinNumber      , A, 'A', 27);
+    _MAKE_MOTATE_PIN(kSocket3_Microstep_0PinNumber      , A, 'A', 28);
+    _MAKE_MOTATE_PIN(kSocket3_StepPinNumber             , A, 'A', 29);
 
-    _MAKE_MOTATE_PIN(kSocket2_StepPinNumber             , B, 'B',  0);  // Socket2_StepPinNumber
-    _MAKE_MOTATE_PIN(kSocket2_EnablePinNumber           , B, 'B',  1);  // Socket2_EnablePinNumber
-    _MAKE_MOTATE_PIN(kSocket2_DirPinNumber              , B, 'B',  2);  // Socket2_DirPinNumber
-    _MAKE_MOTATE_PIN(kSocket3_StepPinNumber             , B, 'B',  3);  // Socket3_StepPinNumber
-    _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber           , B, 'B',  4);  // Socket3_EnablePinNumber
-    _MAKE_MOTATE_PIN(kSocket3_DirPinNumber              , B, 'B',  5);  // Socket3_DirPinNumber
-    _MAKE_MOTATE_PIN(kSocket4_StepPinNumber             , B, 'B',  6);  // Socket4_StepPinNumber
-    _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber           , B, 'B',  7);  // Socket4_EnablePinNumber
-    _MAKE_MOTATE_PIN(kSocket4_DirPinNumber              , B, 'B',  8);  // Socket4_DirPinNumber
-    _MAKE_MOTATE_PIN(kSocket5_StepPinNumber             , B, 'B',  9);  // Socket5_StepPinNumber
-    _MAKE_MOTATE_PIN(kSocket5_EnablePinNumber           , B, 'B', 10);  // Socket5_EnablePinNumber
-    _MAKE_MOTATE_PIN(kSocket5_DirPinNumber              , B, 'B', 11);  // Socket5_DirPinNumber
-    _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber                 , B, 'B', 12);  // TWD1
-    _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber                 , B, 'B', 13);  // TWCK1
-    _MAKE_MOTATE_PIN(kOutput12_PinNumber                , B, 'B', 14);  // DO_12: kOutput12_PinNumber (Indicator_LED)
-    _MAKE_MOTATE_PIN(kSocket1_StepPinNumber             , B, 'B', 15);  //
-    _MAKE_MOTATE_PIN(kOutput2_PinNumber                 , B, 'B', 16);  // DO_2: Extruder2_PWM
-    _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber             , B, 'B', 17);  // Socket1_VrefPinNumber
-    _MAKE_MOTATE_PIN(kSocket2_VrefPinNumber             , B, 'B', 18);  // Socket2_VrefPinNumber
-    _MAKE_MOTATE_PIN(kSocket3_VrefPinNumber             , B, 'B', 19);  // Socket3_VrefPinNumber
-    _MAKE_MOTATE_PIN(kSocket1_SPISlaveSelectPinNumber   , B, 'B', 20);  //
-    _MAKE_MOTATE_PIN(kSocket2_SPISlaveSelectPinNumber   , B, 'B', 21);  //
-    _MAKE_MOTATE_PIN(kOutput10_PinNumber                , B, 'B', 22);  // DO_10: Socket4_SPISlaveSelectPinNumber
-    _MAKE_MOTATE_PIN(kSocket3_SPISlaveSelectPinNumber   , B, 'B', 23);  //
-    _MAKE_MOTATE_PIN(kOutput11_PinNumber                , B, 'B', 24);  // DO_11: (Header Bed FET)
-    _MAKE_MOTATE_PIN(kOutput5_PinNumber                 , B, 'B', 25);  // DO_5: (Fan2A_PWM)
-    _MAKE_MOTATE_PIN(kInput1_PinNumber                  , B, 'B', 26);  // DI_1: XMin
-    _MAKE_MOTATE_PIN(kOutput3_PinNumber                 , B, 'B', 27);  // DO_3: kOutput3_PinNumber (Fan1A_PWM)
-    _MAKE_MOTATE_PIN(kUnassigned4                       , B, 'B', 28);	// JTAG_CLK / SWD_CLK (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned5                       , B, 'B', 29);	// JTAG_TDI (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned6                       , B, 'B', 30);	// JTAG_TDO (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned7                       , B, 'B', 31);	// JTAG_TMS / SWD_DIO (unassigned)
+    _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber           , B, 'B',  0);
+    _MAKE_MOTATE_PIN(kSocket3_DirPinNumber              , B, 'B',  1);
+    _MAKE_MOTATE_PIN(kUnassigned8                       , B, 'B',  2);
+    _MAKE_MOTATE_PIN(kLEDPWM_PinNumber                  , B, 'B',  3);
+    _MAKE_MOTATE_PIN(kUnassigned9                       , B, 'B',  4);
+    _MAKE_MOTATE_PIN(kUnassigned10                      , B, 'B',  5);
+    _MAKE_MOTATE_PIN(kUnassigned11                      , B, 'B',  6);
+    _MAKE_MOTATE_PIN(kUnassigned12                      , B, 'B',  7);
+    _MAKE_MOTATE_PIN(kUnassigned13                      , B, 'B',  8);
+    _MAKE_MOTATE_PIN(kUnassigned14                      , B, 'B',  9);
+    _MAKE_MOTATE_PIN(kSocket4_Microstep_2PinNumber      , B, 'B', 10);
+    _MAKE_MOTATE_PIN(kSocket4_Microstep_0PinNumber      , B, 'B', 11);
+    _MAKE_MOTATE_PIN(kUnassigned15                      , B, 'B', 12); // FS I2C DAT
+    _MAKE_MOTATE_PIN(kUnassigned16                      , B, 'B', 13); // FS I2C CLK
+    _MAKE_MOTATE_PIN(kSocket4_StepPinNumber             , B, 'B', 14);
+    _MAKE_MOTATE_PIN(kSocket1_StepPinNumber             , B, 'B', 15);
+    _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , B, 'B', 16);
+    _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber             , B, 'B', 17);
+    _MAKE_MOTATE_PIN(kSocket2_VrefPinNumber             , B, 'B', 18);
+    _MAKE_MOTATE_PIN(kSocket3_VrefPinNumber             , B, 'B', 19);
+    _MAKE_MOTATE_PIN(kSocket2_Microstep_2PinNumber      , B, 'B', 20);
+    _MAKE_MOTATE_PIN(kSocket2_Microstep_0PinNumber      , B, 'B', 21);
+    _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber           , B, 'B', 22);
+    _MAKE_MOTATE_PIN(kSocket4_DirPinNumber              , B, 'B', 23);
+    _MAKE_MOTATE_PIN(kOutput11_PinNumber                , B, 'B', 24);
+    _MAKE_MOTATE_PIN(kUnassigned17                      , B, 'B', 25);
+    _MAKE_MOTATE_PIN(kInput1_PinNumber                  , B, 'B', 26);
+    _MAKE_MOTATE_PIN(kOutput3_PinNumber                 , B, 'B', 27);
+    _MAKE_MOTATE_PIN(kUnassigned18                      , B, 'B', 28);
+    _MAKE_MOTATE_PIN(kUnassigned19                      , B, 'B', 29);
+    _MAKE_MOTATE_PIN(kUnassigned20                      , B, 'B', 30);
+    _MAKE_MOTATE_PIN(kUnassigned21                      , B, 'B', 31);
 
 } // namespace Motate
 
@@ -188,4 +188,3 @@ namespace Motate {
 
 #endif
 // pboard_c_pinout_h
-

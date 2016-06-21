@@ -166,6 +166,7 @@ namespace Motate {
     pin_number kInterlock_InPinNumber           = 121;
     pin_number kOutputSAFE_PinNumber            = 122;  // SAFE signal
     pin_number kLEDPWM_PinNumber                = 123;
+    pin_number kOutputInterrupt_PinNumber       = 124;  // to-host interrupt signal
 
     // GRBL / gShield compatibility pins -- Due board ONLY
 
@@ -215,6 +216,7 @@ namespace Motate {
 
     // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
 
+    pin_number kUnassigned21                    = 234;
     pin_number kUnassigned20                    = 235;
     pin_number kUnassigned19                    = 236;
     pin_number kUnassigned18                    = 237;
