@@ -438,6 +438,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4F226F81D1493C4008ED57C /* TinyG pBoard-c PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pboard-c DEBUG=2";
+			buildConfigurationList = D4F226F91D1493C4008ED57C /* Build configuration list for PBXLegacyTarget "TinyG pBoard-c PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG pBoard-c PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -488,6 +502,7 @@
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
 				D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */,
+				D4F226F81D1493C4008ED57C /* TinyG pBoard-c PrintrbotPlus */,
 				D4037C091CDA42F300BC72AD /* TinyG printrboardG2v3 PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
 				D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */,
@@ -826,6 +841,22 @@
 			};
 			name = Release;
 		};
+		D4F226FA1D1493C4008ED57C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4F226FB1D1493C4008ED57C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -951,6 +982,15 @@
 			buildConfigurations = (
 				D4F226F51D088A48008ED57C /* Debug */,
 				D4F226F61D088A48008ED57C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4F226F91D1493C4008ED57C /* Build configuration list for PBXLegacyTarget "TinyG pBoard-c PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4F226FA1D1493C4008ED57C /* Debug */,
+				D4F226FB1D1493C4008ED57C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
