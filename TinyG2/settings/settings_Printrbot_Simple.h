@@ -138,7 +138,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.5
+#define M4_POWER_LEVEL              0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B

@@ -120,7 +120,7 @@
 #define M5_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M5_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M5_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M5_POWER_LEVEL              0.6                    // 1mp
+#define M5_POWER_LEVEL              0.3                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M4_MOTOR_MAP                AXIS_Y
@@ -129,7 +129,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 1
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.6
+#define M4_POWER_LEVEL              0.3
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
@@ -138,7 +138,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.6
+#define M3_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M2_MOTOR_MAP                AXIS_A
@@ -147,7 +147,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.6
+#define M2_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M1_MOTOR_MAP                AXIS_B
@@ -156,7 +156,7 @@
 #define M1_MICROSTEPS               32
 #define M1_POLARITY                 0
 #define M1_POWER_MODE               MOTOR_POWER_MODE
-#define M1_POWER_LEVEL              0.35
+#define M1_POWER_LEVEL              0.3
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
@@ -164,7 +164,7 @@
 #define M6_MICROSTEPS               32
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
-#define M6_POWER_LEVEL              0.35
+#define M6_POWER_LEVEL              0.3
 
 // *** axis settings **********************************************************************************
 
