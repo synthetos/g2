@@ -697,7 +697,7 @@ stat_t cm_set_distance_mode(uint8_t mode)
 }
 
 /*
- * cm_set_coord_offsets() - G10 L2 Pn (affects MODEL only)
+ * cm_set_coord_offsets() - G10 L2/L20 Pn (affects MODEL only)
  *
  *	This function applies the offset to the GM model but does not persist the offsets
  *	during the Gcode cycle. The persist flag is used to persist offsets once the cycle
@@ -707,15 +707,27 @@ stat_t cm_set_distance_mode(uint8_t mode)
  *	cm_set_work_offsets() immediately afterwards.
  */
 
-stat_t cm_set_coord_offsets(uint8_t coord_system, float offset[], float flag[])
+stat_t cm_set_coord_offsets(const uint8_t coord_system,
+                            const uint8_t L_word,
+                            const float offset[], const float flag[])
 {
 	if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {	// you can't set G53
-		return (STAT_INTERNAL_RANGE_ERROR);
+		return (STAT_P_WORD_IS_INVALID);
+	}
+	if (!cm.gf.l_word) {
+		return (STAT_L_WORD_IS_MISSING);
+	}
+	if ((L_word != 2) && (L_word != 20)) {
+		return (STAT_L_WORD_IS_INVALID);
 	}
 	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-		if (fp_TRUE(flag[axis])) {
-			cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
-			cm.deferred_write_flag = true;								// persist offsets once machining cycle is over
+		if (flag[axis]) {
+			if (L_word == 2) {
+				cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
+			} else {
+				cm.offset[coord_system][axis] = cm.gmx.position[axis] - _to_millimeters(offset[axis]);
+			}
+			cm.deferred_write_flag = true;                  // persist offsets once machining cycle is over
 		}
 	}
 	return (STAT_OK);
