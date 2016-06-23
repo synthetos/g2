@@ -95,7 +95,8 @@
 #define ADC2_AVAILABLE 0
 #define ADC3_AVAILABLE 0
 
-#define XIO_HAS_UART 0
+#define XIO_HAS_USB 1
+#define XIO_HAS_UART 1
 #define XIO_HAS_SPI 0
 #define XIO_HAS_I2C 0
 
@@ -105,18 +106,18 @@
 // So we have to explicitly enable them as PWM pins.
 // Generated with: perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
 #define OUTPUT1_PWM 1
-#define OUTPUT2_PWM 0
+#define OUTPUT2_PWM 0 // Unused
 #define OUTPUT3_PWM 1
 #define OUTPUT4_PWM 1
-#define OUTPUT5_PWM 1
-#define OUTPUT6_PWM 0   // Can't PWM anyway
-#define OUTPUT7_PWM 0   // Conflicts with kSocket3_VrefPinNumber
-#define OUTPUT8_PWM 0   // Can't PWM anyway
+#define OUTPUT5_PWM 0 // Unused
+#define OUTPUT6_PWM 0 // Unused
+#define OUTPUT7_PWM 0 // Unused
+#define OUTPUT8_PWM 0 // Unused
 #define OUTPUT9_PWM 0   // Unused
-#define OUTPUT10_PWM 0  // Can't PWM anyway
+#define OUTPUT10_PWM 0 // Unused
 #define OUTPUT11_PWM 0  // Can't PWM anyway
-#define OUTPUT12_PWM 0  // Conflicts with kSocket2_VrefPinNumber
-#define OUTPUT13_PWM 0  // Used for INTERRUPT_OUT
+#define OUTPUT12_PWM 0 // Unused
+#define OUTPUT13_PWM 0 // Unused
 
 namespace Motate {
 
