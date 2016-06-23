@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.02 // tuned default PID for PrinterBots
+#define TINYG_FIRMWARE_BUILD            100.03 // tuned power settings for PrinterBots
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
