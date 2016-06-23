@@ -123,7 +123,7 @@ static PWMOutputPin<kOutput3_PinNumber>  output_3_pin;
 static PWMLikeOutputPin<kOutput3_PinNumber>  output_3_pin;
 #endif
 #if OUTPUT4_PWM == 1
-static PWMOutputPin<kOutput4_PinNumber>  output_4_pin;
+static PWMOutputPin<kOutput4_PinNumber>  output_4_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput4_PinNumber>  output_4_pin;
 #endif
