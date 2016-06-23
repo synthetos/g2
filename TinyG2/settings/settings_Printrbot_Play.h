@@ -84,11 +84,14 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","feed","vel","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","vel","unit","path","stat"
+// There are no heater two or three, but these would show those: ,"he2t","he2st","he2at","he3t","he3st","he3at"
+
 // Defaults for motion debugging
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
+
 // Defaults for PID tuning
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -344,14 +347,14 @@
 #define MAX_FAN_TEMP                150.0
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                9.0
-#define H1_DEFAULT_I                0.12
-#define H1_DEFAULT_D                400.0
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.05
+#define H1_DEFAULT_D                150.0
 
 #define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                9.0
-#define H2_DEFAULT_I                0.12
-#define H2_DEFAULT_D                400.0
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.05
+#define H2_DEFAULT_D                150.0
 
 #define H3_DEFAULT_ENABLE           false
 #define H3_DEFAULT_P                9.0
