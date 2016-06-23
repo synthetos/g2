@@ -229,6 +229,7 @@ uint8_t cm_get_units_mode(GCodeState_t *gcode_state) { return gcode_state->units
 uint8_t cm_get_select_plane(GCodeState_t *gcode_state) { return gcode_state->select_plane;}
 uint8_t cm_get_path_control(GCodeState_t *gcode_state) { return gcode_state->path_control;}
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
+uint8_t cm_get_arc_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->arc_distance_mode;}
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
 uint8_t cm_get_tool(GCodeState_t *gcode_state) { return gcode_state->tool;}
 uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state) { return gcode_state->spindle_mode;}
@@ -565,6 +566,7 @@ void canonical_machine_init()
 	cm_select_plane(cm.select_plane);
 	cm_set_path_control(cm.path_control);
 	cm_set_distance_mode(cm.distance_mode);
+	cm_set_arc_distance_mode(INCREMENTAL_MODE);  // always the default
 	cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);// always the default
 
 	cm.gmx.block_delete_switch = true;
@@ -693,6 +695,12 @@ stat_t cm_set_units_mode(uint8_t mode)
 stat_t cm_set_distance_mode(uint8_t mode)
 {
 	cm.gm.distance_mode = mode;		// 0 = absolute mode, 1 = incremental
+	return (STAT_OK);
+}
+
+stat_t cm_set_arc_distance_mode(const uint8_t mode)
+{
+	cm.gm.arc_distance_mode = (cmDistanceMode)mode;	// 0 = absolute mode, 1 = incremental
 	return (STAT_OK);
 }
 
@@ -1417,6 +1425,7 @@ static void _exec_program_finalize(float *value, float *flag)
 		cm_set_coord_system(cm.coord_system);			// reset to default coordinate system
 		cm_select_plane(cm.select_plane);				// reset to default arc plane
 		cm_set_distance_mode(cm.distance_mode);
+		cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
 //++++	cm_set_units_mode(cm.units_mode);				// reset to default units mode +++ REMOVED +++
 		cm_spindle_control_immediate(SPINDLE_OFF);		// M5
 		cm_flood_coolant_control(false);				// M9
@@ -1617,6 +1626,10 @@ static const char msg_g90[] PROGMEM = "G90 - absolute distance mode";
 static const char msg_g91[] PROGMEM = "G91 - incremental distance mode";
 static const char *const msg_dist[] PROGMEM = { msg_g90, msg_g91 };
 
+static const char msg_g901[] PROGMEM = "G90.1 - absolute distance mode";
+static const char msg_g911[] PROGMEM = "G91.1 - incremental distance mode (default mode)";
+static const char *const msg_admo[] PROGMEM = { msg_g901, msg_g911 };
+
 static const char msg_g93[] PROGMEM = "G93 - inverse time mode";
 static const char msg_g94[] PROGMEM = "G94 - units-per-minute mode (i.e. feedrate mode)";
 static const char msg_g95[] PROGMEM = "G95 - units-per-revolution mode";
@@ -1746,6 +1759,7 @@ stat_t cm_get_momo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_momo, cm_get_mo
 stat_t cm_get_plan(nvObj_t *nv) { return(_get_msg_helper(nv, msg_plan, cm_get_select_plane(ACTIVE_MODEL)));}
 stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
+stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
 stat_t cm_get_safe(nvObj_t *nv) {

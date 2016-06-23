@@ -350,8 +350,22 @@ static stat_t _parse_gcode_block(char_t *buf)
 				}
 				case 64: SET_MODAL (MODAL_GROUP_G13,path_control, PATH_CONTINUOUS);
 				case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
-				case 90: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
-				case 91: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
+				case 90: {
+					switch (_point(value)) {
+    					case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
+    					case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_MODE);
+    					default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+                    }
+                    break;
+                }
+				case 91: {
+    				switch (_point(value)) {
+        				case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
+        				case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_MODE);
+        				default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+    				}
+    				break;
+				}
 				case 92: {
 					switch (_point(value)) {
 						case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_ORIGIN_OFFSETS);
@@ -488,6 +502,7 @@ static stat_t _execute_gcode_block()
 	EXEC_FUNC(cm_set_coord_system, coord_system);
 	EXEC_FUNC(cm_set_path_control, path_control);
 	EXEC_FUNC(cm_set_distance_mode, distance_mode);
+	EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
 	//--> set retract mode goes here
 
 	switch (cm.gn.next_action) {

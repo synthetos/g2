@@ -178,12 +178,11 @@ stat_t cm_arc_feed(const float target[], const float target_f[],     // target e
         
         // test that center format absolute distance mode arcs have both offsets specified
     } else {
-        // TODO: OMC hasn't yet ported the code to track arc distance mode
-//        if (cm.gm.arc_distance_mode == ABSOLUTE_MODE) {
-//            if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
-//                return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
-//            }
-//        }
+        if (cm.gm.arc_distance_mode == ABSOLUTE_MODE) {
+            if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
+                return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
+            }
+        }
     }
     
     // Set arc rotations using P word
@@ -225,12 +224,11 @@ stat_t cm_arc_feed(const float target[], const float target_f[],     // target e
     arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
     arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
     
-    // TODO: OMC hasn't yet ported the code to track arc distance mode, and always assumes absolute
-//    if (arc.gm.arc_distance_mode == ABSOLUTE_MODE) {    // adjust offsets if in absolute mode
-//        arc.offset[OFS_I] -= cm.gmx.position[AXIS_X];
-//        arc.offset[OFS_J] -= cm.gmx.position[AXIS_Y];
-//        arc.offset[OFS_K] -= cm.gmx.position[AXIS_Z];
-//    }
+    if (arc.gm.arc_distance_mode == ABSOLUTE_MODE) {    // adjust offsets if in absolute mode
+        arc.offset[OFS_I] -= cm.gmx.position[AXIS_X];
+        arc.offset[OFS_J] -= cm.gmx.position[AXIS_Y];
+        arc.offset[OFS_K] -= cm.gmx.position[AXIS_Z];
+    }
     
 	// compute arc runtime values
 	ritorno(_compute_arc(radius_f));

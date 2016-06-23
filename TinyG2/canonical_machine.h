@@ -96,6 +96,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	uint8_t absolute_override;			// G53 TRUE = move using machine coordinates - this block only (G53)
 	uint8_t path_control;				// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
 	uint8_t distance_mode;				// G91   0=use absolute coords(G90), 1=incremental movement
+	uint8_t arc_distance_mode;			// G90.1=use absolute IJK offsets, G91.1=incremental IJK offsets
 	uint8_t tool;						// M6 tool change - moves "tool_select" to "tool"
 	uint8_t tool_select;				// T value - T sets this value
 	uint8_t mist_coolant;				// TRUE = mist on (M7), FALSE = off (M9)
@@ -159,6 +160,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t origin_offset_mode;			// G92...TRUE=in origin offset mode
 	uint8_t path_control;				// G61... EXACT_PATH, EXACT_STOP, CONTINUOUS
 	uint8_t distance_mode;				// G91   0=use absolute coords(G90), 1=incremental movement
+	uint8_t arc_distance_mode;			// G90.1=use absolute IJK offsets, G91.1=incremental IJK
 
 	uint8_t tool;						// Tool after T and M6 (tool_select and tool_change)
 	uint8_t tool_select;				// T value - T sets this value
@@ -557,6 +559,7 @@ uint8_t cm_get_units_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_select_plane(GCodeState_t *gcode_state);
 uint8_t cm_get_path_control(GCodeState_t *gcode_state);
 uint8_t cm_get_distance_mode(GCodeState_t *gcode_state);
+uint8_t cm_get_arc_distance_mode(const GCodeState_t *gcode_state);
 uint8_t cm_get_feed_rate_mode(GCodeState_t *gcode_state);
 uint8_t cm_get_tool(GCodeState_t *gcode_state);
 uint8_t cm_get_spindle_mode(GCodeState_t *gcode_state);
@@ -600,6 +603,7 @@ stat_t cm_clear(nvObj_t *nv);
 stat_t cm_select_plane(uint8_t plane);							// G17, G18, G19
 stat_t cm_set_units_mode(uint8_t mode);							// G20, G21
 stat_t cm_set_distance_mode(uint8_t mode);						// G90, G91
+stat_t cm_set_arc_distance_mode(const uint8_t mode);            // G90.1, G91.1
 stat_t cm_set_coord_offsets(const uint8_t coord_system, const uint8_t L_word, const float offset[], const float flag[]); // G10 L2
 
 void cm_set_position(uint8_t axis, float position);				// set absolute position - single axis
