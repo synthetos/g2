@@ -190,7 +190,7 @@
 #define Z_SEARCH_VELOCITY           200
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             5
-#define Z_ZERO_BACKOFF              0.1
+#define Z_ZERO_BACKOFF              0
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
