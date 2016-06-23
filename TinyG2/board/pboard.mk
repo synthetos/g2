@@ -18,11 +18,11 @@ ifeq ("$(BOARD)","pboard-a")
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
-ifeq ("$(BOARD)","pboard-c")
-    BASE_BOARD=pboard
-    DEVICE_DEFINES += MOTATE_BOARD="pboard-c"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
+#ifeq ("$(BOARD)","pboard-c")
+#    BASE_BOARD=pboard
+#    DEVICE_DEFINES += MOTATE_BOARD="pboard-c"
+#    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+#endif
 
 ifeq ("$(BOARD)","printrboardG2v3")
     BASE_BOARD=pboard
