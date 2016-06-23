@@ -3413,6 +3413,7 @@
 				D41D13F617374B7D00D522D9 /* settings */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		D45710C61705334000EA19A8 /* motate */ = {
 			isa = PBXGroup;
