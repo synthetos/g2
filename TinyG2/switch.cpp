@@ -61,8 +61,8 @@ switches_t sw;
 //static void _no_action(switch_t *s);
 //static void _led_on(switch_t *s);
 //static void _led_off(switch_t *s);
-static void _trigger_feedhold(switch_t *s);
-static void _trigger_cycle_start(switch_t *s);
+//static void _trigger_feedhold(switch_t *s);
+//static void _trigger_cycle_start(switch_t *s);
 static void _trigger_alarm(switch_t *s);
 
 static void _no_action(switch_t *s) { return; }
@@ -202,24 +202,24 @@ int8_t poll_switch(switch_t *s, uint8_t pin_value)
 	return (true);
 }
 
-static void _trigger_feedhold(switch_t *s)
-{
-    //	IndicatorLed.toggle();
-	cm_request_feedhold();
-/*
-	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
-		cm_request_feedhold();
-	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
-		cm.limit_tripped_flag = true;
-	}
-*/
-}
-
-static void _trigger_cycle_start(switch_t *s)
-{
-//	IndicatorLed.toggle();
-	cm_request_end_hold();
-}
+//static void _trigger_feedhold(switch_t *s)
+//{
+//    //	IndicatorLed.toggle();
+//	cm_request_feedhold();
+///*
+//	if (cm.cycle_state == CYCLE_HOMING) {		// regardless of switch type
+//		cm_request_feedhold();
+//	} else if (s->mode & SW_LIMIT_BIT) {		// set flag if it's a limit switch
+//		cm.limit_tripped_flag = true;
+//	}
+//*/
+//}
+//
+//static void _trigger_cycle_start(switch_t *s)
+//{
+////	IndicatorLed.toggle();
+//	cm_request_end_hold();
+//}
 
 static void _trigger_alarm(switch_t *s)
 {
