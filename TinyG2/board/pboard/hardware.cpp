@@ -2,7 +2,8 @@
  * hardware.cpp - general hardware support functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -104,6 +105,10 @@ stat_t hw_get_fbs(nvObj_t *nv)
     return (STAT_OK);
 }
 
+/*
+ * hw_get_fbc() - get configuration settings file
+ */
+
 stat_t hw_get_fbc(nvObj_t *nv)
 {
     nv->valuetype = TYPE_STRING;
@@ -167,13 +172,13 @@ static const char fmt_hp[] PROGMEM =  "[hp]  hardware platform%15.2f\n";
 static const char fmt_hv[] PROGMEM =  "[hv]  hardware version%16.2f\n";
 static const char fmt_id[] PROGMEM =  "[id]  TinyG ID%21s\n";
 
-void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}    // TYPE_FLOAT
+void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}   // TYPE_FLOAT
 void hw_print_fbs(nvObj_t *nv) { text_print(nv, fmt_fbs);}  // TYPE_STRING
 void hw_print_fbc(nvObj_t *nv) { text_print(nv, fmt_fbc);}  // TYPE_STRING
-void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}    // TYPE_FLOAT
-void hw_print_cv(nvObj_t *nv)  { text_print(nv, fmt_cv);}    // TYPE_FLOAT
-void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}    // TYPE_FLOAT
-void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}    // TYPE_FLOAT
-void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}    // TYPE_STRING
+void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}   // TYPE_FLOAT
+void hw_print_cv(nvObj_t *nv)  { text_print(nv, fmt_cv);}   // TYPE_FLOAT
+void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}   // TYPE_FLOAT
+void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}   // TYPE_FLOAT
+void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}   // TYPE_STRING
 
 #endif //__TEXT_MODE
