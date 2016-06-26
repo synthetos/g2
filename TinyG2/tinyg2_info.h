@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.05  // added fbc to hardware.cpp/.h in all profiles. sbv300 does not compile.
+#define TINYG_FIRMWARE_BUILD            100.06  // removed block merge references
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
