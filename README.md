@@ -1,4 +1,4 @@
-# TinyG 2 - Edge Branch
+# G2 - Edge Branch
 
 This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. It's not guaranteed AT ALL.
 

@@ -2579,20 +2579,6 @@ void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
 
-
-static const char fmt_bme[] PROGMEM = "[bme] block merge enable%11d [0=disable,1=enable]\n";
-static const char fmt_bmr[] PROGMEM = "[bmr] block merge ratio%12d\n";
-static const char fmt_bmv[] PROGMEM = "[bmv] block merge velocity max%8f\n";
-static const char fmt_bml[] PROGMEM = "[bml] block merge length max%10.2f\n";
-static const char fmt_bmc[] PROGMEM = "[bmc] block merge cosine min%10.2f\n";
-
-void cm_print_bme(nvObj_t *nv){ text_print(nv, fmt_bme);}       // TYPE_INT
-void cm_print_bmr(nvObj_t *nv){ text_print(nv, fmt_bmr);}       // TYPE_FLOAT
-void cm_print_bmv(nvObj_t *nv){ text_print(nv, fmt_bmv);}       // TYPE_FLOAT
-void cm_print_bml(nvObj_t *nv){ text_print(nv, fmt_bml);}       // TYPE_FLOAT
-void cm_print_bmc(nvObj_t *nv){ text_print(nv, fmt_bmc);}       // TYPE_FLOAT
-
-
 static const char fmt_m48e[] PROGMEM = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
 static const char fmt_mfoe[] PROGMEM ="[mfoe] manual feed override enab%3d [0=disable,1=enable]\n";
 static const char fmt_mfo[] PROGMEM ="[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";

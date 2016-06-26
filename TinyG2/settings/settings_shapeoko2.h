@@ -45,7 +45,7 @@
 // Machine configuration settings
 
 #define JUNCTION_AGGRESSION         0.75					// cornering - between 0.05 and 1.00 (higher is faster)
-#define CHORDAL_TOLERANCE           0.01					// chordal tolerance for arcs and block compression (in mm)
+#define CHORDAL_TOLERANCE           0.01					// chordal tolerance for arcs (in mm)
 #define BLOCK_COMPRESSION_ENABLE    1                       // 0=off, 1=on
 
 #define SOFT_LIMIT_ENABLE           0						// 0=off, 1=on

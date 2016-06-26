@@ -63,23 +63,7 @@
 #endif
 
 #ifndef CHORDAL_TOLERANCE
-#define CHORDAL_TOLERANCE           0.01    // {ct: chordal tolerance for arcs and block compression (in mm)
-#endif
-
-#ifndef BLOCK_MERGE_ENABLE
-#define BLOCK_MERGE_ENABLE          1       // {bme: 0=off, 1=on
-#endif
-
-#ifndef BLOCK_MERGE_VELOCITY_MAX
-#define BLOCK_MERGE_VELOCITY_MAX    10.0    // {bmv: deltaV above which not to merge
-#endif
-
-#ifndef BLOCK_MERGE_LENGTH_MAX
-#define BLOCK_MERGE_LENGTH_MAX      10.00   // {bml: length above which not to merge
-#endif
-
-#ifndef BLOCK_MERGE_COSINE_MIN
-#define BLOCK_MERGE_COSINE_MIN      0.90    // {bmc: cosine angle below which not to merge
+#define CHORDAL_TOLERANCE           0.01    // {ct: chordal tolerance for arcs (in mm)
 #endif
 
 #ifndef MOTOR_POWER_TIMEOUT
